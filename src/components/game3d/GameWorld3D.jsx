@@ -4,7 +4,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
-import { setPlayerHUD } from './playerHUDStore';
+import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD } from './playerHUDStore';
 import {
   DEFAULT_PLAYER_STATS,
   ENEMY_STAT_TEMPLATES,
@@ -123,6 +123,21 @@ export default function GameWorld3D() {
   const interactPressed = useRef(false);
   const attackPressed = useRef(false);
   const oneShotPlaying = useRef(false);
+
+  // Seed the shared progression store with the player's initial state so the
+  // HUD and Character Progression menu have real data from the start.
+  useEffect(() => {
+    setPlayerHUD({
+      level: 1,
+      xp: 0,
+      xpForNext: xpForLevel(1),
+      baseStats: { ...DEFAULT_PLAYER_STATS },
+      unspentPoints: 0,
+      derived: playerDerivedRef.current,
+      hp: playerDerivedRef.current.maxHP,
+      maxHP: playerDerivedRef.current.maxHP,
+    });
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -657,7 +672,9 @@ export default function GameWorld3D() {
             if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
           });
           if (closestEnemy) {
-            const dmg = calculateHit(playerDerivedRef.current, closestEnemy.derived);
+            // Pull live derived stats from store so stat allocations actually affect damage.
+            const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
+            const dmg = calculateHit(liveDerived, closestEnemy.derived);
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
             if (closestEnemy.hp <= 0) {
@@ -675,20 +692,23 @@ export default function GameWorld3D() {
                 closestEnemy.deathAction = deathAction;
               }
               setScore(prev => prev + 100 * closestEnemy.xpReward);
-              // Award XP, handle level-ups against the custom curve
+              // Award XP, handle level-ups against the custom curve.
+              // Each level-up grants stat points (handled inside awardXP).
               let newXP = playerXPRef.current + closestEnemy.xpReward;
               let newLevel = playerLevelRef.current;
               let needed = xpForLevel(newLevel);
+              let levelsGained = 0;
               while (newXP >= needed) {
                 newXP -= needed;
                 newLevel += 1;
+                levelsGained += 1;
                 needed = xpForLevel(newLevel);
               }
               playerXPRef.current = newXP;
               playerLevelRef.current = newLevel;
               setPlayerXP(newXP);
               setPlayerLevel(newLevel);
-              setPlayerHUD({ level: newLevel, xp: newXP, xpForNext: xpForLevel(newLevel) });
+              awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
             }
           }
         }
@@ -790,7 +810,7 @@ export default function GameWorld3D() {
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
             <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-cyan-300 font-mono">F</span> Attack</div>
             <div><span className="text-cyan-300 font-mono">Q</span> Kick · <span className="text-cyan-300 font-mono">R</span> Roll</div>
-            <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC</div>
+            <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC · <span className="text-yellow-300 font-mono">C</span> Character</div>
           </div>
         </div>
       )}

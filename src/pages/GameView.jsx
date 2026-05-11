@@ -6,26 +6,32 @@ import CharacterLoginScreen from '../components/game3d/CharacterLoginScreen';
 import GameWorld3D from '../components/game3d/GameWorld3D';
 import SkillSlotHUD from '../components/game3d/SkillSlotHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
+import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
 
 export default function GameView() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState('login'); // 'login' | 'world'
   const [storeOpen, setStoreOpen] = useState(false);
+  const [progressionOpen, setProgressionOpen] = useState(false);
 
-  // TAB key toggles the store/build menu while in-game
+  // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = close
   useEffect(() => {
     if (phase !== 'world') return;
     const onKey = (e) => {
+      if (e.target?.matches?.('input, textarea')) return;
       if (e.key === 'Tab') {
         e.preventDefault();
         setStoreOpen((v) => !v);
-      } else if (e.key === 'Escape' && storeOpen) {
-        setStoreOpen(false);
+      } else if (e.key.toLowerCase() === 'c') {
+        setProgressionOpen((v) => !v);
+      } else if (e.key === 'Escape') {
+        if (storeOpen) setStoreOpen(false);
+        if (progressionOpen) setProgressionOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen]);
+  }, [phase, storeOpen, progressionOpen]);
 
   if (phase === 'login') {
     return (
@@ -47,6 +53,7 @@ export default function GameView() {
       <GameWorld3D />
       <SkillSlotHUD />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
+      <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
 
       {/* Back button */}
       <button

@@ -12,21 +12,19 @@ import { subscribePlayerHUD } from './playerHUDStore';
  */
 export default function SkillSlotHUD({
   characterName = 'Erika',
-  hp = 570,
-  maxHp = 570,
   mana = 296,
   maxMana = 296,
   gold = 100000,
-  level: levelProp,
-  xp: xpProp,
-  xpForNext: xpForNextProp,
   onAbility,
 }) {
-  const [hud, setHud] = useState({ level: 1, xp: 0, xpForNext: 5 });
+  const [hud, setHud] = useState({ level: 1, xp: 0, xpForNext: 5, hp: 100, maxHP: 100, unspentPoints: 0, derived: { chi: 0 } });
   useEffect(() => subscribePlayerHUD(setHud), []);
-  const level = levelProp ?? hud.level;
-  const xp = xpProp ?? hud.xp;
-  const xpForNext = xpForNextProp ?? hud.xpForNext;
+  const { level, xp, xpForNext, unspentPoints } = hud;
+  // Pull live HP/Mana from progression store so stat allocations visibly affect bars.
+  const hp = hud.hp ?? 0;
+  const maxHp = hud.maxHP ?? 1;
+  const liveMana = hud.derived?.chi ?? mana;
+  const liveMaxMana = hud.derived?.chi ?? maxMana;
   const abilities = [
     { key: '1', label: 'BOOT', color: '#4a90e2' },
     { key: '2', label: 'BUFF', color: '#7ed321' },
@@ -68,7 +66,7 @@ export default function SkillSlotHUD({
         {/* CENTER: Hero portrait + bars + abilities */}
         <div className="flex items-end gap-2 pointer-events-auto">
           {/* Hero portrait */}
-          <HeroPortrait name={characterName} />
+          <HeroPortrait name={characterName} level={level} unspentPoints={unspentPoints} />
 
           {/* Bars + ability slots */}
           <div className="flex flex-col gap-1.5">
@@ -76,7 +74,7 @@ export default function SkillSlotHUD({
             <div className="flex flex-col gap-1 w-[440px]">
               <XPBar level={level} xp={xp} xpForNext={xpForNext} />
               <ResourceBar value={hp} max={maxHp} color="#4caf50" />
-              <ResourceBar value={mana} max={maxMana} color="#3a9ee6" />
+              <ResourceBar value={liveMana} max={liveMaxMana || 1} color="#3a9ee6" />
             </div>
 
             {/* Ability slot row */}
@@ -120,9 +118,12 @@ function InventorySlot({ empty }) {
   );
 }
 
-function HeroPortrait({ name }) {
+function HeroPortrait({ name, level = 1, unspentPoints = 0 }) {
   return (
-    <div className="relative w-[72px] h-[72px] flex-shrink-0">
+    <div
+      className="relative w-[72px] h-[72px] flex-shrink-0"
+      style={unspentPoints > 0 ? { boxShadow: '0 0 14px rgba(255, 210, 70, 0.7)', borderRadius: 4 } : undefined}
+    >
       <div
         className="w-full h-full rounded-sm overflow-hidden relative"
         style={{
@@ -165,8 +166,23 @@ function HeroPortrait({ name }) {
           border: '1.5px solid rgba(255, 200, 100, 0.8)',
         }}
       >
-        1
+        {level}
       </div>
+      {/* Unspent stat points indicator — press C to spend */}
+      {unspentPoints > 0 && (
+        <div
+          className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-black animate-pulse"
+          style={{
+            background: 'linear-gradient(180deg, #fff7b0 0%, #ffd24a 50%, #c98a00 100%)',
+            border: '1.5px solid rgba(120, 80, 0, 0.8)',
+            color: '#3a2400',
+            boxShadow: '0 0 10px rgba(255, 210, 70, 0.8)',
+          }}
+          title="Press C to spend stat points"
+        >
+          +{unspentPoints}
+        </div>
+      )}
       {/* Status dot */}
       <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-red-500 border border-black/40" />
     </div>
