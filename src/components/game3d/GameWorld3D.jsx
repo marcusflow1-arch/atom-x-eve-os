@@ -160,6 +160,10 @@ export default function GameWorld3D() {
       npcs.push({ ...spawn, mesh: group, ringMesh: ring });
     });
 
+    // Shared FBX loader (used for player + enemies)
+    const loader = new FBXLoader();
+    const clock = new THREE.Clock();
+
     // ─────────────────────────────────────────────
     // ENEMY SPAWNS (female archer model patrolling between waypoints)
     // Same archer FBX as the player, tinted red, with walk (Running.fbx) animation looped
@@ -244,8 +248,6 @@ export default function GameWorld3D() {
     let model;
     const actions = {};
     let currentActionName = 'idle';
-    const clock = new THREE.Clock();
-    const loader = new FBXLoader();
 
     const playAction = (name, timeScale = 1) => {
       const next = actions[name];
