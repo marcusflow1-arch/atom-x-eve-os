@@ -73,7 +73,7 @@ export default function EquipmentSlotsColumn({ selectedCategoryId, onSelectCateg
                 style={{ width: `${cat.slots * 48 + (cat.slots - 1) * 6}px`, minWidth: '100px' }}
               >
                 <span className="h-px flex-1 bg-white/15" />
-                <span className="text-[9px] tracking-widest uppercase text-white/45">Slots</span>
+                <span className="text-[9px] tracking-widest uppercase text-white/45">{cat.label}</span>
                 <span className="h-px flex-1 bg-white/15" />
               </div>
               <div className="flex gap-1.5">
