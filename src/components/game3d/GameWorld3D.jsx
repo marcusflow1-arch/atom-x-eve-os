@@ -466,8 +466,10 @@ export default function GameWorld3D() {
     const deathClipPromise = new Promise((resolve) => {
       loader.load(CREATURE_ANIMATION_URLS.death, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
+    // Use the mutant "punch" animation for attacks (different from the default
+    // "swiping" attack so the player sees variety in enemy strikes).
     const attackClipPromise = new Promise((resolve) => {
-      loader.load(CREATURE_ANIMATION_URLS.attack, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+      loader.load(CREATURE_ANIMATION_URLS.punch, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
     // Cache the death + attack clips once they load so we can reuse them per-enemy
     let cachedDeathClip = null;
@@ -513,6 +515,8 @@ export default function GameWorld3D() {
         enemyModel.scale.setScalar(scale);
         enemyModel.position.set(spawn.home[0], spawn.home[1], spawn.home[2]);
 
+        // Keep the enemy's natural model color — no red tint, no emissive glow.
+        // tintMaterials is still tracked so the death-fade can adjust opacity.
         const tintMaterials = [];
         enemyModel.traverse((node) => {
           if (node.isMesh) {
@@ -520,16 +524,7 @@ export default function GameWorld3D() {
             node.receiveShadow = true;
             if (node.material) {
               const mats = Array.isArray(node.material) ? node.material : [node.material];
-              mats.forEach((m) => {
-                const cloned = m.clone();
-                if (cloned.color) cloned.color.lerp(new THREE.Color(0xff4040), tier.tintMix);
-                cloned.emissive = new THREE.Color(0x661111);
-                cloned.emissiveIntensity = 0.3;
-                tintMaterials.push(cloned);
-              });
-              node.material = Array.isArray(node.material)
-                ? tintMaterials.slice(-node.material.length)
-                : tintMaterials[tintMaterials.length - 1];
+              mats.forEach((m) => tintMaterials.push(m));
             }
           }
         });
@@ -960,9 +955,7 @@ export default function GameWorld3D() {
               if (enemy.idleAction) enemy.idleAction.reset().fadeIn(0.2).play();
             }
             // While attacking, skip wander state updates this frame
-            const glow = enemy.hitCooldown > 0 ? 0.8 : 0.3;
             if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
-            enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
             return;
           }
 
@@ -1006,10 +999,8 @@ export default function GameWorld3D() {
             }
           }
 
-          // Hit-flash tint glow
-          const glow = enemy.hitCooldown > 0 ? 0.8 : 0.3;
+          // Tick hit-cooldown (no emissive glow — natural color preserved)
           if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
-          enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
         });
 
         // ─── Tick player cooldowns ───
