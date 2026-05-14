@@ -52,9 +52,9 @@ export default function EquipmentPreview3D() {
     scene.add(rim);
 
     const pivot = new THREE.Group();
-    // Shift the character to the RIGHT of the canvas so it sits beside the
-    // gear detail panel rather than behind it.
-    pivot.position.x = 1.4;
+    // Position the character just to the right of the equipment slot column,
+    // closer to the left edge of the 3D canvas (not centered).
+    pivot.position.x = -0.4;
     scene.add(pivot);
 
     const loader = new FBXLoader();
