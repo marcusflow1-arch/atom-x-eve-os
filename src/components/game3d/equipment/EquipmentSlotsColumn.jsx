@@ -66,16 +66,33 @@ export default function EquipmentSlotsColumn({ selectedCategoryId, onSelectCateg
               )}
             </button>
 
-            {/* Two empty expansion slots with "Slots" label above */}
+            {/* Expansion slots — one box per available slot for this category */}
             <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1 mb-0.5 w-[100px]">
+              <div
+                className="flex items-center gap-1 mb-0.5"
+                style={{ width: `${cat.slots * 48 + (cat.slots - 1) * 6}px`, minWidth: '100px' }}
+              >
                 <span className="h-px flex-1 bg-white/15" />
                 <span className="text-[9px] tracking-widest uppercase text-white/45">Slots</span>
                 <span className="h-px flex-1 bg-white/15" />
               </div>
               <div className="flex gap-1.5">
-                <div className="w-12 h-12 rounded-md border border-dashed border-white/15 bg-white/[0.03]" />
-                <div className="w-12 h-12 rounded-md border border-dashed border-white/15 bg-white/[0.03]" />
+                {Array.from({ length: cat.slots }).map((_, i) => {
+                  const slotItem = allEquipped[i];
+                  return (
+                    <div
+                      key={i}
+                      title={slotItem ? slotItem.name : `${cat.label} slot ${i + 1} — empty`}
+                      className={`w-12 h-12 rounded-md flex items-center justify-center ${
+                        slotItem
+                          ? 'border border-white/25 bg-white/[0.08]'
+                          : 'border border-dashed border-white/15 bg-white/[0.03]'
+                      }`}
+                    >
+                      {slotItem && Icon && <Icon className="w-5 h-5 text-white/90" />}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
