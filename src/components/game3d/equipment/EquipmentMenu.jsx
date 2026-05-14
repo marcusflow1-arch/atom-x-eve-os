@@ -94,34 +94,10 @@ export default function EquipmentMenu({ open, onClose }) {
         <EquipmentPreview3D />
       </div>
 
-      {/* Tab body */}
+      {/* Tab body (each tab renders its own GearActionsBar for the bottom controls) */}
       {tab === 'abilities' && <AbilitiesTab state={state} />}
       {tab === 'gear' &&      <GearTab state={state} />}
       {tab === 'talents' &&   <TalentsTab state={state} />}
-
-      {/* Bottom hint bar */}
-      <div className="absolute bottom-5 left-6 right-6 flex items-center justify-between text-xs text-white/55 pointer-events-none">
-        <div className="flex items-center gap-5">
-          <span className="flex items-center gap-1.5">
-            <span className="font-mono text-white/70 border border-white/15 rounded-sm px-1.5 py-0.5">Esc</span>
-            Return
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="font-mono text-white/70 border border-white/15 rounded-sm px-1.5 py-0.5">T</span>
-            Share
-          </span>
-        </div>
-        <div className="flex items-center gap-5">
-          <span className="flex items-center gap-1.5">
-            <span className="font-mono text-white/70 border border-white/15 rounded-sm px-1.5 py-0.5">F</span>
-            Build Management
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="font-mono text-amber-200 border border-amber-400/40 bg-amber-700/30 rounded-sm px-1.5 py-0.5">Space</span>
-            Quick Enhance
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
