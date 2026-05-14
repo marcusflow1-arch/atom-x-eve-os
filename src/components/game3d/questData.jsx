@@ -5,12 +5,16 @@
 // 5 archer NPCs total, each carries 2 quests.
 // ─────────────────────────────────────────────
 
+// Quest NPCs are clustered in a tight ring ~6 units from the player spawn (0,0,0)
+// so the player sees all five archers immediately upon entering the world.
+// Y is set well above ground (5) — snapToGround runs at spawn to place feet on terrain,
+// preventing them from sinking under the low-poly map's elevated surfaces.
 export const QUEST_NPCS = [
-  { id: 'archer_lyra',    name: 'Lyra the Seeker',    pos: [5, 0.3, -8],   tint: 0x88c2ff }, // soft blue
-  { id: 'archer_vex',     name: 'Vex the Hunter',     pos: [-9, 0.3, -5],  tint: 0xc488ff }, // soft purple
-  { id: 'archer_kira',    name: 'Kira the Scout',     pos: [10, 0.3, 8],   tint: 0xffc488 }, // soft amber
-  { id: 'archer_noor',    name: 'Noor the Wanderer',  pos: [-14, 0.3, 0],  tint: 0x88ffc4 }, // soft mint
-  { id: 'archer_zephyr',  name: 'Zephyr the Silent',  pos: [0, 0.3, -14],  tint: 0xff88c4 }, // soft rose
+  { id: 'archer_lyra',    name: 'Lyra the Seeker',    pos: [6, 5, -3],    tint: 0x88c2ff }, // soft blue
+  { id: 'archer_vex',     name: 'Vex the Hunter',     pos: [-6, 5, -3],   tint: 0xc488ff }, // soft purple
+  { id: 'archer_kira',    name: 'Kira the Scout',     pos: [4, 5, 5],     tint: 0xffc488 }, // soft amber
+  { id: 'archer_noor',    name: 'Noor the Wanderer',  pos: [-4, 5, 5],    tint: 0x88ffc4 }, // soft mint
+  { id: 'archer_zephyr',  name: 'Zephyr the Silent',  pos: [0, 5, -7],    tint: 0xff88c4 }, // soft rose
 ];
 
 export const QUESTS = [
