@@ -28,11 +28,12 @@ export default function EnchantmentPanel({ item, onClose }) {
 
   return (
     <div
-      className="absolute pointer-events-auto select-none"
+      className="absolute pointer-events-auto select-none flex flex-col"
       style={{
-        left: 860,
+        left: 870,
         top: 96,
-        width: 460,
+        right: 24,
+        bottom: 80,
         // Liquid glass — translucent, blurred, no solid card
         background: 'rgba(15,17,22,0.42)',
         backdropFilter: 'blur(18px) saturate(140%)',
@@ -44,126 +45,137 @@ export default function EnchantmentPanel({ item, onClose }) {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span className="text-[11px] tracking-[0.2em] text-amber-400 font-semibold">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="w-5 h-5 text-amber-400" />
+          <span className="text-sm tracking-[0.25em] text-amber-400 font-semibold">
             ENCHANTMENT
           </span>
         </div>
         <button
           onClick={onClose}
-          className="w-6 h-6 rounded-sm flex items-center justify-center hover:bg-white/10 transition-colors"
+          className="w-8 h-8 rounded-sm flex items-center justify-center hover:bg-white/10 transition-colors"
         >
-          <X className="w-3.5 h-3.5 text-white/60" />
+          <X className="w-4 h-4 text-white/60" />
         </button>
       </div>
 
-      {/* Body */}
-      <div className="flex gap-3 p-3">
-        {/* Mini equipment preview tile */}
-        <div
-          className="shrink-0 w-[110px] h-[140px] rounded-sm flex items-center justify-center relative overflow-hidden"
-          style={{
-            background:
-              'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
+      {/* Body — two columns to use the wider space */}
+      <div className="flex-1 min-h-0 flex gap-5 p-5 overflow-y-auto">
+        {/* LEFT: Mini preview + meta + stats */}
+        <div className="flex flex-col gap-4 w-[240px] shrink-0">
           <div
-            className="absolute inset-0 opacity-40"
+            className="w-full h-[200px] rounded-sm flex items-center justify-center relative overflow-hidden"
             style={{
               background:
-                'radial-gradient(circle at 50% 40%, rgba(251,191,36,0.25), transparent 60%)',
+                'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}
-          />
-          <Gem className="w-10 h-10 text-amber-300/80 relative" />
-          <span className="absolute bottom-1.5 left-1.5 text-[9px] tracking-widest text-white/40">
-            T{item.tier || 1}
-          </span>
-        </div>
-
-        {/* Details */}
-        <div className="flex-1 min-w-0">
-          <div className="text-[10px] tracking-widest text-amber-400/90 font-semibold">
-            {itemType.toUpperCase()}
-          </div>
-          <div className="text-base font-semibold text-white truncate">
-            {itemName}
-          </div>
-          <div className="text-[10px] text-white/40 mt-0.5">
-            A piece of {itemType.toLowerCase()} equipment.
-          </div>
-
-          {/* Stat changes */}
-          <div className="mt-2.5 space-y-1">
-            <Row label="Min Physical Atk" value={`+${minAtk}`} />
-            <Row label="Max Physical Atk" value={`+${maxAtk}`} />
-            <Row label="Mastery" value={`+${item.mastery || 1}`} />
-          </div>
-        </div>
-      </div>
-
-      {/* Materials required */}
-      <div className="px-3 pb-3">
-        <div className="text-[10px] tracking-widest text-white/40 mb-1.5">
-          MATERIALS REQUIRED
-        </div>
-        <div className="flex gap-1.5">
-          {[1, 2, 3].map((i) => (
+          >
             <div
-              key={i}
-              className="flex-1 h-12 rounded-sm flex items-center justify-center relative"
+              className="absolute inset-0 opacity-40"
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background:
+                  'radial-gradient(circle at 50% 40%, rgba(251,191,36,0.25), transparent 60%)',
+              }}
+            />
+            <Gem className="w-16 h-16 text-amber-300/80 relative" />
+            <span className="absolute bottom-2 left-2 text-[10px] tracking-widest text-white/40">
+              T{item.tier || 1}
+            </span>
+          </div>
+
+          <div>
+            <div className="text-[11px] tracking-widest text-amber-400/90 font-semibold">
+              {itemType.toUpperCase()}
+            </div>
+            <div className="text-lg font-semibold text-white truncate">
+              {itemName}
+            </div>
+            <div className="text-[11px] text-white/40 mt-1">
+              A piece of {itemType.toLowerCase()} equipment.
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: Stat changes + materials, stretching to fill */}
+        <div className="flex-1 min-w-0 flex flex-col gap-5">
+          {/* Stat changes */}
+          <div>
+            <div className="text-[11px] tracking-widest text-white/40 mb-2">
+              STAT CHANGES
+            </div>
+            <div className="space-y-1.5">
+              <Row label="Min Physical Atk" value={`+${minAtk}`} />
+              <Row label="Max Physical Atk" value={`+${maxAtk}`} />
+              <Row label="Mastery" value={`+${item.mastery || 1}`} />
+              <Row label="Durability" value={`+${item.stats?.durability || 50}`} />
+              <Row label="Crit Rate" value={`+${item.stats?.crit || 3}%`} />
+            </div>
+          </div>
+
+          {/* Materials required */}
+          <div>
+            <div className="text-[11px] tracking-widest text-white/40 mb-2">
+              MATERIALS REQUIRED
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 rounded-sm flex flex-col items-center justify-center relative"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <Gem className="w-6 h-6 text-cyan-300/70" />
+                  <span className="mt-1 text-[10px] text-white/50">
+                    {i === 1 ? '3' : i === 2 ? '1' : '0'}/2
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 mt-auto">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 text-xs tracking-wider rounded-sm border border-white/12 text-white/70 hover:bg-white/5 transition-colors"
+            >
+              CANCEL
+            </button>
+            <button
+              className="flex-1 py-2.5 text-xs tracking-wider rounded-sm font-semibold transition-all"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))',
+                color: '#1a1208',
+                boxShadow: '0 4px 14px rgba(251,191,36,0.25)',
               }}
             >
-              <Gem className="w-4 h-4 text-cyan-300/70" />
-              <span className="absolute bottom-0.5 right-1 text-[9px] text-white/50">
-                {i === 1 ? '3' : i === 2 ? '1' : '0'}/2
-              </span>
-            </div>
-          ))}
+              ENCHANT
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2 px-3 pb-3">
-        <button
-          onClick={onClose}
-          className="flex-1 py-1.5 text-xs tracking-wider rounded-sm border border-white/12 text-white/70 hover:bg-white/5 transition-colors"
-        >
-          CANCEL
-        </button>
-        <button
-          className="flex-1 py-1.5 text-xs tracking-wider rounded-sm font-semibold transition-all"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))',
-            color: '#1a1208',
-            boxShadow: '0 4px 14px rgba(251,191,36,0.25)',
-          }}
-        >
-          ENCHANT
-        </button>
       </div>
 
       {/* Footer — slot switcher */}
-      <div className="flex items-center justify-between px-3 py-2 border-t border-white/10">
+      <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/10 shrink-0">
         <button
           onClick={() => setSlotIndex((i) => Math.max(0, i - 1))}
-          className="w-6 h-6 rounded-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30"
+          className="w-7 h-7 rounded-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30"
           disabled={slotIndex === 0}
         >
-          <ChevronLeft className="w-3.5 h-3.5 text-white/60" />
+          <ChevronLeft className="w-4 h-4 text-white/60" />
         </button>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           {slots.map((s, i) => (
             <button
               key={s}
               onClick={() => setSlotIndex(i)}
-              className={`w-7 h-7 rounded-sm text-[10px] tracking-wider transition-all ${
+              className={`w-9 h-9 rounded-sm text-[11px] tracking-wider transition-all ${
                 slotIndex === i
                   ? 'text-amber-400 border border-amber-400/60'
                   : 'text-white/40 border border-white/10 hover:text-white/70'
@@ -180,10 +192,10 @@ export default function EnchantmentPanel({ item, onClose }) {
         </div>
         <button
           onClick={() => setSlotIndex((i) => Math.min(slots.length - 1, i + 1))}
-          className="w-6 h-6 rounded-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30"
+          className="w-7 h-7 rounded-sm flex items-center justify-center hover:bg-white/10 disabled:opacity-30"
           disabled={slotIndex === slots.length - 1}
         >
-          <ChevronRight className="w-3.5 h-3.5 text-white/60" />
+          <ChevronRight className="w-4 h-4 text-white/60" />
         </button>
       </div>
     </div>
