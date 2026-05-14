@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import { GEAR_CATEGORIES, setSelected } from './equipmentStore';
+import { GEAR_CATEGORIES, setSelected, equipItem, unequipItem } from './equipmentStore';
 import { INVENTORY, getEquippedItem } from './inventoryData';
 import GearSlotsPanel from './GearSlotsPanel';
 import GearInventoryGrid from './GearInventoryGrid';
 import GearDetailPanel from './GearDetailPanel';
 import GearActionsBar from './GearActionsBar';
+import EquipmentSlotsColumn from './EquipmentSlotsColumn';
+import InventoryItemContextMenu from './InventoryItemContextMenu';
 
 /**
  * Where Winds Meet–style Gear tab:
- *  LEFT  : Equipment slot grid (top) + selected category's own inventory grid
- *  RIGHT : Detail panel for the currently inspected item
- *  BOTTOM: Action bar (Return / Filter / Obtain More / Enhance / Repair / Replace)
+ *  LEFT   : Equipment slot grid (top) + selected category's own inventory grid
+ *  CENTER : Detail panel for the inspected item
+ *  MIDDLE : Vertical equipment slots column (between detail panel and 3D model)
+ *  BOTTOM : Action bar
  *
- * Each category (Weapon, Rings, Helm…) keeps its OWN inventory slots —
- * nothing is mixed into a single shared bag.
+ * Each category keeps its OWN inventory slots — nothing is mixed.
+ * Right-click an inventory item to Equip / Unequip / Inspect it.
  */
 export default function GearTab({ state }) {
   const selectedCat = GEAR_CATEGORIES.find((c) => c.id === state.selectedGearCategory)
@@ -25,6 +28,13 @@ export default function GearTab({ state }) {
     || getEquippedItem(selectedCat.id)?.id
     || null;
   const inspectedItem = (INVENTORY[selectedCat.id] || []).find((it) => it.id === inspectedId) || null;
+
+  // Right-click context menu state
+  const [contextMenu, setContextMenu] = useState(null); // { item, x, y }
+
+  const handleContextItem = (item, x, y) => {
+    setContextMenu({ item, x, y });
+  };
 
   return (
     <>
@@ -43,13 +53,12 @@ export default function GearTab({ state }) {
             onSelectItem={(id) =>
               setInspectedByCat((prev) => ({ ...prev, [selectedCat.id]: id }))
             }
+            onContextItem={handleContextItem}
           />
         </div>
       </div>
 
-      {/* CENTER — item detail panel overlays directly on top of the 3D scene
-          with a soft gradient fade so it blends into the character backdrop instead
-          of looking like a separate boxed panel. */}
+      {/* CENTER — item detail panel overlays directly on top of the 3D scene */}
       <div
         className="absolute top-24 bottom-32 pointer-events-auto px-5 py-4"
         style={{
@@ -62,7 +71,38 @@ export default function GearTab({ state }) {
         <GearDetailPanel item={inspectedItem} />
       </div>
 
+      {/* MIDDLE — vertical equipment slots column between detail panel and 3D model */}
+      <div
+        className="absolute top-28 pointer-events-auto"
+        style={{ left: 760 }}
+      >
+        <EquipmentSlotsColumn
+          selectedCategoryId={selectedCat.id}
+          onSelectCategory={(id) => {
+            const equipped = getEquippedItem(id);
+            if (equipped) {
+              setInspectedByCat((prev) => ({ ...prev, [id]: equipped.id }));
+            }
+          }}
+        />
+      </div>
+
       <GearActionsBar />
+
+      {/* Right-click context menu */}
+      {contextMenu && (
+        <InventoryItemContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          item={contextMenu.item}
+          onEquip={() => equipItem(selectedCat.id, contextMenu.item.id)}
+          onUnequip={() => unequipItem(selectedCat.id, contextMenu.item.id)}
+          onInspect={() =>
+            setInspectedByCat((prev) => ({ ...prev, [selectedCat.id]: contextMenu.item.id }))
+          }
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </>
   );
 }

@@ -1,6 +1,10 @@
 // Mock inventory data — each gear category has its own list of items.
 // Items live in their own per-category slots (no shared bag), matching
 // the Where Winds Meet inventory style.
+//
+// NOTE: INVENTORY is mutated by equipmentStore (equipItem / unequipItem).
+// Components should subscribe to the store and re-read these helpers so
+// the UI reflects equip changes.
 
 import { Swords, Shield, Shirt, HardHat, Footprints, Hand, Gem, Sparkles } from 'lucide-react';
 
@@ -15,8 +19,7 @@ export const CATEGORY_ICONS = {
   trinket: Sparkles,
 };
 
-// Per-category item pools. `equippedSlot` marks which equipped slot it occupies
-// (null = in storage). All info content is generic/placeholder.
+// Per-category item pools. `equipped` marks the currently worn item(s).
 export const INVENTORY = {
   weapon: [
     { id: 'wp_truesword',  name: 'True Heart — Sword', type: 'Weapon — Sword',  mastery: 7, tier: 1, atk: '2-3', durability: '99/100', level: 1, equipped: true,  locked: false },
@@ -50,3 +53,6 @@ export const INVENTORY = {
 
 export const getEquippedItem = (categoryId) =>
   (INVENTORY[categoryId] || []).find((it) => it.equipped) || null;
+
+export const getAllEquippedInCategory = (categoryId) =>
+  (INVENTORY[categoryId] || []).filter((it) => it.equipped);

@@ -2,6 +2,8 @@
 // Holds: equipped abilities (martial arts + inner way + mystic skills),
 // gear slots, and talents. Persists to localStorage and notifies subscribers.
 
+import { INVENTORY, getAllEquippedInCategory } from './inventoryData';
+
 const STORAGE_KEY = 'wwm_equipment_state_v1';
 
 // Slot definitions used by the UI. Info text intentionally left blank
@@ -101,5 +103,42 @@ export const toggleTalent = (treeId, nodeId) => {
 
 export const setSelected = (key, value) => {
   state = { ...state, [key]: value };
+  emit();
+};
+
+// --- Inventory equip / unequip --------------------------------------------
+// Flips the `equipped` flag on items inside INVENTORY for a category.
+// For single-slot categories, equipping a new item unequips the previous one.
+// For multi-slot categories (weapon/accessory/trinket), we cap equipped count
+// at the category's slot count and unequip the oldest equipped item if full.
+
+const findCategoryDef = (categoryId) =>
+  GEAR_CATEGORIES.find((c) => c.id === categoryId);
+
+export const equipItem = (categoryId, itemId) => {
+  const items = INVENTORY[categoryId];
+  if (!items) return;
+  const target = items.find((it) => it.id === itemId);
+  if (!target || target.equipped) { emit(); return; }
+
+  const cat = findCategoryDef(categoryId);
+  const maxSlots = cat?.slots || 1;
+  const currentlyEquipped = getAllEquippedInCategory(categoryId);
+
+  if (currentlyEquipped.length >= maxSlots) {
+    // Unequip the first equipped item to make room
+    const toRemove = currentlyEquipped[0];
+    if (toRemove) toRemove.equipped = false;
+  }
+  target.equipped = true;
+  emit();
+};
+
+export const unequipItem = (categoryId, itemId) => {
+  const items = INVENTORY[categoryId];
+  if (!items) return;
+  const target = items.find((it) => it.id === itemId);
+  if (!target) return;
+  target.equipped = false;
   emit();
 };

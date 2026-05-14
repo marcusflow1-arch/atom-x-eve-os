@@ -4,8 +4,17 @@ import { CATEGORY_ICONS, INVENTORY } from './inventoryData';
 /**
  * The private inventory grid for the currently selected category.
  * Each category has its OWN slots — rings live with rings, weapons with weapons.
+ *
+ * Left-click selects (inspects) an item.
+ * Right-click opens a context menu (handled by parent via onContextItem).
  */
-export default function GearInventoryGrid({ categoryId, categoryLabel, selectedItemId, onSelectItem }) {
+export default function GearInventoryGrid({
+  categoryId,
+  categoryLabel,
+  selectedItemId,
+  onSelectItem,
+  onContextItem,
+}) {
   const items = INVENTORY[categoryId] || [];
   const Icon = CATEGORY_ICONS[categoryId];
   const totalSlots = 35;
@@ -26,6 +35,11 @@ export default function GearInventoryGrid({ categoryId, categoryLabel, selectedI
             <button
               key={i}
               onClick={() => item && onSelectItem(item.id)}
+              onContextMenu={(e) => {
+                if (!item) return;
+                e.preventDefault();
+                onContextItem?.(item, e.clientX, e.clientY);
+              }}
               disabled={!item}
               className={`relative aspect-square rounded-sm transition-all flex items-center justify-center ${
                 isSelected
