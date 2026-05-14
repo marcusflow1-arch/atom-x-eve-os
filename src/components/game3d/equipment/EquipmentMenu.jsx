@@ -87,11 +87,11 @@ export default function EquipmentMenu({ open, onClose }) {
         <ChevronsLeft className="w-5 h-5 text-white/80" />
       </button>
 
-      {/* 3D Character Preview — fills center */}
-      <div className="absolute inset-x-0 top-0 bottom-0">
-        <div className="absolute top-16 right-6 bottom-20 left-[420px]">
-          <EquipmentPreview3D />
-        </div>
+      {/* 3D Character Preview — fills the entire right side as a unified backdrop.
+          Inventory grid + detail panel overlay on top of this with no opaque backgrounds,
+          so it all reads as one continuous space. */}
+      <div className="absolute top-16 right-0 bottom-16 left-[340px] pointer-events-none">
+        <EquipmentPreview3D />
       </div>
 
       {/* Tab body */}

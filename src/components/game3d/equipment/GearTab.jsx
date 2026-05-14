@@ -47,10 +47,17 @@ export default function GearTab({ state }) {
         </div>
       </div>
 
-      {/* CENTER — item detail panel (3D preview lives to its right via EquipmentMenu) */}
+      {/* CENTER — item detail panel overlays directly on top of the 3D scene
+          with a soft gradient fade so it blends into the character backdrop instead
+          of looking like a separate boxed panel. */}
       <div
-        className="absolute top-24 bottom-32 pointer-events-auto"
-        style={{ left: 420, width: 300 }}
+        className="absolute top-24 bottom-32 pointer-events-auto px-5 py-4"
+        style={{
+          left: 410,
+          width: 340,
+          background:
+            'linear-gradient(90deg, rgba(15,17,22,0.78) 0%, rgba(15,17,22,0.55) 70%, rgba(15,17,22,0) 100%)',
+        }}
       >
         <GearDetailPanel item={inspectedItem} />
       </div>

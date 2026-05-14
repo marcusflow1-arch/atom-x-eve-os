@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
+// Note: drag-to-rotate removed — character now always faces the camera.
+
 // Same archer + idle anim used by GameWorld3D — small isolated preview
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
@@ -13,7 +15,6 @@ const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
  */
 export default function EquipmentPreview3D() {
   const containerRef = useRef(null);
-  const drag = useRef({ active: false, x: 0, yaw: 0 });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -36,8 +37,9 @@ export default function EquipmentPreview3D() {
       0.1,
       100,
     );
-    camera.position.set(0, 1.5, 3.4);
-    camera.lookAt(0, 1.0, 0);
+    // Offset camera to the LEFT so the character renders on the RIGHT side of the canvas
+    camera.position.set(-0.7, 1.5, 3.4);
+    camera.lookAt(0.4, 1.0, 0);
 
     // 3-point lighting
     scene.add(new THREE.HemisphereLight(0xe6ecf2, 0x1a1d22, 0.7));
@@ -81,30 +83,13 @@ export default function EquipmentPreview3D() {
       });
     });
 
-    // Drag to rotate
-    const onDown = (e) => {
-      drag.current.active = true;
-      drag.current.x = e.clientX;
-    };
-    const onUp = () => { drag.current.active = false; };
-    const onMove = (e) => {
-      if (!drag.current.active) return;
-      const dx = e.clientX - drag.current.x;
-      drag.current.x = e.clientX;
-      drag.current.yaw += dx * 0.01;
-    };
-    renderer.domElement.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-    window.addEventListener('mousemove', onMove);
-
     let frameId;
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-      // Slow auto-rotate when idle
-      if (!drag.current.active) drag.current.yaw += delta * 0.15;
-      pivot.rotation.y = drag.current.yaw;
+      // Lock facing directly toward camera — no auto-rotate, no drag rotation
+      pivot.rotation.y = 0;
       renderer.render(scene, camera);
     };
     animate();
@@ -119,10 +104,7 @@ export default function EquipmentPreview3D() {
 
     return () => {
       cancelAnimationFrame(frameId);
-      window.removeEventListener('mouseup', onUp);
-      window.removeEventListener('mousemove', onMove);
       window.removeEventListener('resize', onResize);
-      renderer.domElement.removeEventListener('mousedown', onDown);
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
     };
@@ -131,10 +113,7 @@ export default function EquipmentPreview3D() {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full cursor-grab active:cursor-grabbing"
-      style={{
-        background: 'radial-gradient(circle at 50% 60%, rgba(80,90,110,0.45) 0%, rgba(20,22,28,0.85) 70%)',
-      }}
+      className="w-full h-full"
     />
   );
 }
