@@ -792,6 +792,18 @@ export default function GameWorld3D() {
           yaw: orbit.current.yaw,
         });
 
+        // Also broadcast to the multiplayer presence system (same event Luna dashboard uses)
+        // so MultiplayerSystem can keep us "online" and let other players see our position.
+        window.dispatchEvent(new CustomEvent('multiplayerLocalUpdate', {
+          detail: {
+            x: model.position.x,
+            y: model.position.y,
+            z: model.position.z,
+            yaw: orbit.current.yaw,
+            anim: isMoving ? (isRunning ? 'run' : 'walk') : 'idle',
+          },
+        }));
+
         // Camera follow
         const o = orbit.current;
         const camX = model.position.x + o.distance * Math.sin(o.yaw) * Math.cos(o.pitch);

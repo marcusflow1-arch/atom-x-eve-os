@@ -7,12 +7,27 @@ import GameWorld3D from '../components/game3d/GameWorld3D';
 import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
+import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
+import MultiplayerSystem from '../components/game/MultiplayerSystem';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export default function GameView() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [phase, setPhase] = useState('login'); // 'login' | 'world'
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
+
+  // Join the game-mode multiplayer channel so other players can see us & we can see them.
+  // Uses the same MultiplayerSystem the Luna dashboard uses, but on a `game_<userId>` channel
+  // so game-mode presence is distinct from dashboard presence.
+  useEffect(() => {
+    if (phase === 'world' && user?.id) {
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: `game_${user.id}`, hostId: user.id }
+      }));
+    }
+  }, [phase, user?.id]);
 
   // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = close
   useEffect(() => {
@@ -52,6 +67,8 @@ export default function GameView() {
     <div className="fixed inset-0 bg-black overflow-hidden">
       <GameWorld3D />
       <GameHUD />
+      <OnlinePlayersPanel />
+      <MultiplayerSystem envUrl="game_world_lowpoly" />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
 
