@@ -22,6 +22,7 @@ import {
   getQuestState,
 } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
+import EquipmentMenu from './equipment/EquipmentMenu';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -126,6 +127,7 @@ export default function GameWorld3D() {
   const [nearbyQuestNPC, setNearbyQuestNPC] = useState(null); // { id, name }
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const [questState, setQuestState] = useState(getQuestState());
+  const [equipmentOpen, setEquipmentOpen] = useState(false);
   const playerLevelRef = useRef(1);
   const playerXPRef = useRef(0);
   // Player stats: base allocation + equipped gear → derived combat values.
@@ -607,6 +609,8 @@ export default function GameWorld3D() {
       if (k === 'e') interactPressed.current = true;
       // F = attack nearest enemy
       if (k === 'f') attackPressed.current = true;
+      // I = toggle equipment menu (Where Winds Meet style)
+      if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
     const onMouseDown = (e) => {
@@ -1099,7 +1103,7 @@ export default function GameWorld3D() {
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
             <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span>/<span className="text-cyan-300 font-mono">F</span> Attack</div>
             <div><span className="text-cyan-300 font-mono">Q</span> Kick · <span className="text-cyan-300 font-mono">R</span> Roll</div>
-            <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC · <span className="text-yellow-300 font-mono">C</span> Character</div>
+            <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC · <span className="text-yellow-300 font-mono">C</span> Character · <span className="text-amber-300 font-mono">I</span> Equipment</div>
           </div>
         </div>
       )}
@@ -1193,6 +1197,9 @@ export default function GameWorld3D() {
           </button>
         </div>
       )}
+
+      {/* Equipment menu (I) — Where Winds Meet–style layout */}
+      <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
