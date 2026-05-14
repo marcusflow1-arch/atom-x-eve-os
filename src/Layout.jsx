@@ -1204,9 +1204,7 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-      {/* Dev Tools Panel */}
-      <DevTools />
-      <ChangesConsole />
+      {/* Dev Tools & Changes Console hidden globally */}
     </div>
   );
 }

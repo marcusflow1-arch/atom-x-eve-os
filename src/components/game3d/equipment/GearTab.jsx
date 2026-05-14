@@ -7,6 +7,8 @@ import GearDetailPanel from './GearDetailPanel';
 import GearActionsBar from './GearActionsBar';
 import EquipmentSlotsColumn from './EquipmentSlotsColumn';
 import InventoryItemContextMenu from './InventoryItemContextMenu';
+import EnchantmentPanel from './EnchantmentPanel';
+import { Sparkles } from 'lucide-react';
 
 /**
  * Where Winds Meet–style Gear tab:
@@ -31,6 +33,9 @@ export default function GearTab({ state }) {
 
   // Right-click context menu state
   const [contextMenu, setContextMenu] = useState(null); // { item, x, y }
+
+  // Enchantment overlay state
+  const [enchantOpen, setEnchantOpen] = useState(false);
 
   const handleContextItem = (item, x, y) => {
     setContextMenu({ item, x, y });
@@ -86,6 +91,38 @@ export default function GearTab({ state }) {
           }}
         />
       </div>
+
+      {/* Floating ENCHANT button above the 3D model's head */}
+      <button
+        onClick={() => setEnchantOpen((v) => !v)}
+        className="absolute pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-widest font-semibold transition-all hover:scale-105"
+        style={{
+          left: '70%',
+          top: 110,
+          transform: 'translateX(-50%)',
+          background: enchantOpen
+            ? 'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))'
+            : 'rgba(15,17,22,0.55)',
+          color: enchantOpen ? '#1a1208' : 'rgba(251,191,36,0.95)',
+          border: '1px solid rgba(251,191,36,0.45)',
+          backdropFilter: 'blur(14px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+          boxShadow: enchantOpen
+            ? '0 6px 18px rgba(251,191,36,0.35)'
+            : '0 4px 14px rgba(0,0,0,0.4)',
+        }}
+      >
+        <Sparkles className="w-3.5 h-3.5" />
+        ENCHANT
+      </button>
+
+      {/* Enchantment overlay — overlaps the 3D model area */}
+      {enchantOpen && (
+        <EnchantmentPanel
+          item={inspectedItem ? { ...inspectedItem, categoryLabel: selectedCat.label } : { name: 'No Equipment', type: selectedCat.label }}
+          onClose={() => setEnchantOpen(false)}
+        />
+      )}
 
       <GearActionsBar />
 
