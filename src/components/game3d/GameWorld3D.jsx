@@ -24,6 +24,7 @@ import {
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
+import { VOLCANO_MAP_URL, loadVolcanoTextureMap, matchVolcanoTexture } from './volcanoMapAssets';
 import EquipmentMenu from './equipment/EquipmentMenu';
 
 // ─────────────────────────────────────────────
@@ -180,10 +181,10 @@ export default function GameWorld3D() {
     if (!containerRef.current) return;
     const container = containerRef.current;
 
-    // Scene
+    // Scene — tropical sky/ocean tint to match the Volcano Island map
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x6b8eaa, 30, 120);
-    scene.background = new THREE.Color(0x6b8eaa);
+    scene.fog = new THREE.Fog(0x88c4e8, 60, 220);
+    scene.background = new THREE.Color(0x88c4e8);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -211,42 +212,113 @@ export default function GameWorld3D() {
     sun.shadow.camera.bottom = -30;
     scene.add(sun);
 
-    // Ground — grass arena
-    const groundGeo = new THREE.PlaneGeometry(100, 100, 32, 32);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a6b3a, roughness: 0.95 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
+    // Backdrop ocean plane (large, low) so the horizon isn't empty
+    const oceanGeo = new THREE.PlaneGeometry(400, 400);
+    const oceanMat = new THREE.MeshStandardMaterial({ color: 0x2a6a9a, roughness: 0.4, metalness: 0.1 });
+    const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+    ocean.rotation.x = -Math.PI / 2;
+    ocean.position.y = -0.4;
+    ocean.receiveShadow = true;
+    scene.add(ocean);
 
-    // Stone center platform (like the SMITE arena)
-    const platformGeo = new THREE.CylinderGeometry(8, 8.5, 0.3, 16);
-    const platformMat = new THREE.MeshStandardMaterial({ color: 0x9a8868, roughness: 0.8 });
-    const platform = new THREE.Mesh(platformGeo, platformMat);
-    platform.position.y = 0.15;
-    platform.receiveShadow = true;
-    scene.add(platform);
+    // ─────────────────────────────────────────────
+    // VOLCANO ISLAND MAP — replaces the old stone-arena ground.
+    // We load the FBX, scale it up so it's a proper arena (~80 units across),
+    // and assign textures from the bundle by matching material names.
+    // After load, "groundMeshes" is filled so every entity (player, enemies,
+    // quest NPCs) can raycast straight down and stand on the real surface.
+    // ─────────────────────────────────────────────
+    const groundMeshes = [];           // meshes used for terrain raycasts
+    const groundRaycaster = new THREE.Raycaster();
+    const downVec = new THREE.Vector3(0, -1, 0);
+    /** Returns terrain Y at (x,z), or null if no hit. */
+    const sampleGroundY = (x, z) => {
+      if (groundMeshes.length === 0) return null;
+      groundRaycaster.set(new THREE.Vector3(x, 50, z), downVec);
+      const hits = groundRaycaster.intersectObjects(groundMeshes, true);
+      return hits.length > 0 ? hits[0].point.y : null;
+    };
 
-    // Decorative rune circle in the middle (orange star)
-    const runeGeo = new THREE.RingGeometry(2.5, 3.5, 8, 1);
-    const runeMat = new THREE.MeshBasicMaterial({ color: 0xd4651a, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
-    const rune = new THREE.Mesh(runeGeo, runeMat);
-    rune.rotation.x = -Math.PI / 2;
-    rune.position.y = 0.31;
-    scene.add(rune);
+    let mapReady = false;
+    const pendingFootings = []; // entities waiting to be snapped to ground once map loads
 
-    // Scattered rocks
-    for (let i = 0; i < 12; i++) {
-      const rockGeo = new THREE.DodecahedronGeometry(0.4 + Math.random() * 0.5);
-      const rockMat = new THREE.MeshStandardMaterial({ color: 0x7a6a5a, roughness: 1 });
-      const rock = new THREE.Mesh(rockGeo, rockMat);
-      const angle = (i / 12) * Math.PI * 2;
-      const dist = 12 + Math.random() * 8;
-      rock.position.set(Math.cos(angle) * dist, 0.2, Math.sin(angle) * dist);
-      rock.castShadow = true;
-      rock.receiveShadow = true;
-      scene.add(rock);
-    }
+    const volcanoTextureMap = loadVolcanoTextureMap(THREE);
+    const mapLoader = new FBXLoader();
+    mapLoader.load(
+      VOLCANO_MAP_URL,
+      (fbx) => {
+        // Scale up — original FBX is small in Three units; we want ~80u wide arena
+        const box = new THREE.Box3().setFromObject(fbx);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.z);
+        const mapScale = maxDim > 0 ? 80 / maxDim : 1;
+        fbx.scale.setScalar(mapScale);
+        fbx.position.set(0, 0, 0);
+
+        // Re-center on XZ and place its base at y=0 so spawn snapping is easy
+        const box2 = new THREE.Box3().setFromObject(fbx);
+        const center = box2.getCenter(new THREE.Vector3());
+        fbx.position.x -= center.x;
+        fbx.position.z -= center.z;
+        fbx.position.y -= box2.min.y;
+
+        // Assign textures + collect ground meshes for raycasting
+        fbx.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = false;
+            node.receiveShadow = true;
+            const mats = Array.isArray(node.material) ? node.material : [node.material];
+            const newMats = mats.map((mat) => {
+              if (!mat) return mat;
+              const m = mat.clone();
+              const tex = matchVolcanoTexture(m, volcanoTextureMap);
+              if (tex) {
+                m.map = tex;
+                m.color = new THREE.Color(0xffffff); // let texture show
+                m.needsUpdate = true;
+              }
+              return m;
+            });
+            node.material = Array.isArray(node.material) ? newMats : newMats[0];
+            groundMeshes.push(node);
+          }
+        });
+
+        scene.add(fbx);
+        mapReady = true;
+
+        // Snap any entities that spawned before the map was ready
+        pendingFootings.forEach((fn) => fn());
+        pendingFootings.length = 0;
+      },
+      undefined,
+      (err) => {
+        console.error('Volcano map load error:', err);
+        // Fallback: keep a flat green ground so the scene still works
+        const fallback = new THREE.Mesh(
+          new THREE.PlaneGeometry(100, 100),
+          new THREE.MeshStandardMaterial({ color: 0x4a6b3a, roughness: 0.95 }),
+        );
+        fallback.rotation.x = -Math.PI / 2;
+        fallback.receiveShadow = true;
+        scene.add(fallback);
+        groundMeshes.push(fallback);
+        mapReady = true;
+        pendingFootings.forEach((fn) => fn());
+        pendingFootings.length = 0;
+      },
+    );
+
+    // Helper: stand an object on the terrain at (x,z). If map isn't ready yet,
+    // queue the snap for after the FBX finishes loading.
+    const snapToGround = (obj3d, footOffset = 0) => {
+      const apply = () => {
+        const y = sampleGroundY(obj3d.position.x, obj3d.position.z);
+        if (y !== null) obj3d.position.y = y + footOffset;
+      };
+      if (mapReady) apply();
+      else pendingFootings.push(apply);
+    };
 
     // ─────────────────────────────────────────────
     // NPC SPAWNS (talk targets — blue/orange/purple capsules with name label)
@@ -281,6 +353,8 @@ export default function GameWorld3D() {
 
       scene.add(group);
       npcs.push({ ...spawn, mesh: group, ringMesh: ring });
+      // Stand the capsule on the terrain (feet at ground)
+      snapToGround(group, 0);
     });
 
     // Shared FBX loader (used for player + enemies + quest NPCs)
@@ -347,6 +421,8 @@ export default function GameWorld3D() {
         m.add(ring);
 
         scene.add(m);
+        // Stand the quest NPC's feet on the terrain
+        snapToGround(m, 0);
 
         const npcMixer = new THREE.AnimationMixer(m);
         const npcEntry = {
@@ -467,6 +543,8 @@ export default function GameWorld3D() {
         enemyModel.add(ring);
 
         scene.add(enemyModel);
+        // Stand enemy feet on the terrain at its spawn point
+        snapToGround(enemyModel, 0);
 
         const enemyMixer = new THREE.AnimationMixer(enemyModel);
         // Randomize initial state + timer so the herd isn't synced
@@ -550,6 +628,8 @@ export default function GameWorld3D() {
       });
 
       scene.add(fbx);
+      // Snap the player's feet to the terrain at spawn
+      snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
 
       // Load all animations in parallel — skip 'death' (used only on enemies)
@@ -689,6 +769,11 @@ export default function GameWorld3D() {
           const angle = Math.atan2(move.x, move.z);
           const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
           model.quaternion.slerp(targetQ, ROT_SMOOTH);
+        }
+        // Glue player feet to the terrain every frame (volcano map has elevation)
+        if (mapReady) {
+          const gy = sampleGroundY(model.position.x, model.position.z);
+          if (gy !== null) model.position.y = gy;
         }
 
         // Animation state machine — only when not playing a one-shot (kick/roll)
@@ -897,6 +982,11 @@ export default function GameWorld3D() {
                 const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetAngle);
                 enemy.group.quaternion.slerp(targetQ, 0.15);
               }
+            }
+            // Glue feet to terrain as the enemy wanders across uneven ground
+            if (mapReady) {
+              const gy = sampleGroundY(enemy.group.position.x, enemy.group.position.z);
+              if (gy !== null) enemy.group.position.y = gy;
             }
             // After walk duration → switch to idle
             if (enemy.stateTimer >= ENEMY_WALK_TIME) {
