@@ -22,6 +22,7 @@ import {
   getQuestState,
 } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
+import { setPlayerPosition } from './playerPositionStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
 
 // ─────────────────────────────────────────────
@@ -692,6 +693,13 @@ export default function GameWorld3D() {
         } else {
           stopLoopSound('player_walk');
         }
+
+        // Broadcast live player position + facing to the HUD minimap store
+        setPlayerPosition({
+          x: model.position.x,
+          z: model.position.z,
+          yaw: orbit.current.yaw,
+        });
 
         // Camera follow
         const o = orbit.current;
