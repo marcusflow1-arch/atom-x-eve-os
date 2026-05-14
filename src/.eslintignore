@@ -1,0 +1,17 @@
+src/components/security/DependencyAudit.md.jsx
+src/components/security/SecurityDocs.md.jsx
+src/components/security/dependabot.yml.jsx
+src/components/security/github-workflows-security.yml.jsx
+src/components/security/package-json-scripts.md.jsx
+src/components/test/AdminGating.test.jsx
+src/components/test/AuthProvider.test.jsx
+src/components/test/ErrorHandling.test.jsx
+src/components/test/GameFilters.test.jsx
+src/components/test/LunaStore.test.jsx
+src/components/test/README.md.jsx
+src/components/test/playwright.config.jsx
+src/components/test/vitest.config.jsx
+src/components/test/e2e/admin-access.spec.jsx
+src/components/test/e2e/auth.spec.jsx
+src/components/test/e2e/checkout.spec.jsx
+src/components/test/e2e/navigation.spec.jsx
