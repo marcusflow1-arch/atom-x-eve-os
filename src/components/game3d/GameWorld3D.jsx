@@ -64,8 +64,8 @@ const ANIMATION_URLS = {
 
 const DEATH_FADE_DELAY = 5.0; // seconds the corpse stays on the ground before vanishing
 
-const WALK_SPEED = 2.8;
-const RUN_SPEED = 6.2;
+const WALK_SPEED = 4.0;
+const RUN_SPEED = 9.0;
 const ROT_SMOOTH = 0.18;
 const BLEND = 0.2;
 
