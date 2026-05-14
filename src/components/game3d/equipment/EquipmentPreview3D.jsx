@@ -37,9 +37,10 @@ export default function EquipmentPreview3D() {
       0.1,
       100,
     );
-    // Offset camera to the LEFT so the character renders on the RIGHT side of the canvas
-    camera.position.set(-0.7, 1.5, 3.4);
-    camera.lookAt(0.4, 1.0, 0);
+    // Offset camera further left so the character renders well to the RIGHT,
+    // clearing the detail panel on the left side of the menu.
+    camera.position.set(-1.6, 1.5, 3.4);
+    camera.lookAt(1.1, 1.0, 0);
 
     // 3-point lighting
     scene.add(new THREE.HemisphereLight(0xe6ecf2, 0x1a1d22, 0.7));
