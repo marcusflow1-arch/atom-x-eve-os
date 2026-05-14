@@ -8,6 +8,7 @@ import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
 import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
+import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -68,6 +69,7 @@ export default function GameView() {
       <GameWorld3D />
       <GameHUD />
       <OnlinePlayersPanel />
+      <BossWaypoint />
       <MultiplayerSystem envUrl="game_world_lowpoly" />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />

@@ -26,6 +26,8 @@ import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioSto
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
 import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets';
+import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData';
+import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
 
 // ─────────────────────────────────────────────
@@ -491,6 +493,111 @@ export default function GameWorld3D() {
         enemy.target = new THREE.Vector3(tx, enemy.group.position.y, tz);
       }
     };
+
+    // ─────────────────────────────────────────────
+    // WORLD BOSS SPAWNS — supersized champion enemies at fixed map locations.
+    // Same creature model + AI as normal enemies, but:
+    //   • Scale         ×BOSS_SCALE_MULT (7) of a normal champion
+    //   • Max HP        ×BOSS_HP_MULT    (8) of the champion template
+    //   • XP reward     ×BOSS_XP_MULT    (15) of a normal enemy
+    // Seeded into the bossStore so OnlinePlayersPanel/BossWaypoint can subscribe.
+    // ─────────────────────────────────────────────
+    const bossEntities = []; // refs into the `enemies` array, kept so we can push HP/pos to the store
+    setBosses(BOSSES.map((b) => ({
+      id: b.id, name: b.name, title: b.title,
+      x: b.pos[0], z: b.pos[2],
+      hp: 0, maxHp: 0, alive: true,
+    })));
+
+    BOSSES.forEach((bossDef) => {
+      loader.load(CREATURE_MODEL_URL, (fbx) => {
+        const bossModel = fbx;
+        const champBase = ENEMY_STAT_TEMPLATES.champion;
+        const champDerived = computeDerivedStats(champBase, []);
+        const bossMaxHp = champDerived.maxHP * BOSS_HP_MULT;
+        // Boss derived stats: champion damage + scaled HP
+        const bossDerived = { ...champDerived, maxHP: bossMaxHp };
+
+        // Scale = same auto-size as normal enemies, then ×7 for boss
+        const box = new THREE.Box3().setFromObject(fbx);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const bossScale = (1.7 / maxDim) * BOSS_SCALE_MULT;
+        bossModel.scale.setScalar(bossScale);
+        bossModel.position.set(bossDef.pos[0], bossDef.pos[1], bossDef.pos[2]);
+
+        // Track mesh materials for the death-fade pass
+        const tintMaterials = [];
+        bossModel.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = !node.isSkinnedMesh;
+            node.receiveShadow = true;
+            if (node.material) {
+              const mats = Array.isArray(node.material) ? node.material : [node.material];
+              mats.forEach((m) => tintMaterials.push(m));
+            }
+          }
+        });
+
+        // Big menacing ring with boss-specific color
+        const ringGeo = new THREE.RingGeometry(1.1 / bossScale, 1.4 / bossScale, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: bossDef.color, side: THREE.DoubleSide, transparent: true, opacity: 0.7,
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.02 / bossScale;
+        bossModel.add(ring);
+
+        scene.add(bossModel);
+        snapToGround(bossModel, 0);
+
+        const bossMixer = new THREE.AnimationMixer(bossModel);
+        // Bosses are stationary sentinels until aggro'd; reuse enemy AI shape
+        // but set state to 'idle' and never wander (zoneRadius=0).
+        const bossEntry = {
+          id: bossDef.id,
+          group: bossModel,
+          mixer: bossMixer,
+          walkAction: null,
+          idleAction: null,
+          state: 'idle',
+          stateTimer: 0,
+          target: null,
+          alive: true,
+          hitCooldown: 0,
+          tintMaterials,
+          zoneCenter: bossDef.pos,
+          zoneRadius: 0, // never wanders
+          tier: 'boss',
+          level: 10,
+          hp: bossMaxHp,
+          maxHp: bossMaxHp,
+          derived: bossDerived,
+          xpReward: BOSS_XP_MULT, // normal mob drops 1 XP → boss drops 15
+          attackCooldown: Math.random() * 1.5,
+          attacking: false,
+          attackWindupTimer: 0,
+          isBoss: true,
+          bossName: bossDef.name,
+        };
+        enemies.push(bossEntry);
+        bossEntities.push(bossEntry);
+
+        // Seed the store with real HP now that we know maxHp
+        updateBoss(bossDef.id, { hp: bossMaxHp, maxHp: bossMaxHp, alive: true });
+
+        Promise.all([walkClipPromise, idleClipPromise]).then(([walkClip, idleClip]) => {
+          if (walkClip) {
+            const wa = bossMixer.clipAction(walkClip);
+            wa.setEffectiveTimeScale(0.55);
+            bossEntry.walkAction = wa;
+          }
+          if (idleClip) bossEntry.idleAction = bossMixer.clipAction(idleClip);
+          if (bossEntry.idleAction) bossEntry.idleAction.reset().fadeIn(0.2).play();
+        });
+      });
+    });
 
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(CREATURE_MODEL_URL, (fbx) => {
@@ -1138,6 +1245,18 @@ export default function GameWorld3D() {
           });
         });
         setQuestNPCsUI(qUI);
+
+        // ─── Sync live boss state (pos + HP + alive) to bossStore ───
+        // Drives the waypoint guidance and the Boss tab list.
+        bossEntities.forEach((b) => {
+          updateBoss(b.id, {
+            x: b.group.position.x,
+            z: b.group.position.z,
+            hp: Math.max(0, b.hp),
+            maxHp: b.maxHp,
+            alive: b.alive && !b.dying,
+          });
+        });
       }
 
       renderer.render(scene, camera);
