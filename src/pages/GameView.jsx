@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import CharacterLoginScreen from '../components/game3d/CharacterLoginScreen';
 import GameWorld3D from '../components/game3d/GameWorld3D';
-import SkillSlotHUD from '../components/game3d/SkillSlotHUD';
+import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
 
@@ -51,7 +51,7 @@ export default function GameView() {
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
       <GameWorld3D />
-      <SkillSlotHUD />
+      <GameHUD />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
 
