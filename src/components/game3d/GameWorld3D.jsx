@@ -765,10 +765,14 @@ export default function GameWorld3D() {
         }
 
         // Animation state machine — only when not playing a one-shot (kick/roll)
+        // Match the dashboard YBotPlayerViewer feel exactly:
+        //   • Run (shift held) plays the Running clip at native 1.0× — looks natural,
+        //     not whipped. The dashboard uses 1.0× and never speeds it up.
+        //   • Walk (no shift) plays the same Running clip at 0.5× — smooth slow jog
+        //     instead of a stiff in-place stride.
         if (!oneShotPlaying.current) {
           if (isMoving) {
-            // Speed up the run clip so animation matches actual movement speed
-            playAction('run', isRunning ? 1.6 : 1.0);
+            playAction('run', isRunning ? 1.0 : 0.5);
           } else {
             playAction('idle', 1);
           }
