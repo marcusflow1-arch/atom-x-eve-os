@@ -37,10 +37,10 @@ export default function EquipmentPreview3D() {
       0.1,
       100,
     );
-    // Offset camera further left so the character renders well to the RIGHT,
-    // clearing the detail panel on the left side of the menu.
-    camera.position.set(-1.6, 1.5, 3.4);
-    camera.lookAt(1.1, 1.0, 0);
+    // Camera straight on — we offset the pivot to the right instead,
+    // so the character sits on the RIGHT side of the canvas next to the detail panel.
+    camera.position.set(0, 1.5, 3.4);
+    camera.lookAt(0, 1.0, 0);
 
     // 3-point lighting
     scene.add(new THREE.HemisphereLight(0xe6ecf2, 0x1a1d22, 0.7));
@@ -52,6 +52,9 @@ export default function EquipmentPreview3D() {
     scene.add(rim);
 
     const pivot = new THREE.Group();
+    // Shift the character to the RIGHT of the canvas so it sits beside the
+    // gear detail panel rather than behind it.
+    pivot.position.x = 1.4;
     scene.add(pivot);
 
     const loader = new FBXLoader();
