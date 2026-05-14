@@ -287,6 +287,17 @@ export default function GameWorld3D() {
     const loader = new FBXLoader();
     const clock = new THREE.Clock();
 
+    // Quest-NPC idle clip — uses the ARCHER idle (player-style anim set), not the
+    // mutant idle that enemies use. Quest NPCs must ONLY play this idle.
+    const questNPCIdleClipPromise = new Promise((resolve) => {
+      loader.load(
+        ANIMATION_URLS.idle,
+        (animFbx) => resolve(animFbx.animations?.[0] || null),
+        undefined,
+        () => resolve(null),
+      );
+    });
+
     // ─────────────────────────────────────────────
     // QUEST NPCs — 5 female archers at fixed positions, idle animation,
     // NATURAL COLOR (no red tint). Floating "QUEST" label rendered in DOM.
@@ -348,8 +359,8 @@ export default function GameWorld3D() {
         };
         questNPCs.push(npcEntry);
 
-        // Attach idle once it loads
-        idleClipPromise.then((clip) => {
+        // Attach the dedicated archer-idle clip (NOT the enemy mutant idle)
+        questNPCIdleClipPromise.then((clip) => {
           if (clip && npcMixer) {
             const action = npcMixer.clipAction(clip);
             // Slightly randomize timeScale so they don't all idle in sync
