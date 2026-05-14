@@ -17,10 +17,15 @@ const TABS = [
  * Toggled by pressing I inside the game. UI only — info text blank.
  */
 export default function EquipmentMenu({ open, onClose }) {
-  const [tab, setTab] = useState('abilities');
+  const [tab, setTab] = useState('gear');
   const [state, setState] = useState(getEquipmentState());
 
   useEffect(() => subscribeEquipment(setState), []);
+
+  // Reset to Gear tab every time the menu is opened with the I key
+  useEffect(() => {
+    if (open) setTab('gear');
+  }, [open]);
 
   // Hotkeys: Q/E to switch tabs, Esc/I to close
   useEffect(() => {
