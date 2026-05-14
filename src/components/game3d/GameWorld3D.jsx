@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
@@ -24,7 +25,7 @@ import {
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
-import { VOLCANO_MAP_URL, loadVolcanoTextureMap, matchVolcanoTexture } from './volcanoMapAssets';
+import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets';
 import EquipmentMenu from './equipment/EquipmentMenu';
 
 // ─────────────────────────────────────────────
@@ -222,9 +223,9 @@ export default function GameWorld3D() {
     scene.add(ocean);
 
     // ─────────────────────────────────────────────
-    // VOLCANO ISLAND MAP — replaces the old stone-arena ground.
-    // We load the FBX, scale it up so it's a proper arena (~80 units across),
-    // and assign textures from the bundle by matching material names.
+    // LOW-POLY ENVIRONMENT MAP (scene.gltf bundle).
+    // Loaded with a LoadingManager that rewrites relative .bin/texture URLs
+    // to the Base44 bundle URLs from the admin AssetFile manifest.
     // After load, "groundMeshes" is filled so every entity (player, enemies,
     // quest NPCs) can raycast straight down and stand on the real surface.
     // ─────────────────────────────────────────────
@@ -242,49 +243,41 @@ export default function GameWorld3D() {
     let mapReady = false;
     const pendingFootings = []; // entities waiting to be snapped to ground once map loads
 
-    const volcanoTextureMap = loadVolcanoTextureMap(THREE);
-    const mapLoader = new FBXLoader();
+    const mapLoadingManager = createLowPolyLoadingManager(THREE);
+    const mapLoader = new GLTFLoader(mapLoadingManager);
     mapLoader.load(
-      VOLCANO_MAP_URL,
-      (fbx) => {
-        // Scale up — original FBX is small in Three units; we want ~80u wide arena
-        const box = new THREE.Box3().setFromObject(fbx);
+      LOWPOLY_MAP_URL,
+      (gltf) => {
+        const root = gltf.scene || gltf.scenes?.[0];
+        if (!root) {
+          console.error('Low-poly map: GLTF has no scene');
+          return;
+        }
+
+        // Scale up — we want a large walkable arena (~140u across)
+        const box = new THREE.Box3().setFromObject(root);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.z);
-        const mapScale = maxDim > 0 ? 80 / maxDim : 1;
-        fbx.scale.setScalar(mapScale);
-        fbx.position.set(0, 0, 0);
+        const mapScale = maxDim > 0 ? 140 / maxDim : 1;
+        root.scale.setScalar(mapScale);
 
         // Re-center on XZ and place its base at y=0 so spawn snapping is easy
-        const box2 = new THREE.Box3().setFromObject(fbx);
+        const box2 = new THREE.Box3().setFromObject(root);
         const center = box2.getCenter(new THREE.Vector3());
-        fbx.position.x -= center.x;
-        fbx.position.z -= center.z;
-        fbx.position.y -= box2.min.y;
+        root.position.x -= center.x;
+        root.position.z -= center.z;
+        root.position.y -= box2.min.y;
 
-        // Assign textures + collect ground meshes for raycasting
-        fbx.traverse((node) => {
+        // Collect ground meshes for raycasting; textures are already applied by GLTFLoader
+        root.traverse((node) => {
           if (node.isMesh) {
             node.castShadow = false;
             node.receiveShadow = true;
-            const mats = Array.isArray(node.material) ? node.material : [node.material];
-            const newMats = mats.map((mat) => {
-              if (!mat) return mat;
-              const m = mat.clone();
-              const tex = matchVolcanoTexture(m, volcanoTextureMap);
-              if (tex) {
-                m.map = tex;
-                m.color = new THREE.Color(0xffffff); // let texture show
-                m.needsUpdate = true;
-              }
-              return m;
-            });
-            node.material = Array.isArray(node.material) ? newMats : newMats[0];
             groundMeshes.push(node);
           }
         });
 
-        scene.add(fbx);
+        scene.add(root);
         mapReady = true;
 
         // Snap any entities that spawned before the map was ready
@@ -293,10 +286,10 @@ export default function GameWorld3D() {
       },
       undefined,
       (err) => {
-        console.error('Volcano map load error:', err);
+        console.error('Low-poly map load error:', err);
         // Fallback: keep a flat green ground so the scene still works
         const fallback = new THREE.Mesh(
-          new THREE.PlaneGeometry(100, 100),
+          new THREE.PlaneGeometry(140, 140),
           new THREE.MeshStandardMaterial({ color: 0x4a6b3a, roughness: 0.95 }),
         );
         fallback.rotation.x = -Math.PI / 2;
