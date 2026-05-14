@@ -23,6 +23,7 @@ import {
 } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 import { setPlayerPosition } from './playerPositionStore';
+import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
 import EquipmentMenu from './equipment/EquipmentMenu';
 
 // ─────────────────────────────────────────────
@@ -366,18 +367,20 @@ export default function GameWorld3D() {
     // ─────────────────────────────────────────────
     const enemies = []; // { id, group, mixer, walkAction, idleAction, state, stateTimer, target, alive, hitCooldown, tintMaterials, zoneCenter, zoneRadius }
 
-    // Pre-load walk + idle + death clips once (shared across all enemies)
+    // Pre-load enemy creature clips once (shared across all enemies).
+    // These come from the "creature" folder in admin → AnimationFBX manager
+    // (Survivor A Lusth model + mutant animation set).
     const walkClipPromise = new Promise((resolve) => {
-      loader.load(ANIMATION_URLS.run, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+      loader.load(CREATURE_ANIMATION_URLS.walk, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
     const idleClipPromise = new Promise((resolve) => {
-      loader.load(ANIMATION_URLS.idle, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+      loader.load(CREATURE_ANIMATION_URLS.idle, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
     const deathClipPromise = new Promise((resolve) => {
-      loader.load(ANIMATION_URLS.death, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+      loader.load(CREATURE_ANIMATION_URLS.death, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
     const attackClipPromise = new Promise((resolve) => {
-      loader.load(ANIMATION_URLS.kick, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+      loader.load(CREATURE_ANIMATION_URLS.attack, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
     // Cache the death + attack clips once they load so we can reuse them per-enemy
     let cachedDeathClip = null;
@@ -408,7 +411,7 @@ export default function GameWorld3D() {
     };
 
     ENEMY_SPAWNS.forEach((spawn) => {
-      loader.load(ARCHER_URL, (fbx) => {
+      loader.load(CREATURE_MODEL_URL, (fbx) => {
         const enemyModel = fbx;
         const tier = pickTier();
         // Randomize level a bit around the tier's base
