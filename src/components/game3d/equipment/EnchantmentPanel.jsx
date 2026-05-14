@@ -30,7 +30,7 @@ export default function EnchantmentPanel({ item, onClose }) {
     <div
       className="absolute pointer-events-auto select-none flex flex-col"
       style={{
-        left: 870,
+        left: 930,
         top: 96,
         right: 24,
         bottom: 80,
