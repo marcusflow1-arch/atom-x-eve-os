@@ -82,7 +82,8 @@ export function computeDerivedStats(baseStats, equipment = []) {
   // Secondary stats
   const hitChance      = Math.min(95,
     50 + effStr * SECONDARY_RATES.hitPerStr + effVit * SECONDARY_RATES.hitPerVit);
-  const critChance     = Math.min(75, effDex * SECONDARY_RATES.critPerDex);
+  // Base 10% crit chance for everyone, plus dexterity scaling.
+  const critChance     = Math.min(75, 10 + effDex * SECONDARY_RATES.critPerDex);
   const attackRange    = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
   const hpRegen        = effVit * SECONDARY_RATES.hpRegenPerVit;       // HP / sec
   const manaRegen      = effSpr * SECONDARY_RATES.manaRegenPerSpr;     // mana / sec
@@ -120,10 +121,13 @@ export function computeDerivedStats(baseStats, equipment = []) {
 // return a Number-coerced primitive when there's no crit. To keep the call sites
 // simple, we ALWAYS return a number — crits are encoded by attaching a `.crit`
 // flag on the result via a thin wrapper object only when explicitly asked.
+// Crit multiplier — 3× damage on a critical strike (i.e. +150% over a base x2 hit).
+export const CRIT_MULTIPLIER = 3;
+
 export function calculateHit(attackerStats, defenderStats) {
   let raw = attackerStats.totalDamage;
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
-  if (crit) raw = Math.round(raw * 2);
+  if (crit) raw = Math.round(raw * CRIT_MULTIPLIER);
   const reduced = Math.max(1, raw - (defenderStats?.defense || 0));
   return reduced;
 }
@@ -132,7 +136,7 @@ export function calculateHit(attackerStats, defenderStats) {
 export function calculateHitWithCrit(attackerStats, defenderStats) {
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
   let raw = attackerStats.totalDamage;
-  if (crit) raw = Math.round(raw * 2);
+  if (crit) raw = Math.round(raw * CRIT_MULTIPLIER);
   const damage = Math.max(1, raw - (defenderStats?.defense || 0));
   return { damage, crit };
 }
