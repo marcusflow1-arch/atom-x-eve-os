@@ -36,6 +36,12 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
   // when a connection fails/disconnects while the remote is still in the world.
   const recentlyRemoved = new Map(); // peerId → timestamp (ms)
   const RECONNECT_COOLDOWN_MS = 10000;
+  // Hard cap as a safety net — browsers cap at ~500 RTCPeerConnection instances
+  // per page. Beyond a small number of concurrent voice peers, things break.
+  const MAX_PEERS = 16;
+  // syncPeers throttle — membership rarely changes, no need to run every frame.
+  let lastSyncAt = 0;
+  const SYNC_INTERVAL_MS = 1000;
 
   const ensureAudioContext = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -206,13 +212,18 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
 
   const isMicOn = () => micEnabled;
 
-  // Connect to a list of remote players (called by GameWorld3D when remotes appear/leave)
+  // Connect to a list of remote players (called by GameWorld3D every frame).
+  // Throttled internally to ~1Hz since peer membership doesn't change often
+  // and creating PCs every frame would blow past browser limits.
   const syncPeers = (remoteIds) => {
+    const now = Date.now();
+    if (now - lastSyncAt < SYNC_INTERVAL_MS) return;
+    lastSyncAt = now;
+
     const set = new Set(remoteIds);
     // Remove peers no longer present
     peers.forEach((_, pid) => { if (!set.has(pid)) removePeer(pid); });
     // Purge expired cooldown entries so peers can eventually reconnect
-    const now = Date.now();
     recentlyRemoved.forEach((ts, pid) => {
       if (now - ts > RECONNECT_COOLDOWN_MS) recentlyRemoved.delete(pid);
     });
@@ -221,6 +232,8 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
       if (peers.has(pid)) return;
       // Respect cooldown so a failing peer can't be recreated every frame
       if (recentlyRemoved.has(pid)) return;
+      // Hard cap — never exceed MAX_PEERS active connections
+      if (peers.size >= MAX_PEERS) return;
       if (userId > pid) {
         callPeer(pid).catch(() => {});
       } else {
