@@ -255,56 +255,128 @@ export default function Model3DManager() {
   };
 
   // 2. Folder Upload (For complex models with external textures)
+  // Uploads EVERY file in the selected folder (model + textures + .bin + materials),
+  // then builds a manifest with multiple key variations so the GLTFLoader/FBXLoader
+  // can resolve texture paths no matter how the model references them.
   const handleFolderUpload = async (e) => {
     const fileList = Array.from(e.target.files || []);
     if (!fileList.length) return;
+
+    // Reset input so the same folder can be re-selected
+    if (folderInputRef.current) folderInputRef.current.value = '';
 
     // Find the main model file
     const entry = fileList.find(f => /\.gltf$/i.test(f.name)) ||
                   fileList.find(f => /\.glb$/i.test(f.name)) ||
                   fileList.find(f => /\.fbx$/i.test(f.name));
-    
+
     if (!entry) {
-      alert('Selected folder must contain a .gltf, .glb, or .fbx entry file');
+      setUploadError('Selected folder must contain a .gltf, .glb, or .fbx entry file.');
       return;
     }
 
+    // Recognized texture / dependency extensions we'll explicitly include.
+    // (We upload ALL files anyway — this is just for clearer progress logging.)
+    const TEXTURE_RE = /\.(png|jpg|jpeg|webp|ktx2|basis|hdr|exr|tga|bin|mtl)$/i;
+    const textureCount = fileList.filter(f => TEXTURE_RE.test(f.name)).length;
+
+    setUploadError(null);
     setUploading(true);
+    setUploadProgress(`Uploading 0/${fileList.length} files (${textureCount} textures)...`);
+
     try {
       const uploads = [];
-      // Upload files sequentially to avoid browser hanging on large folders
-      for (const f of fileList) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
-        // webkitRelativePath gives us "folder/texture.png", we need that for mapping
-        const original_path = (f.webkitRelativePath || f.name);
-        uploads.push({ original_path, file_url, name: f.name });
+      const failed = [];
+      // Upload files sequentially to avoid browser hanging on large folders.
+      for (let i = 0; i < fileList.length; i++) {
+        const f = fileList[i];
+        setUploadProgress(`Uploading ${i + 1}/${fileList.length}: ${f.name}`);
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
+          if (!file_url) throw new Error('No URL returned');
+          // webkitRelativePath gives us "folder/textures/diffuse.png"
+          const original_path = (f.webkitRelativePath || f.name);
+          uploads.push({
+            original_path,
+            file_url,
+            name: f.name,
+            file_size: f.size,
+            mime_type: f.type || '',
+          });
+        } catch (err) {
+          console.error(`Failed to upload ${f.name}:`, err);
+          failed.push(f.name);
+        }
       }
 
-      // Create a Manifest: Map filenames -> remote URLs
-      const bundle_manifest = uploads.reduce((acc, u) => {
-        acc[u.original_path] = u.file_url; // Full relative path
-        acc[u.name] = u.file_url;          // Just filename (fallback)
-        return acc;
-      }, {});
+      if (!uploads.length) {
+        throw new Error('All file uploads failed.');
+      }
 
       const entryUpload = uploads.find(u => u.name === entry.name);
+      if (!entryUpload) {
+        throw new Error(`Entry file ${entry.name} failed to upload.`);
+      }
+
+      // Build a robust manifest. GLTF files reference textures by relative URI
+      // (e.g. "textures/diffuse.png" or "diffuse.png"). The loader resolves these
+      // against the model's base URL, so we map MANY key variations:
+      //   • Full webkitRelativePath ("MyModel/textures/diffuse.png")
+      //   • Path WITHOUT the top folder ("textures/diffuse.png")
+      //   • Just the filename ("diffuse.png")
+      //   • URL-encoded variants (spaces → %20)
+      const bundle_manifest = {};
+      const addKey = (key, url) => {
+        if (!key) return;
+        bundle_manifest[key] = url;
+        // Also store the URL-encoded variant since browsers may request it that way
+        try {
+          const encoded = encodeURI(key);
+          if (encoded !== key) bundle_manifest[encoded] = url;
+        } catch {}
+      };
+      uploads.forEach((u) => {
+        addKey(u.original_path, u.file_url);
+        addKey(u.name, u.file_url);
+        // Strip the top-level folder prefix (e.g. "MyModel/textures/x.png" → "textures/x.png")
+        const slashIdx = u.original_path.indexOf('/');
+        if (slashIdx !== -1) {
+          addKey(u.original_path.slice(slashIdx + 1), u.file_url);
+        }
+      });
+
+      setUploadProgress('Saving to library...');
+
       const entryExt = (entry.name.split('.').pop() || '').toLowerCase();
 
       await createMutation.mutateAsync({
-        name: newModel.name || entry.name,
+        name: newModel.name || entry.name.replace(/\.[^/.]+$/, ''),
         description: newModel.description,
         file_url: entryUpload.file_url,
         file_type: entryExt,
         category: newModel.category || 'uncategorized',
+        tags: newModel.tags,
         file_size: entry.size,
         is_bundle: true,
-        bundle_manifest, // Store the map in DB
-        entry_file: entry.webkitRelativePath
+        bundle_manifest,
+        entry_file: entry.webkitRelativePath || entry.name,
+        // Populate `files` array too (used by some loaders that iterate dependencies)
+        files: uploads.map((u) => ({
+          original_path: u.original_path,
+          file_url: u.file_url,
+          file_size: u.file_size,
+          mime_type: u.mime_type,
+        })),
       });
 
+      if (failed.length) {
+        setUploadError(`Uploaded ${uploads.length}/${fileList.length} files. Failed: ${failed.join(', ')}`);
+      }
+      setUploadProgress('');
     } catch (error) {
       console.error('Folder upload failed:', error);
       setUploadError(`Folder upload failed: ${error?.message || 'Unknown error'}. Please try again.`);
+      setUploadProgress('');
     } finally {
       setUploading(false);
     }
@@ -411,12 +483,20 @@ export default function Model3DManager() {
                     className="w-full h-12 border-purple-500/50 text-purple-300 hover:bg-purple-500/10"
                     onClick={() => folderInputRef.current?.click()}
                 >
-                    <FolderUp className="w-4 h-4 mr-2" /> Upload Folder (Model + Textures)
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {uploadProgress || 'Uploading...'}
+                      </>
+                    ) : (
+                      <>
+                        <FolderUp className="w-4 h-4 mr-2" /> Upload Folder (Model + Textures)
+                      </>
+                    )}
                 </Button>
             </div>
         </div>
         <p className="text-xs text-slate-500 mt-2 text-center">
-            Use "Upload Folder" if your model has separate texture files (.png, .jpg) alongside the .gltf/.fbx file.
+            Use "Upload Folder" if your model has separate texture files (.png, .jpg, .bin, etc.). Every file in the selected folder is uploaded and linked automatically.
         </p>
 
         {/* Upload Error Display */}
