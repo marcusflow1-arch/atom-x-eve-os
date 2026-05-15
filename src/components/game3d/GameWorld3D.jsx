@@ -1061,13 +1061,14 @@ export default function GameWorld3D() {
       if (mixer) mixer.update(delta);
 
       // ─── Companion mount toggle (F) — runs once per key press.
-      // F works from ANYWHERE: pressing F summons the companion to the player
-      // and mounts; pressing F again dismounts and drops the player next to it.
+      // Two-step from anywhere:
+      //   1) If mounted        → dismount (drop player next to companion).
+      //   2) If companion far  → summon companion to player's side.
+      //   3) If companion near → mount.
       if (mountToggleRef.current && model) {
         mountToggleRef.current = false;
         const compGroup = companionGroupRef.current;
         if (isMountedRef.current) {
-          // Dismount: place player next to companion, restore visibility
           if (compGroup) {
             model.position.x = compGroup.position.x + 1.2;
             model.position.z = compGroup.position.z;
@@ -1077,16 +1078,26 @@ export default function GameWorld3D() {
           setIsMounted(false);
           setMounted(false);
         } else if (compGroup) {
-          // Summon companion to the player (no proximity check) and mount
-          compGroup.position.x = model.position.x;
-          compGroup.position.z = model.position.z;
-          if (mapReady) {
-            const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
-            if (gy !== null) compGroup.position.y = gy;
+          const dx = compGroup.position.x - model.position.x;
+          const dz = compGroup.position.z - model.position.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist < 3.5) {
+            // Close enough → mount
+            isMountedRef.current = true;
+            setIsMounted(true);
+            setMounted(true);
+          } else {
+            // Far away → summon to player's side (next press will mount)
+            compGroup.position.x = model.position.x + 1.2;
+            compGroup.position.z = model.position.z;
+            if (mapReady) {
+              const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
+              if (gy !== null) compGroup.position.y = gy;
+            }
+            // Mark as nearby so the HUD prompt switches to "Mount" immediately
+            nearbyCompanionRef.current = true;
+            setNearbyCompanion(true);
           }
-          isMountedRef.current = true;
-          setIsMounted(true);
-          setMounted(true);
         }
       }
 
