@@ -44,31 +44,35 @@ export default function GameView() {
   useEffect(() => {
     const onAction = async (e) => {
       const { action, playerId, playerName } = e.detail || {};
-      if (!playerId || !user?.id) return;
+      console.log('[Social] gamePlayerAction received:', { action, playerId, playerName, myId: user?.id });
+      if (!playerId) { toast.error('No target player ID'); return; }
+      if (!user?.id) { toast.error('You must be signed in'); return; }
+      if (playerId === user.id) { toast.error("That's you!"); return; }
       const senderName = user.full_name || user.username || 'Player';
       const sender = { id: user.id, name: senderName };
       const receiver = { id: playerId, name: playerName };
 
-      if (action === 'friend') {
-        try {
-          await sendFriendRequest(sender, receiver);
+      try {
+        if (action === 'friend') {
+          const res = await sendFriendRequest(sender, receiver);
+          console.log('[Social] friend request created:', res);
           toast.success(`Friend request sent to ${playerName}`);
-        } catch { toast.error('Could not send friend request'); }
-      } else if (action === 'party') {
-        try {
-          await sendPartyRequest(sender, receiver, partyStore.get().partyId);
+        } else if (action === 'party') {
+          const res = await sendPartyRequest(sender, receiver, partyStore.get().partyId);
+          console.log('[Social] party request created:', res);
           toast.success(`Party invite sent to ${playerName}`);
-        } catch { toast.error('Could not send party invite'); }
-      } else if (action === 'trade') {
-        try {
-          await sendTradeRequest(sender, receiver);
+        } else if (action === 'trade') {
+          const res = await sendTradeRequest(sender, receiver);
+          console.log('[Social] trade request created:', res);
           toast.success(`Trade request sent to ${playerName}`);
-        } catch { toast.error('Could not send trade request'); }
-      } else if (action === 'duel') {
-        try {
-          await sendDuelRequest(sender, receiver);
+        } else if (action === 'duel') {
+          const res = await sendDuelRequest(sender, receiver);
+          console.log('[Social] duel request created:', res);
           toast.success(`Duel challenge sent to ${playerName}`);
-        } catch { toast.error('Could not send duel challenge'); }
+        }
+      } catch (err) {
+        console.error('[Social] request failed:', err);
+        toast.error(`Failed to send ${action} request: ${err?.message || 'unknown error'}`);
       }
     };
     window.addEventListener('gamePlayerAction', onAction);

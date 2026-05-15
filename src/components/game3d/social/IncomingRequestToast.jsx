@@ -67,6 +67,7 @@ export default function IncomingRequestToast({ userId, userName }) {
       const reqs = await base44.entities.SocialRequest.filter({
         receiver_id: userId, status: 'pending',
       });
+      console.log(`[Social] refreshIncoming for ${userId}: ${reqs?.length || 0} pending`);
       setIncoming(reqs || []);
     } catch (e) { console.warn('[Social] refreshIncoming', e); }
   }, [userId]);
@@ -74,15 +75,20 @@ export default function IncomingRequestToast({ userId, userName }) {
   // Initial load + real-time subscriptions
   useEffect(() => {
     if (!userId) return;
+    console.log(`[Social] IncomingRequestToast mounted for user ${userId}`);
     refreshFriends();
     refreshParty();
     refreshIncoming();
+
+    // Poll every 4s as a fallback in case real-time subscription drops.
+    const pollInterval = setInterval(() => refreshIncoming(), 4000);
 
     const unsubReq = base44.entities.SocialRequest.subscribe(() => refreshIncoming());
     const unsubFriend = base44.entities.SocialFriendship.subscribe(() => refreshFriends());
     const unsubParty = base44.entities.PartySession.subscribe(() => refreshParty());
 
     return () => {
+      clearInterval(pollInterval);
       unsubReq && unsubReq();
       unsubFriend && unsubFriend();
       unsubParty && unsubParty();
