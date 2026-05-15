@@ -32,6 +32,10 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
 
   const peers = new Map(); // peerId → { pc, gainNode, audioEl, talking }
   const processedSignals = new Set(); // de-dupe signal subscribe events
+  // Cooldown for peers we just removed — prevents an infinite re-create loop
+  // when a connection fails/disconnects while the remote is still in the world.
+  const recentlyRemoved = new Map(); // peerId → timestamp (ms)
+  const RECONNECT_COOLDOWN_MS = 10000;
 
   const ensureAudioContext = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -84,7 +88,10 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
     };
 
     pc.onconnectionstatechange = () => {
-      if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) {
+      // Only tear down on terminal states. 'disconnected' is often transient
+      // (brief network blip) — closing it triggers an immediate re-create
+      // from syncPeers, which can spiral into hitting the browser's PC limit.
+      if (['failed', 'closed'].includes(pc.connectionState)) {
         removePeer(peerId);
       }
     };
@@ -102,6 +109,7 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
       entry.audioEl.parentNode?.removeChild(entry.audioEl);
     }
     peers.delete(peerId);
+    recentlyRemoved.set(peerId, Date.now());
     onRemoteTalking?.(peerId, false);
   };
 
@@ -203,11 +211,19 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
     const set = new Set(remoteIds);
     // Remove peers no longer present
     peers.forEach((_, pid) => { if (!set.has(pid)) removePeer(pid); });
+    // Purge expired cooldown entries so peers can eventually reconnect
+    const now = Date.now();
+    recentlyRemoved.forEach((ts, pid) => {
+      if (now - ts > RECONNECT_COOLDOWN_MS) recentlyRemoved.delete(pid);
+    });
     // Initiate calls for new peers (deterministic initiator: larger ID calls)
     set.forEach((pid) => {
-      if (!peers.has(pid) && userId > pid) {
+      if (peers.has(pid)) return;
+      // Respect cooldown so a failing peer can't be recreated every frame
+      if (recentlyRemoved.has(pid)) return;
+      if (userId > pid) {
         callPeer(pid).catch(() => {});
-      } else if (!peers.has(pid)) {
+      } else {
         // Pre-create the connection so incoming offers find an entry quickly
         createPeer(pid);
       }
