@@ -1,12 +1,13 @@
 // ─────────────────────────────────────────────
 // Stat System — single source of truth for player/enemy combat math.
 //
-// 5 core stats. Each invested point converts to a derived combat value:
-//   strength   → +3 physical damage
-//   hp (vital) → +20 max HP
-//   spirit     → +20 chi (mana/resource pool)
-//   dexterity  → +2 defense (flat damage reduction)
-//   elemental  → +1 elemental damage
+// 5 core stats. Each invested point converts to multiple derived combat values:
+//
+//   STRENGTH  → +physical damage, +hit chance, small damage roll bonus
+//   VITALITY  → +max HP, +HP regen per second, small hit chance bonus
+//   SPIRIT    → +chi (mana) pool, +mana regen per second, +spell damage %
+//   DEXTERITY → +defense, +crit chance, +attack range
+//   ELEMENTAL → +elemental damage, +elemental defense, +DoT spell damage %
 //
 // Equipment acts as a MULTIPLIER on the stats you've invested.
 // e.g. a sword with { strength_mult: 0.5 } means its bonus damage =
@@ -21,6 +22,20 @@ export const STAT_RATES = {
   spirit:    20,  // chi per point
   dexterity: 2,   // defense per point
   elemental: 1,   // elemental dmg per point
+};
+
+// Secondary derived-stat rates (per invested point)
+export const SECONDARY_RATES = {
+  hitPerStr:        0.5,   // % hit chance per strength
+  hitPerVit:        0.2,   // % hit chance per vitality
+  dmgRollPerStr:    0.3,   // % bonus damage variance per strength
+  hpRegenPerVit:    0.4,   // HP/sec per vitality point
+  manaRegenPerSpr:  0.5,   // mana/sec per spirit point
+  spellDmgPerSpr:   2.0,   // % spell damage per spirit point
+  critPerDex:       0.6,   // % crit chance per dexterity
+  rangePerDex:      0.05,  // meters per dexterity (attack range)
+  dotDmgPerElem:    3.0,   // % DoT/elemental spell damage per elemental
+  elemDefPerElem:   1.5,   // flat elemental defense per elemental
 };
 
 // Default player starting stats (level 1)
@@ -51,34 +66,50 @@ export function computeDerivedStats(baseStats, equipment = []) {
     totals.elemental_mult += eq.elemental_mult || 0;
   });
 
-  // Equipment bonus = invested points × multiplier, re-converted through rate.
-  const physDmg =
-    baseStats.strength  * STAT_RATES.strength +
-    Math.floor(baseStats.strength * totals.strength_mult) * STAT_RATES.strength;
+  // Effective invested values (base + equipment bonus rounded down)
+  const effStr  = baseStats.strength  + Math.floor(baseStats.strength  * totals.strength_mult);
+  const effVit  = baseStats.hp        + Math.floor(baseStats.hp        * totals.hp_mult);
+  const effSpr  = baseStats.spirit    + Math.floor(baseStats.spirit    * totals.spirit_mult);
+  const effDex  = baseStats.dexterity + Math.floor(baseStats.dexterity * totals.dexterity_mult);
+  const effElem = baseStats.elemental + Math.floor(baseStats.elemental * totals.elemental_mult);
 
-  const maxHP =
-    baseStats.hp * STAT_RATES.hp +
-    Math.floor(baseStats.hp * totals.hp_mult) * STAT_RATES.hp;
+  const physDmg = effStr  * STAT_RATES.strength;
+  const maxHP   = effVit  * STAT_RATES.hp;
+  const chi     = effSpr  * STAT_RATES.spirit;
+  const defense = effDex  * STAT_RATES.dexterity;
+  const elemDmg = effElem * STAT_RATES.elemental;
 
-  const chi =
-    baseStats.spirit * STAT_RATES.spirit +
-    Math.floor(baseStats.spirit * totals.spirit_mult) * STAT_RATES.spirit;
-
-  const defense =
-    baseStats.dexterity * STAT_RATES.dexterity +
-    Math.floor(baseStats.dexterity * totals.dexterity_mult) * STAT_RATES.dexterity;
-
-  const elemDmg =
-    baseStats.elemental * STAT_RATES.elemental +
-    Math.floor(baseStats.elemental * totals.elemental_mult) * STAT_RATES.elemental;
+  // Secondary stats
+  const hitChance      = Math.min(95,
+    50 + effStr * SECONDARY_RATES.hitPerStr + effVit * SECONDARY_RATES.hitPerVit);
+  const critChance     = Math.min(75, effDex * SECONDARY_RATES.critPerDex);
+  const attackRange    = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
+  const hpRegen        = effVit * SECONDARY_RATES.hpRegenPerVit;       // HP / sec
+  const manaRegen      = effSpr * SECONDARY_RATES.manaRegenPerSpr;     // mana / sec
+  const spellDamagePct = effSpr * SECONDARY_RATES.spellDmgPerSpr;      // % bonus to ALL spell damage
+  const dotDamagePct   = effElem * SECONDARY_RATES.dotDmgPerElem;      // % bonus to DoT / elemental spells
+  const elementalDefense = effElem * SECONDARY_RATES.elemDefPerElem;
+  const damageRollBonus  = effStr * SECONDARY_RATES.dmgRollPerStr;     // % variance roll bonus
 
   return {
     physicalDamage: physDmg,
     elementalDamage: elemDmg,
     totalDamage: physDmg + elemDmg,
+    // alias used by GameWorld3D ability damage scaling
+    damage: physDmg + elemDmg,
     maxHP,
     chi,
     defense,
+    // Secondary
+    hitChance,
+    critChance,
+    attackRange,
+    hpRegen,
+    manaRegen,
+    spellDamagePct,
+    dotDamagePct,
+    elementalDefense,
+    damageRollBonus,
   };
 }
 
@@ -87,6 +118,15 @@ export function calculateHit(attackerStats, defenderStats) {
   const raw = attackerStats.totalDamage;
   const reduced = Math.max(1, raw - (defenderStats?.defense || 0));
   return reduced;
+}
+
+// Spell damage scaling — applies spirit (all spells) and elemental (DoT/elemental) bonuses.
+// `isDoT` flags damage-over-time / elemental spells, which get the extra elemental bonus.
+export function applySpellScaling(baseDamage, attackerDerived, { isDoT = false, isElemental = true } = {}) {
+  const spirit = attackerDerived.spellDamagePct || 0;
+  const elem   = (isDoT || isElemental) ? (attackerDerived.dotDamagePct || 0) : 0;
+  const totalPct = spirit + elem;
+  return Math.round(baseDamage * (1 + totalPct / 100));
 }
 
 // Enemy stat templates by tier — scales with the same system.

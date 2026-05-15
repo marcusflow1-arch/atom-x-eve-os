@@ -8,12 +8,13 @@ import PlayerXPHUD from './PlayerXPHUD';
 import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
 import FloatingDamageNumbers from './FloatingDamageNumbers';
-import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP } from './playerHUDStore';
+import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
 import {
   DEFAULT_PLAYER_STATS,
   ENEMY_STAT_TEMPLATES,
   computeDerivedStats,
   calculateHit,
+  applySpellScaling,
 } from './statsSystem';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
 import {
@@ -31,7 +32,7 @@ import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData'
 import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
-import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
+import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore'; import { awardCompanionXP } from './companionProgressionStore';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
 import {
@@ -217,19 +218,19 @@ export default function GameWorld3D() {
   const nearbyQuestNPCRef = useRef(null);
   const playerLevelStateRef = useRef(1); // kept in sync with playerLevel for quest gating
 
-  // Seed the shared progression store with the player's initial state so the
-  // HUD and Character Progression menu have real data from the start.
+  // Hydrate from the persistent progression store (localStorage-backed).
+  // If the player has played before, this restores their level, XP, stats,
+  // unspent points, and current HP. Otherwise it leaves the level-1 defaults.
   useEffect(() => {
-    setPlayerHUD({
-      level: 1,
-      xp: 0,
-      xpForNext: xpForLevel(1),
-      baseStats: { ...DEFAULT_PLAYER_STATS },
-      unspentPoints: 0,
-      derived: playerDerivedRef.current,
-      hp: playerDerivedRef.current.maxHP,
-      maxHP: playerDerivedRef.current.maxHP,
-    });
+    const saved = getPlayerHUD();
+    playerLevelRef.current = saved.level || 1;
+    playerXPRef.current = saved.xp || 0;
+    playerBaseStatsRef.current = { ...saved.baseStats };
+    playerDerivedRef.current = saved.derived || computeDerivedStats(saved.baseStats, []);
+    setPlayerLevel(saved.level || 1);
+    setPlayerXP(saved.xp || 0);
+    // Refresh xpForNext to match the loaded level's curve
+    setPlayerHUD({ xpForNext: xpForLevel(saved.level || 1) });
   }, []);
 
   // Subscribe to quest store so React re-renders when quests are accepted/completed
@@ -1527,7 +1528,7 @@ export default function GameWorld3D() {
               }
               setScore(prev => prev + 100 * closestEnemy.xpReward);
               spawnXPFloat(closestEnemy.xpReward);
-              // Tell the quest store about this kill (advances any active kill quests)
+              awardCompanionXP(companionDefRef.current?.id, closestEnemy.xpReward);
               reportEnemyKill(QUESTS, closestEnemy.tier);
               // Award XP, handle level-ups against the custom curve.
               // Each level-up grants stat points (handled inside awardXP).
@@ -1552,8 +1553,7 @@ export default function GameWorld3D() {
         }
       }
 
-      // ─── Ability cooldown ticking ───
-      tickCooldowns(delta);
+      tickCooldowns(delta); tickRegen(delta);
 
       // ─── Update active visual effects (lightning etc.) ───
       activeEffects.current = activeEffects.current.filter((fx) => {
@@ -1594,7 +1594,8 @@ export default function GameWorld3D() {
                 playActionSound('player_attack');
                 const radius = ab.radius || 4.5;
                 const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-                const baseDmg = Math.round(ab.damage + (liveDerived.damage || 0) * 0.4);
+                // Frost Tornado = DoT + elemental AoE spell → scales with Spirit AND Elemental
+                const baseDmg = applySpellScaling(ab.damage + (liveDerived.elementalDamage || 0) * 0.4, liveDerived, { isDoT: true });
                 // Deal damage in 3 ticks across the tornado's duration for sustained feel
                 [400, 1000, 1700].forEach((ms) => {
                   setTimeout(() => {
@@ -1622,7 +1623,7 @@ export default function GameWorld3D() {
                         }
                         if (getAbilityState().target?.id === en.id) clearTarget();
                         setScore(prev => prev + 100 * (en.xpReward || 1));
-                        spawnXPFloat(en.xpReward || 1);
+                        spawnXPFloat(en.xpReward || 1); awardCompanionXP(companionDefRef.current?.id, en.xpReward || 1);
                         reportEnemyKill(QUESTS, en.tier);
                         let newXP = playerXPRef.current + (en.xpReward || 1);
                         let newLevel = playerLevelRef.current;
@@ -1648,7 +1649,7 @@ export default function GameWorld3D() {
                 setTimeout(() => {
                   if (targetEnemy.alive && !targetEnemy.dying) {
                     const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-                    const dmg = Math.round(ab.damage + (liveDerived.damage || 0) * 0.5);
+                    const dmg = applySpellScaling(ab.damage + (liveDerived.elementalDamage || 0) * 0.5, liveDerived, { isElemental: true });
                     targetEnemy.hp -= dmg;
                     spawnDamageFloat(targetEnemy.id, dmg);
                     updateTargetHP(targetEnemy.id, Math.max(0, targetEnemy.hp));
@@ -1668,7 +1669,7 @@ export default function GameWorld3D() {
                       }
                       clearTarget();
                       setScore(prev => prev + 100 * (targetEnemy.xpReward || 1));
-                      spawnXPFloat(targetEnemy.xpReward || 1);
+                      spawnXPFloat(targetEnemy.xpReward || 1); awardCompanionXP(companionDefRef.current?.id, targetEnemy.xpReward || 1);
                       reportEnemyKill(QUESTS, targetEnemy.tier);
                       let newXP = playerXPRef.current + (targetEnemy.xpReward || 1);
                       let newLevel = playerLevelRef.current;

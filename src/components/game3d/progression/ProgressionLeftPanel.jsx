@@ -4,11 +4,16 @@ import { allocateStat } from '../playerHUDStore';
 import { STAT_RATES } from '../statsSystem';
 
 const STAT_DEFS = [
-  { key: 'strength',  label: 'Strength',  icon: Sword,    color: '#e25555', desc: `+${STAT_RATES.strength} Physical Damage`,   derivedKey: 'physicalDamage' },
-  { key: 'hp',        label: 'Vitality',  icon: Heart,    color: '#4caf50', desc: `+${STAT_RATES.hp} Max HP`,                  derivedKey: 'maxHP' },
-  { key: 'spirit',    label: 'Spirit',    icon: Sparkles, color: '#3a9ee6', desc: `+${STAT_RATES.spirit} Chi (Mana)`,          derivedKey: 'chi' },
-  { key: 'dexterity', label: 'Dexterity', icon: Shield,   color: '#c0a060', desc: `+${STAT_RATES.dexterity} Defense`,          derivedKey: 'defense' },
-  { key: 'elemental', label: 'Elemental', icon: Flame,    color: '#b755e2', desc: `+${STAT_RATES.elemental} Elemental Damage`, derivedKey: 'elementalDamage' },
+  { key: 'strength',  label: 'Strength',  icon: Sword,    color: '#e25555',
+    desc: `+${STAT_RATES.strength} Phys Dmg · +Hit Chance · +Dmg Roll`, derivedKey: 'physicalDamage' },
+  { key: 'hp',        label: 'Vitality',  icon: Heart,    color: '#4caf50',
+    desc: `+${STAT_RATES.hp} Max HP · +HP Regen · +Hit Chance`,         derivedKey: 'maxHP' },
+  { key: 'spirit',    label: 'Spirit',    icon: Sparkles, color: '#3a9ee6',
+    desc: `+${STAT_RATES.spirit} Mana · +Mana Regen · +Spell Dmg %`,    derivedKey: 'chi' },
+  { key: 'dexterity', label: 'Dexterity', icon: Shield,   color: '#c0a060',
+    desc: `+${STAT_RATES.dexterity} Defense · +Crit Chance · +Range`,   derivedKey: 'defense' },
+  { key: 'elemental', label: 'Elemental', icon: Flame,    color: '#b755e2',
+    desc: `+${STAT_RATES.elemental} Elem Dmg · +DoT Dmg % · +Elem Def`, derivedKey: 'elementalDamage' },
 ];
 
 export default function ProgressionLeftPanel({ hud }) {
@@ -105,11 +110,14 @@ export default function ProgressionLeftPanel({ hud }) {
         })}
       </div>
 
-      {/* Derived summary */}
+      {/* Derived summary — primary + secondary combat stats */}
       <div className="grid grid-cols-3 gap-2 mt-auto">
-        <SummaryTile label="Max HP"  value={maxHP}                sub={`Now: ${hp}`}                                              color="#4caf50" />
-        <SummaryTile label="Damage"  value={derived.totalDamage}  sub={`Phys ${derived.physicalDamage} · Elem ${derived.elementalDamage}`} color="#e25555" />
-        <SummaryTile label="Defense" value={derived.defense}      sub="Flat reduction"                                            color="#c0a060" />
+        <SummaryTile label="Max HP"   value={maxHP}                sub={`Now: ${hp} · +${derived.hpRegen?.toFixed(1) ?? 0}/s regen`}     color="#4caf50" />
+        <SummaryTile label="Damage"   value={derived.totalDamage}  sub={`Phys ${derived.physicalDamage} · Elem ${derived.elementalDamage}`} color="#e25555" />
+        <SummaryTile label="Defense"  value={derived.defense}      sub={`Elem Def ${(derived.elementalDefense ?? 0).toFixed(0)}`}        color="#c0a060" />
+        <SummaryTile label="Hit %"    value={`${(derived.hitChance ?? 0).toFixed(0)}%`} sub={`Crit ${(derived.critChance ?? 0).toFixed(0)}%`} color="#fbbf24" />
+        <SummaryTile label="Range"    value={`${(derived.attackRange ?? 0).toFixed(1)}m`} sub={`Mana ${derived.chi} · +${(derived.manaRegen ?? 0).toFixed(1)}/s`}  color="#3a9ee6" />
+        <SummaryTile label="Spell+"   value={`+${(derived.spellDamagePct ?? 0).toFixed(0)}%`} sub={`DoT +${(derived.dotDamagePct ?? 0).toFixed(0)}%`}                 color="#b755e2" />
       </div>
     </div>
   );
