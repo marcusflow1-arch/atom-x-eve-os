@@ -171,10 +171,16 @@ export default function IncomingRequestToast({ userId, userName }) {
   };
 
   // ─── DECLINE handler ───
+  // Mark declined briefly so the sender's listener fires the toast, then
+  // hard-delete the record so it doesn't pile up and block future retries.
   const decline = async (req) => {
     try {
       await base44.entities.SocialRequest.update(req.id, { status: 'declined' });
       toast(`${req.sender_name}'s ${req.kind} request declined`);
+      // Give the sender's subscription a moment to receive the update, then purge.
+      setTimeout(() => {
+        base44.entities.SocialRequest.delete(req.id).catch(() => {});
+      }, 2500);
     } catch (e) { console.error('[Social] decline failed', e); }
   };
 

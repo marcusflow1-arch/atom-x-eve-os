@@ -4,6 +4,7 @@
 // when records change). Trade is volatile and lives only in memory.
 
 import { base44 } from '@/api/base44Client';
+import { sendCleanRequest } from './socialRequestHygiene';
 
 const makeStore = (storageKey, defaultState) => {
   let state = (() => {
@@ -30,15 +31,10 @@ export const friendsStore = makeStore('game_friends_v1', { friends: [] });
 
 // Send a friend REQUEST (creates a pending SocialRequest record).
 // Receiver gets a popup via IncomingRequestToast to accept/decline.
+// Cleans up stale/declined records first so retries always work.
 export const sendFriendRequest = async (sender, receiver) => {
-  return base44.entities.SocialRequest.create({
-    kind: 'friend',
-    sender_id: sender.id,
-    sender_name: sender.name,
-    receiver_id: receiver.id,
-    receiver_name: receiver.name,
-    status: 'pending',
-  });
+  const { request } = await sendCleanRequest({ kind: 'friend', sender, receiver });
+  return request;
 };
 
 // Replace the local friends list with a fresh DB snapshot.
@@ -69,16 +65,13 @@ export const partyStore = makeStore('game_party_v1', { members: [], partyId: nul
 export const PARTY_MAX = 4;
 
 // Send a party INVITE (creates a pending SocialRequest record).
+// Cleans up stale/declined records first so retries always work.
 export const sendPartyRequest = async (sender, receiver, partyId) => {
-  return base44.entities.SocialRequest.create({
-    kind: 'party',
-    sender_id: sender.id,
-    sender_name: sender.name,
-    receiver_id: receiver.id,
-    receiver_name: receiver.name,
-    party_id: partyId || null,
-    status: 'pending',
+  const { request } = await sendCleanRequest({
+    kind: 'party', sender, receiver,
+    extraFields: { party_id: partyId || null },
   });
+  return request;
 };
 
 // Replace party state with a fresh DB snapshot.
@@ -109,29 +102,18 @@ export const tradeStore = {
 };
 
 // Send a trade REQUEST — receiver gets accept/decline popup.
-// Returns the created request so caller can hold its id.
+// Cleans up stale/declined records first so retries always work.
 export const sendTradeRequest = async (sender, receiver) => {
-  return base44.entities.SocialRequest.create({
-    kind: 'trade',
-    sender_id: sender.id,
-    sender_name: sender.name,
-    receiver_id: receiver.id,
-    receiver_name: receiver.name,
-    status: 'pending',
-  });
+  const { request } = await sendCleanRequest({ kind: 'trade', sender, receiver });
+  return request;
 };
 
 // Send a duel CHALLENGE — receiver gets accept/decline popup.
 // On accept, IncomingRequestToast creates a DuelSession row.
+// Cleans up stale/declined records first so retries always work.
 export const sendDuelRequest = async (sender, receiver) => {
-  return base44.entities.SocialRequest.create({
-    kind: 'duel',
-    sender_id: sender.id,
-    sender_name: sender.name,
-    receiver_id: receiver.id,
-    receiver_name: receiver.name,
-    status: 'pending',
-  });
+  const { request } = await sendCleanRequest({ kind: 'duel', sender, receiver });
+  return request;
 };
 
 export const openTrade = (partner) => {
