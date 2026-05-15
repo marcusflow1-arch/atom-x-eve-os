@@ -12,11 +12,13 @@ import CompanionFusionCard from './CompanionFusionCard';
 import CompanionGearSlotsPanel from './CompanionGearSlotsPanel';
 import CompanionGearInventoryGrid from './CompanionGearInventoryGrid';
 import CompanionGearDetailPanel from './CompanionGearDetailPanel';
+import CompanionEquipmentSlotsColumn from './CompanionEquipmentSlotsColumn';
 import {
   subscribeFusion,
   getFusionState,
   setSelectedCompanionSlot,
   equipCompanionGear,
+  getCompanionItem,
 } from './companionFusionStore';
 import { Sparkles } from 'lucide-react';
 
@@ -133,12 +135,24 @@ export default function GearTab({ state }) {
         )}
       </div>
 
-      {/* MIDDLE — vertical equipment slots column (player only) */}
-      {!isCompanionMode && (
-        <div
-          className="absolute top-28 pointer-events-auto"
-          style={{ left: 760 }}
-        >
+      {/* MIDDLE — vertical equipment slots column.
+          Player slots in player mode, companion slots in companion mode. */}
+      <div
+        className="absolute top-28 pointer-events-auto"
+        style={{ left: 760 }}
+      >
+        {isCompanionMode ? (
+          <CompanionEquipmentSlotsColumn
+            selectedSlotId={companionSlotId}
+            equippedGear={fusion.equippedGear}
+            onSelectSlot={(id) => {
+              const equippedId = fusion.equippedGear?.[id];
+              if (equippedId) {
+                setInspectedCompanionBySlot((prev) => ({ ...prev, [id]: equippedId }));
+              }
+            }}
+          />
+        ) : (
           <EquipmentSlotsColumn
             selectedCategoryId={selectedCat.id}
             onSelectCategory={(id) => {
@@ -148,14 +162,20 @@ export default function GearTab({ state }) {
               }
             }}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Companion fusion card — to the RIGHT of the 3D player model.
-          Always visible; clicking ATTEND swaps the gear view to companion mode. */}
-      <CompanionFusionCard />
+          Click the companion portrait to toggle into companion mode.
+          The ENCHANT button toggles the enchantment overlay for companion gear. */}
+      <CompanionFusionCard
+        enchantOpen={isCompanionMode && enchantOpen}
+        onEnchant={() => setEnchantOpen((v) => !v)}
+      />
 
-      {/* Floating ENCHANT button above the 3D model's head */}
+      {/* Floating ENCHANT button above the 3D model's head — player mode only.
+          In companion mode, the ENCHANT button on the companion card is used. */}
+      {!isCompanionMode && (
       <button
         onClick={() => setEnchantOpen((v) => !v)}
         className="absolute pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-widest font-semibold transition-all hover:scale-105"
@@ -178,14 +198,30 @@ export default function GearTab({ state }) {
         <Sparkles className="w-3.5 h-3.5" />
         ENCHANT
       </button>
-
-      {/* Enchantment overlay — overlaps the 3D model area */}
-      {enchantOpen && (
-        <EnchantmentPanel
-          item={inspectedItem ? { ...inspectedItem, categoryLabel: selectedCat.label } : { name: 'No Equipment', type: selectedCat.label }}
-          onClose={() => setEnchantOpen(false)}
-        />
       )}
+
+      {/* Enchantment overlay — overlaps the 3D model area.
+          Uses player item in player mode, companion item in companion mode. */}
+      {enchantOpen && (() => {
+        if (isCompanionMode) {
+          const compItem = getCompanionItem(companionSlotId, inspectedCompanionId);
+          const compLabel = COMPANION_SLOT_LABELS[companionSlotId] || companionSlotId;
+          return (
+            <EnchantmentPanel
+              item={compItem
+                ? { ...compItem, categoryLabel: `Companion · ${compLabel}`, type: `Companion ${compLabel}` }
+                : { name: 'No Companion Gear', type: `Companion ${compLabel}` }}
+              onClose={() => setEnchantOpen(false)}
+            />
+          );
+        }
+        return (
+          <EnchantmentPanel
+            item={inspectedItem ? { ...inspectedItem, categoryLabel: selectedCat.label } : { name: 'No Equipment', type: selectedCat.label }}
+            onClose={() => setEnchantOpen(false)}
+          />
+        );
+      })()}
 
       <GearActionsBar />
 
