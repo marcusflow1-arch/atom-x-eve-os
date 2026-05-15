@@ -30,6 +30,9 @@ import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets
 import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData';
 import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
+import CompanionMountHUD from './CompanionMountHUD';
+import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
+import { getCompanionById } from './companionData';
 import {
   getAbilityState, tickCooldowns, startCooldown,
   setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS,
@@ -142,6 +145,18 @@ export default function GameWorld3D() {
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
+  // Companion / mount UI state
+  const [nearbyCompanion, setNearbyCompanion] = useState(false);
+  const nearbyCompanionRef = useRef(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const companionGroupRef = useRef(null);
+  const companionMixerRef = useRef(null);
+  const companionWalkActionRef = useRef(null);
+  const companionIdleActionRef = useRef(null);
+  const companionCurrentAnimRef = useRef('idle');
+  const mountToggleRef = useRef(false);
+  const isMountedRef = useRef(false);
+  const companionDefRef = useRef(getCompanionById(getCompanionState().activeCompanionId));
   // Floating damage/XP numbers: [{ id, enemyId|'player', value, type, born }]
   // enemyId/'player' is used by the projection step to compute current screen pos each frame.
   const floatsRef = useRef([]);
@@ -218,6 +233,13 @@ export default function GameWorld3D() {
   // Subscribe to quest store so React re-renders when quests are accepted/completed
   useEffect(() => {
     return subscribeQuests((s) => setQuestState({ ...s }));
+  }, []);
+
+  // Keep companion def ref in sync when player picks a different companion in the menu
+  useEffect(() => {
+    return subscribeCompanion((s) => {
+      companionDefRef.current = getCompanionById(s.activeCompanionId);
+    });
   }, []);
 
   // Keep a ref of the latest player level for the animation loop to read
@@ -487,6 +509,70 @@ export default function GameWorld3D() {
         });
       });
     });
+
+    // ─────────────────────────────────────────────
+    // COMPANION SPAWN — rideable mount. Uses the creature model URL with its
+    // own walk/idle anims. Stands idle until the player approaches and presses F.
+    // ─────────────────────────────────────────────
+    const companionDef = companionDefRef.current;
+    if (companionDef) {
+      loader.load(companionDef.modelUrl, (fbx) => {
+        const companionModel = fbx;
+        const box = new THREE.Box3().setFromObject(fbx);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const compScale = (1.7 / maxDim) * (companionDef.scale || 1.0);
+        companionModel.scale.setScalar(compScale);
+        companionModel.position.set(
+          companionDef.spawnPos[0],
+          companionDef.spawnPos[1],
+          companionDef.spawnPos[2],
+        );
+
+        companionModel.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = !node.isSkinnedMesh;
+            node.receiveShadow = true;
+          }
+        });
+
+        // Golden friendly ring under the companion
+        const ringGeo = new THREE.RingGeometry(0.8 / compScale, 1.05 / compScale, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0xfbbf24,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.55,
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.02 / compScale;
+        companionModel.add(ring);
+
+        scene.add(companionModel);
+        snapToGround(companionModel, 0);
+
+        const compMixer = new THREE.AnimationMixer(companionModel);
+        companionGroupRef.current = companionModel;
+        companionMixerRef.current = compMixer;
+
+        // Load walk + idle anims (reuses creature anim clips already in codebase)
+        loader.load(companionDef.idleAnim, (af) => {
+          if (af.animations?.[0]) {
+            const idle = compMixer.clipAction(af.animations[0]);
+            companionIdleActionRef.current = idle;
+            idle.reset().fadeIn(0.2).play();
+          }
+        });
+        loader.load(companionDef.walkAnim, (af) => {
+          if (af.animations?.[0]) {
+            const walk = compMixer.clipAction(af.animations[0]);
+            walk.setEffectiveTimeScale(0.7);
+            companionWalkActionRef.current = walk;
+          }
+        });
+      });
+    }
 
     // ─────────────────────────────────────────────
     // ENEMY SPAWNS (female archer model patrolling between waypoints)
@@ -847,6 +933,8 @@ export default function GameWorld3D() {
       if (k === '4') { abilityKeyPressed.current = 3; }
       // I = toggle equipment menu (Where Winds Meet style)
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
+      // F = mount/dismount companion
+      if (k === 'f') { mountToggleRef.current = true; e.preventDefault(); }
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
     // Middle-click raycaster for enemy targeting
@@ -931,10 +1019,39 @@ export default function GameWorld3D() {
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
 
+      // ─── Companion mount toggle (F) — runs once per key press ───
+      if (mountToggleRef.current && model) {
+        mountToggleRef.current = false;
+        const compGroup = companionGroupRef.current;
+        if (isMountedRef.current) {
+          // Dismount: place player next to companion
+          if (compGroup) {
+            model.position.x = compGroup.position.x + 1.2;
+            model.position.z = compGroup.position.z;
+            model.visible = true;
+          }
+          isMountedRef.current = false;
+          setIsMounted(false);
+          setMounted(false);
+        } else if (compGroup) {
+          // Only mount if close enough
+          const dx = compGroup.position.x - model.position.x;
+          const dz = compGroup.position.z - model.position.z;
+          if (Math.sqrt(dx * dx + dz * dz) < 3.5) {
+            isMountedRef.current = true;
+            setIsMounted(true);
+            setMounted(true);
+          }
+        }
+      }
+
       // Movement
       if (model) {
+        const mounted = isMountedRef.current;
+        const compGroup = companionGroupRef.current;
+        const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const isRunning = !!keys.current['shift'];
-        const speed = isRunning ? RUN_SPEED : WALK_SPEED;
+        const speed = (isRunning ? RUN_SPEED : WALK_SPEED) * speedMult;
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -957,6 +1074,68 @@ export default function GameWorld3D() {
         if (mapReady) {
           const gy = sampleGroundY(model.position.x, model.position.z);
           if (gy !== null) model.position.y = gy;
+        }
+
+        // ─── Mount handling: companion follows player while mounted ───
+        if (companionMixerRef.current) companionMixerRef.current.update(delta);
+        if (mounted && compGroup) {
+          // Hide player model so visually we appear ON the companion
+          model.visible = false;
+          // Companion sits at the player's spot, slightly offset down so the player
+          // would "ride" on its back (effectively the companion replaces the player visually)
+          compGroup.position.x = model.position.x;
+          compGroup.position.z = model.position.z;
+          // Match player rotation so steering feels natural
+          compGroup.quaternion.slerp(model.quaternion, ROT_SMOOTH);
+          if (mapReady) {
+            const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
+            if (gy !== null) compGroup.position.y = gy;
+          }
+          // Drive companion animation: walk when moving, idle when still
+          const targetAnim = isMoving ? 'walk' : 'idle';
+          if (targetAnim !== companionCurrentAnimRef.current) {
+            const walk = companionWalkActionRef.current;
+            const idle = companionIdleActionRef.current;
+            if (targetAnim === 'walk' && walk) {
+              if (idle) idle.fadeOut(0.2);
+              walk.reset().fadeIn(0.2).play();
+            } else if (targetAnim === 'idle' && idle) {
+              if (walk) walk.fadeOut(0.2);
+              idle.reset().fadeIn(0.2).play();
+            }
+            companionCurrentAnimRef.current = targetAnim;
+          }
+          if (companionWalkActionRef.current) {
+            companionWalkActionRef.current.setEffectiveTimeScale(isRunning ? 1.0 : 0.7);
+          }
+        } else {
+          // Not mounted — player visible, companion stays put with idle anim
+          model.visible = true;
+          if (compGroup && mapReady) {
+            const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
+            if (gy !== null) compGroup.position.y = gy;
+          }
+          if (companionCurrentAnimRef.current !== 'idle') {
+            const walk = companionWalkActionRef.current;
+            const idle = companionIdleActionRef.current;
+            if (walk) walk.fadeOut(0.2);
+            if (idle) idle.reset().fadeIn(0.2).play();
+            companionCurrentAnimRef.current = 'idle';
+          }
+        }
+
+        // ─── Companion proximity prompt ───
+        if (compGroup && !mounted) {
+          const dx = compGroup.position.x - model.position.x;
+          const dz = compGroup.position.z - model.position.z;
+          const isNear = Math.sqrt(dx * dx + dz * dz) < 3.5;
+          if (isNear !== nearbyCompanionRef.current) {
+            nearbyCompanionRef.current = isNear;
+            setNearbyCompanion(isNear);
+          }
+        } else if (nearbyCompanionRef.current) {
+          nearbyCompanionRef.current = false;
+          setNearbyCompanion(false);
         }
 
         // Animation state machine — only when not playing a one-shot (kick/roll)
@@ -1606,8 +1785,18 @@ export default function GameWorld3D() {
             <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack · <span className="text-cyan-300 font-mono">R</span> Roll</div>
             <div><span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target</div>
             <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-yellow-300 font-mono">C</span> Character · <span className="text-amber-300 font-mono">I</span> Equipment</div>
+            <div><span className="text-amber-300 font-mono">F</span> Mount / Dismount Companion</div>
           </div>
         </div>
+      )}
+
+      {/* Companion mount prompt */}
+      {!loading && (
+        <CompanionMountHUD
+          nearby={nearbyCompanion}
+          mounted={isMounted}
+          companionName={companionDefRef.current?.name || 'Companion'}
+        />
       )}
 
       {/* NPC interact prompt (generic NPCs) */}
