@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { PawPrint, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import {
   subscribeFusion,
   getFusionState,
   setFusionMode,
   getActiveCompanion,
 } from './companionFusionStore';
+import CompanionPreview3D from './CompanionPreview3D';
 
 /**
  * Compact companion preview card that sits to the RIGHT of the 3D player model.
@@ -110,31 +111,43 @@ export default function CompanionFusionCard({ onEnchant, enchantOpen }) {
           title={isActive ? 'Click to return to player view' : 'Click to view companion equipment'}
         >
           <div
-            className="relative flex items-center justify-center"
+            className="relative flex items-center justify-center overflow-hidden"
             style={{ height: 160 }}
           >
+            {/* Floating name label above the 3D model */}
             <div
-              className="absolute rounded-full"
+              className="absolute top-2 left-0 right-0 z-10 text-center pointer-events-none"
               style={{
-                width: 110,
-                height: 110,
+                textShadow: '0 2px 6px rgba(0,0,0,0.9)',
+              }}
+            >
+              <div
+                className="text-[11px] font-bold tracking-wider truncate px-2"
+                style={{ color: rarityColor }}
+              >
+                {companion.name}
+              </div>
+            </div>
+
+            {/* Soft rarity glow behind model */}
+            <div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: 130,
+                height: 130,
                 background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)`,
-                filter: 'blur(8px)',
+                filter: 'blur(10px)',
               }}
             />
-            <PawPrint
-              className="relative"
-              style={{
-                width: 64,
-                height: 64,
-                color: rarityColor,
-                opacity: isActive ? 1 : 0.6,
-                filter: `drop-shadow(0 0 8px ${rarityColor}88)`,
-              }}
-            />
+
+            {/* Live 3D companion model */}
+            <div className="absolute inset-0">
+              <CompanionPreview3D companion={companion} />
+            </div>
+
             {isActive && (
               <Sparkles
-                className="absolute top-2 right-2 w-3.5 h-3.5"
+                className="absolute top-2 right-2 w-3.5 h-3.5 z-10"
                 style={{ color: rarityColor }}
               />
             )}
