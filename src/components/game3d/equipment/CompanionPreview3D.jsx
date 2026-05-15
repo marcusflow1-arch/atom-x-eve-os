@@ -92,7 +92,32 @@ export default function CompanionPreview3D({ companion }) {
         companion.modelUrl,
         (gltf) => {
           const root = gltf.scene || gltf.scenes?.[0];
-          if (root) setupModel(root, gltf.animations || []);
+          if (!root) return;
+          // If a separate animations GLB is provided, load it and retarget
+          // its clips onto this model. Otherwise use any embedded clips.
+          if (companion.animationsUrl) {
+            setupModel(root, []);
+            gltfLoader.load(
+              companion.animationsUrl,
+              (animGltf) => {
+                if (disposed) return;
+                const clips = animGltf.animations || [];
+                if (clips.length === 0) return;
+                mixer = new THREE.AnimationMixer(root);
+                const findClip = (substr) => {
+                  if (!substr) return null;
+                  const lc = substr.toLowerCase();
+                  return clips.find((c) => (c.name || '').toLowerCase().includes(lc)) || null;
+                };
+                const idleClip = findClip(companion.idleClipName) || clips[0];
+                if (idleClip) mixer.clipAction(idleClip).reset().fadeIn(0.3).play();
+              },
+              undefined,
+              (err) => console.error('Companion preview anim GLB load error:', err),
+            );
+          } else {
+            setupModel(root, gltf.animations || []);
+          }
         },
         undefined,
         (err) => console.error('Companion preview GLB load error:', err),
