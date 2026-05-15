@@ -12,6 +12,10 @@ import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import GameWorldServerManager from '../components/game3d/GameWorldServerManager';
+import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
+import PartyPanel from '../components/game3d/social/PartyPanel';
+import TradePanel from '../components/game3d/social/TradePanel';
+import { addFriend, addPartyMember, openTrade } from '../components/game3d/social/socialStores';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
 import { base44 } from '@/api/base44Client';
@@ -23,45 +27,41 @@ export default function GameView() {
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
+  const [friendsListOpen, setFriendsListOpen] = useState(false);
 
   // World server join is handled by GameWorldServerManager — it enforces the
   // 20-player cap and dispatches joinMultiplayerChannel only when capacity allows.
 
   // Player interaction menu actions (Duel / Add Friend / Trade / Party Up)
+  // These now drive the in-game stores directly so the UI reflects changes
+  // immediately. The Base44 entity records are still created in the background
+  // so the data is persisted for the receiving player to accept later.
   useEffect(() => {
     const onAction = async (e) => {
       const { action, playerId, playerName } = e.detail || {};
       if (!playerId || !user?.id) return;
-      try {
-        if (action === 'friend') {
-          await base44.entities.FriendRequest.create({
-            from_user_id: user.id, to_user_id: playerId,
-            from_display_name: user.full_name || user.username || 'Player', status: 'pending',
-          });
-          toast.success(`Friend request sent to ${playerName}`);
-        } else if (action === 'trade') {
-          await base44.entities.TradeOffer.create({
-            from_user_id: user.id, to_user_id: playerId,
-            from_display_name: user.full_name || user.username || 'Player', status: 'pending',
-          });
-          toast.success(`Trade request sent to ${playerName}`);
-        } else if (action === 'party') {
-          await base44.entities.PartyMember.create({
-            invited_by: user.id, user_id: playerId, status: 'invited',
-            display_name: playerName,
-          });
-          toast.success(`${playerName} invited to party`);
-        } else if (action === 'duel') {
-          await base44.entities.Challenge.create({
-            challenger_id: user.id, opponent_id: playerId,
-            type: 'duel', status: 'pending',
-            message: `${user.full_name || 'Player'} challenges you to a duel!`,
-          });
-          toast.success(`Duel challenge sent to ${playerName}`);
-        }
-      } catch (err) {
-        toast.error('Could not send request');
-        console.error('Player action failed:', err);
+
+      if (action === 'friend') {
+        addFriend({ id: playerId, name: playerName });
+        toast.success(`${playerName} added to friends`);
+        base44.entities.FriendRequest.create({
+          from_user_id: user.id, to_user_id: playerId,
+          from_display_name: user.full_name || user.username || 'Player', status: 'pending',
+        }).catch(() => {});
+      } else if (action === 'party') {
+        addPartyMember({ id: playerId, name: playerName });
+        toast.success(`${playerName} joined your party`);
+        base44.entities.PartyMember.create({
+          invited_by: user.id, user_id: playerId, status: 'invited', display_name: playerName,
+        }).catch(() => {});
+      } else if (action === 'trade') {
+        openTrade({ id: playerId, name: playerName });
+      } else if (action === 'duel') {
+        toast.success(`Duel challenge sent to ${playerName}`);
+        base44.entities.Challenge.create({
+          challenger_id: user.id, opponent_id: playerId, type: 'duel', status: 'pending',
+          message: `${user.full_name || 'Player'} challenges you to a duel!`,
+        }).catch(() => {});
       }
     };
     window.addEventListener('gamePlayerAction', onAction);
@@ -80,10 +80,13 @@ export default function GameView() {
         setProgressionOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'k') {
         setSkillTreeOpen((v) => !v);
+      } else if (e.key.toLowerCase() === 'l') {
+        setFriendsListOpen((v) => !v);
       } else if (e.key === 'Escape') {
         if (storeOpen) setStoreOpen(false);
         if (progressionOpen) setProgressionOpen(false);
         if (skillTreeOpen) setSkillTreeOpen(false);
+        if (friendsListOpen) setFriendsListOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -116,6 +119,9 @@ export default function GameView() {
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <SkillTreeMenu open={skillTreeOpen} onClose={() => setSkillTreeOpen(false)} />
+      <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
+      <PartyPanel />
+      <TradePanel />
 
       {/* Back button */}
       <button

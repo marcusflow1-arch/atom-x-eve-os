@@ -213,13 +213,15 @@ export default function MultiplayerSystem({ envUrl }) {
     };
     window.addEventListener('webrtcMovementUpdate', handleWebRTCMovement);
 
-    // 2. Real-time subscription to PlayerState changes (mostly for joins/leaves/environment now)
+    // 2. Real-time subscription to PlayerState changes (joins/leaves/env/position fallback)
     const unsubscribe = base44.entities.PlayerState.subscribe((event) => {
       if (!isSubscribed) return;
       if (event.type === 'create' || event.type === 'update') {
           const p = event.data;
           if (p.channel_id === currentChannel && p.player_id !== user.id) {
-              otherPlayersMap.set(p.player_id, p);
+              const existing = otherPlayersMap.get(p.player_id) || {};
+              // Merge so newer WebRTC position frames aren't clobbered by stale DB ones
+              otherPlayersMap.set(p.player_id, { ...existing, ...p });
               window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
                  detail: { players: Array.from(otherPlayersMap.values()) }
               }));
@@ -281,9 +283,10 @@ export default function MultiplayerSystem({ envUrl }) {
             state.anim !== lastPushState.anim ||
             envUrlCurrent !== (lastPushState.envUrl || '');
 
-        // Push if moved significantly, OR every 8 seconds to keep connection alive
+        // Push if moved significantly, OR every 2 seconds to keep connection alive
+        // (faster heartbeat ⇒ less initial-join latency before WebRTC kicks in)
         const timeSinceLastPush = now - lastPushTime;
-        const forceKeepAlive = timeSinceLastPush > 8000;
+        const forceKeepAlive = timeSinceLastPush > 2000;
         
         // Only write to DB for presence/environment sync every 5s, NOT movement
         if (forceKeepAlive || envUrlCurrent !== (lastPushState.envUrl || '')) {

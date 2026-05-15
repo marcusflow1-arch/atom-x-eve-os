@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 
 /**
  * RemotePlayersManager — renders other players in the shared game world.
@@ -57,8 +58,10 @@ export function createRemotePlayersManager(scene) {
     }
     if (remotes.has(player.player_id)) return;
 
-    // Clone the cached FBX
-    const fbx = cachedArcherFBX.clone(true);
+    // Deep-clone the cached FBX using SkeletonUtils — required for SkinnedMesh
+    // models so the skeleton/bones are also cloned (plain .clone(true) leaves
+    // skinned meshes invisible because they still reference the original bones).
+    const fbx = SkeletonUtils.clone(cachedArcherFBX);
     const box = new THREE.Box3().setFromObject(fbx);
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
