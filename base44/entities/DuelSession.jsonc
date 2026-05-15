@@ -1,0 +1,51 @@
+{
+  "name": "DuelSession",
+  "type": "object",
+  "properties": {
+    "challenger_id": {
+      "type": "string",
+      "description": "User ID of the player who issued the duel"
+    },
+    "challenger_name": {
+      "type": "string"
+    },
+    "opponent_id": {
+      "type": "string",
+      "description": "User ID of the player who accepted the duel"
+    },
+    "opponent_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "finished"
+      ],
+      "default": "active"
+    },
+    "winner_id": {
+      "type": "string",
+      "description": "User ID of the winner (set when status=finished)"
+    },
+    "loser_id": {
+      "type": "string"
+    },
+    "challenger_hp": {
+      "type": "number",
+      "default": 100
+    },
+    "opponent_hp": {
+      "type": "number",
+      "default": 100
+    },
+    "max_hp": {
+      "type": "number",
+      "default": 100
+    }
+  },
+  "required": [
+    "challenger_id",
+    "opponent_id"
+  ]
+}

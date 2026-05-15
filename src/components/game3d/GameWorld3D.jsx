@@ -1209,11 +1209,8 @@ export default function GameWorld3D() {
         }
 
         // Broadcast live player position + facing to the HUD minimap store
-        setPlayerPosition({
-          x: model.position.x,
-          z: model.position.z,
-          yaw: orbit.current.yaw,
-        });
+        setPlayerPosition({ x: model.position.x, z: model.position.z, yaw: orbit.current.yaw });
+        window.__localPlayerPos = { x: model.position.x, y: model.position.y, z: model.position.z };
 
         // Broadcast to multiplayer presence system (used by MultiplayerSystem).
         window.dispatchEvent(new CustomEvent('multiplayerLocalUpdate', {
@@ -1773,16 +1770,19 @@ export default function GameWorld3D() {
           const ivP = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
           setPlayerNameUI(ivP ? { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h } : null);
         } else { setPlayerNameUI(null); }
-        // Project remote-player heads → screen for proximity-voice mic icons
-        const rmUI = [];
+        // Project remote-player heads → mic icons + capture feet projections for duel markers
+        const rmUI = []; const rmFeet = {};
         const rm = remoteManagerRef.current?.getRemotes?.();
         if (rm) rm.forEach((r, pid) => {
           if (!r.group) return;
           tmpVec.set(r.group.position.x, r.group.position.y + 2.6, r.group.position.z); tmpVec.project(camera);
-          const iv = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
-          if (iv) rmUI.push({ id: pid, x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h });
+          if (tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2) rmUI.push({ id: pid, x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h });
+          tmpVec.set(r.group.position.x, r.group.position.y + 0.05, r.group.position.z); tmpVec.project(camera);
+          if (tmpVec.z > -1 && tmpVec.z < 1) rmFeet[pid] = { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h };
         });
         setRemoteMicUI(rmUI);
+        let lf = null; if (model) { tmpVec.set(model.position.x, model.position.y + 0.05, model.position.z); tmpVec.project(camera); if (tmpVec.z > -1 && tmpVec.z < 1) lf = { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h }; }
+        window.__duelFeetPositions = { local: lf, remotes: rmFeet };
 
         // Sync live boss state → bossStore
         bossEntities.forEach((b) => { updateBoss(b.id, { x: b.group.position.x, z: b.group.position.z, hp: Math.max(0, b.hp), maxHp: b.maxHp, alive: b.alive && !b.dying }); });

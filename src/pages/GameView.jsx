@@ -16,13 +16,14 @@ import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
 import IncomingRequestToast from '../components/game3d/social/IncomingRequestToast';
+import DuelSystem from '../components/game3d/social/DuelSystem';
+import DuelMarkers from '../components/game3d/social/DuelMarkers';
 import {
-  sendFriendRequest, sendPartyRequest, sendTradeRequest,
+  sendFriendRequest, sendPartyRequest, sendTradeRequest, sendDuelRequest,
   partyStore,
 } from '../components/game3d/social/socialStores';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
-import { base44 } from '@/api/base44Client';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -64,11 +65,10 @@ export default function GameView() {
           toast.success(`Trade request sent to ${playerName}`);
         } catch { toast.error('Could not send trade request'); }
       } else if (action === 'duel') {
-        toast.success(`Duel challenge sent to ${playerName}`);
-        base44.entities.Challenge.create({
-          challenger_id: user.id, opponent_id: playerId, type: 'duel', status: 'pending',
-          message: `${senderName} challenges you to a duel!`,
-        }).catch(() => {});
+        try {
+          await sendDuelRequest(sender, receiver);
+          toast.success(`Duel challenge sent to ${playerName}`);
+        } catch { toast.error('Could not send duel challenge'); }
       }
     };
     window.addEventListener('gamePlayerAction', onAction);
@@ -130,6 +130,8 @@ export default function GameView() {
       <PartyPanel />
       <TradePanel />
       <IncomingRequestToast userId={user?.id} userName={user?.full_name || user?.username || 'Player'} />
+      <DuelSystem userId={user?.id} />
+      <DuelMarkers localUserId={user?.id} />
 
       {/* Back button */}
       <button

@@ -24,6 +24,21 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
       const pid = hitMesh.userData?.remotePlayerId;
       const pname = hitMesh.userData?.remotePlayerName || 'Player';
       if (pid) {
+        // If we're in an active duel and this is the opponent → strike instead of opening the menu.
+        const activeDuel = (typeof window !== 'undefined') ? window.__activeDuel : null;
+        if (activeDuel && activeDuel.opponentId === pid) {
+          const point = remoteHits[0].point;
+          let distance = 0;
+          if (window.__localPlayerPos) {
+            const lp = window.__localPlayerPos;
+            const dx = point.x - lp.x, dz = point.z - lp.z;
+            distance = Math.sqrt(dx * dx + dz * dz);
+          }
+          window.dispatchEvent(new CustomEvent('duelAttack', {
+            detail: { targetPlayerId: pid, distance },
+          }));
+          return;
+        }
         setPlayerMenu({ x: event.clientX, y: event.clientY, player: { id: pid, name: pname } });
         return;
       }

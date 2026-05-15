@@ -46,9 +46,22 @@ export const setFriendsList = (friends) => {
   friendsStore.set({ friends });
 };
 
-export const removeFriend = (id) => {
+// Remove friend — deletes the SocialFriendship row from the DB so the change
+// persists across sessions. Local store is updated optimistically; the DB
+// subscription in IncomingRequestToast will then refresh both sides.
+export const removeFriend = async (id) => {
   const { friends } = friendsStore.get();
   friendsStore.set({ friends: friends.filter((f) => f.id !== id) });
+  try {
+    const me = await base44.auth.me();
+    if (!me) return;
+    const [asA, asB] = await Promise.all([
+      base44.entities.SocialFriendship.filter({ user_a_id: me.id, user_b_id: id }),
+      base44.entities.SocialFriendship.filter({ user_a_id: id, user_b_id: me.id }),
+    ]);
+    const rows = [...(asA || []), ...(asB || [])];
+    await Promise.all(rows.map((r) => base44.entities.SocialFriendship.delete(r.id)));
+  } catch (e) { console.warn('[Social] removeFriend DB cleanup failed', e); }
 };
 
 // ─── PARTY ───────────────────────────────────────────────
@@ -100,6 +113,19 @@ export const tradeStore = {
 export const sendTradeRequest = async (sender, receiver) => {
   return base44.entities.SocialRequest.create({
     kind: 'trade',
+    sender_id: sender.id,
+    sender_name: sender.name,
+    receiver_id: receiver.id,
+    receiver_name: receiver.name,
+    status: 'pending',
+  });
+};
+
+// Send a duel CHALLENGE — receiver gets accept/decline popup.
+// On accept, IncomingRequestToast creates a DuelSession row.
+export const sendDuelRequest = async (sender, receiver) => {
+  return base44.entities.SocialRequest.create({
+    kind: 'duel',
     sender_id: sender.id,
     sender_name: sender.name,
     receiver_id: receiver.id,

@@ -2,14 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, X, MessageCircle, Trash2 } from 'lucide-react';
 import { friendsStore, removeFriend } from './socialStores';
+import { base44 } from '@/api/base44Client';
+
+const ONLINE_WINDOW_MS = 2 * 60 * 1000; // last_seen within 2 minutes → online
 
 /**
  * FriendsListPanel — opened with the L key.
- * Shows accepted friends with online indicator + actions (remove).
+ * Shows accepted friends with online/offline status + actions (remove).
+ * Online status is determined by reading each friend's User.last_seen.
  */
 export default function FriendsListPanel({ open, onClose }) {
   const [{ friends }, setState] = useState(friendsStore.get());
+  const [onlineMap, setOnlineMap] = useState({}); // userId → bool
   useEffect(() => friendsStore.subscribe(setState), []);
+
+  // Poll each friend's last_seen while panel is open to compute online status
+  useEffect(() => {
+    if (!open || friends.length === 0) return;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const ids = friends.map((f) => f.id);
+        const users = await base44.entities.User.filter({ id: { $in: ids } });
+        if (cancelled) return;
+        const now = Date.now();
+        const map = {};
+        (users || []).forEach((u) => {
+          const seen = u.last_seen ? new Date(u.last_seen).getTime() : 0;
+          map[u.id] = now - seen < ONLINE_WINDOW_MS;
+        });
+        setOnlineMap(map);
+      } catch (e) { /* best-effort, ignore */ }
+    };
+    refresh();
+    const iv = setInterval(refresh, 30000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [open, friends]);
 
   return (
     <AnimatePresence>
@@ -51,19 +79,21 @@ export default function FriendsListPanel({ open, onClose }) {
                   <span className="text-white/30">Middle-click a player and choose Add Friend.</span>
                 </div>
               ) : (
-                friends.map((f) => (
+                friends.map((f) => {
+                  const online = !!onlineMap[f.id];
+                  return (
                   <div
                     key={f.id}
                     className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-200 text-xs font-bold">
+                    <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold ${online ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-200' : 'bg-white/5 border-white/15 text-white/40'}`}>
                       {(f.name || '?').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-white font-medium truncate">{f.name}</div>
-                      <div className="text-[10px] text-emerald-300/60 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        Online
+                      <div className={`text-[10px] flex items-center gap-1 ${online ? 'text-emerald-300/70' : 'text-white/40'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-white/30'}`}></span>
+                        {online ? 'Online' : 'Offline'}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -82,7 +112,8 @@ export default function FriendsListPanel({ open, onClose }) {
                       </button>
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
 

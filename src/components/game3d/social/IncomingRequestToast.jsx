@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Users, ArrowLeftRight, Check, X } from 'lucide-react';
+import { UserPlus, Users, ArrowLeftRight, Swords, Check, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import toast from 'react-hot-toast';
 import {
@@ -141,6 +141,21 @@ export default function IncomingRequestToast({ userId, userName }) {
         openTrade({ id: req.sender_id, name: req.sender_name });
         // Signal sender to also open (their listener will see status=accepted and open)
         toast.success(`Trade started with ${req.sender_name}`);
+      } else if (req.kind === 'duel') {
+        // Create a DuelSession that both players will subscribe to.
+        const duel = await base44.entities.DuelSession.create({
+          challenger_id: req.sender_id,
+          challenger_name: req.sender_name,
+          opponent_id: req.receiver_id,
+          opponent_name: req.receiver_name || userName,
+          status: 'active',
+          challenger_hp: 100,
+          opponent_hp: 100,
+          max_hp: 100,
+        });
+        // Tag the request with the duel id so the sender's listener can pick it up
+        try { await base44.entities.SocialRequest.update(req.id, { duel_id: duel.id }); } catch {}
+        toast.success(`Duel started with ${req.sender_name}`);
       }
     } catch (e) {
       console.error('[Social] accept failed', e);
@@ -170,6 +185,8 @@ export default function IncomingRequestToast({ userId, userName }) {
           toast.success(`${r.receiver_name || 'Player'} accepted your friend request`);
         } else if (r.kind === 'party') {
           toast.success(`${r.receiver_name || 'Player'} joined your party`);
+        } else if (r.kind === 'duel') {
+          toast.success(`${r.receiver_name || 'Player'} accepted your duel! Mid-click to strike.`);
         }
       } else if (r.status === 'declined') {
         toast(`${r.receiver_name || 'Player'} declined your ${r.kind} request`);
@@ -266,5 +283,14 @@ const META = {
     border: 'rgba(251, 191, 36, 0.4)',
     glow: 'rgba(251, 191, 36, 0.18)',
     headerBg: 'rgba(251, 191, 36, 0.12)',
+  },
+  duel: {
+    title: 'Duel Challenge',
+    verb: 'challenges you to a duel',
+    icon: Swords,
+    iconColor: '#fca5a5',
+    border: 'rgba(239, 68, 68, 0.45)',
+    glow: 'rgba(239, 68, 68, 0.20)',
+    headerBg: 'rgba(239, 68, 68, 0.14)',
   },
 };
