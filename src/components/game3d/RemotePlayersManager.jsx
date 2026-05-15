@@ -70,23 +70,14 @@ export function createRemotePlayersManager(scene) {
     fbx.position.set(player.x || 0, player.y || 0.3, player.z || 0);
     fbx.rotation.y = player.yaw || 0;
 
-    // Tint emissive blue so remote players are visually distinct from the local player
+    // Render remote players in their natural colors; only the ring below
+    // their feet identifies them as remote players.
     fbx.traverse((node) => {
       if (node.isMesh) {
         node.castShadow = !node.isSkinnedMesh;
         node.receiveShadow = true;
         node.userData.remotePlayerId = player.player_id;
         node.userData.remotePlayerName = player.display_name || 'Player';
-        if (node.material) {
-          const mats = Array.isArray(node.material) ? node.material : [node.material];
-          const tinted = mats.map((mat) => {
-            const c = mat.clone();
-            c.emissive = new THREE.Color(0x3b82f6);
-            c.emissiveIntensity = 0.15;
-            return c;
-          });
-          node.material = Array.isArray(node.material) ? tinted : tinted[0];
-        }
       }
     });
 
