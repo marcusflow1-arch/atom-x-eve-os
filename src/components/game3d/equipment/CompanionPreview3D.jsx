@@ -36,8 +36,10 @@ export default function CompanionPreview3D() {
       0.1,
       100,
     );
-    camera.position.set(0, 1.0, 3.6);
-    camera.lookAt(0, 0.6, 0);
+    // Match the player preview's camera framing so the companion's feet
+    // line up with the player's feet at the same ground plane (y=0).
+    camera.position.set(0, 1.5, 3.4);
+    camera.lookAt(0, 1.0, 0);
 
     // 3-point lighting (same recipe as player preview)
     scene.add(new THREE.HemisphereLight(0xe6ecf2, 0x1a1d22, 0.7));
@@ -59,9 +61,12 @@ export default function CompanionPreview3D() {
       const box = new THREE.Box3().setFromObject(root);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 1.6 / maxDim;
+      // Bigger than before (was 1.6) — companion now reads at a comparable
+      // visual weight to the player character in the preview.
+      const scale = 2.4 / maxDim;
       root.scale.setScalar(scale);
-      // Center the model on the pivot
+      // Anchor feet to ground (y=0) and center horizontally, matching the
+      // player preview where the character stands on the same ground plane.
       const center = box.getCenter(new THREE.Vector3());
       root.position.x -= center.x * scale;
       root.position.y -= box.min.y * scale;
