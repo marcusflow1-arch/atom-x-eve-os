@@ -11,6 +11,7 @@ import SkillTreeMenu from '../components/game3d/SkillTreeMenu';
 import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
+import GameWorldServerManager from '../components/game3d/GameWorldServerManager';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
 import { base44 } from '@/api/base44Client';
@@ -23,18 +24,8 @@ export default function GameView() {
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
 
-  // Join the game-mode multiplayer channel so other players can see us & we can see them.
-  // Uses the same MultiplayerSystem the Luna dashboard uses, but on a `game_<userId>` channel
-  // so game-mode presence is distinct from dashboard presence.
-  useEffect(() => {
-    if (phase === 'world' && user?.id) {
-      // Shared world channel — every player joins the same channel so they
-      // can see and interact with each other on one server/map.
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: 'game_world_main', hostId: 'game_world_main' }
-      }));
-    }
-  }, [phase, user?.id]);
+  // World server join is handled by GameWorldServerManager — it enforces the
+  // 20-player cap and dispatches joinMultiplayerChannel only when capacity allows.
 
   // Player interaction menu actions (Duel / Add Friend / Trade / Party Up)
   useEffect(() => {
@@ -121,6 +112,7 @@ export default function GameView() {
       <OnlinePlayersPanel />
       <BossWaypoint />
       <MultiplayerSystem envUrl="game_world_lowpoly" />
+      <GameWorldServerManager />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <SkillTreeMenu open={skillTreeOpen} onClose={() => setSkillTreeOpen(false)} />
