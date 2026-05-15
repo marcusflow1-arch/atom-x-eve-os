@@ -19,7 +19,7 @@ import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets
 import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData';
 import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
-import CompanionMountHUD from './CompanionMountHUD';
+import PauseMenu from './PauseMenu'; import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
 import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
 import CompanionHealthBar from './CompanionHealthBar';
@@ -132,7 +132,7 @@ export default function GameWorld3D() {
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
-  // Companion / mount UI state
+  const [pauseOpen, setPauseOpen] = useState(false);
   const [nearbyCompanion, setNearbyCompanion] = useState(false);
   const nearbyCompanionRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -977,8 +977,8 @@ export default function GameWorld3D() {
       if (k === '2') { abilityKeyPressed.current = 1; }
       if (k === '3') { abilityKeyPressed.current = 2; }
       if (k === '4') { abilityKeyPressed.current = 3; }
-      // I = toggle equipment menu (Where Winds Meet style)
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
+      if (e.key === 'Escape') { setPauseOpen((v) => !v); e.preventDefault(); }
       // F = mount/dismount companion
       if (k === 'f') { mountToggleRef.current = true; e.preventDefault(); }
       // Z/X/V/B = companion combat abilities (Bite / Life Drain / Teleport Dash / Heal)
@@ -1879,11 +1879,9 @@ export default function GameWorld3D() {
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
             <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack · <span className="text-cyan-300 font-mono">R</span> Roll</div>
             <div><span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target</div>
-            <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-yellow-300 font-mono">C</span> Character · <span className="text-amber-300 font-mono">I</span> Equipment</div>
-            <div><span className="text-amber-300 font-mono">F</span> Mount · <span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion Skills</div>
-          </div>
-        </div>
-      )}
+            <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-amber-300 font-mono">I</span> Equipment · <span className="text-amber-300 font-mono">F</span> Mount · <span className="text-red-300 font-mono">Esc</span> Menu</div>
+            <div><span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion Skills</div>
+          </div></div>)}
 
       {/* Companion mount prompt */}
       {!loading && (
@@ -1986,6 +1984,7 @@ export default function GameWorld3D() {
 
       {/* Equipment menu (I) — Where Winds Meet–style layout */}
       <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
+      <PauseMenu open={pauseOpen} onClose={() => setPauseOpen(false)} onOpenSettings={() => { setPauseOpen(false); setEquipmentOpen(true); }} />
 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
