@@ -14,7 +14,7 @@ export default function PartyPanel() {
 
   return (
     <div
-      className="absolute left-4 top-[260px] w-[260px] rounded-xl overflow-hidden pointer-events-auto z-20"
+      className="absolute left-4 top-[324px] w-[260px] rounded-xl overflow-hidden pointer-events-auto z-20"
       style={{
         background: 'rgba(10, 14, 22, 0.78)',
         backdropFilter: 'blur(14px) saturate(160%)',

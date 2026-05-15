@@ -86,7 +86,7 @@ export default function HUDMinimapQuest() {
   })();
 
   return (
-    <div className="absolute top-4 left-4 z-20 pointer-events-none w-[230px] flex flex-col gap-3">
+    <div className="absolute top-20 left-4 z-20 pointer-events-none w-[230px] flex flex-col gap-3">
       {/* Minimap */}
       <div
         className="relative w-[150px] h-[150px] rounded-full overflow-hidden"

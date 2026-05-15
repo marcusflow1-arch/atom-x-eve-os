@@ -77,7 +77,7 @@ export default function OnlinePlayersPanel() {
     return (
       <button
         onClick={() => setCollapsed(false)}
-        className="absolute top-4 right-4 z-30 px-3 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white/80 hover:text-white text-xs flex items-center gap-2 transition-all"
+        className="absolute top-20 right-4 z-30 px-3 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white/80 hover:text-white text-xs flex items-center gap-2 transition-all"
       >
         <Users className="w-3.5 h-3.5 text-cyan-300" />
         <span className="font-bold">{worldPlayers.length}</span>
@@ -87,7 +87,7 @@ export default function OnlinePlayersPanel() {
   }
 
   return (
-    <div className="absolute top-4 right-4 z-30 w-64 rounded-xl bg-black/65 backdrop-blur-md border border-white/15 shadow-2xl flex flex-col overflow-hidden">
+    <div className="absolute top-20 right-4 z-30 w-64 rounded-xl bg-black/65 backdrop-blur-md border border-white/15 shadow-2xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
