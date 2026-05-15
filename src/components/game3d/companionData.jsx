@@ -40,7 +40,7 @@ export const COMPANION_DEFINITIONS = [
     // Fallback if the gltf has no embedded clips — pulls idle/walk from
     // the admin AnimationFBX library (folder = "companion").
     externalAnimUrl: null,
-    scale: 1.4,
+    scale: 0.91,
     speedMultiplier: 1.8, // 80% faster while mounted
     spawnPos: [4, 0.3, -3],
     color: 0x9ca3af,

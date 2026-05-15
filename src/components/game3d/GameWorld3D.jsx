@@ -1164,18 +1164,50 @@ export default function GameWorld3D() {
             companionWalkActionRef.current.setEffectiveTimeScale(isRunning ? 1.0 : 0.7);
           }
         } else {
-          // Not mounted — player visible, companion stays put with idle anim
+          // Not mounted — companion follows the player like a pet.
+          // Walks/runs toward player only while WASD is held; idles otherwise.
           model.visible = true;
-          if (compGroup && mapReady) {
-            const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
-            if (gy !== null) compGroup.position.y = gy;
-          }
-          if (companionCurrentAnimRef.current !== 'idle') {
-            const walk = companionWalkActionRef.current;
-            const idle = companionIdleActionRef.current;
-            if (walk) walk.fadeOut(0.2);
-            if (idle) idle.reset().fadeIn(0.2).play();
-            companionCurrentAnimRef.current = 'idle';
+          if (compGroup) {
+            const TRAIL = 1.8;
+            const dx = model.position.x - compGroup.position.x;
+            const dz = model.position.z - compGroup.position.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+            let chasing = false;
+            if (isMoving && dist > TRAIL) {
+              if (dist > 25) {
+                compGroup.position.x = model.position.x - (dx / dist) * TRAIL;
+                compGroup.position.z = model.position.z - (dz / dist) * TRAIL;
+              } else {
+                const fs = isRunning ? RUN_SPEED * 0.85 : WALK_SPEED * 0.9;
+                const nx = dx / dist, nz = dz / dist;
+                compGroup.position.x += nx * fs * delta;
+                compGroup.position.z += nz * fs * delta;
+                const faceQ = new THREE.Quaternion().setFromAxisAngle(
+                  new THREE.Vector3(0, 1, 0), Math.atan2(nx, nz));
+                compGroup.quaternion.slerp(faceQ, ROT_SMOOTH);
+                chasing = true;
+              }
+            }
+            if (mapReady) {
+              const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
+              if (gy !== null) compGroup.position.y = gy;
+            }
+            const targetAnim = chasing ? 'walk' : 'idle';
+            if (targetAnim !== companionCurrentAnimRef.current) {
+              const walk = companionWalkActionRef.current;
+              const idle = companionIdleActionRef.current;
+              if (targetAnim === 'walk' && walk) {
+                if (idle) idle.fadeOut(0.2);
+                walk.reset().fadeIn(0.2).play();
+              } else if (targetAnim === 'idle' && idle) {
+                if (walk) walk.fadeOut(0.2);
+                idle.reset().fadeIn(0.2).play();
+              }
+              companionCurrentAnimRef.current = targetAnim;
+            }
+            if (chasing && companionWalkActionRef.current) {
+              companionWalkActionRef.current.setEffectiveTimeScale(isRunning ? 1.0 : 0.7);
+            }
           }
         }
 
