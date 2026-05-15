@@ -16,6 +16,9 @@ export function createNetworkRemoteTransform(group) {
   const targetPos = new THREE.Vector3();
   const lastPos = new THREE.Vector3();
   const velocity = new THREE.Vector3();
+  // Per-instance scratch Vector3 to feed THREE.Vector3.lerp (which REQUIRES a Vector3).
+  // Per-instance (not module-scope) because update() may be reentrant across instances.
+  const _aim = new THREE.Vector3();
   let targetYaw = 0;
   let lastUpdateMs = 0;
   let initialized = false;
@@ -48,20 +51,18 @@ export function createNetworkRemoteTransform(group) {
     if (!initialized) return;
     const ageMs = performance.now() - lastUpdateMs;
 
-    let aimX = targetPos.x;
-    let aimY = targetPos.y;
-    let aimZ = targetPos.z;
+    _aim.copy(targetPos);
 
     // Extrapolate if we're hungry for fresh data, but cap the extrapolation
     // window so a long pause doesn't shoot the avatar off into the distance.
     if (ageMs > 0 && ageMs < EXTRAPOLATION_MAX_MS) {
       const extraS = ageMs / 1000;
-      aimX += velocity.x * extraS * 0.5; // soften extrapolation (×0.5)
-      aimY += velocity.y * extraS * 0.5;
-      aimZ += velocity.z * extraS * 0.5;
+      _aim.x += velocity.x * extraS * 0.5; // soften extrapolation (×0.5)
+      _aim.y += velocity.y * extraS * 0.5;
+      _aim.z += velocity.z * extraS * 0.5;
     }
 
-    group.position.lerp({ x: aimX, y: aimY, z: aimZ }, POS_LERP);
+    group.position.lerp(_aim, POS_LERP);
     _q.setFromAxisAngle(_yAxis, targetYaw);
     group.quaternion.slerp(_q, YAW_SLERP);
   }
