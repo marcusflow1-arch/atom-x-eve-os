@@ -64,7 +64,9 @@ export default function CompanionFusionCard() {
         className="absolute pointer-events-auto flex flex-col items-center gap-2"
         style={{
           right: 40,
-          top: 110,
+          // Anchor to the bottom so the wolf sits just above the
+          // Repair / Replace action buttons (which live at bottom-5 / ~20px).
+          bottom: 60,
           width: 240,
         }}
       >
@@ -106,10 +108,6 @@ export default function CompanionFusionCard() {
             />
           )}
         </button>
-
-        <div className="text-[9px] tracking-widest uppercase text-white/35 text-center px-2 leading-relaxed">
-          {isActive ? 'Click model to return' : 'Click companion to equip'}
-        </div>
       </div>
     </>
   );
