@@ -47,10 +47,21 @@ export const ABILITY_DEFINITIONS = [
     type: 'self',
     element: 'shadow',
   },
+  {
+    id: 'shadow_teleport',
+    name: 'Shadow Teleport',
+    description: 'Fade into the shadows and reappear behind your target, ready to strike.',
+    icon: '🌀',
+    color: '#a855f7',
+    cooldown: 7.0,
+    damage: 0,
+    type: 'targeted',
+    element: 'shadow',
+  },
 ];
 
-// 4 equip slots — indices 0-3 map to keys Q, E, R, F
-const DEFAULT_EQUIPPED = ['lightning_strike', null, null, null];
+// 4 equip slots — indices 0-3 map to keys 1, 2, 3, 4
+const DEFAULT_EQUIPPED = ['lightning_strike', 'shadow_teleport', null, null];
 
 let state = {
   equipped: [...DEFAULT_EQUIPPED],  // ability id or null per slot

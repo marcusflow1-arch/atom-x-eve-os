@@ -34,6 +34,7 @@ import {
   setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS,
 } from './abilityStore';
 import { createLightningStrike } from './LightningStrikeEffect';
+import { createShadowTeleport } from './ShadowTeleportEffect';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -802,11 +803,11 @@ export default function GameWorld3D() {
       if (k === 'r') playOneShot('roll', 1.3);
       // E = interact with nearby NPC
       if (k === 'e') interactPressed.current = true;
-      // Ability keys: Q=slot 0, R=slot 2, F=slot 3
-      // Q is ability-only (no melee). F triggers both melee + ability slot 3.
-      if (k === 'q') { abilityKeyPressed.current = 0; }
-      if (k === 'r') { abilityKeyPressed.current = 2; }
-      if (k === 'f') { attackPressed.current = true; abilityKeyPressed.current = 3; }
+      // Ability keys: 1=slot 0, 2=slot 1, 3=slot 2, 4=slot 3
+      if (k === '1') { abilityKeyPressed.current = 0; }
+      if (k === '2') { abilityKeyPressed.current = 1; }
+      if (k === '3') { abilityKeyPressed.current = 2; }
+      if (k === '4') { abilityKeyPressed.current = 3; }
       // I = toggle equipment menu (Where Winds Meet style)
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
     };
@@ -1263,7 +1264,15 @@ export default function GameWorld3D() {
             const targetEnemy = enemies.find((e) => e.id === target.id && e.alive && !e.dying);
             if (targetEnemy) {
               startCooldown(slotIndex);
-              if (ab.id === 'lightning_strike') {
+              if (ab.id === 'shadow_teleport') {
+                const fx = createShadowTeleport(scene, model, () => ({
+                  x: targetEnemy.group.position.x,
+                  y: targetEnemy.group.position.y,
+                  z: targetEnemy.group.position.z,
+                }));
+                activeEffects.current.push(fx);
+                playActionSound('player_jump');
+              } else if (ab.id === 'lightning_strike') {
                 // Spawn lightning at the target enemy's position
                 const tx = targetEnemy.group.position.x;
                 const tz = targetEnemy.group.position.z;
@@ -1466,9 +1475,9 @@ export default function GameWorld3D() {
           <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-1">Controls</div>
           <div className="text-xs text-white/80 space-y-0.5">
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
-            <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span>/<span className="text-cyan-300 font-mono">F</span> Attack</div>
-            <div><span className="text-cyan-300 font-mono">Q</span> Kick · <span className="text-cyan-300 font-mono">R</span> Roll</div>
-            <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC · <span className="text-yellow-300 font-mono">C</span> Character · <span className="text-amber-300 font-mono">I</span> Equipment</div>
+            <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack · <span className="text-cyan-300 font-mono">R</span> Roll</div>
+            <div><span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target</div>
+            <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-yellow-300 font-mono">C</span> Character · <span className="text-amber-300 font-mono">I</span> Equipment</div>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { subscribeAbilities } from '../abilityStore';
 import { ABILITY_DEFINITIONS } from '../abilityStore';
 
-const SLOT_KEYS = ['Q', 'E', 'R', 'F'];
+const SLOT_KEYS = ['1', '2', '3', '4'];
 
 const ELEMENT_COLORS = {
   lightning: '#ffe066',
