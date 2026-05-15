@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Eye, Loader2, Box, Plus, Search, Download, Edit2, FolderUp } from 'lucide-react';
+import { Upload, Trash2, Eye, Loader2, Box, Plus, Search, Download, Edit2, FolderUp, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -285,6 +285,53 @@ export default function Model3DManager() {
       return { count: 0, error: err?.message || 'unknown error' };
     }
   };
+
+  // Scan existing Model3D entries whose name contains "companion" (e.g.
+  // "companion", "Companion 1", "Companion 0"). For each matching model that
+  // has embedded animation clips, extract them into the "companion" folder
+  // of the AnimationFBX library. Idempotent-safe: re-running on a model that
+  // already had its anims extracted will create duplicates only if you
+  // haven't cleaned them up, so it's left as a manual action.
+  const [scanning, setScanning] = useState(false);
+  const [scanReport, setScanReport] = useState(null);
+  const handleScanCompanionModels = async () => {
+    setScanError(null);
+    setScanReport(null);
+    setScanning(true);
+    try {
+      const allModels = await base44.entities.Model3D.list('-created_date');
+      const targets = allModels.filter((m) =>
+        (m.name || '').toLowerCase().includes('companion')
+      );
+
+      if (!targets.length) {
+        setScanReport({ scanned: 0, extracted: 0, models: [] });
+        return;
+      }
+
+      const report = { scanned: targets.length, extracted: 0, models: [] };
+      for (let i = 0; i < targets.length; i++) {
+        const m = targets[i];
+        setUploadProgress(`Scanning ${i + 1}/${targets.length}: ${m.name}`);
+        const result = await extractAndSaveAnimations({
+          modelUrl: m.file_url,
+          fileType: m.file_type,
+          bundleManifest: m.bundle_manifest || null,
+          modelName: m.name,
+        });
+        report.extracted += result.count || 0;
+        report.models.push({ name: m.name, count: result.count || 0, error: result.error });
+      }
+      setScanReport(report);
+    } catch (err) {
+      console.error('Companion scan failed:', err);
+      setScanError(`Scan failed: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setScanning(false);
+      setUploadProgress('');
+    }
+  };
+  const [scanError, setScanError] = useState(null);
 
   // 1. Single File Upload
   const handleFileUpload = async (e) => {
@@ -621,6 +668,54 @@ export default function Model3DManager() {
           </div>
         )}
       </div>
+
+      {/* Companion Scan Tool */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-white text-sm">Scan Companion Models</h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Finds existing models whose name contains "companion" and saves any embedded animations into the AnimationFBX <span className="text-purple-300 font-mono">companion</span> folder.
+          </p>
+        </div>
+        <Button
+          type="button"
+          disabled={scanning}
+          variant="outline"
+          className="border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/10 h-10"
+          onClick={handleScanCompanionModels}
+        >
+          {scanning ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {uploadProgress || 'Scanning...'}</>
+          ) : (
+            <><ScanLine className="w-4 h-4 mr-2" /> Scan Companion Models</>
+          )}
+        </Button>
+      </div>
+      {scanError && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm">{scanError}</div>
+      )}
+      {scanReport && (
+        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 text-sm">
+          <p className="text-white font-semibold mb-1">
+            Scanned {scanReport.scanned} model{scanReport.scanned === 1 ? '' : 's'} · Extracted {scanReport.extracted} animation{scanReport.extracted === 1 ? '' : 's'}
+          </p>
+          {scanReport.models.length === 0 ? (
+            <p className="text-slate-400 text-xs">No models with "companion" in the name were found.</p>
+          ) : (
+            <ul className="text-xs text-slate-300 space-y-0.5 mt-1">
+              {scanReport.models.map((r, i) => (
+                <li key={i} className="flex justify-between gap-2">
+                  <span className="truncate">{r.name}</span>
+                  <span className={r.count > 0 ? 'text-green-400 font-mono' : 'text-slate-500 font-mono'}>
+                    {r.error ? `error: ${r.error}` : `${r.count} anim${r.count === 1 ? '' : 's'}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button onClick={() => setScanReport(null)} className="text-xs text-slate-400 hover:text-slate-200 mt-2 underline">Dismiss</button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
