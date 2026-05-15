@@ -560,16 +560,16 @@ export default function GameWorld3D() {
         companionGroupRef.current = companionModel;
         companionMixerRef.current = compMixer;
 
-        if (companionDef.modelFormat === 'glb' && embeddedClips.length > 0) {
-          // Pick clips by name substring (case-insensitive). Falls back to first
-          // clip for idle and second for walk if names don't match.
+        // Helper: bind idle + walk clips onto this companion's mixer.
+        // Used both for embedded-clip and external-clip flows.
+        const bindCompanionClips = (clips) => {
           const findClip = (substr) => {
-            if (!substr) return null;
+            if (!substr || !clips.length) return null;
             const lc = substr.toLowerCase();
-            return embeddedClips.find((c) => (c.name || '').toLowerCase().includes(lc)) || null;
+            return clips.find((c) => (c.name || '').toLowerCase().includes(lc)) || null;
           };
-          const idleClip = findClip(companionDef.idleClipName) || embeddedClips[0];
-          const walkClip = findClip(companionDef.walkClipName) || embeddedClips[1] || embeddedClips[0];
+          const idleClip = findClip(companionDef.idleClipName) || clips[0];
+          const walkClip = findClip(companionDef.walkClipName) || clips[1] || clips[0];
           if (idleClip) {
             const idle = compMixer.clipAction(idleClip);
             companionIdleActionRef.current = idle;
@@ -580,6 +580,21 @@ export default function GameWorld3D() {
             walk.setEffectiveTimeScale(0.7);
             companionWalkActionRef.current = walk;
           }
+        };
+
+        if (companionDef.modelFormat === 'glb' && embeddedClips.length > 0) {
+          bindCompanionClips(embeddedClips);
+        } else if (companionDef.modelFormat === 'glb' && companionDef.externalAnimUrl) {
+          // Mesh-only GLB — pull idle / walk clips from a separate animations GLB.
+          // Works when both files share the same bone hierarchy (wolf-with-animations
+          // rig matches the admin "wolf companion" rig).
+          const extLoader = new GLTFLoader();
+          extLoader.load(
+            companionDef.externalAnimUrl,
+            (extGltf) => bindCompanionClips(extGltf.animations || []),
+            undefined,
+            (err) => console.error('Companion external anim load error:', err),
+          );
         } else {
           // FBX format — load idle + walk anim files separately via FBXLoader
           loader.load(companionDef.idleAnim, (af) => {

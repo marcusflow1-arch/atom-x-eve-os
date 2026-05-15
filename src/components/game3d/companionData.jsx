@@ -10,13 +10,16 @@ export const COMPANION_DEFINITIONS = [
     description: 'A swift wolf companion that grants increased movement speed when ridden.',
     rarity: 'rare',
     // Wolf companion — the "wolf companion" Model3D from admin
-    // (geometric_stylised_wolf_meshy_6.glb). Embedded idle/walk clips are
-    // matched by name substring at runtime.
+    // (geometric_stylised_wolf_meshy_6.glb).
     modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d2fe3d0ef_geometric_stylised_wolf_meshy_6.glb',
     modelFormat: 'glb', // 'glb' = GLTFLoader + embedded anims; 'fbx' = FBXLoader + separate anim URLs
     // For GLB: substring (case-insensitive) used to find the matching clip inside the file
     walkClipName: 'walk',
     idleClipName: 'idle',
+    // External animation source — when the mesh model has no embedded clips,
+    // the loader will fetch this GLB and reuse its idle / walk clips by name.
+    // (The AnimationFBX "companion" folder in admin points at this same file.)
+    externalAnimUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/4636b74d8_wolf_with_animations2.glb',
     scale: 1.2,
     speedMultiplier: 1.8, // 80% faster while mounted
     spawnPos: [4, 0.3, -3],

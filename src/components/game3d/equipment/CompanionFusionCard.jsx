@@ -1,21 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { PawPrint, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import {
   subscribeFusion,
   getFusionState,
   setFusionMode,
   getActiveCompanion,
 } from './companionFusionStore';
+import CompanionPreview3D from './CompanionPreview3D';
 
 /**
- * Compact companion preview card that sits to the RIGHT of the 3D player model.
- * - Click the companion PORTRAIT itself to switch into companion mode.
- * - The button above is ENCHANT (active only in companion mode) — clicking it
- *   toggles the enchantment overlay for companion gear.
+ * Companion live-preview card that sits to the RIGHT of the 3D player model.
  *
- * The 3D model itself is NOT moved.
+ * Layout rules:
+ *  - The previously-used static portrait BOX is replaced with a live 3D model
+ *    viewer (just like the player's 3D preview, on a smaller scale).
+ *  - The thin vertical divider between player and companion changes color based
+ *    on the current fusion mode:
+ *      • Player mode    → amber (matches the enchant button)
+ *      • Companion mode → blue  (matches the companion's active accent)
+ *  - There is NO enchant button on this side anymore. The single enchant button
+ *    above the player model handles both contexts.
+ *  - Clicking the 3D preview area toggles fusion mode just like the old portrait did.
  */
-export default function CompanionFusionCard({ onEnchant, enchantOpen }) {
+export default function CompanionFusionCard() {
   const [fusion, setFusion] = useState(getFusionState());
   useEffect(() => subscribeFusion(setFusion), []);
 
@@ -31,132 +38,75 @@ export default function CompanionFusionCard({ onEnchant, enchantOpen }) {
     legendary: '#fbbf24',
   }[companion.rarity] || '#9ca3af';
 
+  // Divider stop colors — amber in player mode, blue in companion mode
+  const dividerStop = isActive
+    ? 'rgba(147,197,253,0.55)'  // blue
+    : 'rgba(251,191,36,0.55)';  // amber (matches enchant button)
+  const dividerEdge = isActive
+    ? 'rgba(147,197,253,0.35)'
+    : 'rgba(251,191,36,0.35)';
+
   return (
     <>
-      {/* Thin vertical divider between player and companion.
-          Subtle radiant fade — visible but not glowing. */}
+      {/* Thin vertical divider — color follows fusion mode */}
       <div
-        className="absolute pointer-events-none"
+        className="absolute pointer-events-none transition-colors duration-300"
         style={{
           right: 280,
           top: 140,
           bottom: 180,
           width: 1,
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(147,197,253,0.35) 30%, rgba(147,197,253,0.45) 50%, rgba(147,197,253,0.35) 70%, rgba(255,255,255,0) 100%)',
+          background: `linear-gradient(180deg, rgba(255,255,255,0) 0%, ${dividerEdge} 30%, ${dividerStop} 50%, ${dividerEdge} 70%, rgba(255,255,255,0) 100%)`,
         }}
       />
 
       <div
         className="absolute pointer-events-auto flex flex-col items-center gap-2"
         style={{
-          right: 60,
+          right: 40,
           top: 110,
-          width: 200,
+          width: 240,
         }}
       >
-        {/* ENCHANT button — only does something while in companion mode. */}
-        <button
-          onClick={() => {
-            if (!isActive) setFusionMode('companion');
-            else onEnchant?.();
-          }}
-          disabled={false}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-widest font-semibold transition-all hover:scale-105"
-          style={{
-            background: enchantOpen
-              ? 'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))'
-              : isActive
-              ? 'linear-gradient(180deg, rgba(96,165,250,0.95), rgba(37,99,235,0.9))'
-              : 'rgba(15,17,22,0.55)',
-            color: enchantOpen
-              ? '#1a1208'
-              : isActive
-              ? '#0a0f1e'
-              : 'rgba(147,197,253,0.95)',
-            border: `1px solid ${
-              enchantOpen
-                ? 'rgba(251,191,36,0.7)'
-                : isActive
-                ? 'rgba(147,197,253,0.7)'
-                : 'rgba(96,165,250,0.45)'
-            }`,
-            backdropFilter: 'blur(14px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-            boxShadow: isActive
-              ? '0 6px 18px rgba(96,165,250,0.4)'
-              : '0 4px 14px rgba(0,0,0,0.4)',
-          }}
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          ENCHANT
-        </button>
-
-        {/* Companion portrait — CLICK THIS to toggle companion mode. */}
+        {/* Live 3D companion preview — replaces the old portrait box.
+            Clicking it toggles fusion mode. */}
         <button
           onClick={() => setFusionMode(isActive ? 'player' : 'companion')}
-          className="w-full rounded-lg overflow-hidden transition-all hover:scale-[1.02] cursor-pointer"
+          className="w-full rounded-lg overflow-hidden transition-all hover:scale-[1.02] cursor-pointer relative"
           style={{
-            background: isActive
-              ? `linear-gradient(180deg, ${rarityColor}22 0%, rgba(15,17,22,0.7) 100%)`
-              : 'rgba(15,17,22,0.55)',
-            border: `1px solid ${isActive ? rarityColor + 'aa' : 'rgba(255,255,255,0.1)'}`,
-            backdropFilter: 'blur(12px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(140%)',
-            boxShadow: isActive
-              ? `0 6px 20px ${rarityColor}33`
-              : '0 4px 14px rgba(0,0,0,0.4)',
+            height: 260,
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
           }}
           title={isActive ? 'Click to return to player view' : 'Click to view companion equipment'}
         >
-          <div
-            className="relative flex items-center justify-center"
-            style={{ height: 160 }}
-          >
-            <div
-              className="absolute rounded-full"
-              style={{
-                width: 110,
-                height: 110,
-                background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)`,
-                filter: 'blur(8px)',
-              }}
-            />
-            <PawPrint
-              className="relative"
-              style={{
-                width: 64,
-                height: 64,
-                color: rarityColor,
-                opacity: isActive ? 1 : 0.6,
-                filter: `drop-shadow(0 0 8px ${rarityColor}88)`,
-              }}
-            />
-            {isActive && (
-              <Sparkles
-                className="absolute top-2 right-2 w-3.5 h-3.5"
-                style={{ color: rarityColor }}
-              />
-            )}
-          </div>
+          <CompanionPreview3D />
 
-          <div className="px-3 py-2 border-t border-white/5 text-left">
-            <div
-              className="text-[11px] font-bold tracking-wider truncate"
+          {/* Active-mode glow corner indicator */}
+          {isActive && (
+            <Sparkles
+              className="absolute top-2 right-2 w-3.5 h-3.5"
               style={{ color: rarityColor }}
-            >
-              {companion.name}
-            </div>
-            <div className="text-[9px] tracking-widest uppercase text-white/40 mt-0.5">
-              {companion.rarity} · companion
-            </div>
-          </div>
+            />
+          )}
         </button>
 
+        {/* Name + rarity label — kept under the 3D preview */}
+        <div className="text-center">
+          <div
+            className="text-[11px] font-bold tracking-wider truncate"
+            style={{ color: rarityColor }}
+          >
+            {companion.name}
+          </div>
+          <div className="text-[9px] tracking-widest uppercase text-white/40 mt-0.5">
+            {companion.rarity} · companion
+          </div>
+        </div>
+
         <div className="text-[9px] tracking-widest uppercase text-white/35 text-center px-2 leading-relaxed">
-          {isActive
-            ? 'Click portrait to return'
-            : 'Click companion to equip'}
+          {isActive ? 'Click model to return' : 'Click companion to equip'}
         </div>
       </div>
     </>
