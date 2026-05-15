@@ -119,8 +119,8 @@ export default function CompanionPreview3D() {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-      // Gentle auto-rotate so the companion feels alive in the preview
-      pivot.rotation.y += delta * 0.25;
+      // No auto-rotate — companion faces forward (toward camera), idling like the player preview.
+      pivot.rotation.y = 0;
       renderer.render(scene, camera);
     };
     animate();

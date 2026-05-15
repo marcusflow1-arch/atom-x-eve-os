@@ -33,6 +33,7 @@ import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
 import { getCompanionById } from './companionData';
+import { loadCompanionFolderClips } from './companionAnimationLoader';
 import {
   getAbilityState, tickCooldowns, startCooldown,
   setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS,
@@ -584,17 +585,12 @@ export default function GameWorld3D() {
 
         if (companionDef.modelFormat === 'glb' && embeddedClips.length > 0) {
           bindCompanionClips(embeddedClips);
-        } else if (companionDef.modelFormat === 'glb' && companionDef.externalAnimUrl) {
-          // Mesh-only GLB — pull idle / walk clips from a separate animations GLB.
-          // Works when both files share the same bone hierarchy (wolf-with-animations
-          // rig matches the admin "wolf companion" rig).
-          const extLoader = new GLTFLoader();
-          extLoader.load(
-            companionDef.externalAnimUrl,
-            (extGltf) => bindCompanionClips(extGltf.animations || []),
-            undefined,
-            (err) => console.error('Companion external anim load error:', err),
-          );
+        } else if (companionDef.modelFormat === 'glb') {
+          // Mesh-only GLB — source idle / walk clips from the admin AnimationFBX
+          // library (folder = "companion"). See companionAnimationLoader.js.
+          loadCompanionFolderClips(loader)
+            .then((clips) => bindCompanionClips(clips))
+            .catch((err) => console.error('Companion AnimationFBX load error:', err));
         } else {
           // FBX format — load idle + walk anim files separately via FBXLoader
           loader.load(companionDef.idleAnim, (af) => {
