@@ -148,14 +148,16 @@ export function createRemotePlayersManager(scene) {
   };
 
   // Update positions/animations every frame; called from GameWorld3D animate loop
+  // Higher lerp factors = remote player snaps to network position faster,
+  // reducing visual lag at the cost of a tiny bit of smoothing.
   const update = (delta) => {
     remotes.forEach((r) => {
       r.mixer.update(delta);
-      // Smoothly lerp toward target position
-      r.group.position.lerp(r.targetPos, 0.25);
-      // Smooth yaw rotation
+      // Aggressive lerp toward target position (~100ms catch-up at 60fps)
+      r.group.position.lerp(r.targetPos, 0.5);
+      // Faster yaw rotation
       const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), r.targetYaw);
-      r.group.quaternion.slerp(targetQ, 0.18);
+      r.group.quaternion.slerp(targetQ, 0.4);
     });
   };
 

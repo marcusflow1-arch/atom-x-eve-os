@@ -274,12 +274,14 @@ export default function MultiplayerSystem({ envUrl }) {
         
         const envUrlCurrent = envUrlRef.current || '';
         
-        // Calculate diff to avoid spamming the database with updates when idle
+        // Calculate diff to avoid spamming the data channel when truly idle.
+        // Lower thresholds = more frequent updates = lower perceived latency
+        // on the remote side.
         const hasMoved = 
-            Math.abs(state.x - (lastPushState.x || 0)) > 0.05 ||
-            Math.abs(state.y - (lastPushState.y || 0)) > 0.05 ||
-            Math.abs(state.z - (lastPushState.z || 0)) > 0.05 ||
-            Math.abs(state.yaw - (lastPushState.yaw || 0)) > 0.1 ||
+            Math.abs(state.x - (lastPushState.x || 0)) > 0.005 ||
+            Math.abs(state.y - (lastPushState.y || 0)) > 0.005 ||
+            Math.abs(state.z - (lastPushState.z || 0)) > 0.005 ||
+            Math.abs(state.yaw - (lastPushState.yaw || 0)) > 0.01 ||
             state.anim !== lastPushState.anim ||
             envUrlCurrent !== (lastPushState.envUrl || '');
 
@@ -406,7 +408,10 @@ export default function MultiplayerSystem({ envUrl }) {
     };
 
     tick();
-    const interval = setInterval(tick, 50);
+    // 33Hz tick (~30ms) — broadcasts movement over WebRTC data channel as
+    // fast as practical without saturating the connection. DB writes are
+    // still throttled to once every 2s via forceKeepAlive.
+    const interval = setInterval(tick, 30);
 
     return () => {
       isSubscribed = false;
