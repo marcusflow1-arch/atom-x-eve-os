@@ -1,0 +1,24 @@
+{
+  "name": "SocialFriendship",
+  "type": "object",
+  "properties": {
+    "user_a_id": {
+      "type": "string",
+      "description": "First user in the friendship"
+    },
+    "user_a_name": {
+      "type": "string"
+    },
+    "user_b_id": {
+      "type": "string",
+      "description": "Second user in the friendship"
+    },
+    "user_b_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_a_id",
+    "user_b_id"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "SocialRequest",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "friend",
+        "party",
+        "trade"
+      ],
+      "description": "Type of social request"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "User ID of the sender"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Display name of the sender"
+    },
+    "receiver_id": {
+      "type": "string",
+      "description": "User ID of the receiver"
+    },
+    "receiver_name": {
+      "type": "string",
+      "description": "Display name of the receiver"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "party_id": {
+      "type": "string",
+      "description": "If kind=party, the PartySession id involved"
+    },
+    "trade_id": {
+      "type": "string",
+      "description": "If kind=trade, a shared trade session id"
+    }
+  },
+  "required": [
+    "kind",
+    "sender_id",
+    "sender_name",
+    "receiver_id"
+  ]
+}

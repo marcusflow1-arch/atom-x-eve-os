@@ -1,0 +1,42 @@
+{
+  "name": "PartySession",
+  "type": "object",
+  "properties": {
+    "leader_id": {
+      "type": "string",
+      "description": "User ID of the party leader"
+    },
+    "member_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of all member user IDs (including leader)"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Member roster with display names"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "leader_id",
+    "member_ids"
+  ]
+}

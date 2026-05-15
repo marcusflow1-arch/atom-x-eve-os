@@ -15,7 +15,11 @@ import GameWorldServerManager from '../components/game3d/GameWorldServerManager'
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
-import { addFriend, addPartyMember, openTrade } from '../components/game3d/social/socialStores';
+import IncomingRequestToast from '../components/game3d/social/IncomingRequestToast';
+import {
+  sendFriendRequest, sendPartyRequest, sendTradeRequest,
+  partyStore,
+} from '../components/game3d/social/socialStores';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
 import { base44 } from '@/api/base44Client';
@@ -40,27 +44,30 @@ export default function GameView() {
     const onAction = async (e) => {
       const { action, playerId, playerName } = e.detail || {};
       if (!playerId || !user?.id) return;
+      const senderName = user.full_name || user.username || 'Player';
+      const sender = { id: user.id, name: senderName };
+      const receiver = { id: playerId, name: playerName };
 
       if (action === 'friend') {
-        addFriend({ id: playerId, name: playerName });
-        toast.success(`${playerName} added to friends`);
-        base44.entities.FriendRequest.create({
-          from_user_id: user.id, to_user_id: playerId,
-          from_display_name: user.full_name || user.username || 'Player', status: 'pending',
-        }).catch(() => {});
+        try {
+          await sendFriendRequest(sender, receiver);
+          toast.success(`Friend request sent to ${playerName}`);
+        } catch { toast.error('Could not send friend request'); }
       } else if (action === 'party') {
-        addPartyMember({ id: playerId, name: playerName });
-        toast.success(`${playerName} joined your party`);
-        base44.entities.PartyMember.create({
-          invited_by: user.id, user_id: playerId, status: 'invited', display_name: playerName,
-        }).catch(() => {});
+        try {
+          await sendPartyRequest(sender, receiver, partyStore.get().partyId);
+          toast.success(`Party invite sent to ${playerName}`);
+        } catch { toast.error('Could not send party invite'); }
       } else if (action === 'trade') {
-        openTrade({ id: playerId, name: playerName });
+        try {
+          await sendTradeRequest(sender, receiver);
+          toast.success(`Trade request sent to ${playerName}`);
+        } catch { toast.error('Could not send trade request'); }
       } else if (action === 'duel') {
         toast.success(`Duel challenge sent to ${playerName}`);
         base44.entities.Challenge.create({
           challenger_id: user.id, opponent_id: playerId, type: 'duel', status: 'pending',
-          message: `${user.full_name || 'Player'} challenges you to a duel!`,
+          message: `${senderName} challenges you to a duel!`,
         }).catch(() => {});
       }
     };
@@ -122,6 +129,7 @@ export default function GameView() {
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
       <PartyPanel />
       <TradePanel />
+      <IncomingRequestToast userId={user?.id} userName={user?.full_name || user?.username || 'Player'} />
 
       {/* Back button */}
       <button
