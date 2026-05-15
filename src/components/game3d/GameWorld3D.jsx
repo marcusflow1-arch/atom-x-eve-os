@@ -38,6 +38,7 @@ import PlayerInteractionMenu from './PlayerInteractionMenu';
 import { handleMiddleClick } from './middleClickHandler';
 import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
+import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { useCallback } from 'react';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
@@ -230,6 +231,8 @@ export default function GameWorld3D() {
 
   // Quest store subscription
   useEffect(() => subscribeQuests((s) => setQuestState({ ...s })), []);
+  // Toast when mic permission is denied
+  useEffect(() => attachMicErrorListener(), []);
   // Fetch the logged-in user's display name — shown above the player's head + portrait box
   useEffect(() => {
     base44.auth.me().then((u) => { if (u) setPlayerName(u.username || u.full_name || u.email?.split('@')[0] || 'Player'); }).catch(() => setPlayerName('Player'));
@@ -990,7 +993,7 @@ export default function GameWorld3D() {
       if (k === 'b') { companionAbilityPressed.current = 'heal'; }
       if (e.code === 'Backquote' || k === '`') {
         e.preventDefault();
-        voiceRef.current?.toggleMic().then((on) => setLocalMicOn(!!on));
+        handleVoiceToggle(voiceRef, setLocalMicOn);
       }
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
