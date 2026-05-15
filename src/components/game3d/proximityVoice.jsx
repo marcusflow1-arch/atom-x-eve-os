@@ -31,6 +31,7 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
   let unsubSignal = null;
 
   const peers = new Map(); // peerId → { pc, gainNode, audioEl, talking }
+  const processedSignals = new Set(); // de-dupe signal subscribe events
 
   const ensureAudioContext = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -106,35 +107,60 @@ export function createProximityVoice({ userId, getLocalPos, getRemotePos, onRemo
 
   const callPeer = async (peerId) => {
     const { pc } = createPeer(peerId);
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    sendSignal(peerId, 'offer', { sdp: offer.sdp, type: offer.type });
+    // Only initiate from a clean state to prevent glare / duplicate offers.
+    if (pc.signalingState !== 'stable') return;
+    try {
+      const offer = await pc.createOffer();
+      if (pc.signalingState !== 'stable') return; // re-check after async
+      await pc.setLocalDescription(offer);
+      sendSignal(peerId, 'offer', { sdp: offer.sdp, type: offer.type });
+    } catch (err) {
+      console.warn('[proximityVoice] callPeer failed', err);
+    }
   };
 
   const handleSignal = async (signal) => {
     const peerId = signal.sender_id;
     if (signal.target_id !== userId || signal.channel_id !== VOICE_CHANNEL) return;
+    // De-dupe — subscribe can re-emit the same record
+    if (signal.id && processedSignals.has(signal.id)) return;
+    if (signal.id) processedSignals.add(signal.id);
 
-    if (signal.type === 'offer') {
-      const { pc } = createPeer(peerId);
-      await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      sendSignal(peerId, 'answer', { sdp: answer.sdp, type: answer.type });
-    } else if (signal.type === 'answer') {
-      const entry = peers.get(peerId);
-      if (entry?.pc.remoteDescription === null || !entry?.pc.remoteDescription) {
-        await entry?.pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
-      }
-    } else if (signal.type === 'ice-candidate') {
-      const entry = peers.get(peerId) || createPeer(peerId);
-      try { await entry.pc.addIceCandidate(new RTCIceCandidate(signal.payload)); } catch {}
-    } else if (signal.type === 'talking-state') {
+    try {
+      if (signal.type === 'offer') {
+        const { pc } = createPeer(peerId);
+        // Accept offers only from valid states. Handle glare via rollback.
+        if (pc.signalingState !== 'stable' && pc.signalingState !== 'have-local-offer') {
+          console.warn('[proximityVoice] Skip offer — state:', pc.signalingState);
+          return;
+        }
+        if (pc.signalingState === 'have-local-offer') {
+          await pc.setLocalDescription({ type: 'rollback' });
+        }
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
+        if (pc.signalingState !== 'have-remote-offer') return;
+        const answer = await pc.createAnswer();
+        if (pc.signalingState !== 'have-remote-offer') return;
+        await pc.setLocalDescription(answer);
+        sendSignal(peerId, 'answer', { sdp: answer.sdp, type: answer.type });
+      } else if (signal.type === 'answer') {
+        const entry = peers.get(peerId);
+        // Only apply answer if we're awaiting one
+        if (entry?.pc.signalingState === 'have-local-offer') {
+          await entry.pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
+        }
+      } else if (signal.type === 'ice-candidate') {
+        const entry = peers.get(peerId) || createPeer(peerId);
+        try { await entry.pc.addIceCandidate(new RTCIceCandidate(signal.payload)); } catch {}
+      } else if (signal.type === 'talking-state') {
       const entry = peers.get(peerId);
       if (entry) {
         entry.talking = !!signal.payload?.talking;
         onRemoteTalking?.(peerId, entry.talking);
       }
+    }
+    } catch (err) {
+      console.warn('[proximityVoice] handleSignal error', err);
     }
   };
 
