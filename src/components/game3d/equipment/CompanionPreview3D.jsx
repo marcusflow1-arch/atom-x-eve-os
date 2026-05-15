@@ -37,10 +37,13 @@ export default function CompanionPreview3D() {
       0.1,
       100,
     );
-    // Match the player preview's camera framing so the companion's feet
-    // line up with the player's feet at the same ground plane (y=0).
-    camera.position.set(0, 1.5, 3.4);
-    camera.lookAt(0, 1.0, 0);
+    // Frame the companion at the BOTTOM of the preview so its feet visually
+    // sit at the same ground plane as the archer's feet (the archer fills a
+    // taller preview area, so to align the feet we push the wolf into the
+    // lower portion of this smaller viewport). Camera looks well ABOVE the
+    // wolf — that vertical offset shifts the wolf down in screen space.
+    camera.position.set(0, 0.6, 3.0);
+    camera.lookAt(0, 1.6, 0);
 
     // 3-point lighting (same recipe as player preview)
     scene.add(new THREE.HemisphereLight(0xe6ecf2, 0x1a1d22, 0.7));

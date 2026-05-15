@@ -68,8 +68,23 @@ export default function CompanionFusionCard() {
           width: 240,
         }}
       >
-        {/* Live 3D companion preview — replaces the old portrait box.
-            Clicking it toggles fusion mode. */}
+        {/* Name + rarity label — now ABOVE the 3D preview, so the wolf's
+            feet visually sit lower in the frame (closer to the archer's feet). */}
+        <div className="text-center">
+          <div
+            className="text-[11px] font-bold tracking-wider truncate"
+            style={{ color: rarityColor }}
+          >
+            {companion.name}
+          </div>
+          <div className="text-[9px] tracking-widest uppercase text-white/40 mt-0.5">
+            {companion.rarity} · companion
+          </div>
+        </div>
+
+        {/* Live 3D companion preview — clicking toggles fusion mode.
+            Wolf is anchored to the BOTTOM of this frame so its feet align
+            visually with the archer's feet on the same ground plane. */}
         <button
           onClick={() => setFusionMode(isActive ? 'player' : 'companion')}
           className="w-full rounded-lg overflow-hidden transition-all hover:scale-[1.02] cursor-pointer relative"
@@ -91,19 +106,6 @@ export default function CompanionFusionCard() {
             />
           )}
         </button>
-
-        {/* Name + rarity label — kept under the 3D preview */}
-        <div className="text-center">
-          <div
-            className="text-[11px] font-bold tracking-wider truncate"
-            style={{ color: rarityColor }}
-          >
-            {companion.name}
-          </div>
-          <div className="text-[9px] tracking-widest uppercase text-white/40 mt-0.5">
-            {companion.rarity} · companion
-          </div>
-        </div>
 
         <div className="text-[9px] tracking-widest uppercase text-white/35 text-center px-2 leading-relaxed">
           {isActive ? 'Click model to return' : 'Click companion to equip'}
