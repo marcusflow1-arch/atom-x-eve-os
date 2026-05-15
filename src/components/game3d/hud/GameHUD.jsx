@@ -12,7 +12,6 @@ export default function GameHUD() {
   return (
     <>
       <HUDMinimapQuest />
-      <HUDGameQuickActions />
       <TargetDisplay />
       <HUDCompanionSkillSlots />
       <HUDSkillSlots />

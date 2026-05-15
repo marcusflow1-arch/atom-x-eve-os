@@ -38,12 +38,6 @@ export default function HUDCompanionSkillSlots() {
 
   return (
     <div className="absolute z-20 pointer-events-auto" style={{ left: '24px', bottom: '118px' }}>
-      <div className={`text-[10px] font-bold tracking-[0.25em] uppercase mb-1.5 ${mounted ? 'text-slate-300/90' : 'text-cyan-200/70'}`}>
-        {mounted ? 'Mount Skills' : 'Companion Skills'}
-        <span className="text-white/30 normal-case tracking-normal font-normal ml-1">
-          · {companion?.name || 'Pet'}
-        </span>
-      </div>
       <div className="flex gap-2">
         {skills.map((sk) => {
           const cdLeft = !mounted && sk.id ? (abState.cooldowns?.[sk.id] || 0) : 0;
