@@ -798,20 +798,15 @@ export default function GameWorld3D() {
       keys.current[k] = true;
       // Space = jump (one-shot)
       if (k === ' ') { playOneShot('jump', 1); playActionSound('player_jump'); e.preventDefault(); }
-      // Q = kick
-      if (k === 'q') playOneShot('kick', 1.2);
       // R = roll
       if (k === 'r') playOneShot('roll', 1.3);
       // E = interact with nearby NPC
       if (k === 'e') interactPressed.current = true;
-      // F = attack nearest enemy
-      if (k === 'f') attackPressed.current = true;
-      // Ability slots: Q=0, E=1, R=2, F=3 — only if not also movement keys
-      // Q fires ability slot 0 (lightning by default)
+      // Ability keys: Q=slot 0, R=slot 2, F=slot 3
+      // Q is ability-only (no melee). F triggers both melee + ability slot 3.
       if (k === 'q') { abilityKeyPressed.current = 0; }
-      // Slot keys for R (slot 2) and F (slot 3) — slot 1 is 'e' (interact takes priority check in fire logic)
       if (k === 'r') { abilityKeyPressed.current = 2; }
-      if (k === 'f') { abilityKeyPressed.current = 3; }
+      if (k === 'f') { attackPressed.current = true; abilityKeyPressed.current = 3; }
       // I = toggle equipment menu (Where Winds Meet style)
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
     };
@@ -819,9 +814,9 @@ export default function GameWorld3D() {
     // Middle-click raycaster for enemy targeting
     const targetRaycaster = new THREE.Raycaster();
     const onMouseDown = (e) => {
-      // Left click = attack, middle click = target enemy, right click = orbit
+      // Left click = melee attack, middle click = target enemy, right click = orbit
       if (e.button === 0) {
-        attackPressed.current = true;
+        attackPressed.current = true; // melee only — abilities use Q/E/R/F keys
       } else if (e.button === 1) {
         // Middle click — raycast against enemy models
         e.preventDefault();
