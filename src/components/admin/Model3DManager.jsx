@@ -12,6 +12,24 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+// Default folder name where auto-extracted companion animations get filed.
+const COMPANION_ANIM_FOLDER = 'companion';
+
+// Guess an animation_type enum value from a clip's name.
+// Enum: idle, walk, run, jump, attack, swing, dance, emote, other.
+function guessAnimationType(clipName) {
+  const n = (clipName || '').toLowerCase();
+  if (/idle|stand/.test(n)) return 'idle';
+  if (/walk/.test(n)) return 'walk';
+  if (/run|sprint/.test(n)) return 'run';
+  if (/jump|leap/.test(n)) return 'jump';
+  if (/attack|punch|bite|claw|strike/.test(n)) return 'attack';
+  if (/swing/.test(n)) return 'swing';
+  if (/dance/.test(n)) return 'dance';
+  if (/emote|wave|cheer/.test(n)) return 'emote';
+  return 'other';
+}
+
 // --- 3D Viewer Sub-Component ---
 // Handles loading GLB, GLTF, and FBX files with texture path re-mapping
 function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
@@ -200,6 +218,74 @@ export default function Model3DManager() {
   const [uploadError, setUploadError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState('');
 
+  // Extract animation clips embedded in a model file and save each one as an
+  // AnimationFBX entry under the "companion" folder. The clip's source URL is
+  // the model file itself — runtime loaders (GameWorld3D companion setup) pick
+  // the clip by name from the embedded list.
+  const extractAndSaveAnimations = async ({ modelUrl, fileType, bundleManifest, modelName }) => {
+    try {
+      // Ensure the "companion" folder exists (idempotent — find or create)
+      const folders = await base44.entities.AnimationFolder.filter({ name: COMPANION_ANIM_FOLDER });
+      if (!folders.length) {
+        await base44.entities.AnimationFolder.create({
+          name: COMPANION_ANIM_FOLDER,
+          color: 'purple',
+          description: 'Auto-extracted animations from companion / mount 3D models.',
+        });
+      }
+
+      // Load the model client-side just to read its animation clips
+      const manager = new THREE.LoadingManager();
+      if (bundleManifest && typeof bundleManifest === 'object') {
+        manager.setURLModifier((url) => {
+          try {
+            const u = new URL(url, window.location.href);
+            const pathname = decodeURIComponent(u.pathname).replace(/^\//, '');
+            const filename = pathname.split('/').pop();
+            if (bundleManifest[pathname]) return bundleManifest[pathname];
+            if (filename && bundleManifest[filename]) return bundleManifest[filename];
+          } catch {}
+          return bundleManifest[url] || url;
+        });
+      }
+
+      const ext = (fileType || '').toLowerCase();
+      const useFBX = ext === 'fbx';
+      const loader = useFBX ? new FBXLoader(manager) : new GLTFLoader(manager);
+
+      const asset = await new Promise((resolve, reject) => {
+        loader.load(modelUrl, resolve, undefined, reject);
+      });
+
+      const clips = useFBX
+        ? (asset.animations || [])
+        : (asset.animations || asset?.scene?.animations || []);
+
+      if (!clips.length) return { count: 0 };
+
+      // Build AnimationFBX records — one per clip
+      const records = clips.map((clip, idx) => {
+        const clipName = (clip.name && clip.name.trim()) || `${modelName} Anim ${idx + 1}`;
+        return {
+          name: clipName,
+          description: `Auto-extracted from ${modelName}`,
+          file_url: modelUrl,
+          animation_type: guessAnimationType(clipName),
+          duration: clip.duration || undefined,
+          is_loopable: true,
+          folder: COMPANION_ANIM_FOLDER,
+          tags: ['auto-extracted', 'companion'],
+        };
+      });
+
+      await base44.entities.AnimationFBX.bulkCreate(records);
+      return { count: records.length };
+    } catch (err) {
+      console.error('Animation extraction failed:', err);
+      return { count: 0, error: err?.message || 'unknown error' };
+    }
+  };
+
   // 1. Single File Upload
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -231,9 +317,10 @@ export default function Model3DManager() {
       setUploadProgress('Saving to library...');
 
       let finalFileType = fileExtension.replace('.', '');
+      const modelDisplayName = newModel.name || file.name.replace(/\.[^/.]+$/, '');
 
       await createMutation.mutateAsync({
-        name: newModel.name || file.name.replace(/\.[^/.]+$/, ''),
+        name: modelDisplayName,
         description: newModel.description,
         file_url: file_url,
         file_type: finalFileType,
@@ -242,6 +329,17 @@ export default function Model3DManager() {
         file_size: file.size,
         is_public: false
       });
+
+      // Auto-extract embedded animations (glb/fbx scenes often ship with clips)
+      if (['glb', 'gltf', 'fbx'].includes(finalFileType)) {
+        setUploadProgress('Scanning for embedded animations...');
+        await extractAndSaveAnimations({
+          modelUrl: file_url,
+          fileType: finalFileType,
+          bundleManifest: null,
+          modelName: modelDisplayName,
+        });
+      }
 
       setUploadProgress('');
       
@@ -348,9 +446,10 @@ export default function Model3DManager() {
       setUploadProgress('Saving to library...');
 
       const entryExt = (entry.name.split('.').pop() || '').toLowerCase();
+      const modelDisplayName = newModel.name || entry.name.replace(/\.[^/.]+$/, '');
 
       await createMutation.mutateAsync({
-        name: newModel.name || entry.name.replace(/\.[^/.]+$/, ''),
+        name: modelDisplayName,
         description: newModel.description,
         file_url: entryUpload.file_url,
         file_type: entryExt,
@@ -368,6 +467,18 @@ export default function Model3DManager() {
           mime_type: u.mime_type,
         })),
       });
+
+      // Extract embedded animations into the AnimationFBX library (companion folder)
+      setUploadProgress('Scanning for embedded animations...');
+      const animResult = await extractAndSaveAnimations({
+        modelUrl: entryUpload.file_url,
+        fileType: entryExt,
+        bundleManifest: bundle_manifest,
+        modelName: modelDisplayName,
+      });
+      if (animResult.count > 0) {
+        console.log(`Extracted ${animResult.count} animation(s) into "${COMPANION_ANIM_FOLDER}" folder.`);
+      }
 
       if (failed.length) {
         setUploadError(`Uploaded ${uploads.length}/${fileList.length} files. Failed: ${failed.join(', ')}`);
