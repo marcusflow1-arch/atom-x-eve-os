@@ -1,19 +1,21 @@
 // Companion definitions — rideable mounts.
-// Each companion is a Mixamo-compatible character used as a "horse-like" mount.
-// We reuse the creature model URLs already in the codebase so no new asset upload is needed.
-
-import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
+// The wolf_with_animations GLB has embedded idle + walk animation clips,
+// so we mark it as a GLB asset and let the loader pick the right anim clip
+// by name (case-insensitive substring match on clip name).
 
 export const COMPANION_DEFINITIONS = [
   {
-    id: 'shadow_steed',
-    name: 'Shadow Steed',
-    description: 'A swift mount that grants increased movement speed when ridden.',
+    id: 'shadow_wolf',
+    name: 'Shadow Wolf',
+    description: 'A swift wolf companion that grants increased movement speed when ridden.',
     rarity: 'rare',
-    modelUrl: CREATURE_MODEL_URL,
-    walkAnim: CREATURE_ANIMATION_URLS.walk,
-    idleAnim: CREATURE_ANIMATION_URLS.idle,
-    scale: 1.0,
+    // Wolf model uploaded via admin → 3D Models (file: wolf_with_animations.glb)
+    modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/7a5bea174_wolf_with_animations.glb',
+    modelFormat: 'glb', // 'glb' = GLTFLoader + embedded anims; 'fbx' = FBXLoader + separate anim URLs
+    // For GLB: substring (case-insensitive) used to find the matching clip inside the file
+    walkClipName: 'walk',
+    idleClipName: 'idle',
+    scale: 1.2,
     speedMultiplier: 1.8, // 80% faster while mounted
     spawnPos: [4, 0.3, -3],
     color: 0x4a5568,

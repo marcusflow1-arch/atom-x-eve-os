@@ -15,7 +15,15 @@ const buildDefault = () => ({
 let state = (() => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...buildDefault(), ...JSON.parse(saved), isMounted: false };
+    if (saved) {
+      const merged = { ...buildDefault(), ...JSON.parse(saved), isMounted: false };
+      // If the saved active companion ID no longer exists (e.g. after a model
+      // swap), fall back to the first defined companion.
+      if (!getCompanionById(merged.activeCompanionId)) {
+        merged.activeCompanionId = COMPANION_DEFINITIONS[0]?.id || null;
+      }
+      return merged;
+    }
   } catch {}
   return buildDefault();
 })();

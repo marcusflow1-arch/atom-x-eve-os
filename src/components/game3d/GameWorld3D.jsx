@@ -511,14 +511,18 @@ export default function GameWorld3D() {
     });
 
     // ─────────────────────────────────────────────
-    // COMPANION SPAWN — rideable mount. Uses the creature model URL with its
-    // own walk/idle anims. Stands idle until the player approaches and presses F.
+    // COMPANION SPAWN — rideable mount.
+    // Supports two model formats:
+    //   • GLB (modelFormat: 'glb')  → GLTFLoader, animations embedded in the file.
+    //                                  Picked by case-insensitive substring match on
+    //                                  walkClipName / idleClipName (e.g. "walk", "idle").
+    //   • FBX (modelFormat: 'fbx')  → FBXLoader, walkAnim / idleAnim URLs loaded separately.
+    // Stands idle until the player approaches and presses F.
     // ─────────────────────────────────────────────
     const companionDef = companionDefRef.current;
     if (companionDef) {
-      loader.load(companionDef.modelUrl, (fbx) => {
-        const companionModel = fbx;
-        const box = new THREE.Box3().setFromObject(fbx);
+      const setupCompanion = (companionModel, embeddedClips = []) => {
+        const box = new THREE.Box3().setFromObject(companionModel);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const compScale = (1.7 / maxDim) * (companionDef.scale || 1.0);
@@ -556,22 +560,59 @@ export default function GameWorld3D() {
         companionGroupRef.current = companionModel;
         companionMixerRef.current = compMixer;
 
-        // Load walk + idle anims (reuses creature anim clips already in codebase)
-        loader.load(companionDef.idleAnim, (af) => {
-          if (af.animations?.[0]) {
-            const idle = compMixer.clipAction(af.animations[0]);
+        if (companionDef.modelFormat === 'glb' && embeddedClips.length > 0) {
+          // Pick clips by name substring (case-insensitive). Falls back to first
+          // clip for idle and second for walk if names don't match.
+          const findClip = (substr) => {
+            if (!substr) return null;
+            const lc = substr.toLowerCase();
+            return embeddedClips.find((c) => (c.name || '').toLowerCase().includes(lc)) || null;
+          };
+          const idleClip = findClip(companionDef.idleClipName) || embeddedClips[0];
+          const walkClip = findClip(companionDef.walkClipName) || embeddedClips[1] || embeddedClips[0];
+          if (idleClip) {
+            const idle = compMixer.clipAction(idleClip);
             companionIdleActionRef.current = idle;
             idle.reset().fadeIn(0.2).play();
           }
-        });
-        loader.load(companionDef.walkAnim, (af) => {
-          if (af.animations?.[0]) {
-            const walk = compMixer.clipAction(af.animations[0]);
+          if (walkClip && walkClip !== idleClip) {
+            const walk = compMixer.clipAction(walkClip);
             walk.setEffectiveTimeScale(0.7);
             companionWalkActionRef.current = walk;
           }
-        });
-      });
+        } else {
+          // FBX format — load idle + walk anim files separately via FBXLoader
+          loader.load(companionDef.idleAnim, (af) => {
+            if (af.animations?.[0]) {
+              const idle = compMixer.clipAction(af.animations[0]);
+              companionIdleActionRef.current = idle;
+              idle.reset().fadeIn(0.2).play();
+            }
+          });
+          loader.load(companionDef.walkAnim, (af) => {
+            if (af.animations?.[0]) {
+              const walk = compMixer.clipAction(af.animations[0]);
+              walk.setEffectiveTimeScale(0.7);
+              companionWalkActionRef.current = walk;
+            }
+          });
+        }
+      };
+
+      if (companionDef.modelFormat === 'glb') {
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(
+          companionDef.modelUrl,
+          (gltf) => {
+            const root = gltf.scene || gltf.scenes?.[0];
+            if (root) setupCompanion(root, gltf.animations || []);
+          },
+          undefined,
+          (err) => console.error('Companion GLB load error:', err),
+        );
+      } else {
+        loader.load(companionDef.modelUrl, (fbx) => setupCompanion(fbx, []));
+      }
     }
 
     // ─────────────────────────────────────────────
