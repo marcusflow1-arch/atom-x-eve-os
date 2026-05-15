@@ -3,9 +3,10 @@
 // Visit at /NetworkTest
 
 import React, { useEffect, useState } from 'react';
-import NetworkTestScene from '@/components/network/test/NetworkTestScene';
-import NetworkTestControls from '@/components/network/test/NetworkTestControls';
+import NetworkTestScene from '@/components/network/test/NetworkTestScene.jsx';
+import NetworkTestControls from '@/components/network/test/NetworkTestControls.jsx';
 import NetworkDebugHUD from '@/components/network/debug/NetworkDebugHUD.jsx';
+import SceneErrorBoundary from '@/components/network/test/SceneErrorBoundary.jsx';
 import { realtimeNetwork } from '@/components/network/realtimeNetworkManager';
 
 export default function NetworkTest() {
@@ -46,7 +47,9 @@ export default function NetworkTest() {
       )}
 
       <div className="relative flex-1 overflow-hidden">
-        <NetworkTestScene />
+        <SceneErrorBoundary>
+          <NetworkTestScene />
+        </SceneErrorBoundary>
 
         {/* On-screen controls hint */}
         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur rounded-lg p-3 text-xs space-y-1 pointer-events-none border border-white/10">
@@ -76,3 +79,6 @@ export default function NetworkTest() {
     </div>
   );
 }
+
+// Make sure the route doesn't auto-connect on apps without a server set up:
+// realtimeNetwork.connect() is invoked in useEffect with a try/catch above.

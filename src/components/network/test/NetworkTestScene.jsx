@@ -128,19 +128,21 @@ export default function NetworkTestScene() {
 
       // 2) Render local player from predicted state (instant response)
       const local = realtimeNetwork.getLocalState();
-      // Ground clamp on local prediction
-      controller.postApply(local.pos);
-      localMesh.position.set(local.pos.x, local.pos.y, local.pos.z);
-      localMesh.rotation.y = local.rot.y;
-      const localColor = ANIM_COLORS[local.anim] || ANIM_COLORS.idle;
-      localMesh.material.color.setHex(localColor);
+      if (local && local.pos && local.rot) {
+        // Ground clamp on local prediction
+        controller.postApply(local.pos);
+        localMesh.position.set(local.pos.x, local.pos.y, local.pos.z);
+        localMesh.rotation.y = local.rot.y || 0;
+        const localColor = ANIM_COLORS[local.anim] || ANIM_COLORS.idle;
+        localMesh.material.color.setHex(localColor);
+      }
 
       // 3) Render remote players from interpolated state
-      const ids = realtimeNetwork.getRemoteIds();
+      const ids = realtimeNetwork.getRemoteIds() || [];
       const seen = new Set(ids);
       for (const id of ids) {
         const s = realtimeNetwork.getRemoteState(id);
-        if (!s) continue;
+        if (!s || !s.pos) continue;
         const r = getOrCreateRemote(id);
         r.mesh.position.set(s.pos.x, s.pos.y, s.pos.z);
         r.mesh.rotation.y = s.rot?.y || 0;
@@ -155,12 +157,15 @@ export default function NetworkTestScene() {
       }
 
       // 4) Smooth chase camera
-      cameraDesired.set(local.pos.x, local.pos.y + 5, local.pos.z + 8);
-      camera.position.lerp(cameraDesired, 0.08);
-      cameraTarget.set(local.pos.x, local.pos.y + 1, local.pos.z);
-      camera.lookAt(cameraTarget);
+      if (local && local.pos) {
+        cameraDesired.set(local.pos.x, local.pos.y + 5, local.pos.z + 8);
+        camera.position.lerp(cameraDesired, 0.08);
+        cameraTarget.set(local.pos.x, local.pos.y + 1, local.pos.z);
+        camera.lookAt(cameraTarget);
+      }
 
-      renderer.render(scene, camera);
+      try { renderer.render(scene, camera); }
+      catch (e) { console.error('[NetworkTestScene] render error', e); }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -168,11 +173,17 @@ export default function NetworkTestScene() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
-      controller.detach();
-      unsubLeft && unsubLeft();
-      for (const id of Array.from(remoteMeshes.keys())) removeRemote(id);
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+      try { controller.detach(); } catch {}
+      try { unsubLeft && unsubLeft(); } catch {}
+      for (const id of Array.from(remoteMeshes.keys())) {
+        try { removeRemote(id); } catch {}
+      }
+      try { ground.geometry.dispose(); ground.material.dispose(); } catch {}
+      try { localMesh.geometry.dispose(); localMesh.material.dispose(); } catch {}
+      try { renderer.dispose(); } catch {}
+      if (mount.contains(renderer.domElement)) {
+        try { mount.removeChild(renderer.domElement); } catch {}
+      }
     };
   }, []);
 
