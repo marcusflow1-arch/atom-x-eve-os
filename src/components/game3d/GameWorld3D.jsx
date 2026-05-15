@@ -1820,20 +1820,7 @@ export default function GameWorld3D() {
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* HUD: Score + Enemy count + Player Level/XP */}
-      {!loading && (
-        <div className="absolute top-4 left-4 flex gap-3 pointer-events-none">
-          <div className="px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
-            <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase">Score</div>
-            <div className="text-xl font-bold text-yellow-300">{score}</div>
-          </div>
-          <div className="px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-red-500/30">
-            <div className="text-[10px] text-red-300/70 font-bold tracking-[0.2em] uppercase">Enemies</div>
-            <div className="text-xl font-bold text-red-300">{enemyCount}</div>
-          </div>
-          <PlayerXPHUD level={playerLevel} xp={playerXP} xpForNext={xpForLevel(playerLevel)} />
-        </div>
-      )}
+
 
       {/* Enemy HP bars (liquid-glass) — projected above each enemy's head */}
       {!loading && (
@@ -1863,15 +1850,7 @@ export default function GameWorld3D() {
         </div>
       )}
 
-      {!loading && (
-        <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 pointer-events-none">
-          <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-1">Controls</div>
-          <div className="text-xs text-white/80 space-y-0.5">
-            <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run · <span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack</div>
-            <div><span className="text-cyan-300 font-mono">R</span> Roll · <span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target/Player</div>
-            <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-amber-300 font-mono">I</span> Equipment · <span className="text-amber-300 font-mono">F</span> Mount · <span className="text-red-300 font-mono">Esc</span> Menu</div>
-            <div><span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion · <span className={localMicOn ? 'text-emerald-300 font-mono' : 'text-white/40 font-mono'}>`</span> {localMicOn ? 'Mic On' : 'Mic Off'}</div>
-          </div></div>)}
+
 
       {/* Companion mount prompt */}
       {!loading && (
