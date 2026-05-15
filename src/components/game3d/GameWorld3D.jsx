@@ -7,6 +7,7 @@ import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
 import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
+import FloatingDamageNumbers from './FloatingDamageNumbers';
 import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP } from './playerHUDStore';
 import {
   DEFAULT_PLAYER_STATS,
@@ -141,6 +142,41 @@ export default function GameWorld3D() {
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
+  // Floating damage/XP numbers: [{ id, enemyId|'player', value, type, born }]
+  // enemyId/'player' is used by the projection step to compute current screen pos each frame.
+  const floatsRef = useRef([]);
+  const [floats, setFloats] = useState([]);
+  const floatIdRef = useRef(0);
+  // Per-enemy damage merging: if a new hit lands within MERGE_WINDOW on the same
+  // enemy, replace the existing float's value (so consistent damage replaces, not stacks).
+  const MERGE_WINDOW_MS = 350;
+  const spawnDamageFloat = (enemyId, value) => {
+    const nowMs = performance.now();
+    const existing = floatsRef.current.find(
+      (f) => f.enemyId === enemyId && f.type === 'damage' && nowMs - f.born < MERGE_WINDOW_MS,
+    );
+    if (existing) {
+      existing.value = value;
+      existing.born = nowMs;
+    } else {
+      floatsRef.current.push({
+        id: ++floatIdRef.current,
+        enemyId,
+        value,
+        type: 'damage',
+        born: nowMs,
+      });
+    }
+  };
+  const spawnXPFloat = (value) => {
+    floatsRef.current.push({
+      id: ++floatIdRef.current,
+      enemyId: 'player',
+      value,
+      type: 'xp',
+      born: performance.now(),
+    });
+  };
   const playerLevelRef = useRef(1);
   const playerXPRef = useRef(0);
   // Player stats: base allocation + equipped gear → derived combat values.
@@ -1199,6 +1235,7 @@ export default function GameWorld3D() {
             const dmg = calculateHit(liveDerived, closestEnemy.derived);
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
+            spawnDamageFloat(closestEnemy.id, dmg);
             playActionSound('enemy_hit');
             if (closestEnemy.hp <= 0) {
               playActionSound('enemy_death');
@@ -1216,6 +1253,7 @@ export default function GameWorld3D() {
                 closestEnemy.deathAction = deathAction;
               }
               setScore(prev => prev + 100 * closestEnemy.xpReward);
+              spawnXPFloat(closestEnemy.xpReward);
               // Tell the quest store about this kill (advances any active kill quests)
               reportEnemyKill(QUESTS, closestEnemy.tier);
               // Award XP, handle level-ups against the custom curve.
@@ -1294,6 +1332,7 @@ export default function GameWorld3D() {
                       if (dx * dx + dz * dz > radius * radius) return;
                       en.hp -= baseDmg;
                       en.hitCooldown = 0.2;
+                      spawnDamageFloat(en.id, baseDmg);
                       updateTargetHP(en.id, Math.max(0, en.hp));
                       if (en.hp <= 0) {
                         playActionSound('enemy_death');
@@ -1310,6 +1349,7 @@ export default function GameWorld3D() {
                         }
                         if (getAbilityState().target?.id === en.id) clearTarget();
                         setScore(prev => prev + 100 * (en.xpReward || 1));
+                        spawnXPFloat(en.xpReward || 1);
                         reportEnemyKill(QUESTS, en.tier);
                         let newXP = playerXPRef.current + (en.xpReward || 1);
                         let newLevel = playerLevelRef.current;
@@ -1337,6 +1377,7 @@ export default function GameWorld3D() {
                     const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
                     const dmg = Math.round(ab.damage + (liveDerived.damage || 0) * 0.5);
                     targetEnemy.hp -= dmg;
+                    spawnDamageFloat(targetEnemy.id, dmg);
                     updateTargetHP(targetEnemy.id, Math.max(0, targetEnemy.hp));
                     playActionSound('player_attack');
                     if (targetEnemy.hp <= 0) {
@@ -1354,6 +1395,7 @@ export default function GameWorld3D() {
                       }
                       clearTarget();
                       setScore(prev => prev + 100 * (targetEnemy.xpReward || 1));
+                      spawnXPFloat(targetEnemy.xpReward || 1);
                       reportEnemyKill(QUESTS, targetEnemy.tier);
                       let newXP = playerXPRef.current + (targetEnemy.xpReward || 1);
                       let newLevel = playerLevelRef.current;
@@ -1441,6 +1483,38 @@ export default function GameWorld3D() {
           }
         }
 
+        // ─── Project floating damage / XP numbers to screen space ───
+        const nowMs = performance.now();
+        // Drop expired floats (>1.1s)
+        floatsRef.current = floatsRef.current.filter((f) => nowMs - f.born < 1100);
+        const projected = [];
+        floatsRef.current.forEach((f) => {
+          let wx, wy, wz;
+          if (f.enemyId === 'player') {
+            wx = model.position.x;
+            wy = model.position.y + 2.6;
+            wz = model.position.z;
+          } else {
+            const en = enemies.find((e) => e.id === f.enemyId);
+            if (!en || !en.group) return;
+            wx = en.group.position.x;
+            wy = en.group.position.y + 2.4;
+            wz = en.group.position.z;
+          }
+          tmpVec.set(wx, wy, wz);
+          tmpVec.project(camera);
+          if (tmpVec.z < -1 || tmpVec.z > 1) return;
+          projected.push({
+            id: f.id,
+            x: (tmpVec.x * 0.5 + 0.5) * w,
+            y: (-tmpVec.y * 0.5 + 0.5) * h,
+            value: f.value,
+            type: f.type,
+            born: f.born,
+          });
+        });
+        setFloats(projected);
+
         // ─── Sync live boss state (pos + HP + alive) to bossStore ───
         // Drives the waypoint guidance and the Boss tab list.
         bossEntities.forEach((b) => {
@@ -1518,6 +1592,8 @@ export default function GameWorld3D() {
           {questNPCsUI.map((q) => (
             <QuestFloatingLabel key={q.id} x={q.x} y={q.y} status={q.status} />
           ))}
+          {/* Floating damage & XP numbers */}
+          <FloatingDamageNumbers entries={floats} />
         </div>
       )}
 
