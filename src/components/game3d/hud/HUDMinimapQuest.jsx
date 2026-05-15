@@ -144,6 +144,53 @@ export default function HUDMinimapQuest() {
         </div>
       </div>
 
+      {/* Quest tracker */}
+      <div
+        className="px-3 py-2.5 rounded-sm text-white"
+        style={{
+          background: 'linear-gradient(180deg, rgba(15,20,28,0.78), rgba(10,14,20,0.78))',
+          borderLeft: '2px solid rgba(250,204,21,0.7)',
+          backdropFilter: 'blur(6px)',
+        }}
+      >
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <Target className="w-3 h-3 text-yellow-300" />
+          <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-yellow-300/90">
+            Active Quest
+          </span>
+        </div>
+        {tracked ? (
+          <>
+            <div className="text-[12px] text-white/90 leading-snug mb-1 font-semibold">
+              {tracked.quest.title}
+            </div>
+            <div className="text-[11px] text-white/65 leading-snug mb-1.5">
+              {describeObjective(tracked.quest)}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(100, (tracked.current / Math.max(1, tracked.total)) * 100)}%`,
+                    background: 'linear-gradient(90deg, #fde68a, #facc15)',
+                  }}
+                />
+              </div>
+              <span className="text-[10px] text-yellow-200/90 tabular-nums font-bold">
+                {tracked.current}/{tracked.total}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-[12px] text-white/85 leading-snug mb-1">—</div>
+            <div className="text-[11px] text-white/55 leading-snug">
+              Find a quest giver to begin.
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
