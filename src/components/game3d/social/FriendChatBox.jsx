@@ -50,20 +50,71 @@ export default function FriendChatBox({ friend, onClose }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages.length]);
 
+  // Live WebRTC listener — append messages from this friend the instant they arrive
+  useEffect(() => {
+    if (!me || !friend) return;
+    const handler = (e) => {
+      const d = e.detail;
+      if (!d || d.conversation_id !== convId) return;
+      if (d.sender_id !== friend.id) return;
+      setMessages((prev) => {
+        // de-dupe by client_msg_id (set on send) or content+timestamp
+        if (d.client_msg_id && prev.some((m) => m.client_msg_id === d.client_msg_id)) return prev;
+        return [...prev, {
+          id: d.client_msg_id || `rtc_${Date.now()}`,
+          sender_id: d.sender_id,
+          receiver_id: d.receiver_id,
+          content: d.content,
+          conversation_id: d.conversation_id,
+          client_msg_id: d.client_msg_id,
+        }];
+      });
+    };
+    window.addEventListener('directMessageReceived', handler);
+    return () => window.removeEventListener('directMessageReceived', handler);
+  }, [me?.id, friend?.id, convId]);
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !me || !friend || sending) return;
     setSending(true);
+    const clientMsgId = `${me.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    // 1) Broadcast over WebRTC immediately for real-time delivery
     try {
-      const created = await base44.entities.DirectMessage.create({
+      if (typeof window.webrtcBroadcast === 'function') {
+        window.webrtcBroadcast({
+          type: 'dm',
+          payload: {
+            receiver_id: friend.id,
+            content: text,
+            conversation_id: convId,
+            client_msg_id: clientMsgId,
+          },
+        });
+      }
+    } catch { /* ignore */ }
+
+    // 2) Optimistic local append
+    setMessages((prev) => [...prev, {
+      id: clientMsgId,
+      sender_id: me.id,
+      receiver_id: friend.id,
+      content: text,
+      conversation_id: convId,
+      client_msg_id: clientMsgId,
+    }]);
+    setDraft('');
+
+    // 3) Persist to DB for history (works even if peer is offline)
+    try {
+      await base44.entities.DirectMessage.create({
         sender_id: me.id,
         receiver_id: friend.id,
         content: text,
         conversation_id: convId,
         is_read: false,
       });
-      setMessages((prev) => [...prev, created]);
-      setDraft('');
     } catch (e) { /* ignore */ }
     setSending(false);
   };

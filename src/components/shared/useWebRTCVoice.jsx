@@ -122,6 +122,15 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         window.dispatchEvent(new CustomEvent('remoteCompanionUpdate', {
                             detail: { ...data.payload, player_id: peerId }
                         }));
+                    } else if (data.type === 'dm') {
+                        // Real-time direct message. Only surface it if addressed
+                        // to the current user — broadcast goes to all peers but
+                        // only the intended receiver should react.
+                        if (data.payload?.receiver_id === user.id) {
+                            window.dispatchEvent(new CustomEvent('directMessageReceived', {
+                                detail: { ...data.payload, sender_id: peerId }
+                            }));
+                        }
                     }
                 } catch (e) {
                     console.error("Failed to parse data channel message", e);
