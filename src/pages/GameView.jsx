@@ -18,6 +18,8 @@ import TradePanel from '../components/game3d/social/TradePanel';
 import IncomingRequestToast from '../components/game3d/social/IncomingRequestToast';
 import DuelSystem from '../components/game3d/social/DuelSystem';
 import DuelMarkers from '../components/game3d/social/DuelMarkers';
+import NetworkBridgeMount from '../components/network/NetworkBridgeMount';
+import NetworkBridgeHUD from '../components/network/debug/NetworkBridgeHUD';
 import {
   sendFriendRequest, sendPartyRequest, sendTradeRequest, sendDuelRequest,
   partyStore,
@@ -137,6 +139,9 @@ export default function GameView() {
       <DuelSystem userId={user?.id} />
       <DuelMarkers localUserId={user?.id} />
 
+      {/* Slice B — feature-flagged. Default OFF, no effect on existing systems. */}
+      <NetworkBridgeMount />
+      <NetworkBridgeHUD />
     </div>
   );
 }
