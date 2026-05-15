@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { subscribePlayerHUD } from '../playerHUDStore';
 import HUDPortrait3D from './HUDPortrait3D';
+import { base44 } from '@/api/base44Client';
 
 /**
  * Bottom-center HUD: live 3D character portrait + HP / Mana / XP bars.
@@ -15,6 +16,14 @@ export default function HUDVitals() {
   });
   useEffect(() => subscribePlayerHUD(setHud), []);
 
+  // Fetch current player display name to show above the portrait box
+  const [playerName, setPlayerName] = useState('');
+  useEffect(() => {
+    base44.auth.me()
+      .then((u) => { if (u) setPlayerName(u.username || u.full_name || u.email?.split('@')[0] || 'Player'); })
+      .catch(() => setPlayerName('Player'));
+  }, []);
+
   const hp = hud.hp ?? 0;
   const maxHp = hud.maxHP ?? 1;
   const mana = hud.derived?.chi ?? 0;
@@ -23,8 +32,23 @@ export default function HUDVitals() {
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
       <div className="flex items-end gap-3">
-        {/* Live 3D portrait */}
-        <div className="relative">
+        {/* Live 3D portrait + player name */}
+        <div className="relative flex flex-col items-center gap-1">
+          {playerName && (
+            <div
+              className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider whitespace-nowrap"
+              style={{
+                color: '#cffafe',
+                background: 'rgba(8, 20, 32, 0.6)',
+                border: '1px solid rgba(103, 232, 249, 0.45)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+              }}
+            >
+              {playerName}
+            </div>
+          )}
+          <div className="relative">
           <HUDPortrait3D size={86} />
           {/* Level badge */}
           <div
@@ -51,6 +75,7 @@ export default function HUDVitals() {
               +{hud.unspentPoints}
             </div>
           )}
+          </div>
         </div>
 
         {/* Bars stack */}

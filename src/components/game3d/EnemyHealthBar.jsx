@@ -5,7 +5,7 @@ import React from 'react';
  * Positioned in screen-space via parent-supplied (x, y) pixel coordinates.
  * Shows the enemy's level centered above the bar.
  */
-export default function EnemyHealthBar({ x, y, hp, maxHp, level, visible }) {
+export default function EnemyHealthBar({ x, y, hp, maxHp, level, name, visible }) {
   if (!visible) return null;
   const pct = Math.max(0, Math.min(1, hp / maxHp));
   const barWidth = 90;
@@ -36,6 +36,24 @@ export default function EnemyHealthBar({ x, y, hp, maxHp, level, visible }) {
           LV {level}
         </div>
       </div>
+
+      {/* Enemy name — sits between the level pill and HP bar */}
+      {name && (
+        <div className="flex justify-center mb-1">
+          <div
+            className="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider text-white/95 whitespace-nowrap"
+            style={{
+              background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,80,80,0.35)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+            }}
+          >
+            {name}
+          </div>
+        </div>
+      )}
 
       {/* Liquid-glass HP bar */}
       <div

@@ -23,6 +23,8 @@ import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
 import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
 import CompanionHealthBar from './CompanionHealthBar';
+import PlayerNameTag from './PlayerNameTag';
+import { base44 } from '@/api/base44Client';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
 import { getAbilityState, tickCooldowns, startCooldown, setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
@@ -30,13 +32,7 @@ import { createLightningStrike } from './LightningStrikeEffect';
 import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
 
-// ─────────────────────────────────────────────
-// XP / Level system
-// XP_TABLE[n] = XP required to reach level n+2 from level n+1.
-// Hand-tuned (non-multiplicative) curve: 5, 7, 14, 22, 35, 50, 70, 95, 125, 160.
-// Normal enemies drop 1 XP, elites 3 XP, champions 5 XP — so stronger enemies
-// level you with only 4-5 kills.
-// ─────────────────────────────────────────────
+// XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
 const xpForLevel = (level) => XP_TABLE[Math.min(level - 1, XP_TABLE.length - 1)] || 200;
 
@@ -140,6 +136,9 @@ export default function GameWorld3D() {
   const [isMounted, setIsMounted] = useState(false);
   // Companion live HP bar (projected to screen each frame)
   const [companionUI, setCompanionUI] = useState(null); // { x, y, hp, maxHp, level }
+  // Player name tag floating above the player's head
+  const [playerName, setPlayerName] = useState('');
+  const [playerNameUI, setPlayerNameUI] = useState(null); // { x, y }
   // Companion live combat stats (HP, derived, level) — updated when stats are allocated
   const companionStatsRef = useRef(null);
   const companionRegenAccumRef = useRef(0);
@@ -219,9 +218,11 @@ export default function GameWorld3D() {
     setPlayerHUD({ xpForNext: xpForLevel(saved.level || 1) });
   }, []);
 
-  // Subscribe to quest store so React re-renders when quests are accepted/completed
+  // Quest store subscription
+  useEffect(() => subscribeQuests((s) => setQuestState({ ...s })), []);
+  // Fetch the logged-in user's display name — shown above the player's head + portrait box
   useEffect(() => {
-    return subscribeQuests((s) => setQuestState({ ...s }));
+    base44.auth.me().then((u) => { if (u) setPlayerName(u.username || u.full_name || u.email?.split('@')[0] || 'Player'); }).catch(() => setPlayerName('Player'));
   }, []);
 
   // Keep companion def ref in sync when player picks a different companion in the menu
@@ -294,13 +295,7 @@ export default function GameWorld3D() {
     ocean.receiveShadow = true;
     scene.add(ocean);
 
-    // ─────────────────────────────────────────────
-    // LOW-POLY ENVIRONMENT MAP (scene.gltf bundle).
-    // Loaded with a LoadingManager that rewrites relative .bin/texture URLs
-    // to the Base44 bundle URLs from the admin AssetFile manifest.
-    // After load, "groundMeshes" is filled so every entity (player, enemies,
-    // quest NPCs) can raycast straight down and stand on the real surface.
-    // ─────────────────────────────────────────────
+    // LOW-POLY ENVIRONMENT MAP — bundle URLs from admin AssetFile manifest. groundMeshes used for raycast snapping.
     const groundMeshes = [];           // meshes used for terrain raycasts
     const groundRaycaster = new THREE.Raycaster();
     const downVec = new THREE.Vector3(0, -1, 0);
@@ -513,15 +508,7 @@ export default function GameWorld3D() {
       });
     });
 
-    // ─────────────────────────────────────────────
-    // COMPANION SPAWN — rideable mount.
-    // Supports two model formats:
-    //   • GLB (modelFormat: 'glb')  → GLTFLoader, animations embedded in the file.
-    //                                  Picked by case-insensitive substring match on
-    //                                  walkClipName / idleClipName (e.g. "walk", "idle").
-    //   • FBX (modelFormat: 'fbx')  → FBXLoader, walkAnim / idleAnim URLs loaded separately.
-    // Stands idle until the player approaches and presses F.
-    // ─────────────────────────────────────────────
+    // COMPANION SPAWN — rideable mount (GLB w/ embedded clips OR FBX w/ separate idle+walk anim files).
     const companionDef = companionDefRef.current;
     if (companionDef) {
       const setupCompanion = (companionModel, embeddedClips = []) => {
@@ -688,14 +675,7 @@ export default function GameWorld3D() {
       }
     };
 
-    // ─────────────────────────────────────────────
-    // WORLD BOSS SPAWNS — supersized champion enemies at fixed map locations.
-    // Same creature model + AI as normal enemies, but:
-    //   • Scale         ×BOSS_SCALE_MULT (7) of a normal champion
-    //   • Max HP        ×BOSS_HP_MULT    (8) of the champion template
-    //   • XP reward     ×BOSS_XP_MULT    (15) of a normal enemy
-    // Seeded into the bossStore so OnlinePlayersPanel/BossWaypoint can subscribe.
-    // ─────────────────────────────────────────────
+    // WORLD BOSS SPAWNS — supersized champion enemies with ×scale, ×HP, ×XP. Seeded into bossStore.
     const bossEntities = []; // refs into the `enemies` array, kept so we can push HP/pos to the store
     setBosses(BOSSES.map((b) => ({
       id: b.id, name: b.name, title: b.title,
@@ -1710,6 +1690,7 @@ export default function GameWorld3D() {
             hp: enemy.hp,
             maxHp: enemy.maxHp,
             level: enemy.level,
+            name: enemy.bossName || (enemy.tier ? `${enemy.tier.charAt(0).toUpperCase() + enemy.tier.slice(1)} Enemy` : 'Enemy'),
           });
         });
         setEnemiesUI(ui);
@@ -1789,10 +1770,24 @@ export default function GameWorld3D() {
         });
         setFloats(projected);
 
-        // Sync live boss state → bossStore (drives waypoint + Boss tab list)
-        bossEntities.forEach((b) => {
-          updateBoss(b.id, { x: b.group.position.x, z: b.group.position.z, hp: Math.max(0, b.hp), maxHp: b.maxHp, alive: b.alive && !b.dying });
-        });
+        // Project companion head → screen for HP bar (hidden while mounted)
+        const cg = companionGroupRef.current;
+        const cs = companionStatsRef.current;
+        if (cg && cs && !isMountedRef.current) {
+          tmpVec.set(cg.position.x, cg.position.y + 2.4, cg.position.z); tmpVec.project(camera);
+          const iv = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
+          setCompanionUI(iv ? { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h, hp: cs.hp, maxHp: cs.maxHp, level: cs.level } : null);
+        } else { setCompanionUI(null); }
+
+        // Project player head → screen for floating name tag
+        if (model && !isMountedRef.current) {
+          tmpVec.set(model.position.x, model.position.y + 2.6, model.position.z); tmpVec.project(camera);
+          const ivP = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
+          setPlayerNameUI(ivP ? { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h } : null);
+        } else { setPlayerNameUI(null); }
+
+        // Sync live boss state → bossStore
+        bossEntities.forEach((b) => { updateBoss(b.id, { x: b.group.position.x, z: b.group.position.z, hp: Math.max(0, b.hp), maxHp: b.maxHp, alive: b.alive && !b.dying }); });
       }
 
       renderer.render(scene, camera);
@@ -1845,16 +1840,16 @@ export default function GameWorld3D() {
       {!loading && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {enemiesUI.map((e) => (
-            <EnemyHealthBar
-              key={e.id}
-              x={e.x}
-              y={e.y}
-              hp={e.hp}
-              maxHp={e.maxHp}
-              level={e.level}
-              visible
-            />
+            <EnemyHealthBar key={e.id} x={e.x} y={e.y} hp={e.hp} maxHp={e.maxHp} level={e.level} name={e.name} visible />
           ))}
+          {/* Companion HP bar above pet's head (when not mounted) */}
+          {companionUI && (
+            <CompanionHealthBar x={companionUI.x} y={companionUI.y} hp={companionUI.hp} maxHp={companionUI.maxHp} level={companionUI.level} name={companionDefRef.current?.name || 'Companion'} visible />
+          )}
+          {/* Player name floating above the player character's head */}
+          {playerNameUI && playerName && (
+            <PlayerNameTag x={playerNameUI.x} y={playerNameUI.y} name={playerName} visible />
+          )}
           {/* Floating "QUEST" labels above quest NPCs */}
           {questNPCsUI.map((q) => (
             <QuestFloatingLabel key={q.id} x={q.x} y={q.y} status={q.status} />

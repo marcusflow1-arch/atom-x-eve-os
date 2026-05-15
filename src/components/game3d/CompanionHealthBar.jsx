@@ -5,7 +5,7 @@ import React from 'react';
  * Same layout as EnemyHealthBar but uses ally (amber/green) tones so the
  * player can instantly tell friend from foe. Shows companion level + HP fill.
  */
-export default function CompanionHealthBar({ x, y, hp, maxHp, level, visible }) {
+export default function CompanionHealthBar({ x, y, hp, maxHp, level, name, visible }) {
   if (!visible) return null;
   const pct = Math.max(0, Math.min(1, hp / Math.max(1, maxHp)));
   const barWidth = 90;
@@ -37,6 +37,24 @@ export default function CompanionHealthBar({ x, y, hp, maxHp, level, visible }) 
           LV {level}
         </div>
       </div>
+
+      {/* Companion name — between level and HP bar */}
+      {name && (
+        <div className="flex justify-center mb-1">
+          <div
+            className="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider text-amber-100 whitespace-nowrap"
+            style={{
+              background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(251,191,36,0.4)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+            }}
+          >
+            {name}
+          </div>
+        </div>
+      )}
 
       {/* HP bar — green gradient for ally */}
       <div
