@@ -132,14 +132,44 @@ export default function MultiplayerSystem({ envUrl }) {
     const handleLocalUpdate = (e) => {
       if (e.detail) {
         localStateRef.current = { ...localStateRef.current, ...e.detail };
+        // INSTANT broadcast: send the moment movement happens, not on a tick.
+        // This is the hot path for real-time player sync. WebRTC data channel
+        // is configured ordered:false / maxRetransmits:0 so this is UDP-fast.
+        if (window.webrtcBroadcast && user?.id && channelRef.current) {
+          const s = localStateRef.current;
+          window.webrtcBroadcast({
+            type: 'movement',
+            payload: {
+              x: s.x, y: s.y, z: s.z, yaw: s.yaw, anim: s.anim,
+              last_update: Date.now(),
+              display_name: user.full_name || user.username || 'Player',
+              avatar_url: user.avatar_url || '',
+              model_url: localStorage.getItem('luna_active_character') === 'c1'
+                ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
+                : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx'
+            }
+          });
+        }
       }
+    };
+
+    // Realtime ability/skill/action broadcast — fires the instant a local
+    // player uses a skill so peers can see and react with near-zero delay.
+    const handleLocalAction = (e) => {
+      if (!e.detail || !window.webrtcBroadcast || !user?.id) return;
+      window.webrtcBroadcast({
+        type: 'action',
+        payload: { ...e.detail, ts: Date.now(), player_id: user.id }
+      });
     };
 
     window.addEventListener('joinMultiplayerChannel', handleJoin);
     window.addEventListener('multiplayerLocalUpdate', handleLocalUpdate);
+    window.addEventListener('multiplayerLocalAction', handleLocalAction);
     return () => {
       window.removeEventListener('joinMultiplayerChannel', handleJoin);
       window.removeEventListener('multiplayerLocalUpdate', handleLocalUpdate);
+      window.removeEventListener('multiplayerLocalAction', handleLocalAction);
     };
   }, []);
 

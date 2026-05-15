@@ -32,14 +32,25 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
         const initWebRTC = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                if (!isMounted) {
-                    stream.getTracks().forEach(t => t.stop());
-                    return;
+                // Try to get microphone for voice — but do NOT block the data
+                // channel (movement sync) if the user denies mic access.
+                // The data channel is what carries real-time position updates;
+                // it must come up even with no mic permission.
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    if (!isMounted) {
+                        stream.getTracks().forEach(t => t.stop());
+                        return;
+                    }
+                    localStreamRef.current = stream;
+                    stream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+                } catch (micErr) {
+                    console.warn('[WebRTC] Mic unavailable — continuing with data-channel only', micErr);
+                    if (micErr.name === 'NotAllowedError' || micErr.name === 'PermissionDeniedError') {
+                        window.dispatchEvent(new CustomEvent('webrtcPermissionDenied'));
+                    }
+                    if (!isMounted) return;
                 }
-                
-                localStreamRef.current = stream;
-                stream.getAudioTracks().forEach(t => t.enabled = !isMuted);
 
                 unsubscribe = base44.entities.VoiceSignal.subscribe((event) => {
                     if (event.type === 'create' || event.type === 'update') {
@@ -59,11 +70,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 });
 
             } catch (err) {
-                console.error("Failed to init WebRTC voice", err);
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    // Dispatch event for UI to show a toast or message
-                    window.dispatchEvent(new CustomEvent('webrtcPermissionDenied'));
-                }
+                console.error("Failed to init WebRTC", err);
             }
         };
 
@@ -95,8 +102,12 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'movement') {
-                        // Dispatch custom event to be picked up by MultiplayerSystem
                         window.dispatchEvent(new CustomEvent('webrtcMovementUpdate', {
+                            detail: { ...data.payload, player_id: peerId }
+                        }));
+                    } else if (data.type === 'action') {
+                        // Real-time skill/ability/combat action from a peer
+                        window.dispatchEvent(new CustomEvent('webrtcRemoteAction', {
                             detail: { ...data.payload, player_id: peerId }
                         }));
                     }
