@@ -9,10 +9,12 @@ export const COMPANION_DEFINITIONS = [
     name: 'Shadow Wolf',
     description: 'A swift wolf companion that grants increased movement speed when ridden.',
     rarity: 'rare',
-    // Wolf companion — the "wolf companion" Model3D from admin
-    // (geometric_stylised_wolf_meshy_6.glb). Embedded idle/walk clips are
-    // matched by name substring at runtime.
-    modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d2fe3d0ef_geometric_stylised_wolf_meshy_6.glb',
+    // Wolf companion — uses the rigged wolf GLB (wolf_with_animations2.glb)
+    // that contains both the mesh AND embedded idle/walk/run clips matching
+    // the AnimationFBX entries in the "companion" folder. The static
+    // geometric_stylised_wolf_meshy_6.glb has no skeleton, so its animations
+    // can't be bound; this rigged version is the proper companion/mount model.
+    modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/4636b74d8_wolf_with_animations2.glb',
     modelFormat: 'glb', // 'glb' = GLTFLoader + embedded anims; 'fbx' = FBXLoader + separate anim URLs
     // For GLB: substring (case-insensitive) used to find the matching clip inside the file
     walkClipName: 'walk',
