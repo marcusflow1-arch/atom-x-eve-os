@@ -115,6 +115,13 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         window.dispatchEvent(new CustomEvent('webrtcRemoteAction', {
                             detail: { ...data.payload, player_id: peerId }
                         }));
+                    } else if (data.type === 'companion') {
+                        // Real-time mount/companion sync (per-player). Forces
+                        // player_id from the peer connection so each remote
+                        // companion is keyed to the correct rider.
+                        window.dispatchEvent(new CustomEvent('remoteCompanionUpdate', {
+                            detail: { ...data.payload, player_id: peerId }
+                        }));
                     }
                 } catch (e) {
                     console.error("Failed to parse data channel message", e);

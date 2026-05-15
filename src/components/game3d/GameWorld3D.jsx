@@ -34,6 +34,7 @@ import { createFrostTornado } from './FrostTornadoEffect';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
 import { createRemotePlayersManager } from './RemotePlayersManager';
+import { createRemoteCompanionManager } from './RemoteCompanionManager';
 import { ENEMY_SPAWNS } from './enemySpawnConfig';
 import { broadcastEnemyKill } from './enemyRespawnManager';
 import PlayerInteractionMenu from './PlayerInteractionMenu';
@@ -265,10 +266,8 @@ export default function GameWorld3D() {
     const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
     camera.position.set(0, 3, -5);
 
-    // Remote players manager — renders other players in the shared channel
     remoteManagerRef.current = createRemotePlayersManager(scene);
-
-    // Lights
+    const remoteCompanionManager = createRemoteCompanionManager(scene);
     scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0));
     const sun = new THREE.DirectionalLight(0xfff4d6, 2.2);
     sun.position.set(20, 30, 10);
@@ -1035,6 +1034,8 @@ export default function GameWorld3D() {
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
       if (remoteManagerRef.current) remoteManagerRef.current.update(delta);
+      remoteCompanionManager.update(delta);
+      if (remoteManagerRef.current) { const mountedIds = remoteCompanionManager.getMountedPlayerIds(); remoteManagerRef.current.getRemotes?.().forEach((r, pid) => { if (r.group) r.group.visible = !mountedIds.has(pid); }); }
       if (voiceRef.current && remoteManagerRef.current) {
         const ids = Array.from(remoteManagerRef.current.getRemotes?.()?.keys() || []);
         voiceRef.current.syncPeers(ids);
@@ -1515,10 +1516,7 @@ export default function GameWorld3D() {
       }
 
       tickCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta);
-      if (companionAbilityPressed.current) {
-        const abId = companionAbilityPressed.current; companionAbilityPressed.current = null;
-        processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects });
-      }
+      if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
 
       // ─── Update active visual effects (lightning etc.) ───
       activeEffects.current = activeEffects.current.filter((fx) => {
@@ -1755,9 +1753,9 @@ export default function GameWorld3D() {
         });
         setFloats(projected);
 
-        // Project companion head → screen for HP bar (hidden while mounted)
         const cg = companionGroupRef.current;
         const cs = companionStatsRef.current;
+        if (cg) { window.__localCompanionPos = { x: cg.position.x, y: cg.position.y, z: cg.position.z, yaw: cg.rotation.y }; }
         if (cg && cs && !isMountedRef.current) {
           tmpVec.set(cg.position.x, cg.position.y + 2.4, cg.position.z); tmpVec.project(camera);
           const iv = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
@@ -1814,6 +1812,7 @@ export default function GameWorld3D() {
       renderer.dispose();
       stopLoopSound('player_walk');
       if (remoteManagerRef.current) { remoteManagerRef.current.dispose(); remoteManagerRef.current = null; }
+      remoteCompanionManager.dispose();
     };
   }, []);
 

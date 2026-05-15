@@ -3,6 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';
 import { toast } from 'react-hot-toast';
+import { getCompanionState } from '@/components/game3d/companionStore';
+import { getCompanionProgression } from '@/components/game3d/companionProgressionStore';
 
 export default function MultiplayerSystem({ envUrl }) {
   const { user } = useAuth();
@@ -158,6 +160,35 @@ export default function MultiplayerSystem({ envUrl }) {
                 : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx'
             }
           });
+
+          // Broadcast THIS player's companion alongside their movement, so
+          // every peer sees this player's own separate companion instance.
+          // Companion position mirrors the rider when mounted, otherwise it
+          // trails them — GameWorld3D's local companion logic already handles
+          // that; we just send the resolved authority value.
+          try {
+            const comp = getCompanionState();
+            if (comp.activeCompanionId) {
+              const compPos = window.__localCompanionPos || null;
+              const level = (getCompanionProgression(comp.activeCompanionId)?.level) || 1;
+              window.webrtcBroadcast({
+                type: 'companion',
+                payload: {
+                  companion_id: comp.activeCompanionId,
+                  mounted: !!comp.isMounted,
+                  level,
+                  // If mounted, companion is at the player's position.
+                  // Otherwise use the last frame's projected companion world pos.
+                  x: comp.isMounted ? s.x : (compPos?.x ?? s.x),
+                  y: comp.isMounted ? s.y : (compPos?.y ?? s.y),
+                  z: comp.isMounted ? s.z : (compPos?.z ?? s.z),
+                  yaw: comp.isMounted ? s.yaw : (compPos?.yaw ?? s.yaw),
+                  anim: s.anim,
+                  last_update: Date.now(),
+                }
+              });
+            }
+          } catch (err) { /* companion stores not ready yet — ignore */ }
         }
       }
     };
