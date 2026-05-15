@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, X, MessageCircle, Trash2 } from 'lucide-react';
 import { friendsStore, removeFriend } from './socialStores';
 import { base44 } from '@/api/base44Client';
+import FriendChatBox from './FriendChatBox';
 
 const ONLINE_WINDOW_MS = 2 * 60 * 1000; // last_seen within 2 minutes → online
 
@@ -14,6 +15,7 @@ const ONLINE_WINDOW_MS = 2 * 60 * 1000; // last_seen within 2 minutes → online
 export default function FriendsListPanel({ open, onClose }) {
   const [{ friends }, setState] = useState(friendsStore.get());
   const [onlineMap, setOnlineMap] = useState({}); // userId → bool
+  const [chatFriend, setChatFriend] = useState(null);
   useEffect(() => friendsStore.subscribe(setState), []);
 
   // Poll each friend's last_seen while panel is open to compute online status
@@ -99,6 +101,7 @@ export default function FriendsListPanel({ open, onClose }) {
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         title="Message"
+                        onClick={() => setChatFriend(f)}
                         className="p-1.5 rounded hover:bg-cyan-500/20 text-cyan-300"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
@@ -121,6 +124,7 @@ export default function FriendsListPanel({ open, onClose }) {
               Press <span className="font-mono text-emerald-300">L</span> to close
             </div>
           </motion.div>
+          <FriendChatBox friend={chatFriend} onClose={() => setChatFriend(null)} />
         </>
       )}
     </AnimatePresence>
