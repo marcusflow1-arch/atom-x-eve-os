@@ -32,7 +32,7 @@ import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
-import { getCompanionById } from './companionData';
+import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
 import {
   getAbilityState, tickCooldowns, startCooldown,
@@ -611,7 +611,10 @@ export default function GameWorld3D() {
       };
 
       if (companionDef.modelFormat === 'glb') {
-        const gltfLoader = new GLTFLoader();
+        // For glTF bundles (separate .bin + textures), wire a LoadingManager
+        // whose URLModifier maps relative paths to absolute Base44 URLs.
+        const compManager = createCompanionLoadingManager(THREE, companionDef);
+        const gltfLoader = compManager ? new GLTFLoader(compManager) : new GLTFLoader();
         gltfLoader.load(
           companionDef.modelUrl,
           (gltf) => {

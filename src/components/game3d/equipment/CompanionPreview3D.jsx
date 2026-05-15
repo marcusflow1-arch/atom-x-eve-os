@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { getActiveCompanion } from './companionFusionStore';
+import { createCompanionLoadingManager } from '../companionData';
 
 /**
  * Self-contained live 3D preview of the active companion — used in the equipment
@@ -93,7 +94,10 @@ export default function CompanionPreview3D() {
     };
 
     if (companion.modelFormat === 'glb') {
-      const gltfLoader = new GLTFLoader();
+      // Bundle-aware loading manager — resolves relative .bin / texture paths
+      // inside the .gltf to their Base44-hosted absolute URLs.
+      const compManager = createCompanionLoadingManager(THREE, companion);
+      const gltfLoader = compManager ? new GLTFLoader(compManager) : new GLTFLoader();
       gltfLoader.load(companion.modelUrl, (gltf) => {
         const root = gltf.scene || gltf.scenes?.[0];
         if (!root) return;

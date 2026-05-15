@@ -1,29 +1,49 @@
 // Companion definitions — rideable mounts.
-// The wolf_with_animations GLB has embedded idle + walk animation clips,
-// so we mark it as a GLB asset and let the loader pick the right anim clip
-// by name (case-insensitive substring match on clip name).
+// Active companion is the admin Model3D entity "companion" (baby_wolf bundle).
+// The bundle is a glTF + scene.bin + texture, so we provide a bundle manifest
+// keyed by the relative paths the .gltf references — the loader uses a
+// LoadingManager URL modifier to resolve those to absolute Base44 URLs.
+
+// Resolved Base44 URLs for every file in the baby_wolf bundle.
+const BABY_WOLF_GLTF =
+  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/5c34f2f05_scene.gltf';
+const BABY_WOLF_BIN =
+  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/60d93e9c0_scene.bin';
+const BABY_WOLF_TEX =
+  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/75a75efbb_Material_35_baseColor.png';
+
+// Manifest — covers every variant of the relative paths a GLTF parser
+// might resolve (bare filename, folder-prefixed, encoded spaces, etc.).
+const BABY_WOLF_BUNDLE = {
+  'scene.bin': BABY_WOLF_BIN,
+  'baby_wolf (1)/scene.bin': BABY_WOLF_BIN,
+  'baby_wolf%20(1)/scene.bin': BABY_WOLF_BIN,
+  'Material_35_baseColor.png': BABY_WOLF_TEX,
+  'textures/Material_35_baseColor.png': BABY_WOLF_TEX,
+  'baby_wolf (1)/textures/Material_35_baseColor.png': BABY_WOLF_TEX,
+  'baby_wolf%20(1)/textures/Material_35_baseColor.png': BABY_WOLF_TEX,
+};
 
 export const COMPANION_DEFINITIONS = [
   {
     id: 'shadow_wolf',
-    name: 'Shadow Wolf',
-    description: 'A swift wolf companion that grants increased movement speed when ridden.',
+    name: 'Baby Wolf',
+    description: 'A nimble baby wolf companion that grants increased movement speed when ridden.',
     rarity: 'rare',
-    // Wolf companion — the "wolf companion" Model3D from admin
-    // (geometric_stylised_wolf_meshy_6.glb).
-    modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d2fe3d0ef_geometric_stylised_wolf_meshy_6.glb',
-    modelFormat: 'glb', // 'glb' = GLTFLoader + embedded anims; 'fbx' = FBXLoader + separate anim URLs
-    // For GLB: substring (case-insensitive) used to find the matching clip inside the file
+    // Admin Model3D entity "companion" — baby_wolf glTF bundle.
+    modelUrl: BABY_WOLF_GLTF,
+    modelFormat: 'glb', // GLTFLoader handles both .gltf and .glb
+    bundleManifest: BABY_WOLF_BUNDLE,
+    // Embedded clip name hints (case-insensitive substring match).
     walkClipName: 'walk',
     idleClipName: 'idle',
-    // External animation source — when the mesh model has no embedded clips,
-    // the loader will fetch this GLB and reuse its idle / walk clips by name.
-    // (The AnimationFBX "companion" folder in admin points at this same file.)
-    externalAnimUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/4636b74d8_wolf_with_animations2.glb',
-    scale: 1.2,
+    // Fallback if the gltf has no embedded clips — pulls idle/walk from
+    // the admin AnimationFBX library (folder = "companion").
+    externalAnimUrl: null,
+    scale: 1.4,
     speedMultiplier: 1.8, // 80% faster while mounted
     spawnPos: [4, 0.3, -3],
-    color: 0x4a5568,
+    color: 0x9ca3af,
     // Gear slots specific to companions
     gearSlots: ['saddle', 'armor', 'charm'],
   },
@@ -48,3 +68,34 @@ export const COMPANION_GEAR = {
 
 export const getCompanionById = (id) =>
   COMPANION_DEFINITIONS.find((c) => c.id === id) || null;
+
+/**
+ * Builds a Three.js LoadingManager that rewrites relative GLTF resource
+ * paths (e.g. "scene.bin", "textures/foo.png") to the absolute Base44 URLs
+ * defined in the companion's bundleManifest. Required because the .gltf
+ * file references its sibling files by relative path, but each file is
+ * hosted at a different Base44 URL.
+ *
+ * Returns null when the companion has no bundle (e.g. a single-file .glb).
+ */
+export const createCompanionLoadingManager = (THREE, companionDef) => {
+  if (!companionDef?.bundleManifest) return null;
+  const bundle = companionDef.bundleManifest;
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier((url) => {
+    if (url.startsWith('http')) {
+      const tail = url.split('/').slice(-1)[0];
+      if (bundle[tail]) return bundle[tail];
+      const tail2 = url.split('/').slice(-2).join('/');
+      if (bundle[tail2]) return bundle[tail2];
+      return url;
+    }
+    if (bundle[url]) return bundle[url];
+    const cleaned = url.replace(/^\.\//, '');
+    if (bundle[cleaned]) return bundle[cleaned];
+    const tail = url.split('/').slice(-1)[0];
+    if (bundle[tail]) return bundle[tail];
+    return url;
+  });
+  return manager;
+};
