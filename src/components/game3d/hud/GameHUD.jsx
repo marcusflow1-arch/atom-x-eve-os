@@ -5,6 +5,7 @@ import HUDEquipment from './HUDEquipment';
 import HUDVitals from './HUDVitals';
 import TargetDisplay from './TargetDisplay';
 import HUDGameQuickActions from './HUDGameQuickActions';
+import HUDCompanionSkillSlots from './HUDCompanionSkillSlots';
 
 
 export default function GameHUD() {
@@ -13,6 +14,7 @@ export default function GameHUD() {
       <HUDMinimapQuest />
       <HUDGameQuickActions />
       <TargetDisplay />
+      <HUDCompanionSkillSlots />
       <HUDSkillSlots />
       <HUDVitals />
       <HUDEquipment />
