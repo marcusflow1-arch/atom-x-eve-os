@@ -31,6 +31,8 @@ import { getAbilityState, tickCooldowns, startCooldown, setTarget, clearTarget, 
 import { createLightningStrike } from './LightningStrikeEffect';
 import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
+import { tickCompanionCooldowns } from './companionAbilityStore';
+import { processCompanionAbilityPress } from './companionAbilityHandler';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
@@ -192,6 +194,7 @@ export default function GameWorld3D() {
   const keys = useRef({});
   const drag = useRef({ active: false, x: 0, y: 0 });
   const abilityKeyPressed = useRef(-1); // slot index pressed this frame (-1 = none)
+  const companionAbilityPressed = useRef(null); // ability id pressed this frame (null = none)
   const activeEffects = useRef([]); // { alive: fn, update: fn }
   const orbit = useRef({ yaw: 0, pitch: 0.4, distance: 4.5 });
   const nearbyNPCRef = useRef(null);
@@ -978,6 +981,11 @@ export default function GameWorld3D() {
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
       // F = mount/dismount companion
       if (k === 'f') { mountToggleRef.current = true; e.preventDefault(); }
+      // Z/X/V/B = companion combat abilities (Bite / Life Drain / Teleport Dash / Heal)
+      if (k === 'z') { companionAbilityPressed.current = 'bite'; }
+      if (k === 'x') { companionAbilityPressed.current = 'life_drain'; }
+      if (k === 'v') { companionAbilityPressed.current = 'teleport_dash'; }
+      if (k === 'b') { companionAbilityPressed.current = 'heal'; }
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
     // Middle-click raycaster for enemy targeting
@@ -1533,7 +1541,11 @@ export default function GameWorld3D() {
         }
       }
 
-      tickCooldowns(delta); tickRegen(delta);
+      tickCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta);
+      if (companionAbilityPressed.current) {
+        const abId = companionAbilityPressed.current; companionAbilityPressed.current = null;
+        processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects });
+      }
 
       // ─── Update active visual effects (lightning etc.) ───
       activeEffects.current = activeEffects.current.filter((fx) => {
@@ -1868,7 +1880,7 @@ export default function GameWorld3D() {
             <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack · <span className="text-cyan-300 font-mono">R</span> Roll</div>
             <div><span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target</div>
             <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-yellow-300 font-mono">C</span> Character · <span className="text-amber-300 font-mono">I</span> Equipment</div>
-            <div><span className="text-amber-300 font-mono">F</span> Mount / Dismount Companion</div>
+            <div><span className="text-amber-300 font-mono">F</span> Mount · <span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion Skills</div>
           </div>
         </div>
       )}
