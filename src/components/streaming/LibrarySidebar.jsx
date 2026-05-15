@@ -222,8 +222,9 @@ export default function LibrarySidebar() {
   
   const isGenreMastery = pathname.includes('/genremastery');
   const isGameDetail = pathname.includes('/gamedetail');
-  
-  const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || pathname.includes('/gamedetail'));
+  const isGameView = pathname.includes('/gameview');
+
+  const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || isGameView || pathname.includes('/gamedetail'));
   
   // On gamedetail page, use fixed positioning so the sidebar shows over the page
   const positionClass = isGameDetail ? 'fixed' : 'absolute';
