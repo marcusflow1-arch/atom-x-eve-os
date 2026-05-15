@@ -8,8 +8,7 @@ import {
   unequipCompanionGear,
   getEffectiveSpeedMultiplier,
 } from '../companionStore';
-import { Check, Zap, Shield, Sparkles, GitBranch } from 'lucide-react';
-import CompanionSkillTreeOverlay from './CompanionSkillTreeOverlay';
+import { Check, Zap, Shield, Sparkles } from 'lucide-react';
 
 const RARITY_COLORS = {
   common:   { text: 'text-slate-300',  border: 'border-slate-400/40',  bg: 'bg-slate-500/10' },
@@ -26,7 +25,6 @@ const SLOT_ICONS = {
 
 export default function CompanionTab() {
   const [state, setState] = useState(getCompanionState());
-  const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   useEffect(() => subscribeCompanion(setState), []);
 
   const active = getCompanionById(state.activeCompanionId) || COMPANION_DEFINITIONS[0];
@@ -161,36 +159,6 @@ export default function CompanionTab() {
         </div>
       </div>
 
-      {/* "Skill Tree" button — sits above the companion 3D preview on the right.
-          Hidden while the skill tree overlay is open. */}
-      {!skillTreeOpen && (
-        <button
-          onClick={() => setSkillTreeOpen(true)}
-          className="absolute pointer-events-auto px-5 py-2.5 rounded-full flex items-center gap-2 transition-all hover:scale-105"
-          style={{
-            top: 90,
-            right: '50%',
-            transform: 'translateX(50%)',
-            // Anchor over the right half of the layout, above the 3D preview
-            marginRight: '-25%',
-            background: 'linear-gradient(135deg, rgba(251,191,36,0.25) 0%, rgba(245,158,11,0.15) 100%)',
-            border: '1px solid rgba(251,191,36,0.55)',
-            boxShadow: '0 4px 18px rgba(251,191,36,0.25)',
-            color: '#fbbf24',
-          }}
-        >
-          <GitBranch className="w-4 h-4" />
-          <span className="text-xs font-bold tracking-[0.2em] uppercase">Skill Tree</span>
-        </button>
-      )}
-
-      {/* Companion Skill Tree overlay — right-hand stat allocation panel */}
-      {skillTreeOpen && (
-        <CompanionSkillTreeOverlay
-          companion={active}
-          onClose={() => setSkillTreeOpen(false)}
-        />
-      )}
     </>
   );
 }

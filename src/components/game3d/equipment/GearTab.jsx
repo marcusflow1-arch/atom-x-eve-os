@@ -13,6 +13,9 @@ import CompanionGearSlotsPanel from './CompanionGearSlotsPanel';
 import CompanionGearInventoryGrid from './CompanionGearInventoryGrid';
 import CompanionGearDetailPanel from './CompanionGearDetailPanel';
 import CompanionEquipmentSlotsColumn from './CompanionEquipmentSlotsColumn';
+import CompanionSkillTreeOverlay from './CompanionSkillTreeOverlay';
+import { getCompanionById } from '../companionData';
+import { getCompanionState } from '../companionStore';
 import {
   subscribeFusion,
   getFusionState,
@@ -20,7 +23,7 @@ import {
   equipCompanionGear,
   getCompanionItem,
 } from './companionFusionStore';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, GitBranch } from 'lucide-react';
 
 const COMPANION_SLOT_LABELS = { saddle: 'Saddle', armor: 'Armor', charm: 'Charm' };
 
@@ -50,6 +53,9 @@ export default function GearTab({ state }) {
 
   // Enchantment overlay state
   const [enchantOpen, setEnchantOpen] = useState(false);
+  // Companion skill tree overlay state — opened by the button at the far-right
+  // of the same horizontal line as the Enchant button (above the companion preview).
+  const [skillTreeOpen, setSkillTreeOpen] = useState(false);
 
   // Fusion mode (player vs companion view)
   const [fusion, setFusion] = useState(getFusionState());
@@ -204,6 +210,42 @@ export default function GearTab({ state }) {
         <Sparkles className="w-3.5 h-3.5" />
         ENCHANT
       </button>
+
+      {/* Companion SKILL TREE button — far right side of the same horizontal line
+          as Enchant, positioned above the companion preview/head. */}
+      <button
+        onClick={() => setSkillTreeOpen((v) => !v)}
+        className="absolute pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-widest font-semibold transition-all hover:scale-105"
+        style={{
+          right: 28,
+          top: 110,
+          background: skillTreeOpen
+            ? 'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))'
+            : 'rgba(15,17,22,0.55)',
+          color: skillTreeOpen ? '#1a1208' : 'rgba(251,191,36,0.95)',
+          border: '1px solid rgba(251,191,36,0.55)',
+          backdropFilter: 'blur(14px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+          boxShadow: skillTreeOpen
+            ? '0 6px 18px rgba(251,191,36,0.4)'
+            : '0 4px 14px rgba(0,0,0,0.4)',
+        }}
+      >
+        <GitBranch className="w-3.5 h-3.5" />
+        SKILL TREE
+      </button>
+
+      {/* Companion Skill Tree overlay — right side, replacing companion preview area */}
+      {skillTreeOpen && (() => {
+        const compState = getCompanionState();
+        const activeComp = getCompanionById(compState.activeCompanionId);
+        return (
+          <CompanionSkillTreeOverlay
+            companion={activeComp}
+            onClose={() => setSkillTreeOpen(false)}
+          />
+        );
+      })()}
 
       {/* Enchantment overlay — overlaps the 3D model area.
           Uses player item in player mode, companion item in companion mode. */}

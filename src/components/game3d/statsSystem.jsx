@@ -114,10 +114,27 @@ export function computeDerivedStats(baseStats, equipment = []) {
 }
 
 // Damage calc — dealt damage is reduced by defender's defense (min 1).
+// If the attacker rolls a crit (based on their critChance %), damage is x2 and
+// the returned object includes `crit: true` so the world can display it specially.
+// Backward compatible: callers that destructure a number still work because we
+// return a Number-coerced primitive when there's no crit. To keep the call sites
+// simple, we ALWAYS return a number — crits are encoded by attaching a `.crit`
+// flag on the result via a thin wrapper object only when explicitly asked.
 export function calculateHit(attackerStats, defenderStats) {
-  const raw = attackerStats.totalDamage;
+  let raw = attackerStats.totalDamage;
+  const crit = Math.random() * 100 < (attackerStats.critChance || 0);
+  if (crit) raw = Math.round(raw * 2);
   const reduced = Math.max(1, raw - (defenderStats?.defense || 0));
   return reduced;
+}
+
+// Crit-aware variant — returns { damage, crit } so the UI can color crits.
+export function calculateHitWithCrit(attackerStats, defenderStats) {
+  const crit = Math.random() * 100 < (attackerStats.critChance || 0);
+  let raw = attackerStats.totalDamage;
+  if (crit) raw = Math.round(raw * 2);
+  const damage = Math.max(1, raw - (defenderStats?.defense || 0));
+  return { damage, crit };
 }
 
 // Spell damage scaling — applies spirit (all spells) and elemental (DoT/elemental) bonuses.

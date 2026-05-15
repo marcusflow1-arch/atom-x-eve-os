@@ -9,21 +9,9 @@ import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
 import FloatingDamageNumbers from './FloatingDamageNumbers';
 import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
-import {
-  DEFAULT_PLAYER_STATS,
-  ENEMY_STAT_TEMPLATES,
-  computeDerivedStats,
-  calculateHit,
-  applySpellScaling,
-} from './statsSystem';
+import { DEFAULT_PLAYER_STATS, ENEMY_STAT_TEMPLATES, computeDerivedStats, calculateHit, calculateHitWithCrit, applySpellScaling } from './statsSystem';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
-import {
-  acceptQuest,
-  completeQuest,
-  reportEnemyKill,
-  subscribeQuests,
-  getQuestState,
-} from './useQuestStore';
+import { acceptQuest, completeQuest, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
@@ -32,13 +20,12 @@ import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData'
 import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
-import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore'; import { awardCompanionXP } from './companionProgressionStore';
+import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
+import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
+import CompanionHealthBar from './CompanionHealthBar';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
-import {
-  getAbilityState, tickCooldowns, startCooldown,
-  setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS,
-} from './abilityStore';
+import { getAbilityState, tickCooldowns, startCooldown, setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
 import { createLightningStrike } from './LightningStrikeEffect';
 import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
@@ -151,6 +138,11 @@ export default function GameWorld3D() {
   const [nearbyCompanion, setNearbyCompanion] = useState(false);
   const nearbyCompanionRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
+  // Companion live HP bar (projected to screen each frame)
+  const [companionUI, setCompanionUI] = useState(null); // { x, y, hp, maxHp, level }
+  // Companion live combat stats (HP, derived, level) — updated when stats are allocated
+  const companionStatsRef = useRef(null);
+  const companionRegenAccumRef = useRef(0);
   const companionGroupRef = useRef(null);
   const companionMixerRef = useRef(null);
   const companionWalkActionRef = useRef(null);
@@ -187,13 +179,7 @@ export default function GameWorld3D() {
     }
   };
   const spawnXPFloat = (value) => {
-    floatsRef.current.push({
-      id: ++floatIdRef.current,
-      enemyId: 'player',
-      value,
-      type: 'xp',
-      born: performance.now(),
-    });
+    floatsRef.current.push({ id: ++floatIdRef.current, enemyId: 'player', value, type: 'xp', born: performance.now() });
   };
   const playerLevelRef = useRef(1);
   const playerXPRef = useRef(0);
@@ -242,6 +228,20 @@ export default function GameWorld3D() {
   useEffect(() => {
     return subscribeCompanion((s) => {
       companionDefRef.current = getCompanionById(s.activeCompanionId);
+    });
+  }, []);
+
+  // Live companion combat stats — recomputed when player allocates Skill Tree points.
+  // Result is consumed by the HP-bar UI and (later) any companion attack/ability code.
+  useEffect(() => {
+    return subscribeCompanionProgression(() => {
+      const def = companionDefRef.current;
+      if (!def) return;
+      const prog = getCompanionProgression(def.id);
+      const derived = computeDerivedStats(prog.baseStats, []);
+      const prev = companionStatsRef.current;
+      const hp = prev ? Math.min(derived.maxHP, prev.hp + Math.max(0, derived.maxHP - prev.maxHp)) : derived.maxHP;
+      companionStatsRef.current = { hp, maxHp: derived.maxHP, level: prog.level, derived };
     });
   }, []);
 
@@ -1789,16 +1789,9 @@ export default function GameWorld3D() {
         });
         setFloats(projected);
 
-        // ─── Sync live boss state (pos + HP + alive) to bossStore ───
-        // Drives the waypoint guidance and the Boss tab list.
+        // Sync live boss state → bossStore (drives waypoint + Boss tab list)
         bossEntities.forEach((b) => {
-          updateBoss(b.id, {
-            x: b.group.position.x,
-            z: b.group.position.z,
-            hp: Math.max(0, b.hp),
-            maxHp: b.maxHp,
-            alive: b.alive && !b.dying,
-          });
+          updateBoss(b.id, { x: b.group.position.x, z: b.group.position.z, hp: Math.max(0, b.hp), maxHp: b.maxHp, alive: b.alive && !b.dying });
         });
       }
 
