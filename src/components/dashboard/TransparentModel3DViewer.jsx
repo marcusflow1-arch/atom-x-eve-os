@@ -6,13 +6,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { base44 } from '@/api/base44Client';
 import ReactorBridge from '../admin/reactor/ReactorBridge';
 import { attachWeapon, attachEffect } from '../3d/WeaponAttachmentSystem';
-
-const cleanMesh = (c) => {
-  if (!c.isMesh) return;
-  c.receiveShadow = true;
-  // Disable castShadow for SkinnedMesh to prevent WebGL bone limit crashes on some devices
-  c.castShadow = !c.isSkinnedMesh;
-};
+import { cleanMesh } from './transparentViewer/cleanMesh';
+import { useSkybox } from './transparentViewer/useSkybox';
 
 export default function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);
@@ -93,49 +88,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     };
   }, []);
   
-  const skyboxModelRef = useRef(null);
-
-  // Background / Skybox handler
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-
-    if (skyboxModelRef.current) {
-      scene.remove(skyboxModelRef.current);
-      skyboxModelRef.current = null;
-    }
-    
-    scene.background = null;
-
-    if (!backgroundUrl) return;
-
-    const lower = backgroundUrl.toLowerCase();
-    
-    if (lower.endsWith('.fbx') || lower.endsWith('.glb') || lower.endsWith('.gltf')) {
-      const onLoaded = (obj) => {
-        obj.scale.setScalar(500); 
-        obj.traverse((child) => {
-          if (child.isMesh) {
-            child.material.side = THREE.BackSide;
-            child.material.depthWrite = false;
-          }
-        });
-        skyboxModelRef.current = obj;
-        scene.add(obj);
-      };
-
-      if (lower.endsWith('.fbx')) {
-        new FBXLoader().load(backgroundUrl, onLoaded);
-      } else {
-        new GLTFLoader().load(backgroundUrl, (gltf) => onLoaded(gltf.scene));
-      }
-    } else {
-      new THREE.TextureLoader().load(backgroundUrl, (texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        scene.background = texture;
-      });
-    }
-  }, [backgroundUrl, isModelLoaded]);
+  // Skybox loading — fixed null-material crash, see ./transparentViewer/useSkybox.js
+  useSkybox(sceneRef, backgroundUrl, isModelLoaded);
 
   // Player Controller State
   const isSprintingRef = useRef(false);
