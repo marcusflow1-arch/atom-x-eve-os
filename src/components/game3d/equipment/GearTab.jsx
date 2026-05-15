@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GEAR_CATEGORIES, setSelected, equipItem, unequipItem } from './equipmentStore';
 import { INVENTORY, getEquippedItem } from './inventoryData';
 import GearSlotsPanel from './GearSlotsPanel';
@@ -8,7 +8,19 @@ import GearActionsBar from './GearActionsBar';
 import EquipmentSlotsColumn from './EquipmentSlotsColumn';
 import InventoryItemContextMenu from './InventoryItemContextMenu';
 import EnchantmentPanel from './EnchantmentPanel';
+import CompanionFusionCard from './CompanionFusionCard';
+import CompanionGearSlotsPanel from './CompanionGearSlotsPanel';
+import CompanionGearInventoryGrid from './CompanionGearInventoryGrid';
+import CompanionGearDetailPanel from './CompanionGearDetailPanel';
+import {
+  subscribeFusion,
+  getFusionState,
+  setSelectedCompanionSlot,
+  equipCompanionGear,
+} from './companionFusionStore';
 import { Sparkles } from 'lucide-react';
+
+const COMPANION_SLOT_LABELS = { saddle: 'Saddle', armor: 'Armor', charm: 'Charm' };
 
 /**
  * Where Winds Meet–style Gear tab:
@@ -37,30 +49,67 @@ export default function GearTab({ state }) {
   // Enchantment overlay state
   const [enchantOpen, setEnchantOpen] = useState(false);
 
+  // Fusion mode (player vs companion view)
+  const [fusion, setFusion] = useState(getFusionState());
+  useEffect(() => subscribeFusion(setFusion), []);
+  const isCompanionMode = fusion.mode === 'companion';
+
+  // Track inspected companion item per-slot
+  const [inspectedCompanionBySlot, setInspectedCompanionBySlot] = useState({});
+  const companionSlotId = fusion.selectedSlot || 'saddle';
+  const inspectedCompanionId = inspectedCompanionBySlot[companionSlotId]
+    || fusion.equippedGear?.[companionSlotId]
+    || null;
+
   const handleContextItem = (item, x, y) => {
     setContextMenu({ item, x, y });
   };
 
   return (
     <>
-      {/* LEFT — slots panel + per-category inventory grid */}
+      {/* LEFT — slots panel + per-category inventory grid.
+          Swaps to companion slots/inventory when fusion mode is active. */}
       <div className="absolute left-6 top-24 bottom-20 w-[380px] pointer-events-auto">
-        <GearSlotsPanel
-          selectedCategoryId={selectedCat.id}
-          onSelectCategory={(id) => setSelected('selectedGearCategory', id)}
-        />
+        {isCompanionMode ? (
+          <>
+            <CompanionGearSlotsPanel
+              selectedSlotId={companionSlotId}
+              equippedGear={fusion.equippedGear}
+              onSelectSlot={(id) => setSelectedCompanionSlot(id)}
+            />
+            <div className="mt-6">
+              <CompanionGearInventoryGrid
+                slotId={companionSlotId}
+                slotLabel={COMPANION_SLOT_LABELS[companionSlotId] || companionSlotId}
+                equippedGear={fusion.equippedGear}
+                selectedItemId={inspectedCompanionId}
+                onSelectItem={(id) =>
+                  setInspectedCompanionBySlot((prev) => ({ ...prev, [companionSlotId]: id }))
+                }
+                onEquipItem={(id) => equipCompanionGear(companionSlotId, id)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <GearSlotsPanel
+              selectedCategoryId={selectedCat.id}
+              onSelectCategory={(id) => setSelected('selectedGearCategory', id)}
+            />
 
-        <div className="mt-6">
-          <GearInventoryGrid
-            categoryId={selectedCat.id}
-            categoryLabel={selectedCat.label}
-            selectedItemId={inspectedId}
-            onSelectItem={(id) =>
-              setInspectedByCat((prev) => ({ ...prev, [selectedCat.id]: id }))
-            }
-            onContextItem={handleContextItem}
-          />
-        </div>
+            <div className="mt-6">
+              <GearInventoryGrid
+                categoryId={selectedCat.id}
+                categoryLabel={selectedCat.label}
+                selectedItemId={inspectedId}
+                onSelectItem={(id) =>
+                  setInspectedByCat((prev) => ({ ...prev, [selectedCat.id]: id }))
+                }
+                onContextItem={handleContextItem}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* CENTER — item detail panel overlays directly on top of the 3D scene */}
@@ -73,24 +122,38 @@ export default function GearTab({ state }) {
             'linear-gradient(90deg, rgba(15,17,22,0.78) 0%, rgba(15,17,22,0.55) 70%, rgba(15,17,22,0) 100%)',
         }}
       >
-        <GearDetailPanel item={inspectedItem} />
+        {isCompanionMode ? (
+          <CompanionGearDetailPanel
+            slotId={companionSlotId}
+            itemId={inspectedCompanionId}
+            slotLabel={COMPANION_SLOT_LABELS[companionSlotId] || companionSlotId}
+          />
+        ) : (
+          <GearDetailPanel item={inspectedItem} />
+        )}
       </div>
 
-      {/* MIDDLE — vertical equipment slots column between detail panel and 3D model */}
-      <div
-        className="absolute top-28 pointer-events-auto"
-        style={{ left: 760 }}
-      >
-        <EquipmentSlotsColumn
-          selectedCategoryId={selectedCat.id}
-          onSelectCategory={(id) => {
-            const equipped = getEquippedItem(id);
-            if (equipped) {
-              setInspectedByCat((prev) => ({ ...prev, [id]: equipped.id }));
-            }
-          }}
-        />
-      </div>
+      {/* MIDDLE — vertical equipment slots column (player only) */}
+      {!isCompanionMode && (
+        <div
+          className="absolute top-28 pointer-events-auto"
+          style={{ left: 760 }}
+        >
+          <EquipmentSlotsColumn
+            selectedCategoryId={selectedCat.id}
+            onSelectCategory={(id) => {
+              const equipped = getEquippedItem(id);
+              if (equipped) {
+                setInspectedByCat((prev) => ({ ...prev, [id]: equipped.id }));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Companion fusion card — to the RIGHT of the 3D player model.
+          Always visible; clicking ATTEND swaps the gear view to companion mode. */}
+      <CompanionFusionCard />
 
       {/* Floating ENCHANT button above the 3D model's head */}
       <button
