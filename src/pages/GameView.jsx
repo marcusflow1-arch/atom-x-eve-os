@@ -133,14 +133,6 @@ export default function GameView() {
       <DuelSystem userId={user?.id} />
       <DuelMarkers localUserId={user?.id} />
 
-      {/* Back button */}
-      <button
-        onClick={() => navigate(createPageUrl('LunaTemplate'))}
-        className="absolute top-20 left-4 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/70 hover:text-white text-xs flex items-center gap-1.5 z-20"
-      >
-        <ArrowLeft className="w-3 h-3" />
-        Back
-      </button>
     </div>
   );
 }

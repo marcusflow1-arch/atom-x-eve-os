@@ -27,9 +27,6 @@ export default function HUDSkillSlots() {
 
   return (
     <div className="absolute bottom-6 left-6 z-20 pointer-events-auto">
-      <div className="text-[10px] font-bold tracking-[0.25em] uppercase text-amber-200/80 mb-1.5">
-        Skill Slots <span className="text-white/30 normal-case tracking-normal font-normal">· Press K for skill tree</span>
-      </div>
       <div className="flex gap-2">
         {SLOT_KEYS.map((key, i) => {
           const abId = equipped[i];
