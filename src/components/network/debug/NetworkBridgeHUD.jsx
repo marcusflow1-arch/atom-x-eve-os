@@ -136,6 +136,12 @@ export default function NetworkBridgeHUD({ alwaysShow = false }) {
           checked={flags.networkRemoteDebug}
           onChange={(v) => setNetworkFlag('networkRemoteDebug', v)}
         />
+        <Toggle
+          label="Validation telemetry (NVT)"
+          hint="logs drift / pred-err / anim sync to console every 10s"
+          checked={flags.enableNetworkValidationTelemetry}
+          onChange={(v) => setNetworkFlag('enableNetworkValidationTelemetry', v)}
+        />
       </div>
 
       <div className="mt-2 pt-2 border-t border-white/10 text-[9px] text-white/40 leading-snug">

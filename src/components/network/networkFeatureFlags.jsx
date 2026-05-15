@@ -16,6 +16,9 @@ const DEFAULTS = {
   disableLegacyRemotes: false,      // DANGER: hides the existing WebRTC RemotePlayersManager visuals
   networkRemoteDebug: false,        // overlays IDs, snapshot age, RTT on each remote
 
+  // Slice C — validation telemetry (read-only, console output)
+  enableNetworkValidationTelemetry: false, // master switch for NVT
+
   // Reserved for future slices
   enableServerCombat: false,
   enableServerNPCs: false,

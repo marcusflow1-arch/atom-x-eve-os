@@ -23,6 +23,7 @@ import NetworkBridgeHUD from '../components/network/debug/NetworkBridgeHUD';
 import NetworkRemotesMount from '../components/network/remote/NetworkRemotesMount';
 import LegacyRemotesVisibilityToggle from '../components/network/remote/LegacyRemotesVisibilityToggle';
 import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemotesDebugOverlay';
+import NetworkValidationTelemetry from '../components/network/debug/NetworkValidationTelemetry';
 import {
   sendFriendRequest, sendPartyRequest, sendTradeRequest, sendDuelRequest,
   partyStore,
@@ -149,6 +150,7 @@ export default function GameView() {
       <NetworkRemotesMount />
       <LegacyRemotesVisibilityToggle />
       <NetworkRemotesDebugOverlay />
+      <NetworkValidationTelemetry />
     </div>
   );
 }
