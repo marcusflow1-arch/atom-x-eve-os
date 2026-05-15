@@ -117,8 +117,29 @@ export default function NetworkBridgeHUD({ alwaysShow = false }) {
         />
       </div>
 
+      <div className="border-t border-white/10 pt-2 mt-2">
+        <div className="text-[10px] text-white/40 mb-1 tracking-wider">SLICE C — REMOTES</div>
+        <Toggle
+          label="Enable network remotes"
+          hint="render server-driven remote players (green ring)"
+          checked={flags.enableNetworkRemotes}
+          onChange={(v) => setNetworkFlag('enableNetworkRemotes', v)}
+        />
+        <Toggle
+          label="Hide legacy remotes"
+          hint="DANGER — hides existing WebRTC remotes (blue ring)"
+          checked={flags.disableLegacyRemotes}
+          onChange={(v) => setNetworkFlag('disableLegacyRemotes', v)}
+        />
+        <Toggle
+          label="Remote debug labels"
+          checked={flags.networkRemoteDebug}
+          onChange={(v) => setNetworkFlag('networkRemoteDebug', v)}
+        />
+      </div>
+
       <div className="mt-2 pt-2 border-t border-white/10 text-[9px] text-white/40 leading-snug">
-        Bridge is a sibling listener. GameWorld3D code is unchanged.
+        Bridge + remotes are sibling listeners. GameWorld3D code is unchanged.
         Toggle any flag at runtime.
       </div>
     </div>

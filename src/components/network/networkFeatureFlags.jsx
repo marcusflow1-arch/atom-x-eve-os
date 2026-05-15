@@ -11,8 +11,12 @@ const DEFAULTS = {
   bridgeOverridesLocalPos: false,   // when bridge is on, drive playerPositionStore from predicted state
   bridgeLogging: false,             // verbose console logs from the bridge
 
-  // Reserved for future slices (Slice C+)
-  enableRemotePlayerSync: false,
+  // Slice C — remote player pipeline
+  enableNetworkRemotes: false,      // master switch: render remote players from realtimeNetwork
+  disableLegacyRemotes: false,      // DANGER: hides the existing WebRTC RemotePlayersManager visuals
+  networkRemoteDebug: false,        // overlays IDs, snapshot age, RTT on each remote
+
+  // Reserved for future slices
   enableServerCombat: false,
   enableServerNPCs: false,
 };

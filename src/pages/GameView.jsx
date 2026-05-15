@@ -20,6 +20,9 @@ import DuelSystem from '../components/game3d/social/DuelSystem';
 import DuelMarkers from '../components/game3d/social/DuelMarkers';
 import NetworkBridgeMount from '../components/network/NetworkBridgeMount';
 import NetworkBridgeHUD from '../components/network/debug/NetworkBridgeHUD';
+import NetworkRemotesMount from '../components/network/remote/NetworkRemotesMount';
+import LegacyRemotesVisibilityToggle from '../components/network/remote/LegacyRemotesVisibilityToggle';
+import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemotesDebugOverlay';
 import {
   sendFriendRequest, sendPartyRequest, sendTradeRequest, sendDuelRequest,
   partyStore,
@@ -142,6 +145,10 @@ export default function GameView() {
       {/* Slice B — feature-flagged. Default OFF, no effect on existing systems. */}
       <NetworkBridgeMount />
       <NetworkBridgeHUD />
+      {/* Slice C — feature-flagged. Default OFF, runs alongside legacy WebRTC remotes. */}
+      <NetworkRemotesMount />
+      <LegacyRemotesVisibilityToggle />
+      <NetworkRemotesDebugOverlay />
     </div>
   );
 }

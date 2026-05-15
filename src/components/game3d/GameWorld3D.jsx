@@ -268,6 +268,14 @@ export default function GameWorld3D() {
 
     remoteManagerRef.current = createRemotePlayersManager(scene);
     const remoteCompanionManager = createRemoteCompanionManager(scene);
+
+    // Slice C — expose scene + camera + legacy remote manager on window so the
+    // network-remotes pipeline (mounted as a sibling) can attach without code
+    // changes inside this giant useEffect. Cleared on unmount below.
+    window.__gw3dScene = scene;
+    window.__gw3dCamera = camera;
+    window.__gw3dLegacyRemoteManager = remoteManagerRef.current;
+    window.dispatchEvent(new CustomEvent('gw3dSceneReady'));
     scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0));
     const sun = new THREE.DirectionalLight(0xfff4d6, 2.2);
     sun.position.set(20, 30, 10);
@@ -1813,6 +1821,11 @@ export default function GameWorld3D() {
       stopLoopSound('player_walk');
       if (remoteManagerRef.current) { remoteManagerRef.current.dispose(); remoteManagerRef.current = null; }
       remoteCompanionManager.dispose();
+      // Slice C — clear scene refs
+      if (window.__gw3dScene === scene) window.__gw3dScene = null;
+      if (window.__gw3dCamera === camera) window.__gw3dCamera = null;
+      window.__gw3dLegacyRemoteManager = null;
+      window.dispatchEvent(new CustomEvent('gw3dSceneTeardown'));
     };
   }, []);
 
