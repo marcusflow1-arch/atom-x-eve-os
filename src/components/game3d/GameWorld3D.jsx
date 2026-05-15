@@ -154,6 +154,7 @@ export default function GameWorld3D() {
   const companionMixerRef = useRef(null);
   const companionWalkActionRef = useRef(null);
   const companionIdleActionRef = useRef(null);
+  const companionRunActionRef = useRef(null);
   const companionCurrentAnimRef = useRef('idle');
   const mountToggleRef = useRef(false);
   const isMountedRef = useRef(false);
@@ -571,6 +572,7 @@ export default function GameWorld3D() {
           };
           const idleClip = findClip(companionDef.idleClipName) || clips[0];
           const walkClip = findClip(companionDef.walkClipName) || clips[1] || clips[0];
+          const runClip  = findClip(companionDef.runClipName)  || clips[2] || null;
           if (idleClip) {
             const idle = compMixer.clipAction(idleClip);
             companionIdleActionRef.current = idle;
@@ -578,8 +580,13 @@ export default function GameWorld3D() {
           }
           if (walkClip && walkClip !== idleClip) {
             const walk = compMixer.clipAction(walkClip);
-            walk.setEffectiveTimeScale(0.7);
+            walk.setEffectiveTimeScale(1.0);
             companionWalkActionRef.current = walk;
+          }
+          if (runClip && runClip !== idleClip && runClip !== walkClip) {
+            const run = compMixer.clipAction(runClip);
+            run.setEffectiveTimeScale(1.0);
+            companionRunActionRef.current = run;
           }
         };
 
@@ -1146,22 +1153,22 @@ export default function GameWorld3D() {
             const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
             if (gy !== null) compGroup.position.y = gy;
           }
-          // Drive companion animation: walk when moving, idle when still
-          const targetAnim = isMoving ? 'walk' : 'idle';
+          // Drive companion animation: idle (still), walk (W), run (Shift+W).
+          // Falls back gracefully if run clip wasn't found (uses walk instead).
+          const hasRun = !!companionRunActionRef.current;
+          let targetAnim = 'idle';
+          if (isMoving) targetAnim = isRunning && hasRun ? 'run' : 'walk';
           if (targetAnim !== companionCurrentAnimRef.current) {
-            const walk = companionWalkActionRef.current;
             const idle = companionIdleActionRef.current;
-            if (targetAnim === 'walk' && walk) {
-              if (idle) idle.fadeOut(0.2);
-              walk.reset().fadeIn(0.2).play();
-            } else if (targetAnim === 'idle' && idle) {
-              if (walk) walk.fadeOut(0.2);
-              idle.reset().fadeIn(0.2).play();
-            }
+            const walk = companionWalkActionRef.current;
+            const run  = companionRunActionRef.current;
+            // Fade out everything else, fade in the target
+            if (targetAnim !== 'idle' && idle) idle.fadeOut(0.2);
+            if (targetAnim !== 'walk' && walk) walk.fadeOut(0.2);
+            if (targetAnim !== 'run'  && run)  run.fadeOut(0.2);
+            const next = targetAnim === 'run' ? run : targetAnim === 'walk' ? walk : idle;
+            if (next) next.reset().fadeIn(0.2).play();
             companionCurrentAnimRef.current = targetAnim;
-          }
-          if (companionWalkActionRef.current) {
-            companionWalkActionRef.current.setEffectiveTimeScale(isRunning ? 1.0 : 0.7);
           }
         } else {
           // Not mounted — companion follows the player like a pet.
@@ -1192,21 +1199,21 @@ export default function GameWorld3D() {
               const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
               if (gy !== null) compGroup.position.y = gy;
             }
-            const targetAnim = chasing ? 'walk' : 'idle';
+            // 3-state animation: idle when still, walk when player walks,
+            // run when Shift+W is held. Same rules as mounted.
+            const hasRun = !!companionRunActionRef.current;
+            let targetAnim = 'idle';
+            if (chasing) targetAnim = isRunning && hasRun ? 'run' : 'walk';
             if (targetAnim !== companionCurrentAnimRef.current) {
-              const walk = companionWalkActionRef.current;
               const idle = companionIdleActionRef.current;
-              if (targetAnim === 'walk' && walk) {
-                if (idle) idle.fadeOut(0.2);
-                walk.reset().fadeIn(0.2).play();
-              } else if (targetAnim === 'idle' && idle) {
-                if (walk) walk.fadeOut(0.2);
-                idle.reset().fadeIn(0.2).play();
-              }
+              const walk = companionWalkActionRef.current;
+              const run  = companionRunActionRef.current;
+              if (targetAnim !== 'idle' && idle) idle.fadeOut(0.2);
+              if (targetAnim !== 'walk' && walk) walk.fadeOut(0.2);
+              if (targetAnim !== 'run'  && run)  run.fadeOut(0.2);
+              const next = targetAnim === 'run' ? run : targetAnim === 'walk' ? walk : idle;
+              if (next) next.reset().fadeIn(0.2).play();
               companionCurrentAnimRef.current = targetAnim;
-            }
-            if (chasing && companionWalkActionRef.current) {
-              companionWalkActionRef.current.setEffectiveTimeScale(isRunning ? 1.0 : 0.7);
             }
           }
         }

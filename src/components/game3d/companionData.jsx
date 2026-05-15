@@ -37,6 +37,7 @@ export const COMPANION_DEFINITIONS = [
     // Embedded clip name hints (case-insensitive substring match).
     walkClipName: 'walk',
     idleClipName: 'idle',
+    runClipName: 'run',
     // Fallback if the gltf has no embedded clips — pulls idle/walk from
     // the admin AnimationFBX library (folder = "companion").
     externalAnimUrl: null,

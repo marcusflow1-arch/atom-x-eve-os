@@ -26,6 +26,7 @@ export async function loadCompanionFolderClips(fbxLoader) {
 
   const idleEntry = pickEntry('idle', 'idle');
   const walkEntry = pickEntry('walk', 'walk');
+  const runEntry  = pickEntry('run',  'run');
 
   const loadClipsFromUrl = (url) => new Promise((resolve) => {
     const ext = (url.split('.').pop() || '').toLowerCase();
@@ -38,7 +39,7 @@ export async function loadCompanionFolderClips(fbxLoader) {
   });
 
   // Group by URL so we only fetch each source file once
-  const urlsNeeded = [idleEntry, walkEntry].filter(Boolean).map((e) => e.file_url);
+  const urlsNeeded = [idleEntry, walkEntry, runEntry].filter(Boolean).map((e) => e.file_url);
   const uniqueUrls = [...new Set(urlsNeeded)];
   const urlToClips = {};
   await Promise.all(uniqueUrls.map(async (u) => {
@@ -57,8 +58,10 @@ export async function loadCompanionFolderClips(fbxLoader) {
 
   const idleClip = pickClipByName(idleEntry);
   const walkClip = pickClipByName(walkEntry);
+  const runClip  = pickClipByName(runEntry);
   const out = [];
   if (idleClip) { idleClip.name = 'idle'; out.push(idleClip); }
   if (walkClip && walkClip !== idleClip) { walkClip.name = 'walk'; out.push(walkClip); }
+  if (runClip && runClip !== idleClip && runClip !== walkClip) { runClip.name = 'run'; out.push(runClip); }
   return out;
 }
