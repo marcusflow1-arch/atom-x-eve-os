@@ -33,6 +33,9 @@ import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
+import { createRemotePlayersManager } from './RemotePlayersManager';
+import PlayerInteractionMenu from './PlayerInteractionMenu';
+import { handleMiddleClick } from './middleClickHandler';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
@@ -132,7 +135,7 @@ export default function GameWorld3D() {
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
-  const [pauseOpen, setPauseOpen] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false); const [playerMenu, setPlayerMenu] = useState(null); const remoteManagerRef = useRef(null);
   const [nearbyCompanion, setNearbyCompanion] = useState(false);
   const nearbyCompanionRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -276,6 +279,9 @@ export default function GameWorld3D() {
     // Camera
     const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
     camera.position.set(0, 3, -5);
+
+    // Remote players manager — renders other players in the shared channel
+    remoteManagerRef.current = createRemotePlayersManager(scene);
 
     // Lights
     scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0));
@@ -995,43 +1001,8 @@ export default function GameWorld3D() {
       if (e.button === 0) {
         attackPressed.current = true; // melee only — abilities use Q/E/R/F keys
       } else if (e.button === 1) {
-        // Middle click — raycast against enemy models
         e.preventDefault();
-        const rect = renderer.domElement.getBoundingClientRect();
-        const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        targetRaycaster.setFromCamera({ x: ndcX, y: ndcY }, camera);
-        // Collect all enemy meshes
-        const enemyMeshes = [];
-        enemies.forEach((en) => {
-          if (!en.alive || en.dying) return;
-          en.group.traverse((node) => {
-            if (node.isMesh) enemyMeshes.push(node);
-          });
-        });
-        const hits = targetRaycaster.intersectObjects(enemyMeshes, false);
-        if (hits.length > 0) {
-          // Walk up to find which enemy this mesh belongs to
-          let hitMesh = hits[0].object;
-          let foundEnemy = null;
-          for (const en of enemies) {
-            en.group.traverse((node) => { if (node === hitMesh) foundEnemy = en; });
-            if (foundEnemy) break;
-          }
-          if (foundEnemy) {
-            setTarget({
-              id: foundEnemy.id,
-              name: foundEnemy.bossName || (foundEnemy.tier ? `${foundEnemy.tier.charAt(0).toUpperCase() + foundEnemy.tier.slice(1)} Enemy` : 'Enemy'),
-              hp: foundEnemy.hp,
-              maxHp: foundEnemy.maxHp,
-              level: foundEnemy.level,
-              tier: foundEnemy.tier || 'normal',
-              bossName: foundEnemy.bossName || null,
-            });
-          }
-        } else {
-          clearTarget();
-        }
+        handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu });
       } else {
         drag.current = { active: true, x: e.clientX, y: e.clientY };
       }
@@ -1069,6 +1040,7 @@ export default function GameWorld3D() {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
+      if (remoteManagerRef.current) remoteManagerRef.current.update(delta);
 
       // ─── Companion mount toggle (F) — runs once per key press ───
       if (mountToggleRef.current && model) {
@@ -1826,6 +1798,7 @@ export default function GameWorld3D() {
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
       stopLoopSound('player_walk');
+      if (remoteManagerRef.current) { remoteManagerRef.current.dispose(); remoteManagerRef.current = null; }
     };
   }, []);
 
@@ -1876,9 +1849,8 @@ export default function GameWorld3D() {
         <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 pointer-events-none">
           <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-1">Controls</div>
           <div className="text-xs text-white/80 space-y-0.5">
-            <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
-            <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack · <span className="text-cyan-300 font-mono">R</span> Roll</div>
-            <div><span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target</div>
+            <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run · <span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack</div>
+            <div><span className="text-cyan-300 font-mono">R</span> Roll · <span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target/Player</div>
             <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-amber-300 font-mono">I</span> Equipment · <span className="text-amber-300 font-mono">F</span> Mount · <span className="text-red-300 font-mono">Esc</span> Menu</div>
             <div><span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion Skills</div>
           </div></div>)}
@@ -1985,6 +1957,16 @@ export default function GameWorld3D() {
       {/* Equipment menu (I) — Where Winds Meet–style layout */}
       <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
       <PauseMenu open={pauseOpen} onClose={() => setPauseOpen(false)} onOpenSettings={() => { setPauseOpen(false); setEquipmentOpen(true); }} />
+      <PlayerInteractionMenu
+        open={!!playerMenu}
+        x={playerMenu?.x || 0}
+        y={playerMenu?.y || 0}
+        player={playerMenu?.player}
+        onClose={() => setPlayerMenu(null)}
+        onAction={(action, p) => {
+          window.dispatchEvent(new CustomEvent('gamePlayerAction', { detail: { action, playerId: p.id, playerName: p.name } }));
+        }}
+      />
 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">

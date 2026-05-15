@@ -12,6 +12,8 @@ import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import { useAuth } from '@/components/auth/AuthContext';
+import { toast } from 'react-hot-toast';
+import { base44 } from '@/api/base44Client';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -26,11 +28,54 @@ export default function GameView() {
   // so game-mode presence is distinct from dashboard presence.
   useEffect(() => {
     if (phase === 'world' && user?.id) {
+      // Shared world channel — every player joins the same channel so they
+      // can see and interact with each other on one server/map.
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `game_${user.id}`, hostId: user.id }
+        detail: { channelId: 'game_world_main', hostId: 'game_world_main' }
       }));
     }
   }, [phase, user?.id]);
+
+  // Player interaction menu actions (Duel / Add Friend / Trade / Party Up)
+  useEffect(() => {
+    const onAction = async (e) => {
+      const { action, playerId, playerName } = e.detail || {};
+      if (!playerId || !user?.id) return;
+      try {
+        if (action === 'friend') {
+          await base44.entities.FriendRequest.create({
+            from_user_id: user.id, to_user_id: playerId,
+            from_display_name: user.full_name || user.username || 'Player', status: 'pending',
+          });
+          toast.success(`Friend request sent to ${playerName}`);
+        } else if (action === 'trade') {
+          await base44.entities.TradeOffer.create({
+            from_user_id: user.id, to_user_id: playerId,
+            from_display_name: user.full_name || user.username || 'Player', status: 'pending',
+          });
+          toast.success(`Trade request sent to ${playerName}`);
+        } else if (action === 'party') {
+          await base44.entities.PartyMember.create({
+            invited_by: user.id, user_id: playerId, status: 'invited',
+            display_name: playerName,
+          });
+          toast.success(`${playerName} invited to party`);
+        } else if (action === 'duel') {
+          await base44.entities.Challenge.create({
+            challenger_id: user.id, opponent_id: playerId,
+            type: 'duel', status: 'pending',
+            message: `${user.full_name || 'Player'} challenges you to a duel!`,
+          });
+          toast.success(`Duel challenge sent to ${playerName}`);
+        }
+      } catch (err) {
+        toast.error('Could not send request');
+        console.error('Player action failed:', err);
+      }
+    };
+    window.addEventListener('gamePlayerAction', onAction);
+    return () => window.removeEventListener('gamePlayerAction', onAction);
+  }, [user?.id, user?.full_name, user?.username]);
 
   // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = close
   useEffect(() => {
