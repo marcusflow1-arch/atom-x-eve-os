@@ -34,6 +34,8 @@ import { createFrostTornado } from './FrostTornadoEffect';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
 import { createRemotePlayersManager } from './RemotePlayersManager';
+import { ENEMY_SPAWNS } from './enemySpawnConfig';
+import { broadcastEnemyKill } from './enemyRespawnManager';
 import PlayerInteractionMenu from './PlayerInteractionMenu';
 import { handleMiddleClick } from './middleClickHandler';
 import VoiceMicIndicator from './VoiceMicIndicator';
@@ -52,10 +54,11 @@ const ENEMY_TIERS = [
   { name: 'elite',    weight: 0.22, xp: 3, level: 2, scale: 1.15, tintMix: 0.70 },
   { name: 'champion', weight: 0.08, xp: 5, level: 4, scale: 1.30, tintMix: 0.85 },
 ];
-const pickTier = () => {
-  const r = Math.random();
+// Pick tier from a seeded roll (deterministic across clients) — falls back to
+// Math.random() only when called without a roll (legacy paths).
+const pickTier = (roll = Math.random()) => {
   let acc = 0;
-  for (const t of ENEMY_TIERS) { acc += t.weight; if (r < acc) return t; }
+  for (const t of ENEMY_TIERS) { acc += t.weight; if (roll < acc) return t; }
   return ENEMY_TIERS[0];
 };
 
@@ -83,31 +86,6 @@ const NPC_SPAWNS = [
   { id: 'npc_borin', name: 'Borin the Blacksmith', pos: [-7, 0.3, 4], color: 0xe2a04a, dialogue: "Need stronger arrows? Come back when you've slain a few enemies and I'll forge you something special." },
   { id: 'npc_sage', name: 'Sage Mira', pos: [0, 0.3, 12], color: 0xa04ae2, dialogue: "The runes whisper of an ancient power buried beneath the platform. Be careful where you tread." },
 ];
-
-// Enemy zones — each zone spawns ~15 mobs roaming around a center point.
-const ENEMY_ZONES = [
-  { id: 'zone_north', center: [14, 0.3, -10], radius: 9, count: 15 },
-  { id: 'zone_south', center: [-12, 0.3, 12],  radius: 9, count: 15 },
-];
-
-// Build flat spawn list with randomized positions inside each zone.
-const ENEMY_SPAWNS = ENEMY_ZONES.flatMap((zone) =>
-  Array.from({ length: zone.count }, (_, i) => {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * zone.radius;
-    return {
-      id: `${zone.id}_${i}`,
-      zoneId: zone.id,
-      zoneCenter: zone.center,
-      zoneRadius: zone.radius,
-      home: [
-        zone.center[0] + Math.cos(angle) * dist,
-        zone.center[1],
-        zone.center[2] + Math.sin(angle) * dist,
-      ],
-    };
-  })
-);
 
 const ENEMY_SPEED = 1.2;
 const ENEMY_WALK_TIME = 3.0;   // seconds walking
@@ -637,6 +615,18 @@ export default function GameWorld3D() {
 
     // Enemy spawns — mutant model patrolling between waypoints
     const enemies = [];
+    // Remote kill listener: peer killed an enemy → kill it here too.
+    const handleRemoteAction = (e) => {
+      const d = e.detail; if (!d || d.kind !== 'enemy_killed') return;
+      const t = enemies.find((en) => en.id === d.enemy_id && en.alive && !en.dying);
+      if (!t) return;
+      t.respawnAt = performance.now() + 10000; t.dying = true; t.deathTimer = 0; t.hp = 0;
+      if (t.walkAction) t.walkAction.fadeOut(0.15);
+      if (t.idleAction) t.idleAction.fadeOut(0.15);
+      if (cachedDeathClip && t.mixer) { const da = t.mixer.clipAction(cachedDeathClip); da.setLoop(THREE.LoopOnce); da.clampWhenFinished = true; da.reset().fadeIn(0.15).play(); }
+      setEnemyCount(enemies.filter((en) => en.alive && !en.dying).length);
+    };
+    window.addEventListener('webrtcRemoteAction', handleRemoteAction);
 
     // Pre-load enemy creature clips once (shared across all enemies).
     // These come from the "creature" folder in admin → AnimationFBX manager
@@ -784,9 +774,10 @@ export default function GameWorld3D() {
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(CREATURE_MODEL_URL, (fbx) => {
         const enemyModel = fbx;
-        const tier = pickTier();
-        // Randomize level a bit around the tier's base
-        const enemyLevel = tier.level + Math.floor(Math.random() * 2); // tier.level or tier.level+1
+        // DETERMINISTIC tier + level — uses the seeded tierRoll from spawn config
+        // so every client picks the same tier for the same enemy id.
+        const tier = pickTier(spawn.tierRoll);
+        const enemyLevel = tier.level + (spawn.tierRoll > 0.5 ? 1 : 0);
         // Derive enemy combat stats from the shared stat system
         const enemyBaseStats = ENEMY_STAT_TEMPLATES[tier.name];
         const enemyDerived = computeDerivedStats(enemyBaseStats, []);
@@ -840,6 +831,8 @@ export default function GameWorld3D() {
           tintMaterials,
           zoneCenter: spawn.zoneCenter,
           zoneRadius: spawn.zoneRadius,
+          home: spawn.home, // remembered for respawn
+          respawnAt: null,  // set when killed; checked each frame
           tier: tier.name,
           level: enemyLevel,
           hp: enemyDerived.maxHP,
@@ -1320,25 +1313,32 @@ export default function GameWorld3D() {
           if (!enemy.alive) return;
           if (enemy.mixer) enemy.mixer.update(delta);
 
-          // Death sequence: play death anim, wait 5s on the ground, then fade out & remove
+          // Death sequence: play death anim, fade out, RESPAWN after 10s at home.
           if (enemy.dying) {
             enemy.deathTimer += delta;
             if (enemy.deathTimer >= DEATH_FADE_DELAY) {
-              // Fade out over ~0.8s by decreasing material opacity
               const fadeT = Math.min(1, (enemy.deathTimer - DEATH_FADE_DELAY) / 0.8);
-              enemy.tintMaterials.forEach(m => {
-                m.transparent = true;
-                m.opacity = 1 - fadeT;
-              });
-              if (fadeT >= 1) {
-                enemy.alive = false;
-                scene.remove(enemy.group);
+              enemy.tintMaterials.forEach(m => { m.transparent = true; m.opacity = 1 - fadeT; });
+              if (fadeT >= 1 && enemy.group.visible) {
+                enemy.group.visible = false;
                 if (enemy.mixer) enemy.mixer.stopAllAction();
-                const aliveCount = enemies.filter(e => e.alive && !e.dying).length;
-                setEnemyCount(aliveCount);
+                setEnemyCount(enemies.filter(e => e.alive && !e.dying).length);
               }
             }
-            return; // skip wander logic while dying
+            if (enemy.respawnAt && performance.now() >= enemy.respawnAt) {
+              enemy.dying = false; enemy.deathTimer = 0; enemy.respawnAt = null;
+              enemy.hp = enemy.maxHp; enemy.state = 'idle'; enemy.stateTimer = 0;
+              enemy.target = null; enemy.attacking = false; enemy.attackCooldown = 0; enemy.hitCooldown = 0;
+              enemy.tintMaterials.forEach(m => { m.opacity = 1; m.transparent = false; });
+              if (enemy.home && enemy.group) {
+                enemy.group.position.set(enemy.home[0], enemy.home[1], enemy.home[2]);
+                enemy.group.visible = true;
+                if (mapReady) { const gy = sampleGroundY(enemy.group.position.x, enemy.group.position.z); if (gy !== null) enemy.group.position.y = gy; }
+              }
+              if (enemy.idleAction) enemy.idleAction.reset().fadeIn(0.2).play();
+              setEnemyCount(enemies.filter(e => e.alive && !e.dying).length);
+            }
+            return;
           }
 
           // ─── Enemy attack player when in range ───
@@ -1473,10 +1473,13 @@ export default function GameWorld3D() {
             playActionSound('enemy_hit');
             if (closestEnemy.hp <= 0) {
               playActionSound('enemy_death');
-              // Lethal — start death sequence
-              closestEnemy.hp = 0;
+              // Lethal — start death sequence + broadcast kill to all peers so
+              // every player sees this enemy die in real time. 10s respawn is
+              // scheduled inside killEnemyLocal.
+              closestEnemy.respawnAt = performance.now() + 10000;
               closestEnemy.dying = true;
               closestEnemy.deathTimer = 0;
+              closestEnemy.hp = 0;
               if (closestEnemy.walkAction) closestEnemy.walkAction.fadeOut(0.15);
               if (closestEnemy.idleAction) closestEnemy.idleAction.fadeOut(0.15);
               if (cachedDeathClip && closestEnemy.mixer) {
@@ -1486,6 +1489,7 @@ export default function GameWorld3D() {
                 deathAction.reset().fadeIn(0.15).play();
                 closestEnemy.deathAction = deathAction;
               }
+              broadcastEnemyKill(closestEnemy.id);
               setScore(prev => prev + 100 * closestEnemy.xpReward);
               spawnXPFloat(closestEnemy.xpReward);
               awardCompanionXP(companionDefRef.current?.id, closestEnemy.xpReward);
@@ -1805,6 +1809,7 @@ export default function GameWorld3D() {
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('wheel', onWheel);
       renderer.domElement.removeEventListener('contextmenu', onContext);
+      window.removeEventListener('webrtcRemoteAction', handleRemoteAction);
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
       stopLoopSound('player_walk');
