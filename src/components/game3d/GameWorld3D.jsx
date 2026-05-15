@@ -36,6 +36,9 @@ import { processCompanionAbilityPress } from './companionAbilityHandler';
 import { createRemotePlayersManager } from './RemotePlayersManager';
 import PlayerInteractionMenu from './PlayerInteractionMenu';
 import { handleMiddleClick } from './middleClickHandler';
+import VoiceMicIndicator from './VoiceMicIndicator';
+import { useProximityVoiceController } from './useProximityVoiceController';
+import { useCallback } from 'react';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
@@ -72,11 +75,7 @@ const RUN_SPEED = 9.0;
 const ROT_SMOOTH = 0.18;
 const BLEND = 0.2;
 
-/**
- * GameWorld3D - Renders a 3D game world with the female archer character.
- * Camera follows behind the character. WASD to move (rotates character),
- * mouse drag to orbit camera.
- */
+// GameWorld3D — 3D archer + WASD movement + orbit camera + multiplayer + voice.
 // NPC spawn positions + dialogue
 const NPC_SPAWNS = [
   { id: 'npc_elara', name: 'Elara the Guide', pos: [6, 0.3, 6], color: 0x4a90e2, dialogue: "Welcome, traveler! The arena ahead is full of restless spirits — defeat them to prove your worth." },
@@ -136,6 +135,16 @@ export default function GameWorld3D() {
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
   const [pauseOpen, setPauseOpen] = useState(false); const [playerMenu, setPlayerMenu] = useState(null); const remoteManagerRef = useRef(null);
+  const [localMicOn, setLocalMicOn] = useState(false);
+  const [talkingPeers, setTalkingPeers] = useState({});
+  const [remoteMicUI, setRemoteMicUI] = useState([]);
+  const { voiceRef } = useProximityVoiceController({
+    remoteManagerRef,
+    onTalkingChange: (peerId, talking) => setTalkingPeers((prev) => {
+      if (!!prev[peerId] === talking) return prev;
+      const next = { ...prev }; if (talking) next[peerId] = true; else delete next[peerId]; return next;
+    }),
+  });
   const [nearbyCompanion, setNearbyCompanion] = useState(false);
   const nearbyCompanionRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -156,13 +165,11 @@ export default function GameWorld3D() {
   const mountToggleRef = useRef(false);
   const isMountedRef = useRef(false);
   const companionDefRef = useRef(getCompanionById(getCompanionState().activeCompanionId));
-  // Floating damage/XP numbers: [{ id, enemyId|'player', value, type, born }]
-  // enemyId/'player' is used by the projection step to compute current screen pos each frame.
+  // Floating damage/XP numbers — projected to screen each frame.
   const floatsRef = useRef([]);
   const [floats, setFloats] = useState([]);
   const floatIdRef = useRef(0);
-  // Per-enemy damage merging: if a new hit lands within MERGE_WINDOW on the same
-  // enemy, replace the existing float's value (so consistent damage replaces, not stacks).
+  // Per-enemy damage merging — replaces same-enemy value within window
   const MERGE_WINDOW_MS = 350;
   const spawnDamageFloat = (enemyId, value) => {
     const nowMs = performance.now();
@@ -187,8 +194,7 @@ export default function GameWorld3D() {
   };
   const playerLevelRef = useRef(1);
   const playerXPRef = useRef(0);
-  // Player stats: base allocation + equipped gear → derived combat values.
-  // (Equipment is empty for now — plug in your equip system here later.)
+  // Player stats: base + gear → derived combat values
   const playerBaseStatsRef = useRef({ ...DEFAULT_PLAYER_STATS });
   const playerEquipmentRef = useRef([]);
   const playerDerivedRef = useRef(
@@ -209,9 +215,7 @@ export default function GameWorld3D() {
   const nearbyQuestNPCRef = useRef(null);
   const playerLevelStateRef = useRef(1); // kept in sync with playerLevel for quest gating
 
-  // Hydrate from the persistent progression store (localStorage-backed).
-  // If the player has played before, this restores their level, XP, stats,
-  // unspent points, and current HP. Otherwise it leaves the level-1 defaults.
+  // Hydrate persistent progression (level, XP, stats, HP) from localStorage.
   useEffect(() => {
     const saved = getPlayerHUD();
     playerLevelRef.current = saved.level || 1;
@@ -389,9 +393,7 @@ export default function GameWorld3D() {
       else pendingFootings.push(apply);
     };
 
-    // ─────────────────────────────────────────────
-    // NPC SPAWNS (talk targets — blue/orange/purple capsules with name label)
-    // ─────────────────────────────────────────────
+    // NPC spawns — talk targets (colored capsules + name label)
     const npcs = []; // { id, name, dialogue, mesh, ringMesh }
     NPC_SPAWNS.forEach((spawn) => {
       const group = new THREE.Group();
@@ -441,10 +443,7 @@ export default function GameWorld3D() {
       );
     });
 
-    // ─────────────────────────────────────────────
-    // QUEST NPCs — 5 female archers at fixed positions, idle animation,
-    // NATURAL COLOR (no red tint). Floating "QUEST" label rendered in DOM.
-    // ─────────────────────────────────────────────
+    // QUEST NPCs — 5 archers at fixed positions, idle animation, "QUEST" label in DOM.
     const questNPCs = []; // { id, name, group, mixer, idleAction }
     QUEST_NPCS.forEach((spawn) => {
       loader.load(ARCHER_URL, (fbx) => {
@@ -633,11 +632,8 @@ export default function GameWorld3D() {
       }
     }
 
-    // ─────────────────────────────────────────────
-    // ENEMY SPAWNS (female archer model patrolling between waypoints)
-    // Same archer FBX as the player, tinted red, with walk (Running.fbx) animation looped
-    // ─────────────────────────────────────────────
-    const enemies = []; // { id, group, mixer, walkAction, idleAction, state, stateTimer, target, alive, hitCooldown, tintMaterials, zoneCenter, zoneRadius }
+    // Enemy spawns — mutant model patrolling between waypoints
+    const enemies = [];
 
     // Pre-load enemy creature clips once (shared across all enemies).
     // These come from the "creature" folder in admin → AnimationFBX manager
@@ -992,10 +988,12 @@ export default function GameWorld3D() {
       if (k === 'x') { companionAbilityPressed.current = 'life_drain'; }
       if (k === 'v') { companionAbilityPressed.current = 'teleport_dash'; }
       if (k === 'b') { companionAbilityPressed.current = 'heal'; }
+      if (e.code === 'Backquote' || k === '`') {
+        e.preventDefault();
+        voiceRef.current?.toggleMic().then((on) => setLocalMicOn(!!on));
+      }
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
-    // Middle-click raycaster for enemy targeting
-    const targetRaycaster = new THREE.Raycaster();
     const onMouseDown = (e) => {
       // Left click = melee attack, middle click = target enemy, right click = orbit
       if (e.button === 0) {
@@ -1041,6 +1039,11 @@ export default function GameWorld3D() {
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
       if (remoteManagerRef.current) remoteManagerRef.current.update(delta);
+      if (voiceRef.current && remoteManagerRef.current) {
+        const ids = Array.from(remoteManagerRef.current.getRemotes?.()?.keys() || []);
+        voiceRef.current.syncPeers(ids);
+        voiceRef.current.updateSpatialGains();
+      }
 
       // ─── Companion mount toggle (F) — runs once per key press ───
       if (mountToggleRef.current && model) {
@@ -1193,12 +1196,7 @@ export default function GameWorld3D() {
           setNearbyCompanion(false);
         }
 
-        // Animation state machine — only when not playing a one-shot (kick/roll)
-        // Match the dashboard YBotPlayerViewer feel exactly:
-        //   • Run (shift held) plays the Running clip at native 1.0× — looks natural,
-        //     not whipped. The dashboard uses 1.0× and never speeds it up.
-        //   • Walk (no shift) plays the same Running clip at 0.5× — smooth slow jog
-        //     instead of a stiff in-place stride.
+        // Animation state machine — run(1.0×) when shift+move, walk(0.5×) when move, idle otherwise.
         if (!oneShotPlaying.current) {
           if (isMoving) {
             playAction('run', isRunning ? 1.0 : 0.5);
@@ -1221,8 +1219,7 @@ export default function GameWorld3D() {
           yaw: orbit.current.yaw,
         });
 
-        // Also broadcast to the multiplayer presence system (same event Luna dashboard uses)
-        // so MultiplayerSystem can keep us "online" and let other players see our position.
+        // Broadcast to multiplayer presence system (used by MultiplayerSystem).
         window.dispatchEvent(new CustomEvent('multiplayerLocalUpdate', {
           detail: {
             x: model.position.x,
@@ -1769,6 +1766,16 @@ export default function GameWorld3D() {
           const ivP = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
           setPlayerNameUI(ivP ? { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h } : null);
         } else { setPlayerNameUI(null); }
+        // Project remote-player heads → screen for proximity-voice mic icons
+        const rmUI = [];
+        const rm = remoteManagerRef.current?.getRemotes?.();
+        if (rm) rm.forEach((r, pid) => {
+          if (!r.group) return;
+          tmpVec.set(r.group.position.x, r.group.position.y + 2.6, r.group.position.z); tmpVec.project(camera);
+          const iv = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
+          if (iv) rmUI.push({ id: pid, x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h });
+        });
+        setRemoteMicUI(rmUI);
 
         // Sync live boss state → bossStore
         bossEntities.forEach((b) => { updateBoss(b.id, { x: b.group.position.x, z: b.group.position.z, hp: Math.max(0, b.hp), maxHp: b.maxHp, alive: b.alive && !b.dying }); });
@@ -1835,6 +1842,11 @@ export default function GameWorld3D() {
           {playerNameUI && playerName && (
             <PlayerNameTag x={playerNameUI.x} y={playerNameUI.y} name={playerName} visible />
           )}
+          {/* Liquid-glass mic indicators — above local player when on, and above remote talkers */}
+          {playerNameUI && localMicOn && <VoiceMicIndicator x={playerNameUI.x} y={playerNameUI.y} visible />}
+          {remoteMicUI.map((r) => talkingPeers[r.id] && (
+            <VoiceMicIndicator key={r.id} x={r.x} y={r.y} visible />
+          ))}
           {/* Floating "QUEST" labels above quest NPCs */}
           {questNPCsUI.map((q) => (
             <QuestFloatingLabel key={q.id} x={q.x} y={q.y} status={q.status} />
@@ -1844,7 +1856,6 @@ export default function GameWorld3D() {
         </div>
       )}
 
-      {/* Controls hint */}
       {!loading && (
         <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 pointer-events-none">
           <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-1">Controls</div>
@@ -1852,7 +1863,7 @@ export default function GameWorld3D() {
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run · <span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span> Attack</div>
             <div><span className="text-cyan-300 font-mono">R</span> Roll · <span className="text-amber-300 font-mono">1·2·3·4</span> Skills · <span className="text-cyan-300 font-mono">M-Click</span> Target/Player</div>
             <div><span className="text-cyan-300 font-mono">E</span> Talk · <span className="text-amber-300 font-mono">I</span> Equipment · <span className="text-amber-300 font-mono">F</span> Mount · <span className="text-red-300 font-mono">Esc</span> Menu</div>
-            <div><span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion Skills</div>
+            <div><span className="text-emerald-300 font-mono">Z·X·V·B</span> Companion · <span className={localMicOn ? 'text-emerald-300 font-mono' : 'text-white/40 font-mono'}>`</span> {localMicOn ? 'Mic On' : 'Mic Off'}</div>
           </div></div>)}
 
       {/* Companion mount prompt */}
