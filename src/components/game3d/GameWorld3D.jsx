@@ -336,14 +336,22 @@ export default function GameWorld3D() {
         root.position.z -= center.z;
         root.position.y -= box2.min.y;
 
-        // Collect ground meshes for raycasting; textures are already applied by GLTFLoader
+        // Collect ground meshes for raycasting; textures are already applied by GLTFLoader.
+        // Only push meshes tagged userData.isGround (so characters don't try to walk on
+        // top of trees / props). If nothing is tagged (legacy GLTF map), fall back to
+        // every mesh — matches the original behavior.
+        const tagged = [];
         root.traverse((node) => {
           if (node.isMesh) {
-            node.castShadow = false;
             node.receiveShadow = true;
-            groundMeshes.push(node);
+            if (node.userData?.isGround) tagged.push(node);
           }
         });
+        if (tagged.length > 0) {
+          groundMeshes.push(...tagged);
+        } else {
+          root.traverse((node) => { if (node.isMesh) groundMeshes.push(node); });
+        }
 
         scene.add(root);
         mapReady = true;

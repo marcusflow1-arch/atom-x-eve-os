@@ -40,6 +40,7 @@ function buildProceduralMap() {
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   ground.name = 'ground';
+  ground.userData.isGround = true; // GameWorld3D uses this to pick raycast targets
   root.add(ground);
 
   // Shared tree materials (cheap — one allocation, all trees reuse)
