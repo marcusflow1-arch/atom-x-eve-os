@@ -13,6 +13,7 @@ import DepsArt from './pages/DepsArt';
 import GameHub from './pages/GameHub';
 import Studio from './pages/Studio';
 import DevStudio from './pages/DevStudio';
+import NetworkTest from './pages/NetworkTest';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -96,6 +97,8 @@ const AuthenticatedApp = () => {
           </LayoutWrapper>
         }
       />
+      {/* Slice A — isolated realtime networking test. No Layout, no gameplay systems. */}
+      <Route path="/NetworkTest" element={<NetworkTest />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
