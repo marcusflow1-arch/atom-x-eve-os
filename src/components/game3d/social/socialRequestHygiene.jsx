@@ -1,132 +1,136 @@
 // ─────────────────────────────────────────────
-// Social Request Hygiene
+// Social Request Hygiene (lightweight, rate-limit safe)
 //
-// Keeps the SocialRequest table clean so users can always retry sending
-// friend / party / trade / duel requests without hitting "already pending"
-// or accumulated-junk issues.
+// Goal: let users retry friend / party / trade / duel requests reliably
+// WITHOUT hammering the Base44 API and tripping its rate limiter.
 //
-// Rules:
-//  1. Before sending a new request: purge any prior DECLINED or stale
-//     PENDING requests (>STALE_MS old) between the same two users for the
-//     same kind. This guarantees a clean slate for the retry.
-//  2. If a fresh PENDING request already exists (within STALE_MS), reuse it
-//     — don't spam duplicates. Returns { reused: true, request }.
-//  3. Verify the receiver is a real user before creating the row, so the
-//     sender gets a clear error instead of a silent dead request.
-//  4. Provide cleanupDeclined() so the decline handler can hard-delete the
-//     row instead of leaving "declined" sediment behind.
+// Strategy:
+//   1. CLIENT-SIDE COOLDOWN (in-memory). A given (kind, receiverId) pair
+//      can only be sent once every COOLDOWN_MS. Prevents spam-click loops
+//      from generating 10 API calls in 2 seconds.
+//   2. SINGLE CREATE PATH. The send itself fires ONE create call. No
+//      pre-flight filter, no pre-flight deletes.
+//   3. BACKGROUND CLEANUP. After a successful create (or on app idle),
+//      a fire-and-forget sweep removes the sender's own declined /
+//      cancelled / stale-pending rows. Failures here are silent.
+//   4. RATE-LIMIT AWARE. If the API returns a 429 / "rate limit" error,
+//      we surface a typed error so the caller can show "Try again in Xs".
 // ─────────────────────────────────────────────
 
 import { base44 } from '@/api/base44Client';
 
-const STALE_MS = 5 * 60 * 1000; // 5 minutes — pending requests older than this are abandoned
+const COOLDOWN_MS = 3000;       // min interval between identical sends
+const STALE_MS = 5 * 60 * 1000; // pending requests older than this are abandoned
 
-const isStale = (record) => {
-  const ts = record.updated_date || record.created_date;
-  if (!ts) return false;
-  return Date.now() - new Date(ts).getTime() > STALE_MS;
+// In-memory cooldown map: key = `${kind}:${receiverId}` → last send timestamp
+const lastSentAt = new Map();
+
+const cooldownKey = (kind, receiverId) => `${kind}:${receiverId}`;
+
+const isRateLimitError = (e) => {
+  const msg = String(e?.message || e || '').toLowerCase();
+  return msg.includes('rate limit') || msg.includes('429') || msg.includes('too many');
 };
 
 /**
- * Verify the receiver user actually exists. Returns true if found.
- * Failure modes (network blip, permissions) return true so we don't block
- * legitimate sends — this is a best-effort sanity check, not a hard gate.
+ * Background sweep — purge this sender's own declined / cancelled rows and
+ * any stale pending rows to the same receiver. Fire-and-forget; errors are
+ * swallowed so they never block the user.
  */
-const verifyReceiver = async (receiverId) => {
-  if (!receiverId) return false;
-  try {
-    const rows = await base44.entities.User.filter({ id: receiverId });
-    return Array.isArray(rows) && rows.length > 0;
-  } catch {
-    return true;
-  }
-};
-
-/**
- * Purge declined + stale pending requests between sender→receiver for `kind`.
- * Returns the list of any still-fresh pending requests so caller can reuse them.
- */
-const purgeAndFindFreshPending = async ({ kind, senderId, receiverId }) => {
-  let existing = [];
-  try {
-    existing = await base44.entities.SocialRequest.filter({
-      kind, sender_id: senderId, receiver_id: receiverId,
-    });
-  } catch (e) {
-    console.warn('[SocialHygiene] filter failed', e);
-    return [];
-  }
-
-  const toDelete = [];
-  const freshPending = [];
-  for (const r of existing || []) {
-    if (r.status === 'declined' || r.status === 'cancelled') {
-      toDelete.push(r);
-    } else if (r.status === 'pending') {
-      if (isStale(r)) toDelete.push(r);
-      else freshPending.push(r);
+const backgroundCleanup = ({ kind, senderId, receiverId }) => {
+  // Defer to next tick so it doesn't compete with the create call.
+  setTimeout(async () => {
+    try {
+      const rows = await base44.entities.SocialRequest.filter({
+        kind, sender_id: senderId, receiver_id: receiverId,
+      });
+      const now = Date.now();
+      const toDelete = (rows || []).filter((r) => {
+        if (r.status === 'declined' || r.status === 'cancelled') return true;
+        if (r.status === 'pending') {
+          const ts = r.updated_date || r.created_date;
+          if (ts && now - new Date(ts).getTime() > STALE_MS) return true;
+        }
+        return false;
+      });
+      // Keep the most-recent pending row (the one we just created) — never
+      // delete it. Sort newest-first and skip index 0 if it's pending.
+      const keep = (rows || [])
+        .filter((r) => r.status === 'pending')
+        .sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0))[0];
+      for (const r of toDelete) {
+        if (keep && r.id === keep.id) continue;
+        await base44.entities.SocialRequest.delete(r.id).catch(() => {});
+      }
+    } catch {
+      // silent
     }
-    // accepted records are historical — leave them.
-  }
-
-  if (toDelete.length > 0) {
-    await Promise.all(
-      toDelete.map((r) => base44.entities.SocialRequest.delete(r.id).catch(() => {})),
-    );
-  }
-  return freshPending;
+  }, 500);
 };
 
 /**
- * Main entry point — call this from every send*Request helper.
+ * Main entry point — used by every send*Request helper.
  *
  * @param {object} args
  * @param {'friend'|'party'|'trade'|'duel'} args.kind
  * @param {{id:string,name:string}} args.sender
  * @param {{id:string,name?:string}} args.receiver
  * @param {object} [args.extraFields] - kind-specific fields (e.g. party_id)
- * @returns {Promise<{request:object, reused:boolean}>}
- * @throws {Error} if receiver can't be verified
+ * @returns {Promise<object>} the created request record
+ * @throws {Error} with `.code` = 'cooldown' | 'rate_limit' | 'self' | 'invalid'
  */
 export const sendCleanRequest = async ({ kind, sender, receiver, extraFields = {} }) => {
   if (!sender?.id || !receiver?.id) {
-    throw new Error('Missing sender or receiver');
+    const err = new Error('Missing sender or receiver');
+    err.code = 'invalid';
+    throw err;
   }
   if (sender.id === receiver.id) {
-    throw new Error("You can't send a request to yourself");
+    const err = new Error("You can't send a request to yourself");
+    err.code = 'self';
+    throw err;
   }
 
-  // 1. Verify receiver exists
-  const ok = await verifyReceiver(receiver.id);
-  if (!ok) throw new Error('Recipient not found');
-
-  // 2. Purge stale junk + reuse fresh pending if any
-  const fresh = await purgeAndFindFreshPending({
-    kind, senderId: sender.id, receiverId: receiver.id,
-  });
-  if (fresh.length > 0) {
-    // Reuse the freshest one — bump its updated_date so the receiver sees it again.
-    const reuseTarget = fresh.sort((a, b) =>
-      new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date),
-    )[0];
-    // If multiple pending exist, drop the duplicates.
-    await Promise.all(
-      fresh.slice(1).map((r) => base44.entities.SocialRequest.delete(r.id).catch(() => {})),
-    );
-    return { request: reuseTarget, reused: true };
+  // 1. Client-side cooldown
+  const key = cooldownKey(kind, receiver.id);
+  const last = lastSentAt.get(key) || 0;
+  const elapsed = Date.now() - last;
+  if (elapsed < COOLDOWN_MS) {
+    const err = new Error(`Please wait ${Math.ceil((COOLDOWN_MS - elapsed) / 1000)}s before trying again`);
+    err.code = 'cooldown';
+    err.retryAfterMs = COOLDOWN_MS - elapsed;
+    throw err;
   }
+  // Reserve the slot OPTIMISTICALLY so rapid double-clicks can't slip through.
+  lastSentAt.set(key, Date.now());
 
-  // 3. Create the fresh request
-  const request = await base44.entities.SocialRequest.create({
-    kind,
-    sender_id: sender.id,
-    sender_name: sender.name,
-    receiver_id: receiver.id,
-    receiver_name: receiver.name,
-    status: 'pending',
-    ...extraFields,
-  });
-  return { request, reused: false };
+  // 2. Single create call
+  try {
+    const request = await base44.entities.SocialRequest.create({
+      kind,
+      sender_id: sender.id,
+      sender_name: sender.name,
+      receiver_id: receiver.id,
+      receiver_name: receiver.name,
+      status: 'pending',
+      ...extraFields,
+    });
+
+    // 3. Background sweep (fire-and-forget)
+    backgroundCleanup({ kind, senderId: sender.id, receiverId: receiver.id });
+
+    return request;
+  } catch (e) {
+    // Release the cooldown so the user can retry sooner on a real failure.
+    lastSentAt.delete(key);
+    if (isRateLimitError(e)) {
+      const err = new Error('Server is busy — please wait a few seconds and try again');
+      err.code = 'rate_limit';
+      err.retryAfterMs = 5000;
+      throw err;
+    }
+    throw e;
+  }
 };
 
 /**
@@ -137,7 +141,7 @@ export const deleteRequest = async (requestId) => {
   if (!requestId) return;
   try {
     await base44.entities.SocialRequest.delete(requestId);
-  } catch (e) {
-    console.warn('[SocialHygiene] delete failed', e);
+  } catch {
+    // silent — background hygiene will catch it later
   }
 };

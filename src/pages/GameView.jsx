@@ -78,7 +78,16 @@ export default function GameView() {
         }
       } catch (err) {
         console.error('[Social] request failed:', err);
-        toast.error(`Failed to send ${action} request: ${err?.message || 'unknown error'}`);
+        // Typed errors from socialRequestHygiene get friendlier messages.
+        if (err?.code === 'cooldown') {
+          toast(err.message, { icon: '⏳' });
+        } else if (err?.code === 'rate_limit') {
+          toast.error('Server is busy — try again in a few seconds');
+        } else if (err?.code === 'self') {
+          toast.error("That's you!");
+        } else {
+          toast.error(`Failed to send ${action} request: ${err?.message || 'unknown error'}`);
+        }
       }
     };
     window.addEventListener('gamePlayerAction', onAction);
