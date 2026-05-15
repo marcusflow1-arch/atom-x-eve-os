@@ -11,6 +11,19 @@
 //                      { t: 'snapshot', tick, players: [{ id, x,y,z, rotY, anim, lastSeq? }] }
 //                      { t: 'pong', ts, serverTs }
 //                      { t: 'kick', reason }
+//
+// Slice D1 — authoritative simulation extensions (server -> client, purely additive):
+//   { t: 'combat_event', tick, id, kind, source_id?, target_id?, damage?, hp?, max_hp?, crit?, meta? }
+//     - kind: 'hit' | 'miss' | 'death' | 'heal' | 'block' | 'dodge'
+//     - Server is authoritative for damage resolution. Client applies result to HUD.
+//   { t: 'npc_snapshot', tick, npcs: [{ id, type, x, y, z, rotY, anim, hp?, max_hp?, state? }] }
+//     - Server simulates NPC/enemy AI. Client renders read-only.
+//   { t: 'world_event', tick, id, kind, target_id?, by_id?, payload? }
+//     - kind: 'pickup' | 'chest_open' | 'door' | 'trigger' | 'spawn' | 'despawn' | 'custom'
+//     - Server validates interaction. Base44 entity writes happen server-side via service role.
+//
+// Consumers subscribe via realtimeNetwork.on('combat_event' | 'npc_snapshot' | 'world_event', fn).
+// D1 only EMITS these events to listeners; D2/D3/D4 will wire consumers into game systems.
 
 const DEFAULT_URL = 'ws://localhost:2567';
 const URL_STORAGE_KEY = 'atomxe_network_test_url';
@@ -287,6 +300,21 @@ class RealtimeNetwork {
       }
       case 'snapshot': {
         this._handleSnapshot(msg);
+        break;
+      }
+      case 'combat_event': {
+        // Slice D1 — server-authoritative combat result. Emit only; consumers wire in D3.
+        this._emit('combat_event', msg);
+        break;
+      }
+      case 'npc_snapshot': {
+        // Slice D1 — server-authoritative NPC state. Emit only; consumers wire in D2.
+        this._emit('npc_snapshot', msg);
+        break;
+      }
+      case 'world_event': {
+        // Slice D1 — server-validated world interaction result. Emit only; consumers wire in D4.
+        this._emit('world_event', msg);
         break;
       }
       case 'kick': {
