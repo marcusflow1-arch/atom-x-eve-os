@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { createProximityVoice } from './proximityVoice';
 
 /**
@@ -16,6 +17,7 @@ import { createProximityVoice } from './proximityVoice';
  *   localPosRef     — { x, y, z } latest broadcast position of the local player
  */
 export function useProximityVoiceController({ remoteManagerRef, onTalkingChange }) {
+  const { user } = useAuth();
   const voiceRef = useRef(null);
   const localPosRef = useRef({ x: 0, y: 0, z: 0 });
 
@@ -29,30 +31,26 @@ export function useProximityVoiceController({ remoteManagerRef, onTalkingChange 
     return () => window.removeEventListener('multiplayerLocalUpdate', onLocal);
   }, []);
 
-  // Init voice once we have a user id
+  // Init voice as soon as we have a user id (synchronous from AuthContext — no await)
   useEffect(() => {
-    let cancelled = false;
-    base44.auth.me().then((u) => {
-      if (!u || cancelled) return;
-      voiceRef.current = createProximityVoice({
-        userId: u.id,
-        getLocalPos: () => localPosRef.current,
-        getRemotePos: (peerId) => {
-          const mgr = remoteManagerRef.current;
-          if (!mgr?.getRemotes) return null;
-          const r = mgr.getRemotes().get(peerId);
-          if (!r?.group) return null;
-          return { x: r.group.position.x, y: r.group.position.y, z: r.group.position.z };
-        },
-        onRemoteTalking: onTalkingChange,
-      });
-    }).catch(() => {});
+    if (!user?.id) return;
+    voiceRef.current = createProximityVoice({
+      userId: user.id,
+      getLocalPos: () => localPosRef.current,
+      getRemotePos: (peerId) => {
+        const mgr = remoteManagerRef.current;
+        if (!mgr?.getRemotes) return null;
+        const r = mgr.getRemotes().get(peerId);
+        if (!r?.group) return null;
+        return { x: r.group.position.x, y: r.group.position.y, z: r.group.position.z };
+      },
+      onRemoteTalking: onTalkingChange,
+    });
     return () => {
-      cancelled = true;
       voiceRef.current?.dispose();
       voiceRef.current = null;
     };
-  }, [remoteManagerRef, onTalkingChange]);
+  }, [user?.id, remoteManagerRef, onTalkingChange]);
 
   return { voiceRef, localPosRef };
 }

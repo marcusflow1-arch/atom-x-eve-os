@@ -11,6 +11,7 @@ export default function MultiplayerSystem({ envUrl }) {
   const [micEnabled, setMicEnabled] = useState(true);
   const localStateRef = useRef({ x: 0, y: -0.5, z: 0, yaw: 0, anim: 'idle' });
   const channelRef = useRef(null);
+  const explicitlyJoinedRef = useRef(false); // true if joinMultiplayerChannel fired
   const hostGraceTimerRef = useRef(Date.now());
   const envUrlRef = useRef(envUrl);
 
@@ -42,7 +43,10 @@ export default function MultiplayerSystem({ envUrl }) {
   }, []);
   
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !explicitlyJoinedRef.current) {
+      // Default to user's own dashboard channel ONLY if no explicit join has occurred.
+      // GameWorldServerManager dispatches joinMultiplayerChannel BEFORE this effect
+      // runs on the GameView page → that path wins and we skip this default.
       const defaultChannel = `dashboard_${user.id}`;
       setCurrentChannel(defaultChannel);
       channelRef.current = defaultChannel;
@@ -63,12 +67,17 @@ export default function MultiplayerSystem({ envUrl }) {
       const targetChannel = e.detail.channelId;
       const hostId = e.detail.hostId;
       if (targetChannel) {
+        explicitlyJoinedRef.current = true;
         setCurrentChannel(targetChannel);
         channelRef.current = targetChannel;
         console.log(`[Multiplayer] Joined channel: ${targetChannel}`);
 
-        // Fetch host's home environment
-        if (hostId) {
+        // Shared world server: don't try to sync environment to a synthetic host
+        // and don't run host-grace logic (the world channel has no real "host").
+        const isSharedWorld = hostId === targetChannel;
+
+        // Fetch host's home environment (skip for shared world)
+        if (hostId && !isSharedWorld) {
            try {
                const states = await base44.entities.AvatarHomeState.filter({ avatarId: hostId });
                let targetEnvUrl = null;
@@ -405,8 +414,10 @@ export default function MultiplayerSystem({ envUrl }) {
             }
         }
         
-        // If we are a guest, verify the host is still here
-        if (hostId && hostId !== user.id) {
+        // If we are a guest in someone else's dashboard, verify the host is still here.
+        // For the shared world channel (game_world_main), there is no real host — skip.
+        const isSharedWorld = currentChannel === 'game_world_main';
+        if (!isSharedWorld && hostId && hostId !== user.id) {
              if (hostPresent) {
                  hostGraceTimerRef.current = null; // Host is here
              } else {

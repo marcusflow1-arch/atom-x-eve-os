@@ -31,6 +31,15 @@ export default function GameWorldServerManager() {
     if (!user?.id) return;
     let cancelled = false;
 
+    // Join IMMEDIATELY on mount — don't wait for the DB poll. Capacity is
+    // soft-enforced in the background polls below. This keeps the UI from
+    // hanging on "Connecting..." if the DB query is slow or errors.
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: { channelId: WORLD_CHANNEL, hostId: WORLD_CHANNEL },
+    }));
+    joinedRef.current = true;
+    setStatus('connected');
+
     const checkAndJoin = async () => {
       try {
         const all = await base44.entities.PlayerState.filter({ channel_id: WORLD_CHANNEL });
@@ -40,36 +49,19 @@ export default function GameWorldServerManager() {
         );
         const liveCount = live.length;
         if (cancelled) return;
-
-        // Capacity check — block if full (and we're not already in the world)
-        if (!joinedRef.current && liveCount >= MAX_PLAYERS) {
-          setStatus('full');
-          setOnlineCount(liveCount);
-          return;
-        }
-
-        // Join the channel via the existing MultiplayerSystem event
-        if (!joinedRef.current) {
-          window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-            detail: { channelId: WORLD_CHANNEL, hostId: WORLD_CHANNEL },
-          }));
-          joinedRef.current = true;
-          setStatus('connected');
-          toast.success(`Connected to world server (${liveCount + 1}/${MAX_PLAYERS})`, {
-            id: 'world-join', duration: 2500,
-          });
-        }
-        // +1 to include ourselves in the count once joined
-        setOnlineCount(joinedRef.current ? liveCount + 1 : liveCount);
+        setOnlineCount(liveCount + 1);
+        if (liveCount >= MAX_PLAYERS) setStatus('full'); else setStatus('connected');
       } catch (err) {
         if (cancelled) return;
-        console.error('[GameWorldServer] poll error:', err);
-        setStatus('error');
+        console.warn('[GameWorldServer] poll error (non-fatal):', err);
+        // Keep status "connected" — the data channel still works peer-to-peer
+        // even if the DB poll fails.
       }
     };
 
     checkAndJoin();
     const interval = setInterval(checkAndJoin, POLL_MS);
+    toast.success(`Connected to world server`, { id: 'world-join', duration: 2000 });
     return () => { cancelled = true; clearInterval(interval); };
   }, [user?.id]);
 
