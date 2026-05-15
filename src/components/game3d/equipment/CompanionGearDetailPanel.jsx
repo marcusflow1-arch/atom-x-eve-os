@@ -1,4 +1,5 @@
 import React from 'react';
+import { Anchor, Zap, Crown, Shirt, Shield, Clover, Wind, Gem } from 'lucide-react';
 import { getCompanionItem } from './companionFusionStore';
 
 const RARITY_COLOR = {
@@ -7,6 +8,8 @@ const RARITY_COLOR = {
   epic:      '#c084fc',
   legendary: '#fbbf24',
 };
+
+const ICON_MAP = { Anchor, Zap, Crown, Shirt, Shield, Clover, Wind, Gem };
 
 /**
  * Detail panel for the inspected companion gear item.
@@ -27,17 +30,26 @@ export default function CompanionGearDetailPanel({ slotId, itemId, slotLabel }) 
   }
 
   const color = RARITY_COLOR[item.rarity] || RARITY_COLOR.common;
+  const Icon = ICON_MAP[item.icon] || Gem;
 
   return (
     <div className="h-full flex flex-col">
       <div className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40">
         Companion · {slotLabel}
       </div>
-      <div
-        className="text-xl font-bold tracking-wider mt-1"
-        style={{ color }}
-      >
-        {item.name}
+      <div className="flex items-center gap-2 mt-1">
+        <div
+          className="w-9 h-9 rounded-md flex items-center justify-center border"
+          style={{ borderColor: `${color}66`, background: `${color}1a` }}
+        >
+          <Icon className="w-5 h-5" style={{ color }} />
+        </div>
+        <div
+          className="text-xl font-bold tracking-wider"
+          style={{ color }}
+        >
+          {item.name}
+        </div>
       </div>
       <div className="text-[10px] tracking-widest uppercase text-white/40 mt-0.5">
         {item.rarity}

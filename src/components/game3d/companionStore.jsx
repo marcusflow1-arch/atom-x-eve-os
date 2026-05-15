@@ -1,9 +1,12 @@
 // Companion store — tracks the active companion, mount state, and equipped gear.
-// Persists to localStorage so the player's companion choice survives reloads.
+// Persists to BOTH localStorage (fast) and the server (User entity) so the
+// player's companion + gear survives logout across devices.
 
 import { COMPANION_DEFINITIONS, COMPANION_GEAR, getCompanionById } from './companionData';
+import { base44 } from '@/api/base44Client';
 
 const STORAGE_KEY = 'wwm_companion_state_v1';
+const SERVER_FIELD = 'companion_state'; // stored under user.data.companion_state
 
 const buildDefault = () => ({
   activeCompanionId: COMPANION_DEFINITIONS[0]?.id || null,
@@ -29,17 +32,55 @@ let state = (() => {
 })();
 
 const listeners = new Set();
+
+// Debounced server save — coalesces rapid equip/unequip clicks into a single PATCH.
+let saveTimer = null;
+const persistToServer = () => {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      const { isMounted, ...toSave } = state;
+      await base44.auth.updateMe({ [SERVER_FIELD]: toSave });
+    } catch (err) {
+      // Offline / not logged in → localStorage still has it; nothing to do.
+    }
+  }, 600);
+};
+
 const persist = () => {
   try {
     // Don't persist transient `isMounted` flag
     const { isMounted, ...toSave } = state;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch {}
+  persistToServer();
 };
 const emit = () => {
   persist();
   listeners.forEach((fn) => fn(state));
 };
+
+// Hydrate from server on first load — server is the source of truth across devices.
+// If the server has a saved state, merge it in and notify subscribers.
+(async () => {
+  try {
+    const me = await base44.auth.me();
+    const serverState = me?.[SERVER_FIELD];
+    if (serverState && typeof serverState === 'object') {
+      state = { ...state, ...serverState, isMounted: false };
+      if (!getCompanionById(state.activeCompanionId)) {
+        state.activeCompanionId = COMPANION_DEFINITIONS[0]?.id || null;
+      }
+      try {
+        const { isMounted, ...toSave } = state;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+      } catch {}
+      listeners.forEach((fn) => fn(state));
+    }
+  } catch {
+    // Not logged in or offline — localStorage state stands.
+  }
+})();
 
 export const getCompanionState = () => state;
 export const subscribeCompanion = (fn) => {

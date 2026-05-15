@@ -1,4 +1,5 @@
 import React from 'react';
+import { Anchor, Zap, Crown, Shirt, Shield, Clover, Wind, Gem } from 'lucide-react';
 import { COMPANION_GEAR } from '../companionData';
 
 const RARITY_COLOR = {
@@ -8,10 +9,15 @@ const RARITY_COLOR = {
   legendary: '#fbbf24',
 };
 
+// Map the `icon` string on each gear item → actual lucide component.
+const ICON_MAP = { Anchor, Zap, Crown, Shirt, Shield, Clover, Wind, Gem };
+
 /**
- * Companion equivalent of GearInventoryGrid — shows the items for the
- * currently selected companion gear slot. Click an item to inspect it,
- * click an equipped item to unequip it.
+ * Companion equivalent of GearInventoryGrid.
+ * - Renders a real icon for each item (saddle / armor / charm).
+ * - Left-click: select & inspect.
+ * - Right-click: equip (or unequip if already equipped).
+ * - Double-click: equip (kept for back-compat).
  */
 export default function CompanionGearInventoryGrid({
   slotId,
@@ -28,27 +34,39 @@ export default function CompanionGearInventoryGrid({
     <div>
       <div className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50 mb-2">
         {slotLabel} Inventory
+        <span className="ml-2 text-white/30 normal-case tracking-normal font-normal">
+          · Right-click to equip
+        </span>
       </div>
       <div className="grid grid-cols-5 gap-2">
         {items.map((item) => {
           const isSelected = item.id === selectedItemId;
           const isEquipped = item.id === equippedId;
           const color = RARITY_COLOR[item.rarity] || RARITY_COLOR.common;
+          const Icon = ICON_MAP[item.icon] || Gem;
+
+          const handleContext = (e) => {
+            e.preventDefault();
+            onEquipItem?.(item.id);
+          };
+
           return (
             <button
               key={item.id}
               onClick={() => onSelectItem(item.id)}
-              onDoubleClick={() => onEquipItem(item.id)}
-              title={`${item.name}\n(Double-click to equip)`}
-              className={`relative aspect-square rounded-sm transition-all flex items-center justify-center ${
+              onDoubleClick={() => onEquipItem?.(item.id)}
+              onContextMenu={handleContext}
+              title={`${item.name}\n(Right-click to ${isEquipped ? 'unequip' : 'equip'})`}
+              className={`relative aspect-square rounded-sm transition-all flex flex-col items-center justify-center gap-0.5 ${
                 isSelected
                   ? 'border-2 border-blue-300/80 bg-white/[0.08]'
                   : 'border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/25'
               }`}
-              style={isEquipped ? { boxShadow: `inset 0 0 0 1px ${color}66` } : undefined}
+              style={isEquipped ? { boxShadow: `inset 0 0 0 1px ${color}88` } : undefined}
             >
+              <Icon className="w-5 h-5" style={{ color }} />
               <span
-                className="text-[10px] font-bold tracking-wider px-1 text-center leading-tight"
+                className="text-[8px] font-bold tracking-wider px-1 text-center leading-tight truncate w-full"
                 style={{ color }}
               >
                 {item.name.split(' ')[0]}

@@ -8,7 +8,7 @@ import {
   unequipCompanionGear,
   getEffectiveSpeedMultiplier,
 } from '../companionStore';
-import { Check, Zap, Shield, Sparkles } from 'lucide-react';
+import { Check, Zap, Shield, Sparkles, Anchor, Crown, Shirt, Clover, Wind, Gem } from 'lucide-react';
 
 const RARITY_COLORS = {
   common:   { text: 'text-slate-300',  border: 'border-slate-400/40',  bg: 'bg-slate-500/10' },
@@ -22,6 +22,10 @@ const SLOT_ICONS = {
   armor: Shield,
   charm: Sparkles,
 };
+
+// Per-item icon map — looked up via `item.icon` defined in companionData.
+const ITEM_ICON_MAP = { Anchor, Zap, Crown, Shirt, Shield, Clover, Wind, Gem };
+const getItemIcon = (item) => ITEM_ICON_MAP[item?.icon] || Gem;
 
 export default function CompanionTab() {
   const [state, setState] = useState(getCompanionState());
@@ -98,8 +102,9 @@ export default function CompanionTab() {
             'linear-gradient(90deg, rgba(15,17,22,0.78) 0%, rgba(15,17,22,0.55) 70%, rgba(15,17,22,0) 100%)',
         }}
       >
-        <div className="text-amber-400 text-xs tracking-[0.3em] uppercase mb-4 font-semibold">
-          {active.name} — Equipment
+        <div className="text-amber-400 text-xs tracking-[0.3em] uppercase mb-4 font-semibold flex items-baseline justify-between">
+          <span>{active.name} — Equipment</span>
+          <span className="text-[9px] text-white/40 normal-case tracking-normal font-normal">Right-click to equip</span>
         </div>
 
         {(active.gearSlots || []).map((slotId) => {
@@ -125,25 +130,39 @@ export default function CompanionTab() {
                 {items.map((item) => {
                   const isEq = equippedId === item.id;
                   const rc = RARITY_COLORS[item.rarity] || RARITY_COLORS.common;
+                  const ItemIcon = getItemIcon(item);
+
+                  const doEquip = () =>
+                    isEq
+                      ? unequipCompanionGear(active.id, slotId)
+                      : equipCompanionGear(active.id, slotId, item.id);
+
+                  const handleContext = (e) => {
+                    e.preventDefault();
+                    doEquip();
+                  };
+
                   return (
                     <button
                       key={item.id}
-                      onClick={() =>
-                        isEq
-                          ? unequipCompanionGear(active.id, slotId)
-                          : equipCompanionGear(active.id, slotId, item.id)
-                      }
-                      className={`px-2 py-2 rounded-md text-left border text-[11px] transition-all ${
+                      onClick={doEquip}
+                      onContextMenu={handleContext}
+                      className={`px-2 py-2 rounded-md text-left border text-[11px] transition-all flex items-center gap-2 ${
                         isEq
                           ? `${rc.bg} ${rc.border} ring-1 ring-amber-400/40`
                           : `bg-white/[0.03] ${rc.border} opacity-70 hover:opacity-100`
                       }`}
-                      title={item.description}
+                      title={`${item.description}\n(Right-click to ${isEq ? 'unequip' : 'equip'})`}
                     >
-                      <div className={`font-semibold ${rc.text} truncate`}>{item.name}</div>
-                      <div className="text-[9px] text-white/50 uppercase tracking-wider mt-0.5">
-                        {item.speedBonus ? `+${Math.round(item.speedBonus * 100)}% spd` :
-                         item.defense ? `+${item.defense} def` : item.rarity}
+                      <div className={`w-8 h-8 rounded-sm flex-shrink-0 flex items-center justify-center ${rc.bg} ${rc.border} border`}>
+                        <ItemIcon className={`w-4 h-4 ${rc.text}`} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className={`font-semibold ${rc.text} truncate`}>{item.name}</div>
+                        <div className="text-[9px] text-white/50 uppercase tracking-wider mt-0.5">
+                          {item.speedBonus ? `+${Math.round(item.speedBonus * 100)}% spd` :
+                           item.defense ? `+${item.defense} def` : item.rarity}
+                        </div>
                       </div>
                     </button>
                   );

@@ -51,19 +51,20 @@ export const COMPANION_DEFINITIONS = [
 ];
 
 // Companion gear catalog — simple flat list, equipped state stored in companionStore.
+// `icon` is a lucide-react icon name (rendered via COMPANION_ITEM_ICONS map in the UI).
 export const COMPANION_GEAR = {
   saddle: [
-    { id: 'leather_saddle',  name: 'Leather Saddle',  rarity: 'common',   speedBonus: 0.0,  description: 'A sturdy leather saddle.' },
-    { id: 'racing_saddle',   name: 'Racing Saddle',   rarity: 'rare',     speedBonus: 0.15, description: 'Lightweight saddle for speed.' },
-    { id: 'royal_saddle',    name: 'Royal Saddle',    rarity: 'epic',     speedBonus: 0.25, description: 'Embroidered with gold thread.' },
+    { id: 'leather_saddle',  name: 'Leather Saddle',  rarity: 'common',   icon: 'Anchor',    speedBonus: 0.0,  description: 'A sturdy leather saddle.' },
+    { id: 'racing_saddle',   name: 'Racing Saddle',   rarity: 'rare',     icon: 'Zap',       speedBonus: 0.15, description: 'Lightweight saddle for speed.' },
+    { id: 'royal_saddle',    name: 'Royal Saddle',    rarity: 'epic',     icon: 'Crown',     speedBonus: 0.25, description: 'Embroidered with gold thread.' },
   ],
   armor: [
-    { id: 'cloth_barding',   name: 'Cloth Barding',   rarity: 'common',   defense: 5,  description: 'Basic protection.' },
-    { id: 'iron_barding',    name: 'Iron Barding',    rarity: 'rare',     defense: 15, description: 'Heavy iron plates.' },
+    { id: 'cloth_barding',   name: 'Cloth Barding',   rarity: 'common',   icon: 'Shirt',     defense: 5,  description: 'Basic protection.' },
+    { id: 'iron_barding',    name: 'Iron Barding',    rarity: 'rare',     icon: 'Shield',    defense: 15, description: 'Heavy iron plates.' },
   ],
   charm: [
-    { id: 'lucky_horseshoe', name: 'Lucky Horseshoe', rarity: 'rare',     description: 'Brings good fortune.' },
-    { id: 'wind_amulet',     name: 'Wind Amulet',     rarity: 'epic',     speedBonus: 0.10, description: 'Whispers of the wind.' },
+    { id: 'lucky_horseshoe', name: 'Lucky Horseshoe', rarity: 'rare',     icon: 'Clover',    description: 'Brings good fortune.' },
+    { id: 'wind_amulet',     name: 'Wind Amulet',     rarity: 'epic',     icon: 'Wind',      speedBonus: 0.10, description: 'Whispers of the wind.' },
   ],
 };
 

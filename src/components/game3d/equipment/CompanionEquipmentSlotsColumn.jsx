@@ -1,9 +1,13 @@
 import React from 'react';
-import { Anchor, Shield, Gem } from 'lucide-react';
+import { Anchor, Shield, Gem, Zap, Crown, Shirt, Clover, Wind } from 'lucide-react';
 import { getActiveCompanion, setSelectedCompanionSlot, equipCompanionGear, getCompanionItem } from './companionFusionStore';
 
 const SLOT_ICONS  = { saddle: Anchor, armor: Shield, charm: Gem };
 const SLOT_LABELS = { saddle: 'Saddle', armor: 'Armor', charm: 'Charm' };
+// Per-item icon map — keeps slot column visually consistent with the inventory grid.
+const ITEM_ICON_MAP = { Anchor, Zap, Crown, Shirt, Shield, Clover, Wind, Gem };
+const getItemIcon = (item, fallback) =>
+  (item && ITEM_ICON_MAP[item.icon]) || fallback;
 
 /**
  * Vertical column of companion equipment slots — mirrors EquipmentSlotsColumn
@@ -18,10 +22,11 @@ export default function CompanionEquipmentSlotsColumn({ selectedSlotId, equipped
   return (
     <div className="flex flex-col gap-2">
       {slots.map((slotId) => {
-        const Icon = SLOT_ICONS[slotId] || Gem;
+        const SlotIcon = SLOT_ICONS[slotId] || Gem;
         const label = SLOT_LABELS[slotId] || slotId;
         const equippedId = equippedGear?.[slotId] || null;
         const equipped = equippedId ? getCompanionItem(slotId, equippedId) : null;
+        const Icon = getItemIcon(equipped, SlotIcon);
         const isActive = slotId === selectedSlotId;
 
         const handleContext = (e) => {
