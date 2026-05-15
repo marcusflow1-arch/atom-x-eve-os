@@ -1,9 +1,8 @@
 import React from 'react';
 
 /**
- * HUD prompt for the mount system.
- * Shows "Mount" when the companion is nearby, "Dismount" when riding.
- * Hidden when companion is far away (player presses F once to summon it).
+ * HUD prompt shown when player is near their companion (to mount)
+ * or while mounted (to dismount).
  */
 export default function CompanionMountHUD({ nearby, mounted, companionName }) {
   if (!nearby && !mounted) return null;

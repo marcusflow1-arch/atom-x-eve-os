@@ -1060,15 +1060,12 @@ export default function GameWorld3D() {
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
 
-      // ─── Companion mount toggle (F) — runs once per key press.
-      // Two-step from anywhere:
-      //   1) If mounted        → dismount (drop player next to companion).
-      //   2) If companion far  → summon companion to player's side.
-      //   3) If companion near → mount.
+      // ─── Companion mount toggle (F) — runs once per key press ───
       if (mountToggleRef.current && model) {
         mountToggleRef.current = false;
         const compGroup = companionGroupRef.current;
         if (isMountedRef.current) {
+          // Dismount: place player next to companion
           if (compGroup) {
             model.position.x = compGroup.position.x + 1.2;
             model.position.z = compGroup.position.z;
@@ -1078,25 +1075,13 @@ export default function GameWorld3D() {
           setIsMounted(false);
           setMounted(false);
         } else if (compGroup) {
+          // Only mount if close enough
           const dx = compGroup.position.x - model.position.x;
           const dz = compGroup.position.z - model.position.z;
-          const dist = Math.sqrt(dx * dx + dz * dz);
-          if (dist < 3.5) {
-            // Close enough → mount
+          if (Math.sqrt(dx * dx + dz * dz) < 3.5) {
             isMountedRef.current = true;
             setIsMounted(true);
             setMounted(true);
-          } else {
-            // Far away → summon to player's side (next press will mount)
-            compGroup.position.x = model.position.x + 1.2;
-            compGroup.position.z = model.position.z;
-            if (mapReady) {
-              const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
-              if (gy !== null) compGroup.position.y = gy;
-            }
-            // Mark as nearby so the HUD prompt switches to "Mount" immediately
-            nearbyCompanionRef.current = true;
-            setNearbyCompanion(true);
           }
         }
       }

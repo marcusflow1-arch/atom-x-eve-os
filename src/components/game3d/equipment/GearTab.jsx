@@ -166,11 +166,16 @@ export default function GearTab({ state }) {
       </div>
 
       {/* Companion fusion card — to the RIGHT of the 3D player model.
-          Click the companion portrait to toggle into companion mode. */}
-      <CompanionFusionCard />
+          Click the companion portrait to toggle into companion mode.
+          The ENCHANT button toggles the enchantment overlay for companion gear. */}
+      <CompanionFusionCard
+        enchantOpen={isCompanionMode && enchantOpen}
+        onEnchant={() => setEnchantOpen((v) => !v)}
+      />
 
-      {/* Single floating ENCHANT button above the 3D model's head — works
-          in BOTH player and companion modes. Always blue. */}
+      {/* Floating ENCHANT button above the 3D model's head — player mode only.
+          In companion mode, the ENCHANT button on the companion card is used. */}
+      {!isCompanionMode && (
       <button
         onClick={() => setEnchantOpen((v) => !v)}
         className="absolute pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-widest font-semibold transition-all hover:scale-105"
@@ -179,20 +184,21 @@ export default function GearTab({ state }) {
           top: 110,
           transform: 'translateX(-50%)',
           background: enchantOpen
-            ? 'linear-gradient(180deg, rgba(96,165,250,0.95), rgba(37,99,235,0.9))'
+            ? 'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))'
             : 'rgba(15,17,22,0.55)',
-          color: enchantOpen ? '#0a0f1e' : 'rgba(147,197,253,0.95)',
-          border: '1px solid rgba(96,165,250,0.45)',
+          color: enchantOpen ? '#1a1208' : 'rgba(251,191,36,0.95)',
+          border: '1px solid rgba(251,191,36,0.45)',
           backdropFilter: 'blur(14px) saturate(140%)',
           WebkitBackdropFilter: 'blur(14px) saturate(140%)',
           boxShadow: enchantOpen
-            ? '0 6px 18px rgba(96,165,250,0.4)'
+            ? '0 6px 18px rgba(251,191,36,0.35)'
             : '0 4px 14px rgba(0,0,0,0.4)',
         }}
       >
         <Sparkles className="w-3.5 h-3.5" />
         ENCHANT
       </button>
+      )}
 
       {/* Enchantment overlay — overlaps the 3D model area.
           Uses player item in player mode, companion item in companion mode. */}

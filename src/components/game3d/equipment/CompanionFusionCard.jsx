@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { PawPrint, Sparkles } from 'lucide-react';
 import {
   subscribeFusion,
   getFusionState,
   setFusionMode,
   getActiveCompanion,
 } from './companionFusionStore';
-import CompanionPreview3D from './CompanionPreview3D';
 
 /**
  * Compact companion preview card that sits to the RIGHT of the 3D player model.
  * - Click the companion PORTRAIT itself to switch into companion mode.
- * - The vertical divider radiates YELLOW when companion is NOT selected, and
- *   switches to BLUE when companion mode is active.
+ * - The button above is ENCHANT (active only in companion mode) — clicking it
+ *   toggles the enchantment overlay for companion gear.
  *
- * The single ENCHANT button (above the 3D model) is owned by GearTab and
- * works in both player + companion modes.
+ * The 3D model itself is NOT moved.
  */
-export default function CompanionFusionCard() {
+export default function CompanionFusionCard({ onEnchant, enchantOpen }) {
   const [fusion, setFusion] = useState(getFusionState());
   useEffect(() => subscribeFusion(setFusion), []);
 
@@ -33,28 +31,19 @@ export default function CompanionFusionCard() {
     legendary: '#fbbf24',
   }[companion.rarity] || '#9ca3af';
 
-  // Divider color: yellow radiance when companion NOT active, blue when active
-  const dividerGradient = isActive
-    ? 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(147,197,253,0.55) 30%, rgba(147,197,253,0.75) 50%, rgba(147,197,253,0.55) 70%, rgba(255,255,255,0) 100%)'
-    : 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(251,191,36,0.55) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.55) 70%, rgba(255,255,255,0) 100%)';
-  const dividerGlow = isActive
-    ? '0 0 14px 2px rgba(147,197,253,0.45)'
-    : '0 0 14px 2px rgba(251,191,36,0.55)';
-
   return (
     <>
       {/* Thin vertical divider between player and companion.
-          Radiates yellow when companion not selected; blue when active. */}
+          Subtle radiant fade — visible but not glowing. */}
       <div
         className="absolute pointer-events-none"
         style={{
           right: 280,
           top: 140,
           bottom: 180,
-          width: 2,
-          background: dividerGradient,
-          boxShadow: dividerGlow,
-          transition: 'background 0.3s ease, box-shadow 0.3s ease',
+          width: 1,
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(147,197,253,0.35) 30%, rgba(147,197,253,0.45) 50%, rgba(147,197,253,0.35) 70%, rgba(255,255,255,0) 100%)',
         }}
       />
 
@@ -66,6 +55,43 @@ export default function CompanionFusionCard() {
           width: 200,
         }}
       >
+        {/* ENCHANT button — only does something while in companion mode. */}
+        <button
+          onClick={() => {
+            if (!isActive) setFusionMode('companion');
+            else onEnchant?.();
+          }}
+          disabled={false}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-widest font-semibold transition-all hover:scale-105"
+          style={{
+            background: enchantOpen
+              ? 'linear-gradient(180deg, rgba(251,191,36,0.95), rgba(217,119,6,0.9))'
+              : isActive
+              ? 'linear-gradient(180deg, rgba(96,165,250,0.95), rgba(37,99,235,0.9))'
+              : 'rgba(15,17,22,0.55)',
+            color: enchantOpen
+              ? '#1a1208'
+              : isActive
+              ? '#0a0f1e'
+              : 'rgba(147,197,253,0.95)',
+            border: `1px solid ${
+              enchantOpen
+                ? 'rgba(251,191,36,0.7)'
+                : isActive
+                ? 'rgba(147,197,253,0.7)'
+                : 'rgba(96,165,250,0.45)'
+            }`,
+            backdropFilter: 'blur(14px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+            boxShadow: isActive
+              ? '0 6px 18px rgba(96,165,250,0.4)'
+              : '0 4px 14px rgba(0,0,0,0.4)',
+          }}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          ENCHANT
+        </button>
+
         {/* Companion portrait — CLICK THIS to toggle companion mode. */}
         <button
           onClick={() => setFusionMode(isActive ? 'player' : 'companion')}
@@ -84,43 +110,31 @@ export default function CompanionFusionCard() {
           title={isActive ? 'Click to return to player view' : 'Click to view companion equipment'}
         >
           <div
-            className="relative flex items-center justify-center overflow-hidden"
+            className="relative flex items-center justify-center"
             style={{ height: 160 }}
           >
-            {/* Floating name label above the 3D model */}
             <div
-              className="absolute top-2 left-0 right-0 z-10 text-center pointer-events-none"
+              className="absolute rounded-full"
               style={{
-                textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-              }}
-            >
-              <div
-                className="text-[11px] font-bold tracking-wider truncate px-2"
-                style={{ color: rarityColor }}
-              >
-                {companion.name}
-              </div>
-            </div>
-
-            {/* Soft rarity glow behind model */}
-            <div
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                width: 130,
-                height: 130,
+                width: 110,
+                height: 110,
                 background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)`,
-                filter: 'blur(10px)',
+                filter: 'blur(8px)',
               }}
             />
-
-            {/* Live 3D companion model */}
-            <div className="absolute inset-0">
-              <CompanionPreview3D companion={companion} />
-            </div>
-
+            <PawPrint
+              className="relative"
+              style={{
+                width: 64,
+                height: 64,
+                color: rarityColor,
+                opacity: isActive ? 1 : 0.6,
+                filter: `drop-shadow(0 0 8px ${rarityColor}88)`,
+              }}
+            />
             {isActive && (
               <Sparkles
-                className="absolute top-2 right-2 w-3.5 h-3.5 z-10"
+                className="absolute top-2 right-2 w-3.5 h-3.5"
                 style={{ color: rarityColor }}
               />
             )}
