@@ -58,10 +58,22 @@ export const ABILITY_DEFINITIONS = [
     type: 'targeted',
     element: 'shadow',
   },
+  {
+    id: 'frost_tornado',
+    name: 'Frost Tornado',
+    description: 'Summon a towering tornado of ice at the target, dealing frost damage to all enemies within its radius.',
+    icon: '🌪️',
+    color: '#7dd3fc',
+    cooldown: 8.0,
+    damage: 35,
+    radius: 4.5,
+    type: 'aoe',
+    element: 'ice',
+  },
 ];
 
 // 4 equip slots — indices 0-3 map to keys 1, 2, 3, 4
-const DEFAULT_EQUIPPED = ['lightning_strike', 'shadow_teleport', null, null];
+const DEFAULT_EQUIPPED = ['lightning_strike', 'shadow_teleport', 'frost_tornado', null];
 
 let state = {
   equipped: [...DEFAULT_EQUIPPED],  // ability id or null per slot

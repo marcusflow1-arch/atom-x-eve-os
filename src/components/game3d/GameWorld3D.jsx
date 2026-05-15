@@ -35,6 +35,7 @@ import {
 } from './abilityStore';
 import { createLightningStrike } from './LightningStrikeEffect';
 import { createShadowTeleport } from './ShadowTeleportEffect';
+import { createFrostTornado } from './FrostTornadoEffect';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -1272,6 +1273,57 @@ export default function GameWorld3D() {
                 }));
                 activeEffects.current.push(fx);
                 playActionSound('player_jump');
+              } else if (ab.id === 'frost_tornado') {
+                // Aerial AOE — spawn icy tornado at targeted enemy, damage all enemies in radius
+                const tx = targetEnemy.group.position.x;
+                const tz = targetEnemy.group.position.z;
+                const gy = targetEnemy.group.position.y;
+                const fx = createFrostTornado(scene, tx, tz, gy);
+                activeEffects.current.push(fx);
+                playActionSound('player_attack');
+                const radius = ab.radius || 4.5;
+                const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
+                const baseDmg = Math.round(ab.damage + (liveDerived.damage || 0) * 0.4);
+                // Deal damage in 3 ticks across the tornado's duration for sustained feel
+                [400, 1000, 1700].forEach((ms) => {
+                  setTimeout(() => {
+                    enemies.forEach((en) => {
+                      if (!en.alive || en.dying) return;
+                      const dx = en.group.position.x - tx;
+                      const dz = en.group.position.z - tz;
+                      if (dx * dx + dz * dz > radius * radius) return;
+                      en.hp -= baseDmg;
+                      en.hitCooldown = 0.2;
+                      updateTargetHP(en.id, Math.max(0, en.hp));
+                      if (en.hp <= 0) {
+                        playActionSound('enemy_death');
+                        en.hp = 0;
+                        en.dying = true;
+                        en.deathTimer = 0;
+                        if (en.walkAction) en.walkAction.fadeOut(0.15);
+                        if (en.idleAction) en.idleAction.fadeOut(0.15);
+                        if (cachedDeathClip && en.mixer) {
+                          const da = en.mixer.clipAction(cachedDeathClip);
+                          da.setLoop(THREE.LoopOnce);
+                          da.clampWhenFinished = true;
+                          da.reset().fadeIn(0.15).play();
+                        }
+                        if (getAbilityState().target?.id === en.id) clearTarget();
+                        setScore(prev => prev + 100 * (en.xpReward || 1));
+                        reportEnemyKill(QUESTS, en.tier);
+                        let newXP = playerXPRef.current + (en.xpReward || 1);
+                        let newLevel = playerLevelRef.current;
+                        let needed = xpForLevel(newLevel);
+                        let levelsGained = 0;
+                        while (newXP >= needed) { newXP -= needed; newLevel++; levelsGained++; needed = xpForLevel(newLevel); }
+                        playerXPRef.current = newXP; playerLevelRef.current = newLevel;
+                        setPlayerXP(newXP); setPlayerLevel(newLevel);
+                        awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
+                        if (levelsGained > 0) playActionSound('level_up');
+                      }
+                    });
+                  }, ms);
+                });
               } else if (ab.id === 'lightning_strike') {
                 // Spawn lightning at the target enemy's position
                 const tx = targetEnemy.group.position.x;
