@@ -20,5 +20,27 @@
   "required": [
     "user_a_id",
     "user_b_id"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_a_id": "{{user.id}}"
+        },
+        {
+          "user_b_id": "{{user.id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_a_id": "{{user.id}}"
+        },
+        {
+          "user_b_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
 }

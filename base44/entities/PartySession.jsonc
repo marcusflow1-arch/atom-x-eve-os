@@ -38,5 +38,21 @@
   "required": [
     "leader_id",
     "member_ids"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "member_ids": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    },
+    "write": {
+      "member_ids": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    }
+  }
 }

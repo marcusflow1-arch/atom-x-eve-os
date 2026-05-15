@@ -56,5 +56,27 @@
     "sender_id",
     "sender_name",
     "receiver_id"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "sender_id": "{{user.id}}"
+        },
+        {
+          "receiver_id": "{{user.id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "sender_id": "{{user.id}}"
+        },
+        {
+          "receiver_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
 }
