@@ -8,6 +8,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
     const audioRefs = useRef({});
     const initiateCallRef = useRef(null);
     const pendingCandidates = useRef({});
+    const processedSignals = useRef(new Set()); // de-dupe signal subscribe events
 
     // Expose a method to broadcast data to all peers
     useEffect(() => {
@@ -55,16 +56,20 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 unsubscribe = base44.entities.VoiceSignal.subscribe((event) => {
                     if (event.type === 'create' || event.type === 'update') {
                         const signal = event.data;
-                        // For faster signaling, you might skip checking channel_id if it's uniquely targeted
                         if (signal.channel_id === roomId && signal.target_id === user.id) {
+                            // De-dupe — subscribe can replay the same record
+                            if (signal.id && processedSignals.current.has(signal.id)) return;
+                            if (signal.id) processedSignals.current.add(signal.id);
                             handleSignal(signal);
                         }
                     }
                 });
 
-                // Initiate connection to existing participants
+                // Initiate connection to existing participants — only the peer
+                // with the larger user.id initiates, to avoid duplicate offers
+                // (a.k.a. "glare") that put RTCPeerConnection into a bad state.
                 participantIds.forEach(pid => {
-                    if (pid !== user.id && !peersRef.current[pid]) {
+                    if (pid !== user.id && !peersRef.current[pid] && user.id > pid) {
                         initiateCall(pid);
                     }
                 });
@@ -191,7 +196,14 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         async function initiateCall(peerId) {
             try {
                 const pc = createPeerConnection(peerId);
+                // Only initiate if we're in a clean state — prevents duplicate offers
+                // that put the connection into "have-local-offer" and break later answers.
+                if (pc.signalingState !== 'stable') {
+                    console.warn('[WebRTC] Skipping initiateCall — state:', pc.signalingState);
+                    return;
+                }
                 const offer = await pc.createOffer();
+                if (pc.signalingState !== 'stable') return; // re-check after async createOffer
                 await pc.setLocalDescription(offer);
 
                 await base44.entities.VoiceSignal.create({
@@ -213,8 +225,23 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             try {
                 if (signal.type === 'offer') {
                     const pc = createPeerConnection(peerId);
+                    // Only accept an offer when the connection can receive one.
+                    // Valid states: 'stable' (fresh) or 'have-local-offer' (glare → rollback).
+                    if (pc.signalingState !== 'stable' && pc.signalingState !== 'have-local-offer') {
+                        console.warn('[WebRTC] Skipping offer — bad signalingState:', pc.signalingState);
+                        return;
+                    }
+                    // Glare handling: if we already sent an offer, rollback before accepting theirs.
+                    if (pc.signalingState === 'have-local-offer') {
+                        await pc.setLocalDescription({ type: 'rollback' });
+                    }
                     await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
                     const answer = await pc.createAnswer();
+                    // After createAnswer, state should be 'have-remote-offer'. Guard against races.
+                    if (pc.signalingState !== 'have-remote-offer') {
+                        console.warn('[WebRTC] Skipping setLocalDescription(answer) — state:', pc.signalingState);
+                        return;
+                    }
                     await pc.setLocalDescription(answer);
 
                     await base44.entities.VoiceSignal.create({
@@ -233,15 +260,17 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     }
                 } else if (signal.type === 'answer') {
                     const pc = peersRef.current[peerId];
-                    if (pc) {
+                    // Only apply answer if we're waiting for one. Avoids "Called in wrong state: stable".
+                    if (pc && pc.signalingState === 'have-local-offer') {
                         await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
-                        
                         if (pendingCandidates.current[peerId]) {
                             for (const c of pendingCandidates.current[peerId]) {
                                 await pc.addIceCandidate(c);
                             }
                             pendingCandidates.current[peerId] = [];
                         }
+                    } else if (pc) {
+                        console.warn('[WebRTC] Skipping answer — state:', pc.signalingState);
                     }
                 } else if (signal.type === 'ice-candidate') {
                     let pc = peersRef.current[peerId];
