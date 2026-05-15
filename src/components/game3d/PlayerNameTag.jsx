@@ -19,15 +19,10 @@ export default function PlayerNameTag({ x, y, name, visible }) {
       }}
     >
       <div
-        className="px-3 py-1 rounded text-[11px] font-bold tracking-wider whitespace-nowrap"
+        className="text-[12px] font-bold tracking-wider whitespace-nowrap"
         style={{
           color: '#cffafe',
-          background: 'rgba(8, 20, 32, 0.55)',
-          backdropFilter: 'blur(10px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(10px) saturate(180%)',
-          border: '1px solid rgba(103, 232, 249, 0.5)',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.5), 0 0 12px rgba(34,211,238,0.25)',
-          textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+          textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(34,211,238,0.6)',
         }}
       >
         {name}

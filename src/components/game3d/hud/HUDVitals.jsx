@@ -36,13 +36,10 @@ export default function HUDVitals() {
         <div className="relative flex flex-col items-center gap-1">
           {playerName && (
             <div
-              className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider whitespace-nowrap"
+              className="text-[11px] font-bold tracking-wider whitespace-nowrap"
               style={{
                 color: '#cffafe',
-                background: 'rgba(8, 20, 32, 0.6)',
-                border: '1px solid rgba(103, 232, 249, 0.45)',
-                textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(34,211,238,0.6)',
               }}
             >
               {playerName}
