@@ -1,11 +1,11 @@
 import React from 'react';
 
 /**
- * HUD prompt shown when player is near their companion (to mount)
- * or while mounted (to dismount).
+ * HUD prompt for the mount system. F now works from anywhere — the prompt
+ * is always shown (Mount when on foot, Dismount when riding).
+ * The legacy `nearby` prop is accepted but no longer required.
  */
-export default function CompanionMountHUD({ nearby, mounted, companionName }) {
-  if (!nearby && !mounted) return null;
+export default function CompanionMountHUD({ mounted, companionName }) {
 
   return (
     <div
