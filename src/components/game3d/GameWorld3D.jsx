@@ -29,6 +29,11 @@ import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets
 import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData';
 import { setBosses, updateBoss } from './bossStore';
 import EquipmentMenu from './equipment/EquipmentMenu';
+import {
+  getAbilityState, tickCooldowns, startCooldown,
+  setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS,
+} from './abilityStore';
+import { createLightningStrike } from './LightningStrikeEffect';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -145,6 +150,8 @@ export default function GameWorld3D() {
   );
   const keys = useRef({});
   const drag = useRef({ active: false, x: 0, y: 0 });
+  const abilityKeyPressed = useRef(-1); // slot index pressed this frame (-1 = none)
+  const activeEffects = useRef([]); // { alive: fn, update: fn }
   const orbit = useRef({ yaw: 0, pitch: 0.4, distance: 4.5 });
   const nearbyNPCRef = useRef(null);
   const interactPressed = useRef(false);
@@ -799,14 +806,60 @@ export default function GameWorld3D() {
       if (k === 'e') interactPressed.current = true;
       // F = attack nearest enemy
       if (k === 'f') attackPressed.current = true;
+      // Ability slots: Q=0, E=1, R=2, F=3 — only if not also movement keys
+      // Q fires ability slot 0 (lightning by default)
+      if (k === 'q') { abilityKeyPressed.current = 0; }
+      // Slot keys for R (slot 2) and F (slot 3) — slot 1 is 'e' (interact takes priority check in fire logic)
+      if (k === 'r') { abilityKeyPressed.current = 2; }
+      if (k === 'f') { abilityKeyPressed.current = 3; }
       // I = toggle equipment menu (Where Winds Meet style)
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
+    // Middle-click raycaster for enemy targeting
+    const targetRaycaster = new THREE.Raycaster();
     const onMouseDown = (e) => {
-      // Left click = attack, right/middle click = orbit camera drag
+      // Left click = attack, middle click = target enemy, right click = orbit
       if (e.button === 0) {
         attackPressed.current = true;
+      } else if (e.button === 1) {
+        // Middle click — raycast against enemy models
+        e.preventDefault();
+        const rect = renderer.domElement.getBoundingClientRect();
+        const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        targetRaycaster.setFromCamera({ x: ndcX, y: ndcY }, camera);
+        // Collect all enemy meshes
+        const enemyMeshes = [];
+        enemies.forEach((en) => {
+          if (!en.alive || en.dying) return;
+          en.group.traverse((node) => {
+            if (node.isMesh) enemyMeshes.push(node);
+          });
+        });
+        const hits = targetRaycaster.intersectObjects(enemyMeshes, false);
+        if (hits.length > 0) {
+          // Walk up to find which enemy this mesh belongs to
+          let hitMesh = hits[0].object;
+          let foundEnemy = null;
+          for (const en of enemies) {
+            en.group.traverse((node) => { if (node === hitMesh) foundEnemy = en; });
+            if (foundEnemy) break;
+          }
+          if (foundEnemy) {
+            setTarget({
+              id: foundEnemy.id,
+              name: foundEnemy.bossName || (foundEnemy.tier ? `${foundEnemy.tier.charAt(0).toUpperCase() + foundEnemy.tier.slice(1)} Enemy` : 'Enemy'),
+              hp: foundEnemy.hp,
+              maxHp: foundEnemy.maxHp,
+              level: foundEnemy.level,
+              tier: foundEnemy.tier || 'normal',
+              bossName: foundEnemy.bossName || null,
+            });
+          }
+        } else {
+          clearTarget();
+        }
       } else {
         drag.current = { active: true, x: e.clientX, y: e.clientY };
       }
@@ -834,6 +887,8 @@ export default function GameWorld3D() {
     window.addEventListener('mousemove', onMouseMove);
     renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
     renderer.domElement.addEventListener('contextmenu', onContext);
+    // Prevent middle-click scroll/autoscroll on the canvas
+    renderer.domElement.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
 
     // Animation loop
     let frameId;
@@ -1189,6 +1244,79 @@ export default function GameWorld3D() {
         }
       }
 
+      // ─── Ability cooldown ticking ───
+      tickCooldowns(delta);
+
+      // ─── Update active visual effects (lightning etc.) ───
+      activeEffects.current = activeEffects.current.filter((fx) => {
+        fx.update(delta);
+        return fx.alive();
+      });
+
+      // ─── Ability firing (Q/E/R/F keys) ───
+      if (abilityKeyPressed.current !== -1 && model) {
+        const slotIndex = abilityKeyPressed.current;
+        abilityKeyPressed.current = -1;
+        const abState = getAbilityState();
+        const abId = abState.equipped[slotIndex];
+        const cooldownLeft = abState.cooldowns[slotIndex];
+        if (abId && cooldownLeft <= 0) {
+          const ab = ABILITY_DEFINITIONS.find((a) => a.id === abId);
+          const target = abState.target;
+          if (ab && target) {
+            // Find the live enemy entry
+            const targetEnemy = enemies.find((e) => e.id === target.id && e.alive && !e.dying);
+            if (targetEnemy) {
+              startCooldown(slotIndex);
+              if (ab.id === 'lightning_strike') {
+                // Spawn lightning at the target enemy's position
+                const tx = targetEnemy.group.position.x;
+                const tz = targetEnemy.group.position.z;
+                const gy = targetEnemy.group.position.y;
+                const fx = createLightningStrike(scene, tx, tz, gy);
+                activeEffects.current.push(fx);
+                // Deal damage after short windup
+                setTimeout(() => {
+                  if (targetEnemy.alive && !targetEnemy.dying) {
+                    const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
+                    const dmg = Math.round(ab.damage + (liveDerived.damage || 0) * 0.5);
+                    targetEnemy.hp -= dmg;
+                    updateTargetHP(targetEnemy.id, Math.max(0, targetEnemy.hp));
+                    playActionSound('player_attack');
+                    if (targetEnemy.hp <= 0) {
+                      playActionSound('enemy_death');
+                      targetEnemy.hp = 0;
+                      targetEnemy.dying = true;
+                      targetEnemy.deathTimer = 0;
+                      if (targetEnemy.walkAction) targetEnemy.walkAction.fadeOut(0.15);
+                      if (targetEnemy.idleAction) targetEnemy.idleAction.fadeOut(0.15);
+                      if (cachedDeathClip && targetEnemy.mixer) {
+                        const da = targetEnemy.mixer.clipAction(cachedDeathClip);
+                        da.setLoop(THREE.LoopOnce);
+                        da.clampWhenFinished = true;
+                        da.reset().fadeIn(0.15).play();
+                      }
+                      clearTarget();
+                      setScore(prev => prev + 100 * (targetEnemy.xpReward || 1));
+                      reportEnemyKill(QUESTS, targetEnemy.tier);
+                      let newXP = playerXPRef.current + (targetEnemy.xpReward || 1);
+                      let newLevel = playerLevelRef.current;
+                      let needed = xpForLevel(newLevel);
+                      let levelsGained = 0;
+                      while (newXP >= needed) { newXP -= needed; newLevel++; levelsGained++; needed = xpForLevel(newLevel); }
+                      playerXPRef.current = newXP; playerLevelRef.current = newLevel;
+                      setPlayerXP(newXP); setPlayerLevel(newLevel);
+                      awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
+                      if (levelsGained > 0) playActionSound('level_up');
+                    }
+                  }
+                }, 300);
+              }
+            }
+          }
+        }
+      }
+
       // ─── Project enemy world positions → screen-space for HP bars (throttled) ───
       uiFrameCounter++;
       if (uiFrameCounter % 3 === 0) {
@@ -1245,6 +1373,17 @@ export default function GameWorld3D() {
           });
         });
         setQuestNPCsUI(qUI);
+
+        // ─── Sync live target HP to abilityStore ───
+        const currentTarget = getAbilityState().target;
+        if (currentTarget) {
+          const te = enemies.find((e) => e.id === currentTarget.id);
+          if (te && te.alive && !te.dying) {
+            updateTargetHP(te.id, Math.max(0, te.hp));
+          } else if (!te || !te.alive || te.dying) {
+            clearTarget();
+          }
+        }
 
         // ─── Sync live boss state (pos + HP + alive) to bossStore ───
         // Drives the waypoint guidance and the Boss tab list.

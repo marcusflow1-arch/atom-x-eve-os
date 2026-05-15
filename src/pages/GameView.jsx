@@ -7,6 +7,7 @@ import GameWorld3D from '../components/game3d/GameWorld3D';
 import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
+import SkillTreeMenu from '../components/game3d/SkillTreeMenu';
 import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
@@ -18,6 +19,7 @@ export default function GameView() {
   const [phase, setPhase] = useState('login'); // 'login' | 'world'
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
+  const [skillTreeOpen, setSkillTreeOpen] = useState(false);
 
   // Join the game-mode multiplayer channel so other players can see us & we can see them.
   // Uses the same MultiplayerSystem the Luna dashboard uses, but on a `game_<userId>` channel
@@ -40,9 +42,12 @@ export default function GameView() {
         setStoreOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'c') {
         setProgressionOpen((v) => !v);
+      } else if (e.key.toLowerCase() === 'k') {
+        setSkillTreeOpen((v) => !v);
       } else if (e.key === 'Escape') {
         if (storeOpen) setStoreOpen(false);
         if (progressionOpen) setProgressionOpen(false);
+        if (skillTreeOpen) setSkillTreeOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -73,6 +78,7 @@ export default function GameView() {
       <MultiplayerSystem envUrl="game_world_lowpoly" />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
+      <SkillTreeMenu open={skillTreeOpen} onClose={() => setSkillTreeOpen(false)} />
 
       {/* Back button */}
       <button
