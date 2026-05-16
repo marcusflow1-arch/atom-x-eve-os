@@ -28,7 +28,6 @@ export default function SoundLibraryManager() {
         name: folderPath.split('/').pop(),
         type: 'folder',
         folder_path: folderPath,
-        file_url: null,
       });
     },
     onSuccess: () => {
@@ -37,7 +36,10 @@ export default function SoundLibraryManager() {
       setShowFolderInput(false);
       toast.success('Folder created');
     },
-    onError: () => toast.error('Failed to create folder'),
+    onError: (error) => {
+      console.error('Folder creation error:', error);
+      toast.error(error?.message || 'Failed to create folder');
+    },
   });
 
   // Delete asset mutation
