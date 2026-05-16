@@ -11,6 +11,35 @@ import {
   applyPowerCharge,
   applyDodgeBuff,
 } from './activeBuffsStore';
+import { SKILLS_DATABASE } from './equipment/skillData';
+import { ABILITY_DEFINITIONS } from './abilityStore';
+import { getActiveWeaponPath } from './weaponClassBuffStore';
+
+const PATH_LABEL = { damage: 'a Damage', defense: 'a Defense', ranged: 'a Ranged' };
+
+// Returns the weapon-class path ('damage'|'defense'|'ranged') required by a
+// skill, or null if the skill has no path restriction. Checks both the
+// Skills-Book database and the legacy ABILITY_DEFINITIONS list.
+function getSkillPath(id) {
+  const sk = SKILLS_DATABASE.find((s) => s.id === id);
+  if (sk?.path) return sk.path;
+  const ab = ABILITY_DEFINITIONS.find((a) => a.id === id);
+  return ab?.path || null;
+}
+
+// Public helper: returns true if a skill id is allowed to fire given the
+// currently equipped weapon class. Used by GameWorld3D for the legacy
+// ABILITY_DEFINITIONS path so it can block + toast before any logic runs.
+export function isSkillAllowedForActiveWeapon(id) {
+  const required = getSkillPath(id);
+  const active = getActiveWeaponPath();
+  if (!required || !active) return true;
+  if (required === active) return true;
+  window.dispatchEvent(new CustomEvent('skillActivatedToast', {
+    detail: { text: `⛔ Requires ${PATH_LABEL[required] || required} weapon equipped` },
+  }));
+  return false;
+}
 
 // Activation logic per skill id. Each handler receives no args and uses the
 // player HUD store (max HP) where needed.
@@ -102,6 +131,18 @@ export function tryActivateBookSkill(entry) {
   const id = typeof entry === 'string' ? entry : entry.id;
   const handler = HANDLERS[id];
   if (!handler) return false;
+
+  // Weapon-class gate — skill can only fire when the matching weapon class
+  // is equipped in the bottom-right weapon switcher.
+  const required = getSkillPath(id);
+  const active = getActiveWeaponPath();
+  if (required && active && required !== active) {
+    window.dispatchEvent(new CustomEvent('skillActivatedToast', {
+      detail: { text: `⛔ Requires ${PATH_LABEL[required] || required} weapon equipped` },
+    }));
+    return true; // handled (blocked) — don't fall through to legacy path
+  }
+
   const result = handler();
   if (result?.toast) {
     window.dispatchEvent(new CustomEvent('skillActivatedToast', { detail: { text: result.toast } }));

@@ -22,6 +22,7 @@ export const ABILITY_DEFINITIONS = [
     element: 'lightning',
     dualMode: true,
     requiresLearn: true,
+    path: 'ranged',
   },
   {
     id: 'shadow_teleport',
@@ -34,6 +35,7 @@ export const ABILITY_DEFINITIONS = [
     type: 'targeted',
     element: 'shadow',
     requiresLearn: true,
+    path: 'damage',
   },
   {
     id: 'frost_tornado',
@@ -51,6 +53,7 @@ export const ABILITY_DEFINITIONS = [
     element: 'ice',
     dualMode: true,
     requiresLearn: true,
+    path: 'ranged',
   },
 ];
 
