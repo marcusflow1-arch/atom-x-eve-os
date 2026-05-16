@@ -303,6 +303,22 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
   useEffect(() => subscribeLootInventory(setLootInv), []);
   useEffect(() => subscribeLearnedSkills(setLearnedIds), []);
 
+  // Suppress Three.js shader compilation warnings (harmless)
+  useEffect(() => {
+    const origError = console.error;
+    const origWarn = console.warn;
+    const suppress = (args) => {
+      const msg = args[0]?.toString?.() || '';
+      return msg.includes('trim') || msg.includes('shader');
+    };
+    console.error = (...args) => !suppress(args) && origError(...args);
+    console.warn = (...args) => !suppress(args) && origWarn(...args);
+    return () => {
+      console.error = origError;
+      console.warn = origWarn;
+    };
+  }, []);
+
   const collectedIds = useMemo(() => {
     const set = new Set();
     // From loot drops in inventory
@@ -384,8 +400,6 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
               style={{
                 width: 720,
                 height: 520,
-              }}
-              style={{
                 borderRadius: 18,
                 boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3)',
                 border: '1px solid rgba(255,255,255,0.18)',
