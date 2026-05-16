@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Folder, Music, FolderPlus, ArrowLeft, Loader2, Trash2 } from 'lucide-react';
+import { Folder, Music, FolderPlus, ArrowLeft, Loader2, Trash2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SoundLibraryManager() {
@@ -138,13 +138,15 @@ export default function SoundLibraryManager() {
           <FolderPlus className="w-4 h-4 mr-2" />
           Create Folder
         </Button>
-        <Button
-          onClick={() => setShowFileInput(!showFileInput)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Music className="w-4 h-4 mr-2" />
-          Upload File
-        </Button>
+        {currentFolder && (
+          <Button
+            onClick={() => setShowFileInput(!showFileInput)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Music className="w-4 h-4 mr-2" />
+            Add Files
+          </Button>
+        )}
       </div>
 
       {/* Create Folder Input */}
@@ -243,11 +245,25 @@ export default function SoundLibraryManager() {
           return (
             <div
               key={folderPath}
-              onClick={() => setCurrentFolder(folderPath)}
-              className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700 hover:bg-slate-800 cursor-pointer transition-colors"
+              className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors group"
             >
-              <Folder className="w-5 h-5 text-yellow-500" />
-              <span className="text-slate-200 flex-1">{folderName}</span>
+              <Folder className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+              <span
+                onClick={() => setCurrentFolder(folderPath)}
+                className="text-slate-200 flex-1 cursor-pointer"
+              >
+                {folderName}
+              </span>
+              <button
+                onClick={() => {
+                  setCurrentFolder(folderPath);
+                  setShowFileInput(true);
+                }}
+                className="p-2 hover:bg-blue-600/20 rounded opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                title="Add files to this folder"
+              >
+                <Plus className="w-4 h-4 text-blue-400" />
+              </button>
             </div>
           );
         })}
