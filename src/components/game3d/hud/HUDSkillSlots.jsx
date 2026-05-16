@@ -1,7 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import { subscribeAbilities, ABILITY_DEFINITIONS, resolveSlotData } from '../abilityStore';
+import { subscribeBuffs } from '../activeBuffsStore';
 import HUDSkillsBookPanel from './HUDSkillsBookPanel';
+
+// Map a skill id → the field(s) in activeBuffsStore that track its remaining time.
+// Returns { remaining: seconds | null, hits: number | null } or null if not active.
+function getSkillBuffStatus(skillId, buffs) {
+  if (!skillId || !buffs) return null;
+  const n = performance.now();
+  switch (skillId) {
+    case 'aegis_shield':
+      if (buffs.shield > 0 && buffs.shieldExpiresAt > n)
+        return { remaining: (buffs.shieldExpiresAt - n) / 1000 };
+      break;
+    case 'focus':
+      if (buffs.damageBonusHitsLeft > 0)
+        return { hits: buffs.damageBonusHitsLeft };
+      break;
+    case 'decisive_blow':
+      if (buffs.critDamageBonusPct > 0 && buffs.critDamageBonusExpiresAt > n)
+        return { remaining: (buffs.critDamageBonusExpiresAt - n) / 1000 };
+      break;
+    case 'haste':
+      if (buffs.attackSpeedBonusPct > 0 && buffs.attackSpeedExpiresAt > n)
+        return { remaining: (buffs.attackSpeedExpiresAt - n) / 1000 };
+      break;
+    case 'gods_deflection':
+      if (buffs.reflectChancePct > 0 && buffs.reflectExpiresAt > n)
+        return { remaining: (buffs.reflectExpiresAt - n) / 1000 };
+      break;
+    case 'power_charge':
+      if (buffs.powerChargeHitsLeft > 0 && buffs.powerChargeExpiresAt > n)
+        return { remaining: (buffs.powerChargeExpiresAt - n) / 1000, hits: buffs.powerChargeHitsLeft };
+      break;
+    case 'evasion':
+      if (buffs.dodgeChancePct > 0 && buffs.dodgeExpiresAt > n)
+        return { remaining: (buffs.dodgeExpiresAt - n) / 1000 };
+      break;
+    default: return null;
+  }
+  return null;
+}
+
+function fmtTime(sec) {
+  if (sec <= 0) return '0s';
+  if (sec < 10) return `${sec.toFixed(1)}s`;
+  return `${Math.ceil(sec)}s`;
+}
 
 const SLOT_KEYS_BOTTOM = ['1', '2', '3', '4'];
 const SLOT_KEYS_TOP    = ['5', '6', '7', '8'];
@@ -20,7 +66,7 @@ const ELEMENT_ICONS = {
   shadow:    '🌑',
 };
 
-function SlotButton({ slotKey, slotEntry, cooldown }) {
+function SlotButton({ slotKey, slotEntry, cooldown, buffStatus }) {
   const ab    = resolveSlotData(slotEntry);
   const cd    = cooldown || 0;
   const maxCd = ab?.cooldown || 1;
@@ -28,17 +74,37 @@ function SlotButton({ slotKey, slotEntry, cooldown }) {
   const color = ab ? (ab.color || ELEMENT_COLORS[ab.element] || '#4a90e2') : '#4a90e2';
   const icon  = ab ? (ab.icon || ELEMENT_ICONS[ab.element] || '') : '';
   const onCooldown = cd > 0;
+  const buffActive = !!buffStatus;
 
   return (
     <div className="relative">
+      {/* Buff timer floating ABOVE the box when this slot's skill is active */}
+      {buffActive && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 -top-5 px-1.5 py-0.5 rounded text-[9px] font-black tabular-nums whitespace-nowrap pointer-events-none"
+          style={{
+            background: 'rgba(0,0,0,0.78)',
+            border: `1px solid ${color}aa`,
+            color,
+            textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+            boxShadow: `0 0 6px ${color}66`,
+          }}
+        >
+          {buffStatus.remaining != null
+            ? fmtTime(buffStatus.remaining)
+            : `×${buffStatus.hits}`}
+        </div>
+      )}
       <button
         className="relative w-[58px] h-[58px] rounded-sm transition-transform hover:scale-105"
         style={{
           background: ab
             ? `linear-gradient(135deg, ${color}55 0%, ${color}22 100%)`
             : 'linear-gradient(135deg, rgba(74,144,226,0.33) 0%, rgba(74,144,226,0.13) 100%)',
-          border: `1.5px solid ${ab ? color + '88' : 'rgba(180,140,80,0.55)'}`,
-          boxShadow: ab
+          border: `1.5px solid ${buffActive ? color : (ab ? color + '88' : 'rgba(180,140,80,0.55)')}`,
+          boxShadow: buffActive
+            ? `0 3px 12px rgba(0,0,0,0.55), 0 0 14px ${color}cc, inset 0 1px 0 rgba(255,255,255,0.15)`
+            : ab
             ? `0 3px 12px rgba(0,0,0,0.55), 0 0 8px ${color}44, inset 0 1px 0 rgba(255,255,255,0.1)`
             : '0 3px 10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1)',
           opacity: onCooldown ? 0.6 : 1,
@@ -78,11 +144,25 @@ function SlotButton({ slotKey, slotEntry, cooldown }) {
 
 export default function HUDSkillSlots() {
   const [abilityState, setAbilityState] = useState({ equipped: Array(8).fill(null), cooldowns: Array(8).fill(0) });
+  const [buffs, setBuffs] = useState(null);
+  const [, force] = useState(0);
   const [bookOpen, setBookOpen] = useState(false);
 
   useEffect(() => subscribeAbilities(setAbilityState), []);
+  useEffect(() => subscribeBuffs(setBuffs), []);
+  // Tick 5x/sec so the floating buff timers count down smoothly.
+  useEffect(() => {
+    const id = setInterval(() => force((n) => n + 1), 200);
+    return () => clearInterval(id);
+  }, []);
 
   const { equipped, cooldowns } = abilityState;
+
+  const buffStatusForSlot = (slotIndex) => {
+    const entry = equipped[slotIndex];
+    const id = typeof entry === 'string' ? entry : entry?.id;
+    return getSkillBuffStatus(id, buffs);
+  };
   // top row = slots 5-8 (indices 4-7), bottom row = slots 1-4 (indices 0-3)
 
   return (
@@ -138,6 +218,7 @@ export default function HUDSkillSlots() {
               slotKey={key}
               slotEntry={equipped[4 + i]}
               cooldown={cooldowns[4 + i]}
+              buffStatus={buffStatusForSlot(4 + i)}
             />
           ))}
 
@@ -182,6 +263,7 @@ export default function HUDSkillSlots() {
               slotKey={key}
               slotEntry={equipped[i]}
               cooldown={cooldowns[i]}
+              buffStatus={buffStatusForSlot(i)}
             />
           ))}
         </div>
