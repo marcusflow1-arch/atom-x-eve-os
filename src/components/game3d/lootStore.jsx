@@ -129,6 +129,18 @@ export function learnSkill(lootItem) {
   if (_learnedSkillIds.has(lootItem.id)) return; // already learned
   _learnedSkillIds = new Set([..._learnedSkillIds, lootItem.id]);
   _learnListeners.forEach((fn) => fn(_learnedSkillIds));
+
+  // Remove the scroll from the skill inventory so it can't be used again
+  const skills = _lootInventory['skill'] || [];
+  const idx = skills.findIndex(
+    (s) => s.dropId === lootItem.dropId || (s.id === lootItem.id && s.collectedAt === lootItem.collectedAt)
+  );
+  if (idx !== -1) {
+    const updated = [...skills];
+    updated.splice(idx, 1);
+    _lootInventory = { ..._lootInventory, skill: updated };
+    _listeners.forEach((fn) => fn(_lootInventory));
+  }
 }
 
 export function subscribeLearnedSkills(fn) {

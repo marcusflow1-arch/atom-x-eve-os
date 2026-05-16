@@ -23,13 +23,16 @@ import {
   equipCompanionGear,
   getCompanionItem,
 } from './companionFusionStore';
-import { Sparkles, GitBranch, BookOpen } from 'lucide-react';
+import { Sparkles, GitBranch, BookOpen, TrendingUp } from 'lucide-react';
 import { getLootInventory, subscribeLootInventory, LOOT_RARITIES, learnSkill, getLearnedSkillIds, subscribeLearnedSkills } from '../lootStore';
+import { SKILLS_DATABASE } from './skillData';
+import SkillUpgradePanel from './SkillUpgradePanel';
+import { AnimatePresence } from 'framer-motion';
 
 const COMPANION_SLOT_LABELS = { saddle: 'Saddle', armor: 'Armor', charm: 'Charm' };
 
 // ── Small context menu for loot items ────────────────────────────────────
-function LootContextMenu({ item, x, y, onLearn, onInspect, onClose, isLearned }) {
+function LootContextMenu({ item, x, y, onLearn, onInspect, onUpgrade, onClose, isLearned }) {
   React.useEffect(() => {
     const close = () => onClose();
     window.addEventListener('click', close);
@@ -38,7 +41,7 @@ function LootContextMenu({ item, x, y, onLearn, onInspect, onClose, isLearned })
   return (
     <div
       className="fixed z-[200] rounded-lg overflow-hidden border shadow-2xl"
-      style={{ left: x, top: y, minWidth: 140, background: 'rgba(15,17,22,0.96)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(14px)' }}
+      style={{ left: x, top: y, minWidth: 155, background: 'rgba(15,17,22,0.96)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(14px)' }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="px-3 py-1.5 border-b text-[9px] font-bold tracking-widest text-white/40 uppercase" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
@@ -50,17 +53,22 @@ function LootContextMenu({ item, x, y, onLearn, onInspect, onClose, isLearned })
       >
         🔍 Inspect
       </button>
-      {item.category === 'skill' && (
+      {item.category === 'skill' && !isLearned && (
         <button
-          onClick={() => { if (!isLearned) { onLearn(); } onClose(); }}
-          className={`w-full px-3 py-2 text-left text-[11px] transition-colors flex items-center gap-2 ${
-            isLearned
-              ? 'text-emerald-400/60 cursor-default'
-              : 'text-emerald-400 hover:bg-emerald-400/[0.08] hover:text-emerald-300'
-          }`}
+          onClick={() => { onLearn(); onClose(); }}
+          className="w-full px-3 py-2 text-left text-[11px] text-emerald-400 hover:bg-emerald-400/[0.08] hover:text-emerald-300 transition-colors flex items-center gap-2"
         >
           <BookOpen className="w-3 h-3" />
-          {isLearned ? 'Already Learned' : 'Learn Skill'}
+          Learn Skill
+        </button>
+      )}
+      {item.category === 'skill' && isLearned && (
+        <button
+          onClick={() => { onUpgrade(); onClose(); }}
+          className="w-full px-3 py-2 text-left text-[11px] text-amber-400 hover:bg-amber-400/[0.08] hover:text-amber-300 transition-colors flex items-center gap-2"
+        >
+          <TrendingUp className="w-3 h-3" />
+          Upgrade / Assign Slot
         </button>
       )}
     </div>
@@ -69,7 +77,7 @@ function LootContextMenu({ item, x, y, onLearn, onInspect, onClose, isLearned })
 
 // ── Inline loot inventory grid for Skills / Materials extra slots ──────────
 // Matches the same box style as GearInventoryGrid (rounded-sm, 7-col, same bg/borders)
-function LootSlotInventory({ category, label, inv, selected, onSelect, learnedIds }) {
+function LootSlotInventory({ category, label, inv, selected, onSelect, learnedIds, onUpgradeSkill }) {
   const [ctxMenu, setCtxMenu] = React.useState(null); // { item, x, y }
   const items = inv[category] || [];
   const totalSlots = 35;
@@ -97,7 +105,17 @@ function LootSlotInventory({ category, label, inv, selected, onSelect, learnedId
             return (
               <button
                 key={i}
-                onClick={() => item && onSelect(isSel ? null : item)}
+                onClick={() => {
+                  if (!item) return;
+                  const isLearned = learnedIds?.has(item.id);
+                  if (item.category === 'skill' && isLearned) {
+                    // Left-click on a learned skill → open upgrade panel
+                    const skillDef = SKILLS_DATABASE.find(s => s.id === item.id || item.id === `skill_${s.id}`);
+                    if (skillDef && onUpgradeSkill) onUpgradeSkill(skillDef);
+                  } else {
+                    onSelect(isSel ? null : item);
+                  }
+                }}
                 onContextMenu={(e) => {
                   if (!item) return;
                   e.preventDefault();
@@ -143,8 +161,12 @@ function LootSlotInventory({ category, label, inv, selected, onSelect, learnedId
           x={ctxMenu.x}
           y={ctxMenu.y}
           isLearned={learnedIds?.has(ctxMenu.item.id)}
-          onLearn={() => { learnSkill(ctxMenu.item); onSelect(ctxMenu.item); }}
+          onLearn={() => { learnSkill(ctxMenu.item); }}
           onInspect={() => onSelect(ctxMenu.item)}
+          onUpgrade={() => {
+            const skillDef = SKILLS_DATABASE.find(s => s.id === ctxMenu.item.id || ctxMenu.item.id === `skill_${s.id}`);
+            if (skillDef && onUpgradeSkill) onUpgradeSkill(skillDef);
+          }}
           onClose={() => setCtxMenu(null)}
         />
       )}
@@ -236,6 +258,9 @@ export default function GearTab({ state }) {
   const [learnedIds, setLearnedIds] = useState(getLearnedSkillIds());
   useEffect(() => subscribeLearnedSkills(setLearnedIds), []);
 
+  // Skill upgrade panel — opened by clicking a learned skill in the skills book or inventory
+  const [upgradeSkill, setUpgradeSkill] = useState(null); // SKILLS_DATABASE entry or null
+
   // Track inspected companion item per-slot
   const [inspectedCompanionBySlot, setInspectedCompanionBySlot] = useState({});
   const companionSlotId = fusion.selectedSlot || 'saddle';
@@ -291,6 +316,7 @@ export default function GearTab({ state }) {
                   selected={selectedLootItem}
                   onSelect={setSelectedLootItem}
                   learnedIds={learnedIds}
+                  onUpgradeSkill={(skillDef) => setUpgradeSkill(skillDef)}
                 />
               ) : (
                 <GearInventoryGrid
@@ -461,6 +487,16 @@ export default function GearTab({ state }) {
       })()}
 
       <GearActionsBar />
+
+      {/* Skill Upgrade / Slot Assignment Panel */}
+      <AnimatePresence>
+        {upgradeSkill && (
+          <SkillUpgradePanel
+            skill={upgradeSkill}
+            onClose={() => setUpgradeSkill(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Right-click context menu */}
       {contextMenu && (

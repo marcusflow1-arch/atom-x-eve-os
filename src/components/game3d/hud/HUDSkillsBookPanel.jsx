@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, BookOpen, Zap, Shield, Target, Sparkles } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, BookOpen, Zap, Shield, Target, Sparkles, TrendingUp } from 'lucide-react';
 import { SKILLS_DATABASE, RARITIES } from '../equipment/skillData';
 import { getLootInventory, subscribeLootInventory, getLearnedSkillIds, subscribeLearnedSkills } from '../lootStore';
+import SkillUpgradePanel from '../equipment/SkillUpgradePanel';
+import { getSkillData, subscribeSkillUpgrades } from '../equipment/skillUpgradeStore';
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const PASSIVE_IDS = new Set([
@@ -91,7 +93,7 @@ function TOCLeftPage({ onSelectChapter, collectedIds, activeChapterIdx }) {
 }
 
 // ─── Left Page: Chapter skill list ─────────────────────────────────────────
-function ChapterLeftPage({ chapter, skills, selectedSkill, onSelectSkill }) {
+function ChapterLeftPage({ chapter, skills, selectedSkill, onSelectSkill, onUpgradeSkill }) {
   return (
     <div className="flex flex-col h-full px-4 py-4">
       {/* Chapter header */}
@@ -132,7 +134,8 @@ function ChapterLeftPage({ chapter, skills, selectedSkill, onSelectSkill }) {
             return (
               <button
                 key={sk.id}
-                onClick={() => onSelectSkill(isSelected ? null : sk)}
+                onClick={() => { onSelectSkill(isSelected ? null : sk); }}
+                onDoubleClick={() => onUpgradeSkill && onUpgradeSkill(sk)}
                 className="flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all text-left w-full"
                 style={{
                   background: isSelected ? `${color}18` : 'rgba(255,255,255,0.6)',
@@ -165,7 +168,7 @@ function ChapterLeftPage({ chapter, skills, selectedSkill, onSelectSkill }) {
 }
 
 // ─── Right Page: Skill detail ──────────────────────────────────────────────
-function SkillDetailPage({ skill, chapter }) {
+function SkillDetailPage({ skill, chapter, onUpgradeSkill }) {
   if (!skill) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 px-5">
@@ -249,6 +252,16 @@ function SkillDetailPage({ skill, chapter }) {
           </>
         )}
 
+        {/* Upgrade button */}
+        <button
+          onClick={() => onUpgradeSkill && onUpgradeSkill(skill)}
+          className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border transition-all hover:scale-[1.02] active:scale-95"
+          style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.4)', color: '#f59e0b' }}
+        >
+          <TrendingUp className="w-3 h-3" />
+          <span className="text-[9px] font-black tracking-wider">UPGRADE / ASSIGN SLOT</span>
+        </button>
+
         {/* Equipped badge */}
         {skill.equipped && (
           <div
@@ -283,6 +296,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [lootInv, setLootInv] = useState(getLootInventory());
   const [learnedIds, setLearnedIds] = useState(getLearnedSkillIds());
+  const [upgradeSkill, setUpgradeSkill] = useState(null);
 
   useEffect(() => subscribeLootInventory(setLootInv), []);
   useEffect(() => subscribeLearnedSkills(setLearnedIds), []);
@@ -433,6 +447,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                           skills={activeSkills}
                           selectedSkill={selectedSkill}
                           onSelectSkill={setSelectedSkill}
+                          onUpgradeSkill={setUpgradeSkill}
                         />
                       )}
                     </motion.div>
@@ -534,7 +549,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                       className="absolute inset-0 overflow-y-auto"
                       style={{ scrollbarWidth: 'none' }}
                     >
-                      <SkillDetailPage skill={selectedSkill} chapter={activeChapter} />
+                      <SkillDetailPage skill={selectedSkill} chapter={activeChapter} onUpgradeSkill={setUpgradeSkill} />
                     </motion.div>
                   </AnimatePresence>
                 </div>
@@ -552,6 +567,15 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
           </motion.div>
         </>
       )}
+      {/* Skill Upgrade Panel — opens alongside the book */}
+      <AnimatePresence>
+        {upgradeSkill && (
+          <SkillUpgradePanel
+            skill={upgradeSkill}
+            onClose={() => setUpgradeSkill(null)}
+          />
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }
