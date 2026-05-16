@@ -8,12 +8,9 @@ import {
   applyCritDamageBonus,
   applyAttackSpeedBuff,
   applyReflectBuff,
-  applyRepulsionBuff,
-  applyBarrierBuff,
-  applyDestructionBuff,
   applyPowerCharge,
   applyDodgeBuff,
-} from './activeBuffsStore.jsx';
+} from './activeBuffsStore';
 
 // Activation logic per skill id. Each handler receives no args and uses the
 // player HUD store (max HP) where needed.
@@ -27,6 +24,20 @@ import {
 //   • crit dmg   → unchanged
 //   • haste      → unchanged
 const HANDLERS = {
+  repulsion: () => {
+    applyReflectBuff(1.0, 20);
+    return { toast: `⚡ Repulsion: reflect barrier active (20s)` };
+  },
+  barrier_aura: () => {
+    const hud = getPlayerHUD();
+    const amount = Math.round((hud.maxHP || 100) * 0.2);
+    applyShield(amount, 20);
+    return { toast: `🛡️ Barrier Aura: +${amount} shield (20s)` };
+  },
+  heavens_destruction: () => {
+    applyReflectBuff(0.25, 20);
+    return { toast: `🌑 Heaven's Destruction: dark ward active (20s)` };
+  },
   aegis_shield: () => {
     const hud = getPlayerHUD();
     const amount = Math.round((hud.maxHP || 100) * 0.15);
@@ -45,42 +56,6 @@ const HANDLERS = {
     applyReflectBuff(0.03, 180);
     return { toast: `✨ God's Deflection: 3% reflect chance (3min)` };
   },
-  repulsion: () => {
-    applyRepulsionBuff(20);
-    return { toast: `⚡ Repulsion: aura active (20s)` };
-  },
-  gods_repulsion: () => {
-    applyRepulsionBuff(20);
-    return { toast: `⚡ God's Repulsion: aura active (20s)` };
-  },
-  reflective_guard: () => {
-    applyRepulsionBuff(20);
-    return { toast: `⚡ Reflective Guard: aura active (20s)` };
-  },
-  barrier_aura: () => {
-    applyBarrierBuff(20);
-    return { toast: `🛡️ Barrier Aura: shield field active (20s)` };
-  },
-  guardian_wall: () => {
-    applyBarrierBuff(20);
-    return { toast: `🛡️ Guardian Wall: shield field active (20s)` };
-  },
-  iron_fortress: () => {
-    applyBarrierBuff(20);
-    return { toast: `🛡️ Iron Fortress: shield field active (20s)` };
-  },
-  counter_pulse: () => {
-    applyBarrierBuff(20);
-    return { toast: `🛡️ Counter Pulse: shield field active (20s)` };
-  },
-  heavens_destruction: () => {
-    applyDestructionBuff(20);
-    return { toast: `🌑 Heaven's Destruction: aura active (20s)` };
-  },
-  dark_judgment: () => {
-    applyDestructionBuff(20);
-    return { toast: `🌑 Dark Judgment: aura active (20s)` };
-  },
   haste: () => {
     applyAttackSpeedBuff(0.01, 15); // level-1 value; upgrades later scale this
     return { toast: `⚡ Haste: +1% attack speed (15s)` };
@@ -89,6 +64,28 @@ const HANDLERS = {
   power_charge: () => {
     applyPowerCharge(1.0, 5, 90);
     return { toast: `🔥 Power Charge: +100% damage for next 5 hits (90s)` };
+  },
+  reflective_guard: () => {
+    applyReflectBuff(1.0, 12);
+    return { toast: `🪞 Reflective Guard: full reflection active (12s)` };
+  },
+  guardian_wall: () => {
+    const hud = getPlayerHUD();
+    const amount = Math.round((hud.maxHP || 100) * 0.25);
+    applyShield(amount, 20);
+    return { toast: `🛡️ Guardian Wall: party shield effect active (20s)` };
+  },
+  iron_fortress: () => {
+    const hud = getPlayerHUD();
+    const amount = Math.round((hud.maxHP || 100) * 0.2);
+    applyShield(amount, 20);
+    return { toast: `🏰 Iron Fortress: fortified shield active (20s)` };
+  },
+  counter_pulse: () => {
+    const hud = getPlayerHUD();
+    const amount = Math.round((hud.maxHP || 100) * 0.12);
+    applyShield(amount, 12);
+    return { toast: `🔄 Counter Pulse: counter barrier active (12s)` };
   },
   // Defense buff — chance for enemies to miss you entirely. 180s.
   evasion: () => {
