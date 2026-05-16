@@ -12,9 +12,8 @@ const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
  * Renders the female archer (ErikaArcher) facing the camera with an idle animation,
  * and exposes a PLAY button that calls onPlay() to enter the game world.
  */
-export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
+export default function CharacterLoginScreen({ onPlay }) {
   const containerRef = useRef(null);
-  const audioRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [selectedCharIdx, setSelectedCharIdx] = useState(0);
 
@@ -149,28 +148,6 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
       renderer.dispose();
     };
   }, [onPlay]);
-
-  // Background music — stop when component unmounts (on Play)
-  useEffect(() => {
-    if (!themeAudioUrl) return;
-
-    if (!audioRef.current) {
-      audioRef.current = new Audio(themeAudioUrl);
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.5;
-      audioRef.current.play().catch((err) => {
-        console.warn('Audio playback failed:', err);
-      });
-    }
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current = null;
-      }
-    };
-  }, [themeAudioUrl]);
 
   return (
     <div className="fixed inset-0 overflow-hidden">

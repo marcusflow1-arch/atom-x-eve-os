@@ -54,6 +54,7 @@ export default function GameView() {
   const [soundVolume, setSoundVolume] = useState(() => parseFloat(localStorage.getItem('gameVolume') || '1.0'));
   const [graphicsLevel, setGraphicsLevel] = useState(() => localStorage.getItem('graphicsLevel') || 'high');
   const worldAudioRef = useRef(null);
+  const loginAudioRef = useRef(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
@@ -74,6 +75,26 @@ export default function GameView() {
       .catch(() => {});
   }, []);
 
+  // Manage login audio — plays on login phase, stops on world entry
+  useEffect(() => {
+    if (phase !== 'login' || !loginAudioUrl) return;
+
+    if (!loginAudioRef.current) {
+      loginAudioRef.current = new Audio(loginAudioUrl);
+      loginAudioRef.current.loop = true;
+      loginAudioRef.current.volume = 0.5;
+      loginAudioRef.current.play().catch(() => {});
+    }
+
+    return () => {
+      if (loginAudioRef.current) {
+        loginAudioRef.current.pause();
+        loginAudioRef.current.currentTime = 0;
+        loginAudioRef.current = null;
+      }
+    };
+  }, [phase, loginAudioUrl]);
+
   // Manage world background music
   useEffect(() => {
     if (phase !== 'world' || !worldAudioUrl) return;
@@ -88,12 +109,27 @@ export default function GameView() {
     }
 
     return () => {
-      if (worldAudioRef.current && phase !== 'world') {
+      if (worldAudioRef.current) {
         worldAudioRef.current.pause();
+        worldAudioRef.current.currentTime = 0;
         worldAudioRef.current = null;
       }
     };
   }, [phase, worldAudioUrl, soundVolume]);
+
+  // Stop all audio when leaving GameView
+  useEffect(() => {
+    return () => {
+      if (loginAudioRef.current) {
+        loginAudioRef.current.pause();
+        loginAudioRef.current = null;
+      }
+      if (worldAudioRef.current) {
+        worldAudioRef.current.pause();
+        worldAudioRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSettingsChange = ({ soundVolume: newVolume, graphicsLevel: newGraphics }) => {
     setSoundVolume(newVolume);
@@ -222,7 +258,7 @@ export default function GameView() {
   if (phase === 'login') {
     return (
       <div className="fixed inset-0 bg-black">
-        <CharacterLoginScreen onPlay={() => setPhase('world')} themeAudioUrl={loginAudioUrl} />
+        <CharacterLoginScreen onPlay={() => setPhase('world')} />
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate'))}
           className="absolute top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/60 hover:text-white text-xs flex items-center gap-1.5 z-20"
