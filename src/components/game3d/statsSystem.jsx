@@ -53,7 +53,11 @@ export const DEFAULT_PLAYER_STATS = {
 //   — flat additive points that stack BEFORE equipment multipliers, so equipment
 //   scales WITH the halo gains. criticalDefense / criticalChance are passed through
 //   as derived-stat additions.
-export function computeDerivedStats(baseStats, equipment = [], haloBonuses = null) {
+// titleBonuses = optional { strength, vitality, dexterity, spirit, defense, criticalDefense, hp }
+//   — flat additive bonuses from the equipped Title. Stack into the base alongside
+//   halo so equipment scales with them too. `defense` and `hp` are added to derived
+//   values post-rate; `criticalDefense` stacks with halo's criticalDefense.
+export function computeDerivedStats(baseStats, equipment = [], haloBonuses = null, titleBonuses = null) {
   const totals = {
     strength_mult:  0,
     hp_mult:        0,
@@ -70,13 +74,14 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
     totals.elemental_mult += eq.elemental_mult || 0;
   });
 
-  // Halo provides flat stat-point additions that stack into the base before
-  // equipment multipliers apply.
-  const halo = haloBonuses || { strength: 0, dexterity: 0, vitality: 0, spirit: 0, criticalDefense: 0, criticalChance: 0 };
-  const baseStr  = (baseStats.strength  || 0) + (halo.strength  || 0);
-  const baseVit  = (baseStats.hp        || 0) + (halo.vitality  || 0);
-  const baseSpr  = (baseStats.spirit    || 0) + (halo.spirit    || 0);
-  const baseDex  = (baseStats.dexterity || 0) + (halo.dexterity || 0);
+  // Halo + Title provide flat stat-point additions that stack into the base
+  // before equipment multipliers apply, so gear scales WITH them.
+  const halo  = haloBonuses  || { strength: 0, dexterity: 0, vitality: 0, spirit: 0, criticalDefense: 0, criticalChance: 0 };
+  const title = titleBonuses || { strength: 0, dexterity: 0, vitality: 0, spirit: 0, criticalDefense: 0, defense: 0, hp: 0 };
+  const baseStr  = (baseStats.strength  || 0) + (halo.strength  || 0) + (title.strength  || 0);
+  const baseVit  = (baseStats.hp        || 0) + (halo.vitality  || 0) + (title.vitality  || 0);
+  const baseSpr  = (baseStats.spirit    || 0) + (halo.spirit    || 0) + (title.spirit    || 0);
+  const baseDex  = (baseStats.dexterity || 0) + (halo.dexterity || 0) + (title.dexterity || 0);
   const baseElem = (baseStats.elemental || 0);
 
   // Effective invested values (base + halo + equipment bonus rounded down)
@@ -87,9 +92,10 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
   const effElem = baseElem + Math.floor(baseElem * totals.elemental_mult);
 
   const physDmg = effStr  * STAT_RATES.strength;
-  const maxHP   = effVit  * STAT_RATES.hp;
+  // Title contributes flat HP and flat defense on top of derived values.
+  const maxHP   = effVit  * STAT_RATES.hp        + (title.hp      || 0);
   const chi     = effSpr  * STAT_RATES.spirit;
-  const defense = effDex  * STAT_RATES.dexterity;
+  const defense = effDex  * STAT_RATES.dexterity + (title.defense || 0);
   const elemDmg = effElem * STAT_RATES.elemental;
 
   // Secondary stats
@@ -98,8 +104,8 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
   // Base 10% crit chance for everyone, plus dexterity scaling, plus Halo additive crit bonus.
   const critChance     = Math.min(75, 10 + effDex * SECONDARY_RATES.critPerDex + (halo.criticalChance || 0));
   // Critical Defense — % reduction applied to enemy crit damage when this player is HIT by a crit.
-  // 0 = no reduction, 2.0 = 200% (fully negates crit damage). Capped at 1.0 in practice during damage calc.
-  const criticalDefense = halo.criticalDefense || 0;
+  // 0 = no reduction, 1.0 = fully negates crit damage. Halo + Title stack additively here.
+  const criticalDefense = (halo.criticalDefense || 0) + (title.criticalDefense || 0);
   const attackRange    = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
   const hpRegen        = effVit * SECONDARY_RATES.hpRegenPerVit;       // HP / sec
   const manaRegen      = effSpr * SECONDARY_RATES.manaRegenPerSpr;     // mana / sec
