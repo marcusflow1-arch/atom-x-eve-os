@@ -37,6 +37,7 @@ import { toast } from 'react-hot-toast';
 import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
 import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
 import SlashEffectLayer from '../components/game3d/SlashEffect';
+import PauseMenu from '../components/game3d/PauseMenu';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -49,6 +50,11 @@ export default function GameView() {
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
   const [themeVideoUrl, setThemeVideoUrl] = useState(null);
+  const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
+  const [themeVolume, setThemeVolume] = useState(() => {
+    const saved = parseFloat(localStorage.getItem('game_theme_volume'));
+    return Number.isFinite(saved) ? saved : 0.5;
+  });
   const audioRef = useRef(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
@@ -93,7 +99,7 @@ export default function GameView() {
 
     const audio = new Audio(themeAudioUrl);
     audio.loop = true;
-    audio.volume = 0.5;
+    audio.volume = themeVolume;
     audioRef.current = audio;
     audio.play().catch((err) => console.warn('Audio play blocked:', err));
 
@@ -197,7 +203,13 @@ export default function GameView() {
     return () => window.removeEventListener('gamePlayerAction', onAction);
   }, [user?.id, user?.full_name, user?.username]);
 
-  // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = close
+  // Live-update audio volume when slider changes (without reloading the track)
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = themeVolume;
+    localStorage.setItem('game_theme_volume', String(themeVolume));
+  }, [themeVolume]);
+
+  // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = pause menu
   useEffect(() => {
     if (phase !== 'world') return;
     const onKey = (e) => {
@@ -212,11 +224,12 @@ export default function GameView() {
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
       } else if (e.key === 'Escape') {
+        // Close any open sub-panels first; otherwise toggle pause menu
         if (storeOpen) setStoreOpen(false);
-        if (progressionOpen) setProgressionOpen(false);
-        if (skillTreeOpen) setSkillTreeOpen(false);
-        if (friendsListOpen) setFriendsListOpen(false);
-
+        else if (progressionOpen) setProgressionOpen(false);
+        else if (skillTreeOpen) setSkillTreeOpen(false);
+        else if (friendsListOpen) setFriendsListOpen(false);
+        else setPauseMenuOpen((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -273,6 +286,14 @@ export default function GameView() {
 
       {/* Slash visual effects — fires on basic attack and skill activations */}
       <SlashEffectLayer />
+
+      {/* Pause menu — opened by ESC */}
+      <PauseMenu
+        open={pauseMenuOpen}
+        onClose={() => setPauseMenuOpen(false)}
+        volume={themeVolume}
+        onVolumeChange={setThemeVolume}
+      />
     </div>
   );
 }
