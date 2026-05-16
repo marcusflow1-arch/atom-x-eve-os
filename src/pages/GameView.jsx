@@ -51,9 +51,9 @@ export default function GameView() {
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
-  // Fetch game theme audio on mount
+  // Fetch "Game 1" hero background audio on mount
   useEffect(() => {
-    base44.entities.HeroBackground.list('-created_date', 1)
+    base44.entities.HeroBackground.filter({ title: 'Game 1' })
       .then((backgrounds) => {
         if (backgrounds.length > 0 && backgrounds[0].audio_url) {
           setThemeAudioUrl(backgrounds[0].audio_url);
