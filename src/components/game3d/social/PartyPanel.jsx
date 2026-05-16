@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, X } from 'lucide-react';
+import { Users, X, Mic, MicOff } from 'lucide-react';
 import { partyStore, removePartyMember, PARTY_MAX } from './socialStores';
 
 /**
@@ -7,8 +7,25 @@ import { partyStore, removePartyMember, PARTY_MAX } from './socialStores';
  * Lists current party members and lets the user kick them.
  */
 export default function PartyPanel() {
-  const [{ members }, setState] = useState(partyStore.get());
+  const [partyState, setState] = useState(partyStore.get());
+  const { members, partyId } = partyState;
   useEffect(() => partyStore.subscribe(setState), []);
+
+  // When party forms or changes, switch voice chat to the party-specific channel
+  // so party members hear only each other, no matter where they are on the map.
+  useEffect(() => {
+    if (partyId && members.length > 1) {
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: `party_${partyId}`, hostId: `party_${partyId}` },
+      }));
+    }
+    // When party dissolves, rejoin the world channel
+    if (members.length === 0) {
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: 'game_world_main', hostId: 'game_world_main' },
+      }));
+    }
+  }, [partyId, members.length]);
 
   if (members.length === 0) return null; // hidden when empty
 

@@ -30,8 +30,10 @@ export const sendTradeRequest = async (sender, receiver) => {
 
 export const acceptTradeRequest = async (req) => {
   await base44.entities.SocialRequest.update(req.id, { status: 'accepted' });
-  // Open the receiver-side trade panel with the sender as partner.
+  // Open trade panel on the RECEIVER's side — sender as partner.
   openTrade({ id: req.sender_id, name: req.sender_name });
+  // Cleanup the request after a short delay
+  setTimeout(() => deleteRequest(req.id), 3000);
 };
 
 export const declineTradeRequest = async (req) => {

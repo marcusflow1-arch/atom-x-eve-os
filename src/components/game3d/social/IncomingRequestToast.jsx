@@ -66,14 +66,16 @@ export default function IncomingRequestToast({ userId, userName }) {
   }, [userId]);
 
   // ─── Refresh pending incoming requests ───
+  // Fetch all requests where I am the receiver (RLS allows this),
+  // then filter to pending client-side to avoid multi-field filter issues
+  // on the live published app.
   const refreshIncoming = useCallback(async () => {
     if (!userId) return;
     try {
-      const reqs = await base44.entities.SocialRequest.filter({
-        receiver_id: userId, status: 'pending',
-      });
-      console.log(`[Social] refreshIncoming for ${userId}: ${reqs?.length || 0} pending`);
-      setIncoming(reqs || []);
+      const reqs = await base44.entities.SocialRequest.filter({ receiver_id: userId });
+      const pending = (reqs || []).filter((r) => r.status === 'pending');
+      console.log(`[Social] refreshIncoming for ${userId}: ${pending.length} pending`);
+      setIncoming(pending);
     } catch (e) { console.warn('[Social] refreshIncoming', e); }
   }, [userId]);
 

@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, X, MessageCircle, Trash2 } from 'lucide-react';
-import { friendsStore, removeFriend } from './socialStores';
+import { Users, X, MessageCircle, Trash2, ArrowLeftRight, Swords } from 'lucide-react';
+import { friendsStore, removeFriend, partyStore } from './socialStores';
 import { base44 } from '@/api/base44Client';
 import FriendChatBox from './FriendChatBox';
+import { sendPartyInvite } from './partyInvite';
+import { sendTradeRequest } from './tradeRequest';
+import { sendDuelChallenge } from './duelChallenge';
+import toast from 'react-hot-toast';
 
 const ONLINE_WINDOW_MS = 2 * 60 * 1000; // last_seen within 2 minutes → online
 
@@ -14,9 +18,54 @@ const ONLINE_WINDOW_MS = 2 * 60 * 1000; // last_seen within 2 minutes → online
  */
 export default function FriendsListPanel({ open, onClose }) {
   const [{ friends }, setState] = useState(friendsStore.get());
-  const [onlineMap, setOnlineMap] = useState({}); // userId → bool
+  const [onlineMap, setOnlineMap] = useState({});
   const [chatFriend, setChatFriend] = useState(null);
+  const [me, setMe] = useState(null);
   useEffect(() => friendsStore.subscribe(setState), []);
+
+  useEffect(() => {
+    base44.auth.me().then((u) => setMe(u)).catch(() => {});
+  }, []);
+
+  const handleParty = async (f) => {
+    if (!me) return;
+    try {
+      await sendPartyInvite(
+        { id: me.id, name: me.full_name || me.username || 'Player' },
+        { id: f.id, name: f.name },
+        partyStore.get().partyId
+      );
+      toast.success(`Party invite sent to ${f.name}`);
+    } catch (e) {
+      toast.error(e?.code === 'party_full' ? 'Party is full' : `Failed: ${e.message}`);
+    }
+  };
+
+  const handleTrade = async (f) => {
+    if (!me) return;
+    try {
+      await sendTradeRequest(
+        { id: me.id, name: me.full_name || me.username || 'Player' },
+        { id: f.id, name: f.name }
+      );
+      toast.success(`Trade request sent to ${f.name}`);
+    } catch (e) {
+      toast.error(`Failed: ${e.message}`);
+    }
+  };
+
+  const handleDuel = async (f) => {
+    if (!me) return;
+    try {
+      await sendDuelChallenge(
+        { id: me.id, name: me.full_name || me.username || 'Player' },
+        { id: f.id, name: f.name }
+      );
+      toast.success(`Duel challenge sent to ${f.name}`);
+    } catch (e) {
+      toast.error(e?.code === 'already_dueling' ? e.message : `Failed: ${e.message}`);
+    }
+  };
 
   // Poll each friend's last_seen while panel is open to compute online status
   useEffect(() => {
@@ -99,18 +148,19 @@ export default function FriendsListPanel({ open, onClose }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        title="Message"
-                        onClick={() => setChatFriend(f)}
-                        className="p-1.5 rounded hover:bg-cyan-500/20 text-cyan-300"
-                      >
+                      <button title="Message" onClick={() => setChatFriend(f)} className="p-1.5 rounded hover:bg-cyan-500/20 text-cyan-300">
                         <MessageCircle className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        title="Remove"
-                        onClick={() => removeFriend(f.id)}
-                        className="p-1.5 rounded hover:bg-red-500/20 text-red-300"
-                      >
+                      <button title="Party Invite" onClick={() => handleParty(f)} className="p-1.5 rounded hover:bg-purple-500/20 text-purple-300">
+                        <Users className="w-3.5 h-3.5" />
+                      </button>
+                      <button title="Trade" onClick={() => handleTrade(f)} className="p-1.5 rounded hover:bg-amber-500/20 text-amber-300">
+                        <ArrowLeftRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button title="Duel" onClick={() => handleDuel(f)} className="p-1.5 rounded hover:bg-red-500/20 text-red-300">
+                        <Swords className="w-3.5 h-3.5" />
+                      </button>
+                      <button title="Remove Friend" onClick={() => removeFriend(f.id)} className="p-1.5 rounded hover:bg-red-500/20 text-red-300">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -121,7 +171,7 @@ export default function FriendsListPanel({ open, onClose }) {
             </div>
 
             <div className="px-4 py-2 border-t border-white/10 text-[10px] text-white/40 text-center">
-              Press <span className="font-mono text-emerald-300">L</span> to close
+              Hover a friend: <span className="text-cyan-300">💬</span> chat · <span className="text-purple-300">👥</span> party · <span className="text-amber-300">⇄</span> trade · <span className="text-red-300">⚔</span> duel · Press <span className="font-mono text-emerald-300">L</span> to close
             </div>
           </motion.div>
           <FriendChatBox friend={chatFriend} onClose={() => setChatFriend(null)} />
