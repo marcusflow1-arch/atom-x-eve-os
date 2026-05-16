@@ -12,7 +12,7 @@ const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
  * Renders the female archer (ErikaArcher) facing the camera with an idle animation,
  * and exposes a PLAY button that calls onPlay() to enter the game world.
  */
-export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
+export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoUrl }) {
   const containerRef = useRef(null);
   const audioRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -171,17 +171,27 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* Background scene — gradient + decorative fantasy bg */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(ellipse at 80% 20%, rgba(255, 180, 200, 0.25) 0%, transparent 50%),
-            radial-gradient(ellipse at 20% 80%, rgba(100, 200, 220, 0.2) 0%, transparent 50%),
-            linear-gradient(135deg, #1a2438 0%, #2d3a52 30%, #4a4068 70%, #2d3a52 100%)
-          `,
-        }}
-      />
+      {/* Background scene — video or gradient */}
+      {heroVideoUrl ? (
+        <video
+          src={heroVideoUrl}
+          autoPlay
+          muted
+          loop
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(ellipse at 80% 20%, rgba(255, 180, 200, 0.25) 0%, transparent 50%),
+              radial-gradient(ellipse at 20% 80%, rgba(100, 200, 220, 0.2) 0%, transparent 50%),
+              linear-gradient(135deg, #1a2438 0%, #2d3a52 30%, #4a4068 70%, #2d3a52 100%)
+            `,
+          }}
+        />
+      )}
 
       {/* Decorative atmospheric particles */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
