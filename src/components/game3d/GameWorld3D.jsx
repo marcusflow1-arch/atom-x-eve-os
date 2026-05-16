@@ -44,6 +44,7 @@ import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { useCallback } from 'react';
 import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore'; import { tryActivateBookSkill } from './skillActivationHandler'; import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier } from './activeBuffsStore';
+import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
@@ -1088,7 +1089,7 @@ export default function GameWorld3D() {
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const isRunning = !!keys.current['shift'];
-        const speed = (isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED) * speedMult;
+        const speed = (isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED) * speedMult * getWeaponMoveSpeedMult();
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -1387,7 +1388,7 @@ export default function GameWorld3D() {
             enemy.attackWindupTimer -= delta;
             if (enemy.attackWindupTimer <= 0) {
               // Damage lands — only if player still in range and not invulnerable
-              if (playerInRange && playerInvulTimer.current <= 0) {
+              if (playerInRange && playerInvulTimer.current <= 0 && !rollDodge() && !rollGuard() && !rollRangedEvade()) {
                 const playerDerived = getPlayerHUD().derived || playerDerivedRef.current;
                 let dmg = calculateHit(enemy.derived, playerDerived);
                 const levelDiff = enemy.level - playerLevelRef.current;
@@ -1477,7 +1478,9 @@ export default function GameWorld3D() {
           if (closestEnemy) {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-            const dmg = Math.round(calculateHit(liveDerived, closestEnemy.derived) * consumeDamageBuffMultiplier());
+            const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * getWeaponDamageMult());
+            if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
             spawnDamageFloat(closestEnemy.id, dmg);

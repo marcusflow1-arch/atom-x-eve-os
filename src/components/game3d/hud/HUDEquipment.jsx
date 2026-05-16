@@ -1,15 +1,40 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sword, ChevronLeft, ChevronRight } from 'lucide-react';
+import { setActiveWeaponPath, getActiveWeaponPath, subscribeWeaponBuffs, getBuffValuesFor, WEAPON_CLASS_BUFFS } from '../weaponClassBuffStore';
 
 /**
  * Bottom-right HUD: "EQUIPMENT" label with weapon switcher (◄ weapon ►)
- * plus two paired skill slots above it — inspired by the reference image.
+ * plus two paired skill slots above it.
+ *
+ * Switching between the 3 weapon CLASSES (Damage / Ranged / Defense) also
+ * swaps the active native passive buff — Brutal Force / Swift Marksman /
+ * Iron Stance — applied to combat at runtime.
  */
-const WEAPONS = ['Dual Blades', 'Bow', 'Spear', 'Fan'];
+const WEAPON_CLASSES = [
+  { path: 'damage',  label: 'Greatsword',  className: 'Damage'  },
+  { path: 'ranged',  label: 'Bow',         className: 'Ranged'  },
+  { path: 'defense', label: 'Dual Blades', className: 'Defense' },
+];
 
 export default function HUDEquipment() {
-  const [idx, setIdx] = useState(0);
-  const cycle = (dir) => setIdx((i) => (i + dir + WEAPONS.length) % WEAPONS.length);
+  const [idx, setIdx] = useState(() => {
+    const cur = getActiveWeaponPath();
+    return Math.max(0, WEAPON_CLASSES.findIndex((w) => w.path === cur));
+  });
+  const [, force] = useState(0);
+
+  // Re-render when buff levels change so the tooltip stat reflects current level.
+  useEffect(() => subscribeWeaponBuffs(() => force((n) => n + 1)), []);
+
+  const cycle = (dir) => {
+    const next = (idx + dir + WEAPON_CLASSES.length) % WEAPON_CLASSES.length;
+    setIdx(next);
+    setActiveWeaponPath(WEAPON_CLASSES[next].path);
+  };
+
+  const cur = WEAPON_CLASSES[idx];
+  const buff = WEAPON_CLASS_BUFFS[cur.path];
+  const values = getBuffValuesFor(cur.path);
 
   return (
     <div className="absolute bottom-6 right-6 z-20 pointer-events-auto flex flex-col items-end gap-2">
@@ -39,9 +64,17 @@ export default function HUDEquipment() {
           <ChevronLeft className="w-3.5 h-3.5 text-white/80" />
         </button>
 
-        <div className="flex items-center gap-2 min-w-[120px] justify-center">
-          <Sword className="w-4 h-4 text-amber-300" />
-          <span className="text-white text-xs font-medium tracking-wider">{WEAPONS[idx]}</span>
+        <div
+          className="flex flex-col items-center gap-0.5 min-w-[120px] justify-center"
+          title={`${buff.name} (Lvl ${getBuffLevel(cur.path)}/${buff.maxLevel})`}
+        >
+          <div className="flex items-center gap-2">
+            <Sword className="w-4 h-4" style={{ color: buff.color }} />
+            <span className="text-white text-xs font-medium tracking-wider">{cur.label}</span>
+          </div>
+          <span className="text-[9px] tracking-[0.18em] uppercase" style={{ color: buff.color }}>
+            {buff.icon} {buff.name}
+          </span>
         </div>
 
         <button
@@ -51,6 +84,54 @@ export default function HUDEquipment() {
           <ChevronRight className="w-3.5 h-3.5 text-white/80" />
         </button>
       </div>
+
+      {/* Active-buff stat readout — tiny, only shows non-zero values */}
+      <BuffReadout values={values} color={buff.color} />
+    </div>
+  );
+}
+
+// Tiny helper: current level for a path (used for the tooltip).
+function getBuffLevel(path) {
+  try {
+    const raw = localStorage.getItem('weapon_class_buffs_v1');
+    if (raw) return JSON.parse(raw)[path] ?? 1;
+  } catch {}
+  return 1;
+}
+
+function BuffReadout({ values, color }) {
+  const fmt = (k, v) => {
+    if (!v) return null;
+    const pct = (v * 100).toFixed(v < 0.01 ? 1 : 0);
+    const labels = {
+      damageBonusPct:     'DMG',
+      lethalBlowPct:      'Lethal',
+      moveSpeedBonusPct:  'Move',
+      hitChanceBonusPct:  'Hit',
+      critChanceBonusPct: 'Crit',
+      defenseBonusPct:    'DEF',
+      dodgeChancePct:     'Dodge',
+      guardChancePct:     'Guard',
+    };
+    return { label: labels[k] || k, val: `${pct}%` };
+  };
+  const rows = Object.keys(values).map((k) => fmt(k, values[k])).filter(Boolean);
+  if (!rows.length) return null;
+  return (
+    <div
+      className="px-2 py-1 rounded-sm flex gap-2 text-[9px] tracking-wider"
+      style={{
+        background: 'rgba(10,14,20,0.85)',
+        border: `1px solid ${color}55`,
+      }}
+    >
+      {rows.map((r) => (
+        <span key={r.label} className="flex items-center gap-0.5">
+          <span style={{ color }}>{r.label}</span>
+          <span className="text-white">+{r.val}</span>
+        </span>
+      ))}
     </div>
   );
 }
