@@ -38,6 +38,7 @@ import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } fr
 import SlashEffectLayer from '../components/game3d/SlashEffect';
 import PauseMenu from '../components/game3d/PauseMenu';
 import WindRunEffect from '../components/game3d/WindRunEffect';
+import SkillActivationToastListener from '../components/game3d/SkillActivationToastListener';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -284,6 +285,9 @@ export default function GameView() {
 
       {/* Wind streaks while sprinting (Shift-to-Run skill) */}
       <WindRunEffect />
+
+      {/* Toast feedback when self-cast skills (Shield, Focus, Haste, etc.) activate */}
+      <SkillActivationToastListener />
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu

@@ -43,7 +43,7 @@ import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { useCallback } from 'react';
-import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
+import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore'; import { tryActivateBookSkill } from './skillActivationHandler'; import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier } from './activeBuffsStore';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
@@ -986,11 +986,8 @@ export default function GameWorld3D() {
       if (k === 'r') playOneShot('roll', 1.3);
       // E = interact with nearby NPC
       if (k === 'e') interactPressed.current = true;
-      // Ability keys: 1=slot 0, 2=slot 1, 3=slot 2, 4=slot 3
-      if (k === '1') { abilityKeyPressed.current = 0; }
-      if (k === '2') { abilityKeyPressed.current = 1; }
-      if (k === '3') { abilityKeyPressed.current = 2; }
-      if (k === '4') { abilityKeyPressed.current = 3; }
+      // Ability keys: 1..8 → slots 0..7
+      if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
       if (e.key === 'Escape') { setPauseOpen((v) => !v); e.preventDefault(); }
       // F = mount/dismount companion
@@ -1393,13 +1390,12 @@ export default function GameWorld3D() {
               if (playerInRange && playerInvulTimer.current <= 0) {
                 const playerDerived = getPlayerHUD().derived || playerDerivedRef.current;
                 let dmg = calculateHit(enemy.derived, playerDerived);
-                // Scale by level difference: enemies higher level hit harder
                 const levelDiff = enemy.level - playerLevelRef.current;
                 if (levelDiff > 0) dmg = Math.round(dmg * (1 + levelDiff * 0.25));
                 else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
-                const newHP = Math.max(0, getPlayerHUD().hp - dmg);
-                setHP(newHP);
-                playActionSound('player_hit');
+                // God's Deflection: chance to reflect 100% back at attacker
+                if (rollReflect()) { enemy.hp -= dmg; spawnDamageFloat(enemy.id, dmg); playActionSound('enemy_hit'); }
+                else { const absorbed = absorbShield(dmg); dmg = Math.max(0, dmg - absorbed); if (dmg > 0) { setHP(Math.max(0, getPlayerHUD().hp - dmg)); playActionSound('player_hit'); } }
                 playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
               }
               // End attack ~0.4s after damage so anim has time to complete
@@ -1464,7 +1460,7 @@ export default function GameWorld3D() {
         if (attackPressed.current) {
           attackPressed.current = false;
           if (playerAttackCooldown.current <= 0) {
-            playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN;
+            playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier();
             // Play attack animation (reusing kick as the melee attack)
             playOneShot('kick', 1.4);
             playActionSound('player_attack');
@@ -1481,7 +1477,7 @@ export default function GameWorld3D() {
           if (closestEnemy) {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-            const dmg = calculateHit(liveDerived, closestEnemy.derived);
+            const dmg = Math.round(calculateHit(liveDerived, closestEnemy.derived) * consumeDamageBuffMultiplier());
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
             spawnDamageFloat(closestEnemy.id, dmg);
@@ -1532,7 +1528,7 @@ export default function GameWorld3D() {
         }
       }
 
-      tickCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta);
+      tickCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs();
       if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
 
       // ─── Update active visual effects (lightning etc.) ───
@@ -1546,9 +1542,10 @@ export default function GameWorld3D() {
         const slotIndex = abilityKeyPressed.current;
         abilityKeyPressed.current = -1;
         const abState = getAbilityState();
-        const abId = abState.equipped[slotIndex];
+        const entry = abState.equipped[slotIndex];
         const cooldownLeft = abState.cooldowns[slotIndex];
-        if (abId && cooldownLeft <= 0) {
+        if (entry && cooldownLeft <= 0 && tryActivateBookSkill(entry)) { startCooldown(slotIndex); } else if (entry && cooldownLeft <= 0) {
+          const abId = typeof entry === 'string' ? entry : entry.id;
           const ab = ABILITY_DEFINITIONS.find((a) => a.id === abId);
           const target = abState.target;
           if (ab && target) {
