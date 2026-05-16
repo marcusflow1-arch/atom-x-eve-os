@@ -38,6 +38,22 @@ export default function HUDCompanionSkillSlots() {
 
   return (
     <div className="absolute z-20 pointer-events-auto" style={{ left: '24px', bottom: '156px' }}>
+      {/* Companion section label — a paw/dog icon to indicate this row is for the companion */}
+      <div className="flex items-center gap-1.5 mb-1 ml-0.5" title="Companion Skills">
+        <div
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: 22,
+            height: 22,
+            background: 'rgba(0,0,0,0.55)',
+            border: '1.5px solid rgba(255,255,255,0.5)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+          }}
+        >
+          <span className="text-[11px] leading-none">🐾</span>
+        </div>
+        <span className="text-[9px] font-bold tracking-[0.18em] text-white/55 uppercase">Companion</span>
+      </div>
       <div className="flex gap-2">
         {skills.map((sk) => {
           const cdLeft = !mounted && sk.id ? (abState.cooldowns?.[sk.id] || 0) : 0;

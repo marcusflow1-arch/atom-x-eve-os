@@ -89,8 +89,49 @@ export default function HUDSkillSlots() {
     <>
       <div className="absolute bottom-6 left-6 z-20 pointer-events-auto flex flex-col gap-2">
 
+        {/* Player section divider — vertical line spanning both rows, sitting between slots 4/8 and the SKILLS book, with a face icon at center */}
+        <div
+          className="absolute pointer-events-none flex items-center justify-center"
+          style={{
+            // 4 slots × 58 + 3 gaps × 8 = 256px wide row of slots; place divider just past it
+            left: 256 + 6,
+            top: 0,
+            bottom: 0,
+            width: 18,
+            zIndex: 1,
+          }}
+        >
+          <div
+            className="absolute"
+            style={{
+              left: '50%',
+              top: 0,
+              bottom: 0,
+              width: 1.5,
+              transform: 'translateX(-50%)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 18%, rgba(255,255,255,0.45) 82%, rgba(255,255,255,0) 100%)',
+            }}
+          />
+          <div
+            className="relative flex items-center justify-center rounded-full"
+            style={{
+              width: 18,
+              height: 18,
+              background: 'rgba(0,0,0,0.75)',
+              border: '1.5px solid rgba(255,255,255,0.65)',
+              boxShadow: '0 0 6px rgba(0,0,0,0.6)',
+            }}
+            title="Player Skills"
+          >
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+            </svg>
+          </div>
+        </div>
+
         {/* ── Row 2: Player Character Slots 5–8 + SKILLS book ── */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" style={{ paddingLeft: 0 }}>
           {SLOT_KEYS_TOP.map((key, i) => (
             <SlotButton
               key={key}
@@ -100,10 +141,10 @@ export default function HUDSkillSlots() {
             />
           ))}
 
-          {/* SKILLS book button */}
+          {/* SKILLS book button — nudged right past the player-section divider */}
           <button
             onClick={() => setBookOpen((v) => !v)}
-            className="ml-1 flex flex-col items-center justify-center gap-0.5 rounded-sm transition-all hover:scale-105"
+            className="ml-5 flex flex-col items-center justify-center gap-0.5 rounded-sm transition-all hover:scale-105"
             style={{
               width: 46,
               height: 58,
