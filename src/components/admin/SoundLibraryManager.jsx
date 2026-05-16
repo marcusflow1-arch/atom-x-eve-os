@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Folder, Music, Plus, FolderPlus, Loader2, ChevronRight } from 'lucide-react';
+import { Upload, Trash2, Folder, Music, Plus, FolderPlus, Loader2, ChevronRight, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Game } from '@/entities/Game';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 const SOUND_CATEGORIES = [
@@ -17,21 +19,31 @@ const SOUND_CATEGORIES = [
 export default function SoundLibraryManager() {
   const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState('combat');
+  const [selectedGameId, setSelectedGameId] = useState('');
   const [uploading, setUploading] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [expandedFolders, setExpandedFolders] = useState({});
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
 
-  // Fetch sound files from AssetFile entity
+  // Fetch all games
+  const { data: games = [] } = useQuery({
+    queryKey: ['adminGames'],
+    queryFn: () => Game.list('-created_date'),
+  });
+
+  // Fetch sound files for the selected game
   const { data: soundFiles = [], isLoading, refetch } = useQuery({
-    queryKey: ['soundFiles', activeCategory],
+    queryKey: ['soundFiles', activeCategory, selectedGameId],
     queryFn: async () => {
+      if (!selectedGameId) return [];
       const files = await base44.entities.AssetFile.filter({ 
+        game_id: selectedGameId,
         category: activeCategory,
         type: 'audio'
       }, '-created_date', 100);
       return files;
     },
+    enabled: !!selectedGameId,
   });
 
   const createAssetMutation = useMutation({
@@ -65,6 +77,11 @@ export default function SoundLibraryManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!selectedGameId) {
+      showError('Please select a game first');
+      return;
+    }
+
     if (!file.type.startsWith('audio/')) {
       showError('Please upload an audio file');
       return;
@@ -78,6 +95,7 @@ export default function SoundLibraryManager() {
         name: file.name,
         type: 'audio',
         file_url,
+        game_id: selectedGameId,
         category: activeCategory,
         folder: null,
       });
@@ -91,11 +109,17 @@ export default function SoundLibraryManager() {
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
     
+    if (!selectedGameId) {
+      showError('Please select a game first');
+      return;
+    }
+
     try {
       await createAssetMutation.mutateAsync({
         name: newFolderName,
         type: 'folder',
         file_url: null,
+        game_id: selectedGameId,
         category: activeCategory,
         folder: null,
         is_folder: true,
@@ -119,6 +143,30 @@ export default function SoundLibraryManager() {
 
   return (
     <div className="space-y-6">
+      {/* Game Selector */}
+      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+        <label className="block text-sm font-semibold mb-3 text-slate-300">Select a Game</label>
+        <Select value={selectedGameId} onValueChange={setSelectedGameId}>
+          <SelectTrigger className="bg-slate-900 border-slate-700">
+            <SelectValue placeholder="Choose a game to manage its sounds..." />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 border-slate-700">
+            {games.map(game => (
+              <SelectItem key={game.id} value={game.id}>
+                {game.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {!selectedGameId ? (
+        <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
+          <Gamepad2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="text-lg font-semibold">Please select a game to manage its sounds</p>
+        </div>
+      ) : (
+        <>
       {/* Category Tabs */}
       <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
         <TabsList className="bg-slate-900 border border-slate-800">
@@ -317,6 +365,8 @@ export default function SoundLibraryManager() {
           </TabsContent>
         ))}
       </Tabs>
+        </>
+      )}
     </div>
   );
 }
