@@ -57,7 +57,16 @@ export default function GameView() {
   useEffect(() => {
     let cancelled = false;
     const title = phase === 'world' ? 'game 2' : 'game 1';
-    setThemeAudioUrl(null); // stop current audio immediately on phase change
+
+    // Synchronously stop any currently-playing audio before loading the next theme
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.load();
+      audioRef.current = null;
+    }
+    setThemeAudioUrl(null);
+
     base44.entities.HeroBackground.filter({ title })
       .then((backgrounds) => {
         if (cancelled) return;
