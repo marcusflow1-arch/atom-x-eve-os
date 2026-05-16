@@ -49,7 +49,11 @@ export const DEFAULT_PLAYER_STATS = {
 
 // Compute final combat-ready stats from base stats + equipment multipliers.
 // equipment = array of { strength_mult, hp_mult, spirit_mult, dexterity_mult, elemental_mult }
-export function computeDerivedStats(baseStats, equipment = []) {
+// haloBonuses = optional { strength, dexterity, vitality, spirit, criticalDefense, criticalChance }
+//   — flat additive points that stack BEFORE equipment multipliers, so equipment
+//   scales WITH the halo gains. criticalDefense / criticalChance are passed through
+//   as derived-stat additions.
+export function computeDerivedStats(baseStats, equipment = [], haloBonuses = null) {
   const totals = {
     strength_mult:  0,
     hp_mult:        0,
@@ -66,12 +70,21 @@ export function computeDerivedStats(baseStats, equipment = []) {
     totals.elemental_mult += eq.elemental_mult || 0;
   });
 
-  // Effective invested values (base + equipment bonus rounded down)
-  const effStr  = baseStats.strength  + Math.floor(baseStats.strength  * totals.strength_mult);
-  const effVit  = baseStats.hp        + Math.floor(baseStats.hp        * totals.hp_mult);
-  const effSpr  = baseStats.spirit    + Math.floor(baseStats.spirit    * totals.spirit_mult);
-  const effDex  = baseStats.dexterity + Math.floor(baseStats.dexterity * totals.dexterity_mult);
-  const effElem = baseStats.elemental + Math.floor(baseStats.elemental * totals.elemental_mult);
+  // Halo provides flat stat-point additions that stack into the base before
+  // equipment multipliers apply.
+  const halo = haloBonuses || { strength: 0, dexterity: 0, vitality: 0, spirit: 0, criticalDefense: 0, criticalChance: 0 };
+  const baseStr  = (baseStats.strength  || 0) + (halo.strength  || 0);
+  const baseVit  = (baseStats.hp        || 0) + (halo.vitality  || 0);
+  const baseSpr  = (baseStats.spirit    || 0) + (halo.spirit    || 0);
+  const baseDex  = (baseStats.dexterity || 0) + (halo.dexterity || 0);
+  const baseElem = (baseStats.elemental || 0);
+
+  // Effective invested values (base + halo + equipment bonus rounded down)
+  const effStr  = baseStr  + Math.floor(baseStr  * totals.strength_mult);
+  const effVit  = baseVit  + Math.floor(baseVit  * totals.hp_mult);
+  const effSpr  = baseSpr  + Math.floor(baseSpr  * totals.spirit_mult);
+  const effDex  = baseDex  + Math.floor(baseDex  * totals.dexterity_mult);
+  const effElem = baseElem + Math.floor(baseElem * totals.elemental_mult);
 
   const physDmg = effStr  * STAT_RATES.strength;
   const maxHP   = effVit  * STAT_RATES.hp;
@@ -82,8 +95,11 @@ export function computeDerivedStats(baseStats, equipment = []) {
   // Secondary stats
   const hitChance      = Math.min(95,
     50 + effStr * SECONDARY_RATES.hitPerStr + effVit * SECONDARY_RATES.hitPerVit);
-  // Base 10% crit chance for everyone, plus dexterity scaling.
-  const critChance     = Math.min(75, 10 + effDex * SECONDARY_RATES.critPerDex);
+  // Base 10% crit chance for everyone, plus dexterity scaling, plus Halo additive crit bonus.
+  const critChance     = Math.min(75, 10 + effDex * SECONDARY_RATES.critPerDex + (halo.criticalChance || 0));
+  // Critical Defense — % reduction applied to enemy crit damage when this player is HIT by a crit.
+  // 0 = no reduction, 2.0 = 200% (fully negates crit damage). Capped at 1.0 in practice during damage calc.
+  const criticalDefense = halo.criticalDefense || 0;
   const attackRange    = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
   const hpRegen        = effVit * SECONDARY_RATES.hpRegenPerVit;       // HP / sec
   const manaRegen      = effSpr * SECONDARY_RATES.manaRegenPerSpr;     // mana / sec
@@ -111,6 +127,7 @@ export function computeDerivedStats(baseStats, equipment = []) {
     dotDamagePct,
     elementalDefense,
     damageRollBonus,
+    criticalDefense,
   };
 }
 
@@ -133,10 +150,18 @@ export function calculateHit(attackerStats, defenderStats) {
 }
 
 // Crit-aware variant — returns { damage, crit } so the UI can color crits.
+// Defender's `criticalDefense` (from Halo) reduces the EXTRA crit damage on top
+// of the base hit. 1.0 = fully negates the crit multiplier (crit deals same as a normal hit).
+// >1.0 is clamped to 1.0 so a crit can never deal LESS than a normal hit.
 export function calculateHitWithCrit(attackerStats, defenderStats) {
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
   let raw = attackerStats.totalDamage;
-  if (crit) raw = Math.round(raw * CRIT_MULTIPLIER);
+  if (crit) {
+    const critBonus = raw * (CRIT_MULTIPLIER - 1);
+    const defReduction = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
+    const mitigatedBonus = critBonus * (1 - defReduction);
+    raw = Math.round(raw + mitigatedBonus);
+  }
   const damage = Math.max(1, raw - (defenderStats?.defense || 0));
   return { damage, crit };
 }
