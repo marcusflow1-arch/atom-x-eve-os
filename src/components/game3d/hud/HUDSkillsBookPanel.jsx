@@ -364,13 +364,13 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.88, y: 24 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="fixed z-[71] flex items-center pointer-events-auto"
+            className="fixed z-[71] flex items-center justify-center pointer-events-auto"
             style={{
-              bottom: '110px',
+              top: '50%',
               left: '50%',
-              transform: 'translateX(-50%)',
-              width: 820,
-              height: 520,
+              transform: 'translate(-50%, -50%)',
+              width: '100%',
+              height: '100%',
             }}
           >
             {/* ── Skill Equip Slots (outside-left of book) ── */}
@@ -381,7 +381,10 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             {/* ── Outer book cover (slight 3-D wedge feel via perspective) ── */}
             <div
               className="flex overflow-hidden"
-              style={{ flex: 1 }}
+              style={{
+                width: 720,
+                height: 520,
+              }}
               style={{
                 borderRadius: 18,
                 boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3)',
