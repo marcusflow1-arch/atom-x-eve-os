@@ -1,29 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { subscribeBuffs, isPowerChargeActive } from './activeBuffsStore';
 
 /**
  * PassiveSkillAuraEffects
- * Renders CSS/canvas-based visual aura effects on the player character
- * based on which passive skills are currently active.
+ * Renders CSS/canvas-based visual aura effects on the player character.
  *
- * Skills handled:
- *  - repulsion / gods_repulsion  → Lightning orb ring around player (ozone layer)
- *  - guardian_wall / barrier     → Outline aura around body
- *  - heavens_destruction         → Dark angled lightning ring (tilted ~35°)
- *  - power_charge                → Arm/hand glow
+ * Two categories:
+ *   1. ALWAYS-ON passives (learned skills always show): repulsion, barrier, destruction.
+ *   2. BUFF-BASED skills — only visible while their timer is active:
+ *      - power_charge → hand glow, lasts ~90s OR until 5 hits consumed
  */
 
-// ── Skill ID sets (base name → evolved name mapping) ────────────────────────
+// ── Always-on passive skill IDs ─────────────────────────────────────────────
 const REPULSION_IDS    = new Set(['repulsion', 'gods_repulsion', 'reflective_guard']);
 const BARRIER_IDS      = new Set(['barrier_aura', 'guardian_wall', 'iron_fortress', 'counter_pulse']);
 const DESTRUCTION_IDS  = new Set(['heavens_destruction', 'dark_judgment']);
-const POWER_CHARGE_IDS = new Set(['power_charge', 'berserker_slash', 'titan_breaker']);
 
 export default function PassiveSkillAuraEffects({ activeSkillIds = [] }) {
   const hasRepulsion   = activeSkillIds.some(id => REPULSION_IDS.has(id));
   const hasBarrier     = activeSkillIds.some(id => BARRIER_IDS.has(id));
   const hasDestruction = activeSkillIds.some(id => DESTRUCTION_IDS.has(id));
-  const hasPowerCharge = activeSkillIds.some(id => POWER_CHARGE_IDS.has(id));
+
+  // Power Charge is BUFF-DRIVEN — show the hand glow only while the buff is live.
+  const [hasPowerCharge, setHasPowerCharge] = useState(false);
+  useEffect(() => subscribeBuffs(() => setHasPowerCharge(isPowerChargeActive())), []);
 
   return (
     <div
@@ -324,7 +325,7 @@ function HeavensDestructionAura() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. POWER CHARGE — arm/hand glow around the player's weapon side
+// 4. POWER CHARGE — glowing hands aura (both hands light up around the model)
 // ─────────────────────────────────────────────────────────────────────────────
 function PowerChargeAura() {
   return (
@@ -335,45 +336,52 @@ function PowerChargeAura() {
       transition={{ duration: 0.3 }}
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
     >
-      {/* Right arm region glow — sits at right side, upper portion of character */}
+      {/* Both hand glows — mirror left + right */}
+      <HandGlow side="right" />
+      <HandGlow side="left" />
+    </motion.div>
+  );
+}
+
+function HandGlow({ side }) {
+  const isRight = side === 'right';
+  const sideStyle = isRight ? { right: -10 } : { left: -10 };
+  const sparkAnchor = isRight ? { right: 8 } : { left: 8 };
+  const lineAnchor  = (i) => isRight ? { right: 2 + i * 6 } : { left: 2 + i * 6 };
+
+  return (
+    <>
+      {/* Hand region glow */}
       <motion.div
-        animate={{
-          opacity: [0.6, 1, 0.6],
-          scale: [1, 1.08, 1],
-        }}
+        animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.08, 1] }}
         transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
         style={{
           position: 'absolute',
-          right: -10,
-          top: '20%',
-          width: 55,
-          height: 95,
+          ...sideStyle,
+          top: '38%',
+          width: 50,
+          height: 75,
           borderRadius: '40% 60% 60% 40% / 50% 50% 50% 50%',
-          background: 'radial-gradient(ellipse at center, rgba(255,160,40,0.55) 0%, rgba(255,80,0,0.25) 50%, transparent 75%)',
-          boxShadow: '0 0 20px rgba(255,120,0,0.5), 0 0 40px rgba(255,80,0,0.25)',
+          background: 'radial-gradient(ellipse at center, rgba(255,160,40,0.65) 0%, rgba(255,80,0,0.30) 50%, transparent 75%)',
+          boxShadow: '0 0 22px rgba(255,120,0,0.55), 0 0 44px rgba(255,80,0,0.28)',
           filter: 'blur(2px)',
         }}
       />
       {/* Spark trails emanating from fist */}
       {[...Array(5)].map((_, i) => (
         <motion.div
-          key={i}
-          initial={{ x: 20, y: '30%', opacity: 0, scale: 0 }}
+          key={`${side}-spark-${i}`}
+          initial={{ opacity: 0, scale: 0 }}
           animate={{
-            x: [20, 20 + Math.cos((i / 5) * Math.PI * 2) * 30],
-            y: ['30%', `${30 + Math.sin((i / 5) * Math.PI * 2) * 25}%`],
+            x: [0, Math.cos((i / 5) * Math.PI * 2) * (isRight ? 30 : -30)],
+            y: ['45%', `${45 + Math.sin((i / 5) * Math.PI * 2) * 22}%`],
             opacity: [0, 0.9, 0],
             scale: [0, 1, 0],
           }}
-          transition={{
-            duration: 0.8,
-            repeat: Infinity,
-            delay: i * 0.16,
-            ease: 'easeOut',
-          }}
+          transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.16, ease: 'easeOut' }}
           style={{
             position: 'absolute',
-            right: 8,
+            ...sparkAnchor,
             width: 6,
             height: 6,
             borderRadius: '50%',
@@ -385,20 +393,20 @@ function PowerChargeAura() {
       {/* Forearm wrapping energy lines */}
       {[...Array(3)].map((_, i) => (
         <motion.div
-          key={`line-${i}`}
+          key={`${side}-line-${i}`}
           animate={{ scaleY: [1, 1.1, 1], opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 0.6 + i * 0.2, repeat: Infinity, delay: i * 0.1 }}
           style={{
             position: 'absolute',
-            right: 2 + i * 6,
-            top: '18%',
+            ...lineAnchor(i),
+            top: '35%',
             width: 2,
-            height: '28%',
+            height: '22%',
             background: `linear-gradient(to bottom, transparent, rgba(255,${140 + i * 30},0,0.8), transparent)`,
             borderRadius: 2,
           }}
         />
       ))}
-    </motion.div>
+    </>
   );
 }
