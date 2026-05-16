@@ -3,8 +3,13 @@
 // Equipped slots are persisted to localStorage so they survive game exits.
 // ─────────────────────────────────────────────
 import { SKILLS_DATABASE } from './equipment/skillData';
+import { getActiveWeaponPath, subscribeWeaponBuffs } from './weaponClassBuffStore';
 
-const LS_EQUIPPED_KEY = 'game_equipped_abilities_v2';
+// v3 — per-weapon-class slot loadouts. Each path (damage/defense/ranged) has
+// its own 8 slots so switching weapon class swaps in a fresh hotbar without
+// the player having to re-equip skills every time.
+const LS_EQUIPPED_KEY = 'game_equipped_abilities_v3';
+const LS_EQUIPPED_LEGACY_KEY = 'game_equipped_abilities_v2'; // migration source
 
 export const ABILITY_DEFINITIONS = [
   {
@@ -103,39 +108,77 @@ function buildEditorDefaultSlots() {
   });
 }
 
-function loadEquipped() {
+// Normalize an arbitrary parsed array into an 8-slot array of valid entries.
+function normalizeSlotArray(parsed) {
+  const out = [...DEFAULT_EQUIPPED];
+  if (!Array.isArray(parsed)) return out;
+  for (let i = 0; i < Math.min(parsed.length, SLOT_COUNT); i++) {
+    const v = parsed[i];
+    if (typeof v === 'string' || (v && typeof v === 'object' && v.id)) out[i] = v;
+  }
+  return out;
+}
+
+// Load per-path loadouts: { damage: [...8], defense: [...8], ranged: [...8] }.
+// Migrates from the legacy v2 single-array save by copying it into all 3 paths.
+function loadLoadouts() {
+  const empty = () => [...DEFAULT_EQUIPPED];
+  const editorDefaults = () => buildEditorDefaultSlots();
+  const blank = () => ({ damage: empty(), defense: empty(), ranged: empty() });
   try {
     const raw = localStorage.getItem(LS_EQUIPPED_KEY);
-    if (!raw) {
-      return isEditorEnv() ? buildEditorDefaultSlots() : [...DEFAULT_EQUIPPED];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        damage:  normalizeSlotArray(parsed?.damage),
+        defense: normalizeSlotArray(parsed?.defense),
+        ranged:  normalizeSlotArray(parsed?.ranged),
+      };
     }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [...DEFAULT_EQUIPPED];
-    // Pad/truncate to 8 slots so we can migrate old saves (used to be 4)
-    const out = [...DEFAULT_EQUIPPED];
-    for (let i = 0; i < Math.min(parsed.length, SLOT_COUNT); i++) {
-      const v = parsed[i];
-      if (typeof v === 'string' || (v && typeof v === 'object' && v.id)) out[i] = v;
+    // Migrate from legacy v2 (single shared array)
+    const legacy = localStorage.getItem(LS_EQUIPPED_LEGACY_KEY);
+    if (legacy) {
+      const arr = normalizeSlotArray(JSON.parse(legacy));
+      return { damage: [...arr], defense: [...arr], ranged: [...arr] };
     }
-    // In editor mode, fill any remaining empty slots with defaults
-    if (isEditorEnv() && out.every((s) => !s)) {
-      return buildEditorDefaultSlots();
+    if (isEditorEnv()) {
+      const ed = editorDefaults();
+      return { damage: [...ed], defense: [...ed], ranged: [...ed] };
     }
-    return out;
+    return blank();
   } catch {
-    return isEditorEnv() ? buildEditorDefaultSlots() : [...DEFAULT_EQUIPPED];
+    return isEditorEnv()
+      ? { damage: editorDefaults(), defense: editorDefaults(), ranged: editorDefaults() }
+      : blank();
   }
 }
 
-function saveEquipped(equipped) {
-  try { localStorage.setItem(LS_EQUIPPED_KEY, JSON.stringify(equipped)); } catch {}
+function saveLoadouts(loadouts) {
+  try { localStorage.setItem(LS_EQUIPPED_KEY, JSON.stringify(loadouts)); } catch {}
 }
 
+const initialLoadouts = loadLoadouts();
+const initialPath = getActiveWeaponPath() || 'damage';
+
 let state = {
-  equipped: loadEquipped(),     // (string | { id, name, icon, color, cooldown } | null) × 8 — persisted
-  cooldowns: Array(SLOT_COUNT).fill(0),
-  target: null,                  // { id, name, hp, maxHp, level, x, z, kind: 'enemy'|'player' }
+  loadouts: initialLoadouts,                  // per-path slot arrays
+  activePath: initialPath,                    // current weapon class
+  equipped: initialLoadouts[initialPath] || [...DEFAULT_EQUIPPED], // computed view for active path
+  cooldowns: Array(SLOT_COUNT).fill(0),       // shared — resets on swap to avoid carry-over
+  target: null,                                // { id, name, hp, maxHp, level, x, z, kind: 'enemy'|'player' }
 };
+
+// Re-sync `equipped` whenever the player swaps weapon class.
+subscribeWeaponBuffs(({ activePath }) => {
+  if (!activePath || activePath === state.activePath) return;
+  state = {
+    ...state,
+    activePath,
+    equipped: state.loadouts[activePath] || [...DEFAULT_EQUIPPED],
+    cooldowns: Array(SLOT_COUNT).fill(0),
+  };
+  notify();
+});
 
 const subscribers = new Set();
 const notify = () => subscribers.forEach((fn) => fn({ ...state }));
@@ -149,20 +192,28 @@ export function subscribeAbilities(fn) {
 }
 
 export function equipAbility(slotIndex, abilityId) {
-  const next = [...state.equipped];
+  const path = state.activePath;
+  const next = [...(state.loadouts[path] || DEFAULT_EQUIPPED)];
   next[slotIndex] = abilityId;
-  state = { ...state, equipped: next };
-  saveEquipped(next);
+  const loadouts = { ...state.loadouts, [path]: next };
+  state = { ...state, loadouts, equipped: next };
+  saveLoadouts(loadouts);
   notify();
 }
 
 export function unequipAbility(slotIndex) {
-  const next = [...state.equipped];
+  const path = state.activePath;
+  const next = [...(state.loadouts[path] || DEFAULT_EQUIPPED)];
   next[slotIndex] = null;
-  state = { ...state, equipped: next };
-  saveEquipped(next);
+  const loadouts = { ...state.loadouts, [path]: next };
+  state = { ...state, loadouts, equipped: next };
+  saveLoadouts(loadouts);
   notify();
 }
+
+// Read-only access to all 3 loadouts (for UI that wants to show all classes).
+export function getAllLoadouts() { return state.loadouts; }
+export function getActiveLoadoutPath() { return state.activePath; }
 
 export function setTarget(target) {
   // target.kind defaults to 'enemy' for backwards compatibility
