@@ -19,53 +19,27 @@ export const SCALING_TIERS = {
 
 // Master list of weapons available in the world.
 export const WEAPONS = [
-  { id: 'greatsword',    name: 'Greatsword',       icon: '⚔️' },
-  { id: 'sword_shield',  name: 'Sword & Shield',   icon: '🛡️' },
-  { id: 'hatchet',       name: 'Hatchet',          icon: '🪓' },
-  { id: 'warhammer',     name: 'War Hammer',       icon: '🔨' },
-  { id: 'spear',         name: 'Spear',            icon: '🔱' },
-  { id: 'rapier',        name: 'Rapier',           icon: '🗡️' },
-  { id: 'bow',           name: 'Bow',              icon: '🏹' },
-  { id: 'musket',        name: 'Musket',           icon: '🔫' },
-  { id: 'fire_staff',    name: 'Fire Staff',       icon: '🔥' },
-  { id: 'life_staff',    name: 'Life Staff',       icon: '✨' },
-  { id: 'ice_gauntlet',  name: 'Ice Gauntlet',     icon: '❄️' },
-  { id: 'void_gauntlet', name: 'Void Gauntlet',    icon: '🌌' },
+  { id: 'bow',          name: 'Bow',          icon: '🏹' },
+  { id: 'sword',        name: 'Sword',        icon: '⚔️' },
+  { id: 'dual_blades',  name: 'Dual Blades',  icon: '🗡️' },
 ];
 
 // Per-stat synergy map. For each stat, list the weapons that scale with it
 // and the tier of that scaling. Used by the Attributes tab tooltips/inline list.
 export const STAT_SYNERGY = {
   strength: [
-    { weaponId: 'greatsword',   tier: 'S' },
-    { weaponId: 'warhammer',    tier: 'S' },
-    { weaponId: 'hatchet',      tier: 'A' },
-    { weaponId: 'sword_shield', tier: 'B' },
-    { weaponId: 'spear',        tier: 'B' },
+    { weaponId: 'sword',       tier: 'S' },
+    { weaponId: 'dual_blades', tier: 'A' },
   ],
   dexterity: [
-    { weaponId: 'bow',          tier: 'S' },
-    { weaponId: 'musket',       tier: 'S' },
-    { weaponId: 'rapier',       tier: 'A' },
-    { weaponId: 'spear',        tier: 'A' },
-    { weaponId: 'hatchet',      tier: 'B' },
-    { weaponId: 'sword_shield', tier: 'C' },
+    { weaponId: 'bow',         tier: 'S' },
+    { weaponId: 'dual_blades', tier: 'S' },
+    { weaponId: 'sword',       tier: 'B' },
   ],
-  intelligence: [
-    { weaponId: 'fire_staff',    tier: 'S' },
-    { weaponId: 'ice_gauntlet',  tier: 'S' },
-    { weaponId: 'void_gauntlet', tier: 'A' },
-    { weaponId: 'musket',        tier: 'C' },
-  ],
-  focus: [
-    { weaponId: 'life_staff',    tier: 'S' },
-    { weaponId: 'void_gauntlet', tier: 'A' },
-    { weaponId: 'ice_gauntlet',  tier: 'B' },
-  ],
+  intelligence: [],
+  focus: [],
   constitution: [
-    { weaponId: 'sword_shield', tier: 'A' },
-    { weaponId: 'warhammer',    tier: 'B' },
-    { weaponId: 'greatsword',   tier: 'C' },
+    { weaponId: 'sword',       tier: 'B' },
   ],
 };
 
@@ -90,48 +64,6 @@ export function killsForMasteryLevel(level) {
 
 // Skill tree branch definitions. Each ability node has a level it unlocks at.
 export const WEAPON_TREES = {
-  greatsword: {
-    branches: [
-      {
-        id: 'onslaught', name: 'Onslaught', color: '#ef4444',
-        abilities: [
-          { id: 'gs_heavy_slash',  name: 'Heavy Slash',     unlockLevel: 1,  icon: '⚔️' },
-          { id: 'gs_combo_chain',  name: 'Combo Chain',     unlockLevel: 5,  icon: '🔥' },
-          { id: 'gs_relentless',   name: 'Relentless Rush', unlockLevel: 10, icon: '💢' },
-          { id: 'gs_ultimate',     name: 'World Breaker',   unlockLevel: 20, icon: '💥' },
-        ],
-      },
-      {
-        id: 'guardian', name: 'Guardian', color: '#38bdf8',
-        abilities: [
-          { id: 'gs_parry',        name: 'Steel Parry',     unlockLevel: 3,  icon: '🛡️' },
-          { id: 'gs_iron_skin',    name: 'Iron Skin',       unlockLevel: 8,  icon: '🪨' },
-          { id: 'gs_resolve',      name: 'Unbreakable',     unlockLevel: 15, icon: '⛓️' },
-        ],
-      },
-    ],
-  },
-  sword_shield: {
-    branches: [
-      {
-        id: 'swordmaster', name: 'Swordmaster', color: '#ef4444',
-        abilities: [
-          { id: 'ss_strike',       name: 'Whirling Strike', unlockLevel: 1,  icon: '🗡️' },
-          { id: 'ss_leap',         name: 'Leaping Strike',  unlockLevel: 5,  icon: '🦘' },
-          { id: 'ss_reverse',      name: 'Reverse Stab',    unlockLevel: 10, icon: '⚡' },
-          { id: 'ss_ultimate',     name: 'Final Blow',      unlockLevel: 20, icon: '💥' },
-        ],
-      },
-      {
-        id: 'defender', name: 'Defender', color: '#a855f7',
-        abilities: [
-          { id: 'ss_bash',         name: 'Shield Bash',     unlockLevel: 3,  icon: '🛡️' },
-          { id: 'ss_rush',         name: 'Shield Rush',     unlockLevel: 8,  icon: '🏃' },
-          { id: 'ss_taunt',        name: 'Defiant Stance',  unlockLevel: 15, icon: '😤' },
-        ],
-      },
-    ],
-  },
   bow: {
     branches: [
       {
@@ -153,23 +85,44 @@ export const WEAPON_TREES = {
       },
     ],
   },
-  fire_staff: {
+  sword: {
     branches: [
       {
-        id: 'pyromancer', name: 'Pyromancer', color: '#f97316',
+        id: 'swordmaster', name: 'Swordmaster', color: '#ef4444',
         abilities: [
-          { id: 'fs_fireball',     name: 'Fireball',        unlockLevel: 1,  icon: '🔥' },
-          { id: 'fs_pillar',       name: 'Pillar of Fire',  unlockLevel: 5,  icon: '🗿' },
-          { id: 'fs_meteor',       name: 'Meteor Shower',   unlockLevel: 10, icon: '☄️' },
-          { id: 'fs_ultimate',     name: 'Incinerate',      unlockLevel: 20, icon: '💥' },
+          { id: 'sw_whirl',        name: 'Whirling Strike', unlockLevel: 1,  icon: '⚔️' },
+          { id: 'sw_leap',         name: 'Leaping Strike',  unlockLevel: 5,  icon: '🦘' },
+          { id: 'sw_reverse',      name: 'Reverse Stab',    unlockLevel: 10, icon: '⚡' },
+          { id: 'sw_ultimate',     name: 'Final Blow',      unlockLevel: 20, icon: '💥' },
         ],
       },
       {
-        id: 'fire_mage', name: 'Fire Mage', color: '#a855f7',
+        id: 'duelist', name: 'Duelist', color: '#fbbf24',
         abilities: [
-          { id: 'fs_burnout',      name: 'Burn Out',        unlockLevel: 3,  icon: '🔥' },
-          { id: 'fs_flame_thrower',name: 'Flamethrower',    unlockLevel: 8,  icon: '🌋' },
-          { id: 'fs_passive_burn', name: 'Singe',           unlockLevel: 15, icon: '✨' },
+          { id: 'sw_parry',        name: 'Steel Parry',     unlockLevel: 3,  icon: '🛡️' },
+          { id: 'sw_riposte',      name: 'Riposte',         unlockLevel: 8,  icon: '🗡️' },
+          { id: 'sw_resolve',      name: 'Unbreakable',     unlockLevel: 15, icon: '⛓️' },
+        ],
+      },
+    ],
+  },
+  dual_blades: {
+    branches: [
+      {
+        id: 'tempest', name: 'Tempest', color: '#22d3ee',
+        abilities: [
+          { id: 'db_flurry',       name: 'Flurry',          unlockLevel: 1,  icon: '🌀' },
+          { id: 'db_dash',         name: 'Twin Dash',       unlockLevel: 5,  icon: '💨' },
+          { id: 'db_storm',        name: 'Blade Storm',     unlockLevel: 10, icon: '🌪️' },
+          { id: 'db_ultimate',     name: 'Mirror Dance',    unlockLevel: 20, icon: '✨' },
+        ],
+      },
+      {
+        id: 'assassin', name: 'Assassin', color: '#a855f7',
+        abilities: [
+          { id: 'db_shadow',       name: 'Shadow Step',     unlockLevel: 3,  icon: '🌑' },
+          { id: 'db_bleed',        name: 'Bleeding Edge',   unlockLevel: 8,  icon: '🩸' },
+          { id: 'db_silence',      name: 'Silent Kill',     unlockLevel: 15, icon: '☠️' },
         ],
       },
     ],
