@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen } from 'lucide-react';
-import { subscribeAbilities, ABILITY_DEFINITIONS } from '../abilityStore';
+import { subscribeAbilities, ABILITY_DEFINITIONS, resolveSlotData } from '../abilityStore';
 import HUDSkillsBookPanel from './HUDSkillsBookPanel';
 
 const SLOT_KEYS_BOTTOM = ['1', '2', '3', '4'];
@@ -20,13 +20,13 @@ const ELEMENT_ICONS = {
   shadow:    '🌑',
 };
 
-function SlotButton({ slotKey, abId, cooldown }) {
-  const ab    = ABILITY_DEFINITIONS.find((a) => a.id === abId);
+function SlotButton({ slotKey, slotEntry, cooldown }) {
+  const ab    = resolveSlotData(slotEntry);
   const cd    = cooldown || 0;
   const maxCd = ab?.cooldown || 1;
   const cdPct = Math.min(1, cd / maxCd);
-  const color = ab ? (ELEMENT_COLORS[ab.element] || '#4a90e2') : '#4a90e2';
-  const icon  = ab ? (ELEMENT_ICONS[ab.element]  || '')        : '';
+  const color = ab ? (ab.color || ELEMENT_COLORS[ab.element] || '#4a90e2') : '#4a90e2';
+  const icon  = ab ? (ab.icon || ELEMENT_ICONS[ab.element] || '') : '';
   const onCooldown = cd > 0;
 
   return (
@@ -77,7 +77,7 @@ function SlotButton({ slotKey, abId, cooldown }) {
 }
 
 export default function HUDSkillSlots() {
-  const [abilityState, setAbilityState] = useState({ equipped: [null, null, null, null, null, null, null, null], cooldowns: [0,0,0,0,0,0,0,0] });
+  const [abilityState, setAbilityState] = useState({ equipped: Array(8).fill(null), cooldowns: Array(8).fill(0) });
   const [bookOpen, setBookOpen] = useState(false);
 
   useEffect(() => subscribeAbilities(setAbilityState), []);
@@ -136,7 +136,7 @@ export default function HUDSkillSlots() {
             <SlotButton
               key={key}
               slotKey={key}
-              abId={equipped[4 + i]}
+              slotEntry={equipped[4 + i]}
               cooldown={cooldowns[4 + i]}
             />
           ))}
@@ -180,7 +180,7 @@ export default function HUDSkillSlots() {
             <SlotButton
               key={key}
               slotKey={key}
-              abId={equipped[i]}
+              slotEntry={equipped[i]}
               cooldown={cooldowns[i]}
             />
           ))}

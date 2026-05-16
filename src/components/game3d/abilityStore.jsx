@@ -53,16 +53,25 @@ export const ABILITY_DEFINITIONS = [
   },
 ];
 
-// 4 equip slots — start empty; skills must be learned and equipped by the player.
-const DEFAULT_EQUIPPED = [null, null, null, null];
+// 8 equip slots — start empty; skills must be learned and equipped by the player.
+// Slot can hold either an ABILITY_DEFINITIONS id (string, legacy) OR a full
+// skill object { id, name, icon, color, cooldown } from the Skills Book.
+const SLOT_COUNT = 8;
+const DEFAULT_EQUIPPED = Array(SLOT_COUNT).fill(null);
 
 function loadEquipped() {
   try {
     const raw = localStorage.getItem(LS_EQUIPPED_KEY);
     if (!raw) return [...DEFAULT_EQUIPPED];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length !== 4) return [...DEFAULT_EQUIPPED];
-    return parsed.map((v) => (typeof v === 'string' ? v : null));
+    if (!Array.isArray(parsed)) return [...DEFAULT_EQUIPPED];
+    // Pad/truncate to 8 slots so we can migrate old saves (used to be 4)
+    const out = [...DEFAULT_EQUIPPED];
+    for (let i = 0; i < Math.min(parsed.length, SLOT_COUNT); i++) {
+      const v = parsed[i];
+      if (typeof v === 'string' || (v && typeof v === 'object' && v.id)) out[i] = v;
+    }
+    return out;
   } catch {
     return [...DEFAULT_EQUIPPED];
   }
@@ -73,8 +82,8 @@ function saveEquipped(equipped) {
 }
 
 let state = {
-  equipped: loadEquipped(),     // ability id or null per slot — persisted
-  cooldowns: [0, 0, 0, 0],
+  equipped: loadEquipped(),     // (string | { id, name, icon, color, cooldown } | null) × 8 — persisted
+  cooldowns: Array(SLOT_COUNT).fill(0),
   target: null,                  // { id, name, hp, maxHp, level, x, z, kind: 'enemy'|'player' }
 };
 
@@ -140,10 +149,28 @@ export function tickCooldowns(delta) {
 
 // Start cooldown for a slot
 export function startCooldown(slotIndex) {
-  const ability = ABILITY_DEFINITIONS.find((a) => a.id === state.equipped[slotIndex]);
-  if (!ability) return;
+  const entry = state.equipped[slotIndex];
+  let cooldown = 0;
+  if (typeof entry === 'string') {
+    const ability = ABILITY_DEFINITIONS.find((a) => a.id === entry);
+    cooldown = ability?.cooldown || 0;
+  } else if (entry && typeof entry === 'object') {
+    cooldown = entry.cooldown || 0;
+  }
+  if (!cooldown) return;
   const next = [...state.cooldowns];
-  next[slotIndex] = ability.cooldown;
+  next[slotIndex] = cooldown;
   state = { ...state, cooldowns: next };
   notify();
+}
+
+// Resolve a slot entry → { id, name, icon, color, cooldown } for the HUD.
+// Accepts either a string ability id (legacy) or a full skill object.
+export function resolveSlotData(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    const ab = ABILITY_DEFINITIONS.find((a) => a.id === entry);
+    return ab ? { id: ab.id, name: ab.name, icon: ab.icon, color: ab.color, cooldown: ab.cooldown, element: ab.element } : null;
+  }
+  return entry; // already a full object
 }
