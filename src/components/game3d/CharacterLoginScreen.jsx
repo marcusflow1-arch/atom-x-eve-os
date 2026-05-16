@@ -154,12 +154,21 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoU
   useEffect(() => {
     if (!themeAudioUrl) return;
 
-    if (!audioRef.current) {
-      audioRef.current = new Audio(themeAudioUrl);
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.5;
-      audioRef.current.play().catch(() => {});
-    }
+    const audio = new Audio(themeAudioUrl);
+    audio.loop = true;
+    audio.volume = 0.6;
+    audioRef.current = audio;
+
+    // Try autoplay, else wait for user interaction
+    audio.play().catch(() => {
+      const unmute = () => {
+        audio.play().catch(() => {});
+        window.removeEventListener('click', unmute);
+        window.removeEventListener('keydown', unmute);
+      };
+      window.addEventListener('click', unmute, { once: true });
+      window.addEventListener('keydown', unmute, { once: true });
+    });
 
     return () => {
       if (audioRef.current) {
