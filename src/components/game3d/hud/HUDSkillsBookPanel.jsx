@@ -305,6 +305,17 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
 
   const collectedIds = useMemo(() => {
     const set = new Set();
+    // Editor/preview: every skill is pre-learned for testing
+    const isEditor = (() => {
+      try {
+        const h = window.location.hostname;
+        return h === 'localhost' || h.includes('base44.app') || h.includes('preview');
+      } catch { return false; }
+    })();
+    if (isEditor) {
+      SKILLS_DATABASE.forEach((s) => set.add(s.id));
+      return set;
+    }
     // From loot drops in inventory
     const skillDrops = lootInv['skill'] || [];
     skillDrops.forEach((drop) => {
