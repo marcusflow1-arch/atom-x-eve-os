@@ -451,6 +451,7 @@ export default function Admin() {
         <Tabs defaultValue="backgrounds" className="space-y-6">
           <TabsList className="bg-slate-900 border border-slate-800">
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
+            <TabsTrigger value="sounds">Sound Library</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
             <TabsTrigger value="models">3D Models</TabsTrigger>
             <TabsTrigger value="animations">FBX Animations</TabsTrigger>
@@ -465,7 +466,6 @@ export default function Admin() {
             <TabsTrigger value="asset-files">Asset Files</TabsTrigger>
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
             <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
-            <TabsTrigger value="sounds">Sound Library</TabsTrigger>
             </TabsList>
 
           <TabsContent value="backgrounds">
