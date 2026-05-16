@@ -53,51 +53,50 @@ export default function GameView() {
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
-  // Persistent audio player — survives login → world phase change
+  // Load the appropriate theme URL based on phase ('game 1' for login, 'game 2' for world)
   useEffect(() => {
+    let cancelled = false;
+    const title = phase === 'world' ? 'game 2' : 'game 1';
+    setThemeAudioUrl(null); // stop current audio immediately on phase change
+    base44.entities.HeroBackground.filter({ title })
+      .then((backgrounds) => {
+        if (cancelled) return;
+        if (backgrounds.length > 0) {
+          if (backgrounds[0].audio_url) setThemeAudioUrl(backgrounds[0].audio_url);
+          if (backgrounds[0].video_url) setThemeVideoUrl(backgrounds[0].video_url);
+        }
+      })
+      .catch((err) => console.error(`Failed to load ${title}:`, err));
+    return () => { cancelled = true; };
+  }, [phase]);
+
+  // Single persistent audio player — one instance, owned by audioRef.
+  // Cleans up on URL change AND on component unmount (e.g. navigating away from /GameView).
+  useEffect(() => {
+    // Always tear down any existing audio first to prevent overlap
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = '';
+      audioRef.current.load();
       audioRef.current = null;
     }
     if (!themeAudioUrl) return;
+
     const audio = new Audio(themeAudioUrl);
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
     audio.play().catch((err) => console.warn('Audio play blocked:', err));
+
     return () => {
-      audio.pause();
-      audio.src = '';
+      if (audioRef.current === audio) {
+        audio.pause();
+        audio.src = '';
+        audio.load();
+        audioRef.current = null;
+      }
     };
   }, [themeAudioUrl]);
-
-  // Load Game 1 audio immediately on mount for login screen
-  useEffect(() => {
-    base44.entities.HeroBackground.filter({ title: 'game 1' })
-      .then((backgrounds) => {
-        if (backgrounds.length > 0 && backgrounds[0].audio_url) {
-          console.log('Loading game 1 audio:', backgrounds[0].audio_url);
-          setThemeAudioUrl(backgrounds[0].audio_url);
-        }
-      })
-      .catch((err) => console.error('Failed to load game 1:', err));
-  }, []);
-
-  // Stop Game 1 and load Game 2 when transitioning to world
-  useEffect(() => {
-    if (phase === 'world') {
-      setThemeAudioUrl(null);
-      base44.entities.HeroBackground.filter({ title: 'game 2' })
-        .then((backgrounds) => {
-          if (backgrounds.length > 0) {
-            if (backgrounds[0].audio_url) setThemeAudioUrl(backgrounds[0].audio_url);
-            if (backgrounds[0].video_url) setThemeVideoUrl(backgrounds[0].video_url);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [phase]);
 
 
   // World server join is handled by GameWorldServerManager — it enforces the
