@@ -102,6 +102,11 @@ export function createFrostTornado(scene, targetX, targetZ, groundY = 0) {
   light.position.set(targetX, groundY + 2.5, targetZ);
   group.add(light);
 
+  // Fire a 3-slash DOM effect at the tornado's world position (multi-hit AoE visual)
+  window.dispatchEvent(new CustomEvent('spawnSlashWorld', {
+    detail: { wx: targetX, wy: groundY + 1.0, wz: targetZ, angle: -35, count: 3 }
+  }));
+
   let elapsed = 0;
   let alive = true;
   let funnelRot = 0;

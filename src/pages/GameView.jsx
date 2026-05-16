@@ -35,6 +35,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
 import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
 import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
+import SlashEffectLayer from '../components/game3d/SlashEffect';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -211,6 +212,9 @@ export default function GameView() {
 
       {/* Passive skill aura visual effects rendered over the player */}
       <PassiveSkillAuraEffects activeSkillIds={[...learnedSkillIds]} />
+
+      {/* Slash visual effects — fires on basic attack and skill activations */}
+      <SlashEffectLayer />
     </div>
   );
 }
