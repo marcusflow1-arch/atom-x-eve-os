@@ -20,6 +20,7 @@ export default function SoundLibraryManager() {
   const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState('combat');
   const [selectedGameId, setSelectedGameId] = useState('');
+  const [selectedFolder, setSelectedFolder] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [expandedFolders, setExpandedFolders] = useState({});
@@ -83,7 +84,7 @@ export default function SoundLibraryManager() {
     }
 
     if (!file.type.startsWith('audio/')) {
-      showError('Please upload an audio file');
+      showError('Please upload an audio file (MP3, WAV, OGG, etc.)');
       return;
     }
 
@@ -97,8 +98,9 @@ export default function SoundLibraryManager() {
         file_url,
         game_id: selectedGameId,
         category: activeCategory,
-        folder: null,
+        folder: selectedFolder,
       });
+      setSelectedFolder(null);
     } catch (error) {
       showError(error, 'Upload');
     } finally {
@@ -200,10 +202,25 @@ export default function SoundLibraryManager() {
               {/* Upload & Create Folder Section */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
                 <div className="flex flex-col gap-4">
-                  {/* File Upload */}
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2 text-slate-300">Upload Sound File</label>
+                  {/* File Upload with Folder Selection */}
+                  <div className="flex flex-col gap-2">
+                    <label className="block text-sm font-medium text-slate-300">Upload Sound File to Folder</label>
+                    <div className="flex gap-2">
+                      <Select value={selectedFolder || ''} onValueChange={(val) => setSelectedFolder(val || null)}>
+                        <SelectTrigger className="bg-slate-900 border-slate-700 flex-1">
+                          <SelectValue placeholder="Select folder (optional)" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                          <SelectItem value={null}>Root folder</SelectItem>
+                          {Object.keys(groupedByFolder).map(folderName => 
+                            folderName !== 'root' && (
+                              <SelectItem key={folderName} value={folderName}>
+                                {folderName}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
                       <label className="relative cursor-pointer">
                         <input
                           type="file"
@@ -214,7 +231,7 @@ export default function SoundLibraryManager() {
                         />
                         <Button 
                           disabled={uploading}
-                          className="bg-blue-600 hover:bg-blue-700 w-full"
+                          className="bg-blue-600 hover:bg-blue-700"
                           asChild
                         >
                           <span>
@@ -226,7 +243,7 @@ export default function SoundLibraryManager() {
                             ) : (
                               <>
                                 <Upload className="w-4 h-4 mr-2" />
-                                Upload Audio File
+                                Upload
                               </>
                             )}
                           </span>
