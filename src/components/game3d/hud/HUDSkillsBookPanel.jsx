@@ -1,95 +1,216 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { SKILLS_DATABASE, RARITIES } from '../equipment/skillData';
 
-const CATEGORIES = [
-  { id: 'damage',  label: '⚔️ Sword / Damage', color: '#ef4444' },
-  { id: 'defense', label: '🛡️ Defense',         color: '#3b82f6' },
-  { id: 'ranged',  label: '🏹 Range',            color: '#10b981' },
-  { id: 'passive', label: '✨ Passives & Buffs', color: '#a78bfa' },
-];
-
-// Passives are skills with no damage_pct and type doesn't include offensive
+// ─── Data ──────────────────────────────────────────────────────────────────
 const PASSIVE_IDS = new Set([
   'iron_fortress', 'counter_pulse', 'guardian_wall', 'reflective_guard',
 ]);
 
-function getRarityColor(rarityId) {
-  return RARITIES.find((r) => r.id === rarityId)?.color || '#9ca3af';
+const CHAPTERS = [
+  { id: 'damage',  emoji: '⚔️', title: 'Sword Arts',       subtitle: 'Offensive Combat Skills',  color: '#ef4444', path: 'damage'  },
+  { id: 'defense', emoji: '🛡️', title: 'Guardian Codex',   subtitle: 'Defensive Mastery',        color: '#3b82f6', path: 'defense' },
+  { id: 'ranged',  emoji: '🏹', title: 'Range Disciplines', subtitle: 'Ranged & Piercing Skills', color: '#10b981', path: 'ranged'  },
+  { id: 'passive', emoji: '✨', title: 'Passive Blessings', subtitle: 'Aura & Passive Buffs',     color: '#a78bfa', path: 'passive' },
+];
+
+function getRarityStyle(rarityId) {
+  const r = RARITIES.find((r) => r.id === rarityId);
+  return { color: r?.color || '#9ca3af' };
 }
 
-function SkillCard({ skill }) {
-  const rc = getRarityColor(skill.rarity);
+// ─── Table of Contents page ────────────────────────────────────────────────
+function TOCPage({ onSelectChapter }) {
+  return (
+    <div className="flex flex-col h-full px-6 py-5">
+      <div className="text-center mb-5">
+        <div className="text-3xl mb-1">📖</div>
+        <h2 className="text-gray-700 font-black text-lg tracking-tight">Tome of Skills</h2>
+        <p className="text-gray-400 text-[10px] tracking-widest uppercase mt-0.5">Table of Contents</p>
+      </div>
+
+      <div className="flex flex-col gap-2 flex-1">
+        {CHAPTERS.map((ch, idx) => {
+          const skills = ch.id === 'passive'
+            ? SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id))
+            : SKILLS_DATABASE.filter((s) => s.path === ch.id && !PASSIVE_IDS.has(s.id));
+          const owned = skills.filter((s) => s.owned).length;
+
+          return (
+            <button
+              key={ch.id}
+              onClick={() => onSelectChapter(idx + 1)}
+              className="group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left"
+              style={{
+                background: 'rgba(255,255,255,0.55)',
+                backdropFilter: 'blur(12px)',
+                borderColor: 'rgba(200,200,210,0.7)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-xl flex-shrink-0 border"
+                style={{ background: `${ch.color}18`, borderColor: `${ch.color}40` }}
+              >
+                {ch.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-gray-700 font-bold text-xs">{ch.title}</div>
+                <div className="text-gray-400 text-[9px]">{ch.subtitle}</div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="text-gray-500 font-bold text-[10px]">{owned}/{skills.length}</div>
+                <div className="text-gray-400 text-[8px]">owned</div>
+              </div>
+              <ChevronRight
+                className="w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform"
+                style={{ color: ch.color }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="text-center text-gray-400 text-[9px] mt-3 tracking-wide">
+        Use ← → arrows or click a chapter
+      </div>
+    </div>
+  );
+}
+
+// ─── Single skill row ──────────────────────────────────────────────────────
+function SkillRow({ skill }) {
+  const { color } = getRarityStyle(skill.rarity);
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all"
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all"
       style={{
-        background: `${rc}0d`,
-        borderColor: `${rc}30`,
+        background: skill.owned ? 'rgba(255,255,255,0.6)' : 'rgba(220,220,228,0.3)',
+        backdropFilter: 'blur(8px)',
+        borderColor: skill.owned ? `${color}40` : 'rgba(190,190,200,0.5)',
+        opacity: skill.owned ? 1 : 0.6,
       }}
     >
       <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0 border"
-        style={{ background: `${rc}20`, borderColor: `${rc}44` }}
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0 border"
+        style={{ background: `${color}20`, borderColor: `${color}50` }}
       >
         {skill.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-white text-xs font-semibold truncate">{skill.name}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-gray-700 text-[11px] font-bold truncate">{skill.name}</span>
           {skill.equipped && (
-            <span className="text-[8px] px-1 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
+            <span className="text-[7px] px-1 py-0.5 rounded font-black bg-emerald-100 text-emerald-600 border border-emerald-300 flex-shrink-0 tracking-wider">
               EQ
             </span>
           )}
           {!skill.owned && (
-            <span className="text-[8px] px-1 py-0.5 rounded font-bold bg-white/5 text-white/30 border border-white/10 flex-shrink-0">
+            <span className="text-[7px] px-1 py-0.5 rounded font-bold bg-gray-100 text-gray-400 border border-gray-300 flex-shrink-0">
               LOCKED
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-bold" style={{ color: rc }}>{skill.rarity.toUpperCase()}</span>
-          <span className="text-white/30 text-[8px]">•</span>
-          <span className="text-white/40 text-[9px] truncate">{skill.type}</span>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="text-[8px] font-black tracking-wider" style={{ color }}>{skill.rarity?.toUpperCase()}</span>
+          <span className="text-gray-300 text-[7px]">•</span>
+          <span className="text-gray-400 text-[8px] truncate">{skill.type}</span>
         </div>
       </div>
+      {skill.damage_pct && (
+        <div className="text-right flex-shrink-0">
+          <div className="text-gray-600 font-black text-[10px]">{skill.damage_pct}%</div>
+          <div className="text-gray-400 text-[7px]">dmg</div>
+        </div>
+      )}
     </div>
   );
 }
 
-function CategorySection({ cat, skills }) {
-  if (skills.length === 0) return null;
+// ─── Chapter page ──────────────────────────────────────────────────────────
+function ChapterPage({ chapter }) {
+  const skills = chapter.id === 'passive'
+    ? SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id))
+    : SKILLS_DATABASE.filter((s) => s.path === chapter.id && !PASSIVE_IDS.has(s.id));
+  const owned = skills.filter((s) => s.owned).length;
+
   return (
-    <div className="mb-4">
+    <div className="flex flex-col h-full px-5 py-4">
+      {/* Chapter header */}
       <div
-        className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 px-1"
-        style={{ color: cat.color }}
+        className="flex items-center gap-3 mb-4 pb-3 border-b"
+        style={{ borderColor: `${chapter.color}30` }}
       >
-        {cat.label}
-        <span className="ml-1.5 text-white/30 normal-case tracking-normal">
-          ({skills.filter((s) => s.owned).length}/{skills.length})
-        </span>
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl border"
+          style={{ background: `${chapter.color}18`, borderColor: `${chapter.color}50` }}
+        >
+          {chapter.emoji}
+        </div>
+        <div className="flex-1">
+          <h3 className="text-gray-700 font-black text-sm leading-tight">{chapter.title}</h3>
+          <p className="text-gray-400 text-[9px] mt-0.5">{chapter.subtitle}</p>
+        </div>
+        <div
+          className="text-right px-2.5 py-1.5 rounded-lg border"
+          style={{ background: `${chapter.color}12`, borderColor: `${chapter.color}30` }}
+        >
+          <div className="font-black text-sm leading-none" style={{ color: chapter.color }}>{owned}</div>
+          <div className="text-gray-400 text-[8px] mt-0.5">/{skills.length}</div>
+        </div>
       </div>
-      <div className="flex flex-col gap-1.5">
-        {skills.map((sk) => <SkillCard key={sk.id} skill={sk} />)}
+
+      {/* Skill list */}
+      <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        {skills.length === 0 ? (
+          <div className="flex items-center justify-center h-24 text-gray-400 text-xs">
+            No skills in this chapter yet.
+          </div>
+        ) : (
+          skills.map((sk) => <SkillRow key={sk.id} skill={sk} />)
+        )}
+      </div>
+
+      {/* Page footnote */}
+      <div
+        className="mt-3 pt-2 border-t text-gray-400 text-[8px] text-center"
+        style={{ borderColor: `${chapter.color}20` }}
+      >
+        Equip skills via Equipment → Skills tab
       </div>
     </div>
   );
 }
 
+// ─── Page turn animation wrapper ───────────────────────────────────────────
+const PAGE_VARIANTS = {
+  enter: (dir) => ({
+    x: dir > 0 ? 60 : -60,
+    opacity: 0,
+    rotateY: dir > 0 ? 8 : -8,
+  }),
+  center: { x: 0, opacity: 1, rotateY: 0 },
+  exit: (dir) => ({
+    x: dir > 0 ? -60 : 60,
+    opacity: 0,
+    rotateY: dir > 0 ? -8 : 8,
+  }),
+};
+
+// ─── Main component ────────────────────────────────────────────────────────
 export default function HUDSkillsBookPanel({ open, onClose }) {
-  const [filter, setFilter] = useState('all');
+  const [pageIndex, setPageIndex] = useState(0);   // 0 = TOC, 1–4 = chapters
+  const [direction, setDirection] = useState(1);
 
-  const getSkillsFor = (catId) => {
-    if (catId === 'passive') return SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id));
-    return SKILLS_DATABASE.filter((s) => s.path === catId && !PASSIVE_IDS.has(s.id));
+  const totalPages = CHAPTERS.length + 1; // TOC + 4 chapters
+
+  const goTo = (idx) => {
+    setDirection(idx > pageIndex ? 1 : -1);
+    setPageIndex(idx);
   };
-
-  const visibleCats = filter === 'all'
-    ? CATEGORIES
-    : CATEGORIES.filter((c) => c.id === filter);
+  const prev = () => pageIndex > 0 && goTo(pageIndex - 1);
+  const next = () => pageIndex < totalPages - 1 && goTo(pageIndex + 1);
 
   return (
     <AnimatePresence>
@@ -101,81 +222,130 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[70]"
-            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)' }}
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* Book container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-            className="fixed z-[71] flex flex-col overflow-hidden pointer-events-auto"
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+            className="fixed z-[71] flex flex-col pointer-events-auto overflow-hidden"
             style={{
               bottom: '130px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '420px',
-              maxHeight: '520px',
-              background: 'rgba(8, 10, 18, 0.96)',
-              backdropFilter: 'blur(32px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: '14px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+              width: 400,
+              height: 540,
+              /* Liquid glass — light gray */
+              background: 'rgba(235, 236, 240, 0.72)',
+              backdropFilter: 'blur(40px) saturate(200%) brightness(1.08)',
+              WebkitBackdropFilter: 'blur(40px) saturate(200%) brightness(1.08)',
+              border: '1px solid rgba(255,255,255,0.85)',
+              borderRadius: 20,
+              boxShadow:
+                '0 32px 80px rgba(0,0,0,0.35), 0 2px 0 rgba(255,255,255,0.9) inset, 0 -1px 0 rgba(0,0,0,0.06) inset, 4px 0 12px rgba(0,0,0,0.08) inset',
             }}
           >
+            {/* Book spine accent (left edge) */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1 rounded-l-[20px]"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(160,160,180,0.6) 0%, rgba(200,200,220,0.3) 50%, rgba(160,160,180,0.6) 100%)',
+              }}
+            />
+
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.07] flex-shrink-0">
+            <div
+              className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b"
+              style={{ borderColor: 'rgba(180,180,200,0.5)' }}
+            >
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-bold uppercase tracking-widest text-white/80">Skills Book</span>
-              </div>
-              <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Filter tabs */}
-            <div className="flex gap-1 px-3 pt-2.5 pb-1.5 flex-shrink-0">
-              <button
-                onClick={() => setFilter('all')}
-                className="px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all"
-                style={filter === 'all' ? {
-                  background: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)', color: '#fff',
-                } : {
-                  background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)',
-                }}
-              >
-                All
-              </button>
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setFilter(c.id)}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all"
-                  style={filter === c.id ? {
-                    background: `${c.color}25`, borderColor: `${c.color}55`, color: c.color,
-                  } : {
-                    background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)',
-                  }}
+                <BookOpen className="w-4 h-4" style={{ color: '#6b7280' }} />
+                <span className="text-gray-600 text-[11px] font-black uppercase tracking-[0.15em]">Skills Tome</span>
+                <span
+                  className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.6)', borderColor: 'rgba(180,180,200,0.7)', color: '#9ca3af' }}
                 >
-                  {c.label.split(' ').slice(1).join(' ')}
-                </button>
-              ))}
+                  pg {pageIndex + 1}/{totalPages}
+                </span>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                style={{ background: 'rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.1)' }}
+              >
+                <X className="w-3 h-3 text-gray-500" />
+              </button>
             </div>
 
-            {/* Scrollable skill list */}
-            <div className="flex-1 overflow-y-auto px-3 py-2" style={{ scrollbarWidth: 'none' }}>
-              {visibleCats.map((cat) => (
-                <CategorySection key={cat.id} cat={cat} skills={getSkillsFor(cat.id)} />
-              ))}
+            {/* Animated page content */}
+            <div className="flex-1 relative overflow-hidden" style={{ perspective: '800px' }}>
+              <AnimatePresence custom={direction} mode="wait">
+                <motion.div
+                  key={pageIndex}
+                  custom={direction}
+                  variants={PAGE_VARIANTS}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ transformOrigin: direction > 0 ? 'left center' : 'right center' }}
+                >
+                  {pageIndex === 0 ? (
+                    <TOCPage onSelectChapter={(i) => goTo(i)} />
+                  ) : (
+                    <ChapterPage chapter={CHAPTERS[pageIndex - 1]} />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            {/* Footer hint */}
-            <div className="px-4 py-2 border-t border-white/[0.06] text-[9px] text-white/25 text-center flex-shrink-0">
-              Open Equipment → Skills tab to upgrade or equip skills
+            {/* Footer nav — page turn buttons */}
+            <div
+              className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-t"
+              style={{ borderColor: 'rgba(180,180,200,0.5)', background: 'rgba(220,222,228,0.5)' }}
+            >
+              <button
+                onClick={prev}
+                disabled={pageIndex === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'rgba(180,180,200,0.7)', color: '#6b7280' }}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-semibold">Prev</span>
+              </button>
+
+              {/* Dot indicators */}
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    className="transition-all rounded-full"
+                    style={{
+                      width: i === pageIndex ? 16 : 6,
+                      height: 6,
+                      background: i === pageIndex
+                        ? '#6b7280'
+                        : 'rgba(150,150,170,0.4)',
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={next}
+                disabled={pageIndex === totalPages - 1}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'rgba(180,180,200,0.7)', color: '#6b7280' }}
+              >
+                <span className="text-[10px] font-semibold">Next</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </motion.div>
         </>
