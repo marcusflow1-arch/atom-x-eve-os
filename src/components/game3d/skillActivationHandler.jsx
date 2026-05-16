@@ -14,6 +14,14 @@ import {
 import { SKILLS_DATABASE } from './equipment/skillData';
 import { ABILITY_DEFINITIONS } from './abilityStore';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
+import { getSkillData, MAX_SKILL_LEVEL } from './equipment/skillUpgradeStore';
+
+// Linear interpolation from min→max based on skill's current level (1..MAX).
+function scaleByLevel(min, max, skillId) {
+  const { level = 1 } = getSkillData(skillId);
+  const t = Math.min(1, Math.max(0, (level - 1) / (MAX_SKILL_LEVEL - 1)));
+  return min + (max - min) * t;
+}
 
 const PATH_LABEL = { damage: 'a Damage', defense: 'a Defense', ranged: 'a Ranged' };
 
@@ -120,6 +128,22 @@ const HANDLERS = {
   evasion: () => {
     applyDodgeBuff(0.15, 180);
     return { toast: `💨 Evasion: 15% dodge chance (3min)` };
+  },
+  // Defense single-hit slash — 80% → 100% weapon damage scaling by skill level.
+  shield_slash: () => {
+    const mult = scaleByLevel(0.80, 1.00, 'shield_slash');
+    window.dispatchEvent(new CustomEvent('playerSkillStrike', {
+      detail: { multiplier: mult, hits: 1, skillId: 'shield_slash' },
+    }));
+    return { toast: `⚔️ Shield Slash: ${Math.round(mult * 100)}% weapon damage` };
+  },
+  // Defense three-hit strike — 90% → 110% per hit scaling by skill level.
+  guardian_triple_strike: () => {
+    const mult = scaleByLevel(0.90, 1.10, 'guardian_triple_strike');
+    window.dispatchEvent(new CustomEvent('playerSkillStrike', {
+      detail: { multiplier: mult, hits: 3, skillId: 'guardian_triple_strike' },
+    }));
+    return { toast: `⚔️ Guardian Triple Strike: 3× ${Math.round(mult * 100)}% weapon damage` };
   },
 };
 

@@ -185,7 +185,7 @@ export default function GameWorld3D() {
   const keys = useRef({});
   const drag = useRef({ active: false, x: 0, y: 0 });
   const abilityKeyPressed = useRef(-1); // slot index pressed this frame (-1 = none)
-  const companionAbilityPressed = useRef(null); // ability id pressed this frame (null = none)
+  const companionAbilityPressed = useRef(null); const skillStrikeMultRef = useRef(1.0); // skill strike multiplier (e.g. Shield Slash 80%)
   const activeEffects = useRef([]); // { alive: fn, update: fn }
   const orbit = useRef({ yaw: 0, pitch: 0.4, distance: 4.5 });
   const nearbyNPCRef = useRef(null);
@@ -644,6 +644,8 @@ export default function GameWorld3D() {
       setEnemyCount(enemies.filter((en) => en.alive && !en.dying).length);
     };
     window.addEventListener('webrtcRemoteAction', handleRemoteAction);
+    const handlePlayerSkillStrike = (e) => { const { multiplier = 1.0, hits = 1 } = e.detail || {}; for (let i = 0; i < hits; i++) setTimeout(() => { skillStrikeMultRef.current = multiplier; attackPressed.current = true; }, i * 180); };
+    window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
 
     // Pre-load enemy creature clips once (shared across all enemies).
     // These come from the "creature" folder in admin → AnimationFBX manager
@@ -1479,7 +1481,7 @@ export default function GameWorld3D() {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult());
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current); skillStrikeMultRef.current = 1.0;
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
@@ -1816,11 +1818,9 @@ export default function GameWorld3D() {
 
     return () => {
       cancelAnimationFrame(frameId);
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
+      window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('wheel', onWheel);
       renderer.domElement.removeEventListener('contextmenu', onContext);
