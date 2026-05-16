@@ -34,9 +34,21 @@ export default function GameWorldServerManager() {
     // Join IMMEDIATELY on mount — don't wait for the DB poll. Capacity is
     // soft-enforced in the background polls below. This keeps the UI from
     // hanging on "Connecting..." if the DB query is slow or errors.
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: { channelId: WORLD_CHANNEL, hostId: WORLD_CHANNEL },
-    }));
+    //
+    // IMPORTANT: dispatch on a microtask AND retry once on the next frame.
+    // MultiplayerSystem is a sibling component — its `joinMultiplayerChannel`
+    // listener is registered in a separate useEffect, and React's sibling
+    // mount order is not guaranteed. Without this defer, the event can fire
+    // before the listener exists and the world join is silently lost
+    // (other players never appear). Two dispatches a frame apart guarantees
+    // delivery regardless of mount order.
+    const fireJoin = () => {
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: WORLD_CHANNEL, hostId: WORLD_CHANNEL },
+      }));
+    };
+    Promise.resolve().then(fireJoin);                       // microtask: same tick, after current effects
+    const retryHandle = requestAnimationFrame(fireJoin);    // next frame: belt-and-suspenders
     joinedRef.current = true;
     setStatus('connected');
 
@@ -62,7 +74,7 @@ export default function GameWorldServerManager() {
     checkAndJoin();
     const interval = setInterval(checkAndJoin, POLL_MS);
     toast.success(`Connected to world server`, { id: 'world-join', duration: 2000 });
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => { cancelled = true; clearInterval(interval); cancelAnimationFrame(retryHandle); };
   }, [user?.id]);
 
   // Status pill — bottom-left, liquid-glass style
