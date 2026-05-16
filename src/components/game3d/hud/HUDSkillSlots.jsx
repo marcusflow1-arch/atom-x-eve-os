@@ -141,13 +141,14 @@ export default function HUDSkillSlots() {
             />
           ))}
 
-          {/* SKILLS book button — nudged right past the player-section divider */}
+          {/* SKILLS book button — nudged right past the player-section divider, dropped down so its content aligns with the player-face icon between the two rows */}
           <button
             onClick={() => setBookOpen((v) => !v)}
             className="ml-5 flex flex-col items-center justify-center gap-0.5 rounded-sm transition-all hover:scale-105"
             style={{
               width: 46,
               height: 58,
+              transform: 'translateY(33px)',
               background: bookOpen
                 ? 'linear-gradient(135deg, rgba(167,139,250,0.35) 0%, rgba(167,139,250,0.18) 100%)'
                 : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
