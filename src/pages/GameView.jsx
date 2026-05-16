@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 import CharacterLoginScreen from '../components/game3d/CharacterLoginScreen';
 import GameWorld3D from '../components/game3d/GameWorld3D';
 import GameHUD from '../components/game3d/hud/GameHUD';
@@ -46,8 +47,20 @@ export default function GameView() {
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
+  const [themeAudioUrl, setThemeAudioUrl] = useState(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
+
+  // Fetch game theme audio on mount
+  useEffect(() => {
+    base44.entities.HeroBackground.list('-created_date', 1)
+      .then((backgrounds) => {
+        if (backgrounds.length > 0 && backgrounds[0].audio_url) {
+          setThemeAudioUrl(backgrounds[0].audio_url);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
 
   // World server join is handled by GameWorldServerManager — it enforces the
@@ -168,7 +181,7 @@ export default function GameView() {
   if (phase === 'login') {
     return (
       <div className="fixed inset-0 bg-black">
-        <CharacterLoginScreen onPlay={() => setPhase('world')} />
+        <CharacterLoginScreen onPlay={() => setPhase('world')} themeAudioUrl={themeAudioUrl} />
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate'))}
           className="absolute top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/60 hover:text-white text-xs flex items-center gap-1.5 z-20"
