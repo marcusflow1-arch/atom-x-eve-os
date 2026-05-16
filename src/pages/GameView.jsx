@@ -54,21 +54,21 @@ export default function GameView() {
 
   // Load Game 1 audio immediately on mount for login screen
   useEffect(() => {
-    base44.entities.HeroBackground.filter({ title: 'Game 1' })
+    base44.entities.HeroBackground.filter({ title: 'game 1' })
       .then((backgrounds) => {
         if (backgrounds.length > 0 && backgrounds[0].audio_url) {
-          console.log('Loading Game 1 audio:', backgrounds[0].audio_url);
+          console.log('Loading game 1 audio:', backgrounds[0].audio_url);
           setThemeAudioUrl(backgrounds[0].audio_url);
         }
       })
-      .catch((err) => console.error('Failed to load Game 1:', err));
+      .catch((err) => console.error('Failed to load game 1:', err));
   }, []);
 
   // Stop Game 1 and load Game 2 when transitioning to world
   useEffect(() => {
     if (phase === 'world') {
       setThemeAudioUrl(null);
-      base44.entities.HeroBackground.filter({ title: 'Game 2' })
+      base44.entities.HeroBackground.filter({ title: 'game 2' })
         .then((backgrounds) => {
           if (backgrounds.length > 0) {
             if (backgrounds[0].audio_url) setThemeAudioUrl(backgrounds[0].audio_url);
