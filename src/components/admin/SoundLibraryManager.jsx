@@ -38,7 +38,9 @@ export default function SoundLibraryManager() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sound-library-assets'] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['sound-library-assets'] });
+      }, 300);
       setNewFolderName('');
       setShowFolderInput(false);
       toast.success('Folder created');
@@ -86,7 +88,9 @@ export default function SoundLibraryManager() {
       toast.success('File uploaded');
       setNewFileName('');
       setShowFileInput(false);
-      queryClient.invalidateQueries({ queryKey: ['sound-library-assets'] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['sound-library-assets'] });
+      }, 300);
     } catch (error) {
       toast.error('Upload failed');
     } finally {
