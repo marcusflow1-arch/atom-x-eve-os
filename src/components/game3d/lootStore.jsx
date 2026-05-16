@@ -1,4 +1,5 @@
 // ─── Loot Store — Drop definitions, RNG, and inventory state ─────────────────
+import { SKILLS_DATABASE } from './equipment/skillData';
 
 export const LOOT_RARITIES = {
   common:    { color: '#9ca3af', hex: 0x9ca3af, glow: 0x9ca3af, label: 'Common'    },
@@ -151,7 +152,12 @@ function isEditorEnv() {
 function loadInitialLearned() {
   const base = loadLearned();
   if (isEditorEnv()) {
+    // 1. Grant every skill loot-table id (matches inventory-based detection)
     LOOT_TABLE.forEach((item) => { if (item.category === 'skill') base.add(item.id); });
+    // 2. Also grant every SKILLS_DATABASE id directly so the Skills Book shows
+    //    every chapter skill (including passives like iron_fortress, counter_pulse
+    //    that aren't in the loot table).
+    SKILLS_DATABASE.forEach((s) => base.add(s.id));
   }
   return base;
 }
