@@ -3,7 +3,7 @@
 // allocateStat() is callable from the menu and feeds back into the world's stats.
 // Persists level/xp/baseStats/unspentPoints/hp to localStorage so progression
 // survives logout and page reloads.
-import { DEFAULT_PLAYER_STATS, computeDerivedStats } from './statsSystem';
+import { DEFAULT_PLAYER_STATS, computeDerivedStats, migrateBaseStats } from './statsSystem';
 
 const STORAGE_KEY = 'wwm_player_progression_v1';
 const STAT_POINTS_PER_LEVEL = 3;
@@ -27,7 +27,8 @@ let state = (() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      const base = { ...DEFAULT_PLAYER_STATS, ...(parsed.baseStats || {}) };
+      // Migrate legacy stat keys (hp/spirit/elemental) → new NW keys.
+      const base = migrateBaseStats(parsed.baseStats);
       const derived = computeDerivedStats(base, []);
       return {
         level: parsed.level || 1,
