@@ -8,9 +8,12 @@ import {
   applyCritDamageBonus,
   applyAttackSpeedBuff,
   applyReflectBuff,
+  applyRepulsionBuff,
+  applyBarrierBuff,
+  applyDestructionBuff,
   applyPowerCharge,
   applyDodgeBuff,
-} from './activeBuffsStore';
+} from './activeBuffsStore.jsx';
 
 // Activation logic per skill id. Each handler receives no args and uses the
 // player HUD store (max HP) where needed.
@@ -41,6 +44,42 @@ const HANDLERS = {
   gods_deflection: () => {
     applyReflectBuff(0.03, 180);
     return { toast: `✨ God's Deflection: 3% reflect chance (3min)` };
+  },
+  repulsion: () => {
+    applyRepulsionBuff(20);
+    return { toast: `⚡ Repulsion: aura active (20s)` };
+  },
+  gods_repulsion: () => {
+    applyRepulsionBuff(20);
+    return { toast: `⚡ God's Repulsion: aura active (20s)` };
+  },
+  reflective_guard: () => {
+    applyRepulsionBuff(20);
+    return { toast: `⚡ Reflective Guard: aura active (20s)` };
+  },
+  barrier_aura: () => {
+    applyBarrierBuff(20);
+    return { toast: `🛡️ Barrier Aura: shield field active (20s)` };
+  },
+  guardian_wall: () => {
+    applyBarrierBuff(20);
+    return { toast: `🛡️ Guardian Wall: shield field active (20s)` };
+  },
+  iron_fortress: () => {
+    applyBarrierBuff(20);
+    return { toast: `🛡️ Iron Fortress: shield field active (20s)` };
+  },
+  counter_pulse: () => {
+    applyBarrierBuff(20);
+    return { toast: `🛡️ Counter Pulse: shield field active (20s)` };
+  },
+  heavens_destruction: () => {
+    applyDestructionBuff(20);
+    return { toast: `🌑 Heaven's Destruction: aura active (20s)` };
+  },
+  dark_judgment: () => {
+    applyDestructionBuff(20);
+    return { toast: `🌑 Dark Judgment: aura active (20s)` };
   },
   haste: () => {
     applyAttackSpeedBuff(0.01, 15); // level-1 value; upgrades later scale this

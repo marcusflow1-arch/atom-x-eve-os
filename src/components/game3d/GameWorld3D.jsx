@@ -43,7 +43,7 @@ import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { useCallback } from 'react';
-import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore'; import { tryActivateBookSkill } from './skillActivationHandler'; import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './activeBuffsStore';
+import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore'; import { tryActivateBookSkill } from './skillActivationHandler'; import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './activeBuffsStore.jsx';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.

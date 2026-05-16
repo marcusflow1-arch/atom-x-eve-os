@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { subscribeBuffs, isPowerChargeActive } from './activeBuffsStore';
+import { subscribeBuffs, isPowerChargeActive, isRepulsionActive, isBarrierActive, isDestructionActive } from './activeBuffsStore.jsx';
 
 /**
  * PassiveSkillAuraEffects
@@ -12,19 +12,22 @@ import { subscribeBuffs, isPowerChargeActive } from './activeBuffsStore';
  *      - power_charge → hand glow, lasts ~90s OR until 5 hits consumed
  */
 
-// ── Always-on passive skill IDs ─────────────────────────────────────────────
-const REPULSION_IDS    = new Set(['repulsion', 'gods_repulsion', 'reflective_guard']);
-const BARRIER_IDS      = new Set(['barrier_aura', 'guardian_wall', 'iron_fortress', 'counter_pulse']);
-const DESTRUCTION_IDS  = new Set(['heavens_destruction', 'dark_judgment']);
+export default function PassiveSkillAuraEffects() {
+  const [buffState, setBuffState] = useState({
+    hasRepulsion: false,
+    hasBarrier: false,
+    hasDestruction: false,
+    hasPowerCharge: false,
+  });
 
-export default function PassiveSkillAuraEffects({ activeSkillIds = [] }) {
-  const hasRepulsion   = activeSkillIds.some(id => REPULSION_IDS.has(id));
-  const hasBarrier     = activeSkillIds.some(id => BARRIER_IDS.has(id));
-  const hasDestruction = activeSkillIds.some(id => DESTRUCTION_IDS.has(id));
+  useEffect(() => subscribeBuffs(() => setBuffState({
+    hasRepulsion: isRepulsionActive(),
+    hasBarrier: isBarrierActive(),
+    hasDestruction: isDestructionActive(),
+    hasPowerCharge: isPowerChargeActive(),
+  })), []);
 
-  // Power Charge is BUFF-DRIVEN — show the hand glow only while the buff is live.
-  const [hasPowerCharge, setHasPowerCharge] = useState(false);
-  useEffect(() => subscribeBuffs(() => setHasPowerCharge(isPowerChargeActive())), []);
+  const { hasRepulsion, hasBarrier, hasDestruction, hasPowerCharge } = buffState;
 
   return (
     <div

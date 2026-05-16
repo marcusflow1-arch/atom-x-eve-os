@@ -13,13 +13,13 @@ import { subscribeBuffs } from '../activeBuffsStore';
  */
 
 const BUFF_META = {
-  shield:        { icon: '🛡️', label: 'Shield',        color: '#60a5fa' },
-  focus:         { icon: '🧠', label: 'Focus',         color: '#f59e0b' },
-  crit:          { icon: '🎯', label: 'Crit Dmg',      color: '#ef4444' },
-  haste:         { icon: '⚡', label: 'Haste',         color: '#fbbf24' },
-  reflect:       { icon: '✨', label: 'Reflect',       color: '#a78bfa' },
-  power_charge:  { icon: '🔥', label: 'Power Charge',  color: '#fb923c' },
-  dodge:         { icon: '💨', label: 'Evasion',       color: '#22d3ee' },
+  shield:        { icon: '🛡️', label: 'Aegis Shield',      color: '#60a5fa' },
+  focus:         { icon: '🧠', label: 'Focus',             color: '#f59e0b' },
+  crit:          { icon: '🎯', label: 'Decisive Blow',     color: '#ef4444' },
+  haste:         { icon: '⚡', label: 'Haste',             color: '#fbbf24' },
+  reflect:       { icon: '✨', label: "God's Deflection", color: '#a78bfa' },
+  power_charge:  { icon: '🔥', label: 'Power Charge',      color: '#fb923c' },
+  dodge:         { icon: '💨', label: 'Evasion',           color: '#22d3ee' },
 };
 
 function fmt(sec) {
@@ -47,7 +47,7 @@ export default function ActiveBuffsStrip() {
   if (buffs.shield > 0 && buffs.shieldExpiresAt > n)
     active.push({ key: 'shield', remaining: (buffs.shieldExpiresAt - n) / 1000 });
   if (buffs.damageBonusHitsLeft > 0)
-    active.push({ key: 'focus', remaining: null, hits: buffs.damageBonusHitsLeft });
+    active.push({ key: 'focus', remaining: buffs.damageBonusExpiresAt > n ? (buffs.damageBonusExpiresAt - n) / 1000 : null, hits: buffs.damageBonusHitsLeft });
   if (buffs.critDamageBonusPct > 0 && buffs.critDamageBonusExpiresAt > n)
     active.push({ key: 'crit', remaining: (buffs.critDamageBonusExpiresAt - n) / 1000 });
   if (buffs.attackSpeedBonusPct > 0 && buffs.attackSpeedExpiresAt > n)
@@ -73,7 +73,7 @@ export default function ActiveBuffsStrip() {
               animate={{ opacity: 1, scale: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.6, x: 8 }}
               transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded"
+              className="relative flex items-center justify-center w-8 h-8 rounded"
               style={{
                 background: `linear-gradient(135deg, ${meta.color}33 0%, ${meta.color}11 100%)`,
                 border: `1px solid ${meta.color}88`,
@@ -81,13 +81,13 @@ export default function ActiveBuffsStrip() {
               }}
               title={meta.label}
             >
-              <span className="text-[12px] leading-none">{meta.icon}</span>
               <span
-                className="text-[9px] font-black tabular-nums leading-none"
+                className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-black tabular-nums leading-none whitespace-nowrap"
                 style={{ color: meta.color, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
               >
                 {remaining !== null ? fmt(remaining) : `×${hits}`}
               </span>
+              <span className="text-[14px] leading-none">{meta.icon}</span>
             </motion.div>
           );
         })}
