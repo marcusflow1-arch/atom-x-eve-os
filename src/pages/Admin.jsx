@@ -128,8 +128,11 @@ export default function Admin() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.includes('video/mp4')) {
-      showError('Please upload an MP4 file');
+    const isVideo = file.type.includes('video/mp4');
+    const isAudio = file.type.includes('audio/mpeg');
+
+    if (!isVideo && !isAudio) {
+      showError('Please upload an MP4 video or MP3 audio file');
       return;
     }
 
@@ -137,11 +140,18 @@ export default function Admin() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
-      await createMutation.mutateAsync({
-        title: newTitle || file.name.replace('.mp4', ''),
-        video_url: file_url,
+      const data = {
+        title: newTitle || file.name.split('.')[0],
         is_active: true,
-      });
+      };
+
+      if (isVideo) {
+        data.video_url = file_url;
+      } else if (isAudio) {
+        data.audio_url = file_url;
+      }
+
+      await createMutation.mutateAsync(data);
       
       setNewTitle('');
       showSuccess('Background uploaded successfully!');
@@ -498,31 +508,31 @@ export default function Admin() {
               />
               <label className="relative cursor-pointer">
                 <input
-                  type="file"
-                  accept="video/mp4"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <Button 
-                  disabled={uploading}
-                  className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
-                  asChild
-                >
-                  <span>
-                    {uploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload MP4
-                      </>
-                    )}
-                  </span>
-                </Button>
+                   type="file"
+                   accept="video/mp4,audio/mpeg"
+                   onChange={handleFileUpload}
+                   className="hidden"
+                   disabled={uploading}
+                 />
+                 <Button 
+                   disabled={uploading}
+                   className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
+                   asChild
+                 >
+                   <span>
+                     {uploading ? (
+                       <>
+                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                         Uploading...
+                       </>
+                     ) : (
+                       <>
+                         <Upload className="w-4 h-4 mr-2" />
+                         Upload MP4 or MP3
+                       </>
+                     )}
+                   </span>
+                 </Button>
               </label>
             </div>
           </div>
