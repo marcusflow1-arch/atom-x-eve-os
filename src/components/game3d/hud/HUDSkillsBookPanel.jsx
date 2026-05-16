@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, BookOpen, Zap, Shield, Target, Sparkles } from 'lucide-react';
 import { SKILLS_DATABASE, RARITIES } from '../equipment/skillData';
-import { getLootInventory, subscribeLootInventory } from '../lootStore';
+import { getLootInventory, subscribeLootInventory, getLearnedSkillIds, subscribeLearnedSkills } from '../lootStore';
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const PASSIVE_IDS = new Set([
@@ -282,20 +282,30 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
   const [direction, setDirection] = useState(1);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [lootInv, setLootInv] = useState(getLootInventory());
+  const [learnedIds, setLearnedIds] = useState(getLearnedSkillIds());
 
   useEffect(() => subscribeLootInventory(setLootInv), []);
+  useEffect(() => subscribeLearnedSkills(setLearnedIds), []);
 
   const collectedIds = useMemo(() => {
-    const skillDrops = lootInv['skill'] || [];
     const set = new Set();
+    // From loot drops in inventory
+    const skillDrops = lootInv['skill'] || [];
     skillDrops.forEach((drop) => {
       const match = SKILLS_DATABASE.find(
         (s) => s.name.toLowerCase() === drop.name.toLowerCase() || drop.id?.includes(s.id)
       );
       if (match) set.add(match.id);
     });
+    // From explicitly learned skills (right-click → Learn)
+    learnedIds.forEach((lootId) => {
+      const match = SKILLS_DATABASE.find(
+        (s) => lootId.includes(s.id) || lootId === `skill_${s.id}`
+      );
+      if (match) set.add(match.id);
+    });
     return set;
-  }, [lootInv]);
+  }, [lootInv, learnedIds]);
 
   const goToChapter = (idx) => {
     setDirection(idx !== null && (chapterIdx === null || idx > chapterIdx) ? 1 : -1);

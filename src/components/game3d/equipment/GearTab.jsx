@@ -23,51 +23,130 @@ import {
   equipCompanionGear,
   getCompanionItem,
 } from './companionFusionStore';
-import { Sparkles, GitBranch } from 'lucide-react';
-import { getLootInventory, subscribeLootInventory, LOOT_RARITIES } from '../lootStore';
+import { Sparkles, GitBranch, BookOpen } from 'lucide-react';
+import { getLootInventory, subscribeLootInventory, LOOT_RARITIES, learnSkill, getLearnedSkillIds, subscribeLearnedSkills } from '../lootStore';
 
 const COMPANION_SLOT_LABELS = { saddle: 'Saddle', armor: 'Armor', charm: 'Charm' };
 
+// ── Small context menu for loot items ────────────────────────────────────
+function LootContextMenu({ item, x, y, onLearn, onInspect, onClose, isLearned }) {
+  React.useEffect(() => {
+    const close = () => onClose();
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [onClose]);
+  return (
+    <div
+      className="fixed z-[200] rounded-lg overflow-hidden border shadow-2xl"
+      style={{ left: x, top: y, minWidth: 140, background: 'rgba(15,17,22,0.96)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(14px)' }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="px-3 py-1.5 border-b text-[9px] font-bold tracking-widest text-white/40 uppercase" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {item.name}
+      </div>
+      <button
+        onClick={() => { onInspect(); onClose(); }}
+        className="w-full px-3 py-2 text-left text-[11px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors flex items-center gap-2"
+      >
+        🔍 Inspect
+      </button>
+      {item.category === 'skill' && (
+        <button
+          onClick={() => { if (!isLearned) { onLearn(); } onClose(); }}
+          className={`w-full px-3 py-2 text-left text-[11px] transition-colors flex items-center gap-2 ${
+            isLearned
+              ? 'text-emerald-400/60 cursor-default'
+              : 'text-emerald-400 hover:bg-emerald-400/[0.08] hover:text-emerald-300'
+          }`}
+        >
+          <BookOpen className="w-3 h-3" />
+          {isLearned ? 'Already Learned' : 'Learn Skill'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Inline loot inventory grid for Skills / Materials extra slots ──────────
-function LootSlotInventory({ category, label, inv, selected, onSelect }) {
+// Matches the same box style as GearInventoryGrid (rounded-sm, 7-col, same bg/borders)
+function LootSlotInventory({ category, label, inv, selected, onSelect, learnedIds }) {
+  const [ctxMenu, setCtxMenu] = React.useState(null); // { item, x, y }
   const items = inv[category] || [];
+  const totalSlots = 35;
+
   return (
     <div>
-      <div className="text-[10px] text-white/40 tracking-[0.15em] uppercase mb-2 flex items-center gap-1.5">
-        {label}
-        <span className="text-white/25">— {items.length} item{items.length !== 1 ? 's' : ''}</span>
+      <div className="flex items-center justify-center gap-3 mb-3">
+        <span className="h-px flex-1 bg-white/10" />
+        <span className="text-white/60 text-[12px] tracking-[0.25em] uppercase">{label}</span>
+        <span className="h-px flex-1 bg-white/10" />
       </div>
+
       {items.length === 0 ? (
         <div className="text-white/25 text-xs text-center py-6">
           No {category === 'skill' ? 'skill scrolls' : 'materials'} collected yet.<br />
           <span className="text-[10px] opacity-70">Defeat enemies to find drops.</span>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-1.5 max-h-[300px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-          {items.map((item, idx) => {
-            const r = LOOT_RARITIES[item.rarity] || LOOT_RARITIES.common;
-            const isSel = selected?.dropId === item.dropId && selected?.collectedAt === item.collectedAt;
+        <div className="grid grid-cols-7 gap-1.5 max-h-[300px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+          {Array.from({ length: totalSlots }).map((_, i) => {
+            const item = items[i];
+            const r = item ? (LOOT_RARITIES[item.rarity] || LOOT_RARITIES.common) : null;
+            const isSel = item && selected?.dropId === item.dropId && selected?.collectedAt === item.collectedAt;
+            const isLearned = item && learnedIds?.has(item.id);
             return (
               <button
-                key={`${item.dropId}-${idx}`}
-                onClick={() => onSelect(isSel ? null : item)}
-                title={item.name}
-                className="aspect-square rounded-lg flex flex-col items-center justify-center text-xl border transition-all p-1 gap-0.5"
-                style={isSel ? {
-                  background: `${r.color}22`,
-                  borderColor: `${r.color}65`,
-                  boxShadow: `0 0 12px ${r.color}30`,
-                } : {
-                  background: 'rgba(255,255,255,0.04)',
-                  borderColor: 'rgba(255,255,255,0.10)',
+                key={i}
+                onClick={() => item && onSelect(isSel ? null : item)}
+                onContextMenu={(e) => {
+                  if (!item) return;
+                  e.preventDefault();
+                  setCtxMenu({ item, x: e.clientX, y: e.clientY });
                 }}
+                disabled={!item}
+                title={item?.name}
+                className={`relative aspect-square rounded-sm transition-all flex flex-col items-center justify-center ${
+                  isSel
+                    ? 'border-2 border-amber-300/80 bg-white/[0.10]'
+                    : item
+                    ? 'border border-white/15 bg-white/[0.06] hover:bg-white/[0.10] hover:border-white/30 cursor-pointer'
+                    : 'border border-white/10 bg-white/[0.03]'
+                }`}
               >
-                <span>{item.icon}</span>
-                <span className="text-[7px] text-white/45 truncate w-full text-center leading-tight">{item.name}</span>
+                {item && (
+                  <>
+                    <span className="text-base leading-none">{item.icon}</span>
+                    <span className="text-[6px] text-white/40 truncate w-full text-center leading-tight px-0.5 mt-0.5">{item.name.split(' ')[0]}</span>
+                    {/* Rarity corner pip */}
+                    <span className="absolute top-0.5 right-0.5 w-0 h-0"
+                      style={{
+                        borderLeft: '3px solid transparent',
+                        borderRight: '3px solid transparent',
+                        borderBottom: `4px solid ${r?.color || '#9ca3af'}`,
+                      }}
+                    />
+                    {/* Learned checkmark */}
+                    {isLearned && (
+                      <span className="absolute bottom-0.5 right-0.5 text-[8px] leading-none">✓</span>
+                    )}
+                  </>
+                )}
               </button>
             );
           })}
         </div>
+      )}
+
+      {ctxMenu && (
+        <LootContextMenu
+          item={ctxMenu.item}
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          isLearned={learnedIds?.has(ctxMenu.item.id)}
+          onLearn={() => { learnSkill(ctxMenu.item); onSelect(ctxMenu.item); }}
+          onInspect={() => onSelect(ctxMenu.item)}
+          onClose={() => setCtxMenu(null)}
+        />
       )}
     </div>
   );
@@ -154,6 +233,8 @@ export default function GearTab({ state }) {
   const [lootInv, setLootInv] = useState(getLootInventory());
   useEffect(() => subscribeLootInventory(setLootInv), []);
   const [selectedLootItem, setSelectedLootItem] = useState(null);
+  const [learnedIds, setLearnedIds] = useState(getLearnedSkillIds());
+  useEffect(() => subscribeLearnedSkills(setLearnedIds), []);
 
   // Track inspected companion item per-slot
   const [inspectedCompanionBySlot, setInspectedCompanionBySlot] = useState({});
@@ -205,10 +286,11 @@ export default function GearTab({ state }) {
               {state.selectedGearCategory === '__skills' || state.selectedGearCategory === '__materials' ? (
                 <LootSlotInventory
                   category={state.selectedGearCategory === '__skills' ? 'skill' : 'material'}
-                  label={state.selectedGearCategory === '__skills' ? '⚔️ Skills' : '💠 Materials'}
+                  label={state.selectedGearCategory === '__skills' ? 'Skills' : 'Materials'}
                   inv={lootInv}
                   selected={selectedLootItem}
                   onSelect={setSelectedLootItem}
+                  learnedIds={learnedIds}
                 />
               ) : (
                 <GearInventoryGrid

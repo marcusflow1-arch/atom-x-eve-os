@@ -117,3 +117,21 @@ export function subscribeLootInventory(fn) {
   _listeners.add(fn);
   return () => _listeners.delete(fn);
 }
+
+// ── Learned skills — IDs of skill scroll items the player has "learned" ──
+// Stored as a Set of skill loot item IDs (matches LOOT_TABLE id, e.g. 'skill_berserker_slash')
+let _learnedSkillIds = new Set();
+const _learnListeners = new Set();
+
+export function getLearnedSkillIds() { return _learnedSkillIds; }
+
+export function learnSkill(lootItem) {
+  if (_learnedSkillIds.has(lootItem.id)) return; // already learned
+  _learnedSkillIds = new Set([..._learnedSkillIds, lootItem.id]);
+  _learnListeners.forEach((fn) => fn(_learnedSkillIds));
+}
+
+export function subscribeLearnedSkills(fn) {
+  _learnListeners.add(fn);
+  return () => _learnListeners.delete(fn);
+}
