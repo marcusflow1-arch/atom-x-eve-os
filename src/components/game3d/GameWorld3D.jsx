@@ -43,7 +43,7 @@ import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { useCallback } from 'react';
-import { fireSlash } from './SlashEffect';
+import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
 
 // XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
@@ -1091,7 +1091,7 @@ export default function GameWorld3D() {
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const isRunning = !!keys.current['shift'];
-        const speed = (isRunning ? RUN_SPEED : WALK_SPEED) * speedMult;
+        const speed = (isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED) * speedMult;
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -1226,8 +1226,8 @@ export default function GameWorld3D() {
           stopLoopSound('player_walk');
         }
 
-        // Broadcast live player position + facing to the HUD minimap store
-        setPlayerPosition({ x: model.position.x, z: model.position.z, yaw: orbit.current.yaw });
+        // Broadcast live player position + facing to the HUD minimap store (isRunning consumed by WindRunEffect)
+        setPlayerPosition({ x: model.position.x, z: model.position.z, yaw: orbit.current.yaw, isRunning: isRunning && isMoving });
         window.__localPlayerPos = { x: model.position.x, y: model.position.y, z: model.position.z };
 
         // Broadcast to multiplayer presence system (used by MultiplayerSystem).

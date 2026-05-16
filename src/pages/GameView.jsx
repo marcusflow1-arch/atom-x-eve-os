@@ -37,6 +37,7 @@ import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffect
 import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
 import SlashEffectLayer from '../components/game3d/SlashEffect';
 import PauseMenu from '../components/game3d/PauseMenu';
+import WindRunEffect from '../components/game3d/WindRunEffect';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -280,6 +281,9 @@ export default function GameView() {
 
       {/* Slash visual effects — fires on basic attack and skill activations */}
       <SlashEffectLayer />
+
+      {/* Wind streaks while sprinting (Shift-to-Run skill) */}
+      <WindRunEffect />
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu
