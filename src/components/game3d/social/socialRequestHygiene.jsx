@@ -104,7 +104,24 @@ export const sendCleanRequest = async ({ kind, sender, receiver, extraFields = {
   // Reserve the slot OPTIMISTICALLY so rapid double-clicks can't slip through.
   lastSentAt.set(key, Date.now());
 
-  // 2. Single create call
+  // 2. Pre-flight: delete any existing request between this sender→receiver
+  //    for this kind. On the live published app, a stale pending/declined row
+  //    blocks the create (unique constraint or RLS conflict). We must clear it
+  //    synchronously BEFORE the create so the DB is clean.
+  try {
+    const existing = await base44.entities.SocialRequest.filter({
+      kind,
+      sender_id: sender.id,
+      receiver_id: receiver.id,
+    });
+    for (const row of existing || []) {
+      await base44.entities.SocialRequest.delete(row.id).catch(() => {});
+    }
+  } catch {
+    // Non-fatal — proceed even if cleanup fails
+  }
+
+  // 3. Single create call
   try {
     const request = await base44.entities.SocialRequest.create({
       kind,
@@ -115,9 +132,6 @@ export const sendCleanRequest = async ({ kind, sender, receiver, extraFields = {
       status: 'pending',
       ...extraFields,
     });
-
-    // 3. Background sweep (fire-and-forget)
-    backgroundCleanup({ kind, senderId: sender.id, receiverId: receiver.id });
 
     return request;
   } catch (e) {
