@@ -28,6 +28,7 @@ export default function SoundLibraryManager() {
         name: folderPath.split('/').pop(),
         type: 'folder',
         folder_path: folderPath,
+        url: `folder://${folderPath}`,
       });
     },
     onSuccess: () => {
