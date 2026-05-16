@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import CharacterLoginScreen from '../components/game3d/CharacterLoginScreen';
+import GameSettingsMenu from '../components/game3d/GameSettingsMenu';
 import GameWorld3D from '../components/game3d/GameWorld3D';
 import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
@@ -48,6 +49,10 @@ export default function GameView() {
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [soundVolume, setSoundVolume] = useState(() => parseFloat(localStorage.getItem('gameVolume') || '1.0'));
+  const [graphicsLevel, setGraphicsLevel] = useState(() => localStorage.getItem('graphicsLevel') || 'high');
+  const worldAudioRef = useRef(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
@@ -61,6 +66,35 @@ export default function GameView() {
       })
       .catch(() => {});
   }, []);
+
+  // Manage world background music
+  useEffect(() => {
+    if (phase !== 'world' || !themeAudioUrl) return;
+
+    if (!worldAudioRef.current) {
+      worldAudioRef.current = new Audio(themeAudioUrl);
+      worldAudioRef.current.loop = true;
+      worldAudioRef.current.volume = soundVolume;
+      worldAudioRef.current.play().catch(() => {});
+    } else {
+      worldAudioRef.current.volume = soundVolume;
+    }
+
+    return () => {
+      if (worldAudioRef.current && phase !== 'world') {
+        worldAudioRef.current.pause();
+        worldAudioRef.current = null;
+      }
+    };
+  }, [phase, themeAudioUrl, soundVolume]);
+
+  const handleSettingsChange = ({ soundVolume: newVolume, graphicsLevel: newGraphics }) => {
+    setSoundVolume(newVolume);
+    setGraphicsLevel(newGraphics);
+    if (worldAudioRef.current) {
+      worldAudioRef.current.volume = newVolume;
+    }
+  };
 
 
   // World server join is handled by GameWorldServerManager — it enforces the
@@ -168,10 +202,10 @@ export default function GameView() {
         setFriendsListOpen((v) => !v);
       } else if (e.key === 'Escape') {
         if (storeOpen) setStoreOpen(false);
-        if (progressionOpen) setProgressionOpen(false);
-        if (skillTreeOpen) setSkillTreeOpen(false);
-        if (friendsListOpen) setFriendsListOpen(false);
-
+        else if (progressionOpen) setProgressionOpen(false);
+        else if (skillTreeOpen) setSkillTreeOpen(false);
+        else if (friendsListOpen) setFriendsListOpen(false);
+        else setSettingsOpen((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -195,7 +229,7 @@ export default function GameView() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
-      <GameWorld3D />
+      <GameWorld3D soundVolume={soundVolume} graphicsLevel={graphicsLevel} />
       <GameHUD />
       <OnlinePlayersPanel />
       <BossWaypoint />
@@ -228,6 +262,13 @@ export default function GameView() {
 
       {/* Slash visual effects — fires on basic attack and skill activations */}
       <SlashEffectLayer />
+
+      {/* Settings menu (ESC) */}
+      <GameSettingsMenu 
+        isOpen={settingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+        onSettingsChange={handleSettingsChange} 
+      />
     </div>
   );
 }
