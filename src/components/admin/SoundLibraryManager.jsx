@@ -1,389 +1,316 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Folder, Music, Plus, FolderPlus, Loader2, ChevronRight, Gamepad2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Game } from '@/entities/Game';
-import { showError, showSuccess } from '@/components/error/ErrorToast';
-
-const SOUND_CATEGORIES = [
-  { id: 'combat', label: 'Combat Sounds', icon: '⚔️', color: 'red' },
-  { id: 'themes', label: 'Themes & Background Music', icon: '🎵', color: 'blue' },
-];
+import { Folder, File, Plus, Upload, Trash2, Music, FolderPlus, ArrowLeft, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function SoundLibraryManager() {
   const queryClient = useQueryClient();
-  const [activeCategory, setActiveCategory] = useState('combat');
   const [selectedGameId, setSelectedGameId] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [currentFolder, setCurrentFolder] = useState(null);
   const [newFolderName, setNewFolderName] = useState('');
-  const [expandedFolders, setExpandedFolders] = useState({});
-  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+  const [showFolderInput, setShowFolderInput] = useState(false);
+  const [showFileInput, setShowFileInput] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  // Fetch all games
+  // Fetch games
   const { data: games = [] } = useQuery({
-    queryKey: ['adminGames'],
-    queryFn: () => Game.list('-created_date'),
+    queryKey: ['games'],
+    queryFn: () => base44.entities.Game.list(),
   });
 
-  // Fetch sound files for the selected game
-  const { data: soundFiles = [], isLoading, refetch } = useQuery({
-    queryKey: ['soundFiles', activeCategory, selectedGameId],
-    queryFn: async () => {
-      if (!selectedGameId) return [];
-      const files = await base44.entities.AssetFile.filter({ 
-        game_id: selectedGameId,
-        category: activeCategory,
-        type: 'audio'
-      }, '-created_date', 100);
-      return files;
-    },
+  // Fetch assets for current game
+  const { data: assets = [] } = useQuery({
+    queryKey: ['sound-assets', selectedGameId],
+    queryFn: () => selectedGameId ? base44.entities.AssetFile.filter({ game_id: selectedGameId, type: 'audio' }) : Promise.resolve([]),
     enabled: !!selectedGameId,
   });
 
-  const createAssetMutation = useMutation({
-    mutationFn: (data) => base44.entities.AssetFile.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['soundFiles'] });
-      showSuccess('Sound file added successfully!');
+  // Create folder mutation
+  const createFolderMutation = useMutation({
+    mutationFn: async (folderPath) => {
+      // In reality, folders are logical - we just create a marker or store in the folder field
+      await base44.entities.AssetFile.create({
+        name: folderPath.split('/').pop(),
+        type: 'folder',
+        game_id: selectedGameId,
+        folder_path: folderPath,
+        file_url: null,
+      });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sound-assets', selectedGameId] });
+      setNewFolderName('');
+      setShowFolderInput(false);
+      toast.success('Folder created');
+    },
+    onError: () => toast.error('Failed to create folder'),
   });
 
+  // Delete asset mutation
   const deleteAssetMutation = useMutation({
-    mutationFn: (id) => base44.entities.AssetFile.delete(id),
+    mutationFn: (assetId) => base44.entities.AssetFile.delete(assetId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['soundFiles'] });
-      showSuccess('File deleted');
+      queryClient.invalidateQueries({ queryKey: ['sound-assets', selectedGameId] });
+      toast.success('Deleted');
     },
+    onError: () => toast.error('Failed to delete'),
   });
 
-  // Group files by folder
-  const groupedByFolder = useMemo(() => {
-    const groups = { 'root': [] };
-    soundFiles.forEach(file => {
-      const folder = file.folder || 'root';
-      if (!groups[folder]) groups[folder] = [];
-      groups[folder].push(file);
-    });
-    return groups;
-  }, [soundFiles]);
-
+  // Handle file upload
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!selectedGameId) {
-      showError('Please select a game first');
-      return;
-    }
-
-    if (!file.type.startsWith('audio/')) {
-      showError('Please upload an audio file (MP3, WAV, OGG, etc.)');
+    const fileName = newFileName || file.name.replace(/\.[^/.]+$/, '');
+    
+    if (!['audio/mpeg', 'audio/mp4', 'video/mp4', 'audio/wav', 'audio/ogg'].includes(file.type)) {
+      toast.error('Only MP3, MP4, WAV, and OGG files are supported');
       return;
     }
 
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const fullPath = currentFolder ? `${currentFolder}/${fileName}` : fileName;
       
-      await createAssetMutation.mutateAsync({
-        name: file.name,
+      await base44.entities.AssetFile.create({
+        name: fileName,
         type: 'audio',
-        file_url,
         game_id: selectedGameId,
-        category: activeCategory,
-        folder: selectedFolder,
+        folder_path: currentFolder || null,
+        file_url,
+        file_extension: file.name.split('.').pop(),
       });
-      setSelectedFolder(null);
+
+      toast.success('File uploaded');
+      setNewFileName('');
+      setShowFileInput(false);
+      queryClient.invalidateQueries({ queryKey: ['sound-assets', selectedGameId] });
     } catch (error) {
-      showError(error, 'Upload');
+      toast.error('Upload failed');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
+  // Group assets by folder
+  const groupedAssets = useMemo(() => {
+    const groups = { root: [], folders: new Set() };
     
-    if (!selectedGameId) {
-      showError('Please select a game first');
-      return;
-    }
+    assets.forEach((asset) => {
+      if (asset.type === 'folder') {
+        groups.folders.add(asset.folder_path);
+      } else if (currentFolder) {
+        if (asset.folder_path === currentFolder) {
+          groups.root.push(asset);
+        }
+      } else {
+        if (!asset.folder_path) {
+          groups.root.push(asset);
+        } else if (asset.folder_path.split('/')[0] === asset.folder_path) {
+          groups.folders.add(asset.folder_path);
+        }
+      }
+    });
 
-    try {
-      await createAssetMutation.mutateAsync({
-        name: newFolderName,
-        type: 'folder',
-        file_url: null,
-        game_id: selectedGameId,
-        category: activeCategory,
-        folder: null,
-        is_folder: true,
-      });
-      setNewFolderName('');
-      setShowNewFolderInput(false);
-      showSuccess(`Folder "${newFolderName}" created!`);
-    } catch (error) {
-      showError(error, 'Create Folder');
-    }
-  };
+    return groups;
+  }, [assets, currentFolder]);
 
-  const toggleFolderExpand = (folderName) => {
-    setExpandedFolders(prev => ({
-      ...prev,
-      [folderName]: !prev[folderName]
-    }));
-  };
-
-  const category = SOUND_CATEGORIES.find(c => c.id === activeCategory);
+  if (!selectedGameId) {
+    return (
+      <div className="p-6 bg-slate-900/50 rounded-lg border border-slate-700">
+        <h3 className="text-lg font-bold mb-4 text-white">Sound Library</h3>
+        <p className="text-slate-300 mb-4">Select a game to manage its sound files</p>
+        <select
+          value={selectedGameId}
+          onChange={(e) => setSelectedGameId(e.target.value)}
+          className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white"
+        >
+          <option value="">Choose a game...</option>
+          {games.map((game) => (
+            <option key={game.id} value={game.id}>
+              {game.title || game.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Game Selector */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-        <label className="block text-sm font-semibold mb-3 text-slate-300">Select a Game</label>
-        <Select value={selectedGameId} onValueChange={setSelectedGameId}>
-          <SelectTrigger className="bg-slate-900 border-slate-700">
-            <SelectValue placeholder="Choose a game to manage its sounds..." />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-700">
-            {games.map(game => (
-              <SelectItem key={game.id} value={game.id}>
-                {game.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="p-6 bg-slate-900/50 rounded-lg border border-slate-700">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          {currentFolder && (
+            <button
+              onClick={() => setCurrentFolder(null)}
+              className="p-2 hover:bg-slate-800 rounded"
+              title="Go back"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-300" />
+            </button>
+          )}
+          <h3 className="text-lg font-bold text-white">
+            {currentFolder ? `📁 ${currentFolder}` : '🎵 Sound Library'}
+          </h3>
+        </div>
       </div>
 
-      {!selectedGameId ? (
-        <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-          <Gamepad2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-lg font-semibold">Please select a game to manage its sounds</p>
+      {/* Action buttons */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <Button
+          onClick={() => setShowFolderInput(!showFolderInput)}
+          variant="outline"
+          className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+        >
+          <FolderPlus className="w-4 h-4 mr-2" />
+          Create Folder
+        </Button>
+        <Button
+          onClick={() => setShowFileInput(!showFileInput)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Upload File
+        </Button>
+      </div>
+
+      {/* Create Folder Input */}
+      {showFolderInput && (
+        <div className="flex gap-2 mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+          <Input
+            type="text"
+            placeholder="Folder name..."
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            className="bg-slate-900 border-slate-600"
+          />
+          <Button
+            onClick={() => {
+              if (newFolderName) {
+                const folderPath = currentFolder
+                  ? `${currentFolder}/${newFolderName}`
+                  : newFolderName;
+                createFolderMutation.mutate(folderPath);
+              }
+            }}
+            disabled={!newFolderName}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Create
+          </Button>
+          <Button
+            onClick={() => setShowFolderInput(false)}
+            variant="outline"
+            className="bg-slate-800 border-slate-600"
+          >
+            Cancel
+          </Button>
         </div>
-      ) : (
-        <>
-      {/* Category Tabs */}
-      <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
-        <TabsList className="bg-slate-900 border border-slate-800">
-          {SOUND_CATEGORIES.map(cat => (
-            <TabsTrigger key={cat.id} value={cat.id} className="flex items-center gap-2">
-              <span>{cat.icon}</span>
-              {cat.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      )}
 
-        {SOUND_CATEGORIES.map(cat => (
-          <TabsContent key={cat.id} value={cat.id}>
-            {/* Header */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <span>{cat.icon}</span>
-                    {cat.label}
-                  </h2>
-                  <p className="text-slate-400 text-sm mt-1">
-                    Manage {cat.label.toLowerCase()} library with organized folders
-                  </p>
-                </div>
-                <Badge variant="outline" className="text-slate-400">
-                  {soundFiles.length} Files
-                </Badge>
-              </div>
+      {/* Upload File Input */}
+      {showFileInput && (
+        <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 mb-6">
+          <div className="flex flex-col gap-3">
+            <Input
+              type="text"
+              placeholder="File name (optional)..."
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              className="bg-slate-900 border-slate-600"
+            />
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="audio/mpeg,audio/mp4,video/mp4,audio/wav,audio/ogg"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              <Button
+                disabled={uploading}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                asChild
+              >
+                <span>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Music className="w-4 h-4 mr-2" />
+                      Choose MP3/MP4 File
+                    </>
+                  )}
+                </span>
+              </Button>
+            </label>
+            <Button
+              onClick={() => {
+                setShowFileInput(false);
+                setNewFileName('');
+              }}
+              variant="outline"
+              className="bg-slate-800 border-slate-600"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
 
-              {/* Upload & Create Folder Section */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
-                <div className="flex flex-col gap-4">
-                  {/* File Upload with Folder Selection */}
-                  <div className="flex flex-col gap-2">
-                    <label className="block text-sm font-medium text-slate-300">Upload Sound File to Folder</label>
-                    <div className="flex gap-2">
-                      <Select value={selectedFolder || ''} onValueChange={(val) => setSelectedFolder(val || null)}>
-                        <SelectTrigger className="bg-slate-900 border-slate-700 flex-1">
-                          <SelectValue placeholder="Select folder (optional)" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700">
-                          <SelectItem value={null}>Root folder</SelectItem>
-                          {Object.keys(groupedByFolder).map(folderName => 
-                            folderName !== 'root' && (
-                              <SelectItem key={folderName} value={folderName}>
-                                {folderName}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <label className="relative cursor-pointer">
-                        <input
-                          type="file"
-                          accept="audio/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                          disabled={uploading}
-                        />
-                        <Button 
-                          disabled={uploading}
-                          className="bg-blue-600 hover:bg-blue-700"
-                          asChild
-                        >
-                          <span>
-                            {uploading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="w-4 h-4 mr-2" />
-                                Upload
-                              </>
-                            )}
-                          </span>
-                        </Button>
-                      </label>
-                    </div>
-                  </div>
+      {/* Assets List */}
+      <div className="space-y-2">
+        {/* Folders */}
+        {Array.from(groupedAssets.folders).map((folderPath) => {
+          const folderName = folderPath.split('/').pop();
+          return (
+            <div
+              key={folderPath}
+              onClick={() => setCurrentFolder(folderPath)}
+              className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700 hover:bg-slate-800 cursor-pointer transition-colors"
+            >
+              <Folder className="w-5 h-5 text-yellow-500" />
+              <span className="text-slate-200 flex-1">{folderName}</span>
+            </div>
+          );
+        })}
 
-                  {/* Create Folder */}
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2 text-slate-300">Create New Folder</label>
-                      <div className="flex gap-2">
-                        {showNewFolderInput ? (
-                          <>
-                            <Input
-                              placeholder="Folder name (e.g., Enemy AI Sounds)"
-                              value={newFolderName}
-                              onChange={(e) => setNewFolderName(e.target.value)}
-                              className="bg-slate-900 border-slate-700 flex-1"
-                              autoFocus
-                            />
-                            <Button
-                              onClick={handleCreateFolder}
-                              disabled={!newFolderName.trim()}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              Create
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                setShowNewFolderInput(false);
-                                setNewFolderName('');
-                              }}
-                              variant="outline"
-                              className="border-slate-700"
-                            >
-                              Cancel
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            onClick={() => setShowNewFolderInput(true)}
-                            className="bg-purple-600 hover:bg-purple-700 w-full"
-                          >
-                            <FolderPlus className="w-4 h-4 mr-2" />
-                            New Folder
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Files List */}
-              {isLoading ? (
-                <div className="text-center py-12 text-slate-500">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                  Loading files...
-                </div>
-              ) : soundFiles.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-                  <Music className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>No sound files yet</p>
-                  <p className="text-sm">Upload your first audio file above</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <AnimatePresence>
-                    {Object.entries(groupedByFolder).map(([folderName, files]) => (
-                      <div key={folderName}>
-                        {/* Folder Header */}
-                        {folderName !== 'root' && (
-                          <motion.button
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="w-full flex items-center gap-2 px-4 py-3 rounded-lg bg-slate-800/30 border border-slate-700 hover:bg-slate-700/40 transition-colors text-left mb-2"
-                            onClick={() => toggleFolderExpand(folderName)}
-                          >
-                            <ChevronRight 
-                              className={`w-4 h-4 transition-transform ${expandedFolders[folderName] ? 'rotate-90' : ''}`}
-                            />
-                            <Folder className="w-4 h-4 text-yellow-500" />
-                            <span className="font-semibold text-slate-300">{folderName}</span>
-                            <Badge variant="outline" className="ml-auto text-xs">
-                              {files.length} files
-                            </Badge>
-                          </motion.button>
-                        )}
-
-                        {/* Files in folder */}
-                        <AnimatePresence>
-                          {(folderName === 'root' || expandedFolders[folderName]) && (
-                            <div className={folderName !== 'root' ? 'ml-6 space-y-2 mb-4' : 'space-y-2'}>
-                              {files.map(file => (
-                                <motion.div
-                                  key={file.id}
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: -20 }}
-                                  className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-700/50 transition-colors"
-                                >
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <Music className="w-4 h-4 text-blue-400" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-slate-300 font-medium truncate">{file.name}</p>
-                                      <p className="text-xs text-slate-500">
-                                        {new Date(file.created_date).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                    onClick={() => {
-                                      if (window.confirm(`Delete "${file.name}"?`)) {
-                                        deleteAssetMutation.mutate(file.id);
-                                      }
-                                    }}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </motion.div>
-                              ))}
-                            </div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ))}
-                  </AnimatePresence>
-                </div>
+        {/* Files */}
+        {groupedAssets.root.map((asset) => (
+          <div
+            key={asset.id}
+            className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors group"
+          >
+            <Music className="w-5 h-5 text-purple-400" />
+            <div className="flex-1">
+              <p className="text-slate-200">{asset.name}</p>
+              {asset.file_extension && (
+                <p className="text-xs text-slate-400">.{asset.file_extension}</p>
               )}
             </div>
-          </TabsContent>
+            <button
+              onClick={() => deleteAssetMutation.mutate(asset.id)}
+              className="p-2 hover:bg-red-600/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
+            </button>
+          </div>
         ))}
-      </Tabs>
-        </>
-      )}
+
+        {groupedAssets.root.length === 0 && groupedAssets.folders.size === 0 && (
+          <p className="text-center text-slate-400 py-8">No files or folders yet</p>
+        )}
+      </div>
     </div>
   );
 }
