@@ -157,7 +157,7 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
     if (!audioRef.current) {
       audioRef.current = new Audio(themeAudioUrl);
       audioRef.current.loop = true;
-      audioRef.current.volume = 1.0;
+      audioRef.current.volume = 0.5;
       audioRef.current.play().catch(() => {});
     }
 
