@@ -38,6 +38,7 @@ import { toast } from 'react-hot-toast';
 import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
 import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
 import SlashEffectLayer from '../components/game3d/SlashEffect';
+import WorldAudioManager from '../components/game3d/WorldAudioManager';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -230,6 +231,7 @@ export default function GameView() {
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
       <GameWorld3D soundVolume={soundVolume} graphicsLevel={graphicsLevel} />
+      <WorldAudioManager themeAudioUrl={themeAudioUrl} soundVolume={soundVolume} />
       <GameHUD />
       <OnlinePlayersPanel />
       <BossWaypoint />
