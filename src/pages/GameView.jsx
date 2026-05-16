@@ -48,19 +48,23 @@ export default function GameView() {
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
+  const [themeVideoUrl, setThemeVideoUrl] = useState(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
-  // Fetch "Game 1" hero background audio on mount
+  // Fetch "Game 1" hero background when transitioning to world
   useEffect(() => {
-    base44.entities.HeroBackground.filter({ title: 'Game 1' })
-      .then((backgrounds) => {
-        if (backgrounds.length > 0 && backgrounds[0].audio_url) {
-          setThemeAudioUrl(backgrounds[0].audio_url);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (phase === 'world') {
+      base44.entities.HeroBackground.filter({ title: 'Game 1' })
+        .then((backgrounds) => {
+          if (backgrounds.length > 0) {
+            if (backgrounds[0].audio_url) setThemeAudioUrl(backgrounds[0].audio_url);
+            if (backgrounds[0].video_url) setThemeVideoUrl(backgrounds[0].video_url);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [phase]);
 
 
   // World server join is handled by GameWorldServerManager — it enforces the
