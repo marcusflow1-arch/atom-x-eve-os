@@ -377,8 +377,8 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
             className="fixed z-[71] flex items-center justify-center pointer-events-auto"
             style={{
-              top: 'calc(50% - 96px)',
-              left: 80,
+              top: 'calc(50% - 288px)',
+              left: 160,
               transform: 'translateY(-50%)',
             }}
           >
