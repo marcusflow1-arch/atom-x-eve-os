@@ -39,6 +39,14 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
           }));
           return;
         }
+        // Also set the player as the active ability target so dual-mode skills
+        // (e.g. Lightning Strike, Frost Tornado) know the target is a player
+        // and apply their PvP effect instead of enemy damage.
+        setTarget({
+          id: pid,
+          name: pname,
+          kind: 'player',
+        });
         setPlayerMenu({ x: event.clientX, y: event.clientY, player: { id: pid, name: pname } });
         return;
       }

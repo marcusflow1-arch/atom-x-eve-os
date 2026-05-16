@@ -1,51 +1,26 @@
 // ─────────────────────────────────────────────
 // Ability Store — equipped skills + active target
+// Equipped slots are persisted to localStorage so they survive game exits.
 // ─────────────────────────────────────────────
+
+const LS_EQUIPPED_KEY = 'game_equipped_abilities_v2';
 
 export const ABILITY_DEFINITIONS = [
   {
     id: 'lightning_strike',
     name: 'Lightning Strike',
-    description: 'Calls a bolt of lightning from the sky, dealing heavy electric damage to a targeted enemy.',
+    description: 'Calls a bolt of lightning from the sky. Damages enemy AI — paralyzes players with light damage.',
     icon: '⚡',
     color: '#ffe066',
     cooldown: 4.0,
-    damage: 45,
+    damage: 45,           // damage vs enemies
+    pvpDamage: 12,        // light damage vs players
+    pvpEffect: 'paralyze',
+    pvpDuration: 2.0,
     type: 'targeted',
     element: 'lightning',
-  },
-  {
-    id: 'fireball',
-    name: 'Fireball',
-    description: 'Hurls a blazing fireball that explodes on impact.',
-    icon: '🔥',
-    color: '#ff6b35',
-    cooldown: 3.0,
-    damage: 30,
-    type: 'targeted',
-    element: 'fire',
-  },
-  {
-    id: 'frost_nova',
-    name: 'Frost Nova',
-    description: 'Erupts in a burst of ice, slowing nearby enemies.',
-    icon: '❄️',
-    color: '#7dd3fc',
-    cooldown: 6.0,
-    damage: 20,
-    type: 'aoe',
-    element: 'ice',
-  },
-  {
-    id: 'shadow_dash',
-    name: 'Shadow Dash',
-    description: 'Teleport forward through shadows, leaving enemies disoriented.',
-    icon: '🌑',
-    color: '#a855f7',
-    cooldown: 5.0,
-    damage: 0,
-    type: 'self',
-    element: 'shadow',
+    dualMode: true,
+    requiresLearn: true,
   },
   {
     id: 'shadow_teleport',
@@ -57,28 +32,50 @@ export const ABILITY_DEFINITIONS = [
     damage: 0,
     type: 'targeted',
     element: 'shadow',
+    requiresLearn: true,
   },
   {
     id: 'frost_tornado',
     name: 'Frost Tornado',
-    description: 'Summon a towering tornado of ice at the target, dealing frost damage to all enemies within its radius.',
+    description: 'A towering tornado of ice on enemies. On players, it freezes them in place instead.',
     icon: '🌪️',
     color: '#7dd3fc',
     cooldown: 8.0,
     damage: 35,
     radius: 4.5,
+    pvpEffect: 'freeze',
+    pvpDuration: 2.5,
+    pvpDamage: 5,
     type: 'aoe',
     element: 'ice',
+    dualMode: true,
+    requiresLearn: true,
   },
 ];
 
-// 4 equip slots — indices 0-3 map to keys 1, 2, 3, 4
-const DEFAULT_EQUIPPED = ['lightning_strike', 'shadow_teleport', 'frost_tornado', null];
+// 4 equip slots — start empty; skills must be learned and equipped by the player.
+const DEFAULT_EQUIPPED = [null, null, null, null];
+
+function loadEquipped() {
+  try {
+    const raw = localStorage.getItem(LS_EQUIPPED_KEY);
+    if (!raw) return [...DEFAULT_EQUIPPED];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length !== 4) return [...DEFAULT_EQUIPPED];
+    return parsed.map((v) => (typeof v === 'string' ? v : null));
+  } catch {
+    return [...DEFAULT_EQUIPPED];
+  }
+}
+
+function saveEquipped(equipped) {
+  try { localStorage.setItem(LS_EQUIPPED_KEY, JSON.stringify(equipped)); } catch {}
+}
 
 let state = {
-  equipped: [...DEFAULT_EQUIPPED],  // ability id or null per slot
-  cooldowns: [0, 0, 0, 0],          // seconds remaining per slot
-  target: null,                      // { id, name, hp, maxHp, level, x, z }
+  equipped: loadEquipped(),     // ability id or null per slot — persisted
+  cooldowns: [0, 0, 0, 0],
+  target: null,                  // { id, name, hp, maxHp, level, x, z, kind: 'enemy'|'player' }
 };
 
 const subscribers = new Set();
@@ -96,6 +93,7 @@ export function equipAbility(slotIndex, abilityId) {
   const next = [...state.equipped];
   next[slotIndex] = abilityId;
   state = { ...state, equipped: next };
+  saveEquipped(next);
   notify();
 }
 
@@ -103,11 +101,14 @@ export function unequipAbility(slotIndex) {
   const next = [...state.equipped];
   next[slotIndex] = null;
   state = { ...state, equipped: next };
+  saveEquipped(next);
   notify();
 }
 
 export function setTarget(target) {
-  state = { ...state, target };
+  // target.kind defaults to 'enemy' for backwards compatibility
+  const t = target ? { kind: 'enemy', ...target } : null;
+  state = { ...state, target: t };
   notify();
 }
 

@@ -23,6 +23,10 @@ export const LOOT_TABLE = [
   { id: 'barrier_aura',              name: 'Barrier',              category: 'skill',     rarity: 'epic',      icon: '🛡️', weight: 5  },
   { id: 'heavens_destruction',       name: "Heaven's Destruction", category: 'skill',     rarity: 'mythic',    icon: '🌑',  weight: 2  },
   { id: 'power_charge',              name: 'Power Charge',         category: 'skill',     rarity: 'epic',      icon: '🔥',  weight: 6  },
+  // ── Active Ability Scrolls (must be learned to equip in Q/E/R/F slots) ─
+  { id: 'lightning_strike',          name: 'Lightning Strike',     category: 'skill',     rarity: 'rare',      icon: '⚡',  weight: 6  },
+  { id: 'shadow_teleport',           name: 'Shadow Teleport',      category: 'skill',     rarity: 'epic',      icon: '🌀',  weight: 4  },
+  { id: 'frost_tornado',             name: 'Frost Tornado',        category: 'skill',     rarity: 'rare',      icon: '🌪️', weight: 6  },
   // ── Enchanting Materials ──────────────────────────────────────────────────
   { id: 'mat_soul_fragment',     name: 'Soul Fragment',    category: 'material',  rarity: 'rare',      icon: '💠',  weight: 25 },
   { id: 'mat_void_crystal',      name: 'Void Crystal',     category: 'material',  rarity: 'epic',      icon: '🔮',  weight: 15 },
@@ -124,15 +128,47 @@ export function subscribeLootInventory(fn) {
 
 // ── Learned skills — IDs of skill scroll items the player has "learned" ──
 // Stored as a Set of skill loot item IDs (matches LOOT_TABLE id, e.g. 'skill_berserker_slash')
-let _learnedSkillIds = new Set();
+// Persisted to localStorage so learned skills survive game sessions.
+const LS_LEARNED_KEY = 'game_learned_skills_v1';
+
+function loadLearned() {
+  try {
+    const raw = localStorage.getItem(LS_LEARNED_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+}
+
+let _learnedSkillIds = loadLearned();
 const _learnListeners = new Set();
+
+function persistLearned() {
+  try { localStorage.setItem(LS_LEARNED_KEY, JSON.stringify([..._learnedSkillIds])); } catch {}
+}
+
+// IDs in this set are ACTIVE abilities (matches abilityStore ABILITY_DEFINITIONS.id)
+// and should auto-equip to the first empty Q/E/R/F slot when learned.
+const ACTIVE_ABILITY_IDS = new Set(['lightning_strike', 'shadow_teleport', 'frost_tornado']);
 
 export function getLearnedSkillIds() { return _learnedSkillIds; }
 
 export function learnSkill(lootItem) {
   if (_learnedSkillIds.has(lootItem.id)) return; // already learned
   _learnedSkillIds = new Set([..._learnedSkillIds, lootItem.id]);
+  persistLearned();
   _learnListeners.forEach((fn) => fn(_learnedSkillIds));
+
+  // If this is an active ability, auto-equip it into the first empty Q/E/R/F slot
+  // so it instantly appears on the player's hotkey bar.
+  if (ACTIVE_ABILITY_IDS.has(lootItem.id)) {
+    // Lazy import to avoid circular dep at module init
+    import('./abilityStore').then(({ getAbilityState, equipAbility }) => {
+      const equipped = getAbilityState().equipped || [];
+      const emptyIdx = equipped.findIndex((v) => !v);
+      if (emptyIdx !== -1 && !equipped.includes(lootItem.id)) {
+        equipAbility(emptyIdx, lootItem.id);
+      }
+    }).catch(() => {});
+  }
 
   // Remove the scroll from the skill inventory so it can't be used again
   const skills = _lootInventory['skill'] || [];

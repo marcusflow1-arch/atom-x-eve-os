@@ -8,7 +8,6 @@ import GameWorld3D from '../components/game3d/GameWorld3D';
 import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
-import SkillTreeMenu from '../components/game3d/SkillTreeMenu';
 import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
@@ -45,7 +44,6 @@ export default function GameView() {
   const [phase, setPhase] = useState('login'); // 'login' | 'world'
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
-  const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
@@ -219,22 +217,19 @@ export default function GameView() {
         setStoreOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'c') {
         setProgressionOpen((v) => !v);
-      } else if (e.key.toLowerCase() === 'k') {
-        setSkillTreeOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
       } else if (e.key === 'Escape') {
         // Close any open sub-panels first; otherwise toggle pause menu
         if (storeOpen) setStoreOpen(false);
         else if (progressionOpen) setProgressionOpen(false);
-        else if (skillTreeOpen) setSkillTreeOpen(false);
         else if (friendsListOpen) setFriendsListOpen(false);
         else setPauseMenuOpen((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen, progressionOpen, skillTreeOpen, friendsListOpen]);
+  }, [phase, storeOpen, progressionOpen, friendsListOpen]);
 
   if (phase === 'login') {
     return (
@@ -261,7 +256,6 @@ export default function GameView() {
       <GameWorldServerManager />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
-      <SkillTreeMenu open={skillTreeOpen} onClose={() => setSkillTreeOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
       <PartyPanel />
       <TradePanel />
