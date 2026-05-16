@@ -18,7 +18,13 @@ export default function SoundLibraryManager() {
   // Fetch all sound assets
   const { data: assets = [] } = useQuery({
     queryKey: ['sound-library-assets'],
-    queryFn: () => base44.entities.AssetFile.filter({ type: 'audio' }).catch(() => []),
+    queryFn: async () => {
+      const [folders, files] = await Promise.all([
+        base44.entities.AssetFile.filter({ type: 'folder' }).catch(() => []),
+        base44.entities.AssetFile.filter({ type: 'audio' }).catch(() => []),
+      ]);
+      return [...folders, ...files];
+    },
   });
 
   // Create folder mutation
