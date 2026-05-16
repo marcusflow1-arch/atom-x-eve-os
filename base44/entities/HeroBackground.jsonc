@@ -20,7 +20,5 @@
       "description": "Whether this background should be included in rotation"
     }
   },
-  "required": [
-    "video_url"
-  ]
+  "required": []
 }
