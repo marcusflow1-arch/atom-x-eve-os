@@ -37,7 +37,7 @@ export default function HUDCompanionSkillSlots() {
       }));
 
   return (
-    <div className="absolute z-20 pointer-events-auto" style={{ left: '24px', bottom: '118px' }}>
+    <div className="absolute z-20 pointer-events-auto" style={{ left: '24px', bottom: '156px' }}>
       <div className="flex gap-2">
         {skills.map((sk) => {
           const cdLeft = !mounted && sk.id ? (abState.cooldowns?.[sk.id] || 0) : 0;
@@ -45,7 +45,7 @@ export default function HUDCompanionSkillSlots() {
           return (
             <div key={sk.key} className="relative">
               <button
-                className="relative w-[52px] h-[52px] rounded-sm transition-transform hover:scale-105"
+                className="relative w-[58px] h-[58px] rounded-sm transition-transform hover:scale-105"
                 style={
                   mounted
                     ? {
