@@ -186,7 +186,7 @@ export default function GameView() {
     return () => window.removeEventListener('gamePlayerAction', onAction);
   }, [user?.id, user?.full_name, user?.username]);
 
-  // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = close
+  // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = settings
   useEffect(() => {
     if (phase !== 'world') return;
     const onKey = (e) => {
@@ -210,7 +210,7 @@ export default function GameView() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen, progressionOpen, skillTreeOpen, friendsListOpen]);
+  }, [phase, storeOpen, progressionOpen, skillTreeOpen, friendsListOpen, settingsOpen]);
 
   if (phase === 'login') {
     return (
