@@ -83,8 +83,21 @@ export function respawnEnemy(enemy, ctx) {
  * Broadcast a kill so other players in the channel see the same enemy die.
  * Uses the existing WebRTC `multiplayerLocalAction` channel.
  */
-export function broadcastEnemyKill(enemyId) {
+export function broadcastEnemyKill(enemyId, lootCtx) {
   window.dispatchEvent(new CustomEvent('multiplayerLocalAction', {
     detail: { kind: 'enemy_killed', enemy_id: enemyId },
   }));
+  // Fire loot drop event so GameWorldLootLayer can roll drops
+  if (lootCtx) {
+    window.dispatchEvent(new CustomEvent('enemyLootDrop', {
+      detail: {
+        enemyId,
+        tier: lootCtx.tier || 'normal',
+        isBoss: !!lootCtx.isBoss,
+        x: lootCtx.x ?? 0,
+        y: lootCtx.y ?? 0,
+        z: lootCtx.z ?? 0,
+      },
+    }));
+  }
 }

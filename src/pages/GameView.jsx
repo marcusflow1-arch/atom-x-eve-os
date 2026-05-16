@@ -25,6 +25,7 @@ import LegacyRemotesVisibilityToggle from '../components/network/remote/LegacyRe
 import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemotesDebugOverlay';
 import NetworkValidationTelemetry from '../components/network/debug/NetworkValidationTelemetry';
 import { partyStore } from '../components/game3d/social/socialStores';
+import GameWorldLootLayer from '../components/game3d/GameWorldLootLayer';
 // Each action has its own dedicated send module — they do NOT share a code path.
 import { sendFriendRequest } from '../components/game3d/social/friendRequest';
 import { sendPartyInvite } from '../components/game3d/social/partyInvite';
@@ -197,6 +198,9 @@ export default function GameView() {
       <LegacyRemotesVisibilityToggle />
       <NetworkRemotesDebugOverlay />
       <NetworkValidationTelemetry />
+
+      {/* Loot drop layer — spawns world items on enemy death, handles E-to-pickup */}
+      <GameWorldLootLayer />
     </div>
   );
 }
