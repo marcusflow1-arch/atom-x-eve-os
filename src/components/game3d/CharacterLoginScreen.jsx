@@ -445,7 +445,13 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoU
         </div>
 
         <motion.button
-          onClick={onPlay}
+          onClick={() => {
+            if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current = null;
+            }
+            onPlay?.();
+          }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full py-4 rounded text-white font-bold text-xl tracking-[0.3em] uppercase relative overflow-hidden group"
