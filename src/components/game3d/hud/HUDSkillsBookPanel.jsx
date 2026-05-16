@@ -367,8 +367,8 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             className="fixed z-[71] flex items-center justify-center pointer-events-auto"
             style={{
               top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
+              left: 24,
+              transform: 'translateY(-50%)',
             }}
           >
             {/* ── Skill Equip Slots (outside-left of book) ── */}
