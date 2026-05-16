@@ -249,8 +249,8 @@ export default function SoundLibraryManager() {
       {/* Assets List */}
       <div className="space-y-2">
         {/* Folders */}
-        {Array.from(groupedAssets.folders).map((folderPath) => {
-          const folderName = folderPath.split('/').pop();
+        {Array.from(groupedAssets.folders).filter(Boolean).map((folderPath) => {
+          const folderName = folderPath?.split('/').pop();
           return (
             <div
               key={folderPath}
