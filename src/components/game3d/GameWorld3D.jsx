@@ -1542,14 +1542,13 @@ export default function GameWorld3D() {
         return fx.alive();
       });
 
-      // ─── Ability firing (Q/E/R/F keys) ───
+      // ─── Ability firing (1..8 keys) ───
       if (abilityKeyPressed.current !== -1 && model) {
-        const slotIndex = abilityKeyPressed.current;
-        abilityKeyPressed.current = -1;
+        const slotIndex = abilityKeyPressed.current; abilityKeyPressed.current = -1;
         const abState = getAbilityState();
-        const entry = abState.equipped[slotIndex];
-        const cooldownLeft = abState.cooldowns[slotIndex];
-        if (entry && cooldownLeft <= 0 && tryActivateBookSkill(entry)) { startCooldown(slotIndex); } else if (entry && cooldownLeft <= 0) {
+        const entry = abState.equipped[slotIndex]; const cooldownLeft = abState.cooldowns[slotIndex];
+        const _sr = entry && cooldownLeft <= 0 ? tryActivateBookSkill(entry) : false;
+        if (_sr === true) { startCooldown(slotIndex); } else if (_sr !== 'blocked' && entry && cooldownLeft <= 0) {
           const abId = typeof entry === 'string' ? entry : entry.id;
           const ab = ABILITY_DEFINITIONS.find((a) => a.id === abId);
           const target = abState.target;

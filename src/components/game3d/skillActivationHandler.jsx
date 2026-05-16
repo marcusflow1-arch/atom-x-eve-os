@@ -164,7 +164,7 @@ export function tryActivateBookSkill(entry) {
     window.dispatchEvent(new CustomEvent('skillActivatedToast', {
       detail: { text: `⛔ Requires ${PATH_LABEL[required] || required} weapon equipped` },
     }));
-    return true; // handled (blocked) — don't fall through to legacy path
+    return 'blocked'; // handled-but-blocked — caller should NOT start cooldown
   }
 
   const result = handler();
