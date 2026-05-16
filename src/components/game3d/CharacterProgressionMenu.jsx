@@ -37,8 +37,9 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch"
+      className="fixed left-0 right-0 bottom-0 z-40 flex items-stretch"
       style={{
+        top: '64px', // sit flush under the 64px (h-16) top header
         background: 'rgba(4,8,14,0.88)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
