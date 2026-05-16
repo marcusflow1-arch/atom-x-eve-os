@@ -150,7 +150,7 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
     };
   }, [onPlay]);
 
-  // Background music
+  // Background music — stop when component unmounts (on Play)
   useEffect(() => {
     if (!themeAudioUrl) return;
 
@@ -164,6 +164,7 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.currentTime = 0;
         audioRef.current = null;
       }
     };
