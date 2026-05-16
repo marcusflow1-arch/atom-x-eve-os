@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -49,8 +49,28 @@ export default function GameView() {
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
   const [themeVideoUrl, setThemeVideoUrl] = useState(null);
+  const audioRef = useRef(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
+
+  // Persistent audio player — survives login → world phase change
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    if (!themeAudioUrl) return;
+    const audio = new Audio(themeAudioUrl);
+    audio.loop = true;
+    audio.volume = 0.5;
+    audioRef.current = audio;
+    audio.play().catch((err) => console.warn('Audio play blocked:', err));
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, [themeAudioUrl]);
 
   // Load Game 1 audio immediately on mount for login screen
   useEffect(() => {
@@ -198,7 +218,7 @@ export default function GameView() {
   if (phase === 'login') {
     return (
       <div className="fixed inset-0 bg-black">
-        <CharacterLoginScreen onPlay={() => setPhase('world')} themeAudioUrl={themeAudioUrl} />
+        <CharacterLoginScreen onPlay={() => setPhase('world')} />
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate'))}
           className="absolute top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/60 hover:text-white text-xs flex items-center gap-1.5 z-20"
