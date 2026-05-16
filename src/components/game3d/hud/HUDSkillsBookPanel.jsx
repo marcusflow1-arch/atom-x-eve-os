@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { SKILLS_DATABASE, RARITIES } from '../equipment/skillData';
+import { getLootInventory, subscribeLootInventory } from '../lootStore';
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const PASSIVE_IDS = new Set([
@@ -21,7 +22,7 @@ function getRarityStyle(rarityId) {
 }
 
 // ─── Table of Contents page ────────────────────────────────────────────────
-function TOCPage({ onSelectChapter }) {
+function TOCPage({ onSelectChapter, collectedIds }) {
   return (
     <div className="flex flex-col h-full px-6 py-5">
       <div className="text-center mb-5">
@@ -30,12 +31,22 @@ function TOCPage({ onSelectChapter }) {
         <p className="text-gray-400 text-[10px] tracking-widest uppercase mt-0.5">Table of Contents</p>
       </div>
 
-      <div className="flex flex-col gap-2 flex-1">
-        {CHAPTERS.map((ch, idx) => {
-          const skills = ch.id === 'passive'
-            ? SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id))
-            : SKILLS_DATABASE.filter((s) => s.path === ch.id && !PASSIVE_IDS.has(s.id));
-          const owned = skills.filter((s) => s.owned).length;
+      {collectedIds.size === 0 ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3">
+          <div className="text-4xl">📜</div>
+          <p className="text-gray-400 text-xs text-center leading-relaxed">
+            Your tome is empty.<br />
+            Defeat enemies to collect skill scrolls,<br />then pick them up to learn them.
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 flex-1">
+          {CHAPTERS.map((ch, idx) => {
+            const skills = ch.id === 'passive'
+              ? SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id) && collectedIds.has(s.id))
+              : SKILLS_DATABASE.filter((s) => s.path === ch.id && !PASSIVE_IDS.has(s.id) && collectedIds.has(s.id));
+            if (skills.length === 0) return null;
+            const owned = skills.length;
 
           return (
             <button
@@ -60,8 +71,8 @@ function TOCPage({ onSelectChapter }) {
                 <div className="text-gray-400 text-[9px]">{ch.subtitle}</div>
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-gray-500 font-bold text-[10px]">{owned}/{skills.length}</div>
-                <div className="text-gray-400 text-[8px]">owned</div>
+                <div className="text-gray-500 font-bold text-[10px]">{owned}</div>
+                <div className="text-gray-400 text-[8px]">learned</div>
               </div>
               <ChevronRight
                 className="w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform"
@@ -70,11 +81,11 @@ function TOCPage({ onSelectChapter }) {
             </button>
           );
         })}
-      </div>
-
-      <div className="text-center text-gray-400 text-[9px] mt-3 tracking-wide">
-        Use ← → arrows or click a chapter
-      </div>
+          <div className="text-center text-gray-400 text-[9px] mt-3 tracking-wide">
+            Use ← → arrows or click a chapter
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -129,11 +140,11 @@ function SkillRow({ skill }) {
 }
 
 // ─── Chapter page ──────────────────────────────────────────────────────────
-function ChapterPage({ chapter }) {
+function ChapterPage({ chapter, collectedIds }) {
   const skills = chapter.id === 'passive'
-    ? SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id))
-    : SKILLS_DATABASE.filter((s) => s.path === chapter.id && !PASSIVE_IDS.has(s.id));
-  const owned = skills.filter((s) => s.owned).length;
+    ? SKILLS_DATABASE.filter((s) => PASSIVE_IDS.has(s.id) && collectedIds.has(s.id))
+    : SKILLS_DATABASE.filter((s) => s.path === chapter.id && !PASSIVE_IDS.has(s.id) && collectedIds.has(s.id));
+  const owned = skills.length;
 
   return (
     <div className="flex flex-col h-full px-5 py-4">
@@ -157,16 +168,17 @@ function ChapterPage({ chapter }) {
           style={{ background: `${chapter.color}12`, borderColor: `${chapter.color}30` }}
         >
           <div className="font-black text-sm leading-none" style={{ color: chapter.color }}>{owned}</div>
-          <div className="text-gray-400 text-[8px] mt-0.5">/{skills.length}</div>
+          <div className="text-gray-400 text-[8px] mt-0.5">learned</div>
         </div>
       </div>
 
       {/* Skill list */}
       <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {skills.length === 0 ? (
-          <div className="flex items-center justify-center h-24 text-gray-400 text-xs">
-            No skills in this chapter yet.
-          </div>
+        <div className="flex flex-col items-center justify-center h-28 gap-2 text-gray-400 text-xs text-center">
+          <span className="text-2xl">📜</span>
+          No {chapter.title} skills learned yet.<br/>Defeat enemies to find scrolls.
+        </div>
         ) : (
           skills.map((sk) => <SkillRow key={sk.id} skill={sk} />)
         )}
@@ -202,6 +214,24 @@ const PAGE_VARIANTS = {
 export default function HUDSkillsBookPanel({ open, onClose }) {
   const [pageIndex, setPageIndex] = useState(0);   // 0 = TOC, 1–4 = chapters
   const [direction, setDirection] = useState(1);
+  const [lootInv, setLootInv] = useState(getLootInventory());
+
+  useEffect(() => subscribeLootInventory(setLootInv), []);
+
+  // Build a Set of skill loot IDs that map back to SKILLS_DATABASE entries by name match
+  const collectedIds = useMemo(() => {
+    const skillDrops = lootInv['skill'] || [];
+    const set = new Set();
+    skillDrops.forEach((drop) => {
+      // Match by loot item name → skill name (e.g. "Berserker Slash" → id "berserker_slash")
+      const match = SKILLS_DATABASE.find(
+        (s) => s.name.toLowerCase() === drop.name.toLowerCase() ||
+               drop.id?.includes(s.id)
+      );
+      if (match) set.add(match.id);
+    });
+    return set;
+  }, [lootInv]);
 
   const totalPages = CHAPTERS.length + 1; // TOC + 4 chapters
 
@@ -296,9 +326,9 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                   style={{ transformOrigin: direction > 0 ? 'left center' : 'right center' }}
                 >
                   {pageIndex === 0 ? (
-                    <TOCPage onSelectChapter={(i) => goTo(i)} />
+                    <TOCPage onSelectChapter={(i) => goTo(i)} collectedIds={collectedIds} />
                   ) : (
-                    <ChapterPage chapter={CHAPTERS[pageIndex - 1]} />
+                    <ChapterPage chapter={CHAPTERS[pageIndex - 1]} collectedIds={collectedIds} />
                   )}
                 </motion.div>
               </AnimatePresence>
