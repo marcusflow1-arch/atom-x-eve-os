@@ -138,7 +138,25 @@ function loadLearned() {
   } catch { return new Set(); }
 }
 
-let _learnedSkillIds = loadLearned();
+// In the editor/preview environment only, auto-grant ALL skills so devs can
+// test every passive + active without needing to farm them. The live/published
+// app keeps the normal loot-driven learning flow.
+function isEditorEnv() {
+  try {
+    const h = window.location.hostname;
+    return h === 'localhost' || h.includes('base44.app') || h.includes('preview');
+  } catch { return false; }
+}
+
+function loadInitialLearned() {
+  const base = loadLearned();
+  if (isEditorEnv()) {
+    LOOT_TABLE.forEach((item) => { if (item.category === 'skill') base.add(item.id); });
+  }
+  return base;
+}
+
+let _learnedSkillIds = loadInitialLearned();
 const _learnListeners = new Set();
 
 function persistLearned() {
