@@ -48,17 +48,15 @@ export default function GameView() {
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
-  const [heroVideoUrl, setHeroVideoUrl] = useState(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
-  // Fetch game theme audio and video by name
+  // Fetch game theme audio on mount
   useEffect(() => {
-    base44.entities.HeroBackground.filter({ title: 'Game 1' }, '-created_date', 1)
+    base44.entities.HeroBackground.list('-created_date', 1)
       .then((backgrounds) => {
-        if (backgrounds.length > 0) {
-          if (backgrounds[0].audio_url) setThemeAudioUrl(backgrounds[0].audio_url);
-          if (backgrounds[0].video_url) setHeroVideoUrl(backgrounds[0].video_url);
+        if (backgrounds.length > 0 && backgrounds[0].audio_url) {
+          setThemeAudioUrl(backgrounds[0].audio_url);
         }
       })
       .catch(() => {});
@@ -183,7 +181,7 @@ export default function GameView() {
   if (phase === 'login') {
     return (
       <div className="fixed inset-0 bg-black">
-        <CharacterLoginScreen onPlay={() => setPhase('world')} themeAudioUrl={themeAudioUrl} heroVideoUrl={heroVideoUrl} />
+        <CharacterLoginScreen onPlay={() => setPhase('world')} themeAudioUrl={themeAudioUrl} />
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate'))}
           className="absolute top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/60 hover:text-white text-xs flex items-center gap-1.5 z-20"

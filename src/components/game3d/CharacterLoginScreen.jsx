@@ -12,7 +12,7 @@ const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
  * Renders the female archer (ErikaArcher) facing the camera with an idle animation,
  * and exposes a PLAY button that calls onPlay() to enter the game world.
  */
-export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoUrl }) {
+export default function CharacterLoginScreen({ onPlay, themeAudioUrl }) {
   const containerRef = useRef(null);
   const audioRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -154,21 +154,12 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoU
   useEffect(() => {
     if (!themeAudioUrl) return;
 
-    const audio = new Audio(themeAudioUrl);
-    audio.loop = true;
-    audio.volume = 0.6;
-    audioRef.current = audio;
-
-    // Try autoplay, else wait for user interaction
-    audio.play().catch(() => {
-      const unmute = () => {
-        audio.play().catch(() => {});
-        window.removeEventListener('click', unmute);
-        window.removeEventListener('keydown', unmute);
-      };
-      window.addEventListener('click', unmute, { once: true });
-      window.addEventListener('keydown', unmute, { once: true });
-    });
+    if (!audioRef.current) {
+      audioRef.current = new Audio(themeAudioUrl);
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.5;
+      audioRef.current.play().catch(() => {});
+    }
 
     return () => {
       if (audioRef.current) {
@@ -180,27 +171,17 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoU
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* Background scene — video or gradient */}
-      {heroVideoUrl ? (
-        <video
-          src={heroVideoUrl}
-          autoPlay
-          muted
-          loop
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse at 80% 20%, rgba(255, 180, 200, 0.25) 0%, transparent 50%),
-              radial-gradient(ellipse at 20% 80%, rgba(100, 200, 220, 0.2) 0%, transparent 50%),
-              linear-gradient(135deg, #1a2438 0%, #2d3a52 30%, #4a4068 70%, #2d3a52 100%)
-            `,
-          }}
-        />
-      )}
+      {/* Background scene — gradient + decorative fantasy bg */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse at 80% 20%, rgba(255, 180, 200, 0.25) 0%, transparent 50%),
+            radial-gradient(ellipse at 20% 80%, rgba(100, 200, 220, 0.2) 0%, transparent 50%),
+            linear-gradient(135deg, #1a2438 0%, #2d3a52 30%, #4a4068 70%, #2d3a52 100%)
+          `,
+        }}
+      />
 
       {/* Decorative atmospheric particles */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
@@ -445,13 +426,7 @@ export default function CharacterLoginScreen({ onPlay, themeAudioUrl, heroVideoU
         </div>
 
         <motion.button
-          onClick={() => {
-            if (audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current = null;
-            }
-            onPlay?.();
-          }}
+          onClick={onPlay}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full py-4 rounded text-white font-bold text-xl tracking-[0.3em] uppercase relative overflow-hidden group"
