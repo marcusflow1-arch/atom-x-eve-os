@@ -33,6 +33,8 @@ import { sendTradeRequest } from '../components/game3d/social/tradeRequest';
 import { sendDuelChallenge } from '../components/game3d/social/duelChallenge';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
+import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
+import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -42,6 +44,9 @@ export default function GameView() {
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
+  const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
+
+  useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
 
 
   // World server join is handled by GameWorldServerManager — it enforces the
@@ -203,6 +208,9 @@ export default function GameView() {
 
       {/* Loot drop layer — spawns world items on enemy death, handles E-to-pickup */}
       <GameWorldLootLayer />
+
+      {/* Passive skill aura visual effects rendered over the player */}
+      <PassiveSkillAuraEffects activeSkillIds={[...learnedSkillIds]} />
     </div>
   );
 }
