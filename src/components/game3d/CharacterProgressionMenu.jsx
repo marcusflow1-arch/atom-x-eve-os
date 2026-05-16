@@ -40,16 +40,16 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
       className="fixed left-0 right-0 bottom-0 z-40 flex items-stretch"
       style={{
         top: '64px', // sit flush under the 64px (h-16) top header
-        background: 'rgba(4,8,14,0.88)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
+        background: 'rgba(4,8,14,0.35)', // lighter so game world shows through
       }}
       onClick={onClose}
     >
       <div
         className="relative flex flex-col w-full h-full"
         style={{
-          background: 'linear-gradient(135deg, rgba(14,22,34,0.96) 0%, rgba(8,12,20,0.96) 100%)',
+          background: 'linear-gradient(135deg, rgba(14,22,34,0.55) 0%, rgba(8,12,20,0.55) 100%)',
+          backdropFilter: 'blur(8px) saturate(120%)',
+          WebkitBackdropFilter: 'blur(8px) saturate(120%)',
         }}
         onClick={(e) => e.stopPropagation()}
       >

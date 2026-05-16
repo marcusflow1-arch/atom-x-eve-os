@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
+import WeaponSkillTree from './WeaponSkillTree';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
@@ -75,125 +76,171 @@ export default function WeaponMasteryTab() {
   );
 }
 
-// ── Per-weapon detail page with two branch trees ───────────────────────────
+// ── Per-weapon detail page — mirrors the reference MMO mastery screen ───────
 function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive }) {
   const weapon = WEAPONS.find((w) => w.id === weaponId);
   const tree = getTreeForWeapon(weaponId);
   const scaling = getDamageScalingFor(weaponId);
 
+  // Points logic — 1 unspent point per mastery level (matches reference).
+  const totalPoints = masteryEntry.level;
+  const pendingSpent = 0; // future allocation system; 0 until commit-points flow exists
+  const pointsAvailable = totalPoints - pendingSpent;
+
+  const xpPct = masteryEntry.isMaxLevel
+    ? 100
+    : (masteryEntry.killsIntoLevel / Math.max(1, masteryEntry.killsForNextLevel)) * 100;
+
+  // First three abilities across both branches → Q / R / F ability slots.
+  const allAbilities = tree.branches.flatMap((b) => b.abilities);
+  const abilitySlots = [
+    { key: 'Q', ability: allAbilities[0] },
+    { key: 'R', ability: allAbilities[1] },
+    { key: 'F', ability: allAbilities[2] },
+  ];
+
   return (
-    <div className="flex h-full">
-      {/* LEFT — weapon overview */}
-      <div className="w-72 border-r border-white/5 px-6 pt-6 flex flex-col">
-        <button onClick={onBack} className="flex items-center gap-1 text-xs text-white/60 hover:text-white mb-6">
+    <div
+      className="relative w-full h-full px-8 py-6 flex flex-col"
+      style={{
+        // Liquid-glass card — translucent so the world shows through.
+        background: 'rgba(8, 14, 22, 0.42)',
+        backdropFilter: 'blur(18px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 60px rgba(0,0,0,0.35)',
+      }}
+    >
+      {/* Top bar — Back + weapon name */}
+      <div className="flex items-center gap-6 mb-2">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-xs tracking-[0.2em] uppercase text-white/70 hover:text-white px-3 py-1.5 rounded-sm border border-white/15"
+          style={{ background: 'rgba(0,0,0,0.25)' }}
+        >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
-
-        <div className="text-5xl text-center mb-3">{weapon?.icon}</div>
-        <div className="text-center text-lg font-semibold text-white tracking-wide uppercase">
+        <div className="text-2xl font-semibold tracking-[0.45em] uppercase text-white/95">
           {weapon?.name}
         </div>
+      </div>
 
-        <div className="mt-6">
-          <div className="text-[10px] tracking-[0.25em] uppercase text-white/50">Mastery</div>
-          <div className="text-2xl font-light text-amber-200 mt-1">
-            Level {masteryEntry.level} / {MASTERY_MAX_LEVEL}
+      {/* Body — left column + right trees */}
+      <div className="flex-1 flex min-h-0 gap-10 mt-4">
+        {/* LEFT column */}
+        <div className="w-64 flex flex-col items-center">
+          {/* Points-available disc */}
+          <div
+            className="relative w-44 h-44 rounded-full flex items-center justify-center"
+            style={{
+              background: 'radial-gradient(circle, rgba(120,170,210,0.10) 0%, transparent 70%)',
+              border: '1px solid rgba(180,210,240,0.25)',
+            }}
+          >
+            <div className="absolute inset-2 rounded-full border border-white/10" />
+            <div className="text-center">
+              <div className="text-5xl font-light text-white tabular-nums">
+                {pointsAvailable}
+              </div>
+              <div className="mt-1 text-[9px] tracking-[0.35em] uppercase text-white/65">
+                Points<br/>Available
+              </div>
+            </div>
           </div>
-          <div className="mt-2 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <div
-              className="h-full"
-              style={{
-                width: `${masteryEntry.isMaxLevel ? 100 : (masteryEntry.killsIntoLevel / Math.max(1, masteryEntry.killsForNextLevel)) * 100}%`,
-                background: 'linear-gradient(90deg, #6ec3ff, #ffd86b)',
-              }}
-            />
+
+          {/* Level + XP bar */}
+          <div className="w-full mt-5">
+            <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden">
+              <div
+                className="h-full"
+                style={{
+                  width: `${Math.min(100, xpPct)}%`,
+                  background: 'linear-gradient(90deg, #6ec3ff, #a5d8ff)',
+                }}
+              />
+            </div>
+            <div className="flex justify-between mt-1.5 text-[10px] text-white/65 tracking-[0.05em]">
+              <span>Level {masteryEntry.level} / {MASTERY_MAX_LEVEL}</span>
+              <span>
+                {masteryEntry.isMaxLevel
+                  ? 'Mastered'
+                  : `${masteryEntry.killsIntoLevel.toLocaleString()} to level ${masteryEntry.level + 1}`}
+              </span>
+            </div>
           </div>
-          <div className="text-[10px] text-white/50 mt-1">
-            {masteryEntry.isMaxLevel ? 'Weapon Mastered' : `${masteryEntry.killsIntoLevel} / ${masteryEntry.killsForNextLevel} kills`}
+
+          {/* Abilities Q / R / F */}
+          <div className="w-full mt-8">
+            <div className="text-center text-[10px] tracking-[0.4em] uppercase text-white/60 mb-3">
+              Abilities
+            </div>
+            <div className="flex justify-center gap-2">
+              {abilitySlots.map(({ key, ability }) => (
+                <div key={key} className="flex flex-col items-center">
+                  <div
+                    className="w-14 h-14 rounded-sm flex items-center justify-center text-2xl"
+                    style={{
+                      background: 'rgba(0,0,0,0.45)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      boxShadow: 'inset 0 0 10px rgba(0,0,0,0.6)',
+                      opacity: ability ? 1 : 0.35,
+                    }}
+                  >
+                    {ability?.icon || ''}
+                  </div>
+                  <div className="mt-1.5 text-[10px] text-white/75 tracking-widest">{key}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Damage scales with */}
+          <div className="w-full mt-10 text-center">
+            <div className="text-[10px] tracking-[0.35em] uppercase text-white/55">
+              Damage Scales With
+            </div>
+            <div className="mt-2 text-xs text-white/80 italic capitalize">
+              {scaling.length === 0
+                ? '—'
+                : scaling.map((s) => s.stat).join(' and ')}
+            </div>
           </div>
         </div>
 
-        <div className="mt-8">
-          <div className="text-[10px] tracking-[0.25em] uppercase text-white/50 mb-2">Damage Scales With</div>
-          {scaling.length === 0 && <div className="text-xs text-white/40">—</div>}
-          {scaling.map((s) => (
-            <div key={s.stat} className="text-xs text-white/80 capitalize">
-              {s.stat} <span className="text-amber-400/70 ml-1">{s.tier}</span>
-            </div>
+        {/* RIGHT — two branch skill trees */}
+        <div className="flex-1 min-w-0 flex justify-around items-start overflow-y-auto pt-2">
+          {tree.branches.map((branch) => (
+            <WeaponSkillTree
+              key={branch.id}
+              branch={branch}
+              weaponLevel={masteryEntry.level}
+            />
           ))}
         </div>
+      </div>
 
+      {/* Bottom — Commit Points / Set Active button bar */}
+      <div className="mt-4 flex justify-center">
         <button
           onClick={onSetActive}
           disabled={isActive}
-          className="mt-auto mb-6 py-2 rounded-sm text-[11px] tracking-[0.3em] uppercase font-semibold transition-all"
+          className="px-10 py-3 text-[11px] tracking-[0.45em] uppercase font-semibold transition-all"
           style={{
-            background: isActive ? 'rgba(255,216,107,0.15)' : 'rgba(255,216,107,0.08)',
-            border: '1px solid rgba(255,216,107,0.35)',
-            color: isActive ? '#ffd86b' : 'rgba(255,216,107,0.85)',
+            background: isActive
+              ? 'rgba(59, 130, 246, 0.18)'
+              : 'linear-gradient(180deg, rgba(59,130,246,0.35) 0%, rgba(29,78,216,0.30) 100%)',
+            border: '1px solid rgba(96,165,250,0.55)',
+            color: '#dbeafe',
+            boxShadow: isActive
+              ? 'inset 0 0 12px rgba(59,130,246,0.25)'
+              : '0 0 18px rgba(59,130,246,0.25), inset 0 0 14px rgba(96,165,250,0.20)',
+            minWidth: 320,
             cursor: isActive ? 'default' : 'pointer',
           }}
         >
-          {isActive ? 'Active Weapon' : 'Set Active'}
+          {isActive
+            ? 'Active Weapon'
+            : `Commit ${pointsAvailable} Point${pointsAvailable === 1 ? '' : 's'}`}
         </button>
-      </div>
-
-      {/* RIGHT — two branch trees */}
-      <div className="flex-1 min-w-0 px-10 pt-8 overflow-y-auto">
-        <div className="grid grid-cols-2 gap-12">
-          {tree.branches.map((branch) => (
-            <BranchTree key={branch.id} branch={branch} weaponLevel={masteryEntry.level} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BranchTree({ branch, weaponLevel }) {
-  return (
-    <div>
-      <div
-        className="text-center text-sm tracking-[0.4em] uppercase pb-4 mb-6"
-        style={{
-          color: branch.color,
-          borderBottom: `1px solid ${branch.color}40`,
-        }}
-      >
-        {branch.name}
-      </div>
-      <div className="space-y-4">
-        {branch.abilities.map((ab) => {
-          const unlocked = weaponLevel >= ab.unlockLevel;
-          return (
-            <div
-              key={ab.id}
-              className="flex items-center gap-3 p-3 rounded-md border transition-all"
-              style={{
-                background: unlocked ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.15)',
-                borderColor: unlocked ? `${branch.color}55` : 'rgba(255,255,255,0.05)',
-                opacity: unlocked ? 1 : 0.35,
-              }}
-            >
-              <div
-                className="w-10 h-10 rounded-md flex items-center justify-center text-xl"
-                style={{
-                  background: unlocked ? `${branch.color}22` : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${unlocked ? branch.color : 'rgba(255,255,255,0.1)'}`,
-                }}
-              >
-                {ab.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-white">{ab.name}</div>
-                <div className="text-[10px] tracking-[0.25em] uppercase mt-0.5"
-                     style={{ color: unlocked ? branch.color : 'rgba(255,255,255,0.4)' }}>
-                  {unlocked ? 'Unlocked' : `Unlocks at Lv ${ab.unlockLevel}`}
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
