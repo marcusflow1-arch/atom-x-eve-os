@@ -167,6 +167,18 @@ export function isPowerChargeActive() {
   return state.powerChargeHitsLeft > 0 && state.powerChargeExpiresAt >= now();
 }
 
+export function isRepulsionActive() {
+  return isCastVisualActive('repulsion');
+}
+
+export function isBarrierActive() {
+  return isCastVisualActive('barrier_aura') || isCastVisualActive('guardian_wall') || isCastVisualActive('iron_fortress') || isCastVisualActive('counter_pulse') || isCastVisualActive('aegis_shield');
+}
+
+export function isDestructionActive() {
+  return isCastVisualActive('heavens_destruction');
+}
+
 export function isCastVisualActive(skillId) {
   return (state.castVisuals?.[skillId] || 0) >= now();
 }
