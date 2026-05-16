@@ -1,25 +1,32 @@
 // ─── Halo Store ────────────────────────────────────────────────────────────
-// Persistent, account-wide store for the player's Halo progression.
-// Driven by PvP kills — every player kill grants 1 Halo XP. When accumulated
-// kills meet `killsRequiredForNextLevel(currentLevel)`, the Halo levels up.
+// Persistent, account-wide Halo progression driven by a PvP-kill
+// ENHANCEMENT/GAMBLE system (like elixir enhancement):
+//
+//   1. Player earns PvP kills → banked as `kills` currency.
+//   2. To level up, player spends HALO_ATTEMPT_COST (10) kills on an attempt.
+//   3. The attempt rolls against `getSuccessChanceForLevel(currentLevel)`.
+//      - Success → Halo Level +1.
+//      - Failure → kills are consumed, level unchanged.
 //
 // API mirrors the existing weaponClassBuffStore pattern (no zustand dep).
 //
-//   recordPvPKill()         — call when player kills another player
-//   getHaloState()          — { level, killsThisLevel, totalKills, tier, bonuses }
-//   getHaloBonuses()        — current applied bonuses (for stats pipeline)
+//   recordPvPKill()         — bank kills earned in PvP combat
+//   attemptEnhancement()    — spend kills, roll for level up
+//   getHaloState()          — full snapshot for UI
+//   getHaloBonuses()        — bonuses applied to stats pipeline
 //   subscribeHalo(fn)       — reactive subscription
 //   setHaloLevel(level)     — admin / debug
 //   resetHalo()             — admin / debug
 
 import {
   MAX_HALO_LEVEL,
-  killsRequiredForNextLevel,
+  HALO_ATTEMPT_COST,
+  getSuccessChanceForLevel,
   getTierForLevel,
   getHaloBonusesForLevel,
 } from './haloData';
 
-const STORAGE_KEY = 'halo_progression_v1';
+const STORAGE_KEY = 'halo_progression_v2';
 
 const loadState = () => {
   try {
@@ -28,12 +35,14 @@ const loadState = () => {
       const parsed = JSON.parse(raw);
       return {
         level:           Math.max(0, Math.min(MAX_HALO_LEVEL, parsed.level || 0)),
-        killsThisLevel:  Math.max(0, parsed.killsThisLevel || 0),
+        kills:           Math.max(0, parsed.kills || 0),
         totalKills:      Math.max(0, parsed.totalKills || 0),
+        totalAttempts:   Math.max(0, parsed.totalAttempts || 0),
+        totalSuccesses:  Math.max(0, parsed.totalSuccesses || 0),
       };
     }
   } catch {}
-  return { level: 0, killsThisLevel: 0, totalKills: 0 };
+  return { level: 0, kills: 0, totalKills: 0, totalAttempts: 0, totalSuccesses: 0 };
 };
 
 let state = loadState();
@@ -52,11 +61,16 @@ const emit = () => {
 
 export function getHaloState() {
   const bonuses = getHaloBonusesForLevel(state.level);
+  const successChance = getSuccessChanceForLevel(state.level);
   return {
     level:           state.level,
-    killsThisLevel:  state.killsThisLevel,
-    killsRequired:   killsRequiredForNextLevel(state.level),
-    totalKills:      state.totalKills,
+    kills:           state.kills,           // banked, ready-to-spend kill currency
+    totalKills:      state.totalKills,      // lifetime kills (never decremented)
+    totalAttempts:   state.totalAttempts,
+    totalSuccesses:  state.totalSuccesses,
+    attemptCost:     HALO_ATTEMPT_COST,
+    canAttempt:      state.kills >= HALO_ATTEMPT_COST && state.level < MAX_HALO_LEVEL,
+    successChance,                          // 0..1 for the NEXT attempt
     tier:            getTierForLevel(state.level),
     bonuses,
     isMaxLevel:      state.level >= MAX_HALO_LEVEL,
@@ -73,42 +87,60 @@ export function subscribeHalo(fn) {
   return () => listeners.delete(fn);
 }
 
-// Award PvP kill(s). Returns the number of times the halo leveled up
-// during this call so callers can show "Halo Level Up!" toasts.
+// Bank a PvP kill. Returns the new kill currency total.
 export function recordPvPKill(count = 1) {
-  if (count <= 0) return 0;
-  let levelUps = 0;
-  let { level, killsThisLevel, totalKills } = state;
-  totalKills += count;
-  killsThisLevel += count;
-
-  while (level < MAX_HALO_LEVEL) {
-    const need = killsRequiredForNextLevel(level);
-    if (killsThisLevel < need) break;
-    killsThisLevel -= need;
-    level += 1;
-    levelUps += 1;
-  }
-  if (level >= MAX_HALO_LEVEL) killsThisLevel = 0;
-
-  state = { level, killsThisLevel, totalKills };
+  if (count <= 0) return state.kills;
+  state = {
+    ...state,
+    kills:      state.kills + count,
+    totalKills: state.totalKills + count,
+  };
   save();
   emit();
-  return levelUps;
+  return state.kills;
+}
+
+// Attempt to enhance the Halo. Returns:
+//   { ok: false, reason }                                — couldn't attempt
+//   { ok: true, success: true,  level, chance }          — leveled up
+//   { ok: true, success: false, level, chance }          — failed, kills lost
+export function attemptEnhancement() {
+  if (state.level >= MAX_HALO_LEVEL) {
+    return { ok: false, reason: 'max_level' };
+  }
+  if (state.kills < HALO_ATTEMPT_COST) {
+    return { ok: false, reason: 'insufficient_kills', need: HALO_ATTEMPT_COST, have: state.kills };
+  }
+
+  const chance = getSuccessChanceForLevel(state.level);
+  const success = Math.random() < chance;
+
+  let nextLevel = state.level;
+  if (success) nextLevel += 1;
+
+  state = {
+    ...state,
+    kills:          state.kills - HALO_ATTEMPT_COST,
+    level:          nextLevel,
+    totalAttempts:  state.totalAttempts + 1,
+    totalSuccesses: state.totalSuccesses + (success ? 1 : 0),
+  };
+  save();
+  emit();
+  return { ok: true, success, level: nextLevel, chance };
 }
 
 export function setHaloLevel(level) {
   state = {
+    ...state,
     level: Math.max(0, Math.min(MAX_HALO_LEVEL, Math.round(level))),
-    killsThisLevel: 0,
-    totalKills: state.totalKills,
   };
   save();
   emit();
 }
 
 export function resetHalo() {
-  state = { level: 0, killsThisLevel: 0, totalKills: 0 };
+  state = { level: 0, kills: 0, totalKills: 0, totalAttempts: 0, totalSuccesses: 0 };
   save();
   emit();
 }
