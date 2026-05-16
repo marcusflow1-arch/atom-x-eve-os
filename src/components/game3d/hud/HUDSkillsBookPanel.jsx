@@ -5,6 +5,7 @@ import { SKILLS_DATABASE, RARITIES } from '../equipment/skillData';
 import { getLootInventory, subscribeLootInventory, getLearnedSkillIds, subscribeLearnedSkills } from '../lootStore';
 import SkillUpgradePanel from '../equipment/SkillUpgradePanel';
 import { getSkillData, subscribeSkillUpgrades } from '../equipment/skillUpgradeStore';
+import SkillEquipSlots from './SkillEquipSlots';
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const PASSIVE_IDS = new Set([
@@ -297,6 +298,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
   const [lootInv, setLootInv] = useState(getLootInventory());
   const [learnedIds, setLearnedIds] = useState(getLearnedSkillIds());
   const [upgradeSkill, setUpgradeSkill] = useState(null);
+  const [draggedSkill, setDraggedSkill] = useState(null); // skill pending equip into a slot
 
   useEffect(() => subscribeLootInventory(setLootInv), []);
   useEffect(() => subscribeLearnedSkills(setLearnedIds), []);
@@ -356,24 +358,30 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             onClick={onClose}
           />
 
-          {/* Book wrapper — two pages side by side */}
+          {/* Book wrapper — slots on left + two pages side by side */}
           <motion.div
             initial={{ opacity: 0, scale: 0.88, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.88, y: 24 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="fixed z-[71] flex flex-col pointer-events-auto"
+            className="fixed z-[71] flex items-center pointer-events-auto"
             style={{
               bottom: '110px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: 720,
+              width: 820,
               height: 520,
             }}
           >
+            {/* ── Skill Equip Slots (outside-left of book) ── */}
+            <SkillEquipSlots
+              draggedSkill={draggedSkill}
+              onClearDrag={() => setDraggedSkill(null)}
+            />
             {/* ── Outer book cover (slight 3-D wedge feel via perspective) ── */}
             <div
-              className="flex flex-1 overflow-hidden"
+              className="flex overflow-hidden"
+              style={{ flex: 1 }}
               style={{
                 borderRadius: 18,
                 boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3)',
@@ -446,7 +454,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                           chapter={activeChapter}
                           skills={activeSkills}
                           selectedSkill={selectedSkill}
-                          onSelectSkill={setSelectedSkill}
+                          onSelectSkill={(sk) => { setSelectedSkill(sk); setDraggedSkill(sk); }}
                           onUpgradeSkill={setUpgradeSkill}
                         />
                       )}
@@ -568,6 +576,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
         </>
       )}
       {/* Skill Upgrade Panel — opens alongside the book */}
+
       <AnimatePresence>
         {upgradeSkill && (
           <SkillUpgradePanel
