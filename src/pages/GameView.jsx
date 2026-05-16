@@ -26,6 +26,7 @@ import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemot
 import NetworkValidationTelemetry from '../components/network/debug/NetworkValidationTelemetry';
 import { partyStore } from '../components/game3d/social/socialStores';
 import GameWorldLootLayer from '../components/game3d/GameWorldLootLayer';
+import MiscInventoryPanel from '../components/game3d/MiscInventoryPanel';
 // Each action has its own dedicated send module — they do NOT share a code path.
 import { sendFriendRequest } from '../components/game3d/social/friendRequest';
 import { sendPartyInvite } from '../components/game3d/social/partyInvite';
@@ -42,6 +43,7 @@ export default function GameView() {
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
+  const [miscInventoryOpen, setMiscInventoryOpen] = useState(false);
 
   // World server join is handled by GameWorldServerManager — it enforces the
   // 20-player cap and dispatches joinMultiplayerChannel only when capacity allows.
@@ -146,16 +148,19 @@ export default function GameView() {
         setSkillTreeOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
+      } else if (e.key.toLowerCase() === 'i') {
+        setMiscInventoryOpen((v) => !v);
       } else if (e.key === 'Escape') {
         if (storeOpen) setStoreOpen(false);
         if (progressionOpen) setProgressionOpen(false);
         if (skillTreeOpen) setSkillTreeOpen(false);
         if (friendsListOpen) setFriendsListOpen(false);
+        if (miscInventoryOpen) setMiscInventoryOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen, progressionOpen]);
+  }, [phase, storeOpen, progressionOpen, skillTreeOpen, friendsListOpen, miscInventoryOpen]);
 
   if (phase === 'login') {
     return (
@@ -201,6 +206,7 @@ export default function GameView() {
 
       {/* Loot drop layer — spawns world items on enemy death, handles E-to-pickup */}
       <GameWorldLootLayer />
+      <MiscInventoryPanel open={miscInventoryOpen} onClose={() => setMiscInventoryOpen(false)} />
     </div>
   );
 }
