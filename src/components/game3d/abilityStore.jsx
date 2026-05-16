@@ -2,6 +2,7 @@
 // Ability Store — equipped skills + active target
 // Equipped slots are persisted to localStorage so they survive game exits.
 // ─────────────────────────────────────────────
+import { SKILLS_DATABASE } from './equipment/skillData';
 
 const LS_EQUIPPED_KEY = 'game_equipped_abilities_v2';
 
@@ -59,10 +60,52 @@ export const ABILITY_DEFINITIONS = [
 const SLOT_COUNT = 8;
 const DEFAULT_EQUIPPED = Array(SLOT_COUNT).fill(null);
 
+// In the editor/preview environment, we pre-fill empty slots with a curated
+// set of skills so devs can test combat without manually equipping every time.
+// Live/published builds always start with empty slots.
+function isEditorEnv() {
+  try {
+    const h = window.location.hostname;
+    return h === 'localhost' || h.includes('base44.app') || h.includes('preview');
+  } catch { return false; }
+}
+
+const RARITY_COLORS = {
+  common: '#9ca3af', uncommon: '#22c55e', rare: '#60a5fa', epic: '#a78bfa',
+  legendary: '#f59e0b', mythic: '#f43f5e', divine: '#e879f9',
+};
+
+function buildEditorDefaultSlots() {
+  // Lazy import to avoid circular dep — synchronous require not available in Vite,
+  // so we use dynamic import on first equip OR import statically at top.
+  // Here we use a static import (added at top of file).
+  const picks = [
+    'aegis_shield', 'focus', 'haste', 'power_charge',
+    'decisive_blow', 'gods_deflection', 'lightning_strike', 'frost_tornado',
+  ];
+  return picks.map((id) => {
+    const sk = SKILLS_DATABASE.find((s) => s.id === id);
+    if (sk) {
+      return {
+        id: sk.id,
+        name: sk.name,
+        icon: sk.icon,
+        color: RARITY_COLORS[sk.rarity] || '#a78bfa',
+        cooldown: sk.cooldown || 4.0,
+        rarity: sk.rarity,
+      };
+    }
+    // Fallback for ability ids like lightning_strike that live in ABILITY_DEFINITIONS
+    return id;
+  });
+}
+
 function loadEquipped() {
   try {
     const raw = localStorage.getItem(LS_EQUIPPED_KEY);
-    if (!raw) return [...DEFAULT_EQUIPPED];
+    if (!raw) {
+      return isEditorEnv() ? buildEditorDefaultSlots() : [...DEFAULT_EQUIPPED];
+    }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [...DEFAULT_EQUIPPED];
     // Pad/truncate to 8 slots so we can migrate old saves (used to be 4)
@@ -71,9 +114,13 @@ function loadEquipped() {
       const v = parsed[i];
       if (typeof v === 'string' || (v && typeof v === 'object' && v.id)) out[i] = v;
     }
+    // In editor mode, fill any remaining empty slots with defaults
+    if (isEditorEnv() && out.every((s) => !s)) {
+      return buildEditorDefaultSlots();
+    }
     return out;
   } catch {
-    return [...DEFAULT_EQUIPPED];
+    return isEditorEnv() ? buildEditorDefaultSlots() : [...DEFAULT_EQUIPPED];
   }
 }
 
