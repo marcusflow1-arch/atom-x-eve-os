@@ -35,21 +35,22 @@ function TOCLeftPage({ onSelectChapter, collectedIds, activeChapterIdx }) {
   return (
     <div className="flex flex-col h-full px-5 py-5">
       <div className="text-center mb-4">
-        <div className="text-2xl mb-1">📖</div>
-        <h2 className="text-gray-700 font-black text-base tracking-tight">Tome of Skills</h2>
-        <p className="text-gray-400 text-[9px] tracking-widest uppercase mt-0.5">Table of Contents</p>
+        <div className="text-2xl mb-1 opacity-80">📖</div>
+        <h2 className="text-amber-100/90 font-semibold text-base tracking-[0.25em] uppercase">Tome of Skills</h2>
+        <p className="text-white/40 text-[9px] tracking-[0.35em] uppercase mt-1">Table of Contents</p>
+        <div className="mx-auto mt-2 h-px w-20" style={{ background: 'linear-gradient(to right, transparent, rgba(255,216,107,0.4), transparent)' }} />
       </div>
 
       {collectedIds.size === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-3">
-          <div className="text-3xl">📜</div>
-          <p className="text-gray-400 text-[10px] text-center leading-relaxed">
+          <div className="text-3xl opacity-60">📜</div>
+          <p className="text-white/50 text-[10px] text-center leading-relaxed tracking-wide">
             Your tome is empty.<br />
             Defeat enemies to collect<br />skill scrolls.
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5 flex-1">
+        <div className="flex flex-col gap-2 flex-1">
           {CHAPTERS.map((ch, idx) => {
             const skills = getSkillsForChapter(ch.id, collectedIds);
             if (skills.length === 0) return null;
@@ -58,27 +59,33 @@ function TOCLeftPage({ onSelectChapter, collectedIds, activeChapterIdx }) {
               <button
                 key={ch.id}
                 onClick={() => onSelectChapter(idx)}
-                className="group flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left"
+                className="group flex items-center gap-2.5 px-3 py-2.5 transition-all text-left"
                 style={{
-                  background: isActive ? `${ch.color}18` : 'rgba(255,255,255,0.55)',
-                  backdropFilter: 'blur(12px)',
-                  borderColor: isActive ? `${ch.color}60` : 'rgba(200,200,210,0.7)',
-                  boxShadow: isActive ? `0 0 12px ${ch.color}20` : '0 2px 8px rgba(0,0,0,0.06)',
+                  background: isActive
+                    ? `linear-gradient(90deg, ${ch.color}22 0%, transparent 100%)`
+                    : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${isActive ? ch.color + '60' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: 2,
+                  boxShadow: isActive ? `inset 0 0 12px ${ch.color}20` : 'none',
                 }}
               >
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 border"
-                  style={{ background: `${ch.color}18`, borderColor: `${ch.color}40` }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+                  style={{
+                    background: `radial-gradient(circle, ${ch.color}30 0%, rgba(0,0,0,0.5) 70%)`,
+                    border: `1px solid ${ch.color}80`,
+                    boxShadow: `0 0 8px ${ch.color}40`,
+                  }}
                 >
                   {ch.emoji}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-gray-700 font-bold text-[11px]">{ch.title}</div>
-                  <div className="text-gray-400 text-[8px]">{skills.length} skills</div>
+                  <div className="text-white/90 font-semibold text-[11px] tracking-[0.18em] uppercase">{ch.title}</div>
+                  <div className="text-white/40 text-[8px] tracking-widest uppercase mt-0.5">{skills.length} skills</div>
                 </div>
                 <ChevronRight
-                  className="w-3 h-3 flex-shrink-0 group-hover:translate-x-0.5 transition-transform"
-                  style={{ color: isActive ? ch.color : '#d1d5db' }}
+                  className="w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform"
+                  style={{ color: isActive ? ch.color : 'rgba(255,255,255,0.25)' }}
                 />
               </button>
             );
@@ -86,7 +93,7 @@ function TOCLeftPage({ onSelectChapter, collectedIds, activeChapterIdx }) {
         </div>
       )}
 
-      <div className="text-center text-gray-300 text-[8px] mt-3 tracking-wide">
+      <div className="text-center text-white/30 text-[8px] mt-3 tracking-[0.3em] uppercase">
         ← → to turn pages
       </div>
     </div>
@@ -99,33 +106,41 @@ function ChapterLeftPage({ chapter, skills, selectedSkill, onSelectSkill, onUpgr
     <div className="flex flex-col h-full px-4 py-4">
       {/* Chapter header */}
       <div
-        className="flex items-center gap-2.5 mb-3 pb-2.5 border-b flex-shrink-0"
-        style={{ borderColor: `${chapter.color}30` }}
+        className="flex items-center gap-2.5 mb-3 pb-2.5 flex-shrink-0"
+        style={{ borderBottom: `1px solid ${chapter.color}40` }}
       >
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-xl border flex-shrink-0"
-          style={{ background: `${chapter.color}18`, borderColor: `${chapter.color}50` }}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-xl flex-shrink-0"
+          style={{
+            background: `radial-gradient(circle, ${chapter.color}30 0%, rgba(0,0,0,0.5) 70%)`,
+            border: `1px solid ${chapter.color}90`,
+            boxShadow: `0 0 10px ${chapter.color}40`,
+          }}
         >
           {chapter.emoji}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-700 font-black text-[12px] leading-tight">{chapter.title}</h3>
-          <p className="text-gray-400 text-[8px]">{chapter.subtitle}</p>
+          <h3 className="text-white/95 font-semibold text-[12px] leading-tight tracking-[0.2em] uppercase">{chapter.title}</h3>
+          <p className="text-white/45 text-[8px] tracking-widest uppercase mt-0.5">{chapter.subtitle}</p>
         </div>
         <div
-          className="px-2 py-1 rounded-lg border flex-shrink-0 text-center"
-          style={{ background: `${chapter.color}12`, borderColor: `${chapter.color}30` }}
+          className="px-2 py-1 flex-shrink-0 text-center"
+          style={{
+            background: `${chapter.color}15`,
+            border: `1px solid ${chapter.color}40`,
+            borderRadius: 2,
+          }}
         >
-          <div className="font-black text-[12px] leading-none" style={{ color: chapter.color }}>{skills.length}</div>
-          <div className="text-gray-400 text-[7px]">learned</div>
+          <div className="font-semibold text-[12px] leading-none" style={{ color: chapter.color }}>{skills.length}</div>
+          <div className="text-white/40 text-[7px] tracking-widest uppercase mt-0.5">learned</div>
         </div>
       </div>
 
       {/* Skill list */}
       <div className="flex flex-col gap-1 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {skills.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-24 gap-2 text-gray-400 text-[10px] text-center">
-            <span className="text-xl">📜</span>
+          <div className="flex flex-col items-center justify-center h-24 gap-2 text-white/45 text-[10px] text-center tracking-wide">
+            <span className="text-xl opacity-60">📜</span>
             No {chapter.title} skills yet.<br />Defeat enemies to find scrolls.
           </div>
         ) : (
@@ -137,26 +152,33 @@ function ChapterLeftPage({ chapter, skills, selectedSkill, onSelectSkill, onUpgr
                 key={sk.id}
                 onClick={() => { onSelectSkill(isSelected ? null : sk); }}
                 onDoubleClick={() => onUpgradeSkill && onUpgradeSkill(sk)}
-                className="flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all text-left w-full"
+                className="flex items-center gap-2 px-2.5 py-2 transition-all text-left w-full"
                 style={{
-                  background: isSelected ? `${color}18` : 'rgba(255,255,255,0.6)',
-                  borderColor: isSelected ? `${color}60` : 'rgba(200,200,210,0.5)',
-                  boxShadow: isSelected ? `0 0 10px ${color}25` : 'none',
+                  background: isSelected
+                    ? `linear-gradient(90deg, ${color}25 0%, transparent 100%)`
+                    : 'rgba(255,255,255,0.025)',
+                  border: `1px solid ${isSelected ? color + '70' : 'rgba(255,255,255,0.06)'}`,
+                  borderRadius: 2,
+                  boxShadow: isSelected ? `inset 0 0 10px ${color}25` : 'none',
                 }}
               >
                 <div
-                  className="w-7 h-7 rounded-md flex items-center justify-center text-sm flex-shrink-0 border"
-                  style={{ background: `${color}20`, borderColor: `${color}50` }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+                  style={{
+                    background: `radial-gradient(circle, ${color}30 0%, rgba(0,0,0,0.55) 70%)`,
+                    border: `1px solid ${color}80`,
+                    boxShadow: `0 0 6px ${color}40`,
+                  }}
                 >
                   {sk.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-gray-700 text-[10px] font-bold truncate">{sk.name}</div>
-                  <div className="text-[8px] font-black tracking-wider" style={{ color }}>{sk.rarity?.toUpperCase()}</div>
+                  <div className="text-white/90 text-[10px] font-semibold truncate tracking-wide">{sk.name}</div>
+                  <div className="text-[8px] font-semibold tracking-[0.25em] uppercase mt-0.5" style={{ color }}>{sk.rarity}</div>
                 </div>
                 {sk.damage_pct && (
                   <div className="text-right flex-shrink-0">
-                    <span className="text-gray-500 font-black text-[9px]">{sk.damage_pct}%</span>
+                    <span className="text-white/70 font-semibold text-[9px] tabular-nums">{sk.damage_pct}%</span>
                   </div>
                 )}
               </button>
@@ -174,7 +196,7 @@ function SkillDetailPage({ skill, chapter, onUpgradeSkill }) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 px-5">
         <div className="text-3xl opacity-30">👆</div>
-        <p className="text-gray-400 text-[10px] text-center leading-relaxed">
+        <p className="text-white/45 text-[10px] text-center leading-relaxed tracking-wide">
           Select a skill on the left<br />to view its details here.
         </p>
       </div>
@@ -188,95 +210,114 @@ function SkillDetailPage({ skill, chapter, onUpgradeSkill }) {
       {/* Skill identity */}
       <div className="flex flex-col items-center text-center mb-4">
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border-2 mb-3"
+          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3"
           style={{
-            background: `${color}18`,
-            borderColor: `${color}60`,
-            boxShadow: `0 0 24px ${color}30`,
+            background: `radial-gradient(circle, ${color}30 0%, rgba(0,0,0,0.55) 70%)`,
+            border: `1.5px solid ${color}`,
+            boxShadow: `0 0 28px ${color}55, inset 0 0 12px ${color}33`,
           }}
         >
           {skill.icon}
         </div>
-        <h3 className="text-gray-700 font-black text-sm leading-tight mb-1">{skill.name}</h3>
+        <h3 className="text-white/95 font-semibold text-sm leading-tight mb-2 tracking-[0.2em] uppercase">{skill.name}</h3>
         <span
-          className="text-[9px] px-2 py-0.5 rounded-full font-black tracking-wider border"
-          style={{ color, background: `${color}15`, borderColor: `${color}40` }}
+          className="text-[9px] px-2.5 py-0.5 font-semibold tracking-[0.3em] uppercase"
+          style={{
+            color,
+            background: `${color}18`,
+            border: `1px solid ${color}55`,
+            borderRadius: 2,
+          }}
         >
-          {label?.toUpperCase() || skill.rarity?.toUpperCase()}
+          {label || skill.rarity}
         </span>
       </div>
 
       {/* Divider */}
-      <div className="w-full h-px mb-4" style={{ background: `linear-gradient(to right, transparent, ${color}40, transparent)` }} />
+      <div className="w-full h-px mb-4" style={{ background: `linear-gradient(to right, transparent, ${color}60, transparent)` }} />
 
       {/* Stats */}
       <div className="flex flex-col gap-2 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {skill.type && (
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-gray-400">Type</span>
-            <span className="text-gray-600 font-bold">{skill.type}</span>
+            <span className="text-white/45 tracking-[0.2em] uppercase">Type</span>
+            <span className="text-white/85 font-semibold tracking-wide">{skill.type}</span>
           </div>
         )}
         {skill.damage_pct && (
           <div
-            className="flex items-center justify-between px-3 py-2 rounded-lg border"
-            style={{ background: `${color}10`, borderColor: `${color}30` }}
+            className="flex items-center justify-between px-3 py-2"
+            style={{
+              background: `${color}12`,
+              border: `1px solid ${color}40`,
+              borderRadius: 2,
+            }}
           >
-            <span className="text-gray-500 text-[10px]">Damage</span>
-            <span className="font-black text-sm" style={{ color }}>{skill.damage_pct}%</span>
+            <span className="text-white/60 text-[10px] tracking-[0.2em] uppercase">Damage</span>
+            <span className="font-semibold text-sm tabular-nums" style={{ color }}>{skill.damage_pct}%</span>
           </div>
         )}
         {skill.cooldown && (
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-gray-400">Cooldown</span>
-            <span className="text-gray-600 font-bold">{skill.cooldown}s</span>
+            <span className="text-white/45 tracking-[0.2em] uppercase">Cooldown</span>
+            <span className="text-white/85 font-semibold tabular-nums">{skill.cooldown}s</span>
           </div>
         )}
         {skill.stamina_cost && (
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-gray-400">Stamina Cost</span>
-            <span className="text-gray-600 font-bold">{skill.stamina_cost}</span>
+            <span className="text-white/45 tracking-[0.2em] uppercase">Stamina Cost</span>
+            <span className="text-white/85 font-semibold tabular-nums">{skill.stamina_cost}</span>
           </div>
         )}
         {skill.range && (
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-gray-400">Range</span>
-            <span className="text-gray-600 font-bold">{skill.range}</span>
+            <span className="text-white/45 tracking-[0.2em] uppercase">Range</span>
+            <span className="text-white/85 font-semibold tabular-nums">{skill.range}</span>
           </div>
         )}
 
         {/* Description */}
         {skill.description && (
           <>
-            <div className="w-full h-px mt-1" style={{ background: 'rgba(200,200,210,0.5)' }} />
-            <p className="text-gray-500 text-[10px] leading-relaxed mt-1">{skill.description}</p>
+            <div className="w-full h-px mt-1" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            <p className="text-white/65 text-[10px] leading-relaxed mt-1 italic">{skill.description}</p>
           </>
         )}
 
         {/* Upgrade button */}
         <button
           onClick={() => onUpgradeSkill && onUpgradeSkill(skill)}
-          className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border transition-all hover:scale-[1.02] active:scale-95"
-          style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.4)', color: '#f59e0b' }}
+          className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 transition-all hover:brightness-125 active:scale-95"
+          style={{
+            background: 'linear-gradient(180deg, rgba(245,158,11,0.25) 0%, rgba(180,83,9,0.20) 100%)',
+            border: '1px solid rgba(245,158,11,0.55)',
+            color: '#fde68a',
+            borderRadius: 2,
+            boxShadow: '0 0 12px rgba(245,158,11,0.20), inset 0 0 10px rgba(245,158,11,0.15)',
+          }}
         >
           <TrendingUp className="w-3 h-3" />
-          <span className="text-[9px] font-black tracking-wider">UPGRADE / ASSIGN SLOT</span>
+          <span className="text-[9px] font-semibold tracking-[0.3em] uppercase">Upgrade / Assign Slot</span>
         </button>
 
         {/* Equipped badge */}
         {skill.equipped && (
           <div
-            className="mt-auto flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border"
-            style={{ background: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.4)' }}
+            className="mt-auto flex items-center justify-center gap-1.5 px-3 py-2"
+            style={{
+              background: 'rgba(16,185,129,0.12)',
+              border: '1px solid rgba(16,185,129,0.45)',
+              borderRadius: 2,
+            }}
           >
-            <Sparkles className="w-3 h-3 text-emerald-500" />
-            <span className="text-emerald-600 text-[9px] font-black tracking-wider">CURRENTLY EQUIPPED</span>
+            <Sparkles className="w-3 h-3 text-emerald-400" />
+            <span className="text-emerald-300 text-[9px] font-semibold tracking-[0.3em] uppercase">Currently Equipped</span>
           </div>
         )}
       </div>
 
       {/* Footer hint */}
-      <div className="mt-3 pt-2 border-t text-gray-300 text-[8px] text-center" style={{ borderColor: 'rgba(200,200,210,0.4)' }}>
+      <div className="mt-3 pt-2 text-white/30 text-[8px] text-center tracking-[0.25em] uppercase" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         Equip via Equipment → Skills tab
       </div>
     </div>
@@ -359,13 +400,13 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop — lighter so the world shows through */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[70]"
-            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(4,8,14,0.32)', backdropFilter: 'blur(4px)' }}
             onClick={onClose}
           />
 
@@ -387,56 +428,52 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
               draggedSkill={draggedSkill}
               onClearDrag={() => setDraggedSkill(null)}
             />
-            {/* ── Outer book cover (slight 3-D wedge feel via perspective) ── */}
+            {/* ── Outer book frame — liquid-glass, New-World style ── */}
             <div
-              className="flex overflow-hidden"
+              className="flex overflow-hidden relative"
               style={{
                 width: 720,
                 height: 520,
-                borderRadius: 18,
-                boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: 4,
+                boxShadow: '0 40px 100px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,216,107,0.12), 0 0 24px rgba(255,216,107,0.08)',
+                border: '1px solid rgba(255,216,107,0.28)',
                 perspective: '1200px',
+                background: 'linear-gradient(135deg, rgba(10,14,22,0.55) 0%, rgba(6,10,16,0.55) 100%)',
+                backdropFilter: 'blur(16px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(140%)',
               }}
             >
+              {/* Decorative engraved corner brackets */}
+              {[
+                { top: 6, left: 6, borderTop: '1px solid rgba(255,216,107,0.5)', borderLeft: '1px solid rgba(255,216,107,0.5)' },
+                { top: 6, right: 6, borderTop: '1px solid rgba(255,216,107,0.5)', borderRight: '1px solid rgba(255,216,107,0.5)' },
+                { bottom: 6, left: 6, borderBottom: '1px solid rgba(255,216,107,0.5)', borderLeft: '1px solid rgba(255,216,107,0.5)' },
+                { bottom: 6, right: 6, borderBottom: '1px solid rgba(255,216,107,0.5)', borderRight: '1px solid rgba(255,216,107,0.5)' },
+              ].map((s, i) => (
+                <div key={i} className="absolute w-3 h-3 pointer-events-none z-10" style={s} />
+              ))}
+
               {/* ── LEFT PAGE ──────────────────────────────────────────── */}
               <div
                 className="relative flex flex-col overflow-hidden"
                 style={{
                   width: '50%',
-                  borderRadius: '18px 0 0 18px',
-                  /* Inward fold on right edge */
-                  background: 'rgba(238, 238, 244, 0.82)',
-                  backdropFilter: 'blur(40px) saturate(180%) brightness(1.06)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%) brightness(1.06)',
-                  boxShadow: 'inset -8px 0 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9)',
-                  borderRight: '1px solid rgba(160,160,180,0.35)',
-                  transformStyle: 'preserve-3d',
-                  transform: 'rotateY(4deg)',
-                  transformOrigin: 'right center',
+                  background: 'linear-gradient(135deg, rgba(14,22,34,0.40) 0%, rgba(8,12,20,0.40) 100%)',
+                  boxShadow: 'inset -1px 0 0 rgba(255,216,107,0.15), inset 0 0 60px rgba(0,0,0,0.35)',
                 }}
               >
-                {/* Left spine accent */}
-                <div
-                  className="absolute left-0 top-0 bottom-0 w-1.5"
-                  style={{
-                    borderRadius: '18px 0 0 18px',
-                    background: 'linear-gradient(to right, rgba(140,140,160,0.5), transparent)',
-                  }}
-                />
-
                 {/* Left page header */}
                 <div
-                  className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b"
-                  style={{ borderColor: 'rgba(180,180,200,0.4)' }}
+                  className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+                  style={{ borderBottom: '1px solid rgba(255,216,107,0.25)' }}
                 >
                   <div className="flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-[0.12em]">
+                    <BookOpen className="w-3.5 h-3.5 text-amber-200/70" />
+                    <span className="text-amber-100/85 text-[10px] font-semibold uppercase tracking-[0.3em]">
                       {activeChapter ? activeChapter.title : 'Contents'}
                     </span>
                   </div>
-                  <span className="text-gray-300 text-[8px]">pg {pageIndicator + 1}/{totalPages}</span>
+                  <span className="text-white/35 text-[8px] tracking-[0.25em] uppercase">pg {pageIndicator + 1}/{totalPages}</span>
                 </div>
 
                 {/* Animated page content */}
@@ -474,28 +511,37 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
 
                 {/* Footer nav */}
                 <div
-                  className="flex items-center justify-between px-4 py-2 flex-shrink-0 border-t"
-                  style={{ borderColor: 'rgba(180,180,200,0.4)', background: 'rgba(220,222,228,0.45)' }}
+                  className="flex items-center justify-between px-4 py-2 flex-shrink-0"
+                  style={{
+                    borderTop: '1px solid rgba(255,216,107,0.18)',
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.30) 100%)',
+                  }}
                 >
                   <button
                     onClick={prev}
                     disabled={chapterIdx === null}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg border transition-all disabled:opacity-25 hover:scale-105 active:scale-95 text-[9px] font-semibold text-gray-500"
-                    style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'rgba(180,180,200,0.7)' }}
+                    className="flex items-center gap-1 px-2.5 py-1 transition-all disabled:opacity-25 hover:brightness-125 active:scale-95 text-[9px] font-semibold tracking-[0.2em] uppercase"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,216,107,0.30)',
+                      color: 'rgba(255,216,107,0.85)',
+                      borderRadius: 2,
+                    }}
                   >
                     <ChevronLeft className="w-3 h-3" /> Prev
                   </button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {[null, ...CHAPTERS.map((_, i) => i)].map((val, i) => (
                       <button
                         key={i}
                         onClick={() => goToChapter(val)}
-                        className="rounded-full transition-all"
+                        className="transition-all"
                         style={{
-                          width: chapterIdx === val ? 14 : 5,
+                          width: chapterIdx === val ? 16 : 5,
                           height: 5,
-                          background: chapterIdx === val ? '#6b7280' : 'rgba(150,150,170,0.35)',
+                          background: chapterIdx === val ? 'rgba(255,216,107,0.85)' : 'rgba(255,255,255,0.18)',
+                          boxShadow: chapterIdx === val ? '0 0 6px rgba(255,216,107,0.6)' : 'none',
                         }}
                       />
                     ))}
@@ -504,20 +550,26 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                   <button
                     onClick={next}
                     disabled={chapterIdx === CHAPTERS.length - 1}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg border transition-all disabled:opacity-25 hover:scale-105 active:scale-95 text-[9px] font-semibold text-gray-500"
-                    style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'rgba(180,180,200,0.7)' }}
+                    className="flex items-center gap-1 px-2.5 py-1 transition-all disabled:opacity-25 hover:brightness-125 active:scale-95 text-[9px] font-semibold tracking-[0.2em] uppercase"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,216,107,0.30)',
+                      color: 'rgba(255,216,107,0.85)',
+                      borderRadius: 2,
+                    }}
                   >
                     Next <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
               </div>
 
-              {/* ── SPINE shadow strip ──────────────────────────────────── */}
+              {/* ── SPINE — engraved gold seam ──────────────────────────── */}
               <div
                 style={{
-                  width: 6,
+                  width: 2,
                   flexShrink: 0,
-                  background: 'linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0.04))',
+                  background: 'linear-gradient(to bottom, transparent, rgba(255,216,107,0.55), transparent)',
+                  boxShadow: '0 0 8px rgba(255,216,107,0.30)',
                   zIndex: 2,
                 }}
               />
@@ -527,31 +579,27 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                 className="relative flex flex-col overflow-hidden"
                 style={{
                   flex: 1,
-                  borderRadius: '0 18px 18px 0',
-                  /* Inward fold on left edge */
-                  background: 'rgba(245, 245, 250, 0.78)',
-                  backdropFilter: 'blur(40px) saturate(180%) brightness(1.04)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%) brightness(1.04)',
-                  boxShadow: 'inset 8px 0 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.85)',
-                  transformStyle: 'preserve-3d',
-                  transform: 'rotateY(-4deg)',
-                  transformOrigin: 'left center',
+                  background: 'linear-gradient(135deg, rgba(14,22,34,0.40) 0%, rgba(8,12,20,0.40) 100%)',
+                  boxShadow: 'inset 1px 0 0 rgba(255,216,107,0.15), inset 0 0 60px rgba(0,0,0,0.35)',
                 }}
               >
                 {/* Right page header */}
                 <div
-                  className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b"
-                  style={{ borderColor: 'rgba(180,180,200,0.4)' }}
+                  className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+                  style={{ borderBottom: '1px solid rgba(255,216,107,0.25)' }}
                 >
-                  <span className="text-gray-500 text-[10px] font-black uppercase tracking-[0.12em]">
+                  <span className="text-amber-100/85 text-[10px] font-semibold uppercase tracking-[0.3em] truncate">
                     {selectedSkill ? selectedSkill.name : 'Skill Details'}
                   </span>
                   <button
                     onClick={onClose}
-                    className="w-5 h-5 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                    style={{ background: 'rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.1)' }}
+                    className="w-6 h-6 rounded-full flex items-center justify-center transition-all hover:brightness-125"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,216,107,0.35)',
+                    }}
                   >
-                    <X className="w-2.5 h-2.5 text-gray-500" />
+                    <X className="w-3 h-3 text-amber-100/80" />
                   </button>
                 </div>
 
@@ -572,14 +620,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                   </AnimatePresence>
                 </div>
 
-                {/* Right spine accent */}
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-1.5"
-                  style={{
-                    borderRadius: '0 18px 18px 0',
-                    background: 'linear-gradient(to left, rgba(140,140,160,0.4), transparent)',
-                  }}
-                />
+
               </div>
             </div>
           </motion.div>
