@@ -4,8 +4,13 @@ import { UserPlus, Users, ArrowLeftRight, Swords, Check, X } from 'lucide-react'
 import { base44 } from '@/api/base44Client';
 import toast from 'react-hot-toast';
 import {
-  setFriendsList, setPartyState, openTrade, PARTY_MAX,
+  setFriendsList, setPartyState, openTrade,
 } from './socialStores';
+// Each kind has its own accept/decline module so the flows stay independent.
+import { acceptFriendRequest, declineFriendRequest } from './friendRequest';
+import { acceptPartyInvite, declinePartyInvite } from './partyInvite';
+import { acceptTradeRequest, declineTradeRequest } from './tradeRequest';
+import { acceptDuelChallenge, declineDuelChallenge } from './duelChallenge';
 
 /**
  * IncomingRequestToast — global subscriber for the real-time social system.
@@ -97,90 +102,40 @@ export default function IncomingRequestToast({ userId, userName }) {
   }, [userId, refreshFriends, refreshParty, refreshIncoming]);
 
   // ─── ACCEPT handler ───
+  // Each kind has its own accept module. We dispatch to the right one and
+  // show a kind-specific success toast — the flows are kept independent.
   const accept = async (req) => {
     try {
-      // Mark accepted first so both sides see the update
-      await base44.entities.SocialRequest.update(req.id, { status: 'accepted' });
-
       if (req.kind === 'friend') {
-        // Create the friendship record (visible to both)
-        await base44.entities.SocialFriendship.create({
-          user_a_id: req.sender_id, user_a_name: req.sender_name,
-          user_b_id: req.receiver_id, user_b_name: req.receiver_name || userName,
-        });
+        await acceptFriendRequest(req, userName);
         toast.success(`You and ${req.sender_name} are now friends`);
       } else if (req.kind === 'party') {
-        // Find or create the party session
-        let session = null;
-        if (req.party_id) {
-          const found = await base44.entities.PartySession.filter({ id: req.party_id });
-          session = (found || [])[0];
-        }
-        if (!session) {
-          // Sender had no party yet — create one with both members
-          session = await base44.entities.PartySession.create({
-            leader_id: req.sender_id,
-            member_ids: [req.sender_id, req.receiver_id],
-            members: [
-              { id: req.sender_id, name: req.sender_name },
-              { id: req.receiver_id, name: req.receiver_name || userName },
-            ],
-            active: true,
-          });
-        } else {
-          // Add receiver to existing party
-          if ((session.member_ids || []).length >= PARTY_MAX) {
-            toast.error('Party is full');
-            return;
-          }
-          const newMemberIds = Array.from(new Set([...(session.member_ids || []), req.receiver_id]));
-          const newMembers = [
-            ...(session.members || []),
-            { id: req.receiver_id, name: req.receiver_name || userName },
-          ];
-          await base44.entities.PartySession.update(session.id, {
-            member_ids: newMemberIds, members: newMembers,
-          });
-        }
+        await acceptPartyInvite(req, userName);
         toast.success(`Joined ${req.sender_name}'s party`);
       } else if (req.kind === 'trade') {
-        // Open the trade panel on BOTH sides. The receiver opens with sender as partner.
-        openTrade({ id: req.sender_id, name: req.sender_name });
-        // Signal sender to also open (their listener will see status=accepted and open)
+        await acceptTradeRequest(req);
         toast.success(`Trade started with ${req.sender_name}`);
       } else if (req.kind === 'duel') {
-        // Create a DuelSession that both players will subscribe to.
-        const duel = await base44.entities.DuelSession.create({
-          challenger_id: req.sender_id,
-          challenger_name: req.sender_name,
-          opponent_id: req.receiver_id,
-          opponent_name: req.receiver_name || userName,
-          status: 'active',
-          challenger_hp: 100,
-          opponent_hp: 100,
-          max_hp: 100,
-        });
-        // Tag the request with the duel id so the sender's listener can pick it up
-        try { await base44.entities.SocialRequest.update(req.id, { duel_id: duel.id }); } catch {}
+        await acceptDuelChallenge(req, userName);
         toast.success(`Duel started with ${req.sender_name}`);
       }
     } catch (e) {
       console.error('[Social] accept failed', e);
-      toast.error('Could not accept request');
+      if (e?.code === 'party_full') toast.error('Party is full');
+      else toast.error('Could not accept request');
     }
   };
 
   // ─── DECLINE handler ───
-  // Mark declined briefly so the sender's listener fires the toast, then
-  // hard-delete the record so it doesn't pile up and block future retries.
+  // Same per-kind dispatch — each module owns the timing of the hard-delete
+  // that prevents declined rows from blocking future retries.
   const decline = async (req) => {
     try {
-      await base44.entities.SocialRequest.update(req.id, { status: 'declined' });
+      if (req.kind === 'friend') await declineFriendRequest(req);
+      else if (req.kind === 'party') await declinePartyInvite(req);
+      else if (req.kind === 'trade') await declineTradeRequest(req);
+      else if (req.kind === 'duel') await declineDuelChallenge(req);
       toast(`${req.sender_name}'s ${req.kind} request declined`);
-      // Give the sender's subscription a moment to receive the update, then purge.
-      setTimeout(() => {
-        base44.entities.SocialRequest.delete(req.id).catch(() => {});
-      }, 2500);
     } catch (e) { console.error('[Social] decline failed', e); }
   };
 

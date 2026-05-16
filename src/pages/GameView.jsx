@@ -24,10 +24,12 @@ import NetworkRemotesMount from '../components/network/remote/NetworkRemotesMoun
 import LegacyRemotesVisibilityToggle from '../components/network/remote/LegacyRemotesVisibilityToggle';
 import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemotesDebugOverlay';
 import NetworkValidationTelemetry from '../components/network/debug/NetworkValidationTelemetry';
-import {
-  sendFriendRequest, sendPartyRequest, sendTradeRequest, sendDuelRequest,
-  partyStore,
-} from '../components/game3d/social/socialStores';
+import { partyStore } from '../components/game3d/social/socialStores';
+// Each action has its own dedicated send module — they do NOT share a code path.
+import { sendFriendRequest } from '../components/game3d/social/friendRequest';
+import { sendPartyInvite } from '../components/game3d/social/partyInvite';
+import { sendTradeRequest } from '../components/game3d/social/tradeRequest';
+import { sendDuelChallenge } from '../components/game3d/social/duelChallenge';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -43,12 +45,72 @@ export default function GameView() {
   // World server join is handled by GameWorldServerManager — it enforces the
   // 20-player cap and dispatches joinMultiplayerChannel only when capacity allows.
 
-  // Player interaction menu actions (Duel / Add Friend / Trade / Party Up)
-  // These now drive the in-game stores directly so the UI reflects changes
-  // immediately. The Base44 entity records are still created in the background
-  // so the data is persisted for the receiving player to accept later.
+  // Player interaction menu actions — each action (friend / party / trade / duel)
+  // is dispatched to its OWN dedicated module. They do not share a code path,
+  // so each one can evolve its rules, side effects, and error messages
+  // independently.
   useEffect(() => {
-    const onAction = async (e) => {
+    // Shared error formatter for the generic codes that every send helper can throw.
+    const formatError = (err, action) => {
+      if (err?.code === 'cooldown') return { msg: err.message, icon: '⏳' };
+      if (err?.code === 'rate_limit') return { msg: 'Server is busy — try again in a few seconds', error: true };
+      if (err?.code === 'self') return { msg: "That's you!", error: true };
+      if (err?.code === 'invalid') return { msg: 'Invalid target', error: true };
+      return { msg: `Failed to send ${action}: ${err?.message || 'unknown error'}`, error: true };
+    };
+    const showError = (err, action) => {
+      const f = formatError(err, action);
+      if (f.error) toast.error(f.msg); else toast(f.msg, { icon: f.icon });
+    };
+
+    // ─── FRIEND ───
+    const handleFriend = async (sender, receiver) => {
+      try {
+        await sendFriendRequest(sender, receiver);
+        toast.success(`Friend request sent to ${receiver.name}`);
+      } catch (err) {
+        console.error('[Social/friend] failed:', err);
+        if (err?.code === 'already_friends') toast(err.message, { icon: '🤝' });
+        else showError(err, 'friend request');
+      }
+    };
+
+    // ─── PARTY ───
+    const handleParty = async (sender, receiver) => {
+      try {
+        await sendPartyInvite(sender, receiver, partyStore.get().partyId);
+        toast.success(`Party invite sent to ${receiver.name}`);
+      } catch (err) {
+        console.error('[Social/party] failed:', err);
+        if (err?.code === 'party_full') toast.error('Your party is full');
+        else showError(err, 'party invite');
+      }
+    };
+
+    // ─── TRADE ───
+    const handleTrade = async (sender, receiver) => {
+      try {
+        await sendTradeRequest(sender, receiver);
+        toast.success(`Trade request sent to ${receiver.name}`);
+      } catch (err) {
+        console.error('[Social/trade] failed:', err);
+        showError(err, 'trade request');
+      }
+    };
+
+    // ─── DUEL ───
+    const handleDuel = async (sender, receiver) => {
+      try {
+        await sendDuelChallenge(sender, receiver);
+        toast.success(`Duel challenge sent to ${receiver.name}`);
+      } catch (err) {
+        console.error('[Social/duel] failed:', err);
+        if (err?.code === 'already_dueling') toast.error(err.message);
+        else showError(err, 'duel challenge');
+      }
+    };
+
+    const onAction = (e) => {
       const { action, playerId, playerName } = e.detail || {};
       console.log('[Social] gamePlayerAction received:', { action, playerId, playerName, myId: user?.id });
       if (!playerId) { toast.error('No target player ID'); return; }
@@ -58,37 +120,12 @@ export default function GameView() {
       const sender = { id: user.id, name: senderName };
       const receiver = { id: playerId, name: playerName };
 
-      try {
-        if (action === 'friend') {
-          const res = await sendFriendRequest(sender, receiver);
-          console.log('[Social] friend request created:', res);
-          toast.success(`Friend request sent to ${playerName}`);
-        } else if (action === 'party') {
-          const res = await sendPartyRequest(sender, receiver, partyStore.get().partyId);
-          console.log('[Social] party request created:', res);
-          toast.success(`Party invite sent to ${playerName}`);
-        } else if (action === 'trade') {
-          const res = await sendTradeRequest(sender, receiver);
-          console.log('[Social] trade request created:', res);
-          toast.success(`Trade request sent to ${playerName}`);
-        } else if (action === 'duel') {
-          const res = await sendDuelRequest(sender, receiver);
-          console.log('[Social] duel request created:', res);
-          toast.success(`Duel challenge sent to ${playerName}`);
-        }
-      } catch (err) {
-        console.error('[Social] request failed:', err);
-        // Typed errors from socialRequestHygiene get friendlier messages.
-        if (err?.code === 'cooldown') {
-          toast(err.message, { icon: '⏳' });
-        } else if (err?.code === 'rate_limit') {
-          toast.error('Server is busy — try again in a few seconds');
-        } else if (err?.code === 'self') {
-          toast.error("That's you!");
-        } else {
-          toast.error(`Failed to send ${action} request: ${err?.message || 'unknown error'}`);
-        }
-      }
+      // Route to the dedicated handler — no shared try/catch, no shared switch.
+      if (action === 'friend') handleFriend(sender, receiver);
+      else if (action === 'party') handleParty(sender, receiver);
+      else if (action === 'trade') handleTrade(sender, receiver);
+      else if (action === 'duel') handleDuel(sender, receiver);
+      else console.warn('[Social] unknown action:', action);
     };
     window.addEventListener('gamePlayerAction', onAction);
     return () => window.removeEventListener('gamePlayerAction', onAction);

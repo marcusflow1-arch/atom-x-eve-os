@@ -4,7 +4,12 @@
 // when records change). Trade is volatile and lives only in memory.
 
 import { base44 } from '@/api/base44Client';
-import { sendCleanRequest } from './socialRequestHygiene';
+// Each social action lives in its own focused module. socialStores only
+// re-exports the send helpers so existing callers keep working.
+import { sendFriendRequest as _sendFriendRequest } from './friendRequest';
+import { sendPartyInvite as _sendPartyInvite, PARTY_MAX as _PARTY_MAX } from './partyInvite';
+import { sendTradeRequest as _sendTradeRequest } from './tradeRequest';
+import { sendDuelChallenge as _sendDuelChallenge } from './duelChallenge';
 
 const makeStore = (storageKey, defaultState) => {
   let state = (() => {
@@ -29,13 +34,8 @@ const makeStore = (storageKey, defaultState) => {
 // ─── FRIENDS ─────────────────────────────────────────────
 export const friendsStore = makeStore('game_friends_v1', { friends: [] });
 
-// Send a friend REQUEST (creates a pending SocialRequest record).
-// Receiver gets a popup via IncomingRequestToast to accept/decline.
-// Cleans up stale/declined records first so retries always work.
-export const sendFriendRequest = async (sender, receiver) => {
-  const { request } = await sendCleanRequest({ kind: 'friend', sender, receiver });
-  return request;
-};
+// Friend request — delegates to friendRequest.js
+export const sendFriendRequest = _sendFriendRequest;
 
 // Replace the local friends list with a fresh DB snapshot.
 export const setFriendsList = (friends) => {
@@ -62,17 +62,10 @@ export const removeFriend = async (id) => {
 
 // ─── PARTY ───────────────────────────────────────────────
 export const partyStore = makeStore('game_party_v1', { members: [], partyId: null, leaderId: null });
-export const PARTY_MAX = 4;
+export const PARTY_MAX = _PARTY_MAX;
 
-// Send a party INVITE (creates a pending SocialRequest record).
-// Cleans up stale/declined records first so retries always work.
-export const sendPartyRequest = async (sender, receiver, partyId) => {
-  const { request } = await sendCleanRequest({
-    kind: 'party', sender, receiver,
-    extraFields: { party_id: partyId || null },
-  });
-  return request;
-};
+// Party invite — delegates to partyInvite.js
+export const sendPartyRequest = _sendPartyInvite;
 
 // Replace party state with a fresh DB snapshot.
 export const setPartyState = ({ members, partyId, leaderId }) => {
@@ -101,20 +94,11 @@ export const tradeStore = {
   subscribe: (fn) => { tradeListeners.add(fn); fn(tradeState); return () => tradeListeners.delete(fn); },
 };
 
-// Send a trade REQUEST — receiver gets accept/decline popup.
-// Cleans up stale/declined records first so retries always work.
-export const sendTradeRequest = async (sender, receiver) => {
-  const { request } = await sendCleanRequest({ kind: 'trade', sender, receiver });
-  return request;
-};
+// Trade request — delegates to tradeRequest.js
+export const sendTradeRequest = _sendTradeRequest;
 
-// Send a duel CHALLENGE — receiver gets accept/decline popup.
-// On accept, IncomingRequestToast creates a DuelSession row.
-// Cleans up stale/declined records first so retries always work.
-export const sendDuelRequest = async (sender, receiver) => {
-  const { request } = await sendCleanRequest({ kind: 'duel', sender, receiver });
-  return request;
-};
+// Duel challenge — delegates to duelChallenge.js
+export const sendDuelRequest = _sendDuelChallenge;
 
 export const openTrade = (partner) => {
   tradeState = { open: true, partner, myOffer: [], theirOffer: [], myConfirmed: false, theirConfirmed: false };
