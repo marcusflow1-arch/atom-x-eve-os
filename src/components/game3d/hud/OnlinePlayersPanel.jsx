@@ -117,7 +117,7 @@ export default function OnlinePlayersPanel() {
   }
 
   return (
-    <div className="absolute top-20 right-4 z-30 w-64 rounded-xl bg-black/65 backdrop-blur-md border border-white/15 shadow-2xl flex flex-col overflow-hidden">
+    <div className="absolute top-20 right-[196px] z-30 w-64 rounded-xl bg-black/65 backdrop-blur-md border border-white/15 shadow-2xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
