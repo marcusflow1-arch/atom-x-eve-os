@@ -27,7 +27,10 @@ import PlayerNameTag from './PlayerNameTag';
 import { base44 } from '@/api/base44Client';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
-import { getAbilityState, tickCooldowns, startCooldown, setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
+import { getAbilityState, tickCooldowns as tickLegacyAbilityCooldowns, startCooldown as startLegacyAbilityCooldown, setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
+import { getLoadout, startCooldown as startSkillCooldown, tickCooldowns as tickSkillCooldowns } from './skills/loadoutStore';
+import { castSkill } from './skills/skillExecutor';
+import { getPlayerHUD as getHUDForSkill } from './playerHUDStore';
 import { createLightningStrike } from './LightningStrikeEffect';
 import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
@@ -43,7 +46,8 @@ import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { useCallback } from 'react';
-import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore'; import { tryActivateBookSkill, isSkillAllowedForActiveWeapon } from './skillActivationHandler'; import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './activeBuffsStore.jsx';
+import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
+import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
@@ -1495,7 +1499,7 @@ export default function GameWorld3D() {
         }
       }
 
-      tickCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs();
+      tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs();
       if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
 
       // ─── Update active visual effects (lightning etc.) ───
@@ -1505,20 +1509,37 @@ export default function GameWorld3D() {
       });
 
       // ─── Ability firing (1..8 keys) ───
+      // NEW PIPELINE: Input → loadoutStore → skillExecutor (validates weapon
+      // lock, runs buff/attack via the new system). Falls back to the LEGACY
+      // targeted-ability path ONLY for skills not yet in the new registry
+      // (lightning_strike, shadow_teleport, frost_tornado — kept verbatim).
       if (abilityKeyPressed.current !== -1 && model) {
         const slotIndex = abilityKeyPressed.current; abilityKeyPressed.current = -1;
+        const loadout = getLoadout();
+        const newSkillId = loadout.activeSlots[slotIndex];
+        const newCooldown = loadout.cooldowns[slotIndex];
+
+        // Try new system first.
+        if (newSkillId && newCooldown <= 0) {
+          const result = castSkill(newSkillId, {
+            level: 1,
+            maxHP: getHUDForSkill().maxHP || 100,
+          });
+          if (result.ok) startSkillCooldown(slotIndex);
+        }
+
+        // Legacy targeted abilities still live on abilityStore for now.
         const abState = getAbilityState();
         const entry = abState.equipped[slotIndex]; const cooldownLeft = abState.cooldowns[slotIndex];
-        const _sr = entry && cooldownLeft <= 0 ? tryActivateBookSkill(entry) : false;
-        if (_sr === true) { startCooldown(slotIndex); } else if (_sr !== 'blocked' && entry && cooldownLeft <= 0) {
+        if (entry && cooldownLeft <= 0 && !newSkillId) {
           const abId = typeof entry === 'string' ? entry : entry.id;
           const ab = ABILITY_DEFINITIONS.find((a) => a.id === abId);
           const target = abState.target;
-          if (ab && target && isSkillAllowedForActiveWeapon(abId)) {
+          if (ab && target) {
             // Find the live enemy entry
             const targetEnemy = enemies.find((e) => e.id === target.id && e.alive && !e.dying);
             if (targetEnemy) {
-              startCooldown(slotIndex);
+              startLegacyAbilityCooldown(slotIndex);
               if (ab.id === 'shadow_teleport') {
                 const fx = createShadowTeleport(scene, model, () => ({
                   x: targetEnemy.group.position.x,

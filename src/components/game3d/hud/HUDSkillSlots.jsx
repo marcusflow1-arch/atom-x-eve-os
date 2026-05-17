@@ -1,46 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen } from 'lucide-react';
-import { subscribeAbilities, ABILITY_DEFINITIONS, resolveSlotData } from '../abilityStore';
-import { subscribeBuffs } from '../activeBuffsStore';
+import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
+import { getSkillById } from '../skills/skillRegistry';
+import { subscribeBuffs } from '../skills/buffEngine';
 import HUDSkillsBookPanel from './HUDSkillsBookPanel';
 
-// Map a skill id → the field(s) in activeBuffsStore that track its remaining time.
-// Returns { remaining: seconds | null, hits: number | null } or null if not active.
-function getSkillBuffStatus(skillId, buffs) {
-  if (!skillId || !buffs) return null;
-  const n = performance.now();
-  switch (skillId) {
-    case 'aegis_shield':
-      if (buffs.shield > 0 && buffs.shieldExpiresAt > n)
-        return { remaining: (buffs.shieldExpiresAt - n) / 1000 };
-      break;
-    case 'focus':
-      if (buffs.damageBonusHitsLeft > 0)
-        return { hits: buffs.damageBonusHitsLeft };
-      break;
-    case 'decisive_blow':
-      if (buffs.critDamageBonusPct > 0 && buffs.critDamageBonusExpiresAt > n)
-        return { remaining: (buffs.critDamageBonusExpiresAt - n) / 1000 };
-      break;
-    case 'haste':
-      if (buffs.attackSpeedBonusPct > 0 && buffs.attackSpeedExpiresAt > n)
-        return { remaining: (buffs.attackSpeedExpiresAt - n) / 1000 };
-      break;
-    case 'gods_deflection':
-      if (buffs.reflectChancePct > 0 && buffs.reflectExpiresAt > n)
-        return { remaining: (buffs.reflectExpiresAt - n) / 1000 };
-      break;
-    case 'power_charge':
-      if (buffs.powerChargeHitsLeft > 0 && buffs.powerChargeExpiresAt > n)
-        return { remaining: (buffs.powerChargeExpiresAt - n) / 1000, hits: buffs.powerChargeHitsLeft };
-      break;
-    case 'evasion':
-      if (buffs.dodgeChancePct > 0 && buffs.dodgeExpiresAt > n)
-        return { remaining: (buffs.dodgeExpiresAt - n) / 1000 };
-      break;
-    default: return null;
+// Map a new-system buff record → { remaining, hits } for the floating label.
+function getBuffStatusFromRecord(skill_id, buffs) {
+  if (!skill_id || !buffs) return null;
+  const b = buffs[skill_id];
+  if (!b) return null;
+  const remainingMs = b.expiresAt - performance.now();
+  if (remainingMs <= 0) return null;
+  if (skill_id === 'focus' && typeof b.hitsRemaining === 'number') {
+    return { remaining: remainingMs / 1000, hits: b.hitsRemaining };
   }
-  return null;
+  return { remaining: remainingMs / 1000 };
 }
 
 function fmtTime(sec) {
@@ -52,33 +27,23 @@ function fmtTime(sec) {
 const SLOT_KEYS_BOTTOM = ['1', '2', '3', '4'];
 const SLOT_KEYS_TOP    = ['5', '6', '7', '8'];
 
-const ELEMENT_COLORS = {
-  lightning: '#ffe066',
-  fire:      '#ff6b35',
-  ice:       '#7dd3fc',
-  shadow:    '#a855f7',
+const TYPE_COLORS = {
+  ACTIVE_ATTACK: '#f59e0b',
+  ACTIVE_BUFF:   '#60a5fa',
+  PASSIVE:       '#a78bfa',
 };
 
-const ELEMENT_ICONS = {
-  lightning: '⚡',
-  fire:      '🔥',
-  ice:       '❄️',
-  shadow:    '🌑',
-};
-
-function SlotButton({ slotKey, slotEntry, cooldown, buffStatus }) {
-  const ab    = resolveSlotData(slotEntry);
+function SlotButton({ slotKey, skill, cooldown, buffStatus }) {
   const cd    = cooldown || 0;
-  const maxCd = ab?.cooldown || 1;
+  const maxCd = skill?.cooldown || 1;
   const cdPct = Math.min(1, cd / maxCd);
-  const color = ab ? (ab.color || ELEMENT_COLORS[ab.element] || '#4a90e2') : '#4a90e2';
-  const icon  = ab ? (ab.icon || ELEMENT_ICONS[ab.element] || '') : '';
+  const color = skill ? (TYPE_COLORS[skill.skill_type] || '#4a90e2') : '#4a90e2';
+  const icon  = skill?.icon || '';
   const onCooldown = cd > 0;
   const buffActive = !!buffStatus;
 
   return (
     <div className="relative">
-      {/* Buff timer floating ABOVE the box when this slot's skill is active */}
       {buffActive && (
         <div
           className="absolute left-1/2 -translate-x-1/2 -top-5 px-1.5 py-0.5 rounded text-[9px] font-black tabular-nums whitespace-nowrap pointer-events-none"
@@ -90,28 +55,28 @@ function SlotButton({ slotKey, slotEntry, cooldown, buffStatus }) {
             boxShadow: `0 0 6px ${color}66`,
           }}
         >
-          {buffStatus.remaining != null
-            ? fmtTime(buffStatus.remaining)
-            : `×${buffStatus.hits}`}
+          {buffStatus.hits != null
+            ? `×${buffStatus.hits}`
+            : fmtTime(buffStatus.remaining)}
         </div>
       )}
       <button
         className="relative w-[58px] h-[58px] rounded-sm transition-transform hover:scale-105"
         style={{
-          background: ab
+          background: skill
             ? `linear-gradient(135deg, ${color}55 0%, ${color}22 100%)`
             : 'linear-gradient(135deg, rgba(74,144,226,0.33) 0%, rgba(74,144,226,0.13) 100%)',
-          border: `1.5px solid ${buffActive ? color : (ab ? color + '88' : 'rgba(180,140,80,0.55)')}`,
+          border: `1.5px solid ${buffActive ? color : (skill ? color + '88' : 'rgba(180,140,80,0.55)')}`,
           boxShadow: buffActive
             ? `0 3px 12px rgba(0,0,0,0.55), 0 0 14px ${color}cc, inset 0 1px 0 rgba(255,255,255,0.15)`
-            : ab
+            : skill
             ? `0 3px 12px rgba(0,0,0,0.55), 0 0 8px ${color}44, inset 0 1px 0 rgba(255,255,255,0.1)`
             : '0 3px 10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1)',
           opacity: onCooldown ? 0.6 : 1,
         }}
       >
         <div className="absolute inset-1 rounded-[2px] bg-black/35" />
-        {ab && (
+        {skill && (
           <div className="absolute inset-0 flex items-center justify-center text-xl">{icon}</div>
         )}
         {onCooldown && (
@@ -143,60 +108,46 @@ function SlotButton({ slotKey, slotEntry, cooldown, buffStatus }) {
 }
 
 export default function HUDSkillSlots() {
-  const [abilityState, setAbilityState] = useState({ equipped: Array(8).fill(null), cooldowns: Array(8).fill(0) });
-  const [buffs, setBuffs] = useState(null);
+  const [loadout, setLoadout] = useState(getLoadout());
+  const [buffs, setBuffs] = useState({});
   const [, force] = useState(0);
   const [bookOpen, setBookOpen] = useState(false);
 
-  useEffect(() => subscribeAbilities(setAbilityState), []);
-  useEffect(() => subscribeBuffs(setBuffs), []);
-  // Tick 5x/sec so the floating buff timers count down smoothly.
+  useEffect(() => subscribeLoadout(setLoadout), []);
+  useEffect(() => subscribeBuffs((s) => setBuffs(s.buffs || {})), []);
   useEffect(() => {
     const id = setInterval(() => force((n) => n + 1), 200);
     return () => clearInterval(id);
   }, []);
 
-  const { equipped, cooldowns } = abilityState;
+  const { activeSlots, cooldowns } = loadout;
 
-  const buffStatusForSlot = (slotIndex) => {
-    const entry = equipped[slotIndex];
-    const id = typeof entry === 'string' ? entry : entry?.id;
-    return getSkillBuffStatus(id, buffs);
+  const skillForSlot = (idx) => {
+    const id = activeSlots[idx];
+    return id ? getSkillById(id) : null;
   };
-  // top row = slots 5-8 (indices 4-7), bottom row = slots 1-4 (indices 0-3)
+  const buffStatusForSlot = (idx) => getBuffStatusFromRecord(activeSlots[idx], buffs);
 
   return (
     <>
       <div className="absolute bottom-6 left-6 z-20 pointer-events-auto flex flex-col gap-2">
 
-        {/* Player section divider — vertical line spanning both rows, sitting between slots 4/8 and the SKILLS book, with a face icon at center */}
+        {/* Player section divider */}
         <div
           className="absolute pointer-events-none flex items-center justify-center"
-          style={{
-            // 4 slots × 58 + 3 gaps × 8 = 256px wide row of slots; place divider just past it
-            left: 256 + 6,
-            top: 0,
-            bottom: 0,
-            width: 18,
-            zIndex: 1,
-          }}
+          style={{ left: 256 + 6, top: 0, bottom: 0, width: 18, zIndex: 1 }}
         >
           <div
             className="absolute"
             style={{
-              left: '50%',
-              top: 0,
-              bottom: 0,
-              width: 1.5,
-              transform: 'translateX(-50%)',
+              left: '50%', top: 0, bottom: 0, width: 1.5, transform: 'translateX(-50%)',
               background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 18%, rgba(255,255,255,0.45) 82%, rgba(255,255,255,0) 100%)',
             }}
           />
           <div
             className="relative flex items-center justify-center rounded-full"
             style={{
-              width: 18,
-              height: 18,
+              width: 18, height: 18,
               background: 'rgba(0,0,0,0.75)',
               border: '1.5px solid rgba(255,255,255,0.65)',
               boxShadow: '0 0 6px rgba(0,0,0,0.6)',
@@ -210,26 +161,23 @@ export default function HUDSkillSlots() {
           </div>
         </div>
 
-        {/* ── Row 2: Player Character Slots 5–8 + SKILLS book ── */}
-        <div className="flex items-center gap-2" style={{ paddingLeft: 0 }}>
+        {/* Row 2: Slots 5–8 + SKILLS book */}
+        <div className="flex items-center gap-2">
           {SLOT_KEYS_TOP.map((key, i) => (
             <SlotButton
               key={key}
               slotKey={key}
-              slotEntry={equipped[4 + i]}
+              skill={skillForSlot(4 + i)}
               cooldown={cooldowns[4 + i]}
               buffStatus={buffStatusForSlot(4 + i)}
             />
           ))}
 
-          {/* SKILLS book button — nudged right past the player-section divider, dropped down so its content aligns with the player-face icon between the two rows */}
           <button
             onClick={() => setBookOpen((v) => !v)}
             className="ml-5 flex flex-col items-center justify-center gap-0.5 rounded-sm transition-all hover:scale-105"
             style={{
-              width: 46,
-              height: 58,
-              transform: 'translateY(33px)',
+              width: 46, height: 58, transform: 'translateY(33px)',
               background: bookOpen
                 ? 'linear-gradient(135deg, rgba(167,139,250,0.35) 0%, rgba(167,139,250,0.18) 100%)'
                 : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
@@ -242,10 +190,7 @@ export default function HUDSkillSlots() {
             }}
             title="Skills Book"
           >
-            <BookOpen
-              className="w-4 h-4"
-              style={{ color: bookOpen ? '#c4b5fd' : 'rgba(255,255,255,0.55)' }}
-            />
+            <BookOpen className="w-4 h-4" style={{ color: bookOpen ? '#c4b5fd' : 'rgba(255,255,255,0.55)' }} />
             <span
               className="text-[8px] font-bold tracking-wider leading-none"
               style={{ color: bookOpen ? '#c4b5fd' : 'rgba(255,255,255,0.45)' }}
@@ -255,13 +200,13 @@ export default function HUDSkillSlots() {
           </button>
         </div>
 
-        {/* ── Row 1: Ability Slots 1–4 ── */}
+        {/* Row 1: Slots 1–4 */}
         <div className="flex gap-2">
           {SLOT_KEYS_BOTTOM.map((key, i) => (
             <SlotButton
               key={key}
               slotKey={key}
-              slotEntry={equipped[i]}
+              skill={skillForSlot(i)}
               cooldown={cooldowns[i]}
               buffStatus={buffStatusForSlot(i)}
             />

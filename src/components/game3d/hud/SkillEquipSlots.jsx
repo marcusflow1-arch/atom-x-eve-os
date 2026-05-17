@@ -1,78 +1,69 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { subscribeAbilities, equipAbility, unequipAbility, resolveSlotData } from '../abilityStore';
+import { subscribeLoadout, equipActive, unequipActive } from '../skills/loadoutStore';
+import { getSkillById } from '../skills/skillRegistry';
+import { SKILL_TYPE } from '../skills/skillTypes';
 
 /**
- * SkillEquipSlots — 8 slots displayed as a vertical strip on the outside-left
- * of the Skill Book. Click a slot while a skill is selected in the book to
- * equip it; the same slots feed the in-game HUD (1–8 keys).
- *
- * Each slot shows its slot number (1–8) OUTSIDE the box on the left, so the
- * player can clearly map slots to keybinds.
+ * SkillEquipSlots — 8 vertical equip slots to the left of the Skills Book.
+ * Player can place ANY active skill in ANY slot. Passives are blocked
+ * (they belong in the passive panel, not on the active bar).
  *
  * Props:
- *   draggedSkill  — skill object currently selected for equip from the book
+ *   draggedSkill  — a skill object selected for equip (from registry)
  *   onClearDrag   — clears the selection after placing
  */
 
 const SLOT_COUNT = 8;
 
-function getRarityColor(rarity) {
-  const map = {
-    common: '#9ca3af', uncommon: '#22c55e', rare: '#60a5fa', epic: '#a78bfa',
-    legendary: '#f59e0b', mythic: '#f43f5e', divine: '#e879f9',
-  };
-  return map[rarity] || '#9ca3af';
-}
-
-// Convert a Skills-Book skill → a serializable slot entry for abilityStore
-function skillToSlotEntry(skill) {
-  return {
-    id: skill.id,
-    name: skill.name,
-    icon: skill.icon,
-    color: getRarityColor(skill.rarity),
-    cooldown: skill.cooldown || 4.0,
-    rarity: skill.rarity,
-  };
-}
+const TYPE_COLORS = {
+  [SKILL_TYPE.ACTIVE_ATTACK]: '#f59e0b',
+  [SKILL_TYPE.ACTIVE_BUFF]:   '#60a5fa',
+  [SKILL_TYPE.PASSIVE]:       '#a78bfa',
+};
 
 export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
-  const [equipped, setEquipped] = useState(Array(SLOT_COUNT).fill(null));
+  const [activeSlots, setActiveSlots] = useState(Array(SLOT_COUNT).fill(null));
   const [hoveredSlot, setHoveredSlot] = useState(null);
 
-  useEffect(() => subscribeAbilities((s) => setEquipped(s.equipped)), []);
+  useEffect(() => subscribeLoadout((s) => setActiveSlots(s.activeSlots)), []);
 
   const placeSkill = (slotIdx) => {
     if (!draggedSkill) return;
-    equipAbility(slotIdx, skillToSlotEntry(draggedSkill));
+    const result = equipActive(slotIdx, draggedSkill.skill_id);
+    if (!result.ok) {
+      // The one hard rule: passives cannot go in active slots.
+      window.dispatchEvent(new CustomEvent('skillActivatedToast', {
+        detail: { text: '⛔ Passive skills cannot be placed in active slots' },
+      }));
+      return;
+    }
     onClearDrag?.();
   };
 
   const removeSkill = (slotIdx, e) => {
     e.stopPropagation();
-    unequipAbility(slotIdx);
+    unequipActive(slotIdx);
   };
+
+  const isPassive = draggedSkill?.skill_type === SKILL_TYPE.PASSIVE;
 
   return (
     <div className="flex flex-col gap-1.5 pr-2" style={{ width: 110 }}>
-      {/* Label */}
       <div className="text-center mb-1">
         <span className="text-[7px] font-black uppercase tracking-widest text-white/50">Skill Slots</span>
       </div>
 
-      {/* 4 rows × 2 cols = 8 slots, each with slot number on the LEFT outside */}
       <div className="grid grid-cols-2 gap-1.5">
-        {equipped.map((entry, idx) => {
-          const resolved = resolveSlotData(entry);
+        {activeSlots.map((id, idx) => {
+          const skill = id ? getSkillById(id) : null;
           const isHovered = hoveredSlot === idx;
-          const canDrop = !!draggedSkill && !resolved;
-          const color = resolved?.color || '#6b7280';
+          const canDrop = !!draggedSkill && !skill && !isPassive;
+          const color = skill ? (TYPE_COLORS[skill.skill_type] || '#6b7280') : '#6b7280';
 
           return (
             <div key={idx} className="flex items-center gap-1">
-              {/* Slot number OUTSIDE on the left */}
               <span
                 className="text-[9px] font-black tabular-nums text-white/70"
                 style={{ width: 10, textAlign: 'right' }}
@@ -83,18 +74,16 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
               <motion.div
                 className="relative flex flex-col cursor-pointer select-none"
                 style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 8,
-                  background: resolved
+                  width: 38, height: 38, borderRadius: 8,
+                  background: skill
                     ? `${color}22`
                     : canDrop
                     ? 'rgba(255,255,255,0.12)'
                     : 'rgba(255,255,255,0.04)',
                   border: `1.5px ${canDrop && isHovered ? 'solid' : 'dashed'} ${
-                    resolved ? color + '80' : canDrop ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'
+                    skill ? color + '80' : canDrop ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'
                   }`,
-                  boxShadow: resolved
+                  boxShadow: skill
                     ? `0 0 10px ${color}30`
                     : canDrop && isHovered
                     ? '0 0 14px rgba(255,255,255,0.2)'
@@ -106,11 +95,10 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
                 onMouseEnter={() => setHoveredSlot(idx)}
                 onMouseLeave={() => setHoveredSlot(null)}
                 onClick={() => placeSkill(idx)}
-                title={resolved ? `${resolved.name} — click × to unequip` : `Slot ${idx + 1} — click to equip selected skill`}
+                title={skill ? `${skill.skill_name} — click × to unequip` : `Slot ${idx + 1}`}
               >
-                {resolved ? (
+                {skill ? (
                   <>
-                    {/* Remove × */}
                     <button
                       onClick={(e) => removeSkill(idx, e)}
                       className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center z-10"
@@ -118,9 +106,7 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
                     >
                       <X className="w-2 h-2" style={{ color }} />
                     </button>
-                    <div className="w-full h-full flex items-center justify-center text-lg">
-                      {resolved.icon}
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-lg">{skill.icon}</div>
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -133,7 +119,6 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
         })}
       </div>
 
-      {/* Hint when a skill is selected */}
       <AnimatePresence>
         {draggedSkill && (
           <motion.div
@@ -142,7 +127,11 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
             exit={{ opacity: 0, y: 4 }}
             className="text-center mt-1"
           >
-            <span className="text-[7px] text-yellow-300/90 font-bold">Click slot to equip</span>
+            {isPassive ? (
+              <span className="text-[7px] text-red-300/90 font-bold">Passives can't be equipped here</span>
+            ) : (
+              <span className="text-[7px] text-yellow-300/90 font-bold">Click slot to equip</span>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
