@@ -1,19 +1,55 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeHalo, attemptEnhancement } from '../haloStore';
+import { subscribeHalo, attemptEnhancement, attemptEnhancementBatch } from '../haloStore';
 import { MAX_HALO_LEVEL } from '../haloData';
+
+const BATCH_PRESETS = [10, 15, 25, 35];
 
 export default function HaloSubTab() {
   const [halo, setHalo] = useState(null);
   const [lastResult, setLastResult] = useState(null);
+  const [customAttempts, setCustomAttempts] = useState('');
 
   useEffect(() => subscribeHalo(setHalo), []);
   if (!halo) return null;
+
+  // Max attempts the player can afford right now
+  const maxAttempts = halo.attemptCost > 0
+    ? Math.floor(halo.kills / halo.attemptCost)
+    : 0;
 
   const handleAttempt = () => {
     const r = attemptEnhancement();
     setLastResult(r);
     if (r.ok) {
       window.setTimeout(() => setLastResult(null), 2500);
+    }
+  };
+
+  const handleBatch = (count) => {
+    if (!halo.canAttempt || halo.isMaxLevel) return;
+    const safe = Math.min(count, maxAttempts);
+    if (safe < 1) return;
+    const summary = attemptEnhancementBatch(safe);
+    setLastResult({ ok: true, success: summary.successes > 0, batch: summary });
+    window.setTimeout(() => setLastResult(null), 3000);
+  };
+
+  const handleCustomBatch = () => {
+    const n = parseInt(customAttempts, 10);
+    if (!Number.isFinite(n) || n < 1) return;
+    handleBatch(n);
+    setCustomAttempts('');
+  };
+
+  // Cap custom input to maxAttempts as the user types
+  const onCustomChange = (e) => {
+    const raw = e.target.value.replace(/[^0-9]/g, '');
+    if (raw === '') return setCustomAttempts('');
+    const n = parseInt(raw, 10);
+    if (n > maxAttempts) {
+      setCustomAttempts(String(maxAttempts));
+    } else {
+      setCustomAttempts(raw);
     }
   };
 
@@ -61,23 +97,86 @@ export default function HaloSubTab() {
           <Stat label="Total Attempts"   value={halo.totalAttempts} />
         </div>
 
-        <button
-          onClick={handleAttempt}
-          disabled={!halo.canAttempt}
-          className="w-full py-4 rounded-sm text-sm tracking-[0.4em] uppercase font-semibold transition-all"
-          style={{
-            background: halo.canAttempt ? 'rgba(255,216,107,0.10)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${halo.canAttempt ? 'rgba(255,216,107,0.45)' : 'rgba(255,255,255,0.08)'}`,
-            color: halo.canAttempt ? '#ffd86b' : 'rgba(255,255,255,0.3)',
-            cursor: halo.canAttempt ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {halo.isMaxLevel
-            ? 'Halo Maxed'
-            : halo.canAttempt
-              ? `Attempt Enhancement — ${chancePct}%`
-              : `Need ${halo.attemptCost - halo.kills} more kills`}
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Single attempt — shrunk to ~25% of previous width */}
+          <button
+            onClick={handleAttempt}
+            disabled={!halo.canAttempt}
+            className="py-2 px-3 rounded-sm text-[10px] tracking-[0.2em] uppercase font-semibold transition-all"
+            style={{
+              width: '25%',
+              minWidth: 120,
+              background: halo.canAttempt ? 'rgba(255,216,107,0.10)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${halo.canAttempt ? 'rgba(255,216,107,0.45)' : 'rgba(255,255,255,0.08)'}`,
+              color: halo.canAttempt ? '#ffd86b' : 'rgba(255,255,255,0.3)',
+              cursor: halo.canAttempt ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {halo.isMaxLevel
+              ? 'Halo Maxed'
+              : halo.canAttempt
+                ? `Attempt — ${chancePct}%`
+                : `Need ${halo.attemptCost - halo.kills}`}
+          </button>
+
+          {/* Preset batch buttons */}
+          {BATCH_PRESETS.map((n) => {
+            const affordable = n <= maxAttempts && !halo.isMaxLevel;
+            return (
+              <button
+                key={n}
+                onClick={() => handleBatch(n)}
+                disabled={!affordable}
+                className="py-2 px-3 rounded-sm text-[10px] tracking-[0.15em] uppercase font-semibold transition-all"
+                style={{
+                  background: affordable ? 'rgba(255,216,107,0.08)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${affordable ? 'rgba(255,216,107,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                  color: affordable ? '#ffd86b' : 'rgba(255,255,255,0.25)',
+                  cursor: affordable ? 'pointer' : 'not-allowed',
+                }}
+                title={affordable ? `Run ${n} attempts` : `Need ${n * halo.attemptCost} kills`}
+              >
+                {n}×
+              </button>
+            );
+          })}
+
+          {/* Custom amount input + run button */}
+          <div className="flex items-center gap-1 ml-auto">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={customAttempts}
+              onChange={onCustomChange}
+              placeholder={`Max ${maxAttempts}`}
+              disabled={halo.isMaxLevel || maxAttempts < 1}
+              className="py-2 px-2 rounded-sm text-[11px] tabular-nums text-white tracking-wider bg-white/[0.04] border border-white/10 focus:border-amber-400/50 outline-none w-24"
+            />
+            <button
+              onClick={handleCustomBatch}
+              disabled={
+                halo.isMaxLevel ||
+                !customAttempts ||
+                parseInt(customAttempts, 10) < 1 ||
+                parseInt(customAttempts, 10) > maxAttempts
+              }
+              className="py-2 px-3 rounded-sm text-[10px] tracking-[0.15em] uppercase font-semibold transition-all"
+              style={{
+                background: 'rgba(255,216,107,0.10)',
+                border: '1px solid rgba(255,216,107,0.45)',
+                color: '#ffd86b',
+              }}
+            >
+              Run
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-2 text-[9px] tracking-[0.2em] uppercase text-white/40">
+          Max possible attempts: <span className="text-amber-200/80 tabular-nums">{maxAttempts}</span>
+          {' · '}
+          {halo.attemptCost} kills per attempt
+        </div>
 
         {lastResult?.ok && (
           <div
@@ -87,7 +186,11 @@ export default function HaloSubTab() {
               color: lastResult.success ? '#a3e635' : '#fb7185',
             }}
           >
-            {lastResult.success ? `Success — Now Halo Lv ${lastResult.level}` : 'Failure — kills consumed'}
+            {lastResult.batch
+              ? `${lastResult.batch.attempts} attempts — ${lastResult.batch.successes} success · Halo Lv ${lastResult.batch.finalLevel}`
+              : lastResult.success
+                ? `Success — Now Halo Lv ${lastResult.level}`
+                : 'Failure — kills consumed'}
           </div>
         )}
 

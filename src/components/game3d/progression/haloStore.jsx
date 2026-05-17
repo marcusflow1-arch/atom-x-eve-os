@@ -132,6 +132,22 @@ export function attemptEnhancement() {
   return { ok: true, success, level: nextLevel, chance };
 }
 
+// Run multiple attempts in sequence. Stops early if max level reached or
+// kills run out. Returns a summary { attempts, successes, finalLevel }.
+export function attemptEnhancementBatch(count) {
+  const n = Math.max(1, Math.floor(count || 0));
+  let attempts = 0;
+  let successes = 0;
+  for (let i = 0; i < n; i++) {
+    const r = attemptEnhancement();
+    if (!r.ok) break;
+    attempts += 1;
+    if (r.success) successes += 1;
+    if (state.level >= MAX_HALO_LEVEL) break;
+  }
+  return { attempts, successes, finalLevel: state.level };
+}
+
 export function setHaloLevel(level) {
   state = {
     ...state,
