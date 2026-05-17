@@ -23,7 +23,7 @@ function persist() {
 export function getKillCount() { return _count; }
 
 export function incrementKillCount(n = 1) {
-  _count += n;
+  _count = Math.max(0, _count + n);
   persist();
   _listeners.forEach((fn) => fn(_count));
 }

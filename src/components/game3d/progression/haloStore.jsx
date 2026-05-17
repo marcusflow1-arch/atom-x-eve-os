@@ -1,20 +1,23 @@
 // ─── Halo Store ────────────────────────────────────────────────────────────
-// Persistent, account-wide Halo progression driven by a PvP-kill
-// ENHANCEMENT/GAMBLE system (like elixir enhancement):
+// Persistent, account-wide Halo progression driven by an ENHANCEMENT/GAMBLE
+// system that spends the player's REAL kill count (the same counter shown
+// above the player's name in the HUD) as currency.
 //
-//   1. Player earns PvP kills → banked as `kills` currency.
-//   2. To level up, player spends HALO_ATTEMPT_COST (10) kills on an attempt.
+//   1. Every rogue kill banks +1 into killCountStore (the HUD kill count).
+//   2. To level up the Halo, the player spends HALO_ATTEMPT_COST (10) of
+//      those kills on an attempt.
 //   3. The attempt rolls against `getSuccessChanceForLevel(currentLevel)`.
 //      - Success → Halo Level +1.
 //      - Failure → kills are consumed, level unchanged.
 //
-// API mirrors the existing weaponClassBuffStore pattern (no zustand dep).
+// This means the kill count in your HUD pill is literally the currency for
+// the Halo system — kill 50 rogues, get 5 attempts.
 //
-//   recordPvPKill()         — bank kills earned in PvP combat
+// API:
 //   attemptEnhancement()    — spend kills, roll for level up
 //   getHaloState()          — full snapshot for UI
 //   getHaloBonuses()        — bonuses applied to stats pipeline
-//   subscribeHalo(fn)       — reactive subscription
+//   subscribeHalo(fn)       — reactive subscription (re-emits on kill change)
 //   setHaloLevel(level)     — admin / debug
 //   resetHalo()             — admin / debug
 
@@ -25,8 +28,13 @@ import {
   getTierForLevel,
   getHaloBonusesForLevel,
 } from './haloData';
+import {
+  getKillCount,
+  incrementKillCount,
+  subscribeKillCount,
+} from '../killCountStore';
 
-const STORAGE_KEY = 'halo_progression_v2';
+const STORAGE_KEY = 'halo_progression_v3';
 
 const loadState = () => {
   try {
@@ -35,14 +43,12 @@ const loadState = () => {
       const parsed = JSON.parse(raw);
       return {
         level:           Math.max(0, Math.min(MAX_HALO_LEVEL, parsed.level || 0)),
-        kills:           Math.max(0, parsed.kills || 0),
-        totalKills:      Math.max(0, parsed.totalKills || 0),
         totalAttempts:   Math.max(0, parsed.totalAttempts || 0),
         totalSuccesses:  Math.max(0, parsed.totalSuccesses || 0),
       };
     }
   } catch {}
-  return { level: 0, kills: 0, totalKills: 0, totalAttempts: 0, totalSuccesses: 0 };
+  return { level: 0, totalAttempts: 0, totalSuccesses: 0 };
 };
 
 let state = loadState();
@@ -57,19 +63,23 @@ const emit = () => {
   listeners.forEach((fn) => fn(snapshot));
 };
 
+// Re-emit whenever the player's kill count changes so the UI (banked-kills
+// + can-attempt button) updates live every time you defeat a rogue.
+subscribeKillCount(() => emit());
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 export function getHaloState() {
   const bonuses = getHaloBonusesForLevel(state.level);
   const successChance = getSuccessChanceForLevel(state.level);
+  const kills = getKillCount();
   return {
     level:           state.level,
-    kills:           state.kills,           // banked, ready-to-spend kill currency
-    totalKills:      state.totalKills,      // lifetime kills (never decremented)
+    kills,                                  // mirrors the HUD kill count — the spendable currency
     totalAttempts:   state.totalAttempts,
     totalSuccesses:  state.totalSuccesses,
     attemptCost:     HALO_ATTEMPT_COST,
-    canAttempt:      state.kills >= HALO_ATTEMPT_COST && state.level < MAX_HALO_LEVEL,
+    canAttempt:      kills >= HALO_ATTEMPT_COST && state.level < MAX_HALO_LEVEL,
     successChance,                          // 0..1 for the NEXT attempt
     tier:            getTierForLevel(state.level),
     bonuses,
@@ -87,20 +97,8 @@ export function subscribeHalo(fn) {
   return () => listeners.delete(fn);
 }
 
-// Bank a PvP kill. Returns the new kill currency total.
-export function recordPvPKill(count = 1) {
-  if (count <= 0) return state.kills;
-  state = {
-    ...state,
-    kills:      state.kills + count,
-    totalKills: state.totalKills + count,
-  };
-  save();
-  emit();
-  return state.kills;
-}
-
-// Attempt to enhance the Halo. Returns:
+// Attempt to enhance the Halo. Spends HALO_ATTEMPT_COST kills from the
+// player's HUD kill counter (killCountStore). Returns:
 //   { ok: false, reason }                                — couldn't attempt
 //   { ok: true, success: true,  level, chance }          — leveled up
 //   { ok: true, success: false, level, chance }          — failed, kills lost
@@ -108,8 +106,9 @@ export function attemptEnhancement() {
   if (state.level >= MAX_HALO_LEVEL) {
     return { ok: false, reason: 'max_level' };
   }
-  if (state.kills < HALO_ATTEMPT_COST) {
-    return { ok: false, reason: 'insufficient_kills', need: HALO_ATTEMPT_COST, have: state.kills };
+  const banked = getKillCount();
+  if (banked < HALO_ATTEMPT_COST) {
+    return { ok: false, reason: 'insufficient_kills', need: HALO_ATTEMPT_COST, have: banked };
   }
 
   const chance = getSuccessChanceForLevel(state.level);
@@ -120,13 +119,16 @@ export function attemptEnhancement() {
 
   state = {
     ...state,
-    kills:          state.kills - HALO_ATTEMPT_COST,
     level:          nextLevel,
     totalAttempts:  state.totalAttempts + 1,
     totalSuccesses: state.totalSuccesses + (success ? 1 : 0),
   };
   save();
-  emit();
+
+  // Spend the kills from the real HUD counter — this will trigger the
+  // killCountStore subscription above and re-emit the halo state.
+  incrementKillCount(-HALO_ATTEMPT_COST);
+
   return { ok: true, success, level: nextLevel, chance };
 }
 
@@ -140,7 +142,7 @@ export function setHaloLevel(level) {
 }
 
 export function resetHalo() {
-  state = { level: 0, kills: 0, totalKills: 0, totalAttempts: 0, totalSuccesses: 0 };
+  state = { level: 0, totalAttempts: 0, totalSuccesses: 0 };
   save();
   emit();
 }
