@@ -41,6 +41,7 @@ import { toast } from 'react-hot-toast';
 import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
 import PlayerHaloAura from '../components/game3d/PlayerHaloAura';
 import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
+import { runOneTimeProgressionReset } from '../components/game3d/progression/oneTimeReset';
 import SlashEffectLayer from '../components/game3d/SlashEffect';
 import PauseMenu from '../components/game3d/PauseMenu';
 import WindRunEffect from '../components/game3d/WindRunEffect';
@@ -65,6 +66,11 @@ export default function GameView() {
   const audioRef = useRef(null);
 
   useEffect(() => subscribeLearnedSkills(setLearnedSkillIds), []);
+
+  // One-time wipe: reset Halo + Title progression to zero so the player can
+  // rebuild from scratch. Guarded by a versioned localStorage flag — runs
+  // exactly once per browser.
+  useEffect(() => { runOneTimeProgressionReset(); }, []);
 
   // Load the appropriate theme URL based on phase ('game 1' for login, 'game 2' for world)
   useEffect(() => {
