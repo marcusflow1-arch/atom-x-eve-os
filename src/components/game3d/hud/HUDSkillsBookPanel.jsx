@@ -3,7 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles } from 'lucide-react';
 import { getAllSkills } from '../skills/skillRegistry';
 import { SKILL_TYPE, WEAPON_TYPE } from '../skills/skillTypes';
+import {
+  getAllCompanionSkills,
+  COMPANION_SKILL_CATEGORY,
+} from '../skills/companionSkillRegistry';
 import SkillEquipSlots from './SkillEquipSlots';
+import CompanionSkillEquipSlots from './CompanionSkillEquipSlots';
 import SkillsBookCategoryTabs from './SkillsBookCategoryTabs';
 
 // Five top-level categories — exactly mirror the new skill model.
@@ -13,6 +18,14 @@ const CATEGORIES = [
   { id: 'ranged',   emoji: '🏹', title: 'Ranged',   color: '#10b981' },
   { id: 'buffs',    emoji: '✨', title: 'Buffs',    color: '#f59e0b' },
   { id: 'passives', emoji: '🌀', title: 'Passives', color: '#a78bfa' },
+];
+
+// Companion subpage categories — partition companion skill registry.
+const COMPANION_CATEGORIES = [
+  { id: COMPANION_SKILL_CATEGORY.COMBAT,   emoji: '⚔️', title: 'Combat',   color: '#ef4444' },
+  { id: COMPANION_SKILL_CATEGORY.SUPPORT,  emoji: '✨', title: 'Support',  color: '#34d399' },
+  { id: COMPANION_SKILL_CATEGORY.MOBILITY, emoji: '💨', title: 'Mobility', color: '#22d3ee' },
+  { id: COMPANION_SKILL_CATEGORY.FUSION,   emoji: '👼', title: 'Fusion',   color: '#ffd86b' },
 ];
 
 // Partition the registry into the five tabs using the canonical skill metadata.
@@ -32,6 +45,24 @@ function getSkillsForCategory(categoryId) {
     default:
       return [];
   }
+}
+
+// Partition companion skills by category for the companion subpage.
+function getCompanionSkillsForCategory(categoryId) {
+  return getAllCompanionSkills().filter((s) => s.category === categoryId);
+}
+
+// Adapter — companion skills don't have skill_type. Give them a synthetic
+// one so the existing SkillList/SkillDetail rows still render correctly.
+function adaptCompanionSkillForDetail(sk) {
+  if (!sk) return sk;
+  return {
+    ...sk,
+    skill_type: sk.fusion ? SKILL_TYPE.ACTIVE_BUFF : SKILL_TYPE.ACTIVE_ATTACK,
+    weapon_type: null,
+    hit_count: sk.hit_count || 0,
+    max_level: sk.max_level || 10,
+  };
 }
 
 const TYPE_COLOR = {
@@ -174,23 +205,46 @@ function SkillDetail({ skill }) {
 }
 
 export default function HUDSkillsBookPanel({ open, onClose }) {
+  // 'player' or 'companion' — top-level subpage toggle.
+  const [mode, setMode] = useState('player');
   const [activeCategory, setActiveCategory] = useState('sword');
+  const [activeCompanionCategory, setActiveCompanionCategory] = useState(COMPANION_SKILL_CATEGORY.COMBAT);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [draggedSkill, setDraggedSkill] = useState(null);
 
   const countsById = useMemo(() => {
     const out = {};
-    CATEGORIES.forEach((c) => { out[c.id] = getSkillsForCategory(c.id).length; });
+    if (mode === 'companion') {
+      COMPANION_CATEGORIES.forEach((c) => { out[c.id] = getCompanionSkillsForCategory(c.id).length; });
+    } else {
+      CATEGORIES.forEach((c) => { out[c.id] = getSkillsForCategory(c.id).length; });
+    }
     return out;
-  }, []);
+  }, [mode]);
 
   const handleSelectCategory = (id) => {
-    setActiveCategory(id);
+    if (mode === 'companion') setActiveCompanionCategory(id);
+    else setActiveCategory(id);
     setSelectedSkill(null);
+    setDraggedSkill(null);
   };
 
-  const category = CATEGORIES.find((c) => c.id === activeCategory) || CATEGORIES[0];
-  const skills = getSkillsForCategory(activeCategory);
+  const handleSwitchMode = (newMode) => {
+    if (newMode === mode) return;
+    setMode(newMode);
+    setSelectedSkill(null);
+    setDraggedSkill(null);
+  };
+
+  const isCompanion = mode === 'companion';
+  const categoryList = isCompanion ? COMPANION_CATEGORIES : CATEGORIES;
+  const currentCategoryId = isCompanion ? activeCompanionCategory : activeCategory;
+  const category = categoryList.find((c) => c.id === currentCategoryId) || categoryList[0];
+  const rawSkills = isCompanion
+    ? getCompanionSkillsForCategory(currentCategoryId)
+    : getSkillsForCategory(currentCategoryId);
+  // For the detail panel, companion skills need a synthetic skill_type.
+  const skills = isCompanion ? rawSkills.map(adaptCompanionSkillForDetail) : rawSkills;
 
   return (
     <AnimatePresence>
@@ -213,10 +267,17 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             className="fixed z-[71] flex items-center pointer-events-auto"
             style={{ top: 'calc(50% - 300px)', left: 160, transform: 'translateY(-50%)' }}
           >
-            <SkillEquipSlots
-              draggedSkill={draggedSkill}
-              onClearDrag={() => setDraggedSkill(null)}
-            />
+            {isCompanion ? (
+              <CompanionSkillEquipSlots
+                draggedSkill={draggedSkill}
+                onClearDrag={() => setDraggedSkill(null)}
+              />
+            ) : (
+              <SkillEquipSlots
+                draggedSkill={draggedSkill}
+                onClearDrag={() => setDraggedSkill(null)}
+              />
+            )}
 
             <div
               className="relative flex flex-col overflow-hidden"
@@ -245,6 +306,29 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                 <div className="text-amber-100/90 text-[11px] font-semibold tracking-[0.35em] uppercase">
                   Tome of Skills
                 </div>
+
+                {/* Player ↔ Companion toggle */}
+                <div className="flex items-center gap-1">
+                  {['player', 'companion'].map((m) => {
+                    const active = mode === m;
+                    return (
+                      <button
+                        key={m}
+                        onClick={() => handleSwitchMode(m)}
+                        className="px-2.5 py-1 text-[9px] font-bold tracking-[0.25em] uppercase transition-all"
+                        style={{
+                          color: active ? '#ffd86b' : 'rgba(255,255,255,0.5)',
+                          background: active ? 'rgba(255,216,107,0.14)' : 'transparent',
+                          border: `1px solid ${active ? 'rgba(255,216,107,0.55)' : 'rgba(255,255,255,0.12)'}`,
+                          borderRadius: 2,
+                        }}
+                      >
+                        {m === 'player' ? '👤 Player' : '🐾 Companion'}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <button
                   onClick={onClose}
                   className="w-6 h-6 rounded-full flex items-center justify-center transition-all hover:brightness-125"
@@ -255,8 +339,8 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
               </div>
 
               <SkillsBookCategoryTabs
-                categories={CATEGORIES}
-                activeId={activeCategory}
+                categories={categoryList}
+                activeId={currentCategoryId}
                 onSelect={handleSelectCategory}
                 countsById={countsById}
               />
@@ -276,7 +360,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                   <div className="flex-1 overflow-hidden">
                     <AnimatePresence mode="wait">
                       <motion.div
-                        key={activeCategory}
+                        key={`${mode}-${currentCategoryId}`}
                         initial={{ opacity: 0, x: 12 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -12 }}

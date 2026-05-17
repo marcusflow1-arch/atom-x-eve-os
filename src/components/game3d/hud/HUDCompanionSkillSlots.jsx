@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { subscribeCompanion } from '../companionStore';
 import { getCompanionById } from '../companionData';
-import { COMPANION_ABILITIES, subscribeCompanionAbilities } from '../companionAbilityStore';
+import { subscribeCompanionAbilities } from '../companionAbilityStore';
+import {
+  subscribeCompanionLoadout,
+  COMPANION_SLOT_KEYS,
+} from '../skills/companionLoadoutStore';
+import { getCompanionSkillById } from '../skills/companionSkillRegistry';
 
 // Skills shown when MOUNTED — you control the mount's combat moves.
 // (Not yet wired to abilities — purely visual for now.)
@@ -22,19 +27,32 @@ const MOUNTED_SKILLS = [
 export default function HUDCompanionSkillSlots() {
   const [compState, setCompState] = useState(null);
   const [abState, setAbState] = useState({ cooldowns: {} });
+  const [loadout, setLoadout] = useState({ activeSlots: [null, null, null, null] });
 
   useEffect(() => subscribeCompanion(setCompState), []);
   useEffect(() => subscribeCompanionAbilities(setAbState), []);
+  useEffect(() => subscribeCompanionLoadout(setLoadout), []);
 
   const mounted = !!compState?.isMounted;
   const companion = getCompanionById(compState?.activeCompanionId);
 
-  // Unmounted = real companion abilities. Mounted = visual placeholders.
+  // Unmounted = whatever the player has equipped in the companion loadout.
+  // Mounted = visual placeholders for the mount.
   const skills = mounted
     ? MOUNTED_SKILLS
-    : COMPANION_ABILITIES.map((a) => ({
-        id: a.id, key: a.key, icon: a.icon, name: a.name, color: a.color, cooldown: a.cooldown,
-      }));
+    : COMPANION_SLOT_KEYS.map((slotKey, idx) => {
+        const id = loadout.activeSlots[idx];
+        const sk = id ? getCompanionSkillById(id) : null;
+        if (!sk) return { key: slotKey, icon: '—', name: 'Empty', color: '#6b7280', cooldown: 0, empty: true };
+        return {
+          id:       sk.legacy_id || sk.skill_id,
+          key:      slotKey,
+          icon:     sk.icon,
+          name:     sk.skill_name,
+          color:    sk.color,
+          cooldown: sk.cooldown,
+        };
+      });
 
   return (
     <div className="absolute z-20 pointer-events-auto" style={{ left: '24px', bottom: '156px' }}>
@@ -80,7 +98,13 @@ export default function HUDCompanionSkillSlots() {
                 title={sk.name}
               >
                 <div className={`absolute inset-1 rounded-[2px] ${mounted ? 'bg-black/40' : 'bg-white/[0.03]'}`} />
-                <div className="absolute inset-0 flex items-center justify-center text-lg" style={{ filter: mounted ? 'saturate(0.9)' : 'none' }}>
+                <div
+                  className="absolute inset-0 flex items-center justify-center text-lg"
+                  style={{
+                    filter: mounted ? 'saturate(0.9)' : 'none',
+                    opacity: sk.empty ? 0.25 : 1,
+                  }}
+                >
                   {sk.icon}
                 </div>
 
