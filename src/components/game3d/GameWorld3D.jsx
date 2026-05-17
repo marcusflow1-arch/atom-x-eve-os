@@ -250,7 +250,6 @@ export default function GameWorld3D() {
     window.__gw3dScene = scene;
     window.__gw3dCamera = camera;
     window.__gw3dLegacyRemoteManager = remoteManagerRef.current;
-    window.dispatchEvent(new CustomEvent('gw3dSceneReady'));
     scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0));
     const sun = new THREE.DirectionalLight(0xfff4d6, 2.2);
     sun.position.set(20, 30, 10);
@@ -622,9 +621,9 @@ export default function GameWorld3D() {
 
     // Boss entities — declared early so the bus + minion spawner can close over it.
     const bossEntities = [];
-    // Expose enemy + boss arrays for the host-authoritative WorldSync layer.
-    window.__gw3dEnemies = enemies;
-    window.__gw3dBosses = bossEntities;
+    // Expose live arrays for world-sync layer (after both are declared).
+    window.__gw3dEnemies = enemies; window.__gw3dBosses = bossEntities;
+    window.dispatchEvent(new CustomEvent('gw3dSceneReady'));
 
     // Boss event bus — applies bossAction events (AOE / cone / orb / dash / summon)
     // dispatched by BossBrain. Decouples boss AI from world mutation (multiplayer seam).
