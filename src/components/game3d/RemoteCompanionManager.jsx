@@ -121,7 +121,11 @@ export function createRemoteCompanionManager(scene) {
 
   const ensureInstance = (playerId, companionId) => {
     const existing = instances.get(playerId);
-    if (existing && existing.companionId === companionId) return Promise.resolve(existing);
+    if (existing && existing.companionId === companionId) {
+      // Skip duplicate builds while the original is still loading
+      if (existing.loading) return Promise.resolve(null);
+      return Promise.resolve(existing);
+    }
     // If companion changed, remove the old instance first
     if (existing) removeInstance(playerId);
     // Reserve the slot so multiple updates don't trigger duplicate loads
@@ -161,7 +165,7 @@ export function createRemoteCompanionManager(scene) {
   const onUpdate = (e) => {
     const d = e.detail; if (!d || !d.player_id || !d.companion_id) return;
     ensureInstance(d.player_id, d.companion_id).then((inst) => {
-      if (!inst) return;
+      if (!inst || inst.loading || !inst.targetPos) return;
       if (typeof d.x === 'number') inst.targetPos.x = d.x;
       if (typeof d.y === 'number') inst.targetPos.y = d.y;
       if (typeof d.z === 'number') inst.targetPos.z = d.z;
