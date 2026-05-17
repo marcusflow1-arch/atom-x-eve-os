@@ -84,10 +84,10 @@ export default function PauseMenu({ open, onClose, volume, onVolumeChange }) {
             <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div>
                 <div className="text-[10px] text-white/50 font-bold tracking-[0.3em] uppercase">
-                  {view === 'graphics' ? 'Settings' : 'System'}
+                  {view === 'graphics' ? 'Settings' : 'Settings'}
                 </div>
                 <div className="text-xl font-bold text-white tracking-wider drop-shadow">
-                  {view === 'graphics' ? 'Graphics' : 'Game Paused'}
+                  {view === 'graphics' ? 'Graphics' : 'Game Settings'}
                 </div>
               </div>
               <button
@@ -140,7 +140,7 @@ export default function PauseMenu({ open, onClose, volume, onVolumeChange }) {
                     />
                   </div>
 
-                  <MenuButton icon={Play} label="Resume" hint="Esc" onClick={onClose} accent="cyan" />
+                  <MenuButton icon={Play} label="Close Settings" hint="Esc" onClick={onClose} accent="cyan" />
                   <MenuButton
                     icon={Monitor}
                     label="Graphics Settings"
@@ -161,7 +161,7 @@ export default function PauseMenu({ open, onClose, volume, onVolumeChange }) {
             {/* Footer hint */}
             <div className="relative px-6 py-3 border-t border-white/10 text-center">
               <span className="text-[10px] text-white/40 font-mono tracking-wider">
-                Press ESC to {view === 'graphics' ? 'go back' : 'resume'}
+                Press ESC to {view === 'graphics' ? 'go back' : 'close'}
               </span>
             </div>
           </motion.div>

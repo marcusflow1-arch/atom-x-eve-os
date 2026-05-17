@@ -23,7 +23,7 @@ import { attachBossEventBus } from './boss/useBossEventBus';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
-import PauseMenu from './PauseMenu'; import CompanionMountHUD from './CompanionMountHUD';
+import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
 import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
 import CompanionHealthBar from './CompanionHealthBar';
@@ -86,7 +86,7 @@ export default function GameWorld3D() {
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
-  const [pauseOpen, setPauseOpen] = useState(false); const [playerMenu, setPlayerMenu] = useState(null); const remoteManagerRef = useRef(null);
+  const [playerMenu, setPlayerMenu] = useState(null); const remoteManagerRef = useRef(null);
   const [localMicOn, setLocalMicOn] = useState(false);
   const [talkingPeers, setTalkingPeers] = useState({});
   const [remoteMicUI, setRemoteMicUI] = useState([]);
@@ -1006,7 +1006,6 @@ export default function GameWorld3D() {
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
-      if (e.key === 'Escape') { setPauseOpen((v) => !v); e.preventDefault(); }
       // F = mount/dismount companion
       if (k === 'f') { mountToggleRef.current = true; e.preventDefault(); }
       // Z/X/V/B = companion combat abilities (Bite / Life Drain / Teleport Dash / Heal)
@@ -1975,7 +1974,6 @@ export default function GameWorld3D() {
 
       {/* Equipment menu (I) — Where Winds Meet–style layout */}
       <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
-      <PauseMenu open={pauseOpen} onClose={() => setPauseOpen(false)} onOpenSettings={() => { setPauseOpen(false); setEquipmentOpen(true); }} />
       <PlayerInteractionMenu
         open={!!playerMenu}
         x={playerMenu?.x || 0}
