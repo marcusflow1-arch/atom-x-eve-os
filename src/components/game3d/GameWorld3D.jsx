@@ -54,6 +54,8 @@ import { useCallback } from 'react';
 import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
 import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
+import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline';
+import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
 import {
@@ -1494,7 +1496,8 @@ export default function GameWorld3D() {
         if (attackPressed.current) {
           attackPressed.current = false;
           if (playerAttackCooldown.current <= 0) {
-            playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier();
+            // Weapon Mastery attack-speed bonus shortens cooldown further.
+            playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier() / getMasteryAttackSpeedMult();
             // Play attack animation (reusing kick as the melee attack)
             playOneShot('kick', 1.4);
             playActionSound('player_attack');
@@ -1514,6 +1517,26 @@ export default function GameWorld3D() {
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
             let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current); skillStrikeMultRef.current = 1.0;
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
+
+            // Weapon Mastery — adjust damage, apply identity/milestone passives.
+            const dxM = closestEnemy.group.position.x - model.position.x;
+            const dzM = closestEnemy.group.position.z - model.position.z;
+            const distM = Math.sqrt(dxM * dxM + dzM * dzM);
+            const masteryRes = applyMasteryToHit(dmg, {
+              targetHPPct: closestEnemy.hp / closestEnemy.maxHp,
+              playerHPPct: (getPlayerHUD().hp || 0) / (getPlayerHUD().maxHP || 1),
+              distance: distM,
+              isCrit: false,
+            });
+            dmg = masteryRes.damage;
+            if (masteryRes.armorPenPct > 0) {
+              const pen = Math.round((closestEnemy.derived?.defense || 0) * (masteryRes.armorPenPct / 100));
+              dmg = Math.max(1, dmg + pen);
+            }
+
+            const activeWeaponId = getActiveWeaponId();
+            reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: masteryRes.isCrit, isBoss: !!closestEnemy.isBoss });
+
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
             spawnDamageFloat(closestEnemy.id, dmg);
@@ -1524,6 +1547,7 @@ export default function GameWorld3D() {
             }
             if (closestEnemy.hp <= 0) {
               playActionSound('enemy_death');
+              reportWeaponKill(getActiveWeaponId());
               // Lethal — start death sequence + broadcast kill to all peers so
               // every player sees this enemy die in real time. 10s respawn is
               // scheduled inside killEnemyLocal.

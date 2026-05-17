@@ -16,6 +16,8 @@ import { getSkillById, scaleStat } from './skillRegistry';
 import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValidator';
 import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
+import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
+import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 
 function toast(text) {
   if (typeof window === 'undefined') return;
@@ -24,7 +26,9 @@ function toast(text) {
 
 function dispatchStrike(skill, hitIndex, level) {
   if (typeof window === 'undefined') return;
-  const mult = scaleStat(skill, 'damage_pct', level || 1) || 1;
+  const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
+  // Weapon Mastery scales skill damage based on the equipped weapon's level.
+  const mult = applyMasteryToSkillMultiplier(baseMult);
   window.dispatchEvent(new CustomEvent('playerSkillStrike', {
     detail: {
       skillId:   skill.skill_id,
@@ -114,6 +118,9 @@ export function castSkill(skill_id, ctx = {}) {
     default:
       return { ok: false, reason: 'unsupported_cast_type' };
   }
+
+  // Report skill cast → mastery XP for the equipped weapon.
+  reportSkillCast(getActiveWeaponId());
 
   toast(`${skill.icon} ${skill.skill_name}`);
   return { ok: true };
