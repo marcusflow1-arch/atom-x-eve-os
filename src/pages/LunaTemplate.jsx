@@ -1260,7 +1260,7 @@ export default function LunaTemplate() {
 
             {/* Main Showcase Area: PS5-style Developer Spotlight fills entire space below top row */}
             <div className={`absolute left-0 right-0 bottom-0 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                 style={{ top: '370px', paddingLeft: '440px', paddingRight: '32px', paddingBottom: '32px' }}>
+                 style={{ top: '280px', paddingLeft: '440px', paddingRight: '0px', paddingBottom: '32px' }}>
               <div className="h-full w-full">
                 <DevSpotlightShowcase onOpenOverlay={() => setShowDevSpotlight(true)} />
               </div>
