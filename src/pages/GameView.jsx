@@ -39,6 +39,7 @@ import SlashEffectLayer from '../components/game3d/SlashEffect';
 import PauseMenu from '../components/game3d/PauseMenu';
 import WindRunEffect from '../components/game3d/WindRunEffect';
 import SkillActivationToastListener from '../components/game3d/SkillActivationToastListener';
+import GameStateProvider from '../components/game3d/state/GameStateProvider';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -250,6 +251,10 @@ export default function GameView() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
+      {/* Hybrid host-authoritative simulation layer.
+          Owns enemies / loot / pvp damage / player hp.
+          GameWorld3D is becoming a renderer that reads from this. */}
+      <GameStateProvider>
       <GameWorld3D />
       <GameHUD />
       <OnlinePlayersPanel />
@@ -296,6 +301,7 @@ export default function GameView() {
         volume={themeVolume}
         onVolumeChange={setThemeVolume}
       />
+      </GameStateProvider>
     </div>
   );
 }
