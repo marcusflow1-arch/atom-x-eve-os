@@ -40,6 +40,7 @@ import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
+import { tickCompanionAutoCombat, resetCompanionAutoCombat } from './companionAutoCombat';
 import { createRemotePlayersManager } from './RemotePlayersManager';
 import { createRemoteCompanionManager } from './RemoteCompanionManager';
 import { ENEMY_SPAWNS } from './enemySpawnConfig';
@@ -1570,6 +1571,20 @@ export default function GameWorld3D() {
       tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs();
       if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
 
+      // ─── Companion auto-combat AI ───
+      // Auto-attacks the player's target with off-cooldown abilities, and
+      // auto-heals when the player's HP drops low or they take recent damage.
+      // Uses the exact same processCompanionAbilityPress() path as manual casts.
+      tickCompanionAutoCombat({
+        delta, scene, model, enemies, cachedDeathClip,
+        companionDefId: companionDefRef.current?.id,
+        playerXPRef, playerLevelRef,
+        setScore, setPlayerXP, setPlayerLevel,
+        spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP,
+        activeEffectsRef: activeEffects,
+        isMounted: isMountedRef.current,
+      });
+
       // ─── Update active visual effects (lightning etc.) ───
       activeEffects.current = activeEffects.current.filter((fx) => {
         fx.update(delta);
@@ -1780,6 +1795,7 @@ export default function GameWorld3D() {
       renderer.domElement.removeEventListener('contextmenu', onContext);
       window.removeEventListener('webrtcRemoteAction', handleRemoteAction);
       detachBossBus();
+      resetCompanionAutoCombat();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
       stopLoopSound('player_walk');
