@@ -1,6 +1,8 @@
 import React from 'react';
 import { allocateStat, getPlayerHUD, setPlayerHUD } from '../../playerHUDStore';
 import { computeDerivedStats } from '../../statsSystem';
+import { getHaloBonuses } from '../haloStore';
+import { getEquippedTitleBonuses } from '../titleStore';
 import { STAT_SYNERGY } from '../weaponSynergyData';
 import AttributeRow from './AttributeRow';
 
@@ -23,7 +25,9 @@ function refundStat(statKey) {
   const current = hud.baseStats?.[statKey] ?? 0;
   if (current <= 1) return false;
   const newBase = { ...hud.baseStats, [statKey]: current - 1 };
-  const newDerived = computeDerivedStats(newBase, []);
+  // Pass halo (virtual attribute points) + title (flat final stats) through
+  // the recompute so the Defense/Damage panels stay accurate after refund.
+  const newDerived = computeDerivedStats(newBase, [], getHaloBonuses(), getEquippedTitleBonuses());
   setPlayerHUD({
     baseStats: newBase,
     unspentPoints: hud.unspentPoints + 1,
@@ -88,8 +92,14 @@ export default function AttributesTab({ hud }) {
           <div>
             <div className="text-[10px] tracking-[0.3em] uppercase text-amber-300/80 mb-3">Offensive</div>
             <div className="space-y-1.5 text-xs text-white/75">
-              <div className="flex justify-between"><span>Physical Damage</span><span className="text-white">{d.physicalDamage || 0}</span></div>
-              <div className="flex justify-between"><span>Elemental Damage</span><span className="text-white">{d.elementalDamage || 0}</span></div>
+              <div className="flex justify-between border-b border-white/10 pb-1.5 mb-0.5">
+                <span className="text-white/90 font-semibold">Total Damage</span>
+                <span className="text-amber-200 font-semibold tabular-nums">{(d.totalDamage || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between"><span>Physical Damage</span><span className="text-white tabular-nums">{(d.physicalDamage || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Elemental Damage</span><span className="text-white tabular-nums">{(d.elementalDamage || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Crit Chance</span><span className="text-white">{(d.critChance||0).toFixed(1)}%</span></div>
+              <div className="flex justify-between"><span>Crit Damage</span><span className="text-white">+{Math.round((d.criticalDamage||0)*100)}%</span></div>
               <div className="flex justify-between"><span>Attack Speed</span><span className="text-white">+{(d.attackSpeedPct||0).toFixed(1)}%</span></div>
               <div className="flex justify-between"><span>Skill Power</span><span className="text-white">+{(d.skillPowerPct||0).toFixed(1)}%</span></div>
               <div className="flex justify-between"><span>DoT / Elemental</span><span className="text-white">+{(d.dotDamagePct||0).toFixed(1)}%</span></div>
@@ -98,7 +108,12 @@ export default function AttributesTab({ hud }) {
           <div>
             <div className="text-[10px] tracking-[0.3em] uppercase text-sky-300/80 mb-3">Defensive</div>
             <div className="space-y-1.5 text-xs text-white/75">
-              <div className="flex justify-between"><span>Defense</span><span className="text-white">{Math.round(d.defense || 0)}</span></div>
+              <div className="flex justify-between border-b border-white/10 pb-1.5 mb-0.5">
+                <span className="text-white/90 font-semibold">Max HP</span>
+                <span className="text-sky-200 font-semibold tabular-nums">{(d.maxHP || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between"><span>Defense</span><span className="text-white tabular-nums">{Math.round(d.defense || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Crit Defense</span><span className="text-white">{Math.round((d.criticalDefense||0)*100)}%</span></div>
               <div className="flex justify-between"><span>HP Regen</span><span className="text-white">{(d.hpRegen||0).toFixed(1)}/s</span></div>
               <div className="flex justify-between"><span>Evasion</span><span className="text-white">{(d.evasionPct||0).toFixed(1)}%</span></div>
               <div className="flex justify-between"><span>Mana Regen</span><span className="text-white">{(d.manaRegen||0).toFixed(1)}/s</span></div>
