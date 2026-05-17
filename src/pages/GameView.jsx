@@ -28,6 +28,8 @@ import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemot
 import NetworkValidationTelemetry from '../components/network/debug/NetworkValidationTelemetry';
 import { partyStore } from '../components/game3d/social/socialStores';
 import GameWorldLootLayer from '../components/game3d/GameWorldLootLayer';
+import EnemyPlayerSpawner from '../components/game3d/EnemyPlayerSpawner';
+import ShopEffectsBridge from '../components/game3d/shop/shopEffectsBridge';
 // Each action has its own dedicated send module — they do NOT share a code path.
 import { sendFriendRequest } from '../components/game3d/social/friendRequest';
 import { sendPartyInvite } from '../components/game3d/social/partyInvite';
@@ -287,6 +289,12 @@ export default function GameView() {
 
       {/* Loot drop layer — spawns world items on enemy death, handles E-to-pickup */}
       <GameWorldLootLayer />
+
+      {/* Hostile rogue-player AIs — kill them for gold, XP, loot, and PvP title kills */}
+      <EnemyPlayerSpawner />
+
+      {/* Shop consumable effects — applies buffs/heals when items are used from the shop */}
+      <ShopEffectsBridge />
 
       {/* Passive skill aura visual effects rendered over the player */}
       <PassiveSkillAuraEffects activeSkillIds={[...learnedSkillIds]} />

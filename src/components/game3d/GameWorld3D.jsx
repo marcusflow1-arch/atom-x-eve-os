@@ -55,8 +55,8 @@ import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './r
 import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
-import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline';
-import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
+import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
+import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
 import {
@@ -1517,7 +1517,7 @@ export default function GameWorld3D() {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current); skillStrikeMultRef.current = 1.0;
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5); window.dispatchEvent(new CustomEvent('rogueAITakeDamage', { detail: { damage: dmg } }));
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
 
             // Weapon Mastery — adjust damage, apply identity/milestone passives.
@@ -1566,7 +1566,7 @@ export default function GameWorld3D() {
                 deathAction.reset().fadeIn(0.15).play();
                 closestEnemy.deathAction = deathAction;
               }
-              broadcastEnemyKill(closestEnemy.id, { tier: closestEnemy.tier || 'normal', isBoss: !!closestEnemy.isBoss, x: closestEnemy.group.position.x, y: closestEnemy.group.position.y, z: closestEnemy.group.position.z });
+              broadcastEnemyKill(closestEnemy.id, { tier: closestEnemy.tier || 'normal', isBoss: !!closestEnemy.isBoss, x: closestEnemy.group.position.x, y: closestEnemy.group.position.y, z: closestEnemy.group.position.z }); recordTitleKill(closestEnemy.isBoss ? 'boss' : (closestEnemy.tier === 'elite' || closestEnemy.tier === 'champion' ? 'elite' : 'normal'), 1); addGold(closestEnemy.isBoss ? 250 : closestEnemy.tier === 'champion' ? 60 : closestEnemy.tier === 'elite' ? 30 : 15);
               setScore(prev => prev + 100 * closestEnemy.xpReward);
               spawnXPFloat(closestEnemy.xpReward);
               awardCompanionXP(companionDefRef.current?.id, closestEnemy.xpReward);
