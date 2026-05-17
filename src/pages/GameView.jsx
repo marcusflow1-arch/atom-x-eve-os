@@ -16,6 +16,7 @@ import WorldSyncMount from '../components/game3d/network/WorldSyncMount';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
+import TradeSessionWatcher from '../components/game3d/social/TradeSessionWatcher';
 import IncomingRequestToast from '../components/game3d/social/IncomingRequestToast';
 import DuelSystem from '../components/game3d/social/DuelSystem';
 import DuelMarkers from '../components/game3d/social/DuelMarkers';
@@ -270,6 +271,7 @@ export default function GameView() {
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
       <PartyPanel />
       <TradePanel />
+      <TradeSessionWatcher userId={user?.id} />
       <IncomingRequestToast userId={user?.id} userName={user?.full_name || user?.username || 'Player'} />
       <DuelSystem userId={user?.id} />
       <DuelMarkers localUserId={user?.id} />
