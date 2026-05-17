@@ -6,6 +6,7 @@ import HUDPortrait3D from './HUDPortrait3D';
 import ActiveBuffsStrip from './ActiveBuffsStrip';
 import { base44 } from '@/api/base44Client';
 import { Skull } from 'lucide-react';
+import { subscribeFusionState } from '../fusionStore';
 
 /**
  * Bottom-center HUD: live 3D character portrait + HP / Mana / XP bars.
@@ -22,6 +23,10 @@ export default function HUDVitals() {
   // Live total kill count — shown as a small pill above the player's name.
   const [killCount, setKillCount] = useState(0);
   useEffect(() => subscribeKillCount(setKillCount), []);
+
+  // Fusion state — display fusion tank above HP bar
+  const [fusionState, setFusionState] = useState({ isFused: false, duration: 0, timeRemaining: 0 });
+  useEffect(() => subscribeFusionState(setFusionState), []);
 
   // Fetch current player display name to show above the portrait box
   const [playerName, setPlayerName] = useState('');
@@ -103,6 +108,10 @@ export default function HUDVitals() {
         <div className="flex flex-col gap-1 w-[380px]">
           {/* Active self-cast buff icons — float above the HP bar */}
           <ActiveBuffsStrip />
+          {/* Fusion tank — appears above HP */}
+          {fusionState.isFused && (
+            <Bar value={fusionState.timeRemaining} max={fusionState.duration} color="#a78bfa" label="FUSION" />
+          )}
           <Bar value={hp} max={maxHp} color="#4caf50" label="HP" />
           <Bar value={mana} max={maxMana} color="#3a9ee6" label="MP" />
           <XPBar level={hud.level} xp={hud.xp} xpForNext={hud.xpForNext} />

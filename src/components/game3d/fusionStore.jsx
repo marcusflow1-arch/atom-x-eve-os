@@ -26,6 +26,22 @@ export function subscribeFusion(fn) {
   return () => listeners.delete(fn);
 }
 
+// Subscribe to fusion state with time remaining — hydrates HUD display.
+export function subscribeFusionState(fn) {
+  const updateFn = () => {
+    const now = performance.now();
+    const remaining = Math.max(0, (state.expiresAt - now) / 1000);
+    fn({
+      isFused: state.isFused,
+      duration: state.durationMs / 1000,
+      timeRemaining: remaining,
+    });
+  };
+  listeners.add(updateFn);
+  updateFn();
+  return () => listeners.delete(updateFn);
+}
+
 export function startFusion(durationSec = 20) {
   const now = performance.now();
   state = {
