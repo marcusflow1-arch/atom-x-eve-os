@@ -1418,35 +1418,6 @@ export default function LunaTemplate() {
 
                   <div className="mt-6 w-full max-w-sm">
                   <LunaStatsPanel />
-                </div>
-
-                {/* AI News */}
-                  <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                    <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
-                      <Radio className="w-5 h-5 text-green-400" />
-                      Platform Updates
-                    </h2>
-                    <div className="space-y-3">
-                      {platformUpdates.slice(0, 3).map((update, i) =>
-                            <div
-                              key={i}
-                              onClick={() => setSelectedUpdate(update)}
-                              className={`bg-white/5 rounded-lg p-4 border transition-colors cursor-pointer ${update.update_type === 'required' ? 'border-red-500/50 hover:border-red-400' : 'border-white/10 hover:border-green-400/50'}`
-                              }>
-
-                          <div className="flex items-start gap-3">
-                            <Bot className={`w-5 h-5 flex-shrink-0 mt-0.5 ${update.update_type === 'required' ? 'text-red-400' : 'text-green-400'}`} />
-                            <div className="flex-1">
-                              <p className="text-white font-semibold mb-1">{update.title}</p>
-                              <p className="text-white/60 text-sm">{update.description}</p>
-                            </div>
-                          </div>
-                        </div>
-                            )}
-                      {platformUpdates.length === 0 &&
-                            <p className="text-white/40 text-sm text-center py-4">No updates available</p>
-                            }
-                    </div>
                   </div>
                 </div>
                 </motion.div>
