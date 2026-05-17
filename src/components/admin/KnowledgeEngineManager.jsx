@@ -10,6 +10,7 @@ import WebResearchTab        from './knowledge/WebResearchTab';
 import UnrealDocsIndexerTab  from './knowledge/UnrealDocsIndexerTab';
 import VectorMemoryTab       from './knowledge/VectorMemoryTab';
 import UE5TranslatorTab      from './knowledge/UE5TranslatorTab';
+import UE5BlueprintGeneratorTab from './knowledge/UE5BlueprintGeneratorTab';
 import LearningLogsTab       from './knowledge/LearningLogsTab';
 
 // ─── Knowledge Engine ─────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ export default function KnowledgeEngineManager() {
           <TabsTrigger value="unreal">Unreal Docs</TabsTrigger>
           <TabsTrigger value="vector">Vector Memory</TabsTrigger>
           <TabsTrigger value="ue5">UE5 Translator</TabsTrigger>
+          <TabsTrigger value="ue5bp">BP Generator</TabsTrigger>
           <TabsTrigger value="logs">Learning Logs</TabsTrigger>
         </TabsList>
 
@@ -60,6 +62,7 @@ export default function KnowledgeEngineManager() {
         <TabsContent value="unreal">  <UnrealDocsIndexerTab />  </TabsContent>
         <TabsContent value="vector">  <VectorMemoryTab />       </TabsContent>
         <TabsContent value="ue5">     <UE5TranslatorTab />      </TabsContent>
+        <TabsContent value="ue5bp">   <UE5BlueprintGeneratorTab /> </TabsContent>
         <TabsContent value="logs">    <LearningLogsTab />       </TabsContent>
       </Tabs>
     </div>
