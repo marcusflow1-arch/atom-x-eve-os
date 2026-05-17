@@ -10,7 +10,9 @@ const MAX_PLAYERS = 20;
 // A player is considered "online" if they've sent a heartbeat in this window.
 const ONLINE_WINDOW_MS = 15000;
 // How often we re-check the cap & sync the live online count.
-const POLL_MS = 4000;
+// Lowered frequency (was 4s) to stay under the entity API rate limit when
+// multiple in-world pollers are running concurrently.
+const POLL_MS = 15000;
 
 /**
  * GameWorldServerManager

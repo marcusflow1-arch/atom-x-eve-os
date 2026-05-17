@@ -87,9 +87,11 @@ export default function IncomingRequestToast({ userId, userName }) {
     refreshParty();
     refreshIncoming();
 
-    // Poll every 5s as a safety net in case real-time subscription drops.
+    // Poll every 20s as a safety net in case real-time subscription drops.
     // (Real-time subscription is the primary mechanism — this just covers gaps.)
-    const pollInterval = setInterval(() => refreshIncoming(), 5000);
+    // Lowered from 5s to avoid hitting the entity API rate limit alongside
+    // other social/world pollers.
+    const pollInterval = setInterval(() => refreshIncoming(), 20000);
 
     const unsubReq = base44.entities.SocialRequest.subscribe(() => refreshIncoming());
     const unsubFriend = base44.entities.SocialFriendship.subscribe(() => refreshFriends());

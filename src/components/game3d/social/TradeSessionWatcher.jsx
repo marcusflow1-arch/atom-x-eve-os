@@ -68,9 +68,11 @@ export default function TradeSessionWatcher({ userId }) {
     // Initial scan
     scan();
 
-    // Poll every 2s as a reliable fallback. TradeSession is short-lived and
-    // low-volume so polling cost is negligible.
-    const interval = setInterval(scan, 2000);
+    // Poll every 15s as a reliable safety-net fallback. The realtime
+    // subscription below is the primary mechanism — polling just covers gaps
+    // if a subscription drops. Lowered from 2s to avoid hitting the entity
+    // API rate limit when multiple watchers/pollers are mounted at once.
+    const interval = setInterval(scan, 15000);
 
     // Realtime subscription — opens the panel instantly when the row appears.
     const unsub = base44.entities.TradeSession.subscribe((event) => {

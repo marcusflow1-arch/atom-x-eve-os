@@ -71,7 +71,7 @@ export default function OnlinePlayersPanel() {
         }));
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    refetchInterval: 20000,
   });
 
   // Channel populations + host per channel (earliest joiner wins, matching the
@@ -97,7 +97,7 @@ export default function OnlinePlayersPanel() {
       return byChannel;
     },
     enabled: !!user?.id && tab === 'channels',
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   const list = tab === 'world' ? worldPlayers : globalUsers;
