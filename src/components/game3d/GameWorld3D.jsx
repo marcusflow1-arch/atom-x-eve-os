@@ -46,60 +46,18 @@ import { useCallback } from 'react';
 import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore'; import { tryActivateBookSkill, isSkillAllowedForActiveWeapon } from './skillActivationHandler'; import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './activeBuffsStore.jsx';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 
-// XP / Level system — XP_TABLE[n] = XP to reach level n+2 from n+1.
-const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
-const xpForLevel = (level) => XP_TABLE[Math.min(level - 1, XP_TABLE.length - 1)] || 200;
-
-// Enemy tier definitions — HP/damage/defense now come from ENEMY_STAT_TEMPLATES
-// via the shared statsSystem. Only visual + XP/level metadata lives here.
-const ENEMY_TIERS = [
-  { name: 'normal',   weight: 0.70, xp: 1, level: 1, scale: 1.0,  tintMix: 0.55 },
-  { name: 'elite',    weight: 0.22, xp: 3, level: 2, scale: 1.15, tintMix: 0.70 },
-  { name: 'champion', weight: 0.08, xp: 5, level: 4, scale: 1.30, tintMix: 0.85 },
-];
-// Pick tier from a seeded roll (deterministic across clients) — falls back to
-// Math.random() only when called without a roll (legacy paths).
-const pickTier = (roll = Math.random()) => {
-  let acc = 0;
-  for (const t of ENEMY_TIERS) { acc += t.weight; if (roll < acc) return t; }
-  return ENEMY_TIERS[0];
-};
-
-const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
-const ANIMATION_URLS = {
-  idle:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx',
-  run:   'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/4edd51169_Running.fbx',
-  jump:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/b1e388a25_Jumping.fbx',
-  kick:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/d4d6d9112_standingmeleekick.fbx',
-  roll:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/c9ba745cd_SprintingForwardRoll.fbx',
-  death: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/183d60083_standingdeathforward01.fbx',
-};
-
-const DEATH_FADE_DELAY = 5.0; // seconds the corpse stays on the ground before vanishing
-
-const WALK_SPEED = 4.0;
-const RUN_SPEED = 9.0;
-const ROT_SMOOTH = 0.18;
-const BLEND = 0.2;
-
-// GameWorld3D — 3D archer + WASD movement + orbit camera + multiplayer + voice.
-// NPC spawn positions + dialogue
-const NPC_SPAWNS = [
-  { id: 'npc_elara', name: 'Elara the Guide', pos: [6, 0.3, 6], color: 0x4a90e2, dialogue: "Welcome, traveler! The arena ahead is full of restless spirits — defeat them to prove your worth." },
-  { id: 'npc_borin', name: 'Borin the Blacksmith', pos: [-7, 0.3, 4], color: 0xe2a04a, dialogue: "Need stronger arrows? Come back when you've slain a few enemies and I'll forge you something special." },
-  { id: 'npc_sage', name: 'Sage Mira', pos: [0, 0.3, 12], color: 0xa04ae2, dialogue: "The runes whisper of an ancient power buried beneath the platform. Be careful where you tread." },
-];
-
-const ENEMY_SPEED = 1.2;
-const ENEMY_WALK_TIME = 3.0;   // seconds walking
-const ENEMY_IDLE_TIME = 5.0;   // seconds idle
-const ENEMY_WANDER_RADIUS = 4; // how far they pick a new walk target
-const NPC_INTERACT_RANGE = 3.5;
-const ENEMY_ATTACK_RANGE = 2.0;
-const ENEMY_ATTACK_COOLDOWN = 2.2;     // seconds between enemy attacks
-const ENEMY_ATTACK_WINDUP = 0.4;       // seconds before damage actually lands (mid-anim)
-const PLAYER_ATTACK_COOLDOWN = 0.6;    // seconds between player left-click attacks
-const PLAYER_INVUL_AFTER_HIT = 0.5;    // brief i-frames after taking a hit
+// GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
+import {
+  XP_TABLE, xpForLevel,
+  ENEMY_TIERS, pickTier,
+  ARCHER_URL, ANIMATION_URLS,
+  DEATH_FADE_DELAY, WALK_SPEED, RUN_SPEED, ROT_SMOOTH, BLEND,
+  NPC_SPAWNS,
+  ENEMY_SPEED, ENEMY_WALK_TIME, ENEMY_IDLE_TIME, ENEMY_WANDER_RADIUS,
+  NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP,
+  PLAYER_ATTACK_COOLDOWN, PLAYER_INVUL_AFTER_HIT,
+} from './gameWorldConfig';
+import { attachContextGuard } from './webglContextGuard';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -263,6 +221,10 @@ export default function GameWorld3D() {
     renderer.toneMappingExposure = 1.1;
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
+    // Guard against WebGL context loss + post-dispose render calls — without
+    // this, three.js shadow-map pass crashes inside getUniforms() with
+    // "Cannot read properties of null (reading 'trim')".
+    const rendererGuard = attachContextGuard(renderer);
 
     // Camera
     const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
@@ -1804,7 +1766,7 @@ export default function GameWorld3D() {
         bossEntities.forEach((b) => { updateBoss(b.id, { x: b.group.position.x, z: b.group.position.z, hp: Math.max(0, b.hp), maxHp: b.maxHp, alive: b.alive && !b.dying }); });
       }
 
-      renderer.render(scene, camera);
+      rendererGuard.render(scene, camera);
     };
     animate();
 
@@ -1816,7 +1778,11 @@ export default function GameWorld3D() {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // Mark guard disposed FIRST so any in-flight animate() bails before
+      // touching the renderer — prevents the null.trim shadow-map crash.
+      rendererGuard.markDisposed();
       cancelAnimationFrame(frameId);
+      rendererGuard.dispose();
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
