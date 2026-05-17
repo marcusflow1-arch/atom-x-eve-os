@@ -10,6 +10,7 @@ import {
   persistParsedDocument,
 } from './knowledgeIngestService';
 import KnowledgeStatusBanner from './KnowledgeStatusBanner';
+import BulkGoogleDocsImport from './BulkGoogleDocsImport';
 import { showSuccess, showError } from '@/components/error/ErrorToast';
 
 // Step-by-step ingestion runner for a Google Docs link.
@@ -138,6 +139,10 @@ export default function GoogleDocsImportTab({ onIngested }) {
             )}
           </motion.div>
         )}
+
+        <div className="mt-6">
+          <BulkGoogleDocsImport onIngested={(r) => setLastResult(r)} />
+        </div>
       </section>
     </div>
   );
