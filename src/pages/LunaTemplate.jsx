@@ -70,6 +70,7 @@ import CombatXPHandler from '../components/combat/CombatXPHandler';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
 import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
+import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
@@ -1257,30 +1258,9 @@ export default function LunaTemplate() {
 
             </div>
 
-            {/* Main Grid: Leaderboard + 2x2 Right */}
-            {/* Added relative z-index to ensure it sits below the overlays if they overflow */}
-            <div className={`flex-1 flex gap-6 min-h-0 relative z-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              {/* Leaderboard Tile - Left */}
-              <div className="pointer-events-auto"><LeaderboardTile /></div>
-
-              {/* Right Side - 2x2 Grid */}
-                <div className="flex-1 flex flex-col gap-6">
-                   {/* App Shortcuts */}
-                   <div className="flex gap-6 flex-1">
-                     {/* My Games & Apps */}
-                     <ConsoleTile
-                            onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                            className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto">
-                            
-                       <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                       <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
-                     </ConsoleTile>
-                   </div>
-                   {/* Developer Spotlight — at the bottom of the right column, aligned with AI Attribute Box bottom */}
-                   <div className="pointer-events-auto">
-                     <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
-                   </div>
-                 </div>
+            {/* Main Showcase Area: PS5-style Developer Spotlight fills entire space below top row */}
+            <div className={`flex-1 min-h-0 relative z-0 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <DevSpotlightShowcase onOpenOverlay={() => setShowDevSpotlight(true)} />
             </div>
             </>
                   }
