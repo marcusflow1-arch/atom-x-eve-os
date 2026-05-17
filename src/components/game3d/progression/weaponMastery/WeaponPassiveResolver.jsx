@@ -14,6 +14,7 @@ import {
   resolveWeaponType,
   WEAPON_TYPES,
 } from './weaponMasteryConfig';
+import { getAllocatedModifiers } from './weaponMasteryTreeStore';
 
 // Linear progress 0..1 based on current level vs max.
 function progress(level) {
@@ -88,11 +89,22 @@ export function resolveWeaponPassives(weaponId) {
   if (!weaponId) return { weaponType: WEAPON_TYPES.SWORD, level: 1, global: {}, identity: {}, milestones: {} };
   const level = getWeaponLevel(weaponId);
   const weaponType = resolveWeaponType(weaponId);
+  // Tree-allocated nodes contribute additional modifiers that stack
+  // additively with milestone passives (same key namespace).
+  const treeMods = getAllocatedModifiers(weaponType);
+  const milestones = milestonePassives(weaponType, level);
+  for (const k of Object.keys(treeMods)) {
+    const v = treeMods[k];
+    if (typeof v === 'number') milestones[k] = (milestones[k] || 0) + v;
+    else milestones[k] = v;
+  }
+
   return {
     weaponType,
     level,
     global:     globalPassives(level),
     identity:   identityPassives(weaponType, level),
-    milestones: milestonePassives(weaponType, level),
+    milestones,
+    tree:       treeMods,
   };
 }

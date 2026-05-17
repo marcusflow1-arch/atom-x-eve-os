@@ -3,6 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
 import WeaponSkillTree from './WeaponSkillTree';
+import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
+import { resolveWeaponType } from '../weaponMastery/weaponMasteryConfig';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
@@ -206,15 +208,9 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
           </div>
         </div>
 
-        {/* RIGHT — two branch skill trees */}
-        <div className="flex-1 min-w-0 flex justify-around items-start overflow-y-auto pt-2">
-          {tree.branches.map((branch) => (
-            <WeaponSkillTree
-              key={branch.id}
-              branch={branch}
-              weaponLevel={masteryEntry.level}
-            />
-          ))}
+        {/* RIGHT — interactive Mastery Tree (passive nodes, point spending) */}
+        <div className="flex-1 min-w-0 flex justify-center items-start overflow-y-auto pt-2">
+          <WeaponMasteryTreePanel weaponType={resolveWeaponType(weaponId)} />
         </div>
       </div>
 
