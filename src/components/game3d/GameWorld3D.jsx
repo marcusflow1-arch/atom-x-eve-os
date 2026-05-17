@@ -617,6 +617,10 @@ export default function GameWorld3D() {
     const handlePlayerSkillStrike = (e) => { const { multiplier = 1.0, hits = 1 } = e.detail || {}; for (let i = 0; i < hits; i++) setTimeout(() => { skillStrikeMultRef.current = multiplier; attackPressed.current = true; }, i * 180); };
     window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
 
+    // Boss entities — declared early so the bus + minion spawner can close over it.
+    // Populated below when BOSSES.forEach loader callbacks finish.
+    const bossEntities = [];
+
     // Boss event bus — applies bossAction events (AOE / cone / orb / dash / summon)
     // dispatched by BossBrain. Decouples boss AI from world mutation (multiplayer seam).
     let _spawnBossMinion = () => {};
@@ -681,7 +685,7 @@ export default function GameWorld3D() {
     };
 
     // WORLD BOSS SPAWNS — supersized champion enemies with ×scale, ×HP, ×XP. Seeded into bossStore.
-    const bossEntities = []; // refs into the `enemies` array, kept so we can push HP/pos to the store
+    // (bossEntities array was declared earlier so the event bus could capture it.)
     setBosses(BOSSES.map((b) => ({
       id: b.id, name: b.name, title: b.title,
       x: b.pos[0], z: b.pos[2],
