@@ -18,6 +18,10 @@ import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
 import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets';
 import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData';
 import { setBosses, updateBoss } from './bossStore';
+import { createBossBrain } from './boss/BossBrain';
+import { attachBossEventBus } from './boss/useBossEventBus';
+import { makeBossMinionSpawner } from './boss/spawnBossMinion';
+import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import PauseMenu from './PauseMenu'; import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
@@ -613,6 +617,18 @@ export default function GameWorld3D() {
     const handlePlayerSkillStrike = (e) => { const { multiplier = 1.0, hits = 1 } = e.detail || {}; for (let i = 0; i < hits; i++) setTimeout(() => { skillStrikeMultRef.current = multiplier; attackPressed.current = true; }, i * 180); };
     window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
 
+    // Boss event bus — applies bossAction events (AOE / cone / orb / dash / summon)
+    // dispatched by BossBrain. Decouples boss AI from world mutation (multiplayer seam).
+    let _spawnBossMinion = () => {};
+    const detachBossBus = attachBossEventBus({
+      scene, getPlayerHUD, setHP, spawnDamageFloat,
+      activeEffectsRef: activeEffects,
+      sampleGroundY,
+      get model() { return model; },
+      getBossById: (id) => bossEntities.find((b) => b.id === id),
+      spawnBossMinion: (bid, p) => _spawnBossMinion(bid, p),
+    });
+
     // Pre-load enemy creature clips once (shared across all enemies).
     // These come from the "creature" folder in admin → AnimationFBX manager
     // (Survivor A Lusth model + mutant animation set).
@@ -635,6 +651,12 @@ export default function GameWorld3D() {
     let cachedAttackClip = null;
     deathClipPromise.then((clip) => { cachedDeathClip = clip; });
     attackClipPromise.then((clip) => { cachedAttackClip = clip; });
+
+    // Boss minion spawner — wired now that loader + clip promises exist.
+    _spawnBossMinion = makeBossMinionSpawner({
+      scene, loader, enemies, bossEntities, snapToGround,
+      walkClipPromise, idleClipPromise, setEnemyCount,
+    });
 
     // Helper: pick a random wander point inside the enemy's zone
     const pickWanderTarget = (enemy) => {
@@ -741,6 +763,12 @@ export default function GameWorld3D() {
         enemies.push(bossEntry);
         bossEntities.push(bossEntry);
 
+        // Attach the new MMO-style boss brain. This drives ALL boss behavior
+        // (state machine, threat, abilities, summons) and replaces the
+        // generic wander/attack logic for this entity.
+        bossEntry.brain = createBossBrain(bossEntry);
+        bossEntry.aiTarget = null; bossEntry.aiSpeed = 1.2;
+
         // Seed the store with real HP now that we know maxHp
         updateBoss(bossDef.id, { hp: bossMaxHp, maxHp: bossMaxHp, alive: true });
 
@@ -827,6 +855,12 @@ export default function GameWorld3D() {
           attackCooldown: Math.random() * 1.5, // stagger initial attacks
           attacking: false,
           attackWindupTimer: 0,
+          // Phase 5 desync fix — per-enemy randomized think/move/idle timing.
+          thinkInterval: 0.2 + Math.random() * 1.2,
+          thinkTimer: Math.random() * 0.9,
+          speedJitter: 0.85 + Math.random() * 0.3,
+          idleVariance: 0.7 + Math.random() * 0.8,
+          walkVariance: 0.7 + Math.random() * 0.8,
         };
         enemies.push(enemyEntry);
         if (startsWalking) pickWanderTarget(enemyEntry);
@@ -1294,6 +1328,27 @@ export default function GameWorld3D() {
           if (!enemy.alive) return;
           if (enemy.mixer) enemy.mixer.update(delta);
 
+          // BOSS PATH — delegate to BossBrain (state machine + abilities + threat).
+          // Bypasses wander/attack logic entirely; brain emits bossAction events.
+          if (enemy.isBoss && enemy.brain) {
+            if (enemy.dying) return;
+            const localPos = { id: 'local_player', x: model.position.x, z: model.position.z, hp: getPlayerHUD().hp || 100, maxHp: getPlayerHUD().maxHP || 100, isLocal: true };
+            enemy.brain.tick(delta, { players: [localPos], dt: delta });
+            if (mapReady) {
+              const gy = sampleGroundY(enemy.group.position.x, enemy.group.position.z);
+              if (gy !== null) enemy.group.position.y = gy;
+            }
+            // Animation: walk when aiTarget set, idle otherwise
+            if (enemy.aiTarget && enemy.walkAction && enemy.idleAction) {
+              if (!enemy.walkAction.isRunning()) { enemy.idleAction.fadeOut(0.2); enemy.walkAction.reset().fadeIn(0.2).play(); }
+            } else if (enemy.idleAction && enemy.walkAction) {
+              if (!enemy.idleAction.isRunning()) { enemy.walkAction.fadeOut(0.2); enemy.idleAction.reset().fadeIn(0.2).play(); }
+            }
+            // Boss damage credit when hit by player → into threat table
+            if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
+            return;
+          }
+
           // Death sequence: play death anim, fade out, RESPAWN after 10s at home.
           if (enemy.dying) {
             enemy.deathTimer += delta;
@@ -1453,6 +1508,10 @@ export default function GameWorld3D() {
             closestEnemy.hitCooldown = 0.25;
             spawnDamageFloat(closestEnemy.id, dmg);
             playActionSound('enemy_hit');
+            // Boss threat credit — feeds the boss brain's aggro table.
+            if (closestEnemy.isBoss && closestEnemy.brain) {
+              closestEnemy.brain.recordDamage('local_player', dmg);
+            }
             if (closestEnemy.hp <= 0) {
               playActionSound('enemy_death');
               // Lethal — start death sequence + broadcast kill to all peers so
@@ -1538,117 +1597,17 @@ export default function GameWorld3D() {
           if (ab && target) {
             // Find the live enemy entry
             const targetEnemy = enemies.find((e) => e.id === target.id && e.alive && !e.dying);
-            if (targetEnemy) {
-              startLegacyAbilityCooldown(slotIndex);
-              if (ab.id === 'shadow_teleport') {
-                const fx = createShadowTeleport(scene, model, () => ({
-                  x: targetEnemy.group.position.x,
-                  y: targetEnemy.group.position.y,
-                  z: targetEnemy.group.position.z,
-                }));
-                activeEffects.current.push(fx);
-                playActionSound('player_jump');
-              } else if (ab.id === 'frost_tornado') {
-                // Aerial AOE — spawn icy tornado at targeted enemy, damage all enemies in radius
-                const tx = targetEnemy.group.position.x;
-                const tz = targetEnemy.group.position.z;
-                const gy = targetEnemy.group.position.y;
-                const fx = createFrostTornado(scene, tx, tz, gy);
-                activeEffects.current.push(fx);
-                playActionSound('player_attack');
-                const radius = ab.radius || 4.5;
-                const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-                // Frost Tornado = DoT + elemental AoE spell → scales with Spirit AND Elemental
-                const baseDmg = applySpellScaling(ab.damage + (liveDerived.elementalDamage || 0) * 0.4, liveDerived, { isDoT: true });
-                // Deal damage in 3 ticks across the tornado's duration for sustained feel
-                [400, 1000, 1700].forEach((ms) => {
-                  setTimeout(() => {
-                    enemies.forEach((en) => {
-                      if (!en.alive || en.dying) return;
-                      const dx = en.group.position.x - tx;
-                      const dz = en.group.position.z - tz;
-                      if (dx * dx + dz * dz > radius * radius) return;
-                      en.hp -= baseDmg;
-                      en.hitCooldown = 0.2;
-                      spawnDamageFloat(en.id, baseDmg);
-                      updateTargetHP(en.id, Math.max(0, en.hp));
-                      if (en.hp <= 0) {
-                        playActionSound('enemy_death');
-                        en.hp = 0;
-                        en.dying = true;
-                        en.deathTimer = 0;
-                        if (en.walkAction) en.walkAction.fadeOut(0.15);
-                        if (en.idleAction) en.idleAction.fadeOut(0.15);
-                        if (cachedDeathClip && en.mixer) {
-                          const da = en.mixer.clipAction(cachedDeathClip);
-                          da.setLoop(THREE.LoopOnce);
-                          da.clampWhenFinished = true;
-                          da.reset().fadeIn(0.15).play();
-                        }
-                        if (getAbilityState().target?.id === en.id) clearTarget();
-                        setScore(prev => prev + 100 * (en.xpReward || 1));
-                        spawnXPFloat(en.xpReward || 1); awardCompanionXP(companionDefRef.current?.id, en.xpReward || 1);
-                        reportEnemyKill(QUESTS, en.tier);
-                        let newXP = playerXPRef.current + (en.xpReward || 1);
-                        let newLevel = playerLevelRef.current;
-                        let needed = xpForLevel(newLevel);
-                        let levelsGained = 0;
-                        while (newXP >= needed) { newXP -= needed; newLevel++; levelsGained++; needed = xpForLevel(newLevel); }
-                        playerXPRef.current = newXP; playerLevelRef.current = newLevel;
-                        setPlayerXP(newXP); setPlayerLevel(newLevel);
-                        awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
-                        if (levelsGained > 0) playActionSound('level_up');
-                      }
-                    });
-                  }, ms);
-                });
-              } else if (ab.id === 'lightning_strike') {
-                // Spawn lightning at the target enemy's position
-                const tx = targetEnemy.group.position.x;
-                const tz = targetEnemy.group.position.z;
-                const gy = targetEnemy.group.position.y;
-                const fx = createLightningStrike(scene, tx, tz, gy);
-                activeEffects.current.push(fx);
-                // Deal damage after short windup
-                setTimeout(() => {
-                  if (targetEnemy.alive && !targetEnemy.dying) {
-                    const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-                    const dmg = applySpellScaling(ab.damage + (liveDerived.elementalDamage || 0) * 0.5, liveDerived, { isElemental: true });
-                    targetEnemy.hp -= dmg;
-                    spawnDamageFloat(targetEnemy.id, dmg);
-                    updateTargetHP(targetEnemy.id, Math.max(0, targetEnemy.hp));
-                    playActionSound('player_attack');
-                    if (targetEnemy.hp <= 0) {
-                      playActionSound('enemy_death');
-                      targetEnemy.hp = 0;
-                      targetEnemy.dying = true;
-                      targetEnemy.deathTimer = 0;
-                      if (targetEnemy.walkAction) targetEnemy.walkAction.fadeOut(0.15);
-                      if (targetEnemy.idleAction) targetEnemy.idleAction.fadeOut(0.15);
-                      if (cachedDeathClip && targetEnemy.mixer) {
-                        const da = targetEnemy.mixer.clipAction(cachedDeathClip);
-                        da.setLoop(THREE.LoopOnce);
-                        da.clampWhenFinished = true;
-                        da.reset().fadeIn(0.15).play();
-                      }
-                      clearTarget();
-                      setScore(prev => prev + 100 * (targetEnemy.xpReward || 1));
-                      spawnXPFloat(targetEnemy.xpReward || 1); awardCompanionXP(companionDefRef.current?.id, targetEnemy.xpReward || 1);
-                      reportEnemyKill(QUESTS, targetEnemy.tier);
-                      let newXP = playerXPRef.current + (targetEnemy.xpReward || 1);
-                      let newLevel = playerLevelRef.current;
-                      let needed = xpForLevel(newLevel);
-                      let levelsGained = 0;
-                      while (newXP >= needed) { newXP -= needed; newLevel++; levelsGained++; needed = xpForLevel(newLevel); }
-                      playerXPRef.current = newXP; playerLevelRef.current = newLevel;
-                      setPlayerXP(newXP); setPlayerLevel(newLevel);
-                      awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
-                      if (levelsGained > 0) playActionSound('level_up');
-                    }
-                  }
-                }, 300);
-              }
-            }
+            startLegacyAbilityCooldown(slotIndex);
+            castLegacyTargetedAbility({
+              ab, target, enemies, scene, model,
+              activeEffectsRef: activeEffects,
+              playActionSound, spawnDamageFloat, spawnXPFloat,
+              getPlayerHUD, playerDerivedRef, cachedDeathClip,
+              awardCompanionXP, companionDefRef, reportEnemyKill, QUESTS,
+              setScore, setPlayerXP, setPlayerLevel, awardXP,
+              playerXPRef, playerLevelRef, xpForLevel,
+              clearTarget, updateTargetHP, getAbilityState,
+            });
           }
         }
       }
@@ -1811,6 +1770,7 @@ export default function GameWorld3D() {
       renderer.domElement.removeEventListener('wheel', onWheel);
       renderer.domElement.removeEventListener('contextmenu', onContext);
       window.removeEventListener('webrtcRemoteAction', handleRemoteAction);
+      detachBossBus();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
       stopLoopSound('player_walk');
