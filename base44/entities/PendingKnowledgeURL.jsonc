@@ -14,16 +14,62 @@
       "type": "string",
       "description": "Optional batch/folder label for grouping (e.g. 'Unreal Character System')"
     },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "google_doc",
+        "web_research",
+        "file_upload",
+        "url"
+      ],
+      "default": "google_doc",
+      "description": "Source kind \u2014 drives which fetch/parse strategy the worker uses."
+    },
     "status": {
       "type": "string",
       "enum": [
         "pending",
         "processing",
         "completed",
-        "failed"
+        "failed",
+        "paused"
       ],
       "default": "pending",
       "description": "Processing status"
+    },
+    "next_chunk_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Index of the next chunk to process \u2014 used to resume from checkpoint."
+    },
+    "total_chunks": {
+      "type": "number",
+      "default": 0,
+      "description": "Total chunks computed after first fetch."
+    },
+    "chunks_stored": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of KnowledgeChunk records successfully stored so far."
+    },
+    "retry_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this job has been retried."
+    },
+    "max_retries": {
+      "type": "number",
+      "default": 3,
+      "description": "Retry ceiling before the job is marked failed."
+    },
+    "document_id": {
+      "type": "string",
+      "description": "KnowledgeDocument this job is appending to."
+    },
+    "last_heartbeat": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the worker touched this job \u2014 used to detect stalled jobs."
     },
     "error_message": {
       "type": "string",
