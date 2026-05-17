@@ -12,6 +12,7 @@ import OnlinePlayersPanel from '../components/game3d/hud/OnlinePlayersPanel';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import GameWorldServerManager from '../components/game3d/GameWorldServerManager';
+import WorldSyncMount from '../components/game3d/network/WorldSyncMount';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -261,6 +262,9 @@ export default function GameView() {
       <BossWaypoint />
       <MultiplayerSystem envUrl="game_world_lowpoly" />
       <GameWorldServerManager />
+      {/* Host-authoritative enemy/boss sync — elects one host per channel,
+          broadcasts world snapshots, and applies them on non-hosts. */}
+      <WorldSyncMount />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />

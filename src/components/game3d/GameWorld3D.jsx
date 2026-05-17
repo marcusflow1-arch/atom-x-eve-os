@@ -250,6 +250,8 @@ export default function GameWorld3D() {
     window.__gw3dScene = scene;
     window.__gw3dCamera = camera;
     window.__gw3dLegacyRemoteManager = remoteManagerRef.current;
+    window.__gw3dEnemies = enemies;
+    window.__gw3dBosses = bossEntities;
     window.dispatchEvent(new CustomEvent('gw3dSceneReady'));
     scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0));
     const sun = new THREE.DirectionalLight(0xfff4d6, 2.2);
@@ -1830,6 +1832,8 @@ export default function GameWorld3D() {
       if (window.__gw3dScene === scene) window.__gw3dScene = null;
       if (window.__gw3dCamera === camera) window.__gw3dCamera = null;
       window.__gw3dLegacyRemoteManager = null;
+      if (window.__gw3dEnemies === enemies) window.__gw3dEnemies = null;
+      if (window.__gw3dBosses === bossEntities) window.__gw3dBosses = null;
       window.dispatchEvent(new CustomEvent('gw3dSceneTeardown'));
     };
   }, []);

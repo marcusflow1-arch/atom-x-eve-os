@@ -122,6 +122,16 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         window.dispatchEvent(new CustomEvent('remoteCompanionUpdate', {
                             detail: { ...data.payload, player_id: peerId }
                         }));
+                    } else if (data.type === 'enemy_snapshot') {
+                        // Host-authoritative enemy world state (positions / HP).
+                        window.dispatchEvent(new CustomEvent('webrtcEnemySnapshot', {
+                            detail: data.payload
+                        }));
+                    } else if (data.type === 'boss_snapshot') {
+                        // Host-authoritative boss world state.
+                        window.dispatchEvent(new CustomEvent('webrtcBossSnapshot', {
+                            detail: data.payload
+                        }));
                     } else if (data.type === 'dm') {
                         // Real-time direct message. Only surface it if addressed
                         // to the current user — broadcast goes to all peers but
