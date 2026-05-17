@@ -56,7 +56,7 @@ import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getA
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
-import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore';
+import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
 import {
@@ -1026,7 +1026,7 @@ export default function GameWorld3D() {
         attackPressed.current = true; // melee only — abilities use Q/E/R/F keys
       } else if (e.button === 1) {
         e.preventDefault();
-        handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu });
+        handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
       } else {
         drag.current = { active: true, x: e.clientX, y: e.clientY };
       }
@@ -1496,7 +1496,7 @@ export default function GameWorld3D() {
         if (playerAttackCooldown.current > 0) playerAttackCooldown.current -= delta;
         if (playerInvulTimer.current > 0) playerInvulTimer.current -= delta;
         if (attackPressed.current) {
-          attackPressed.current = false;
+          attackPressed.current = false; dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
           if (playerAttackCooldown.current <= 0) {
             // Weapon Mastery attack-speed bonus shortens cooldown further.
             playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier() / getMasteryAttackSpeedMult();
@@ -1517,7 +1517,7 @@ export default function GameWorld3D() {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5); window.dispatchEvent(new CustomEvent('rogueAITakeDamage', { detail: { damage: dmg } }));
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
 
             // Weapon Mastery — adjust damage, apply identity/milestone passives.

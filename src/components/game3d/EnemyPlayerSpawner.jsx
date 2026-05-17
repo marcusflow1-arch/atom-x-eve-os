@@ -168,9 +168,16 @@ export default function EnemyPlayerSpawner() {
           r.deathAction.reset().fadeIn(0.15).play();
         }
         // Rewards
+        // ── Kill reward formula ──────────────────────────────────────────
+        // PROD (live version): kills awarded == the rogue's level.
+        //   e.g. level 3 rogue → +3 kills, level 50 rogue → +50 kills.
+        // TEST (current): multiplied by 100 so each kill yields ~level×100
+        //   to make Halo enhancement attempts easy to verify.
+        const TEST_KILL_MULTIPLIER = 100; // ⚠ remove for live release
+        const killReward = (r.level || 1) * TEST_KILL_MULTIPLIER;
         addGold(r.goldReward || 75);
-        recordTitleKill('pvp', 1);
-        incrementKillCount(1);
+        recordTitleKill('pvp', killReward);
+        incrementKillCount(killReward);
         // Drop loot at the rogue's position
         window.dispatchEvent(new CustomEvent('enemyLootDrop', {
           detail: {
@@ -178,7 +185,7 @@ export default function EnemyPlayerSpawner() {
             x: r.group.position.x, y: r.group.position.y, z: r.group.position.z,
           },
         }));
-        toast.success(`Defeated ${r.name} — +${r.goldReward} gold`, { icon: '⚔️' });
+        toast.success(`Defeated ${r.name} — +${killReward} kills, +${r.goldReward} gold`, { icon: '⚔️' });
       };
 
       window.addEventListener('rogueAITakeDamage', onPlayerAttack);

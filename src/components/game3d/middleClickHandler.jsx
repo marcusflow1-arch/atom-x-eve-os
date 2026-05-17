@@ -9,7 +9,7 @@ const raycaster = new THREE.Raycaster();
  *   2. Hits on an enemy → set as active combat target.
  *   3. Empty space → clear current target.
  */
-export function handleMiddleClick({ event, renderer, camera, enemies, remoteManager, setPlayerMenu }) {
+export function handleMiddleClick({ event, renderer, camera, enemies, remoteManager, setPlayerMenu, rogues = [] }) {
   const rect = renderer.domElement.getBoundingClientRect();
   const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -53,11 +53,15 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
     }
   }
 
-  // 2. Enemies
+  // 2. Enemies + hostile rogue-AI (treated as targetable enemies)
   const enemyMeshes = [];
   enemies.forEach((en) => {
     if (!en.alive || en.dying) return;
     en.group.traverse((node) => { if (node.isMesh) enemyMeshes.push(node); });
+  });
+  rogues.forEach((r) => {
+    if (!r.alive || r.dying || !r.group?.visible) return;
+    r.group.traverse((node) => { if (node.isMesh) enemyMeshes.push(node); });
   });
   const hits = raycaster.intersectObjects(enemyMeshes, false);
   if (hits.length > 0) {
@@ -67,14 +71,20 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
       en.group.traverse((node) => { if (node === hitMesh) foundEnemy = en; });
       if (foundEnemy) break;
     }
+    if (!foundEnemy) {
+      for (const r of rogues) {
+        r.group.traverse((node) => { if (node === hitMesh) foundEnemy = r; });
+        if (foundEnemy) break;
+      }
+    }
     if (foundEnemy) {
       setTarget({
         id: foundEnemy.id,
-        name: foundEnemy.bossName || (foundEnemy.tier ? `${foundEnemy.tier.charAt(0).toUpperCase() + foundEnemy.tier.slice(1)} Enemy` : 'Enemy'),
+        name: foundEnemy.name || foundEnemy.bossName || (foundEnemy.tier ? `${foundEnemy.tier.charAt(0).toUpperCase() + foundEnemy.tier.slice(1)} Enemy` : 'Enemy'),
         hp: foundEnemy.hp,
         maxHp: foundEnemy.maxHp,
         level: foundEnemy.level,
-        tier: foundEnemy.tier || 'normal',
+        tier: foundEnemy.tier || (foundEnemy.color !== undefined ? 'rogue' : 'normal'),
         bossName: foundEnemy.bossName || null,
       });
       return;
