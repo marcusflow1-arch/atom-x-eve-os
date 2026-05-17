@@ -49,12 +49,17 @@ function scheduleSequential(skill, level) {
 }
 
 function scheduleGuardianBurst(skill, level) {
-  // Hits 1+2 near-simultaneous (separated by burst_delay), final hit after hit_delay.
-  // Total hits: 3.
+  // Hits 1+2 near-simultaneous (separated by burst_delay), then hit 3 after
+  // hit_delay, then a final follow-up hit 4 after follow_up_delay.
+  // Total hits: 4 (configurable via skill.hit_count, defaults to 4).
   const burst = skill.burst_delay ?? 0.08;
+  const followUp = skill.follow_up_delay ?? 0.4;
   setTimeout(() => dispatchStrike(skill, 0, level), 0);
   setTimeout(() => dispatchStrike(skill, 1, level), burst * 1000);
   setTimeout(() => dispatchStrike(skill, 2, level), skill.hit_delay * 1000);
+  if ((skill.hit_count ?? 3) >= 4) {
+    setTimeout(() => dispatchStrike(skill, 3, level), (skill.hit_delay + followUp) * 1000);
+  }
 }
 
 function scheduleRangedDouble(skill, level) {

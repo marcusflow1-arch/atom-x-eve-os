@@ -85,15 +85,16 @@ const SKILLS = [
     skill_type: SKILL_TYPE.ACTIVE_ATTACK,
     weapon_type: WEAPON_TYPE.GUARDIAN,
     cast_type: CAST_TYPE.MULTI_HIT_BURST,
-    hit_count: 3,
-    hit_delay: 0.5,                 // delay BEFORE the FINAL hit
+    hit_count: 4,
+    hit_delay: 0.5,                 // delay BEFORE hit 3 (after the burst pair)
     burst_delay: 0.08,              // delay between the first two near-simultaneous hits
+    follow_up_delay: 0.4,           // delay between hit 3 and the final hit 4
     cooldown: 8.0,
     duration: 0,
     max_level: 10,
     scaling: { damage_pct: { min: 0.90, max: 1.10 } }, // per hit
     icon: '👊',
-    description: 'First two hits land almost simultaneously, final hit follows 0.5s later.',
+    description: 'First two hits land almost simultaneously, then a third hit, then a final follow-up hit.',
     animation_ref: 'guardian_combo',
     vfx_ref: 'impact_combo',
   },
@@ -106,7 +107,7 @@ const SKILLS = [
     weapon_type: WEAPON_TYPE.RANGED,
     cast_type: CAST_TYPE.RANGED_DOUBLE,
     hit_count: 2,
-    hit_delay: 0.25,                // brief gap between the two projectiles
+    hit_delay: 0.2,                 // brief gap between the two projectiles
     cooldown: 4.0,
     duration: 0,
     max_level: 10,
@@ -123,13 +124,13 @@ const SKILLS = [
     weapon_type: WEAPON_TYPE.RANGED,
     cast_type: CAST_TYPE.RANGED_BARRAGE,
     hit_count: 5,
-    hit_delay: 0.4,                 // 0.4s between each shot
+    hit_delay: 0.3,                 // 0.3s between each shot
     cooldown: 10.0,
     duration: 0,
     max_level: 10,
     scaling: { damage_pct: { min: 0.80, max: 1.10 } }, // per shot
     icon: '🌪️',
-    description: 'Five rapid ranged shots, each 0.4s apart.',
+    description: 'Five rapid ranged shots, each 0.3s apart.',
     animation_ref: 'ranged_barrage',
     vfx_ref: 'arrow_barrage',
   },

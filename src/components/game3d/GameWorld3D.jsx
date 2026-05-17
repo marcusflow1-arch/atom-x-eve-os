@@ -54,6 +54,7 @@ import { useCallback } from 'react';
 import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
 import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
+import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline';
 import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 
@@ -65,7 +66,7 @@ import {
   DEATH_FADE_DELAY, WALK_SPEED, RUN_SPEED, ROT_SMOOTH, BLEND,
   NPC_SPAWNS,
   ENEMY_SPEED, ENEMY_WALK_TIME, ENEMY_IDLE_TIME, ENEMY_WANDER_RADIUS,
-  NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP,
+  NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, RANGED_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP,
   PLAYER_ATTACK_COOLDOWN, PLAYER_INVUL_AFTER_HIT,
 } from './gameWorldConfig';
 import { attachContextGuard } from './webglContextGuard';
@@ -1504,7 +1505,7 @@ export default function GameWorld3D() {
             playActionSound('player_attack');
           }
           let closestEnemy = null;
-          let closestEnemyDist = ENEMY_ATTACK_RANGE;
+          let closestEnemyDist = getActiveWeaponPath() === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
           enemies.forEach((enemy) => {
             if (!enemy.alive || enemy.dying) return;
             const dx = enemy.group.position.x - model.position.x;

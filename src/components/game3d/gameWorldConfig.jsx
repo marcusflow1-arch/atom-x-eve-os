@@ -30,6 +30,10 @@ export const ENEMY_IDLE_TIME = 5.0;
 export const ENEMY_WANDER_RADIUS = 4;
 export const NPC_INTERACT_RANGE = 3.5;
 export const ENEMY_ATTACK_RANGE = 2.0;
+// Ranged weapons (bows/firearms/energy) can engage from much further away
+// than melee. ~3 feet ≈ 1 unit; we use 12 units so the bow feels properly
+// ranged while still rewarding the player for closing distance with melee.
+export const RANGED_ATTACK_RANGE = 12.0;
 export const ENEMY_ATTACK_COOLDOWN = 2.2;
 export const ENEMY_ATTACK_WINDUP = 0.4;
 export const PLAYER_ATTACK_COOLDOWN = 0.6;
