@@ -21,6 +21,7 @@ import { addGold } from './shop/shopStore';
 import { recordTitleKill } from './progression/titleStore';
 import { incrementKillCount } from './killCountStore';
 import { addFusionPoints, FUSION_POINTS_PER_KILL } from './fusionStore';
+import { registerKill as registerStreakKill } from './killStreakStore';
 import toast from 'react-hot-toast';
 
 // Radius around each rogue that blocks the player from walking through them.
@@ -180,6 +181,21 @@ export default function EnemyPlayerSpawner() {
         recordTitleKill('pvp', killReward);
         incrementKillCount(killReward);
         addFusionPoints(FUSION_POINTS_PER_KILL);
+
+        // ── Kill streak XP multiplier ─────────────────────────────────
+        // Bump the consecutive kill streak and award XP scaled by the
+        // table in killStreakStore (resets on player death).
+        const streakMult = registerStreakKill();
+        const baseXp = 25 + (r.level || 1) * 10;
+        const finalXp = Math.round(baseXp * streakMult);
+        window.dispatchEvent(new CustomEvent('combatXPReward', {
+          detail: {
+            xp: finalXp,
+            genre: 'PvP',
+            source: streakMult > 1 ? `Streak ×${streakMult.toFixed(1)}` : 'Kill',
+          },
+        }));
+
         // Drop loot at the rogue's position
         window.dispatchEvent(new CustomEvent('enemyLootDrop', {
           detail: {
@@ -187,7 +203,10 @@ export default function EnemyPlayerSpawner() {
             x: r.group.position.x, y: r.group.position.y, z: r.group.position.z,
           },
         }));
-        toast.success(`Defeated ${r.name} — +${killReward} kills, +${r.goldReward} gold`, { icon: '⚔️' });
+        toast.success(
+          `Defeated ${r.name} — +${finalXp} XP${streakMult > 1 ? ` (×${streakMult.toFixed(1)})` : ''}, +${r.goldReward} gold`,
+          { icon: '⚔️' }
+        );
       };
 
       window.addEventListener('rogueAITakeDamage', onPlayerAttack);
