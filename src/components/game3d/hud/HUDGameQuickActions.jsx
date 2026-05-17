@@ -51,8 +51,8 @@ export default function HUDGameQuickActions() {
 
   return (
     <>
-      {/* The 4 pills — sits just under the Active Quest box */}
-      <div className="absolute left-4 z-20 flex gap-2 pointer-events-auto" style={{ top: '340px' }}>
+      {/* The 4 pills — sit between the minimap and the Active Quest box (above the quest tracker) */}
+      <div className="absolute left-4 z-20 flex gap-2 pointer-events-auto" style={{ top: '244px' }}>
         {PILLS.map((p) => {
           const Icon = p.icon;
           const isActive = activePanel === p.id;
