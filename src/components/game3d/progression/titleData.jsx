@@ -1,19 +1,31 @@
 // ─── Title Progression — Data Definitions ─────────────────────────────────
-// Specialization paths that grow primarily ONE stat while granting smaller
-// balanced bonuses to the others. Levels 1..20. Bonuses scale with curves
-// defined here; the store applies them via getTitleBonusesForLevel().
+// IMPORTANT DESIGN RULE:
+//   Titles inject FLAT, FINAL combat stats. They do NOT pass through the
+//   attribute system. (That's Halo's job.)
 //
-// Design summary (from spec):
+//   So a title bonus of +500 Damage adds exactly +500 to the player's final
+//   damage total — it is NOT +500 strength being converted to +1500 phys dmg.
+//   Same for HP, defense, crit. This keeps title power predictable and
+//   prevents the attribute formulas from massively inflating title stats.
+//
+// Progression:
 //   • Max title level: 20
 //   • One title slot equipped at a time
-//   • Primary stat gets the biggest growth
-//   • Secondary stats get smaller but meaningful bonuses
-//   • Kill requirements grow steeply for prestige
+//   • ONLY the equipped title accumulates kill progress
+//   • Kills can be point-valued (e.g. boss kill = 100 points)
+//
+// Bonus schema (FLAT FINAL STATS — applied directly to derived totals):
+//   hp              — flat max HP
+//   damage          — flat damage added to totalDamage
+//   defense         — flat defense added to defense total
+//   critChance      — additive % crit chance (0..100 scale)
+//   critDamage      — additive crit damage multiplier (0..1 scale, e.g. 0.10 = +10%)
+//   criticalDefense — additive crit damage reduction (0..1 scale)
 
 export const MAX_TITLE_LEVEL = 20;
 
-// Kill requirements per level. Index = level (1..20). 0 is unused.
-// Spec gives Lv 1..10; we extend curve through Lv 20.
+// Points required per title level. Each "kill" can be worth N points
+// (normal = 1, elite = 5, boss = 100, etc — see TITLE_KILL_POINTS below).
 export const TITLE_KILLS_PER_LEVEL = [
   0,
   800,    // Lv 1
@@ -43,6 +55,16 @@ export function killsRequiredForTitleLevel(level) {
   return TITLE_KILLS_PER_LEVEL[level] || Infinity;
 }
 
+// Point value of each kill type — fed into the equipped title's progress bar.
+// e.g. a boss kill grants 100 progress points; a normal kill grants 1.
+export const TITLE_KILL_POINTS = {
+  normal: 1,
+  elite:  5,
+  boss:   100,
+  pvp:    10,
+  raid:   25,
+};
+
 // Rarity progression keyed by level — used for UI tint + aura intensity.
 export const TITLE_RARITY_BANDS = [
   { from: 1,  to: 4,  rarity: 'common',    color: '#9ca3af', glow: 'rgba(156,163,175,0.45)', auraIntensity: 0.20 },
@@ -57,66 +79,56 @@ export function getTitleRarityForLevel(level) {
   return band || TITLE_RARITY_BANDS[0];
 }
 
-// ── Scaling helper ────────────────────────────────────────────────────────
-// Linear interpolation from a Level-1 bonus to a Level-20 bonus.
+// ── Scaling helper — linear lerp from Lv1 to Lv20 ─────────────────────────
 function lerpLevel(min, max, level) {
   const lvl = Math.max(1, Math.min(MAX_TITLE_LEVEL, level));
   const t = (lvl - 1) / (MAX_TITLE_LEVEL - 1);
-  return Math.round(min + (max - min) * t);
+  return min + (max - min) * t;
 }
 
 // ── Title Path Definitions ────────────────────────────────────────────────
-// Each path declares its Level-1 and Level-20 bonus envelope. The store
-// linearly interpolates intermediate levels via getTitleBonusesForLevel().
-//
-// Bonus keys map onto statsSystem inputs:
-//   strength, vitality, dexterity, spirit  → flat stat-point additions
-//   defense                                 → flat derived defense
-//   criticalDefense                         → % crit damage reduction (0..1, e.g. 0.10 = 10%)
-//   hp                                      → flat max HP
-//
-// Note: `criticalDefense` here is expressed in *percent-points*, then
-// converted to the 0..1 scale by getTitleBonusesForLevel().
+// Each path defines its FLAT FINAL bonus envelope from Lv1 → Lv20.
+// Damage / HP / Defense scale into the thousands. Crit values are %.
 export const TITLE_PATHS = [
   {
     id: 'strength',
     name: 'Path of Strength',
-    primaryStat: 'strength',
-    description: 'Offensive specialization. Primarily scales attack power and physical damage with smaller defensive support.',
+    primaryStat: 'damage',
+    description: 'Offensive specialization. Massive flat damage with supporting HP and defense.',
     icon: '⚔️',
     color: '#ef4444',
-    lv1:  { strength: 15,  vitality: 5,  dexterity: 3,  spirit: 3,  defense: 10, criticalDefense: 10, hp: 50  },
-    lv20: { strength: 200, vitality: 50, dexterity: 30, spirit: 30, defense: 80, criticalDefense: 70, hp: 800 },
+    lv1:  { hp: 200,   damage: 30,   defense: 20,  critChance: 0.5, critDamage: 0.01, criticalDefense: 0.01 },
+    lv20: { hp: 4000,  damage: 800,  defense: 400, critChance: 8,   critDamage: 0.30, criticalDefense: 0.15 },
   },
   {
     id: 'vitality',
     name: 'Path of Vitality',
-    primaryStat: 'vitality',
-    description: 'Survivability specialization. Massive HP, defense, and crit resistance with moderate offensive bonuses.',
+    primaryStat: 'hp',
+    description: 'Survivability specialization. Huge HP and defense; moderate offense.',
     icon: '🛡️',
     color: '#22c55e',
-    lv1:  { vitality: 20,  strength: 6,  dexterity: 3,  spirit: 3,  defense: 15,  criticalDefense: 10, hp: 100  },
-    lv20: { vitality: 220, strength: 45, dexterity: 25, spirit: 25, defense: 120, criticalDefense: 90, hp: 1500 },
+    lv1:  { hp: 500,   damage: 10,   defense: 40,  critChance: 0.2, critDamage: 0.005, criticalDefense: 0.02 },
+    lv20: { hp: 12000, damage: 300,  defense: 900, critChance: 3,   critDamage: 0.10,  criticalDefense: 0.45 },
   },
   {
     id: 'dexterity',
     name: 'Path of Dexterity',
-    primaryStat: 'dexterity',
-    description: 'Mobility specialization. Attack speed, evasion, and crit chance with balanced offense and defense.',
+    primaryStat: 'critChance',
+    description: 'Precision specialization. High crit chance and damage with balanced offense.',
     icon: '🏹',
     color: '#38bdf8',
-    lv1:  { dexterity: 18,  strength: 5,  vitality: 4,  spirit: 3,  defense: 12,  criticalDefense: 10, hp: 60  },
-    lv20: { dexterity: 210, strength: 35, vitality: 35, spirit: 25, defense: 100, criticalDefense: 75, hp: 900 },
+    lv1:  { hp: 250,   damage: 18,   defense: 22,  critChance: 1,   critDamage: 0.02, criticalDefense: 0.01 },
+    lv20: { hp: 5000,  damage: 500,  defense: 450, critChance: 25,  critDamage: 0.60, criticalDefense: 0.15 },
   },
   {
     id: 'spirit',
     name: 'Path of Spirit',
-    primaryStat: 'spirit',
-    description: 'Skill power specialization. Energy, ability damage, and aura strength with utility bonuses.',
+    primaryStat: 'critDamage',
+    description: 'Devastation specialization. Massive crit damage multipliers and resistance.',
     icon: '✨',
     color: '#a855f7',
-    lv1:  { spirit: 18,  strength: 4,  vitality: 4,  dexterity: 3,  defense: 10, criticalDefense: 10, hp: 60  },
-    lv20: { spirit: 220, strength: 30, vitality: 35, dexterity: 25, defense: 85, criticalDefense: 75, hp: 900 },
+    lv1:  { hp: 250,   damage: 15,   defense: 20,  critChance: 0.5, critDamage: 0.03, criticalDefense: 0.015 },
+    lv20: { hp: 4500,  damage: 400,  defense: 400, critChance: 10,  critDamage: 1.00, criticalDefense: 0.25 },
   },
 ];
 
@@ -124,19 +136,20 @@ export function getTitlePathById(id) {
   return TITLE_PATHS.find((p) => p.id === id) || null;
 }
 
-// Compute the interpolated bonuses for a specific title path at a given level.
-// Returns the same shape used by statsSystem (criticalDefense as 0..1 fraction).
+// Compute interpolated FLAT FINAL bonuses for a path at a given level.
+// All values are returned in their final-stat scale — NOT attribute points.
+// Returns zeros at level 0 (un-leveled title).
 export function getTitleBonusesForLevel(pathId, level) {
   const path = getTitlePathById(pathId);
-  if (!path || level <= 0) {
-    return { strength: 0, vitality: 0, dexterity: 0, spirit: 0, defense: 0, criticalDefense: 0, hp: 0 };
-  }
-  const keys = ['strength', 'vitality', 'dexterity', 'spirit', 'defense', 'criticalDefense', 'hp'];
+  const zero = { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
+  if (!path || level <= 0) return zero;
+
+  const keys = ['hp', 'damage', 'defense', 'critChance', 'critDamage', 'criticalDefense'];
   const out = {};
   keys.forEach((k) => {
-    out[k] = lerpLevel(path.lv1[k] || 0, path.lv20[k] || 0, level);
+    const v = lerpLevel(path.lv1[k] || 0, path.lv20[k] || 0, level);
+    // Integer values for hp/damage/defense; precise floats for crit ratios/percent.
+    out[k] = (k === 'hp' || k === 'damage' || k === 'defense') ? Math.round(v) : v;
   });
-  // Convert criticalDefense from percent-points to 0..1 scale for statsSystem.
-  out.criticalDefense = out.criticalDefense / 100;
   return out;
 }

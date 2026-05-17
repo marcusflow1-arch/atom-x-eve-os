@@ -20,6 +20,7 @@
 import {
   MAX_TITLE_LEVEL,
   TITLE_PATHS,
+  TITLE_KILL_POINTS,
   killsRequiredForTitleLevel,
   getTitlePathById,
   getTitleBonusesForLevel,
@@ -154,9 +155,10 @@ export function getTitleState() {
 }
 
 // Bonuses from the currently-equipped title only. null-safe for statsSystem.
+// Returns FLAT FINAL stats (hp/damage/defense/critChance/critDamage/criticalDefense).
 export function getEquippedTitleBonuses() {
   if (!state.equippedPathId) {
-    return { strength: 0, vitality: 0, dexterity: 0, spirit: 0, defense: 0, criticalDefense: 0, hp: 0 };
+    return { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
   }
   const p = state.paths[state.equippedPathId];
   return getTitleBonusesForLevel(state.equippedPathId, p.level);
@@ -168,23 +170,29 @@ export function subscribeTitles(fn) {
   return () => listeners.delete(fn);
 }
 
-// Record a kill toward title progression. ALL paths advance simultaneously
-// so players can passively grind multiple builds. `killType` is tracked for
-// later use (boss/elite/PvP-specific titles).
+// Record a kill toward title progression. ONLY the EQUIPPED title path
+// accumulates progress — players choose which build to grind by equipping it.
+// Each killType is worth a different number of progress points (see
+// TITLE_KILL_POINTS): normal=1, elite=5, boss=100, pvp=10, raid=25.
 //
 //   killType: 'normal' | 'elite' | 'boss' | 'pvp' | 'raid'
+//   count:    number of kills (each multiplied by the type's point value)
 export function recordTitleKill(killType = 'normal', count = 1) {
   if (count <= 0) return;
 
-  // Update global tracking counters.
+  // Update global tracking counters (for analytics / future use).
   state.tracking.totalEnemyKills += count;
   if (killType === 'elite') state.tracking.eliteKills += count;
   if (killType === 'boss')  state.tracking.bossKills  += count;
   if (killType === 'pvp')   state.tracking.pvpKills   += count;
   if (killType === 'raid')  state.tracking.raidParticipation += count;
 
-  // Advance every path (the design allows parallel grinding).
-  TITLE_PATHS.forEach((def) => advancePath(def.id, count));
+  // Convert kills to progress points. Only the EQUIPPED path advances.
+  const pointsPerKill = TITLE_KILL_POINTS[killType] ?? 1;
+  const points = pointsPerKill * count;
+  if (state.equippedPathId && points > 0) {
+    advancePath(state.equippedPathId, points);
+  }
 
   save();
   emit();

@@ -76,10 +76,13 @@ export function migrateBaseStats(stats) {
 // Compute final combat-ready stats from base stats + equipment multipliers.
 // equipment      = array of { strength_mult, constitution_mult, dexterity_mult, intelligence_mult, focus_mult }
 //                  (legacy keys hp_mult / spirit_mult / elemental_mult are also accepted for backwards compat)
-// haloBonuses    = { strength, constitution|vitality, dexterity, intelligence|elemental, focus|spirit,
-//                    criticalDefense, criticalChance } — flat stat-point additions.
+// haloBonuses    = VIRTUAL ATTRIBUTE POINTS — pass through attribute formulas.
+//                  { strength, constitution|vitality, dexterity, intelligence|elemental, focus|spirit,
+//                    criticalDefense, criticalChance, criticalDamage }
 //                  Legacy keys (vitality/spirit) are auto-mapped.
-// titleBonuses   = same shape as haloBonuses + optional flat `defense` and `hp`.
+// titleBonuses   = FLAT FINAL STATS — added directly to derived totals AFTER all formulas.
+//                  Does NOT pass through the attribute system.
+//                  { hp, damage, defense, critChance, critDamage, criticalDefense }
 export function computeDerivedStats(baseStats, equipment = [], haloBonuses = null, titleBonuses = null) {
   // Ensure base is in the new shape.
   const base = migrateBaseStats(baseStats);
@@ -101,9 +104,9 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
     totals.focus_mult        += eq.focus_mult        || eq.spirit_mult    || 0;
   });
 
-  // Normalize halo / title bonus key names (accept legacy aliases).
-  const normalizeBonus = (b) => {
-    const x = b || {};
+  // Halo bonuses act as VIRTUAL ATTRIBUTE POINTS — pass through formulas.
+  const halo = (() => {
+    const x = haloBonuses || {};
     return {
       strength:        x.strength     || 0,
       constitution:    x.constitution || x.vitality  || 0,
@@ -113,19 +116,30 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
       criticalDefense: x.criticalDefense || 0,
       criticalChance:  x.criticalChance  || 0,
       criticalDamage:  x.criticalDamage  || 0,
-      defense:         x.defense || 0,
-      hp:              x.hp      || 0,
     };
-  };
-  const halo  = normalizeBonus(haloBonuses);
-  const title = normalizeBonus(titleBonuses);
+  })();
 
-  // Halo + Title stack into base BEFORE equipment multipliers, so gear scales WITH them.
-  const baseStr = base.strength     + halo.strength     + title.strength;
-  const baseCon = base.constitution + halo.constitution + title.constitution;
-  const baseDex = base.dexterity    + halo.dexterity    + title.dexterity;
-  const baseInt = base.intelligence + halo.intelligence + title.intelligence;
-  const baseFoc = base.focus        + halo.focus        + title.focus;
+  // Title bonuses are FLAT FINAL STATS — applied AFTER all derivations.
+  // They never touch base attributes.
+  const title = (() => {
+    const x = titleBonuses || {};
+    return {
+      hp:              x.hp              || 0,
+      damage:          x.damage          || 0,
+      defense:         x.defense         || 0,
+      critChance:      x.critChance      || 0,
+      critDamage:      x.critDamage      || 0,
+      criticalDefense: x.criticalDefense || 0,
+    };
+  })();
+
+  // Halo stacks into base BEFORE equipment multipliers, so gear scales WITH it.
+  // Titles do NOT stack here — they apply later as flat final-stat additions.
+  const baseStr = base.strength     + halo.strength;
+  const baseCon = base.constitution + halo.constitution;
+  const baseDex = base.dexterity    + halo.dexterity;
+  const baseInt = base.intelligence + halo.intelligence;
+  const baseFoc = base.focus        + halo.focus;
 
   // Apply equipment multiplier on top of the base+halo+title totals.
   const effStr = baseStr + Math.floor(baseStr * totals.strength_mult);
@@ -134,26 +148,28 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
   const effInt = baseInt + Math.floor(baseInt * totals.intelligence_mult);
   const effFoc = baseFoc + Math.floor(baseFoc * totals.focus_mult);
 
-  // Primary derived combat stats.
+  // Primary derived combat stats — computed from base + halo only.
+  // Title FLAT FINAL stats are added at the END (no formula scaling).
   const physDmg = effStr * STAT_RATES.strength;
-  const maxHP   = effCon * STAT_RATES.constitution + title.hp;
+  const elemDmg = effInt * STAT_RATES.intelligence;
+  const maxHP   = effCon * STAT_RATES.constitution + title.hp;            // + flat title HP
   const chi     = effFoc * STAT_RATES.focus;
-  // Defense draws from Dex (rate) + Con (flat) + title flat defense bonus.
+  // Defense from Dex (rate) + Con (flat) + flat title defense bonus.
   const defense = effDex * STAT_RATES.dexterity
                 + effCon * SECONDARY_RATES.defPerCon
-                + title.defense;
-  const elemDmg = effInt * STAT_RATES.intelligence;
+                + title.defense;                                          // + flat title defense
 
   // Secondary derived stats.
   const hitChance = Math.min(95,
     50 + effStr * SECONDARY_RATES.hitPerStr + effCon * SECONDARY_RATES.hitPerCon);
-  // Base 10% crit chance + Dex scaling + Halo additive crit.
-  const critChance = Math.min(75, 10 + effDex * SECONDARY_RATES.critPerDex + halo.criticalChance);
+  // Base 10% crit chance + Dex scaling + Halo additive crit + flat title crit %.
+  const critChance = Math.min(75,
+    10 + effDex * SECONDARY_RATES.critPerDex + halo.criticalChance + title.critChance);
   // Critical Defense — % reduction applied to incoming crit damage (0..1+, clamped at 1 in damage calc).
   const criticalDefense = halo.criticalDefense + title.criticalDefense;
   // Critical Damage — additive multiplier ON TOP of base CRIT_MULTIPLIER.
   // e.g. 0.20 means crits deal (CRIT_MULTIPLIER + 0.20)× damage.
-  const criticalDamage  = halo.criticalDamage  + title.criticalDamage;
+  const criticalDamage  = halo.criticalDamage  + title.critDamage;
   const attackRange     = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
   const attackSpeedPct  = effDex * SECONDARY_RATES.atkSpdPerDex;     // % attack-speed bonus
   const evasionPct      = effDex * SECONDARY_RATES.evasionPerDex;    // % dodge
@@ -165,12 +181,16 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
   const elementalDefense= effInt * SECONDARY_RATES.elemDefPerInt;
   const damageRollBonus = effStr * SECONDARY_RATES.dmgRollPerStr;
 
+  // FLAT FINAL title damage is added on top of the derived total — it does
+  // NOT pass through strength/elemental scaling.
+  const finalTotalDamage = physDmg + elemDmg + title.damage;
+
   return {
     // Primary
     physicalDamage: physDmg,
     elementalDamage: elemDmg,
-    totalDamage: physDmg + elemDmg,
-    damage: physDmg + elemDmg, // alias used by GameWorld3D
+    totalDamage: finalTotalDamage,
+    damage: finalTotalDamage, // alias used by GameWorld3D
     maxHP,
     chi,
     defense,

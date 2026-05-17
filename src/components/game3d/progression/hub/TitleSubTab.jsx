@@ -127,13 +127,15 @@ function BonusBlock({ title, bonuses, accent }) {
         {title}
       </div>
       <div className="space-y-1.5 text-xs text-white/75">
-        <Row k="Strength"     v={`+${bonuses.strength}`} />
-        <Row k="Constitution" v={`+${bonuses.vitality}`} />
-        <Row k="Dexterity"    v={`+${bonuses.dexterity}`} />
-        <Row k="Focus"        v={`+${bonuses.spirit}`} />
-        <Row k="Defense"      v={`+${bonuses.defense}`} />
-        <Row k="Crit Defense" v={`+${Math.round((bonuses.criticalDefense||0)*100)}%`} />
-        <Row k="Max HP"       v={`+${bonuses.hp}`} />
+        <Row k="Max HP"       v={`+${(bonuses.hp || 0).toLocaleString()}`} />
+        <Row k="Damage"       v={`+${(bonuses.damage || 0).toLocaleString()}`} />
+        <Row k="Defense"      v={`+${(bonuses.defense || 0).toLocaleString()}`} />
+        <Row k="Crit Chance"  v={`+${(bonuses.critChance || 0).toFixed(1)}%`} />
+        <Row k="Crit Damage"  v={`+${Math.round((bonuses.critDamage || 0) * 100)}%`} />
+        <Row k="Crit Defense" v={`+${Math.round((bonuses.criticalDefense || 0) * 100)}%`} />
+      </div>
+      <div className="text-[9px] tracking-[0.25em] uppercase text-white/30 mt-3">
+        Flat final stats · not attribute-scaled
       </div>
     </div>
   );
