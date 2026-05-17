@@ -62,22 +62,24 @@ export function getSuccessChanceForLevel(currentLevel) {
 //   +1 strength, +1 constitution, +1 dexterity, +1 intelligence, +1 focus
 //   +0.2% additive critical chance
 //   +0.3% critical defense (reduces incoming crit bonus damage)
+//   +0.1% critical damage (added to crit multiplier)
 //
-// These points flow THROUGH the stat pipeline the same way Attribute points
-// do — e.g. +1 strength yields +3 physical damage via STAT_RATES.strength.
-// This gives the player two parallel ways to increase offense/defense:
-// allocating Attribute points OR leveling the Halo.
+// IMPORTANT: Halo NEVER bypasses the attribute system. Each +1 stat is a
+// VIRTUAL ATTRIBUTE POINT — fed into computeDerivedStats() the same way
+// allocated points are — so e.g. +1 STR yields +3 physical damage via
+// STAT_RATES.strength, +0.5% hit chance, +0.3% damage variance, etc.
 //
 // At MAX_HALO_LEVEL (200) the totals are:
-//   200 STR / CON / DEX / INT / FOC, +40% crit, +60% crit defense.
+//   200 STR / CON / DEX / INT / FOC, +40% crit, +60% crit defense, +20 crit dmg.
 export const PER_LEVEL_HALO_BONUSES = {
   strength:         1,
   constitution:     1,
   dexterity:        1,
   intelligence:     1,
   focus:            1,
-  criticalChance:   0.2,   // +0.2% per Halo level
+  criticalChance:   0.2,   // +0.2% per Halo level (additive crit chance)
   criticalDefense:  0.003, // +0.3% per Halo level (stored as 0..1 multiplier)
+  criticalDamage:   0.001, // +0.1% per Halo level (stored as 0..1 multiplier added to crit)
 };
 
 // Legacy export — kept for any UI that imports MAX_HALO_BONUSES. Reflects the
@@ -93,6 +95,7 @@ export const MAX_HALO_BONUSES = {
   spirit:          PER_LEVEL_HALO_BONUSES.focus           * MAX_HALO_LEVEL,
   criticalChance:  PER_LEVEL_HALO_BONUSES.criticalChance  * MAX_HALO_LEVEL,
   criticalDefense: PER_LEVEL_HALO_BONUSES.criticalDefense * MAX_HALO_LEVEL,
+  criticalDamage:  PER_LEVEL_HALO_BONUSES.criticalDamage  * MAX_HALO_LEVEL,
 };
 
 // Kills required to perform an enhancement attempt. Constant regardless of level.
@@ -130,5 +133,6 @@ export function getHaloBonusesForLevel(level) {
     spirit:          PER_LEVEL_HALO_BONUSES.focus           * lvl,
     criticalChance:  PER_LEVEL_HALO_BONUSES.criticalChance  * lvl,
     criticalDefense: PER_LEVEL_HALO_BONUSES.criticalDefense * lvl,
+    criticalDamage:  PER_LEVEL_HALO_BONUSES.criticalDamage  * lvl,
   };
 }

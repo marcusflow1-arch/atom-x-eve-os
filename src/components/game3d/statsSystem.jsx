@@ -112,6 +112,7 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
       focus:           x.focus        || x.spirit    || 0,
       criticalDefense: x.criticalDefense || 0,
       criticalChance:  x.criticalChance  || 0,
+      criticalDamage:  x.criticalDamage  || 0,
       defense:         x.defense || 0,
       hp:              x.hp      || 0,
     };
@@ -150,6 +151,9 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
   const critChance = Math.min(75, 10 + effDex * SECONDARY_RATES.critPerDex + halo.criticalChance);
   // Critical Defense — % reduction applied to incoming crit damage (0..1+, clamped at 1 in damage calc).
   const criticalDefense = halo.criticalDefense + title.criticalDefense;
+  // Critical Damage — additive multiplier ON TOP of base CRIT_MULTIPLIER.
+  // e.g. 0.20 means crits deal (CRIT_MULTIPLIER + 0.20)× damage.
+  const criticalDamage  = halo.criticalDamage  + title.criticalDamage;
   const attackRange     = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
   const attackSpeedPct  = effDex * SECONDARY_RATES.atkSpdPerDex;     // % attack-speed bonus
   const evasionPct      = effDex * SECONDARY_RATES.evasionPerDex;    // % dodge
@@ -185,6 +189,7 @@ export function computeDerivedStats(baseStats, equipment = [], haloBonuses = nul
     elementalDefense,
     damageRollBonus,
     criticalDefense,
+    criticalDamage,
     // Echo effective invested values for UI live previews.
     effective: {
       strength:     effStr,
@@ -202,18 +207,23 @@ export const CRIT_MULTIPLIER = 3;
 export function calculateHit(attackerStats, defenderStats) {
   let raw = attackerStats.totalDamage;
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
-  if (crit) raw = Math.round(raw * CRIT_MULTIPLIER);
+  if (crit) {
+    const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
+    raw = Math.round(raw * critMult);
+  }
   const reduced = Math.max(1, raw - (defenderStats?.defense || 0));
   return reduced;
 }
 
 // Crit-aware variant — returns { damage, crit } so the UI can color crits.
 // Defender's `criticalDefense` reduces ONLY the EXTRA crit damage on top of a normal hit.
+// Attacker's `criticalDamage` adds to the crit multiplier (CRIT_MULTIPLIER + criticalDamage).
 export function calculateHitWithCrit(attackerStats, defenderStats) {
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
   let raw = attackerStats.totalDamage;
   if (crit) {
-    const critBonus = raw * (CRIT_MULTIPLIER - 1);
+    const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
+    const critBonus = raw * (critMult - 1);
     const defReduction = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
     const mitigatedBonus = critBonus * (1 - defReduction);
     raw = Math.round(raw + mitigatedBonus);

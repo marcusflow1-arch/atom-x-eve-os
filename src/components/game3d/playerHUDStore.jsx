@@ -4,12 +4,23 @@
 // Persists level/xp/baseStats/unspentPoints/hp to localStorage so progression
 // survives logout and page reloads.
 import { DEFAULT_PLAYER_STATS, computeDerivedStats, migrateBaseStats } from './statsSystem';
+import { getHaloBonuses, subscribeHalo } from './progression/haloStore';
+import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
 
 const STORAGE_KEY = 'wwm_player_progression_v1';
 const STAT_POINTS_PER_LEVEL = 3;
 
+// Pull current halo+title bonuses for every derived-stat recompute. Halo
+// bonuses are treated as VIRTUAL ATTRIBUTE POINTS — they pass through the
+// same statsSystem formulas as allocated points (e.g. +1 STR → +3 phys dmg).
+const getBonuses = () => ({
+  halo:  getHaloBonuses(),
+  title: getEquippedTitleBonuses(),
+});
+
 const buildDefault = () => {
-  const derived = computeDerivedStats(DEFAULT_PLAYER_STATS, []);
+  const b = getBonuses();
+  const derived = computeDerivedStats(DEFAULT_PLAYER_STATS, [], b.halo, b.title);
   return {
     level: 1,
     xp: 0,
@@ -29,7 +40,8 @@ let state = (() => {
       const parsed = JSON.parse(saved);
       // Migrate legacy stat keys (hp/spirit/elemental) → new NW keys.
       const base = migrateBaseStats(parsed.baseStats);
-      const derived = computeDerivedStats(base, []);
+      const b = getBonuses();
+      const derived = computeDerivedStats(base, [], b.halo, b.title);
       return {
         level: parsed.level || 1,
         xp: parsed.xp || 0,
@@ -88,7 +100,8 @@ export function allocateStat(statKey) {
   if (state.unspentPoints <= 0) return false;
   if (!(statKey in state.baseStats)) return false;
   const newBase = { ...state.baseStats, [statKey]: state.baseStats[statKey] + 1 };
-  const newDerived = computeDerivedStats(newBase, []);
+  const b = getBonuses();
+  const newDerived = computeDerivedStats(newBase, [], b.halo, b.title);
   // Heal by the maxHP increase (so investing in vitality feels rewarding)
   const hpGain = newDerived.maxHP - state.maxHP;
   state = {
@@ -102,6 +115,25 @@ export function allocateStat(statKey) {
   emit();
   return true;
 }
+
+// Real-time recompute: when Halo level changes (or equipped title changes),
+// re-run computeDerivedStats with the new virtual attribute points so the
+// HUD, damage formulas, and UI all reflect the new bonuses instantly.
+// Heals the player by any maxHP increase so leveling up Halo feels rewarding.
+function recomputeFromBonuses() {
+  const b = getBonuses();
+  const newDerived = computeDerivedStats(state.baseStats, [], b.halo, b.title);
+  const hpGain = newDerived.maxHP - state.maxHP;
+  state = {
+    ...state,
+    derived: newDerived,
+    maxHP: newDerived.maxHP,
+    hp: Math.min(newDerived.maxHP, state.hp + Math.max(0, hpGain)),
+  };
+  emit();
+}
+subscribeHalo(recomputeFromBonuses);
+subscribeTitles(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
