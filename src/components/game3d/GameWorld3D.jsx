@@ -623,12 +623,16 @@ export default function GameWorld3D() {
 
     // Boss event bus — applies bossAction events (AOE / cone / orb / dash / summon)
     // dispatched by BossBrain. Decouples boss AI from world mutation (multiplayer seam).
+    // modelRef is a plain object the bus reads lazily; we assign .current when the
+    // player FBX finishes loading (see archer load below). This avoids any
+    // temporal-dead-zone trap with `let model` declared further down.
     let _spawnBossMinion = () => {};
+    const modelRef = { current: null };
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
       sampleGroundY,
-      get model() { return model; },
+      modelRef,
       getBossById: (id) => bossEntities.find((b) => b.id === id),
       spawnBossMinion: (bid, p) => _spawnBossMinion(bid, p),
     });
@@ -906,6 +910,7 @@ export default function GameWorld3D() {
 
     loader.load(ARCHER_URL, (fbx) => {
       model = fbx;
+      modelRef.current = fbx;
       const box = new THREE.Box3().setFromObject(fbx);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
