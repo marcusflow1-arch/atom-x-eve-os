@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import KnowledgeStatusBanner from './KnowledgeStatusBanner';
-import PersistentGoogleDocsImport from './PersistentGoogleDocsImport';
-import BulkGoogleDocsImport from './BulkGoogleDocsImport';
+import QueuedGoogleDocsImport from './QueuedGoogleDocsImport';
+import IngestionPipelineDashboard from './IngestionPipelineDashboard';
+import { startWorker } from './backgroundIngestionWorker';
+import { listActiveJobs } from './ingestionQueue';
 
-// Persistent, resumable, batched Google Docs ingestion.
-// Large Unreal Engine knowledge docs are split into character-bounded
-// batches, each parsed by the LLM individually, with progress checkpointed
-// to localStorage after every batch so the job auto-resumes on refresh.
+// Real queue + worker pipeline.
+// • Submitting a doc only enqueues a `PendingKnowledgeURL` row.
+// • A singleton background worker drains the queue continuously, chunk by
+//   chunk, with checkpoints saved to the database after every chunk.
+// • If any pending/processing job exists on mount we auto-start the worker.
 export default function GoogleDocsImportTab() {
+  useEffect(() => {
+    (async () => {
+      try {
+        const active = await listActiveJobs();
+        if (active && active.length > 0) startWorker();
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
   return (
     <div>
       <KnowledgeStatusBanner />
@@ -19,17 +31,17 @@ export default function GoogleDocsImportTab() {
             <h2 className="text-2xl font-bold">Knowledge Import from Google Docs</h2>
           </div>
           <p className="text-slate-400 text-sm">
-            Paste a Google Docs share link. The system fetches the document, splits it into batches,
-            parses each batch with AI, classifies content, maps Unreal Engine concepts, and stores
-            structured chunks into the knowledge databank. Long docs are <em>checkpointed</em> — if
-            the page is refreshed mid-ingestion the job resumes automatically.
+            Submitted documents are queued as <em>PendingKnowledgeURL</em> jobs and processed by a
+            background worker — one chunk at a time, with a database checkpoint after each chunk,
+            up to 3 automatic retries on failure, and full resume on refresh. The worker keeps
+            running until the queue is empty.
           </p>
         </div>
 
-        <PersistentGoogleDocsImport />
+        <QueuedGoogleDocsImport />
 
         <div className="pt-2 border-t border-slate-800">
-          <BulkGoogleDocsImport />
+          <IngestionPipelineDashboard />
         </div>
       </section>
     </div>
