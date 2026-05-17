@@ -24,8 +24,8 @@ export default function HUDVitals() {
   const [killCount, setKillCount] = useState(0);
   useEffect(() => subscribeKillCount(setKillCount), []);
 
-  // Fusion state — display fusion tank above HP bar
-  const [fusionState, setFusionState] = useState({ isFused: false, duration: 0, timeRemaining: 0 });
+  // Fusion state — display fusion tank above HP bar (points-based 0-100)
+  const [fusionState, setFusionState] = useState({ isFused: false, points: 0, maxPoints: 100 });
   useEffect(() => subscribeFusionState(setFusionState), []);
 
   // Fetch current player display name to show above the portrait box
@@ -108,10 +108,14 @@ export default function HUDVitals() {
         <div className="flex flex-col gap-1 w-[380px]">
           {/* Active self-cast buff icons — float above the HP bar */}
           <ActiveBuffsStrip />
-          {/* Fusion tank — appears above HP */}
-          {fusionState.isFused && (
-            <Bar value={fusionState.timeRemaining} max={fusionState.duration} color="#a78bfa" label="FUSION" />
-          )}
+          {/* Fusion tank — always visible above HP, fills from kills, drains while active */}
+          <Bar
+            value={fusionState.points}
+            max={fusionState.maxPoints}
+            color={fusionState.isFused ? '#c084fc' : '#a78bfa'}
+            label={fusionState.isFused ? 'FUSION ⚡' : 'FUSION'}
+          />
+          
           <Bar value={hp} max={maxHp} color="#4caf50" label="HP" />
           <Bar value={mana} max={maxMana} color="#3a9ee6" label="MP" />
           <XPBar level={hud.level} xp={hud.xp} xpForNext={hud.xpForNext} />

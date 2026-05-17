@@ -1,18 +1,21 @@
 // ─── Fusion Store ──────────────────────────────────────────────────────
-// Tracks whether the player is currently in Deity Fusion mode. While fused:
-//   - The companion 3D model is hidden
-//   - The player levitates (Y offset applied each frame)
-//   - The fusion expires automatically after `duration` seconds
+// Points-based Deity Fusion resource (0-100).
+//   • Earn fusion points by killing enemies (addFusionPoints)
+//   • Activating fusion drains 2 points per second
+//   • Fusion auto-ends when points hit 0
+//   • While fused: companion hidden, player levitates
 //
-// This is intentionally tiny — it's a transient runtime state, not persisted.
+// This is intentionally tiny — runtime state, not persisted.
 
-const LEVITATE_HEIGHT = 1.2;  // world units lifted off the ground
+const LEVITATE_HEIGHT = 1.2;     // world units lifted off the ground
+const MAX_POINTS      = 100;
+const DRAIN_PER_SEC   = 2;       // points drained while fused
+const POINTS_PER_KILL = 5;       // points gained per enemy kill
 
 let state = {
-  isFused:        false,
-  startedAt:      0,
-  durationMs:     0,
-  expiresAt:      0,
+  isFused:    false,
+  points:     0,
+  lastTickMs: 0,
 };
 
 const listeners = new Set();
@@ -26,15 +29,13 @@ export function subscribeFusion(fn) {
   return () => listeners.delete(fn);
 }
 
-// Subscribe to fusion state with time remaining — hydrates HUD display.
+// Subscribe to fusion state with normalized HUD data.
 export function subscribeFusionState(fn) {
   const updateFn = () => {
-    const now = performance.now();
-    const remaining = Math.max(0, (state.expiresAt - now) / 1000);
     fn({
       isFused: state.isFused,
-      duration: state.durationMs / 1000,
-      timeRemaining: remaining,
+      points: state.points,
+      maxPoints: MAX_POINTS,
     });
   };
   listeners.add(updateFn);
@@ -42,14 +43,20 @@ export function subscribeFusionState(fn) {
   return () => listeners.delete(updateFn);
 }
 
-export function startFusion(durationSec = 20) {
-  const now = performance.now();
-  state = {
-    isFused:    true,
-    startedAt:  now,
-    durationMs: durationSec * 1000,
-    expiresAt:  now + durationSec * 1000,
-  };
+export function addFusionPoints(amount = POINTS_PER_KILL) {
+  state = { ...state, points: Math.min(MAX_POINTS, state.points + amount) };
+  emit();
+}
+
+export function startFusion() {
+  if (state.isFused) return;
+  if (state.points <= 0) {
+    window.dispatchEvent(new CustomEvent('skillActivatedToast', {
+      detail: { text: '⚠️ No fusion points — kill enemies to charge' },
+    }));
+    return;
+  }
+  state = { ...state, isFused: true, lastTickMs: performance.now() };
   emit();
   window.dispatchEvent(new CustomEvent('skillActivatedToast', {
     detail: { text: '👼 Deity Fusion activated' },
@@ -58,17 +65,25 @@ export function startFusion(durationSec = 20) {
 
 export function endFusion() {
   if (!state.isFused) return;
-  state = { isFused: false, startedAt: 0, durationMs: 0, expiresAt: 0 };
+  state = { ...state, isFused: false, lastTickMs: 0 };
   emit();
   window.dispatchEvent(new CustomEvent('skillActivatedToast', {
     detail: { text: '✨ Fusion ended' },
   }));
 }
 
-// Call every frame — auto-ends fusion when timer expires.
+// Call every frame — drains points at 2/sec while fused; ends when empty.
 export function tickFusion() {
   if (!state.isFused) return;
-  if (performance.now() >= state.expiresAt) endFusion();
+  const now = performance.now();
+  const dt = (now - state.lastTickMs) / 1000;
+  if (dt <= 0) return;
+  const newPoints = Math.max(0, state.points - DRAIN_PER_SEC * dt);
+  state = { ...state, points: newPoints, lastTickMs: now };
+  if (newPoints <= 0) { endFusion(); return; }
+  emit();
 }
 
 export const FUSION_LEVITATE_HEIGHT = LEVITATE_HEIGHT;
+export const FUSION_MAX_POINTS = MAX_POINTS;
+export const FUSION_POINTS_PER_KILL = POINTS_PER_KILL;

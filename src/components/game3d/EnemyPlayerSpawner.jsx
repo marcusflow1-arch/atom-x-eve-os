@@ -20,6 +20,7 @@ import { getPlayerHUD, setHP } from './playerHUDStore';
 import { addGold } from './shop/shopStore';
 import { recordTitleKill } from './progression/titleStore';
 import { incrementKillCount } from './killCountStore';
+import { addFusionPoints, FUSION_POINTS_PER_KILL } from './fusionStore';
 import toast from 'react-hot-toast';
 
 // Radius around each rogue that blocks the player from walking through them.
@@ -178,6 +179,7 @@ export default function EnemyPlayerSpawner() {
         addGold(r.goldReward || 75);
         recordTitleKill('pvp', killReward);
         incrementKillCount(killReward);
+        addFusionPoints(FUSION_POINTS_PER_KILL);
         // Drop loot at the rogue's position
         window.dispatchEvent(new CustomEvent('enemyLootDrop', {
           detail: {

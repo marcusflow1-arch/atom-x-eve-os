@@ -14,7 +14,7 @@ export function handleCompanionKey(k, pressedRef) {
   const eq = getCompanionSkillForKey(k.toUpperCase());
   if (!eq) return;
   if (eq.fusion) {
-    if (!getFusionState().isFused) startFusion(eq.duration || 20);
+    if (!getFusionState().isFused) startFusion();
     return;
   }
   if (eq.legacy_id) pressedRef.current = eq.legacy_id;
