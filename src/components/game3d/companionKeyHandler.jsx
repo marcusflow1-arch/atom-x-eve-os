@@ -3,7 +3,7 @@
 // Extracted from GameWorld3D's onKeyDown to keep that file under its size cap.
 
 import { getCompanionSkillForKey } from './skills/companionLoadoutStore';
-import { startFusion, getFusionState } from './fusionStore';
+import { startFusion, endFusion, getFusionState } from './fusionStore';
 
 /**
  * @param {string} k — lowercase key ('z' | 'x' | 'v' | 'b')
@@ -14,7 +14,8 @@ export function handleCompanionKey(k, pressedRef) {
   const eq = getCompanionSkillForKey(k.toUpperCase());
   if (!eq) return;
   if (eq.fusion) {
-    if (!getFusionState().isFused) startFusion();
+    if (getFusionState().isFused) endFusion();
+    else startFusion();
     return;
   }
   if (eq.legacy_id) pressedRef.current = eq.legacy_id;
