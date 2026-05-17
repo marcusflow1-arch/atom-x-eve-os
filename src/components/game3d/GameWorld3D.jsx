@@ -40,6 +40,9 @@ import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
+import { tickFusion } from './fusionStore';
+import { handleCompanionKey } from './companionKeyHandler';
+import { applyFusionEffects } from './applyFusionEffects';
 import { tickCompanionAutoCombat, resetCompanionAutoCombat } from './companionAutoCombat';
 import { createRemotePlayersManager } from './RemotePlayersManager';
 import { createRemoteCompanionManager } from './RemoteCompanionManager';
@@ -1008,11 +1011,8 @@ export default function GameWorld3D() {
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
       // F = mount/dismount companion
       if (k === 'f') { mountToggleRef.current = true; e.preventDefault(); }
-      // Z/X/V/B = companion combat abilities (Bite / Life Drain / Teleport Dash / Heal)
-      if (k === 'z') { companionAbilityPressed.current = 'bite'; }
-      if (k === 'x') { companionAbilityPressed.current = 'life_drain'; }
-      if (k === 'v') { companionAbilityPressed.current = 'teleport_dash'; }
-      if (k === 'b') { companionAbilityPressed.current = 'heal'; }
+      // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
+      handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
         e.preventDefault();
         handleVoiceToggle(voiceRef, setLocalMicOn);
@@ -1593,7 +1593,8 @@ export default function GameWorld3D() {
         }
       }
 
-      tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs();
+      tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs(); tickFusion();
+      applyFusionEffects(model, companionGroupRef.current, isMountedRef.current);
       if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, companionGroup: companionGroupRef.current, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
 
       // ─── Companion auto-combat AI ───
