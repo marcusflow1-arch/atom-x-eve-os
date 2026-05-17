@@ -175,17 +175,19 @@ export default function EnemyPlayerSpawner() {
         //   e.g. level 3 rogue → +3 kills, level 50 rogue → +50 kills.
         // TEST (current): multiplied by 100 so each kill yields ~level×100
         //   to make Halo enhancement attempts easy to verify.
+        // ── Kill streak multiplier ────────────────────────────────────
+        // Bump the consecutive kill streak FIRST so both kill points and
+        // XP rewards benefit from the same multiplier (resets on death).
+        const streakMult = registerStreakKill();
+
         const TEST_KILL_MULTIPLIER = 100; // ⚠ remove for live release
-        const killReward = (r.level || 1) * TEST_KILL_MULTIPLIER;
+        const basePoints = (r.level || 1) * TEST_KILL_MULTIPLIER;
+        const killReward = Math.round(basePoints * streakMult);
         addGold(r.goldReward || 75);
         recordTitleKill('pvp', killReward);
         incrementKillCount(killReward);
         addFusionPoints(FUSION_POINTS_PER_KILL);
 
-        // ── Kill streak XP multiplier ─────────────────────────────────
-        // Bump the consecutive kill streak and award XP scaled by the
-        // table in killStreakStore (resets on player death).
-        const streakMult = registerStreakKill();
         const baseXp = 25 + (r.level || 1) * 10;
         const finalXp = Math.round(baseXp * streakMult);
         window.dispatchEvent(new CustomEvent('combatXPReward', {
