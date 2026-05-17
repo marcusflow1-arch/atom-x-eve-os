@@ -279,6 +279,11 @@ export default function OnlinePlayersPanel() {
                   )}
                 </div>
               </div>
+              {!isCurrent && (
+                <span className="ml-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                  Join
+                </span>
+              )}
             </button>
           );
         })}
