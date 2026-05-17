@@ -1566,7 +1566,7 @@ export default function GameWorld3D() {
                 deathAction.reset().fadeIn(0.15).play();
                 closestEnemy.deathAction = deathAction;
               }
-              broadcastEnemyKill(closestEnemy.id);
+              broadcastEnemyKill(closestEnemy.id, { tier: closestEnemy.tier || 'normal', isBoss: !!closestEnemy.isBoss, x: closestEnemy.group.position.x, y: closestEnemy.group.position.y, z: closestEnemy.group.position.z });
               setScore(prev => prev + 100 * closestEnemy.xpReward);
               spawnXPFloat(closestEnemy.xpReward);
               awardCompanionXP(companionDefRef.current?.id, closestEnemy.xpReward);
