@@ -58,17 +58,41 @@ export function getSuccessChanceForLevel(currentLevel) {
   return HALO_SUCCESS_BANDS[HALO_SUCCESS_BANDS.length - 1].chance;
 }
 
-// Bonuses granted at MAX level. All lower levels scale linearly toward these.
-// Critical Defense reduces incoming enemy critical damage by this %.
-// Critical Chance is an ADDITIVE flat % on top of the base crit chance.
-// Stat points (str/dex/vit/spr) stack INTO the base stats pipeline.
+// Per-level Halo bonuses. Each Halo level grants:
+//   +1 strength, +1 constitution, +1 dexterity, +1 intelligence, +1 focus
+//   +0.2% additive critical chance
+//   +0.3% critical defense (reduces incoming crit bonus damage)
+//
+// These points flow THROUGH the stat pipeline the same way Attribute points
+// do — e.g. +1 strength yields +3 physical damage via STAT_RATES.strength.
+// This gives the player two parallel ways to increase offense/defense:
+// allocating Attribute points OR leveling the Halo.
+//
+// At MAX_HALO_LEVEL (200) the totals are:
+//   200 STR / CON / DEX / INT / FOC, +40% crit, +60% crit defense.
+export const PER_LEVEL_HALO_BONUSES = {
+  strength:         1,
+  constitution:     1,
+  dexterity:        1,
+  intelligence:     1,
+  focus:            1,
+  criticalChance:   0.2,   // +0.2% per Halo level
+  criticalDefense:  0.003, // +0.3% per Halo level (stored as 0..1 multiplier)
+};
+
+// Legacy export — kept for any UI that imports MAX_HALO_BONUSES. Reflects the
+// totals at MAX_HALO_LEVEL given the per-level values above.
 export const MAX_HALO_BONUSES = {
-  strength:         200,
-  dexterity:        200,
-  vitality:         200, // maps to `hp` in the existing stat system
-  spirit:           200,
-  criticalDefense:  2.0,  // 200% (i.e. completely negates enemy crit damage)
-  criticalChance:   15,   // +15% additive crit chance
+  strength:        PER_LEVEL_HALO_BONUSES.strength        * MAX_HALO_LEVEL,
+  constitution:    PER_LEVEL_HALO_BONUSES.constitution    * MAX_HALO_LEVEL,
+  dexterity:       PER_LEVEL_HALO_BONUSES.dexterity       * MAX_HALO_LEVEL,
+  intelligence:    PER_LEVEL_HALO_BONUSES.intelligence    * MAX_HALO_LEVEL,
+  focus:           PER_LEVEL_HALO_BONUSES.focus           * MAX_HALO_LEVEL,
+  // Legacy aliases — some older UI reads these names.
+  vitality:        PER_LEVEL_HALO_BONUSES.constitution    * MAX_HALO_LEVEL,
+  spirit:          PER_LEVEL_HALO_BONUSES.focus           * MAX_HALO_LEVEL,
+  criticalChance:  PER_LEVEL_HALO_BONUSES.criticalChance  * MAX_HALO_LEVEL,
+  criticalDefense: PER_LEVEL_HALO_BONUSES.criticalDefense * MAX_HALO_LEVEL,
 };
 
 // Kills required to perform an enhancement attempt. Constant regardless of level.
@@ -87,17 +111,24 @@ export function getTierForLevel(level) {
   return tier;
 }
 
-// Linear scale 0..1 → applied to MAX_HALO_BONUSES to get current bonuses.
-// Level 0 = no bonus.  Level 100 = full bonus.
+// Per-level multiplication — every Halo level grants the PER_LEVEL bonuses.
+// Returns ALL five attribute keys (strength / constitution / dexterity /
+// intelligence / focus) plus crit chance & crit defense. statsSystem's
+// computeDerivedStats consumes these as flat stat-point additions and runs
+// them through STAT_RATES, so they feed into both offense and defense the
+// same way Attribute points do.
 export function getHaloBonusesForLevel(level) {
   const lvl = Math.max(0, Math.min(MAX_HALO_LEVEL, level));
-  const t = lvl / MAX_HALO_LEVEL;
   return {
-    strength:        Math.round(MAX_HALO_BONUSES.strength        * t),
-    dexterity:       Math.round(MAX_HALO_BONUSES.dexterity       * t),
-    vitality:        Math.round(MAX_HALO_BONUSES.vitality        * t),
-    spirit:          Math.round(MAX_HALO_BONUSES.spirit          * t),
-    criticalDefense: MAX_HALO_BONUSES.criticalDefense * t,
-    criticalChance:  MAX_HALO_BONUSES.criticalChance  * t,
+    strength:        PER_LEVEL_HALO_BONUSES.strength        * lvl,
+    constitution:    PER_LEVEL_HALO_BONUSES.constitution    * lvl,
+    dexterity:       PER_LEVEL_HALO_BONUSES.dexterity       * lvl,
+    intelligence:    PER_LEVEL_HALO_BONUSES.intelligence    * lvl,
+    focus:           PER_LEVEL_HALO_BONUSES.focus           * lvl,
+    // Legacy aliases — some older UI reads these. statsSystem also accepts them.
+    vitality:        PER_LEVEL_HALO_BONUSES.constitution    * lvl,
+    spirit:          PER_LEVEL_HALO_BONUSES.focus           * lvl,
+    criticalChance:  PER_LEVEL_HALO_BONUSES.criticalChance  * lvl,
+    criticalDefense: PER_LEVEL_HALO_BONUSES.criticalDefense * lvl,
   };
 }
