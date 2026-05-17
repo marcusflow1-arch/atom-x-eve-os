@@ -1569,14 +1569,15 @@ export default function GameWorld3D() {
       }
 
       tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs();
-      if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
+      if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, companionGroup: companionGroupRef.current, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
 
       // ─── Companion auto-combat AI ───
       // Auto-attacks the player's target with off-cooldown abilities, and
       // auto-heals when the player's HP drops low or they take recent damage.
       // Uses the exact same processCompanionAbilityPress() path as manual casts.
       tickCompanionAutoCombat({
-        delta, scene, model, enemies, cachedDeathClip,
+        delta, scene, model, companionGroup: companionGroupRef.current,
+        enemies, cachedDeathClip,
         companionDefId: companionDefRef.current?.id,
         playerXPRef, playerLevelRef,
         setScore, setPlayerXP, setPlayerLevel,

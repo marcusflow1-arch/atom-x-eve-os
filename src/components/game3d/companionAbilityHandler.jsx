@@ -66,8 +66,13 @@ function handleEnemyKill(ctx) {
  * Fire a companion ability. Returns an effect handle to push onto activeEffects,
  * or null if the cast failed (cooldown / no target / no model).
  */
+// Melee range for companion targeted abilities (game units ≈ feet).
+// teleport_dash is a gap-closer and is exempt — it's how the companion
+// gets INTO range in the first place.
+const COMPANION_ABILITY_RANGE = 4;
+
 function fireCompanionAbility({
-  abilityId, scene, model, enemies, spawnDamageFloat, spawnHealFloat, onKill,
+  abilityId, scene, model, companionGroup, enemies, spawnDamageFloat, spawnHealFloat, onKill,
 }) {
   const ab = getCompanionAbilityById(abilityId);
   if (!ab) return null;
@@ -95,6 +100,17 @@ function fireCompanionAbility({
     if (!target) return null;
     const targetEnemy = enemies.find((e) => e.id === target.id && e.alive && !e.dying);
     if (!targetEnemy) return null;
+
+    // Range gate — measure from the COMPANION (or player as fallback) to the
+    // target. teleport_dash is exempt because it IS the gap-closer.
+    if (ab.id !== 'teleport_dash') {
+      const origin = companionGroup?.position || model.position;
+      const dx = targetEnemy.group.position.x - origin.x;
+      const dz = targetEnemy.group.position.z - origin.z;
+      if ((dx * dx + dz * dz) > COMPANION_ABILITY_RANGE * COMPANION_ABILITY_RANGE) {
+        return null;
+      }
+    }
 
     startCompanionCooldown(abilityId);
 
@@ -173,10 +189,10 @@ function fireCompanionAbility({
  * Pushes any resulting effect onto `ctx.activeEffectsRef.current`.
  */
 export function processCompanionAbilityPress(ctx) {
-  const { abilityId, scene, model, enemies, spawnDamageFloat, activeEffectsRef } = ctx;
+  const { abilityId, scene, model, companionGroup, enemies, spawnDamageFloat, activeEffectsRef } = ctx;
   if (!abilityId || !model) return;
   const result = fireCompanionAbility({
-    abilityId, scene, model, enemies,
+    abilityId, scene, model, companionGroup, enemies,
     spawnDamageFloat,
     spawnHealFloat: (val) => spawnDamageFloat('player', -val),
     onKill: (en) => handleEnemyKill({ ...ctx, en }),
