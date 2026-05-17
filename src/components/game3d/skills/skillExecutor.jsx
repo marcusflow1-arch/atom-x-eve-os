@@ -18,6 +18,12 @@ import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
 import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
+import {
+  onTripleSlashCast,
+  onTripleSlashFinalHit,
+  onDoubleShotHit,
+  onDoubleShotCastEnd,
+} from './skillSoundEffects';
 
 function toast(text) {
   if (typeof window === 'undefined') return;
@@ -43,8 +49,13 @@ function dispatchStrike(skill, hitIndex, level) {
 
 function scheduleSequential(skill, level) {
   // Hit 1 at t=0, hit i at t = i*hit_delay
+  const isTripleSlash = skill.skill_id === 'sword_triple_slash';
+  if (isTripleSlash) onTripleSlashCast();
   for (let i = 0; i < skill.hit_count; i++) {
-    setTimeout(() => dispatchStrike(skill, i, level), i * skill.hit_delay * 1000);
+    setTimeout(() => {
+      dispatchStrike(skill, i, level);
+      if (isTripleSlash && i === skill.hit_count - 1) onTripleSlashFinalHit();
+    }, i * skill.hit_delay * 1000);
   }
 }
 
@@ -63,8 +74,13 @@ function scheduleGuardianBurst(skill, level) {
 }
 
 function scheduleRangedDouble(skill, level) {
-  setTimeout(() => dispatchStrike(skill, 0, level), 0);
-  setTimeout(() => dispatchStrike(skill, 1, level), skill.hit_delay * 1000);
+  const isDoubleShot = skill.skill_id === 'ranged_double_shot';
+  setTimeout(() => { dispatchStrike(skill, 0, level); if (isDoubleShot) onDoubleShotHit(); }, 0);
+  setTimeout(() => { dispatchStrike(skill, 1, level); if (isDoubleShot) onDoubleShotHit(); }, skill.hit_delay * 1000);
+  // Failsafe: ensure sfx is cleared shortly after the cast window ends.
+  if (isDoubleShot) {
+    setTimeout(() => onDoubleShotCastEnd(), (skill.hit_delay * 1000) + 800);
+  }
 }
 
 function scheduleRangedBarrage(skill, level) {
