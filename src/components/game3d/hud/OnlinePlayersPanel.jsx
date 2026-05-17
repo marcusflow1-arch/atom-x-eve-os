@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Globe, Circle, Skull, Crosshair } from 'lucide-react';
+import { Users, Globe, Circle, Skull, Crosshair, Radio, Crown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { subscribeBosses } from '../bossStore';
 import { setTrackedBoss, subscribeTrackedBoss } from '../bossGuidanceStore';
+import { CHANNELS, subscribeChannel, switchChannel } from '../channelStore';
 
 /**
  * OnlinePlayersPanel — Game Mode presence widget.
@@ -21,10 +22,13 @@ import { setTrackedBoss, subscribeTrackedBoss } from '../bossGuidanceStore';
 export default function OnlinePlayersPanel() {
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const [tab, setTab] = useState('world'); // 'world' | 'global' | 'boss'
+  const [tab, setTab] = useState('world'); // 'world' | 'global' | 'boss' | 'channels'
   const [worldPlayers, setWorldPlayers] = useState([]);
   const [bosses, setBosses] = useState([]);
   const [trackedBossId, setTrackedBossId] = useState(null);
+  const [currentChannelId, setCurrentChannelId] = useState(CHANNELS[0].id);
+
+  useEffect(() => subscribeChannel(setCurrentChannelId), []);
 
   // Live boss state + currently tracked boss (for the "guide me" star icon)
   useEffect(() => {
@@ -67,6 +71,32 @@ export default function OnlinePlayersPanel() {
         }));
     },
     enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
+
+  // Channel populations + host per channel (earliest joiner wins, matching the
+  // existing host-election behavior in WorldSyncMount).
+  const { data: channelStats = {} } = useQuery({
+    queryKey: ['gameViewChannelStats', user?.id],
+    queryFn: async () => {
+      const res = await base44.entities.PlayerState.list();
+      const now = Date.now();
+      const byChannel = {};
+      CHANNELS.forEach((c) => { byChannel[c.id] = { count: 0, hostName: null, hostJoined: Infinity }; });
+      res.forEach((p) => {
+        if (!byChannel[p.channel_id]) return;
+        if (now - (p.last_update || 0) >= 30000) return;
+        const bucket = byChannel[p.channel_id];
+        bucket.count += 1;
+        const joined = p.created_date ? new Date(p.created_date).getTime() : (p.last_update || 0);
+        if (joined < bucket.hostJoined) {
+          bucket.hostJoined = joined;
+          bucket.hostName = p.display_name || 'Player';
+        }
+      });
+      return byChannel;
+    },
+    enabled: !!user?.id && tab === 'channels',
     refetchInterval: 5000,
   });
 
@@ -131,6 +161,15 @@ export default function OnlinePlayersPanel() {
         >
           <Skull className="w-3 h-3" />
           Boss ({bosses.filter((b) => b.alive).length})
+        </button>
+        <button
+          onClick={() => setTab('channels')}
+          className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-colors flex items-center justify-center gap-1 ${
+            tab === 'channels' ? 'bg-emerald-500/20 text-emerald-300' : 'text-white/50 hover:text-white'
+          }`}
+        >
+          <Radio className="w-3 h-3" />
+          Channels
         </button>
       </div>
 
@@ -197,6 +236,49 @@ export default function OnlinePlayersPanel() {
               {b.alive && (
                 <Crosshair className={`w-3.5 h-3.5 ${isTracked ? 'text-red-300' : 'text-white/40'}`} />
               )}
+            </button>
+          );
+        })}
+
+        {/* Channels tab — switch instances. Only same-channel players are visible. */}
+        {tab === 'channels' && CHANNELS.map((c) => {
+          const isCurrent = currentChannelId === c.id;
+          const stats = channelStats[c.id] || { count: 0, hostName: null };
+          return (
+            <button
+              key={c.id}
+              onClick={() => !isCurrent && switchChannel(c.id)}
+              disabled={isCurrent}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-left border ${
+                isCurrent
+                  ? 'bg-emerald-500/15 border-emerald-400/40'
+                  : 'hover:bg-white/5 border-transparent'
+              }`}
+              title={isCurrent ? 'You are in this channel' : 'Join this channel'}
+            >
+              <div className="relative w-7 h-7 rounded-full bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
+                <Radio className="w-3.5 h-3.5 text-emerald-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[12px] text-white/90 truncate font-bold">{c.name}</p>
+                  {isCurrent && (
+                    <span className="text-[8px] uppercase tracking-wider text-emerald-300 font-bold">You</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-white/50">
+                  <span className="flex items-center gap-0.5">
+                    <Users className="w-2.5 h-2.5" />
+                    {stats.count}
+                  </span>
+                  {stats.hostName && (
+                    <span className="flex items-center gap-0.5 truncate">
+                      <Crown className="w-2.5 h-2.5 text-amber-300" />
+                      <span className="truncate">{stats.hostName}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </button>
           );
         })}
