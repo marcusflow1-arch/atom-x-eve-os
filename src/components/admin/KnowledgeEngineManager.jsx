@@ -13,6 +13,7 @@ import UE5TranslatorTab      from './knowledge/UE5TranslatorTab';
 import BlueprintGeneratorTab from './knowledge/BlueprintGeneratorTab';
 import GASDesignerTab        from './knowledge/GASDesignerTab';
 import GameDesignOSTab       from './knowledge/GameDesignOSTab';
+import AutoSystemBuilderTab  from './knowledge/AutoSystemBuilderTab';
 import LearningLogsTab       from './knowledge/LearningLogsTab';
 
 // ─── Knowledge Engine ─────────────────────────────────────────────────────
@@ -40,8 +41,9 @@ export default function KnowledgeEngineManager() {
         </div>
       </div>
 
-      <Tabs defaultValue="gdocs" className="space-y-4">
+      <Tabs defaultValue="auto" className="space-y-4">
         <TabsList className="bg-slate-900 border border-slate-800 flex-wrap h-auto">
+          <TabsTrigger value="auto">⚙️ Auto Builder</TabsTrigger>
           <TabsTrigger value="gdocs">Google Docs Import</TabsTrigger>
           <TabsTrigger value="file">File Upload</TabsTrigger>
           <TabsTrigger value="library">Knowledge Library</TabsTrigger>
@@ -57,6 +59,7 @@ export default function KnowledgeEngineManager() {
           <TabsTrigger value="logs">Learning Logs</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="auto">    <AutoSystemBuilderTab />  </TabsContent>
         <TabsContent value="gdocs">   <GoogleDocsImportTab />   </TabsContent>
         <TabsContent value="file">    <EngineFileImportTab />   </TabsContent>
         <TabsContent value="library"> <KnowledgeLibraryTab />   </TabsContent>
