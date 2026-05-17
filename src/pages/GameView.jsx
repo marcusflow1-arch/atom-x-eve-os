@@ -29,6 +29,7 @@ import NetworkValidationTelemetry from '../components/network/debug/NetworkValid
 import { partyStore } from '../components/game3d/social/socialStores';
 import GameWorldLootLayer from '../components/game3d/GameWorldLootLayer';
 import EnemyPlayerSpawner from '../components/game3d/EnemyPlayerSpawner';
+import RogueAIHPBarLayer from '../components/game3d/RogueAIHPBarLayer';
 import ShopEffectsBridge from '../components/game3d/shop/shopEffectsBridge';
 // Each action has its own dedicated send module — they do NOT share a code path.
 import { sendFriendRequest } from '../components/game3d/social/friendRequest';
@@ -292,6 +293,9 @@ export default function GameView() {
 
       {/* Hostile rogue-player AIs — kill them for gold, XP, loot, and PvP title kills */}
       <EnemyPlayerSpawner />
+
+      {/* HP bars (level + random name + liquid-glass HP) above each rogue AI */}
+      <RogueAIHPBarLayer />
 
       {/* Shop consumable effects — applies buffs/heals when items are used from the shop */}
       <ShopEffectsBridge />

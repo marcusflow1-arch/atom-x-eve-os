@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { subscribePlayerHUD } from '../playerHUDStore';
+import { subscribeKillCount } from '../killCountStore';
 import HUDPortrait3D from './HUDPortrait3D';
 import ActiveBuffsStrip from './ActiveBuffsStrip';
 import { base44 } from '@/api/base44Client';
+import { Skull } from 'lucide-react';
 
 /**
  * Bottom-center HUD: live 3D character portrait + HP / Mana / XP bars.
@@ -16,6 +18,10 @@ export default function HUDVitals() {
     derived: { chi: 0 },
   });
   useEffect(() => subscribePlayerHUD(setHud), []);
+
+  // Live total kill count — shown as a small pill above the player's name.
+  const [killCount, setKillCount] = useState(0);
+  useEffect(() => subscribeKillCount(setKillCount), []);
 
   // Fetch current player display name to show above the portrait box
   const [playerName, setPlayerName] = useState('');
@@ -35,6 +41,23 @@ export default function HUDVitals() {
       <div className="flex items-end gap-3">
         {/* Live 3D portrait + player name */}
         <div className="relative flex flex-col items-center gap-1">
+          {/* Kill count pill — sits above the player name */}
+          <div
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider whitespace-nowrap"
+            style={{
+              background: 'rgba(20, 8, 8, 0.7)',
+              backdropFilter: 'blur(8px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(8px) saturate(180%)',
+              border: '1px solid rgba(255, 90, 90, 0.45)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.5), 0 0 8px rgba(255,80,80,0.25)',
+              color: '#ffb4b4',
+              textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+            }}
+            title="Total rogue AI kills"
+          >
+            <Skull className="w-2.5 h-2.5" />
+            <span className="tabular-nums">{killCount} Kills</span>
+          </div>
           {playerName && (
             <div
               className="text-[11px] font-bold tracking-wider whitespace-nowrap"

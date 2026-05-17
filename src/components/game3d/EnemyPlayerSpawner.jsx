@@ -15,11 +15,15 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { ARCHER_URL, ANIMATION_URLS } from './gameWorldConfig';
-import { ENEMY_PLAYER_SPAWNS, ENEMY_PLAYER_STATS, ENEMY_PLAYER_RESPAWN_SECONDS } from './enemyPlayerSpawnConfig';
+import { ENEMY_PLAYER_SPAWNS, ENEMY_PLAYER_STATS, ENEMY_PLAYER_RESPAWN_SECONDS, getRandomRogueName } from './enemyPlayerSpawnConfig';
 import { getPlayerHUD, setHP } from './playerHUDStore';
 import { addGold } from './shop/shopStore';
 import { recordTitleKill } from './progression/titleStore';
+import { incrementKillCount } from './killCountStore';
 import toast from 'react-hot-toast';
+
+// Radius around each rogue that blocks the player from walking through them.
+const ROGUE_BODY_RADIUS = 0.9;
 
 export default function EnemyPlayerSpawner() {
   const rogueRef = useRef([]);
@@ -90,6 +94,7 @@ export default function EnemyPlayerSpawner() {
           const mixer = new THREE.AnimationMixer(fbx);
           const entry = {
             ...def,
+            name: getRandomRogueName(),
             group: fbx,
             mixer,
             tintMats,
@@ -165,6 +170,7 @@ export default function EnemyPlayerSpawner() {
         // Rewards
         addGold(r.goldReward || 75);
         recordTitleKill('pvp', 1);
+        incrementKillCount(1);
         // Drop loot at the rogue's position
         window.dispatchEvent(new CustomEvent('enemyLootDrop', {
           detail: {
@@ -199,6 +205,7 @@ export default function EnemyPlayerSpawner() {
             if (r.respawnAt && performance.now() >= r.respawnAt) {
               r.dying = false; r.deathTimer = 0; r.respawnAt = null;
               r.hp = r.maxHp;
+              r.name = getRandomRogueName();
               r.group.position.set(r.home[0], r.home[1], r.home[2]);
               r.group.visible = true;
               r.tintMats.forEach((m) => { m.opacity = 1; m.transparent = false; m.emissive.setHex(r.color); });

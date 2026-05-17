@@ -1129,6 +1129,8 @@ export default function GameWorld3D() {
           const gy = sampleGroundY(model.position.x, model.position.z);
           if (gy !== null) model.position.y = gy;
         }
+        // Rogue-AI body collision — push player out so they can't walk through hostile player-AIs
+        { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } }
 
         // ─── Mount handling: companion follows player while mounted ───
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
@@ -1490,11 +1492,9 @@ export default function GameWorld3D() {
           if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
         });
 
-        // ─── Tick player cooldowns ───
+        // Tick player cooldowns + player attack
         if (playerAttackCooldown.current > 0) playerAttackCooldown.current -= delta;
         if (playerInvulTimer.current > 0) playerInvulTimer.current -= delta;
-
-        // ─── Player attack: Left-click or F. Plays kick animation + damages nearest enemy in range ───
         if (attackPressed.current) {
           attackPressed.current = false;
           if (playerAttackCooldown.current <= 0) {
