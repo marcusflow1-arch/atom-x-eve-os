@@ -1,0 +1,120 @@
+// ─── Skill Executor ────────────────────────────────────────────────────
+// The single entry point for casting any skill. Validates weapon lock,
+// dispatches by cast_type, schedules multi-hit timings exactly per spec.
+//
+// Public API:
+//   castSkill(skill_id, ctx) → { ok, reason? }
+//     ctx: { level, maxHP, getPlayerLevel?, getDamageMult? }
+//
+// Side effects:
+//   • For SELF_CAST buffs → activates buff via buffEngine
+//   • For attack casts    → dispatches 'playerSkillStrike' window events,
+//                           one per hit, with proper delays.
+//   • Always dispatches a 'skillActivatedToast' for player feedback.
+
+import { getSkillById, scaleStat } from './skillRegistry';
+import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValidator';
+import { activateBuff } from './buffEngine';
+import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
+
+function toast(text) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('skillActivatedToast', { detail: { text } }));
+}
+
+function dispatchStrike(skill, hitIndex, level) {
+  if (typeof window === 'undefined') return;
+  const mult = scaleStat(skill, 'damage_pct', level || 1) || 1;
+  window.dispatchEvent(new CustomEvent('playerSkillStrike', {
+    detail: {
+      skillId:   skill.skill_id,
+      multiplier: mult,
+      hitIndex,
+      hitsTotal: skill.hit_count,
+      castType:  skill.cast_type,
+      weaponType: skill.weapon_type,
+    },
+  }));
+}
+
+function scheduleSequential(skill, level) {
+  // Hit 1 at t=0, hit i at t = i*hit_delay
+  for (let i = 0; i < skill.hit_count; i++) {
+    setTimeout(() => dispatchStrike(skill, i, level), i * skill.hit_delay * 1000);
+  }
+}
+
+function scheduleGuardianBurst(skill, level) {
+  // Hits 1+2 near-simultaneous (separated by burst_delay), final hit after hit_delay.
+  // Total hits: 3.
+  const burst = skill.burst_delay ?? 0.08;
+  setTimeout(() => dispatchStrike(skill, 0, level), 0);
+  setTimeout(() => dispatchStrike(skill, 1, level), burst * 1000);
+  setTimeout(() => dispatchStrike(skill, 2, level), skill.hit_delay * 1000);
+}
+
+function scheduleRangedDouble(skill, level) {
+  setTimeout(() => dispatchStrike(skill, 0, level), 0);
+  setTimeout(() => dispatchStrike(skill, 1, level), skill.hit_delay * 1000);
+}
+
+function scheduleRangedBarrage(skill, level) {
+  for (let i = 0; i < skill.hit_count; i++) {
+    setTimeout(() => dispatchStrike(skill, i, level), i * skill.hit_delay * 1000);
+  }
+}
+
+/**
+ * Cast a skill. Returns { ok, reason? }.
+ *   reason values: 'unknown_skill' | 'passive_cannot_cast' | 'wrong_weapon' | 'no_weapon_equipped'
+ */
+export function castSkill(skill_id, ctx = {}) {
+  const skill = getSkillById(skill_id);
+  if (!skill) return { ok: false, reason: 'unknown_skill' };
+
+  // PASSIVES can never be cast manually. Hard rule.
+  if (skill.skill_type === SKILL_TYPE.PASSIVE) {
+    toast('⛔ Passive skills activate automatically');
+    return { ok: false, reason: 'passive_cannot_cast' };
+  }
+
+  // Weapon-lock check.
+  const w = canCastWithEquippedWeapon(skill_id);
+  if (!w.ok) {
+    toast(describeWeaponMismatch(w));
+    return { ok: false, reason: w.reason };
+  }
+
+  const level = ctx.level || 1;
+
+  // Buff branch.
+  if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) {
+    activateBuff(skill_id, level, { maxHP: ctx.maxHP });
+    toast(`${skill.icon} ${skill.skill_name} activated`);
+    return { ok: true };
+  }
+
+  // Attack branch — dispatch by cast_type.
+  switch (skill.cast_type) {
+    case CAST_TYPE.SINGLE_HIT:
+      dispatchStrike(skill, 0, level);
+      break;
+    case CAST_TYPE.MULTI_HIT_SEQUENTIAL:
+      scheduleSequential(skill, level);
+      break;
+    case CAST_TYPE.MULTI_HIT_BURST:
+      scheduleGuardianBurst(skill, level);
+      break;
+    case CAST_TYPE.RANGED_DOUBLE:
+      scheduleRangedDouble(skill, level);
+      break;
+    case CAST_TYPE.RANGED_BARRAGE:
+      scheduleRangedBarrage(skill, level);
+      break;
+    default:
+      return { ok: false, reason: 'unsupported_cast_type' };
+  }
+
+  toast(`${skill.icon} ${skill.skill_name}`);
+  return { ok: true };
+}
