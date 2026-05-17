@@ -186,14 +186,39 @@ export async function persistUnrealReference({ result, topicOrUrl }) {
 // ─── Smart Matching: query both internal + web-indexed knowledge ──────────
 // Returns up to `limit` chunks that look most relevant to the user's request.
 // Used as the context-retrieval step before generating any system.
+//
+// Prefers semantic vector search when embeddings exist; falls back to keyword
+// + category scoring when the vector memory is still empty.
 export async function smartQueryUnrealKnowledge(userPrompt, { limit = 12 } = {}) {
-  const KnowledgeChunk = base44.entities.KnowledgeChunk;
-  const categories = mapRequestToCategories(userPrompt);
+  const KnowledgeChunk     = base44.entities.KnowledgeChunk;
+  const KnowledgeEmbedding = base44.entities.KnowledgeEmbedding;
+  const categories         = mapRequestToCategories(userPrompt);
 
-  // 1. Pull a candidate pool from the databank — recent chunks across all sources.
-  const pool = await KnowledgeChunk.list('-created_date', 400);
+  // 1. Try semantic search first (lazy import to avoid pulling embedding code
+  //    into bundles that don't need it).
+  let semanticChunks = [];
+  try {
+    const embCount = (await KnowledgeEmbedding.list('-created_date', 1)).length;
+    if (embCount > 0) {
+      const { semanticSearch } = await import('./embeddingService');
+      const r = await semanticSearch(userPrompt, { topK: limit });
+      semanticChunks = r.results.map((x) => x.chunk).filter(Boolean);
+    }
+  } catch (e) {
+    console.warn('[smartQuery] semantic path unavailable, falling back to keyword:', e);
+  }
 
-  // 2. Score each chunk by keyword + category match against the prompt.
+  if (semanticChunks.length > 0) {
+    return {
+      matched_categories: categories,
+      chunk_count:        semanticChunks.length,
+      chunks:             semanticChunks,
+      retrieval:          'semantic',
+    };
+  }
+
+  // 2. Keyword + category fallback.
+  const pool  = await KnowledgeChunk.list('-created_date', 400);
   const terms = userPrompt
     .toLowerCase()
     .split(/[^a-z0-9_]+/)
@@ -204,10 +229,9 @@ export async function smartQueryUnrealKnowledge(userPrompt, { limit = 12 } = {})
     let score = 0;
     terms.forEach((t) => { if (hay.includes(t)) score += 2; });
     categories.forEach((c) => { if (hay.includes(c.toLowerCase())) score += 3; });
-    if (ch.section_path?.toLowerCase().includes('unreal')) score += 1; // mild boost for engine refs
+    if (ch.section_path?.toLowerCase().includes('unreal')) score += 1;
     return { chunk: ch, score };
   });
-
   scored.sort((a, b) => b.score - a.score);
   const top = scored.filter((s) => s.score > 0).slice(0, limit).map((s) => s.chunk);
 
@@ -215,5 +239,6 @@ export async function smartQueryUnrealKnowledge(userPrompt, { limit = 12 } = {})
     matched_categories: categories,
     chunk_count:        top.length,
     chunks:             top,
+    retrieval:          'keyword',
   };
 }

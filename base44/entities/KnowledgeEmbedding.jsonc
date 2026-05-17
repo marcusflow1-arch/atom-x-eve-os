@@ -1,0 +1,73 @@
+{
+  "name": "KnowledgeEmbedding",
+  "type": "object",
+  "properties": {
+    "chunk_id": {
+      "type": "string",
+      "description": "ID of the KnowledgeChunk this embedding represents"
+    },
+    "document_id": {
+      "type": "string",
+      "description": "Parent KnowledgeDocument id (denormalized for fast filtering)"
+    },
+    "source_reference": {
+      "type": "string",
+      "description": "Human-readable source label (doc title, file name, URL)"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "game_design_systems",
+        "ui_ux_systems",
+        "combat_systems",
+        "progression_systems",
+        "engine_logic_notes",
+        "technical_implementation_notes",
+        "reference_documentation",
+        "uncategorized"
+      ],
+      "default": "uncategorized"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "vector": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Fixed-length semantic embedding vector"
+    },
+    "vector_dim": {
+      "type": "number",
+      "default": 0,
+      "description": "Length of the embedding vector"
+    },
+    "model": {
+      "type": "string",
+      "description": "Identifier of the model used to generate the embedding"
+    },
+    "importance_score": {
+      "type": "number",
+      "default": 1,
+      "description": "Manual or computed importance multiplier (0.1 - 5)"
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this embedding has been retrieved as top context"
+    },
+    "preview": {
+      "type": "string",
+      "description": "Short preview of the chunk content (first ~300 chars)"
+    }
+  },
+  "required": [
+    "chunk_id",
+    "vector"
+  ]
+}

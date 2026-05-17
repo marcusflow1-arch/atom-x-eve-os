@@ -8,6 +8,7 @@ import SystemGraphViewerTab  from './knowledge/SystemGraphViewerTab';
 import KnowledgeSearchTab    from './knowledge/KnowledgeSearchTab';
 import WebResearchTab        from './knowledge/WebResearchTab';
 import UnrealDocsIndexerTab  from './knowledge/UnrealDocsIndexerTab';
+import VectorMemoryTab       from './knowledge/VectorMemoryTab';
 import LearningLogsTab       from './knowledge/LearningLogsTab';
 
 // ─── Knowledge Engine ─────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export default function KnowledgeEngineManager() {
           <TabsTrigger value="search">Search</TabsTrigger>
           <TabsTrigger value="web">Web Research</TabsTrigger>
           <TabsTrigger value="unreal">Unreal Docs</TabsTrigger>
+          <TabsTrigger value="vector">Vector Memory</TabsTrigger>
           <TabsTrigger value="logs">Learning Logs</TabsTrigger>
         </TabsList>
 
@@ -54,6 +56,7 @@ export default function KnowledgeEngineManager() {
         <TabsContent value="search">  <KnowledgeSearchTab />    </TabsContent>
         <TabsContent value="web">     <WebResearchTab />        </TabsContent>
         <TabsContent value="unreal">  <UnrealDocsIndexerTab />  </TabsContent>
+        <TabsContent value="vector">  <VectorMemoryTab />       </TabsContent>
         <TabsContent value="logs">    <LearningLogsTab />       </TabsContent>
       </Tabs>
     </div>
