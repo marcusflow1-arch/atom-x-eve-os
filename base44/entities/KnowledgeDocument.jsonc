@@ -1,0 +1,149 @@
+{
+  "name": "KnowledgeDocument",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Display title for the document"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "google_docs",
+        "file_upload",
+        "engine_doc",
+        "web_research",
+        "manual_entry"
+      ],
+      "description": "Where this document originated"
+    },
+    "source_url": {
+      "type": "string",
+      "description": "Original URL (Google Docs link, file URL, web source)"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Stable identifier extracted from the source (e.g. Google Doc ID, filename)"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "MIME-like type label: gdoc, cpp, h, json, md, pdf, txt, blueprint, config"
+    },
+    "raw_content": {
+      "type": "string",
+      "description": "Truncated raw text content (first ~30k chars) for reference. Full content lives in chunks."
+    },
+    "summary": {
+      "type": "string",
+      "description": "AI-generated short summary of the document"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "game_design_systems",
+        "ui_ux_systems",
+        "combat_systems",
+        "progression_systems",
+        "engine_logic_notes",
+        "technical_implementation_notes",
+        "reference_documentation",
+        "uncategorized"
+      ],
+      "default": "uncategorized",
+      "description": "Auto-classified primary category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Free-form keyword tags extracted from content"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Top keywords for search"
+    },
+    "section_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of parsed sections / chunks"
+    },
+    "engine_mapping": {
+      "type": "object",
+      "properties": {
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blueprints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "game_modes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Engine concepts mapped to Base44 internal representations"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "fetching",
+        "parsing",
+        "indexed",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Ingestion processing status"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Last error if ingestion failed"
+    },
+    "version": {
+      "type": "number",
+      "default": 1,
+      "description": "Version number; increments on re-ingest"
+    },
+    "indexed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the doc was last fully indexed"
+    }
+  },
+  "required": [
+    "title",
+    "source_type"
+  ]
+}

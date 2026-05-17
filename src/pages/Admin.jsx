@@ -25,6 +25,7 @@ import AssetFilesManager from '../components/admin/AssetFilesManager';
 import VideoAnalyzer from '../components/admin/VideoAnalyzer';
 import NPCActionAudioManager from '../components/admin/NPCActionAudioManager';
 import SoundLibraryManager from '../components/admin/SoundLibraryManager';
+import KnowledgeEngineManager from '../components/admin/KnowledgeEngineManager';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -476,6 +477,7 @@ export default function Admin() {
             <TabsTrigger value="asset-files">Asset Files</TabsTrigger>
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
             <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
+            <TabsTrigger value="knowledge-engine">Knowledge Engine</TabsTrigger>
             </TabsList>
 
           <TabsContent value="backgrounds">
@@ -989,6 +991,10 @@ export default function Admin() {
 
           <TabsContent value="sounds">
             <SoundLibraryManager />
+          </TabsContent>
+
+          <TabsContent value="knowledge-engine">
+            <KnowledgeEngineManager />
           </TabsContent>
 
                     </Tabs>

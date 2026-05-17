@@ -1,0 +1,114 @@
+{
+  "name": "KnowledgeChunk",
+  "type": "object",
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "description": "Reference to the KnowledgeDocument this chunk belongs to"
+    },
+    "document_title": {
+      "type": "string",
+      "description": "Denormalized parent document title for fast display"
+    },
+    "section_path": {
+      "type": "string",
+      "description": "Hierarchical path of headers, e.g. 'Combat > Damage > Crit Logic'"
+    },
+    "heading": {
+      "type": "string",
+      "description": "Local heading of this chunk"
+    },
+    "heading_level": {
+      "type": "number",
+      "default": 1,
+      "description": "Heading depth (1 = h1, 2 = h2, etc.)"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Order of this chunk within the parent document"
+    },
+    "chunk_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "code",
+        "table",
+        "list",
+        "formula",
+        "note"
+      ],
+      "default": "text",
+      "description": "Kind of content"
+    },
+    "language": {
+      "type": "string",
+      "description": "Programming language for code chunks (cpp, json, blueprint, etc.)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Chunk body text"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "game_design_systems",
+        "ui_ux_systems",
+        "combat_systems",
+        "progression_systems",
+        "engine_logic_notes",
+        "technical_implementation_notes",
+        "reference_documentation",
+        "uncategorized"
+      ],
+      "default": "uncategorized"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "entities_detected": {
+      "type": "object",
+      "properties": {
+        "systems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mechanics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "formulas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Structured entities extracted from this chunk"
+    }
+  },
+  "required": [
+    "document_id",
+    "content"
+  ]
+}
