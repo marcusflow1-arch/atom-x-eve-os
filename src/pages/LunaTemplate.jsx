@@ -624,7 +624,6 @@ export default function LunaTemplate() {
           
           {!avatarFocusMode && !uiVisible &&
                 <div className="flex flex-col gap-6">
-              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.15)', transformOrigin: 'top left', marginBottom: 24 } : { height: 380, marginBottom: 12 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
               {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
             </div>
                 }
@@ -734,39 +733,7 @@ export default function LunaTemplate() {
                 }
       </AnimatePresence>
 
-      {/* 3D Model Viewer - Full Page Background */}
-      {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
-              <>
-          <div
-                  className="fixed inset-0 z-0 pointer-events-auto"
-                  style={{
-                    display: isEnvironmentActive ? 'flex' : 'none',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100vw',
-                    height: '100vh'
-                  }}>
-            <TransparentModel3DViewer
-                    modelUrl={modelUrl}
-                    weaponModel={weaponModelUrl}
-                    triggerAnimation={triggerAnimation}
-                    backgroundUrl={bannerBackgroundUrl}
-                    roomModelUrl={roomModelUrl}
-                    activeScene={activeScene}
-                    isStatsOpen={stageMode === 'stats'}
-                    playerSpawn={playerSpawn}
-                    useMeshCollision={useMeshCollision}
-                    equippedWeaponUrl={weaponModelUrl}
-                    drawEffectUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb" />
-                  
-          </div>
-          
-          <AnimatePresence>
-            {!isEnvironmentActive && <LunaDashboardOfflineView />}
-          </AnimatePresence>
-        </>
-              }
+      {/* 3D Model Viewer - Disabled */}
 
       {/* Focus Mode Background Overlay - Removed to show custom background */}
 
@@ -1208,14 +1175,7 @@ export default function LunaTemplate() {
                 <span className={`text-sm font-sans relative z-10 ${stageMode === 'friends' ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
               </ConsoleTile>
 
-              {/* Live (Replaces Cards) */}
-              <ConsoleTile
-                          onClick={() => setStageMode((m) => m === 'live' ? 'default' : 'live')}
-                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'live' ? 'border-red-400/50 bg-red-900/20' : ''}`}>
-                          
-                <Video className={`w-10 h-10 relative z-10 ${stageMode === 'live' ? 'text-red-400' : ''}`} style={stageMode === 'live' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
-                <span className={`text-sm font-sans relative z-10 ${stageMode === 'live' ? 'text-red-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Live</span>
-              </ConsoleTile>
+
 
               {/* Leaderboard */}
               <ConsoleTile
@@ -1289,23 +1249,7 @@ export default function LunaTemplate() {
                       </div>
                             }
 
-                    {stageMode === 'live' &&
-                            <div className="h-full flex gap-3 p-3">
-                        <div className="flex-1 bg-black/40 rounded-xl border border-red-500/20 overflow-hidden flex items-center justify-center flex-col gap-2">
-                          <Video className="w-8 h-8 text-red-500/40" />
-                          <span className="text-white/30 text-xs">Stream Offline</span>
-                        </div>
-                        <div className="w-1/3 bg-black/40 rounded-xl border border-white/10 flex flex-col overflow-hidden">
-                          <div className="p-2 border-b border-white/10 bg-white/5 flex justify-between items-center">
-                            <span className="text-white font-bold text-xs">Chat</span>
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          </div>
-                          <div className="flex-1 p-2">
-                            <div className="text-[10px] text-white/40 italic">Connecting...</div>
-                          </div>
-                        </div>
-                      </div>
-                            }
+
                   </motion.div>
                           }
               </AnimatePresence>
