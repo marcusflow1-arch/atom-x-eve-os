@@ -548,223 +548,223 @@ export default function LiveIntelligenceFeed() {
         }
       </AnimatePresence>
 
-      <motion.div
-        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-        transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
-        className="w-[360px] flex flex-col font-sans relative overflow-hidden flex-shrink-0 rounded-2xl h-full hidden"
-        style={{
-          background: 'rgba(20, 26, 38, 0.75)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-        }}>
-        
-        {/* Original Feed Content (Standard View) */}
-        <div className="w-full flex flex-col h-full flex-shrink-0 relative hidden">
-          {/* Expand Toggle Button */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="absolute top-1/2 left-0 -translate-y-1/2 z-10 w-4 h-12 bg-white/10 hover:bg-white/20 border-y border-r border-white/10 rounded-r-xl flex items-center justify-center backdrop-blur-md transition-colors">
-            
-            {isExpanded ? <ChevronRight className="w-3 h-3 text-white" /> : <ChevronLeft className="w-3 h-3 text-white" />}
-          </button>
+      
 
-          {/* Scrollable Content Area */}
-          <div className="p-4 pl-6 flex-1 overflow-y-auto hidden" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
-           <style>{`
-              .intel-scrollbar::-webkit-scrollbar { width: 6px; }
-              .intel-scrollbar::-webkit-scrollbar-track { background: transparent; }
-              .intel-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-           `}</style>
 
-           {/* LIVE FEED | INTEL Header */}
-           <div className="text-[#64B5F6] text-sm font-bold tracking-widest mb-4 flex justify-between items-center">
-              <span>LIVE FEED | INTEL</span>
-           </div>
 
-           {/* Tabs */}
-           <div className="flex gap-2 mb-4">
-             <button
-                onClick={() => setActiveTab('missions')}
-                className={`flex-1 py-2 text-[10px] font-bold tracking-widest rounded-lg border transition-all ${
-                activeTab === 'missions' ?
-                'bg-[#64B5F6]/20 border-[#64B5F6]/50 text-[#64B5F6]' :
-                'bg-black/20 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'}`
-                }>
-                
-               MISSIONS
-             </button>
-             <button
-                onClick={() => setActiveTab('market')}
-                className={`flex-1 py-2 text-[10px] font-bold tracking-widest rounded-lg border transition-all ${
-                activeTab === 'market' ?
-                'bg-[#64B5F6]/20 border-[#64B5F6]/50 text-[#64B5F6]' :
-                'bg-black/20 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'}`
-                }>
-                
-               MARKET
-             </button>
-             <button
-                onClick={() => setActiveTab('settings')}
-                className={`p-2 rounded-lg border transition-all ${
-                activeTab === 'settings' ?
-                'bg-[#64B5F6]/20 border-[#64B5F6]/50 text-[#64B5F6]' :
-                'bg-black/20 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'}`
-                }>
-                
-               <Settings className="w-4 h-4" />
-             </button>
-           </div>
 
-           <AnimatePresence mode="wait">
-             {activeTab === 'missions' && feedSettings.missions &&
-              <motion.div
-                key="missions"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-                className="flex-1">
-                
-                 <div className="space-y-4">
-                    {invites.length > 0 &&
-                  <div className="mb-4 space-y-2">
-                        {invites.map((inv, i) =>
-                    <div key={i} className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/40 cursor-pointer flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center">
-                              <span className="text-purple-300 font-bold text-xs">?</span>
-                            </div>
-                            <div>
-                              <h4 className="text-white text-xs font-bold mb-0.5">Incoming Invite</h4>
-                              <p className="text-[10px] text-white/70">
-                                <span className="font-bold text-purple-300">{inv.fromUser?.friend_name || 'A player'}</span> invited you.
-                              </p>
-                            </div>
-                          </div>
-                    )}
-                      </div>
-                  }
-                    {MISSION_CATEGORIES.map((category) => {
-                    const categoryMissions = MOCK_MISSIONS.filter((m) => m.category === category);
-                    if (categoryMissions.length === 0) return null;
 
-                    return (
-                      <div key={category} className="mb-2">
-                          <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                             {category === 'Ability' && <Zap className="w-3 h-3 text-purple-400" />}
-                             {category === 'Equipment' && <Shield className="w-3 h-3 text-blue-400" />}
-                             {category === 'Weapon' && <Sword className="w-3 h-3 text-red-400" />}
-                             {category === 'Companion' && <Bot className="w-3 h-3 text-green-400" />}
-                             {category === 'Cosmetic' && <Image className="w-3 h-3 text-amber-400" />}
-                             {category}
-                          </h4>
-                          <div className="space-y-2">
-                            {categoryMissions.map((mission) => {
-                            const gameObj = MOCK_GAMES.find((g) => g.id === mission.gameId);
-                            return (
-                              <div key={mission.id} className="rounded-lg bg-black/40 border border-white/10 overflow-hidden group">
-                                  <div
-                                  className="flex justify-between items-start p-3 cursor-pointer hover:bg-white/5 transition-colors"
-                                  onClick={() => setStandardExpandedMission(standardExpandedMission === mission.id ? null : mission.id)}>
-                                  
-                                     <div className="flex-1 min-w-0 pr-2">
-                                        <div className="flex text-xs text-white mb-1.5 font-semibold">
-                                           <span className="truncate">{mission.title}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden">
-                                             <div className="h-full bg-gradient-to-r from-[#64B5F6] to-blue-400 rounded-full" style={{ width: mission.progress.split('/')[0] / mission.progress.split('/')[1] * 100 + '%' }} />
-                                          </div>
-                                          <span className="text-[9px] text-white/50">{mission.progress}</span>
-                                        </div>
-                                     </div>
-                                     {standardExpandedMission === mission.id ? <ChevronUp className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50 group-hover:text-white" />}
-                                  </div>
 
-                                  <AnimatePresence>
-                                    {standardExpandedMission === mission.id &&
-                                  <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="bg-white/5 border-t border-white/5">
-                                    
-                                         <div className="p-3 space-y-3">
-                                            <p className="text-[10px] text-white/70 leading-relaxed">{mission.description}</p>
-                                            <div className="text-[10px] text-white/50 flex items-center gap-1">
-                                              <Gamepad2 className="w-3 h-3" /> {gameObj?.name}
-                                            </div>
-                                            <div className="bg-black/30 rounded p-2 border border-white/5">
-                                              <span className="text-[9px] text-[#64B5F6] uppercase font-bold block mb-1">Reward</span>
-                                              <span className="text-xs text-white">{mission.reward}</span>
-                                            </div>
-                                         </div>
-                                      </motion.div>
-                                  }
-                                  </AnimatePresence>
-                               </div>);
 
-                          })}
-                          </div>
-                        </div>);
 
-                  })}
-                 </div>
-               </motion.div>
-              }
 
-             {activeTab === 'market' && feedSettings.marketUpdates &&
-              <motion.div
-                key="market"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex-1">
-                
-                  <div className="space-y-3">
-                    {MOCK_MARKET_UPDATES.map((update) =>
-                  <div key={update.id} className="p-3 rounded-xl bg-black/40 border border-[#64B5F6]/20 cursor-pointer hover:bg-white/5 transition-colors group">
-                          <div className="flex justify-between items-start mb-1.5">
-                             <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
-                      update.type === 'drop' ? 'bg-green-500/20 text-green-400' :
-                      update.type === 'event' ? 'bg-purple-500/20 text-purple-400' :
-                      update.type === 'limited' ? 'bg-amber-500/20 text-amber-400' :
-                      'bg-blue-500/20 text-blue-400'}`
-                      }>{update.tag}</span>
-                             <span className="text-[9px] text-white/40">{update.time}</span>
-                          </div>
-                          <h4 className="text-white text-xs font-semibold mb-1 group-hover:text-[#64B5F6] transition-colors">{update.title}</h4>
-                          <p className="text-[10px] text-white/60 mb-2">{update.desc}</p>
-                          <div className="text-[9px] text-white/30 flex items-center gap-1">
-                            <Gamepad2 className="w-3 h-3" /> {update.game}
-                          </div>
-                       </div>
-                  )}
-                  </div>
-               </motion.div>
-              }
 
-             {activeTab === 'settings' &&
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex-1 text-center py-8">
-                
-                  <Settings className="w-8 h-8 text-white/20 mx-auto mb-3" />
-                  <p className="text-white/60 text-xs">Expand the panel to access<br />full Feed Settings.</p>
-               </motion.div>
-              }
-           </AnimatePresence>
-          </div>
-        </div>
-      </motion.div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
     </div>);
 
 }
