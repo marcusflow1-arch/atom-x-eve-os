@@ -12,6 +12,7 @@ import VectorMemoryTab       from './knowledge/VectorMemoryTab';
 import UE5TranslatorTab      from './knowledge/UE5TranslatorTab';
 import BlueprintGeneratorTab from './knowledge/BlueprintGeneratorTab';
 import GASDesignerTab        from './knowledge/GASDesignerTab';
+import GameDesignOSTab       from './knowledge/GameDesignOSTab';
 import LearningLogsTab       from './knowledge/LearningLogsTab';
 
 // ─── Knowledge Engine ─────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ export default function KnowledgeEngineManager() {
           <TabsTrigger value="ue5">UE5 Translator</TabsTrigger>
           <TabsTrigger value="ue5bp">Blueprint Gen</TabsTrigger>
           <TabsTrigger value="gas">GAS Specialist</TabsTrigger>
+          <TabsTrigger value="os">OS Kernel</TabsTrigger>
           <TabsTrigger value="logs">Learning Logs</TabsTrigger>
         </TabsList>
 
@@ -66,6 +68,7 @@ export default function KnowledgeEngineManager() {
         <TabsContent value="ue5">     <UE5TranslatorTab />      </TabsContent>
         <TabsContent value="ue5bp">   <BlueprintGeneratorTab /> </TabsContent>
         <TabsContent value="gas">     <GASDesignerTab />        </TabsContent>
+        <TabsContent value="os">      <GameDesignOSTab />       </TabsContent>
         <TabsContent value="logs">    <LearningLogsTab />       </TabsContent>
       </Tabs>
     </div>

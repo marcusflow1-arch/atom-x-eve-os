@@ -1,0 +1,183 @@
+{
+  "name": "GameSystem",
+  "type": "object",
+  "properties": {
+    "system_id": {
+      "type": "string",
+      "description": "Stable kernel identifier (slug). Required and unique within the registry."
+    },
+    "system_name": {
+      "type": "string",
+      "description": "Human-readable display name."
+    },
+    "system_type": {
+      "type": "string",
+      "enum": [
+        "combat",
+        "skills",
+        "abilities",
+        "ui",
+        "progression",
+        "inventory",
+        "equipment",
+        "weapons",
+        "titles",
+        "halos",
+        "companions",
+        "ai",
+        "movement",
+        "input",
+        "audio",
+        "vfx",
+        "economy",
+        "social",
+        "networking",
+        "data",
+        "other"
+      ],
+      "default": "other"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short description of what the system does."
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "system_id values that this system REQUIRES to function."
+    },
+    "connected_systems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "system_id values this system interacts with (non-required edges)."
+    },
+    "version": {
+      "type": "number",
+      "default": 1,
+      "description": "Monotonic version. Increments every time the system is regenerated."
+    },
+    "source_origin": {
+      "type": "string",
+      "enum": [
+        "google_docs",
+        "ue_docs",
+        "user_created",
+        "kernel_generated",
+        "import"
+      ],
+      "default": "kernel_generated"
+    },
+    "memory_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "IDs of KnowledgeChunk / KnowledgeDocument entries this system was grounded in."
+    },
+    "ue5_mapping": {
+      "type": "object",
+      "properties": {
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blueprints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "abilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ui_widgets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "UE5 binding produced by the translation hook."
+    },
+    "stat_contract": {
+      "type": "object",
+      "properties": {
+        "reads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "writes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Which core attributes (Strength/Vital/Dex/Spirit/etc.) this system reads or modifies."
+    },
+    "rule_validation": {
+      "type": "object",
+      "properties": {
+        "passed": {
+          "type": "boolean",
+          "default": false
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Last Global Rule Engine validation result."
+    },
+    "architecture_payload": {
+      "type": "object",
+      "description": "Full UE5 architecture blueprint JSON for this system (from the Translator)."
+    },
+    "previous_version_id": {
+      "type": "string",
+      "description": "ID of the prior GameSystem record this version supersedes (for evolution history)."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "validated",
+        "active",
+        "deprecated"
+      ],
+      "default": "draft"
+    }
+  },
+  "required": [
+    "system_id",
+    "system_name",
+    "system_type"
+  ]
+}
