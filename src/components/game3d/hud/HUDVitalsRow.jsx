@@ -74,7 +74,7 @@ function SkillSlot({ slotKey, skill, cooldown, buffStatus }) {
         </div>
       )}
       <button
-        className="relative w-[46px] h-[46px] rounded-full transition-transform hover:scale-105 pointer-events-auto"
+        className="relative w-[38px] h-[38px] rounded-full transition-transform hover:scale-105 pointer-events-auto"
         style={{
           background: skill
             ? `radial-gradient(circle at 50% 35%, ${color}55 0%, ${color}11 70%, rgba(0,0,0,0.7) 100%)`
@@ -493,8 +493,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
   return (
     <>
       <div className="flex flex-col items-center gap-1">
-        {/* TOP: skills columns + spacer for the center cluster (skills sit ABOVE gauges) */}
-        <div className="flex items-end justify-center gap-2">
+        {/* TOP: skills columns — pulled down so icons rest ON the HP/Fusion gauges */}
+        <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
           {/* Skills 1–4 above HP gauge */}
           <SkillsColumn
             slotKeys={SLOTS_LEFT}
