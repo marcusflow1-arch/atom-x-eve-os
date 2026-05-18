@@ -265,7 +265,7 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             exit={{ opacity: 0, scale: 0.92, y: 24 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
             className="fixed z-[71] flex items-center pointer-events-auto"
-            style={{ top: 'calc(50% - 300px)', left: 160, transform: 'translateY(-50%)' }}
+            style={{ top: 'calc(50% - 516px)', left: 160, transform: 'translateY(-50%)' }}
           >
             {isCompanion ? (
               <CompanionSkillEquipSlots

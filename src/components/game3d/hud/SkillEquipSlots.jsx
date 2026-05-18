@@ -50,12 +50,12 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
   const isPassive = draggedSkill?.skill_type === SKILL_TYPE.PASSIVE;
 
   return (
-    <div className="flex flex-col gap-1.5 pr-2" style={{ width: 110 }}>
+    <div className="flex flex-col gap-1.5 pr-2" style={{ width: 150 }}>
       <div className="text-center mb-1">
         <span className="text-[7px] font-black uppercase tracking-widest text-white/50">Skill Slots</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="flex flex-col gap-1.5">
         {activeSlots.map((id, idx) => {
           const skill = id ? getSkillById(id) : null;
           const isHovered = hoveredSlot === idx;
@@ -63,10 +63,10 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
           const color = skill ? (TYPE_COLORS[skill.skill_type] || '#6b7280') : '#6b7280';
 
           return (
-            <div key={idx} className="flex items-center gap-1">
+            <div key={idx} className="flex items-center gap-1.5">
               <span
-                className="text-[9px] font-black tabular-nums text-white/70"
-                style={{ width: 10, textAlign: 'right' }}
+                className="text-[10px] font-black tabular-nums text-white/70"
+                style={{ width: 14, textAlign: 'right' }}
               >
                 {idx + 1}
               </span>
@@ -74,7 +74,7 @@ export default function SkillEquipSlots({ draggedSkill, onClearDrag }) {
               <motion.div
                 className="relative flex flex-col cursor-pointer select-none"
                 style={{
-                  width: 38, height: 38, borderRadius: 8,
+                  width: 57, height: 57, borderRadius: 8,
                   background: skill
                     ? `${color}22`
                     : canDrop
