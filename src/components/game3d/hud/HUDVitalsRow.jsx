@@ -600,33 +600,26 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
 
   return (
     <>
-      <div className="flex flex-col items-center gap-1">
-        {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
-        <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: -125 }}>
-          {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
-          <div className="flex flex-col items-stretch" style={{ width: 320 }}>
-            <BuffDividerLine icon={User} color="rgba(220,200,150,0.85)" />
-            <div className="flex items-center justify-between mt-1.5" style={{ width: 320 }}>
-              {SLOTS_ALL.map((key, i) => (
-                <SkillSlot
-                  key={key}
-                  slotKey={key}
-                  skill={skillForSlot(i)}
-                  cooldown={loadout.cooldowns[i]}
-                  buffStatus={buffStatusForSlot(i)}
-                  size={34}
-                />
-              ))}
-            </div>
+      {/* All 8 skills (1-8) — ORIGINAL position, resting ON the HP/Fusion gauges */}
+      <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
+        <div className="flex flex-col items-stretch" style={{ width: 320 }}>
+          <BuffDividerLine icon={User} color="rgba(220,200,150,0.85)" />
+          <div className="flex items-center justify-between mt-1.5" style={{ width: 320 }}>
+            {SLOTS_ALL.map((key, i) => (
+              <SkillSlot
+                key={key}
+                slotKey={key}
+                skill={skillForSlot(i)}
+                cooldown={loadout.cooldowns[i]}
+                buffStatus={buffStatusForSlot(i)}
+                size={34}
+              />
+            ))}
           </div>
-
-          {/* Spacer matching the center cluster width (character + weapon circles) */}
-          <div style={{ width: 118 }} />
-
-          {/* Spacer so layout is preserved */}
-          <div style={{ width: 52 }} />
         </div>
+      </div>
 
+      <div className="flex flex-col items-center gap-1" style={{ marginTop: 24 }}>
         {/* BOTTOM: Companion skills | Kill count | HP gauge | center cluster | Fusion gauge | Skills Book */}
         <div className="flex items-center justify-center gap-2">
           {/* Companion skill slots (to the left of kill count) */}
