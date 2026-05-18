@@ -639,8 +639,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
 
   return (
     <>
-      <div className="flex flex-col items-center gap-1">
-        {/* TOP: skills above HP | center spacer | quick-action boxes above Fusion */}
+      <div className="relative flex flex-col items-center gap-1">
+        {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
         <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: -125 }}>
           {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
           <div className="flex flex-col items-stretch" style={{ width: 320 }}>
@@ -662,11 +662,27 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
           {/* Spacer matching the center cluster width (character + weapon circles) */}
           <div style={{ width: 118 }} />
 
-          {/* Quick-action boxes above Fusion gauge */}
-          <QuickActionBoxRow />
-
-          {/* Spacer for Skills Book button */}
+          {/* Spacer so layout is preserved */}
           <div style={{ width: 52 }} />
+        </div>
+
+        {/* Quick-action boxes — absolutely positioned above Fusion gauge so they
+            don't shift any other layout and don't overlap the weapon switcher. */}
+        <div
+          className="pointer-events-none absolute"
+          style={{
+            // Fusion gauge sits in the bottom row to the right of the center
+            // weapon cluster. Center this row over that gauge (320px wide).
+            // Bottom row vertical center ≈ 32px from the bottom of the wrapper,
+            // gauge top ≈ that minus ~7px. We anchor by bottom so it floats just
+            // above the Fusion gauge without affecting any flex sizing.
+            right: 52 /* SkillsBookButton width */ + 8 /* gap */,
+            bottom: 64 /* approx gauge top */ + 6,
+            width: 320,
+            zIndex: 3,
+          }}
+        >
+          <QuickActionBoxRow />
         </div>
 
         {/* BOTTOM: Companion skills | Kill count | HP gauge | center cluster | Fusion gauge | Skills Book */}
