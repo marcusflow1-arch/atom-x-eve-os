@@ -267,8 +267,8 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             className="fixed z-[71] flex items-stretch pointer-events-auto"
             style={{ top: 'calc(50% - 516px)', left: 'calc(50% - 360px)', transform: 'translateY(-50%)' }}
           >
-           {/* Equip slots column — sits OUTSIDE the box, its right edge against the box's left border */}
-           <div className="flex items-center" style={{ marginRight: -1 }}>
+           {/* Equip slots column — sits OUTSIDE the box, flush against the left border */}
+           <div className="flex items-stretch" style={{ marginRight: 0 }}>
              {isCompanion ? (
                <CompanionSkillEquipSlots
                  draggedSkill={draggedSkill}
