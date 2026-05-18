@@ -629,11 +629,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
           <div style={{ width: 52 }} />
         </div>
 
-        {/* BOTTOM: Companion skills | Kill count | HP gauge | center cluster | Fusion gauge | Skills Book */}
+        {/* BOTTOM: Kill count | HP gauge | center cluster | Fusion gauge | Skills Book */}
         <div className="flex items-center justify-center gap-2">
-          {/* Companion skill slots (to the left of kill count) */}
-          <CompanionSkillSlots />
-
           {/* Kill count box with "KILLS" label above */}
           {killCount > 0 && (
             <div className="flex flex-col items-center gap-0.5">
