@@ -176,6 +176,16 @@ function WeaponCenterSwitcher({ unspentPoints }) {
       {/* C-key character circle */}
       <div className="relative" style={{ width: 64, height: 64 }}>
         <CharacterRing unspentPoints={unspentPoints} />
+
+        {/* Weapon icon stack sits DIRECTLY above the C circle */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ bottom: 'calc(100% + 4px)', zIndex: 4 }}
+        >
+          <div className="pointer-events-auto">
+            <WeaponIconStack />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -442,42 +452,18 @@ function SectionDivider({ icon: Icon, color = 'rgba(220,200,150,0.8)' }) {
 
 // ── Skills column (divider line ON TOP, then 4 slots below it) ────────────
 // Width matches the gauge width below it so the divider line stretches end to end.
-function SkillsColumn({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor }) {
+// Skills column — packs icons tightly to one side (no spread).
+// align="left"  → packs to the left edge (icons 1-4 above HP tank)
+// align="right" → packs to the right edge (icons 5-8 above Fusion tank)
+function SkillsColumn({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor, align = 'left' }) {
   return (
     <div className="flex flex-col items-stretch" style={{ width: 320 }}>
-      {/* Section divider line + circle icon (ABOVE the skills) */}
       <SectionDivider icon={dividerIcon} color={dividerColor} />
 
-      {/* Skill slots row (BELOW the line, above the gauge) */}
-      <div className="flex items-center justify-between gap-1 mt-1.5 px-1">
-        {slotKeys.map((key, i) => (
-          <SkillSlot
-            key={key}
-            slotKey={key}
-            skill={skillForSlot(offset + i)}
-            cooldown={cooldowns[offset + i]}
-            buffStatus={buffStatusForSlot(offset + i)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Skills column with weapon icon stack above-right (HP side) ───────────
-function SkillsColumnWithWeapons({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor }) {
-  return (
-    <div className="flex flex-col items-stretch relative" style={{ width: 320 }}>
-      {/* Weapon icon stack absolutely positioned at the far-right above HP tank */}
-      <div className="absolute right-1 pointer-events-none" style={{ bottom: 'calc(100% + 4px)', zIndex: 4 }}>
-        <div className="pointer-events-auto">
-          <WeaponIconStack />
-        </div>
-      </div>
-
-      <SectionDivider icon={dividerIcon} color={dividerColor} />
-
-      <div className="flex items-center justify-between gap-1 mt-1.5 px-1">
+      <div
+        className="flex items-center gap-1.5 mt-1.5"
+        style={{ justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}
+      >
         {slotKeys.map((key, i) => (
           <SkillSlot
             key={key}
@@ -553,8 +539,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
       <div className="flex flex-col items-center gap-1">
         {/* TOP: skills columns — pulled down so icons rest ON the HP/Fusion gauges */}
         <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
-          {/* Skills 1–4 above HP gauge — also hosts the weapon icon stack at far-right */}
-          <SkillsColumnWithWeapons
+          {/* Skills 1–4 packed at the LEFT edge of HP gauge */}
+          <SkillsColumn
             slotKeys={SLOTS_LEFT}
             skillForSlot={skillForSlot}
             cooldowns={loadout.cooldowns}
@@ -562,12 +548,13 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
             offset={0}
             dividerIcon={User}
             dividerColor="rgba(220,200,150,0.85)"
+            align="left"
           />
 
           {/* Spacer matching the center cluster width (character + weapon circles) */}
           <div style={{ width: 118 }} />
 
-          {/* Skills 5–8 above Fusion gauge */}
+          {/* Skills 5–8 packed at the RIGHT edge of Fusion gauge */}
           <SkillsColumn
             slotKeys={SLOTS_RIGHT}
             skillForSlot={skillForSlot}
@@ -576,6 +563,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
             offset={4}
             dividerIcon={Sparkles}
             dividerColor="rgba(192,164,250,0.9)"
+            align="right"
           />
 
           {/* Spacer so top row aligns with the skill book sitting beside the Fusion gauge */}
