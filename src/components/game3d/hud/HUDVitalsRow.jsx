@@ -163,71 +163,68 @@ function WeaponCenterSwitcher({ unspentPoints }) {
   }, [cycle]);
 
   const cur  = WEAPON_CLASSES[idx];
-  const next = WEAPON_CLASSES[(idx + 1) % WEAPON_CLASSES.length];
   const buff = WEAPON_CLASS_BUFFS[cur.path];
-  const nextBuff = WEAPON_CLASS_BUFFS[next.path];
+
+  // Faded "other" weapons stacked upward behind the active icon
+  const others = WEAPON_CLASSES
+    .map((w, i) => ({ w, i }))
+    .filter(({ i }) => i !== idx);
 
   return (
     <div className="relative flex items-center" style={{ height: 64 }}>
       {/* C-key character circle */}
       <div className="relative" style={{ width: 64, height: 64 }}>
         <CharacterRing unspentPoints={unspentPoints} />
-      </div>
 
-      {/* Weapon circle with faded "next" weapon hint peeking out behind */}
-      <div
-        className="relative"
-        style={{ width: 64, height: 64, marginLeft: -10 }}
-        title={`${cur.label} — Press G or ◄ ► to swap`}
-      >
-        {/* Faded "next weapon" silhouette peeking out from behind */}
+        {/* Weapon swap icon stack — sits directly ABOVE the C circle, fades upward */}
         <button
           onClick={() => cycle(1)}
-          className="absolute pointer-events-auto"
-          style={{
-            top: 6,
-            left: 18,
-            right: -4,
-            bottom: 6,
-            borderRadius: 999,
-            background:
-              'radial-gradient(circle at 30% 45%, rgba(40,45,60,0.55) 0%, rgba(10,12,18,0.75) 80%)',
-            border: '1.5px solid rgba(220,200,150,0.35)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
-            opacity: 0.55,
-            filter: 'blur(0.4px)',
-          }}
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-auto"
+          style={{ bottom: '100%', marginBottom: 4, width: 28, height: 56 }}
+          title={`${cur.label} — Press G or ◄ ► to swap`}
         >
-          <div className="absolute inset-0 flex items-center justify-end pr-2">
-            <Sword
-              style={{ width: 16, height: 16, color: nextBuff?.color || '#cbb98a', opacity: 0.8 }}
-              strokeWidth={2}
-            />
-          </div>
-        </button>
+          {/* Faded other-weapon icons stacking upward behind the active one */}
+          {others.map(({ w, i }, k) => {
+            const ob = WEAPON_CLASS_BUFFS[w.path];
+            // k=0 → just behind active, k=1 → further up & more faded
+            const offsetY = -(10 + k * 9);
+            const opacity = 0.45 - k * 0.18;
+            const scale = 0.78 - k * 0.1;
+            return (
+              <Sword
+                key={w.path}
+                className="absolute left-1/2 bottom-0 -translate-x-1/2"
+                style={{
+                  width: 22,
+                  height: 22,
+                  color: ob?.color || '#cbb98a',
+                  opacity,
+                  transform: `translate(-50%, ${offsetY}px) scale(${scale})`,
+                  filter: 'blur(0.3px) drop-shadow(0 1px 1px rgba(0,0,0,0.7))',
+                  pointerEvents: 'none',
+                }}
+                strokeWidth={2}
+              />
+            );
+          })}
 
-        {/* Primary weapon circle */}
-        <button
-          onClick={() => cycle(1)}
-          className="absolute inset-0 pointer-events-auto"
-          style={{
-            borderRadius: 999,
-            background:
-              'radial-gradient(circle at 50% 40%, rgba(50,55,70,0.92) 0%, rgba(10,12,18,0.98) 80%)',
-            border: '2px solid rgba(220,200,150,0.75)',
-            boxShadow: `0 0 12px ${buff.color}66, 0 3px 10px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.55)`,
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Sword
-              style={{ width: 24, height: 24, color: buff.color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))' }}
-              strokeWidth={2.1}
-            />
-          </div>
-          {/* G key tag */}
-          <div
-            className="absolute -top-1 left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
+          {/* Active weapon icon (foreground) */}
+          <Sword
+            className="absolute left-1/2 bottom-0 -translate-x-1/2"
             style={{
+              width: 24,
+              height: 24,
+              color: buff.color,
+              filter: `drop-shadow(0 0 4px ${buff.color}99) drop-shadow(0 1px 2px rgba(0,0,0,0.9))`,
+            }}
+            strokeWidth={2.2}
+          />
+
+          {/* G key tag above the active icon */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
+            style={{
+              top: -2,
               background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
               border: '1px solid rgba(220,200,150,0.65)',
               color: '#fde68a',
