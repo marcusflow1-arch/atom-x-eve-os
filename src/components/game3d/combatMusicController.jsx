@@ -21,33 +21,43 @@
 
 import { base44 } from '@/api/base44Client';
 
-const WORLD_FADE_MS        = 500;   // world theme ducks out
-const COMBAT_FADE_IN_MS    = 600;   // combat theme fades in
+const WORLD_FADE_MS        = 2000;  // world theme fades out over 2 seconds, then fully stops
+const COMBAT_FADE_IN_MS    = 400;   // combat theme fades in quickly after world stops
 const COMBAT_FADE_OUT_MS   = 1000;  // combat theme fades out after combat ends
 const WORLD_RESUME_DELAY_MS = 3000; // 3 second gap before world theme returns
 const WORLD_FADE_IN_MS     = 1200;  // world theme fades back up
 
-const COMBAT_VOLUME_FACTOR = 1.0; // combat plays at full target (= world volume)
+const COMBAT_VOLUME = 1.0; // combat theme plays at MAX volume
 
 let combatAudio = null;
 let worldAudioRef = null;        // ref-object passed in from GameView
 let worldTargetVolume = 0.5;     // remembered so we can restore it after fade
-let activeFadeTimer = null;      // setInterval id for the current fade
 let resumeTimer = null;          // setTimeout id for the 3 s gap
 let inCombat = false;
 let combatUrlLoaded = false;
 let combatUrlPromise = null;
 
+// Per-audio fade timers so world fade-out and combat fade-in can run
+// independently without cancelling each other.
+const fadeTimers = new WeakMap();
+
 // ─── Helpers ──────────────────────────────────────────────────────────
 
 function clearTimers() {
-  if (activeFadeTimer) { clearInterval(activeFadeTimer); activeFadeTimer = null; }
-  if (resumeTimer)     { clearTimeout(resumeTimer);     resumeTimer = null; }
+  if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+}
+
+function cancelFade(audio) {
+  if (!audio) return;
+  const t = fadeTimers.get(audio);
+  if (t) { clearInterval(t); fadeTimers.delete(audio); }
 }
 
 // Generic linear volume fade. onDone fires when target reached.
+// Each audio element has its own independent timer.
 function fadeTo(audio, target, durationMs, onDone) {
   if (!audio) { onDone?.(); return; }
+  cancelFade(audio);
   const start = audio.volume;
   const delta = target - start;
   if (Math.abs(delta) < 0.001 || durationMs <= 0) {
@@ -58,17 +68,17 @@ function fadeTo(audio, target, durationMs, onDone) {
   const stepMs = 50;
   const steps = Math.max(1, Math.round(durationMs / stepMs));
   let i = 0;
-  if (activeFadeTimer) clearInterval(activeFadeTimer);
-  activeFadeTimer = setInterval(() => {
+  const id = setInterval(() => {
     i++;
     const v = start + delta * (i / steps);
     audio.volume = Math.max(0, Math.min(1, v));
     if (i >= steps) {
-      clearInterval(activeFadeTimer);
-      activeFadeTimer = null;
+      clearInterval(id);
+      fadeTimers.delete(audio);
       onDone?.();
     }
   }, stepMs);
+  fadeTimers.set(audio, id);
 }
 
 async function ensureCombatLoaded() {
@@ -106,7 +116,7 @@ export function setWorldTargetVolume(v) {
   worldTargetVolume = v;
   // If we're not currently in combat AND no fade is active, keep the world
   // audio at the new level. (If we ARE in combat, leave it muted.)
-  if (!inCombat && worldAudioRef?.current && !activeFadeTimer) {
+  if (!inCombat && worldAudioRef?.current && !fadeTimers.get(worldAudioRef.current)) {
     worldAudioRef.current.volume = v;
   }
 }
@@ -123,18 +133,32 @@ export async function enterCombat() {
     worldTargetVolume = worldAudioRef.current.volume || worldTargetVolume;
   }
 
-  // 1) Fade world out
-  if (worldAudioRef?.current) {
-    fadeTo(worldAudioRef.current, 0, WORLD_FADE_MS);
+  // 1) Fade world theme out over 2 seconds, then PAUSE it completely so
+  //    nothing bleeds through underneath the combat theme.
+  const worldEl = worldAudioRef?.current;
+  if (worldEl) {
+    fadeTo(worldEl, 0, WORLD_FADE_MS, () => {
+      if (!inCombat) return; // combat ended during the fade — leave it alone
+      try {
+        worldEl.pause();
+        worldEl.volume = 0;
+      } catch {}
+    });
   }
 
-  // 2) Start combat fade in
+  // 2) Preload combat audio while world is fading out.
   const audio = await ensureCombatLoaded();
-  if (!audio || !inCombat) return; // user may have exited combat by now
-  audio.currentTime = 0;
-  audio.volume = 0;
-  audio.play().catch((err) => console.warn('[combatMusic] play blocked:', err));
-  fadeTo(audio, worldTargetVolume * COMBAT_VOLUME_FACTOR, COMBAT_FADE_IN_MS);
+  if (!audio || !inCombat) return;
+
+  // 3) Wait for the world fade to finish, THEN start combat at MAX volume.
+  //    Timer-event style: clean handoff with no overlap.
+  setTimeout(() => {
+    if (!inCombat) return;
+    audio.currentTime = 0;
+    audio.volume = 0;
+    audio.play().catch((err) => console.warn('[combatMusic] play blocked:', err));
+    fadeTo(audio, COMBAT_VOLUME, COMBAT_FADE_IN_MS);
+  }, WORLD_FADE_MS);
 }
 
 export function exitCombat() {
@@ -152,13 +176,12 @@ export function exitCombat() {
   resumeTimer = setTimeout(() => {
     resumeTimer = null;
     if (inCombat) return; // combat restarted during the gap — abort restore
-    if (worldAudioRef?.current) {
-      // Make sure the world audio is actually playing (it should be — we
-      // only ducked its volume, not its playback state).
-      if (worldAudioRef.current.paused) {
-        worldAudioRef.current.play().catch(() => {});
-      }
-      fadeTo(worldAudioRef.current, worldTargetVolume, WORLD_FADE_IN_MS);
+    const worldEl = worldAudioRef?.current;
+    if (worldEl) {
+      // World was paused during combat — restart from silent and fade back up.
+      worldEl.volume = 0;
+      if (worldEl.paused) worldEl.play().catch(() => {});
+      fadeTo(worldEl, worldTargetVolume, WORLD_FADE_IN_MS);
     }
   }, WORLD_RESUME_DELAY_MS);
 }
