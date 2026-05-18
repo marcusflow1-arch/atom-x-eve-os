@@ -130,9 +130,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
 
   const tabs = [
     { id: 'store', label: 'Store', icon: Store },
-    { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
     { id: 'trading', label: 'Trading Post', icon: ArrowRightLeft },
-    { id: 'overview', label: 'Overview', icon: Eye },
   ];
 
   const isDevCardActive = activeTab === 'devcards';

@@ -43,8 +43,10 @@ import RecentlyPlayedSidebar from '../components/store/RecentlyPlayedSidebar';
 import DevCardsContent from '../components/store/DevCardsContent';
 import ShooterContent from '../components/store/ShooterContent';
 import { DollarSign, Building2 } from 'lucide-react';
-import StudioDrawer, { MOCK_STUDIOS } from '../components/store/StudioDrawer';
+
 import StoreHeaderSearchPanel from '../components/store/StoreHeaderSearchPanel';
+import { ChevronDown } from 'lucide-react';
+import { MOCK_STUDIOS } from '../components/store/StudioDrawer';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -212,7 +214,7 @@ export default function Store() {
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
-    const [studioDrawerOpen, setStudioDrawerOpen] = useState(false);
+    const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
     const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
@@ -413,28 +415,10 @@ export default function Store() {
 
     const handleStoreTabChange = (tabId) => {
         setActiveStoreTab(tabId);
-        switch (tabId) {
-            case 'overview':
-                setShowOverview(true);
-                setStoreMode('store');
-                break;
-            case 'marketplace':
-                setShowOverview(false);
-                setStoreMode('marketplace');
-                break;
-            case 'trading':
-                setShowOverview(false);
-                setStoreMode('trading');
-                break;
-            case 'devcards':
-                setShowOverview(false);
-                setStoreMode('devcards');
-                break;
-            case 'store':
-            default:
-                setShowOverview(false);
-                setStoreMode('store');
-                break;
+        if (tabId === 'trading') {
+            setStoreMode('trading');
+        } else {
+            setStoreMode('store');
         }
     };
 
@@ -460,22 +444,14 @@ export default function Store() {
                     <button onClick={() => { setStoreMode('shooter'); setShowOverview(false); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'shooter' ? 'bg-red-500/20 border-red-500/30 text-red-300' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Shooter</button>
                     </div>
                   <div className="flex items-center gap-3">
-                    <CategorySearchBar
-                      activeCategoryOverlay={activeCategoryOverlay}
-                      games={games}
-                      onGameSelect={(game) => { setActiveCategoryOverlay(null); handleNavigateToGame(game.id); }}
-                    />
-                    <button
-                      onClick={() => setStudioDrawerOpen(true)}
-                      className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 flex items-center gap-2"
-                      title="Gaming Studios"
-                    >
-                      <Building2 className="w-3.5 h-3.5" />
-                      Studios
-                    </button>
-                    <div onClick={() => setHeaderSearchOpen(true)} className="cursor-pointer">
-                      <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
-                    </div>
+                   <CategorySearchBar
+                     activeCategoryOverlay={activeCategoryOverlay}
+                     games={games}
+                     onGameSelect={(game) => { setActiveCategoryOverlay(null); handleNavigateToGame(game.id); }}
+                   />
+                   <div onClick={() => setHeaderSearchOpen(true)} className="cursor-pointer">
+                     <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                   </div>
                   </div>
                 </div>
               }
@@ -550,57 +526,42 @@ export default function Store() {
                               <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
                             </div>
 
-                            {/* Scrollable studio tabs */}
-                            <div className="flex-1 min-w-0 relative overflow-hidden">
-                              <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
-                              <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
-                              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2">
-                                {MOCK_STUDIOS.map((studio) => (
-                                  <button
-                                    key={studio.id}
-                                    onClick={() => setStudioDrawerOpen(true)}
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70"
-                                  >
-                                    <div className="w-4 h-4 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-[8px] flex-shrink-0">
-                                      {studio.initials}
-                                    </div>
-                                    <span>{studio.name}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
+                            {/* Gaming Studios Dropdown */}
+                             <div className="relative">
+                               <button
+                                 onClick={() => setStudioDropdownOpen(!studioDropdownOpen)}
+                                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+                               >
+                                 <span>Studios</span>
+                                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${studioDropdownOpen ? 'rotate-180' : ''}`} />
+                               </button>
 
-                            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-                              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-                            </div>
-
-                            {/* Action buttons */}
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <button
-                                onClick={() => { setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace'); handleStoreTabChange(storeMode === 'marketplace' ? 'store' : 'marketplace'); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                                  storeMode === 'marketplace'
-                                    ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
-                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                                }`}
-                                style={{ backdropFilter: 'blur(12px)' }}
-                              >
-                                <ShoppingCart className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Marketplace</span>
-                              </button>
-                              <button
-                                onClick={() => { setStoreMode(storeMode === 'trading' ? 'store' : 'trading'); handleStoreTabChange(storeMode === 'trading' ? 'store' : 'trading'); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                                  storeMode === 'trading'
-                                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                                }`}
-                                style={{ backdropFilter: 'blur(12px)' }}
-                              >
-                                <DollarSign className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Trading Post</span>
-                              </button>
-                            </div>
+                               {/* Dropdown Menu */}
+                               <AnimatePresence>
+                                 {studioDropdownOpen && (
+                                   <motion.div
+                                     initial={{ opacity: 0, y: -8 }}
+                                     animate={{ opacity: 1, y: 0 }}
+                                     exit={{ opacity: 0, y: -8 }}
+                                     transition={{ duration: 0.15 }}
+                                     className="absolute top-full left-0 mt-1 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-lg overflow-hidden z-50"
+                                   >
+                                     {MOCK_STUDIOS && MOCK_STUDIOS.length > 0 ? (
+                                       MOCK_STUDIOS.map((studio) => (
+                                         <button
+                                           key={studio.id}
+                                           onClick={() => setStudioDropdownOpen(false)}
+                                           className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                                         >
+                                           <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex-shrink-0" />
+                                           <span>{studio.name}</span>
+                                         </button>
+                                       ))
+                                     ) : null}
+                                   </motion.div>
+                                 )}
+                               </AnimatePresence>
+                             </div>
                           </div>
                         </div>}
 
@@ -609,12 +570,7 @@ export default function Store() {
 
     
 
-                            {/* STORE OVERVIEW OVERLAY */}
-                            <AnimatePresence>
-                                {showOverview && (
-                                    <StoreOverview onClose={() => setShowOverview(false)} />
-                                )}
-                            </AnimatePresence>
+
 
                             {/* CATEGORY OVERLAY */}
                             <AnimatePresence>
@@ -806,14 +762,6 @@ export default function Store() {
                                     <motion.div key="shooter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden pt-16">
                                         <ShooterContent games={games} onNavigateToGame={handleNavigateToGame} />
                                     </motion.div>
-                                ) : storeMode === 'marketplace' ? (
-                                    <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                                        <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
-                                    </motion.div>
-                                ) : storeMode === 'devcards' ? (
-                                    <motion.div key="devcards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden">
-                                        <DevCardsContent onNavigateToGame={handleNavigateToGame} />
-                                    </motion.div>
                                 ) : (
                                     <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
                                         <TradingPostContent />
@@ -834,13 +782,6 @@ export default function Store() {
                             <StoreHeaderSearchPanel
                               isOpen={headerSearchOpen}
                               onClose={() => setHeaderSearchOpen(false)}
-                            />
-
-                            {/* STUDIO DRAWER */}
-                            <StudioDrawer
-                              isOpen={studioDrawerOpen}
-                              onClose={() => setStudioDrawerOpen(false)}
-                              games={games}
                             />
 
                             {/* IN-PAGE STORE VIEW OVERLAY */}
