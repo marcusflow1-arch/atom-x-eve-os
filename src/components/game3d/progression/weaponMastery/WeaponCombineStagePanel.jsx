@@ -10,10 +10,9 @@
 // All math + persistence lives in enchantmentStore.
 
 import React from 'react';
-import { Star, GitMerge, Lock } from 'lucide-react';
+import { Star, GitMerge } from 'lucide-react';
 import {
   MAX_COMBINE_STAGE,
-  MAX_LEVEL,
   getCombineCost,
   getDerivedStats,
   attemptCombineStage,
@@ -22,21 +21,16 @@ import {
 export default function WeaponCombineStagePanel({ weaponId, weaponName, entry, accent, stash }) {
   const stage = entry.combineStage || 0;
   const atMaxStage = stage >= MAX_COMBINE_STAGE;
-  const atMaxEnchant = entry.level >= MAX_LEVEL;
 
   const cost = atMaxStage ? null : getCombineCost(stage);
   const nextStats = getDerivedStats(entry.level, stage + 1);
   const curStats = getDerivedStats(entry.level, stage);
 
-  const hasCopies = !atMaxEnchant
-    ? false
-    : (stash.duplicates?.[weaponId] || 0) >= (cost?.copies || 1);
-  const hasGold = !atMaxEnchant ? false : stash.gold >= (cost?.gold || 0);
-  const hasCatalyst = !atMaxEnchant
-    ? false
-    : (stash[cost?.catalyst.key] || 0) >= (cost?.catalyst.count || 0);
+  const hasCopies = (stash.duplicates?.[weaponId] || 0) >= (cost?.copies || 1);
+  const hasGold = stash.gold >= (cost?.gold || 0);
+  const hasCatalyst = (stash[cost?.catalyst.key] || 0) >= (cost?.catalyst.count || 0);
 
-  const canCombine = atMaxEnchant && !atMaxStage && hasCopies && hasGold && hasCatalyst;
+  const canCombine = !atMaxStage && hasCopies && hasGold && hasCatalyst;
 
   const onCombine = () => {
     if (!canCombine) return;
@@ -48,15 +42,15 @@ export default function WeaponCombineStagePanel({ weaponId, weaponName, entry, a
       className="mt-4 px-4 py-3 rounded-sm"
       style={{
         background: 'linear-gradient(90deg, rgba(30,20,42,0.7) 0%, rgba(10,8,18,0.85) 100%)',
-        border: `1px solid ${atMaxEnchant ? accent + '55' : 'rgba(180,160,130,0.20)'}`,
-        boxShadow: atMaxEnchant ? `0 0 18px ${accent}22, inset 0 0 18px rgba(0,0,0,0.5)` : 'inset 0 0 18px rgba(0,0,0,0.5)',
+        border: `1px solid ${accent}55`,
+        boxShadow: `0 0 18px ${accent}22, inset 0 0 18px rgba(0,0,0,0.5)`,
       }}
     >
       {/* Header row — title + stage pips */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <GitMerge className="w-3.5 h-3.5" style={{ color: atMaxEnchant ? accent : 'rgba(255,255,255,0.4)' }} />
-          <span className="text-[10px] tracking-[0.35em] uppercase font-semibold" style={{ color: atMaxEnchant ? '#fff' : 'rgba(255,255,255,0.55)' }}>
+          <GitMerge className="w-3.5 h-3.5" style={{ color: accent }} />
+          <span className="text-[10px] tracking-[0.35em] uppercase font-semibold text-white">
             Combine Stage
           </span>
         </div>
@@ -78,13 +72,8 @@ export default function WeaponCombineStagePanel({ weaponId, weaponName, entry, a
         </div>
       </div>
 
-      {/* Body — preview of stage bonus, OR locked / maxed message */}
-      {!atMaxEnchant ? (
-        <div className="flex items-center gap-2 text-[11px] text-white/55 py-1.5">
-          <Lock className="w-3 h-3" />
-          Reach Enchant {MAX_LEVEL} to unlock weapon combining.
-        </div>
-      ) : atMaxStage ? (
+      {/* Body — preview of stage bonus, OR maxed message */}
+      {atMaxStage ? (
         <div className="text-[11px] text-amber-200/90 py-1.5 tracking-[0.15em] uppercase">
           Maximum Combine Stage Reached · Apex Form
         </div>

@@ -214,7 +214,6 @@ export function getCombineCost(currentStage) {
 // this function only persists the stage change.
 export function attemptCombineStage(weaponId) {
   const entry = ensureEntry(weaponId);
-  if (entry.level < MAX_LEVEL) return { ok: false, reason: 'not_max_enchant' };
   if (entry.combineStage >= MAX_COMBINE_STAGE) return { ok: false, reason: 'max_stage' };
   entry.combineStage += 1;
   persist();
