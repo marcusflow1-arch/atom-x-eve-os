@@ -561,7 +561,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
     <>
       <div className="flex flex-col items-center gap-1">
         {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
-        <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: 0 }}>
+        <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: -192 }}>
           {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
           <div className="flex flex-col items-stretch" style={{ width: 320 }}>
             <SectionDivider icon={User} color="rgba(220,200,150,0.85)" />
