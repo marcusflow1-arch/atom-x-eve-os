@@ -526,7 +526,7 @@ function CompanionSkillSlots() {
   // PlayStation/Xbox controller face-button layout: top / right / bottom / left,
   // each rendered as a rotated 45° clear-glass diamond, spaced apart so the
   // two diagonal X-lines are clearly visible through the gaps.
-  const BTN = 22;             // clear glass diamond edge length
+  const BTN = 31;             // clear glass diamond edge length (22 × 1.4)
   const OFFSET = 26;          // distance from center to each face-button slot
   const SIZE = 80;            // container — kept compact, no layout shift to HP side
 
