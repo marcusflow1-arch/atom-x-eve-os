@@ -6,6 +6,8 @@
 import { DEFAULT_PLAYER_STATS, computeDerivedStats, migrateBaseStats } from './statsSystem';
 import { getHaloBonuses, subscribeHalo } from './progression/haloStore';
 import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
+import { consumeRestedForGain } from './restedXPStore';
+import { xpForLevel } from './gameWorldConfig';
 
 const STORAGE_KEY = 'wwm_player_progression_v1';
 const STAT_POINTS_PER_LEVEL = 3;
@@ -82,13 +84,48 @@ export function setPlayerHUD(next) {
 }
 
 // Called by GameWorld3D when player gains XP. Handles level-ups and awards points.
-export function awardXP({ newLevel, newXP, xpForNext, levelsGained, bonusPoints = 0 }) {
-  const points = Math.max(0, levelsGained || 0) * STAT_POINTS_PER_LEVEL + Math.max(0, bonusPoints);
+//
+// Rested XP integration:
+//   The caller computes its result (newLevel/newXP/xpForNext/levelsGained) using
+//   only the BASE xp that was earned. This function then pulls a matching
+//   amount of bonus XP out of the rested pool (1:1 with the base gain, so the
+//   player effectively earns 2× while rested) and re-runs the level-up loop
+//   with that bonus on top. Any rested pool left over rolls naturally into
+//   future XP gains — there is nothing to carry across the level-up boundary
+//   beyond the pool itself, which the rested store already preserves.
+export function awardXP({ newLevel, newXP, xpForNext, levelsGained, bonusPoints = 0, xpGained = 0 }) {
+  // Pull rested bonus matching the BASE gain. The bonus is applied at the
+  // CURRENT level's xpForNext (the gain happened at that level).
+  const restedBonus = xpGained > 0
+    ? consumeRestedForGain(xpGained, state.xpForNext || xpForNext)
+    : 0;
+
+  let level = newLevel;
+  let xp = newXP;
+  let next = xpForNext;
+  let extraLevels = 0;
+
+  if (restedBonus > 0) {
+    xp += restedBonus;
+    let need = xpForLevel(level);
+    next = need;
+    while (xp >= need) {
+      xp -= need;
+      level += 1;
+      extraLevels += 1;
+      need = xpForLevel(level);
+      next = need;
+    }
+  }
+
+  const totalLevels = Math.max(0, levelsGained || 0) + extraLevels;
+  const points = totalLevels * STAT_POINTS_PER_LEVEL + Math.max(0, bonusPoints);
+
   state = {
     ...state,
-    level: newLevel,
-    xp: newXP,
-    xpForNext,
+    level,
+    xp,
+    xpForNext: next,
     unspentPoints: state.unspentPoints + points,
   };
   emit();

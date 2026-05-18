@@ -1586,7 +1586,7 @@ export default function GameWorld3D() {
               playerLevelRef.current = newLevel;
               setPlayerXP(newXP);
               setPlayerLevel(newLevel);
-              awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
+              awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained, xpGained: closestEnemy.xpReward });
               if (levelsGained > 0) playActionSound('level_up');
             }
           }
@@ -1951,6 +1951,7 @@ export default function GameWorld3D() {
               xpForNext: xpForLevel(newLevel),
               levelsGained,
               bonusPoints: q.reward.points,
+              xpGained: q.reward.xp,
             });
             playActionSound('quest_complete');
             if (levelsGained > 0) playActionSound('level_up');
