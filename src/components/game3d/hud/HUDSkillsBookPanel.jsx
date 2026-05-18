@@ -264,9 +264,24 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 24 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="fixed z-[71] flex items-center pointer-events-auto"
+            className="fixed z-[71] flex items-center gap-0 pointer-events-auto"
             style={{ top: 'calc(50% - 516px)', left: 'calc(50% - 360px)', transform: 'translateY(-50%)' }}
           >
+           {/* Equip slots — rendered OUTSIDE the panel on the left */}
+           <div className="flex-shrink-0">
+             {open && (isCompanion ? (
+               <CompanionSkillEquipSlots
+                 draggedSkill={draggedSkill}
+                 onClearDrag={() => setDraggedSkill(null)}
+               />
+             ) : (
+               <SkillEquipSlots
+                 draggedSkill={draggedSkill}
+                 onClearDrag={() => setDraggedSkill(null)}
+               />
+             ))}
+           </div>
+
            <div
               className="relative flex flex-col overflow-hidden"
               style={{
@@ -336,22 +351,6 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
               <div className="h-px mx-4" style={{ background: `linear-gradient(to right, transparent, ${category.color}50, transparent)` }} />
 
               <div className="flex flex-1 overflow-hidden">
-                <div className="w-32 flex flex-col flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,216,107,0.15)' }}>
-                  <div className="flex-shrink-0">
-                    {isCompanion ? (
-                      <CompanionSkillEquipSlots
-                        draggedSkill={draggedSkill}
-                        onClearDrag={() => setDraggedSkill(null)}
-                      />
-                    ) : (
-                      <SkillEquipSlots
-                        draggedSkill={draggedSkill}
-                        onClearDrag={() => setDraggedSkill(null)}
-                      />
-                    )}
-                  </div>
-                </div>
-
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="px-4 pt-2 pb-1 flex items-center justify-between flex-shrink-0">
                     <span className="text-[9px] font-semibold tracking-[0.3em] uppercase" style={{ color: category.color }}>
