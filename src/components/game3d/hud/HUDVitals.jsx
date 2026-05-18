@@ -42,9 +42,6 @@ export default function HUDVitals() {
 
   return (
     <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-0">
-      {/* Active self-cast buff icons — floats above the vitals row */}
-      <ActiveBuffsStrip />
-
       {/* Skills | HP | Center | Fusion | Skills */}
       <HUDVitalsRow
         hp={hp}

@@ -22,6 +22,7 @@ import {
   WEAPON_CLASS_BUFFS,
 } from '../weaponClassBuffStore';
 import HUDSkillsBookPanel from './HUDSkillsBookPanel';
+import BuffDividerLine from './BuffDividerLine';
 
 // ── Skill slot button (mirrors HUDSkillSlots styling, condensed) ──────────
 const TYPE_COLORS = {
@@ -564,7 +565,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
         <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: -125 }}>
           {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
           <div className="flex flex-col items-stretch" style={{ width: 320 }}>
-            <SectionDivider icon={User} color="rgba(220,200,150,0.85)" />
+            <BuffDividerLine icon={User} color="rgba(220,200,150,0.85)" />
             <div className="flex items-center justify-between mt-1.5" style={{ width: 320 }}>
               {SLOTS_ALL.map((key, i) => (
                 <SkillSlot

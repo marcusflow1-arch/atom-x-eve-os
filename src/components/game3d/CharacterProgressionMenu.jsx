@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Skull } from 'lucide-react';
 import { subscribePlayerHUD } from './playerHUDStore';
+import { subscribeKillCount } from './killCountStore';
+import { base44 } from '@/api/base44Client';
 import CharacterHubTabs from './progression/hub/CharacterHubTabs';
 import HubSubTabs from './progression/hub/HubSubTabs';
 import AttributesTab from './progression/hub/AttributesTab';
@@ -27,11 +29,21 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
   const [hud, setHud] = useState(null);
   const [mainTab, setMainTab] = useState('attributes');
   const [subTab, setSubTab] = useState('tree');
+  const [killCount, setKillCount] = useState(0);
+  const [playerName, setPlayerName] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
     return subscribePlayerHUD(setHud);
   }, [isOpen]);
+
+  useEffect(() => subscribeKillCount(setKillCount), []);
+
+  useEffect(() => {
+    base44.auth.me()
+      .then((u) => { if (u) setPlayerName(u.username || u.full_name || u.email?.split('@')[0] || 'Player'); })
+      .catch(() => setPlayerName('Player'));
+  }, []);
 
   if (!isOpen || !hud) return null;
 
@@ -53,6 +65,37 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Top-left: player name + kill count */}
+        <div className="absolute top-4 left-4 flex flex-col items-start gap-1.5 z-10">
+          {playerName && (
+            <div
+              className="px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider"
+              style={{
+                background: 'rgba(8, 14, 22, 0.72)',
+                border: '1px solid rgba(220, 200, 150, 0.45)',
+                color: '#cffafe',
+                textShadow: '0 1px 2px rgba(0,0,0,0.9), 0 0 8px rgba(34,211,238,0.4)',
+              }}
+            >
+              {playerName}
+            </div>
+          )}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider whitespace-nowrap"
+            style={{
+              background: 'rgba(20, 8, 8, 0.65)',
+              border: '1px solid rgba(255, 90, 90, 0.5)',
+              color: '#ffb4b4',
+              textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+            }}
+            title="Total rogue AI kills"
+          >
+            <Skull className="w-3 h-3" />
+            <span className="opacity-80 text-[9px]">KILLS</span>
+            <span className="tabular-nums text-white">{killCount}</span>
+          </div>
+        </div>
+
         {/* Header — engraved MMO style */}
         <div className="pt-5">
           <div className="text-center text-[11px] tracking-[0.45em] uppercase text-amber-200/80 font-semibold">
