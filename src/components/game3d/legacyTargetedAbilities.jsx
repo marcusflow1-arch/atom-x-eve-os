@@ -50,7 +50,7 @@ export function castLegacyTargetedAbility(args) {
     while (nXP >= need) { nXP -= need; nLv++; gained++; need = xpForLevel(nLv); }
     playerXPRef.current = nXP; playerLevelRef.current = nLv;
     setPlayerXP(nXP); setPlayerLevel(nLv);
-    awardXP({ newLevel: nLv, newXP: nXP, xpForNext: xpForLevel(nLv), levelsGained: gained });
+    awardXP({ newLevel: nLv, newXP: nXP, xpForNext: xpForLevel(nLv), levelsGained: gained, xpGained: en.xpReward || 1 });
     if (gained > 0) playActionSound('level_up');
   };
 

@@ -58,7 +58,7 @@ function handleEnemyKill(ctx) {
   playerLevelRef.current = newLevel;
   setPlayerXP(newXP);
   setPlayerLevel(newLevel);
-  awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
+  awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained, xpGained: en.xpReward || 1 });
   if (levelsGained > 0) playActionSound('level_up');
 }
 
