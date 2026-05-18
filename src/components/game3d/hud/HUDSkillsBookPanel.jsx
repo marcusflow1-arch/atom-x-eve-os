@@ -265,21 +265,9 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
             exit={{ opacity: 0, scale: 0.92, y: 24 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
             className="fixed z-[71] flex items-center pointer-events-auto"
-            style={{ top: 'calc(50% - 516px)', left: 160, transform: 'translateY(-50%)' }}
+            style={{ top: 'calc(50% - 516px)', left: 'calc(50% - 360px)', transform: 'translateY(-50%)' }}
           >
-            {isCompanion ? (
-              <CompanionSkillEquipSlots
-                draggedSkill={draggedSkill}
-                onClearDrag={() => setDraggedSkill(null)}
-              />
-            ) : (
-              <SkillEquipSlots
-                draggedSkill={draggedSkill}
-                onClearDrag={() => setDraggedSkill(null)}
-              />
-            )}
-
-            <div
+           <div
               className="relative flex flex-col overflow-hidden"
               style={{
                 width: 720, height: 540, borderRadius: 4,
@@ -348,7 +336,23 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
               <div className="h-px mx-4" style={{ background: `linear-gradient(to right, transparent, ${category.color}50, transparent)` }} />
 
               <div className="flex flex-1 overflow-hidden">
-                <div className="flex-1 flex flex-col overflow-hidden" style={{ borderRight: '1px solid rgba(255,216,107,0.15)' }}>
+                <div className="w-32 flex flex-col flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,216,107,0.15)' }}>
+                  <div className="flex-shrink-0">
+                    {isCompanion ? (
+                      <CompanionSkillEquipSlots
+                        draggedSkill={draggedSkill}
+                        onClearDrag={() => setDraggedSkill(null)}
+                      />
+                    ) : (
+                      <SkillEquipSlots
+                        draggedSkill={draggedSkill}
+                        onClearDrag={() => setDraggedSkill(null)}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="px-4 pt-2 pb-1 flex items-center justify-between flex-shrink-0">
                     <span className="text-[9px] font-semibold tracking-[0.3em] uppercase" style={{ color: category.color }}>
                       {category.title}
@@ -357,40 +361,42 @@ export default function HUDSkillsBookPanel({ open, onClose }) {
                       {skills.length} skills
                     </span>
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={`${mode}-${currentCategoryId}`}
-                        initial={{ opacity: 0, x: 12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -12 }}
-                        transition={{ duration: 0.18 }}
-                        className="h-full"
-                      >
-                        <SkillList
-                          category={category}
-                          skills={skills}
-                          selectedSkill={selectedSkill}
-                          onSelectSkill={(sk) => { setSelectedSkill(sk); setDraggedSkill(sk); }}
-                        />
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
+                  <div className="flex flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-hidden" style={{ borderRight: '1px solid rgba(255,216,107,0.15)' }}>
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={`${mode}-${currentCategoryId}`}
+                          initial={{ opacity: 0, x: 12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -12 }}
+                          transition={{ duration: 0.18 }}
+                          className="h-full"
+                        >
+                          <SkillList
+                            category={category}
+                            skills={skills}
+                            selectedSkill={selectedSkill}
+                            onSelectSkill={(sk) => { setSelectedSkill(sk); setDraggedSkill(sk); }}
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
 
-                <div className="flex-1 overflow-hidden">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={selectedSkill?.skill_id ?? 'empty'}
-                      initial={{ opacity: 0, x: 16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -16 }}
-                      transition={{ duration: 0.22, ease: 'easeOut' }}
-                      className="h-full"
-                    >
-                      <SkillDetail skill={selectedSkill} />
-                    </motion.div>
-                  </AnimatePresence>
+                    <div className="flex-1 overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={selectedSkill?.skill_id ?? 'empty'}
+                          initial={{ opacity: 0, x: 16 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -16 }}
+                          transition={{ duration: 0.22, ease: 'easeOut' }}
+                          className="h-full"
+                        >
+                          <SkillDetail skill={selectedSkill} />
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
