@@ -511,6 +511,28 @@ function SkillsBookButton({ open, onToggle }) {
   );
 }
 
+// ── Companion skill slots (placeholder for now) ────────────────────────────
+function CompanionSkillSlots() {
+  // Placeholder: would connect to companion loadout store in production
+  return (
+    <div className="flex items-center gap-1">
+      {/* 3-4 small companion skill slots */}
+      {[0, 1, 2].map((i) => (
+        <button
+          key={i}
+          className="relative w-[28px] h-[28px] rounded-full transition-transform hover:scale-105 pointer-events-auto"
+          style={{
+            background: 'radial-gradient(circle at 50% 35%, rgba(100,150,200,0.35) 0%, rgba(100,150,200,0.08) 70%, rgba(0,0,0,0.7) 100%)',
+            border: '1.5px solid rgba(100,150,200,0.55)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
+          }}
+          title={`Companion skill ${i + 1}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Main row component ────────────────────────────────────────────────────
 export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCount = 0, playerName = '' }) {
   const [loadout, setLoadout] = useState(getLoadout());
@@ -531,61 +553,60 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
   };
   const buffStatusForSlot = (idx) => getBuffStatusFromRecord(loadout.activeSlots[idx], buffs);
 
-  const SLOTS_LEFT  = ['1', '2', '3', '4'];
-  const SLOTS_RIGHT = ['5', '6', '7', '8'];
+  const SLOTS_ALL = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
   return (
     <>
       <div className="flex flex-col items-center gap-1">
-        {/* TOP: skills columns — pulled down so icons rest ON the HP/Fusion gauges */}
-        <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
-          {/* Skills 1–4 packed at the RIGHT edge of HP gauge (icon 1 sits at the start of HP tank, mirroring icon 8 on Fusion side) */}
-          <SkillsColumn
-            slotKeys={SLOTS_LEFT}
-            skillForSlot={skillForSlot}
-            cooldowns={loadout.cooldowns}
-            buffStatusForSlot={buffStatusForSlot}
-            offset={0}
-            dividerIcon={User}
-            dividerColor="rgba(220,200,150,0.85)"
-            align="right"
-          />
+        {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
+        <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: 0 }}>
+          {/* All 8 skills (1-8) packed tightly on HP side */}
+          <div className="flex flex-col items-stretch" style={{ width: 'auto' }}>
+            <SectionDivider icon={User} color="rgba(220,200,150,0.85)" />
+            <div className="flex items-center gap-1 mt-1.5">
+              {SLOTS_ALL.map((key, i) => (
+                <SkillSlot
+                  key={key}
+                  slotKey={key}
+                  skill={skillForSlot(i)}
+                  cooldown={loadout.cooldowns[i]}
+                  buffStatus={buffStatusForSlot(i)}
+                />
+              ))}
+            </div>
+          </div>
 
           {/* Spacer matching the center cluster width (character + weapon circles) */}
           <div style={{ width: 118 }} />
 
-          {/* Skills 5–8 packed at the RIGHT edge of Fusion gauge */}
-          <SkillsColumn
-            slotKeys={SLOTS_RIGHT}
-            skillForSlot={skillForSlot}
-            cooldowns={loadout.cooldowns}
-            buffStatusForSlot={buffStatusForSlot}
-            offset={4}
-            dividerIcon={Sparkles}
-            dividerColor="rgba(192,164,250,0.9)"
-            align="right"
-          />
-
-          {/* Spacer so top row aligns with the skill book sitting beside the Fusion gauge */}
+          {/* Spacer so layout is preserved */}
           <div style={{ width: 52 }} />
         </div>
 
-        {/* BOTTOM: HP gauge | center cluster | Fusion gauge | Skills Book */}
+        {/* BOTTOM: Companion skills | Kill count | HP gauge | center cluster | Fusion gauge | Skills Book */}
         <div className="flex items-center justify-center gap-2">
-          {/* Kill count to the left of HP gauge */}
+          {/* Companion skill slots (to the left of kill count) */}
+          <CompanionSkillSlots />
+
+          {/* Kill count box with "KILLS" label above */}
           {killCount > 0 && (
-            <div
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider whitespace-nowrap"
-              style={{
-                background: 'rgba(20, 8, 8, 0.55)',
-                border: '1px solid rgba(255, 90, 90, 0.4)',
-                color: '#ffb4b4',
-                textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-              }}
-              title="Total rogue AI kills"
-            >
-              <Skull className="w-2.5 h-2.5" />
-              <span className="tabular-nums">{killCount}</span>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-[7px] font-bold tracking-wider" style={{ color: 'rgba(255, 180, 180, 0.7)' }}>
+                KILLS
+              </span>
+              <div
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider whitespace-nowrap"
+                style={{
+                  background: 'rgba(20, 8, 8, 0.55)',
+                  border: '1px solid rgba(255, 90, 90, 0.4)',
+                  color: '#ffb4b4',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                }}
+                title="Total rogue AI kills"
+              >
+                <Skull className="w-2.5 h-2.5" />
+                <span className="tabular-nums">{killCount}</span>
+              </div>
             </div>
           )}
           <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" playerName={playerName} />
