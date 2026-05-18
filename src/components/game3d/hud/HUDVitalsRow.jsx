@@ -525,8 +525,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
   return (
     <>
       <div className="flex flex-col items-center gap-1">
-        {/* TOP: skills columns + spacer for the center cluster (skills sit directly on top of gauges) */}
-        <div className="flex items-end justify-center gap-2" style={{ marginBottom: -8 }}>
+        {/* TOP: skills columns + spacer for the center cluster — pulled down to rest on gauges */}
+        <div className="flex items-end justify-center gap-2" style={{ marginBottom: -22, position: 'relative', zIndex: 2 }}>
           {/* Skills 1–4 above HP gauge */}
           <SkillsColumn
             slotKeys={SLOTS_LEFT}
@@ -557,7 +557,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
         </div>
 
         {/* BOTTOM: HP gauge | center cluster | Fusion gauge | Skills Book */}
-        <div className="flex items-center justify-center gap-2" style={{ position: 'relative', zIndex: 1 }}>
+        <div className="flex items-center justify-center gap-2">
           <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" />
           <WeaponCenterSwitcher unspentPoints={unspentPoints} />
           <HorizontalGauge
