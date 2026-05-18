@@ -523,10 +523,10 @@ function SkillsBookButton({ open, onToggle }) {
 //   • Skill 3 → bottom
 //   • Skill 4 → right
 function CompanionSkillSlots() {
-  // 1.5× the previous size: 22 → 33
+  // 1.5× the original 22px size: 22 → 33
   const BTN = 33;             // square button edge length
-  const OFFSET = 33;          // distance from center to each diamond point
-  const SIZE = (OFFSET + BTN) * 2;  // container size to fit all 4 + gap
+  const OFFSET = 22;          // distance from center to each diamond point (original)
+  const SIZE = 70;            // container size — same footprint as before
 
   const positions = [
     { key: '1', tx: -OFFSET, ty: 0,        title: 'Companion skill 1' },
@@ -539,10 +539,10 @@ function CompanionSkillSlots() {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: SIZE * 0.85,
+    width: SIZE * 0.95,
     height: 1,
     background:
-      'linear-gradient(90deg, rgba(120,180,230,0) 0%, rgba(120,180,230,0.5) 50%, rgba(120,180,230,0) 100%)',
+      'linear-gradient(90deg, rgba(120,180,230,0) 0%, rgba(120,180,230,0.55) 50%, rgba(120,180,230,0) 100%)',
     transformOrigin: 'center',
     pointerEvents: 'none',
   };
@@ -565,10 +565,12 @@ function CompanionSkillSlots() {
             height: BTN,
             // Translate to slot position, then rotate 45° so the square looks like a diamond
             transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(45deg)`,
-            background: 'transparent',
-            border: '1.5px solid rgba(255,255,255,0.55)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.05)',
-            borderRadius: 2,
+            background: 'rgba(20, 30, 45, 0.25)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            border: '1.5px solid rgba(140,190,235,0.65)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 6px rgba(120,180,230,0.25), inset 0 0 0 1px rgba(255,255,255,0.06)',
+            borderRadius: 3,
           }}
         />
       ))}
