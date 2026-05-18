@@ -129,8 +129,8 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
         </div>
       </div>
 
-      {/* Body — left column + right trees */}
-      <div className="flex-1 flex min-h-0 gap-10 mt-4">
+      {/* Body — left column + vertical divider + right trees */}
+      <div className="flex-1 flex min-h-0 gap-6 mt-4">
         {/* LEFT column */}
         <div className="w-64 flex flex-col items-center">
           {/* Points-available disc */}
@@ -210,6 +210,15 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
             </div>
           </div>
         </div>
+
+        {/* VERTICAL DIVIDER between Points-Available column and Enchantment view */}
+        <div
+          className="w-px flex-shrink-0 self-stretch"
+          style={{
+            background:
+              'linear-gradient(180deg, transparent 0%, rgba(180,160,130,0.45) 12%, rgba(180,160,130,0.45) 88%, transparent 100%)',
+          }}
+        />
 
         {/* RIGHT — Enchantment ring (Annulus-style) OR legacy passive tree */}
         <div className="flex-1 min-w-0 flex flex-col overflow-y-auto pt-2">
