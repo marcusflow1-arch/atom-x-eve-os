@@ -163,50 +163,61 @@ function WeaponCenterSwitcher({ unspentPoints }) {
   }, [cycle]);
 
   const cur  = WEAPON_CLASSES[idx];
-  const next = WEAPON_CLASSES[(idx + 1) % WEAPON_CLASSES.length];
   const buff = WEAPON_CLASS_BUFFS[cur.path];
-  const nextBuff = WEAPON_CLASS_BUFFS[next.path];
+
+  // Inactive weapons fan to the RIGHT of the active one (PlayStation cross-menu style)
+  const inactive = WEAPON_CLASSES
+    .map((w, i) => ({ ...w, i }))
+    .filter((w) => w.i !== idx);
 
   return (
-    <div className="relative flex items-center" style={{ height: 64 }}>
-      {/* C-key character circle */}
-      <div className="relative" style={{ width: 64, height: 64 }}>
-        <CharacterRing unspentPoints={unspentPoints} />
-      </div>
-
-      {/* Weapon circle with faded "next" weapon hint peeking out behind */}
+    <div className="relative flex flex-col items-center" style={{ width: 64, height: 132 }}>
+      {/* Top: active weapon (G) — stacked directly above the C-character circle */}
       <div
         className="relative"
-        style={{ width: 64, height: 64, marginLeft: -10 }}
+        style={{ width: 64, height: 64 }}
         title={`${cur.label} — Press G or ◄ ► to swap`}
       >
-        {/* Faded "next weapon" silhouette peeking out from behind */}
-        <button
-          onClick={() => cycle(1)}
-          className="absolute pointer-events-auto"
-          style={{
-            top: 6,
-            left: 18,
-            right: -4,
-            bottom: 6,
-            borderRadius: 999,
-            background:
-              'radial-gradient(circle at 30% 45%, rgba(40,45,60,0.55) 0%, rgba(10,12,18,0.75) 80%)',
-            border: '1.5px solid rgba(220,200,150,0.35)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
-            opacity: 0.55,
-            filter: 'blur(0.4px)',
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-end pr-2">
-            <Sword
-              style={{ width: 16, height: 16, color: nextBuff?.color || '#cbb98a', opacity: 0.8 }}
-              strokeWidth={2}
-            />
-          </div>
-        </button>
+        {/* Faded inactive weapons peeking out to the right of the active circle */}
+        {inactive.map((w, k) => {
+          const wb = WEAPON_CLASS_BUFFS[w.path];
+          // Stagger to the right: first one closer, second further & more faded
+          const offsetX = 28 + k * 22;
+          const opacity = 0.45 - k * 0.15;
+          const scale   = 0.78 - k * 0.10;
+          return (
+            <button
+              key={w.path}
+              onClick={() => cycle(k + 1)}
+              className="absolute pointer-events-auto"
+              style={{
+                top: '50%',
+                left: '50%',
+                width: 64,
+                height: 64,
+                transform: `translate(calc(-50% + ${offsetX}px), -50%) scale(${scale})`,
+                borderRadius: 999,
+                background:
+                  'radial-gradient(circle at 30% 45%, rgba(40,45,60,0.55) 0%, rgba(10,12,18,0.75) 80%)',
+                border: '1.5px solid rgba(220,200,150,0.35)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
+                opacity,
+                filter: 'blur(0.4px)',
+                zIndex: 1 - k,
+              }}
+              title={`${w.label} — switch`}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sword
+                  style={{ width: 22, height: 22, color: wb?.color || '#cbb98a' }}
+                  strokeWidth={2}
+                />
+              </div>
+            </button>
+          );
+        })}
 
-        {/* Primary weapon circle */}
+        {/* Active weapon circle (front-most) */}
         <button
           onClick={() => cycle(1)}
           className="absolute inset-0 pointer-events-auto"
@@ -216,6 +227,7 @@ function WeaponCenterSwitcher({ unspentPoints }) {
               'radial-gradient(circle at 50% 40%, rgba(50,55,70,0.92) 0%, rgba(10,12,18,0.98) 80%)',
             border: '2px solid rgba(220,200,150,0.75)',
             boxShadow: `0 0 12px ${buff.color}66, 0 3px 10px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.55)`,
+            zIndex: 5,
           }}
         >
           <div className="absolute inset-0 flex items-center justify-center">
@@ -238,6 +250,11 @@ function WeaponCenterSwitcher({ unspentPoints }) {
             G
           </div>
         </button>
+      </div>
+
+      {/* Bottom: C-key character circle */}
+      <div className="relative mt-1" style={{ width: 64, height: 64 }}>
+        <CharacterRing unspentPoints={unspentPoints} />
       </div>
 
       {/* Current weapon label — tiny tag below the cluster */}
