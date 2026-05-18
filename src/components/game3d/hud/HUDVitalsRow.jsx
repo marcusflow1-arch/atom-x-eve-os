@@ -539,7 +539,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
       <div className="flex flex-col items-center gap-1">
         {/* TOP: skills columns — pulled down so icons rest ON the HP/Fusion gauges */}
         <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
-          {/* Skills 1–4 packed at the LEFT edge of HP gauge */}
+          {/* Skills 1–4 packed at the RIGHT edge of HP gauge (icon 1 sits at the start of HP tank, mirroring icon 8 on Fusion side) */}
           <SkillsColumn
             slotKeys={SLOTS_LEFT}
             skillForSlot={skillForSlot}
@@ -548,7 +548,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
             offset={0}
             dividerIcon={User}
             dividerColor="rgba(220,200,150,0.85)"
-            align="left"
+            align="right"
           />
 
           {/* Spacer matching the center cluster width (character + weapon circles) */}
