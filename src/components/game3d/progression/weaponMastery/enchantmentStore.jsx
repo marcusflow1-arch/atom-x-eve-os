@@ -36,7 +36,7 @@ const ATK_PER_LEVEL_OVER = 8;
 // Unlocked only after the weapon reaches MAX_LEVEL (200). Each stage requires
 // sacrificing one additional max-level copy + a large gold + special material
 // cost. Each stage permanently increases the weapon's power ceiling.
-export const MAX_COMBINE_STAGE = 5;
+export const MAX_COMBINE_STAGE = 12;
 const COMBINE_FLAT_ATK_PER_STAGE = 250;     // flat ATK added per stage
 const COMBINE_PCT_PER_STAGE = 0.10;         // +10% total ATK per stage (multiplicative)
 const COMBINE_ELEMENT_PER_STAGE = 15;       // elemental dmg per stage
