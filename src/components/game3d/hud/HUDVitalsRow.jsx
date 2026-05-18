@@ -11,7 +11,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Sword, Sparkles, BookOpen, Crosshair, Zap, Skull } from 'lucide-react';
+import { User, Sword, Sparkles, BookOpen, Crosshair, Zap, Skull, Users as UsersIcon, Library, Package } from 'lucide-react';
 import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
 import { getSkillById } from '../skills/skillRegistry';
 import { subscribeBuffs } from '../skills/buffEngine';
@@ -579,6 +579,42 @@ function CompanionSkillSlots() {
   );
 }
 
+// ── Quick action icon boxes (above Fusion gauge) ──────────────────────────
+// 4 empty glass boxes with icons, matching the visual style of the skill
+// slots. Divider line + center circle on top mirrors the HP-side layout.
+const QUICK_ACTIONS = [
+  { id: 'friends',   icon: UsersIcon, label: 'Friends'   },
+  { id: 'library',   icon: Library,   label: 'Library'   },
+  { id: 'inventory', icon: Package,   label: 'Inventory' },
+  { id: 'skills',    icon: Zap,       label: 'Ability'   },
+];
+
+function QuickActionBoxRow() {
+  return (
+    <div className="flex flex-col items-stretch" style={{ width: 320 }}>
+      <BuffDividerLine icon={Sparkles} color="rgba(167,139,250,0.85)" />
+      <div className="flex items-center justify-end gap-1.5 mt-1.5">
+        {QUICK_ACTIONS.map(({ id, icon: Icon, label }) => (
+          <button
+            key={id}
+            title={label}
+            className="rounded-full flex items-center justify-center transition-transform hover:scale-105 pointer-events-auto"
+            style={{
+              width: 34,
+              height: 34,
+              background: 'radial-gradient(circle at 50% 35%, rgba(40,50,60,0.65), rgba(8,10,14,0.9))',
+              border: '1.5px solid rgba(220,200,150,0.55)',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+            }}
+          >
+            <Icon className="w-4 h-4" style={{ color: 'rgba(255,240,200,0.85)' }} strokeWidth={2.2} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main row component ────────────────────────────────────────────────────
 export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCount = 0, playerName = '' }) {
   const [loadout, setLoadout] = useState(getLoadout());
@@ -604,7 +640,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
   return (
     <>
       <div className="flex flex-col items-center gap-1">
-        {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
+        {/* TOP: skills above HP | center spacer | quick-action boxes above Fusion */}
         <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: -125 }}>
           {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
           <div className="flex flex-col items-stretch" style={{ width: 320 }}>
@@ -626,7 +662,10 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
           {/* Spacer matching the center cluster width (character + weapon circles) */}
           <div style={{ width: 118 }} />
 
-          {/* Spacer so layout is preserved */}
+          {/* Quick-action boxes above Fusion gauge */}
+          <QuickActionBoxRow />
+
+          {/* Spacer for Skills Book button */}
           <div style={{ width: 52 }} />
         </div>
 

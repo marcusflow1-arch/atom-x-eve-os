@@ -51,27 +51,7 @@ export default function HUDGameQuickActions() {
 
   return (
     <>
-      {/* The 4 pills — sit between the minimap and the Active Quest box (above the quest tracker) */}
-      <div className="absolute left-4 z-20 flex gap-2 pointer-events-auto" style={{ top: '244px' }}>
-        {PILLS.map((p) => {
-          const Icon = p.icon;
-          const isActive = activePanel === p.id;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setActivePanel(isActive ? null : p.id)}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                isActive
-                  ? `${p.activeBorder} ${p.activeBg} ${p.accent}`
-                  : `border-white/10 bg-white/5 text-white/60 ${p.hoverText} ${p.hoverBorder} ${p.hoverBg}`
-              }`}
-              title={p.label}
-            >
-              <Icon className="w-4 h-4" />
-            </button>
-          );
-        })}
-      </div>
+      {/* Pills moved into HUDVitalsRow above the Fusion gauge */}
 
       {/* Slide-in panel — same glass treatment as LibrarySidebar expanded panel */}
       <AnimatePresence>
