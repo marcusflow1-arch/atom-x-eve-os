@@ -16,6 +16,12 @@ import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
 import { getSkillById } from '../skills/skillRegistry';
 import { subscribeBuffs } from '../skills/buffEngine';
 import {
+  subscribeCompanionLoadout,
+  COMPANION_SLOT_KEYS,
+} from '../skills/companionLoadoutStore';
+import { getCompanionSkillById } from '../skills/companionSkillRegistry';
+import { subscribeCompanionAbilities } from '../companionAbilityStore';
+import {
   setActiveWeaponPath,
   getActiveWeaponPath,
   subscribeWeaponBuffs,
@@ -530,11 +536,19 @@ function CompanionSkillSlots() {
   const OFFSET = 26;          // distance from center to each face-button slot
   const SIZE = 80;            // container — kept compact, no layout shift to HP side
 
+  const [loadout, setLoadout] = useState({ activeSlots: [null, null, null, null] });
+  const [abState, setAbState] = useState({ cooldowns: {} });
+
+  useEffect(() => subscribeCompanionLoadout(setLoadout), []);
+  useEffect(() => subscribeCompanionAbilities(setAbState), []);
+
+  // Controller layout: slot 0 → top, slot 1 → right, slot 2 → bottom, slot 3 → left.
+  // Keys (Z / X / V / B) match COMPANION_SLOT_KEYS order from the loadout store.
   const positions = [
-    { key: 'top',    tx: 0,        ty: -OFFSET, title: 'Companion skill 1' },
-    { key: 'right',  tx: OFFSET,   ty: 0,       title: 'Companion skill 2' },
-    { key: 'bottom', tx: 0,        ty: OFFSET,  title: 'Companion skill 3' },
-    { key: 'left',   tx: -OFFSET,  ty: 0,       title: 'Companion skill 4' },
+    { slotIdx: 0, tx: 0,       ty: -OFFSET },
+    { slotIdx: 1, tx: OFFSET,  ty: 0       },
+    { slotIdx: 2, tx: 0,       ty: OFFSET  },
+    { slotIdx: 3, tx: -OFFSET, ty: 0       },
   ];
 
   const diagLineStyle = {
@@ -555,26 +569,72 @@ function CompanionSkillSlots() {
       <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(45deg)' }} />
       <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(-45deg)' }} />
 
-      {positions.map(({ key, tx, ty, title }) => (
-        <button
-          key={key}
-          title={title}
-          className="absolute pointer-events-auto transition-transform hover:scale-110"
-          style={{
-            top: '50%',
-            left: '50%',
-            width: BTN,
-            height: BTN,
-            transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(45deg)`,
-            background: 'rgba(255, 255, 255, 0.06)',
-            backdropFilter: 'blur(6px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(6px) saturate(140%)',
-            border: '1px solid rgba(255, 255, 255, 0.35)',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18)',
-            borderRadius: 3,
-          }}
-        />
-      ))}
+      {positions.map(({ slotIdx, tx, ty }) => {
+        const slotKey = COMPANION_SLOT_KEYS[slotIdx];
+        const skillId = loadout.activeSlots[slotIdx];
+        const skill   = skillId ? getCompanionSkillById(skillId) : null;
+        const runtimeId = skill?.legacy_id || skill?.skill_id;
+        const cdLeft = runtimeId ? (abState.cooldowns?.[runtimeId] || 0) : 0;
+        const cdPct  = cdLeft > 0 && skill?.cooldown ? Math.min(1, cdLeft / skill.cooldown) : 0;
+
+        return (
+          <button
+            key={slotIdx}
+            title={skill ? `${skill.skill_name} (${slotKey})` : `Empty (${slotKey})`}
+            className="absolute pointer-events-auto transition-transform hover:scale-110"
+            style={{
+              top: '50%',
+              left: '50%',
+              width: BTN,
+              height: BTN,
+              transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(45deg)`,
+              background: skill
+                ? `radial-gradient(circle at 50% 35%, ${skill.color}33 0%, rgba(255,255,255,0.06) 70%)`
+                : 'rgba(255, 255, 255, 0.06)',
+              backdropFilter: 'blur(6px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(6px) saturate(140%)',
+              border: `1px solid ${skill ? skill.color + 'aa' : 'rgba(255, 255, 255, 0.35)'}`,
+              boxShadow: skill
+                ? `0 2px 10px rgba(0,0,0,0.45), 0 0 8px ${skill.color}55, inset 0 0 0 1px rgba(255,255,255,0.10)`
+                : '0 2px 10px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18)',
+              borderRadius: 3,
+            }}
+          >
+            {/* Counter-rotate inner content so icons stay upright */}
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ transform: 'rotate(-45deg)' }}
+            >
+              {skill && (
+                <span
+                  className="text-base leading-none"
+                  style={{ filter: cdLeft > 0 ? 'grayscale(0.6) brightness(0.7)' : 'none' }}
+                >
+                  {skill.icon}
+                </span>
+              )}
+              {cdLeft > 0 && (
+                <span className="absolute text-[10px] font-black text-white tabular-nums drop-shadow-md">
+                  {cdLeft.toFixed(1)}
+                </span>
+              )}
+            </div>
+
+            {/* Slot key letter (upright, bottom corner) */}
+            <div
+              className="absolute text-[8px] font-bold text-white/80 tracking-wider"
+              style={{
+                transform: 'rotate(-45deg)',
+                bottom: 2,
+                right: 4,
+                textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+              }}
+            >
+              {slotKey}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
