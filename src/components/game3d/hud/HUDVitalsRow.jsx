@@ -523,10 +523,12 @@ function SkillsBookButton({ open, onToggle }) {
 //   • Skill 3 → bottom
 //   • Skill 4 → right
 function CompanionSkillSlots() {
-  // 1.5× the original 22px size: 22 → 33
-  const BTN = 33;             // square button edge length
-  const OFFSET = 22;          // distance from center to each diamond point (original)
-  const SIZE = 70;            // container size — same footprint as before
+  // Scale outer boxes 1.2× (33 → ~40), add spacing between them so the
+  // diagonal X is visible, and add a 5th box at the center.
+  const BTN = 40;             // outer square button edge length (33 × 1.2)
+  const CENTER_BTN = 28;      // smaller center box so it doesn't crowd
+  const OFFSET = 30;          // distance from center to each diamond point (spaced out)
+  const SIZE = 70;            // container size — same footprint as before (no layout shift)
 
   const positions = [
     { key: '1', tx: -OFFSET, ty: 0,        title: 'Companion skill 1' },
@@ -574,6 +576,25 @@ function CompanionSkillSlots() {
           }}
         />
       ))}
+
+      {/* 5th center diamond — sits at the intersection of the X */}
+      <button
+        title="Companion skill 5"
+        className="absolute pointer-events-auto transition-transform hover:scale-110"
+        style={{
+          top: '50%',
+          left: '50%',
+          width: CENTER_BTN,
+          height: CENTER_BTN,
+          transform: 'translate(-50%, -50%) rotate(45deg)',
+          background: 'rgba(20, 30, 45, 0.25)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          border: '1.5px solid rgba(140,190,235,0.65)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 6px rgba(120,180,230,0.25), inset 0 0 0 1px rgba(255,255,255,0.06)',
+          borderRadius: 3,
+        }}
+      />
     </div>
   );
 }
