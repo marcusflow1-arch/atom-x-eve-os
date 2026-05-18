@@ -211,28 +211,44 @@ export default function WeaponEnchantmentPanel({ weaponId, weaponName, weaponIco
         }}
       />
 
-      {/* ── RIGHT: detailed stat panel + combine stage ───────────────────── */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        <WeaponStatPanel
-          weaponId={weaponId}
-          weaponName={weaponName}
-          entry={entry}
-          preview={preview}
-          rarity={rarity}
-          accent={accent}
-          stash={stash}
-          onEnhance={onEnhance}
-          MAX_LEVEL={MAX_LEVEL}
-          MAX_NORMAL_LEVEL={MAX_NORMAL_LEVEL}
-        />
+      {/* ── RIGHT: stat panel  |  short floating divider  |  combine stage ── */}
+      <div className="flex-1 min-w-0 flex items-stretch gap-4 relative">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <WeaponStatPanel
+            weaponId={weaponId}
+            weaponName={weaponName}
+            entry={entry}
+            preview={preview}
+            rarity={rarity}
+            accent={accent}
+            stash={stash}
+            onEnhance={onEnhance}
+            MAX_LEVEL={MAX_LEVEL}
+            MAX_NORMAL_LEVEL={MAX_NORMAL_LEVEL}
+          />
+        </div>
 
-        <WeaponCombineStagePanel
-          weaponId={weaponId}
-          weaponName={weaponName}
-          entry={entry}
-          accent={accent}
-          stash={stash}
-        />
+        {/* Short floating divider — sits in the middle, doesn't reach top/bottom */}
+        <div className="flex-shrink-0 flex items-center justify-center">
+          <div
+            className="w-px"
+            style={{
+              height: '55%',
+              background:
+                'linear-gradient(180deg, transparent 0%, rgba(180,160,130,0.55) 30%, rgba(180,160,130,0.55) 70%, transparent 100%)',
+            }}
+          />
+        </div>
+
+        <div className="flex-1 min-w-0 flex flex-col">
+          <WeaponCombineStagePanel
+            weaponId={weaponId}
+            weaponName={weaponName}
+            entry={entry}
+            accent={accent}
+            stash={stash}
+          />
+        </div>
       </div>
     </div>
   );
