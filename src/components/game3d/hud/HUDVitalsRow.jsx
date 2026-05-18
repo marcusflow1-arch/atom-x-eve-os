@@ -11,7 +11,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Sword } from 'lucide-react';
+import { User, Sword, Sparkles, BookOpen } from 'lucide-react';
 import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
 import { getSkillById } from '../skills/skillRegistry';
 import { subscribeBuffs } from '../skills/buffEngine';
@@ -21,6 +21,7 @@ import {
   subscribeWeaponBuffs,
   WEAPON_CLASS_BUFFS,
 } from '../weaponClassBuffStore';
+import HUDSkillsBookPanel from './HUDSkillsBookPanel';
 
 // ── Skill slot button (mirrors HUDSkillSlots styling, condensed) ──────────
 const TYPE_COLORS = {
@@ -366,11 +367,120 @@ function HorizontalGauge({ value, max, color, label, align }) {
   );
 }
 
+// ── Section divider: horizontal line with a small circle icon centered ───
+// Matches the player-circle divider used between skill groups in the screenshot.
+function SectionDivider({ icon: Icon, color = 'rgba(220,200,150,0.8)' }) {
+  return (
+    <div className="relative flex items-center w-full" style={{ height: 18 }}>
+      {/* Left line segment */}
+      <div
+        className="flex-1"
+        style={{
+          height: 1.5,
+          background:
+            'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(220,200,150,0.55) 30%, rgba(220,200,150,0.65) 100%)',
+        }}
+      />
+      {/* Center circle */}
+      <div
+        className="relative flex items-center justify-center rounded-full mx-1.5"
+        style={{
+          width: 18,
+          height: 18,
+          background: 'rgba(0,0,0,0.78)',
+          border: `1.5px solid ${color}`,
+          boxShadow: '0 0 6px rgba(0,0,0,0.6)',
+        }}
+      >
+        <Icon
+          style={{ width: 10, height: 10, color, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.9))' }}
+          strokeWidth={2.2}
+        />
+      </div>
+      {/* Right line segment */}
+      <div
+        className="flex-1"
+        style={{
+          height: 1.5,
+          background:
+            'linear-gradient(90deg, rgba(220,200,150,0.65) 0%, rgba(220,200,150,0.55) 70%, rgba(255,255,255,0) 100%)',
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Skills column (4 slots + divider) ─────────────────────────────────────
+// Width matches the gauge width below it so the divider line stretches end to end.
+function SkillsColumn({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor, bookButton }) {
+  return (
+    <div className="flex flex-col items-stretch" style={{ width: 200 }}>
+      {/* Skill slots row */}
+      <div className="flex items-center justify-between gap-1">
+        {slotKeys.map((key, i) => {
+          // If a bookButton is provided AND this is the first slot of slotKeys
+          // (the slot the user wants replaced by the skills book), render the
+          // book button instead of the slot itself.
+          if (bookButton && i === 0) return <React.Fragment key={`book-${key}`}>{bookButton}</React.Fragment>;
+          return (
+            <SkillSlot
+              key={key}
+              slotKey={key}
+              skill={skillForSlot(offset + i)}
+              cooldown={cooldowns[offset + i]}
+              buffStatus={buffStatusForSlot(offset + i)}
+            />
+          );
+        })}
+      </div>
+
+      {/* Section divider line + circle icon */}
+      <div className="mt-1.5">
+        <SectionDivider icon={dividerIcon} color={dividerColor} />
+      </div>
+    </div>
+  );
+}
+
+// ── Skills Book button (replaces slot "5" position on the right side) ─────
+function SkillsBookButton({ open, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="relative w-[46px] h-[46px] rounded-full transition-transform hover:scale-105 pointer-events-auto flex flex-col items-center justify-center gap-0.5"
+      style={{
+        background: open
+          ? 'radial-gradient(circle at 50% 35%, rgba(167,139,250,0.45) 0%, rgba(167,139,250,0.12) 70%, rgba(0,0,0,0.7) 100%)'
+          : 'radial-gradient(circle at 50% 35%, rgba(40,50,60,0.65), rgba(8,10,14,0.9))',
+        border: open
+          ? '1.5px solid rgba(167,139,250,0.75)'
+          : '1.5px solid rgba(220,200,150,0.55)',
+        boxShadow: open
+          ? '0 3px 12px rgba(0,0,0,0.55), 0 0 12px rgba(167,139,250,0.6)'
+          : '0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+      }}
+      title="Skills Book"
+    >
+      <BookOpen
+        className="w-4 h-4"
+        style={{ color: open ? '#c4b5fd' : 'rgba(255,240,200,0.85)' }}
+      />
+      <span
+        className="text-[7px] font-bold tracking-[0.15em] leading-none"
+        style={{ color: open ? '#c4b5fd' : 'rgba(255,240,200,0.7)' }}
+      >
+        SKILLS
+      </span>
+    </button>
+  );
+}
+
 // ── Main row component ────────────────────────────────────────────────────
 export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
   const [loadout, setLoadout] = useState(getLoadout());
   const [buffs, setBuffs] = useState({});
   const [, force] = useState(0);
+  const [bookOpen, setBookOpen] = useState(false);
 
   useEffect(() => subscribeLoadout(setLoadout), []);
   useEffect(() => subscribeBuffs((s) => setBuffs(s.buffs || {})), []);
@@ -389,47 +499,52 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
   const SLOTS_RIGHT = ['5', '6', '7', '8'];
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      {/* Skills 1–4 (left of HP) */}
-      <div className="flex items-center gap-1.5">
-        {SLOTS_LEFT.map((key, i) => (
-          <SkillSlot
-            key={key}
-            slotKey={key}
-            skill={skillForSlot(i)}
-            cooldown={loadout.cooldowns[i]}
-            buffStatus={buffStatusForSlot(i)}
+    <>
+      <div className="flex flex-col items-center gap-1">
+        {/* TOP: skills columns + spacer for the center cluster (skills sit ABOVE gauges) */}
+        <div className="flex items-end justify-center gap-2">
+          {/* Skills 1–4 above HP gauge */}
+          <SkillsColumn
+            slotKeys={SLOTS_LEFT}
+            skillForSlot={skillForSlot}
+            cooldowns={loadout.cooldowns}
+            buffStatusForSlot={buffStatusForSlot}
+            offset={0}
+            dividerIcon={User}
+            dividerColor="rgba(220,200,150,0.85)"
           />
-        ))}
+
+          {/* Spacer matching the center cluster width (character + weapon circles) */}
+          <div style={{ width: 118 }} />
+
+          {/* Skills 5–8 above Fusion gauge — slot "5" is replaced by the skills book */}
+          <SkillsColumn
+            slotKeys={SLOTS_RIGHT}
+            skillForSlot={skillForSlot}
+            cooldowns={loadout.cooldowns}
+            buffStatusForSlot={buffStatusForSlot}
+            offset={4}
+            dividerIcon={Sparkles}
+            dividerColor="rgba(192,164,250,0.9)"
+            bookButton={<SkillsBookButton open={bookOpen} onToggle={() => setBookOpen((v) => !v)} />}
+          />
+        </div>
+
+        {/* BOTTOM: HP gauge | center cluster | Fusion gauge */}
+        <div className="flex items-center justify-center gap-2">
+          <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" />
+          <WeaponCenterSwitcher unspentPoints={unspentPoints} />
+          <HorizontalGauge
+            value={fusion.points}
+            max={fusion.maxPoints}
+            color={fusion.isFused ? '#c084fc' : '#a78bfa'}
+            label={fusion.isFused ? 'FUSION ⚡' : 'FUSION'}
+            align="left"
+          />
+        </div>
       </div>
 
-      {/* HP gauge */}
-      <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" />
-
-      {/* Center: character circle + weapon switcher */}
-      <WeaponCenterSwitcher unspentPoints={unspentPoints} />
-
-      {/* Fusion gauge */}
-      <HorizontalGauge
-        value={fusion.points}
-        max={fusion.maxPoints}
-        color={fusion.isFused ? '#c084fc' : '#a78bfa'}
-        label={fusion.isFused ? 'FUSION ⚡' : 'FUSION'}
-        align="left"
-      />
-
-      {/* Skills 5–8 (right of Fusion) */}
-      <div className="flex items-center gap-1.5">
-        {SLOTS_RIGHT.map((key, i) => (
-          <SkillSlot
-            key={key}
-            slotKey={key}
-            skill={skillForSlot(4 + i)}
-            cooldown={loadout.cooldowns[4 + i]}
-            buffStatus={buffStatusForSlot(4 + i)}
-          />
-        ))}
-      </div>
-    </div>
+      <HUDSkillsBookPanel open={bookOpen} onClose={() => setBookOpen(false)} />
+    </>
   );
 }
