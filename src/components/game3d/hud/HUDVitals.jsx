@@ -100,23 +100,23 @@ export default function HUDVitals() {
         </div>
 
         <div className="relative w-[520px] h-[3px] mt-1">
-          {/* Rested overlay — sits just behind the main fill, same theme, cooler tint */}
+          {/* Rested XP continuation — light blue section after yellow fill, inside the bar */}
           {restedSpan > 0 && (
             <motion.div
               className="absolute top-0 bottom-0 rounded-full"
               style={{
                 left: `${xpPct}%`,
                 background:
-                  'linear-gradient(90deg, rgba(160,220,255,0.85) 0%, rgba(200,240,255,1) 100%)',
+                  'linear-gradient(90deg, rgba(120, 200, 255, 0.6) 0%, rgba(160, 220, 255, 0.75) 100%)',
                 boxShadow:
-                  '0 0 6px rgba(160, 220, 255, 0.85), 0 0 14px rgba(120, 200, 255, 0.55)',
-                opacity: 0.85,
+                  'inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 4px rgba(120, 200, 255, 0.6)',
+                opacity: 0.9,
               }}
               animate={{ width: `${restedSpan}%` }}
               transition={{ duration: 0.4 }}
             />
           )}
-          {/* Main XP fill on top */}
+          {/* Main XP fill — yellow/gold foreground */}
           <motion.div
             className="absolute left-0 top-0 bottom-0 rounded-full"
             style={{
