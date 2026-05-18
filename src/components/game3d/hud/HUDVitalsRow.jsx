@@ -11,7 +11,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Sword, Sparkles, BookOpen, Crosshair, Zap } from 'lucide-react';
+import { User, Sword, Sparkles, BookOpen, Crosshair, Zap, Skull } from 'lucide-react';
 import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
 import { getSkillById } from '../skills/skillRegistry';
 import { subscribeBuffs } from '../skills/buffEngine';
@@ -333,9 +333,11 @@ function CharacterRing({ unspentPoints }) {
 }
 
 // ── Horizontal gauge (HP / Fusion) ────────────────────────────────────────
-function HorizontalGauge({ value, max, color, label, align }) {
+function HorizontalGauge({ value, max, color, label, align, killCount, playerName }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   const isRightAligned = align === 'right';
+  const isHPGauge = label === 'HP';
+  
   return (
     <div className="relative h-[14px]" style={{ width: 200 }}>
       <div
@@ -365,9 +367,14 @@ function HorizontalGauge({ value, max, color, label, align }) {
           letterSpacing: '0.08em',
         }}
       >
-        {isRightAligned ? (
+        {isHPGauge ? (
           <>
             <span className="opacity-80">{label}</span>
+            {playerName && (
+              <span style={{ color: '#cffafe', textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(34,211,238,0.5)' }}>
+                {playerName}
+              </span>
+            )}
             <span>{Math.round(value)} / {Math.round(max)}</span>
           </>
         ) : (
@@ -482,7 +489,7 @@ function SkillsBookButton({ open, onToggle }) {
 }
 
 // ── Main row component ────────────────────────────────────────────────────
-export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
+export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCount = 0, playerName = '' }) {
   const [loadout, setLoadout] = useState(getLoadout());
   const [buffs, setBuffs] = useState({});
   const [, force] = useState(0);
@@ -540,7 +547,23 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
 
         {/* BOTTOM: HP gauge | center cluster | Fusion gauge | Skills Book */}
         <div className="flex items-center justify-center gap-2">
-          <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" />
+          {/* Kill count to the left of HP gauge */}
+          {killCount > 0 && (
+            <div
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider whitespace-nowrap"
+              style={{
+                background: 'rgba(20, 8, 8, 0.55)',
+                border: '1px solid rgba(255, 90, 90, 0.4)',
+                color: '#ffb4b4',
+                textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+              }}
+              title="Total rogue AI kills"
+            >
+              <Skull className="w-2.5 h-2.5" />
+              <span className="tabular-nums">{killCount}</span>
+            </div>
+          )}
+          <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" playerName={playerName} />
           <WeaponCenterSwitcher unspentPoints={unspentPoints} />
           <HorizontalGauge
             value={fusion.points}

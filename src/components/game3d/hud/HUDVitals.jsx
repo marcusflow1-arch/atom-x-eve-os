@@ -41,7 +41,7 @@ export default function HUDVitals() {
   const xpPct = hud.xpForNext > 0 ? Math.max(0, Math.min(100, (hud.xp / hud.xpForNext) * 100)) : 0;
 
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2">
+    <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-0">
       {/* Active self-cast buff icons — floats above the vitals row */}
       <ActiveBuffsStrip />
 
@@ -51,40 +51,12 @@ export default function HUDVitals() {
         maxHp={maxHp}
         fusion={fusionState}
         unspentPoints={hud.unspentPoints || 0}
+        killCount={killCount}
+        playerName={playerName}
       />
 
       {/* Bottom row: level + EXP value + invisible EXP bar with only fill visible */}
       <div className="flex flex-col items-center w-full mt-2">
-        {(killCount > 0 || playerName) && (
-          <div className="flex items-center gap-3 mb-1">
-            {killCount > 0 && (
-              <div
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider whitespace-nowrap"
-                style={{
-                  background: 'rgba(20, 8, 8, 0.55)',
-                  border: '1px solid rgba(255, 90, 90, 0.4)',
-                  color: '#ffb4b4',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-                }}
-                title="Total rogue AI kills"
-              >
-                <Skull className="w-2.5 h-2.5" />
-                <span className="tabular-nums">{killCount} Kills</span>
-              </div>
-            )}
-            {playerName && (
-              <div
-                className="text-[11px] font-bold tracking-wider whitespace-nowrap"
-                style={{
-                  color: '#cffafe',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(34,211,238,0.5)',
-                }}
-              >
-                {playerName}
-              </div>
-            )}
-          </div>
-        )}
 
         <div
           className="flex items-baseline gap-2 text-[12px] font-bold tracking-wider tabular-nums"
