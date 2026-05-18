@@ -46,6 +46,12 @@ import PauseMenu from '../components/game3d/PauseMenu';
 import WindRunEffect from '../components/game3d/WindRunEffect';
 import SkillActivationToastListener from '../components/game3d/SkillActivationToastListener';
 import GameStateProvider from '../components/game3d/state/GameStateProvider';
+import CombatMusicTrigger from '../components/game3d/CombatMusicTrigger';
+import {
+  bindWorldAudio,
+  setWorldTargetVolume,
+  teardownCombatMusic,
+} from '../components/game3d/combatMusicController';
 
 export default function GameView() {
   const navigate = useNavigate();
@@ -115,6 +121,9 @@ export default function GameView() {
     audioRef.current = audio;
     audio.play().catch((err) => console.warn('Audio play blocked:', err));
 
+    // Let the combat music controller duck this audio during combat.
+    bindWorldAudio(audioRef, themeVolume);
+
     return () => {
       if (audioRef.current === audio) {
         audio.pause();
@@ -124,6 +133,9 @@ export default function GameView() {
       }
     };
   }, [themeAudioUrl]);
+
+  // Tear down combat audio when leaving GameView entirely.
+  useEffect(() => () => teardownCombatMusic(), []);
 
 
   // World server join is handled by GameWorldServerManager — it enforces the
@@ -218,6 +230,7 @@ export default function GameView() {
   // Live-update audio volume when slider changes (without reloading the track)
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = themeVolume;
+    setWorldTargetVolume(themeVolume);
     localStorage.setItem('game_theme_volume', String(themeVolume));
   }, [themeVolume]);
 
@@ -319,6 +332,9 @@ export default function GameView() {
 
       {/* Toast feedback when self-cast skills (Shield, Focus, Haste, etc.) activate */}
       <SkillActivationToastListener />
+
+      {/* Combat music — fades world theme out, plays combat track during fights */}
+      <CombatMusicTrigger />
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu
