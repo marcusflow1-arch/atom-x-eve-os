@@ -78,10 +78,8 @@ function SideStack({ buffs, side }) {
   // Additional rows stack UPWARD.
   const rows = chunkRows(buffs);
   return (
-    <div
-      className="relative flex-1 h-full"
-      style={{ minWidth: 0 }}
-    >
+    <>
+    
       {rows.map((row, rowIdx) => (
         <div
           key={rowIdx}
@@ -104,7 +102,7 @@ function SideStack({ buffs, side }) {
           </AnimatePresence>
         </div>
       ))}
-    </div>
+    </>
   );
 }
 
@@ -146,8 +144,8 @@ export default function BuffDividerLine({ icon: Icon, color = 'rgba(220,200,150,
     <div className="relative flex items-center w-full" style={{ height: 18 }}>
       {/* Left line segment */}
       <div
-        className="relative flex-1 h-full"
-        style={{ minWidth: 0 }}
+        className="relative"
+        style={{ flex: 1, minWidth: 0, height: '100%' }}
       >
         {/* the visible line itself */}
         <div
@@ -182,8 +180,8 @@ export default function BuffDividerLine({ icon: Icon, color = 'rgba(220,200,150,
 
       {/* Right line segment */}
       <div
-        className="relative flex-1 h-full"
-        style={{ minWidth: 0 }}
+        className="relative"
+        style={{ flex: 1, minWidth: 0, height: '100%' }}
       >
         <div
           className="absolute left-0 right-0 top-1/2 -translate-y-1/2"
