@@ -16,12 +16,15 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { ARCHER_URL, ANIMATION_URLS } from './gameWorldConfig';
 import { ENEMY_PLAYER_SPAWNS, ENEMY_PLAYER_STATS, ENEMY_PLAYER_RESPAWN_SECONDS, getRandomRogueName } from './enemyPlayerSpawnConfig';
-import { getPlayerHUD, setHP } from './playerHUDStore';
+import { getPlayerHUD, setHP, awardXP } from './playerHUDStore';
+import { xpForLevel } from './gameWorldConfig';
 import { addGold } from './shop/shopStore';
 import { recordTitleKill } from './progression/titleStore';
 import { incrementKillCount } from './killCountStore';
 import { addFusionPoints, FUSION_POINTS_PER_KILL } from './fusionStore';
 import { registerKill as registerStreakKill } from './killStreakStore';
+import { awardCompanionXP } from './companionProgressionStore';
+import { getCompanionState } from './companionStore';
 import toast from 'react-hot-toast';
 
 // Radius around each rogue that blocks the player from walking through them.
@@ -197,6 +200,20 @@ export default function EnemyPlayerSpawner() {
             source: streakMult > 1 ? `Streak ×${streakMult.toFixed(1)}` : 'Kill',
           },
         }));
+
+        // Feed the same XP into the player HUD progression so the rested 2×
+        // bonus applies to rogue-AI kills (same path as mobs/bosses).
+        const hud = getPlayerHUD();
+        let nXP = (hud.xp || 0) + finalXp;
+        let nLv = hud.level || 1;
+        let need = xpForLevel(nLv);
+        let gained = 0;
+        while (nXP >= need) { nXP -= need; nLv++; gained++; need = xpForLevel(nLv); }
+        awardXP({ newLevel: nLv, newXP: nXP, xpForNext: xpForLevel(nLv), levelsGained: gained, xpGained: finalXp });
+
+        // Companion earns the same base XP (rested 1.5× applies inside the store).
+        const compId = getCompanionState().activeCompanionId;
+        if (compId) awardCompanionXP(compId, finalXp);
 
         // Drop loot at the rogue's position
         window.dispatchEvent(new CustomEvent('enemyLootDrop', {

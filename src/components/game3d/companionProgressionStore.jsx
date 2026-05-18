@@ -2,6 +2,12 @@
 // Parallels playerHUDStore but keyed by companionId so each pet has its own progression.
 // Saved to localStorage so pets keep their levels across logouts.
 
+import { consumeRestedForGain } from './restedXPStore';
+
+// Companions earn 1.5× XP while the player has rested XP available
+// (vs. the player's 2×). Bonus drains from the same shared rested pool.
+const COMPANION_RESTED_MULT = 0.5; // +50% on top of base
+
 const STORAGE_KEY = 'wwm_companion_progression_v1';
 const STAT_POINTS_PER_LEVEL = 2;
 
@@ -60,10 +66,18 @@ export function getCompanionProgression(companionId) {
 }
 
 // Award XP to a specific companion. Handles multi-level-ups.
+// Rested bonus: while the player has rested XP, the companion earns
+// an extra 50% (1.5× total). Bonus is drawn from the shared rested pool.
 export function awardCompanionXP(companionId, amount) {
   if (!companionId || amount <= 0) return;
   const cur = getCompanionProgression(companionId);
-  let newXP = cur.xp + amount;
+
+  // Pull a 0.5× bonus from the rested pool, capped by what's available.
+  const desiredBonus = amount * COMPANION_RESTED_MULT;
+  const restedBonus = consumeRestedForGain(desiredBonus, cur.xpForNext || companionXpForLevel(cur.level));
+  const totalGain = amount + restedBonus;
+
+  let newXP = cur.xp + totalGain;
   let newLevel = cur.level;
   let needed = companionXpForLevel(newLevel);
   let gained = 0;
