@@ -514,22 +514,57 @@ function SkillsBookButton({ open, onToggle }) {
   );
 }
 
-// ── Companion skill slots (placeholder for now) ────────────────────────────
+// ── Companion skill slots (PlayStation/Xbox diamond layout) ──────────────
 function CompanionSkillSlots() {
-  // Placeholder: would connect to companion loadout store in production
+  // 4 buttons in a diamond: top, right, bottom, left (PS-style)
+  // Container is square; diagonal accent lines cross behind the buttons.
+  const SIZE = 70;          // overall container size
+  const BTN = 22;            // individual button size
+  const OFFSET = 22;         // distance from center to each diamond point
+
+  const positions = [
+    { key: 'T', top: '50%',  left: '50%', tx: 0,        ty: -OFFSET, title: 'Companion skill 1' },
+    { key: 'R', top: '50%',  left: '50%', tx: OFFSET,   ty: 0,       title: 'Companion skill 2' },
+    { key: 'B', top: '50%',  left: '50%', tx: 0,        ty: OFFSET,  title: 'Companion skill 3' },
+    { key: 'L', top: '50%',  left: '50%', tx: -OFFSET,  ty: 0,       title: 'Companion skill 4' },
+  ];
+
+  const diagLineStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: SIZE * 0.95,
+    height: 1,
+    background:
+      'linear-gradient(90deg, rgba(120,180,230,0) 0%, rgba(120,180,230,0.55) 50%, rgba(120,180,230,0) 100%)',
+    transformOrigin: 'center',
+    pointerEvents: 'none',
+  };
+
   return (
-    <div className="flex items-center gap-1">
-      {/* 3-4 small companion skill slots */}
-      {[0, 1, 2].map((i) => (
+    <div className="relative" style={{ width: SIZE, height: SIZE }}>
+      {/* Diagonal accent lines (top-left ↘ bottom-right  and  top-right ↙ bottom-left) */}
+      <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(45deg)' }} />
+      <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(-45deg)' }} />
+
+      {positions.map(({ key, top, left, tx, ty, title }) => (
         <button
-          key={i}
-          className="relative w-[28px] h-[28px] rounded-full transition-transform hover:scale-105 pointer-events-auto"
+          key={key}
+          title={title}
+          className="absolute pointer-events-auto transition-transform hover:scale-110"
           style={{
-            background: 'radial-gradient(circle at 50% 35%, rgba(100,150,200,0.35) 0%, rgba(100,150,200,0.08) 70%, rgba(0,0,0,0.7) 100%)',
-            border: '1.5px solid rgba(100,150,200,0.55)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
+            top,
+            left,
+            width: BTN,
+            height: BTN,
+            transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px)`,
+            borderRadius: '50%',
+            background:
+              'radial-gradient(circle at 50% 35%, rgba(120,180,230,0.45) 0%, rgba(80,130,190,0.15) 70%, rgba(0,0,0,0.75) 100%)',
+            border: '1.5px solid rgba(140,190,235,0.7)',
+            boxShadow:
+              '0 2px 8px rgba(0,0,0,0.6), 0 0 6px rgba(120,180,230,0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
           }}
-          title={`Companion skill ${i + 1}`}
         />
       ))}
     </div>
