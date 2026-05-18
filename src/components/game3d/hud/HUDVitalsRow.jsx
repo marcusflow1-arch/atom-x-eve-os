@@ -176,96 +176,105 @@ function WeaponCenterSwitcher({ unspentPoints }) {
       {/* C-key character circle */}
       <div className="relative" style={{ width: 64, height: 64 }}>
         <CharacterRing unspentPoints={unspentPoints} />
-
-        {/* Weapon swap icon stack — sits directly ABOVE the C circle, fades upward */}
-        <button
-          onClick={() => cycle(1)}
-          className="absolute left-1/2 -translate-x-1/2 pointer-events-auto flex flex-col items-center"
-          style={{ bottom: '100%', marginBottom: 4, width: 28, height: 80 }}
-          title={`${cur.label} — Press G or ◄ ► to swap`}
-        >
-          {/* Faded other-weapon icons stacking upward behind the active one */}
-          {others.map(({ w, i }, k) => {
-            const ob = WEAPON_CLASS_BUFFS[w.path];
-            const OtherIcon = w.Icon;
-            // k=0 → just behind active, k=1 → further up & more faded
-            const offsetY = -(10 + k * 9);
-            const opacity = 0.45 - k * 0.18;
-            const scale = 0.78 - k * 0.1;
-            return (
-              <OtherIcon
-                key={w.path}
-                className="absolute left-1/2 bottom-0 -translate-x-1/2"
-                style={{
-                  width: 22,
-                  height: 22,
-                  color: ob?.color || '#cbb98a',
-                  opacity,
-                  transform: `translate(-50%, ${offsetY}px) scale(${scale})`,
-                  filter: 'blur(0.3px) drop-shadow(0 1px 1px rgba(0,0,0,0.7))',
-                  pointerEvents: 'none',
-                }}
-                strokeWidth={2}
-              />
-            );
-          })}
-
-          {/* Active weapon icon (foreground) */}
-          <ActiveIcon
-            className="absolute left-1/2 bottom-0 -translate-x-1/2"
-            style={{
-              width: 24,
-              height: 24,
-              color: buff.color,
-              filter: `drop-shadow(0 0 4px ${buff.color}99) drop-shadow(0 1px 2px rgba(0,0,0,0.9))`,
-            }}
-            strokeWidth={2.2}
-          />
-
-          {/* G key tag + weapon name label */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
-            style={{
-              top: -2,
-            }}
-          >
-            <div
-              className="px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider"
-              style={{
-                background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
-                border: '1px solid rgba(220,200,150,0.65)',
-                color: '#fde68a',
-                textShadow: '0 1px 1px rgba(0,0,0,0.9)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
-              }}
-            >
-              G
-            </div>
-            <div
-              className="text-[7px] font-black tracking-wider mt-0.5"
-              style={{
-                color: buff.color,
-                textShadow: '0 1px 2px rgba(0,0,0,0.95)',
-              }}
-            >
-              {cur.label.toUpperCase()}
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* Current weapon label — tiny tag below the cluster */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold tracking-[0.2em] uppercase pointer-events-none"
-        style={{
-          bottom: -14,
-          color: buff.color,
-          textShadow: '0 1px 2px rgba(0,0,0,0.95)',
-        }}
-      >
-        {cur.label}
       </div>
     </div>
+  );
+}
+
+// ── Weapon icon stack (placed above the right end of HP tank) ────────────
+function WeaponIconStack() {
+  const [idx, setIdx] = useState(() => {
+    const cur = getActiveWeaponPath();
+    return Math.max(0, WEAPON_CLASSES.findIndex((w) => w.path === cur));
+  });
+  const [, force] = useState(0);
+
+  useEffect(() => subscribeWeaponBuffs(() => force((n) => n + 1)), []);
+
+  const cycle = React.useCallback((dir) => {
+    setIdx((prev) => {
+      const next = (prev + dir + WEAPON_CLASSES.length) % WEAPON_CLASSES.length;
+      setActiveWeaponPath(WEAPON_CLASSES[next].path);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.code === 'KeyG')        { cycle(1);  e.preventDefault(); }
+      else if (e.code === 'ArrowRight') { cycle(1);  }
+      else if (e.code === 'ArrowLeft')  { cycle(-1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [cycle]);
+
+  const cur  = WEAPON_CLASSES[idx];
+  const buff = WEAPON_CLASS_BUFFS[cur.path];
+  const others = WEAPON_CLASSES.map((w, i) => ({ w, i })).filter(({ i }) => i !== idx);
+  const ActiveIcon = cur.Icon;
+
+  return (
+    <button
+      onClick={() => cycle(1)}
+      className="relative pointer-events-auto flex flex-col items-center"
+      style={{ width: 32, height: 60 }}
+      title={`${cur.label} — Press G or ◄ ► to swap`}
+    >
+      {/* Faded other-weapon icons stacking upward behind active */}
+      {others.map(({ w }, k) => {
+        const ob = WEAPON_CLASS_BUFFS[w.path];
+        const OtherIcon = w.Icon;
+        const offsetY = -(10 + k * 9);
+        const opacity = 0.45 - k * 0.18;
+        const scale = 0.78 - k * 0.1;
+        return (
+          <OtherIcon
+            key={w.path}
+            className="absolute left-1/2 bottom-2 -translate-x-1/2"
+            style={{
+              width: 22,
+              height: 22,
+              color: ob?.color || '#cbb98a',
+              opacity,
+              transform: `translate(-50%, ${offsetY}px) scale(${scale})`,
+              filter: 'blur(0.3px) drop-shadow(0 1px 1px rgba(0,0,0,0.7))',
+              pointerEvents: 'none',
+            }}
+            strokeWidth={2}
+          />
+        );
+      })}
+
+      {/* Active weapon icon */}
+      <ActiveIcon
+        className="absolute left-1/2 bottom-2 -translate-x-1/2"
+        style={{
+          width: 24,
+          height: 24,
+          color: buff.color,
+          filter: `drop-shadow(0 0 4px ${buff.color}99) drop-shadow(0 1px 2px rgba(0,0,0,0.9))`,
+        }}
+        strokeWidth={2.2}
+      />
+
+      {/* G key tag */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
+        style={{
+          top: -2,
+          background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
+          border: '1px solid rgba(220,200,150,0.65)',
+          color: '#fde68a',
+          textShadow: '0 1px 1px rgba(0,0,0,0.9)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
+        }}
+      >
+        G
+      </div>
+    </button>
   );
 }
 
@@ -339,7 +348,7 @@ function HorizontalGauge({ value, max, color, label, align, killCount, playerNam
   const isHPGauge = label === 'HP';
   
   return (
-    <div className="relative h-[14px]" style={{ width: 200 }}>
+    <div className="relative h-[14px]" style={{ width: 320 }}>
       <div
         className="absolute inset-0 rounded-full overflow-hidden"
         style={{
@@ -435,12 +444,40 @@ function SectionDivider({ icon: Icon, color = 'rgba(220,200,150,0.8)' }) {
 // Width matches the gauge width below it so the divider line stretches end to end.
 function SkillsColumn({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor }) {
   return (
-    <div className="flex flex-col items-stretch" style={{ width: 200 }}>
+    <div className="flex flex-col items-stretch" style={{ width: 320 }}>
       {/* Section divider line + circle icon (ABOVE the skills) */}
       <SectionDivider icon={dividerIcon} color={dividerColor} />
 
       {/* Skill slots row (BELOW the line, above the gauge) */}
-      <div className="flex items-center justify-between gap-1 mt-1.5">
+      <div className="flex items-center justify-between gap-1 mt-1.5 px-1">
+        {slotKeys.map((key, i) => (
+          <SkillSlot
+            key={key}
+            slotKey={key}
+            skill={skillForSlot(offset + i)}
+            cooldown={cooldowns[offset + i]}
+            buffStatus={buffStatusForSlot(offset + i)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Skills column with weapon icon stack above-right (HP side) ───────────
+function SkillsColumnWithWeapons({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor }) {
+  return (
+    <div className="flex flex-col items-stretch relative" style={{ width: 320 }}>
+      {/* Weapon icon stack absolutely positioned at the far-right above HP tank */}
+      <div className="absolute right-1 pointer-events-none" style={{ bottom: 'calc(100% + 4px)', zIndex: 4 }}>
+        <div className="pointer-events-auto">
+          <WeaponIconStack />
+        </div>
+      </div>
+
+      <SectionDivider icon={dividerIcon} color={dividerColor} />
+
+      <div className="flex items-center justify-between gap-1 mt-1.5 px-1">
         {slotKeys.map((key, i) => (
           <SkillSlot
             key={key}
@@ -516,8 +553,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
       <div className="flex flex-col items-center gap-1">
         {/* TOP: skills columns — pulled down so icons rest ON the HP/Fusion gauges */}
         <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
-          {/* Skills 1–4 above HP gauge */}
-          <SkillsColumn
+          {/* Skills 1–4 above HP gauge — also hosts the weapon icon stack at far-right */}
+          <SkillsColumnWithWeapons
             slotKeys={SLOTS_LEFT}
             skillForSlot={skillForSlot}
             cooldowns={loadout.cooldowns}
