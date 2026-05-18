@@ -23,13 +23,32 @@ export const APPEARANCE_OPTIONS = {
   shoulders: [{ id: 'default', label: 'Default' }],
 };
 
+// Reserved id for the editor-only "Dev Test" character. This slot OWNS the
+// legacy single-key progression data (the test progression that existed
+// before the multi-character system) — `characterStorage.js` migrates the
+// legacy keys into this id on first run, so it shows up pre-loaded with
+// your old test data. Every character created AFTER this one starts fresh.
+const DEV_TEST_ID = '__dev_test__';
+
+const DEV_TEST_CHARACTER = {
+  id: DEV_TEST_ID,
+  name: 'Dev Test',
+  isDevTest: true,
+  appearance: { head: 'default', body: 'default', shoulders: 'default' },
+  createdAt: '1970-01-01T00:00:00.000Z',
+};
+
 function load() {
   try {
-    const roster = JSON.parse(localStorage.getItem(ROSTER_KEY) || '[]');
-    const activeId = localStorage.getItem(ACTIVE_KEY) || (roster[0]?.id ?? null);
+    const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || '[]');
+    // Ensure the Dev Test slot is always present at the top of the roster
+    // (editor-only — safe to leave in for now; will be the first to display).
+    const withoutDev = stored.filter((c) => c.id !== DEV_TEST_ID);
+    const roster = [DEV_TEST_CHARACTER, ...withoutDev];
+    const activeId = localStorage.getItem(ACTIVE_KEY) || DEV_TEST_ID;
     return { roster, activeId };
   } catch {
-    return { roster: [], activeId: null };
+    return { roster: [DEV_TEST_CHARACTER], activeId: DEV_TEST_ID };
   }
 }
 
@@ -38,7 +57,11 @@ const listeners = new Set();
 
 const persist = () => {
   try {
-    localStorage.setItem(ROSTER_KEY, JSON.stringify(state.roster));
+    // Don't persist the Dev Test character into the roster — it's seeded
+    // on every load() so it's always present without polluting the saved
+    // user-created roster.
+    const persistable = state.roster.filter((c) => c.id !== DEV_TEST_ID);
+    localStorage.setItem(ROSTER_KEY, JSON.stringify(persistable));
     if (state.activeId) localStorage.setItem(ACTIVE_KEY, state.activeId);
   } catch {}
 };

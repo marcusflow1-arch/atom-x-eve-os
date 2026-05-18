@@ -272,7 +272,14 @@ export default function CharacterLoginScreen({ onPlay }) {
                       {char.level}
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="text-white font-bold text-base">{char.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-bold text-base">{char.name}</span>
+                        {char.isDevTest && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-amber-500/20 border border-amber-400/40 text-amber-300">
+                            Editor
+                          </span>
+                        )}
+                      </div>
                       <div className="text-white/50 text-xs">Level {char.level}</div>
                     </div>
                   </button>

@@ -48,25 +48,51 @@ function scopedKey(baseKey) {
   return `${baseKey}::${getActiveId()}`;
 }
 
+// The "Dev Test" character owns all legacy single-key progression data.
+// On first read for the Dev Test slot, we copy the legacy data into it
+// once. NEW user-created characters never receive this migration — they
+// start completely fresh.
+const DEV_TEST_ID = '__dev_test__';
+const MIGRATION_FLAG_KEY = 'wwm_character_storage_migrated_v1';
+
+function getMigrationFlags() {
+  try { return JSON.parse(localStorage.getItem(MIGRATION_FLAG_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function markMigrated(baseKey) {
+  try {
+    const flags = getMigrationFlags();
+    flags[baseKey] = true;
+    localStorage.setItem(MIGRATION_FLAG_KEY, JSON.stringify(flags));
+  } catch {}
+}
+
 // Public: a { get, set, remove, baseKey } accessor scoped to the active
-// character. On first read for a brand-new character, transparently
-// migrates legacy single-key data into the new slot exactly once.
+// character. On first read for the Dev Test character only, transparently
+// copies the legacy single-key data into the dev-test slot exactly once.
 export function characterScopedStorage(baseKey) {
   return {
     baseKey,
     get() {
       try {
-        const scoped = localStorage.getItem(scopedKey(baseKey));
+        const activeId = getActiveId();
+        const key = `${baseKey}::${activeId}`;
+        const scoped = localStorage.getItem(key);
         if (scoped !== null) return scoped;
-        // Migration path: if this character has no scoped data yet but
-        // there IS legacy data at the base key, copy it ONCE for the
-        // first character (so existing players keep their progression).
-        // For NEW characters created later, we skip this migration to
-        // ensure they start fresh.
-        const legacy = localStorage.getItem(baseKey);
-        if (legacy !== null && isFirstCharacterToMigrate(baseKey)) {
-          localStorage.setItem(scopedKey(baseKey), legacy);
-          return legacy;
+
+        // Legacy migration: only the Dev Test character inherits the old
+        // single-key progression. Runs at most once per baseKey.
+        if (activeId === DEV_TEST_ID) {
+          const flags = getMigrationFlags();
+          if (!flags[baseKey]) {
+            markMigrated(baseKey);
+            const legacy = localStorage.getItem(baseKey);
+            if (legacy !== null) {
+              localStorage.setItem(key, legacy);
+              return legacy;
+            }
+          }
         }
         return null;
       } catch {
@@ -80,30 +106,4 @@ export function characterScopedStorage(baseKey) {
       try { localStorage.removeItem(scopedKey(baseKey)); } catch {}
     },
   };
-}
-
-// Only the FIRST character ever created inherits legacy single-key data.
-// We track which baseKeys have been migrated so a NEW character created
-// later starts completely fresh.
-const MIGRATION_FLAG_KEY = 'wwm_character_storage_migrated_v1';
-
-function getMigrationFlags() {
-  try { return JSON.parse(localStorage.getItem(MIGRATION_FLAG_KEY) || '{}'); }
-  catch { return {}; }
-}
-
-function setMigrationFlag(baseKey) {
-  try {
-    const flags = getMigrationFlags();
-    flags[baseKey] = getActiveId();
-    localStorage.setItem(MIGRATION_FLAG_KEY, JSON.stringify(flags));
-  } catch {}
-}
-
-function isFirstCharacterToMigrate(baseKey) {
-  const flags = getMigrationFlags();
-  // Already migrated for some character → never migrate again.
-  if (flags[baseKey]) return false;
-  setMigrationFlag(baseKey);
-  return true;
 }
