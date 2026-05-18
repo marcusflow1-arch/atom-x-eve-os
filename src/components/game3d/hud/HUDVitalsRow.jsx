@@ -410,44 +410,36 @@ function SectionDivider({ icon: Icon, color = 'rgba(220,200,150,0.8)' }) {
   );
 }
 
-// ── Skills column (4 slots + divider) ─────────────────────────────────────
+// ── Skills column (divider line ON TOP, then 4 slots below it) ────────────
 // Width matches the gauge width below it so the divider line stretches end to end.
-function SkillsColumn({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor, bookButton }) {
+function SkillsColumn({ slotKeys, skillForSlot, cooldowns, buffStatusForSlot, offset, dividerIcon, dividerColor }) {
   return (
     <div className="flex flex-col items-stretch" style={{ width: 200 }}>
-      {/* Skill slots row */}
-      <div className="flex items-center justify-between gap-1">
-        {slotKeys.map((key, i) => {
-          // If a bookButton is provided AND this is the first slot of slotKeys
-          // (the slot the user wants replaced by the skills book), render the
-          // book button instead of the slot itself.
-          if (bookButton && i === 0) return <React.Fragment key={`book-${key}`}>{bookButton}</React.Fragment>;
-          return (
-            <SkillSlot
-              key={key}
-              slotKey={key}
-              skill={skillForSlot(offset + i)}
-              cooldown={cooldowns[offset + i]}
-              buffStatus={buffStatusForSlot(offset + i)}
-            />
-          );
-        })}
-      </div>
+      {/* Section divider line + circle icon (ABOVE the skills) */}
+      <SectionDivider icon={dividerIcon} color={dividerColor} />
 
-      {/* Section divider line + circle icon */}
-      <div className="mt-1.5">
-        <SectionDivider icon={dividerIcon} color={dividerColor} />
+      {/* Skill slots row (BELOW the line, above the gauge) */}
+      <div className="flex items-center justify-between gap-1 mt-1.5">
+        {slotKeys.map((key, i) => (
+          <SkillSlot
+            key={key}
+            slotKey={key}
+            skill={skillForSlot(offset + i)}
+            cooldown={cooldowns[offset + i]}
+            buffStatus={buffStatusForSlot(offset + i)}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-// ── Skills Book button (replaces slot "5" position on the right side) ─────
+// ── Skills Book button (sits to the far right of the Fusion gauge) ───────
 function SkillsBookButton({ open, onToggle }) {
   return (
     <button
       onClick={onToggle}
-      className="relative w-[46px] h-[46px] rounded-full transition-transform hover:scale-105 pointer-events-auto flex flex-col items-center justify-center gap-0.5"
+      className="relative w-[52px] h-[52px] rounded-full transition-transform hover:scale-105 pointer-events-auto flex flex-col items-center justify-center gap-0.5"
       style={{
         background: open
           ? 'radial-gradient(circle at 50% 35%, rgba(167,139,250,0.45) 0%, rgba(167,139,250,0.12) 70%, rgba(0,0,0,0.7) 100%)'
@@ -517,7 +509,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
           {/* Spacer matching the center cluster width (character + weapon circles) */}
           <div style={{ width: 118 }} />
 
-          {/* Skills 5–8 above Fusion gauge — slot "5" is replaced by the skills book */}
+          {/* Skills 5–8 above Fusion gauge */}
           <SkillsColumn
             slotKeys={SLOTS_RIGHT}
             skillForSlot={skillForSlot}
@@ -526,11 +518,13 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
             offset={4}
             dividerIcon={Sparkles}
             dividerColor="rgba(192,164,250,0.9)"
-            bookButton={<SkillsBookButton open={bookOpen} onToggle={() => setBookOpen((v) => !v)} />}
           />
+
+          {/* Spacer so top row aligns with the skill book sitting beside the Fusion gauge */}
+          <div style={{ width: 52 }} />
         </div>
 
-        {/* BOTTOM: HP gauge | center cluster | Fusion gauge */}
+        {/* BOTTOM: HP gauge | center cluster | Fusion gauge | Skills Book */}
         <div className="flex items-center justify-center gap-2">
           <HorizontalGauge value={hp} max={maxHp} color="#e23b3b" label="HP" align="right" />
           <WeaponCenterSwitcher unspentPoints={unspentPoints} />
@@ -541,6 +535,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
             label={fusion.isFused ? 'FUSION ⚡' : 'FUSION'}
             align="left"
           />
+          {/* Skills Book — vertically centered with the Fusion gauge */}
+          <SkillsBookButton open={bookOpen} onToggle={() => setBookOpen((v) => !v)} />
         </div>
       </div>
 
