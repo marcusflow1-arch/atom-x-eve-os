@@ -11,7 +11,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Sword, Sparkles, BookOpen } from 'lucide-react';
+import { User, Sword, Sparkles, BookOpen, Crosshair, Zap } from 'lucide-react';
 import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
 import { getSkillById } from '../skills/skillRegistry';
 import { subscribeBuffs } from '../skills/buffEngine';
@@ -125,9 +125,9 @@ function SkillSlot({ slotKey, skill, cooldown, buffStatus }) {
 
 // ── Weapon cycler (center) ────────────────────────────────────────────────
 const WEAPON_CLASSES = [
-  { path: 'damage',  label: 'Greatsword',  className: 'Damage'  },
-  { path: 'ranged',  label: 'Bow',         className: 'Ranged'  },
-  { path: 'defense', label: 'Dual Blades', className: 'Defense' },
+  { path: 'damage',  label: 'Greatsword',  className: 'Damage',  Icon: Sword  },
+  { path: 'ranged',  label: 'Bow',         className: 'Ranged',  Icon: Zap    },
+  { path: 'defense', label: 'Dual Blades', className: 'Defense', Icon: Crosshair },
 ];
 
 function WeaponCenterSwitcher({ unspentPoints }) {
@@ -169,6 +169,7 @@ function WeaponCenterSwitcher({ unspentPoints }) {
   const others = WEAPON_CLASSES
     .map((w, i) => ({ w, i }))
     .filter(({ i }) => i !== idx);
+  const ActiveIcon = cur.Icon;
 
   return (
     <div className="relative flex items-center" style={{ height: 64 }}>
@@ -179,19 +180,20 @@ function WeaponCenterSwitcher({ unspentPoints }) {
         {/* Weapon swap icon stack — sits directly ABOVE the C circle, fades upward */}
         <button
           onClick={() => cycle(1)}
-          className="absolute left-1/2 -translate-x-1/2 pointer-events-auto"
-          style={{ bottom: '100%', marginBottom: 4, width: 28, height: 56 }}
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-auto flex flex-col items-center"
+          style={{ bottom: '100%', marginBottom: 4, width: 28, height: 80 }}
           title={`${cur.label} — Press G or ◄ ► to swap`}
         >
           {/* Faded other-weapon icons stacking upward behind the active one */}
           {others.map(({ w, i }, k) => {
             const ob = WEAPON_CLASS_BUFFS[w.path];
+            const OtherIcon = w.Icon;
             // k=0 → just behind active, k=1 → further up & more faded
             const offsetY = -(10 + k * 9);
             const opacity = 0.45 - k * 0.18;
             const scale = 0.78 - k * 0.1;
             return (
-              <Sword
+              <OtherIcon
                 key={w.path}
                 className="absolute left-1/2 bottom-0 -translate-x-1/2"
                 style={{
@@ -209,7 +211,7 @@ function WeaponCenterSwitcher({ unspentPoints }) {
           })}
 
           {/* Active weapon icon (foreground) */}
-          <Sword
+          <ActiveIcon
             className="absolute left-1/2 bottom-0 -translate-x-1/2"
             style={{
               width: 24,
@@ -220,19 +222,34 @@ function WeaponCenterSwitcher({ unspentPoints }) {
             strokeWidth={2.2}
           />
 
-          {/* G key tag above the active icon */}
+          {/* G key tag + weapon name label */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
+            className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
             style={{
               top: -2,
-              background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
-              border: '1px solid rgba(220,200,150,0.65)',
-              color: '#fde68a',
-              textShadow: '0 1px 1px rgba(0,0,0,0.9)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
             }}
           >
-            G
+            <div
+              className="px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider"
+              style={{
+                background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
+                border: '1px solid rgba(220,200,150,0.65)',
+                color: '#fde68a',
+                textShadow: '0 1px 1px rgba(0,0,0,0.9)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
+              }}
+            >
+              G
+            </div>
+            <div
+              className="text-[7px] font-black tracking-wider mt-0.5"
+              style={{
+                color: buff.color,
+                textShadow: '0 1px 2px rgba(0,0,0,0.95)',
+              }}
+            >
+              {cur.label.toUpperCase()}
+            </div>
           </div>
         </button>
       </div>
