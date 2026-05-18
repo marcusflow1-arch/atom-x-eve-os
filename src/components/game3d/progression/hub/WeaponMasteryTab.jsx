@@ -4,6 +4,7 @@ import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } fro
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
 import WeaponSkillTree from './WeaponSkillTree';
 import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
+import WeaponEnchantmentPanel from '../weaponMastery/WeaponEnchantmentPanel';
 import { resolveWeaponType } from '../weaponMastery/weaponMasteryConfig';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
@@ -83,6 +84,8 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
   const weapon = WEAPONS.find((w) => w.id === weaponId);
   const tree = getTreeForWeapon(weaponId);
   const scaling = getDamageScalingFor(weaponId);
+  // 'enchant' (new Annulus-style ring) or 'tree' (legacy passive nodes).
+  const [view, setView] = useState('enchant');
 
   // Points logic — 1 unspent point per mastery level (matches reference).
   const totalPoints = masteryEntry.level;
@@ -208,9 +211,50 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
           </div>
         </div>
 
-        {/* RIGHT — interactive Mastery Tree (passive nodes, point spending) */}
-        <div className="flex-1 min-w-0 flex justify-center items-start overflow-y-auto pt-2">
-          <WeaponMasteryTreePanel weaponType={resolveWeaponType(weaponId)} />
+        {/* RIGHT — Enchantment ring (Annulus-style) OR legacy passive tree */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto pt-2">
+          {/* View toggle */}
+          <div className="flex justify-center mb-3">
+            <div
+              className="inline-flex rounded-sm overflow-hidden"
+              style={{ border: '1px solid rgba(180,160,130,0.30)' }}
+            >
+              {[
+                { id: 'enchant', label: 'Enchantment' },
+                { id: 'tree',    label: 'Skill Tree' },
+              ].map((opt) => {
+                const on = view === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setView(opt.id)}
+                    className="px-5 py-1.5 text-[10px] tracking-[0.35em] uppercase transition-all"
+                    style={{
+                      background: on
+                        ? 'linear-gradient(180deg, rgba(45,212,191,0.20), rgba(13,148,136,0.20))'
+                        : 'rgba(20,20,24,0.55)',
+                      color: on ? '#a7f3d0' : 'rgba(255,255,255,0.55)',
+                      borderRight: opt.id === 'enchant' ? '1px solid rgba(180,160,130,0.30)' : 'none',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {view === 'enchant' ? (
+            <WeaponEnchantmentPanel
+              weaponId={weaponId}
+              weaponName={weapon?.name}
+              weaponIcon={weapon?.icon}
+            />
+          ) : (
+            <div className="flex justify-center items-start">
+              <WeaponMasteryTreePanel weaponType={resolveWeaponType(weaponId)} />
+            </div>
+          )}
         </div>
       </div>
 
