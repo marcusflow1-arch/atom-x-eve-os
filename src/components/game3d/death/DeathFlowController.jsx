@@ -12,7 +12,7 @@ import { subscribeDeath, setDeathPhase, getDeathState } from './deathStore';
 import DeathTipsOverlay from './DeathTipsOverlay';
 import RespawnMapOverlay from './RespawnMapOverlay';
 
-const DEATH_ANIM_MS = 1800; // time the death animation plays before tips overlay
+const DEATH_ANIM_MS = 3000; // play death animation for 3 s before tips overlay appears
 
 export default function DeathFlowController() {
   const [phase, setPhase] = useState(getDeathState().phase);

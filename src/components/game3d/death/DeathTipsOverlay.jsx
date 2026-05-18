@@ -17,7 +17,7 @@ const TIPS = [
   'Watch your HP bar carefully and disengage from fights you cannot win.',
 ];
 
-const TIPS_DURATION_MS = 5000;
+const TIPS_DURATION_MS = 3000;
 
 export default function DeathTipsOverlay() {
   const tip = useMemo(() => TIPS[Math.floor(Math.random() * TIPS.length)], []);
