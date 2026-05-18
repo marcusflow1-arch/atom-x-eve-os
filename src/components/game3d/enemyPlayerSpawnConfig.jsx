@@ -2,12 +2,10 @@
 // "Rogue players" — same archer model as you, red-tinted, hostile.
 // Killing them gives bonus gold + records a PvP-style title kill.
 
+// Reduced rogue count from 5 → 2 to improve framerate.
 export const ENEMY_PLAYER_SPAWNS = [
   { id: 'rogue_alpha',   pos: [18, 0.3, 8],   level: 3, color: 0xff3b3b },
-  { id: 'rogue_bravo',   pos: [-16, 0.3, -8], level: 4, color: 0xb91c1c },
   { id: 'rogue_charlie', pos: [4, 0.3, -18],  level: 5, color: 0x991b1b },
-  { id: 'rogue_delta',   pos: [-4, 0.3, 18],  level: 6, color: 0xdc2626 },
-  { id: 'rogue_echo',    pos: [22, 0.3, -14], level: 7, color: 0x7f1d1d },
 ];
 
 // Random name pool — assigned on first spawn and each respawn for variety.
