@@ -504,8 +504,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
             dividerColor="rgba(220,200,150,0.85)"
           />
 
-          {/* Spacer matching the center cluster width (character + weapon circles) */}
-          <div style={{ width: 118 }} />
+          {/* Spacer matching the center cluster width (weapon switcher) */}
+          <div style={{ width: 64 }} />
 
           {/* Skills 5–8 above Fusion gauge */}
           <SkillsColumn
