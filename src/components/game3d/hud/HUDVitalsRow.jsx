@@ -178,45 +178,64 @@ function WeaponCenterSwitcher({ unspentPoints }) {
         style={{ width: 64, height: 64 }}
         title={`${cur.label} — Press G or ◄ ► to swap`}
       >
-        {/* Faded inactive weapons stacked upward behind the active circle */}
+        {/* Faded inactive weapons peeking out to the right of the active circle */}
         {inactive.map((w, k) => {
           const wb = WEAPON_CLASS_BUFFS[w.path];
-          const offsetY = -(24 + k * 20);
+          // Stagger to the right: first one closer, second further & more faded
+          const offsetX = 28 + k * 22;
           const opacity = 0.45 - k * 0.15;
           const scale   = 0.78 - k * 0.10;
           return (
-            <div
+            <button
               key={w.path}
-              className="absolute flex items-center justify-center pointer-events-none"
+              onClick={() => cycle(k + 1)}
+              className="absolute pointer-events-auto"
               style={{
                 top: '50%',
                 left: '50%',
                 width: 64,
                 height: 64,
-                transform: `translate(-50%, calc(-50% + ${offsetY}px)) scale(${scale})`,
+                transform: `translate(calc(-50% + ${offsetX}px), -50%) scale(${scale})`,
+                borderRadius: 999,
+                background:
+                  'radial-gradient(circle at 30% 45%, rgba(40,45,60,0.55) 0%, rgba(10,12,18,0.75) 80%)',
+                border: '1.5px solid rgba(220,200,150,0.35)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
                 opacity,
+                filter: 'blur(0.4px)',
                 zIndex: 1 - k,
               }}
+              title={`${w.label} — switch`}
             >
-              <Sword
-                style={{ width: 22, height: 22, color: wb?.color || '#cbb98a' }}
-                strokeWidth={2}
-              />
-            </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sword
+                  style={{ width: 22, height: 22, color: wb?.color || '#cbb98a' }}
+                  strokeWidth={2}
+                />
+              </div>
+            </button>
           );
         })}
 
-        {/* Active weapon circle (front-most) — visual only */}
-        <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        {/* Active weapon circle (front-most) */}
+        <button
+          onClick={() => cycle(1)}
+          className="absolute inset-0 pointer-events-auto"
           style={{
+            borderRadius: 999,
+            background:
+              'radial-gradient(circle at 50% 40%, rgba(50,55,70,0.92) 0%, rgba(10,12,18,0.98) 80%)',
+            border: '2px solid rgba(220,200,150,0.75)',
+            boxShadow: `0 0 12px ${buff.color}66, 0 3px 10px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.55)`,
             zIndex: 5,
           }}
         >
-          <Sword
-            style={{ width: 24, height: 24, color: buff.color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))' }}
-            strokeWidth={2.1}
-          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Sword
+              style={{ width: 24, height: 24, color: buff.color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))' }}
+              strokeWidth={2.1}
+            />
+          </div>
           {/* G key tag */}
           <div
             className="absolute -top-1 left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
@@ -230,7 +249,7 @@ function WeaponCenterSwitcher({ unspentPoints }) {
           >
             G
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Bottom: C-key character circle */}
@@ -504,8 +523,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
             dividerColor="rgba(220,200,150,0.85)"
           />
 
-          {/* Spacer matching the center cluster width (weapon switcher) */}
-          <div style={{ width: 64 }} />
+          {/* Spacer matching the center cluster width (character + weapon circles) */}
+          <div style={{ width: 118 }} />
 
           {/* Skills 5–8 above Fusion gauge */}
           <SkillsColumn
