@@ -232,7 +232,12 @@ export function getNextStepPreview(weaponId) {
   const entry = ensureEntry(weaponId);
   const cur = entry.level;
   if (cur >= MAX_LEVEL) {
-    return { atMax: true };
+    const stage = entry.combineStage || 0;
+    return {
+      atMax: true,
+      fromLevel: cur,
+      fromStats: getDerivedStats(cur, stage),
+    };
   }
   const next = cur + 1;
   const stage = entry.combineStage || 0;
