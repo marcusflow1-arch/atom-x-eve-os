@@ -671,7 +671,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
           className="pointer-events-none absolute"
           style={{
             right: 52 /* SkillsBookButton width */ + 8 /* gap */,
-            bottom: 92 /* align with HP-side skill icons */,
+            bottom: 38 /* align with HP-side skill icons resting on gauge */,
             width: 320,
             zIndex: 3,
           }}
