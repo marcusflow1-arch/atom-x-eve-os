@@ -178,10 +178,10 @@ function WeaponCenterSwitcher({ unspentPoints }) {
         style={{ width: 64, height: 64 }}
         title={`${cur.label} — Press G or ◄ ► to swap`}
       >
-        {/* Faded inactive weapons peeking out to the right of the active circle */}
+        {/* Faded inactive weapons stacked upward behind the active circle */}
         {inactive.map((w, k) => {
           const wb = WEAPON_CLASS_BUFFS[w.path];
-          const offsetX = 28 + k * 22;
+          const offsetY = -(24 + k * 20);
           const opacity = 0.45 - k * 0.15;
           const scale   = 0.78 - k * 0.10;
           return (
@@ -193,7 +193,7 @@ function WeaponCenterSwitcher({ unspentPoints }) {
                 left: '50%',
                 width: 64,
                 height: 64,
-                transform: `translate(calc(-50% + ${offsetX}px), -50%) scale(${scale})`,
+                transform: `translate(-50%, calc(-50% + ${offsetY}px)) scale(${scale})`,
                 opacity,
                 zIndex: 1 - k,
               }}
