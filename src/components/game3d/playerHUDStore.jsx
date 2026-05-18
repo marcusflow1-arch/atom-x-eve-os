@@ -8,8 +8,9 @@ import { getHaloBonuses, subscribeHalo } from './progression/haloStore';
 import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
 import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
+import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
 
-const STORAGE_KEY = 'wwm_player_progression_v1';
+const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
 
 // Pull current halo+title bonuses for every derived-stat recompute. Halo
@@ -35,9 +36,9 @@ const buildDefault = () => {
   };
 };
 
-let state = (() => {
+const loadState = () => {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = storage.get();
     if (saved) {
       const parsed = JSON.parse(saved);
       // Migrate legacy stat keys (hp/spirit/elemental) → new NW keys.
@@ -57,25 +58,31 @@ let state = (() => {
     }
   } catch {}
   return buildDefault();
-})();
+};
+
+let state = loadState();
 
 const listeners = new Set();
 const persist = () => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      level: state.level,
-      xp: state.xp,
-      xpForNext: state.xpForNext,
-      baseStats: state.baseStats,
-      unspentPoints: state.unspentPoints,
-      hp: state.hp,
-    }));
-  } catch {}
+  storage.set(JSON.stringify({
+    level: state.level,
+    xp: state.xp,
+    xpForNext: state.xpForNext,
+    baseStats: state.baseStats,
+    unspentPoints: state.unspentPoints,
+    hp: state.hp,
+  }));
 };
 const emit = () => {
   persist();
   listeners.forEach((fn) => fn(state));
 };
+
+// When the active character changes, reload that character's progression.
+subscribeCharacterChange(() => {
+  state = loadState();
+  listeners.forEach((fn) => fn(state));
+});
 
 // Used by GameWorld3D to seed/sync hud snapshots. Persists too.
 export function setPlayerHUD(next) {

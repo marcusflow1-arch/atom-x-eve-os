@@ -24,17 +24,24 @@ export default function CharacterLoginScreen({ onPlay }) {
   const [selectedCharIdx, setSelectedCharIdx] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [roster, setRoster] = useState(() => getCharacterState().roster);
-  const [activeId, setActiveId] = useState(() => getCharacterState().activeId);
 
   // Live-subscribe to the persistent character roster.
   useEffect(() => subscribeCharacters((s) => {
     setRoster(s.roster);
-    setActiveId(s.activeId);
     const idx = s.roster.findIndex((c) => c.id === s.activeId);
     if (idx >= 0) setSelectedCharIdx(idx);
   }), []);
 
-  const characters = roster;
+  // Decorate each roster entry with its OWN saved level (read directly
+  // from that character's namespaced progression slot).
+  const characters = roster.map((c) => {
+    let level = 1;
+    try {
+      const raw = localStorage.getItem(`wwm_player_progression_v1::${c.id}`);
+      if (raw) level = JSON.parse(raw).level || 1;
+    } catch {}
+    return { ...c, level };
+  });
 
   // Activate the selected character's saved level/xp into the HUD, then play.
   const handlePlay = () => {

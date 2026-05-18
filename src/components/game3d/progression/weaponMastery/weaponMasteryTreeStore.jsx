@@ -11,8 +11,9 @@
 import { getTreeForType, getNodeById } from './weaponMasteryTreeData';
 import { resolveWeaponType, WEAPON_TYPES } from './weaponMasteryConfig';
 import { getMasteryState } from '../weaponMasteryStore';
+import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
 
-const STORAGE_KEY = 'weapon_mastery_tree_v1';
+const storage = characterScopedStorage('weapon_mastery_tree_v1');
 
 const defaults = () => ({
   [WEAPON_TYPES.SWORD]:    {},
@@ -21,17 +22,22 @@ const defaults = () => ({
   [WEAPON_TYPES.FISTS]:    {},
 });
 
-let allocations = (() => {
+const loadAllocations = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.get();
     if (raw) return { ...defaults(), ...JSON.parse(raw) };
   } catch {}
   return defaults();
-})();
+};
+
+let allocations = loadAllocations();
 
 const listeners = new Set();
-const persist = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(allocations)); } catch {} };
+const persist = () => { storage.set(JSON.stringify(allocations)); };
 const emit = () => listeners.forEach((fn) => fn(getSnapshot()));
+
+// Reload this character's tree when the active character switches.
+subscribeCharacterChange(() => { allocations = loadAllocations(); emit(); });
 
 export function subscribeMasteryTree(fn) {
   listeners.add(fn);

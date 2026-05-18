@@ -26,8 +26,9 @@ import {
   getTitleBonusesForLevel,
   getTitleRarityForLevel,
 } from './titleData';
+import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 
-const STORAGE_KEY = 'title_progression_v1';
+const storage = characterScopedStorage('title_progression_v1');
 
 // Tracks per-path stats. paths[pathId] = { level, killsIntoLevel, totalKills }
 const initialPathState = () => {
@@ -40,7 +41,7 @@ const initialPathState = () => {
 
 const loadState = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.get();
     if (raw) {
       const parsed = JSON.parse(raw);
       const paths = initialPathState();
@@ -84,14 +85,15 @@ const loadState = () => {
 let state = loadState();
 const listeners = new Set();
 
-const save = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-};
+const save = () => { storage.set(JSON.stringify(state)); };
 
 const emit = () => {
   const snapshot = getTitleState();
   listeners.forEach((fn) => fn(snapshot));
 };
+
+// Reload this character's title data when the active character switches.
+subscribeCharacterChange(() => { state = loadState(); emit(); });
 
 // ── Progression math ──────────────────────────────────────────────────────
 // Adds `count` kills toward a specific path, leveling it up as thresholds

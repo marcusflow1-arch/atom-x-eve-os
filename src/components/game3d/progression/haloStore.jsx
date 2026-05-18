@@ -33,12 +33,13 @@ import {
   incrementKillCount,
   subscribeKillCount,
 } from '../killCountStore';
+import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 
-const STORAGE_KEY = 'halo_progression_v3';
+const storage = characterScopedStorage('halo_progression_v3');
 
 const loadState = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.get();
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
@@ -54,9 +55,10 @@ const loadState = () => {
 let state = loadState();
 const listeners = new Set();
 
-const save = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-};
+const save = () => { storage.set(JSON.stringify(state)); };
+
+// Reload this character's halo data when the active character switches.
+subscribeCharacterChange(() => { state = loadState(); emit(); });
 
 const emit = () => {
   const snapshot = getHaloState();

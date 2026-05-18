@@ -3,8 +3,9 @@
 // Mirrors the same persistent / subscribe pattern as halo + title stores.
 
 import { WEAPONS, MASTERY_MAX_LEVEL, killsForMasteryLevel } from './weaponSynergyData';
+import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 
-const STORAGE_KEY = 'weapon_mastery_v1';
+const storage = characterScopedStorage('weapon_mastery_v1');
 
 const defaults = () => {
   const out = {};
@@ -16,7 +17,7 @@ const defaults = () => {
 
 const load = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.get();
     if (raw) {
       const parsed = JSON.parse(raw);
       const merged = defaults();
@@ -39,13 +40,14 @@ const load = () => {
 let state = load();
 const listeners = new Set();
 
-const save = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-};
+const save = () => { storage.set(JSON.stringify(state)); };
 const emit = () => {
   const snap = getMasteryState();
   listeners.forEach((fn) => fn(snap));
 };
+
+// Reload this character's weapon mastery when the active character switches.
+subscribeCharacterChange(() => { state = load(); emit(); });
 
 function advance(weaponId, count) {
   const w = state.weapons[weaponId];
