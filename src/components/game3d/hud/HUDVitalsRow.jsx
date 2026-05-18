@@ -595,7 +595,7 @@ function QuickActionBoxRow() {
       <BuffDividerLine icon={Sparkles} color="rgba(167,139,250,0.85)" />
       <div
         className="flex items-center justify-end gap-1.5 mt-1.5"
-        style={{ transform: 'translateX(-192px)' }}
+        style={{ transform: 'translateX(-144px)' }}
       >
         {QUICK_ACTIONS.map(({ id, icon: Icon, label }) => (
           <button
