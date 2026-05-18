@@ -130,7 +130,10 @@ const WEAPON_CLASSES = [
   { path: 'defense', label: 'Dual Blades', className: 'Defense' },
 ];
 
-function WeaponCenterSwitcher({ unspentPoints }) {
+// Standalone weapon-switcher cluster: active weapon centered, other weapons
+// peek out behind it like a fan/cross menu. A "G" tag sits above the cluster.
+// Cycle with G or ◄ / ►.
+function WeaponFanSwitcher() {
   const [idx, setIdx] = useState(() => {
     const cur = getActiveWeaponPath();
     return Math.max(0, WEAPON_CLASSES.findIndex((w) => w.path === cur));
@@ -139,7 +142,6 @@ function WeaponCenterSwitcher({ unspentPoints }) {
 
   useEffect(() => subscribeWeaponBuffs(() => force((n) => n + 1)), []);
 
-  // Single source of truth for cycling so keys + UI use the same path.
   const cycle = React.useCallback((dir) => {
     setIdx((prev) => {
       const next = (prev + dir + WEAPON_CLASSES.length) % WEAPON_CLASSES.length;
@@ -148,99 +150,113 @@ function WeaponCenterSwitcher({ unspentPoints }) {
     });
   }, []);
 
-  // Key bindings: G cycles forward, ◄ / ► cycle backward / forward.
   useEffect(() => {
     const onKey = (e) => {
-      // Ignore typing in inputs
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      if (e.code === 'KeyG')        { cycle(1);  e.preventDefault(); }
-      else if (e.code === 'ArrowRight') { cycle(1);  }
-      else if (e.code === 'ArrowLeft')  { cycle(-1); }
+      if (e.code === 'KeyG')             { cycle(1);  e.preventDefault(); }
+      else if (e.code === 'ArrowRight')  { cycle(1);  }
+      else if (e.code === 'ArrowLeft')   { cycle(-1); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [cycle]);
 
   const cur  = WEAPON_CLASSES[idx];
-  const next = WEAPON_CLASSES[(idx + 1) % WEAPON_CLASSES.length];
   const buff = WEAPON_CLASS_BUFFS[cur.path];
-  const nextBuff = WEAPON_CLASS_BUFFS[next.path];
+
+  // Position the non-active weapons in a fan around the active one (cross style).
+  // Offsets are in pixels relative to the cluster center.
+  const peekOffsets = [
+    { x: -22, y: 6 },   // back-left
+    { x:  22, y: 6 },   // back-right
+    { x:   0, y: -18 }, // back-top
+    { x:   0, y: 22 },  // back-bottom
+  ];
+
+  // Build list of non-active weapons in display order.
+  const others = WEAPON_CLASSES
+    .map((w, i) => ({ w, i }))
+    .filter((e) => e.i !== idx);
 
   return (
-    <div className="relative flex items-center" style={{ height: 64 }}>
-      {/* C-key character circle */}
-      <div className="relative" style={{ width: 64, height: 64 }}>
-        <CharacterRing unspentPoints={unspentPoints} />
+    <div className="relative pointer-events-auto" style={{ width: 72, height: 72 }} title={`${cur.label} — Press G to swap`}>
+      {/* G key tag — stays above the cluster */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[10px] font-black tracking-wider pointer-events-none z-30"
+        style={{
+          top: -14,
+          background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
+          border: '1px solid rgba(220,200,150,0.7)',
+          color: '#fde68a',
+          textShadow: '0 1px 1px rgba(0,0,0,0.9)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
+        }}
+      >
+        G
       </div>
 
-      {/* Weapon circle with faded "next" weapon hint peeking out behind */}
-      <div
-        className="relative"
-        style={{ width: 64, height: 64, marginLeft: -10 }}
-        title={`${cur.label} — Press G or ◄ ► to swap`}
-      >
-        {/* Faded "next weapon" silhouette peeking out from behind */}
-        <button
-          onClick={() => cycle(1)}
-          className="absolute pointer-events-auto"
-          style={{
-            top: 6,
-            left: 18,
-            right: -4,
-            bottom: 6,
-            borderRadius: 999,
-            background:
-              'radial-gradient(circle at 30% 45%, rgba(40,45,60,0.55) 0%, rgba(10,12,18,0.75) 80%)',
-            border: '1.5px solid rgba(220,200,150,0.35)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.55)',
-            opacity: 0.55,
-            filter: 'blur(0.4px)',
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-end pr-2">
+      {/* Peek-out weapon icons (smaller, tucked behind the active one) */}
+      {others.map((entry, k) => {
+        const off = peekOffsets[k % peekOffsets.length];
+        const oBuff = WEAPON_CLASS_BUFFS[entry.w.path];
+        return (
+          <button
+            key={entry.w.path}
+            onClick={() => {
+              setActiveWeaponPath(entry.w.path);
+              setIdx(entry.i);
+            }}
+            className="absolute rounded-full pointer-events-auto"
+            style={{
+              width: 26,
+              height: 26,
+              left: '50%',
+              top: '50%',
+              transform: `translate(calc(-50% + ${off.x}px), calc(-50% + ${off.y}px))`,
+              background:
+                'radial-gradient(circle at 50% 40%, rgba(40,45,60,0.85) 0%, rgba(10,12,18,0.95) 80%)',
+              border: '1.5px solid rgba(220,200,150,0.45)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
+              opacity: 0.7,
+              zIndex: 5,
+            }}
+            title={entry.w.label}
+          >
             <Sword
-              style={{ width: 16, height: 16, color: nextBuff?.color || '#cbb98a', opacity: 0.8 }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{ width: 12, height: 12, color: oBuff?.color || '#cbb98a' }}
               strokeWidth={2}
             />
-          </div>
-        </button>
+          </button>
+        );
+      })}
 
-        {/* Primary weapon circle */}
-        <button
-          onClick={() => cycle(1)}
-          className="absolute inset-0 pointer-events-auto"
-          style={{
-            borderRadius: 999,
-            background:
-              'radial-gradient(circle at 50% 40%, rgba(50,55,70,0.92) 0%, rgba(10,12,18,0.98) 80%)',
-            border: '2px solid rgba(220,200,150,0.75)',
-            boxShadow: `0 0 12px ${buff.color}66, 0 3px 10px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.55)`,
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Sword
-              style={{ width: 24, height: 24, color: buff.color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))' }}
-              strokeWidth={2.1}
-            />
-          </div>
-          {/* G key tag */}
-          <div
-            className="absolute -top-1 left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
-            style={{
-              background: 'linear-gradient(180deg, rgba(35,35,45,0.95) 0%, rgba(15,15,20,0.95) 100%)',
-              border: '1px solid rgba(220,200,150,0.65)',
-              color: '#fde68a',
-              textShadow: '0 1px 1px rgba(0,0,0,0.9)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
-            }}
-          >
-            G
-          </div>
-        </button>
-      </div>
+      {/* Active weapon (big, centered, on top) */}
+      <button
+        onClick={() => cycle(1)}
+        className="absolute rounded-full pointer-events-auto"
+        style={{
+          width: 48,
+          height: 48,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          background:
+            'radial-gradient(circle at 50% 40%, rgba(55,60,75,0.95) 0%, rgba(10,12,18,0.98) 80%)',
+          border: '2px solid rgba(220,200,150,0.85)',
+          boxShadow: `0 0 12px ${buff.color}77, 0 3px 10px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.55)`,
+          zIndex: 10,
+        }}
+      >
+        <Sword
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ width: 22, height: 22, color: buff.color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))' }}
+          strokeWidth={2.1}
+        />
+      </button>
 
-      {/* Current weapon label — tiny tag below the cluster */}
+      {/* Active weapon label tag — below the cluster */}
       <div
         className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold tracking-[0.2em] uppercase pointer-events-none"
         style={{
@@ -250,6 +266,22 @@ function WeaponCenterSwitcher({ unspentPoints }) {
         }}
       >
         {cur.label}
+      </div>
+    </div>
+  );
+}
+
+// Center column: weapon fan sits ABOVE the C-key character circle.
+function WeaponCenterSwitcher({ unspentPoints }) {
+  return (
+    <div className="relative flex flex-col items-center" style={{ width: 96 }}>
+      {/* Weapon fan on top */}
+      <div className="mb-3">
+        <WeaponFanSwitcher />
+      </div>
+      {/* C-key character circle below */}
+      <div className="relative" style={{ width: 64, height: 64 }}>
+        <CharacterRing unspentPoints={unspentPoints} />
       </div>
     </div>
   );
@@ -506,8 +538,8 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints }) {
             dividerColor="rgba(220,200,150,0.85)"
           />
 
-          {/* Spacer matching the center cluster width (character + weapon circles) */}
-          <div style={{ width: 118 }} />
+          {/* Spacer matching the center cluster width (weapon fan + character circle stacked) */}
+          <div style={{ width: 96 }} />
 
           {/* Skills 5–8 above Fusion gauge */}
           <SkillsColumn
