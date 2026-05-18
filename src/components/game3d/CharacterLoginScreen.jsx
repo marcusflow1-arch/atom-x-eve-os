@@ -2,48 +2,46 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { motion } from 'framer-motion';
-import { ChevronDown, Plus, MoreHorizontal, MessageSquare, Settings, Power, Loader2 } from 'lucide-react';
+import { Plus, MessageSquare, Settings, Power, Loader2 } from 'lucide-react';
+import {
+  subscribeCharacters,
+  activateAndSyncToHUD,
+  getCharacterState,
+} from './characterStore';
+import CharacterCreationModal from './CharacterCreationModal';
 
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
 /**
- * CharacterLoginScreen — Mirrors the "Select Character" screen from New World.
- * Renders the female archer (ErikaArcher) facing the camera with an idle animation,
- * and exposes a PLAY button that calls onPlay() to enter the game world.
+ * CharacterLoginScreen — Character selection and creation.
+ * Renders the female archer (ErikaArcher) facing the camera with an idle animation.
+ * Players can select a character from their persistent roster or create a new one.
  */
 export default function CharacterLoginScreen({ onPlay }) {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [selectedCharIdx, setSelectedCharIdx] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
+  const [roster, setRoster] = useState(() => getCharacterState().roster);
+  const [activeId, setActiveId] = useState(() => getCharacterState().activeId);
 
-  const REGIONS = [
-    { name: 'US East', count: '2/3', ping: 28 },
-    { name: 'US West', count: '1/3', ping: 64 },
-    { name: 'EU Central', count: '3/3', ping: 110 },
-    { name: 'South America', count: '0/2', ping: 145 },
-    { name: 'Asia Pacific', count: '2/4', ping: 180 },
-    { name: 'Australia', count: '1/2', ping: 220 },
-  ];
+  // Live-subscribe to the persistent character roster.
+  useEffect(() => subscribeCharacters((s) => {
+    setRoster(s.roster);
+    setActiveId(s.activeId);
+    const idx = s.roster.findIndex((c) => c.id === s.activeId);
+    if (idx >= 0) setSelectedCharIdx(idx);
+  }), []);
 
-  const SERVERS = [
-    { name: 'Nightveil Hallow', players: 1842, status: 'High' },
-    { name: 'Maramma', players: 1203, status: 'Medium' },
-    { name: 'Valhalla', players: 987, status: 'Medium' },
-    { name: 'El Dorado', players: 432, status: 'Low' },
-    { name: 'Castle of Steel', players: 1567, status: 'High' },
-    { name: 'Aeternum Prime', players: 2100, status: 'Full' },
-  ];
+  const characters = roster;
 
-  const [selectedRegionIdx, setSelectedRegionIdx] = useState(0);
-  const [selectedServerIdx, setSelectedServerIdx] = useState(0);
-  const [regionOpen, setRegionOpen] = useState(false);
-  const [serverOpen, setServerOpen] = useState(false);
-
-  const characters = [
-    { name: 'Erika', region: 'Maramma', level: 65 },
-    { name: 'Belghast', region: 'Valhalla', level: 60 },
-  ];
+  // Activate the selected character's saved level/xp into the HUD, then play.
+  const handlePlay = () => {
+    const chosen = characters[selectedCharIdx];
+    if (chosen) activateAndSyncToHUD(chosen.id);
+    onPlay?.();
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -136,7 +134,7 @@ export default function CharacterLoginScreen({ onPlay }) {
 
     // Press ENTER to play
     const onKey = (e) => {
-      if (e.key === 'Enter') onPlay?.();
+      if (e.key === 'Enter') handlePlay();
     };
     window.addEventListener('keydown', onKey);
 
@@ -147,7 +145,8 @@ export default function CharacterLoginScreen({ onPlay }) {
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
     };
-  }, [onPlay]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="fixed inset-0 overflow-hidden">
@@ -220,7 +219,7 @@ export default function CharacterLoginScreen({ onPlay }) {
         ))}
       </div>
 
-      {/* LEFT PANEL: Region + Characters */}
+      {/* LEFT PANEL: Characters */}
       <motion.div
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
@@ -236,75 +235,21 @@ export default function CharacterLoginScreen({ onPlay }) {
             boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
           }}
         >
-          {/* Region selector */}
-          <div className="p-4 border-b border-white/10 relative">
-            <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-2">Region</div>
-            <button
-              onClick={() => { setRegionOpen(v => !v); setServerOpen(false); }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded bg-black/30 border transition-all ${regionOpen ? 'border-cyan-400/60' : 'border-white/10 hover:border-cyan-400/40'}`}
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col gap-0.5">
-                  <span className="w-3 h-[2px] bg-cyan-300" />
-                  <span className="w-3 h-[2px] bg-cyan-300/70" />
-                  <span className="w-3 h-[2px] bg-cyan-300/40" />
-                </div>
-                <span className="text-white text-sm font-medium">{REGIONS[selectedRegionIdx].name}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-white/60 text-xs">{REGIONS[selectedRegionIdx].count}</span>
-                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${regionOpen ? 'rotate-180' : ''}`} />
-              </div>
-            </button>
-
-            {regionOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute left-4 right-4 top-full mt-1 z-30 rounded overflow-hidden"
-                style={{
-                  background: 'rgba(15, 25, 40, 0.98)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(120, 200, 240, 0.35)',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
-                }}
-              >
-                <div className="px-3 py-2 border-b border-white/10 text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase">
-                  {REGIONS.length} Regions Available
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {REGIONS.map((r, idx) => (
-                    <button
-                      key={r.name}
-                      onClick={() => { setSelectedRegionIdx(idx); setRegionOpen(false); }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-all ${
-                        idx === selectedRegionIdx ? 'bg-cyan-500/15 text-white' : 'text-white/75 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${r.ping < 80 ? 'bg-green-400' : r.ping < 150 ? 'bg-yellow-400' : 'bg-red-400'}`} />
-                        <span className="text-sm font-medium">{r.name}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-white/50">
-                        <span>{r.ping}ms</span>
-                        <span>{r.count}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </div>
-
           {/* Characters */}
           <div className="p-4">
             <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-3">Characters</div>
             <div className="space-y-2">
+              {characters.length === 0 && (
+                <div className="px-3 py-6 rounded bg-black/20 border border-white/5 text-center text-white/50 text-xs">
+                  No characters yet. Create one to begin.
+                </div>
+              )}
+
               {characters.map((char, idx) => {
                 const isSelected = selectedCharIdx === idx;
                 return (
                   <button
-                    key={char.name}
+                    key={char.id || char.name}
                     onClick={() => setSelectedCharIdx(idx)}
                     className={`w-full flex items-center gap-3 p-3 rounded transition-all ${
                       isSelected
@@ -321,95 +266,37 @@ export default function CharacterLoginScreen({ onPlay }) {
                     </div>
                     <div className="flex-1 text-left">
                       <div className="text-white font-bold text-base">{char.name}</div>
-                      <div className="text-white/50 text-xs">{char.region}</div>
+                      <div className="text-white/50 text-xs">Level {char.level}</div>
                     </div>
-                    <MoreHorizontal className="w-4 h-4 text-white/40" />
                   </button>
                 );
               })}
 
-              <button className="w-full flex items-center justify-center gap-2 p-3 rounded border border-dashed border-white/20 hover:border-white/40 text-white/60 hover:text-white text-sm transition-all">
+              <button
+                onClick={() => setShowCreate(true)}
+                className="w-full flex items-center justify-center gap-2 p-3 rounded border border-dashed border-white/20 hover:border-white/40 text-white/60 hover:text-white text-sm transition-all"
+              >
                 <Plus className="w-4 h-4" />
                 <span className="underline underline-offset-2">Create Character</span>
               </button>
             </div>
           </div>
         </div>
-
-        {/* World buttons */}
-        <div className="flex gap-2 mt-4">
-          <button className="flex-1 px-4 py-2.5 rounded bg-black/40 border border-white/15 text-white/80 hover:text-white hover:bg-black/60 text-sm transition-all">
-            View Worlds
-          </button>
-          <button className="flex-1 px-4 py-2.5 rounded bg-black/40 border border-white/15 text-white/80 hover:text-white hover:bg-black/60 text-sm transition-all">
-            Refresh
-          </button>
-        </div>
       </motion.div>
 
-      {/* BOTTOM-RIGHT: World + PLAY */}
+      {/* BOTTOM-RIGHT: PLAY */}
       <motion.div
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3, duration: 0.6 }}
-        className="absolute bottom-8 right-8 w-[280px] z-10 space-y-3"
+        className="absolute bottom-8 right-8 w-[280px] z-10"
       >
-        <div className="relative">
-          {serverOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded overflow-hidden"
-              style={{
-                background: 'rgba(15, 25, 40, 0.98)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(120, 200, 240, 0.35)',
-                boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
-              }}
-            >
-              <div className="px-3 py-2 border-b border-white/10 text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase">
-                {SERVERS.length} Servers — {REGIONS[selectedRegionIdx].name}
-              </div>
-              <div className="max-h-72 overflow-y-auto">
-                {SERVERS.map((s, idx) => (
-                  <button
-                    key={s.name}
-                    onClick={() => { setSelectedServerIdx(idx); setServerOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-all ${
-                      idx === selectedServerIdx ? 'bg-cyan-500/15 text-white' : 'text-white/75 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${s.status === 'Full' ? 'bg-red-400' : s.status === 'High' ? 'bg-orange-400' : s.status === 'Medium' ? 'bg-yellow-400' : 'bg-green-400'}`} />
-                      <span className="text-sm font-medium">{s.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-white/50">
-                      <span>{s.players.toLocaleString()}</span>
-                      <span>{s.status}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          <button
-            onClick={() => { setServerOpen(v => !v); setRegionOpen(false); }}
-            className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded bg-black/40 backdrop-blur-md border text-white/80 text-sm hover:bg-black/60 transition-all ${serverOpen ? 'border-cyan-400/60' : 'border-white/15'}`}
-          >
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full border border-white/40 flex items-center justify-center text-[10px] text-white/60">?</div>
-              <span>{SERVERS[selectedServerIdx].name}</span>
-            </div>
-            <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${serverOpen ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
         <motion.button
-          onClick={onPlay}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full py-4 rounded text-white font-bold text-xl tracking-[0.3em] uppercase relative overflow-hidden group"
+          onClick={handlePlay}
+          disabled={characters.length === 0}
+          whileHover={{ scale: characters.length === 0 ? 1 : 1.02 }}
+          whileTap={{ scale: characters.length === 0 ? 1 : 0.98 }}
+          className={`w-full py-4 rounded text-white font-bold text-xl tracking-[0.3em] uppercase relative overflow-hidden group ${characters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           style={{
             background: 'linear-gradient(180deg, rgba(40, 100, 140, 0.7) 0%, rgba(20, 60, 100, 0.9) 100%)',
             border: '1px solid rgba(120, 200, 240, 0.5)',
@@ -425,6 +312,13 @@ export default function CharacterLoginScreen({ onPlay }) {
           <span className="relative z-10 drop-shadow-lg">PLAY</span>
         </motion.button>
       </motion.div>
+
+      {showCreate && (
+        <CharacterCreationModal
+          onClose={() => setShowCreate(false)}
+          onCreated={() => { /* roster subscription auto-selects new char */ }}
+        />
+      )}
     </div>
   );
 }
