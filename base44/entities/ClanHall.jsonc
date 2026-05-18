@@ -1,0 +1,71 @@
+{
+  "name": "ClanHall",
+  "type": "object",
+  "properties": {
+    "clan_id": {
+      "type": "string",
+      "description": "ID of the clan/division that owns this hall"
+    },
+    "hall_type": {
+      "type": "string",
+      "enum": [
+        "gilded_hollow",
+        "lost_precipice",
+        "windswept_haven",
+        "isle_of_reflection"
+      ],
+      "default": "gilded_hollow",
+      "description": "Which preset hall biome was claimed"
+    },
+    "hall_name": {
+      "type": "string",
+      "description": "Custom display name for the hall"
+    },
+    "claimed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "claimed_by": {
+      "type": "string",
+      "description": "User ID who led the claim"
+    },
+    "favor": {
+      "type": "number",
+      "default": 0,
+      "description": "Guild Favor currency stored at the hall"
+    },
+    "aetherium": {
+      "type": "number",
+      "default": 0,
+      "description": "Aetherium currency stored at the hall"
+    },
+    "decorations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "rotation": {
+            "type": "number"
+          }
+        }
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "clan_id",
+    "hall_type"
+  ]
+}

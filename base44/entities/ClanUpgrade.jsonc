@@ -1,0 +1,82 @@
+{
+  "name": "ClanUpgrade",
+  "type": "object",
+  "properties": {
+    "clan_id": {
+      "type": "string",
+      "description": "ID of the clan/division"
+    },
+    "upgrade_key": {
+      "type": "string",
+      "description": "Stable key identifying which upgrade this is (e.g. 'vault_tab_2', 'mission_board', 'banner_strength')"
+    },
+    "upgrade_name": {
+      "type": "string",
+      "description": "Display name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "tactics",
+        "economy",
+        "politics",
+        "war",
+        "art_of_war"
+      ],
+      "default": "tactics",
+      "description": "GW2-style upgrade lane"
+    },
+    "tier": {
+      "type": "number",
+      "default": 1,
+      "description": "Current tier 1..5"
+    },
+    "max_tier": {
+      "type": "number",
+      "default": 5
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "locked",
+        "available",
+        "in_progress",
+        "completed"
+      ],
+      "default": "available"
+    },
+    "progress_seconds": {
+      "type": "number",
+      "default": 0,
+      "description": "Seconds elapsed on the current build"
+    },
+    "build_seconds": {
+      "type": "number",
+      "default": 3600,
+      "description": "Seconds required to finish current tier"
+    },
+    "cost_favor": {
+      "type": "number",
+      "default": 0,
+      "description": "Guild Favor cost"
+    },
+    "cost_aetherium": {
+      "type": "number",
+      "default": 0,
+      "description": "Aetherium currency cost"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "clan_id",
+    "upgrade_key",
+    "upgrade_name"
+  ]
+}

@@ -468,6 +468,153 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- EDIT MESSAGE OF THE DAY ---
+        if (action === 'edit_motd') {
+            const { divisionId, motd } = data;
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
+                return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+            await base44.asServiceRole.entities.Division.update(divisionId, { motto: motd || '' });
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- DEPOSIT TO VAULT ---
+        if (action === 'deposit_vault') {
+            const { divisionId, item } = data;
+            const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!member.length) {
+                return new Response(JSON.stringify({ error: 'Not a member' }), { status: 403, headers: corsHeaders });
+            }
+            await base44.asServiceRole.entities.ClanVaultItem.create({
+                clan_id: divisionId,
+                item_id: item.item_id || '',
+                item_name: item.item_name,
+                item_icon: item.item_icon || '',
+                rarity: item.rarity || 'common',
+                quantity: item.quantity || 1,
+                stash_tab: item.stash_tab || 0,
+                deposited_by: user.id,
+                deposited_at: new Date().toISOString(),
+                note: item.note || ''
+            });
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- WITHDRAW FROM VAULT ---
+        if (action === 'withdraw_vault') {
+            const { vaultItemId, quantity } = data;
+            const vaultItem = await base44.asServiceRole.entities.ClanVaultItem.get(vaultItemId);
+            if (!vaultItem) {
+                return new Response(JSON.stringify({ error: 'Item not found' }), { status: 404, headers: corsHeaders });
+            }
+            const member = await base44.entities.ClanMember.filter({ clan_id: vaultItem.clan_id, user_id: user.id });
+            if (!member.length) {
+                return new Response(JSON.stringify({ error: 'Not a member' }), { status: 403, headers: corsHeaders });
+            }
+            const take = Math.max(1, Math.min(quantity || 1, vaultItem.quantity));
+            if (take >= vaultItem.quantity) {
+                await base44.asServiceRole.entities.ClanVaultItem.delete(vaultItemId);
+            } else {
+                await base44.asServiceRole.entities.ClanVaultItem.update(vaultItemId, { quantity: vaultItem.quantity - take });
+            }
+            return new Response(JSON.stringify({ success: true, withdrawn: take }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- START UPGRADE ---
+        if (action === 'start_upgrade') {
+            const { divisionId, upgradeKey, upgradeName, category, buildSeconds, costFavor, costAetherium } = data;
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
+                return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+
+            // Find existing upgrade row (or create one)
+            const existing = await base44.asServiceRole.entities.ClanUpgrade.filter({ clan_id: divisionId, upgrade_key: upgradeKey });
+            if (existing.length > 0) {
+                const u = existing[0];
+                if (u.status === 'in_progress') {
+                    return new Response(JSON.stringify({ error: 'Already in progress' }), { status: 400, headers: corsHeaders });
+                }
+                if (u.tier >= (u.max_tier || 5)) {
+                    return new Response(JSON.stringify({ error: 'Max tier reached' }), { status: 400, headers: corsHeaders });
+                }
+                await base44.asServiceRole.entities.ClanUpgrade.update(u.id, {
+                    status: 'in_progress',
+                    progress_seconds: 0,
+                    build_seconds: buildSeconds || 3600,
+                    cost_favor: costFavor || 0,
+                    cost_aetherium: costAetherium || 0,
+                    started_at: new Date().toISOString()
+                });
+            } else {
+                await base44.asServiceRole.entities.ClanUpgrade.create({
+                    clan_id: divisionId,
+                    upgrade_key: upgradeKey,
+                    upgrade_name: upgradeName,
+                    category: category || 'tactics',
+                    tier: 1,
+                    max_tier: 5,
+                    status: 'in_progress',
+                    progress_seconds: 0,
+                    build_seconds: buildSeconds || 3600,
+                    cost_favor: costFavor || 0,
+                    cost_aetherium: costAetherium || 0,
+                    started_at: new Date().toISOString()
+                });
+            }
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- CLAIM GUILD HALL ---
+        if (action === 'claim_hall') {
+            const { divisionId, hallType, hallName } = data;
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!actor.length || actor[0].role !== 'leader') {
+                return new Response(JSON.stringify({ error: 'Only the leader can claim a hall' }), { status: 403, headers: corsHeaders });
+            }
+            const existing = await base44.asServiceRole.entities.ClanHall.filter({ clan_id: divisionId });
+            if (existing.length > 0) {
+                return new Response(JSON.stringify({ error: 'Hall already claimed' }), { status: 400, headers: corsHeaders });
+            }
+            const hall = await base44.asServiceRole.entities.ClanHall.create({
+                clan_id: divisionId,
+                hall_type: hallType || 'gilded_hollow',
+                hall_name: hallName || 'Guild Hall',
+                claimed_at: new Date().toISOString(),
+                claimed_by: user.id,
+                favor: 0,
+                aetherium: 0,
+                decorations: []
+            });
+            return new Response(JSON.stringify({ success: true, hallId: hall.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- POST CHAT MESSAGE ---
+        if (action === 'post_message') {
+            const { divisionId, channelId, content, isAnnouncement } = data;
+            const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!member.length) {
+                return new Response(JSON.stringify({ error: 'Not a member' }), { status: 403, headers: corsHeaders });
+            }
+            // Announcements require officer+
+            if (isAnnouncement && member[0].role !== 'leader' && member[0].role !== 'officer') {
+                return new Response(JSON.stringify({ error: 'Only officers can announce' }), { status: 403, headers: corsHeaders });
+            }
+            await base44.asServiceRole.entities.ClanMessage.create({
+                divisionId,
+                channelId: channelId || '',
+                author: user.full_name || user.username || 'Player',
+                authorAvatar: user.avatar_url || '',
+                content: content || '',
+                userId: user.id,
+                role: member[0].role,
+                isAnnouncement: !!isAnnouncement,
+                isPinned: false
+            });
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders });
 
     } catch (error) {

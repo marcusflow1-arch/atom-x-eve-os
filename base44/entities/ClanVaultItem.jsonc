@@ -1,0 +1,59 @@
+{
+  "name": "ClanVaultItem",
+  "type": "object",
+  "properties": {
+    "clan_id": {
+      "type": "string",
+      "description": "ID of the clan/division this item belongs to"
+    },
+    "item_id": {
+      "type": "string",
+      "description": "Reference to the underlying item type (Item entity id or static item key)"
+    },
+    "item_name": {
+      "type": "string",
+      "description": "Snapshot of the item display name"
+    },
+    "item_icon": {
+      "type": "string",
+      "description": "Snapshot icon URL"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "epic",
+        "legendary",
+        "mythical"
+      ],
+      "default": "common"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "stash_tab": {
+      "type": "number",
+      "default": 0,
+      "description": "Which vault tab (0..N-1) this stack lives in"
+    },
+    "deposited_by": {
+      "type": "string",
+      "description": "User ID of the depositor"
+    },
+    "deposited_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional note left with the deposit"
+    }
+  },
+  "required": [
+    "clan_id",
+    "item_name"
+  ]
+}

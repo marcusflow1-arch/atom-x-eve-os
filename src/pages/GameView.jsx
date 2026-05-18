@@ -48,6 +48,7 @@ import SkillActivationToastListener from '../components/game3d/SkillActivationTo
 import GameStateProvider from '../components/game3d/state/GameStateProvider';
 import CombatMusicTrigger from '../components/game3d/CombatMusicTrigger';
 import DeathFlowController from '../components/game3d/death/DeathFlowController';
+import ClanOverlay from '../components/game3d/clan/ClanOverlay';
 import {
   bindWorldAudio,
   setWorldTargetVolume,
@@ -61,6 +62,7 @@ export default function GameView() {
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
+  const [clanOverlayOpen, setClanOverlayOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
   const [themeAudioUrl, setThemeAudioUrl] = useState(null);
   const [themeVideoUrl, setThemeVideoUrl] = useState(null);
@@ -247,17 +249,20 @@ export default function GameView() {
         setProgressionOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
+      } else if (e.key.toLowerCase() === 'g') {
+        setClanOverlayOpen((v) => !v);
       } else if (e.key === 'Escape') {
         // Close any open sub-panels first; otherwise toggle pause menu
         if (storeOpen) setStoreOpen(false);
         else if (progressionOpen) setProgressionOpen(false);
         else if (friendsListOpen) setFriendsListOpen(false);
+        else if (clanOverlayOpen) setClanOverlayOpen(false);
         else setPauseMenuOpen((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen, progressionOpen, friendsListOpen]);
+  }, [phase, storeOpen, progressionOpen, friendsListOpen, clanOverlayOpen]);
 
   if (phase === 'login') {
     return (
@@ -339,6 +344,9 @@ export default function GameView() {
 
       {/* Death flow — death animation → 5s tips overlay → respawn map */}
       <DeathFlowController />
+
+      {/* Guild Wars 2-style clan overlay — opened by G key */}
+      <ClanOverlay open={clanOverlayOpen} onClose={() => setClanOverlayOpen(false)} userId={user?.id} />
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu
