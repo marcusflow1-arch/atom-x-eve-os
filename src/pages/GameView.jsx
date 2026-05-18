@@ -47,6 +47,7 @@ import WindRunEffect from '../components/game3d/WindRunEffect';
 import SkillActivationToastListener from '../components/game3d/SkillActivationToastListener';
 import GameStateProvider from '../components/game3d/state/GameStateProvider';
 import CombatMusicTrigger from '../components/game3d/CombatMusicTrigger';
+import DeathFlowController from '../components/game3d/death/DeathFlowController';
 import {
   bindWorldAudio,
   setWorldTargetVolume,
@@ -335,6 +336,9 @@ export default function GameView() {
 
       {/* Combat music — fades world theme out, plays combat track during fights */}
       <CombatMusicTrigger />
+
+      {/* Death flow — death animation → 5s tips overlay → respawn map */}
+      <DeathFlowController />
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu
