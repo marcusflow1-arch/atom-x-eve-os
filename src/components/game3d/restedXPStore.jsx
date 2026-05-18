@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'wwm_rested_xp_v1';
-const PCT_PER_MIN = 0.1;          // 0.1% of xpForNext per minute offline
+const PCT_PER_MIN = 6000;         // DEMO: 100% per second (6000% per minute) — revert to 0.1 after testing
 const MAX_PCT = 100;              // capped at 100% of one level
 const HEARTBEAT_MS = 30 * 1000;   // touch lastSeenAt every 30s while online
 
