@@ -514,61 +514,56 @@ function SkillsBookButton({ open, onToggle }) {
   );
 }
 
-// ── Companion skill slots (diamond of rotated clear squares) ──────────────
-// 4 square buttons rotated 45° (so they appear as diamonds), arranged around
-// a central point. Buttons are clear (no fill) matching the other companion
-// HUD style. Layout:
-//   • Skill 1 → left
-//   • Skill 2 → top
-//   • Skill 3 → bottom
-//   • Skill 4 → right
+// ── Companion skill slots (PlayStation/Xbox diamond layout) ──────────────
 function CompanionSkillSlots() {
-  // 1.8× the previous size: BTN 22 → ~40, container scaled to fit.
-  const BTN = 40;             // square button edge length
-  const OFFSET = 40;          // distance from center to each diamond point
-  const SIZE = (OFFSET + BTN) * 2;  // container size to fit all 4 + gap
+  // 4 buttons in a diamond: top, right, bottom, left (PS-style)
+  // Container is square; diagonal accent lines cross behind the buttons.
+  const SIZE = 70;          // overall container size
+  const BTN = 22;            // individual button size
+  const OFFSET = 22;         // distance from center to each diamond point
 
   const positions = [
-    { key: '1', tx: -OFFSET, ty: 0,        title: 'Companion skill 1' },
-    { key: '2', tx: 0,        ty: -OFFSET, title: 'Companion skill 2' },
-    { key: '3', tx: 0,        ty: OFFSET,  title: 'Companion skill 3' },
-    { key: '4', tx: OFFSET,   ty: 0,        title: 'Companion skill 4' },
+    { key: 'T', top: '50%',  left: '50%', tx: 0,        ty: -OFFSET, title: 'Companion skill 1' },
+    { key: 'R', top: '50%',  left: '50%', tx: OFFSET,   ty: 0,       title: 'Companion skill 2' },
+    { key: 'B', top: '50%',  left: '50%', tx: 0,        ty: OFFSET,  title: 'Companion skill 3' },
+    { key: 'L', top: '50%',  left: '50%', tx: -OFFSET,  ty: 0,       title: 'Companion skill 4' },
   ];
 
   const diagLineStyle = {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: SIZE * 0.85,
+    width: SIZE * 0.95,
     height: 1,
     background:
-      'linear-gradient(90deg, rgba(120,180,230,0) 0%, rgba(120,180,230,0.5) 50%, rgba(120,180,230,0) 100%)',
+      'linear-gradient(90deg, rgba(120,180,230,0) 0%, rgba(120,180,230,0.55) 50%, rgba(120,180,230,0) 100%)',
     transformOrigin: 'center',
     pointerEvents: 'none',
   };
 
   return (
     <div className="relative" style={{ width: SIZE, height: SIZE }}>
-      {/* Diagonal accent lines crossing the center */}
+      {/* Diagonal accent lines (top-left ↘ bottom-right  and  top-right ↙ bottom-left) */}
       <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(45deg)' }} />
       <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(-45deg)' }} />
 
-      {positions.map(({ key, tx, ty, title }) => (
+      {positions.map(({ key, top, left, tx, ty, title }) => (
         <button
           key={key}
           title={title}
           className="absolute pointer-events-auto transition-transform hover:scale-110"
           style={{
-            top: '50%',
-            left: '50%',
+            top,
+            left,
             width: BTN,
             height: BTN,
-            // Translate to slot position, then rotate 45° so the square looks like a diamond
-            transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(45deg)`,
-            background: 'transparent',
-            border: '1.5px solid rgba(255,255,255,0.55)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.05)',
-            borderRadius: 2,
+            transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px)`,
+            borderRadius: '50%',
+            background:
+              'radial-gradient(circle at 50% 35%, rgba(120,180,230,0.45) 0%, rgba(80,130,190,0.15) 70%, rgba(0,0,0,0.75) 100%)',
+            border: '1.5px solid rgba(140,190,235,0.7)',
+            boxShadow:
+              '0 2px 8px rgba(0,0,0,0.6), 0 0 6px rgba(120,180,230,0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
           }}
         />
       ))}
@@ -600,26 +595,33 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
 
   return (
     <>
-      {/* All 8 skills (1-8) — ORIGINAL position, resting ON the HP/Fusion gauges */}
-      <div className="flex items-end justify-center gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3 }}>
-        <div className="flex flex-col items-stretch" style={{ width: 320 }}>
-          <BuffDividerLine icon={User} color="rgba(220,200,150,0.85)" />
-          <div className="flex items-center justify-between mt-1.5" style={{ width: 320 }}>
-            {SLOTS_ALL.map((key, i) => (
-              <SkillSlot
-                key={key}
-                slotKey={key}
-                skill={skillForSlot(i)}
-                cooldown={loadout.cooldowns[i]}
-                buffStatus={buffStatusForSlot(i)}
-                size={34}
-              />
-            ))}
+      <div className="flex flex-col items-center gap-1">
+        {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
+        <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: -125 }}>
+          {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
+          <div className="flex flex-col items-stretch" style={{ width: 320 }}>
+            <BuffDividerLine icon={User} color="rgba(220,200,150,0.85)" />
+            <div className="flex items-center justify-between mt-1.5" style={{ width: 320 }}>
+              {SLOTS_ALL.map((key, i) => (
+                <SkillSlot
+                  key={key}
+                  slotKey={key}
+                  skill={skillForSlot(i)}
+                  cooldown={loadout.cooldowns[i]}
+                  buffStatus={buffStatusForSlot(i)}
+                  size={34}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="flex flex-col items-center gap-1" style={{ marginTop: 24 }}>
+          {/* Spacer matching the center cluster width (character + weapon circles) */}
+          <div style={{ width: 118 }} />
+
+          {/* Spacer so layout is preserved */}
+          <div style={{ width: 52 }} />
+        </div>
+
         {/* BOTTOM: Companion skills | Kill count | HP gauge | center cluster | Fusion gauge | Skills Book */}
         <div className="flex items-center justify-center gap-2">
           {/* Companion skill slots (to the left of kill count) */}
