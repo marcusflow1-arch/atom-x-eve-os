@@ -523,18 +523,18 @@ function SkillsBookButton({ open, onToggle }) {
 //   • Skill 3 → bottom
 //   • Skill 4 → right
 function CompanionSkillSlots() {
-  // Scale outer boxes 1.2× (33 → ~40), add spacing between them so the
-  // diagonal X is visible, and add a 5th box at the center.
-  const BTN = 40;             // outer square button edge length (33 × 1.2)
-  const CENTER_BTN = 28;      // smaller center box so it doesn't crowd
-  const OFFSET = 30;          // distance from center to each diamond point (spaced out)
-  const SIZE = 70;            // container size — same footprint as before (no layout shift)
+  // PlayStation/Xbox controller face-button layout: top / right / bottom / left,
+  // each rendered as a rotated 45° clear-glass diamond, spaced apart so the
+  // two diagonal X-lines are clearly visible through the gaps.
+  const BTN = 22;             // clear glass diamond edge length
+  const OFFSET = 26;          // distance from center to each face-button slot
+  const SIZE = 80;            // container — kept compact, no layout shift to HP side
 
   const positions = [
-    { key: '1', tx: -OFFSET, ty: 0,        title: 'Companion skill 1' },
-    { key: '2', tx: 0,        ty: -OFFSET, title: 'Companion skill 2' },
-    { key: '3', tx: 0,        ty: OFFSET,  title: 'Companion skill 3' },
-    { key: '4', tx: OFFSET,   ty: 0,       title: 'Companion skill 4' },
+    { key: 'top',    tx: 0,        ty: -OFFSET, title: 'Companion skill 1' },
+    { key: 'right',  tx: OFFSET,   ty: 0,       title: 'Companion skill 2' },
+    { key: 'bottom', tx: 0,        ty: OFFSET,  title: 'Companion skill 3' },
+    { key: 'left',   tx: -OFFSET,  ty: 0,       title: 'Companion skill 4' },
   ];
 
   const diagLineStyle = {
@@ -544,14 +544,14 @@ function CompanionSkillSlots() {
     width: SIZE * 0.95,
     height: 1,
     background:
-      'linear-gradient(90deg, rgba(120,180,230,0) 0%, rgba(120,180,230,0.55) 50%, rgba(120,180,230,0) 100%)',
+      'linear-gradient(90deg, rgba(160,200,240,0) 0%, rgba(160,200,240,0.6) 50%, rgba(160,200,240,0) 100%)',
     transformOrigin: 'center',
     pointerEvents: 'none',
   };
 
   return (
     <div className="relative" style={{ width: SIZE, height: SIZE }}>
-      {/* Diagonal accent lines crossing the center */}
+      {/* Diagonal X — top-left → bottom-right and top-right → bottom-left */}
       <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(45deg)' }} />
       <div style={{ ...diagLineStyle, transform: 'translate(-50%, -50%) rotate(-45deg)' }} />
 
@@ -565,36 +565,16 @@ function CompanionSkillSlots() {
             left: '50%',
             width: BTN,
             height: BTN,
-            // Translate to slot position, then rotate 45° so the square looks like a diamond
             transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(45deg)`,
-            background: 'rgba(20, 30, 45, 0.25)',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            border: '1.5px solid rgba(140,190,235,0.65)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 6px rgba(120,180,230,0.25), inset 0 0 0 1px rgba(255,255,255,0.06)',
+            background: 'rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(6px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(6px) saturate(140%)',
+            border: '1px solid rgba(255, 255, 255, 0.35)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18)',
             borderRadius: 3,
           }}
         />
       ))}
-
-      {/* 5th center diamond — sits at the intersection of the X */}
-      <button
-        title="Companion skill 5"
-        className="absolute pointer-events-auto transition-transform hover:scale-110"
-        style={{
-          top: '50%',
-          left: '50%',
-          width: CENTER_BTN,
-          height: CENTER_BTN,
-          transform: 'translate(-50%, -50%) rotate(45deg)',
-          background: 'rgba(20, 30, 45, 0.25)',
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
-          border: '1.5px solid rgba(140,190,235,0.65)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 6px rgba(120,180,230,0.25), inset 0 0 0 1px rgba(255,255,255,0.06)',
-          borderRadius: 3,
-        }}
-      />
     </div>
   );
 }
