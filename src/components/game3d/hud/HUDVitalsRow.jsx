@@ -48,7 +48,7 @@ function getBuffStatusFromRecord(skill_id, buffs) {
   return { remaining: remainingMs / 1000 };
 }
 
-function SkillSlot({ slotKey, skill, cooldown, buffStatus }) {
+function SkillSlot({ slotKey, skill, cooldown, buffStatus, size = 38 }) {
   const cd    = cooldown || 0;
   const maxCd = skill?.cooldown || 1;
   const cdPct = Math.min(1, cd / maxCd);
@@ -74,8 +74,10 @@ function SkillSlot({ slotKey, skill, cooldown, buffStatus }) {
         </div>
       )}
       <button
-        className="relative w-[38px] h-[38px] rounded-full transition-transform hover:scale-105 pointer-events-auto"
+        className="relative rounded-full transition-transform hover:scale-105 pointer-events-auto"
         style={{
+          width: size,
+          height: size,
           background: skill
             ? `radial-gradient(circle at 50% 35%, ${color}55 0%, ${color}11 70%, rgba(0,0,0,0.7) 100%)`
             : 'radial-gradient(circle at 50% 35%, rgba(40,50,60,0.65), rgba(8,10,14,0.9))',
@@ -560,10 +562,10 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
       <div className="flex flex-col items-center gap-1">
         {/* TOP: all 8 skills packed to HP side — pulled down so icons rest ON the HP gauge */}
         <div className="flex items-end justify-start gap-2" style={{ marginBottom: -28, position: 'relative', zIndex: 3, marginLeft: 0 }}>
-          {/* All 8 skills (1-8) packed tightly on HP side */}
-          <div className="flex flex-col items-stretch" style={{ width: 'auto' }}>
+          {/* All 8 skills (1-8) — fit exactly within HP bar width (320px) */}
+          <div className="flex flex-col items-stretch" style={{ width: 320 }}>
             <SectionDivider icon={User} color="rgba(220,200,150,0.85)" />
-            <div className="flex items-center gap-1 mt-1.5">
+            <div className="flex items-center justify-between mt-1.5" style={{ width: 320 }}>
               {SLOTS_ALL.map((key, i) => (
                 <SkillSlot
                   key={key}
@@ -571,6 +573,7 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
                   skill={skillForSlot(i)}
                   cooldown={loadout.cooldowns[i]}
                   buffStatus={buffStatusForSlot(i)}
+                  size={34}
                 />
               ))}
             </div>
