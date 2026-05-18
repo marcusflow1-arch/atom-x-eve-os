@@ -666,18 +666,12 @@ export default function HUDVitalsRow({ hp, maxHp, fusion, unspentPoints, killCou
           <div style={{ width: 52 }} />
         </div>
 
-        {/* Quick-action boxes — absolutely positioned above Fusion gauge so they
-            don't shift any other layout and don't overlap the weapon switcher. */}
+        {/* Quick-action boxes — absolutely positioned at same eye level as HP-side skill icons */}
         <div
           className="pointer-events-none absolute"
           style={{
-            // Fusion gauge sits in the bottom row to the right of the center
-            // weapon cluster. Center this row over that gauge (320px wide).
-            // Bottom row vertical center ≈ 32px from the bottom of the wrapper,
-            // gauge top ≈ that minus ~7px. We anchor by bottom so it floats just
-            // above the Fusion gauge without affecting any flex sizing.
             right: 52 /* SkillsBookButton width */ + 8 /* gap */,
-            bottom: 64 /* approx gauge top */ + 6,
+            bottom: 92 /* align with HP-side skill icons */,
             width: 320,
             zIndex: 3,
           }}
