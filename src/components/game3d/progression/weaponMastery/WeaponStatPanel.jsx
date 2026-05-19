@@ -244,12 +244,13 @@ export default function WeaponStatPanel({
               className="w-12 h-12 rounded-sm flex items-center justify-center text-xl mb-1"
               style={{
                 background: preview.isOver
-                  ? 'radial-gradient(circle, rgba(150,40,40,0.45), rgba(10,8,8,0.95))'
-                  : 'radial-gradient(circle, rgba(80,70,60,0.45), rgba(10,8,8,0.95))',
-                border: '1px solid rgba(180,160,130,0.4)',
+                  ? 'radial-gradient(circle, rgba(168,85,247,0.55), rgba(10,8,16,0.95))'
+                  : 'radial-gradient(circle, rgba(96,165,250,0.45), rgba(8,10,18,0.95))',
+                border: '1px solid rgba(168,140,220,0.5)',
+                boxShadow: `0 0 12px ${preview.isOver ? 'rgba(168,85,247,0.5)' : 'rgba(96,165,250,0.4)'}`,
               }}
             >
-              {preview.isOver ? '💎' : '🪨'}
+              👻
             </div>
             <div className="tabular-nums text-[11px] text-white/85">
               {stash[preview.material.key] >= 1e6

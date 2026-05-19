@@ -19,6 +19,7 @@ import { ENEMY_PLAYER_SPAWNS, ENEMY_PLAYER_STATS, ENEMY_PLAYER_RESPAWN_SECONDS, 
 import { getPlayerHUD, setHP, awardXP } from './playerHUDStore';
 import { xpForLevel } from './gameWorldConfig';
 import { addGold } from './shop/shopStore';
+import { addSouls } from './progression/weaponMastery/soulEssenceStore';
 import { recordTitleKill } from './progression/titleStore';
 import { incrementKillCount } from './killCountStore';
 import { addFusionPoints, FUSION_POINTS_PER_KILL } from './fusionStore';
@@ -190,6 +191,15 @@ export default function EnemyPlayerSpawner() {
         recordTitleKill('pvp', killReward);
         incrementKillCount(killReward);
         addFusionPoints(FUSION_POINTS_PER_KILL);
+
+        // ── Soul Essence drop ─────────────────────────────────────────
+        // 35% chance per kill to drop 1–3 souls. Higher-level rogues drop
+        // slightly more. Souls are required to enchant weapons.
+        if (Math.random() < 0.35) {
+          const soulAmount = 1 + Math.floor(Math.random() * 3) + Math.floor((r.level || 1) / 5);
+          addSouls(soulAmount);
+          toast.success(`+${soulAmount} Soul Essence`, { icon: '👻', duration: 2000 });
+        }
 
         const baseXp = 25 + (r.level || 1) * 10;
         const finalXp = Math.round(baseXp * streakMult);

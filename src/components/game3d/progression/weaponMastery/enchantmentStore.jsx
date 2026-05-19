@@ -50,20 +50,21 @@ function goldCostFor(level) {
 }
 
 // Material requirement for a single +1 attempt at the next level.
-// Normal levels use "Iron Ore". Over-enchant uses "Refined Stone".
+// ALL enchantment (normal + over-enchant) requires SOUL ESSENCE — a rare
+// material that drops from enemy AI kills. Over-enchant just costs more.
 function materialReqFor(level) {
   if (level <= MAX_NORMAL_LEVEL) {
     const tier = Math.floor((level - 1) / MILESTONE_STEP); // 0..5 across 0–120
     return {
-      key: 'iron_ore',
-      label: 'Iron Ore',
+      key: 'souls',
+      label: 'Soul Essence',
       count: 1 + tier, // 1,2,3,4,5,6
     };
   }
   return {
-    key: 'refined_stone',
-    label: 'Refined Stone',
-    count: 2 + Math.floor((level - MAX_NORMAL_LEVEL) / MILESTONE_STEP),
+    key: 'souls',
+    label: 'Soul Essence',
+    count: 5 + Math.floor((level - MAX_NORMAL_LEVEL) / MILESTONE_STEP) * 2,
   };
 }
 

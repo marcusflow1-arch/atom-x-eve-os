@@ -21,6 +21,8 @@ import {
 } from './enchantmentStore';
 import WeaponStatPanel from './WeaponStatPanel';
 import WeaponCombineStagePanel from './WeaponCombineStagePanel';
+import { subscribeShop, addGold } from '../../shop/shopStore';
+import { subscribeSouls, spendSouls } from './soulEssenceStore';
 
 const RING_SIZE = 340;
 const RING_RADIUS = RING_SIZE / 2;
@@ -80,15 +82,19 @@ export default function WeaponEnchantmentPanel({ weaponId, weaponName, weaponIco
   const [, force] = useState(0);
   useEffect(() => subscribeEnchantment(() => force((x) => x + 1)), []);
 
-  // Placeholder economy. Real wiring lives in a separate inventory store —
-  // until then, surface deterministic numbers so the UI feels alive.
-  const [stash] = useState({
-    iron_ore: 7213000,
-    refined_stone: 181,
+  // Live economy — gold from shopStore, souls from soulEssenceStore.
+  // Both are earned from enemy AI kills (gold = guaranteed, souls = chance drop).
+  const [gold, setGoldState] = useState(0);
+  const [souls, setSoulsState] = useState(0);
+  useEffect(() => subscribeShop((s) => setGoldState(s.gold)), []);
+  useEffect(() => subscribeSouls((s) => setSoulsState(s.souls)), []);
+
+  const stash = {
+    souls,
+    gold,
     astral_core: 3,
-    gold: 522700,
     duplicates: { bow: 2, sword: 2, dual_blades: 1 },
-  });
+  };
 
   const entry = getEnchantment(weaponId);
   const preview = useMemo(
@@ -106,6 +112,11 @@ export default function WeaponEnchantmentPanel({ weaponId, weaponName, weaponIco
 
   const onEnhance = () => {
     if (preview.atMax) return;
+    // Spend both currencies before applying the +1.
+    if (souls < preview.material.count) return;
+    if (gold < preview.gold) return;
+    if (!spendSouls(preview.material.count)) return;
+    addGold(-preview.gold);
     attemptEnhance(weaponId);
   };
 
