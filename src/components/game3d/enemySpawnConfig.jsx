@@ -2,13 +2,12 @@
 // Every client must spawn enemies at IDENTICAL positions so two players see
 // the same world. Use this module instead of Math.random() in GameWorld3D.
 
-// Reduced enemy counts to improve framerate. Was 15+15, now 6+6.
+// Single boss-style enemy AI on the plain circular arena.
 export const ENEMY_ZONES = [
-  { id: 'zone_north', center: [14, 0.3, -10], radius: 9, count: 6 },
-  { id: 'zone_south', center: [-12, 0.3, 12],  radius: 9, count: 6 },
+  { id: 'boss_arena', center: [12, 0.3, -10], radius: 0, count: 1 },
 ];
 
-// 10 seconds after death, enemies respawn at their home position with full HP.
+// 10 seconds after death, the enemy respawns at its home position with full HP.
 export const ENEMY_RESPAWN_SECONDS = 10;
 
 // World seed — change to reshuffle the world. All clients use the same value.
