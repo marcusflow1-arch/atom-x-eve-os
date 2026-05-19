@@ -75,7 +75,7 @@ import {
 import { attachContextGuard } from './webglContextGuard';
 import { buildGrassEnvironment } from './buildGrassEnvironment';
 import { loadPlayerAnimationClips } from './player/playerAnimationLibrary';
-import { createPlayerAnimationController } from './player/PlayerAnimationController';
+import { createLunaDashboardPlayerController as createPlayerAnimationController } from './player/LunaDashboardPlayerController';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
