@@ -41,8 +41,10 @@ export const BIOME_ZONES = [
   { kind: 'rock_outcrop', cx: -25, cz: -65, r: 14 },
   { kind: 'rock_outcrop', cx:  20, cz:  30, r: 10 },
 
-  // ─── Pond (water feature) ───────────────────────────────────────────
-  { kind: 'pond', cx: -40, cz: -10, r: 9 },
+  // ─── Pond disabled — WATER_SCENE GLTF is a multi-file bundle and its
+  // sidecar scene.bin isn't reachable through the current asset URL, which
+  // throws "Failed to load buffer scene.bin" in GLTFLoader. Re-enable once
+  // the water asset is re-uploaded as a self-contained GLB.
 
   // ─── Pathways (cut through forest to encourage exploration) ─────────
   // Paths are short overlapping segments so they bend naturally.

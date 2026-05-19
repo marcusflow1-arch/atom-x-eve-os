@@ -38,7 +38,7 @@ export default function TerrainArea() {
       const scene = window.__gw3dScene;
       if (!scene) { setTimeout(start, 250); return; }
 
-      preload(['TREE_2', 'GRASS', 'ROCKS', 'WATER_SCENE']);
+      preload(['TREE_2', 'GRASS', 'ROCKS']);
 
       group = new THREE.Group();
       group.name = 'terrain_area';
@@ -71,13 +71,9 @@ export default function TerrainArea() {
       };
 
       // ─── Generate placement data once (deterministic) ────────────────
-      const { trees, grass, rocks, ponds } = generateForestPlacements();
-
-      // ─── Ponds first (so grass clustering around their edges sees them) ─
-      for (const p of ponds) {
-        if (!mounted) break;
-        await place('WATER_SCENE', p);
-      }
+      // Ponds intentionally not placed — see forestBiome.js note about
+      // the WATER_SCENE GLTF bundle missing its sidecar .bin file.
+      const { trees, grass, rocks } = generateForestPlacements();
 
       // ─── Trees ───────────────────────────────────────────────────────
       for (const p of trees) {
