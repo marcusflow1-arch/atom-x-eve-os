@@ -14,8 +14,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { instantiate } from '../../game3d/terrain/assetLoaderCache';
 import { useSandboxStore } from './sandboxStore';
 import { getAssetMeta } from './sandboxAssetCatalog';
