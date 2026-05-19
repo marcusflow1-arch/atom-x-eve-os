@@ -346,8 +346,9 @@ export default function GameWorld3D() {
     });
 
     // QUEST NPCs — 5 archers at fixed positions, idle animation, "QUEST" label in DOM.
+    // TEMPORARILY DISABLED
     const questNPCs = []; // { id, name, group, mixer, idleAction }
-    QUEST_NPCS.forEach((spawn) => {
+    /* QUEST_NPCS.forEach((spawn) => {
       loader.load(ARCHER_URL, (fbx) => {
         const m = fbx;
         const box = new THREE.Box3().setFromObject(fbx);
@@ -415,10 +416,10 @@ export default function GameWorld3D() {
             action.reset().fadeIn(0.3).play();
           }
         });
-      });
-    });
+        });
+        }); */
 
-    // COMPANION SPAWN — rideable mount (GLB w/ embedded clips OR FBX w/ separate idle+walk anim files).
+        // COMPANION SPAWN — rideable mount (GLB w/ embedded clips OR FBX w/ separate idle+walk anim files).
     const companionDef = companionDefRef.current;
     if (companionDef) {
       const setupCompanion = (companionModel, embeddedClips = []) => {
@@ -625,8 +626,9 @@ export default function GameWorld3D() {
     };
 
     // WORLD BOSS SPAWNS — supersized champion enemies with ×scale, ×HP, ×XP. Seeded into bossStore.
+    // TEMPORARILY DISABLED
     // (bossEntities array was declared earlier so the event bus could capture it.)
-    setBosses(BOSSES.map((b) => ({
+    /* setBosses(BOSSES.map((b) => ({
       id: b.id, name: b.name, title: b.title,
       x: b.pos[0], z: b.pos[2],
       hp: 0, maxHp: 0, alive: true,
@@ -727,6 +729,7 @@ export default function GameWorld3D() {
         });
       });
     });
+    */
 
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(CREATURE_MODEL_URL, (fbx) => {
