@@ -73,6 +73,7 @@ import {
   PLAYER_ATTACK_COOLDOWN, PLAYER_INVUL_AFTER_HIT,
 } from './gameWorldConfig';
 import { attachContextGuard } from './webglContextGuard';
+import { buildGrassEnvironment } from './buildGrassEnvironment';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -305,16 +306,9 @@ export default function GameWorld3D() {
     let mapReady = false;
     const pendingFootings = []; // entities waiting to be snapped to ground once map loads
 
-    // Simple flat green grass terrain — restored as the world ground.
-    // No external map load: instant ready, zero network dependency.
-    const grassGround = new THREE.Mesh(
-      new THREE.PlaneGeometry(200, 200, 1, 1),
-      new THREE.MeshStandardMaterial({ color: 0x4a7c3a, roughness: 0.95, metalness: 0 }),
-    );
-    grassGround.rotation.x = -Math.PI / 2;
-    grassGround.position.y = 0;
-    grassGround.receiveShadow = true;
-    scene.add(grassGround);
+    // Rolling green grass environment — textured ground + decorative tufts/bushes.
+    // Instant ready, no external assets.
+    const grassGround = buildGrassEnvironment(scene);
     groundMeshes.push(grassGround);
     mapReady = true;
     // Flush any spawn snapping that queued before this point (none in practice
