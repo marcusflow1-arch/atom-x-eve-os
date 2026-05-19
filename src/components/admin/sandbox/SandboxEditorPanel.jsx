@@ -9,6 +9,7 @@ import SandboxToolbar from './SandboxToolbar';
 import SandboxInspector from './SandboxInspector';
 import SandboxHierarchy from './SandboxHierarchy';
 import SandboxSceneManager from './SandboxSceneManager';
+import SandboxTerrainPanel from './SandboxTerrainPanel';
 
 export default function SandboxEditorPanel() {
   return (
@@ -36,9 +37,10 @@ export default function SandboxEditorPanel() {
           </div>
         </div>
 
-        {/* Right column — scenes + hierarchy + inspector */}
+        {/* Right column — scenes + terrain + hierarchy + inspector */}
         <div className="col-span-12 lg:col-span-3 flex flex-col gap-3 lg:max-h-[calc(100vh-220px)]">
           <SandboxSceneManager />
+          <SandboxTerrainPanel />
           <div className="flex-1 min-h-[180px]">
             <SandboxHierarchy />
           </div>

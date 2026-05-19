@@ -7,21 +7,43 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { TERRAIN_ASSETS } from './terrainAssetRegistry';
+import { base44 } from '@/api/base44Client';
 
 const cache = new Map();
 const inflight = new Map();
+// Dynamic registry for user-uploaded Model3D assets, keyed by `model3d:<id>`.
+// Populated lazily by resolveDynamicDef() on first use.
+const dynamicDefs = new Map();
 
 const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
+
+async function resolveDynamicDef(assetKey) {
+  if (dynamicDefs.has(assetKey)) return dynamicDefs.get(assetKey);
+  if (!assetKey.startsWith('model3d:')) return null;
+  const id = assetKey.slice('model3d:'.length);
+  const model = await base44.entities.Model3D.get(id);
+  if (!model?.file_url) throw new Error(`Model3D ${id} has no file_url`);
+  const type = (model.file_type || '').toLowerCase();
+  const def = {
+    id: assetKey,
+    type: type === 'fbx' ? 'fbx' : 'gltf', // glb is loaded by GLTFLoader
+    url: model.file_url,
+    targetHeight: 2.5, // sensible default; user can scale via inspector
+  };
+  dynamicDefs.set(assetKey, def);
+  return def;
+}
 
 function loadOnce(assetKey) {
   if (cache.has(assetKey)) return Promise.resolve(cache.get(assetKey));
   if (inflight.has(assetKey)) return inflight.get(assetKey);
 
-  const def = TERRAIN_ASSETS[assetKey];
-  if (!def) return Promise.reject(new Error(`Unknown terrain asset: ${assetKey}`));
+  const builtIn = TERRAIN_ASSETS[assetKey];
+  const defPromise = builtIn ? Promise.resolve(builtIn) : resolveDynamicDef(assetKey);
 
-  const p = new Promise((resolve, reject) => {
+  const p = defPromise.then((def) => new Promise((resolve, reject) => {
+    if (!def) { reject(new Error(`Unknown terrain asset: ${assetKey}`)); return; }
     const done = (root) => {
       // AABB-normalize: compute current height, derive scale to hit targetHeight.
       const box = new THREE.Box3().setFromObject(root);
@@ -44,7 +66,8 @@ function loadOnce(assetKey) {
 
     if (def.type === 'fbx') fbxLoader.load(def.url, done, undefined, err);
     else gltfLoader.load(def.url, (g) => done(g.scene || g.scenes?.[0]), undefined, err);
-  });
+  }));
+  p.catch(() => { inflight.delete(assetKey); });
   inflight.set(assetKey, p);
   return p;
 }

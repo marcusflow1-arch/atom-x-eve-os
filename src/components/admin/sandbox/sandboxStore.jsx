@@ -27,12 +27,18 @@ export const useSandboxStore = create((set, get) => ({
   rotSnapDeg: 15,
   groundSnap: true,
 
+  // ─── Terrain (per-scene) ────────────────────────────────────────────
+  groundColor: '#4a6a3e',
+  groundSize: 200,
+
   // ─── Scene actions ──────────────────────────────────────────────────
   loadScene(scene) {
     set({
       activeSceneId: scene?.id || null,
       activeSceneName: scene?.name || 'Untitled Scene',
       placements: Array.isArray(scene?.placements) ? scene.placements.map((p) => ({ ...p })) : [],
+      groundColor: scene?.ground_color || '#4a6a3e',
+      groundSize: scene?.ground_size || 200,
       selectedId: null,
       isDirty: false,
     });
@@ -42,9 +48,16 @@ export const useSandboxStore = create((set, get) => ({
       activeSceneId: null,
       activeSceneName: 'Untitled Scene',
       placements: [],
+      groundColor: '#4a6a3e',
+      groundSize: 200,
       selectedId: null,
       isDirty: false,
     });
+  },
+  setGroundColor(v) { set({ groundColor: v || '#4a6a3e', isDirty: true }); },
+  setGroundSize(v) {
+    const n = Number(v);
+    set({ groundSize: Number.isFinite(n) && n > 0 ? n : 200, isDirty: true });
   },
   markSaved(sceneId, sceneName) {
     set({ activeSceneId: sceneId, activeSceneName: sceneName, isDirty: false });

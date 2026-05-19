@@ -16,6 +16,8 @@ export default function SandboxSceneManager() {
   const activeSceneName = useSandboxStore((s) => s.activeSceneName);
   const isDirty = useSandboxStore((s) => s.isDirty);
   const placements = useSandboxStore((s) => s.placements);
+  const groundColor = useSandboxStore((s) => s.groundColor);
+  const groundSize = useSandboxStore((s) => s.groundSize);
   const loadScene = useSandboxStore((s) => s.loadScene);
   const resetScene = useSandboxStore((s) => s.resetScene);
   const markSaved = useSandboxStore((s) => s.markSaved);
@@ -30,6 +32,8 @@ export default function SandboxSceneManager() {
       return base44.entities.SandboxScene.create({
         name: name || `Scene ${new Date().toLocaleString()}`,
         placements,
+        ground_color: groundColor,
+        ground_size: groundSize,
         is_active: false,
       });
     },
@@ -43,7 +47,11 @@ export default function SandboxSceneManager() {
   const saveCurrent = useMutation({
     mutationFn: async () => {
       if (!activeSceneId) return saveAs.mutateAsync(activeSceneName);
-      return base44.entities.SandboxScene.update(activeSceneId, { placements });
+      return base44.entities.SandboxScene.update(activeSceneId, {
+        placements,
+        ground_color: groundColor,
+        ground_size: groundSize,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sandbox-scenes'] });

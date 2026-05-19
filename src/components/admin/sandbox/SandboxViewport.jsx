@@ -54,17 +54,38 @@ export default function SandboxViewport() {
     scene.add(sun);
 
     // Flat ground plane (the sandbox world surface)
-    const groundGeo = new THREE.PlaneGeometry(200, 200);
+    const initialState = storeRef.current;
+    let groundSize = initialState.groundSize || 200;
+    let groundColor = initialState.groundColor || '#4a6a3e';
+    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
     groundGeo.rotateX(-Math.PI / 2);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x4a6a3e });
+    const groundMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(groundColor) });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.name = 'sandbox_ground';
     scene.add(ground);
 
     // Grid helper
-    const grid = new THREE.GridHelper(200, 100, 0x666666, 0x333333);
+    let grid = new THREE.GridHelper(groundSize, Math.max(10, Math.round(groundSize / 2)), 0x666666, 0x333333);
     grid.position.y = 0.01;
     scene.add(grid);
+
+    const applyTerrain = (s) => {
+      if (s.groundColor !== groundColor) {
+        groundColor = s.groundColor;
+        groundMat.color.set(groundColor);
+      }
+      if (s.groundSize !== groundSize) {
+        groundSize = s.groundSize;
+        ground.geometry.dispose();
+        const g = new THREE.PlaneGeometry(groundSize, groundSize);
+        g.rotateX(-Math.PI / 2);
+        ground.geometry = g;
+        scene.remove(grid);
+        grid = new THREE.GridHelper(groundSize, Math.max(10, Math.round(groundSize / 2)), 0x666666, 0x333333);
+        grid.position.y = 0.01;
+        scene.add(grid);
+      }
+    };
 
     // Controls
     const orbit = new OrbitControls(camera, renderer.domElement);
@@ -248,8 +269,9 @@ export default function SandboxViewport() {
       }
     };
 
-    syncFromStore(storeRef.current);
-    const unsub = useSandboxStore.subscribe(syncFromStore);
+    const syncAll = (s) => { applyTerrain(s); syncFromStore(s); };
+    syncAll(storeRef.current);
+    const unsub = useSandboxStore.subscribe(syncAll);
 
     // ─── Render loop ─────────────────────────────────────────────────
     let raf = 0;

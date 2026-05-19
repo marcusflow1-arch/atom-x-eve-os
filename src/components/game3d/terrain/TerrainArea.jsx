@@ -1,11 +1,9 @@
 // ─── TerrainArea ──────────────────────────────────────────────────────────
-// The procedural forest world has been removed. Instead this component:
-//   1. Renders a flat ground plane as the default world surface.
-//   2. Loads the currently active SandboxScene (if any) and instantiates
-//      its placements with GPU instancing for repeated assets.
-//   3. Registers collider data for placements flagged as solid, so the
-//      existing applyTerrainCollision push-out keeps the player from
-//      walking through trees / rocks / structures.
+// Renders the active SandboxScene into the live game world AND watches the
+// SandboxScene entity for real-time updates. Whenever the active scene's
+// placements / ground color / ground size change (e.g. the admin hits Save
+// in the sandbox editor), this component rebuilds the in-game terrain
+// without requiring a reload.
 //
 // All gameplay systems (player controller, AI, combat, abilities, camera,
 // inventory, HUD) are untouched — they continue to consume the same global
@@ -18,39 +16,57 @@ import { getSource } from './assetLoaderCache';
 import { buildFlatGround, sampleGroundY } from './forestGround';
 import { buildInstancedProps } from './instancedProps';
 
+const POLL_INTERVAL_MS = 5000; // SandboxScene poll cadence (no built-in subscribe yet)
+
+function hexToInt(hex, fallback = 0x4a6a3e) {
+  if (typeof hex !== 'string') return fallback;
+  const s = hex.replace('#', '');
+  const n = parseInt(s, 16);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function sceneSignature(scene) {
+  if (!scene) return 'none';
+  // Cheap fingerprint — id + updated_date is enough to detect any save.
+  return `${scene.id}::${scene.updated_date || ''}`;
+}
+
 export default function TerrainArea() {
-  const groupRef = useRef(null);
+  const lastSigRef = useRef('init');
 
   useEffect(() => {
     let mounted = true;
-    let group = null;
+    let currentGroup = null;
+    let pollTimer = null;
 
-    const start = async () => {
+    const disposeGroup = (g) => {
       const scene = window.__gw3dScene;
-      if (!scene) { setTimeout(start, 250); return; }
+      if (!g) return;
+      g.traverse((n) => {
+        if (n.isInstancedMesh) n.dispose?.();
+        if (n.geometry?.dispose) n.geometry.dispose();
+        if (n.material?.dispose) n.material.dispose();
+      });
+      if (scene) scene.remove(g);
+    };
 
-      group = new THREE.Group();
-      group.name = 'terrain_area';
-      groupRef.current = group;
+    const rebuild = async (activeScene) => {
+      const scene = window.__gw3dScene;
+      if (!scene) return;
 
-      // ─── Flat ground ─────────────────────────────────────────────
-      group.add(buildFlatGround({ size: 200 }));
+      const newGroup = new THREE.Group();
+      newGroup.name = 'terrain_area';
+
+      // ─── Ground ─────────────────────────────────────────────────
+      const groundSize = activeScene?.ground_size || 200;
+      const groundColor = hexToInt(activeScene?.ground_color, 0x4a6a3e);
+      newGroup.add(buildFlatGround({ size: groundSize, color: groundColor }));
 
       // Heightmap API — flat world → always 0
       window.__terrainSampleY = sampleGroundY;
 
-      // ─── Load active sandbox scene (if any) ──────────────────────
-      let activeScene = null;
-      try {
-        const scenes = await base44.entities.SandboxScene.filter({ is_active: true }, '-updated_date', 1);
-        activeScene = scenes?.[0] || null;
-      } catch (e) {
-        // No SandboxScene entity yet, or filter error — just render flat ground.
-      }
-
+      // ─── Placements ─────────────────────────────────────────────
       const placements = Array.isArray(activeScene?.placements) ? activeScene.placements : [];
-
-      // Group placements by assetKey so each asset becomes one InstancedMesh batch.
       const byAsset = new Map();
       for (const p of placements) {
         if (!p.assetKey) continue;
@@ -60,7 +76,6 @@ export default function TerrainArea() {
 
       const colliders = [];
 
-      // Render each asset group as an instanced batch.
       for (const [assetKey, list] of byAsset) {
         let src;
         try {
@@ -71,25 +86,21 @@ export default function TerrainArea() {
         }
         if (!mounted) return;
 
-        // Map our placement shape → builder shape
         const batch = list.map((p) => ({
           x: p.x || 0,
           y: p.y || 0,
           z: p.z || 0,
           rotY: p.rotY || 0,
-          // The instancer uses a uniform scale — we use scaleY as the
-          // representative multiplier (sandbox usually keeps them uniform).
           scaleMult: p.scaleY || p.scaleX || 1,
         }));
 
         const meshGroup = buildInstancedProps(src, batch, {
           name: `sandbox_${assetKey}`,
           receiveShadow: true,
-          boundsRadius: 200,
+          boundsRadius: Math.max(200, groundSize),
         });
-        group.add(meshGroup);
+        newGroup.add(meshGroup);
 
-        // Collect colliders for solid placements
         for (const p of list) {
           if (p.collides && (p.colliderRadius || 0) > 0) {
             colliders.push({
@@ -103,25 +114,45 @@ export default function TerrainArea() {
 
       window.__terrainColliders = colliders;
 
-      if (!mounted) {
-        scene.remove(group);
-        return;
-      }
+      if (!mounted) return;
 
-      scene.add(group);
+      // Swap in the new group, dispose the previous one.
+      scene.add(newGroup);
+      if (currentGroup) disposeGroup(currentGroup);
+      currentGroup = newGroup;
+    };
+
+    const checkForUpdates = async () => {
+      try {
+        const scenes = await base44.entities.SandboxScene.filter({ is_active: true }, '-updated_date', 1);
+        const active = scenes?.[0] || null;
+        const sig = sceneSignature(active);
+        if (sig !== lastSigRef.current) {
+          lastSigRef.current = sig;
+          await rebuild(active);
+        }
+      } catch (e) {
+        // No SandboxScene entity yet or filter failed — render flat ground once.
+        if (lastSigRef.current === 'init') {
+          lastSigRef.current = 'none';
+          await rebuild(null);
+        }
+      }
+    };
+
+    const start = async () => {
+      if (!window.__gw3dScene) { setTimeout(start, 250); return; }
+      await checkForUpdates();
+      pollTimer = setInterval(() => { if (mounted) checkForUpdates(); }, POLL_INTERVAL_MS);
     };
 
     start();
 
     return () => {
       mounted = false;
-      const scene = window.__gw3dScene;
-      if (scene && group) {
-        group.traverse((n) => {
-          if (n.isInstancedMesh) n.dispose?.();
-        });
-        scene.remove(group);
-      }
+      if (pollTimer) clearInterval(pollTimer);
+      disposeGroup(currentGroup);
+      currentGroup = null;
       window.__terrainColliders = [];
       window.__terrainSampleY = null;
     };

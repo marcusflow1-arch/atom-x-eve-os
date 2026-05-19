@@ -14,6 +14,16 @@
       "default": false,
       "description": "If true, this scene is loaded into the live game world. Only one scene should be active at a time."
     },
+    "ground_color": {
+      "type": "string",
+      "default": "#4a6a3e",
+      "description": "Hex color of the terrain ground plane."
+    },
+    "ground_size": {
+      "type": "number",
+      "default": 200,
+      "description": "Square size (world units) of the ground plane."
+    },
     "placements": {
       "type": "array",
       "description": "Snapshot of all object placements in this scene. Each entry includes asset key, position, rotation, scale, lock state.",
@@ -24,7 +34,8 @@
             "type": "string"
           },
           "assetKey": {
-            "type": "string"
+            "type": "string",
+            "description": "Built-in TERRAIN_ASSETS key (e.g. TREE_2) OR 'model3d:<id>' for a user-uploaded Model3D."
           },
           "x": {
             "type": "number",
