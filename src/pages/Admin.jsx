@@ -27,6 +27,7 @@ import NPCActionAudioManager from '../components/admin/NPCActionAudioManager';
 import SoundLibraryManager from '../components/admin/SoundLibraryManager';
 import KnowledgeEngineManager from '../components/admin/KnowledgeEngineManager';
 import AdminPerformancePanel from '../components/admin/performance/AdminPerformancePanel';
+import SandboxEditorPanel from '../components/admin/sandbox/SandboxEditorPanel';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -480,6 +481,7 @@ export default function Admin() {
             <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
             <TabsTrigger value="knowledge-engine">Knowledge Engine</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="sandbox">Sandbox Editor</TabsTrigger>
             </TabsList>
 
           <TabsContent value="backgrounds">
@@ -1001,6 +1003,10 @@ export default function Admin() {
 
           <TabsContent value="performance">
             <AdminPerformancePanel />
+          </TabsContent>
+
+          <TabsContent value="sandbox" forceMount className="data-[state=inactive]:hidden">
+            <SandboxEditorPanel />
           </TabsContent>
 
                     </Tabs>

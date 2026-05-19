@@ -1,27 +1,21 @@
 // ─── TerrainArea ──────────────────────────────────────────────────────────
-// Realistic forest biome — optimized build.
+// The procedural forest world has been removed. Instead this component:
+//   1. Renders a flat ground plane as the default world surface.
+//   2. Loads the currently active SandboxScene (if any) and instantiates
+//      its placements with GPU instancing for repeated assets.
+//   3. Registers collider data for placements flagged as solid, so the
+//      existing applyTerrainCollision push-out keeps the player from
+//      walking through trees / rocks / structures.
 //
-// Performance strategy:
-//   • One procedural ground mesh (vertex-color blended, fits in VRAM easily)
-//   • Trees / rocks / grass rendered with THREE.InstancedMesh → tens of
-//     draw calls total instead of thousands
-//   • Frustum culling on each InstancedMesh (with a generous bounds sphere
-//     so we don't pop instances at the edges)
-//
-// Collision strategy:
-//   • Heightmap is the source of truth for the ground.  We expose
-//     `window.__terrainSampleY(x, z)` so player / AI controllers can ask
-//     the exact ground Y at any world position (no raycasts, O(1)).
-//   • Tree trunks register as solid cylinder colliders in
-//     `window.__terrainColliders` (same shape as rocks) — the existing
-//     `applyTerrainCollision()` push-out already handles them, so the
-//     player can't walk through or stand on top of trees.
-//   • Rocks also register as colliders.  Grass does NOT collide.
+// All gameplay systems (player controller, AI, combat, abilities, camera,
+// inventory, HUD) are untouched — they continue to consume the same global
+// hooks (`window.__terrainSampleY`, `window.__terrainColliders`).
 
 import { useEffect, useRef } from 'react';
-import { getSource, preload } from './assetLoaderCache';
-import { generateForestPlacements } from './forestPlacement';
-import { buildForestGround, sampleGroundY } from './forestGround';
+import * as THREE from 'three';
+import { base44 } from '@/api/base44Client';
+import { getSource } from './assetLoaderCache';
+import { buildFlatGround, sampleGroundY } from './forestGround';
 import { buildInstancedProps } from './instancedProps';
 
 export default function TerrainArea() {
@@ -35,89 +29,78 @@ export default function TerrainArea() {
       const scene = window.__gw3dScene;
       if (!scene) { setTimeout(start, 250); return; }
 
-      preload(['TREE_2', 'GRASS', 'ROCKS']);
-
-      const THREE = await import('three');
       group = new THREE.Group();
       group.name = 'terrain_area';
       groupRef.current = group;
 
-      // ─── Ground (compact 100×100 boss arena) ───────────────────────
-      const ground = buildForestGround({ size: 100, segments: 96 });
-      group.add(ground);
+      // ─── Flat ground ─────────────────────────────────────────────
+      group.add(buildFlatGround({ size: 200 }));
 
-      // Heightmap API — player/AI controllers can snap feet to ground in O(1)
+      // Heightmap API — flat world → always 0
       window.__terrainSampleY = sampleGroundY;
 
-      // ─── Generate placement data once (deterministic) ──────────────
-      const { trees, grass, rocks } = generateForestPlacements();
+      // ─── Load active sandbox scene (if any) ──────────────────────
+      let activeScene = null;
+      try {
+        const scenes = await base44.entities.SandboxScene.filter({ is_active: true }, '-updated_date', 1);
+        activeScene = scenes?.[0] || null;
+      } catch (e) {
+        // No SandboxScene entity yet, or filter error — just render flat ground.
+      }
 
-      // Honor live perf settings — thin foliage/trees per the active preset.
-      const perf = (typeof window !== 'undefined' && window.__perfSettings) || {};
-      const treeDensity    = typeof perf.treeDensity    === 'number' ? perf.treeDensity    : 1;
-      const foliageDensity = typeof perf.foliageDensity === 'number' ? perf.foliageDensity : 1;
-      const renderDistance = typeof perf.renderDistance === 'number' ? perf.renderDistance : 60;
+      const placements = Array.isArray(activeScene?.placements) ? activeScene.placements : [];
 
-      const keepRatio = (arr, ratio) => {
-        if (ratio >= 1) return arr;
-        if (ratio <= 0) return [];
-        return arr.filter((_, i) => ((i * 9301 + 49297) % 233280) / 233280 < ratio);
-      };
-      const inRange = (p) => (p.x * p.x + p.z * p.z) <= renderDistance * renderDistance;
+      // Group placements by assetKey so each asset becomes one InstancedMesh batch.
+      const byAsset = new Map();
+      for (const p of placements) {
+        if (!p.assetKey) continue;
+        if (!byAsset.has(p.assetKey)) byAsset.set(p.assetKey, []);
+        byAsset.get(p.assetKey).push(p);
+      }
 
-      const trimmedTrees = keepRatio(trees.filter(inRange), treeDensity);
-      const trimmedGrass = keepRatio(grass.filter(inRange), foliageDensity);
-      const trimmedRocks = rocks.filter(inRange);
-
-      // Snap every placement to the ground heightmap up-front so the
-      // instanced batch builder gets final world Y values.
-      const withY = (p, extraY = 0) => ({
-        ...p,
-        y: sampleGroundY(p.x, p.z) + (p.yOffset || 0) + extraY,
-      });
-      const treePlacements = trimmedTrees.map((p) => withY(p));
-      const rockPlacements = trimmedRocks.map((p) => withY(p));
-      const grassPlacements = trimmedGrass.map((p) => withY(p));
-
-      // ─── Load sources in parallel ──────────────────────────────────
-      const [treeSrc, rockSrc, grassSrc] = await Promise.all([
-        getSource('TREE_2'),
-        getSource('ROCKS'),
-        getSource('GRASS'),
-      ]);
-      if (!mounted) return;
-
-      // ─── Build instanced batches ───────────────────────────────────
-      const treeBatch = buildInstancedProps(treeSrc, treePlacements, {
-        name: 'forest_trees',
-        receiveShadow: true,
-        boundsRadius: 80,
-      });
-      const rockBatch = buildInstancedProps(rockSrc, rockPlacements, {
-        name: 'forest_rocks',
-        receiveShadow: true,
-        boundsRadius: 80,
-      });
-      const grassBatch = buildInstancedProps(grassSrc, grassPlacements, {
-        name: 'forest_grass',
-        receiveShadow: false,
-        boundsRadius: 80,
-      });
-
-      group.add(treeBatch);
-      group.add(rockBatch);
-      group.add(grassBatch);
-
-      // ─── Colliders ─────────────────────────────────────────────────
-      // Trees: tight cylinder at the trunk (so the player slides around it).
-      // Rocks: a touch wider than the visible base.
       const colliders = [];
-      for (const p of treePlacements) {
-        colliders.push({ x: p.x, z: p.z, r: 0.55 * (p.scaleMult || 1) });
+
+      // Render each asset group as an instanced batch.
+      for (const [assetKey, list] of byAsset) {
+        let src;
+        try {
+          src = await getSource(assetKey);
+        } catch (err) {
+          console.warn('TerrainArea: missing sandbox asset', assetKey, err);
+          continue;
+        }
+        if (!mounted) return;
+
+        // Map our placement shape → builder shape
+        const batch = list.map((p) => ({
+          x: p.x || 0,
+          y: p.y || 0,
+          z: p.z || 0,
+          rotY: p.rotY || 0,
+          // The instancer uses a uniform scale — we use scaleY as the
+          // representative multiplier (sandbox usually keeps them uniform).
+          scaleMult: p.scaleY || p.scaleX || 1,
+        }));
+
+        const meshGroup = buildInstancedProps(src, batch, {
+          name: `sandbox_${assetKey}`,
+          receiveShadow: true,
+          boundsRadius: 200,
+        });
+        group.add(meshGroup);
+
+        // Collect colliders for solid placements
+        for (const p of list) {
+          if (p.collides && (p.colliderRadius || 0) > 0) {
+            colliders.push({
+              x: p.x || 0,
+              z: p.z || 0,
+              r: (p.colliderRadius || 0.5) * (p.scaleX || 1),
+            });
+          }
+        }
       }
-      for (const p of rockPlacements) {
-        colliders.push({ x: p.x, z: p.z, r: 1.3 * (p.scaleMult || 1) });
-      }
+
       window.__terrainColliders = colliders;
 
       if (!mounted) {
@@ -134,11 +117,8 @@ export default function TerrainArea() {
       mounted = false;
       const scene = window.__gw3dScene;
       if (scene && group) {
-        // Dispose instanced meshes so we don't leak GPU memory on unmount.
         group.traverse((n) => {
-          if (n.isInstancedMesh) {
-            n.dispose?.();
-          }
+          if (n.isInstancedMesh) n.dispose?.();
         });
         scene.remove(group);
       }

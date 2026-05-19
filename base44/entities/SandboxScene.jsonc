@@ -1,0 +1,89 @@
+{
+  "name": "SandboxScene",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name of the sandbox scene"
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this scene is loaded into the live game world. Only one scene should be active at a time."
+    },
+    "placements": {
+      "type": "array",
+      "description": "Snapshot of all object placements in this scene. Each entry includes asset key, position, rotation, scale, lock state.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "assetKey": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number",
+            "default": 0
+          },
+          "y": {
+            "type": "number",
+            "default": 0
+          },
+          "z": {
+            "type": "number",
+            "default": 0
+          },
+          "rotX": {
+            "type": "number",
+            "default": 0
+          },
+          "rotY": {
+            "type": "number",
+            "default": 0
+          },
+          "rotZ": {
+            "type": "number",
+            "default": 0
+          },
+          "scaleX": {
+            "type": "number",
+            "default": 1
+          },
+          "scaleY": {
+            "type": "number",
+            "default": 1
+          },
+          "scaleZ": {
+            "type": "number",
+            "default": 1
+          },
+          "locked": {
+            "type": "boolean",
+            "default": false
+          },
+          "collides": {
+            "type": "boolean",
+            "default": true
+          },
+          "colliderRadius": {
+            "type": "number",
+            "default": 0.5
+          }
+        },
+        "required": [
+          "id",
+          "assetKey"
+        ]
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
