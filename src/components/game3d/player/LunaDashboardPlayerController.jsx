@@ -15,19 +15,20 @@ const STATES = {
   BLOCK: 'Block',
 };
 
+// STRICT ALIASING: only exact spelling variations of the same animation.
 const ACTION_ALIASES = {
-  [STATES.IDLE]: ['idle'],
-  [STATES.WALK]: ['walk'],
-  [STATES.RUN]: ['run', 'running'],
-  [STATES.CROUCH_IDLE]: ['crouchIdle', 'crouch_idle'],
-  [STATES.CROUCH_WALK]: ['crouchWalk', 'crouch_walk'],
-  [STATES.CROUCH_RUN]: ['crouchRun', 'crouch_run'],
-  [STATES.ROLL]: ['roll'],
-  [STATES.DODGE]: ['dodge'],
-  [STATES.JUMP]: ['jump'],
-  [STATES.KICK]: ['kick'],
-  [STATES.FIRE_ARROW]: ['fireArrow'],
-  [STATES.BLOCK]: ['block'],
+  [STATES.IDLE]: ['Idle', 'idle'],
+  [STATES.WALK]: ['Walk', 'walk'],
+  [STATES.RUN]: ['Run', 'run', 'running'],
+  [STATES.CROUCH_IDLE]: ['CrouchIdle', 'crouchIdle', 'crouch_idle'],
+  [STATES.CROUCH_WALK]: ['CrouchWalk', 'crouchWalk', 'crouch_walk'],
+  [STATES.CROUCH_RUN]: ['CrouchRun', 'crouchRun', 'crouch_run'],
+  [STATES.ROLL]: ['Roll', 'roll'],
+  [STATES.DODGE]: ['Dodge', 'dodge'],
+  [STATES.JUMP]: ['Jump', 'jump', 'jumpStart'],
+  [STATES.KICK]: ['Kick', 'kick'],
+  [STATES.FIRE_ARROW]: ['FireArrow', 'fireArrow', 'fire_arrow'],
+  [STATES.BLOCK]: ['Block', 'block'],
 };
 
 const LOOP_STATES = new Set([
@@ -75,19 +76,23 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const now = () => performance.now() / 1000;
 
   const resolveActionKey = (state) => {
-    const direct = String(state || '').trim();
-    const lower = direct.toLowerCase();
-    if (actions[direct]) return direct;
-    if (actions[lower]) return lower;
-    return (ACTION_ALIASES[direct] || ACTION_ALIASES[lower] || []).find((key) => actions[key]) || null;
+    const aliases = ACTION_ALIASES[state] || [state];
+    for (const alias of aliases) {
+      if (actions[alias]) return alias;
+    }
+    return null;
   };
 
   const ChangeState = (newState, options = {}) => {
     if (isDead) return false;
+    if (isBusy && !options.force && ONE_SHOT_STATES.has(currentState)) return false;
     if (!options.force && currentState === newState) return true;
 
     const nextKey = resolveActionKey(newState);
-    if (!nextKey) return false;
+    if (!nextKey) {
+      console.warn(`[Controller] Missing animation for: ${newState}`);
+      return false;
+    }
 
     const nextAction = actions[nextKey];
     const previousAction = currentActionKey ? actions[currentActionKey] : null;
@@ -125,10 +130,12 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const startOneShot = (state, duration = ONE_SHOT_DURATION[state]) => {
     if (isDead || isBusy || isBlocking) return false;
     if (!resolveActionKey(state)) return false;
+    const changed = ChangeState(state, { force: true, fade: 0.05 });
+    if (!changed) return false;
     isBusy = true;
     busyResetAt = now() + duration;
     if (oneShotRef) oneShotRef.current = true;
-    return ChangeState(state, { force: true, fade: 0.05 });
+    return true;
   };
 
   const HandleMovement = ({ moving = lastMovement.moving, running = lastMovement.running } = {}) => {
@@ -146,6 +153,7 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       return;
     }
 
+    // Common-sense fallback: if the player is not actively moving, force Idle only.
     if (!moving) ChangeState(STATES.IDLE);
     else if (running) ChangeState(STATES.RUN);
     else ChangeState(STATES.WALK);
