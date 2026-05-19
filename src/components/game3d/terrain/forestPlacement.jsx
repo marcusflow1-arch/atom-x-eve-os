@@ -1,18 +1,20 @@
 // ─── Forest Placement ─────────────────────────────────────────────────────
-// Generates a list of placements (asset key + world transform) for every
-// prop in the forest, using biome-aware Poisson-disc-style sampling so
-// trees never line up in grids and density varies naturally per biome.
+// Deterministic, biome-aware placement of trees / grass / rocks across the
+// forest. Pure data — no three.js. Returns world-space transforms that
+// TerrainArea.jsx then snaps to the procedural ground heightmap.
 //
-// Output is deterministic given the same seed — re-renders never reshuffle.
-//
-// IMPORTANT: this file does NOT touch three.js. It returns plain data so
-// it's cheap to call, easy to test, and trivially serializable later if we
-// move placement to a backend bake step.
+// Key rules:
+//   • Poisson-style minimum spacing so trees never line up
+//   • Slope-aware (no trees on cliff faces — slope from forestGround)
+//   • Random scale + rotation for organic variation
+//   • Grass clusters near trees, rocks, and along path edges
+//   • Rocks bias toward steeper terrain and rock_outcrop zones
 
 import {
-  FOREST_BOUNDS, BIOME_DENSITY, BIOME_ZONES,
-  biomeAt, SPAWN_POINT, SPAWN_CLEAR_RADIUS,
+  FOREST_BOUNDS, BIOME_DENSITY, biomeAt,
+  SPAWN_POINT, SPAWN_CLEAR_RADIUS,
 } from './forestBiome';
+import { sampleGroundY, sampleGroundSlope } from './forestGround';
 
 function rng(seed) {
   let s = seed >>> 0;
@@ -25,74 +27,48 @@ function rng(seed) {
   };
 }
 
-// Find the nearest pond zone — used to skip placements inside water.
-function inPond(x, z) {
-  for (const zone of BIOME_ZONES) {
-    if (zone.kind !== 'pond') continue;
-    const dx = x - zone.cx, dz = z - zone.cz;
-    if (dx * dx + dz * dz <= zone.r * zone.r) return zone;
-  }
-  return null;
-}
-
-// Distance from (x,z) to the nearest pond edge — negative if inside.
-function distToPondEdge(x, z) {
-  let best = Infinity;
-  for (const zone of BIOME_ZONES) {
-    if (zone.kind !== 'pond') continue;
-    const dx = x - zone.cx, dz = z - zone.cz;
-    const d = Math.sqrt(dx * dx + dz * dz) - zone.r;
-    if (d < best) best = d;
-  }
-  return best;
+function distToSpawnSq(x, z) {
+  const dx = x - SPAWN_POINT.x;
+  const dz = z - SPAWN_POINT.z;
+  return dx * dx + dz * dz;
 }
 
 /**
- * Generate all placements for the forest in one pass.
- * Returns: { trees, grass, rocks, ponds }
- *   each entry: { x, z, scaleMult, rotY }
+ * Generate all forest placements in one deterministic pass.
+ * Returns: { trees, grass, rocks }
+ *   each entry: { x, z, scaleMult, rotY, yOffset? }
  */
 export function generateForestPlacements(seed = 20260519) {
   const r = rng(seed);
   const { halfX, halfZ } = FOREST_BOUNDS;
+  const spawnSq = SPAWN_CLEAR_RADIUS * SPAWN_CLEAR_RADIUS;
 
-  // ─── Ponds — direct from biome zones ──────────────────────────────
-  const ponds = BIOME_ZONES
-    .filter((z) => z.kind === 'pond')
-    .map((z) => ({
-      x: z.cx, z: z.cz,
-      scaleMult: Math.max(1.0, z.r / 4.5), // scale water asset to fit
-      rotY: r() * Math.PI * 2,
-    }));
-
-  // ─── Trees — disabled; use hand-placed custom trees instead ─────────
+  // ─── TREES ────────────────────────────────────────────────────────
   const trees = [];
-  const treeAttempts = 0;
-  for (let i = 0; i < treeAttempts; i++) {
+  const TREE_ATTEMPTS = 1100;
+  for (let i = 0; i < TREE_ATTEMPTS; i++) {
     const x = (r() * 2 - 1) * halfX;
     const z = (r() * 2 - 1) * halfZ;
 
-    // Spawn area is always clear
-    const dxS = x - SPAWN_POINT.x, dzS = z - SPAWN_POINT.z;
-    if (dxS * dxS + dzS * dzS < SPAWN_CLEAR_RADIUS * SPAWN_CLEAR_RADIUS) continue;
-
-    // No trees in water
-    if (inPond(x, z)) continue;
-
-    // Keep trees a small buffer back from pond edges
-    if (distToPondEdge(x, z) < 1.5) continue;
+    if (distToSpawnSq(x, z) < spawnSq) continue;
 
     const biome = biomeAt(x, z);
     const profile = BIOME_DENSITY[biome];
     if (!profile || profile.tree <= 0) continue;
 
-    // Probability gate so density varies per biome
-    if (r() > profile.tree * 0.55) continue;
+    // Trees don't grow on steep rock faces
+    const slope = sampleGroundSlope(x, z);
+    if (slope > 0.55) continue;
+    // Slight bias against very low marshy areas
+    if (sampleGroundY(x, z) < -1.8 && r() < 0.7) continue;
 
-    // Minimum spacing check against already-placed trees
-    let tooClose = false;
+    // Density gate
+    if (r() > profile.tree * 0.6) continue;
+
+    // Minimum spacing against existing trees
     const minDist = profile.minTreeDist;
     const minDistSq = minDist * minDist;
+    let tooClose = false;
     for (let t = trees.length - 1; t >= 0; t--) {
       const p = trees[t];
       const ddx = p.x - x, ddz = p.z - z;
@@ -102,77 +78,80 @@ export function generateForestPlacements(seed = 20260519) {
 
     trees.push({
       x, z,
-      scaleMult: 0.7 + r() * 0.7,
+      scaleMult: 0.75 + r() * 0.85, // 0.75x .. 1.6x for size variation
       rotY: r() * Math.PI * 2,
     });
   }
 
-  // ─── Rocks — clustered in rock_outcrop zones, sparse elsewhere ────
+  // ─── ROCKS ────────────────────────────────────────────────────────
   const rocks = [];
-  const rockAttempts = 600;
-  for (let i = 0; i < rockAttempts; i++) {
+  const ROCK_ATTEMPTS = 700;
+  for (let i = 0; i < ROCK_ATTEMPTS; i++) {
     const x = (r() * 2 - 1) * halfX;
     const z = (r() * 2 - 1) * halfZ;
 
-    const dxS = x - SPAWN_POINT.x, dzS = z - SPAWN_POINT.z;
-    if (dxS * dxS + dzS * dzS < SPAWN_CLEAR_RADIUS * SPAWN_CLEAR_RADIUS) continue;
-    if (inPond(x, z)) continue;
+    if (distToSpawnSq(x, z) < spawnSq) continue;
 
     const biome = biomeAt(x, z);
     const profile = BIOME_DENSITY[biome];
     if (!profile || profile.rock <= 0) continue;
-    if (r() > profile.rock * 0.18) continue;
 
-    // Spacing — rocks need breathing room from each other
+    // Rocks like steeper ground a bit more
+    const slope = sampleGroundSlope(x, z);
+    const slopeBoost = Math.min(0.5, slope * 0.6);
+
+    if (r() > profile.rock * 0.2 + slopeBoost) continue;
+
     let tooClose = false;
     for (let t = rocks.length - 1; t >= 0; t--) {
       const p = rocks[t];
       const ddx = p.x - x, ddz = p.z - z;
-      if (ddx * ddx + ddz * ddz < 3.5 * 3.5) { tooClose = true; break; }
+      if (ddx * ddx + ddz * ddz < 3.2 * 3.2) { tooClose = true; break; }
     }
     if (tooClose) continue;
 
     rocks.push({
       x, z,
-      scaleMult: 0.6 + r() * 1.0,
+      scaleMult: 0.55 + r() * 1.1,
       rotY: r() * Math.PI * 2,
-      // Partial ground embedding — varies per rock so they look natural
-      yOffset: -(0.15 + r() * 0.35),
+      // Partial embedding — varies so they look natural
+      yOffset: -(0.18 + r() * 0.45),
     });
   }
 
-  // ─── Grass — dense, clustered around trees / rocks / pond edges ───
+  // ─── GRASS ────────────────────────────────────────────────────────
   const grass = [];
-  const grassAttempts = 1400;
-  for (let i = 0; i < grassAttempts; i++) {
+  const GRASS_ATTEMPTS = 2200;
+  for (let i = 0; i < GRASS_ATTEMPTS; i++) {
     const x = (r() * 2 - 1) * halfX;
     const z = (r() * 2 - 1) * halfZ;
-
-    if (inPond(x, z)) continue;
 
     const biome = biomeAt(x, z);
     const profile = BIOME_DENSITY[biome];
     if (!profile || profile.grass <= 0) continue;
 
-    // Cluster around nearby trees / rocks / pond edges
+    // Cluster near trees (up to +0.4) and rocks (+0.2)
     let clusterBoost = 0;
-    for (let t = trees.length - 1; t >= 0 && clusterBoost < 0.5; t--) {
+    for (let t = trees.length - 1; t >= 0 && clusterBoost < 0.4; t--) {
       const p = trees[t];
       const ddx = p.x - x, ddz = p.z - z;
-      if (ddx * ddx + ddz * ddz < 9) clusterBoost += 0.2;
+      if (ddx * ddx + ddz * ddz < 9) clusterBoost += 0.15;
     }
-    const pondEdge = distToPondEdge(x, z);
-    if (pondEdge > 0 && pondEdge < 3) clusterBoost += 0.3;
+    for (let t = rocks.length - 1; t >= 0 && clusterBoost < 0.6; t--) {
+      const p = rocks[t];
+      const ddx = p.x - x, ddz = p.z - z;
+      if (ddx * ddx + ddz * ddz < 6) clusterBoost += 0.12;
+    }
 
-    const baseProb = profile.grass * 0.6 + clusterBoost;
+    const baseProb = profile.grass * 0.55 + clusterBoost;
     if (r() > Math.min(0.95, baseProb)) continue;
 
     grass.push({
       x, z,
-      scaleMult: 0.5 + r() * 0.9,
+      scaleMult: 0.5 + r() * 1.0,
       rotY: r() * Math.PI * 2,
     });
   }
 
-  return { trees, grass, rocks, ponds };
+  return { trees, grass, rocks };
 }

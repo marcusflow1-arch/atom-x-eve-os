@@ -1,70 +1,60 @@
 // ─── Forest Biome Zones ───────────────────────────────────────────────────
-// Defines named biome zones inside the forest so density / asset choice
-// varies naturally instead of looking procedurally uniform.
+// Hand-tuned circular zones that define the character of each region of
+// the forest. Later entries override earlier ones, so a path can cut
+// through a thicket and a clearing can carve out of forest.
 //
-// Each zone is a circular region (cx, cz, radius) with a "kind" that tells
-// the placement system what to do:
-//   • dense_thicket  → very high tree density, lots of underbrush
-//   • forest         → standard forest, medium tree density
-//   • meadow         → open clearing, no trees, dense grass
-//   • path           → walkable corridor, no trees, sparse grass
-//   • pond           → water feature, grass ring around it, no trees inside
-//   • rock_outcrop   → rocky cluster, sparse trees, dense rocks
-//
-// All distances are in world units. Zones can overlap — later zones in the
-// array take priority over earlier ones (used for paths cutting through
-// forest, ponds carving out clearings, etc.).
+// Zones used here:
+//   • forest         — base layer, medium tree density
+//   • dense_thicket  — deep woods, very high tree density
+//   • meadow         — sunlit clearing, no trees, dense flowering grass
+//   • path           — walkable corridor, no trees, light gravel/grass
+//   • rock_outcrop   — rocky cluster, sparse trees, lots of rocks
 
-export const FOREST_BOUNDS = { halfX: 100, halfZ: 100 }; // 200×200 area
+export const FOREST_BOUNDS = { halfX: 100, halfZ: 100 };
 export const SPAWN_POINT = { x: 0, z: 0 };
-export const SPAWN_CLEAR_RADIUS = 8;
+export const SPAWN_CLEAR_RADIUS = 9;
 
-// Hand-placed biome zones — feels handcrafted, not procedural.
-// Ordered from background → foreground (later overrides earlier).
 export const BIOME_ZONES = [
-  // Base forest fills everything
+  // Base layer — entire map is forest by default
   { kind: 'forest', cx: 0, cz: 0, r: 9999 },
 
-  // ─── Dense thickets ─────────────────────────────────────────────────
-  { kind: 'dense_thicket', cx: -55, cz: -45, r: 28 },
-  { kind: 'dense_thicket', cx:  60, cz:  40, r: 32 },
-  { kind: 'dense_thicket', cx: -30, cz:  65, r: 22 },
-  { kind: 'dense_thicket', cx:  75, cz: -60, r: 20 },
+  // ─── Deep thickets (dark, dense, exploration-rewarding) ─────────────
+  { kind: 'dense_thicket', cx: -60, cz: -55, r: 30 },
+  { kind: 'dense_thicket', cx:  65, cz:  50, r: 34 },
+  { kind: 'dense_thicket', cx: -35, cz:  70, r: 24 },
+  { kind: 'dense_thicket', cx:  80, cz: -65, r: 22 },
+  { kind: 'dense_thicket', cx:  -8, cz: -80, r: 20 },
 
-  // ─── Open meadows / clearings ───────────────────────────────────────
-  { kind: 'meadow', cx:  30, cz: -25, r: 18 },
-  { kind: 'meadow', cx: -65, cz:  20, r: 16 },
-  { kind: 'meadow', cx:  10, cz:  55, r: 14 },
+  // ─── Sunlit meadows / clearings ─────────────────────────────────────
+  { kind: 'meadow', cx:  32, cz: -22, r: 16 },
+  { kind: 'meadow', cx: -68, cz:  18, r: 15 },
+  { kind: 'meadow', cx:  12, cz:  52, r: 13 },
+  { kind: 'meadow', cx:  55, cz: -45, r: 11 },
 
-  // ─── Rock outcrops ──────────────────────────────────────────────────
-  { kind: 'rock_outcrop', cx:  45, cz:  10, r: 12 },
-  { kind: 'rock_outcrop', cx: -25, cz: -65, r: 14 },
-  { kind: 'rock_outcrop', cx:  20, cz:  30, r: 10 },
+  // ─── Rocky outcrops ─────────────────────────────────────────────────
+  { kind: 'rock_outcrop', cx:  48, cz:  12, r: 13 },
+  { kind: 'rock_outcrop', cx: -28, cz: -68, r: 15 },
+  { kind: 'rock_outcrop', cx:  22, cz:  32, r: 10 },
+  { kind: 'rock_outcrop', cx: -50, cz:  55, r: 11 },
 
-  // ─── Pond disabled — WATER_SCENE GLTF is a multi-file bundle and its
-  // sidecar scene.bin isn't reachable through the current asset URL, which
-  // throws "Failed to load buffer scene.bin" in GLTFLoader. Re-enable once
-  // the water asset is re-uploaded as a self-contained GLB.
+  // ─── Winding path through the woods (gentle S-curve) ────────────────
+  // Many small overlapping circles so the path bends naturally.
+  { kind: 'path', cx:   0, cz: -10, r: 4 },
+  { kind: 'path', cx:   6, cz: -20, r: 4 },
+  { kind: 'path', cx:  14, cz: -28, r: 4 },
+  { kind: 'path', cx:  22, cz: -32, r: 4 },
+  { kind: 'path', cx:  30, cz: -28, r: 4 },
+  { kind: 'path', cx:  -4, cz:   2, r: 4 },
+  { kind: 'path', cx:  -8, cz:  14, r: 4 },
+  { kind: 'path', cx: -14, cz:  26, r: 4 },
+  { kind: 'path', cx: -22, cz:  36, r: 4 },
+  { kind: 'path', cx: -32, cz:  42, r: 4 },
 
-  // ─── Pathways (cut through forest to encourage exploration) ─────────
-  // Paths are short overlapping segments so they bend naturally.
-  { kind: 'path', cx:   0, cz: -15, r: 4 },
-  { kind: 'path', cx:  10, cz: -25, r: 4 },
-  { kind: 'path', cx:  20, cz: -30, r: 4 },
-  { kind: 'path', cx:   5, cz:  10, r: 4 },
-  { kind: 'path', cx: -10, cz:  20, r: 4 },
-  { kind: 'path', cx: -20, cz:  35, r: 4 },
-  { kind: 'path', cx: -15, cz:   0, r: 4 },
-  { kind: 'path', cx: -25, cz:  -5, r: 4 },
-
-  // Spawn clearing — always open
+  // Spawn clearing — always open and walkable
   { kind: 'meadow', cx: SPAWN_POINT.x, cz: SPAWN_POINT.z, r: SPAWN_CLEAR_RADIUS },
 ];
 
-/**
- * Resolve which biome a point belongs to. Later zones override earlier ones
- * when they contain the point, so paths cut through forests etc.
- */
+/** Resolve which biome a world-space point belongs to. */
 export function biomeAt(x, z) {
   let best = 'forest';
   for (const zone of BIOME_ZONES) {
@@ -76,16 +66,13 @@ export function biomeAt(x, z) {
 }
 
 /**
- * Density profile per biome. Used by the placement system to know how
- * many trees / grass / rocks belong in each cell of the world grid.
- *
- * Values are "weights" — relative to each other, not absolute counts.
+ * Per-biome density profile. Weights are relative — the placement system
+ * uses them as probability multipliers and minimum-spacing constraints.
  */
 export const BIOME_DENSITY = {
-  dense_thicket: { tree: 1.4, grass: 1.2, rock: 0.4, minTreeDist: 2.2 },
+  dense_thicket: { tree: 1.6, grass: 1.3, rock: 0.4, minTreeDist: 2.3 },
   forest:        { tree: 1.0, grass: 1.0, rock: 0.3, minTreeDist: 3.0 },
-  rock_outcrop:  { tree: 0.4, grass: 0.6, rock: 1.6, minTreeDist: 4.0 },
-  meadow:        { tree: 0.0, grass: 1.6, rock: 0.0, minTreeDist: 0   },
-  path:          { tree: 0.0, grass: 0.3, rock: 0.0, minTreeDist: 0   },
-  pond:          { tree: 0.0, grass: 0.0, rock: 0.0, minTreeDist: 0   },
+  rock_outcrop:  { tree: 0.4, grass: 0.7, rock: 1.8, minTreeDist: 4.0 },
+  meadow:        { tree: 0.0, grass: 1.7, rock: 0.0, minTreeDist: 0   },
+  path:          { tree: 0.0, grass: 0.25, rock: 0.0, minTreeDist: 0   },
 };
