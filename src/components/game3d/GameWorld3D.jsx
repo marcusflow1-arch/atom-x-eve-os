@@ -1048,8 +1048,13 @@ export default function GameWorld3D() {
           move.normalize();
           model.position.x += move.x * speed * delta;
           model.position.z += move.z * speed * delta;
-          model.position.x = Math.max(-36.5, Math.min(36.5, model.position.x));
-          model.position.z = Math.max(-36.5, Math.min(36.5, model.position.z));
+          const arenaRadius = 36.5;
+          const distFromCenter = Math.sqrt(model.position.x * model.position.x + model.position.z * model.position.z);
+          if (distFromCenter > arenaRadius) {
+            const edgeScale = arenaRadius / distFromCenter;
+            model.position.x *= edgeScale;
+            model.position.z *= edgeScale;
+          }
           const angle = Math.atan2(move.x, move.z);
           const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
           model.quaternion.slerp(targetQ, ROT_SMOOTH);

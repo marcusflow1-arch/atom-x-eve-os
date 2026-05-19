@@ -29,5 +29,13 @@ export function buildGrassEnvironment(scene) {
   ground.receiveShadow = true;
   scene.add(ground);
 
+  const barrier = new THREE.Mesh(
+    new THREE.CylinderGeometry(37.5, 37.5, 4, 96, 1, true),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+  );
+  barrier.position.y = 2;
+  barrier.name = 'invisible_arena_barrier';
+  scene.add(barrier);
+
   return ground;
 }
