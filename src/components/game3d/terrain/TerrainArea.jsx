@@ -1,25 +1,28 @@
 // ─── TerrainArea ──────────────────────────────────────────────────────────
-// Realistic forest biome built from scratch.
+// Realistic forest biome — optimized build.
 //
-//   • forestGround.js     — procedural rolling-hill ground mesh with
-//                           vertex-color blending (grass / dirt / rock)
-//                           and a sampleGroundY(x,z) API.
-//   • forestBiome.js      — hand-tuned biome zones (thickets, meadows,
-//                           paths, rocky outcrops).
-//   • forestPlacement.js  — deterministic biome-aware placement of
-//                           trees / grass / rocks with slope awareness
-//                           and natural clustering.
-//   • TerrainArea.jsx     — this file. Mounts ground + props into the
-//                           live scene, snaps each prop to the
-//                           heightmap, registers rock colliders.
+// Performance strategy:
+//   • One procedural ground mesh (vertex-color blended, fits in VRAM easily)
+//   • Trees / rocks / grass rendered with THREE.InstancedMesh → tens of
+//     draw calls total instead of thousands
+//   • Frustum culling on each InstancedMesh (with a generous bounds sphere
+//     so we don't pop instances at the edges)
 //
-// Enemies, bosses, player, and companions are untouched — they live in
-// other components and freely use this terrain.
+// Collision strategy:
+//   • Heightmap is the source of truth for the ground.  We expose
+//     `window.__terrainSampleY(x, z)` so player / AI controllers can ask
+//     the exact ground Y at any world position (no raycasts, O(1)).
+//   • Tree trunks register as solid cylinder colliders in
+//     `window.__terrainColliders` (same shape as rocks) — the existing
+//     `applyTerrainCollision()` push-out already handles them, so the
+//     player can't walk through or stand on top of trees.
+//   • Rocks also register as colliders.  Grass does NOT collide.
 
 import { useEffect, useRef } from 'react';
-import { instantiate, preload } from './assetLoaderCache';
+import { getSource, preload } from './assetLoaderCache';
 import { generateForestPlacements } from './forestPlacement';
 import { buildForestGround, sampleGroundY } from './forestGround';
+import { buildInstancedProps } from './instancedProps';
 
 export default function TerrainArea() {
   const groupRef = useRef(null);
@@ -34,7 +37,6 @@ export default function TerrainArea() {
 
       preload(['TREE_2', 'GRASS', 'ROCKS']);
 
-      // Root group lets us cleanly remove the whole forest on unmount.
       const THREE = await import('three');
       group = new THREE.Group();
       group.name = 'terrain_area';
@@ -44,44 +46,62 @@ export default function TerrainArea() {
       const ground = buildForestGround({ size: 220, segments: 160 });
       group.add(ground);
 
+      // Heightmap API — player/AI controllers can snap feet to ground in O(1)
+      window.__terrainSampleY = sampleGroundY;
+
       // ─── Generate placement data once (deterministic) ──────────────
       const { trees, grass, rocks } = generateForestPlacements();
 
-      // Helper: place an asset at (x,z), snapped to the ground heightmap.
-      const place = async (assetKey, p) => {
-        if (!mounted) return null;
-        const obj = await instantiate(assetKey);
-        const y = sampleGroundY(p.x, p.z) + (p.yOffset || 0);
-        obj.position.set(p.x, y, p.z);
-        obj.rotation.y = p.rotY || 0;
-        if (p.scaleMult) obj.scale.multiplyScalar(p.scaleMult);
-        group.add(obj);
-        return obj;
-      };
+      // Snap every placement to the ground heightmap up-front so the
+      // instanced batch builder gets final world Y values.
+      const withY = (p, extraY = 0) => ({
+        ...p,
+        y: sampleGroundY(p.x, p.z) + (p.yOffset || 0) + extraY,
+      });
+      const treePlacements = trees.map((p) => withY(p));
+      const rockPlacements = rocks.map((p) => withY(p));
+      const grassPlacements = grass.map((p) => withY(p));
 
-      // ─── Trees ─────────────────────────────────────────────────────
-      const TREE_BATCH = 12;
-      for (let i = 0; i < trees.length; i += TREE_BATCH) {
-        if (!mounted) break;
-        const slice = trees.slice(i, i + TREE_BATCH);
-        await Promise.all(slice.map((p) => place('TREE_2', p)));
-      }
+      // ─── Load sources in parallel ──────────────────────────────────
+      const [treeSrc, rockSrc, grassSrc] = await Promise.all([
+        getSource('TREE_2'),
+        getSource('ROCKS'),
+        getSource('GRASS'),
+      ]);
+      if (!mounted) return;
 
-      // ─── Rocks (collidable) ────────────────────────────────────────
+      // ─── Build instanced batches ───────────────────────────────────
+      const treeBatch = buildInstancedProps(treeSrc, treePlacements, {
+        name: 'forest_trees',
+        receiveShadow: true,
+        boundsRadius: 220,
+      });
+      const rockBatch = buildInstancedProps(rockSrc, rockPlacements, {
+        name: 'forest_rocks',
+        receiveShadow: true,
+        boundsRadius: 220,
+      });
+      const grassBatch = buildInstancedProps(grassSrc, grassPlacements, {
+        name: 'forest_grass',
+        receiveShadow: false,
+        boundsRadius: 220,
+      });
+
+      group.add(treeBatch);
+      group.add(rockBatch);
+      group.add(grassBatch);
+
+      // ─── Colliders ─────────────────────────────────────────────────
+      // Trees: tight cylinder at the trunk (so the player slides around it).
+      // Rocks: a touch wider than the visible base.
       const colliders = [];
-      for (const p of rocks) {
-        if (!mounted) break;
-        await place('ROCKS', p);
-        colliders.push({ x: p.x, z: p.z, r: 1.4 * (p.scaleMult || 1) });
+      for (const p of treePlacements) {
+        colliders.push({ x: p.x, z: p.z, r: 0.55 * (p.scaleMult || 1) });
       }
-
-      // ─── Grass — ground cover, batched so we don't block the main thread
-      const GRASS_BATCH = 40;
-      for (let i = 0; i < grass.length; i += GRASS_BATCH) {
-        if (!mounted) break;
-        const slice = grass.slice(i, i + GRASS_BATCH);
-        await Promise.all(slice.map((p) => place('GRASS', p)));
+      for (const p of rockPlacements) {
+        colliders.push({ x: p.x, z: p.z, r: 1.3 * (p.scaleMult || 1) });
       }
+      window.__terrainColliders = colliders;
 
       if (!mounted) {
         scene.remove(group);
@@ -89,8 +109,6 @@ export default function TerrainArea() {
       }
 
       scene.add(group);
-      window.__terrainColliders = colliders;
-      window.__terrainSampleY = sampleGroundY; // expose for foot-snap systems
     };
 
     start();
@@ -98,7 +116,15 @@ export default function TerrainArea() {
     return () => {
       mounted = false;
       const scene = window.__gw3dScene;
-      if (scene && group) scene.remove(group);
+      if (scene && group) {
+        // Dispose instanced meshes so we don't leak GPU memory on unmount.
+        group.traverse((n) => {
+          if (n.isInstancedMesh) {
+            n.dispose?.();
+          }
+        });
+        scene.remove(group);
+      }
       window.__terrainColliders = [];
       window.__terrainSampleY = null;
     };

@@ -58,6 +58,19 @@ export async function instantiate(assetKey) {
   return clone;
 }
 
+/**
+ * Get the cached source object (NOT a clone) with its fit scale applied
+ * to the root. Used by the instanced-props builder so we can read the
+ * sub-mesh geometries directly instead of cloning per-instance.
+ */
+export async function getSource(assetKey) {
+  const root = await loadOnce(assetKey);
+  const fit = root.userData.__fitScale || 1;
+  root.scale.setScalar(fit);
+  root.updateMatrixWorld(true);
+  return root;
+}
+
 export function preload(assetKeys) {
   assetKeys.forEach((k) => loadOnce(k).catch(() => {}));
 }
