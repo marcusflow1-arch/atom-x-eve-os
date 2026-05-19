@@ -185,14 +185,22 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
     return startOneShot(STATES.JUMP);
   };
 
-  const startSpecialMove = (state, direction, speed, duration = ONE_SHOT_DURATION[state]) => {
+  const startSpecialMove = (state, direction, speed, duration = ONE_SHOT_DURATION[state], options = {}) => {
+    if (isDead || isBusy || isBlocking) return false;
+
     const dir = direction?.clone?.() || new THREE.Vector3(0, 0, -1);
     if (dir.lengthSq() === 0) dir.set(0, 0, -1);
     dir.y = 0;
     dir.normalize();
 
-    const started = startOneShot(state, duration);
-    if (!started) return false;
+    if (!options.movementOnly) {
+      const started = startOneShot(state, duration);
+      if (!started) return false;
+    } else {
+      isBusy = true;
+      busyResetAt = now() + duration;
+      if (oneShotRef) oneShotRef.current = true;
+    }
 
     specialMoveVelocity = dir.multiplyScalar(speed);
     specialMoveTimer = duration;
@@ -200,7 +208,7 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   };
 
   const requestRoll = (direction) => startSpecialMove(STATES.ROLL, direction, 14, ONE_SHOT_DURATION[STATES.ROLL]);
-  const requestDodge = (direction) => startSpecialMove(STATES.DODGE, direction, 13, ONE_SHOT_DURATION[STATES.DODGE]);
+  const requestDodge = (direction) => startSpecialMove(STATES.DODGE, direction, 13, ONE_SHOT_DURATION[STATES.DODGE], { movementOnly: true });
 
   const HandleCombat = (kind = 'attack') => {
     const state = kind === 'kick' ? STATES.KICK : STATES.FIRE_ARROW;
