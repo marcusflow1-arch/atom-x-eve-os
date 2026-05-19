@@ -222,10 +222,10 @@ export default function GameWorld3D() {
     if (!containerRef.current) return;
     const container = containerRef.current;
 
-    // Scene — tropical sky/ocean tint to match the Volcano Island map
+    // Scene — soft daytime sky for a simple green grass field
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x88c4e8, 60, 220);
-    scene.background = new THREE.Color(0x88c4e8);
+    scene.fog = new THREE.Fog(0xa8d0e8, 80, 240);
+    scene.background = new THREE.Color(0xa8d0e8);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -265,14 +265,7 @@ export default function GameWorld3D() {
     sun.shadow.camera.bottom = -30;
     scene.add(sun);
 
-    // Backdrop ocean plane (large, low) so the horizon isn't empty
-    const oceanGeo = new THREE.PlaneGeometry(400, 400);
-    const oceanMat = new THREE.MeshStandardMaterial({ color: 0x2a6a9a, roughness: 0.4, metalness: 0.1 });
-    const ocean = new THREE.Mesh(oceanGeo, oceanMat);
-    ocean.rotation.x = -Math.PI / 2;
-    ocean.position.y = -0.4;
-    ocean.receiveShadow = true;
-    scene.add(ocean);
+    // (Ocean backdrop removed — replaced by simple flat green grass ground below.)
 
     // LOW-POLY ENVIRONMENT MAP — bundle URLs from admin AssetFile manifest. groundMeshes used for raycast snapping.
     const groundMeshes = [];           // meshes used for terrain raycasts
@@ -289,72 +282,22 @@ export default function GameWorld3D() {
     let mapReady = false;
     const pendingFootings = []; // entities waiting to be snapped to ground once map loads
 
-    const mapLoadingManager = createLowPolyLoadingManager(THREE);
-    const mapLoader = new GLTFLoader(mapLoadingManager);
-    mapLoader.load(
-      LOWPOLY_MAP_URL,
-      (gltf) => {
-        const root = gltf.scene || gltf.scenes?.[0];
-        if (!root) {
-          console.error('Low-poly map: GLTF has no scene');
-          return;
-        }
-
-        // Scale up — we want a large walkable arena (~140u across)
-        const box = new THREE.Box3().setFromObject(root);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.z);
-        const mapScale = maxDim > 0 ? 140 / maxDim : 1;
-        root.scale.setScalar(mapScale);
-
-        // Re-center on XZ and place its base at y=0 so spawn snapping is easy
-        const box2 = new THREE.Box3().setFromObject(root);
-        const center = box2.getCenter(new THREE.Vector3());
-        root.position.x -= center.x;
-        root.position.z -= center.z;
-        root.position.y -= box2.min.y;
-
-        // Collect ground meshes for raycasting; textures are already applied by GLTFLoader.
-        // Only push meshes tagged userData.isGround (so characters don't try to walk on
-        // top of trees / props). If nothing is tagged (legacy GLTF map), fall back to
-        // every mesh — matches the original behavior.
-        const tagged = [];
-        root.traverse((node) => {
-          if (node.isMesh) {
-            node.receiveShadow = true;
-            if (node.userData?.isGround) tagged.push(node);
-          }
-        });
-        if (tagged.length > 0) {
-          groundMeshes.push(...tagged);
-        } else {
-          root.traverse((node) => { if (node.isMesh) groundMeshes.push(node); });
-        }
-
-        scene.add(root);
-        mapReady = true;
-
-        // Snap any entities that spawned before the map was ready
-        pendingFootings.forEach((fn) => fn());
-        pendingFootings.length = 0;
-      },
-      undefined,
-      (err) => {
-        console.error('Low-poly map load error:', err);
-        // Fallback: keep a flat green ground so the scene still works
-        const fallback = new THREE.Mesh(
-          new THREE.PlaneGeometry(140, 140),
-          new THREE.MeshStandardMaterial({ color: 0x4a6b3a, roughness: 0.95 }),
-        );
-        fallback.rotation.x = -Math.PI / 2;
-        fallback.receiveShadow = true;
-        scene.add(fallback);
-        groundMeshes.push(fallback);
-        mapReady = true;
-        pendingFootings.forEach((fn) => fn());
-        pendingFootings.length = 0;
-      },
+    // Simple flat green grass terrain — restored as the world ground.
+    // No external map load: instant ready, zero network dependency.
+    const grassGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 200, 1, 1),
+      new THREE.MeshStandardMaterial({ color: 0x4a7c3a, roughness: 0.95, metalness: 0 }),
     );
+    grassGround.rotation.x = -Math.PI / 2;
+    grassGround.position.y = 0;
+    grassGround.receiveShadow = true;
+    scene.add(grassGround);
+    groundMeshes.push(grassGround);
+    mapReady = true;
+    // Flush any spawn snapping that queued before this point (none in practice
+    // since this runs synchronously, but kept for safety).
+    pendingFootings.forEach((fn) => fn());
+    pendingFootings.length = 0;
 
     // Helper: stand an object on the terrain at (x,z). If map isn't ready yet,
     // queue the snap for after the FBX finishes loading.
