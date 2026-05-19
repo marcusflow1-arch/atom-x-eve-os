@@ -1,64 +1,157 @@
 import * as THREE from 'three';
 
-const ACTION_ALIASES = {
-  Idle: ['idle'],
-  Running: ['running', 'run', 'sprint', 'walk'],
-  Jumping: ['jumping', 'jumpStart', 'jumpLoop', 'jump'],
-  Falling: ['falling', 'fall', 'jumpLoop', 'jump'],
-  HurricaneKick: ['hurricane_kick', 'kick', 'attack'],
-  Sprinting: ['sprinting', 'roll', 'sprint', 'run'],
-  FireArrow: ['fireArrow', 'attack', 'kick'],
-  Hurt: ['hurt', 'hitReact'],
-  Death: ['death'],
+const STATES = {
+  IDLE: 'Idle',
+  WALK: 'Walk',
+  RUN: 'Run',
+  SPRINT: 'Sprint',
+  JUMP_START: 'JumpStart',
+  JUMP_LOOP: 'JumpLoop',
+  JUMP_LAND: 'JumpLand',
+  FALL: 'Fall',
+  BOW_IDLE: 'BowIdle',
+  DRAW_BOW: 'DrawBow',
+  HOLD_BOW: 'HoldBow',
+  FIRE_ARROW: 'FireArrow',
+  HURT: 'Hurt',
+  DEATH: 'Death',
 };
+
+const ACTION_ALIASES = {
+  [STATES.IDLE]: ['idle'],
+  [STATES.WALK]: ['walk', 'running', 'run'],
+  [STATES.RUN]: ['run', 'running', 'walk'],
+  [STATES.SPRINT]: ['sprint', 'sprinting', 'running', 'run'],
+  [STATES.JUMP_START]: ['jumpStart', 'jumping', 'jump'],
+  [STATES.JUMP_LOOP]: ['jumpLoop', 'jumping', 'jump'],
+  [STATES.JUMP_LAND]: ['jumpLand', 'idle'],
+  [STATES.FALL]: ['fall', 'falling', 'jumpLoop', 'jumping'],
+  [STATES.BOW_IDLE]: ['bowIdle', 'holdBow', 'idle'],
+  [STATES.DRAW_BOW]: ['drawBow', 'holdBow', 'bowIdle'],
+  [STATES.HOLD_BOW]: ['holdBow', 'bowIdle', 'idle'],
+  [STATES.FIRE_ARROW]: ['fireArrow', 'attack', 'kick', 'hurricane_kick'],
+  [STATES.HURT]: ['hurt', 'hitReact'],
+  [STATES.DEATH]: ['death'],
+  HurricaneKick: ['hurricane_kick', 'kick', 'attack'],
+};
+
+const ONE_SHOT_KEYS = new Set([
+  'jumpStart', 'jumpLand', 'drawBow', 'fireArrow', 'attack', 'kick',
+  'hurricane_kick', 'hurt', 'hitReact', 'death', 'roll', 'dodge', 'sprinting',
+]);
+
+const LOOP_STATES = new Set([
+  STATES.IDLE, STATES.WALK, STATES.RUN, STATES.SPRINT,
+  STATES.JUMP_LOOP, STATES.FALL, STATES.BOW_IDLE, STATES.HOLD_BOW,
+]);
 
 export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const actions = {};
-  let currentActionName = '';
-  let lockedUntil = 0;
-  let verticalVelocity = 0;
-  let verticalOffset = 0;
+  let currentState = null;
+  let currentActionKey = null;
+  let lastMovement = { moving: false, running: false, sprinting: false };
+
+  let isMoving = false;
+  let isRunning = false;
+  let isSprinting = false;
+  let isJumping = false;
   let isGrounded = true;
-  let isDead = false;
-  let isHurt = false;
   let isAttacking = false;
+  let isBowDrawn = false;
+  let isHurt = false;
+  let isDead = false;
+
+  let velocity = new THREE.Vector3();
+  let verticalOffset = 0;
+  let attackResetAt = 0;
+  let hurtResetAt = 0;
+  let landingResetAt = 0;
 
   const now = () => performance.now() / 1000;
-  const isLocked = () => now() < lockedUntil || isDead;
 
-  const resolveActionKey = (name) => {
-    const direct = String(name || '').trim();
+  const resolveActionKey = (state) => {
+    const direct = String(state || '').trim();
     const lower = direct.toLowerCase();
     if (actions[direct]) return direct;
     if (actions[lower]) return lower;
-
-    const aliases = ACTION_ALIASES[direct] || ACTION_ALIASES[lower] || ACTION_ALIASES[name];
-    if (aliases) return aliases.find((key) => actions[key]) || null;
-    return null;
+    return (ACTION_ALIASES[direct] || ACTION_ALIASES[lower] || []).find((key) => actions[key]) || null;
   };
 
-  const fadeToAction = (name, duration = 0.2, force = false) => {
-    const key = resolveActionKey(name);
-    if (!key) return false;
-    if (!force && currentActionName === key) return true;
+  const ChangeState = (newState, options = {}) => {
+    if (isDead && newState !== STATES.DEATH) return false;
+    if (isHurt && newState !== STATES.HURT && newState !== STATES.DEATH) return false;
+    if (!options.force && currentState === newState) return true;
 
-    const nextAction = actions[key];
-    const previousAction = currentActionName ? actions[currentActionName] : null;
+    const nextKey = resolveActionKey(newState);
+    if (!nextKey) return false;
 
-    if (previousAction && previousAction !== nextAction) previousAction.fadeOut(duration);
-    nextAction.reset().fadeIn(duration).play();
-    currentActionName = key;
+    const nextAction = actions[nextKey];
+    const previousAction = currentActionKey ? actions[currentActionKey] : null;
+    nextAction.enabled = true;
+    nextAction.setEffectiveWeight(1);
+    nextAction.setEffectiveTimeScale(options.timeScale || 1);
+
+    if (!LOOP_STATES.has(newState)) {
+      nextAction.setLoop(THREE.LoopOnce, 1);
+      nextAction.clampWhenFinished = true;
+    } else {
+      nextAction.setLoop(THREE.LoopRepeat);
+      nextAction.clampWhenFinished = false;
+    }
+
+    currentState = newState;
+    currentActionKey = nextKey;
+
+    if (previousAction && previousAction !== nextAction) previousAction.fadeOut(options.fade ?? 0.15);
+    nextAction.reset().fadeIn(options.fade ?? 0.15).play();
     return true;
   };
 
-  const play = (name, force = false) => {
-    if (!force && isLocked()) return false;
-    return fadeToAction(name, 0.2, force);
+  const HandleMovement = () => {
+    if (isDead || isHurt || isAttacking || !isGrounded) return;
+
+    if (isBowDrawn) {
+      ChangeState(STATES.HOLD_BOW);
+      return;
+    }
+
+    if (!isMoving) {
+      ChangeState(STATES.IDLE);
+      return;
+    }
+
+    if (isMoving && isSprinting) {
+      ChangeState(STATES.SPRINT);
+      return;
+    }
+
+    if (isMoving && isRunning) {
+      ChangeState(STATES.RUN);
+      return;
+    }
+
+    ChangeState(STATES.WALK);
   };
 
-  const lockOneShot = (seconds) => {
-    lockedUntil = now() + seconds;
-    if (oneShotRef) oneShotRef.current = true;
+  const ReturnToMovement = () => {
+    landingResetAt = 0;
+    HandleMovement();
+  };
+
+  const ResetAttack = () => {
+    attackResetAt = 0;
+    isAttacking = false;
+    if (oneShotRef) oneShotRef.current = false;
+
+    if (isBowDrawn) ChangeState(STATES.HOLD_BOW, { force: true });
+    else HandleMovement();
+  };
+
+  const ResetHurt = () => {
+    hurtResetAt = 0;
+    isHurt = false;
+    if (oneShotRef) oneShotRef.current = false;
+    HandleMovement();
   };
 
   const bindClips = (clipsByKey = {}) => {
@@ -66,67 +159,98 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       const action = mixer.clipAction(clip);
       action.enabled = true;
       action.setEffectiveWeight(1);
-
-      if (['jumpStart', 'jumpLand', 'roll', 'dodge', 'kick', 'attack', 'fireArrow', 'hurt', 'death'].includes(key)) {
+      if (ONE_SHOT_KEYS.has(key)) {
         action.setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = true;
       }
-
       actions[key] = action;
     });
 
     if (actions.run && !actions.running) actions.running = actions.run;
     if (actions.jumpStart && !actions.jumping) actions.jumping = actions.jumpStart;
-    if (actions.roll && !actions.sprinting) actions.sprinting = actions.roll;
     if (actions.kick && !actions.hurricane_kick) actions.hurricane_kick = actions.kick;
+    if (actions.roll && !actions.sprinting) actions.sprinting = actions.roll;
 
-    fadeToAction('Idle', 0.2, true);
+    ChangeState(STATES.IDLE, { force: true });
   };
 
-  const updateActionState = ({ isMoving }) => {
-    if (isDead || isHurt || isAttacking || isLocked()) return;
-    if (!isGrounded) {
-      play(verticalVelocity > 0 ? 'Jumping' : 'Falling');
+  const updateActionState = ({ isMoving: moving, isRunning: running, isSprinting: sprinting }) => {
+    isMoving = !!moving;
+    isRunning = !!running;
+    isSprinting = !!sprinting;
+    lastMovement = { moving: isMoving, running: isRunning, sprinting: isSprinting };
+
+    if (isDead) {
+      ChangeState(STATES.DEATH, { force: true });
       return;
     }
-    play(isMoving ? 'Running' : 'Idle');
+
+    if (isHurt) {
+      ChangeState(STATES.HURT, { force: true });
+      return;
+    }
+
+    if (isAttacking) return;
+    if (landingResetAt > 0) return;
+
+    HandleMovement();
   };
 
   const requestJump = () => {
     if (isDead || isHurt || isAttacking || !isGrounded) return false;
-    verticalVelocity = 5;
-    verticalOffset = Math.max(verticalOffset, 0.01);
+    velocity.y = Math.sqrt(5 * -2 * -20);
+    isJumping = true;
     isGrounded = false;
-    fadeToAction('Jumping', 0.15, true);
+    if (oneShotRef) oneShotRef.current = true;
+    return ChangeState(STATES.JUMP_START, { force: true });
+  };
+
+  const HandleCombat = () => {
+    if (isDead || isHurt || isAttacking) return false;
+    isAttacking = true;
+    attackResetAt = now() + 0.4;
+    if (oneShotRef) oneShotRef.current = true;
+    return ChangeState(STATES.FIRE_ARROW, { force: true, fade: 0.05 });
+  };
+
+  const requestRoll = () => HandleCombat('kick');
+
+  const setAiming = (enabled) => {
+    if (isDead || isHurt || isAttacking) return false;
+
+    if (enabled) {
+      isBowDrawn = true;
+      return ChangeState(STATES.DRAW_BOW, { force: true, fade: 0.05 });
+    }
+
+    isBowDrawn = false;
+    ChangeState(STATES.BOW_IDLE, { force: true });
+    HandleMovement();
     return true;
   };
 
-  const requestRoll = () => {
-    if (isDead || isHurt || isAttacking || !isGrounded) return false;
-    isAttacking = true;
-    lockOneShot(0.6);
-    return fadeToAction('Sprinting', 0.15, true);
-  };
-
-  const HandleCombat = (kind = 'attack') => {
-    if (isDead || isHurt || isAttacking) return false;
-    isAttacking = true;
-    const actionName = kind === 'kick' ? 'HurricaneKick' : 'FireArrow';
-    lockOneShot(kind === 'kick' ? 0.7 : 0.45);
-    return fadeToAction(actionName, 0.15, true);
-  };
-
   const updateMotion = (model, delta, groundY = model.position.y) => {
-    if (!isGrounded || verticalOffset > 0) {
-      verticalVelocity += -25 * delta;
-      verticalOffset += verticalVelocity * delta;
+    if (attackResetAt > 0 && now() >= attackResetAt) ResetAttack();
+    if (hurtResetAt > 0 && now() >= hurtResetAt) ResetHurt();
+    if (landingResetAt > 0 && now() >= landingResetAt) ReturnToMovement();
+
+    if (!isGrounded) {
+      velocity.y += -20 * delta;
+      verticalOffset += velocity.y * delta;
+
+      if (velocity.y > 0) ChangeState(STATES.JUMP_LOOP);
+      else ChangeState(STATES.FALL);
 
       if (verticalOffset <= 0) {
         verticalOffset = 0;
-        verticalVelocity = 0;
+        velocity.y = 0;
         isGrounded = true;
-      } else {
-        isGrounded = false;
+
+        if (isJumping) {
+          isJumping = false;
+          ChangeState(STATES.JUMP_LAND, { force: true });
+          landingResetAt = now() + 0.2;
+        }
       }
     }
 
@@ -134,56 +258,55 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   };
 
   const requestHitReact = () => {
-    if (isDead || isHurt) return false;
+    if (isDead) return false;
     isHurt = true;
     isAttacking = false;
-    lockOneShot(0.5);
-    return fadeToAction('Hurt', 0.1, true);
+    hurtResetAt = now() + 0.5;
+    if (oneShotRef) oneShotRef.current = true;
+    return ChangeState(STATES.HURT, { force: true, fade: 0.05 });
   };
 
   const HandleDeath = () => {
     isDead = true;
     isHurt = false;
     isAttacking = false;
-    lockedUntil = Infinity;
-    return fadeToAction('Death', 0.1, true);
+    return ChangeState(STATES.DEATH, { force: true, fade: 0.05 });
   };
 
-  mixer.addEventListener('finished', () => {
-    if (isDead) return;
-    if (isHurt) isHurt = false;
-    if (isAttacking) isAttacking = false;
-    lockedUntil = 0;
-    if (oneShotRef) oneShotRef.current = false;
+  mixer.addEventListener('finished', (event) => {
+    if (event.action?.getClip?.()?.name !== currentActionKey || isDead) return;
+    if (currentState === STATES.FIRE_ARROW) ResetAttack();
+    if (currentState === STATES.HURT) ResetHurt();
+    if (currentState === STATES.DRAW_BOW && isBowDrawn) ChangeState(STATES.HOLD_BOW, { force: true });
   });
 
   return {
     actions,
     bindClips,
-    ChangeState: (state, options = {}) => fadeToAction(state, options.fade ?? 0.2, options.force),
-    PlayAnimation: (state, options = {}) => fadeToAction(state, options.fade ?? 0.2, options.force),
+    ChangeState,
+    PlayAnimation: ChangeState,
     HandleMovement: updateActionState,
     HandleCombat,
     HandleJump: requestJump,
     HandleAirborne: () => {},
     HandleDamage: requestHitReact,
     HandleDeath,
-    playOneShot: (name) => HandleCombat(name === 'kick' ? 'kick' : 'attack'),
+    playOneShot: HandleCombat,
     requestAttack: HandleCombat,
     requestCrouch: () => false,
     requestHitReact,
     requestJump,
     requestRoll,
-    setAiming: () => false,
+    setAiming,
     setBlocking: () => false,
     updateActionState,
     updateMotion,
-    getCurrent: () => currentActionName || 'idle',
-    getIsAiming: () => false,
+    getCurrent: () => currentState || STATES.IDLE,
+    getIsAiming: () => isBowDrawn,
     getIsBlocking: () => false,
     getIsCrouching: () => false,
-    isMovementOverridden: () => false,
+    isMovementOverridden: () => isAttacking || isHurt || isDead || landingResetAt > 0,
     has: (name) => !!resolveActionKey(name),
-    getDebugState: () => ({ currentActionName, isGrounded, isAttacking, isDead, isHurt, verticalVelocity }),
+    getDebugState: () => ({ currentState, currentActionKey, ...lastMovement, isGrounded, isJumping, isAttacking, isBowDrawn, isHurt, isDead, velocity }),
   };
 }
