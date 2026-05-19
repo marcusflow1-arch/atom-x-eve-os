@@ -1,19 +1,15 @@
 // ─── Asset Loader Cache ───────────────────────────────────────────────────
-// Loads each terrain asset (FBX / GLTF / GLB) exactly ONCE and caches the
-// parsed root object. Subsequent requests return a SkeletonUtils-free
-// shallow clone — meshes share their geometry + materials but get fresh
-// transforms so they can be placed independently in the scene.
-//
-// This is what makes re-entering an unloaded chunk feel instant: the file
-// has already been parsed, we just clone it.
+// Loads each terrain asset (FBX / GLTF / GLB) once and returns clones for
+// every placement. Auto-fits to TARGET_HEIGHT via AABB normalization — no
+// more guess scalars.
 
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { TERRAIN_ASSETS } from './terrainAssetRegistry';
 
-const cache = new Map();           // assetKey → parsed root Object3D
-const inflight = new Map();        // assetKey → Promise<Object3D>
+const cache = new Map();
+const inflight = new Map();
 
 const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
@@ -25,45 +21,43 @@ function loadOnce(assetKey) {
   const def = TERRAIN_ASSETS[assetKey];
   if (!def) return Promise.reject(new Error(`Unknown terrain asset: ${assetKey}`));
 
-  const promise = new Promise((resolve, reject) => {
-    const onDone = (obj) => {
-      // Tag every mesh so the streamer can find them later if needed.
-      obj.traverse((n) => {
+  const p = new Promise((resolve, reject) => {
+    const done = (root) => {
+      // AABB-normalize: compute current height, derive scale to hit targetHeight.
+      const box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+      const currentHeight = size.y || Math.max(size.x, size.z) || 1;
+      const fitScale = (def.targetHeight || 1) / currentHeight;
+      root.userData.__fitScale = fitScale;
+
+      root.traverse((n) => {
         if (n.isMesh) {
-          n.castShadow = false;            // props don't cast shadows (perf)
+          n.castShadow = false;
           n.receiveShadow = true;
-          n.userData.__terrainAsset = assetKey;
         }
       });
-      cache.set(assetKey, obj);
+      cache.set(assetKey, root);
       inflight.delete(assetKey);
-      resolve(obj);
+      resolve(root);
     };
-    const onErr = (e) => { inflight.delete(assetKey); reject(e); };
+    const err = (e) => { inflight.delete(assetKey); reject(e); };
 
-    if (def.type === 'fbx') {
-      fbxLoader.load(def.url, onDone, undefined, onErr);
-    } else {
-      gltfLoader.load(def.url, (gltf) => onDone(gltf.scene || gltf.scenes?.[0]), undefined, onErr);
-    }
+    if (def.type === 'fbx') fbxLoader.load(def.url, done, undefined, err);
+    else gltfLoader.load(def.url, (g) => done(g.scene || g.scenes?.[0]), undefined, err);
   });
-  inflight.set(assetKey, promise);
-  return promise;
+  inflight.set(assetKey, p);
+  return p;
 }
 
-/**
- * Return a fresh clone of the asset ready to be added to the scene.
- * Geometry + materials are shared with the cache (cheap clone).
- */
+/** Clone the asset, pre-scaled to its target world height. */
 export async function instantiate(assetKey) {
   const root = await loadOnce(assetKey);
   const clone = root.clone(true);
-  const def = TERRAIN_ASSETS[assetKey];
-  clone.scale.setScalar(def.scale || 1);
+  const fit = root.userData.__fitScale || 1;
+  clone.scale.setScalar(fit);
   return clone;
 }
 
-/** Preload a batch of assets — fire & forget. */
 export function preload(assetKeys) {
   assetKeys.forEach((k) => loadOnce(k).catch(() => {}));
 }

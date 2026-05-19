@@ -72,7 +72,7 @@ import {
   NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, RANGED_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP,
   PLAYER_ATTACK_COOLDOWN, PLAYER_INVUL_AFTER_HIT,
 } from './gameWorldConfig';
-import { attachContextGuard } from './webglContextGuard';
+import { attachContextGuard } from './webglContextGuard'; import { applyTerrainCollision } from './terrain/applyTerrainCollision';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -1128,8 +1128,8 @@ export default function GameWorld3D() {
           const gy = sampleGroundY(model.position.x, model.position.z);
           if (gy !== null) model.position.y = gy;
         }
-        // Rogue-AI body collision — push player out so they can't walk through hostile player-AIs
-        { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } }
+        // Rogue-AI body collision + terrain rock collision (push player out of solids)
+        { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } applyTerrainCollision(model); }
 
         // ─── Mount handling: companion follows player while mounted ───
         if (companionMixerRef.current) companionMixerRef.current.update(delta);

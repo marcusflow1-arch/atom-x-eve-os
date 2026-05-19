@@ -28,7 +28,7 @@ import NetworkValidationTelemetry from '../components/network/debug/NetworkValid
 import { partyStore } from '../components/game3d/social/socialStores';
 import GameWorldLootLayer from '../components/game3d/GameWorldLootLayer';
 import EnemyPlayerSpawner from '../components/game3d/EnemyPlayerSpawner';
-import TerrainStreamer from '../components/game3d/terrain/TerrainStreamer';
+import TerrainArea from '../components/game3d/terrain/TerrainArea';
 import RogueAIHPBarLayer from '../components/game3d/RogueAIHPBarLayer';
 import ShopEffectsBridge from '../components/game3d/shop/shopEffectsBridge';
 // Each action has its own dedicated send module — they do NOT share a code path.
@@ -316,10 +316,9 @@ export default function GameView() {
       {/* Loot drop layer — spawns world items on enemy death, handles E-to-pickup */}
       <GameWorldLootLayer />
 
-      {/* KOTOR + Metroid Prime-style streaming terrain — loads/unloads
-          chunks of trees, rocks, grass, and hand-placed scenes (altar / water)
-          around the player so we never have the whole world in memory. */}
-      <TerrainStreamer />
+      {/* Isolated fantasy-forest area — single hand-composed clearing with
+          tree ring, rock barriers, grass tufts, altar, and water pond. */}
+      <TerrainArea />
 
       {/* Hostile rogue-player AIs — kill them for gold, XP, loot, and PvP title kills */}
       <EnemyPlayerSpawner />
