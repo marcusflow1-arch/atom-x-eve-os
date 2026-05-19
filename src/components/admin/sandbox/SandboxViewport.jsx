@@ -55,6 +55,9 @@ export default function SandboxViewport() {
       }
       renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
       mount.appendChild(renderer.domElement);
     } catch (err) {
       console.error('SandboxViewport: failed to create WebGL context', err);
@@ -147,8 +150,8 @@ export default function SandboxViewport() {
 
     // ─── Resize handler ──────────────────────────────────────────────
     const resize = () => {
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
+      const w = Math.max(1, mount.clientWidth);
+      const h = Math.max(1, mount.clientHeight);
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();

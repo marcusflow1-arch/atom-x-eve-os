@@ -30,9 +30,9 @@ export default function SandboxEditorPanel() {
         </div>
 
         {/* Center — viewport + toolbar */}
-        <div className="col-span-12 lg:col-span-7 flex flex-col gap-3">
+        <div className="col-span-12 lg:col-span-7 flex flex-col gap-3 min-h-[600px]">
           <SandboxToolbar />
-          <div className="flex-1 min-h-[500px]">
+          <div className="flex-1 min-h-[500px] h-[600px] relative">
             <SandboxViewport />
           </div>
         </div>
