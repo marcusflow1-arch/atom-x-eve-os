@@ -74,6 +74,8 @@ import {
 } from './gameWorldConfig';
 import { attachContextGuard } from './webglContextGuard';
 import { buildGrassEnvironment } from './buildGrassEnvironment';
+import { loadPlayerAnimationClips } from './player/playerAnimationLibrary';
+import { createPlayerAnimationController } from './player/PlayerAnimationController';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -829,23 +831,11 @@ export default function GameWorld3D() {
       });
     });
 
-    // Load the female archer + animations
+    // Load the player model + admin-managed player animation library
     let mixer;
     let model;
-    const actions = {};
-    let currentActionName = 'idle';
-
-    const playAction = (name, timeScale = 1) => {
-      const next = actions[name];
-      if (!next || currentActionName === name) return;
-      const prev = actions[currentActionName];
-      next.enabled = true;
-      next.setEffectiveTimeScale(timeScale);
-      next.setEffectiveWeight(1);
-      next.reset().fadeIn(BLEND).play();
-      if (prev) prev.fadeOut(BLEND);
-      currentActionName = name;
-    };
+    let playerAnim;
+    const crouchTogglePressed = { current: false };
 
     loader.load(ARCHER_URL, (fbx) => {
       model = fbx;
@@ -869,48 +859,17 @@ export default function GameWorld3D() {
       // Snap the player's feet to the terrain at spawn
       snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
+      playerAnim = createPlayerAnimationController({ mixer, blend: BLEND, oneShotRef: oneShotPlaying });
 
-      // Load all animations in parallel — skip 'death' (used only on enemies)
-      const entries = Object.entries(ANIMATION_URLS).filter(([n]) => n !== 'death');
-      const ONE_SHOTS = new Set(['jump', 'kick', 'roll']);
-      let loaded = 0;
-      entries.forEach(([name, url]) => {
-        loader.load(url, (animFbx) => {
-          if (animFbx.animations?.length > 0) {
-            const clip = animFbx.animations[0];
-            clip.name = name;
-            const action = mixer.clipAction(clip);
-            if (ONE_SHOTS.has(name)) {
-              action.setLoop(THREE.LoopOnce);
-              action.clampWhenFinished = true;
-            }
-            actions[name] = action;
-          }
-          loaded++;
-          if (loaded === entries.length) {
-            if (actions.idle) {
-              actions.idle.reset().fadeIn(0.2).play();
-              currentActionName = 'idle';
-            }
-            setLoading(false);
-          }
-        }, undefined, () => {
-          loaded++;
-          if (loaded === entries.length) setLoading(false);
+      loadPlayerAnimationClips(loader)
+        .then((clipsByKey) => {
+          playerAnim.bindClips(clipsByKey);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('Player AnimationFBX library load error:', err);
+          setLoading(false);
         });
-      });
-
-      // When any one-shot finishes, release the lock and blend back to idle
-      mixer.addEventListener('finished', (e) => {
-        const finishedName = e.action?.getClip()?.name;
-        if (ONE_SHOTS.has(finishedName)) {
-          oneShotPlaying.current = false;
-          if (actions.idle) {
-            actions.idle.reset().fadeIn(0.15).play();
-            currentActionName = 'idle';
-          }
-        }
-      });
     }, undefined, (err) => {
       console.error('Archer load error:', err);
       setLoading(false);
@@ -918,24 +877,32 @@ export default function GameWorld3D() {
 
     // Controls
     const playOneShot = (name, timeScale = 1) => {
-      const action = actions[name];
-      if (!action || !model || oneShotPlaying.current) return;
-      oneShotPlaying.current = true;
-      const prev = actions[currentActionName];
-      if (prev && prev !== action) prev.fadeOut(0.1);
-      action.setEffectiveTimeScale(timeScale);
-      action.reset().fadeIn(0.1).play();
-      currentActionName = name;
+      if (!model || !playerAnim) return;
+      playerAnim.playOneShot(name, timeScale);
     };
 
     const onKeyDown = (e) => {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
-      // Space = jump (one-shot)
-      if (k === ' ') { playOneShot('jump', 1); playActionSound('player_jump'); e.preventDefault(); }
-      // R = roll
-      if (k === 'r') playOneShot('roll', 1.3);
+      // Space/R = directional dodge roll with physical movement
+      if (k === ' ' || k === 'r') {
+        const yaw = orbit.current.yaw;
+        const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+        const rx = -Math.cos(yaw), rz = Math.sin(yaw);
+        const dir = new THREE.Vector3();
+        if (keys.current['w']) { dir.x += fx; dir.z += fz; }
+        if (keys.current['s']) { dir.x -= fx; dir.z -= fz; }
+        if (keys.current['a']) { dir.x += rx; dir.z += rz; }
+        if (keys.current['d']) { dir.x -= rx; dir.z -= rz; }
+        if (playerAnim?.requestRoll(dir)) playActionSound('player_jump');
+        e.preventDefault();
+      }
+      // C = toggle crouch once per press
+      if (k === 'c' && !crouchTogglePressed.current) {
+        crouchTogglePressed.current = true;
+        playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
+      }
       // E = interact with nearby NPC
       if (k === 'e') interactPressed.current = true;
       // Ability keys: 1..8 → slots 0..7
@@ -950,7 +917,11 @@ export default function GameWorld3D() {
         handleVoiceToggle(voiceRef, setLocalMicOn);
       }
     };
-    const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
+    const onKeyUp = (e) => {
+      const k = e.key.toLowerCase();
+      keys.current[k] = false;
+      if (k === 'c') crouchTogglePressed.current = false;
+    };
     const onMouseDown = (e) => {
       // Left click = melee attack, middle click = target enemy, right click = orbit
       if (e.button === 0) {
@@ -1036,7 +1007,8 @@ export default function GameWorld3D() {
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const isRunning = !!keys.current['shift'];
-        const speed = (isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED) * speedMult * getWeaponMoveSpeedMult();
+        const isCrouching = !!playerAnim?.getIsCrouching?.();
+        const speed = ((isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED) * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -1166,13 +1138,10 @@ export default function GameWorld3D() {
           setNearbyCompanion(false);
         }
 
-        // Animation state machine — run(1.0×) when shift+move, walk(0.5×) when move, idle otherwise.
-        if (!oneShotPlaying.current) {
-          if (isMoving) {
-            playAction('run', isRunning ? 1.0 : 0.5);
-          } else {
-            playAction('idle', 1);
-          }
+        // Centralized animation controller: priority one-shots > crouch locomotion > standing locomotion.
+        if (playerAnim) {
+          playerAnim.updateMotion(model, delta);
+          playerAnim.updateActionState({ isMoving, isRunning, isSprinting: isRunning && !isCrouching });
         }
 
         // Walk/run SFX loop — start/stop based on movement
@@ -1193,7 +1162,7 @@ export default function GameWorld3D() {
             y: model.position.y,
             z: model.position.z,
             yaw: orbit.current.yaw,
-            anim: isMoving ? (isRunning ? 'run' : 'walk') : 'idle',
+            anim: playerAnim?.getCurrent?.() || (isMoving ? (isRunning ? 'run' : 'walk') : 'idle'),
           },
         }));
 
@@ -1440,8 +1409,8 @@ export default function GameWorld3D() {
           if (playerAttackCooldown.current <= 0) {
             // Weapon Mastery attack-speed bonus shortens cooldown further.
             playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier() / getMasteryAttackSpeedMult();
-            // Play attack animation (reusing kick as the melee attack)
-            playOneShot('kick', 1.4);
+            // Play attack montage from the player animation controller
+            playOneShot(playerAnim?.has?.('shoot') && getActiveWeaponPath() === 'ranged' ? 'shoot' : 'kick', 1.4);
             playActionSound('player_attack');
           }
           let closestEnemy = null;
