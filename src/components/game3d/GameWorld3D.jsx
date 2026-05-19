@@ -903,8 +903,18 @@ export default function GameWorld3D() {
         crouchTogglePressed.current = true;
         playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
       }
-      // E = interact with nearby NPC
-      if (k === 'e') interactPressed.current = true;
+      // E = multi-shot attack; falls back to interaction if no montage is available
+      if (k === 'e') {
+        if (playerAnim?.requestAttack('multiShot', 1.0)) {
+          setTimeout(() => { attackPressed.current = true; }, 260);
+          setTimeout(() => { skillStrikeMultRef.current = 0.75; attackPressed.current = true; }, 480);
+          setTimeout(() => { skillStrikeMultRef.current = 0.75; attackPressed.current = true; }, 700);
+        } else {
+          interactPressed.current = true;
+        }
+      }
+      // Q = hold block
+      if (k === 'q') playerAnim?.setBlocking(true);
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
@@ -921,6 +931,7 @@ export default function GameWorld3D() {
       const k = e.key.toLowerCase();
       keys.current[k] = false;
       if (k === 'c') crouchTogglePressed.current = false;
+      if (k === 'q') playerAnim?.setBlocking(false);
     };
     const onMouseDown = (e) => {
       // Left click = melee attack, middle click = target enemy, right click = orbit
@@ -930,10 +941,14 @@ export default function GameWorld3D() {
         e.preventDefault();
         handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
       } else {
+        playerAnim?.setAiming(true);
         drag.current = { active: true, x: e.clientX, y: e.clientY };
       }
     };
-    const onMouseUp = () => { drag.current.active = false; };
+    const onMouseUp = (e) => {
+      if (e.button === 2) playerAnim?.setAiming(false);
+      drag.current.active = false;
+    };
     const onMouseMove = (e) => {
       if (!drag.current.active) return;
       const dx = e.clientX - drag.current.x;
@@ -1007,8 +1022,11 @@ export default function GameWorld3D() {
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const isRunning = !!keys.current['shift'];
+        const isSprinting = isRunning && !!keys.current['control'];
         const isCrouching = !!playerAnim?.getIsCrouching?.();
-        const speed = ((isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED) * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
+        const movementOverridden = !!playerAnim?.isMovementOverridden?.();
+        const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
+        const speed = (baseMoveSpeed * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -1019,7 +1037,7 @@ export default function GameWorld3D() {
         if (keys.current['d']) { move.x -= rx; move.z -= rz; }
 
         const isMoving = move.lengthSq() > 0;
-        if (isMoving) {
+        if (isMoving && !movementOverridden) {
           move.normalize();
           model.position.x += move.x * speed * delta;
           model.position.z += move.z * speed * delta;
@@ -1034,6 +1052,7 @@ export default function GameWorld3D() {
           const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
           model.quaternion.slerp(targetQ, ROT_SMOOTH);
         }
+        if (playerAnim) playerAnim.updateMotion(model, delta);
         // Glue player feet to the terrain every frame (volcano map has elevation)
         if (mapReady) {
           const gy = sampleGroundY(model.position.x, model.position.z);
@@ -1140,8 +1159,7 @@ export default function GameWorld3D() {
 
         // Centralized animation controller: priority one-shots > crouch locomotion > standing locomotion.
         if (playerAnim) {
-          playerAnim.updateMotion(model, delta);
-          playerAnim.updateActionState({ isMoving, isRunning, isSprinting: isRunning && !isCrouching });
+          playerAnim.updateActionState({ isMoving, isRunning, isSprinting });
         }
 
         // Walk/run SFX loop — start/stop based on movement
@@ -1162,7 +1180,7 @@ export default function GameWorld3D() {
             y: model.position.y,
             z: model.position.z,
             yaw: orbit.current.yaw,
-            anim: playerAnim?.getCurrent?.() || (isMoving ? (isRunning ? 'run' : 'walk') : 'idle'),
+            anim: playerAnim?.getCurrent?.() || (isMoving ? (isSprinting ? 'sprint' : isRunning ? 'run' : 'walk') : 'idle'),
           },
         }));
 
@@ -1344,7 +1362,7 @@ export default function GameWorld3D() {
                 else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
                 // God's Deflection: chance to reflect 100% back at attacker
                 if (rollReflect()) { enemy.hp -= dmg; spawnDamageFloat(enemy.id, dmg); playActionSound('enemy_hit'); }
-                else { const absorbed = absorbShield(dmg); dmg = Math.max(0, dmg - absorbed); if (dmg > 0) { setHP(Math.max(0, getPlayerHUD().hp - dmg)); playActionSound('player_hit'); } }
+                else { const absorbed = absorbShield(dmg); dmg = Math.max(0, dmg - absorbed); if (dmg > 0) { setHP(Math.max(0, getPlayerHUD().hp - dmg)); playerAnim?.requestHitReact(); playActionSound('player_hit'); } }
                 playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
               }
               // End attack ~0.4s after damage so anim has time to complete
@@ -1409,8 +1427,8 @@ export default function GameWorld3D() {
           if (playerAttackCooldown.current <= 0) {
             // Weapon Mastery attack-speed bonus shortens cooldown further.
             playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier() / getMasteryAttackSpeedMult();
-            // Play attack montage from the player animation controller
-            playOneShot(playerAnim?.has?.('shoot') && getActiveWeaponPath() === 'ranged' ? 'shoot' : 'kick', 1.4);
+            // Play attack montage once; damage is applied by this combat window, not by animation spam
+            playOneShot(getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick', 1.4);
             playActionSound('player_attack');
           }
           let closestEnemy = null;

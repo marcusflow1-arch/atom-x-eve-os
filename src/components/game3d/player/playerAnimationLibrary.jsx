@@ -11,14 +11,17 @@ const pickKey = (name, type) => {
   if (n.includes('crouch') && (n.includes('run') || n.includes('sprint'))) return 'crouchRun';
   if (n.includes('crouch')) return 'crouchEnter';
 
+  if (n.includes('aim') && (n.includes('walk') || n.includes('run') || n.includes('move'))) return 'aimMove';
+  if (n.includes('aim') && n.includes('idle')) return 'aimIdle';
+  if (n.includes('aim')) return 'aimIdle';
+
   if (n.includes('roll') || n.includes('dodge')) return 'roll';
   if (n.includes('kick')) return 'kick';
-  if (n.includes('block') && (n.includes('idle') || n.includes('hold'))) return 'blockHold';
+  if (n.includes('block') && (n.includes('idle') || n.includes('hold') || n.includes('loop'))) return 'blockHold';
   if (n.includes('block') && n.includes('exit')) return 'blockExit';
   if (n.includes('block')) return 'blockEnter';
   if (n.includes('multi') || n.includes('combo')) return 'multiShot';
-  if (n.includes('shoot') || n.includes('fire') || n.includes('arrow')) return 'shoot';
-  if (n.includes('aim')) return 'aim';
+  if (n.includes('shoot') || n.includes('fire') || n.includes('arrow') || n.includes('attack')) return 'attack';
   if (n.includes('react') || n.includes('hit')) return 'hitReact';
   if (n.includes('death') || n.includes('dying')) return 'death';
 
