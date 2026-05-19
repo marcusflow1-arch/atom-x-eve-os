@@ -22,6 +22,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [activeInvite, setActiveInvite] = useState(null);
+  const [glError, setGlError] = useState(false);
 
   useEffect(() => {
      const handleInvite = (e) => setActiveInvite(e.detail);
@@ -85,14 +86,27 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
     camera.lookAt(0, 1.7, 0);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(w, h);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-    containerRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+    let renderer;
+    try {
+      const probe = document.createElement('canvas');
+      const gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl');
+      if (!gl) {
+        setGlError(true);
+        return;
+      }
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(w, h);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
+      containerRef.current.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
+    } catch (err) {
+      console.warn('Mini3DViewerBox: WebGL context unavailable', err?.message || err);
+      setGlError(true);
+      return;
+    }
 
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -275,7 +289,16 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
               />
             </>
           )}
-          <div ref={containerRef} className="w-full h-full relative z-0" />
+          <div ref={containerRef} className="w-full h-full relative z-0">
+            {glError && (
+              <div className="absolute inset-0 flex items-center justify-center p-3 text-center">
+                <div className="space-y-1.5">
+                  <div className="text-amber-400/90 text-[10px] font-bold uppercase tracking-wider">3D Unavailable</div>
+                  <p className="text-white/50 text-[10px] leading-snug">Too many 3D contexts open. Close other tabs and reload.</p>
+                </div>
+              </div>
+            )}
+          </div>
         
         {/* Incoming Invite Notification */}
         {activeInvite && !isUiVisible && (
