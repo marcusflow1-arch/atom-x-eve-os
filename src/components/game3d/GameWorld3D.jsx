@@ -885,8 +885,12 @@ export default function GameWorld3D() {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
-      // Space/R = directional dodge roll with physical movement
-      if (k === ' ' || k === 'r') {
+      // Space = jump, R = directional dodge roll with physical movement
+      if (k === ' ') {
+        if (playerAnim?.requestJump()) playActionSound('player_jump');
+        e.preventDefault();
+      }
+      if (k === 'r') {
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -936,7 +940,11 @@ export default function GameWorld3D() {
     const onMouseDown = (e) => {
       // Left click = melee attack, middle click = target enemy, right click = orbit
       if (e.button === 0) {
-        attackPressed.current = true; // melee only — abilities use Q/E/R/F keys
+        if (playerAnim?.getIsAiming?.()) {
+          if (playerAnim.requestAttack('attack', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
+        } else {
+          attackPressed.current = true;
+        }
       } else if (e.button === 1) {
         e.preventDefault();
         handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
@@ -1022,7 +1030,7 @@ export default function GameWorld3D() {
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const isRunning = !!keys.current['shift'];
-        const isSprinting = isRunning && !!keys.current['control'];
+        const isSprinting = !!keys.current['control'] && isMoving;
         const isCrouching = !!playerAnim?.getIsCrouching?.();
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
         const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
@@ -1052,11 +1060,13 @@ export default function GameWorld3D() {
           const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
           model.quaternion.slerp(targetQ, ROT_SMOOTH);
         }
-        if (playerAnim) playerAnim.updateMotion(model, delta);
-        // Glue player feet to the terrain every frame (volcano map has elevation)
+        // Glue player feet to terrain, then let the manual controller add jump/roll offsets.
         if (mapReady) {
           const gy = sampleGroundY(model.position.x, model.position.z);
           if (gy !== null) model.position.y = gy;
+          if (playerAnim) playerAnim.updateMotion(model, delta, gy ?? model.position.y);
+        } else if (playerAnim) {
+          playerAnim.updateMotion(model, delta, model.position.y);
         }
         // Rock collision — small ground rocks block player movement.
         { const rocks = window.__gw3dRockColliders || []; for (let i = 0; i < rocks.length; i++) { const r = rocks[i]; const minD = r.radius + 0.35; const dx = model.position.x - r.x, dz = model.position.z - r.z, d = Math.sqrt(dx * dx + dz * dz); if (d > 0 && d < minD) { const p = (minD - d) / d; model.position.x += dx * p; model.position.z += dz * p; } } }
@@ -1427,8 +1437,10 @@ export default function GameWorld3D() {
           if (playerAttackCooldown.current <= 0) {
             // Weapon Mastery attack-speed bonus shortens cooldown further.
             playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier() / getMasteryAttackSpeedMult();
-            // Play attack montage once; damage is applied by this combat window, not by animation spam
-            playOneShot(getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick', 1.4);
+            // Attack montage is manually gated by the animation state machine.
+            if (!playerAnim?.HandleCombat?.(getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick')) {
+              playOneShot(getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick', 1.4);
+            }
             playActionSound('player_attack');
           }
           let closestEnemy = null;

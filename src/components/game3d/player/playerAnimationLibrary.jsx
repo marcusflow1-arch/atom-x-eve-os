@@ -11,19 +11,31 @@ const pickKey = (name, type) => {
   if (n.includes('crouch') && (n.includes('run') || n.includes('sprint'))) return 'crouchRun';
   if (n.includes('crouch')) return 'crouchEnter';
 
-  if (n.includes('aim') && (n.includes('walk') || n.includes('run') || n.includes('move'))) return 'aimMove';
-  if (n.includes('aim') && n.includes('idle')) return 'aimIdle';
-  if (n.includes('aim')) return 'aimIdle';
+  if (n.includes('jump') && (n.includes('start') || n.includes('up'))) return 'jumpStart';
+  if (n.includes('jump') && (n.includes('loop') || n.includes('air'))) return 'jumpLoop';
+  if (n.includes('jump') && (n.includes('land') || n.includes('end'))) return 'jumpLand';
+  if (n.includes('fall')) return 'fall';
 
-  if (n.includes('roll') || n.includes('dodge')) return 'roll';
+  if ((n.includes('bow') || n.includes('aim')) && (n.includes('walk') || n.includes('move'))) return 'combatWalk';
+  if ((n.includes('bow') || n.includes('aim')) && n.includes('run')) return 'combatRun';
+  if (n.includes('draw') && (n.includes('bow') || n.includes('arrow'))) return 'drawBow';
+  if ((n.includes('hold') || n.includes('idle')) && (n.includes('bow') || n.includes('aim'))) return 'holdBow';
+  if ((n.includes('fire') || n.includes('shoot')) && (n.includes('bow') || n.includes('arrow'))) return 'fireArrow';
+  if (n.includes('reload') && (n.includes('bow') || n.includes('arrow'))) return 'reloadArrow';
+  if (n.includes('aim') && (n.includes('walk') || n.includes('run') || n.includes('move'))) return 'combatWalk';
+  if (n.includes('aim') && n.includes('idle')) return 'holdBow';
+  if (n.includes('aim')) return 'holdBow';
+
+  if (n.includes('roll')) return 'roll';
+  if (n.includes('dodge')) return 'dodge';
   if (n.includes('kick')) return 'kick';
   if (n.includes('block') && (n.includes('idle') || n.includes('hold') || n.includes('loop'))) return 'blockHold';
-  if (n.includes('block') && n.includes('exit')) return 'blockExit';
-  if (n.includes('block')) return 'blockEnter';
   if (n.includes('multi') || n.includes('combo')) return 'multiShot';
   if (n.includes('shoot') || n.includes('fire') || n.includes('arrow') || n.includes('attack')) return 'attack';
-  if (n.includes('react') || n.includes('hit')) return 'hitReact';
+  if (n.includes('knock')) return 'knockback';
+  if (n.includes('react') || n.includes('hurt') || n.includes('hit')) return 'hurt';
   if (n.includes('death') || n.includes('dying')) return 'death';
+  if (n.includes('celebrate') || n.includes('victory')) return 'celebrate';
 
   if (n.includes('sprint')) return 'sprint';
   if (n.includes('run') && n.includes('forward')) return 'run';
