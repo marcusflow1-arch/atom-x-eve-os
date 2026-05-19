@@ -836,6 +836,8 @@ export default function GameWorld3D() {
     let model;
     let playerAnim;
     const crouchTogglePressed = { current: false };
+    const lastDirectionTap = { current: {} };
+    const DOUBLE_TAP_MS = 280;
 
     loader.load(ARCHER_URL, (fbx) => {
       model = fbx;
@@ -885,17 +887,25 @@ export default function GameWorld3D() {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
-      // Space = Jump, Left Alt = Roll, Q = Dodge
+      const dodgeKeyMap = {
+        w: () => new THREE.Vector3(-Math.sin(orbit.current.yaw), 0, -Math.cos(orbit.current.yaw)),
+        s: () => new THREE.Vector3(Math.sin(orbit.current.yaw), 0, Math.cos(orbit.current.yaw)),
+        a: () => new THREE.Vector3(-Math.cos(orbit.current.yaw), 0, Math.sin(orbit.current.yaw)),
+        d: () => new THREE.Vector3(Math.cos(orbit.current.yaw), 0, -Math.sin(orbit.current.yaw)),
+      };
+      if (!e.repeat && dodgeKeyMap[k]) {
+        const nowMs = performance.now();
+        if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
+          if (playerAnim?.requestDodge?.(dodgeKeyMap[k]())) playActionSound('player_jump');
+          lastDirectionTap.current[k] = 0;
+          e.preventDefault();
+          return;
+        }
+        lastDirectionTap.current[k] = nowMs;
+      }
+      // Space = Jump
       if (k === ' ') {
         if (playerAnim?.requestJump()) playActionSound('player_jump');
-        e.preventDefault();
-      }
-      if (e.code === 'AltLeft') {
-        if (playerAnim?.requestRoll()) playActionSound('player_jump');
-        e.preventDefault();
-      }
-      if (k === 'q') {
-        if (playerAnim?.requestDodge?.()) playActionSound('player_jump');
         e.preventDefault();
       }
       // C = toggle crouch once per press
@@ -925,12 +935,13 @@ export default function GameWorld3D() {
       if (k === 'c') crouchTogglePressed.current = false;
     };
     const onMouseDown = (e) => {
-      // Left click = Fire Arrow, middle click = target enemy, right click = Block
+      // Left click = Fire Arrow, middle click = Roll, right click = Block
       if (e.button === 0) {
         if (playerAnim?.requestAttack('attack', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
       } else if (e.button === 1) {
         e.preventDefault();
-        handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
+        const forward = new THREE.Vector3(-Math.sin(orbit.current.yaw), 0, -Math.cos(orbit.current.yaw));
+        if (playerAnim?.requestRoll?.(forward)) playActionSound('player_jump');
       } else {
         playerAnim?.setBlocking(true);
       }
