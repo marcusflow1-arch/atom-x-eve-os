@@ -203,7 +203,12 @@ export function createPlayerAnimationController({ mixer, oneShotRef }) {
     if (isDead || isHurt || isAttacking) return false;
     isAttacking = true;
     const state = kind === 'multiShot' ? STATES.FIRE_ARROW : kind === 'kick' ? STATES.KICK : STATES.FIRE_ARROW;
-    return ChangeState(state, { duration: kind === 'multiShot' ? 0.95 : 0.62, timeScale: kind === 'kick' ? 1.25 : 1 });
+    return ChangeState(state, {
+      force: true,
+      duration: kind === 'multiShot' ? 0.95 : kind === 'kick' ? 0.72 : 0.4,
+      timeScale: kind === 'kick' ? 1.25 : 1,
+      fade: 0.05,
+    });
   };
 
   const HandleJump = () => {
@@ -264,11 +269,11 @@ export function createPlayerAnimationController({ mixer, oneShotRef }) {
   };
 
   const setAiming = (enabled) => {
-    if (isDead || isHurt) return false;
+    if (isDead || isHurt || isAttacking) return false;
     if (isBowDrawn === enabled) return false;
     isBowDrawn = enabled;
-    if (enabled) return ChangeState(STATES.DRAW_BOW, { duration: 0.25, fade: 0.05 });
-    return ChangeState(STATES.BOW_IDLE, { duration: 0.18, fade: 0.15 });
+    if (enabled) return ChangeState(STATES.DRAW_BOW, { force: true, duration: 0.25, fade: 0.05 });
+    return ChangeState(STATES.BOW_IDLE, { force: true, duration: 0.18, fade: 0.15 });
   };
 
   const updateMotion = (model, delta, groundY = model.position.y) => {
@@ -305,7 +310,11 @@ export function createPlayerAnimationController({ mixer, oneShotRef }) {
     if (!name || name !== activeKey) return;
     if (currentState === STATES.DEATH) return;
     if ([STATES.HURT, STATES.KNOCKBACK].includes(currentState)) isHurt = false;
-    if ([STATES.FIRE_ARROW, STATES.KICK, STATES.RELOAD_ARROW].includes(currentState)) isAttacking = false;
+    if ([STATES.FIRE_ARROW, STATES.KICK, STATES.RELOAD_ARROW].includes(currentState)) {
+      isAttacking = false;
+      if (isBowDrawn) ChangeState(STATES.HOLD_BOW, { force: true, fade: 0.15 });
+    }
+    if (currentState === STATES.DRAW_BOW && isBowDrawn) ChangeState(STATES.HOLD_BOW, { force: true, fade: 0.15 });
     if (oneShotRef) oneShotRef.current = false;
     lockedUntil = 0;
   });

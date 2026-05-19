@@ -1029,12 +1029,6 @@ export default function GameWorld3D() {
         const mounted = isMountedRef.current;
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
-        const isRunning = !!keys.current['shift'];
-        const isSprinting = !!keys.current['control'] && isMoving;
-        const isCrouching = !!playerAnim?.getIsCrouching?.();
-        const movementOverridden = !!playerAnim?.isMovementOverridden?.();
-        const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
-        const speed = (baseMoveSpeed * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -1045,6 +1039,12 @@ export default function GameWorld3D() {
         if (keys.current['d']) { move.x -= rx; move.z -= rz; }
 
         const isMoving = move.lengthSq() > 0;
+        const isRunning = !!keys.current['shift'] && isMoving;
+        const isSprinting = !!keys.current['control'] && isMoving;
+        const isCrouching = !!playerAnim?.getIsCrouching?.();
+        const movementOverridden = !!playerAnim?.isMovementOverridden?.();
+        const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
+        const speed = (baseMoveSpeed * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
         if (isMoving && !movementOverridden) {
           move.normalize();
           model.position.x += move.x * speed * delta;
