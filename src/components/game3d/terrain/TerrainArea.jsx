@@ -54,7 +54,7 @@ export default function TerrainArea() {
 
       // Honor live perf settings — thin foliage/trees per the active preset.
       const perf = (typeof window !== 'undefined' && window.__perfSettings) || {};
-      const treeDensity   = typeof perf.treeDensity    === 'number' ? perf.treeDensity    : 1;
+      const treeDensity    = typeof perf.treeDensity    === 'number' ? perf.treeDensity    : 1;
       const foliageDensity = typeof perf.foliageDensity === 'number' ? perf.foliageDensity : 1;
       const renderDistance = typeof perf.renderDistance === 'number' ? perf.renderDistance : 220;
 
