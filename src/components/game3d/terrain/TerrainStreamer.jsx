@@ -132,15 +132,25 @@ export default function TerrainStreamer() {
         return 0;
       };
 
+      const normalizeRockToPlayer = (obj, scaleMult) => {
+        const playerHeight = window.__gw3dPlayerHeight || 1.7;
+        const targetRockHeight = playerHeight * 0.04;
+        const box = new THREE.Box3().setFromObject(obj);
+        const size = box.getSize(new THREE.Vector3());
+        if (size.y > 0) obj.scale.multiplyScalar(targetRockHeight / size.y);
+        obj.scale.multiplyScalar(scaleMult);
+      };
       try {
         // Place all procedural props in parallel.
         await Promise.all(layout.props.map(async (p) => {
           const obj = await instantiate(p.assetKey);
           obj.position.set(p.x, sampleY(p.x, p.z), p.z);
           obj.rotation.y = p.rotY;
-          obj.scale.multiplyScalar(p.scaleMult);
           if (p.assetKey === 'ROCKS') {
-            rockColliders.push({ x: p.x, z: p.z, radius: 0.45 * p.scaleMult });
+            normalizeRockToPlayer(obj, p.scaleMult);
+            rockColliders.push({ x: p.x, z: p.z, radius: Math.max(0.18, (window.__gw3dPlayerHeight || 1.7) * 0.08 * p.scaleMult) });
+          } else {
+            obj.scale.multiplyScalar(p.scaleMult);
           }
           group.add(obj);
         }));

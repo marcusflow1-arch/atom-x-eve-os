@@ -884,6 +884,7 @@ export default function GameWorld3D() {
       const maxDim = Math.max(size.x, size.y, size.z);
       const scale = 1.7 / maxDim;
       fbx.scale.setScalar(scale);
+      window.__gw3dPlayerHeight = size.y * scale;
       fbx.position.set(0, 0.3, 0);
 
       fbx.traverse((node) => {
