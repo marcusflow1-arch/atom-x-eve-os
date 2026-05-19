@@ -22,6 +22,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [activeInvite, setActiveInvite] = useState(null);
+  const [webglFailed, setWebglFailed] = useState(false);
 
   useEffect(() => {
      const handleInvite = (e) => setActiveInvite(e.detail);
@@ -85,13 +86,31 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
     camera.lookAt(0, 1.7, 0);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power', failIfMajorPerformanceCaveat: false });
+    } catch (err) {
+      console.warn('[Mini3DViewerBox] WebGL context unavailable, falling back to 2D placeholder:', err?.message);
+      setWebglFailed(true);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
-    containerRef.current.appendChild(renderer.domElement);
+
+    // Handle context loss gracefully (browser may evict contexts under pressure)
+    const canvas = renderer.domElement;
+    const onContextLost = (e) => {
+      e.preventDefault();
+      console.warn('[Mini3DViewerBox] WebGL context lost');
+      setWebglFailed(true);
+      if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    };
+    canvas.addEventListener('webglcontextlost', onContextLost, false);
+
+    containerRef.current.appendChild(canvas);
     rendererRef.current = renderer;
 
     // Lighting
@@ -275,7 +294,13 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
               />
             </>
           )}
-          <div ref={containerRef} className="w-full h-full relative z-0" />
+          <div ref={containerRef} className="w-full h-full relative z-0">
+            {webglFailed && (
+              <div className="absolute inset-0 flex items-center justify-center text-center p-4 text-white/50 text-xs">
+                <span>3D preview unavailable</span>
+              </div>
+            )}
+          </div>
         
         {/* Incoming Invite Notification */}
         {activeInvite && !isUiVisible && (
