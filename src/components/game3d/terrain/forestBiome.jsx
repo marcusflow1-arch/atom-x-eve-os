@@ -1,78 +1,76 @@
-// ─── Forest Biome Zones ───────────────────────────────────────────────────
-// Hand-tuned circular zones that define the character of each region of
-// the forest. Later entries override earlier ones, so a path can cut
-// through a thicket and a clearing can carve out of forest.
+// ─── Boss Arena Layout ────────────────────────────────────────────────────
+// Compact 100×100 boss-fight arena. NOT an open world.
 //
-// Zones used here:
-//   • forest         — base layer, medium tree density
-//   • dense_thicket  — deep woods, very high tree density
-//   • meadow         — sunlit clearing, no trees, dense flowering grass
-//   • path           — walkable corridor, no trees, light gravel/grass
-//   • rock_outcrop   — rocky cluster, sparse trees, lots of rocks
+// Layout:
+//   • Spawn at the south edge of the map (z = +38)
+//   • A narrow forest path runs north from spawn toward the center
+//   • A wide CIRCULAR CLEARING in the middle is the boss arena
+//   • Trees ONLY in the outer ring (between the clearing and the map edge)
+//   • Path + clearing are completely tree-free for clean combat
+//
+// The TerrainArea + placement code reads these constants to decide where
+// objects can spawn. Keep this file small and declarative.
 
-export const FOREST_BOUNDS = { halfX: 100, halfZ: 100 };
-export const SPAWN_POINT = { x: 0, z: 0 };
-export const SPAWN_CLEAR_RADIUS = 9;
+// Full playable square is 100 × 100. halfX/halfZ define the half-extents.
+export const FOREST_BOUNDS = { halfX: 50, halfZ: 50 };
 
-export const BIOME_ZONES = [
-  // Base layer — entire map is forest by default
-  { kind: 'forest', cx: 0, cz: 0, r: 9999 },
+// Spawn at south end, facing into the path/clearing.
+export const SPAWN_POINT = { x: 0, z: 38 };
+export const SPAWN_CLEAR_RADIUS = 5;
 
-  // ─── Deep thickets (dark, dense, exploration-rewarding) ─────────────
-  { kind: 'dense_thicket', cx: -60, cz: -55, r: 30 },
-  { kind: 'dense_thicket', cx:  65, cz:  50, r: 34 },
-  { kind: 'dense_thicket', cx: -35, cz:  70, r: 24 },
-  { kind: 'dense_thicket', cx:  80, cz: -65, r: 22 },
-  { kind: 'dense_thicket', cx:  -8, cz: -80, r: 20 },
+// Boss arena (central clearing).
+export const ARENA_CENTER = { x: 0, z: 0 };
+export const ARENA_RADIUS = 16;          // fully open combat circle
+export const ARENA_EDGE_BAND = 2;        // soft band — light grass, no trees
 
-  // ─── Sunlit meadows / clearings ─────────────────────────────────────
-  { kind: 'meadow', cx:  32, cz: -22, r: 16 },
-  { kind: 'meadow', cx: -68, cz:  18, r: 15 },
-  { kind: 'meadow', cx:  12, cz:  52, r: 13 },
-  { kind: 'meadow', cx:  55, cz: -45, r: 11 },
+// Path connecting spawn → arena (a straight south→center corridor).
+export const PATH_HALF_WIDTH = 2.5;
+export const PATH_START_Z = ARENA_RADIUS; // arena perimeter
+export const PATH_END_Z   = SPAWN_POINT.z;
 
-  // ─── Rocky outcrops ─────────────────────────────────────────────────
-  { kind: 'rock_outcrop', cx:  48, cz:  12, r: 13 },
-  { kind: 'rock_outcrop', cx: -28, cz: -68, r: 15 },
-  { kind: 'rock_outcrop', cx:  22, cz:  32, r: 10 },
-  { kind: 'rock_outcrop', cx: -50, cz:  55, r: 11 },
+// Outer tree ring — the only place trees grow.
+export const TREE_RING_INNER = ARENA_RADIUS + ARENA_EDGE_BAND; // 18
+export const TREE_RING_OUTER = 48;                              // just inside map edge
 
-  // ─── Winding path through the woods (gentle S-curve) ────────────────
-  // Many small overlapping circles so the path bends naturally.
-  { kind: 'path', cx:   0, cz: -10, r: 4 },
-  { kind: 'path', cx:   6, cz: -20, r: 4 },
-  { kind: 'path', cx:  14, cz: -28, r: 4 },
-  { kind: 'path', cx:  22, cz: -32, r: 4 },
-  { kind: 'path', cx:  30, cz: -28, r: 4 },
-  { kind: 'path', cx:  -4, cz:   2, r: 4 },
-  { kind: 'path', cx:  -8, cz:  14, r: 4 },
-  { kind: 'path', cx: -14, cz:  26, r: 4 },
-  { kind: 'path', cx: -22, cz:  36, r: 4 },
-  { kind: 'path', cx: -32, cz:  42, r: 4 },
+/** Square distance to the arena center. */
+function distToArenaSq(x, z) {
+  const dx = x - ARENA_CENTER.x;
+  const dz = z - ARENA_CENTER.z;
+  return dx * dx + dz * dz;
+}
 
-  // Spawn clearing — always open and walkable
-  { kind: 'meadow', cx: SPAWN_POINT.x, cz: SPAWN_POINT.z, r: SPAWN_CLEAR_RADIUS },
-];
-
-/** Resolve which biome a world-space point belongs to. */
-export function biomeAt(x, z) {
-  let best = 'forest';
-  for (const zone of BIOME_ZONES) {
-    const dx = x - zone.cx;
-    const dz = z - zone.cz;
-    if (dx * dx + dz * dz <= zone.r * zone.r) best = zone.kind;
-  }
-  return best;
+/** True if (x,z) lies on the narrow spawn→arena path corridor. */
+function onPath(x, z) {
+  if (Math.abs(x) > PATH_HALF_WIDTH) return false;
+  return z >= PATH_START_Z && z <= PATH_END_Z;
 }
 
 /**
- * Per-biome density profile. Weights are relative — the placement system
- * uses them as probability multipliers and minimum-spacing constraints.
+ * Resolve which "zone" a point belongs to. Used by placement rules.
+ * Returns: 'arena' | 'path' | 'edge_band' | 'forest_ring' | 'outside'
+ */
+export function biomeAt(x, z) {
+  // Outside the playable square — nothing spawns.
+  if (Math.abs(x) > FOREST_BOUNDS.halfX || Math.abs(z) > FOREST_BOUNDS.halfZ) {
+    return 'outside';
+  }
+
+  const dSq = distToArenaSq(x, z);
+
+  if (dSq <= ARENA_RADIUS * ARENA_RADIUS) return 'arena';
+  if (onPath(x, z)) return 'path';
+  if (dSq <= (ARENA_RADIUS + ARENA_EDGE_BAND) ** 2) return 'edge_band';
+  return 'forest_ring';
+}
+
+/**
+ * Density rules per zone. The placement system uses these to filter
+ * candidate points. `tree: 0` means no trees in that zone at all.
  */
 export const BIOME_DENSITY = {
-  dense_thicket: { tree: 1.6, grass: 1.3, rock: 0.4, minTreeDist: 2.3 },
-  forest:        { tree: 1.0, grass: 1.0, rock: 0.3, minTreeDist: 3.0 },
-  rock_outcrop:  { tree: 0.4, grass: 0.7, rock: 1.8, minTreeDist: 4.0 },
-  meadow:        { tree: 0.0, grass: 1.7, rock: 0.0, minTreeDist: 0   },
-  path:          { tree: 0.0, grass: 0.25, rock: 0.0, minTreeDist: 0   },
+  outside:     { tree: 0,   grass: 0,    rock: 0,   minTreeDist: 0 },
+  arena:       { tree: 0,   grass: 0.25, rock: 0,   minTreeDist: 0 },
+  path:        { tree: 0,   grass: 0.15, rock: 0,   minTreeDist: 0 },
+  edge_band:   { tree: 0,   grass: 0.8,  rock: 0.3, minTreeDist: 0 },
+  forest_ring: { tree: 1.0, grass: 1.0,  rock: 0.4, minTreeDist: 3.2 },
 };

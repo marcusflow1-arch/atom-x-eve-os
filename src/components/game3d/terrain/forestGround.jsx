@@ -8,6 +8,7 @@
 // "what is Y at (x,z)?" without raycasting.
 
 import * as THREE from 'three';
+import { ARENA_CENTER, ARENA_RADIUS, ARENA_EDGE_BAND } from './forestBiome';
 
 // Deterministic 2D hash → [0,1)
 function hash2(ix, iz) {
@@ -37,10 +38,24 @@ function valueNoise(x, z) {
  * Multi-octave so we get broad hills + medium bumps + fine roughness.
  */
 export function sampleGroundY(x, z) {
-  const big    = valueNoise(x * 0.012, z * 0.012) * 4.0;  // rolling hills
-  const medium = valueNoise(x * 0.040, z * 0.040) * 1.2;  // mounds
-  const small  = valueNoise(x * 0.130, z * 0.130) * 0.35; // roughness
-  return big + medium + small;
+  // Gentle rolling terrain for the outer ring
+  const big    = valueNoise(x * 0.025, z * 0.025) * 1.4;
+  const medium = valueNoise(x * 0.070, z * 0.070) * 0.5;
+  const small  = valueNoise(x * 0.150, z * 0.150) * 0.18;
+  let y = big + medium + small;
+
+  // Flatten the arena floor so the boss fight has a clean, level surface.
+  const dx = x - ARENA_CENTER.x;
+  const dz = z - ARENA_CENTER.z;
+  const d = Math.sqrt(dx * dx + dz * dz);
+  const flatEnd = ARENA_RADIUS + ARENA_EDGE_BAND;
+  if (d < flatEnd) {
+    const t = d <= ARENA_RADIUS
+      ? 0
+      : (d - ARENA_RADIUS) / ARENA_EDGE_BAND;  // 0→1 across edge band
+    y = y * t; // fully flat at center, blends to natural terrain past edge
+  }
+  return y;
 }
 
 /**

@@ -42,8 +42,8 @@ export default function TerrainArea() {
       group.name = 'terrain_area';
       groupRef.current = group;
 
-      // ─── Ground ────────────────────────────────────────────────────
-      const ground = buildForestGround({ size: 220, segments: 160 });
+      // ─── Ground (compact 100×100 boss arena) ───────────────────────
+      const ground = buildForestGround({ size: 100, segments: 96 });
       group.add(ground);
 
       // Heightmap API — player/AI controllers can snap feet to ground in O(1)
@@ -56,7 +56,7 @@ export default function TerrainArea() {
       const perf = (typeof window !== 'undefined' && window.__perfSettings) || {};
       const treeDensity    = typeof perf.treeDensity    === 'number' ? perf.treeDensity    : 1;
       const foliageDensity = typeof perf.foliageDensity === 'number' ? perf.foliageDensity : 1;
-      const renderDistance = typeof perf.renderDistance === 'number' ? perf.renderDistance : 220;
+      const renderDistance = typeof perf.renderDistance === 'number' ? perf.renderDistance : 60;
 
       const keepRatio = (arr, ratio) => {
         if (ratio >= 1) return arr;
@@ -91,17 +91,17 @@ export default function TerrainArea() {
       const treeBatch = buildInstancedProps(treeSrc, treePlacements, {
         name: 'forest_trees',
         receiveShadow: true,
-        boundsRadius: 220,
+        boundsRadius: 80,
       });
       const rockBatch = buildInstancedProps(rockSrc, rockPlacements, {
         name: 'forest_rocks',
         receiveShadow: true,
-        boundsRadius: 220,
+        boundsRadius: 80,
       });
       const grassBatch = buildInstancedProps(grassSrc, grassPlacements, {
         name: 'forest_grass',
         receiveShadow: false,
-        boundsRadius: 220,
+        boundsRadius: 80,
       });
 
       group.add(treeBatch);
