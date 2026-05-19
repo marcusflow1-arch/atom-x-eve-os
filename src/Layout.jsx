@@ -1014,8 +1014,7 @@ function LayoutContent({ children, currentPageName }) {
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className="flex flex-wrap items-center gap-2 content-start pr-2"
-                                  style={{ maxWidth: '100%', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
+                                  className="flex items-center gap-2 min-w-0 flex-nowrap overflow-x-auto scrollbar-hide pr-2"
                                 >
                                   {navOrder.map((id, index) => (
                                     <Draggable key={id} draggableId={id} index={index}>

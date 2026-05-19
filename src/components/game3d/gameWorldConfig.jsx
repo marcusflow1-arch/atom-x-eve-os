@@ -18,7 +18,11 @@ export const RUN_SPEED = 9.0;
 export const ROT_SMOOTH = 0.18;
 export const BLEND = 0.2;
 
-export const NPC_SPAWNS = [];
+export const NPC_SPAWNS = [
+  { id: 'npc_elara', name: 'Elara the Guide', pos: [6, 0.3, 6], color: 0x4a90e2, dialogue: "Welcome, traveler! The arena ahead is full of restless spirits — defeat them to prove your worth." },
+  { id: 'npc_borin', name: 'Borin the Blacksmith', pos: [-7, 0.3, 4], color: 0xe2a04a, dialogue: "Need stronger arrows? Come back when you've slain a few enemies and I'll forge you something special." },
+  { id: 'npc_sage', name: 'Sage Mira', pos: [0, 0.3, 12], color: 0xa04ae2, dialogue: "The runes whisper of an ancient power buried beneath the platform. Be careful where you tread." },
+];
 
 export const ENEMY_SPEED = 1.2;
 export const ENEMY_WALK_TIME = 3.0;

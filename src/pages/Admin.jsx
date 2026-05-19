@@ -26,8 +26,6 @@ import VideoAnalyzer from '../components/admin/VideoAnalyzer';
 import NPCActionAudioManager from '../components/admin/NPCActionAudioManager';
 import SoundLibraryManager from '../components/admin/SoundLibraryManager';
 import KnowledgeEngineManager from '../components/admin/KnowledgeEngineManager';
-import AdminPerformancePanel from '../components/admin/performance/AdminPerformancePanel';
-import SandboxEditorPanel from '../components/admin/sandbox/SandboxEditorPanel';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -462,7 +460,7 @@ export default function Admin() {
         <p className="text-slate-400 mb-8">Manage hero backgrounds, games, and site content</p>
 
         <Tabs defaultValue="backgrounds" className="space-y-6">
-          <TabsList className="bg-slate-900 border border-slate-800 flex flex-wrap content-start gap-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
+          <TabsList className="bg-slate-900 border border-slate-800">
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="sounds">Sound Library</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
@@ -480,8 +478,6 @@ export default function Admin() {
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
             <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
             <TabsTrigger value="knowledge-engine">Knowledge Engine</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="sandbox">Sandbox Editor</TabsTrigger>
             </TabsList>
 
           <TabsContent value="backgrounds">
@@ -999,14 +995,6 @@ export default function Admin() {
 
           <TabsContent value="knowledge-engine">
             <KnowledgeEngineManager />
-          </TabsContent>
-
-          <TabsContent value="performance">
-            <AdminPerformancePanel />
-          </TabsContent>
-
-          <TabsContent value="sandbox" forceMount className="data-[state=inactive]:hidden">
-            <SandboxEditorPanel />
           </TabsContent>
 
                     </Tabs>
