@@ -58,19 +58,8 @@ export default function TerrainStreamer() {
 
       const { cx: pcx, cz: pcz } = chunkOf(pos.x || 0, pos.z || 0);
 
-      // ── PHASE 1: figure out which chunks SHOULD be loaded ──────────────
-      const want = new Set();
-      for (let dx = -LOAD_RADIUS; dx <= LOAD_RADIUS; dx++) {
-        for (let dz = -LOAD_RADIUS; dz <= LOAD_RADIUS; dz++) {
-          want.add(chunkKey(pcx + dx, pcz + dz));
-        }
-      }
-      // Origin chunks always stay loaded (spawn area never pops).
-      for (let dx = -ORIGIN_RADIUS; dx <= ORIGIN_RADIUS; dx++) {
-        for (let dz = -ORIGIN_RADIUS; dz <= ORIGIN_RADIUS; dz++) {
-          want.add(chunkKey(dx, dz));
-        }
-      }
+      // ── PHASE 1: focused boss arena — only the origin chunk exists ─────
+      const want = new Set([chunkKey(0, 0)]);
 
       // ── PHASE 2: queue loads for missing chunks (rate-limited) ─────────
       let slots = MAX_PARALLEL_LOADS - loadingKeys.current.size;

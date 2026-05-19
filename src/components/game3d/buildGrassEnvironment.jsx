@@ -27,15 +27,15 @@ const makeGrassTexture = () => {
   }
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(40, 40);
+  tex.repeat.set(15, 15);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 };
 
 export function buildGrassEnvironment(scene) {
-  // Ground plane (200×200) with gentle rolling hills.
+  // Ground plane (75×75) for the focused boss-fight arena.
   // Vertices near origin are flat so spawn area stays usable.
-  const grassGeo = new THREE.PlaneGeometry(200, 200, 80, 80);
+  const grassGeo = new THREE.PlaneGeometry(75, 75, 40, 40);
   const posAttr = grassGeo.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
     const x = posAttr.getX(i);
@@ -65,7 +65,7 @@ export function buildGrassEnvironment(scene) {
   // Decorative grass tufts — instanced small green cones scattered around.
   const tuftGeo = new THREE.ConeGeometry(0.15, 0.45, 5);
   const tuftMat = new THREE.MeshStandardMaterial({ color: 0x6aa84f, roughness: 1 });
-  const tuftCount = 220;
+  const tuftCount = 120;
   const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, tuftCount);
   const tmpMat = new THREE.Matrix4();
   const tmpEuler = new THREE.Euler();
@@ -74,7 +74,7 @@ export function buildGrassEnvironment(scene) {
   const tmpPos = new THREE.Vector3();
   for (let i = 0; i < tuftCount; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const radius = 8 + Math.random() * 82;
+    const radius = 4 + Math.random() * 31;
     tmpPos.set(Math.cos(angle) * radius, 0.22, Math.sin(angle) * radius);
     tmpEuler.set(0, Math.random() * Math.PI * 2, 0);
     tmpQuat.setFromEuler(tmpEuler);
