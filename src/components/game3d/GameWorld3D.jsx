@@ -72,7 +72,7 @@ import {
   NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, RANGED_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP,
   PLAYER_ATTACK_COOLDOWN, PLAYER_INVUL_AFTER_HIT,
 } from './gameWorldConfig';
-import { attachContextGuard } from './webglContextGuard'; import { applyTerrainCollision } from './terrain/applyTerrainCollision';
+import { attachContextGuard } from './webglContextGuard'; import { applyTerrainCollision } from './terrain/applyTerrainCollision'; import { createGuardedRenderer } from './createGuardedRenderer';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -227,18 +227,10 @@ export default function GameWorld3D() {
     scene.fog = new THREE.Fog(0x88c4e8, 60, 220);
     scene.background = new THREE.Color(0x88c4e8);
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
-    // Guard against WebGL context loss + post-dispose render calls — without
-    // this, three.js shadow-map pass crashes inside getUniforms() with
-    // "Cannot read properties of null (reading 'trim')".
+    // Renderer — soft-fail if WebGL context can't be created (context limit / no GPU)
+    const renderer = createGuardedRenderer(container, (msg) => { console.error(msg); setLoading(false); });
+    if (!renderer) return;
+    // Guard against WebGL context loss + post-dispose render calls.
     const rendererGuard = attachContextGuard(renderer);
 
     // Camera
