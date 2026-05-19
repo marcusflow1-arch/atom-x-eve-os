@@ -21,19 +21,11 @@ const loadRepeatingTexture = (url, repeatX, repeatY, colorSpace = THREE.SRGBColo
 };
 
 export function buildGrassEnvironment(scene) {
-  const grassMaterial = new THREE.MeshStandardMaterial({
-    map: loadRepeatingTexture(TERRAIN_ASSETS.GRASS.textures.topSeamless, 16, 16),
-    color: 0xffffff,
-    roughness: 0.95,
-    metalness: 0,
-  });
-
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(ARENA_SIZE, ARENA_SIZE, 1, 1),
-    grassMaterial,
+    new THREE.PlaneGeometry(75, 75, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0x555555 }),
   );
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = 0;
   ground.receiveShadow = true;
   scene.add(ground);
 
