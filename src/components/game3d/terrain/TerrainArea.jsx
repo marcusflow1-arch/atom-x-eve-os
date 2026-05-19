@@ -52,15 +52,32 @@ export default function TerrainArea() {
       // ─── Generate placement data once (deterministic) ──────────────
       const { trees, grass, rocks } = generateForestPlacements();
 
+      // Honor live perf settings — thin foliage/trees per the active preset.
+      const perf = (typeof window !== 'undefined' && window.__perfSettings) || {};
+      const treeDensity   = typeof perf.treeDensity    === 'number' ? perf.treeDensity    : 1;
+      const foliageDensity = typeof perf.foliageDensity === 'number' ? perf.foliageDensity : 1;
+      const renderDistance = typeof perf.renderDistance === 'number' ? perf.renderDistance : 220;
+
+      const keepRatio = (arr, ratio) => {
+        if (ratio >= 1) return arr;
+        if (ratio <= 0) return [];
+        return arr.filter((_, i) => ((i * 9301 + 49297) % 233280) / 233280 < ratio);
+      };
+      const inRange = (p) => (p.x * p.x + p.z * p.z) <= renderDistance * renderDistance;
+
+      const trimmedTrees = keepRatio(trees.filter(inRange), treeDensity);
+      const trimmedGrass = keepRatio(grass.filter(inRange), foliageDensity);
+      const trimmedRocks = rocks.filter(inRange);
+
       // Snap every placement to the ground heightmap up-front so the
       // instanced batch builder gets final world Y values.
       const withY = (p, extraY = 0) => ({
         ...p,
         y: sampleGroundY(p.x, p.z) + (p.yOffset || 0) + extraY,
       });
-      const treePlacements = trees.map((p) => withY(p));
-      const rockPlacements = rocks.map((p) => withY(p));
-      const grassPlacements = grass.map((p) => withY(p));
+      const treePlacements = trimmedTrees.map((p) => withY(p));
+      const rockPlacements = trimmedRocks.map((p) => withY(p));
+      const grassPlacements = trimmedGrass.map((p) => withY(p));
 
       // ─── Load sources in parallel ──────────────────────────────────
       const [treeSrc, rockSrc, grassSrc] = await Promise.all([
