@@ -62,30 +62,26 @@ export function buildGrassEnvironment(scene) {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // Decorative grass tufts — instanced small green cones scattered around.
-  const tuftGeo = new THREE.ConeGeometry(0.15, 0.45, 5);
-  const tuftMat = new THREE.MeshStandardMaterial({ color: 0x6aa84f, roughness: 1 });
-  const tuftCount = 120;
-  const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, tuftCount);
-  const tmpMat = new THREE.Matrix4();
-  const tmpEuler = new THREE.Euler();
-  const tmpQuat = new THREE.Quaternion();
-  const tmpScale = new THREE.Vector3();
-  const tmpPos = new THREE.Vector3();
-  for (let i = 0; i < tuftCount; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = 4 + Math.random() * 31;
-    tmpPos.set(Math.cos(angle) * radius, 0.22, Math.sin(angle) * radius);
-    tmpEuler.set(0, Math.random() * Math.PI * 2, 0);
-    tmpQuat.setFromEuler(tmpEuler);
-    const s = 0.7 + Math.random() * 0.9;
-    tmpScale.set(s, s, s);
-    tmpMat.compose(tmpPos, tmpQuat, tmpScale);
-    tufts.setMatrixAt(i, tmpMat);
+  // Simple dirt walkway through the arena, kept as terrain detail rather than a prop.
+  const pathGeo = new THREE.PlaneGeometry(5, 74, 4, 40);
+  const pathPos = pathGeo.attributes.position;
+  for (let i = 0; i < pathPos.count; i++) {
+    const x = pathPos.getX(i);
+    const y = pathPos.getY(i);
+    const dist = Math.sqrt(x * x + y * y);
+    const fade = Math.min(1, Math.max(0, (dist - 15) / 40));
+    const z = Math.sin(x * 0.08) * Math.cos(y * 0.08) * 0.6 * fade
+            + Math.sin(x * 0.22 + y * 0.18) * 0.25 * fade;
+    pathPos.setZ(i, z + 0.025);
   }
-  tufts.instanceMatrix.needsUpdate = true;
-  tufts.receiveShadow = true;
-  scene.add(tufts);
+  pathGeo.computeVertexNormals();
+  const path = new THREE.Mesh(
+    pathGeo,
+    new THREE.MeshStandardMaterial({ color: 0x7a5a34, roughness: 1, metalness: 0 }),
+  );
+  path.rotation.x = -Math.PI / 2;
+  path.receiveShadow = true;
+  scene.add(path);
 
   return ground;
 }

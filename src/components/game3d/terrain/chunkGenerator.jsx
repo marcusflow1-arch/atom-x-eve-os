@@ -33,11 +33,35 @@ export function generateChunkLayout(cx, cz) {
   const props = [];
 
   for (const [assetKey, count] of Object.entries(PROPS_PER_CHUNK)) {
+    if (assetKey === 'GRASS') {
+      const spacing = 4.4;
+      for (let x = -half + 3; x <= half - 3; x += spacing) {
+        for (let z = -half + 3; z <= half - 3; z += spacing) {
+          const wx = baseX + x + (rng() - 0.5) * 1.4;
+          const wz = baseZ + z + (rng() - 0.5) * 1.4;
+          if (Math.abs(wx) < 3.2) continue;
+          props.push({
+            assetKey,
+            x: wx,
+            z: wz,
+            rotY: rng() * Math.PI * 2,
+            scaleMult: 0.75 + rng() * 0.25,
+            variantIndex: 0,
+            pieceCount: 1,
+          });
+        }
+      }
+      continue;
+    }
+
     for (let i = 0; i < count; i++) {
+      const x = baseX + (rng() * 2 - 1) * half * 0.9;
+      const z = baseZ + (rng() * 2 - 1) * half * 0.9;
+      if (Math.abs(x) < 4) continue;
       props.push({
         assetKey,
-        x: baseX + (rng() * 2 - 1) * half * 0.9,
-        z: baseZ + (rng() * 2 - 1) * half * 0.9,
+        x,
+        z,
         rotY: rng() * Math.PI * 2,
         scaleMult: 0.85 + rng() * 0.4,
         variantIndex: assetKey === 'ROCKS' ? Math.floor(rng() * 12) : 0,

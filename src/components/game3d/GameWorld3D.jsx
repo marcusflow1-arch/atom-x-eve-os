@@ -327,40 +327,8 @@ export default function GameWorld3D() {
       else pendingFootings.push(apply);
     };
 
-    // NPC spawns — talk targets (colored capsules + name label)
-    const npcs = []; // { id, name, dialogue, mesh, ringMesh }
-    NPC_SPAWNS.forEach((spawn) => {
-      const group = new THREE.Group();
-      group.position.set(spawn.pos[0], spawn.pos[1], spawn.pos[2]);
-
-      // Body
-      const bodyGeo = new THREE.CapsuleGeometry(0.45, 1.0, 4, 8);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: spawn.color, roughness: 0.6, emissive: spawn.color, emissiveIntensity: 0.15 });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.position.y = 0.95;
-      body.castShadow = true;
-      group.add(body);
-
-      // Head
-      const headGeo = new THREE.SphereGeometry(0.3, 12, 12);
-      const head = new THREE.Mesh(headGeo, bodyMat);
-      head.position.y = 1.85;
-      head.castShadow = true;
-      group.add(head);
-
-      // Friendly indicator ring (glowing on ground)
-      const ringGeo = new THREE.RingGeometry(0.7, 0.9, 24);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.02;
-      group.add(ring);
-
-      scene.add(group);
-      npcs.push({ ...spawn, mesh: group, ringMesh: ring });
-      // Stand the capsule on the terrain (feet at ground)
-      snapToGround(group, 0);
-    });
+    // Generic capsule NPCs removed; only real quest NPC assets remain.
+    const npcs = [];
 
     // Shared FBX loader (used for player + enemies + quest NPCs)
     const loader = new FBXLoader();

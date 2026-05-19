@@ -22,7 +22,7 @@ export const STREAM_TICK_MS = 250;
 // Density of props per chunk. Real numbers are picked deterministically per
 // chunk so the same coords always produce the same layout.
 export const PROPS_PER_CHUNK = {
-  GRASS:    14,
+  GRASS:    260,
   ROCKS:    6,
   TREE_1:   2,
   TREE_2:   2,

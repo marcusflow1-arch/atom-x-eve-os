@@ -121,12 +121,12 @@ export default function TerrainStreamer() {
         return 0;
       };
 
-      const normalizeRockToPlayer = (obj, scaleMult) => {
+      const normalizeAssetHeightToPlayer = (obj, targetRatio, scaleMult) => {
         const playerHeight = window.__gw3dPlayerHeight || 1.7;
-        const targetRockHeight = playerHeight * 0.16;
+        const targetHeight = playerHeight * targetRatio;
         const box = new THREE.Box3().setFromObject(obj);
         const size = box.getSize(new THREE.Vector3());
-        if (size.y > 0) obj.scale.multiplyScalar(targetRockHeight / size.y);
+        if (size.y > 0) obj.scale.multiplyScalar(targetHeight / size.y);
         obj.scale.multiplyScalar(scaleMult);
       };
       try {
@@ -136,8 +136,10 @@ export default function TerrainStreamer() {
           obj.position.set(p.x, sampleY(p.x, p.z), p.z);
           obj.rotation.y = p.rotY;
           if (p.assetKey === 'ROCKS') {
-            normalizeRockToPlayer(obj, p.scaleMult);
+            normalizeAssetHeightToPlayer(obj, 0.16, p.scaleMult);
             rockColliders.push({ x: p.x, z: p.z, radius: Math.max(0.18, (window.__gw3dPlayerHeight || 1.7) * 0.08 * p.scaleMult) });
+          } else if (p.assetKey === 'GRASS') {
+            normalizeAssetHeightToPlayer(obj, 0.10, p.scaleMult);
           } else {
             obj.scale.multiplyScalar(p.scaleMult);
           }
