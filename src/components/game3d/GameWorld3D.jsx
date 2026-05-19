@@ -885,21 +885,17 @@ export default function GameWorld3D() {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
-      // Space = jump, R = directional dodge roll with physical movement
+      // Space = Jump, Left Alt = Roll, Q = Dodge
       if (k === ' ') {
         if (playerAnim?.requestJump()) playActionSound('player_jump');
         e.preventDefault();
       }
-      if (k === 'r') {
-        const yaw = orbit.current.yaw;
-        const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-        const rx = -Math.cos(yaw), rz = Math.sin(yaw);
-        const dir = new THREE.Vector3();
-        if (keys.current['w']) { dir.x += fx; dir.z += fz; }
-        if (keys.current['s']) { dir.x -= fx; dir.z -= fz; }
-        if (keys.current['a']) { dir.x += rx; dir.z += rz; }
-        if (keys.current['d']) { dir.x -= rx; dir.z -= rz; }
-        if (playerAnim?.requestRoll(dir)) playActionSound('player_jump');
+      if (e.code === 'AltLeft') {
+        if (playerAnim?.requestRoll()) playActionSound('player_jump');
+        e.preventDefault();
+      }
+      if (k === 'q') {
+        if (playerAnim?.requestDodge?.()) playActionSound('player_jump');
         e.preventDefault();
       }
       // C = toggle crouch once per press
@@ -907,23 +903,15 @@ export default function GameWorld3D() {
         crouchTogglePressed.current = true;
         playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
       }
-      // E = multi-shot attack; falls back to interaction if no montage is available
-      if (k === 'e') {
-        if (playerAnim?.requestAttack('multiShot', 1.0)) {
-          setTimeout(() => { attackPressed.current = true; }, 260);
-          setTimeout(() => { skillStrikeMultRef.current = 0.75; attackPressed.current = true; }, 480);
-          setTimeout(() => { skillStrikeMultRef.current = 0.75; attackPressed.current = true; }, 700);
-        } else {
-          interactPressed.current = true;
-        }
+      // E = interact, F = Kick
+      if (k === 'e') interactPressed.current = true;
+      if (k === 'f') {
+        if (playerAnim?.requestAttack('kick', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
+        e.preventDefault();
       }
-      // Q = hold block
-      if (k === 'q') playerAnim?.setBlocking(true);
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
-      // F = mount/dismount companion
-      if (k === 'f') { mountToggleRef.current = true; e.preventDefault(); }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
@@ -935,26 +923,20 @@ export default function GameWorld3D() {
       const k = e.key.toLowerCase();
       keys.current[k] = false;
       if (k === 'c') crouchTogglePressed.current = false;
-      if (k === 'q') playerAnim?.setBlocking(false);
     };
     const onMouseDown = (e) => {
-      // Left click = melee attack, middle click = target enemy, right click = orbit
+      // Left click = Fire Arrow, middle click = target enemy, right click = Block
       if (e.button === 0) {
-        if (playerAnim?.getIsAiming?.()) {
-          if (playerAnim.requestAttack('attack', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
-        } else {
-          attackPressed.current = true;
-        }
+        if (playerAnim?.requestAttack('attack', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
       } else if (e.button === 1) {
         e.preventDefault();
         handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
       } else {
-        playerAnim?.setAiming(true);
-        drag.current = { active: true, x: e.clientX, y: e.clientY };
+        playerAnim?.setBlocking(true);
       }
     };
     const onMouseUp = (e) => {
-      if (e.button === 2) playerAnim?.setAiming(false);
+      if (e.button === 2) playerAnim?.setBlocking(false);
       drag.current.active = false;
     };
     const onMouseMove = (e) => {
