@@ -17,17 +17,17 @@ const STATES = {
 
 const ACTION_ALIASES = {
   [STATES.IDLE]: ['idle'],
-  [STATES.WALK]: ['walk', 'walking'],
+  [STATES.WALK]: ['walk'],
   [STATES.RUN]: ['run', 'running'],
-  [STATES.CROUCH_IDLE]: ['crouchIdle', 'crouch_idle', 'crouch', 'idle'],
-  [STATES.CROUCH_WALK]: ['crouchWalk', 'crouch_walk', 'walk'],
-  [STATES.CROUCH_RUN]: ['crouchRun', 'crouch_run', 'run'],
-  [STATES.ROLL]: ['roll', 'sprinting'],
-  [STATES.DODGE]: ['dodge', 'roll'],
-  [STATES.JUMP]: ['jump', 'jumping', 'jumpStart'],
-  [STATES.KICK]: ['kick', 'hurricane_kick', 'attack'],
-  [STATES.FIRE_ARROW]: ['fireArrow', 'attack', 'shoot'],
-  [STATES.BLOCK]: ['block', 'blockHold', 'holdBow', 'idle'],
+  [STATES.CROUCH_IDLE]: ['crouchIdle', 'crouch_idle'],
+  [STATES.CROUCH_WALK]: ['crouchWalk', 'crouch_walk'],
+  [STATES.CROUCH_RUN]: ['crouchRun', 'crouch_run'],
+  [STATES.ROLL]: ['roll'],
+  [STATES.DODGE]: ['dodge'],
+  [STATES.JUMP]: ['jump'],
+  [STATES.KICK]: ['kick'],
+  [STATES.FIRE_ARROW]: ['fireArrow'],
+  [STATES.BLOCK]: ['block'],
 };
 
 const LOOP_STATES = new Set([
@@ -106,8 +106,12 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
     currentState = newState;
     currentActionKey = nextKey;
 
-    if (previousAction && previousAction !== nextAction) previousAction.fadeOut(options.fade ?? 0.15);
-    nextAction.reset().fadeIn(options.fade ?? 0.15).play();
+    if (previousAction !== nextAction) {
+      if (previousAction) previousAction.fadeOut(options.fade ?? 0.15);
+      nextAction.reset().fadeIn(options.fade ?? 0.15).play();
+    } else if (!nextAction.isRunning()) {
+      nextAction.play();
+    }
     return true;
   };
 
@@ -120,6 +124,7 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
 
   const startOneShot = (state, duration = ONE_SHOT_DURATION[state]) => {
     if (isDead || isBusy || isBlocking) return false;
+    if (!resolveActionKey(state)) return false;
     isBusy = true;
     busyResetAt = now() + duration;
     if (oneShotRef) oneShotRef.current = true;
@@ -153,11 +158,6 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       action.setEffectiveWeight(1);
       actions[key] = action;
     });
-
-    if (actions.run && !actions.running) actions.running = actions.run;
-    if (actions.jump && !actions.jumping) actions.jumping = actions.jump;
-    if (actions.kick && !actions.hurricane_kick) actions.hurricane_kick = actions.kick;
-    if (actions.blockHold && !actions.block) actions.block = actions.blockHold;
 
     ChangeState(STATES.IDLE, { force: true });
   };
