@@ -55,7 +55,22 @@ export default function CharacterLoginScreen({ onPlay }) {
     const container = containerRef.current;
 
     const scene = new THREE.Scene();
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // WebGL context creation can fail when the browser hits its context limit
+    // (too many active canvases) or on low-end hardware. Fail soft: skip the
+    // 3D preview and let the rest of the login UI render normally.
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'low-power',
+        failIfMajorPerformanceCaveat: false,
+      });
+    } catch (e) {
+      console.warn('CharacterLoginScreen: WebGL unavailable, skipping 3D preview.', e);
+      setLoading(false);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
