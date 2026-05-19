@@ -1,164 +1,123 @@
 import * as THREE from 'three';
 
 const STATES = {
-  IDLE: 'Idle',
-  WALK: 'Walk',
-  RUN: 'Run',
-  CROUCH_IDLE: 'CrouchIdle',
-  CROUCH_WALK: 'CrouchWalk',
-  CROUCH_RUN: 'CrouchRun',
-  ROLL: 'Roll',
-  DODGE: 'Dodge',
-  JUMP: 'Jump',
-  KICK: 'Kick',
-  FIRE_ARROW: 'FireArrow',
-  BLOCK: 'Block',
-};
-
-// STRICT ALIASING: only exact spelling variations of the same animation.
-const ACTION_ALIASES = {
-  [STATES.IDLE]: ['Idle', 'idle'],
-  [STATES.WALK]: ['Walk', 'walk'],
-  [STATES.RUN]: ['Run', 'run', 'running'],
-  [STATES.CROUCH_IDLE]: ['CrouchIdle', 'crouchIdle', 'crouch_idle'],
-  [STATES.CROUCH_WALK]: ['CrouchWalk', 'crouchWalk', 'crouch_walk'],
-  [STATES.CROUCH_RUN]: ['CrouchRun', 'crouchRun', 'crouch_run'],
-  [STATES.ROLL]: ['Roll', 'roll'],
-  [STATES.DODGE]: ['Dodge', 'dodge'],
-  [STATES.JUMP]: ['Jump', 'jump', 'jumpStart'],
-  [STATES.KICK]: ['Kick', 'kick'],
-  [STATES.FIRE_ARROW]: ['FireArrow', 'fireArrow', 'fire_arrow'],
-  [STATES.BLOCK]: ['Block', 'block'],
+  IDLE: 'idle',
+  RUN: 'run',
+  RUN_STOP: 'runStop',
+  RUN_BACK: 'runBack',
+  DRAW_ARROW: 'drawArrow',
+  DODGE_RIGHT: 'dodgeRight',
+  DODGE_LEFT: 'dodgeLeft',
+  DODGE_FORWARD: 'dodgeForward',
+  DODGE_BACKWARD: 'dodgeBackward',
+  DIVE_FORWARD: 'diveForward',
+  AIM_WALK_RIGHT: 'aimWalkRight',
+  AIM_WALK_LEFT: 'aimWalkLeft',
+  AIM_WALK_FORWARD: 'aimWalkForward',
+  AIM_WALK_BACKWARD: 'aimWalkBackward',
 };
 
 const LOOP_STATES = new Set([
   STATES.IDLE,
-  STATES.WALK,
   STATES.RUN,
-  STATES.CROUCH_IDLE,
-  STATES.CROUCH_WALK,
-  STATES.CROUCH_RUN,
-  STATES.BLOCK,
-]);
-
-const ONE_SHOT_STATES = new Set([
-  STATES.JUMP,
-  STATES.ROLL,
-  STATES.DODGE,
-  STATES.KICK,
-  STATES.FIRE_ARROW,
+  STATES.RUN_BACK,
+  STATES.AIM_WALK_RIGHT,
+  STATES.AIM_WALK_LEFT,
+  STATES.AIM_WALK_FORWARD,
+  STATES.AIM_WALK_BACKWARD,
 ]);
 
 const ONE_SHOT_DURATION = {
-  [STATES.JUMP]: 0.9,
-  [STATES.ROLL]: 0.8,
-  [STATES.DODGE]: 0.6,
-  [STATES.KICK]: 0.6,
-  [STATES.FIRE_ARROW]: 0.7,
+  [STATES.RUN_STOP]: 0.45,
+  [STATES.DRAW_ARROW]: 0.7,
+  [STATES.DODGE_RIGHT]: 0.45,
+  [STATES.DODGE_LEFT]: 0.45,
+  [STATES.DODGE_FORWARD]: 0.45,
+  [STATES.DODGE_BACKWARD]: 0.45,
+  [STATES.DIVE_FORWARD]: 0.8,
+};
+
+const DODGE_STATE_BY_DIRECTION = {
+  right: STATES.DODGE_RIGHT,
+  left: STATES.DODGE_LEFT,
+  forward: STATES.DODGE_FORWARD,
+  backward: STATES.DODGE_BACKWARD,
 };
 
 export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const actions = {};
   let currentState = null;
-  let currentActionKey = null;
-  let lastMovement = { moving: false, running: false };
-
+  let previousMoving = false;
+  let lastMovement = { moving: false, running: false, direction: 'forward', aiming: false };
   let isBusy = false;
-  let isBlocking = false;
-  let isCrouching = false;
-  let isGrounded = true;
+  let isAiming = false;
   let isDead = false;
   let busyResetAt = 0;
-
-  let velocity = new THREE.Vector3();
-  let verticalOffset = 0;
   let specialMoveVelocity = null;
   let specialMoveTimer = 0;
 
   const now = () => performance.now() / 1000;
+  const hasAction = (state) => !!actions[state];
 
-  const resolveActionKey = (state) => {
-    const aliases = ACTION_ALIASES[state] || [state];
-    for (const alias of aliases) {
-      if (actions[alias]) return alias;
-    }
-    return null;
-  };
+  const playState = (state, options = {}) => {
+    if (isDead || !hasAction(state)) return false;
+    if (!options.force && currentState === state) return true;
 
-  const ChangeState = (newState, options = {}) => {
-    if (isDead) return false;
-    if (isBusy && !options.force && ONE_SHOT_STATES.has(currentState)) return false;
-    if (!options.force && currentState === newState) return true;
+    const nextAction = actions[state];
+    const previousAction = currentState ? actions[currentState] : null;
 
-    const nextKey = resolveActionKey(newState);
-    if (!nextKey) {
-      console.warn(`[Controller] Missing animation for: ${newState}`);
-      return false;
-    }
-
-    const nextAction = actions[nextKey];
-    const previousAction = currentActionKey ? actions[currentActionKey] : null;
     nextAction.enabled = true;
     nextAction.setEffectiveWeight(1);
     nextAction.setEffectiveTimeScale(options.timeScale || 1);
 
-    if (LOOP_STATES.has(newState)) {
-      nextAction.setLoop(THREE.LoopRepeat);
+    if (LOOP_STATES.has(state)) {
+      nextAction.setLoop(THREE.LoopRepeat, Infinity);
       nextAction.clampWhenFinished = false;
     } else {
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = true;
     }
 
-    currentState = newState;
-    currentActionKey = nextKey;
-
-    if (previousAction !== nextAction) {
-      if (previousAction) previousAction.fadeOut(options.fade ?? 0.15);
-      nextAction.reset().fadeIn(options.fade ?? 0.15).play();
-    } else if (!nextAction.isRunning()) {
-      nextAction.play();
-    }
+    if (previousAction && previousAction !== nextAction) previousAction.fadeOut(options.fade ?? 0.12);
+    nextAction.reset().fadeIn(options.fade ?? 0.12).play();
+    currentState = state;
     return true;
   };
 
-  const ResetBusy = () => {
+  const movementStateFor = ({ moving, direction, aiming }) => {
+    if (!moving) return STATES.IDLE;
+    if (aiming) {
+      if (direction === 'right') return STATES.AIM_WALK_RIGHT;
+      if (direction === 'left') return STATES.AIM_WALK_LEFT;
+      if (direction === 'backward') return STATES.AIM_WALK_BACKWARD;
+      return STATES.AIM_WALK_FORWARD;
+    }
+    if (direction === 'backward') return STATES.RUN_BACK;
+    return STATES.RUN;
+  };
+
+  const resetBusy = () => {
     isBusy = false;
     busyResetAt = 0;
     if (oneShotRef) oneShotRef.current = false;
-    HandleMovement(lastMovement);
+    handleMovement(lastMovement);
   };
 
-  const startOneShot = (state, duration = ONE_SHOT_DURATION[state]) => {
-    if (isDead || isBusy || isBlocking) return false;
-    if (!resolveActionKey(state)) return false;
-    const changed = ChangeState(state, { force: true, fade: 0.05 });
-    if (!changed) return false;
-    isBusy = true;
-    busyResetAt = now() + duration;
-    if (oneShotRef) oneShotRef.current = true;
-    return true;
-  };
-
-  const HandleMovement = ({ moving = lastMovement.moving, running = lastMovement.running } = {}) => {
+  const handleMovement = ({ moving = lastMovement.moving, running = lastMovement.running, direction = lastMovement.direction, aiming = isAiming } = {}) => {
+    lastMovement = { moving: !!moving, running: !!running, direction, aiming: !!aiming };
     if (isDead || isBusy) return;
 
-    if (isBlocking) {
-      ChangeState(STATES.BLOCK);
+    if (previousMoving && !moving && hasAction(STATES.RUN_STOP)) {
+      previousMoving = false;
+      isBusy = true;
+      busyResetAt = now() + ONE_SHOT_DURATION[STATES.RUN_STOP];
+      if (oneShotRef) oneShotRef.current = true;
+      playState(STATES.RUN_STOP, { force: true, fade: 0.05 });
       return;
     }
 
-    if (isCrouching) {
-      if (!moving) ChangeState(STATES.CROUCH_IDLE);
-      else if (running) ChangeState(STATES.CROUCH_RUN);
-      else ChangeState(STATES.CROUCH_WALK);
-      return;
-    }
-
-    // Common-sense fallback: if the player is not actively moving, force Idle only.
-    if (!moving) ChangeState(STATES.IDLE);
-    else if (running) ChangeState(STATES.RUN);
-    else ChangeState(STATES.WALK);
+    previousMoving = !!moving;
+    playState(movementStateFor(lastMovement));
   };
 
   const bindClips = (clipsByKey = {}) => {
@@ -169,50 +128,38 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       actions[key] = action;
     });
 
-    ChangeState(STATES.IDLE, { force: true });
+    playState(STATES.IDLE, { force: true });
   };
 
-  const updateActionState = ({ isMoving, isRunning }) => {
-    lastMovement = { moving: !!isMoving, running: !!isRunning };
-    HandleMovement(lastMovement);
-  };
+  const startSpecialMove = (state, directionVector, speed, duration = ONE_SHOT_DURATION[state]) => {
+    if (isDead || isBusy || !hasAction(state)) return false;
 
-  const requestJump = () => {
-    if (!isGrounded) return false;
-    velocity.y = Math.sqrt(5 * -2 * -20);
-    verticalOffset = Math.max(verticalOffset, 0.01);
-    isGrounded = false;
-    return startOneShot(STATES.JUMP);
-  };
-
-  const startSpecialMove = (state, direction, speed, duration = ONE_SHOT_DURATION[state], options = {}) => {
-    if (isDead || isBusy || isBlocking) return false;
-
-    const dir = direction?.clone?.() || new THREE.Vector3(0, 0, -1);
+    const dir = directionVector?.clone?.() || new THREE.Vector3(0, 0, -1);
     if (dir.lengthSq() === 0) dir.set(0, 0, -1);
     dir.y = 0;
     dir.normalize();
 
-    if (!options.movementOnly) {
-      const started = startOneShot(state, duration);
-      if (!started) return false;
-    } else {
-      isBusy = true;
-      busyResetAt = now() + duration;
-      if (oneShotRef) oneShotRef.current = true;
-    }
-
+    isBusy = true;
+    busyResetAt = now() + duration;
+    if (oneShotRef) oneShotRef.current = true;
     specialMoveVelocity = dir.multiplyScalar(speed);
     specialMoveTimer = duration;
-    return true;
+    return playState(state, { force: true, fade: 0.05 });
   };
 
-  const requestRoll = (direction) => startSpecialMove(STATES.ROLL, direction, 14, ONE_SHOT_DURATION[STATES.ROLL]);
-  const requestDodge = (direction) => startSpecialMove(STATES.DODGE, direction, 13, ONE_SHOT_DURATION[STATES.DODGE], { movementOnly: true });
+  const requestDodge = (directionVector, directionName = 'forward') => {
+    const state = DODGE_STATE_BY_DIRECTION[directionName] || STATES.DODGE_FORWARD;
+    return startSpecialMove(state, directionVector, 13, ONE_SHOT_DURATION[state]);
+  };
 
-  const HandleCombat = (kind = 'attack') => {
-    const state = kind === 'kick' ? STATES.KICK : STATES.FIRE_ARROW;
-    return startOneShot(state);
+  const requestRoll = (directionVector) => startSpecialMove(STATES.DIVE_FORWARD, directionVector, 14, ONE_SHOT_DURATION[STATES.DIVE_FORWARD]);
+
+  const requestAttack = () => {
+    if (isDead || isBusy) return false;
+    isBusy = true;
+    busyResetAt = now() + ONE_SHOT_DURATION[STATES.DRAW_ARROW];
+    if (oneShotRef) oneShotRef.current = true;
+    return playState(STATES.DRAW_ARROW, { force: true, fade: 0.05 });
   };
 
   const updateMotion = (model, delta, groundY = model.position.y) => {
@@ -223,72 +170,49 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       if (specialMoveTimer <= 0) specialMoveVelocity = null;
     }
 
-    if (busyResetAt > 0 && now() >= busyResetAt) ResetBusy();
-
-    if (!isGrounded || verticalOffset > 0) {
-      velocity.y += -20 * delta;
-      verticalOffset += velocity.y * delta;
-
-      if (verticalOffset <= 0) {
-        verticalOffset = 0;
-        velocity.y = 0;
-        isGrounded = true;
-      } else {
-        isGrounded = false;
-      }
-    }
-
-    model.position.y = groundY + verticalOffset;
+    if (busyResetAt > 0 && now() >= busyResetAt) resetBusy();
+    model.position.y = groundY;
   };
 
-  const requestCrouch = (enabled) => {
-    if (isBusy || isBlocking) return false;
-    isCrouching = enabled;
-    HandleMovement(lastMovement);
-    return true;
-  };
-
-  const setBlocking = (enabled) => {
-    if (isBusy && enabled) return false;
-    isBlocking = enabled;
-    if (enabled) ChangeState(STATES.BLOCK, { force: true });
-    else HandleMovement(lastMovement);
+  const setAiming = (enabled) => {
+    isAiming = !!enabled;
+    handleMovement({ ...lastMovement, aiming: isAiming });
     return true;
   };
 
   mixer.addEventListener('finished', (event) => {
-    if (event.action?.getClip?.()?.name !== currentActionKey) return;
-    if (ONE_SHOT_STATES.has(currentState)) ResetBusy();
+    if (event.action !== actions[currentState]) return;
+    if (!LOOP_STATES.has(currentState)) resetBusy();
   });
 
   return {
     actions,
     bindClips,
-    ChangeState,
-    PlayAnimation: ChangeState,
-    HandleMovement: updateActionState,
-    HandleCombat,
-    HandleJump: requestJump,
+    ChangeState: playState,
+    PlayAnimation: playState,
+    HandleMovement: handleMovement,
+    HandleCombat: requestAttack,
+    HandleJump: () => false,
     HandleAirborne: () => {},
     HandleDamage: () => false,
     HandleDeath: () => { isDead = true; return false; },
-    playOneShot: (name) => HandleCombat(name === 'kick' ? 'kick' : 'attack'),
-    requestAttack: HandleCombat,
-    requestCrouch,
+    playOneShot: requestAttack,
+    requestAttack,
+    requestCrouch: () => false,
     requestDodge,
     requestHitReact: () => false,
-    requestJump,
+    requestJump: () => false,
     requestRoll,
-    setAiming: setBlocking,
-    setBlocking,
-    updateActionState,
+    setAiming,
+    setBlocking: setAiming,
+    updateActionState: handleMovement,
     updateMotion,
     getCurrent: () => currentState || STATES.IDLE,
-    getIsAiming: () => isBlocking,
-    getIsBlocking: () => isBlocking,
-    getIsCrouching: () => isCrouching,
-    isMovementOverridden: () => isBusy || isBlocking,
-    has: (name) => !!resolveActionKey(name),
-    getDebugState: () => ({ currentState, currentActionKey, ...lastMovement, isBusy, isBlocking, isCrouching, isGrounded, velocity }),
+    getIsAiming: () => isAiming,
+    getIsBlocking: () => isAiming,
+    getIsCrouching: () => false,
+    isMovementOverridden: () => isBusy,
+    has: hasAction,
+    getDebugState: () => ({ currentState, ...lastMovement, isBusy, isAiming, specialMoveTimer }),
   };
 }

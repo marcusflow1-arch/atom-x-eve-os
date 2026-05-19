@@ -888,15 +888,16 @@ export default function GameWorld3D() {
       const k = e.key.toLowerCase();
       keys.current[k] = true;
       const dodgeKeyMap = {
-        w: () => new THREE.Vector3(-Math.sin(orbit.current.yaw), 0, -Math.cos(orbit.current.yaw)),
-        s: () => new THREE.Vector3(Math.sin(orbit.current.yaw), 0, Math.cos(orbit.current.yaw)),
-        a: () => new THREE.Vector3(-Math.cos(orbit.current.yaw), 0, Math.sin(orbit.current.yaw)),
-        d: () => new THREE.Vector3(Math.cos(orbit.current.yaw), 0, -Math.sin(orbit.current.yaw)),
+        w: { direction: 'forward', vector: () => new THREE.Vector3(-Math.sin(orbit.current.yaw), 0, -Math.cos(orbit.current.yaw)) },
+        s: { direction: 'backward', vector: () => new THREE.Vector3(Math.sin(orbit.current.yaw), 0, Math.cos(orbit.current.yaw)) },
+        a: { direction: 'left', vector: () => new THREE.Vector3(-Math.cos(orbit.current.yaw), 0, Math.sin(orbit.current.yaw)) },
+        d: { direction: 'right', vector: () => new THREE.Vector3(Math.cos(orbit.current.yaw), 0, -Math.sin(orbit.current.yaw)) },
       };
       if (!e.repeat && dodgeKeyMap[k]) {
         const nowMs = performance.now();
         if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
-          if (playerAnim?.requestDodge?.(dodgeKeyMap[k]())) playActionSound('player_jump');
+          const dodge = dodgeKeyMap[k];
+          if (playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) playActionSound('player_jump');
           lastDirectionTap.current[k] = 0;
           e.preventDefault();
           return;
@@ -1034,6 +1035,8 @@ export default function GameWorld3D() {
         const isMoving = move.lengthSq() > 0;
         const isRunning = !!keys.current['shift'] && isMoving;
         const isSprinting = !!keys.current['control'] && isMoving;
+        const isAiming = !!playerAnim?.getIsAiming?.();
+        const moveDirection = keys.current['s'] ? 'backward' : keys.current['a'] ? 'left' : keys.current['d'] ? 'right' : 'forward';
         const isCrouching = !!playerAnim?.getIsCrouching?.();
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
         const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
@@ -1160,7 +1163,7 @@ export default function GameWorld3D() {
 
         // Centralized animation controller: priority one-shots > crouch locomotion > standing locomotion.
         if (playerAnim) {
-          playerAnim.updateActionState({ isMoving, isRunning, isSprinting });
+          playerAnim.updateActionState({ isMoving, isRunning, isSprinting, direction: moveDirection, aiming: isAiming });
         }
 
         // Walk/run SFX loop — start/stop based on movement
