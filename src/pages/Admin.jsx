@@ -462,7 +462,7 @@ export default function Admin() {
         <p className="text-slate-400 mb-8">Manage hero backgrounds, games, and site content</p>
 
         <Tabs defaultValue="backgrounds" className="space-y-6">
-          <TabsList className="bg-slate-900 border border-slate-800">
+          <TabsList className="bg-slate-900 border border-slate-800 flex flex-wrap content-start gap-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="sounds">Sound Library</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
