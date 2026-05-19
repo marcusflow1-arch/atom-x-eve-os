@@ -42,7 +42,7 @@ export default function TerrainStreamer() {
 
       // Eagerly preload the most common assets so the first chunk pop-in is
       // instant. The bigger tree GLBs load lazily as needed.
-      preload(['GRASS', 'ROCKS', 'TREE_2']);
+      preload(['GRASS', 'DIRT', 'ROCKS', 'TREE_2']);
 
       // Main streaming tick — runs every STREAM_TICK_MS.
       intervalRef.current = setInterval(streamTick, STREAM_TICK_MS);

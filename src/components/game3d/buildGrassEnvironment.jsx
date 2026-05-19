@@ -6,29 +6,15 @@
 // Returns the ground Mesh so the caller can add it to `groundMeshes` for
 // raycast snapping. All decorative meshes are added directly to the scene.
 import * as THREE from 'three';
+import { TERRAIN_ASSETS } from './terrain/terrainAssetRegistry';
 
-const makeGrassTexture = () => {
-  const size = 256;
-  const c = document.createElement('canvas');
-  c.width = size; c.height = size;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#4a7c3a';
-  ctx.fillRect(0, 0, size, size);
-  for (let i = 0; i < 4000; i++) {
-    const x = Math.random() * size;
-    const y = Math.random() * size;
-    const v = Math.random();
-    ctx.fillStyle = v > 0.7
-      ? `rgba(120, 170, 90, ${0.25 + Math.random() * 0.35})`
-      : v > 0.4
-        ? `rgba(60, 100, 50, ${0.15 + Math.random() * 0.25})`
-        : `rgba(90, 140, 70, ${0.1 + Math.random() * 0.2})`;
-    ctx.fillRect(x, y, 1.5, 1.5);
-  }
-  const tex = new THREE.CanvasTexture(c);
+const textureLoader = new THREE.TextureLoader();
+
+const loadRepeatingTexture = (url, repeatX, repeatY, colorSpace = THREE.SRGBColorSpace) => {
+  const tex = textureLoader.load(url);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(15, 15);
-  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.repeat.set(repeatX, repeatY);
+  tex.colorSpace = colorSpace;
   return tex;
 };
 
@@ -51,7 +37,7 @@ export function buildGrassEnvironment(scene) {
   const ground = new THREE.Mesh(
     grassGeo,
     new THREE.MeshStandardMaterial({
-      map: makeGrassTexture(),
+      map: loadRepeatingTexture(TERRAIN_ASSETS.GRASS.textures.topSeamless, 14, 14),
       color: 0xffffff,
       roughness: 0.95,
       metalness: 0,
@@ -77,7 +63,13 @@ export function buildGrassEnvironment(scene) {
   pathGeo.computeVertexNormals();
   const path = new THREE.Mesh(
     pathGeo,
-    new THREE.MeshStandardMaterial({ color: 0x7a5a34, roughness: 1, metalness: 0 }),
+    new THREE.MeshStandardMaterial({
+      map: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.baseColor, 1.5, 18),
+      normalMap: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.normal, 1.5, 18, THREE.NoColorSpace),
+      roughnessMap: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.roughness, 1.5, 18, THREE.NoColorSpace),
+      roughness: 1,
+      metalness: 0,
+    }),
   );
   path.rotation.x = -Math.PI / 2;
   path.receiveShadow = true;

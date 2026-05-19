@@ -9,7 +9,8 @@
 //   WATER_SCENE — Low-poly tree + water scene (GLB)
 //   TREE_1      — High detail Elm tree collection (GLB)
 //   TREE_2      — Realistic trees pack (GLB)
-//   GRASS       — Grass FBX with 2 blade textures
+//   GRASS       — Latest uploaded Grass FBX with blade textures
+//   DIRT        — Latest uploaded Rocky Dirt FBX/material textures for the walkway
 
 export const TERRAIN_ASSETS = {
   ROCKS: {
@@ -62,8 +63,29 @@ export const TERRAIN_ASSETS = {
   GRASS: {
     id: 'grass',
     type: 'fbx',
-    url: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/03a674d24_Grass.fbx',
+    url: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/3ba425676_FInal.fbx',
+    textures: {
+      plate1: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/462f6f613_Plate1.png',
+      plate2: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/689121b41_Plate2.png',
+      plate3: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/e17318434_Plate3.png',
+      topSeamless: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/ad6043139_TopSeamless.png',
+    },
     scale: 0.4,
+    yOffset: 0,
+  },
+
+  DIRT: {
+    id: 'dirt',
+    type: 'fbx',
+    url: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/e816b88c0_MaterialSphere01.fbx',
+    textures: {
+      baseColor: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d657e4dd4_RockyDirt02_Base_Color.png',
+      normal: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d95df2662_RockyDirt02_Normal.png',
+      roughness: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/765e54d43_RockyDirt02_Roughness.png',
+      height: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/dadd154f0_RockyDirt02_Height.png',
+      ao: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/f785d80a0_RockyDirt01_Ambient_Occlusion.png',
+    },
+    scale: 1,
     yOffset: 0,
   },
 };
