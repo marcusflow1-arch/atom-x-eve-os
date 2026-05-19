@@ -733,7 +733,7 @@ export default function Store() {
                                                         <div className="flex flex-1 overflow-hidden px-6 gap-8">
                                                             {/* LEFT: Genre list */}
                                                             <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                                                <motion.div
+                                                                <div
                                                                     ref={genreListRef}
                                                                     className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
                                                                     onWheel={handleGenreWheel}
@@ -742,9 +742,6 @@ export default function Store() {
                                                                     onFocus={() => setGenrePanelFocused(true)}
                                                                     onBlur={() => setGenrePanelFocused(false)}
                                                                     tabIndex={0}
-                                                                    initial={false}
-                                                                    animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
-                                                                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                                                                 >
                                                                     {genreData.map((genre, idx) => {
                                                                         const Icon = genre.icon;
@@ -756,7 +753,7 @@ export default function Store() {
                                                                             </motion.button>
                                                                         );
                                                                     })}
-                                                                </motion.div>
+                                                                </div>
                                                             </div>
 
                                                             {/* CENTER: Game Grid */}
