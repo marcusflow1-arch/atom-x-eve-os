@@ -2,15 +2,16 @@
 // Save / load / activate sandbox scenes. The "active" scene is the one
 // loaded into the live game by TerrainArea at runtime.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Save, FolderOpen, Plus, Star, Trash2 } from 'lucide-react';
+import { Save, FolderOpen, Plus, Star, Trash2, Download } from 'lucide-react';
 import { useSandboxStore } from './sandboxStore';
 
 export default function SandboxSceneManager() {
   const qc = useQueryClient();
   const [newName, setNewName] = useState('');
+  const [autoLoaded, setAutoLoaded] = useState(false);
 
   const activeSceneId = useSandboxStore((s) => s.activeSceneId);
   const activeSceneName = useSandboxStore((s) => s.activeSceneName);
@@ -25,6 +26,40 @@ export default function SandboxSceneManager() {
   const { data: scenes = [], isLoading } = useQuery({
     queryKey: ['sandbox-scenes'],
     queryFn: () => base44.entities.SandboxScene.list('-updated_date', 50),
+  });
+
+  // Auto-load the LIVE in-game scene the first time we open the editor,
+  // so admins can immediately see and edit what's currently in the world.
+  useEffect(() => {
+    if (autoLoaded) return;
+    if (isLoading) return;
+    if (activeSceneId) { setAutoLoaded(true); return; }
+    const live = scenes.find((s) => s.is_active);
+    if (live) {
+      loadScene(live);
+      setAutoLoaded(true);
+    } else {
+      setAutoLoaded(true);
+    }
+  }, [autoLoaded, isLoading, scenes, activeSceneId, loadScene]);
+
+  // If no scenes exist at all, offer a one-click bootstrap.
+  const bootstrapLive = useMutation({
+    mutationFn: async () => {
+      const scene = await base44.entities.SandboxScene.create({
+        name: 'Default Game World',
+        placements: [],
+        ground_color: '#4a6a3e',
+        ground_size: 200,
+        is_active: true,
+      });
+      return scene;
+    },
+    onSuccess: (scene) => {
+      qc.invalidateQueries({ queryKey: ['sandbox-scenes'] });
+      loadScene(scene);
+      markSaved(scene.id, scene.name);
+    },
   });
 
   const saveAs = useMutation({
@@ -89,8 +124,21 @@ export default function SandboxSceneManager() {
       </div>
 
       {/* Current scene info */}
-      <div className="text-xs text-slate-400">
-        Editing: <span className="text-slate-200">{activeSceneName}</span>
+      <div className="text-xs text-slate-400 flex items-center justify-between gap-2">
+        <span>Editing: <span className="text-slate-200">{activeSceneName}</span></span>
+        {(() => {
+          const live = scenes.find((s) => s.is_active);
+          if (!live || live.id === activeSceneId) return null;
+          return (
+            <button
+              onClick={() => loadScene(live)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-[10px] uppercase tracking-wider"
+              title="Load the currently active in-game scene"
+            >
+              <Download className="w-3 h-3" /> Load LIVE
+            </button>
+          );
+        })()}
       </div>
 
       {/* Quick save / save as */}
@@ -135,7 +183,16 @@ export default function SandboxSceneManager() {
         {isLoading ? (
           <p className="text-xs text-slate-500">Loading…</p>
         ) : scenes.length === 0 ? (
-          <p className="text-xs text-slate-500">No saved scenes yet.</p>
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500">No saved scenes yet — there's no in-game world defined.</p>
+            <button
+              onClick={() => bootstrapLive.mutate()}
+              disabled={bootstrapLive.isPending}
+              className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs rounded-md disabled:opacity-50"
+            >
+              <Star className="w-3.5 h-3.5" /> Create Default LIVE World
+            </button>
+          </div>
         ) : (
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {scenes.map((s) => {
