@@ -4,7 +4,7 @@
 
 // Single visible boss-style rogue player AI.
 export const ENEMY_PLAYER_SPAWNS = [
-  { id: 'rogue_boss', pos: [12, 0.3, -10], level: 10, color: 0xff2020 },
+  { id: 'rogue_boss', name: 'Arena Boss', pos: [12, 0.3, -10], level: 10, color: 0xff2020 },
 ];
 
 // Random name pool — assigned on first spawn and each respawn for variety.

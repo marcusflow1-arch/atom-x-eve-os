@@ -105,7 +105,7 @@ export default function EnemyPlayerSpawner() {
           const mixer = new THREE.AnimationMixer(fbx);
           const entry = {
             ...def,
-            name: getRandomRogueName(),
+            name: def.name || getRandomRogueName(),
             group: fbx,
             mixer,
             tintMats,

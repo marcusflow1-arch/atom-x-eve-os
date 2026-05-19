@@ -9,6 +9,7 @@ import GameHUD from '../components/game3d/hud/GameHUD';
 import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 import CharacterProgressionMenu from '../components/game3d/CharacterProgressionMenu';
 import BossWaypoint from '../components/game3d/hud/BossWaypoint';
+import RogueBossHPTank from '../components/game3d/hud/RogueBossHPTank';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import GameWorldServerManager from '../components/game3d/GameWorldServerManager';
 import WorldSyncMount from '../components/game3d/network/WorldSyncMount';
@@ -288,6 +289,7 @@ export default function GameView() {
       <GameStateProvider>
       <GameWorld3D />
       <GameHUD />
+      <RogueBossHPTank />
       <BossWaypoint />
       <MultiplayerSystem envUrl="game_world_lowpoly" />
       <GameWorldServerManager />
