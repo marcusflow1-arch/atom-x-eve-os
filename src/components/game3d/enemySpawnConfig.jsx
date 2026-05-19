@@ -2,10 +2,8 @@
 // Every client must spawn enemies at IDENTICAL positions so two players see
 // the same world. Use this module instead of Math.random() in GameWorld3D.
 
-// Single boss-style enemy AI on the plain circular arena.
-export const ENEMY_ZONES = [
-  { id: 'boss_arena', center: [12, 0.3, -10], radius: 0, count: 1 },
-];
+// Generic creature spawns disabled; the arena uses one visible rogue player AI instead.
+export const ENEMY_ZONES = [];
 
 // 10 seconds after death, the enemy respawns at its home position with full HP.
 export const ENEMY_RESPAWN_SECONDS = 10;

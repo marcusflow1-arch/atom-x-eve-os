@@ -74,10 +74,15 @@ export default function EnemyPlayerSpawner() {
             if (n.isMesh) {
               n.castShadow = !n.isSkinnedMesh;
               n.receiveShadow = true;
+              n.visible = true;
+              n.frustumCulled = false;
               if (n.material) {
                 const mats = Array.isArray(n.material) ? n.material : [n.material];
                 const red = mats.map((m) => {
                   const c = m.clone();
+                  c.transparent = false;
+                  c.opacity = 1;
+                  c.side = THREE.DoubleSide;
                   c.emissive = new THREE.Color(def.color);
                   c.emissiveIntensity = 0.4;
                   return c;
