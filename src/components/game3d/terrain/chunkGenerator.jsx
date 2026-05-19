@@ -5,6 +5,7 @@
 // re-entering a previously unloaded chunk visually identical.
 
 import { CHUNK_SIZE, PROPS_PER_CHUNK, SPECIAL_CHUNKS } from './terrainStreamConfig';
+import { isDirtArea } from './terrainPathLayout';
 
 // Tiny seeded RNG — Mulberry32. Deterministic per (cx, cz) pair.
 function makeRng(cx, cz) {
@@ -39,7 +40,7 @@ export function generateChunkLayout(cx, cz) {
         for (let z = -half + 3; z <= half - 3; z += spacing) {
           const wx = baseX + x + (rng() - 0.5) * 1.4;
           const wz = baseZ + z + (rng() - 0.5) * 1.4;
-          if (Math.abs(wx) < 3.2) continue;
+          if (isDirtArea(wx, wz, 1.6)) continue;
           props.push({
             assetKey,
             x: wx,

@@ -7,6 +7,7 @@
 // raycast snapping. All decorative meshes are added directly to the scene.
 import * as THREE from 'three';
 import { TERRAIN_ASSETS } from './terrain/terrainAssetRegistry';
+import { ARENA_SIZE, DIRT_CIRCLE, DIRT_PATH_WIDTH, getSPathCenterX } from './terrain/terrainPathLayout';
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -19,61 +20,43 @@ const loadRepeatingTexture = (url, repeatX, repeatY, colorSpace = THREE.SRGBColo
 };
 
 export function buildGrassEnvironment(scene) {
-  // Ground plane (75×75) for the focused boss-fight arena.
-  // Vertices near origin are flat so spawn area stays usable.
-  const grassGeo = new THREE.PlaneGeometry(75, 75, 40, 40);
-  const posAttr = grassGeo.attributes.position;
-  for (let i = 0; i < posAttr.count; i++) {
-    const x = posAttr.getX(i);
-    const y = posAttr.getY(i);
-    const dist = Math.sqrt(x * x + y * y);
-    const fade = Math.min(1, Math.max(0, (dist - 15) / 40));
-    const z = Math.sin(x * 0.08) * Math.cos(y * 0.08) * 0.6 * fade
-            + Math.sin(x * 0.22 + y * 0.18) * 0.25 * fade;
-    posAttr.setZ(i, z);
-  }
-  grassGeo.computeVertexNormals();
-
   const ground = new THREE.Mesh(
-    grassGeo,
-    new THREE.MeshStandardMaterial({
-      map: loadRepeatingTexture(TERRAIN_ASSETS.GRASS.textures.topSeamless, 14, 14),
-      color: 0xffffff,
-      roughness: 0.95,
-      metalness: 0,
-    }),
+    new THREE.PlaneGeometry(ARENA_SIZE, ARENA_SIZE, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0x25441f, roughness: 1, metalness: 0 }),
   );
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = 0;
+  ground.position.y = -0.035;
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // Simple dirt walkway through the arena, kept as terrain detail rather than a prop.
-  const pathGeo = new THREE.PlaneGeometry(5, 74, 4, 40);
-  const pathPos = pathGeo.attributes.position;
-  for (let i = 0; i < pathPos.count; i++) {
-    const x = pathPos.getX(i);
-    const y = pathPos.getY(i);
-    const dist = Math.sqrt(x * x + y * y);
-    const fade = Math.min(1, Math.max(0, (dist - 15) / 40));
-    const z = Math.sin(x * 0.08) * Math.cos(y * 0.08) * 0.6 * fade
-            + Math.sin(x * 0.22 + y * 0.18) * 0.25 * fade;
-    pathPos.setZ(i, z + 0.025);
+  const dirtMaterial = new THREE.MeshStandardMaterial({
+    map: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.baseColor, 2, 16),
+    normalMap: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.normal, 2, 16, THREE.NoColorSpace),
+    roughnessMap: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.roughness, 2, 16, THREE.NoColorSpace),
+    roughness: 1,
+    metalness: 0,
+  });
+
+  const points = [];
+  for (let z = -35; z <= DIRT_CIRCLE.z; z += 1.5) {
+    points.push(new THREE.Vector3(getSPathCenterX(z), 0.035, z));
   }
-  pathGeo.computeVertexNormals();
-  const path = new THREE.Mesh(
-    pathGeo,
-    new THREE.MeshStandardMaterial({
-      map: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.baseColor, 1.5, 18),
-      normalMap: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.normal, 1.5, 18, THREE.NoColorSpace),
-      roughnessMap: loadRepeatingTexture(TERRAIN_ASSETS.DIRT.textures.roughness, 1.5, 18, THREE.NoColorSpace),
-      roughness: 1,
-      metalness: 0,
-    }),
-  );
-  path.rotation.x = -Math.PI / 2;
+
+  const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.25);
+  const pathGeo = new THREE.TubeGeometry(curve, 96, DIRT_PATH_WIDTH * 0.5, 14, false);
+  const path = new THREE.Mesh(pathGeo, dirtMaterial);
+  path.scale.y = 0.035;
   path.receiveShadow = true;
   scene.add(path);
+
+  const circle = new THREE.Mesh(
+    new THREE.CircleGeometry(DIRT_CIRCLE.radius, 80),
+    dirtMaterial.clone(),
+  );
+  circle.rotation.x = -Math.PI / 2;
+  circle.position.set(DIRT_CIRCLE.x, 0.045, DIRT_CIRCLE.z);
+  circle.receiveShadow = true;
+  scene.add(circle);
 
   return ground;
 }
