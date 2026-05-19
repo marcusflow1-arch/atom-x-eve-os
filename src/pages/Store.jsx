@@ -527,41 +527,81 @@ export default function Store() {
                             </div>
 
                             {/* Gaming Studios Dropdown */}
-                             <div className="relative">
-                               <button
-                                 onClick={() => setStudioDropdownOpen(!studioDropdownOpen)}
-                                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
-                               >
-                                 <span>Studios</span>
-                                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${studioDropdownOpen ? 'rotate-180' : ''}`} />
-                               </button>
+                              <div className="relative">
+                                <button
+                                  onClick={() => setStudioDropdownOpen(!studioDropdownOpen)}
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+                                >
+                                  <span>Studios</span>
+                                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${studioDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
 
-                               {/* Dropdown Menu */}
-                               <AnimatePresence>
-                                 {studioDropdownOpen && (
-                                   <motion.div
-                                     initial={{ opacity: 0, y: -8 }}
-                                     animate={{ opacity: 1, y: 0 }}
-                                     exit={{ opacity: 0, y: -8 }}
-                                     transition={{ duration: 0.15 }}
-                                     className="absolute top-full left-0 mt-1 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-lg overflow-hidden z-50"
-                                   >
-                                     {MOCK_STUDIOS && MOCK_STUDIOS.length > 0 ? (
-                                       MOCK_STUDIOS.map((studio) => (
-                                         <button
-                                           key={studio.id}
-                                           onClick={() => setStudioDropdownOpen(false)}
-                                           className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
-                                         >
-                                           <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex-shrink-0" />
-                                           <span>{studio.name}</span>
-                                         </button>
-                                       ))
-                                     ) : null}
-                                   </motion.div>
-                                 )}
-                               </AnimatePresence>
-                             </div>
+                                {/* Dropdown Menu */}
+                                <AnimatePresence>
+                                  {studioDropdownOpen && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: -8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.15 }}
+                                      className="absolute top-full left-0 mt-1 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-lg overflow-hidden z-50"
+                                    >
+                                      {MOCK_STUDIOS && MOCK_STUDIOS.length > 0 ? (
+                                        MOCK_STUDIOS.map((studio) => (
+                                          <button
+                                            key={studio.id}
+                                            onClick={() => setStudioDropdownOpen(false)}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                                          >
+                                            <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex-shrink-0" />
+                                            <span>{studio.name}</span>
+                                          </button>
+                                        ))
+                                      ) : null}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+
+                              {/* Genre Dropdown */}
+                              <div className="relative">
+                                <button
+                                  onClick={() => setStoreFilters(prev => ({ ...prev, _genreDropdownOpen: !prev._genreDropdownOpen }))}
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+                                >
+                                  <span>{storeFilters.genre ? storeFilters.genre : 'Genres'}</span>
+                                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${storeFilters._genreDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {/* Genre Dropdown Menu */}
+                                <AnimatePresence>
+                                  {storeFilters._genreDropdownOpen && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: -8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.15 }}
+                                      className="absolute top-full left-0 mt-1 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-lg overflow-hidden z-50"
+                                    >
+                                      <button
+                                        onClick={() => setStoreFilters(prev => ({ ...prev, genre: null, _genreDropdownOpen: false }))}
+                                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors border-b border-white/5 ${!storeFilters.genre ? 'bg-white/5 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                      >
+                                        <span>All Genres</span>
+                                      </button>
+                                      {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle', 'Romance', 'Sci-Fi'].map((genre) => (
+                                        <button
+                                          key={genre}
+                                          onClick={() => setStoreFilters(prev => ({ ...prev, genre: storeFilters.genre === genre ? null : genre, _genreDropdownOpen: false }))}
+                                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors border-b border-white/5 last:border-b-0 ${storeFilters.genre === genre ? 'bg-cyan-500/20 text-cyan-300' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                          <span>{genre}</span>
+                                        </button>
+                                      ))}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
                           </div>
                         </div>}
 
