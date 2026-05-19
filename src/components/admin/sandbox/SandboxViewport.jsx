@@ -12,7 +12,7 @@
 // this is plenty fast. Heavy duplication is reserved for the runtime
 // (TerrainArea) which still uses InstancedMesh.
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
@@ -22,6 +22,7 @@ import { getAssetMeta } from './sandboxAssetCatalog';
 
 export default function SandboxViewport() {
   const mountRef = useRef(null);
+  const [glError, setGlError] = useState(null);
   const stateRef = useRef({
     placementNodes: new Map(), // id -> THREE.Object3D
   });
@@ -43,9 +44,23 @@ export default function SandboxViewport() {
     camera.position.set(20, 20, 20);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
+    // Probe WebGL availability first to fail gracefully instead of crashing React.
+    let renderer;
+    try {
+      const probe = document.createElement('canvas');
+      const gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl');
+      if (!gl) {
+        setGlError('WebGL is not available in this browser/tab. Close other 3D tabs or enable hardware acceleration.');
+        return;
+      }
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      mount.appendChild(renderer.domElement);
+    } catch (err) {
+      console.error('SandboxViewport: failed to create WebGL context', err);
+      setGlError('Could not create a 3D viewport. The browser may have too many active WebGL contexts open — try closing other game/3D tabs and reload.');
+      return;
+    }
 
     // Lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -300,7 +315,22 @@ export default function SandboxViewport() {
   return (
     <div
       ref={mountRef}
-      className="w-full h-full min-h-[500px] bg-slate-950 rounded-xl border border-slate-800 overflow-hidden"
-    />
+      className="w-full h-full min-h-[500px] bg-slate-950 rounded-xl border border-slate-800 overflow-hidden relative"
+    >
+      {glError && (
+        <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+          <div className="max-w-md space-y-3">
+            <div className="text-amber-400 text-sm font-semibold uppercase tracking-wider">3D Viewport Unavailable</div>
+            <p className="text-slate-300 text-sm leading-relaxed">{glError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-sm transition-colors"
+            >
+              Reload page
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
