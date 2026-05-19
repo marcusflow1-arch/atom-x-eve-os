@@ -227,8 +227,25 @@ export default function GameWorld3D() {
     scene.fog = new THREE.Fog(0xa8d0e8, 80, 240);
     scene.background = new THREE.Color(0xa8d0e8);
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Renderer — fail soft if the browser can't allocate a WebGL context
+    // (too many active canvases or low-end hardware). Show a placeholder
+    // instead of crashing the whole game view.
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: 'low-power',
+        failIfMajorPerformanceCaveat: false,
+      });
+    } catch (e) {
+      console.warn('GameWorld3D: WebGL unavailable — 3D world disabled.', e);
+      setLoading(false);
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;background:#0f1419;text-align:center;padding:24px;';
+      msg.innerHTML = '<div><div style="font-size:18px;font-weight:600;margin-bottom:8px">3D world unavailable</div><div style="opacity:0.6;font-size:14px">Your browser couldn\'t allocate a WebGL context. Try closing other tabs and reloading.</div></div>';
+      container.appendChild(msg);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
