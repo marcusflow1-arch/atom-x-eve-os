@@ -134,7 +134,7 @@ export default function TerrainStreamer() {
 
       const normalizeRockToPlayer = (obj, scaleMult) => {
         const playerHeight = window.__gw3dPlayerHeight || 1.7;
-        const targetRockHeight = playerHeight * 0.04;
+        const targetRockHeight = playerHeight * 0.16;
         const box = new THREE.Box3().setFromObject(obj);
         const size = box.getSize(new THREE.Vector3());
         if (size.y > 0) obj.scale.multiplyScalar(targetRockHeight / size.y);
@@ -143,7 +143,7 @@ export default function TerrainStreamer() {
       try {
         // Place all procedural props in parallel.
         await Promise.all(layout.props.map(async (p) => {
-          const obj = await instantiate(p.assetKey);
+          const obj = await instantiate(p.assetKey, { variantIndex: p.variantIndex, pieceCount: p.pieceCount });
           obj.position.set(p.x, sampleY(p.x, p.z), p.z);
           obj.rotation.y = p.rotY;
           if (p.assetKey === 'ROCKS') {

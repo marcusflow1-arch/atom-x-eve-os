@@ -40,6 +40,8 @@ export function generateChunkLayout(cx, cz) {
         z: baseZ + (rng() * 2 - 1) * half * 0.9,
         rotY: rng() * Math.PI * 2,
         scaleMult: 0.85 + rng() * 0.4,
+        variantIndex: assetKey === 'ROCKS' ? Math.floor(rng() * 12) : 0,
+        pieceCount: assetKey === 'ROCKS' ? 1 + Math.floor(rng() * 2) : 1,
       });
     }
   }

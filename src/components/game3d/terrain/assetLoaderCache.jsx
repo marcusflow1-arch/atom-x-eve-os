@@ -51,13 +51,34 @@ function loadOnce(assetKey) {
   return promise;
 }
 
+function cloneRockPieces(root, variantIndex = 0, pieceCount = 1) {
+  const meshes = [];
+  root.traverse((n) => {
+    if (n.isMesh) meshes.push(n);
+  });
+
+  if (!meshes.length) return root.clone(true);
+
+  const group = new THREE.Group();
+  const count = Math.max(1, Math.min(pieceCount, 2, meshes.length));
+  for (let i = 0; i < count; i++) {
+    const mesh = meshes[(variantIndex + i * 3) % meshes.length].clone(true);
+    mesh.position.set((i - (count - 1) / 2) * 0.35, 0, i * 0.12);
+    mesh.rotation.y += i * 0.8;
+    group.add(mesh);
+  }
+  return group;
+}
+
 /**
  * Return a fresh clone of the asset ready to be added to the scene.
  * Geometry + materials are shared with the cache (cheap clone).
  */
-export async function instantiate(assetKey) {
+export async function instantiate(assetKey, options = {}) {
   const root = await loadOnce(assetKey);
-  const clone = root.clone(true);
+  const clone = assetKey === 'ROCKS'
+    ? cloneRockPieces(root, options.variantIndex || 0, options.pieceCount || 1)
+    : root.clone(true);
   const def = TERRAIN_ASSETS[assetKey];
   clone.scale.setScalar(def.scale || 1);
   return clone;
