@@ -40,6 +40,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const [activeCharLabel, setActiveCharLabel] = useState(localStorage.getItem('luna_active_character') || 'ybot'); // For UI display
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const switchingRef = useRef(false);     // Prevent double-switch
+  const [glError, setGlError] = useState(null); // Soft-fail when WebGL context can't be created
   
   const [playerStats, setPlayerStats] = useState({ level: 1, xp: 0, hp: 100, maxHp: 100, attack: 25 });
   const playerStatsRef = useRef({ level: 1, xp: 0, hp: 100, maxHp: 100, attack: 25 });
@@ -400,13 +401,26 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     camera.position.set(0, 3, -5);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
-    containerRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+    let renderer;
+    try {
+      const probe = document.createElement('canvas');
+      const gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl');
+      if (!gl) {
+        setGlError('WebGL is not available. Close other 3D tabs or enable hardware acceleration, then reload.');
+        return;
+      }
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      containerRef.current.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
+    } catch (err) {
+      console.error('TransparentModel3DViewer: failed to create WebGL context', err);
+      setGlError('Could not create the 3D viewer — too many WebGL contexts are active. Close other tabs and reload.');
+      return;
+    }
 
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
     hemiLight.position.set(0, 50, 0);
@@ -1908,6 +1922,23 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (c1Mixer) c1Mixer.removeEventListener('finished', handleIdleFinish);
     };
   }, [equippedWeaponUrl, isModelLoaded]);
+
+  if (glError) {
+    return (
+      <div ref={containerRef} className="w-full h-full relative flex items-center justify-center bg-slate-950/80 rounded-xl border border-slate-800 p-6 text-center">
+        <div className="max-w-md space-y-3">
+          <div className="text-amber-400 text-sm font-semibold uppercase tracking-wider">3D Viewer Unavailable</div>
+          <p className="text-slate-300 text-sm leading-relaxed">{glError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-sm transition-colors"
+          >
+            Reload page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="w-full h-full relative" tabIndex="0" onContextMenu={(e) => e.preventDefault()}>
