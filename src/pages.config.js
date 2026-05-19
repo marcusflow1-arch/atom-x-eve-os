@@ -86,6 +86,7 @@ import Launcher from './pages/Launcher';
 import Leaderboard from './pages/Leaderboard';
 import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
+import MapBuilder from './pages/MapBuilder';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
 import OnboardingHome from './pages/OnboardingHome';
@@ -148,6 +149,7 @@ export const PAGES = {
     "Leaderboard": Leaderboard,
     "Library": Library,
     "LunaTemplate": LunaTemplate,
+    "MapBuilder": MapBuilder,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
     "OnboardingHome": OnboardingHome,
