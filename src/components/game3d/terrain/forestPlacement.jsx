@@ -65,9 +65,9 @@ export function generateForestPlacements(seed = 20260519) {
       rotY: r() * Math.PI * 2,
     }));
 
-  // ─── Trees — Poisson-disc with biome-aware min distance ───────────
+  // ─── Trees — disabled; use hand-placed custom trees instead ─────────
   const trees = [];
-  const treeAttempts = 2500;
+  const treeAttempts = 0;
   for (let i = 0; i < treeAttempts; i++) {
     const x = (r() * 2 - 1) * halfX;
     const z = (r() * 2 - 1) * halfZ;
