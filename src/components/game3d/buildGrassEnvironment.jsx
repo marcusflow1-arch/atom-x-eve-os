@@ -1,7 +1,7 @@
 // Builds the green-grass 3D environment for GameWorld3D:
 //   • Textured grass ground plane with subtle rolling hills (vertex noise)
 //   • Procedural grass texture (no external assets — generated via canvas)
-//   • Decorative grass tufts + bushes scattered around the spawn area
+//   • Decorative grass tufts scattered around the spawn area
 //
 // Returns the ground Mesh so the caller can add it to `groundMeshes` for
 // raycast snapping. All decorative meshes are added directly to the scene.
@@ -86,27 +86,6 @@ export function buildGrassEnvironment(scene) {
   tufts.instanceMatrix.needsUpdate = true;
   tufts.receiveShadow = true;
   scene.add(tufts);
-
-  // Decorative bushes — rounded green spheres dotted further out.
-  const bushGeo = new THREE.SphereGeometry(0.8, 8, 6);
-  const bushMat = new THREE.MeshStandardMaterial({ color: 0x4f7a3a, roughness: 1 });
-  const bushCount = 28;
-  const bushes = new THREE.InstancedMesh(bushGeo, bushMat, bushCount);
-  for (let i = 0; i < bushCount; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = 14 + Math.random() * 70;
-    tmpPos.set(Math.cos(angle) * radius, 0.5, Math.sin(angle) * radius);
-    tmpEuler.set(0, Math.random() * Math.PI * 2, 0);
-    tmpQuat.setFromEuler(tmpEuler);
-    const s = 0.8 + Math.random() * 0.7;
-    tmpScale.set(s * 1.2, s, s * 1.2);
-    tmpMat.compose(tmpPos, tmpQuat, tmpScale);
-    bushes.setMatrixAt(i, tmpMat);
-  }
-  bushes.instanceMatrix.needsUpdate = true;
-  bushes.castShadow = true;
-  bushes.receiveShadow = true;
-  scene.add(bushes);
 
   return ground;
 }

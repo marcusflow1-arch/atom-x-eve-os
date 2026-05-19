@@ -106,9 +106,11 @@ export default function TerrainStreamer() {
 
       const layout = generateChunkLayout(cx, cz);
       const group = new THREE.Group();
+      const rockColliders = [];
       group.name = `chunk_${key}`;
       // Tag so we can identify these objects in dev tools / cleanup loops.
       group.userData.__terrainChunk = key;
+      group.userData.__rockColliders = rockColliders;
 
       // Sample ground Y at each prop's footprint so trees stand on the
       // existing low-poly terrain. Falls back to y=0 if no terrain mesh hit.
@@ -137,6 +139,9 @@ export default function TerrainStreamer() {
           obj.position.set(p.x, sampleY(p.x, p.z), p.z);
           obj.rotation.y = p.rotY;
           obj.scale.multiplyScalar(p.scaleMult);
+          if (p.assetKey === 'ROCKS') {
+            rockColliders.push({ x: p.x, z: p.z, radius: 0.45 * p.scaleMult });
+          }
           group.add(obj);
         }));
 
@@ -161,6 +166,7 @@ export default function TerrainStreamer() {
 
       sceneRef.current?.add(group);
       loadedChunks.current.set(key, group);
+      window.__gw3dRockColliders = Array.from(loadedChunks.current.values()).flatMap((g) => g.userData.__rockColliders || []);
       loadingKeys.current.delete(key);
     };
 
@@ -168,6 +174,7 @@ export default function TerrainStreamer() {
       sceneRef.current?.remove(group);
       disposeGroup(group);
       loadedChunks.current.delete(key);
+      window.__gw3dRockColliders = Array.from(loadedChunks.current.values()).flatMap((g) => g.userData.__rockColliders || []);
     };
 
     const disposeGroup = (group) => {
@@ -194,6 +201,7 @@ export default function TerrainStreamer() {
       });
       loadedChunks.current.clear();
       loadingKeys.current.clear();
+      window.__gw3dRockColliders = [];
     };
   }, []);
 

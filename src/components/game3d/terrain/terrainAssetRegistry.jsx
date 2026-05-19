@@ -22,7 +22,8 @@ export const TERRAIN_ASSETS = {
       plainBase:   'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/817c7c7bc_M_Plain_Rock_BaseColour.png',
       snowyBase:   'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/3f20e8246_M_Snowy_Rock_BaseColour.png',
     },
-    scale: 1.0,
+    // Normal ground-rock size: roughly a small fraction of player height.
+    scale: 0.035,
     yOffset: 0,
   },
 

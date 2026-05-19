@@ -1088,6 +1088,8 @@ export default function GameWorld3D() {
           const gy = sampleGroundY(model.position.x, model.position.z);
           if (gy !== null) model.position.y = gy;
         }
+        // Rock collision — small ground rocks block player movement.
+        { const rocks = window.__gw3dRockColliders || []; for (let i = 0; i < rocks.length; i++) { const r = rocks[i]; const minD = r.radius + 0.35; const dx = model.position.x - r.x, dz = model.position.z - r.z, d = Math.sqrt(dx * dx + dz * dz); if (d > 0 && d < minD) { const p = (minD - d) / d; model.position.x += dx * p; model.position.z += dz * p; } } }
         // Rogue-AI body collision — push player out so they can't walk through hostile player-AIs
         { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } }
 
