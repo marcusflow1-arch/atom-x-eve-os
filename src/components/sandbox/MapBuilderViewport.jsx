@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { instantiateAsset } from './mapBuilderLoader';
+import { buildDefaultCabin } from './buildDefaultCabin';
 import { Loader2 } from 'lucide-react';
 
 const WALK_SPEED = 6;
@@ -82,6 +83,11 @@ export default function MapBuilderViewport({ onSelectionChange }) {
     grid.material.transparent = true;
     grid.material.opacity = 0.35;
     scene.add(grid);
+
+    // Default cabin — pre-placed so the map isn't completely empty
+    const cabin = buildDefaultCabin();
+    cabin.position.set(0, 0, -10);
+    scene.add(cabin);
 
     // Camera — first-person eye height
     const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 500);

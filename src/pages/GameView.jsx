@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Hammer } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import CharacterLoginScreen from '../components/game3d/CharacterLoginScreen';
@@ -352,6 +352,16 @@ export default function GameView() {
 
       {/* Guild Wars 2-style clan overlay — opened by G key */}
       <ClanOverlay open={clanOverlayOpen} onClose={() => setClanOverlayOpen(false)} userId={user?.id} />
+
+      {/* Map Builder button — opens the blank-canvas sandbox in a new tab */}
+      <button
+        onClick={() => navigate(createPageUrl('MapBuilder'))}
+        className="absolute top-4 left-4 px-3 py-2 rounded-lg bg-slate-900/85 backdrop-blur-md border border-cyan-500/40 text-cyan-200 hover:text-white hover:bg-cyan-500/20 text-xs font-medium flex items-center gap-1.5 z-30 transition-colors shadow-lg"
+        title="Open Map Builder sandbox"
+      >
+        <Hammer className="w-3.5 h-3.5" />
+        Map Builder
+      </button>
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu
