@@ -22,7 +22,7 @@ const loadRepeatingTexture = (url, repeatX, repeatY, colorSpace = THREE.SRGBColo
 
 export function buildGrassEnvironment(scene) {
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(75, 75, 1, 1),
+    new THREE.CircleGeometry(37.5, 96),
     new THREE.MeshStandardMaterial({ color: 0x555555 }),
   );
   ground.rotation.x = -Math.PI / 2;
