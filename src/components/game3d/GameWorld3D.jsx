@@ -227,48 +227,45 @@ export default function GameWorld3D() {
     scene.fog = new THREE.Fog(0xa8d0e8, 80, 240);
     scene.background = new THREE.Color(0xa8d0e8);
 
-    // Renderer — GameWorld3D is the primary 3D view. Try high-quality first;
-    // if that fails (e.g. too many small preview contexts elsewhere holding
-    // WebGL handles), fall back to a minimal configuration before giving up.
+    // Renderer — keep it simple and proven. Create a canvas explicitly so we
+    // can attach the WebGL context-loss listener BEFORE THREE allocates the
+    // context, and we can detect a failed context immediately.
+    const canvas = document.createElement('canvas');
+    canvas.style.display = 'block';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    container.appendChild(canvas);
+
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        powerPreference: 'high-performance',
-        failIfMajorPerformanceCaveat: false,
-      });
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     } catch (e) {
-      console.warn('GameWorld3D: high-quality WebGL failed, retrying minimal.', e);
-      try {
-        renderer = new THREE.WebGLRenderer({
-          antialias: false,
-          powerPreference: 'low-power',
-          failIfMajorPerformanceCaveat: false,
-        });
-      } catch (e2) {
-        console.error('GameWorld3D: WebGL unavailable — 3D world disabled.', e2);
-        setLoading(false);
-        const msg = document.createElement('div');
-        msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;background:#0f1419;text-align:center;padding:24px;';
-        msg.innerHTML = '<div><div style="font-size:18px;font-weight:600;margin-bottom:8px">3D world unavailable</div><div style="opacity:0.6;font-size:14px">Your browser couldn\'t allocate a WebGL context. Close other tabs (especially other 3D previews) and reload.</div></div>';
-        container.appendChild(msg);
-        return;
-      }
+      console.error('GameWorld3D: WebGL unavailable —', e);
+      setLoading(false);
+      canvas.remove();
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;background:#0f1419;text-align:center;padding:24px;';
+      msg.innerHTML = '<div><div style="font-size:18px;font-weight:600;margin-bottom:8px">3D world unavailable</div><div style="opacity:0.6;font-size:14px">Your browser couldn\'t allocate a WebGL context. Close other tabs and reload.</div></div>';
+      container.appendChild(msg);
+      return;
     }
+
+    // Width/height may be 0 on first paint inside hidden tabs — guard against that.
+    const w0 = container.clientWidth || window.innerWidth;
+    const h0 = container.clientHeight || window.innerHeight;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(w0, h0, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
     renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
     // Guard against WebGL context loss + post-dispose render calls — without
     // this, three.js shadow-map pass crashes inside getUniforms() with
     // "Cannot read properties of null (reading 'trim')".
     const rendererGuard = attachContextGuard(renderer);
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
+    const camera = new THREE.PerspectiveCamera(55, (w0 || 1) / (h0 || 1), 0.1, 200);
     camera.position.set(0, 3, -5);
 
     remoteManagerRef.current = createRemotePlayersManager(scene);
