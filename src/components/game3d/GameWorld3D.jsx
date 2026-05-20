@@ -168,6 +168,7 @@ export default function GameWorld3D() {
   const interactPressed = useRef(false);
   const attackPressed = useRef(false);
   const oneShotPlaying = useRef(false);
+  const lockOnTargetRef = useRef(null);
   const playerAttackCooldown = useRef(0);
   const playerInvulTimer = useRef(0);
   const nearbyQuestNPCRef = useRef(null);
@@ -936,13 +937,13 @@ export default function GameWorld3D() {
       if (k === 'c') crouchTogglePressed.current = false;
     };
     const onMouseDown = (e) => {
-      // Left click = Fire Arrow, middle click = Roll, right click = Block
+      // Left click = Fire Arrow, middle click = Lock-On, right click = Block
       if (e.button === 0) {
         if (playerAnim?.requestAttack('attack', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
       } else if (e.button === 1) {
         e.preventDefault();
-        const forward = new THREE.Vector3(-Math.sin(orbit.current.yaw), 0, -Math.cos(orbit.current.yaw));
-        if (playerAnim?.requestRoll?.(forward)) playActionSound('player_jump');
+        const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
+        lockOnTargetRef.current = target && lockOnTargetRef.current?.id !== target.id ? target : null;
       } else {
         playerAnim?.setBlocking(true);
       }
@@ -1188,18 +1189,39 @@ export default function GameWorld3D() {
           },
         }));
 
-        // Dynamic camera follow — smoothly stays behind the direction the player is facing.
+        // Dynamic camera follow — lock-on tracks the selected target from the player's perspective.
         const o = orbit.current;
-        if (!drag.current.active) {
-          const facingYaw = model.rotation.y - Math.PI;
-          const yawDelta = Math.atan2(Math.sin(facingYaw - o.yaw), Math.cos(facingYaw - o.yaw));
-          o.yaw += yawDelta * 0.08;
+        const lockedTarget = lockOnTargetRef.current;
+        if (lockedTarget?.group && (!lockedTarget.aliveRef || lockedTarget.aliveRef())) {
+          const targetPos = lockedTarget.group.position;
+          const toTarget = new THREE.Vector3(targetPos.x - model.position.x, 0, targetPos.z - model.position.z);
+          if (toTarget.lengthSq() > 0.001) {
+            toTarget.normalize();
+            const lockYaw = Math.atan2(-toTarget.x, -toTarget.z);
+            const yawDelta = Math.atan2(Math.sin(lockYaw - o.yaw), Math.cos(lockYaw - o.yaw));
+            o.yaw += yawDelta * Math.min(1, 3.0 * delta);
+            model.quaternion.slerp(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(toTarget.x, toTarget.z)), ROT_SMOOTH);
+          }
+          const idealCameraPosition = new THREE.Vector3(
+            model.position.x - toTarget.x * o.distance,
+            model.position.y + 3.0,
+            model.position.z - toTarget.z * o.distance
+          );
+          camera.position.lerp(idealCameraPosition, Math.min(1, 3.0 * delta));
+          camera.lookAt(targetPos.x, targetPos.y + 1.5, targetPos.z);
+        } else {
+          if (lockedTarget) lockOnTargetRef.current = null;
+          if (!drag.current.active) {
+            const facingYaw = model.rotation.y - Math.PI;
+            const yawDelta = Math.atan2(Math.sin(facingYaw - o.yaw), Math.cos(facingYaw - o.yaw));
+            o.yaw += yawDelta * 0.08;
+          }
+          const camX = model.position.x + o.distance * Math.sin(o.yaw) * Math.cos(o.pitch);
+          const camY = model.position.y + 1 + o.distance * Math.sin(o.pitch);
+          const camZ = model.position.z + o.distance * Math.cos(o.yaw) * Math.cos(o.pitch);
+          camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
+          camera.lookAt(model.position.x, model.position.y + 1, model.position.z);
         }
-        const camX = model.position.x + o.distance * Math.sin(o.yaw) * Math.cos(o.pitch);
-        const camY = model.position.y + 1 + o.distance * Math.sin(o.pitch);
-        const camZ = model.position.z + o.distance * Math.cos(o.yaw) * Math.cos(o.pitch);
-        camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
-        camera.lookAt(model.position.x, model.position.y + 1, model.position.z);
 
         // ─── NPC proximity & interaction ───
         let closestNPC = null;

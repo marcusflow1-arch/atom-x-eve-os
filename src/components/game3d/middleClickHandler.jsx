@@ -4,9 +4,9 @@ import { setTarget, clearTarget } from './abilityStore';
 const raycaster = new THREE.Raycaster();
 
 /**
- * Handle a middle-click in the 3D game world. Priority:
- *   1. Hits on a remote player → open the player interaction menu.
- *   2. Hits on an enemy → set as active combat target.
+ * Handle a middle-click lock-on in the 3D game world. Priority:
+ *   1. Hits on a remote player → lock camera/combat target.
+ *   2. Hits on an enemy → lock camera/combat target.
  *   3. Empty space → clear current target.
  */
 export function handleMiddleClick({ event, renderer, camera, enemies, remoteManager, setPlayerMenu, rogues = [] }) {
@@ -37,7 +37,14 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
           window.dispatchEvent(new CustomEvent('duelAttack', {
             detail: { targetPlayerId: pid, distance },
           }));
-          return;
+          const remote = remoteManager?.getRemotes?.()?.get(pid);
+          return remote?.group ? {
+            id: pid,
+            group: remote.group,
+            name: pname,
+            kind: 'player',
+            aliveRef: () => remoteManager?.getRemotes?.()?.has(pid),
+          } : null;
         }
         // Also set the player as the active ability target so dual-mode skills
         // (e.g. Lightning Strike, Frost Tornado) know the target is a player
@@ -47,8 +54,14 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
           name: pname,
           kind: 'player',
         });
-        setPlayerMenu({ x: event.clientX, y: event.clientY, player: { id: pid, name: pname } });
-        return;
+        const remote = remoteManager?.getRemotes?.()?.get(pid);
+        return remote?.group ? {
+          id: pid,
+          group: remote.group,
+          name: pname,
+          kind: 'player',
+          aliveRef: () => remoteManager?.getRemotes?.()?.has(pid),
+        } : null;
       }
     }
   }
@@ -87,10 +100,18 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
         tier: foundEnemy.tier || (foundEnemy.color !== undefined ? 'rogue' : 'normal'),
         bossName: foundEnemy.bossName || null,
       });
-      return;
+      return {
+        id: foundEnemy.id,
+        group: foundEnemy.group,
+        name: foundEnemy.name || foundEnemy.bossName || 'Enemy',
+        kind: foundEnemy.color !== undefined ? 'rogue' : 'enemy',
+        aliveRef: () => !!foundEnemy.alive && !foundEnemy.dying && foundEnemy.group?.visible !== false,
+      };
     }
   }
 
   // 3. Empty space → clear
   clearTarget();
+  setPlayerMenu?.(null);
+  return null;
 }
