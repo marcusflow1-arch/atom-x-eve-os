@@ -39,6 +39,7 @@ import { base44 } from '@/api/base44Client';
 // ─── Timing Constants ────────────────────────────────────────────────
 const WORLD_FADE_MS         = 2000; // world theme fades out over 2 s, then pauses
 const COMBAT_FADE_IN_MS     = 400;  // combat theme fades in after world stops
+const COMBAT_LOOP_FADE_MS    = 1200; // combat theme fades out/in between loops
 const COMBAT_FADE_OUT_MS    = 1000; // combat theme fades out after combat ends
 const WORLD_RESUME_DELAY_MS = 3000; // 3 s gap before world theme returns
 const WORLD_FADE_IN_MS      = 1200; // world theme fades back up
@@ -66,6 +67,7 @@ let lastCombatExitTime = 0;        // timestamp of last exit (ms epoch)
 // Transition timers
 let resumeTimer        = null;     // setTimeout id for the world-resume delay
 let combatStartTimer   = null;     // setTimeout id for delayed combat start
+let combatLoopRestartTimer = null; // setTimeout id for fade-loop restart
 
 let combatUrlLoaded    = false;
 let combatUrlPromise   = null;
@@ -79,12 +81,23 @@ const fadeTimers = new WeakMap();
 function clearTransitionTimers() {
   if (resumeTimer)      { clearTimeout(resumeTimer);      resumeTimer = null; }
   if (combatStartTimer) { clearTimeout(combatStartTimer); combatStartTimer = null; }
+  if (combatLoopRestartTimer) { clearTimeout(combatLoopRestartTimer); combatLoopRestartTimer = null; }
 }
 
 function cancelFade(audio) {
   if (!audio) return;
   const t = fadeTimers.get(audio);
   if (t) { clearInterval(t); fadeTimers.delete(audio); }
+}
+
+function restartCombatLoopWithFade(audio) {
+  if (!audio || currentState !== STATE.COMBAT) return;
+  fadeTo(audio, 0, COMBAT_LOOP_FADE_MS, () => {
+    if (currentState !== STATE.COMBAT) return;
+    try { audio.currentTime = 0; } catch {}
+    audio.play().catch(() => {});
+    fadeTo(audio, COMBAT_VOLUME, COMBAT_LOOP_FADE_MS);
+  });
 }
 
 // Linear volume fade. Each audio element fades independently.
@@ -118,14 +131,15 @@ async function ensureCombatLoaded() {
   if (combatUrlLoaded && combatAudio) return combatAudio;
   if (!combatUrlPromise) {
     combatUrlPromise = (async () => {
-      // DB stores the title as "combat " (trailing space) — filter permissively.
       const all   = await base44.entities.HeroBackground.list();
-      const match = all.find((b) => (b.title || '').trim().toLowerCase() === 'combat');
+      const match = all.find((b) => (b.title || '').trim().toLowerCase() === 'combat 2')
+        || all.find((b) => (b.title || '').trim().toLowerCase() === 'combat');
       const url   = match?.audio_url || match?.video_url || null;
       if (!url) return null;
       const a   = new Audio(url);
-      a.loop    = true;
+      a.loop    = false;
       a.volume  = 0;
+      a.addEventListener('ended', () => restartCombatLoopWithFade(a));
       combatAudio     = a;
       combatUrlLoaded = true;
       return a;
@@ -253,4 +267,5 @@ export function teardownCombatMusic() {
   combatUrlPromise   = null;
   combatThemeTime    = 0;
   lastCombatExitTime = 0;
+  combatLoopRestartTimer = null;
 }
