@@ -122,7 +122,10 @@ export function castSkill(skill_id, ctx = {}) {
   // Attack branch — dispatch by cast_type.
   switch (skill.cast_type) {
     case CAST_TYPE.SINGLE_HIT:
-      dispatchStrike(skill, 0, level);
+      window.dispatchEvent(new CustomEvent('playerSkillCastStart', {
+        detail: { skillId: skill.skill_id, castType: skill.cast_type, duration: 0.45 },
+      }));
+      setTimeout(() => dispatchStrike(skill, 0, level), 120);
       break;
     case CAST_TYPE.MULTI_HIT_SEQUENTIAL:
       scheduleSequential(skill, level);

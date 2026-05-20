@@ -17,12 +17,13 @@
 import * as THREE from 'three';
 import { createWarningCircle, createMeteorImpact, createShadowChargeTrail, createConeTelegraph, createChaosOrb } from './bossAbilityVfx';
 import { createTrackingAOE, createDelayedTask, createShockwave } from './adaptiveBossVfx';
+import { createRaidAerialStrike } from './raidAerialStrikeVfx';
 
 export function attachBossEventBus(ctx) {
   const {
     scene, getPlayerHUD, setHP, spawnDamageFloat,
     activeEffectsRef, spawnBossMinion, getBossById,
-    sampleGroundY, modelRef,
+    sampleGroundY, modelRef, gltfLoader, applyLocalBossDamage,
   } = ctx;
   const ARENA_RADIUS = 36.5;
   const clampToArena = (position) => {
@@ -158,6 +159,28 @@ export function attachBossEventBus(ctx) {
           applyDamageToLocalPlayer(payload.damage);
         }
       }
+      return;
+    }
+
+    if (type === 'raid_aerial_strike') {
+      const fx = createRaidAerialStrike({
+        scene,
+        loader: gltfLoader,
+        getTargetPosition: () => getModel()?.position,
+        getGroundY: (x, z) => sampleGroundY?.(x, z) ?? 0.3,
+        getLocalPlayerPosition: () => {
+          const m = getModel();
+          return m ? m.position : null;
+        },
+        applyLocalDamage: (amount) => {
+          if (applyLocalBossDamage) applyLocalBossDamage(amount);
+          else applyDamageToLocalPlayer(amount);
+        },
+        radius: payload.radius,
+        damage: payload.tickDamage,
+        duration: payload.duration,
+      });
+      activeEffectsRef.current.push(fx);
       return;
     }
 

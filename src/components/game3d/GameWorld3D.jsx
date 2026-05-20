@@ -83,6 +83,8 @@ import { createLunaDashboardPlayerController as createPlayerAnimationController 
 import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
+import { loadDeepSpaceSkybox } from './worldSkybox';
+import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -234,10 +236,10 @@ export default function GameWorld3D() {
     if (!containerRef.current) return;
     const container = containerRef.current;
 
-    // Scene — soft daytime sky for a simple green grass field
+    // Scene — deep-space world skybox + retained terrain fog depth.
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0xa8d0e8, 80, 240);
-    scene.background = new THREE.Color(0xa8d0e8);
+    scene.fog = new THREE.Fog(0x080b18, 90, 260);
+    scene.background = new THREE.Color(0x050711);
 
     // Renderer — keep it simple and proven. Create a canvas explicitly so we
     // can attach the WebGL context-loss listener BEFORE THREE allocates the
@@ -299,6 +301,9 @@ export default function GameWorld3D() {
     sun.shadow.camera.top = 30;
     sun.shadow.camera.bottom = -30;
     scene.add(sun);
+
+    const worldGltfLoader = new GLTFLoader();
+    const disposeSkybox = loadDeepSpaceSkybox({ scene, gltfLoader: worldGltfLoader });
 
     // (Ocean backdrop removed — replaced by simple flat green grass ground below.)
 
@@ -491,7 +496,18 @@ export default function GameWorld3D() {
     };
     window.addEventListener('webrtcRemoteAction', handleRemoteAction);
     const handlePlayerSkillStrike = (e) => { const { multiplier = 1.0, hits = 1 } = e.detail || {}; for (let i = 0; i < hits; i++) setTimeout(() => { skillStrikeMultRef.current = multiplier; attackPressed.current = true; }, i * 180); };
+    const handlePlayerSkillCastStart = (e) => {
+      const duration = e.detail?.duration || 0.45;
+      activeEffects.current.push(createPlayerCastLightBeam({
+        scene,
+        loader: worldGltfLoader,
+        playerRef: modelRef,
+        getGroundY: (x, z) => sampleGroundY?.(x, z) ?? 0,
+        duration,
+      }));
+    };
     window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
+    window.addEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
 
     // Boss entities — declared early so the bus + minion spawner can close over it.
     const bossEntities = [];
@@ -506,11 +522,24 @@ export default function GameWorld3D() {
     // temporal-dead-zone trap with `let model` declared further down.
     let _spawnBossMinion = () => {};
     const modelRef = { current: null };
+    const applyLocalBossDamage = (amount) => {
+      if (playerInvulTimer.current > 0 || rollDodge() || rollGuard() || rollRangedEvade() || rollDodgeBuff()) return;
+      let dmg = amount;
+      const absorbed = absorbShield(dmg);
+      dmg = Math.max(0, dmg - absorbed);
+      if (dmg <= 0) return;
+      setHP(Math.max(0, getPlayerHUD().hp - dmg));
+      spawnDamageFloat('player', dmg);
+      playerInvulTimer.current = Math.max(playerInvulTimer.current, 0.1);
+    };
+
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
       sampleGroundY,
       modelRef,
+      gltfLoader: worldGltfLoader,
+      applyLocalBossDamage,
       getBossById: (id) => bossEntities.find((b) => b.id === id),
       spawnBossMinion: (bid, p) => _spawnBossMinion(bid, p),
     });
@@ -785,6 +814,7 @@ export default function GameWorld3D() {
         if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
           const dodge = getDodgeVectorAndName(k);
           if (playerStateMachine.startCombat('dodge', { lock: 0.45, cancel: 0.18 }) && playerAnim?.requestDodge?.(dodge.vector, dodge.direction)) {
+            window.dispatchEvent(new CustomEvent('playerSkillCastCancel'));
             startDodgeVanish(dodge.direction);
             playActionSound('player_jump');
           }
@@ -1655,6 +1685,8 @@ export default function GameWorld3D() {
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
+      window.removeEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
+      disposeSkybox?.();
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('wheel', onWheel);
       renderer.domElement.removeEventListener('contextmenu', onContext);

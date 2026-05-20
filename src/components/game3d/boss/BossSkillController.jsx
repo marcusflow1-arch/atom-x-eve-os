@@ -84,9 +84,11 @@ export function createSkillController(bossId) {
     cooldowns[ability.id] = ability.cooldown * (payload.cdMult || 1);
     lastUsedId = ability.id;
     if (ability.id === 'meteor_rain') {
-      payload.impacts.forEach((pt) => dispatch('aoe_damage', {
-        x: pt.x, z: pt.z, radius: ability.radius, damage: ability.damage,
-        burnTicks: 3, knockback: 1,
+      payload.impacts.forEach((pt) => dispatch('raid_aerial_strike', {
+        x: pt.x, z: pt.z, radius: ability.radius + 1.5,
+        tickDamage: Math.max(3, Math.round(ability.damage * 0.16)),
+        duration: 4.5,
+        knockback: 1,
       }));
     } else if (ability.id === 'shadow_charge') {
       dispatch('aoe_damage', {
@@ -162,8 +164,8 @@ export function createSkillController(bossId) {
           (ctx.hpFrac < 0.65 || ctx.nearbyPlayerCount >= 2)) {
         return 'summon_legion';
       }
-      // METEOR RAIN — grouped players
-      if (cdReady('meteor_rain') && ctx.nearbyPlayerCount >= 2 && notRepeat('meteor_rain')) {
+      // METEOR RAIN — cinematic area denial, even against one locked-on player
+      if (cdReady('meteor_rain') && ctx.targetDistance !== null && notRepeat('meteor_rain')) {
         return 'meteor_rain';
       }
       // WORLD BREAKER — close range
