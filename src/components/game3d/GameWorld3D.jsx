@@ -1095,7 +1095,7 @@ export default function GameWorld3D() {
           moveAmount: isMoving ? 1 : 0,
           runHeld: isRunning,
           sprintHeld: isSprinting,
-          aimHeld: isAiming || combatLocked,
+          aimHeld: isAiming,
           direction: moveDirection,
         });
         playerStateMachine.update(delta);

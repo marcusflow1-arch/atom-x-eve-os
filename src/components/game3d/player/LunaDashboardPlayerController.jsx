@@ -84,14 +84,8 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
     return true;
   };
 
-  const movementStateFor = ({ moving, direction, aiming }) => {
+  const movementStateFor = ({ moving, direction }) => {
     if (!moving) return STATES.IDLE;
-    if (aiming) {
-      if (direction === 'right') return STATES.AIM_WALK_RIGHT;
-      if (direction === 'left') return STATES.AIM_WALK_LEFT;
-      if (direction === 'backward') return STATES.AIM_WALK_BACKWARD;
-      return STATES.AIM_WALK_FORWARD;
-    }
     if (direction === 'backward') return STATES.RUN_BACK;
     return STATES.RUN;
   };
