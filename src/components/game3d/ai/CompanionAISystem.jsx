@@ -14,10 +14,11 @@ export class CompanionAISystem {
     this.getMounted = getMounted;
     this.state = 'idle';
     this.velocity = new THREE.Vector3();
-    this.followDistance = 2.15;
-    this.deadZone = 0.42;
+    this.followDistance = 2.5;
+    this.deadZone = 0.35;
     this.catchUpDistance = 5.5;
-    this.teleportDistance = 28;
+    this.teleportDistance = 25;
+    this.moveSpeed = 5;
   }
 
   setState(nextState) {
@@ -57,22 +58,23 @@ export class CompanionAISystem {
       return;
     }
 
-    if (distance <= this.deadZone) {
-      this.velocity.multiplyScalar(Math.max(0, 1 - 10 * delta));
+    if (distance > this.deadZone) {
+      toTarget.normalize();
+      const speed = distance > this.catchUpDistance || ownerRunning ? this.moveSpeed * 1.3 : this.moveSpeed;
+      this.velocity.lerp(toTarget.multiplyScalar(speed), Math.min(1, 5 * delta));
+      companion.position.addScaledVector(this.velocity, delta);
+
+      if (this.velocity.lengthSq() > 0.01) {
+        faceQuat.setFromAxisAngle(upAxis, Math.atan2(this.velocity.x, this.velocity.z));
+        companion.quaternion.slerp(faceQuat, Math.min(1, 6 * delta));
+      }
+
+      this.setState(distance > this.catchUpDistance ? 'return_to_player' : 'follow');
+      this.playAnimation?.(speed > this.moveSpeed ? 'run' : 'walk');
+    } else {
+      this.velocity.lerp(new THREE.Vector3(), Math.min(1, 6 * delta));
       this.setState('idle');
       this.playAnimation?.('idle');
-    } else {
-      toTarget.normalize();
-      const speed = distance > this.catchUpDistance || ownerRunning ? 6.4 : 3.15;
-      const accel = distance > this.catchUpDistance ? 12 : 7;
-      this.velocity.x += (toTarget.x * speed - this.velocity.x) * Math.min(1, accel * delta);
-      this.velocity.z += (toTarget.z * speed - this.velocity.z) * Math.min(1, accel * delta);
-      companion.position.x += this.velocity.x * delta;
-      companion.position.z += this.velocity.z * delta;
-      faceQuat.setFromAxisAngle(upAxis, Math.atan2(this.velocity.x, this.velocity.z));
-      companion.quaternion.slerp(faceQuat, Math.min(1, 8 * delta));
-      this.setState(distance > this.catchUpDistance ? 'return_to_player' : 'follow');
-      this.playAnimation?.(speed > 4.5 ? 'run' : 'walk');
     }
 
     const gy = this.sampleGroundY?.(companion.position.x, companion.position.z);

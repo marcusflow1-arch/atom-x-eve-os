@@ -15,6 +15,11 @@ export class PlayerMovementSystem {
     this.getSpeed = getSpeed;
     this.arenaRadius = arenaRadius;
     this.velocity = new THREE.Vector3();
+    this.walkSpeed = 4;
+    this.runSpeed = 7;
+    this.sprintSpeed = 11;
+    this.acceleration = 18;
+    this.deceleration = 14;
     this.intent = { moveAmount: 0, direction: 'forward', runHeld: false, sprintHeld: false };
   }
 
@@ -36,16 +41,17 @@ export class PlayerMovementSystem {
     const runHeld = !!this.keys.current.shift && moveAmount > 0;
     const sprintHeld = !!this.keys.current.control && moveAmount > 0;
     this.intent = { moveAmount, direction, runHeld, sprintHeld };
-    this.stateMachine.setIntent(this.intent);
+    this.stateMachine.setIntent?.(this.intent);
 
-    if (moveAmount > 0 && !this.playerAnim.current?.isMovementOverridden?.()) {
+    const movementOverridden = this.playerAnim.current?.isMovementOverridden?.();
+    if (moveAmount > 0 && !movementOverridden) {
       tmpMove.normalize();
-      const targetSpeed = this.getSpeed(this.stateMachine.getSnapshot());
-      const accel = sprintHeld ? 14 : runHeld ? 11 : 8;
-      this.velocity.x += (tmpMove.x * targetSpeed - this.velocity.x) * Math.min(1, accel * delta);
-      this.velocity.z += (tmpMove.z * targetSpeed - this.velocity.z) * Math.min(1, accel * delta);
-      model.position.x += this.velocity.x * delta;
-      model.position.z += this.velocity.z * delta;
+      let targetSpeed = this.getSpeed?.(this.stateMachine.getSnapshot?.()) ?? this.walkSpeed;
+      if (sprintHeld) targetSpeed = Math.max(targetSpeed, this.sprintSpeed);
+      else if (runHeld) targetSpeed = Math.max(targetSpeed, this.runSpeed);
+
+      this.velocity.lerp(tmpMove.clone().multiplyScalar(targetSpeed), Math.min(1, this.acceleration * delta));
+      model.position.addScaledVector(this.velocity, delta);
 
       const dist = Math.hypot(model.position.x, model.position.z);
       if (dist > this.arenaRadius) {
@@ -54,8 +60,7 @@ export class PlayerMovementSystem {
         model.position.z *= edgeScale;
       }
     } else {
-      this.velocity.x += (0 - this.velocity.x) * Math.min(1, 10 * delta);
-      this.velocity.z += (0 - this.velocity.z) * Math.min(1, 10 * delta);
+      this.velocity.lerp(new THREE.Vector3(), Math.min(1, this.deceleration * delta));
     }
 
     const groundY = this.sampleGroundY(model.position.x, model.position.z);
@@ -76,7 +81,7 @@ export class PlayerRotationSystem {
 
   update(delta, movementIntent, orbit) {
     const model = this.modelRef.current;
-    if (!model || this.stateMachine.getSnapshot().locked) return;
+    if (!model || this.stateMachine.getSnapshot?.().locked) return;
 
     const lockedTarget = this.lockOnTargetRef.current;
     if (lockedTarget?.group) {

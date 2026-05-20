@@ -17,22 +17,28 @@ export class WorldSystemManager {
     return system;
   }
 
+  unregister(system) {
+    this.systems = this.systems.filter((entry) => entry.system !== system);
+    system?.dispose?.();
+  }
+
   setPaused(paused) {
     this.paused = !!paused;
   }
 
   update(delta) {
     if (this.paused) return;
+    const safeDelta = Math.min(delta, 0.033);
     for (const entry of this.systems) {
       if (!entry.enabled || !entry.system?.update) continue;
       if (entry.interval > 0) {
-        entry.accumulator += delta;
+        entry.accumulator += safeDelta;
         if (entry.accumulator < entry.interval) continue;
         const step = entry.accumulator;
         entry.accumulator = 0;
         entry.system.update(step);
       } else {
-        entry.system.update(delta);
+        entry.system.update(safeDelta);
       }
     }
   }

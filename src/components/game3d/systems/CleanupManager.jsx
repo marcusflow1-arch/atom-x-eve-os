@@ -22,6 +22,11 @@ export class CleanupManager {
     });
   }
 
+  disposeRenderer(renderer) {
+    renderer?.renderLists?.dispose?.();
+    renderer?.dispose?.();
+  }
+
   dispose() {
     for (let i = this.cleanups.length - 1; i >= 0; i--) {
       this.cleanups[i]?.();

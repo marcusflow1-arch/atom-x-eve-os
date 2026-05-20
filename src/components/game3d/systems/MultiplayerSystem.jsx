@@ -9,10 +9,10 @@ export class MultiplayerSystem {
 
   hasMeaningfulChange(next) {
     if (!this.lastSent) return true;
-    return Math.abs(next.x - this.lastSent.x) > 0.025 ||
-      Math.abs(next.y - this.lastSent.y) > 0.025 ||
-      Math.abs(next.z - this.lastSent.z) > 0.025 ||
-      Math.abs(next.yaw - this.lastSent.yaw) > 0.015 ||
+    return Math.abs((next.x ?? 0) - (this.lastSent.x ?? 0)) > 0.025 ||
+      Math.abs((next.y ?? 0) - (this.lastSent.y ?? 0)) > 0.025 ||
+      Math.abs((next.z ?? 0) - (this.lastSent.z ?? 0)) > 0.025 ||
+      Math.abs((next.yaw ?? 0) - (this.lastSent.yaw ?? 0)) > 0.015 ||
       next.anim !== this.lastSent.anim ||
       next.mounted !== this.lastSent.mounted ||
       next.combat !== this.lastSent.combat;
@@ -25,7 +25,7 @@ export class MultiplayerSystem {
     const snapshot = this.getSnapshot?.();
     if (!snapshot || !this.hasMeaningfulChange(snapshot)) return;
     this.lastSent = { ...snapshot };
-    this.eventBus?.emit('multiplayer:localSnapshot', snapshot);
+    this.eventBus?.emit?.('multiplayer:localSnapshot', snapshot);
     window.dispatchEvent(new CustomEvent('multiplayerLocalUpdate', { detail: snapshot }));
   }
 }
