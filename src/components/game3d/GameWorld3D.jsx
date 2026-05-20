@@ -748,11 +748,11 @@ export default function GameWorld3D() {
         a: { direction: 'left', vector: new THREE.Vector3(-Math.cos(yaw), 0, Math.sin(yaw)) },
         d: { direction: 'right', vector: new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)) },
       };
-      if (!axes) return freeMap[key];
-      if (key === 'w') return { direction: 'forward', vector: axes.forward.clone() };
-      if (key === 's') return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
-      if (key === 'a') return { direction: 'left', vector: axes.right.clone().multiplyScalar(-1) };
-      if (key === 'd') return { direction: 'right', vector: axes.right.clone() };
+      if (!axes) return freeMap[key] || { direction: 'forward', vector: new THREE.Vector3(0, 0, -1).applyQuaternion(model.quaternion) };
+      if (keys.current['a']) return { direction: 'left', vector: axes.right.clone().multiplyScalar(-1) };
+      if (keys.current['d']) return { direction: 'right', vector: axes.right.clone() };
+      if (keys.current['s']) return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
+      if (keys.current['w']) return { direction: 'forward', vector: axes.forward.clone() };
       return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
     };
 
@@ -764,7 +764,7 @@ export default function GameWorld3D() {
       dir.normalize();
       const targetYaw = Math.atan2(dir.x, dir.z);
       const targetQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetYaw);
-      model.quaternion.slerp(targetQuat, 1 - Math.exp(-12 * delta));
+      model.quaternion.slerp(targetQuat, 1 - Math.exp(-14 * delta));
     };
 
     const startDodgeVanish = (direction) => {
