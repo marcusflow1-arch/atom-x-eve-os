@@ -30,10 +30,10 @@ export function emitAdaptiveAction(bossEntity, action, target, adaptive) {
   }
 
   if (action === 'sky_dive') {
-    dispatchAdaptiveBossAction(bossId, 'sky_dive_attack', {
-      damage: damage * 3,
-      radius: 8,
-      chargeTime: phase >= 4 ? 1.0 : 1.5,
+    dispatchAdaptiveBossAction(bossId, 'raid_aerial_strike', {
+      tickDamage: damage * 0.08,
+      radius: phase >= 4 ? 5.8 : 5.2,
+      duration: phase >= 4 ? 5.5 : 4.5,
     });
     return true;
   }

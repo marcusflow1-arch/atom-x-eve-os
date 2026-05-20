@@ -12,7 +12,7 @@ function loadAerialAsset(loader) {
   return aerialPromise;
 }
 
-export function createRaidAerialStrike({ scene, loader, getTargetPosition, getGroundY, getLocalPlayerPosition, applyLocalDamage, radius = 6.5, damage = 5, duration = 5.5 }) {
+export function createRaidAerialStrike({ scene, loader, getTargetPosition, getGroundY, getLocalPlayerPosition, applyLocalDamage, radius = 5.2, damage = 5, duration = 5.5 }) {
   const group = new THREE.Group();
   const warning = new THREE.Group();
   group.add(warning);
@@ -46,7 +46,7 @@ export function createRaidAerialStrike({ scene, loader, getTargetPosition, getGr
   let impactStarted = false;
   let aerialAsset = null;
   let tickTimer = 0;
-  const FOLLOW_TIME = 2;
+  const FOLLOW_TIME = 1.5;
   const LOCK_DELAY = 1;
   const FIELD_TIME = duration;
   const IMPACT_TIME = FOLLOW_TIME + LOCK_DELAY;

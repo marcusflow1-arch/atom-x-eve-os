@@ -84,9 +84,14 @@ function scheduleRangedDouble(skill, level) {
 }
 
 function scheduleRangedBarrage(skill, level) {
+  const castDurationMs = ((skill.hit_count - 1) * skill.hit_delay * 1000) + 350;
+  window.dispatchEvent(new CustomEvent('playerSkillCastStart', {
+    detail: { skillId: skill.skill_id, castType: skill.cast_type, duration: castDurationMs / 1000 },
+  }));
   for (let i = 0; i < skill.hit_count; i++) {
-    setTimeout(() => dispatchStrike(skill, i, level), i * skill.hit_delay * 1000);
+    setTimeout(() => { dispatchStrike(skill, i, level); onDoubleShotHit(); }, i * skill.hit_delay * 1000);
   }
+  setTimeout(() => onDoubleShotCastEnd(), castDurationMs + 300);
 }
 
 /**

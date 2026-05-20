@@ -22,7 +22,7 @@ import { createStateMachine, BOSS_STATES, DETECTION_RANGE, MELEE_RANGE, RANGED_T
 import { createThreatTable } from './BossThreatSystem';
 import { createSkillController, BOSS_ABILITIES } from './BossSkillController';
 import { createSummoner } from './BossSummoner';
-import { AdaptiveBossBrain } from './AdaptiveBossBrain';
+import { BossPhaseController } from './BossPhaseController';
 import { emitAdaptiveAction } from './adaptiveBossEvents';
 
 const PATROL_RADIUS = 6;
@@ -43,7 +43,7 @@ export function createBossBrain(bossEntity) {
   const threat = createThreatTable();
   const skills = createSkillController(bossEntity.id);
   const summoner = createSummoner(bossEntity.id);
-  const adaptive = new AdaptiveBossBrain(bossEntity);
+  const adaptive = new BossPhaseController(bossEntity);
 
   // Per-instance randomized think cadence — boss "thinks" 4–6 Hz, never in
   // lockstep with other bosses or enemies. This is the cornerstone of the

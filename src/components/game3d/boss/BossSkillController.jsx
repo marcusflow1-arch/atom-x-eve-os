@@ -85,7 +85,7 @@ export function createSkillController(bossId) {
     lastUsedId = ability.id;
     if (ability.id === 'meteor_rain') {
       payload.impacts.forEach((pt) => dispatch('raid_aerial_strike', {
-        x: pt.x, z: pt.z, radius: ability.radius + 1.5,
+        x: pt.x, z: pt.z, radius: ability.radius + 0.7,
         tickDamage: Math.max(3, Math.round(ability.damage * 0.16)),
         duration: 4.5,
         knockback: 1,

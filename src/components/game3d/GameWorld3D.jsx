@@ -765,8 +765,16 @@ export default function GameWorld3D() {
       const forward = new THREE.Vector3(target.x - model.position.x, 0, target.z - model.position.z);
       if (forward.lengthSq() <= 0.0001) return null;
       forward.normalize();
-      const right = new THREE.Vector3(forward.z, 0, -forward.x);
-      return { forward, right };
+      const cameraForward = new THREE.Vector3();
+      camera.getWorldDirection(cameraForward);
+      cameraForward.y = 0;
+      if (cameraForward.lengthSq() <= 0.0001) cameraForward.copy(forward);
+      cameraForward.normalize();
+      const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+      cameraRight.y = 0;
+      if (cameraRight.lengthSq() <= 0.0001) cameraRight.set(forward.z, 0, -forward.x);
+      cameraRight.normalize();
+      return { forward, right: cameraRight, cameraForward, cameraRight };
     };
 
     const getDodgeVectorAndName = (key) => {
@@ -779,8 +787,8 @@ export default function GameWorld3D() {
         d: { direction: 'right', vector: new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)) },
       };
       if (!axes) return freeMap[key] || { direction: 'forward', vector: new THREE.Vector3(0, 0, -1).applyQuaternion(model.quaternion) };
-      if (keys.current['a']) return { direction: 'left', vector: axes.right.clone() };
-      if (keys.current['d']) return { direction: 'right', vector: axes.right.clone().multiplyScalar(-1) };
+      if (keys.current['a']) return { direction: 'left', vector: axes.cameraRight.clone().multiplyScalar(-1) };
+      if (keys.current['d']) return { direction: 'right', vector: axes.cameraRight.clone() };
       if (keys.current['s']) return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
       if (keys.current['w']) return { direction: 'forward', vector: axes.forward.clone() };
       return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
@@ -986,8 +994,8 @@ export default function GameWorld3D() {
         if (combatAxes) {
           if (keys.current['w']) move.add(combatAxes.forward);
           if (keys.current['s']) move.add(combatAxes.forward.clone().multiplyScalar(-1));
-          if (keys.current['a']) move.add(combatAxes.right.clone().multiplyScalar(-1));
-          if (keys.current['d']) move.add(combatAxes.right);
+          if (keys.current['a']) move.add(combatAxes.cameraRight.clone().multiplyScalar(-1));
+          if (keys.current['d']) move.add(combatAxes.cameraRight);
         } else {
           const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
           const rx = -Math.cos(yaw), rz = Math.sin(yaw);
