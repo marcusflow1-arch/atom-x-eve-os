@@ -836,7 +836,7 @@ export default function GameWorld3D() {
     let mixer;
     let model;
     let playerAnim;
-    const dodgeFade = { active: false, timer: 0, duration: 0.45, materials: [] };
+    const dodgeVanish = { active: false, timer: 0, duration: 0.45 };
     const crouchTogglePressed = { current: false };
     const lastDirectionTap = { current: {} };
     const DOUBLE_TAP_MS = 280;
@@ -885,19 +885,11 @@ export default function GameWorld3D() {
       playerAnim.playOneShot(name, timeScale);
     };
 
-    const startDodgeFade = () => {
-      if (!model) return;
-      dodgeFade.active = true;
-      dodgeFade.timer = 0;
-      dodgeFade.materials = [];
-      model.traverse((node) => {
-        if (!node.isMesh || !node.material) return;
-        const mats = Array.isArray(node.material) ? node.material : [node.material];
-        mats.forEach((mat) => {
-          dodgeFade.materials.push({ mat, transparent: mat.transparent, opacity: mat.opacity });
-          mat.transparent = true;
-        });
-      });
+    const startDodgeVanish = (direction) => {
+      if (!model || !['left', 'right'].includes(direction)) return;
+      dodgeVanish.active = true;
+      dodgeVanish.timer = 0;
+      model.visible = false;
     };
 
     const onKeyDown = (e) => {
@@ -915,7 +907,7 @@ export default function GameWorld3D() {
         if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
           const dodge = dodgeKeyMap[k];
           if (playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) {
-            startDodgeFade();
+            startDodgeVanish(dodge.direction);
             playActionSound('player_jump');
           }
           lastDirectionTap.current[k] = 0;
@@ -1006,18 +998,11 @@ export default function GameWorld3D() {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-      if (dodgeFade.active) {
-        dodgeFade.timer += delta;
-        const half = dodgeFade.duration * 0.5;
-        const opacity = dodgeFade.timer < half ? Math.max(0, 1 - dodgeFade.timer / half) : Math.min(1, (dodgeFade.timer - half) / half);
-        dodgeFade.materials.forEach(({ mat }) => { mat.opacity = opacity; });
-        if (dodgeFade.timer >= dodgeFade.duration) {
-          dodgeFade.materials.forEach(({ mat, transparent, opacity }) => {
-            mat.opacity = opacity;
-            mat.transparent = transparent;
-          });
-          dodgeFade.active = false;
-          dodgeFade.materials = [];
+      if (dodgeVanish.active) {
+        dodgeVanish.timer += delta;
+        if (dodgeVanish.timer >= dodgeVanish.duration) {
+          if (model) model.visible = true;
+          dodgeVanish.active = false;
         }
       }
       if (remoteManagerRef.current) remoteManagerRef.current.update(delta);
