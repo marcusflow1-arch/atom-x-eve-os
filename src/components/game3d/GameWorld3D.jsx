@@ -76,6 +76,9 @@ import { attachContextGuard } from './webglContextGuard';
 import { buildGrassEnvironment } from './buildGrassEnvironment';
 import { loadPlayerAnimationClips } from './player/playerAnimationLibrary';
 import { createLunaDashboardPlayerController as createPlayerAnimationController } from './player/LunaDashboardPlayerController';
+import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
+import { CoreAnimationController } from './player/CoreAnimationController';
+import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -836,6 +839,9 @@ export default function GameWorld3D() {
     let mixer;
     let model;
     let playerAnim;
+    const playerStateMachine = new CorePlayerStateMachine();
+    let coreAnimationController = null;
+    const playerCameraSystem = new PlayerCameraSystem({ camera, orbit, modelRef, lockOnTargetRef });
     const dodgeVanish = { active: false, timer: 0, duration: 0.45 };
     const crouchTogglePressed = { current: false };
     const lastDirectionTap = { current: {} };
@@ -864,6 +870,7 @@ export default function GameWorld3D() {
       snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
       playerAnim = createPlayerAnimationController({ mixer, blend: BLEND, oneShotRef: oneShotPlaying });
+      coreAnimationController = new CoreAnimationController({ legacyController: playerAnim });
 
       loadPlayerAnimationClips(loader)
         .then((clipsByKey) => {
@@ -906,7 +913,7 @@ export default function GameWorld3D() {
         const nowMs = performance.now();
         if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
           const dodge = dodgeKeyMap[k];
-          if (playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) {
+          if (playerStateMachine.startCombat('dodge', { lock: 0.45, cancel: 0.18 }) && playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) {
             startDodgeVanish(dodge.direction);
             playActionSound('player_jump');
           }
@@ -959,11 +966,15 @@ export default function GameWorld3D() {
         const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
         lockOnTargetRef.current = target && lockOnTargetRef.current?.id !== target.id ? target : null;
       } else {
+        playerStateMachine.setIntent({ blockHeld: true });
         playerAnim?.setBlocking(true);
       }
     };
     const onMouseUp = (e) => {
-      if (e.button === 2) playerAnim?.setBlocking(false);
+      if (e.button === 2) {
+        playerStateMachine.setIntent({ blockHeld: false });
+        playerAnim?.setBlocking(false);
+      }
       drag.current.active = false;
     };
     const onMouseMove = (e) => {
@@ -1023,7 +1034,7 @@ export default function GameWorld3D() {
           if (compGroup) {
             model.position.x = compGroup.position.x + 1.2;
             model.position.z = compGroup.position.z;
-            model.visible = true;
+            if (!dodgeVanish.active) model.visible = true;
           }
           isMountedRef.current = false;
           setIsMounted(false);
@@ -1092,19 +1103,20 @@ export default function GameWorld3D() {
         // ─── Mount handling: companion follows player while mounted ───
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
         if (mounted && compGroup) {
-          // Hide player model so visually we appear ON the companion
-          model.visible = false;
-          // Companion sits at the player's spot, slightly offset down so the player
-          // would "ride" on its back (effectively the companion replaces the player visually)
+          // Rider socket pass: keep the player visible and position them above the mount instead of replacing them visually.
+          if (!dodgeVanish.active) model.visible = true;
           compGroup.position.x = model.position.x;
           compGroup.position.z = model.position.z;
           // Match player rotation so steering feels natural
           compGroup.quaternion.slerp(model.quaternion, ROT_SMOOTH);
           if (mapReady) {
             const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
-            if (gy !== null) compGroup.position.y = gy;
+            if (gy !== null) {
+              compGroup.position.y = gy;
+              model.position.y = gy + 1.15;
+            }
           }
-          // Drive companion animation: idle (still), walk (W), run (Shift+W).
+          // Drive mount animation: idle (still), walk (W), run (Shift+W).
           // Falls back gracefully if run clip wasn't found (uses walk instead).
           const hasRun = !!companionRunActionRef.current;
           let targetAnim = 'idle';
@@ -1124,7 +1136,7 @@ export default function GameWorld3D() {
         } else {
           // Not mounted — companion follows the player like a pet.
           // Walks/runs toward player only while WASD is held; idles otherwise.
-          model.visible = true;
+          if (!dodgeVanish.active) model.visible = true;
           if (compGroup) {
             const TRAIL = 1.8;
             const dx = model.position.x - compGroup.position.x;
@@ -1183,8 +1195,18 @@ export default function GameWorld3D() {
           setNearbyCompanion(false);
         }
 
-        // Centralized animation controller: priority one-shots > crouch locomotion > standing locomotion.
-        if (playerAnim) {
+        // Core player state machine drives locomotion/combat intent, while legacy animation clips remain preserved.
+        playerStateMachine.setIntent({
+          moveAmount: isMoving ? 1 : 0,
+          runHeld: isRunning,
+          sprintHeld: isSprinting,
+          aimHeld: isAiming,
+          direction: moveDirection,
+        });
+        playerStateMachine.update(delta);
+        if (coreAnimationController) {
+          coreAnimationController.update(playerStateMachine.getSnapshot(), playerStateMachine.intent);
+        } else if (playerAnim) {
           playerAnim.updateActionState({ moving: isMoving, running: isRunning, direction: moveDirection, aiming: isAiming });
         }
 
@@ -1210,36 +1232,8 @@ export default function GameWorld3D() {
           },
         }));
 
-        // Dynamic camera follow — lock-on tracks the selected target from the player's perspective.
-        const o = orbit.current;
-        const lockedTarget = lockOnTargetRef.current;
-        if (lockedTarget?.group && (!lockedTarget.aliveRef || lockedTarget.aliveRef())) {
-          const targetPos = lockedTarget.group.position;
-          const toTarget = new THREE.Vector3(targetPos.x - model.position.x, 0, targetPos.z - model.position.z);
-          if (toTarget.lengthSq() > 0.001) {
-            toTarget.normalize();
-            const lockYaw = Math.atan2(-toTarget.x, -toTarget.z);
-            const yawDelta = Math.atan2(Math.sin(lockYaw - o.yaw), Math.cos(lockYaw - o.yaw));
-            o.yaw += yawDelta * Math.min(1, 3.0 * delta);
-            if (!playerAnim?.isMovementOverridden?.()) {
-              model.quaternion.slerp(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(toTarget.x, toTarget.z)), ROT_SMOOTH);
-            }
-          }
-          const idealCameraPosition = new THREE.Vector3(
-            model.position.x - toTarget.x * o.distance,
-            model.position.y + 3.0,
-            model.position.z - toTarget.z * o.distance
-          );
-          camera.position.lerp(idealCameraPosition, Math.min(1, 3.0 * delta));
-          camera.lookAt(targetPos.x, targetPos.y + 1.5, targetPos.z);
-        } else {
-          if (lockedTarget) lockOnTargetRef.current = null;
-          const camX = model.position.x + o.distance * Math.sin(o.yaw) * Math.cos(o.pitch);
-          const camY = model.position.y + 1 + o.distance * Math.sin(o.pitch);
-          const camZ = model.position.z + o.distance * Math.cos(o.yaw) * Math.cos(o.pitch);
-          camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
-          camera.lookAt(model.position.x, model.position.y + 1, model.position.z);
-        }
+        // Smooth camera system: damped lock-on yaw, combat distance, and sprint pullback without per-frame object spam.
+        playerCameraSystem.update(delta, playerStateMachine.intent);
 
         // ─── NPC proximity & interaction ───
         let closestNPC = null;
