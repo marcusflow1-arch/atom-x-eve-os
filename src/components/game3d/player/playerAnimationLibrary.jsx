@@ -25,6 +25,19 @@ const pickRequestedKey = (name = '') => {
   return match?.key || null;
 };
 
+const makeRunClipInPlace = (key, clip) => {
+  if (!['run', 'runBack'].includes(key)) return clip;
+
+  const inPlaceClip = clip.clone();
+  inPlaceClip.tracks = inPlaceClip.tracks.filter((track) => {
+    const trackName = track.name.toLowerCase();
+    const isRootPosition = trackName.endsWith('.position') && /(hips|pelvis|root|armature)/i.test(track.name);
+    return !isRootPosition;
+  });
+  inPlaceClip.resetDuration();
+  return inPlaceClip;
+};
+
 export async function loadPlayerAnimationClips(loader) {
   const rows = await base44.entities.AnimationFBX.filter({ folder: 'player character' }, '-created_date', 100);
   const clipsByKey = {};
@@ -38,8 +51,9 @@ export async function loadPlayerAnimationClips(loader) {
       (fbx) => {
         const clip = fbx.animations?.[0];
         if (clip) {
-          clip.name = key;
-          clipsByKey[key] = clip;
+          const finalClip = makeRunClipInPlace(key, clip);
+          finalClip.name = key;
+          clipsByKey[key] = finalClip;
         }
         resolve(clip || null);
       },
