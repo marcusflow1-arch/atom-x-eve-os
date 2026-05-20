@@ -723,6 +723,50 @@ export default function GameWorld3D() {
       playerAnim.playOneShot(name, timeScale);
     };
 
+    const getLockOnTargetPosition = () => {
+      const target = lockOnTargetRef.current;
+      if (!target?.group || (target.aliveRef && !target.aliveRef())) return null;
+      return target.group.position;
+    };
+
+    const getCombatAxes = () => {
+      const target = getLockOnTargetPosition();
+      if (!target || !model) return null;
+      const forward = new THREE.Vector3(target.x - model.position.x, 0, target.z - model.position.z);
+      if (forward.lengthSq() <= 0.0001) return null;
+      forward.normalize();
+      const right = new THREE.Vector3(forward.z, 0, -forward.x);
+      return { forward, right };
+    };
+
+    const getDodgeVectorAndName = (key) => {
+      const axes = getCombatAxes();
+      const yaw = orbit.current.yaw;
+      const freeMap = {
+        w: { direction: 'forward', vector: new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)) },
+        s: { direction: 'backward', vector: new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)) },
+        a: { direction: 'left', vector: new THREE.Vector3(-Math.cos(yaw), 0, Math.sin(yaw)) },
+        d: { direction: 'right', vector: new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)) },
+      };
+      if (!axes) return freeMap[key];
+      if (key === 'w') return { direction: 'forward', vector: axes.forward.clone() };
+      if (key === 's') return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
+      if (key === 'a') return { direction: 'left', vector: axes.right.clone().multiplyScalar(-1) };
+      if (key === 'd') return { direction: 'right', vector: axes.right.clone() };
+      return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
+    };
+
+    const updateLockOnRotation = (delta) => {
+      const target = getLockOnTargetPosition();
+      if (!target || !model || playerAnim?.isMovementOverridden?.()) return;
+      const dir = new THREE.Vector3(target.x - model.position.x, 0, target.z - model.position.z);
+      if (dir.lengthSq() <= 0.0001) return;
+      dir.normalize();
+      const targetYaw = Math.atan2(dir.x, dir.z);
+      const targetQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetYaw);
+      model.quaternion.slerp(targetQuat, 1 - Math.exp(-12 * delta));
+    };
+
     const startDodgeVanish = (direction) => {
       if (!model || !['left', 'right'].includes(direction)) return;
       dodgeVanish.active = true;
@@ -734,17 +778,12 @@ export default function GameWorld3D() {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
-      const dodgeKeyMap = {
-        w: { direction: 'forward', vector: () => new THREE.Vector3(-Math.sin(orbit.current.yaw), 0, -Math.cos(orbit.current.yaw)) },
-        s: { direction: 'backward', vector: () => new THREE.Vector3(Math.sin(orbit.current.yaw), 0, Math.cos(orbit.current.yaw)) },
-        a: { direction: 'left', vector: () => new THREE.Vector3(-Math.cos(orbit.current.yaw), 0, Math.sin(orbit.current.yaw)) },
-        d: { direction: 'right', vector: () => new THREE.Vector3(Math.cos(orbit.current.yaw), 0, -Math.sin(orbit.current.yaw)) },
-      };
-      if (!e.repeat && dodgeKeyMap[k]) {
+      const dodgeKeys = new Set(['w', 'a', 's', 'd']);
+      if (!e.repeat && dodgeKeys.has(k)) {
         const nowMs = performance.now();
         if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
-          const dodge = dodgeKeyMap[k];
-          if (playerStateMachine.startCombat('dodge', { lock: 0.45, cancel: 0.18 }) && playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) {
+          const dodge = getDodgeVectorAndName(k);
+          if (playerStateMachine.startCombat('dodge', { lock: 0.45, cancel: 0.18 }) && playerAnim?.requestDodge?.(dodge.vector, dodge.direction)) {
             startDodgeVanish(dodge.direction);
             playActionSound('player_jump');
           }
@@ -912,19 +951,28 @@ export default function GameWorld3D() {
         const compGroup = companionGroupRef.current;
         const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
         const yaw = orbit.current.yaw;
-        const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-        const rx = -Math.cos(yaw), rz = Math.sin(yaw);
         const move = new THREE.Vector3();
-        if (keys.current['w']) { move.x += fx; move.z += fz; }
-        if (keys.current['s']) { move.x -= fx; move.z -= fz; }
-        if (keys.current['a']) { move.x += rx; move.z += rz; }
-        if (keys.current['d']) { move.x -= rx; move.z -= rz; }
+        const combatAxes = getCombatAxes();
+        if (combatAxes) {
+          if (keys.current['w']) move.add(combatAxes.forward);
+          if (keys.current['s']) move.add(combatAxes.forward.clone().multiplyScalar(-1));
+          if (keys.current['a']) move.add(combatAxes.right.clone().multiplyScalar(-1));
+          if (keys.current['d']) move.add(combatAxes.right);
+        } else {
+          const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+          const rx = -Math.cos(yaw), rz = Math.sin(yaw);
+          if (keys.current['w']) { move.x += fx; move.z += fz; }
+          if (keys.current['s']) { move.x -= fx; move.z -= fz; }
+          if (keys.current['a']) { move.x += rx; move.z += rz; }
+          if (keys.current['d']) { move.x -= rx; move.z -= rz; }
+        }
 
         const isMoving = move.lengthSq() > 0;
         const isRunning = !!keys.current['shift'] && isMoving;
         const isSprinting = !!keys.current['control'] && isMoving;
         const isAiming = !!playerAnim?.getIsAiming?.();
         const moveDirection = keys.current['s'] ? 'backward' : keys.current['a'] ? 'left' : keys.current['d'] ? 'right' : 'forward';
+        const combatLocked = !!combatAxes;
         const isCrouching = !!playerAnim?.getIsCrouching?.();
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
         const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
@@ -940,9 +988,11 @@ export default function GameWorld3D() {
             model.position.x *= edgeScale;
             model.position.z *= edgeScale;
           }
-          const angle = Math.atan2(move.x, move.z);
-          const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-          model.quaternion.slerp(targetQ, ROT_SMOOTH);
+          if (!combatAxes) {
+            const angle = Math.atan2(move.x, move.z);
+            const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            model.quaternion.slerp(targetQ, ROT_SMOOTH);
+          }
         }
         // Glue player feet to terrain, then let the manual controller add jump/roll offsets.
         if (mapReady) {
@@ -1008,12 +1058,14 @@ export default function GameWorld3D() {
           setNearbyCompanion(false);
         }
 
+        updateLockOnRotation(delta);
+
         // Core player state machine drives locomotion/combat intent, while legacy animation clips remain preserved.
         playerStateMachine.setIntent({
           moveAmount: isMoving ? 1 : 0,
           runHeld: isRunning,
           sprintHeld: isSprinting,
-          aimHeld: isAiming,
+          aimHeld: isAiming || combatLocked,
           direction: moveDirection,
         });
         playerStateMachine.update(delta);

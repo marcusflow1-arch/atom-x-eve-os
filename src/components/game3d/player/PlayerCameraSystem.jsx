@@ -23,20 +23,22 @@ export class PlayerCameraSystem {
     if (lockedTarget?.group && (!lockedTarget.aliveRef || lockedTarget.aliveRef())) {
       const targetPos = lockedTarget.group.position;
       tmpToTarget.set(targetPos.x - model.position.x, 0, targetPos.z - model.position.z);
-      if (tmpToTarget.lengthSq() > 0.001) {
+      const pairDistance = tmpToTarget.length();
+      if (pairDistance > 0.001) {
         tmpToTarget.normalize();
         const lockYaw = Math.atan2(-tmpToTarget.x, -tmpToTarget.z);
         const yawDelta = Math.atan2(Math.sin(lockYaw - o.yaw), Math.cos(lockYaw - o.yaw));
-        o.yaw += yawDelta * Math.min(1, 5 * delta);
+        o.yaw += yawDelta * Math.min(1, 6 * delta);
       }
-      const distance = THREE.MathUtils.lerp(o.distance, this.combatDistance, Math.min(1, 2.5 * delta));
+      const dynamicDistance = THREE.MathUtils.clamp(pairDistance * 0.55 + this.combatDistance, 5.5, 10.5);
+      tmpTarget.addVectors(model.position, targetPos).multiplyScalar(0.5);
+      tmpTarget.y += 1.35;
       tmpCamera.set(
-        model.position.x - tmpToTarget.x * distance,
-        model.position.y + 2.8,
-        model.position.z - tmpToTarget.z * distance,
+        tmpTarget.x - tmpToTarget.x * dynamicDistance,
+        tmpTarget.y + 1.6,
+        tmpTarget.z - tmpToTarget.z * dynamicDistance,
       );
-      this.camera.position.lerp(tmpCamera, Math.min(1, 5 * delta));
-      tmpTarget.set(targetPos.x, targetPos.y + 1.45, targetPos.z);
+      this.camera.position.lerp(tmpCamera, Math.min(1, 6 * delta));
       this.camera.lookAt(tmpTarget);
       return;
     }
