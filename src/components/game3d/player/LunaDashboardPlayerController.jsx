@@ -29,7 +29,7 @@ const LOOP_STATES = new Set([
 
 const ONE_SHOT_DURATION = {
   [STATES.RUN_STOP]: 0.45,
-  [STATES.DRAW_ARROW]: 0.7,
+  [STATES.DRAW_ARROW]: 0.32,
   [STATES.DODGE_RIGHT]: 0.45,
   [STATES.DODGE_LEFT]: 0.45,
   [STATES.DODGE_FORWARD]: 0.45,
@@ -75,7 +75,7 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       nextAction.clampWhenFinished = false;
     } else {
       nextAction.setLoop(THREE.LoopOnce, 1);
-      nextAction.clampWhenFinished = true;
+      nextAction.clampWhenFinished = state !== STATES.DRAW_ARROW;
     }
 
     if (previousAction && previousAction !== nextAction) previousAction.fadeOut(options.fade ?? 0.12);
@@ -148,8 +148,15 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   };
 
   const requestDodge = (directionVector, directionName = 'forward') => {
-    const state = DODGE_STATE_BY_DIRECTION[directionName] || STATES.DODGE_FORWARD;
-    return startSpecialMove(state, directionVector, 13, ONE_SHOT_DURATION[state]);
+    if (isDead) return false;
+    const dir = directionVector?.clone?.() || new THREE.Vector3(0, 0, -1);
+    if (dir.lengthSq() === 0) dir.set(0, 0, -1);
+    dir.y = 0;
+    dir.normalize();
+    specialMoveVelocity = dir.multiplyScalar(13);
+    specialMoveTimer = ONE_SHOT_DURATION[DODGE_STATE_BY_DIRECTION[directionName] || STATES.DODGE_FORWARD];
+    handleMovement(lastMovement);
+    return true;
   };
 
   const requestRoll = (directionVector) => startSpecialMove(STATES.DIVE_FORWARD, directionVector, 14, ONE_SHOT_DURATION[STATES.DIVE_FORWARD]);

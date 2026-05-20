@@ -46,7 +46,8 @@ export default function RogueBossHPTank() {
   if (!boss) return null;
 
   const tankSize = boss.hpTankSize || boss.maxHp;
-  const remainingTanks = tankSize > 0 ? Math.max(0, Math.ceil(boss.hp / tankSize)) : 0;
+  const totalTanks = boss.hpTanks || 1;
+  const remainingTanks = tankSize > 0 ? Math.min(totalTanks, Math.max(0, Math.ceil(boss.hp / tankSize))) : 0;
   const currentTankHp = boss.hp > 0 ? ((boss.hp - 1) % tankSize) + 1 : 0;
   const pct = tankSize > 0 ? Math.max(0, Math.min(1, currentTankHp / tankSize)) : 0;
 
