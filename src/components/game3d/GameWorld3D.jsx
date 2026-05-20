@@ -1036,7 +1036,7 @@ export default function GameWorld3D() {
         const isMoving = move.lengthSq() > 0;
         const isRunning = !!keys.current['shift'] && isMoving;
         const isSprinting = !!keys.current['control'] && isMoving;
-        const isAiming = !!playerAnim?.getIsAiming?.();
+        const isAiming = !!lockOnTargetRef.current || !!playerAnim?.getIsAiming?.();
         const moveDirection = keys.current['s'] ? 'backward' : keys.current['a'] ? 'left' : keys.current['d'] ? 'right' : 'forward';
         const isCrouching = !!playerAnim?.getIsCrouching?.();
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
@@ -1164,7 +1164,7 @@ export default function GameWorld3D() {
 
         // Centralized animation controller: priority one-shots > crouch locomotion > standing locomotion.
         if (playerAnim) {
-          playerAnim.updateActionState({ isMoving, isRunning, isSprinting, direction: moveDirection, aiming: isAiming });
+          playerAnim.updateActionState({ moving: isMoving, running: isRunning, direction: moveDirection, aiming: isAiming });
         }
 
         // Walk/run SFX loop — start/stop based on movement
