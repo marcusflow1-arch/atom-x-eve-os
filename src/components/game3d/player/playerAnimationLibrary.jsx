@@ -4,9 +4,9 @@ const norm = (value = '') => value.toLowerCase().replace(/[_-]+/g, ' ').replace(
 
 const REQUESTED_ANIMATION_KEYS = [
   { key: 'idle', names: ['unarmed idle 01', 'unarmed idle zero one'] },
-  { key: 'run', names: ['standing running'] },
+  { key: 'run', names: ['run forward', 'running forward', 'standing running'] },
   { key: 'runStop', names: ['standing run stop', 'standing run'] },
-  { key: 'runBack', names: ['standing run back'] },
+  { key: 'runBack', names: ['running backward', 'running backwards', 'standing run back'] },
   { key: 'drawArrow', names: ['standing draw arrow'] },
   { key: 'dodgeRight', names: ['standing dodge right'] },
   { key: 'dodgeLeft', names: ['standing dodge left'] },
