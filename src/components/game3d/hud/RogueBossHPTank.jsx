@@ -34,6 +34,8 @@ export default function RogueBossHPTank() {
         level: activeBoss.level || 1,
         hp: activeBoss.hp,
         maxHp: activeBoss.maxHp,
+        hpTankSize: activeBoss.hpTankSize || activeBoss.maxHp,
+        hpTanks: activeBoss.hpTanks || 1,
       } : null);
     };
 
@@ -43,7 +45,10 @@ export default function RogueBossHPTank() {
 
   if (!boss) return null;
 
-  const pct = boss.maxHp > 0 ? Math.max(0, Math.min(1, boss.hp / boss.maxHp)) : 0;
+  const tankSize = boss.hpTankSize || boss.maxHp;
+  const remainingTanks = tankSize > 0 ? Math.max(0, Math.ceil(boss.hp / tankSize)) : 0;
+  const currentTankHp = boss.hp > 0 ? ((boss.hp - 1) % tankSize) + 1 : 0;
+  const pct = tankSize > 0 ? Math.max(0, Math.min(1, currentTankHp / tankSize)) : 0;
 
   return (
     <div className="absolute top-5 left-1/2 -translate-x-1/2 z-30 pointer-events-none w-[min(520px,78vw)] select-none">
@@ -53,7 +58,7 @@ export default function RogueBossHPTank() {
       </div>
 
       <div
-        className="relative rounded-xl border px-4 py-3 overflow-hidden"
+        className="relative rounded-xl border px-4 py-3 overflow-visible"
         style={{
           background: 'rgba(255, 255, 255, 0.08)',
           backdropFilter: 'blur(14px) saturate(180%)',
@@ -62,8 +67,11 @@ export default function RogueBossHPTank() {
           boxShadow: '0 8px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.22)',
         }}
       >
-        <div
-          className="relative h-6 rounded-full overflow-hidden"
+      <div className="absolute -right-4 -top-4 rounded-full border border-red-200/40 bg-red-950/80 px-3 py-1 text-sm font-black tracking-wider text-red-100 shadow-[0_0_18px_rgba(255,60,80,0.45)]">
+        ×{remainingTanks}
+      </div>
+      <div
+        className="relative h-6 rounded-full overflow-hidden"
           style={{
             background: 'rgba(255, 255, 255, 0.08)',
             border: '1px solid rgba(255,255,255,0.18)',
@@ -80,7 +88,7 @@ export default function RogueBossHPTank() {
           />
           <div className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-white/25" />
           <div className="absolute inset-0 flex items-center justify-center text-[11px] font-bold tracking-[0.2em] text-white/90 drop-shadow">
-            {Math.max(0, Math.ceil(boss.hp))} / {Math.ceil(boss.maxHp)} HP
+            {Math.max(0, Math.ceil(currentTankHp))} / {Math.ceil(tankSize)} HP
           </div>
         </div>
       </div>

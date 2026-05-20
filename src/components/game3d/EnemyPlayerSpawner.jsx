@@ -103,6 +103,8 @@ export default function EnemyPlayerSpawner() {
 
           scene.add(fbx);
           const mixer = new THREE.AnimationMixer(fbx);
+          const baseHp = ENEMY_PLAYER_STATS.hp + def.level * 20;
+          const hpTanks = def.hpTanks || 1;
           const entry = {
             ...def,
             name: def.name || getRandomRogueName(),
@@ -110,8 +112,10 @@ export default function EnemyPlayerSpawner() {
             mixer,
             tintMats,
             ringMat,
-            hp: ENEMY_PLAYER_STATS.hp + def.level * 20,
-            maxHp: ENEMY_PLAYER_STATS.hp + def.level * 20,
+            hp: baseHp * hpTanks,
+            maxHp: baseHp * hpTanks,
+            hpTankSize: baseHp,
+            hpTanks,
             alive: true,
             dying: false,
             deathTimer: 0,
