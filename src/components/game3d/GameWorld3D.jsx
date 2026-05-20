@@ -1188,8 +1188,13 @@ export default function GameWorld3D() {
           },
         }));
 
-        // Camera follow
+        // Dynamic camera follow — smoothly stays behind the direction the player is facing.
         const o = orbit.current;
+        if (!drag.current.active) {
+          const facingYaw = model.rotation.y - Math.PI;
+          const yawDelta = Math.atan2(Math.sin(facingYaw - o.yaw), Math.cos(facingYaw - o.yaw));
+          o.yaw += yawDelta * 0.08;
+        }
         const camX = model.position.x + o.distance * Math.sin(o.yaw) * Math.cos(o.pitch);
         const camY = model.position.y + 1 + o.distance * Math.sin(o.pitch);
         const camZ = model.position.z + o.distance * Math.cos(o.yaw) * Math.cos(o.pitch);
