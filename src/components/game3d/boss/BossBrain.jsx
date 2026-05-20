@@ -26,6 +26,17 @@ import { AdaptiveBossBrain } from './AdaptiveBossBrain';
 import { emitAdaptiveAction } from './adaptiveBossEvents';
 
 const PATROL_RADIUS = 6;
+const ARENA_RADIUS = 36.5;
+
+function clampToArena(position) {
+  const dist = Math.sqrt(position.x * position.x + position.z * position.z);
+  if (dist > ARENA_RADIUS) {
+    const scale = ARENA_RADIUS / dist;
+    position.x *= scale;
+    position.z *= scale;
+  }
+  return position;
+}
 
 export function createBossBrain(bossEntity) {
   const sm = createStateMachine();
@@ -51,7 +62,7 @@ export function createBossBrain(bossEntity) {
   function pickPatrol() {
     const a = Math.random() * Math.PI * 2;
     const d = Math.random() * PATROL_RADIUS;
-    patrolTarget = new THREE.Vector3(anchor.x + Math.cos(a) * d, 0, anchor.z + Math.sin(a) * d);
+    patrolTarget = clampToArena(new THREE.Vector3(anchor.x + Math.cos(a) * d, 0, anchor.z + Math.sin(a) * d));
   }
 
   // Receive damage credit from external systems (player attacks etc.)
@@ -236,6 +247,7 @@ export function createBossBrain(bossEntity) {
     const nx = dx / d, nz = dz / d;
     bossEntity.group.position.x += nx * speed * dt;
     bossEntity.group.position.z += nz * speed * dt;
+    clampToArena(bossEntity.group.position);
     const ang = Math.atan2(nx, nz);
     const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ang);
     bossEntity.group.quaternion.slerp(q, 0.18);

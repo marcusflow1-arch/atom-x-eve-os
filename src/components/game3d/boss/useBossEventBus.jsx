@@ -24,6 +24,17 @@ export function attachBossEventBus(ctx) {
     activeEffectsRef, spawnBossMinion, getBossById,
     sampleGroundY, modelRef,
   } = ctx;
+  const ARENA_RADIUS = 36.5;
+  const clampToArena = (position) => {
+    const dist = Math.sqrt(position.x * position.x + position.z * position.z);
+    if (dist > ARENA_RADIUS) {
+      const scale = ARENA_RADIUS / dist;
+      position.x *= scale;
+      position.z *= scale;
+    }
+    return position;
+  };
+
   // Read player model lazily via a mutable ref — never evaluated at attach time
   // so there's no TDZ risk against `let model` in GameWorld3D.
   const getModel = () => modelRef?.current || null;
@@ -76,7 +87,7 @@ export function attachBossEventBus(ctx) {
       const m = getModel();
       if (!m || !boss) return;
       const behindOffset = new THREE.Vector3(0, 0, -3).applyQuaternion(m.quaternion);
-      boss.group.position.copy(m.position.clone().add(behindOffset));
+      boss.group.position.copy(clampToArena(m.position.clone().add(behindOffset)));
       const gy = sampleGroundY?.(boss.group.position.x, boss.group.position.z);
       if (gy !== null && gy !== undefined) boss.group.position.y = gy;
       boss.group.lookAt(m.position);
@@ -97,8 +108,8 @@ export function attachBossEventBus(ctx) {
       activeEffectsRef.current.push(createDelayedTask(payload.chargeTime ?? 1.5, () => {
         const cur = getModel();
         if (!cur) return;
-        boss.group.position.copy(cur.position);
-        const gy = sampleGroundY?.(cur.position.x, cur.position.z) ?? cur.position.y;
+        boss.group.position.copy(clampToArena(cur.position.clone()));
+        const gy = sampleGroundY?.(boss.group.position.x, boss.group.position.z) ?? cur.position.y;
         boss.group.position.y = gy;
         activeEffectsRef.current.push(createShockwave(scene, cur.position.x, cur.position.z, gy, payload.radius ?? 8));
         const dx = cur.position.x - boss.group.position.x;
@@ -169,9 +180,10 @@ export function attachBossEventBus(ctx) {
     if (type === 'boss_dash') {
       const y = sampleGroundY?.(payload.fromX, payload.fromZ) ?? 0.3;
       if (boss) {
-        boss.group.position.x = payload.toX;
-        boss.group.position.z = payload.toZ;
-        const gy = sampleGroundY?.(payload.toX, payload.toZ);
+        const dashPos = clampToArena({ x: payload.toX, z: payload.toZ });
+        boss.group.position.x = dashPos.x;
+        boss.group.position.z = dashPos.z;
+        const gy = sampleGroundY?.(dashPos.x, dashPos.z);
         if (gy !== null && gy !== undefined) boss.group.position.y = gy;
       }
       const fx = createShadowChargeTrail(scene, payload.fromX, payload.fromZ, payload.toX, payload.toZ, y);
