@@ -937,9 +937,12 @@ export default function GameWorld3D() {
       if (k === 'c') crouchTogglePressed.current = false;
     };
     const onMouseDown = (e) => {
-      // Left click = Fire Arrow, middle click = Lock-On, right click = Block
+      // Left click + hold = rotate camera, middle click = Lock-On, right click = Block
       if (e.button === 0) {
-        if (playerAnim?.requestAttack('attack', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
+        drag.current.active = true;
+        drag.current.x = e.clientX;
+        drag.current.y = e.clientY;
+        e.preventDefault();
       } else if (e.button === 1) {
         e.preventDefault();
         const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
@@ -1211,11 +1214,6 @@ export default function GameWorld3D() {
           camera.lookAt(targetPos.x, targetPos.y + 1.5, targetPos.z);
         } else {
           if (lockedTarget) lockOnTargetRef.current = null;
-          if (!drag.current.active) {
-            const facingYaw = model.rotation.y - Math.PI;
-            const yawDelta = Math.atan2(Math.sin(facingYaw - o.yaw), Math.cos(facingYaw - o.yaw));
-            o.yaw += yawDelta * 0.08;
-          }
           const camX = model.position.x + o.distance * Math.sin(o.yaw) * Math.cos(o.pitch);
           const camY = model.position.y + 1 + o.distance * Math.sin(o.pitch);
           const camZ = model.position.z + o.distance * Math.cos(o.yaw) * Math.cos(o.pitch);
