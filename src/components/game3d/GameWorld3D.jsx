@@ -923,7 +923,7 @@ export default function GameWorld3D() {
         const isMoving = move.lengthSq() > 0;
         const isRunning = !!keys.current['shift'] && isMoving;
         const isSprinting = !!keys.current['control'] && isMoving;
-        const isAiming = !!lockOnTargetRef.current || !!playerAnim?.getIsAiming?.();
+        const isAiming = !!playerAnim?.getIsAiming?.();
         const moveDirection = keys.current['s'] ? 'backward' : keys.current['a'] ? 'left' : keys.current['d'] ? 'right' : 'forward';
         const isCrouching = !!playerAnim?.getIsCrouching?.();
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
