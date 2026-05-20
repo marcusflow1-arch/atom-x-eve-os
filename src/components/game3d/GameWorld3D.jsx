@@ -993,8 +993,8 @@ export default function GameWorld3D() {
           const rx = -Math.cos(yaw), rz = Math.sin(yaw);
           if (keys.current['w']) { move.x += fx; move.z += fz; }
           if (keys.current['s']) { move.x -= fx; move.z -= fz; }
-          if (keys.current['a']) { move.x += rx; move.z += rz; }
-          if (keys.current['d']) { move.x -= rx; move.z -= rz; }
+          if (keys.current['a']) { move.x -= rx; move.z -= rz; }
+          if (keys.current['d']) { move.x += rx; move.z += rz; }
         }
 
         const isMoving = move.lengthSq() > 0;
