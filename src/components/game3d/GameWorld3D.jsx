@@ -46,6 +46,10 @@ import { applyFusionEffects } from './applyFusionEffects';
 import { tickCompanionAutoCombat, resetCompanionAutoCombat } from './companionAutoCombat';
 import { createRemotePlayersManager } from './RemotePlayersManager';
 import { createRemoteCompanionManager } from './RemoteCompanionManager';
+import { CompanionAISystem } from './ai/CompanionAISystem';
+import { EnemyAISystem } from './ai/EnemyAISystem';
+import { CombatSystem } from './combat/CombatSystem';
+import { AbilitySystem } from './skills/AbilitySystem';
 import { ENEMY_SPAWNS } from './enemySpawnConfig';
 import { broadcastEnemyKill } from './enemyRespawnManager';
 import PlayerInteractionMenu from './PlayerInteractionMenu';
@@ -339,6 +343,7 @@ export default function GameWorld3D() {
     // Shared FBX loader (used for player + enemies + quest NPCs)
     const loader = new FBXLoader();
     const clock = new THREE.Clock();
+    const playerModelRef = { current: null };
 
     // Quest-NPC idle clip — uses the ARCHER idle (player-style anim set), not the
     // mutant idle that enemies use. Quest NPCs must ONLY play this idle.
@@ -351,79 +356,8 @@ export default function GameWorld3D() {
       );
     });
 
-    // QUEST NPCs — 5 archers at fixed positions, idle animation, "QUEST" label in DOM.
-    // TEMPORARILY DISABLED
+    // Quest NPC spawning is currently disabled.
     const questNPCs = []; // { id, name, group, mixer, idleAction }
-    /* QUEST_NPCS.forEach((spawn) => {
-      loader.load(ARCHER_URL, (fbx) => {
-        const m = fbx;
-        const box = new THREE.Box3().setFromObject(fbx);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 1.7 / maxDim;
-        m.scale.setScalar(scale);
-        m.position.set(spawn.pos[0], spawn.pos[1], spawn.pos[2]);
-        // Random facing so they don't all look the same way
-        m.rotation.y = Math.random() * Math.PI * 2;
-
-        // Light emissive tint per NPC so each is visually distinct (subtle, not red)
-        m.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = !node.isSkinnedMesh;
-            node.receiveShadow = true;
-            if (node.material) {
-              const mats = Array.isArray(node.material) ? node.material : [node.material];
-              const tinted = mats.map((mat) => {
-                const c = mat.clone();
-                c.emissive = new THREE.Color(spawn.tint);
-                c.emissiveIntensity = 0.08;
-                return c;
-              });
-              node.material = Array.isArray(node.material) ? tinted : tinted[0];
-            }
-          }
-        });
-
-        // Friendly golden ground ring marking this as a quest giver
-        const ringGeo = new THREE.RingGeometry(0.7 / scale, 0.95 / scale, 32);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: 0xfacc15,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.55,
-        });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.02 / scale;
-        m.add(ring);
-
-        scene.add(m);
-        // Stand the quest NPC's feet on the terrain
-        snapToGround(m, 0);
-
-        const npcMixer = new THREE.AnimationMixer(m);
-        const npcEntry = {
-          id: spawn.id,
-          name: spawn.name,
-          group: m,
-          mixer: npcMixer,
-          idleAction: null,
-          ringMesh: ring,
-        };
-        questNPCs.push(npcEntry);
-
-        // Attach the dedicated archer-idle clip (NOT the enemy mutant idle)
-        questNPCIdleClipPromise.then((clip) => {
-          if (clip && npcMixer) {
-            const action = npcMixer.clipAction(clip);
-            // Slightly randomize timeScale so they don't all idle in sync
-            action.setEffectiveTimeScale(0.9 + Math.random() * 0.2);
-            npcEntry.idleAction = action;
-            action.reset().fadeIn(0.3).play();
-          }
-        });
-        });
-        }); */
 
         // COMPANION SPAWN — rideable mount (GLB w/ embedded clips OR FBX w/ separate idle+walk anim files).
     const companionDef = companionDefRef.current;
@@ -631,111 +565,7 @@ export default function GameWorld3D() {
       }
     };
 
-    // WORLD BOSS SPAWNS — supersized champion enemies with ×scale, ×HP, ×XP. Seeded into bossStore.
-    // TEMPORARILY DISABLED
-    // (bossEntities array was declared earlier so the event bus could capture it.)
-    /* setBosses(BOSSES.map((b) => ({
-      id: b.id, name: b.name, title: b.title,
-      x: b.pos[0], z: b.pos[2],
-      hp: 0, maxHp: 0, alive: true,
-    })));
-
-    BOSSES.forEach((bossDef) => {
-      loader.load(CREATURE_MODEL_URL, (fbx) => {
-        const bossModel = fbx;
-        const champBase = ENEMY_STAT_TEMPLATES.champion;
-        const champDerived = computeDerivedStats(champBase, []);
-        const bossMaxHp = champDerived.maxHP * BOSS_HP_MULT;
-        // Boss derived stats: champion damage + scaled HP
-        const bossDerived = { ...champDerived, maxHP: bossMaxHp };
-
-        // Scale = same auto-size as normal enemies, then ×7 for boss
-        const box = new THREE.Box3().setFromObject(fbx);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const bossScale = (1.7 / maxDim) * BOSS_SCALE_MULT;
-        bossModel.scale.setScalar(bossScale);
-        bossModel.position.set(bossDef.pos[0], bossDef.pos[1], bossDef.pos[2]);
-
-        // Track mesh materials for the death-fade pass
-        const tintMaterials = [];
-        bossModel.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = !node.isSkinnedMesh;
-            node.receiveShadow = true;
-            if (node.material) {
-              const mats = Array.isArray(node.material) ? node.material : [node.material];
-              mats.forEach((m) => tintMaterials.push(m));
-            }
-          }
-        });
-
-        // Big menacing ring with boss-specific color
-        const ringGeo = new THREE.RingGeometry(1.1 / bossScale, 1.4 / bossScale, 32);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: bossDef.color, side: THREE.DoubleSide, transparent: true, opacity: 0.7,
-        });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.02 / bossScale;
-        bossModel.add(ring);
-
-        scene.add(bossModel);
-        snapToGround(bossModel, 0);
-
-        const bossMixer = new THREE.AnimationMixer(bossModel);
-        // Bosses are stationary sentinels until aggro'd; reuse enemy AI shape
-        // but set state to 'idle' and never wander (zoneRadius=0).
-        const bossEntry = {
-          id: bossDef.id,
-          group: bossModel,
-          mixer: bossMixer,
-          walkAction: null,
-          idleAction: null,
-          state: 'idle',
-          stateTimer: 0,
-          target: null,
-          alive: true,
-          hitCooldown: 0,
-          tintMaterials,
-          zoneCenter: bossDef.pos,
-          zoneRadius: 0, // never wanders
-          tier: 'boss',
-          level: 10,
-          hp: bossMaxHp,
-          maxHp: bossMaxHp,
-          derived: bossDerived,
-          xpReward: BOSS_XP_MULT, // normal mob drops 1 XP → boss drops 15
-          attackCooldown: Math.random() * 1.5,
-          attacking: false,
-          attackWindupTimer: 0,
-          isBoss: true,
-          bossName: bossDef.name,
-        };
-        enemies.push(bossEntry);
-        bossEntities.push(bossEntry);
-
-        // Attach the new MMO-style boss brain. This drives ALL boss behavior
-        // (state machine, threat, abilities, summons) and replaces the
-        // generic wander/attack logic for this entity.
-        bossEntry.brain = createBossBrain(bossEntry);
-        bossEntry.aiTarget = null; bossEntry.aiSpeed = 1.2;
-
-        // Seed the store with real HP now that we know maxHp
-        updateBoss(bossDef.id, { hp: bossMaxHp, maxHp: bossMaxHp, alive: true });
-
-        Promise.all([walkClipPromise, idleClipPromise]).then(([walkClip, idleClip]) => {
-          if (walkClip) {
-            const wa = bossMixer.clipAction(walkClip);
-            wa.setEffectiveTimeScale(0.55);
-            bossEntry.walkAction = wa;
-          }
-          if (idleClip) bossEntry.idleAction = bossMixer.clipAction(idleClip);
-          if (bossEntry.idleAction) bossEntry.idleAction.reset().fadeIn(0.2).play();
-        });
-      });
-    });
-    */
+    // World boss spawning is currently disabled; boss brain support remains available for active boss entities.
 
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(CREATURE_MODEL_URL, (fbx) => {
@@ -850,6 +680,7 @@ export default function GameWorld3D() {
     loader.load(ARCHER_URL, (fbx) => {
       model = fbx;
       modelRef.current = fbx;
+      playerModelRef.current = fbx;
       const box = new THREE.Box3().setFromObject(fbx);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
@@ -1002,6 +833,30 @@ export default function GameWorld3D() {
     // Prevent middle-click scroll/autoscroll on the canvas
     renderer.domElement.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
 
+    const playCompanionAnimation = (targetAnim) => {
+      if (targetAnim === companionCurrentAnimRef.current) return;
+      const idle = companionIdleActionRef.current;
+      const walk = companionWalkActionRef.current;
+      const run = companionRunActionRef.current;
+      if (targetAnim !== 'idle' && idle) idle.fadeOut(0.2);
+      if (targetAnim !== 'walk' && walk) walk.fadeOut(0.2);
+      if (targetAnim !== 'run' && run) run.fadeOut(0.2);
+      const next = targetAnim === 'run' ? run : targetAnim === 'walk' ? walk : idle;
+      if (next) next.reset().fadeIn(0.2).play();
+      companionCurrentAnimRef.current = targetAnim;
+    };
+
+    const companionSystem = new CompanionAISystem({
+      companionRef: companionGroupRef,
+      ownerRef: playerModelRef,
+      sampleGroundY,
+      playAnimation: playCompanionAnimation,
+      getMounted: () => isMountedRef.current,
+    });
+    const enemySystem = new EnemyAISystem({ enemies, playerRef: playerModelRef, sampleGroundY });
+    const combatSystem = new CombatSystem({ calculateHit, getPlayerHUD, setHP, spawnDamageFloat, playActionSound });
+    const abilitySystem = new AbilitySystem({ getLoadout, castSkill, startSkillCooldown });
+
     // Animation loop
     let frameId;
     let uiFrameCounter = 0;
@@ -1134,51 +989,9 @@ export default function GameWorld3D() {
             companionCurrentAnimRef.current = targetAnim;
           }
         } else {
-          // Not mounted — companion follows the player like a pet.
-          // Walks/runs toward player only while WASD is held; idles otherwise.
+          // Not mounted — steering-based companion AI prevents snap/micro-jitter near the player.
           if (!dodgeVanish.active) model.visible = true;
-          if (compGroup) {
-            const TRAIL = 1.8;
-            const dx = model.position.x - compGroup.position.x;
-            const dz = model.position.z - compGroup.position.z;
-            const dist = Math.sqrt(dx * dx + dz * dz);
-            let chasing = false;
-            if (isMoving && dist > TRAIL) {
-              if (dist > 25) {
-                compGroup.position.x = model.position.x - (dx / dist) * TRAIL;
-                compGroup.position.z = model.position.z - (dz / dist) * TRAIL;
-              } else {
-                const fs = isRunning ? RUN_SPEED * 0.85 : WALK_SPEED * 0.9;
-                const nx = dx / dist, nz = dz / dist;
-                compGroup.position.x += nx * fs * delta;
-                compGroup.position.z += nz * fs * delta;
-                const faceQ = new THREE.Quaternion().setFromAxisAngle(
-                  new THREE.Vector3(0, 1, 0), Math.atan2(nx, nz));
-                compGroup.quaternion.slerp(faceQ, ROT_SMOOTH);
-                chasing = true;
-              }
-            }
-            if (mapReady) {
-              const gy = sampleGroundY(compGroup.position.x, compGroup.position.z);
-              if (gy !== null) compGroup.position.y = gy;
-            }
-            // 3-state animation: idle when still, walk when player walks,
-            // run when Shift+W is held. Same rules as mounted.
-            const hasRun = !!companionRunActionRef.current;
-            let targetAnim = 'idle';
-            if (chasing) targetAnim = isRunning && hasRun ? 'run' : 'walk';
-            if (targetAnim !== companionCurrentAnimRef.current) {
-              const idle = companionIdleActionRef.current;
-              const walk = companionWalkActionRef.current;
-              const run  = companionRunActionRef.current;
-              if (targetAnim !== 'idle' && idle) idle.fadeOut(0.2);
-              if (targetAnim !== 'walk' && walk) walk.fadeOut(0.2);
-              if (targetAnim !== 'run'  && run)  run.fadeOut(0.2);
-              const next = targetAnim === 'run' ? run : targetAnim === 'walk' ? walk : idle;
-              if (next) next.reset().fadeIn(0.2).play();
-              companionCurrentAnimRef.current = targetAnim;
-            }
-          }
+          companionSystem.update(delta, { ownerMoving: isMoving, ownerRunning: isRunning, ownerYaw: orbit.current.yaw });
         }
 
         // ─── Companion proximity prompt ───
@@ -1511,10 +1324,7 @@ export default function GameWorld3D() {
             const activeWeaponId = getActiveWeaponId();
             reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: masteryRes.isCrit, isBoss: !!closestEnemy.isBoss });
 
-            closestEnemy.hp -= dmg;
-            closestEnemy.hitCooldown = 0.25;
-            spawnDamageFloat(closestEnemy.id, dmg);
-            playActionSound('enemy_hit');
+            combatSystem.applyDamage(closestEnemy, dmg, { sourceId: closestEnemy.id, sound: 'enemy_hit' });
             // Boss threat credit — feeds the boss brain's aggro table.
             if (closestEnemy.isBoss && closestEnemy.brain) {
               closestEnemy.brain.recordDamage('local_player', dmg);
@@ -1566,6 +1376,7 @@ export default function GameWorld3D() {
         }
       }
 
+      combatSystem.update(delta);
       tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs(); tickFusion();
       applyFusionEffects(model, companionGroupRef.current, isMountedRef.current);
       if (companionAbilityPressed.current) { const abId = companionAbilityPressed.current; companionAbilityPressed.current = null; processCompanionAbilityPress({ abilityId: abId, scene, model, companionGroup: companionGroupRef.current, enemies, cachedDeathClip, companionDefId: companionDefRef.current?.id, playerXPRef, playerLevelRef, setScore, setPlayerXP, setPlayerLevel, spawnXPFloat, spawnDamageFloat, xpForLevel, awardXP, activeEffectsRef: activeEffects }); }
