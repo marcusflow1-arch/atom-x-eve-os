@@ -836,6 +836,7 @@ export default function GameWorld3D() {
     let mixer;
     let model;
     let playerAnim;
+    const dodgeFade = { active: false, timer: 0, duration: 0.45, materials: [] };
     const crouchTogglePressed = { current: false };
     const lastDirectionTap = { current: {} };
     const DOUBLE_TAP_MS = 280;
@@ -884,6 +885,21 @@ export default function GameWorld3D() {
       playerAnim.playOneShot(name, timeScale);
     };
 
+    const startDodgeFade = () => {
+      if (!model) return;
+      dodgeFade.active = true;
+      dodgeFade.timer = 0;
+      dodgeFade.materials = [];
+      model.traverse((node) => {
+        if (!node.isMesh || !node.material) return;
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+        mats.forEach((mat) => {
+          dodgeFade.materials.push({ mat, transparent: mat.transparent, opacity: mat.opacity });
+          mat.transparent = true;
+        });
+      });
+    };
+
     const onKeyDown = (e) => {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
@@ -898,7 +914,10 @@ export default function GameWorld3D() {
         const nowMs = performance.now();
         if (nowMs - (lastDirectionTap.current[k] || 0) <= DOUBLE_TAP_MS) {
           const dodge = dodgeKeyMap[k];
-          if (playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) playActionSound('player_jump');
+          if (playerAnim?.requestDodge?.(dodge.vector(), dodge.direction)) {
+            startDodgeFade();
+            playActionSound('player_jump');
+          }
           lastDirectionTap.current[k] = 0;
           e.preventDefault();
           return;
@@ -987,6 +1006,20 @@ export default function GameWorld3D() {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
+      if (dodgeFade.active) {
+        dodgeFade.timer += delta;
+        const half = dodgeFade.duration * 0.5;
+        const opacity = dodgeFade.timer < half ? Math.max(0, 1 - dodgeFade.timer / half) : Math.min(1, (dodgeFade.timer - half) / half);
+        dodgeFade.materials.forEach(({ mat }) => { mat.opacity = opacity; });
+        if (dodgeFade.timer >= dodgeFade.duration) {
+          dodgeFade.materials.forEach(({ mat, transparent, opacity }) => {
+            mat.opacity = opacity;
+            mat.transparent = transparent;
+          });
+          dodgeFade.active = false;
+          dodgeFade.materials = [];
+        }
+      }
       if (remoteManagerRef.current) remoteManagerRef.current.update(delta);
       remoteCompanionManager.update(delta);
       if (remoteManagerRef.current) { const mountedIds = remoteCompanionManager.getMountedPlayerIds(); remoteManagerRef.current.getRemotes?.().forEach((r, pid) => { if (r.group) r.group.visible = !mountedIds.has(pid); }); }
@@ -1203,7 +1236,9 @@ export default function GameWorld3D() {
             const lockYaw = Math.atan2(-toTarget.x, -toTarget.z);
             const yawDelta = Math.atan2(Math.sin(lockYaw - o.yaw), Math.cos(lockYaw - o.yaw));
             o.yaw += yawDelta * Math.min(1, 3.0 * delta);
-            model.quaternion.slerp(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(toTarget.x, toTarget.z)), ROT_SMOOTH);
+            if (!playerAnim?.isMovementOverridden?.()) {
+              model.quaternion.slerp(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(toTarget.x, toTarget.z)), ROT_SMOOTH);
+            }
           }
           const idealCameraPosition = new THREE.Vector3(
             model.position.x - toTarget.x * o.distance,
