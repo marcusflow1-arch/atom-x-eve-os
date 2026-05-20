@@ -174,6 +174,7 @@ export default function GameWorld3D() {
   const nearbyNPCRef = useRef(null);
   const interactPressed = useRef(false);
   const attackPressed = useRef(false);
+  const rangedClickAttackPressed = useRef(false);
   const oneShotPlaying = useRef(false);
   const lockOnTargetRef = useRef(null);
   const playerAttackCooldown = useRef(0);
@@ -749,8 +750,8 @@ export default function GameWorld3D() {
         d: { direction: 'right', vector: new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)) },
       };
       if (!axes) return freeMap[key] || { direction: 'forward', vector: new THREE.Vector3(0, 0, -1).applyQuaternion(model.quaternion) };
-      if (keys.current['a']) return { direction: 'left', vector: axes.right.clone().multiplyScalar(-1) };
-      if (keys.current['d']) return { direction: 'right', vector: axes.right.clone() };
+      if (keys.current['a']) return { direction: 'left', vector: axes.right.clone() };
+      if (keys.current['d']) return { direction: 'right', vector: axes.right.clone().multiplyScalar(-1) };
       if (keys.current['s']) return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
       if (keys.current['w']) return { direction: 'forward', vector: axes.forward.clone() };
       return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
@@ -827,9 +828,8 @@ export default function GameWorld3D() {
     const onMouseDown = (e) => {
       // Left click + hold = rotate camera, middle click = Lock-On, right click = Block
       if (e.button === 0) {
-        drag.current.active = true;
-        drag.current.x = e.clientX;
-        drag.current.y = e.clientY;
+        rangedClickAttackPressed.current = true;
+        attackPressed.current = true;
         e.preventDefault();
       } else if (e.button === 1) {
         e.preventDefault();
@@ -1331,18 +1331,20 @@ export default function GameWorld3D() {
         if (playerAttackCooldown.current > 0) playerAttackCooldown.current -= delta;
         if (playerInvulTimer.current > 0) playerInvulTimer.current -= delta;
         if (attackPressed.current) {
-          attackPressed.current = false; dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
-          if (playerAttackCooldown.current <= 0) {
-            // Weapon Mastery attack-speed bonus shortens cooldown further.
-            playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN * getAttackSpeedMultiplier() / getMasteryAttackSpeedMult();
-            // Attack montage is manually gated by the animation state machine.
-            if (!playerAnim?.HandleCombat?.(getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick')) {
-              playOneShot(getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick', 1.4);
-            }
-            playActionSound('player_attack');
+          attackPressed.current = false;
+          const isRangedClickAttack = rangedClickAttackPressed.current;
+          rangedClickAttackPressed.current = false;
+          if (playerAttackCooldown.current > 0) return;
+          dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
+          // 0.2 second delay between attacks.
+          playerAttackCooldown.current = 0.2;
+          // Attack montage is manually gated by the animation state machine.
+          if (!playerAnim?.HandleCombat?.(isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick')) {
+            playOneShot(isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick', 1.4);
           }
+          playActionSound('player_attack');
           let closestEnemy = null;
-          let closestEnemyDist = getActiveWeaponPath() === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
+          let closestEnemyDist = isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
           enemies.forEach((enemy) => {
             if (!enemy.alive || enemy.dying) return;
             const dx = enemy.group.position.x - model.position.x;
