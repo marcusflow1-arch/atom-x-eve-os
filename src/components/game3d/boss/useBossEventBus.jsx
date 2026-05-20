@@ -14,7 +14,9 @@
 //   // on cleanup:
 //   detachBossBus();
 
+import * as THREE from 'three';
 import { createWarningCircle, createMeteorImpact, createShadowChargeTrail, createConeTelegraph, createChaosOrb } from './bossAbilityVfx';
+import { createTrackingAOE, createDelayedTask, createShockwave } from './adaptiveBossVfx';
 
 export function attachBossEventBus(ctx) {
   const {
@@ -44,6 +46,90 @@ export function attachBossEventBus(ctx) {
         );
         activeEffectsRef.current.push(fx);
       }
+      return;
+    }
+
+    if (type === 'tracking_aoe') {
+      const m = getModel();
+      if (!m) return;
+      const fx = createTrackingAOE(scene, {
+        getTargetPosition: () => getModel()?.position,
+        getGroundY: (x, z) => sampleGroundY?.(x, z) ?? 0.3,
+        radius: payload.radius,
+        followTime: payload.followTime,
+        explodeDelay: payload.explodeDelay,
+        onExplode: (pos) => {
+          activeEffectsRef.current.push(createShockwave(scene, pos.x, pos.z, sampleGroundY?.(pos.x, pos.z) ?? 0.3, payload.radius));
+          const cur = getModel();
+          if (cur) {
+            const dx = cur.position.x - pos.x;
+            const dz = cur.position.z - pos.z;
+            if (dx * dx + dz * dz < payload.radius * payload.radius) applyDamageToLocalPlayer(payload.damage);
+          }
+        },
+      });
+      activeEffectsRef.current.push(fx);
+      return;
+    }
+
+    if (type === 'teleport_behind_player') {
+      const m = getModel();
+      if (!m || !boss) return;
+      const behindOffset = new THREE.Vector3(0, 0, -3).applyQuaternion(m.quaternion);
+      boss.group.position.copy(m.position.clone().add(behindOffset));
+      const gy = sampleGroundY?.(boss.group.position.x, boss.group.position.z);
+      if (gy !== null && gy !== undefined) boss.group.position.y = gy;
+      boss.group.lookAt(m.position);
+      activeEffectsRef.current.push(createDelayedTask(payload.delay ?? 0.5, () => {
+        const cur = getModel();
+        if (!cur) return;
+        const dx = cur.position.x - boss.group.position.x;
+        const dz = cur.position.z - boss.group.position.z;
+        if (dx * dx + dz * dz < (payload.radius ?? 3) * (payload.radius ?? 3)) applyDamageToLocalPlayer(payload.damage);
+      }));
+      return;
+    }
+
+    if (type === 'sky_dive_attack') {
+      const m = getModel();
+      if (!m || !boss) return;
+      boss.group.position.y += 25;
+      activeEffectsRef.current.push(createDelayedTask(payload.chargeTime ?? 1.5, () => {
+        const cur = getModel();
+        if (!cur) return;
+        boss.group.position.copy(cur.position);
+        const gy = sampleGroundY?.(cur.position.x, cur.position.z) ?? cur.position.y;
+        boss.group.position.y = gy;
+        activeEffectsRef.current.push(createShockwave(scene, cur.position.x, cur.position.z, gy, payload.radius ?? 8));
+        const dx = cur.position.x - boss.group.position.x;
+        const dz = cur.position.z - boss.group.position.z;
+        if (dx * dx + dz * dz < (payload.radius ?? 8) * (payload.radius ?? 8)) applyDamageToLocalPlayer(payload.damage);
+      }));
+      return;
+    }
+
+    if (type === 'delayed_cone_damage') {
+      activeEffectsRef.current.push(createDelayedTask(payload.delay ?? 0.75, () => {
+        const m = getModel();
+        if (!m) return;
+        const dx = m.position.x - payload.x;
+        const dz = m.position.z - payload.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist > payload.range) return;
+        const playerAng = Math.atan2(dx, dz);
+        const half = (payload.angleDeg * Math.PI / 180) / 2;
+        const diff = Math.atan2(Math.sin(playerAng - payload.yaw), Math.cos(playerAng - payload.yaw));
+        if (Math.abs(diff) <= half) applyDamageToLocalPlayer(payload.damage);
+      }));
+      return;
+    }
+
+    if (type === 'phase_shift') {
+      const m = getModel();
+      const x = boss?.group?.position?.x ?? m?.position?.x ?? 0;
+      const z = boss?.group?.position?.z ?? m?.position?.z ?? 0;
+      const y = sampleGroundY?.(x, z) ?? 0.3;
+      activeEffectsRef.current.push(createShockwave(scene, x, z, y, 5 + (payload.phase || 1)));
       return;
     }
 

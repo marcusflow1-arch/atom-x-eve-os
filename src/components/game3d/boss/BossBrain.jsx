@@ -22,6 +22,8 @@ import { createStateMachine, BOSS_STATES, DETECTION_RANGE, MELEE_RANGE, RANGED_T
 import { createThreatTable } from './BossThreatSystem';
 import { createSkillController, BOSS_ABILITIES } from './BossSkillController';
 import { createSummoner } from './BossSummoner';
+import { AdaptiveBossBrain } from './AdaptiveBossBrain';
+import { emitAdaptiveAction } from './adaptiveBossEvents';
 
 const PATROL_RADIUS = 6;
 
@@ -30,6 +32,7 @@ export function createBossBrain(bossEntity) {
   const threat = createThreatTable();
   const skills = createSkillController(bossEntity.id);
   const summoner = createSummoner(bossEntity.id);
+  const adaptive = new AdaptiveBossBrain(bossEntity);
 
   // Per-instance randomized think cadence — boss "thinks" 4–6 Hz, never in
   // lockstep with other bosses or enemies. This is the cornerstone of the
@@ -65,6 +68,7 @@ export function createBossBrain(bossEntity) {
     sm.tick(dt);
     threat.tick(dt);
     skills.tick(dt);
+    adaptive.tickCooldowns(dt);
 
     // Despawn expired minions
     const expired = summoner.getExpired();
@@ -102,6 +106,15 @@ export function createBossBrain(bossEntity) {
     const target = threat.pickTarget(playersInRange, {
       bossX, bossZ, rangedThreshold: RANGED_THRESHOLD,
     });
+
+    const highestPlayerLevel = Math.max(1, ...playersInRange.map((p) => p.level || p.playerLevel || 1));
+    adaptive.syncScaling(highestPlayerLevel);
+    const segmentEvent = adaptive.syncSegments();
+    if (segmentEvent) {
+      window.dispatchEvent(new CustomEvent('bossAction', {
+        detail: { type: 'phase_shift', bossId: bossEntity.id, payload: segmentEvent },
+      }));
+    }
 
     const hpFrac = bossEntity.maxHp > 0 ? bossEntity.hp / bossEntity.maxHp : 1;
     const summonCount = summoner.getCount();
@@ -165,11 +178,16 @@ export function createBossBrain(bossEntity) {
         summonCount,
         enraged,
       };
-      const chosen = skills.chooseAbility(choiceCtx);
-      if (chosen) {
-        const cdMult = enraged ? 0.65 : 1; // enraged → 35% shorter recovery
-        const payload = buildPayload(chosen, target, playersInRange, bossX, bossZ, bossY, cdMult);
-        if (payload) skills.tryCast(chosen, payload);
+      const adaptiveAction = adaptive.decide(dt, target);
+      if (adaptiveAction && emitAdaptiveAction(bossEntity, adaptiveAction, target, adaptive)) {
+        bossEntity.aiTarget = null;
+      } else {
+        const chosen = skills.chooseAbility(choiceCtx);
+        if (chosen) {
+          const cdMult = enraged ? 0.65 : 1; // enraged → 35% shorter recovery
+          const payload = buildPayload(chosen, target, playersInRange, bossX, bossZ, bossY, cdMult);
+          if (payload) skills.tryCast(chosen, payload);
+        }
       }
 
       // Position management — engage / kite based on state
@@ -276,6 +294,7 @@ export function createBossBrain(bossEntity) {
       enraged: sm.isEnraged(),
       summons: summoner.getCount(),
       casting: skills.currentCastId(),
+      adaptive: adaptive.debug(),
     }),
   };
 }
