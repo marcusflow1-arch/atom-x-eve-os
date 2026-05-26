@@ -61,7 +61,7 @@ import { useCallback } from 'react';
 import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
 import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
-import { getActiveWeaponPath } from './weaponClassBuffStore';
+import { getActiveWeaponPath, setActiveWeaponPath } from './weaponClassBuffStore';
 import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
@@ -851,8 +851,14 @@ export default function GameWorld3D() {
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
-      // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
-      // Note: Z also cycles weapon class (handled in HUDVitalsRow key listener).
+      // Z = cycle weapon class (damage → ranged → defense → damage)
+      if (k === 'z') {
+        const paths = ['damage', 'ranged', 'defense'];
+        const current = getActiveWeaponPath();
+        const nextIdx = (paths.indexOf(current) + 1) % paths.length;
+        setActiveWeaponPath(paths[nextIdx]);
+      }
+      // X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
         e.preventDefault();
