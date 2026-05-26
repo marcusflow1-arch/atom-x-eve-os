@@ -439,11 +439,11 @@ export default function LibrarySidebar() {
           )}
 
           {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
-          <motion.div
+          {!isSidebarCollapsed && <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`${positionClass} left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`${positionClass} left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
           >
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (
@@ -713,7 +713,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
             </button>
 
-          </motion.div>
+          </motion.div>}
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
