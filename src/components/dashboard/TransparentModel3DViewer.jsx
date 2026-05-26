@@ -1940,14 +1940,25 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
       <div ref={floatingTextContainerRef} className="absolute inset-0 pointer-events-none z-50 overflow-hidden" />
 
-      <div className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase pointer-events-none"
-        style={{
-          background: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          color: 'rgba(255,255,255,0.7)'
-        }}>
-        {activeCharLabel === 'ybot' ? 'Y-Bot' : 'C1'} ⟨ \\ ⟩
+      <div className="absolute bottom-4 right-4 z-10 flex gap-3 pointer-events-none">
+        <div className="px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase"
+          style={{
+            background: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.7)'
+          }}>
+          Weapon ⟨ Z ⟩
+        </div>
+        <div className="px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase"
+          style={{
+            background: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.7)'
+          }}>
+          {activeCharLabel === 'ybot' ? 'Y-Bot' : 'C1'} ⟨ \\ ⟩
+        </div>
       </div>
     </div>
   );
