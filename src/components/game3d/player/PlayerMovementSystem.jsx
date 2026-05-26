@@ -33,8 +33,8 @@ export class PlayerMovementSystem {
     tmpMove.set(0, 0, 0);
     if (this.keys.current.w) { tmpMove.x += fx; tmpMove.z += fz; }
     if (this.keys.current.s) { tmpMove.x -= fx; tmpMove.z -= fz; }
-    if (this.keys.current.a) { tmpMove.x -= rx; tmpMove.z -= rz; }
-    if (this.keys.current.d) { tmpMove.x += rx; tmpMove.z += rz; }
+    if (this.keys.current.a) { tmpMove.x += rx; tmpMove.z += rz; }
+    if (this.keys.current.d) { tmpMove.x -= rx; tmpMove.z -= rz; }
 
     const moveAmount = Math.min(1, tmpMove.length());
     const direction = this.keys.current.s ? 'backward' : this.keys.current.a ? 'left' : this.keys.current.d ? 'right' : 'forward';
@@ -101,8 +101,8 @@ export class PlayerRotationSystem {
     let x = 0, z = 0;
     if (this.keys.current.w) { x += fx; z += fz; }
     if (this.keys.current.s) { x -= fx; z -= fz; }
-    if (this.keys.current.a) { x -= rx; z -= rz; }
-    if (this.keys.current.d) { x += rx; z += rz; }
+    if (this.keys.current.a) { x += rx; z += rz; }
+    if (this.keys.current.d) { x -= rx; z -= rz; }
     if (x * x + z * z > 0.001) {
       tmpQuat.setFromAxisAngle(upAxis, Math.atan2(x, z));
       model.quaternion.slerp(tmpQuat, Math.min(1, this.rotationSmooth * delta));
