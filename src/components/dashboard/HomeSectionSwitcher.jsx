@@ -3,14 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ChevronDown, Home, Star } from 'lucide-react';
 
 const SECTIONS = [
-  { id: 'avatar',   label: 'AI Avatar Home', icon: Home, color: 'cyan' },
-  { id: 'discover', label: "What's New",     icon: Star, color: 'amber' },
+  { id: 'avatar',    label: 'AI Avatar Home',       icon: Home, color: 'cyan' },
+  { id: 'developer', label: 'Developer Spotlight',  icon: Star, color: 'purple' },
+  { id: 'discover',  label: "What's New",           icon: Star, color: 'amber' },
 ];
 
 const DOT_COLORS = {
   cyan:   'bg-cyan-400',
   purple: 'bg-purple-400',
   amber:  'bg-amber-400',
+  green:  'bg-green-400',
 };
 
 const ARROW_BASE = "flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 pointer-events-auto";
