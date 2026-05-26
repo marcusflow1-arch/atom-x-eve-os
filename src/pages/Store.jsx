@@ -274,9 +274,26 @@ export default function Store() {
         genreData
     } = useGameFilters(games, loading);
 
-    // Apply storeFilters (genre, mode, choices, free, pvp) on top of the genre-wheel selection
+    // Apply storeFilters (genre, mode, choices, free, pvp, category) on top of the genre-wheel selection
     const applyStoreFilters = (gameList) => {
         return gameList.filter(game => {
+            // Category pill filter
+            if (storeFilters.category) {
+                const cat = storeFilters.category;
+                if (cat === 'new_releases') {
+                    const year = game.release_year || game.original_year || game.year;
+                    if (year && year < 2023) return false;
+                } else if (cat === 'trending') {
+                    if ((game.reviews || 0) < 500 && (game.rating || 0) < 4.3) return false;
+                } else if (cat === 'top_rated') {
+                    if ((game.rating || 0) < 4.5) return false;
+                } else if (cat === 'recommended') {
+                    if ((game.rating || 0) < 4.0) return false;
+                } else if (cat === 'hidden_gems') {
+                    // High rated but low review count = hidden gem
+                    if ((game.rating || 0) < 4.2 || (game.reviews || 0) > 5000) return false;
+                }
+            }
             // Genre filter
             if (storeFilters.genre) {
                 const g = (game.genre || '').toLowerCase();
@@ -287,14 +304,12 @@ export default function Store() {
                 const modes = (game.game_modes || game.modes || game.tags || [])
                     .map(m => (m || '').toLowerCase());
                 const target = storeFilters.mode.toLowerCase();
-                // also check top-level fields like multiplayer, co_op, pvp
                 const hasMode =
                     modes.some(m => m.includes(target.split(' ')[0])) ||
                     (target === 'single player' && game.single_player) ||
                     (target === 'multiplayer' && game.multiplayer) ||
                     (target === 'co-op' && (game.co_op || game.coop)) ||
                     (target === 'pvp' && game.pvp);
-                // If game has no mode metadata at all, let it pass through
                 if (game.game_modes || game.modes) {
                     if (!hasMode) return false;
                 }

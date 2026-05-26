@@ -89,38 +89,44 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
         <div className="w-px h-5 bg-white/20 mx-4" />
       </div>
 
-      {/* ── RIGHT: Trading Post + Dev Cards + Search ── */}
-      <div className="flex items-center gap-4 flex-1 justify-end">
-        <motion.button
-          onClick={() => onTabChange('trading')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
-          className={`relative text-[11px] font-bold uppercase tracking-wider transition-all ${
-            isTradingActive ? 'text-white' : 'text-white/45 hover:text-white'
-          }`}
-        >
-          Trading Post
-          {isTradingActive && (
-            <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-blue-500 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
-          )}
-        </motion.button>
+      {/* ── RIGHT: Trading Post + Dev Cards (close to center divider) + Search (far right) ── */}
+      <div className="flex items-center flex-1">
+        {/* Trading Post & Dev Cards — immediately after the center divider */}
+        <div className="flex items-center gap-4">
+          <motion.button
+            onClick={() => onTabChange('trading')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            className={`relative text-[11px] font-bold uppercase tracking-wider transition-all ${
+              isTradingActive ? 'text-white' : 'text-white/45 hover:text-white'
+            }`}
+          >
+            Trading Post
+            {isTradingActive && (
+              <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-blue-500 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
+            )}
+          </motion.button>
 
-        <motion.button
-          onClick={() => onTabChange('devcards')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
-          className={`relative text-[11px] font-black uppercase tracking-wider transition-all ${
-            isDevCardActive ? 'text-amber-300' : 'text-amber-500/50 hover:text-amber-300'
-          }`}
-        >
-          Dev Cards
-          {isDevCardActive && (
-            <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-amber-400 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
-          )}
-        </motion.button>
+          <motion.button
+            onClick={() => onTabChange('devcards')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            className={`relative text-[11px] font-black uppercase tracking-wider transition-all ${
+              isDevCardActive ? 'text-amber-300' : 'text-amber-500/50 hover:text-amber-300'
+            }`}
+          >
+            Dev Cards
+            {isDevCardActive && (
+              <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-amber-400 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
+            )}
+          </motion.button>
+        </div>
 
-        {/* Search */}
-        <div className="w-px h-4 bg-white/10 mx-1" />
+        {/* Spacer pushes search to far right */}
+        <div className="flex-1" />
+
+        {/* Search — far right */}
+        <div className="w-px h-4 bg-white/10 mr-3" />
         <div className="flex items-center gap-2 min-w-[180px]">
           <Search className="w-3.5 h-3.5 flex-shrink-0 text-white/30" />
           <input
