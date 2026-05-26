@@ -83,6 +83,7 @@ import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
+import { useSidebarVisible } from '../hooks/useSidebarVisible';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
 {
@@ -185,6 +186,7 @@ export default function LunaTemplate() {
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
+  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
   // Stream Player State
   const [isLive, setIsLive] = useState(false);
@@ -575,16 +577,22 @@ export default function LunaTemplate() {
 
   return (
     <PageErrorBoundary pageName="LunaTemplate">
-    <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}>
+    <GlassPageFrame
+      sidebarVisible={sidebarVisible}
+      onSidebarToggle={toggleSidebar}
+      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}
+    >
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
     <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
       {/* 5% Left Area for Global Icons */}
-      <LunaLeftRail
-        isEnvironmentActive={isEnvironmentActive}
-        onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
-      />
+      {sidebarVisible && (
+        <LunaLeftRail
+          isEnvironmentActive={isEnvironmentActive}
+          onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
+        />
+      )}
 
       {/* 95% Main Area */}
       <div className="flex-1 relative h-full overflow-hidden" style={{

@@ -47,6 +47,7 @@ import { DollarSign, Building2 } from 'lucide-react';
 import StoreHeaderSearchPanel from '../components/store/StoreHeaderSearchPanel';
 import { ChevronDown } from 'lucide-react';
 import { MOCK_STUDIOS } from '../components/store/StudioDrawer';
+import { useSidebarVisible } from '../hooks/useSidebarVisible';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -186,7 +187,7 @@ export default function Store() {
     const { user } = useAuth();
     const { getCartCount } = useCart();
 
-    const [sidebarVisible, setSidebarVisible] = useState(true);
+    const [sidebarVisible, toggleSidebar] = useSidebarVisible();
     const [showOverview, setShowOverview] = useState(false);
     const [storeLibraryOpen, setStoreLibraryOpen] = useState(false);
     const [inPageStoreGameId, setInPageStoreGameId] = useState(null);
@@ -443,7 +444,7 @@ export default function Store() {
           <WishlistProvider>
             <GlassPageFrame
               sidebarVisible={sidebarVisible}
-              onSidebarToggle={() => setSidebarVisible(v => !v)}
+              onSidebarToggle={toggleSidebar}
               topContent={
                 <div className="flex items-center justify-between w-full gap-4">
                   <div className="flex items-center gap-6">

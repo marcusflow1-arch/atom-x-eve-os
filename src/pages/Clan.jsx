@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import { useSidebarVisible } from '../hooks/useSidebarVisible';
 
 export default function ClanPage() {
     const { user, updatePresenceContext } = useAuth();
@@ -45,13 +46,7 @@ export default function ClanPage() {
     // Entry gate state (authoritative)
     const [entryState, setEntryState] = useState('pending'); // 'pending' | 'intro' | 'clan'
     const [preselectedClanId, setPreselectedClanId] = useState(null);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
-
-    useEffect(() => {
-        const handler = (e) => setIsSidebarCollapsed(e.detail);
-        window.addEventListener('sidebarCollapseChange', handler);
-        return () => window.removeEventListener('sidebarCollapseChange', handler);
-    }, []);
+    const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
     useEffect(() => {
         const handleToggleRoster = () => setBottomTab(prev => prev === 'roster' ? 'home' : 'roster');
@@ -384,7 +379,10 @@ export default function ClanPage() {
     }
 
     return (
-        <GlassPageFrame bottomContent={
+        <GlassPageFrame
+            sidebarVisible={sidebarVisible}
+            onSidebarToggle={toggleSidebar}
+            bottomContent={
             <ClanBottomNav 
                 activeTab={bottomTab} 
                 onTabSelect={setBottomTab} 
@@ -397,22 +395,9 @@ export default function ClanPage() {
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
             {/* 5% Left Area for Global Icons */}
-            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center pt-24 pb-6`}>
-                {!isSidebarCollapsed && (
-                    <button
-                        onClick={() => {
-                            localStorage.setItem('sidebarCollapsed', 'true');
-                            window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: true }));
-                        }}
-                        className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md z-50 shadow-lg"
-                        title="Collapse Sidebar"
-                    >
-                        <ChevronLeft className="w-4 h-4 -ml-1" />
-                    </button>
-                )}
-
-                {/* Roster Button moved to LibrarySidebar */}
-            </div>
+            {sidebarVisible && (
+              <div className="w-[5%] min-w-[80px] border-r border-white/20 h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center pt-24 pb-6" />
+            )}
 
             {/* 95% Main Clan Area */}
             <div className="flex-1 relative h-full pt-20">

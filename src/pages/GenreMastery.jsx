@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
@@ -93,14 +94,8 @@ export default function GenreMastery({ onClose }) {
   const [marketView, setMarketView] = useState('cards'); // 'cards' | 'blackmarket' | 'tradingpost'
   const [cardSearchQuery, setCardSearchQuery] = useState('');
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => setIsSidebarCollapsed(e.detail);
-    window.addEventListener('sidebarCollapseChange', handler);
-    return () => window.removeEventListener('sidebarCollapseChange', handler);
-  }, []);
 
   const { data: allGames = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games-for-genre-mastery'],
@@ -166,23 +161,16 @@ export default function GenreMastery({ onClose }) {
   }, [marketView]);
 
   return (
-    <GlassPageFrame bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}>
+    <GlassPageFrame
+      sidebarVisible={sidebarVisible}
+      onSidebarToggle={toggleSidebar}
+      bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}
+    >
       <div className="flex w-full h-full">
         {/* 5% Left Sidebar for Global Icons */}
-        <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/10'} flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm`}>
-            {!isSidebarCollapsed && (
-                <button
-                    onClick={() => {
-                        localStorage.setItem('sidebarCollapsed', 'true');
-                        window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: true }));
-                    }}
-                    className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md z-50 shadow-lg"
-                    title="Collapse Sidebar"
-                >
-                    <ChevronLeft className="w-4 h-4 -ml-1" />
-                </button>
-            )}
-        </div>
+        {sidebarVisible && (
+          <div className="w-[5%] min-w-[80px] border-r border-white/10 flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm" />
+        )}
         
         {/* Main Content Area */}
         <div className="flex-1 h-screen text-white font-sans overflow-hidden relative flex flex-col"
