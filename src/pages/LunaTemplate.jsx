@@ -80,6 +80,9 @@ import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOffli
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
+import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
+import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
+import WhatsNewSection from '../components/dashboard/WhatsNewSection';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
 {
@@ -181,6 +184,7 @@ export default function LunaTemplate() {
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
+  const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
 
   // Stream Player State
   const [isLive, setIsLive] = useState(false);
@@ -610,6 +614,44 @@ export default function LunaTemplate() {
             backgroundRepeat: 'no-repeat'
           }}>
         <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
+
+        {/* Home Section Switcher — left arrow + bottom arrow, only on default dashboard view */}
+        {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && !clickedSlot &&
+          <HomeSectionSwitcher currentSection={homeSection} onSectionChange={setHomeSection} />
+        }
+
+        {/* Developer Spotlight Section — slides in when homeSection === 'developer' */}
+        <AnimatePresence>
+          {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection === 'developer' &&
+            <motion.div
+              key="developer-section"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="absolute z-30 pointer-events-auto overflow-hidden"
+              style={{ left: '360px', top: '80px', right: '16px', bottom: '80px' }}>
+              <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />
+            </motion.div>
+          }
+        </AnimatePresence>
+
+        {/* What's New Section */}
+        <AnimatePresence>
+          {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection === 'discover' &&
+            <motion.div
+              key="discover-section"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="absolute z-30 pointer-events-auto overflow-hidden"
+              style={{ left: '360px', top: '80px', right: '16px', bottom: '80px' }}>
+              <WhatsNewSection />
+            </motion.div>
+          }
+        </AnimatePresence>
+
         <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
 
 
@@ -768,9 +810,9 @@ export default function LunaTemplate() {
                 }
       </AnimatePresence>
 
-      {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
+      {/* Focus Mode Panel - Shows when UI is hidden (I key) — only on avatar section */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !avatarFocusMode &&
+        {!uiVisible && !showConsoleMode && !avatarFocusMode && homeSection === 'avatar' &&
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
