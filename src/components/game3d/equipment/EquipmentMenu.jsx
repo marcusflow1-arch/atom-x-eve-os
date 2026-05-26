@@ -6,17 +6,13 @@ import AbilitiesTab from './AbilitiesTab';
 import GearTab from './GearTab';
 import TalentsTab from './TalentsTab';
 import CompanionTab from './CompanionTab';
-import WeaponPathTab from './WeaponPathTab';
 import SkillsTab from './SkillsTab';
-import MiscTab from './MiscTab';
 
 const TABS = [
   { id: 'abilities', label: 'Abilities', hotkey: 'Q' },
   { id: 'gear',      label: 'Gear',     hotkey: null },
   { id: 'talents',   label: 'Talents',  hotkey: 'E' },
-  { id: 'combat',    label: 'Combat',   hotkey: null },
   { id: 'skills',    label: 'Skills',   hotkey: null },
-  { id: 'misc',      label: 'Loot',     hotkey: null },
   { id: 'companion', label: 'Companion', hotkey: null },
 ];
 
@@ -106,9 +102,7 @@ export default function EquipmentMenu({ open, onClose }) {
       {tab === 'abilities' && <AbilitiesTab state={state} />}
       {tab === 'gear' &&      <GearTab state={state} />}
       {tab === 'talents' &&   <TalentsTab state={state} />}
-      {tab === 'combat' &&    <WeaponPathTab />}
       {tab === 'skills' &&    <SkillsTab />}
-      {tab === 'misc' &&      <MiscTab />}
       {tab === 'companion' && <CompanionTab />}
     </div>
   );

@@ -26,9 +26,9 @@ export const ABILITY_GROUPS = [
 ];
 
 export const TALENT_TREES = [
-  { id: 'tree_offense',  label: 'Offense' },
-  { id: 'tree_defense',  label: 'Defense' },
-  { id: 'tree_mystic',   label: 'Mystic' },
+  { id: 'tree_range',   label: 'Range',   weaponPath: 'ranged',  icon: '🏹', color: '#10b981' },
+  { id: 'tree_defense', label: 'Defense', weaponPath: 'defense', icon: '🗡️', color: '#3b82f6' },
+  { id: 'tree_offense', label: 'Offense', weaponPath: 'damage',  icon: '⚔️', color: '#ef4444' },
 ];
 
 const buildDefaultState = () => ({
@@ -46,7 +46,7 @@ const buildDefaultState = () => ({
   // Selected item per tab (drives right-side detail panel)
   selectedAbilityGroup: 'martial_arts',
   selectedGearCategory: 'weapon',
-  selectedTalentTree: 'tree_offense',
+  selectedTalentTree: 'tree_range',
 });
 
 let state = (() => {
