@@ -1770,7 +1770,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   // Removed internal calendar logic in favor of global IntelligentCalendarOverlay
 
   return (
-    <div className="relative h-full flex flex-col items-center focus-panel-scroll overflow-hidden pointer-events-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="relative h-full flex flex-col items-center focus-panel-scroll pointer-events-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - Quick Access Icons & Live Streaming */}
