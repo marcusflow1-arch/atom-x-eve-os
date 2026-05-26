@@ -463,8 +463,8 @@ export default function Store() {
                 onLibraryToggle={() => setStoreLibraryOpen(v => !v)}
                 activeFilters={storeFilters}
                 onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
-                activeCategory={activeCategoryOverlay}
-                onCategoryChange={setActiveCategoryOverlay}
+                activeCategory={storeFilters.category || null}
+                onCategoryChange={(catId) => setStoreFilters(prev => ({ ...prev, category: catId }))}
                 showDevLabel={true}
               />
             }>

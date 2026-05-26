@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Store, ShoppingBag, ArrowRightLeft, Mic, MicOff, Search, X, Sparkles, Clock, Trophy, Flame, Gem } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRightLeft, Mic, MicOff, Search, Sparkles, Clock, Trophy, Flame, Gem } from 'lucide-react';
 
 const CATEGORY_PILLS = [
   { id: 'new_releases', label: 'New Release', icon: Clock },
@@ -10,245 +10,119 @@ const CATEGORY_PILLS = [
   { id: 'top_rated', label: 'Top Rated', icon: Trophy },
 ];
 
-function SearchDropdownPanel({ onClose }) {
-  const [searchValue, setSearchValue] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const handleMic = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-    const rec = new SR();
-    recognitionRef.current = rec;
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = 'en-US';
-    rec.onresult = (e) => setSearchValue(e.results[0][0].transcript);
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
-    rec.start();
-    setIsListening(true);
-  };
-
-  useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 100);
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
-      transition={{ duration: 0.2 }}
-      className="fixed left-0 right-0 z-[34] flex items-center justify-center px-6 py-3"
-      style={{
-        bottom: '48px',
-        background: 'rgba(6, 8, 14, 0.90)',
-        backdropFilter: 'blur(40px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(160%)',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        boxShadow: '0 -8px 24px rgba(0,0,0,0.4)',
-      }}
-    >
-      <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.04] w-full max-w-lg">
-        <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder="Search games..."
-          className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-        />
-        <button
-          onClick={handleMic}
-          className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
-        >
-          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-        </button>
-        <button onClick={onClose} className="flex-shrink-0 text-white/30 hover:text-white transition-colors ml-1">
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    </motion.div>
-  );
-}
 
 export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
-
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
-  const containerRef = useRef(null);
 
   const handleMic = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
     const rec = new SR();
     recognitionRef.current = rec;
     rec.continuous = false;
     rec.interimResults = false;
     rec.lang = 'en-US';
-    rec.onresult = (e) => {
-      const text = e.results[0][0].transcript;
-      setSearchValue(text);
-      onSearch?.(text);
-    };
+    rec.onresult = (e) => { const text = e.results[0][0].transcript; setSearchValue(text); onSearch?.(text); };
     rec.onerror = () => setIsListening(false);
     rec.onend = () => setIsListening(false);
     rec.start();
     setIsListening(true);
   };
 
-  const handleChange = (e) => {
-    setSearchValue(e.target.value);
-    onSearch?.(e.target.value);
-  };
-
-  const handleClose = () => {
-    inputRef.current?.blur();
-    if (libraryActive) onLibraryToggle?.();
-  };
-
-  useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [libraryActive]);
-
-  const tabs = [
-    { id: 'store', label: 'Store', icon: Store },
-    { id: 'trading', label: 'Trading Post', icon: ArrowRightLeft },
-  ];
+  const handleChange = (e) => { setSearchValue(e.target.value); onSearch?.(e.target.value); };
 
   const isDevCardActive = activeTab === 'devcards';
+  const isStoreActive = activeTab === 'store';
+  const isTradingActive = activeTab === 'trading';
 
   return (
-    <>
-      {showDevLabel && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2">
-          <span className="text-white/40 text-[11px] font-semibold tracking-widest uppercase">DEV INFO</span>
-        </div>
-      )}
-      <div className="flex items-center justify-center gap-2 relative">
-        {/* ── CATEGORY PILLS (left of Store) ── */}
-        <div className="flex items-center gap-1.5 mr-1">
-          {CATEGORY_PILLS.map(({ id, label, icon: Icon }) => {
-            const isActive = activeCategory === id;
-            return (
-              <button
-                key={id}
-                onClick={() => onCategoryChange?.(isActive ? null : id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                  isActive
-                    ? 'bg-cyan-500/15 border-cyan-400/40 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                    : 'bg-white/5 border-white/10 text-white/55 hover:bg-white/10 hover:text-white hover:border-white/20'
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                <span>{label}</span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="flex items-center w-full relative">
 
-        {/* Vertical divider */}
-        <div className="w-px h-6 bg-white/15 mx-1" />
-
-        {tabs.slice(0, 2).map((tab) => {
-          const isActive = activeTab === tab.id;
+      {/* ── LEFT: Category pills, flush left, no button styling ── */}
+      <div className="flex items-center gap-5 flex-1">
+        {CATEGORY_PILLS.map(({ id, label, icon: Icon }) => {
+          const isActive = activeCategory === id;
           return (
-            <motion.button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`relative px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all ${
-                isActive ? 'text-white' : 'text-white/50 hover:text-white'
+            <button
+              key={id}
+              onClick={() => onCategoryChange?.(isActive ? null : id)}
+              className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                isActive ? 'text-cyan-300' : 'text-white/45 hover:text-white'
               }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
             >
-              {tab.label}
-              {isActive && (
-                <motion.div
-                  layoutId="store-tab-underline"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 rounded-full"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
-            </motion.button>
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : ''}`} />
+              <span>{label}</span>
+            </button>
           );
         })}
+      </div>
 
-        {/* Dev Cards — inline tab on the nav line */}
+      {/* ── CENTER: Divider | Store | Divider ── */}
+      <div className="flex items-center flex-shrink-0">
+        {/* Left divider */}
+        <div className="w-px h-5 bg-white/20 mx-4" />
+
         <motion.button
-          onClick={() => onTabChange('devcards')}
+          onClick={() => onTabChange('store')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
-          className={`relative px-4 py-2 text-sm font-black uppercase tracking-wider transition-all ${
-            isDevCardActive ? 'text-amber-300' : 'text-amber-500/60 hover:text-amber-300'
+          className={`relative px-5 py-1.5 text-sm font-black uppercase tracking-wider transition-all ${
+            isStoreActive ? 'text-white' : 'text-white/50 hover:text-white'
           }`}
         >
-          Dev Cards
-          {isDevCardActive && (
+          Store
+          {isStoreActive && (
             <motion.div
               layoutId="store-tab-underline"
-              className="absolute bottom-0 left-0 right-0 h-[2px] bg-amber-400 rounded-full"
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 rounded-full"
               initial={false}
               transition={{ type: 'spring', stiffness: 500, damping: 35 }}
             />
           )}
         </motion.button>
 
-        {tabs.slice(2).map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <motion.button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`relative px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all ${
-                isActive ? 'text-white' : 'text-white/50 hover:text-white'
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {tab.label}
-              {isActive && (
-                <motion.div
-                  layoutId="store-tab-underline"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 rounded-full"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
-            </motion.button>
-          );
-        })}
+        {/* Right divider */}
+        <div className="w-px h-5 bg-white/20 mx-4" />
+      </div>
 
-        {/* Search bar */}
-        <div className="w-px h-5 bg-white/10 mx-1" />
-        <div
-          ref={containerRef}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-            libraryActive
-              ? 'border-white/10 bg-transparent shadow-none'
-              : 'border-transparent bg-transparent'
+      {/* ── RIGHT: Trading Post + Dev Cards + Search ── */}
+      <div className="flex items-center gap-4 flex-1 justify-end">
+        <motion.button
+          onClick={() => onTabChange('trading')}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          className={`relative text-[11px] font-bold uppercase tracking-wider transition-all ${
+            isTradingActive ? 'text-white' : 'text-white/45 hover:text-white'
           }`}
-          style={{ minWidth: '220px' }}
         >
-          <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
+          Trading Post
+          {isTradingActive && (
+            <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-blue-500 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
+          )}
+        </motion.button>
+
+        <motion.button
+          onClick={() => onTabChange('devcards')}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          className={`relative text-[11px] font-black uppercase tracking-wider transition-all ${
+            isDevCardActive ? 'text-amber-300' : 'text-amber-500/50 hover:text-amber-300'
+          }`}
+        >
+          Dev Cards
+          {isDevCardActive && (
+            <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-amber-400 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
+          )}
+        </motion.button>
+
+        {/* Search */}
+        <div className="w-px h-4 bg-white/10 mx-1" />
+        <div className="flex items-center gap-2 min-w-[180px]">
+          <Search className="w-3.5 h-3.5 flex-shrink-0 text-white/30" />
           <input
             ref={inputRef}
             type="text"
@@ -258,11 +132,11 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
             placeholder="Search bar"
             className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
           />
-          <button onClick={(e) => { e.stopPropagation(); handleMic(); }} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
-            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          <button onClick={handleMic} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
+            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
