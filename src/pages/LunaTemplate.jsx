@@ -44,8 +44,7 @@ import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
 import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
-import FocusModePanel, { LibraryBannerSection } from '../components/dashboard/FocusModePanel';
-import DateTimeTile from '../components/dashboard/DateTimeTile';
+import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
@@ -609,6 +608,57 @@ export default function LunaTemplate() {
            <HomeSectionSwitcher currentSection={homeSection} onSectionChange={setHomeSection} />
          }
 
+         {/* Avatar Home: Friends & Clock Panel at top */}
+         <AnimatePresence mode="wait">
+           {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection === 'avatar' &&
+             <motion.div
+               key="avatar-home-top"
+               initial={{ opacity: 0, y: -30 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, y: -30 }}
+               transition={{ duration: 0.35, ease: 'easeOut' }}
+               className="absolute z-30 pointer-events-auto overflow-hidden"
+               style={{ left: '440px', top: '88px', right: '60px', height: '240px' }}>
+               <div className="flex gap-6 h-full">
+                 {/* Clock Card - Left */}
+                 <div className="flex-1 min-w-0 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 cursor-pointer hover:bg-white/[0.05] transition-colors flex flex-col items-center justify-center"
+                   onClick={() => setShowCalendar(true)}>
+                   <div className="text-4xl font-bold text-white mb-2 font-mono">
+                     {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                   </div>
+                   <div className="text-sm text-white/60">
+                     {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                   </div>
+                 </div>
+
+                 {/* Friends List - Right */}
+                 <div className="flex-1 min-w-0 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col overflow-hidden">
+                   <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                     <Users className="w-4 h-4 text-blue-400" />
+                     Friends
+                   </h3>
+                   <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none' }}>
+                     {mockFriends.slice(0, 4).map((friend) =>
+                       <div key={friend.id} className="flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg transition-colors">
+                         <div className="relative flex-shrink-0">
+                           <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full" />
+                           <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-slate-900 ${
+                             friend.status === 'online' ? 'bg-green-500' : friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                           }`} />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className="text-white text-xs font-semibold truncate">{friend.name}</p>
+                           <p className="text-white/40 text-[10px] truncate">{friend.game || friend.status}</p>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             </motion.div>
+           }
+         </AnimatePresence>
+
          {/* Non-avatar section panels — only use the space to the right of the 3D viewer/card column */}
          <AnimatePresence mode="wait">
            {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection !== 'avatar' &&
@@ -810,42 +860,6 @@ export default function LunaTemplate() {
         {showDevSpotlight &&
                 <DevSpotlightOverlay onClose={() => setShowDevSpotlight(false)} />
                 }
-      </AnimatePresence>
-
-      {/* Top Header Bar (Memories + Friends + Clock) — avatar home only, always visible */}
-      <AnimatePresence>
-        {sidebarVisible && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' &&
-          <motion.div
-            key="avatar-header-bar"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="absolute z-40 pointer-events-auto"
-            style={{ left: '440px', top: '84px', right: '32px', height: '96px' }}
-          >
-            <LibraryBannerSection
-              games={[]}
-              onBackgroundChange={() => {}}
-              currentEnvId={currentEnvId}
-              onSelectEnv={handleEnvSelect}
-              showEnvDropdown={false}
-              setShowEnvDropdown={() => {}}
-              onQuickChangeToggle={() => {}}
-              isEnvironmentActive={isEnvironmentActive}
-              onToggleEnvironment={() => setIsEnvironmentActive(p => !p)}
-              navBoxes={null}
-              intelligenceFeed={null}
-              calendarBox={
-                <div className="flex w-full h-full">
-                  <div className="flex-1 min-w-0 h-full">
-                    <DateTimeTile onClick={() => {}} onCalendarClick={() => setShowCalendar(true)} />
-                  </div>
-                </div>
-              }
-            />
-          </motion.div>
-        }
       </AnimatePresence>
 
       {/* Focus Mode Panel - Shows only on avatar section, hidden when sidebar is hidden */}
@@ -1336,6 +1350,8 @@ export default function LunaTemplate() {
               </AnimatePresence>
             </div>
 
+            </div>
+
             {/* Main Showcase Area: PS5-style Developer Spotlight fills entire space below top row */}
             <div className={`absolute left-0 right-0 bottom-0 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                  style={{ top: '280px', paddingLeft: '440px', paddingRight: '0px', paddingBottom: '32px' }}>
@@ -1343,9 +1359,6 @@ export default function LunaTemplate() {
                 <DevSpotlightShowcase onOpenOverlay={() => setShowDevSpotlight(true)} />
               </div>
             </div>
-
-            </div>
-
             </>
                   }
 

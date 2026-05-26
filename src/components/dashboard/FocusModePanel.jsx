@@ -1272,8 +1272,19 @@ export function LibraryBannerSection({
       {/* Game Banner + Memories */}
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
-          {/* Top Row: Memories | Friends | Online Users | Calendar Box */}
+          {/* Top Row: Env Hub | Memories | Friends | Home | Online Users | Spacer | Calendar Box */}
           <div className="flex items-center gap-4 w-full h-24">
+            {/* Environment Hub - Reduced by 25% */}
+            <div className="w-[247px] h-full flex-shrink-0">
+              <EnvironmentHubTile 
+                isOpen={showEnvDropdown} 
+                onToggle={() => setShowEnvDropdown(v => !v)} 
+                onQuickChangeToggle={onQuickChangeToggle}
+                isEnvironmentActive={isEnvironmentActive}
+                onToggleEnvironment={onToggleEnvironment}
+              />
+            </div>
+
             {/* Memories & Line */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full px-2">
               <button
@@ -1286,7 +1297,7 @@ export function LibraryBannerSection({
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
             </div>
 
-            {/* Friends (with placeholders) & Online Users Dropdown */}
+            {/* Friends (with placeholders) & Home & Online Users Dropdown */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
               {(onlineFriends || []).filter(Boolean).map((friend) => (
                 <div key={friend.id} className="flex-shrink-0">
@@ -1308,8 +1319,12 @@ export function LibraryBannerSection({
                   <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
                 </div>
               ))}
+
+              <div className="flex-shrink-0 ml-2">
+                <HomeReference onClick={handleHomeClick} />
+              </div>
               
-              {/* Online Users Dropdown */}
+              {/* Planet Icon / Online Users Dropdown moved here next to Home */}
               <div className="flex-shrink-0 ml-2 flex items-center justify-center">
                 <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
               </div>
