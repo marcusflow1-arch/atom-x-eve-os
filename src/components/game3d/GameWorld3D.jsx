@@ -61,7 +61,7 @@ import { useCallback } from 'react';
 import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
 import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
-import { getActiveWeaponPath } from './weaponClassBuffStore';
+import { getActiveWeaponPath, setActiveWeaponPath } from './weaponClassBuffStore';
 import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
@@ -851,7 +851,14 @@ export default function GameWorld3D() {
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
-      // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
+      // Z = cycle weapon class (damage → ranged → defense → damage)
+      if (k === 'z') {
+        const paths = ['damage', 'ranged', 'defense'];
+        const current = getActiveWeaponPath();
+        const nextIdx = (paths.indexOf(current) + 1) % paths.length;
+        setActiveWeaponPath(paths[nextIdx]);
+      }
+      // X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
         e.preventDefault();
@@ -864,7 +871,7 @@ export default function GameWorld3D() {
       if (k === 'c') crouchTogglePressed.current = false;
     };
     const onMouseDown = (e) => {
-      // Left click + hold = rotate camera, middle click = Lock-On, right click = Block
+      // Left click = attack, middle click = Lock-On, right click = camera rotate
       if (e.button === 0) {
         rangedClickAttackPressed.current = true;
         attackPressed.current = true;
@@ -873,17 +880,21 @@ export default function GameWorld3D() {
         e.preventDefault();
         const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
         lockOnTargetRef.current = target && lockOnTargetRef.current?.id !== target.id ? target : null;
-      } else {
-        playerStateMachine.setIntent({ blockHeld: true });
-        playerAnim?.setBlocking(true);
+      } else if (e.button === 2) {
+        // Right click held = rotate camera
+        drag.current.active = true;
+        drag.current.x = e.clientX;
+        drag.current.y = e.clientY;
+        e.preventDefault();
       }
     };
     const onMouseUp = (e) => {
       if (e.button === 2) {
-        playerStateMachine.setIntent({ blockHeld: false });
-        playerAnim?.setBlocking(false);
+        drag.current.active = false;
       }
-      drag.current.active = false;
+      if (e.button === 0) {
+        drag.current.active = false;
+      }
     };
     const onMouseMove = (e) => {
       if (!drag.current.active) return;
@@ -1001,8 +1012,8 @@ export default function GameWorld3D() {
           const rx = -Math.cos(yaw), rz = Math.sin(yaw);
           if (keys.current['w']) { move.x += fx; move.z += fz; }
           if (keys.current['s']) { move.x -= fx; move.z -= fz; }
-          if (keys.current['a']) { move.x -= rx; move.z -= rz; }
-          if (keys.current['d']) { move.x += rx; move.z += rz; }
+          if (keys.current['a']) { move.x += rx; move.z += rz; }
+          if (keys.current['d']) { move.x -= rx; move.z -= rz; }
         }
 
         const isMoving = move.lengthSq() > 0;
