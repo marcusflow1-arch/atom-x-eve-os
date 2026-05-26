@@ -44,7 +44,8 @@ import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
 import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
-import FocusModePanel from '../components/dashboard/FocusModePanel';
+import FocusModePanel, { LibraryBannerSection } from '../components/dashboard/FocusModePanel';
+import DateTimeTile from '../components/dashboard/DateTimeTile';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
@@ -809,6 +810,42 @@ export default function LunaTemplate() {
         {showDevSpotlight &&
                 <DevSpotlightOverlay onClose={() => setShowDevSpotlight(false)} />
                 }
+      </AnimatePresence>
+
+      {/* Top Header Bar (Memories + Friends + Clock) — avatar home only, always visible */}
+      <AnimatePresence>
+        {sidebarVisible && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' &&
+          <motion.div
+            key="avatar-header-bar"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="absolute z-40 pointer-events-auto"
+            style={{ left: '440px', top: '84px', right: '32px', height: '96px' }}
+          >
+            <LibraryBannerSection
+              games={[]}
+              onBackgroundChange={() => {}}
+              currentEnvId={currentEnvId}
+              onSelectEnv={handleEnvSelect}
+              showEnvDropdown={false}
+              setShowEnvDropdown={() => {}}
+              onQuickChangeToggle={() => {}}
+              isEnvironmentActive={isEnvironmentActive}
+              onToggleEnvironment={() => setIsEnvironmentActive(p => !p)}
+              navBoxes={null}
+              intelligenceFeed={null}
+              calendarBox={
+                <div className="flex w-full h-full">
+                  <div className="flex-1 min-w-0 h-full">
+                    <DateTimeTile onClick={() => {}} onCalendarClick={() => setShowCalendar(true)} />
+                  </div>
+                </div>
+              }
+            />
+          </motion.div>
+        }
       </AnimatePresence>
 
       {/* Focus Mode Panel - Shows only on avatar section, hidden when sidebar is hidden */}
