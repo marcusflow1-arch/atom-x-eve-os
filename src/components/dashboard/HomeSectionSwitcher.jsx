@@ -1,11 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ChevronDown, Home, Sparkles, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Home, Star } from 'lucide-react';
 
 const SECTIONS = [
-  { id: 'avatar',    label: 'AI Avatar Home',      icon: Home,     color: 'cyan' },
-  { id: 'developer', label: 'Developer Spotlight', icon: Sparkles, color: 'purple' },
-  { id: 'discover',  label: "What's New",          icon: Star,     color: 'amber' },
+  { id: 'avatar',   label: 'AI Avatar Home', icon: Home, color: 'cyan' },
+  { id: 'discover', label: "What's New",     icon: Star, color: 'amber' },
 ];
 
 const DOT_COLORS = {
