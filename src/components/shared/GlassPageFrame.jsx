@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Mic, MicOff } from 'lucide-react';
+import { Search, Mic, MicOff, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LiveStreamBox from './LiveStreamBox';
 import StudioOverlayContent from './StudioOverlayContent';
@@ -186,7 +186,7 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
   );
 }
 
-export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
 
@@ -336,8 +336,23 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
         )}
 
         {bottomContent && (
-          <div className="h-full w-full flex items-center justify-center px-6 py-2">
-            {bottomContent}
+          <div className="h-full w-full flex items-center px-3 py-2 gap-3">
+            {/* Sidebar toggle button — far left of bottom bar */}
+            {onSidebarToggle && (
+              <button
+                onClick={onSidebarToggle}
+                title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
+                className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all hover:bg-white/10 text-white/40 hover:text-white"
+              >
+                {sidebarVisible
+                  ? <PanelLeftClose className="w-4 h-4" />
+                  : <PanelLeftOpen className="w-4 h-4" />
+                }
+              </button>
+            )}
+            <div className="flex-1 flex items-center justify-center">
+              {bottomContent}
+            </div>
           </div>
         )}
       </div>

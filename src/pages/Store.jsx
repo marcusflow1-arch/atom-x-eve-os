@@ -186,6 +186,7 @@ export default function Store() {
     const { user } = useAuth();
     const { getCartCount } = useCart();
 
+    const [sidebarVisible, setSidebarVisible] = useState(true);
     const [showOverview, setShowOverview] = useState(false);
     const [storeLibraryOpen, setStoreLibraryOpen] = useState(false);
     const [inPageStoreGameId, setInPageStoreGameId] = useState(null);
@@ -426,6 +427,8 @@ export default function Store() {
         <PageErrorBoundary pageName="Store">
           <WishlistProvider>
             <GlassPageFrame
+              sidebarVisible={sidebarVisible}
+              onSidebarToggle={() => setSidebarVisible(v => !v)}
               topContent={
                 <div className="flex items-center justify-between w-full gap-4">
                   <div className="flex items-center gap-6">
@@ -483,7 +486,7 @@ export default function Store() {
                     />
 
                     {/* 5% Left Sidebar — split into 3 bounded sections (Recently Played | Launch zone | Options) */}
-                    {!inPageStoreGameId && <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center"
+                    {!inPageStoreGameId && sidebarVisible && <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
                             backdropFilter: 'blur(24px) saturate(160%)',
