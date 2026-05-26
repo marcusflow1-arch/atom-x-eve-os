@@ -621,6 +621,11 @@ export default function LunaTemplate() {
               style={{ left: '440px', top: '88px', right: '60px', bottom: '160px' }}>
               {homeSection === 'developer' && <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />}
               {homeSection === 'discover' && <WhatsNewSection />}
+              {homeSection === 'avatar' && (
+                <div className="h-full w-full">
+                  <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
+                </div>
+              )}
             </motion.div>
           }
         </AnimatePresence>
