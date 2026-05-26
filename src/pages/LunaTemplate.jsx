@@ -620,34 +620,19 @@ export default function LunaTemplate() {
           <HomeSectionSwitcher currentSection={homeSection} onSectionChange={setHomeSection} />
         }
 
-        {/* Developer Spotlight Section — slides in when homeSection === 'developer' */}
-        <AnimatePresence>
-          {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection === 'developer' &&
+        {/* Non-avatar section panels — only use the space to the right of the 3D viewer/card column */}
+        <AnimatePresence mode="wait">
+          {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection !== 'avatar' &&
             <motion.div
-              key="developer-section"
-              initial={{ opacity: 0, x: 40 }}
+              key={homeSection}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
               className="absolute z-30 pointer-events-auto overflow-hidden"
-              style={{ left: '360px', top: '80px', right: '16px', bottom: '80px' }}>
-              <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />
-            </motion.div>
-          }
-        </AnimatePresence>
-
-        {/* What's New Section */}
-        <AnimatePresence>
-          {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && homeSection === 'discover' &&
-            <motion.div
-              key="discover-section"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="absolute z-30 pointer-events-auto overflow-hidden"
-              style={{ left: '360px', top: '80px', right: '16px', bottom: '80px' }}>
-              <WhatsNewSection />
+              style={{ left: '360px', top: '88px', right: '16px', bottom: '100px' }}>
+              {homeSection === 'developer' && <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />}
+              {homeSection === 'discover' && <WhatsNewSection />}
             </motion.div>
           }
         </AnimatePresence>
@@ -667,7 +652,35 @@ export default function LunaTemplate() {
           
           {!avatarFocusMode && !uiVisible &&
                 <div className="flex flex-col gap-6">
-              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+              {homeSection === 'avatar' && slot2Content !== 'none' && (
+                <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>
+                  {slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}
+                </div>
+              )}
+              {homeSection === 'developer' && (
+                <div className="w-full rounded-2xl bg-black/40 border border-purple-400/20 p-4">
+                  <p className="text-purple-300 text-xs font-bold uppercase tracking-widest mb-2">Dev Notes</p>
+                  <ul className="space-y-2">
+                    {['Boss phase AI rework','Terrain streaming v2','Weapon synergy trees','Clan hall decor system'].map(note => (
+                      <li key={note} className="text-white/50 text-xs flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-purple-400 flex-shrink-0" />{note}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {homeSection === 'discover' && (
+                <div className="w-full rounded-2xl bg-black/40 border border-amber-400/20 p-4">
+                  <p className="text-amber-300 text-xs font-bold uppercase tracking-widest mb-2">Quick Links</p>
+                  <ul className="space-y-2">
+                    {['New Cards Available','Live Aura Streams','Clan Events','Leaderboard'].map(link => (
+                      <li key={link} className="text-white/50 text-xs flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />{link}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
                 }
 
@@ -810,9 +823,9 @@ export default function LunaTemplate() {
                 }
       </AnimatePresence>
 
-      {/* Focus Mode Panel - Shows when UI is hidden (I key) — only on avatar section */}
+      {/* Focus Mode Panel - Shows only on avatar section */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !avatarFocusMode && homeSection === 'avatar' &&
+        {!uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' &&
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
