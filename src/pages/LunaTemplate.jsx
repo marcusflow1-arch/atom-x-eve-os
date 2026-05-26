@@ -815,18 +815,18 @@ export default function LunaTemplate() {
       <AnimatePresence>
         {sidebarVisible && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' &&
                 <motion.div
-                  initial={{ opacity: 0, y: 50 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 50 }}
+                  exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
-                  className="absolute right-8 z-30 overflow-hidden pointer-events-none"
+                  className="absolute right-0 z-30 pointer-events-none"
                   style={{
-                    left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+                    left: '440px',
                     top: '80px',
                     bottom: '32px'
                   }}>
 
-            <div className="h-full">
+            <div className="h-full overflow-visible">
               <FocusModePanel
                       onOpenCalendar={() => setShowCalendar(true)}
                       onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
