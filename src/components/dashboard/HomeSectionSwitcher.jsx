@@ -32,14 +32,14 @@ export default function HomeSectionSwitcher({ currentSection, onSectionChange })
 
   return (
     <>
-      {/* LEFT arrow — vertically centered, at far left of right-side content area */}
+      {/* LEFT arrow — vertically centered, right next to the left sidebar rail */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={goLeft}
         title="Previous section"
         className={`${ARROW_BASE} absolute z-50 pointer-events-auto`}
-        style={{ left: '368px', top: '50%', transform: 'translateY(-50%)', ...ARROW_STYLE }}
+        style={{ left: '52px', top: '50%', transform: 'translateY(-50%)', ...ARROW_STYLE }}
       >
         <ChevronLeft className="w-5 h-5 text-white/80" />
       </motion.button>
@@ -59,7 +59,7 @@ export default function HomeSectionSwitcher({ currentSection, onSectionChange })
       {/* BOTTOM center — down arrow + dots + label, above the bottom nav */}
       <div
         className="absolute z-50 flex flex-col items-center gap-1.5 pointer-events-auto"
-        style={{ bottom: '76px', left: '368px', right: '52px' }}
+        style={{ bottom: '76px', left: '52px', right: '52px' }}
       >
         {/* Section label */}
         <AnimatePresence mode="wait">

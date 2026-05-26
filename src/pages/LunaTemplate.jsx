@@ -610,7 +610,7 @@ export default function LunaTemplate() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="absolute z-30 pointer-events-auto overflow-hidden"
-              style={{ left: '370px', top: '88px', right: '60px', bottom: '160px' }}>
+              style={{ left: '440px', top: '88px', right: '60px', bottom: '160px' }}>
               {homeSection === 'developer' && <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />}
               {homeSection === 'discover' && <WhatsNewSection />}
             </motion.div>
