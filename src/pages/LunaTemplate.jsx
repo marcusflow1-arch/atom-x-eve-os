@@ -251,45 +251,25 @@ export default function LunaTemplate() {
   const [useMeshCollision, setUseMeshCollision] = useState(false);
 
   // Auto-select model: Try Lara first, fallback to Y-Bot (Xbot.glb)
+  // NOTE: Model3D.list() is shared with the scene loader below via window.__model3dCache to avoid duplicate API calls
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        // Try to load Lara model from Model3D entities
-        const models = await base44.entities.Model3D.list();
-        let url = null;
-        
-        // Look for Lara model (case-insensitive, exact name or with "lara" substring)
+        // Reuse cached model list if scene loader already fetched it
+        const models = window.__model3dCache || await base44.entities.Model3D.list().then(r => { window.__model3dCache = r; return r; });
         const lara = models.find(m => {
           const name = (m.name || '').toLowerCase();
           return name === 'lara' || (name.includes('lara') && !name.includes('xbot') && !name.includes('ybot'));
         });
-        
-        if (lara && lara.file_url) {
-          console.log('Loaded Lara model:', lara.name);
-          url = lara.file_url;
-        } else {
-          console.log('Lara model not found, using Y-Bot fallback');
-        }
-        
-        // Fallback to Y-bot (using Xbot.glb as standard web-ready version)
-        if (!url) {
-          url = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
-        }
-
-        if (!cancelled) {
-          setModelUrl(url);
-        }
+        const url = (lara?.file_url) || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
+        if (!cancelled) setModelUrl(url);
       } catch (e) {
-        console.error('Dashboard model lookup failed:', e);
-        if (!cancelled) {
-          // Fallback on error
-          setModelUrl('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb');
-        }
+        if (!cancelled) setModelUrl('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb');
       }
     };
     if (!modelUrl) load();
-    return () => {cancelled = true;};
+    return () => { cancelled = true; };
   }, [modelUrl]);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -307,6 +287,7 @@ export default function LunaTemplate() {
   // Combined scene + user env loader (merged to avoid duplicate API calls)
   useEffect(() => {
     if (sceneLoadedRef.current) return;
+    // Stagger by 500ms to avoid rate-limiting collision with model loader
     const loadScene = async () => {
       sceneLoadedRef.current = true;
       try {
@@ -339,8 +320,8 @@ export default function LunaTemplate() {
             } catch {}
           }
 
-          // 3. Fallback: load Model3D list once
-          const models = await base44.entities.Model3D.list();
+          // 3. Fallback: load Model3D list once (reuse cache if already fetched)
+          const models = window.__model3dCache || await base44.entities.Model3D.list().then(r => { window.__model3dCache = r; return r; });
           const queries = { cyber_loft: ['room 2', 'room2'], zen_garden: ['zen', 'garden'], mars_outpost: ['mars', 'outpost'] };
           let found = null;
           if (savedId && queries[savedId]) {
@@ -434,21 +415,20 @@ export default function LunaTemplate() {
   }, [location.search]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) return;
-
+    if (!user?.id) return;
+    // Delay non-critical data fetch by 2s to avoid rate-limiting on page load
+    const timer = setTimeout(async () => {
       try {
         const events = await base44.entities.UserEvent.filter({ user_id: user.id });
         setUserEvents(events);
-
         const updates = await base44.entities.PlatformUpdate.filter({ published: true });
         setPlatformUpdates(updates);
       } catch (error) {
         showError(error, 'Load Events');
       }
-    };
-    fetchData();
-  }, [user]);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [user?.id]);
 
   useEffect(() => {
     const handleEnvChange = (e) => {
@@ -520,7 +500,7 @@ export default function LunaTemplate() {
       if (key === '\\') {
         // Backslash key: switch to Lara model
         try {
-          const models = await base44.entities.Model3D.list();
+          const models = window.__model3dCache || await base44.entities.Model3D.list().then(r => { window.__model3dCache = r; return r; });
           const lara = models.find(m => m.name && m.name.toLowerCase().includes('lara'));
           if (lara && lara.file_url) {
             setModelUrl(lara.file_url);
