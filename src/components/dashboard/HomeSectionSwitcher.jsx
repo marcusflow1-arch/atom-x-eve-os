@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Home, Sparkles, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Home, Sparkles, Star } from 'lucide-react';
 
 const SECTIONS = [
   { id: 'avatar',    label: 'AI Avatar Home',      icon: Home,     color: 'cyan' },
@@ -14,30 +14,54 @@ const DOT_COLORS = {
   amber:  'bg-amber-400',
 };
 
+const ARROW_BASE = "flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 pointer-events-auto";
+const ARROW_STYLE = {
+  background: 'rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.18)',
+  backdropFilter: 'blur(8px)',
+};
+
 export default function HomeSectionSwitcher({ currentSection, onSectionChange }) {
   const currentIdx = SECTIONS.findIndex(s => s.id === currentSection);
 
   const goLeft  = () => onSectionChange(SECTIONS[(currentIdx - 1 + SECTIONS.length) % SECTIONS.length].id);
   const goRight = () => onSectionChange(SECTIONS[(currentIdx + 1) % SECTIONS.length].id);
+  const goDown  = () => onSectionChange(SECTIONS[(currentIdx + 1) % SECTIONS.length].id);
+
+  const section = SECTIONS[currentIdx];
 
   return (
-    /* Strip sits at the very bottom of the right-side content area, above the bottom nav */
-    <div
-      className="absolute z-50 flex items-center justify-between pointer-events-auto"
-      style={{ left: '360px', right: '16px', bottom: '72px', height: '32px' }}>
-
-      {/* Left arrow — bare icon, far left of the strip */}
+    <>
+      {/* LEFT arrow — vertically centered, at far left of right-side content area */}
       <motion.button
-        whileHover={{ x: -2, opacity: 1 }}
-        whileTap={{ scale: 0.85 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={goLeft}
         title="Previous section"
-        className="text-white/30 hover:text-white/80 transition-colors">
-        <ChevronLeft className="w-5 h-5" />
+        className={`${ARROW_BASE} absolute z-50 pointer-events-auto`}
+        style={{ left: '368px', top: '50%', transform: 'translateY(-50%)', ...ARROW_STYLE }}
+      >
+        <ChevronLeft className="w-5 h-5 text-white/80" />
       </motion.button>
 
-      {/* Section dots + label centered */}
-      <div className="flex flex-col items-center gap-1">
+      {/* RIGHT arrow — vertically centered, at far right */}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={goRight}
+        title="Next section"
+        className={`${ARROW_BASE} absolute z-50 pointer-events-auto`}
+        style={{ right: '16px', top: '50%', transform: 'translateY(-50%)', ...ARROW_STYLE }}
+      >
+        <ChevronRight className="w-5 h-5 text-white/80" />
+      </motion.button>
+
+      {/* BOTTOM center — down arrow + dots + label, above the bottom nav */}
+      <div
+        className="absolute z-50 flex flex-col items-center gap-1.5 pointer-events-auto"
+        style={{ bottom: '76px', left: '368px', right: '52px' }}
+      >
+        {/* Section label */}
         <AnimatePresence mode="wait">
           <motion.span
             key={currentSection}
@@ -45,11 +69,14 @@ export default function HomeSectionSwitcher({ currentSection, onSectionChange })
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.2 }}
-            className="text-white/30 text-[9px] uppercase tracking-widest select-none">
-            {SECTIONS[currentIdx]?.label}
+            className="text-white/50 text-[10px] uppercase tracking-widest select-none font-medium"
+          >
+            {section?.label}
           </motion.span>
         </AnimatePresence>
-        <div className="flex items-center gap-1.5">
+
+        {/* Dots */}
+        <div className="flex items-center gap-2">
           {SECTIONS.map((s, i) => (
             <button
               key={s.id}
@@ -57,24 +84,26 @@ export default function HomeSectionSwitcher({ currentSection, onSectionChange })
               title={s.label}
               className={`rounded-full transition-all duration-300 ${
                 i === currentIdx
-                  ? `w-2 h-2 ${DOT_COLORS[s.color]}`
-                  : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'
+                  ? `w-2.5 h-2.5 ${DOT_COLORS[s.color]} shadow-lg`
+                  : 'w-1.5 h-1.5 bg-white/25 hover:bg-white/50'
               }`}
             />
           ))}
         </div>
-      </div>
 
-      {/* Right arrow — bare icon, far right of the strip */}
-      <motion.button
-        whileHover={{ x: 2, opacity: 1 }}
-        whileTap={{ scale: 0.85 }}
-        onClick={goRight}
-        title="Next section"
-        className="text-white/30 hover:text-white/80 transition-colors">
-        <ChevronRight className="w-5 h-5" />
-      </motion.button>
-    </div>
+        {/* Down arrow button */}
+        <motion.button
+          whileHover={{ scale: 1.15, y: 2 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={goDown}
+          title="Next section"
+          className={`${ARROW_BASE} mt-0.5`}
+          style={ARROW_STYLE}
+        >
+          <ChevronDown className="w-5 h-5 text-white/80" />
+        </motion.button>
+      </div>
+    </>
   );
 }
 
