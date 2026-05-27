@@ -103,6 +103,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.35, distance: 1.2 });
   const isDraggingRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
+  // MMO-style: camera only rotates while right mouse button is held
+  const isRightMouseDownRef = useRef(false);
 
   // Keybind-driven animation queue (replaces old one-shot system)
   const sequenceQueueRef = useRef([]);   // Current animation sequence being played
@@ -427,47 +429,51 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       return !!element.closest('button, a, input, textarea, select, label, [role="button"], [data-no-camera], .pointer-events-auto, .overflow-y-auto, .overflow-auto, .scroll-auto');
     };
 
+    // MMO-style right-click camera controls
     const onMouseDown = (e) => {
-      if (!containerRef.current?.contains(e.target)) return;
-      if (e.target !== renderer.domElement || isInteractiveUiTarget(e.target)) return;
-      if (e.button === 0 || e.button === 2) {
-        isDraggingRef.current = true;
+      if (e.button === 2) {
+        isRightMouseDownRef.current = true;
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
-        containerRef.current?.focus();
+        document.body.style.cursor = 'none';
+        if (containerRef.current) containerRef.current.focus();
         e.preventDefault();
         e.stopPropagation();
       }
     };
-    const onMouseUp = () => { isDraggingRef.current = false; };
+    const onMouseUp = (e) => {
+      if (e.button === 2) {
+        isRightMouseDownRef.current = false;
+        document.body.style.cursor = 'default';
+      }
+      isDraggingRef.current = false;
+    };
     const onMouseMove = (e) => {
-      if (!isDraggingRef.current) return;
-      const dx = e.clientX - lastMouseRef.current.x, dy = e.clientY - lastMouseRef.current.y;
+      if (!isRightMouseDownRef.current) return;
+      const dx = e.clientX - lastMouseRef.current.x;
+      const dy = e.clientY - lastMouseRef.current.y;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
+      // Yaw: drag right = rotate right (+)
       cameraOrbitRef.current.yaw += dx * 0.005;
       cameraOrbitRef.current.pitch = Math.max(0.05, Math.min(Math.PI / 1.8, cameraOrbitRef.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
       if (!containerRef.current?.contains(e.target)) return;
-      if (e.target !== renderer.domElement || isInteractiveUiTarget(e.target)) return;
       const orbit = cameraOrbitRef.current;
       orbit.distance = Math.max(0.3, Math.min(15, orbit.distance + e.deltaY * 0.002));
       e.preventDefault();
       e.stopPropagation();
     };
     const onContextMenu = (e) => {
-      if (!containerRef.current?.contains(e.target)) return;
-      if (e.target === renderer.domElement) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      e.preventDefault();
+      e.stopPropagation();
     };
 
     renderer.domElement.style.pointerEvents = 'auto';
-    renderer.domElement.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('mousemove', onMouseMove);
     renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
-    renderer.domElement.addEventListener('contextmenu', onContextMenu);
+    window.addEventListener('contextmenu', onContextMenu);
 
     const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     swapEnvironment(initialEnvUrl);
@@ -1837,11 +1843,12 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('keydown', onSwitchCharacter);
       window.removeEventListener('resize', handleResize);
-      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('mousemove', onMouseMove);
       renderer.domElement.removeEventListener('wheel', onWheel);
-      renderer.domElement.removeEventListener('contextmenu', onContextMenu);
+      window.removeEventListener('contextmenu', onContextMenu);
+      document.body.style.cursor = 'default';
       window.removeEventListener('multiplayerPlayersUpdate', handleMultiplayerUpdate);
       if (c1ModelRef.current?.userData?._weaponCleanup) c1ModelRef.current.userData._weaponCleanup();
       spawnedAIModelsRef.current.forEach(inst => {
