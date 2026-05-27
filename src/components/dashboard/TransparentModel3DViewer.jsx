@@ -994,30 +994,47 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
         const moveSpeed = 0.6;
         let isMoving = false;
-        
+
+        // Camera forward flat from yaw
+        const _up = new THREE.Vector3(0, 1, 0);
+        const forwardVec = new THREE.Vector3(
+          -Math.sin(cameraOrbitRef.current.yaw),
+          0,
+          -Math.cos(cameraOrbitRef.current.yaw)
+        ).normalize();
+        // Correct right vector: up × forward  (NOT forward × up — that inverts A/D)
+        const rightVec = new THREE.Vector3().crossVectors(_up, forwardVec).normalize();
+
         const moveVector = new THREE.Vector3(0, 0, 0);
-
-        // Camera forward (flat, from yaw)
-        const forwardVec = new THREE.Vector3(-Math.sin(cameraOrbitRef.current.yaw), 0, -Math.cos(cameraOrbitRef.current.yaw)).normalize();
-        // Correct right vector: up × forward (fixes A/D inversion)
-        const rightVec = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), forwardVec).normalize();
-
-        if (keysPressed.current['w']) { moveVector.add(forwardVec); }
-        if (keysPressed.current['s']) { moveVector.sub(forwardVec); }
-        if (keysPressed.current['a']) { moveVector.sub(rightVec); }
-        if (keysPressed.current['d']) { moveVector.add(rightVec); }
+        if (keysPressed.current['w']) moveVector.add(forwardVec);
+        if (keysPressed.current['s']) moveVector.sub(forwardVec);
+        if (keysPressed.current['a']) moveVector.sub(rightVec);  // A = LEFT  (subtract right)
+        if (keysPressed.current['d']) moveVector.add(rightVec);  // D = RIGHT (add right)
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
             isMoving = true;
 
-            const angle = Math.atan2(moveVector.x, moveVector.z);
-            const targetQuat = new THREE.Quaternion();
-            targetQuat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-            activeModel.quaternion.slerp(targetQuat, 0.2);
-
             activeModel.position.x += moveVector.x * moveSpeed * delta;
             activeModel.position.z += moveVector.z * moveSpeed * delta;
+
+            // Lock-on: face the target, strafe freely without rotating character
+            const lockTarget = window._lockOnTarget || null;
+            if (lockTarget) {
+              const lookDir = new THREE.Vector3()
+                .subVectors(lockTarget.position || lockTarget, activeModel.position);
+              lookDir.y = 0;
+              if (lookDir.lengthSq() > 0.001) {
+                const lockAngle = Math.atan2(lookDir.x, lookDir.z);
+                const lockQuat = new THREE.Quaternion().setFromAxisAngle(_up, lockAngle);
+                activeModel.quaternion.slerp(lockQuat, 0.3);
+              }
+            } else {
+              // Normal: face movement direction
+              const angle = Math.atan2(moveVector.x, moveVector.z);
+              const targetQuat = new THREE.Quaternion().setFromAxisAngle(_up, angle);
+              activeModel.quaternion.slerp(targetQuat, 0.2);
+            }
         }
 
         const orbit = cameraOrbitRef.current;
