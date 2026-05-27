@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Zap, CheckCircle2, Circle } from 'lucide-react';
+import { ChevronLeft, Zap, CheckCircle2, Circle, Sparkles } from 'lucide-react';
 import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
 import WeaponSkillTree from './WeaponSkillTree';
 import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
 import WeaponEnchantmentPanel from '../weaponMastery/WeaponEnchantmentPanel';
 import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
+import AdvancedClassPanel from '../../../game3d/talents/AdvancedClassPanel';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
   const [mastery, setMastery] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [topView, setTopView] = useState('mastery'); // 'mastery' | 'advanced'
 
   useEffect(() => subscribeMastery(setMastery), []);
   if (!mastery) return null;
@@ -28,6 +30,44 @@ export default function WeaponMasteryTab() {
   }
 
   return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Top-level tab toggle: Weapon Mastery vs Advanced Classes */}
+      <div
+        className="flex-shrink-0 flex gap-0 px-6 pt-4"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        {[
+          { id: 'mastery',   label: 'Weapon Mastery', icon: '⚔️' },
+          { id: 'advanced',  label: 'Advanced Classes', icon: '✦' },
+        ].map((tab) => {
+          const on = topView === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setTopView(tab.id)}
+              className="flex items-center gap-1.5 px-5 pb-2.5 text-xs transition-all"
+              style={{
+                color: on ? '#ffffff' : 'rgba(255,255,255,0.40)',
+                borderBottom: on ? '2px solid #f59e0b' : '2px solid transparent',
+                fontWeight: on ? 600 : 400,
+              }}
+            >
+              <span>{tab.icon}</span>
+              <span className="tracking-[0.15em] uppercase">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Advanced Classes view */}
+      {topView === 'advanced' && (
+        <div className="flex-1 overflow-hidden">
+          <AdvancedClassPanel />
+        </div>
+      )}
+
+      {/* Mastery weapon grid */}
+      {topView === 'mastery' && (
     <div className="p-8 overflow-y-auto">
       <div className="grid grid-cols-3 gap-4">
         {WEAPONS.map((w) => {
@@ -75,6 +115,8 @@ export default function WeaponMasteryTab() {
           );
         })}
       </div>
+    </div>
+      )}
     </div>
   );
 }
