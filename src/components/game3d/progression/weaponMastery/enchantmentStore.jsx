@@ -285,3 +285,20 @@ export function resetEnchantment(weaponId) {
   persist();
   emit();
 }
+
+// ── Combat Integration ─────────────────────────────────────────────────────
+// Returns the total flat ATK bonus this weapon has from enchantment + combine
+// stage. This is consumed by WeaponPassiveResolver to feed into the damage
+// pipeline so enchanting directly boosts how much damage the weapon deals.
+export function getEnchantmentAtkBonus(weaponId) {
+  if (!weaponId) return 0;
+  const entry = ensureEntry(weaponId);
+  return getAtkBonus(entry.level, entry.combineStage);
+}
+
+// Returns the elemental damage bonus from enchantment + combine stage.
+export function getEnchantmentElementBonus(weaponId) {
+  if (!weaponId) return 0;
+  const entry = ensureEntry(weaponId);
+  return getElementBonus(entry.level, entry.combineStage);
+}

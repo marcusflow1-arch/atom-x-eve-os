@@ -10,7 +10,9 @@
 // rarity, accent color, and the Enhance handler from the parent panel.
 
 import React from 'react';
-import { Hammer, Sparkles, Zap, ShieldAlert, Star } from 'lucide-react';
+import { Hammer, Sparkles, Zap, ShieldAlert, Star, TrendingUp } from 'lucide-react';
+import { getWeaponLevel } from '../weaponMasteryStore';
+import { resolveWeaponPassives } from './WeaponPassiveResolver';
 
 // Display label, element color, and matching emoji for each weapon type.
 // (Falls back to neutral arcane if the weapon id is unrecognized.)
@@ -68,6 +70,15 @@ export default function WeaponStatPanel({
 }) {
   const overEnchant = entry.level > MAX_NORMAL_LEVEL;
   const element = ELEMENT_BY_WEAPON[weaponId] || DEFAULT_ELEMENT;
+
+  // Resolve combined power — enchantment ATK + mastery-level passives
+  const passives = resolveWeaponPassives(weaponId);
+  const masteryLevel = passives.level || 1;
+  const masteryDmgPct = Math.round(passives.global?.damageMultPct || 0);
+  const enchantAtk = passives.enchantAtkBonus || 0;
+  const enchantElem = passives.enchantElemBonus || 0;
+  // Combined ATK shown in the UI = enchant flat bonus + mastery % of enchant bonus
+  const combinedAtkBonus = Math.round(enchantAtk * (1 + masteryDmgPct / 100));
 
   const canAfford = preview.atMax
     ? false
@@ -198,6 +209,42 @@ export default function WeaponStatPanel({
             accent={accent}
           />
         </div>
+
+        {/* ── Combined Power summary — shows enchant + mastery stacking ── */}
+        {(enchantAtk > 0 || masteryDmgPct > 0) && (
+          <div
+            className="mt-2 px-3 py-2 rounded-sm flex items-center justify-between"
+            style={{
+              background: `${accent}08`,
+              border: `1px solid ${accent}33`,
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="w-3 h-3" style={{ color: accent }} />
+              <span className="text-[9px] tracking-[0.25em] uppercase text-white/55">Combined Power</span>
+            </div>
+            <div className="text-right tabular-nums">
+              {enchantAtk > 0 && (
+                <div className="text-[10px] text-white/60">
+                  Enchant <span style={{ color: accent }}>+{enchantAtk}</span> ATK
+                  {masteryDmgPct > 0 && (
+                    <span className="text-emerald-300/80 ml-1">× {(1 + masteryDmgPct / 100).toFixed(2)} mastery</span>
+                  )}
+                </div>
+              )}
+              {combinedAtkBonus > 0 && (
+                <div className="text-[11px] font-semibold" style={{ color: accent }}>
+                  = +{combinedAtkBonus} total ATK
+                </div>
+              )}
+              {enchantElem > 0 && (
+                <div className="text-[10px]" style={{ color: element.color }}>
+                  +{Math.round(enchantElem * 0.5)} {element.name} dmg
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Milestone callout */}
         {!preview.atMax && preview.crossesMilestone && (

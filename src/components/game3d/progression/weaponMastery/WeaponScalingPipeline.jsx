@@ -80,12 +80,19 @@ export function getActiveWeaponId() {
 export function applyMasteryToHit(rawDamage, ctx = {}) {
   const weaponId = ctx.weaponId || getActiveWeaponId();
   const passives = resolveWeaponPassives(weaponId);
-  const { global, identity, milestones, weaponType } = passives;
+  const { global, identity, milestones, weaponType, enchantAtkBonus, enchantElemBonus } = passives;
   let dmg = rawDamage;
   let isCrit = !!ctx.isCrit;
   let execute = false;
 
-  // Global damage multiplier
+  // ── Enchantment flat ATK bonus (weapon enchanting + combine stage) ───────
+  // Applied as a flat addition BEFORE mastery multipliers so that mastery
+  // scales on top — both systems compound together, giving the player more
+  // total power the more they invest in either or both.
+  if (enchantAtkBonus > 0) dmg += enchantAtkBonus;
+  if (enchantElemBonus > 0) dmg += enchantElemBonus * 0.5; // elemental at half-weight vs physical
+
+  // Global damage multiplier (mastery level-based)
   dmg *= 1 + (global.damageMultPct || 0) / 100;
 
   // Crit-damage bonus (applies only if hit is a crit)
