@@ -999,13 +999,13 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         const camYaw = cameraOrbitRef.current.yaw;
         const forwardX = -Math.sin(camYaw);
         const forwardZ = -Math.cos(camYaw);
-        const rightX = -Math.cos(camYaw);
-        const rightZ = Math.sin(camYaw);
+        const rightX = Math.cos(camYaw);
+        const rightZ = -Math.sin(camYaw);
         
         if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; }
         if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; }
-        if (keysPressed.current['a']) { moveVector.x += rightX; moveVector.z += rightZ; }
-        if (keysPressed.current['d']) { moveVector.x -= rightX; moveVector.z -= rightZ; }
+        if (keysPressed.current['a']) { moveVector.x -= rightX; moveVector.z -= rightZ; }
+        if (keysPressed.current['d']) { moveVector.x += rightX; moveVector.z += rightZ; }
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
