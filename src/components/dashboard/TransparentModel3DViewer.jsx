@@ -1004,8 +1004,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         
         if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; }
         if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; }
-        if (keysPressed.current['a']) { moveVector.x -= rightX; moveVector.z -= rightZ; }
-        if (keysPressed.current['d']) { moveVector.x += rightX; moveVector.z += rightZ; }
+        if (keysPressed.current['a']) { moveVector.x += rightX; moveVector.z += rightZ; }
+        if (keysPressed.current['d']) { moveVector.x -= rightX; moveVector.z -= rightZ; }
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
