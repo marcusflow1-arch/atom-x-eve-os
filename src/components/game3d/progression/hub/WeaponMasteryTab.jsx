@@ -300,7 +300,7 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
             >
               {[
                 { id: 'enchant', label: 'Enchantment' },
-                { id: 'tree',    label: 'Skill Tree' },
+                { id: 'tree',    label: 'Mastery Art' },
               ].map((opt) => {
                 const on = view === opt.id;
                 return (

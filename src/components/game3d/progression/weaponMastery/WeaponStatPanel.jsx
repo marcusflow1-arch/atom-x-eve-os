@@ -9,8 +9,8 @@
 // Pure presentation. Receives a `preview` object (next step), current entry,
 // rarity, accent color, and the Enhance handler from the parent panel.
 
-import React from 'react';
-import { Hammer, Sparkles, Zap, ShieldAlert, Star, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Hammer, Sparkles, Zap, ShieldAlert, Star, TrendingUp, Power } from 'lucide-react';
 import { getWeaponLevel } from '../weaponMasteryStore';
 import { resolveWeaponPassives } from './WeaponPassiveResolver';
 
@@ -68,6 +68,22 @@ export default function WeaponStatPanel({
   MAX_LEVEL,
   MAX_NORMAL_LEVEL,
 }) {
+  // Activate / Deactivate — controls whether enchantment + mastery bonuses apply to combat.
+  // Persisted per weapon so the player can flip it without re-enchanting.
+  const activateKey = `enchant_active_${weaponId}`;
+  const [bonusActive, setBonusActive] = useState(() => {
+    try { return localStorage.getItem(activateKey) !== 'false'; } catch { return true; }
+  });
+  const toggleBonus = () => {
+    setBonusActive((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(activateKey, String(next)); } catch {}
+      // Broadcast so combat pipeline can react
+      window.dispatchEvent(new CustomEvent('enchantBonusToggle', { detail: { weaponId, active: next } }));
+      return next;
+    });
+  };
+
   const overEnchant = entry.level > MAX_NORMAL_LEVEL;
   const element = ELEMENT_BY_WEAPON[weaponId] || DEFAULT_ELEMENT;
 
@@ -276,7 +292,7 @@ export default function WeaponStatPanel({
         )}
       </div>
 
-      {/* ── Material + Gold + Enhance button ───────────────────────────── */}
+      {/* ── Material + Gold + Enchant button ───────────────────────────── */}
       {!preview.atMax ? (
         <div className="mt-auto flex items-end justify-between gap-3">
           <div
@@ -316,47 +332,111 @@ export default function WeaponStatPanel({
               <span className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-200 to-amber-500" />
               <span className="tabular-nums text-white/90">{preview.gold.toLocaleString()}</span>
             </div>
-            <button
-              onClick={onEnhance}
-              disabled={!canAfford}
-              className="px-6 py-2.5 text-[12px] tracking-[0.4em] uppercase font-semibold transition-all"
-              style={{
-                background: canAfford
-                  ? (preview.isOver
-                      ? 'linear-gradient(180deg, rgba(244,63,94,0.85) 0%, rgba(159,18,57,0.85) 100%)'
-                      : 'linear-gradient(180deg, rgba(45,212,191,0.85) 0%, rgba(13,148,136,0.85) 100%)')
-                  : 'rgba(40,40,46,0.85)',
-                color: canAfford ? '#fff' : 'rgba(255,255,255,0.35)',
-                border: canAfford
-                  ? (preview.isOver ? '1px solid rgba(244,63,94,0.7)' : '1px solid rgba(45,212,191,0.7)')
-                  : '1px solid rgba(255,255,255,0.10)',
-                boxShadow: canAfford
-                  ? (preview.isOver
-                      ? '0 0 18px rgba(244,63,94,0.35), inset 0 1px 0 rgba(255,255,255,0.15)'
-                      : '0 0 18px rgba(45,212,191,0.35), inset 0 1px 0 rgba(255,255,255,0.15)')
-                  : 'inset 0 0 12px rgba(0,0,0,0.6)',
-                cursor: canAfford ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {preview.isOver ? 'Refine' : 'Enhance'}
-            </button>
+            {/* Two-button row: Enchant + Activate/Deactivate */}
+            <div className="flex gap-2">
+              <button
+                onClick={onEnhance}
+                disabled={!canAfford}
+                className="flex-1 py-2.5 text-[11px] tracking-[0.4em] uppercase font-semibold transition-all"
+                style={{
+                  background: canAfford
+                    ? (preview.isOver
+                        ? 'linear-gradient(180deg, rgba(244,63,94,0.85) 0%, rgba(159,18,57,0.85) 100%)'
+                        : 'linear-gradient(180deg, rgba(45,212,191,0.85) 0%, rgba(13,148,136,0.85) 100%)')
+                    : 'rgba(40,40,46,0.85)',
+                  color: canAfford ? '#fff' : 'rgba(255,255,255,0.35)',
+                  border: canAfford
+                    ? (preview.isOver ? '1px solid rgba(244,63,94,0.7)' : '1px solid rgba(45,212,191,0.7)')
+                    : '1px solid rgba(255,255,255,0.10)',
+                  boxShadow: canAfford
+                    ? (preview.isOver
+                        ? '0 0 18px rgba(244,63,94,0.35), inset 0 1px 0 rgba(255,255,255,0.15)'
+                        : '0 0 18px rgba(45,212,191,0.35), inset 0 1px 0 rgba(255,255,255,0.15)')
+                    : 'inset 0 0 12px rgba(0,0,0,0.6)',
+                  cursor: canAfford ? 'pointer' : 'not-allowed',
+                }}
+              >
+                {preview.isOver ? 'Refine' : 'Enchant'}
+              </button>
+
+              <button
+                onClick={toggleBonus}
+                className="flex items-center gap-1.5 px-3 py-2.5 text-[11px] tracking-[0.3em] uppercase font-semibold transition-all"
+                style={{
+                  background: bonusActive
+                    ? 'linear-gradient(180deg, rgba(99,102,241,0.70) 0%, rgba(67,56,202,0.70) 100%)'
+                    : 'rgba(40,40,46,0.85)',
+                  color: bonusActive ? '#e0e7ff' : 'rgba(255,255,255,0.40)',
+                  border: bonusActive
+                    ? '1px solid rgba(129,140,248,0.65)'
+                    : '1px solid rgba(255,255,255,0.12)',
+                  boxShadow: bonusActive
+                    ? '0 0 14px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.12)'
+                    : 'inset 0 0 10px rgba(0,0,0,0.5)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+                title={bonusActive
+                  ? 'Bonus active — click to deactivate and remove extra damage'
+                  : 'Bonus inactive — click to activate enchantment & mastery damage'}
+              >
+                <Power className="w-3.5 h-3.5 flex-shrink-0" />
+                {bonusActive ? 'Deactivate' : 'Activate'}
+              </button>
+            </div>
+
+            {/* Status hint */}
+            <div className="text-[9px] text-white/35 text-right leading-relaxed">
+              {bonusActive
+                ? 'Enchant & mastery bonuses applied to combat'
+                : 'Bonuses paused — useful for sparring or training'}
+            </div>
           </div>
         </div>
       ) : (
-        <div
-          className="px-6 py-4 text-center"
-          style={{
-            background: 'rgba(245,210,122,0.06)',
-            border: '1px solid rgba(245,210,122,0.45)',
-          }}
-        >
-          <div className="text-[11px] tracking-[0.4em] uppercase text-amber-200">
-            Maximum Enchantment Reached
+        <>
+          <div
+            className="px-6 py-4 text-center"
+            style={{
+              background: 'rgba(245,210,122,0.06)',
+              border: '1px solid rgba(245,210,122,0.45)',
+            }}
+          >
+            <div className="text-[11px] tracking-[0.4em] uppercase text-amber-200">
+              Maximum Enchantment Reached
+            </div>
+            <div className="text-[10px] text-white/55 mt-1">
+              Combine duplicate weapons below to push the power ceiling further.
+            </div>
           </div>
-          <div className="text-[10px] text-white/55 mt-1">
-            Combine duplicate weapons below to push the power ceiling further.
+
+          {/* Activate/Deactivate still available at max level */}
+          <button
+            onClick={toggleBonus}
+            className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 text-[11px] tracking-[0.35em] uppercase font-semibold transition-all"
+            style={{
+              background: bonusActive
+                ? 'linear-gradient(180deg, rgba(99,102,241,0.70) 0%, rgba(67,56,202,0.70) 100%)'
+                : 'rgba(40,40,46,0.85)',
+              color: bonusActive ? '#e0e7ff' : 'rgba(255,255,255,0.40)',
+              border: bonusActive
+                ? '1px solid rgba(129,140,248,0.65)'
+                : '1px solid rgba(255,255,255,0.12)',
+              boxShadow: bonusActive
+                ? '0 0 14px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.12)'
+                : 'inset 0 0 10px rgba(0,0,0,0.5)',
+              cursor: 'pointer',
+            }}
+          >
+            <Power className="w-3.5 h-3.5" />
+            {bonusActive ? 'Deactivate Bonus' : 'Activate Bonus'}
+          </button>
+          <div className="text-[9px] text-white/30 text-center mt-1.5">
+            {bonusActive
+              ? 'Enchant & mastery bonuses applied to combat'
+              : 'Bonuses paused — useful for sparring or training'}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
