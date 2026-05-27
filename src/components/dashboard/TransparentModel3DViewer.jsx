@@ -996,16 +996,16 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         let isMoving = false;
         
         const moveVector = new THREE.Vector3(0, 0, 0);
-        const camYaw = cameraOrbitRef.current.yaw;
-        const forwardX = -Math.sin(camYaw);
-        const forwardZ = -Math.cos(camYaw);
-        const rightX = Math.cos(camYaw);
-        const rightZ = -Math.sin(camYaw);
-        
-        if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; }
-        if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; }
-        if (keysPressed.current['a']) { moveVector.x -= rightX; moveVector.z -= rightZ; }
-        if (keysPressed.current['d']) { moveVector.x += rightX; moveVector.z += rightZ; }
+
+        // Camera forward (flat, from yaw)
+        const forwardVec = new THREE.Vector3(-Math.sin(cameraOrbitRef.current.yaw), 0, -Math.cos(cameraOrbitRef.current.yaw)).normalize();
+        // Correct right vector: up × forward (fixes A/D inversion)
+        const rightVec = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), forwardVec).normalize();
+
+        if (keysPressed.current['w']) { moveVector.add(forwardVec); }
+        if (keysPressed.current['s']) { moveVector.sub(forwardVec); }
+        if (keysPressed.current['a']) { moveVector.sub(rightVec); }
+        if (keysPressed.current['d']) { moveVector.add(rightVec); }
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
@@ -1013,7 +1013,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
             const angle = Math.atan2(moveVector.x, moveVector.z);
             const targetQuat = new THREE.Quaternion();
-            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), angle);
+            targetQuat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             activeModel.quaternion.slerp(targetQuat, 0.2);
 
             activeModel.position.x += moveVector.x * moveSpeed * delta;
