@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Zap, CheckCircle2, Circle } from 'lucide-react';
 import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
 import WeaponSkillTree from './WeaponSkillTree';
 import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
 import WeaponEnchantmentPanel from '../weaponMastery/WeaponEnchantmentPanel';
-import { resolveWeaponType } from '../weaponMastery/weaponMasteryConfig';
+import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
@@ -82,33 +82,41 @@ export default function WeaponMasteryTab() {
 // ── Per-weapon detail page — mirrors the reference MMO mastery screen ───────
 function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive }) {
   const weapon = WEAPONS.find((w) => w.id === weaponId);
-  const tree = getTreeForWeapon(weaponId);
-  const scaling = getDamageScalingFor(weaponId);
-  // 'enchant' (new Annulus-style ring) or 'tree' (legacy passive nodes).
+  const weaponType = resolveWeaponType(weaponId);
+  // 'enchant' (Annulus-style ring) or 'tree' (passive skill nodes)
   const [view, setView] = useState('enchant');
 
-  // Points logic — 1 unspent point per mastery level (matches reference).
-  const totalPoints = masteryEntry.level;
-  const pendingSpent = 0; // future allocation system; 0 until commit-points flow exists
-  const pointsAvailable = totalPoints - pendingSpent;
+  // Mastery perks that have been toggled active by the player (persist per weapon)
+  const storageKey = `mastery_active_perks_${weaponId}`;
+  const [activePerks, setActivePerks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch { return {}; }
+  });
+
+  const togglePerk = (perkId) => {
+    setActivePerks((prev) => {
+      const next = { ...prev, [perkId]: !prev[perkId] };
+      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   const xpPct = masteryEntry.isMaxLevel
     ? 100
     : (masteryEntry.killsIntoLevel / Math.max(1, masteryEntry.killsForNextLevel)) * 100;
 
-  // First three abilities across both branches → Q / R / F ability slots.
-  const allAbilities = tree.branches.flatMap((b) => b.abilities);
-  const abilitySlots = [
-    { key: 'Q', ability: allAbilities[0] },
-    { key: 'R', ability: allAbilities[1] },
-    { key: 'F', ability: allAbilities[2] },
-  ];
+  // Milestone passives for this weapon type, filtered to those the player has reached
+  const milestonePassives = MILESTONE_LEVELS
+    .filter((lvl) => masteryEntry.level >= lvl)
+    .map((lvl) => ({ lvl, perk: MILESTONE_PASSIVES[weaponType]?.[lvl] }))
+    .filter(({ perk }) => !!perk);
+
+  // Next locked milestone for context
+  const nextMilestone = MILESTONE_LEVELS.find((lvl) => masteryEntry.level < lvl);
 
   return (
     <div
       className="relative w-full h-full px-8 py-6 flex flex-col"
       style={{
-        // Liquid-glass card — translucent so the world shows through.
         background: 'rgba(8, 14, 22, 0.42)',
         backdropFilter: 'blur(18px) saturate(140%)',
         WebkitBackdropFilter: 'blur(18px) saturate(140%)',
@@ -129,89 +137,151 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
         </div>
       </div>
 
-      {/* Body — left column + vertical divider + right trees */}
+      {/* Body — left column + vertical divider + right panel */}
       <div className="flex-1 flex min-h-0 gap-6 mt-4">
-        {/* LEFT column */}
-        <div className="w-64 flex flex-col items-center">
-          {/* Points-available disc */}
+
+        {/* ── LEFT COLUMN: weapon proficiency + togglable perks ── */}
+        <div className="w-64 flex flex-col items-center overflow-y-auto">
+
+          {/* Mastery Level disc */}
           <div
-            className="relative w-44 h-44 rounded-full flex items-center justify-center"
+            className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
             style={{
-              background: 'radial-gradient(circle, rgba(120,170,210,0.10) 0%, transparent 70%)',
-              border: '1px solid rgba(180,210,240,0.25)',
+              background: 'radial-gradient(circle, rgba(110,195,255,0.10) 0%, rgba(165,216,255,0.04) 50%, transparent 75%)',
+              border: '1.5px solid rgba(110,195,255,0.30)',
+              boxShadow: masteryEntry.level > 1 ? '0 0 24px rgba(110,195,255,0.12)' : 'none',
             }}
           >
-            <div className="absolute inset-2 rounded-full border border-white/10" />
+            <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
             <div className="text-center">
-              <div className="text-5xl font-light text-white tabular-nums">
-                {pointsAvailable}
+              <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-1">
+                Mastery Level
               </div>
-              <div className="mt-1 text-[9px] tracking-[0.35em] uppercase text-white/65">
-                Points<br/>Available
+              <div className="text-5xl font-light text-white tabular-nums leading-none">
+                {masteryEntry.level}
+              </div>
+              <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">
+                / {MASTERY_MAX_LEVEL}
               </div>
             </div>
+            {masteryEntry.isMaxLevel && (
+              <div
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] tracking-[0.35em] uppercase font-semibold rounded-sm"
+                style={{
+                  background: 'rgba(251,191,36,0.15)',
+                  border: '1px solid rgba(251,191,36,0.50)',
+                  color: '#fbbf24',
+                }}
+              >
+                Mastered
+              </div>
+            )}
           </div>
 
-          {/* Level + XP bar */}
-          <div className="w-full mt-5">
-            <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden">
+          {/* XP progress bar */}
+          <div className="w-full mt-6 px-1">
+            <div className="flex justify-between text-[9px] text-white/45 mb-1.5 tracking-[0.05em]">
+              <span>Proficiency XP</span>
+              <span>
+                {masteryEntry.isMaxLevel
+                  ? 'Complete'
+                  : `${masteryEntry.killsIntoLevel} / ${masteryEntry.killsForNextLevel}`}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
               <div
-                className="h-full"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${Math.min(100, xpPct)}%`,
                   background: 'linear-gradient(90deg, #6ec3ff, #a5d8ff)',
+                  boxShadow: '0 0 6px rgba(110,195,255,0.4)',
                 }}
               />
             </div>
-            <div className="flex justify-between mt-1.5 text-[10px] text-white/65 tracking-[0.05em]">
-              <span>Level {masteryEntry.level} / {MASTERY_MAX_LEVEL}</span>
-              <span>
-                {masteryEntry.isMaxLevel
-                  ? 'Mastered'
-                  : `${masteryEntry.killsIntoLevel.toLocaleString()} to level ${masteryEntry.level + 1}`}
-              </span>
+            <div className="text-[9px] text-white/35 mt-1.5 text-center">
+              {masteryEntry.isMaxLevel
+                ? 'All proficiency earned'
+                : `${masteryEntry.killsForNextLevel - masteryEntry.killsIntoLevel} more to Level ${masteryEntry.level + 1}`}
             </div>
           </div>
 
-          {/* Abilities Q / R / F */}
-          <div className="w-full mt-8">
-            <div className="text-center text-[10px] tracking-[0.4em] uppercase text-white/60 mb-3">
-              Abilities
+          {/* Unlocked Perks — togglable on/off */}
+          <div className="w-full mt-5 px-1">
+            <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">
+              Weapon Perks
             </div>
-            <div className="flex justify-center gap-2">
-              {abilitySlots.map(({ key, ability }) => (
-                <div key={key} className="flex flex-col items-center">
-                  <div
-                    className="w-14 h-14 rounded-sm flex items-center justify-center text-2xl"
-                    style={{
-                      background: 'rgba(0,0,0,0.45)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      boxShadow: 'inset 0 0 10px rgba(0,0,0,0.6)',
-                      opacity: ability ? 1 : 0.35,
-                    }}
-                  >
-                    {ability?.icon || ''}
-                  </div>
-                  <div className="mt-1.5 text-[10px] text-white/75 tracking-widest">{key}</div>
-                </div>
-              ))}
-            </div>
+
+            {milestonePassives.length === 0 ? (
+              <div className="text-[10px] text-white/30 text-center py-3 px-2 rounded-sm border border-white/[0.06]">
+                {nextMilestone
+                  ? `Reach Level ${nextMilestone} to unlock your first perk`
+                  : 'No perks available'}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {milestonePassives.map(({ lvl, perk }) => {
+                  const on = !!activePerks[perk.id];
+                  return (
+                    <button
+                      key={perk.id}
+                      onClick={() => togglePerk(perk.id)}
+                      className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-sm transition-all"
+                      style={{
+                        background: on ? 'rgba(110,195,255,0.07)' : 'rgba(255,255,255,0.02)',
+                        border: on ? '1px solid rgba(110,195,255,0.30)' : '1px solid rgba(255,255,255,0.07)',
+                      }}
+                    >
+                      <div className="mt-0.5 flex-shrink-0">
+                        {on
+                          ? <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+                          : <Circle className="w-3.5 h-3.5 text-white/25" />
+                        }
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          <span className="text-[11px] font-semibold text-white/85">{perk.name}</span>
+                          <span className="text-[9px] tracking-[0.15em] text-white/35">Lv{lvl}</span>
+                        </div>
+                        <div className="text-[9px] text-white/45 mt-0.5 leading-relaxed">{perk.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Next locked milestone hint */}
+            {nextMilestone && (
+              <div
+                className="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-sm"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px dashed rgba(255,255,255,0.10)',
+                }}
+              >
+                <Zap className="w-3 h-3 text-white/25 flex-shrink-0" />
+                <span className="text-[9px] text-white/30">
+                  Next perk at Level {nextMilestone}
+                  {MILESTONE_PASSIVES[weaponType]?.[nextMilestone]?.name
+                    ? ` — ${MILESTONE_PASSIVES[weaponType][nextMilestone].name}`
+                    : ''}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Damage scales with */}
-          <div className="w-full mt-10 text-center">
-            <div className="text-[10px] tracking-[0.35em] uppercase text-white/55">
-              Damage Scales With
-            </div>
-            <div className="mt-2 text-xs text-white/80 italic capitalize">
-              {scaling.length === 0
-                ? '—'
-                : scaling.map((s) => s.stat).join(' and ')}
+          {/* Skill Tree hint */}
+          <div className="w-full mt-4 px-1">
+            <div
+              className="px-3 py-2 rounded-sm text-[9px] text-white/40 leading-relaxed"
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <span className="text-white/55 font-semibold">Skill Tree</span> — use your mastery level to allocate points and unlock additional combat bonuses for this weapon.
             </div>
           </div>
         </div>
 
-        {/* VERTICAL DIVIDER between Points-Available column and Enchantment view */}
+        {/* VERTICAL DIVIDER */}
         <div
           className="w-px flex-shrink-0 self-stretch"
           style={{
@@ -220,7 +290,7 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
           }}
         />
 
-        {/* RIGHT — Enchantment ring (Annulus-style) OR legacy passive tree */}
+        {/* RIGHT — Enchantment ring (Annulus-style) OR skill tree nodes */}
         <div className="flex-1 min-w-0 flex flex-col overflow-y-auto pt-2">
           {/* View toggle */}
           <div className="flex justify-center mb-3">
@@ -261,13 +331,13 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
             />
           ) : (
             <div className="flex justify-center items-start">
-              <WeaponMasteryTreePanel weaponType={resolveWeaponType(weaponId)} />
+              <WeaponMasteryTreePanel weaponType={weaponType} />
             </div>
           )}
         </div>
       </div>
 
-      {/* Bottom — Commit Points / Set Active button bar */}
+      {/* Bottom — Set Active button */}
       <div className="mt-4 flex justify-center">
         <button
           onClick={onSetActive}
@@ -286,9 +356,7 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
             cursor: isActive ? 'default' : 'pointer',
           }}
         >
-          {isActive
-            ? 'Active Weapon'
-            : `Commit ${pointsAvailable} Point${pointsAvailable === 1 ? '' : 's'}`}
+          {isActive ? 'Active Weapon' : 'Set as Active Weapon'}
         </button>
       </div>
     </div>
