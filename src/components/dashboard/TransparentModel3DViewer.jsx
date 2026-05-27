@@ -443,7 +443,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       if (!isDraggingRef.current) return;
       const dx = e.clientX - lastMouseRef.current.x, dy = e.clientY - lastMouseRef.current.y;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
-      cameraOrbitRef.current.yaw -= dx * 0.005;
+      cameraOrbitRef.current.yaw += dx * 0.005;
       cameraOrbitRef.current.pitch = Math.max(0.05, Math.min(Math.PI / 1.8, cameraOrbitRef.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
@@ -992,7 +992,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
           }
         }));
 
-        const moveSpeed = 0.6;
+        const moveSpeed = 6.0;
         let isMoving = false;
 
         // Camera forward flat from yaw
@@ -1011,6 +1011,17 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (keysPressed.current['a']) moveVector.sub(rightVec);  // A = LEFT  (subtract right)
         if (keysPressed.current['d']) moveVector.add(rightVec);  // D = RIGHT (add right)
 
+        console.log("MOVE", {
+          yaw: cameraOrbitRef.current.yaw,
+          moveX: moveVector.x,
+          moveZ: moveVector.z,
+          rightVec: { x: rightVec.x, z: rightVec.z },
+          forwardVec: { x: forwardVec.x, z: forwardVec.z }
+        });
+
+        // Disable lock-on temporarily to isolate rotation override issues
+        window._lockOnTarget = null;
+
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
             isMoving = true;
@@ -1018,23 +1029,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
             activeModel.position.x += moveVector.x * moveSpeed * delta;
             activeModel.position.z += moveVector.z * moveSpeed * delta;
 
-            // Lock-on: face the target, strafe freely without rotating character
-            const lockTarget = window._lockOnTarget || null;
-            if (lockTarget) {
-              const lookDir = new THREE.Vector3()
-                .subVectors(lockTarget.position || lockTarget, activeModel.position);
-              lookDir.y = 0;
-              if (lookDir.lengthSq() > 0.001) {
-                const lockAngle = Math.atan2(lookDir.x, lookDir.z);
-                const lockQuat = new THREE.Quaternion().setFromAxisAngle(_up, lockAngle);
-                activeModel.quaternion.slerp(lockQuat, 0.3);
-              }
-            } else {
-              // Normal: face movement direction
-              const angle = Math.atan2(moveVector.x, moveVector.z);
-              const targetQuat = new THREE.Quaternion().setFromAxisAngle(_up, angle);
-              activeModel.quaternion.slerp(targetQuat, 0.2);
-            }
+            // Direct rotation — no quaternion slerp smoothing (avoids delayed/inverted facing)
+            activeModel.rotation.y = Math.atan2(moveVector.x, moveVector.z);
         }
 
         const orbit = cameraOrbitRef.current;
