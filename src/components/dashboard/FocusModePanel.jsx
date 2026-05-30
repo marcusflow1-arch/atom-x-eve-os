@@ -1813,10 +1813,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* PS5 AI Avatar Home Panel */}
-              <div className="relative mt-3" style={{ height: '512px' }}>
-                <PS5AvatarHomePanel onSelectEnv={onSelectEnv} />
-              </div>
+              {/* AI Avatar Home — intentionally blank */}
+              <div className="relative mt-3" style={{ height: '512px' }} />
 
               {/* DevSpotlightRibbon removed from here, moved to root of FocusModePanel */}
 
