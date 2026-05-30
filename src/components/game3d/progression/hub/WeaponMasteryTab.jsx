@@ -416,28 +416,7 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
 
       </div>
 
-      {/* Bottom — Set Active button */}
-      <div className="mt-4 flex justify-center">
-        <button
-          onClick={onSetActive}
-          disabled={isActive}
-          className="px-10 py-3 text-[11px] tracking-[0.45em] uppercase font-semibold transition-all"
-          style={{
-            background: isActive
-              ? 'rgba(59, 130, 246, 0.18)'
-              : 'linear-gradient(180deg, rgba(59,130,246,0.35) 0%, rgba(29,78,216,0.30) 100%)',
-            border: '1px solid rgba(96,165,250,0.55)',
-            color: '#dbeafe',
-            boxShadow: isActive
-              ? 'inset 0 0 12px rgba(59,130,246,0.25)'
-              : '0 0 18px rgba(59,130,246,0.25), inset 0 0 14px rgba(96,165,250,0.20)',
-            minWidth: 320,
-            cursor: isActive ? 'default' : 'pointer',
-          }}
-        >
-          {isActive ? 'Active Weapon' : 'Set as Active Weapon'}
-        </button>
-      </div>
+
     </div>
   );
 }
