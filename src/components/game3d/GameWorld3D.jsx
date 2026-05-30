@@ -85,6 +85,7 @@ import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { loadDeepSpaceSkybox } from './worldSkybox';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
+import { createQuestEnemySpawner } from './questEnemySpawner';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -99,6 +100,7 @@ export default function GameWorld3D() {
   const [questNPCsUI, setQuestNPCsUI] = useState([]); // [{ id, x, y, status }]
   const [nearbyQuestNPC, setNearbyQuestNPC] = useState(null); // { id, name }
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
+  const spawnQuestEnemiesRef = useRef(null); // set inside useEffect once scene is ready
   const [questState, setQuestState] = useState(getQuestState());
   const [equipmentOpen, setEquipmentOpen] = useState(false);
   const [playerMenu, setPlayerMenu] = useState(null); const remoteManagerRef = useRef(null);
@@ -733,50 +735,61 @@ export default function GameWorld3D() {
       playerAnim = createPlayerAnimationController({ mixer, blend: BLEND, oneShotRef: oneShotPlaying });
       coreAnimationController = new CoreAnimationController({ legacyController: playerAnim });
 
-      // ─── Quest NPC: load a SECOND copy of the same archer model ───
-      // We load it fresh (not a Three.js clone) so it gets its own independent
-      // skeleton, mixer and animation state — no shared-rig conflicts.
-      loader.load(ARCHER_URL, (npcFbx) => {
-        const npcBox = new THREE.Box3().setFromObject(npcFbx);
-        const npcSize = npcBox.getSize(new THREE.Vector3());
-        const npcMaxDim = Math.max(npcSize.x, npcSize.y, npcSize.z);
-        const npcScale = 1.7 / npcMaxDim;
-        npcFbx.scale.setScalar(npcScale);
-        // Place 4 units to the right of player spawn so you see them immediately
-        npcFbx.position.set(4, 0, 0);
-        // Face the player (toward -X)
-        npcFbx.rotation.y = -Math.PI / 2;
+      // ─── Spawn all 5 Quest NPCs as individual archer model copies ───
+      // Each gets its own independent skeleton + mixer — no shared-rig conflicts.
+      QUEST_NPCS.forEach((npcDef) => {
+        loader.load(ARCHER_URL, (npcFbx) => {
+          const npcBox = new THREE.Box3().setFromObject(npcFbx);
+          const npcSize = npcBox.getSize(new THREE.Vector3());
+          const npcMaxDim = Math.max(npcSize.x, npcSize.y, npcSize.z);
+          const npcScale = 1.7 / npcMaxDim;
+          npcFbx.scale.setScalar(npcScale);
+          npcFbx.position.set(npcDef.pos[0], npcDef.pos[1], npcDef.pos[2]);
+          // Face toward player spawn (0,0,0)
+          const ang = Math.atan2(-npcDef.pos[0], -npcDef.pos[2]);
+          npcFbx.rotation.y = ang;
 
-        npcFbx.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = !node.isSkinnedMesh;
-            node.receiveShadow = true;
-          }
+          // Apply the NPC's tint color so each archer looks distinct
+          npcFbx.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = !node.isSkinnedMesh;
+              node.receiveShadow = true;
+              if (node.material) {
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                mats.forEach((m) => { m.color?.setHex(npcDef.tint); });
+              }
+            }
+          });
+
+          // Golden quest ring under feet
+          const npcRingGeo = new THREE.RingGeometry(0.7 / npcScale, 0.95 / npcScale, 32);
+          const npcRingMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+          const npcRing = new THREE.Mesh(npcRingGeo, npcRingMat);
+          npcRing.rotation.x = -Math.PI / 2;
+          npcRing.position.y = 0.02 / npcScale;
+          npcFbx.add(npcRing);
+
+          scene.add(npcFbx);
+          snapToGround(npcFbx, 0);
+
+          const npcMixer = new THREE.AnimationMixer(npcFbx);
+
+          questNPCs.push({
+            id: npcDef.id,
+            name: npcDef.name,
+            group: npcFbx,
+            mixer: npcMixer,
+            idleAction: null,
+            ringMesh: npcRing,
+            _pendingMixer: npcMixer,
+          });
         });
+      });
 
-        // Golden quest ring under feet
-        const npcRingGeo = new THREE.RingGeometry(0.7 / npcScale, 0.95 / npcScale, 32);
-        const npcRingMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
-        const npcRing = new THREE.Mesh(npcRingGeo, npcRingMat);
-        npcRing.rotation.x = -Math.PI / 2;
-        npcRing.position.y = 0.02 / npcScale;
-        npcFbx.add(npcRing);
-
-        scene.add(npcFbx);
-        snapToGround(npcFbx, 0);
-
-        const npcMixer = new THREE.AnimationMixer(npcFbx);
-
-        // Push NPC immediately — idle clip will be bound once player clips finish loading
-        questNPCs.push({
-          id: 'npc_quest_stranger',
-          name: 'The Stranger',
-          group: npcFbx,
-          mixer: npcMixer,
-          idleAction: null,
-          ringMesh: npcRing,
-          _pendingMixer: npcMixer, // used below to bind idle after player clips load
-        });
+      // Wire up the quest enemy spawner — set on the ref so the React layer can call it
+      spawnQuestEnemiesRef.current = createQuestEnemySpawner({
+        scene, enemies, loader, snapToGround,
+        walkClipPromise, idleClipPromise, setEnemyCount,
       });
 
       // Load player animation clips once — bind to player AND reuse for quest NPC idle
@@ -1874,8 +1887,17 @@ export default function GameWorld3D() {
           mode={activeQuestDialogue.mode}
           progress={activeQuestDialogue.progress}
           onAccept={() => {
-            acceptQuest(activeQuestDialogue.quest.id);
+            const q = activeQuestDialogue.quest;
+            acceptQuest(q.id);
             playActionSound('quest_accept');
+            // Spawn the required enemies on the map so the player can fight them
+            if (spawnQuestEnemiesRef.current && q.spawnCount) {
+              spawnQuestEnemiesRef.current({
+                count: q.spawnCount,
+                tierName: q.spawnTier || 'normal',
+                playerPos: window.__localPlayerPos || { x: 0, z: 0 },
+              });
+            }
             setActiveQuestDialogue(null);
           }}
           onDecline={() => setActiveQuestDialogue(null)}
