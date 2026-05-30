@@ -66,7 +66,7 @@ export default function QuestDialogueBox({
 
   return (
     <div
-      className="absolute left-4 bottom-36 w-[480px] max-w-[45%] rounded-2xl p-6 z-[200]"
+      className="fixed left-6 top-24 w-[480px] max-w-[44vw] rounded-2xl p-6 z-[9999]"
       style={{
         background: 'rgba(10, 14, 22, 0.78)',
         backdropFilter: 'blur(28px) saturate(180%)',
