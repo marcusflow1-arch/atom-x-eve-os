@@ -74,7 +74,6 @@ export default function IncomingRequestToast({ userId, userName }) {
     try {
       const reqs = await base44.entities.SocialRequest.filter({ receiver_id: userId });
       const pending = (reqs || []).filter((r) => r.status === 'pending');
-      console.log(`[Social] refreshIncoming for ${userId}: ${pending.length} pending`);
       setIncoming(pending);
     } catch (e) { console.warn('[Social] refreshIncoming', e); }
   }, [userId]);
@@ -82,23 +81,15 @@ export default function IncomingRequestToast({ userId, userName }) {
   // Initial load + real-time subscriptions
   useEffect(() => {
     if (!userId) return;
-    console.log(`[Social] IncomingRequestToast mounted for user ${userId}`);
     refreshFriends();
     refreshParty();
     refreshIncoming();
-
-    // Poll every 20s as a safety net in case real-time subscription drops.
-    // (Real-time subscription is the primary mechanism — this just covers gaps.)
-    // Lowered from 5s to avoid hitting the entity API rate limit alongside
-    // other social/world pollers.
-    const pollInterval = setInterval(() => refreshIncoming(), 20000);
 
     const unsubReq = base44.entities.SocialRequest.subscribe(() => refreshIncoming());
     const unsubFriend = base44.entities.SocialFriendship.subscribe(() => refreshFriends());
     const unsubParty = base44.entities.PartySession.subscribe(() => refreshParty());
 
     return () => {
-      clearInterval(pollInterval);
       unsubReq && unsubReq();
       unsubFriend && unsubFriend();
       unsubParty && unsubParty();
