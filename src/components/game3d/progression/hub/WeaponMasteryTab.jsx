@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Zap, CheckCircle2, Circle, Sparkles } from 'lucide-react';
+import { ChevronLeft, Zap, CheckCircle2, Circle, Sparkles, Lock, Unlock, Star, RotateCcw } from 'lucide-react';
 import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
 import WeaponSkillTree from './WeaponSkillTree';
 import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
 import WeaponEnchantmentPanel from '../weaponMastery/WeaponEnchantmentPanel';
+import MasteryArtPanel from '../weaponMastery/MasteryArtPanel';
 import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
 import AdvancedClassPanel from '../../../game3d/talents/AdvancedClassPanel';
 
@@ -182,182 +183,218 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
       {/* Body — left column + vertical divider + right panel */}
       <div className="flex-1 flex min-h-0 gap-6 mt-4">
 
-        {/* ── LEFT COLUMN: weapon proficiency + togglable perks ── */}
-        <div className="w-64 flex flex-col items-center overflow-y-auto">
+        {/* ── LEFT COLUMN — content changes based on active view ── */}
+        <div className="w-64 flex flex-col items-center overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
 
-          {/* Mastery Level disc */}
-          <div
-            className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{
-              background: 'radial-gradient(circle, rgba(110,195,255,0.10) 0%, rgba(165,216,255,0.04) 50%, transparent 75%)',
-              border: '1.5px solid rgba(110,195,255,0.30)',
-              boxShadow: masteryEntry.level > 1 ? '0 0 24px rgba(110,195,255,0.12)' : 'none',
-            }}
-          >
-            <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
-            <div className="text-center">
-              <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-1">
-                Mastery Level
-              </div>
-              <div className="text-5xl font-light text-white tabular-nums leading-none">
-                {masteryEntry.level}
-              </div>
-              <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">
-                / {MASTERY_MAX_LEVEL}
-              </div>
-            </div>
-            {masteryEntry.isMaxLevel && (
+          {view === 'enchant' ? (
+            /* ── ENCHANTMENT left: mastery level disc + proficiency bar + perks ── */
+            <>
+              {/* Mastery Level disc */}
               <div
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] tracking-[0.35em] uppercase font-semibold rounded-sm"
+                className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
-                  background: 'rgba(251,191,36,0.15)',
-                  border: '1px solid rgba(251,191,36,0.50)',
-                  color: '#fbbf24',
+                  background: 'radial-gradient(circle, rgba(110,195,255,0.10) 0%, rgba(165,216,255,0.04) 50%, transparent 75%)',
+                  border: '1.5px solid rgba(110,195,255,0.30)',
+                  boxShadow: masteryEntry.level > 1 ? '0 0 24px rgba(110,195,255,0.12)' : 'none',
                 }}
               >
-                Mastered
+                <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
+                <div className="text-center">
+                  <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-1">Enchant Lv</div>
+                  <div className="text-5xl font-light text-white tabular-nums leading-none">{masteryEntry.level}</div>
+                  <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">/ {MASTERY_MAX_LEVEL}</div>
+                </div>
+                {masteryEntry.isMaxLevel && (
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] tracking-[0.35em] uppercase font-semibold rounded-sm"
+                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.50)', color: '#fbbf24' }}>
+                    Mastered
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* XP progress bar */}
-          <div className="w-full mt-6 px-1">
-            <div className="flex justify-between text-[9px] text-white/45 mb-1.5 tracking-[0.05em]">
-              <span>Proficiency XP</span>
-              <span>
-                {masteryEntry.isMaxLevel
-                  ? 'Complete'
-                  : `${masteryEntry.killsIntoLevel} / ${masteryEntry.killsForNextLevel}`}
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
+              {/* XP bar */}
+              <div className="w-full mt-6 px-1">
+                <div className="flex justify-between text-[9px] text-white/45 mb-1.5">
+                  <span>Proficiency XP</span>
+                  <span>{masteryEntry.isMaxLevel ? 'Complete' : `${masteryEntry.killsIntoLevel} / ${masteryEntry.killsForNextLevel}`}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, xpPct)}%`, background: 'linear-gradient(90deg, #6ec3ff, #a5d8ff)', boxShadow: '0 0 6px rgba(110,195,255,0.4)' }} />
+                </div>
+                <div className="text-[9px] text-white/35 mt-1.5 text-center">
+                  {masteryEntry.isMaxLevel ? 'All proficiency earned' : `${masteryEntry.killsForNextLevel - masteryEntry.killsIntoLevel} more to Level ${masteryEntry.level + 1}`}
+                </div>
+              </div>
+
+              {/* Unlocked Perks */}
+              <div className="w-full mt-5 px-1">
+                <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Weapon Perks</div>
+                {milestonePassives.length === 0 ? (
+                  <div className="text-[10px] text-white/30 text-center py-3 px-2 rounded-sm border border-white/[0.06]">
+                    {nextMilestone ? `Reach Level ${nextMilestone} to unlock your first perk` : 'No perks available'}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {milestonePassives.map(({ lvl, perk }) => {
+                      const on = !!activePerks[perk.id];
+                      return (
+                        <button key={perk.id} onClick={() => togglePerk(perk.id)}
+                          className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-sm transition-all"
+                          style={{ background: on ? 'rgba(110,195,255,0.07)' : 'rgba(255,255,255,0.02)', border: on ? '1px solid rgba(110,195,255,0.30)' : '1px solid rgba(255,255,255,0.07)' }}>
+                          <div className="mt-0.5 flex-shrink-0">
+                            {on ? <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" /> : <Circle className="w-3.5 h-3.5 text-white/25" />}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-baseline gap-1.5 flex-wrap">
+                              <span className="text-[11px] font-semibold text-white/85">{perk.name}</span>
+                              <span className="text-[9px] tracking-[0.15em] text-white/35">Lv{lvl}</span>
+                            </div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-relaxed">{perk.desc}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {nextMilestone && (
+                  <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-sm"
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.10)' }}>
+                    <Zap className="w-3 h-3 text-white/25 flex-shrink-0" />
+                    <span className="text-[9px] text-white/30">
+                      Next perk at Level {nextMilestone}
+                      {MILESTONE_PASSIVES[weaponType]?.[nextMilestone]?.name ? ` — ${MILESTONE_PASSIVES[weaponType][nextMilestone].name}` : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            /* ── MASTERY ART left: level 1–20 progress + advanced class + XP + perks ── */
+            <>
+              {/* Mastery Art level ring */}
+              <div className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
-                  width: `${Math.min(100, xpPct)}%`,
-                  background: 'linear-gradient(90deg, #6ec3ff, #a5d8ff)',
-                  boxShadow: '0 0 6px rgba(110,195,255,0.4)',
-                }}
-              />
-            </div>
-            <div className="text-[9px] text-white/35 mt-1.5 text-center">
-              {masteryEntry.isMaxLevel
-                ? 'All proficiency earned'
-                : `${masteryEntry.killsForNextLevel - masteryEntry.killsIntoLevel} more to Level ${masteryEntry.level + 1}`}
-            </div>
-          </div>
-
-          {/* Unlocked Perks — togglable on/off */}
-          <div className="w-full mt-5 px-1">
-            <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">
-              Weapon Perks
-            </div>
-
-            {milestonePassives.length === 0 ? (
-              <div className="text-[10px] text-white/30 text-center py-3 px-2 rounded-sm border border-white/[0.06]">
-                {nextMilestone
-                  ? `Reach Level ${nextMilestone} to unlock your first perk`
-                  : 'No perks available'}
+                  background: 'radial-gradient(circle, rgba(251,191,36,0.10) 0%, rgba(245,158,11,0.04) 50%, transparent 75%)',
+                  border: '1.5px solid rgba(251,191,36,0.35)',
+                  boxShadow: masteryEntry.level >= 10 ? '0 0 24px rgba(251,191,36,0.14)' : 'none',
+                }}>
+                <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
+                <div className="text-center">
+                  <div className="text-[10px] tracking-[0.35em] uppercase text-amber-300/60 mb-1">Mastery Art</div>
+                  <div className="text-5xl font-light text-white tabular-nums leading-none">{masteryEntry.level}</div>
+                  <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">/ 20</div>
+                </div>
+                {masteryEntry.level >= 20 && (
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] tracking-[0.35em] uppercase font-semibold rounded-sm"
+                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.50)', color: '#fbbf24' }}>
+                    Grand Mastery
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {milestonePassives.map(({ lvl, perk }) => {
-                  const on = !!activePerks[perk.id];
-                  return (
-                    <button
-                      key={perk.id}
-                      onClick={() => togglePerk(perk.id)}
-                      className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-sm transition-all"
-                      style={{
-                        background: on ? 'rgba(110,195,255,0.07)' : 'rgba(255,255,255,0.02)',
-                        border: on ? '1px solid rgba(110,195,255,0.30)' : '1px solid rgba(255,255,255,0.07)',
-                      }}
-                    >
-                      <div className="mt-0.5 flex-shrink-0">
-                        {on
-                          ? <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
-                          : <Circle className="w-3.5 h-3.5 text-white/25" />
-                        }
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-baseline gap-1.5 flex-wrap">
-                          <span className="text-[11px] font-semibold text-white/85">{perk.name}</span>
-                          <span className="text-[9px] tracking-[0.15em] text-white/35">Lv{lvl}</span>
-                        </div>
-                        <div className="text-[9px] text-white/45 mt-0.5 leading-relaxed">{perk.desc}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
 
-            {/* Next locked milestone hint */}
-            {nextMilestone && (
-              <div
-                className="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-sm"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px dashed rgba(255,255,255,0.10)',
-                }}
-              >
-                <Zap className="w-3 h-3 text-white/25 flex-shrink-0" />
-                <span className="text-[9px] text-white/30">
-                  Next perk at Level {nextMilestone}
-                  {MILESTONE_PASSIVES[weaponType]?.[nextMilestone]?.name
-                    ? ` — ${MILESTONE_PASSIVES[weaponType][nextMilestone].name}`
-                    : ''}
-                </span>
+              {/* Advanced class unlock badge */}
+              <div className="w-full mt-6 px-1">
+                <div className="flex items-center gap-2 px-3 py-2 rounded"
+                  style={{
+                    background: masteryEntry.level >= 10 ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.02)',
+                    border: masteryEntry.level >= 10 ? '1px solid rgba(52,211,153,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                  {masteryEntry.level >= 10
+                    ? <Unlock className="w-3.5 h-3.5 text-emerald-300 flex-shrink-0" />
+                    : <Lock className="w-3.5 h-3.5 text-white/25 flex-shrink-0" />
+                  }
+                  <div>
+                    <div className="text-[10px] font-semibold" style={{ color: masteryEntry.level >= 10 ? '#6ee7b7' : 'rgba(255,255,255,0.30)' }}>
+                      Weapon Efficiency
+                    </div>
+                    <div className="text-[9px] text-white/35">
+                      {masteryEntry.level >= 10 ? 'Advanced Class Available' : `Reach Level 10 to unlock`}
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Skill Tree hint */}
-          <div className="w-full mt-4 px-1">
-            <div
-              className="px-3 py-2 rounded-sm text-[9px] text-white/40 leading-relaxed"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <span className="text-white/55 font-semibold">Skill Tree</span> — use your mastery level to allocate points and unlock additional combat bonuses for this weapon.
-            </div>
-          </div>
+              {/* XP bar */}
+              <div className="w-full mt-4 px-1">
+                <div className="flex justify-between text-[9px] text-white/45 mb-1.5">
+                  <span>Mastery XP</span>
+                  <span>{masteryEntry.isMaxLevel ? 'Complete' : `${masteryEntry.killsIntoLevel} / ${masteryEntry.killsForNextLevel}`}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, xpPct)}%`, background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', boxShadow: '0 0 6px rgba(251,191,36,0.4)' }} />
+                </div>
+                <div className="text-[9px] text-white/35 mt-1.5 text-center">
+                  {masteryEntry.isMaxLevel ? 'Grand Mastery achieved' : `${masteryEntry.killsForNextLevel - masteryEntry.killsIntoLevel} kills to Level ${masteryEntry.level + 1}`}
+                </div>
+              </div>
+
+              {/* Weapon Perks for Mastery Art */}
+              <div className="w-full mt-4 px-1">
+                <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Mastery Perks</div>
+                {milestonePassives.length === 0 ? (
+                  <div className="text-[10px] text-white/30 text-center py-3 px-2 rounded-sm border border-white/[0.06]">
+                    {nextMilestone ? `Reach Level ${nextMilestone} to unlock your first perk` : 'No perks available'}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {milestonePassives.map(({ lvl, perk }) => {
+                      const on = !!activePerks[perk.id];
+                      return (
+                        <button key={perk.id} onClick={() => togglePerk(perk.id)}
+                          className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-sm transition-all"
+                          style={{ background: on ? 'rgba(251,191,36,0.07)' : 'rgba(255,255,255,0.02)', border: on ? '1px solid rgba(251,191,36,0.30)' : '1px solid rgba(255,255,255,0.07)' }}>
+                          <div className="mt-0.5 flex-shrink-0">
+                            {on ? <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" /> : <Circle className="w-3.5 h-3.5 text-white/25" />}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-baseline gap-1.5 flex-wrap">
+                              <span className="text-[11px] font-semibold text-white/85">{perk.name}</span>
+                              <span className="text-[9px] tracking-[0.15em] text-amber-400/50">Lv{lvl}</span>
+                            </div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-relaxed">{perk.desc}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* VERTICAL DIVIDER */}
         <div
           className="w-px flex-shrink-0 self-stretch"
           style={{
-            background:
-              'linear-gradient(180deg, transparent 0%, rgba(180,160,130,0.45) 12%, rgba(180,160,130,0.45) 88%, transparent 100%)',
+            background: view === 'enchant'
+              ? 'linear-gradient(180deg, transparent 0%, rgba(110,195,255,0.35) 12%, rgba(110,195,255,0.35) 88%, transparent 100%)'
+              : 'linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.35) 12%, rgba(251,191,36,0.35) 88%, transparent 100%)',
           }}
         />
 
-        {/* RIGHT — Enchantment ring (Annulus-style) OR skill tree nodes */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto pt-2">
+        {/* RIGHT PANEL — view-specific content */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto pt-2" style={{ scrollbarWidth: 'none' }}>
           {/* View toggle */}
-          <div className="flex justify-center mb-3">
-            <div
-              className="inline-flex rounded-sm overflow-hidden"
-              style={{ border: '1px solid rgba(180,160,130,0.30)' }}
-            >
+          <div className="flex justify-center mb-4 flex-shrink-0">
+            <div className="inline-flex rounded overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.12)' }}>
               {[
-                { id: 'enchant', label: 'Enchantment' },
-                { id: 'tree',    label: 'Mastery Art' },
+                { id: 'enchant', label: 'Enchantment', color: '#6ec3ff' },
+                { id: 'tree',    label: 'Mastery Art',  color: '#fbbf24' },
               ].map((opt) => {
                 const on = view === opt.id;
                 return (
-                  <button
-                    key={opt.id}
-                    onClick={() => setView(opt.id)}
+                  <button key={opt.id} onClick={() => setView(opt.id)}
                     className="px-5 py-1.5 text-[10px] tracking-[0.35em] uppercase transition-all"
                     style={{
-                      background: on
-                        ? 'linear-gradient(180deg, rgba(45,212,191,0.20), rgba(13,148,136,0.20))'
-                        : 'rgba(20,20,24,0.55)',
-                      color: on ? '#a7f3d0' : 'rgba(255,255,255,0.55)',
-                      borderRight: opt.id === 'enchant' ? '1px solid rgba(180,160,130,0.30)' : 'none',
-                    }}
-                  >
+                      background: on ? `${opt.color}18` : 'rgba(20,20,24,0.55)',
+                      color: on ? opt.color : 'rgba(255,255,255,0.45)',
+                      borderBottom: on ? `2px solid ${opt.color}` : '2px solid transparent',
+                      borderRight: opt.id === 'enchant' ? '1px solid rgba(255,255,255,0.10)' : 'none',
+                      fontWeight: on ? 600 : 400,
+                    }}>
                     {opt.label}
                   </button>
                 );
@@ -366,17 +403,17 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
           </div>
 
           {view === 'enchant' ? (
-            <WeaponEnchantmentPanel
-              weaponId={weaponId}
-              weaponName={weapon?.name}
-              weaponIcon={weapon?.icon}
-            />
+            <WeaponEnchantmentPanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} />
           ) : (
-            <div className="flex justify-center items-start">
-              <WeaponMasteryTreePanel weaponType={weaponType} />
-            </div>
+            <MasteryArtPanel
+              masteryEntry={masteryEntry}
+              weaponId={weaponId}
+              weaponType={weaponType}
+              weaponName={weapon?.name}
+            />
           )}
         </div>
+
       </div>
 
       {/* Bottom — Set Active button */}
