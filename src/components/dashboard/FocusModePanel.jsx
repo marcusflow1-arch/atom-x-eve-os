@@ -1170,7 +1170,7 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
   return null;
 }
 
-// Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
+// ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
   navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment
@@ -1180,7 +1180,6 @@ export function LibraryBannerSection({
   const [onlineFriends, setOnlineFriends] = useState([]);
   const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
   const [memoriesExpanded, setMemoriesExpanded] = useState(false);
-  const scrollRef = useRef(null);
   const { user } = useAuth();
   const [invitedUsers, setInvitedUsers] = useState({});
 
@@ -1195,15 +1194,11 @@ export function LibraryBannerSection({
     const now = new Date();
     const isOnline = (p) => {
       if (p.player_id === user?.id) return false;
-      if (p.last_update) {
-        return (now.getTime() - p.last_update) < 120000;
-      }
+      if (p.last_update) return (now.getTime() - p.last_update) < 120000;
       return true;
     };
-
     const usersList = [];
     const seenIds = new Set();
-    
     (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && isOnline(p)).forEach(p => {
       if (!p || !p.player_id) return;
       if (!seenIds.has(p.player_id)) {
@@ -1217,64 +1212,45 @@ export function LibraryBannerSection({
         });
       }
     });
-
     setOnlineFriends(usersList.filter(f => f && f.id).slice(0, 5));
   }, [dbUsers, user]);
 
-  const handleFriendClick = (friend) => {
-    setActiveFriend(activeFriend?.id === friend.id ? null : friend);
-  };
+  const handleFriendClick = (friend) => setActiveFriend(activeFriend?.id === friend.id ? null : friend);
 
   const handleJoin = (u) => {
     setActiveFriend(null);
-    if (onSelectEnv) {
-      onSelectEnv({
-        id: `joined_${u.id}`,
-        modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
-      });
-    }
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name }
-    }));
+    if (onSelectEnv) onSelectEnv({ id: `joined_${u.id}`, modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' });
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name } }));
   };
 
   const handleInvite = (u) => {
     setInvitedUsers(prev => ({ ...prev, [u.id]: 'inviting' }));
     setTimeout(() => {
       setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' }
-      }));
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' } }));
       setActiveFriend(null);
     }, 2000);
   };
 
-  const handlePartyInvite = (u) => {
-    setActiveFriend(null);
-    // You can add party invite logic/toast here later
-  };
+  const handlePartyInvite = (u) => setActiveFriend(null);
 
   const handleHomeClick = () => {
     setActiveFriend(null);
-    if (onSelectEnv) {
-      onSelectEnv({
-        id: 'default_room',
-        modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
-      });
-    }
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' }
-    }));
+    if (onSelectEnv) onSelectEnv({ id: 'default_room', modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' });
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' } }));
   };
+
+  const emptySlots = Math.max(0, 5 - onlineFriends.length);
 
   return (
     <div className="flex flex-col items-start w-full h-full">
-      {/* Game Banner + Memories */}
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
-          {/* Top Row: Env Hub | Memories | Friends | Home | Online Users | Spacer | Calendar Box */}
+
+          {/* ── PS5-style Top Row ── */}
           <div className="flex items-center gap-4 w-full h-24">
-            {/* Environment Hub - Reduced by 25% */}
+
+            {/* Environment Hub tile */}
             <div className="w-[247px] h-full flex-shrink-0">
               <EnvironmentHubTile 
                 isOpen={showEnvDropdown} 
@@ -1285,20 +1261,33 @@ export function LibraryBannerSection({
               />
             </div>
 
-            {/* Memories & Line */}
-            <div className="flex flex-shrink-0 items-center gap-2 h-full px-2">
+            {/* ── PS5 Presence Bar: Memories | divider | Friend Slots | Home | Globe ── */}
+            <div
+              className="flex items-center gap-3 h-full px-4 rounded-2xl flex-shrink-0"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                backdropFilter: 'blur(16px)',
+              }}
+            >
+              {/* Memories */}
               <button
                 onClick={() => setShowMemoriesDrawer(true)}
-                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider transition-colors flex flex-col items-center justify-center gap-0.5"
+                className="flex flex-col items-center justify-center gap-1 group transition-all"
               >
-                <span className="text-xl leading-none">📷</span>
-                <span className="leading-none">Memories</span>
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
+                >
+                  <span className="text-lg leading-none">📷</span>
+                </div>
+                <span className="text-[8px] text-white/35 uppercase tracking-widest group-hover:text-white/60 transition-colors">Memories</span>
               </button>
-              <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
-            </div>
 
-            {/* Friends (with placeholders) & Home & Online Users Dropdown */}
-            <div className="flex flex-shrink-0 items-center gap-2 h-full">
+              {/* Divider */}
+              <div className="w-px h-10 bg-white/8 flex-shrink-0 mx-1" />
+
+              {/* Online Friends */}
               {(onlineFriends || []).filter(Boolean).map((friend) => (
                 <div key={friend.id} className="flex-shrink-0">
                   <FriendReference 
@@ -1311,32 +1300,49 @@ export function LibraryBannerSection({
                   />
                 </div>
               ))}
-              
-              {/* Invisible Placeholders for Friends */}
-              {[...Array(Math.max(0, 5 - onlineFriends.length))].map((_, i) => (
+
+              {/* PS5-style empty friend slots */}
+              {[...Array(emptySlots)].map((_, i) => (
                 <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <Plus className="w-3.5 h-3.5 text-white" />
-                  <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
+                  <div
+                    className="w-16 h-16 rounded-xl flex items-center justify-center transition-all hover:border-white/20 hover:bg-white/5 cursor-pointer group"
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px dashed rgba(255,255,255,0.10)',
+                    }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                    >
+                      <Plus className="w-3 h-3 text-white/30 group-hover:text-white/60 transition-colors" />
+                    </div>
+                  </div>
+                  <span className="text-[7px] text-white/20 uppercase tracking-widest">Invite</span>
                 </div>
               ))}
 
-              <div className="flex-shrink-0 ml-2">
+              {/* Divider */}
+              <div className="w-px h-10 bg-white/8 flex-shrink-0 mx-1" />
+
+              {/* Home */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 <HomeReference onClick={handleHomeClick} />
               </div>
-              
-              {/* Planet Icon / Online Users Dropdown moved here next to Home */}
-              <div className="flex-shrink-0 ml-2 flex items-center justify-center">
+
+              {/* Globe / Online Users */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
               </div>
             </div>
 
-            {/* Calendar Box - Expanded to fill remaining space */}
+            {/* Calendar Box */}
             <div className="flex-1 min-w-[400px] h-full">
               {calendarBox}
             </div>
           </div>
 
-          {/* Bottom Row: Nav Boxes */}
+          {/* Bottom Row: Nav Boxes + Intelligence Feed */}
           <div className="flex justify-between items-start w-full">
             <div className="w-[330px] flex justify-center">
               {navBoxes}
@@ -1350,9 +1356,9 @@ export function LibraryBannerSection({
             )}
           </div>
         </div>
-    </div>
+      </div>
 
-      {/* Memories Drawer — slides in from right */}
+      {/* Memories Drawer */}
       <AnimatePresence>
         {showMemoriesDrawer && (
           <>
@@ -1375,14 +1381,12 @@ export function LibraryBannerSection({
                 boxShadow: '-4px 0 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
               }}
             >
-              {/* Expand Toggle */}
               <button
                 onClick={() => setMemoriesExpanded(prev => !prev)}
                 className="absolute top-1/2 -left-6 -translate-y-1/2 w-6 h-20 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-l-xl border-y border-l border-white/20 flex items-center justify-center z-10 transition-colors"
               >
                 {memoriesExpanded ? <ChevronRight className="w-4 h-4 text-white" /> : <ChevronLeft className="w-4 h-4 text-white" />}
               </button>
-
               <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📷</span>
