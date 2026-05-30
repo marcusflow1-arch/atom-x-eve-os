@@ -8,6 +8,7 @@ import WeaponEnchantmentPanel from '../weaponMastery/WeaponEnchantmentPanel';
 import MasteryArtPanel from '../weaponMastery/MasteryArtPanel';
 import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
 import AdvancedClassPanel from '../../../game3d/talents/AdvancedClassPanel';
+import PerkTreePanel from '../perkTree/PerkTreePanel';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
@@ -127,7 +128,7 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
   const weapon = WEAPONS.find((w) => w.id === weaponId);
   const weaponType = resolveWeaponType(weaponId);
   // 'enchant' (Annulus-style ring) or 'tree' (passive skill nodes)
-  const [view, setView] = useState('enchant');
+  const [view, setView] = useState('enchant'); // 'enchant' | 'tree' | 'perks'
 
   // Mastery perks that have been toggled active by the player (persist per weapon)
   const storageKey = `mastery_active_perks_${weaponId}`;
@@ -383,6 +384,7 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
               {[
                 { id: 'enchant', label: 'Enchantment', color: '#6ec3ff' },
                 { id: 'tree',    label: 'Mastery Art',  color: '#fbbf24' },
+                { id: 'perks',   label: 'Perk Tree',    color: '#a78bfa' },
               ].map((opt) => {
                 const on = view === opt.id;
                 return (
@@ -404,6 +406,8 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
 
           {view === 'enchant' ? (
             <WeaponEnchantmentPanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} />
+          ) : view === 'perks' ? (
+            <PerkTreePanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} />
           ) : (
             <MasteryArtPanel
               masteryEntry={masteryEntry}
