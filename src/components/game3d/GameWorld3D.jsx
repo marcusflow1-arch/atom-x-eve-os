@@ -79,6 +79,7 @@ import {
 import { attachContextGuard } from './webglContextGuard';
 import { buildGrassEnvironment } from './buildGrassEnvironment';
 import { loadPlayerAnimationClips, tryBindEmbeddedClips } from './player/playerAnimationLibrary';
+import { EmbeddedClipController } from './player/EmbeddedClipController';
 import { createLunaDashboardPlayerController as createPlayerAnimationController } from './player/LunaDashboardPlayerController';
 import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
@@ -129,6 +130,7 @@ export default function GameWorld3D() {
   const companionIdleActionRef = useRef(null);
   const companionRunActionRef = useRef(null);
   const companionCurrentAnimRef = useRef('idle');
+  const companionEmbeddedCtrlRef = useRef(null); // EmbeddedClipController when wolf has built-in clips
   const mountToggleRef = useRef(false);
   const isMountedRef = useRef(false);
   const companionDefRef = useRef(getCompanionById(getCompanionState().activeCompanionId));
@@ -408,8 +410,17 @@ export default function GameWorld3D() {
         companionMixerRef.current = compMixer;
 
         // Helper: bind idle + walk clips onto this companion's mixer.
-        // Used both for embedded-clip and external-clip flows.
+        // When the model ships with ≥2 embedded clips, use EmbeddedClipController
+        // for smart idle↔run state-machine transitions driven by player movement.
         const bindCompanionClips = (clips) => {
+          if (clips.length >= 2) {
+            // Embedded multi-clip path: let EmbeddedClipController handle state detection
+            const ctrl = new EmbeddedClipController(compMixer, clips);
+            ctrl.init(); // starts idle
+            companionEmbeddedCtrlRef.current = ctrl;
+            return;
+          }
+          // Legacy single/external clip path
           const findClip = (substr) => {
             if (!substr || !clips.length) return null;
             const lc = substr.toLowerCase();
@@ -934,6 +945,12 @@ export default function GameWorld3D() {
     renderer.domElement.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
 
     const playCompanionAnimation = (targetAnim) => {
+      // Route through EmbeddedClipController if available
+      if (companionEmbeddedCtrlRef.current) {
+        companionEmbeddedCtrlRef.current.transitionTo(targetAnim, 0.25);
+        companionCurrentAnimRef.current = targetAnim;
+        return;
+      }
       if (targetAnim === companionCurrentAnimRef.current) return;
       const idle = companionIdleActionRef.current;
       const walk = companionWalkActionRef.current;
@@ -1104,6 +1121,10 @@ export default function GameWorld3D() {
           // Not mounted — steering-based companion AI prevents snap/micro-jitter near the player.
           if (!dodgeVanish.active) model.visible = true;
           companionSystem.update(delta, { ownerMoving: isMoving, ownerRunning: isRunning, ownerYaw: orbit.current.yaw });
+          // Drive companion animation by player movement (idle ↔ run)
+          if (companionEmbeddedCtrlRef.current) {
+            companionEmbeddedCtrlRef.current.updateFromMovement({ moving: isMoving, running: isMoving });
+          }
         }
 
         // ─── Companion proximity prompt ───
