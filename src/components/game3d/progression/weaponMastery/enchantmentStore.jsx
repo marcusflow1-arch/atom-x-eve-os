@@ -177,18 +177,90 @@ export function getElementBonus(level, combineStage = 0) {
   return fromLevel + fromStage;
 }
 
-// Derived stats shown in the detailed panel. These are deterministic numbers
-// derived from level + stage so the UI can show before → after deltas.
-export function getDerivedStats(level, combineStage = 0) {
+// ── Per-weapon stat scaling definitions ────────────────────────────────────
+// All values at enchant level 200 (max). The UI scales linearly from 0.
+// +allSkills: +1 every 40 levels → +5 at level 200 (hard cap).
+const ALL_SKILLS_PER_LEVEL = 1 / 40;  // +1 per 40 levels
+const ALL_SKILLS_MAX       = 5;       // hard cap at +5
+
+export const WEAPON_ENCHANT_STATS = {
+  bow: {
+    atk:          { perLevel: 5,    perOverLevel: 8,   stageFlat: 250, stagePct: 0.10 },
+    critRatePct:  { base: 2,        perLevel: 0.075,   stageMult: 1.5  }, // higher crit for bow
+    critDmgPct:   { base: 150,      perLevel: 0.5,     stageMult: 8    },
+    attackSpeedPct:{ base: 0,       perLevel: 0.05,    stageMult: 0.5  }, // up to +10% at 200
+    allSkills:    { perLevel: ALL_SKILLS_PER_LEVEL, max: ALL_SKILLS_MAX },
+  },
+  sword: {
+    atk:          { perLevel: 5,    perOverLevel: 8,   stageFlat: 250, stagePct: 0.10 },
+    critRatePct:  { base: 2,        perLevel: 0.05,    stageMult: 1.5  },
+    critDmgPct:   { base: 150,      perLevel: 0.4,     stageMult: 8    },
+    lethalBlowPct:{ base: 0,        perLevel: 0.025,   stageMult: 0    }, // +5% at level 200
+    allSkills:    { perLevel: ALL_SKILLS_PER_LEVEL, max: ALL_SKILLS_MAX },
+  },
+  dual_blades: {
+    atk:          { perLevel: 5,    perOverLevel: 8,   stageFlat: 250, stagePct: 0.10 },
+    critRatePct:  { base: 2,        perLevel: 0.04,    stageMult: 1.5  }, // lower crit (defense focus)
+    critDmgPct:   { base: 150,      perLevel: 0.3,     stageMult: 8    },
+    critDefensePct:{ base: 0,       perLevel: 0.025,   stageMult: 0    }, // +5% at 200
+    dodgeRatePct: { base: 0,        perLevel: 0.05,    stageMult: 0.5  }, // +10% at 200
+    defensePct:   { base: 0,        perLevel: 0.025,   stageMult: 0.5  }, // up to ~5% at 200
+    abilityDmgPct:{ base: 0,        perLevel: 0.025,   stageMult: 0.5  }, // +5% at 200
+    allSkills:    { perLevel: ALL_SKILLS_PER_LEVEL, max: ALL_SKILLS_MAX },
+  },
+  // fallback for any other weapon
+  _default: {
+    atk:          { perLevel: 5,    perOverLevel: 8,   stageFlat: 250, stagePct: 0.10 },
+    critRatePct:  { base: 2,        perLevel: 0.05,    stageMult: 1.5  },
+    critDmgPct:   { base: 150,      perLevel: 0.4,     stageMult: 8    },
+  },
+};
+
+// Compute a single scaling stat value given level + stage.
+function scaleStat(cfg, lvl, stage) {
+  if (!cfg) return 0;
+  const base   = cfg.base   || 0;
+  const perLvl = cfg.perLevel     || 0;
+  const stageM = cfg.stageMult    || 0;
+  return +(base + lvl * perLvl + stage * stageM).toFixed(2);
+}
+
+// allSkills bonus — floor so it's always a clean integer, hard-capped.
+function calcAllSkills(lvl, cfg) {
+  if (!cfg) return 0;
+  return Math.min(cfg.max, Math.floor(lvl * cfg.perLevel));
+}
+
+// Derived stats shown in the detailed panel. Weapon-aware so each weapon
+// shows the correct unique stat set in the UI.
+export function getDerivedStats(level, combineStage = 0, weaponId = null) {
   const stage = Math.max(0, Math.min(MAX_COMBINE_STAGE, combineStage));
-  const lvl = Math.max(0, level);
-  return {
-    atk:         getAtkBonus(lvl, stage),
-    elementDmg:  getElementBonus(lvl, stage),
-    critRatePct: +(2 + lvl * 0.05 + stage * 1.5).toFixed(2),
-    critDmgPct:  +(150 + lvl * 0.4 + stage * 8).toFixed(1),
+  const lvl   = Math.max(0, level);
+  const cfg   = WEAPON_ENCHANT_STATS[weaponId] || WEAPON_ENCHANT_STATS._default;
+
+  const stats = {
+    atk:        getAtkBonus(lvl, stage),          // unchanged ATK formula
+    elementDmg: getElementBonus(lvl, stage),
+    critRatePct: scaleStat(cfg.critRatePct, lvl, stage),
+    critDmgPct:  scaleStat(cfg.critDmgPct,  lvl, stage),
     durability:  100 + lvl * 2 + stage * 25,
   };
+
+  if (weaponId === 'bow') {
+    stats.attackSpeedPct = scaleStat(cfg.attackSpeedPct, lvl, stage);
+    stats.allSkills      = calcAllSkills(lvl, cfg.allSkills);
+  } else if (weaponId === 'sword') {
+    stats.lethalBlowPct  = scaleStat(cfg.lethalBlowPct,  lvl, stage);
+    stats.allSkills      = calcAllSkills(lvl, cfg.allSkills);
+  } else if (weaponId === 'dual_blades') {
+    stats.critDefensePct = scaleStat(cfg.critDefensePct, lvl, stage);
+    stats.dodgeRatePct   = scaleStat(cfg.dodgeRatePct,   lvl, stage);
+    stats.defensePct     = scaleStat(cfg.defensePct,     lvl, stage);
+    stats.abilityDmgPct  = scaleStat(cfg.abilityDmgPct,  lvl, stage);
+    stats.allSkills      = calcAllSkills(lvl, cfg.allSkills);
+  }
+
+  return stats;
 }
 
 // ── Combine Stage helpers ──────────────────────────────────────────────────
@@ -236,7 +308,7 @@ export function getNextStepPreview(weaponId) {
     return {
       atMax: true,
       fromLevel: cur,
-      fromStats: getDerivedStats(cur, stage),
+      fromStats: getDerivedStats(cur, stage, weaponId),
     };
   }
   const next = cur + 1;
@@ -247,8 +319,8 @@ export function getNextStepPreview(weaponId) {
     toLevel: next,
     fromAtk: getAtkBonus(cur, stage),
     toAtk: getAtkBonus(next, stage),
-    fromStats: getDerivedStats(cur, stage),
-    toStats: getDerivedStats(next, stage),
+    fromStats: getDerivedStats(cur, stage, weaponId),
+    toStats: getDerivedStats(next, stage, weaponId),
     gold: goldCostFor(next),
     material: materialReqFor(next),
     isOver: isOverEnchant(next),

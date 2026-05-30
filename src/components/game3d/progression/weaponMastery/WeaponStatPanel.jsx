@@ -218,6 +218,82 @@ export default function WeaponStatPanel({
             suffix="%"
             accent={accent}
           />
+
+          {/* ── Bow-specific stats ──────────────────────────────────────── */}
+          {weaponId === 'bow' && <>
+            <StatRow
+              label="Attack Speed"
+              fromValue={preview.fromStats.attackSpeedPct}
+              toValue={!preview.atMax ? preview.toStats.attackSpeedPct : null}
+              suffix="%"
+              accent={accent}
+              highlight
+            />
+            <StatRow
+              label="+ All Skills"
+              fromValue={preview.fromStats.allSkills ?? 0}
+              toValue={!preview.atMax ? (preview.toStats.allSkills ?? 0) : null}
+              accent={accent}
+            />
+          </>}
+
+          {/* ── Sword-specific stats ────────────────────────────────────── */}
+          {weaponId === 'sword' && <>
+            <StatRow
+              label="Lethal Blow"
+              fromValue={preview.fromStats.lethalBlowPct}
+              toValue={!preview.atMax ? preview.toStats.lethalBlowPct : null}
+              suffix="%"
+              accent={accent}
+              highlight
+            />
+            <StatRow
+              label="+ All Skills"
+              fromValue={preview.fromStats.allSkills ?? 0}
+              toValue={!preview.atMax ? (preview.toStats.allSkills ?? 0) : null}
+              accent={accent}
+            />
+          </>}
+
+          {/* ── Dual Blades-specific stats ──────────────────────────────── */}
+          {weaponId === 'dual_blades' && <>
+            <StatRow
+              label="Crit Defense"
+              fromValue={preview.fromStats.critDefensePct}
+              toValue={!preview.atMax ? preview.toStats.critDefensePct : null}
+              suffix="%"
+              accent={accent}
+              highlight
+            />
+            <StatRow
+              label="Dodge Rate"
+              fromValue={preview.fromStats.dodgeRatePct}
+              toValue={!preview.atMax ? preview.toStats.dodgeRatePct : null}
+              suffix="%"
+              accent={accent}
+            />
+            <StatRow
+              label="Defense"
+              fromValue={preview.fromStats.defensePct}
+              toValue={!preview.atMax ? preview.toStats.defensePct : null}
+              suffix="%"
+              accent={accent}
+            />
+            <StatRow
+              label="Ability Damage"
+              fromValue={preview.fromStats.abilityDmgPct}
+              toValue={!preview.atMax ? preview.toStats.abilityDmgPct : null}
+              suffix="%"
+              accent={accent}
+            />
+            <StatRow
+              label="+ All Skills"
+              fromValue={preview.fromStats.allSkills ?? 0}
+              toValue={!preview.atMax ? (preview.toStats.allSkills ?? 0) : null}
+              accent={accent}
+            />
+          </>}
+
           <StatRow
             label="Durability"
             fromValue={preview.fromStats.durability}
