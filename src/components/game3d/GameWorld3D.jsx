@@ -767,31 +767,34 @@ export default function GameWorld3D() {
 
         const npcMixer = new THREE.AnimationMixer(npcFbx);
 
-        // Bind the idle animation using the same player animation library
-        loadPlayerAnimationClips(loader).then((clipsByKey) => {
-          const idleClip = clipsByKey['idle'];
-          if (idleClip) {
-            const idleAction = npcMixer.clipAction(idleClip);
-            idleAction.reset().fadeIn(0.2).play();
-          }
-          questNPCs.push({
-            id: 'npc_quest_stranger',
-            name: 'The Stranger',
-            group: npcFbx,
-            mixer: npcMixer,
-            idleAction: idleClip ? npcMixer.clipAction(idleClip) : null,
-            ringMesh: npcRing,
-          });
-        }).catch(() => {
-          // Push even without animation so proximity/interaction still works
-          questNPCs.push({ id: 'npc_quest_stranger', name: 'The Stranger', group: npcFbx, mixer: npcMixer, idleAction: null, ringMesh: npcRing });
+        // Push NPC immediately — idle clip will be bound once player clips finish loading
+        questNPCs.push({
+          id: 'npc_quest_stranger',
+          name: 'The Stranger',
+          group: npcFbx,
+          mixer: npcMixer,
+          idleAction: null,
+          ringMesh: npcRing,
+          _pendingMixer: npcMixer, // used below to bind idle after player clips load
         });
       });
 
-      // Load player animation clips and bind them to the player mixer
+      // Load player animation clips once — bind to player AND reuse for quest NPC idle
       loadPlayerAnimationClips(loader)
         .then((clipsByKey) => {
           playerAnim.bindClips(clipsByKey);
+          // Bind idle to the quest NPC using the already-loaded clip (no extra fetch)
+          const idleClip = clipsByKey['idle'];
+          if (idleClip) {
+            questNPCs.forEach((qn) => {
+              if (qn._pendingMixer) {
+                const idleAction = qn._pendingMixer.clipAction(idleClip);
+                idleAction.reset().fadeIn(0.2).play();
+                qn.idleAction = idleAction;
+                delete qn._pendingMixer;
+              }
+            });
+          }
           setLoading(false);
         })
         .catch((err) => {
