@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft, Zap, CheckCircle2, Circle, Sparkles, Lock, Unlock, Star, RotateCcw } from 'lucide-react';
+import { subscribeEnchantment, getEnchantment, MAX_LEVEL as ENCHANT_MAX_LEVEL } from '../weaponMastery/enchantmentStore';
 import { WEAPONS, MASTERY_MAX_LEVEL, getTreeForWeapon, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery, setActiveWeapon } from '../weaponMasteryStore';
 import WeaponSkillTree from './WeaponSkillTree';
@@ -9,6 +10,8 @@ import MasteryArtPanel from '../weaponMastery/MasteryArtPanel';
 import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
 import AdvancedClassPanel from '../../../game3d/talents/AdvancedClassPanel';
 import PerkTreePanel from '../perkTree/PerkTreePanel';
+import WeaponRunePanel from '../weaponMastery/WeaponRunePanel';
+import WeaponUpgradePanel from '../weaponMastery/WeaponUpgradePanel';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
@@ -127,8 +130,15 @@ export default function WeaponMasteryTab() {
 function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive }) {
   const weapon = WEAPONS.find((w) => w.id === weaponId);
   const weaponType = resolveWeaponType(weaponId);
-  // 'enchant' (Annulus-style ring) or 'tree' (passive skill nodes)
-  const [view, setView] = useState('enchant'); // 'enchant' | 'tree' | 'perks'
+  const [view, setView] = useState('enchant'); // 'enchant' | 'tree' | 'perks' | 'rune' | 'upgrade'
+
+  // Live enchantment level — connected to enchantmentStore so it updates in real-time
+  const [enchantLevel, setEnchantLevel] = useState(() => getEnchantment(weaponId)?.level ?? 0);
+  useEffect(() => {
+    return subscribeEnchantment(() => {
+      setEnchantLevel(getEnchantment(weaponId)?.level ?? 0);
+    });
+  }, [weaponId]);
 
   // Mastery perks that have been toggled active by the player (persist per weapon)
   const storageKey = `mastery_active_perks_${weaponId}`;
@@ -202,13 +212,13 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                 <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
                 <div className="text-center">
                   <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-1">Enchant Lv</div>
-                  <div className="text-5xl font-light text-white tabular-nums leading-none">{masteryEntry.level}</div>
-                  <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">/ {MASTERY_MAX_LEVEL}</div>
+                  <div className="text-5xl font-light text-white tabular-nums leading-none">{enchantLevel}</div>
+                  <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">/ {ENCHANT_MAX_LEVEL}</div>
                 </div>
-                {masteryEntry.isMaxLevel && (
+                {enchantLevel >= ENCHANT_MAX_LEVEL && (
                   <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] tracking-[0.35em] uppercase font-semibold rounded-sm"
                     style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.50)', color: '#fbbf24' }}>
-                    Mastered
+                    Max Enchant
                   </div>
                 )}
               </div>
@@ -372,7 +382,13 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
           style={{
             background: view === 'enchant'
               ? 'linear-gradient(180deg, transparent 0%, rgba(110,195,255,0.35) 12%, rgba(110,195,255,0.35) 88%, transparent 100%)'
-              : 'linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.35) 12%, rgba(251,191,36,0.35) 88%, transparent 100%)',
+              : view === 'rune'
+                ? 'linear-gradient(180deg, transparent 0%, rgba(52,211,153,0.35) 12%, rgba(52,211,153,0.35) 88%, transparent 100%)'
+                : view === 'upgrade'
+                  ? 'linear-gradient(180deg, transparent 0%, rgba(251,146,60,0.35) 12%, rgba(251,146,60,0.35) 88%, transparent 100%)'
+                  : view === 'perks'
+                    ? 'linear-gradient(180deg, transparent 0%, rgba(167,139,250,0.35) 12%, rgba(167,139,250,0.35) 88%, transparent 100%)'
+                    : 'linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.35) 12%, rgba(251,191,36,0.35) 88%, transparent 100%)',
           }}
         />
 
@@ -385,16 +401,18 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                 { id: 'enchant', label: 'Enchantment', color: '#6ec3ff' },
                 { id: 'tree',    label: 'Mastery Art',  color: '#fbbf24' },
                 { id: 'perks',   label: 'Perk Tree',    color: '#a78bfa' },
-              ].map((opt) => {
+                { id: 'rune',    label: 'Rune',         color: '#34d399' },
+                { id: 'upgrade', label: 'Upgrade',      color: '#fb923c' },
+              ].map((opt, i, arr) => {
                 const on = view === opt.id;
                 return (
                   <button key={opt.id} onClick={() => setView(opt.id)}
-                    className="px-5 py-1.5 text-[10px] tracking-[0.35em] uppercase transition-all"
+                    className="px-4 py-1.5 text-[10px] tracking-[0.25em] uppercase transition-all"
                     style={{
                       background: on ? `${opt.color}18` : 'rgba(20,20,24,0.55)',
                       color: on ? opt.color : 'rgba(255,255,255,0.45)',
                       borderBottom: on ? `2px solid ${opt.color}` : '2px solid transparent',
-                      borderRight: opt.id === 'enchant' ? '1px solid rgba(255,255,255,0.10)' : 'none',
+                      borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.10)' : 'none',
                       fontWeight: on ? 600 : 400,
                     }}>
                     {opt.label}
@@ -408,6 +426,10 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
             <WeaponEnchantmentPanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} />
           ) : view === 'perks' ? (
             <PerkTreePanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} />
+          ) : view === 'rune' ? (
+            <WeaponRunePanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} masteryLevel={masteryEntry?.level ?? 1} />
+          ) : view === 'upgrade' ? (
+            <WeaponUpgradePanel weaponId={weaponId} weaponName={weapon?.name} weaponIcon={weapon?.icon} />
           ) : (
             <MasteryArtPanel
               masteryEntry={masteryEntry}
