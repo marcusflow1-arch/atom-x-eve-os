@@ -28,13 +28,13 @@ export class PlayerMovementSystem {
     if (!model) return this.intent;
 
     const yaw = this.orbit.current.yaw;
-    const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-    const rx = -Math.cos(yaw), rz = Math.sin(yaw);
+    const fx = -Math.sin(yaw), fz = -Math.cos(yaw); // forward
+    const rx =  Math.cos(yaw), rz =  Math.sin(yaw); // right (fixed: A=left, D=right)
     tmpMove.set(0, 0, 0);
     if (this.keys.current.w) { tmpMove.x += fx; tmpMove.z += fz; }
     if (this.keys.current.s) { tmpMove.x -= fx; tmpMove.z -= fz; }
-    if (this.keys.current.a) { tmpMove.x += rx; tmpMove.z += rz; }
-    if (this.keys.current.d) { tmpMove.x -= rx; tmpMove.z -= rz; }
+    if (this.keys.current.a) { tmpMove.x -= rx; tmpMove.z -= rz; } // left = -right
+    if (this.keys.current.d) { tmpMove.x += rx; tmpMove.z += rz; } // right = +right
 
     const moveAmount = Math.min(1, tmpMove.length());
     const direction = this.keys.current.s ? 'backward' : this.keys.current.a ? 'left' : this.keys.current.d ? 'right' : 'forward';
@@ -96,13 +96,13 @@ export class PlayerRotationSystem {
 
     if (movementIntent.moveAmount <= 0) return;
     const yaw = orbit.current.yaw;
-    const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-    const rx = -Math.cos(yaw), rz = Math.sin(yaw);
+    const fx = -Math.sin(yaw), fz = -Math.cos(yaw); // forward
+    const rx =  Math.cos(yaw), rz =  Math.sin(yaw); // right (fixed)
     let x = 0, z = 0;
     if (this.keys.current.w) { x += fx; z += fz; }
     if (this.keys.current.s) { x -= fx; z -= fz; }
-    if (this.keys.current.a) { x += rx; z += rz; }
-    if (this.keys.current.d) { x -= rx; z -= rz; }
+    if (this.keys.current.a) { x -= rx; z -= rz; } // left = -right
+    if (this.keys.current.d) { x += rx; z += rz; } // right = +right
     if (x * x + z * z > 0.001) {
       tmpQuat.setFromAxisAngle(upAxis, Math.atan2(x, z));
       model.quaternion.slerp(tmpQuat, Math.min(1, this.rotationSmooth * delta));

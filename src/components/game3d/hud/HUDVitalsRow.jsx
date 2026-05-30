@@ -157,13 +157,13 @@ function WeaponCenterSwitcher({ unspentPoints }) {
     });
   }, []);
 
-  // Key bindings: G cycles forward, ◄ / ► cycle backward / forward.
+  // Key bindings: Z cycles forward, ◄ / ► cycle backward / forward.
   useEffect(() => {
     const onKey = (e) => {
       // Ignore typing in inputs
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      if (e.code === 'KeyG')        { cycle(1);  e.preventDefault(); }
+      if (e.code === 'KeyZ')        { cycle(1);  e.preventDefault(); }
       else if (e.code === 'ArrowRight') { cycle(1);  }
       else if (e.code === 'ArrowLeft')  { cycle(-1); }
     };
@@ -222,7 +222,7 @@ function WeaponIconStack() {
     const onKey = (e) => {
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      if (e.code === 'KeyG')        { cycle(1);  e.preventDefault(); }
+      if (e.code === 'KeyZ')        { cycle(1);  e.preventDefault(); }
       else if (e.code === 'ArrowRight') { cycle(1);  }
       else if (e.code === 'ArrowLeft')  { cycle(-1); }
     };
@@ -240,7 +240,7 @@ function WeaponIconStack() {
       onClick={() => cycle(1)}
       className="relative pointer-events-auto flex flex-col items-center"
       style={{ width: 32, height: 60 }}
-      title={`${cur.label} — Press G or ◄ ► to swap`}
+      title={`${cur.label} — Press Z or ◄ ► to swap`}
     >
       {/* Faded other-weapon icons stacking upward behind active */}
       {others.map(({ w }, k) => {
@@ -279,7 +279,7 @@ function WeaponIconStack() {
         strokeWidth={2.2}
       />
 
-      {/* G key tag */}
+      {/* Z key tag */}
       <div
         className="absolute left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider pointer-events-none"
         style={{
@@ -291,7 +291,7 @@ function WeaponIconStack() {
           boxShadow: '0 1px 3px rgba(0,0,0,0.7)',
         }}
       >
-        G
+        Z
       </div>
     </button>
   );

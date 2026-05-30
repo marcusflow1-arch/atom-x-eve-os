@@ -781,10 +781,10 @@ export default function GameWorld3D() {
       const axes = getCombatAxes();
       const yaw = orbit.current.yaw;
       const freeMap = {
-        w: { direction: 'forward', vector: new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)) },
-        s: { direction: 'backward', vector: new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)) },
-        a: { direction: 'left', vector: new THREE.Vector3(-Math.cos(yaw), 0, Math.sin(yaw)) },
-        d: { direction: 'right', vector: new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)) },
+        w: { direction: 'forward',  vector: new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)) },
+        s: { direction: 'backward', vector: new THREE.Vector3( Math.sin(yaw), 0,  Math.cos(yaw)) },
+        a: { direction: 'left',     vector: new THREE.Vector3(-Math.cos(yaw), 0, -Math.sin(yaw)) }, // fixed A=left
+        d: { direction: 'right',    vector: new THREE.Vector3( Math.cos(yaw), 0,  Math.sin(yaw)) }, // fixed D=right
       };
       if (!axes) return freeMap[key] || { direction: 'forward', vector: new THREE.Vector3(0, 0, -1).applyQuaternion(model.quaternion) };
       if (keys.current['a']) return { direction: 'left', vector: axes.cameraRight.clone().multiplyScalar(-1) };
@@ -806,7 +806,7 @@ export default function GameWorld3D() {
     };
 
     const startDodgeVanish = (direction) => {
-      if (!model || !['left', 'right'].includes(direction)) return;
+      if (!model) return;
       dodgeVanish.active = true;
       dodgeVanish.timer = 0;
       model.visible = false;
@@ -997,12 +997,13 @@ export default function GameWorld3D() {
           if (keys.current['a']) move.add(combatAxes.cameraRight.clone().multiplyScalar(-1));
           if (keys.current['d']) move.add(combatAxes.cameraRight);
         } else {
-          const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-          const rx = -Math.cos(yaw), rz = Math.sin(yaw);
+          // Camera-relative movement: Forward = -sin/cos of yaw, Right = cross(up, forward)
+          const fx = -Math.sin(yaw), fz = -Math.cos(yaw); // forward
+          const rx =  Math.cos(yaw), rz = Math.sin(yaw);  // right (fixed: A=left, D=right)
           if (keys.current['w']) { move.x += fx; move.z += fz; }
           if (keys.current['s']) { move.x -= fx; move.z -= fz; }
-          if (keys.current['a']) { move.x -= rx; move.z -= rz; }
-          if (keys.current['d']) { move.x += rx; move.z += rz; }
+          if (keys.current['a']) { move.x -= rx; move.z -= rz; } // left = -right
+          if (keys.current['d']) { move.x += rx; move.z += rz; } // right = +right
         }
 
         const isMoving = move.lengthSq() > 0;
