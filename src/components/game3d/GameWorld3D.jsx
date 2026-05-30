@@ -362,8 +362,8 @@ export default function GameWorld3D() {
       );
     });
 
-    // Quest NPC spawning is currently disabled.
-    const questNPCs = []; // { id, name, group, mixer, idleAction }
+    // Quest NPC — cloned archer model, spawned right next to the player.
+    const questNPCs = []; // populated after ARCHER_URL loads below
 
         // COMPANION SPAWN — rideable mount (GLB w/ embedded clips OR FBX w/ separate idle+walk anim files).
     const companionDef = companionDefRef.current;
@@ -733,6 +733,62 @@ export default function GameWorld3D() {
       playerAnim = createPlayerAnimationController({ mixer, blend: BLEND, oneShotRef: oneShotPlaying });
       coreAnimationController = new CoreAnimationController({ legacyController: playerAnim });
 
+      // ─── Quest NPC: load a SECOND copy of the same archer model ───
+      // We load it fresh (not a Three.js clone) so it gets its own independent
+      // skeleton, mixer and animation state — no shared-rig conflicts.
+      loader.load(ARCHER_URL, (npcFbx) => {
+        const npcBox = new THREE.Box3().setFromObject(npcFbx);
+        const npcSize = npcBox.getSize(new THREE.Vector3());
+        const npcMaxDim = Math.max(npcSize.x, npcSize.y, npcSize.z);
+        const npcScale = 1.7 / npcMaxDim;
+        npcFbx.scale.setScalar(npcScale);
+        // Place 4 units to the right of player spawn so you see them immediately
+        npcFbx.position.set(4, 0, 0);
+        // Face the player (toward -X)
+        npcFbx.rotation.y = -Math.PI / 2;
+
+        npcFbx.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = !node.isSkinnedMesh;
+            node.receiveShadow = true;
+          }
+        });
+
+        // Golden quest ring under feet
+        const npcRingGeo = new THREE.RingGeometry(0.7 / npcScale, 0.95 / npcScale, 32);
+        const npcRingMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+        const npcRing = new THREE.Mesh(npcRingGeo, npcRingMat);
+        npcRing.rotation.x = -Math.PI / 2;
+        npcRing.position.y = 0.02 / npcScale;
+        npcFbx.add(npcRing);
+
+        scene.add(npcFbx);
+        snapToGround(npcFbx, 0);
+
+        const npcMixer = new THREE.AnimationMixer(npcFbx);
+
+        // Bind the idle animation using the same player animation library
+        loadPlayerAnimationClips(loader).then((clipsByKey) => {
+          const idleClip = clipsByKey['idle'];
+          if (idleClip) {
+            const idleAction = npcMixer.clipAction(idleClip);
+            idleAction.reset().fadeIn(0.2).play();
+          }
+          questNPCs.push({
+            id: 'npc_quest_stranger',
+            name: 'The Stranger',
+            group: npcFbx,
+            mixer: npcMixer,
+            idleAction: idleClip ? npcMixer.clipAction(idleClip) : null,
+            ringMesh: npcRing,
+          });
+        }).catch(() => {
+          // Push even without animation so proximity/interaction still works
+          questNPCs.push({ id: 'npc_quest_stranger', name: 'The Stranger', group: npcFbx, mixer: npcMixer, idleAction: null, ringMesh: npcRing });
+        });
+      });
+
+      // Load player animation clips and bind them to the player mixer
       loadPlayerAnimationClips(loader)
         .then((clipsByKey) => {
           playerAnim.bindClips(clipsByKey);
