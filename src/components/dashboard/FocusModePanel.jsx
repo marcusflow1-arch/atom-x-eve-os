@@ -34,8 +34,7 @@ import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
-import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
-import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
+import AvatarHomeCardShowcase from '@/components/dashboard/AvatarHomeCardShowcase';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
 
 
@@ -1780,8 +1779,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* AI Avatar Home — intentionally blank */}
-              <div className="relative mt-3" style={{ height: '512px' }} />
+              {/* AI Avatar Home — Card Showcase */}
+              <div className="relative mt-3 pointer-events-auto" style={{ height: '512px' }}>
+                <AvatarHomeCardShowcase />
+              </div>
 
               {/* DevSpotlightRibbon removed from here, moved to root of FocusModePanel */}
 
