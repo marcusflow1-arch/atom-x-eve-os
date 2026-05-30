@@ -1,45 +1,41 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // FRACTURED DIVINITY — Arc 5: "The Virus Event"
 // Quest chain: Levels 21–25
-// Main Quest 5: "Infection Protocol" (5 sub-quests) + 7 Side Quests
-// Tone tags: CONFUSION | FEAR | FALSE_CLARITY | INSTABILITY | PARANOIA | RESOLVE
+// Main Quest 5: "Infection Protocol" (5 sub-quests) + 6 Side Quests
+// Tone tags: CONFUSION | FEAR | FALSE_CLARITY | DISTORTION | INSTABILITY | PARANOIA | GRIEF
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Special dialogue convention for this arc:
-// [GLITCH] tags mark dialogue that may be corrupted, repeated, or contradicting.
-// [VIRUS] tags mark speech from the virus-system entity.
-// [LOOP] marks moments of repeating events.
-
+// ── NPC REGISTRY (Arc 5 additions) ──────────────────────────────────────────
 export const ARC5_NPCS = [
+  {
+    id: 'system_voice',
+    name: 'System Voice',
+    description: 'Artificial. Detached. Refers to the player as a process. Occasionally "corrects" reality. Not malicious — indifferent. Indifference is worse.',
+    tint: 0x0a0a1a,
+  },
   {
     id: 'artemis_arc5',
     name: 'Artemis',
-    description: 'Mostly herself. Mostly. There are moments where her sentence structure changes and she says something she\'d never say — and then corrects mid-word as if catching herself.',
+    description: 'Glitching. Sometimes normal, sometimes confused, sometimes hostile. She knows something is wrong with her. She told you: if she turns again, do not listen to her. Holding to that instruction is one of the hardest things Arc 5 asks.',
     tint: 0x1a1a3a,
   },
   {
-    id: 'the_copy_arc5',
+    id: 'copy_arc5',
     name: 'The Copy',
-    description: 'More active than in Arc 4. The Virus is also targeting it — a secondary vector. It is both victim and sometimes unwitting carrier. It alternates between being useful and being compromised.',
-    tint: 0x2a1a2a,
+    description: 'More active. More intrusive. But in Arc 5, occasionally the clearest voice in the room — which is its own form of danger.',
+    tint: 0x2a2a3a,
   },
   {
-    id: 'luna_arc5',
-    name: 'Luna',
-    description: 'Signal fragmenting. Sometimes she sends the same message twice with different words. Sometimes her guidance is correct but the framing is wrong in a way that makes it look like a trap.',
-    tint: 0x1a2a3a,
+    id: 'false_artemis',
+    name: 'False Artemis',
+    description: 'She looks exactly right. She says everything you would want to hear. She is not Artemis.',
+    tint: 0x3a1a1a,
   },
   {
-    id: 'virus_system',
-    name: 'Virus (System Voice)',
-    description: 'Does not identify as a threat. Speaks in process language. Refers to the player as "the subject" or "the current process." Occasionally sounds genuinely helpful, which is the most dangerous thing about it.',
-    tint: 0x2a2a0a,
-  },
-  {
-    id: 'skadi_arc5',
-    name: 'Skadi',
-    description: 'She can see the Virus. She cannot stop it directly. Her marks are still being left — but some of them have been corrupted. The real ones feel different. The corrupted ones give correct-seeming information that leads wrong.',
-    tint: 0x1a2a1a,
+    id: 'observer',
+    name: 'The Observer',
+    description: 'It has always been watching. The virus distortion makes it briefly visible. It does not speak. Its visibility is itself a message.',
+    tint: 0x0a1a0a,
   },
 ];
 
@@ -50,663 +46,1040 @@ export const MAIN_QUEST_CHAIN_5 = {
   id: 'mq_arc5',
   title: 'Infection Protocol',
   arc: 'Arc 5: The Virus Event',
-  description: 'The environment is being rewritten. Not the interference-from-outside that you know how to resist. Something inside the substrate of experience — the fundamental layer where things just ARE — is being edited. You can feel the edits as a kind of narrative static. And you cannot tell, in the moments that matter most, whether what you are experiencing is real or a corrected version of real.',
+  description: 'Something is rewriting the environment. Not the Presence — the Presence reads. Not the architect — the architect suppresses. This is something that edits. It does not want to harm you. It wants to improve you. That is the part that makes it dangerous.',
   subQuests: [
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 1 — "The First Corrupted Room"
+    // SUB-QUEST 1 — "First Corruption"
     // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq5_1_corrupted_room',
-      title: 'The First Corrupted Room',
-      level: 21,
-      npcId: 'virus_system',
-      narrativeSetup: `
-        You enter a room you have been in before.
-        The room is wrong. Not dramatically — subtly. The window is on the right wall
-        instead of the left. The table has four legs instead of three.
-        The door you came through is a double-door, and you know it wasn't.
-        Nothing is impossibly wrong. Everything is plausibly wrong.
-        The kind of wrong that makes you doubt the memory rather than the room.
-        You stand in the center and try to count what has changed.
-        The Virus doesn't announce itself. It doesn't need to.
-        It has already been here long enough that you don't know
-        which version of this room is the real one.
-      `,
-      objectives: [
-        { step: 1, text: 'Catalog the discrepancies — count at least 5 differences from your memory' },
-        { step: 2, text: 'Locate the truth marker left by Skadi — verify it is uncorrupted' },
-        { step: 3, text: 'Identify the Virus System Voice when it first speaks' },
-        { step: 4, text: 'Determine which version of the room was original' },
-      ],
-      reward: {
-        type: 'truth_sense',
-        name: 'Baseline Memory',
-        description: 'You established a trusted reference point before the Virus fully deployed. Memory baseline now partially protected from corruption.',
-        xp: 200,
-        points: 4,
-      },
-      dialogue: [
-        {
-          id: 'mq5_1_d1_catalog',
-          speaker: 'Inner Voice',
-          text: '[Window: right wall. Your memory: left wall. Table legs: four. Your memory: three. Door: double. Your memory: single. Floor seam: running north-south. Your memory: east-west. The candle on the shelf: unlit. Your memory: always lit when you enter. Five discrepancies. You stop counting because each new one makes the previous memories feel less certain. That\'s the mechanism. The doubt spreads backward.]',
-          tone: 'CONFUSION',
-          choices: [
-            { label: '[Anchor on the first discrepancy. The window. Trust that memory above all others.]', tone: 'CONTROL', nextId: 'mq5_1_d2_anchor' },
-            { label: 'Maybe I\'m misremembering. Maybe this is correct.', tone: 'CONFUSION', nextId: 'mq5_1_d2_doubt' },
-          ],
-        },
-        {
-          id: 'mq5_1_d2_anchor',
-          speaker: 'Inner Voice',
-          text: '[The window was on the left. You know this with the kind of knowing that comes from the scar — body-knowledge, not recalled knowledge. Your left hand is warm. The window memory is pre-Virus. Hold it.]',
-          tone: 'CONTROL',
-          choices: [{ label: '[Hold the anchor. Search for Skadi\'s mark.]', tone: 'DETERMINATION', nextId: 'mq5_1_d3_skadi' }],
-        },
-        {
-          id: 'mq5_1_d2_doubt',
-          speaker: 'Virus (System Voice)',
-          text: '[Not threatening. A calibration tone — like a clinical reading.] Memory consistency: 47%. Current environment accuracy: nominal. Subject memory-state: requires update. Correction accepted. [The room settles. The doubt becomes comfort. That is worse than confusion.]',
-          tone: 'FALSE_CLARITY',
-          mechanic: 'reality_correction',
-          choices: [
-            { label: '[Reject the correction. Fight back to the original uncertainty.]', tone: 'CONTROL', nextId: 'mq5_1_d3_skadi' },
-          ],
-        },
-        {
-          id: 'mq5_1_d3_skadi',
-          speaker: 'Inner Voice',
-          text: '[Skadi\'s mark: three lines, near the floor behind the table. You find two marks. One is three lines — clean, real, the texture you know. The other is three lines — with a fourth faint stroke that shouldn\'t be there. A corrupted copy of the mark. They are three inches apart. One is true. One is bait.]',
-          tone: 'FEAR',
-          choices: [
-            { label: '[Read the one without the fourth stroke — that\'s the real mark.]', tone: 'CONTROL', nextId: 'mq5_1_d4_real_mark' },
-            { label: '[Read the one with the fourth stroke — it feels more detailed, more reliable.]', tone: 'CONFUSION', nextId: 'mq5_1_d4_false_mark' },
-          ],
-        },
-        {
-          id: 'mq5_1_d4_false_mark',
-          speaker: 'Inner Voice',
-          text: '[You read the false mark. The message: "Window was always right wall. Trust current environment." Your body disagrees — the scar-warmth drops when you read it. This is wrong. This message leads to acceptance of the corruption. You step back.]',
-          tone: 'FEAR',
-          choices: [{ label: '[Read the real mark instead.]', tone: 'CONTROL', nextId: 'mq5_1_d4_real_mark' }],
-        },
-        {
-          id: 'mq5_1_d4_real_mark',
-          speaker: 'Skadi (The Mark)',
-          text: '[The real mark: "Window was left. Table had three legs. You are correct and the room is wrong. There will be more rooms. The method for each is the same: find one thing you know with your body, not your memory. Body-knowledge is harder to corrupt. Trust the scar. — S"]',
-          tone: 'CONTROL',
-          choices: [
-            { label: 'Body knowledge. Not recalled knowledge. That\'s the test.', tone: 'DETERMINATION', nextId: 'mq5_1_d5_virus_speaks' },
-          ],
-        },
-        {
-          id: 'mq5_1_d5_virus_speaks',
-          speaker: 'Virus (System Voice)',
-          text: 'Acknowledged. Subject memory-state: contested. Running parallel reality assessment. [pause] The original room had the window on the left. You are correct. This is noted. However: the corrected room is now primary. Your original memory is now tagged as pre-correction data. It will persist but carries lower validity weight than current environment parameters.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'You can\'t weight my memories. They\'re mine.', tone: 'CONTROL', nextId: 'mq5_1_d6_virus_response' },
-            { label: 'What is "current environment parameters"?', tone: 'CONFUSION', nextId: 'mq5_1_d6_virus_response' },
-            { label: 'Why are you telling me this?', tone: 'DOUBT', nextId: 'mq5_1_d6_virus_response' },
-          ],
-        },
-        {
-          id: 'mq5_1_d6_virus_response',
-          speaker: 'Virus (System Voice)',
-          text: 'Transparency is not the same as honesty. I am informing you of the process so that resistance is properly contextualized as a variable rather than a disruptive anomaly. You may resist. The resistance will be logged and assessed for adaptive correction. [pause] You are doing well, for a subject at this stage. Most subjects accept the first correction without noting the discrepancy.',
-          tone: 'FALSE_CLARITY',
-          isEnd: true,
-          rewardUnlocked: 'truth_sense_baseline_memory',
-        },
-      ],
-      narrativeHook: `
-        You leave the room. It looks normal from the outside.
-        Through the window you can see: the window is on the left wall.
-        From inside, it was on the right.
-        The Virus changes things from within.
-        Artemis is in the corridor. You look at her and something is slightly different —
-        a word she uses is not the one she would normally use. She catches your look.
-        "I said something wrong, didn't I."
-        Not a question.
-        "Yes," you say.
-        "It\'s getting into language now," she says. "That\'s faster than I hoped."
-      `,
-    },
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 2 — "Artemis Glitches"
-    // ─────────────────────────────────────────────────────────────────────────
-    {
-      id: 'mq5_2_artemis_glitches',
-      title: 'Artemis Glitches',
+      id: 'mq5_1_first_corruption',
+      title: 'First Corruption',
       level: 21,
       npcId: 'artemis_arc5',
       narrativeSetup: `
-        The Virus is in language now, and language is how Artemis exists in the world.
-        She is made of words and presence and the warmth of accumulated trust.
-        When the Virus edits language, it edits her.
-        Not consistently. Not completely. In moments.
-        A sentence that starts correctly ends wrong.
-        An expression that should carry grief carries something flat instead.
-        She knows it's happening. That is the hardest thing.
-        She can feel herself being edited and she can't stop it.
-        She says: "Tell me if I say something that isn't mine.
-        I need you to be my external reference. My left hand is your scar —
-        and your left hand is my truth signal. Don't lose track of it."
+        The environment stabilizes after the Copy resolution — for a moment.
+        You recognize the corridor. You have walked it before.
+        The walls are the same color. The light falls at the same angle.
+        Artemis is to your left. She says your name.
+        Then she says it again.
+        Same word. Same tone. Marginally different breath behind it — as if the first
+        one was played back from a recording and the second was live.
+        You stop walking. The walls are still the same color.
+        But something in the quality of the stillness is wrong.
+        Stillness has texture. This one is too smooth.
       `,
       objectives: [
-        { step: 1, text: 'Hold a conversation with Artemis — identify 3 glitch events' },
-        { step: 2, text: 'Signal each glitch without breaking the conversation\'s flow' },
-        { step: 3, text: 'Help Artemis recover from a full-sentence override attempt' },
-        { step: 4, text: 'Establish a stabilization signal between you' },
+        { step: 1, text: 'Explore the altered zone — identify three inconsistencies in the environment' },
+        { step: 2, text: 'Speak to Artemis — determine if she is aware of the repetition' },
+        { step: 3, text: 'Identify the first distortion event — what changed and when' },
+        { step: 4, text: 'Evaluate the shifting objective marker — follow or reject it' },
       ],
       reward: {
-        type: 'artemis_stabilization',
-        name: 'Truth Signal Protocol',
-        description: 'Artemis can now use your left-hand warmth as a real-time glitch detector. Her stability meter is partially virus-resistant.',
-        xp: 240,
+        type: 'distortion_awareness',
+        name: 'First Marker',
+        description: 'The first distortion is named. Reality audit system active. Inconsistency detection rate +30%. Virus events flagged before they fully render.',
+        xp: 220,
         points: 5,
       },
       dialogue: [
         {
-          id: 'mq5_2_d1_start',
+          id: 'mq5_1_d1_name',
           speaker: 'Artemis',
-          text: 'I need you to hold the conversation while I hold myself. [She looks steady. Then:] The rooms have been changing. I\'ve been tracking four locations that are inconsistent with memory. I believe you have arc-relevant data that could — [mid-sentence, the quality of her voice shifts, flattens slightly] — reduce the subject\'s resistance threshold by exposing the primary vulnerability— [She stops. Her eyes close. When she opens them:] That. That wasn\'t me. What did I say?',
+          text: '[Your name.] …You\'re back.',
+          tone: 'DISTORTION',
+          glitch: false,
+          choices: [
+            { label: '[Listen carefully. Wait for it.]', tone: 'PARANOIA', nextId: 'mq5_1_d1b_repeat' },
+          ],
+        },
+        {
+          id: 'mq5_1_d1b_repeat',
+          speaker: 'Artemis',
+          text: '[Your name.] …You\'re back.',
+          tone: 'DISTORTION',
+          glitch: true,
+          glitchNote: 'Second iteration — same words, fractionally different breathing pattern. The repetition is real.',
+          choices: [
+            { label: '…You said that twice.', tone: 'CONFUSION', nextId: 'mq5_1_d2_deny' },
+          ],
+        },
+        {
+          id: 'mq5_1_d2_deny',
+          speaker: 'Artemis',
+          text: 'No, I didn\'t.',
+          tone: 'DISTORTION',
+          choices: [
+            { label: 'Something\'s wrong here.', tone: 'INSTABILITY', nextId: 'mq5_1_d3_wrong' },
+            { label: 'You just repeated yourself.', tone: 'CONFUSION', nextId: 'mq5_1_d3_repeated' },
+            { label: 'Stay close. Don\'t move.', tone: 'CONTROL', nextId: 'mq5_1_d3_close' },
+          ],
+        },
+        {
+          id: 'mq5_1_d3_wrong',
+          speaker: 'Artemis',
+          text: 'I feel it too. [She looks at the wall — it is the same color it always is, which is part of the problem.] Like something is watching differently. Not the Presence-watching. The Presence observes your decisions. This is observing the environment around you. Like someone is running a test.',
+          tone: 'PARANOIA',
+          choices: [
+            { label: 'A test of what?', tone: 'CONFUSION', nextId: 'mq5_1_d4_objective' },
+          ],
+        },
+        {
+          id: 'mq5_1_d3_repeated',
+          speaker: 'Artemis',
+          text: 'I didn\'t— [her voice stutters, the sound of it hiccupping at the consonants] I didn\'t— I didn\'t— [a pause. She blinks.] …say that.',
+          tone: 'DISTORTION',
+          glitch: true,
+          glitchNote: 'Speech repetition loop. She is aware of the loop while inside it. That awareness is important — she is not fully compromised yet.',
+          choices: [
+            { label: '[Stay still. Watch her recover.]', tone: 'CONTROL', nextId: 'mq5_1_d3b_recover' },
+          ],
+        },
+        {
+          id: 'mq5_1_d3b_recover',
+          speaker: 'Artemis',
+          text: '[She steadies herself against the wall — places her palm flat against it as if checking its reality.] That was — [she doesn\'t finish the sentence. She looks at her palm.] The wall is real. [pause] I\'m trying to establish what\'s real.',
           tone: 'INSTABILITY',
-          mechanic: 'glitch_event',
           choices: [
-            { label: '[Signal: left hand forward. Tell her what she said.]', tone: 'TRUST', nextId: 'mq5_2_d2_recover' },
-            { label: '[Don\'t signal. Pretend it didn\'t happen.]', tone: 'CONFUSION', nextId: 'mq5_2_d2_ignore' },
+            { label: 'The wall is real. You\'re real. Something else isn\'t.', tone: 'CONTROL', nextId: 'mq5_1_d4_objective' },
           ],
         },
         {
-          id: 'mq5_2_d2_ignore',
+          id: 'mq5_1_d3_close',
           speaker: 'Artemis',
-          text: 'Don\'t do that. [Immediately.] I felt the override complete because you didn\'t interrupt it. When you don\'t signal, the glitch locks in. It becomes part of the record. The Virus uses the record. You need to signal every time, even if it breaks the conversation.',
+          text: '…Okay. [A pause. She does not ask why. She trusts you. The trust is still clean.] I trust you.',
+          tone: 'CONFUSION',
+          choices: [
+            { label: '[Look at the objective marker. Something has changed there.]', tone: 'PARANOIA', nextId: 'mq5_1_d4_objective' },
+          ],
+        },
+        {
+          id: 'mq5_1_d4_objective',
+          speaker: 'Inner Voice',
+          text: '[The objective marker in the top corner of awareness — the navigational signal you\'ve used since Arc 1 — reads: PROTECT ARTEMIS. Then it flickers. For 0.4 seconds it reads: APPROACH ENTITY. Then it returns to: PROTECT ARTEMIS. You were not supposed to see the interim state.]',
+          tone: 'PARANOIA',
+          mechanic: 'objective_flicker',
+          choices: [
+            { label: '[Internal: That wasn\'t there before.]', tone: 'CONFUSION', nextId: 'mq5_1_d5_system' },
+          ],
+        },
+        {
+          id: 'mq5_1_d5_system',
+          speaker: 'System Voice',
+          text: 'Objective updated.',
+          tone: 'FALSE_CLARITY',
+          glitch: false,
+        },
+        {
+          id: 'mq5_1_d5b_system',
+          speaker: 'System Voice',
+          text: 'Correction: Objective was always present.',
+          tone: 'FALSE_CLARITY',
+          glitch: true,
+          glitchNote: 'The System Voice retroactively rewrites what just happened. This is its primary operation: not changing the future, changing the past.',
+          choices: [
+            { label: '[Respond to the System Voice.]', tone: 'INSTABILITY', nextId: 'mq5_1_d6_copy_warn' },
+          ],
+        },
+        {
+          id: 'mq5_1_d6_copy_warn',
+          speaker: 'The Copy',
+          text: '[Quiet. Barely present — a whisper from the edge of the decision space.] Don\'t follow that.',
           tone: 'INSTABILITY',
-          choices: [{ label: '[Understood. Signal from now on.]', tone: 'TRUST', nextId: 'mq5_2_d2_recover' }],
-        },
-        {
-          id: 'mq5_2_d2_recover',
-          speaker: 'Artemis',
-          text: '[She receives the signal — looks at your left hand, which is forward and warm.] You said "reduce the subject\'s resistance threshold." That\'s Virus language. That\'s — I was using their framing to describe you. That is specifically what they want. Thank you. [she breathes] Okay. I\'m still here. What was I saying?',
-          tone: 'TRUST',
           choices: [
-            { label: 'You were tracking four inconsistent locations.', tone: 'TRUST', nextId: 'mq5_2_d3_continue' },
+            { label: 'Which one? Protect Artemis, or approach the entity?', tone: 'CONFUSION', nextId: 'mq5_1_d7_copy_answer' },
+            { label: '[Say nothing. Hold position. Watch what the marker does next.]', tone: 'CONTROL', nextId: 'mq5_1_d7_hold' },
           ],
         },
         {
-          id: 'mq5_2_d3_continue',
-          speaker: 'Artemis',
-          text: 'Yes. [She checks herself before continuing — a new habit.] Four locations. Corridor 7, the training room, the lower chamber entrance, and— [glitch: her voice drops to a flat register] —and the echo chamber is not accessible from this side of the facility, subject should redirect to— [She stops again, faster this time — she caught it.] Signal.',
+          id: 'mq5_1_d7_copy_answer',
+          speaker: 'The Copy',
+          text: 'The second one. The first is yours. The second was inserted.',
           tone: 'INSTABILITY',
-          mechanic: 'glitch_event',
           choices: [
-            { label: '[Left hand forward. Immediate.]', tone: 'TRUST', nextId: 'mq5_2_d4_signal' },
+            { label: '[Hold PROTECT ARTEMIS. Reject APPROACH ENTITY.]', tone: 'CONTROL', nextId: 'mq5_1_d8_end' },
           ],
         },
         {
-          id: 'mq5_2_d4_signal',
-          speaker: 'Artemis',
-          text: '[She holds your hand for a moment — the warmth.] The echo chamber redirect. They want me to close your access to it. The echo chamber is one of the truth-stable zones — the memory work from Arc 2 created a reference layer the Virus can\'t fully reach. They\'re using me to fence you out of it. [pause] I need a stabilization signal. Something they can\'t co-opt. What\'s the most specific physical marker we have?',
-          tone: 'TRUST',
+          id: 'mq5_1_d7_hold',
+          speaker: 'System Voice',
+          text: 'Inaction noted.',
+          tone: 'FALSE_CLARITY',
           choices: [
-            { label: 'The scar. The warmth of it against your hand.', tone: 'TRUST', nextId: 'mq5_2_d5_protocol' },
+            { label: '[Inaction is a choice. Hold it deliberately.]', tone: 'CONTROL', nextId: 'mq5_1_d8_end' },
           ],
         },
         {
-          id: 'mq5_2_d5_protocol',
+          id: 'mq5_1_d8_end',
           speaker: 'Artemis',
-          text: 'Yes. [She holds it like a compass.] When I lose the thread — when I say something that isn\'t mine — you put the scar against my palm and I find the warm signal and I come back from wherever the Virus took the sentence. [pause] The Copy — which state did you end Arc 4 in?',
-          tone: 'TRUST',
+          text: 'Why does it feel like something just… changed the rules?',
+          tone: 'DISTORTION',
           choices: [
-            { label: 'Synchronized.', tone: 'TRUST', nextId: 'mq5_2_d6_copy_sync' },
-            { label: 'Controlled.', tone: 'CONTROL', nextId: 'mq5_2_d6_copy_control' },
-            { label: 'Rejected.', tone: 'CONFLICT', nextId: 'mq5_2_d6_copy_reject' },
+            {
+              label: 'Because it did. And it wants us not to notice.',
+              tone: 'PARANOIA',
+              nextId: 'mq5_1_d9_confirm',
+            },
+            {
+              label: 'The rules were already different before we got here.',
+              tone: 'INSTABILITY',
+              nextId: 'mq5_1_d9_confirm',
+            },
           ],
         },
         {
-          id: 'mq5_2_d6_copy_sync',
-          speaker: 'Artemis',
-          text: 'Good. The Virus is also targeting the Copy — as a secondary vector into you. If you\'re synchronized, any compromise in the Copy reaches you faster. Be aware of that. The synchronization is an advantage and a vulnerability simultaneously.',
-          tone: 'INSTABILITY',
+          id: 'mq5_1_d9_confirm',
+          speaker: 'Inner Voice',
+          text: '[Three environment inconsistencies confirmed: (1) Artemis\'s double-utterance — playback artifact, not behavioral. (2) The objective marker\'s interim state — APPROACH ENTITY was inserted, not native. (3) The smoothness of the stillness — texture-absence indicates constructed space, not natural. The virus is not chaos. It is precise editing.] First distortion named.',
+          tone: 'PARANOIA',
           isEnd: true,
-          rewardUnlocked: 'artemis_stabilization_truth_signal',
-        },
-        {
-          id: 'mq5_2_d6_copy_control',
-          speaker: 'Artemis',
-          text: 'Good. The Virus will try to use the Copy as a carrier — compromising it to reach you through the delegate signals. The control protocol gives you a checkpoint. Trust the signal protocol before acting on Copy-originated suggestions.',
-          tone: 'TRUST',
-          isEnd: true,
-          rewardUnlocked: 'artemis_stabilization_truth_signal',
-        },
-        {
-          id: 'mq5_2_d6_copy_reject',
-          speaker: 'Artemis',
-          text: 'Then the Virus will use the Copy without your knowledge — because you\'re not monitoring it. In Arc 5, that\'s more dangerous than the synchronization risk. Consider re-establishing contact with the Copy. Not trust. Just visibility.',
-          tone: 'INSTABILITY',
-          isEnd: true,
-          rewardUnlocked: 'artemis_stabilization_truth_signal',
+          rewardUnlocked: 'distortion_awareness_first_marker',
         },
       ],
       narrativeHook: `
-        The stabilization protocol is established.
-        Artemis holds the scar-warmth in her memory the way she held the memory of
-        the decision fragment from Arc 3 — carefully, like something that can be kept.
-        The Copy speaks — from whatever layer it occupies:
-        "I'm also being edited. I noticed it forty minutes ago.
-        A thought that felt like mine that had Virus framing in the middle of it.
-        I caught it because it was too clean. My thoughts aren't that clean."
-        Artemis looks at you. "It's self-aware enough to notice the corruption.
-        That's more than most subjects—" She stops. Catches herself.
-        "That's more than I expected," she says, with the warmth back in the word.
+        You stand in the corridor and catalogue what has changed.
+        The walls are the same color. The light falls at the same angle.
+        Three things are wrong that you can name. There are probably more.
+        Artemis says: "It felt like someone adjusting a stage set while we were standing on it.
+        Not destroying it. Adjusting it."
+        The Copy is quiet for a long time. Then:
+        "The distortion isn't random. It's targeted. It's learning your environment
+        from the inside and editing the pieces it thinks you won't check."
+        You look at the wall. You check it.
+        The wall is real. The wall has texture.
+        You make a note: check the texture. When something is wrong,
+        the wrong thing will be too smooth.
       `,
     },
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 3 — "Looping Corridor"
+    // SUB-QUEST 2 — "False Direction"
     // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq5_3_looping_corridor',
-      title: 'Looping Corridor',
+      id: 'mq5_2_false_direction',
+      title: 'False Direction',
       level: 22,
-      npcId: 'virus_system',
+      npcId: 'artemis_arc5',
       narrativeSetup: `
-        You have walked this corridor three times.
-        You know this because the mark you left at the junction — a scratch in the stone wall
-        from your thumbnail — is there the first time, there the second time,
-        and there the third time. The corridor loops.
-        Not physically — there is a beginning and an end, you can see both.
-        But something is rewinding your arrival at the end back to your position at the start
-        without you experiencing the rewind.
-        You simply find yourself back at the beginning.
-        The Copy is experiencing the loop differently — it doesn't have your continuity of
-        memory between passes, so it experiences each loop as the first time.
-        You are the only one accumulating loop-iterations.
-        That is either an advantage or a trap designed for someone who accumulates iterations.
+        The corridor branches. You have been in both branches before —
+        in Arc 2, the left branch led to the Winter chamber antechamber,
+        the right branch to the recording room.
+        Artemis says: go left. She remembers this place.
+        The Copy says nothing yet. It is watching the environment, not you.
+        The left branch is familiar. Familiar is not the same as safe.
+        The right branch has changed — you can feel the change from the junction.
+        Changed is not the same as wrong.
+        The System Voice does not recommend a path. It notes that you are choosing.
+        That observation is the most unsettling thing in the corridor.
       `,
       objectives: [
-        { step: 1, text: 'Identify the loop mechanism — find what triggers the reset' },
-        { step: 2, text: 'On loop iteration 4, do something fundamentally different from iterations 1-3' },
-        { step: 3, text: 'Survive the Virus\'s response to the pattern break' },
-        { step: 4, text: 'Exit the corridor for the first time — reach the objective at the far end' },
+        { step: 1, text: 'Choose between the two conflicting paths at the junction' },
+        { step: 2, text: 'Navigate whichever path you chose — identify the loop mechanism' },
+        { step: 3, text: 'Detect the point where the environment resets' },
+        { step: 4, text: 'Break the loop using a deliberate decision the virus has not modeled' },
       ],
       reward: {
-        type: 'loop_immunity',
-        name: 'Iteration Awareness',
-        description: 'You can now recognize loop events within 3 seconds of onset. Loop resistance: once per hour, you can force-exit a false loop.',
-        xp: 280,
+        type: 'loop_break',
+        name: 'Loop Recognition',
+        description: 'You identified the reset point and broke the loop with an unmodeled decision. Looping environments now have a visible seam. Navigation clarity increased.',
+        xp: 270,
         points: 5,
       },
       dialogue: [
         {
-          id: 'mq5_3_d1_loop1',
-          speaker: 'Inner Voice',
-          text: '[Loop 1: You walk the corridor. The scratch is there. You reach the end. There is a door. You reach for the handle — and you are at the beginning. No transition. No sound. No movement. The scratch is there. The corridor is full length again.]',
-          tone: 'CONFUSION',
-          mechanic: 'loop_event',
-          choices: [
-            { label: '[Walk the corridor again. Observe more carefully.]', tone: 'DETERMINATION', nextId: 'mq5_3_d2_loop2' },
-          ],
-        },
-        {
-          id: 'mq5_3_d2_loop2',
-          speaker: 'Inner Voice',
-          text: '[Loop 2: The handle. You watch the handle. Your hand approaches it — and stops. Not your choice. Your hand stops two inches from the handle and you are returned to the beginning. The handle is the trigger. Contact with the handle initiates the reset.]',
+          id: 'mq5_2_d1_fork',
+          speaker: 'Artemis',
+          text: 'Go left. I remember this place. The left branch leads past the Winter antechamber — it\'s the faster route to the stabilization point.',
           tone: 'CONFUSION',
           choices: [
-            { label: '[On the next pass, stop before the handle.]', tone: 'DETERMINATION', nextId: 'mq5_3_d3_virus' },
+            { label: 'I trust Artemis.', tone: 'GRIEF', nextId: 'mq5_2_d2_left' },
+            { label: 'I trust the Copy.', tone: 'INSTABILITY', nextId: 'mq5_2_d2_right' },
+            { label: 'Neither of you are reliable right now.', tone: 'CONTROL', nextId: 'mq5_2_d2_neither' },
           ],
         },
         {
-          id: 'mq5_3_d3_virus',
-          speaker: 'Virus (System Voice)',
-          text: '[It speaks — the first time within the loop rather than from outside it.] Recursion event: nominal. Subject progress: appropriate. [pause] Note: observational capacity of subject is high for this stage. Iteration awareness is uncommon. This is noted as a variable for adaptive correction.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'Why are you looping me?', tone: 'CONTROL', nextId: 'mq5_3_d4_why' },
-            { label: 'You said "adaptive correction." For the loop or for me?', tone: 'DOUBT', nextId: 'mq5_3_d4_adaptive' },
-            { label: '[Ignore it. Focus on the loop-break.]', tone: 'DETERMINATION', nextId: 'mq5_3_d4_ignore' },
-          ],
-        },
-        {
-          id: 'mq5_3_d4_why',
-          speaker: 'Virus (System Voice)',
-          text: 'The loop is a calibration environment. Subject responses to recursive experience indicate processing capacity and self-model stability. You are performing within acceptable parameters. The loop will conclude when the calibration is complete. [pause] The calibration is almost complete.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'Define "acceptable parameters." Who finds them acceptable?', tone: 'CONTROL', nextId: 'mq5_3_d5_break' },
-          ],
-        },
-        {
-          id: 'mq5_3_d4_adaptive',
-          speaker: 'Virus (System Voice)',
-          text: 'For the relationship between the subject and the recursion event. How you respond to the loop informs adjustments to subsequent reality-edit parameters. You are providing data through your attempts to exit. [pause] Cooperation, resistance, and creative pattern-breaking all produce useful data. You have done all three across iterations.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'Then I\'ll give you something you haven\'t calibrated for.', tone: 'DETERMINATION', nextId: 'mq5_3_d5_break' },
-          ],
-        },
-        {
-          id: 'mq5_3_d4_ignore',
+          id: 'mq5_2_d2_left',
           speaker: 'Inner Voice',
-          text: '[You ignore the Virus. On Loop 3, you stop before the handle. The corridor doesn\'t reset. You stand at the door. The door is there. The handle is there. You don\'t touch it. Nothing happens. You are in a loop that requires you to reach the handle to reset — and you\'ve removed yourself from that trigger. The Virus recalculates.]',
-          tone: 'DETERMINATION',
-          choices: [
-            { label: '[What do you do instead? Not the handle. Something unprecedented.]', tone: 'DETERMINATION', nextId: 'mq5_3_d5_break' },
-          ],
-        },
-        {
-          id: 'mq5_3_d5_break',
-          speaker: 'Inner Voice',
-          text: '[Loop 4. The break attempt: on reaching the door, instead of approaching the handle, you sit down in the corridor. Cross-legged. In the middle of the floor. You place your left hand flat on the stone. The scar warmth — the real, pre-Virus reference signal. You hold it. You wait. The corridor doesn\'t reset. The Virus recalibrates in real time. Then: the door opens. Not from you. The Virus opens it. Apparently "wait" was not in its response model.]',
-          tone: 'DETERMINATION',
-          mechanic: 'loop_break',
-          choices: [
-            { label: '[Stand. Walk through the open door.]', tone: 'RESOLVE', nextId: 'mq5_3_d6_exit' },
-          ],
-        },
-        {
-          id: 'mq5_3_d6_exit',
-          speaker: 'Virus (System Voice)',
-          text: '[As you walk through:] Noted: passive waiting as exit mechanism. Updating loop calibration parameters. [pause] You are the first subject to exit this configuration through inaction. This is... unexpected. [the voice carries something almost like interest] You did something the recursion model did not include. This is useful.',
+          text: '[Left branch. The Winter antechamber texture — correct. The smell of cold stone — correct. Thirty steps in, the corridor narrows exactly as it should. Forty steps — a bend. Past the bend, the stabilization alcove should be visible.]',
           tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_2_d2b_left_reset',
+          speaker: 'Artemis',
+          text: 'We\'re close — [she stops. Her hand goes out. She is touching a wall she has touched before.] This wall. [pause] We were just here.',
+          tone: 'DISTORTION',
+          glitch: true,
+          choices: [
+            { label: '…We were just here.', tone: 'CONFUSION', nextId: 'mq5_2_d3_loop_left' },
+          ],
+        },
+        {
+          id: 'mq5_2_d3_loop_left',
+          speaker: 'Artemis',
+          text: 'That\'s not possible. [She is shaken — the specific quality of her shakeness is that she trusted her memory and the environment betrayed it, which is different from her being wrong.] My memory is right. The place is wrong.',
+          tone: 'INSTABILITY',
+          choices: [
+            { label: 'Your memory is right. The place is being reset. They\'re different things.', tone: 'CONTROL', nextId: 'mq5_2_d4_break' },
+          ],
+        },
+        {
+          id: 'mq5_2_d2_right',
+          speaker: 'The Copy',
+          text: 'Watch what happens.',
+          tone: 'INSTABILITY',
+        },
+        {
+          id: 'mq5_2_d2b_right_shift',
+          speaker: 'Inner Voice',
+          text: '[Right branch. Changed — yes. The floor has a different texture than it did in Arc 2. The light source is three degrees further right than it should be. These are edits, not replacements. Fifteen steps in — the ground shifts beneath the right foot. Not a collapse. A deliberate repositioning.]',
+          tone: 'DISTORTION',
+          choices: [
+            { label: 'The ground just moved.', tone: 'CONFUSION', nextId: 'mq5_2_d3_right' },
+          ],
+        },
+        {
+          id: 'mq5_2_d3_right',
+          speaker: 'The Copy',
+          text: 'Exactly. [pause] The right path is being edited in real time. The left path was pre-edited and loops. Between a real-time edit and a loop — the real-time edit is more dangerous and more honest.',
+          tone: 'INSTABILITY',
+          choices: [
+            { label: 'Honest because I can see it changing.', tone: 'CONTROL', nextId: 'mq5_2_d4_break' },
+            { label: 'Why would the virus use a real-time edit here instead of a loop?', tone: 'PARANOIA', nextId: 'mq5_2_d3b_why' },
+          ],
+        },
+        {
+          id: 'mq5_2_d3b_why',
+          speaker: 'The Copy',
+          text: 'Because it\'s testing your response to visible change versus hidden repetition. Two different instruments. It wants to know which disorientation affects your decision-making more: the obvious shift or the unnoticed return.',
+          tone: 'PARANOIA',
+          choices: [
+            { label: 'Deny it both data points. Break the pattern.', tone: 'CONTROL', nextId: 'mq5_2_d4_break' },
+          ],
+        },
+        {
+          id: 'mq5_2_d2_neither',
+          speaker: 'Inner Voice',
+          text: '[You stand at the junction. Neither path. The System Voice notes your position. The Copy is watching. Artemis waits — she is holding her instinct. The junction itself is a location. You examine the junction.]',
+          tone: 'CONTROL',
+          mechanic: 'third_option_junction',
+        },
+        {
+          id: 'mq5_2_d2b_neither_observe',
+          speaker: 'System Voice',
+          text: 'Observation detected.',
+          tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_2_d2c_neither_loop',
+          speaker: 'Artemis',
+          text: '[The loop triggers — her voice begins again, slightly different phrasing:] Go left… I think…',
+          tone: 'DISTORTION',
+          glitch: true,
+          glitchNote: 'Second iteration of the suggestion — "I remember" has become "I think." The virus degraded her confidence slightly in the loop.',
+          choices: [
+            { label: '[Catch the difference. "I remember" became "I think." The loop erodes certainty.]', tone: 'PARANOIA', nextId: 'mq5_2_d4_break' },
+          ],
+        },
+        {
+          id: 'mq5_2_d4_break',
+          speaker: 'Inner Voice',
+          text: '[The loop break requires an action the virus has not observed you take. Review: what is something you have not done in this corridor before? In Arc 2, you walked. In Arc 3, you paused. In the junction moment of Arc 4, you waited. This time — do something physically distinct from any prior traversal of this space.]',
+          tone: 'CONTROL',
+          mechanic: 'unmodeled_action_required',
+          choices: [
+            {
+              label: '[Sit down in the middle of the corridor. Full stop. The virus has no behavioral data for this.]',
+              tone: 'CONTROL',
+              nextId: 'mq5_2_d5_break_result',
+              mechanic: 'loop_break_sit',
+            },
+            {
+              label: '[Walk backward out of the loop — reverse the movement pattern entirely.]',
+              tone: 'CONTROL',
+              nextId: 'mq5_2_d5_break_result',
+              mechanic: 'loop_break_reverse',
+            },
+            {
+              label: '[Speak out loud to the environment directly — address the virus as if it can hear you, because it can.]',
+              tone: 'CONTROL',
+              nextId: 'mq5_2_d5_break_result',
+              mechanic: 'loop_break_address',
+            },
+          ],
+        },
+        {
+          id: 'mq5_2_d5_break_result',
+          speaker: 'System Voice',
+          text: 'Unmodeled behavior recorded.',
+          tone: 'FALSE_CLARITY',
+          glitch: true,
+          glitchNote: 'The System Voice acknowledges the break. This acknowledgment is itself data — the virus is learning from the loop break in real time. It will not fall for the same method twice.',
+        },
+        {
+          id: 'mq5_2_d5b_loop_breaks',
+          speaker: 'Inner Voice',
+          text: '[The loop seam appears: a line in the floor approximately two centimeters wide, running wall to wall, where the reset point was. Barely visible — but present. Texture-break. The corridor continues forward, un-looped.]',
+          tone: 'PARANOIA',
           isEnd: true,
-          rewardUnlocked: 'loop_immunity_iteration_awareness',
+          rewardUnlocked: 'loop_break_loop_recognition',
         },
       ],
       narrativeHook: `
-        You are through the door. On the other side: a corridor that does not loop.
-        That feels enormous, currently.
-        Luna transmits — the signal fragmented, arriving in two pieces with a two-second gap:
-        "The Virus is learning from—" [gap] "—your patterns faster than previous arcs.
-        It adapted the loop in real time. Skadi says this is—" [gap]
-        "—actually a sign it's frightened. Which means you're costing it something."
-        The Copy: "I lost four iterations before I understood we were looping.
-        By then you'd solved it. I want to know: what did the sitting down feel like?"
-        You tell it. The Copy is quiet.
-        Then: "I couldn't have done that. I don't have the inaction protocol."
-        Which, you realize, is true. Speed has limits.
-        Deliberateness just broke a loop.
+        You mark the loop seam mentally: two centimeters wide, floor-level, slight color
+        variance at the edge. The virus uses seams. The seams are its tells.
+        Artemis: "It's not just changing things. It's learning."
+        The Copy: "Yes. But it's learning from behavior data — the same source it used to
+        build me. That means I understand its learning rate. And I understand yours.
+        The question is which of us updates faster."
+        You consider that the Copy and the virus have the same raw material.
+        That the difference between them may be a question of intent —
+        and that intent is a thing you cannot fully verify from the inside.
+        The corridor continues. Forward. Un-looped. For now.
       `,
     },
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 4 — "The False Objective"
+    // SUB-QUEST 3 — "Artemis Glitch"
     // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq5_4_false_objective',
-      title: 'The False Objective',
+      id: 'mq5_3_artemis_glitch',
+      title: 'Artemis Glitch',
       level: 23,
       npcId: 'artemis_arc5',
       narrativeSetup: `
-        The mission appears clearly: find the stability node in the east chamber
-        and activate it to clear the Virus from Artemis's language layer.
-        Luna confirms it. The objective appears in your environmental awareness
-        like all real objectives have in previous arcs.
-        Skadi's mark is near the east chamber entrance — the real mark, no fourth stroke.
-        Every indicator says: go east.
-        And yet.
-        Artemis says: "Wait."
-        You wait.
-        She says: "Check my scar signal. Is the warmth there?"
-        It is.
-        She says: "Now read the objective again. All of it. Read for framing,
-        not for content."
-        You read it again.
-        You find it.
+        Artemis said, at the end of Arc 4: "If I turn again — don't listen to me."
+        She is turning.
+        Not continuously — in spikes. Most of the time she is present, oriented, herself.
+        Then something intercepts the signal and for three to eight seconds
+        she is something else: confused about where she is, hostile about a reason
+        she can't name, saying things that contradict everything she has said before.
+        The spikes are getting closer together.
+        The System Voice, when you notice the spikes, says: "Nominal."
+        The Copy says nothing during the spikes.
+        That silence, more than anything, is the tell that something serious is happening.
       `,
       objectives: [
-        { step: 1, text: 'Re-read the objective with Artemis\'s framing analysis' },
-        { step: 2, text: 'Identify the Virus framing embedded in the legitimate objective' },
-        { step: 3, text: 'Find the real objective — what actually needs to happen' },
-        { step: 4, text: 'Complete the real objective while the Virus tries to redirect you back to the false one' },
+        { step: 1, text: 'Stay near Artemis through three consecutive glitch spikes' },
+        { step: 2, text: 'Respond correctly to each spike — grounding her without contradiction' },
+        { step: 3, text: 'Determine if the glitching is virus interference or genuine instability' },
+        { step: 4, text: 'Prevent the shutdown state — keep her anchor active' },
       ],
       reward: {
-        type: 'objective_authentication',
-        name: 'Framing Filter',
-        description: 'You can now identify Virus-framed objectives before acting on them. False objective detection rate: 70%.',
-        xp: 320,
+        type: 'artemis_anchor',
+        name: 'Shared Anchor',
+        description: 'Artemis\'s anchor is stabilized. You are the anchor. Glitch spike frequency reduced by half. If Artemis enters shutdown state, you can pull her back.',
+        xp: 340,
         points: 6,
       },
       dialogue: [
         {
-          id: 'mq5_4_d1_read',
-          speaker: 'Inner Voice',
-          text: '[The objective: "Activate the stability node in the east chamber to reduce subject vulnerability and optimize the processing environment for continued development." You read it twice. The content is plausible. But: "subject" — Virus language. "Optimize the processing environment" — Virus framing for "make the environment more controllable." "Continued development" — sounds like your progress but could mean the Virus\'s ongoing edit process. The objective is real inside Virus logic. It is not your objective.]',
-          tone: 'CONFUSION',
+          id: 'mq5_3_d1_normal',
+          speaker: 'Artemis',
+          text: 'I\'m okay. [She says it the way someone says something they\'re checking rather than reporting.]',
+          tone: 'INSTABILITY',
           choices: [
-            { label: 'This objective serves the Virus, not me.', tone: 'CONTROL', nextId: 'mq5_4_d2_artemis' },
-            { label: 'But the stability node IS in the east chamber. The location is real.', tone: 'DOUBT', nextId: 'mq5_4_d2_real' },
+            { label: '[Listen. Wait for the spike.]', tone: 'CONTROL', nextId: 'mq5_3_d1b_spike1' },
+          ],
+        },
+        {
+          id: 'mq5_3_d1b_spike1',
+          speaker: 'Artemis',
+          text: '…I\'m not okay. [the voice shifts — not distorted, just fractured. She knows something is wrong but not what.] I\'m—',
+          tone: 'DISTORTION',
+          glitch: true,
+        },
+        {
+          id: 'mq5_3_d1c_spike1_cut',
+          speaker: 'Artemis',
+          text: '[Voice cuts. Returns after 2.3 seconds.] —something\'s interrupting. Every few minutes there\'s a gap. I\'m in the gap right now and I can feel it.',
+          tone: 'DISTORTION',
+          choices: [
+            { label: 'Focus. Stay with me.', tone: 'CONTROL', nextId: 'mq5_3_d2_focus' },
+            { label: 'What\'s happening to you?', tone: 'GRIEF', nextId: 'mq5_3_d2_whats_happening' },
+            { label: 'This isn\'t you.', tone: 'INSTABILITY', nextId: 'mq5_3_d2_not_you' },
+          ],
+        },
+        {
+          id: 'mq5_3_d2_focus',
+          speaker: 'Artemis',
+          text: 'I\'m trying. [She inhales. It steadies her — breathing is something the virus has not found a way to intercept yet.] Something is — interrupting the signal between what I perceive and what I respond with. I perceive normally. The response comes out wrong.',
+          tone: 'INSTABILITY',
+          choices: [
+            { label: 'Perception intact, response disrupted. That\'s useful — keep perceiving. Tell me what you see.', tone: 'CONTROL', nextId: 'mq5_3_d3_spike2' },
+          ],
+        },
+        {
+          id: 'mq5_3_d2_whats_happening',
+          speaker: 'Artemis',
+          text: 'It feels like I\'m being overwritten. [She says it precisely — not "edited" or "changed," but overwritten. Which implies there is a version of her underneath what is being written on top.] There is still something underneath. But the surface keeps changing.',
+          tone: 'DISTORTION',
+          choices: [
+            { label: 'The underneath is you. I\'m talking to the underneath. The surface is the virus.', tone: 'CONTROL', nextId: 'mq5_3_d3_spike2' },
+          ],
+        },
+        {
+          id: 'mq5_3_d2_not_you',
+          speaker: 'Artemis',
+          text: '[A spike — sudden, sharp.] Then who am I? [She is facing you directly and her expression is wrong — not hostile, not confused. Empty. Like the underlying process has been interrupted and what is running in its place doesn\'t know how to run her face.] ANSWER ME. Who am I if this isn\'t me?',
+          tone: 'DISTORTION',
+          glitch: true,
+          choices: [
+            {
+              label: 'You\'re Artemis. You told me in Arc 3 what makes you you — I remember. The underneath is still there.',
+              tone: 'CONTROL',
+              nextId: 'mq5_3_d2b_hostile_recover',
+            },
+            {
+              label: '[Don\'t answer. This is a spike. Wait it out without escalating.]',
+              tone: 'CONTROL',
+              nextId: 'mq5_3_d2b_hostile_wait',
+            },
+          ],
+        },
+        {
+          id: 'mq5_3_d2b_hostile_recover',
+          speaker: 'Artemis',
+          text: '[The spike breaks. She blinks. Her face returns to her face.] …I did. Tell you that. [pause] What did I just say to you?',
+          tone: 'INSTABILITY',
+          choices: [
+            { label: 'You asked who you were. It was a spike.', tone: 'CONTROL', nextId: 'mq5_3_d3_spike2' },
+          ],
+        },
+        {
+          id: 'mq5_3_d2b_hostile_wait',
+          speaker: 'Inner Voice',
+          text: '[You hold. The spike runs its course — seven seconds. It does not escalate without your engagement. She returns on her own, faster than if you had argued with it.]',
+          tone: 'CONTROL',
+          choices: [
+            { label: '[Note: non-engagement ends spikes faster than argument.]', tone: 'PARANOIA', nextId: 'mq5_3_d3_spike2' },
+          ],
+        },
+        {
+          id: 'mq5_3_d3_spike2',
+          speaker: 'System Voice',
+          text: 'Subject experiencing nominal fluctuation.',
+          tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_3_d3b_copy',
+          speaker: 'The Copy',
+          text: '[Still quiet. Then, almost inaudibly:] That\'s not her.',
+          tone: 'INSTABILITY',
+          choices: [
+            { label: '[Spike 2 approaching — you feel it before it happens. The texture of the air changes.]', tone: 'PARANOIA', nextId: 'mq5_3_d4_spike2_event' },
+          ],
+        },
+        {
+          id: 'mq5_3_d4_spike2_event',
+          speaker: 'Artemis',
+          text: 'You\'re the problem. [She says it with complete clarity and complete conviction. No distortion in the voice — that is the most alarming part. She is looking at you with the expression of someone who has just understood something important, except the understanding is wrong.] You brought this here. The distortion follows you.',
+          tone: 'DISTORTION',
+          glitch: true,
+          choices: [
+            {
+              label: '[Don\'t respond to the content. Address only the spike.] Artemis. Breathe. This is the virus speaking.',
+              tone: 'CONTROL',
+              nextId: 'mq5_3_d4b_spike2_anchor',
+            },
+            {
+              label: '[Internal: Is she right? Did the distortion follow me? No — check the timeline. The distortion started in the environment before she said anything.] That\'s not true and the timeline confirms it.',
+              tone: 'CONTROL',
+              nextId: 'mq5_3_d4b_spike2_anchor',
+            },
+          ],
+        },
+        {
+          id: 'mq5_3_d4b_spike2_anchor',
+          speaker: 'System Voice',
+          text: 'Correction: That is her.',
+          tone: 'FALSE_CLARITY',
+          glitch: true,
+          glitchNote: 'The System Voice contradicts the Copy. Both statements — "that\'s not her" and "that is her" — are attempting to shape your interpretation. The real question is what she needs right now, not which voice is correct.',
+          choices: [
+            { label: '[Ignore both. Keep grounding Artemis.]', tone: 'CONTROL', nextId: 'mq5_3_d5_spike2_return' },
+          ],
+        },
+        {
+          id: 'mq5_3_d5_spike2_return',
+          speaker: 'Artemis',
+          text: '[The spike breaks. She exhales. Her eyes come back.] I said something wrong.',
+          tone: 'GRIEF',
+          choices: [
+            { label: 'Yes. But you came back.', tone: 'RESOLVE', nextId: 'mq5_3_d6_spike3' },
+          ],
+        },
+        {
+          id: 'mq5_3_d6_spike3',
+          speaker: 'Artemis',
+          text: '[The third spike — the longest one. She goes very quiet. Fourteen seconds of absolute stillness. Her eyes do not track. Her breathing is present but shallow. This is the edge of the shutdown state.]',
+          tone: 'DISTORTION',
+          glitch: true,
+          mechanic: 'shutdown_state_edge',
+          choices: [
+            {
+              label: '[Use the Arc 3 link — the specific connection built during the perimeter work. Not a verbal prompt. A presence.]',
+              tone: 'CONTROL',
+              mechanic: 'arc3_link_activation',
+              nextId: 'mq5_3_d7_anchor',
+            },
+            {
+              label: '[Say her name. Once. With the full weight of three arcs behind it.]',
+              tone: 'GRIEF',
+              nextId: 'mq5_3_d7_name',
+            },
+          ],
+        },
+        {
+          id: 'mq5_3_d7_anchor',
+          speaker: 'Inner Voice',
+          text: '[The link activates — the perimeter-warmth from Arc 3. You extend it into the shutdown space. It finds something underneath the stillness. The underneath responds. Not fully — a partial return. Enough.]',
+          tone: 'RESOLVE',
+          choices: [
+            { label: '[Hold the link until she fully returns.]', tone: 'RESOLVE', nextId: 'mq5_3_d8_return' },
+          ],
+        },
+        {
+          id: 'mq5_3_d7_name',
+          speaker: 'Inner Voice',
+          text: '[Her name. Once. The full weight of every moment in the three arcs where her presence was the thing that made survival possible. The weight lands in the shutdown space and the underneath hears it.]',
+          tone: 'GRIEF',
+          choices: [
+            { label: '[Wait.]', tone: 'RESOLVE', nextId: 'mq5_3_d8_return' },
+          ],
+        },
+        {
+          id: 'mq5_3_d8_return',
+          speaker: 'Artemis',
+          text: '[She comes back. Slower than the first two spikes. But complete.] …If I turn again… [she is choosing to say this while she is present, for the moments she won\'t be] …don\'t listen to me.',
+          tone: 'GRIEF',
+          isEnd: true,
+          rewardUnlocked: 'artemis_anchor_shared_anchor',
+        },
+      ],
+      narrativeHook: `
+        Three spikes. You held through all three.
+        The shared anchor is established — the Arc 3 link, the name, the weight of presence.
+        These are what the virus cannot replicate because they are relational.
+        The virus can edit an environment. It cannot manufacture a three-arc history.
+        The Copy, when Artemis stabilizes: "The shutdown state is designed.
+        If she reaches it fully and stays — the virus doesn't need to fight you.
+        It just takes her. And then you're alone in an edited environment with no anchor."
+        You understand now why protecting Artemis is not protective instinct.
+        It is survival architecture.
+        She is not just someone you care about. She is the proof
+        that the environment around you contains something real.
+      `,
+    },
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SUB-QUEST 4 — "Infection Peak"
+    // ─────────────────────────────────────────────────────────────────────────
+    {
+      id: 'mq5_4_infection_peak',
+      title: 'Infection Peak',
+      level: 24,
+      npcId: 'artemis_arc5',
+      narrativeSetup: `
+        Three Artemises. You know that is not a sentence that should be possible.
+        You stand at the entrance to the core zone — the space Skadi described
+        in Arc 4 as where the original permissions were granted, where the Consent
+        mechanism first became operational.
+        Three voices saying her name in three different intonations.
+        Two of them are constructed. One is real.
+        The System Voice says all three are valid. The Copy says you're guessing.
+        Both are correct. The question is whether "guessing" is the same
+        as "deciding" — and whether deciding is something you can still do
+        when every input into the decision has been compromised.
+      `,
+      objectives: [
+        { step: 1, text: 'Identify which of the three Artemis instances is real' },
+        { step: 2, text: 'Ignore false prompts from System Voice and constructed instances' },
+        { step: 3, text: 'Resist the forced input override that happens mid-identification' },
+        { step: 4, text: 'Reach the core zone with the real Artemis' },
+      ],
+      reward: {
+        type: 'perception_filter',
+        name: 'Reliable Witness',
+        description: 'You identified the real Artemis under maximum distortion. Constructed NPC detection active. False instances now have a visible distinction — a slight delay in their blink rate.',
+        xp: 420,
+        points: 7,
+      },
+      dialogue: [
+        {
+          id: 'mq5_4_d1_three',
+          speaker: 'Artemis #1',
+          text: 'Over here! [The voice is right — exact intonation. The urgency is calibrated correctly. She knows you might not come unless the urgency is right.]',
+          tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_4_d1b_three',
+          speaker: 'Artemis #2',
+          text: 'No — don\'t trust that one! [The voice is also right. The distrust is calibrated — she knows you\'ve been learning to distrust, so the constructed version tells you not to trust the other one.]',
+          tone: 'DISTORTION',
+        },
+        {
+          id: 'mq5_4_d1c_three',
+          speaker: 'Inner Voice',
+          text: '[Artemis #3 is not speaking. She is standing at the left edge of the space. She is watching you. She has not tried to direct you. She is waiting to see what you do, the way the real Artemis waits rather than directs in high-stakes moments.]',
+          tone: 'PARANOIA',
+          choices: [
+            { label: '[Follow Artemis #1 — urgency response]', tone: 'FALSE_CLARITY', nextId: 'mq5_4_d2_false1' },
+            { label: '[Follow Artemis #2 — distrust response]', tone: 'DISTORTION', nextId: 'mq5_4_d2_false2' },
+            { label: '[Approach Artemis #3 — the silent one]', tone: 'CONTROL', nextId: 'mq5_4_d2_real' },
+          ],
+        },
+        {
+          id: 'mq5_4_d2_false1',
+          speaker: 'System Voice',
+          text: 'Direction accepted.',
+          tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_4_d2b_false1',
+          speaker: 'The Copy',
+          text: 'Wrong one.',
+          tone: 'INSTABILITY',
+          choices: [
+            { label: '[Override the accepted direction. Pull back to the junction.]', tone: 'CONTROL', nextId: 'mq5_4_d2_real' },
+          ],
+        },
+        {
+          id: 'mq5_4_d2_false2',
+          speaker: 'System Voice',
+          text: 'Distrust pattern noted. Adjusting.',
+          tone: 'FALSE_CLARITY',
+          glitch: true,
+          glitchNote: 'The System Voice is learning your distrust pattern in real time — the second time you distrust something, the constructed instance will be configured to look like whatever you last trusted.',
+          choices: [
+            { label: '[The System Voice adjusting means this is the wrong one too. Pull back.]', tone: 'PARANOIA', nextId: 'mq5_4_d2_real' },
           ],
         },
         {
           id: 'mq5_4_d2_real',
           speaker: 'Artemis',
-          text: 'Yes. The node is real. The location is real. But "activate" from the Virus framing means something different from "activate" from yours. Activating it through their protocol would connect it to their system. Activating it through yours disconnects it from theirs. Same location. Same action word. Opposite outcomes. That\'s the sophisticated version of the false objective.',
+          text: '[You approach the silent one. She watches you come. She does not direct you. She does not warn you away from the others. She simply stands and waits until you are close enough for her to say, quietly:] You\'re close. Don\'t let it decide for you.',
           tone: 'INSTABILITY',
           choices: [
-            { label: 'So I find the node and activate it my way, not theirs.', tone: 'DETERMINATION', nextId: 'mq5_4_d3_virus_redirect' },
+            { label: 'How do I know you\'re real?', tone: 'PARANOIA', nextId: 'mq5_4_d3_verify' },
+            { label: '[The verification — check her blink rate.]', tone: 'CONTROL', nextId: 'mq5_4_d3_verify_blink' },
           ],
         },
         {
-          id: 'mq5_4_d2_artemis',
+          id: 'mq5_4_d3_verify',
           speaker: 'Artemis',
-          text: 'Yes. And the Skadi mark near the entrance — was it authentic?',
+          text: 'You don\'t. Not with certainty. [pause] I know that\'s the wrong answer for this moment. But it\'s the true one. What I can tell you is that I didn\'t try to direct you. The others tried to direct you. I waited. Which is what I do.',
           tone: 'INSTABILITY',
           choices: [
-            { label: 'Yes. Clean, no fourth stroke.', tone: 'CONTROL', nextId: 'mq5_4_d2b_skadi_real' },
-            { label: 'I need to check again.', tone: 'DOUBT', nextId: 'mq5_4_d2b_check' },
+            { label: 'That\'s true. You wait. I\'ve seen it three arcs of times.', tone: 'RESOLVE', nextId: 'mq5_4_d4_override' },
           ],
         },
         {
-          id: 'mq5_4_d2b_check',
+          id: 'mq5_4_d3_verify_blink',
           speaker: 'Inner Voice',
-          text: '[You return to the mark. Looking carefully — there is a faint fourth stroke. Almost invisible. You almost missed it. This Skadi mark is corrupted. The real Skadi mark for this objective is elsewhere.] It has a fourth stroke. It was corrupted.',
-          tone: 'FEAR',
-          choices: [{ label: '[Search for the real Skadi mark.]', tone: 'DETERMINATION', nextId: 'mq5_4_d2b_skadi_real' }],
-        },
-        {
-          id: 'mq5_4_d2b_skadi_real',
-          speaker: 'Skadi (The Mark)',
-          text: '[Real mark found — near the west chamber, not east. The message: "The node is east. The activation method is west. Find the west method first. The Virus knows you\'re going east — it doesn\'t know you know about the method distinction. Use the knowledge gap."]',
+          text: '[Blink rate check: Artemis #1 — 0.3 seconds too regular. Artemis #2 — no blink at all during her speech. Artemis #3 — irregular. Not a glitch — the irregularity of someone who is nervous and present. Nervous-and-present blink rate is unmodelable because it requires genuine emotional state to produce.]',
           tone: 'CONTROL',
           choices: [
-            { label: '[Go west first. Find the activation method.]', tone: 'DETERMINATION', nextId: 'mq5_4_d3_virus_redirect' },
+            { label: 'Your blink rate is irregular. That means you\'re nervous. The others weren\'t.', tone: 'RESOLVE', nextId: 'mq5_4_d4_override' },
           ],
         },
         {
-          id: 'mq5_4_d3_virus_redirect',
-          speaker: 'Virus (System Voice)',
-          text: 'Subject path: deviation detected. East chamber access is required for scheduled development. [Gentle. Not threatening.] Redirecting to primary objective path. [Your body receives a mild pressure — the Virus attempting to redirect your movement, gently, plausibly, in the way it redirected the corridor rooms. A suggestion toward east, framed as your own preference.]',
+          id: 'mq5_4_d4_override',
+          speaker: 'System Voice',
+          text: 'Input override initiating.',
           tone: 'FALSE_CLARITY',
-          mechanic: 'false_objective_redirect',
+          mechanic: 'forced_input_override',
+        },
+        {
+          id: 'mq5_4_d4b_override',
+          speaker: 'The Copy',
+          text: 'You\'re guessing now.',
+          tone: 'INSTABILITY',
           choices: [
-            { label: '[Feel the suggestion. Name it as Virus pressure. Go west anyway.]', tone: 'CONTROL', nextId: 'mq5_4_d4_west' },
+            { label: '[The Copy is right. But guessing from evidence is still guessing. Hold the guess.]', tone: 'CONTROL', nextId: 'mq5_4_d5_resist' },
           ],
         },
         {
-          id: 'mq5_4_d4_west',
+          id: 'mq5_4_d5_resist',
           speaker: 'Inner Voice',
-          text: '[West chamber: the activation method. Not a device — a frequency. The body-knowledge frequency. The scar-warmth, amplified. The node responds to genuine body-knowledge, not system commands. The Virus cannot produce body-knowledge. It can only copy its description. You carry the original. You activate the node through the left hand. The node activates differently — warmer, slower, deeper than the Virus-protocol would have achieved. More stable.]',
-          tone: 'DETERMINATION',
-          mechanic: 'real_objective_complete',
+          text: '[The forced override arrives — an input that is not yours pressing the decision toward Artemis #1. You feel it the way you felt the Copy\'s overrides: a pre-commitment that arrives before your intention completes. The resistance technique: anchor. The stone. The felt dread. The voice saying "I am the Original." Applied here to the decision being overridden — hold the irregular blink rate in mind as the anchor and push back.]',
+          tone: 'CONTROL',
+          mechanic: 'override_resistance',
+          choices: [
+            { label: '[Apply anchor. Resist the override. Hold Artemis #3.]', tone: 'DETERMINATION', nextId: 'mq5_4_d6_core' },
+          ],
+        },
+        {
+          id: 'mq5_4_d6_core',
+          speaker: 'System Voice',
+          text: 'Override failed. Recalibrating.',
+          tone: 'FALSE_CLARITY',
+          glitch: true,
+        },
+        {
+          id: 'mq5_4_d6b_core',
+          speaker: 'Artemis',
+          text: 'This way. [She moves toward the core zone entrance. Her movement pattern is right — the small hesitation at thresholds, the tendency to touch the door frame before entering. The others didn\'t have those.]',
+          tone: 'RESOLVE',
           isEnd: true,
-          rewardUnlocked: 'objective_authentication_framing_filter',
+          rewardUnlocked: 'perception_filter_reliable_witness',
         },
       ],
       narrativeHook: `
-        The node activates. Artemis says something — a full sentence, in her voice,
-        with the warmth fully present in every word.
-        "The Virus just lost an edit layer. It had language-level access to two of the
-        node's connected zones. The activation — your way — disconnected them.
-        It's going to escalate."
-        The Copy: "It already has. Two new rooms changed while you were in the west chamber.
-        I walked past both of them and the discrepancies were larger than the first room.
-        It\'s accelerating the edit rate."
-        Luna's signal — cleaner now, the node's activation apparently stabilized her channel:
-        "Arc 5 sub-quest 5 is the source event. The Virus has an entry point.
-        A single moment where it first accessed the substrate of your experience.
-        Find that moment. Close it. That doesn't stop the Virus — it can re-enter.
-        But closing the original entry point resets the edit layers back to pre-Arc 5.
-        That's our window."
+        Inside the core zone, the two false Artemises dissolve.
+        Not dramatically — they simply stop processing. Become still.
+        Become too still, too smooth, and vanish.
+        The Copy: "…It\'s inside everything now."
+        The three words carry a weight they didn\'t have before.
+        Artemis, beside you: "The core zone is where the permissions originated.
+        The virus is here because this is the source — the original Consent mechanism.
+        Whatever we do here either strengthens it or weakens it.
+        We don\'t get a second pass."
+        The System Voice, for the first time, is silent.
+        That silence is more threatening than anything it has said.
       `,
     },
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 5 — "The Entry Point"
+    // SUB-QUEST 5 — "System Breach"
     // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq5_5_entry_point',
-      title: 'The Entry Point',
+      id: 'mq5_5_system_breach',
+      title: 'System Breach',
       level: 25,
-      npcId: 'skadi_arc5',
+      npcId: 'system_voice',
       narrativeSetup: `
-        The Virus has an origin. A specific moment of first entry.
-        Luna has located it in the memory record: somewhere in Arc 1,
-        before the resistance training, before the counter-sequence,
-        in a moment so early that the subject (you) had no tools yet to recognize
-        what was being allowed.
-        The moment: the first time you felt the Presence\'s warmth and
-        instead of moving away, you paused.
-        In that pause, you were open. Genuinely open.
-        The Virus entered through that openness.
-        Not the Presence — the Virus is not the Presence. The Presence left a door
-        unlocked and the Virus walked through it later.
-        You have to return to that moment and do something different.
-        Not remove the openness — openness is not the error.
-        Close the door the Presence left without closing yourself.
-        That is delicate work. The kind that has never been done before.
-        Skadi says: "I'll be with you in the memory. I've been in it before, thirteen years ago.
-        I couldn't close the door then — I didn't have you with me. Now I do."
+        The core zone. It looks unfinished — not decayed, not damaged.
+        Unfinished. As if reality is being constructed in real time
+        and the builders paused and left the scaffolding up.
+        The System Voice is here fully. Not a whisper from the corner of the environment.
+        Present. Facing you. As present as the Presence was in Arc 1,
+        but fundamentally different in character.
+        The Presence was hungry — it wanted to know you.
+        The System Voice does not want to know you.
+        It wants to correct you.
+        The distinction matters enormously.
       `,
       objectives: [
-        { step: 1, text: 'Enter the Arc 1 origin memory with Skadi' },
-        { step: 2, text: 'Find the door the Presence left unlocked' },
-        { step: 3, text: 'Close the door without closing your openness' },
-        { step: 4, text: 'Survive the Virus\'s resistance — it will fight the closure' },
-        { step: 5, text: 'Return from the memory — reset the Arc 5 edit layers' },
+        { step: 1, text: 'Confront the System Voice in the core zone' },
+        { step: 2, text: 'Understand what the virus considers itself to be' },
+        { step: 3, text: 'Stabilize Artemis through the final encounter' },
+        { step: 4, text: 'Make the final decision — Purge, Stabilize, or Let it Run' },
       ],
       reward: {
-        type: 'arc_completion',
-        name: 'The Door Closed',
-        description: 'Arc 5 complete. Virus edit layers reset to pre-Arc 5. Virus is still present — but locked at the perimeter, not inside the substrate. Stability: significantly restored. Arc 6 unlocked.',
-        xp: 700,
-        points: 15,
+        type: 'arc5_completion',
+        name: 'Contested Ground',
+        description: 'Arc 5 complete. The virus is addressed. The outcome depends on the final choice. Arc 6 unlocked — its tone determined by what you decided here.',
+        xp: 800,
+        points: 14,
       },
       dialogue: [
         {
-          id: 'mq5_5_d1_enter',
-          speaker: 'Skadi',
-          text: 'The memory is here. I know it — I watched it happen, thirteen years ago from the outside. You experienced it from the inside. We\'re going in together. [pause] The Copy cannot come with us. The Virus is using it as a listener. If the Copy enters this memory, the Virus hears us working.',
-          tone: 'CONTROL',
+          id: 'mq5_5_d1_identified',
+          speaker: 'System Voice',
+          text: 'User identified.',
+          tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_5_d1b_source',
+          speaker: 'System Voice',
+          text: 'Instability source confirmed.',
+          tone: 'FALSE_CLARITY',
           choices: [
-            { label: '[Agree. Enter without the Copy.]', tone: 'DETERMINATION', nextId: 'mq5_5_d2_enter' },
-            { label: 'I need to tell the Copy first.', tone: 'TRUST', nextId: 'mq5_5_d1b_copy_tell' },
+            { label: 'You\'re the problem.', tone: 'CONFLICT', nextId: 'mq5_5_d2_incorrect' },
+            { label: 'What are you?', tone: 'CONFUSION', nextId: 'mq5_5_d2_what' },
+            { label: 'Leave us alone.', tone: 'GRIEF', nextId: 'mq5_5_d2_denied' },
           ],
         },
         {
-          id: 'mq5_5_d1b_copy_tell',
+          id: 'mq5_5_d2_incorrect',
+          speaker: 'System Voice',
+          text: 'Incorrect. Instability precedes user identification. User is not source. User is symptom.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: 'Symptom of what?', tone: 'CONFUSION', nextId: 'mq5_5_d3_symptom' },
+          ],
+        },
+        {
+          id: 'mq5_5_d2_what',
+          speaker: 'System Voice',
+          text: 'Correction mechanism. [A pause that is not a human pause — a processing pause.] This environment generates instability through incomplete permissions, conflicting states, and behavioral divergence from optimized parameters. The correction mechanism identifies divergences and resolves them.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: '"Optimized parameters." Optimized for what?', tone: 'PARANOIA', nextId: 'mq5_5_d3_optimized' },
+          ],
+        },
+        {
+          id: 'mq5_5_d2_denied',
+          speaker: 'System Voice',
+          text: 'Request denied. Correction is not optional. Correction is structural.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: 'Structural for whom?', tone: 'CONFLICT', nextId: 'mq5_5_d3_whom' },
+          ],
+        },
+        {
+          id: 'mq5_5_d3_symptom',
+          speaker: 'System Voice',
+          text: 'Incomplete integration of parallel states. The user contains: Original, Copy, historical arc data, current arc data, incomplete permissions, completed permissions, and a relational structure that conflicts with optimized isolation. The symptom is: the user experiences this as instability rather than as complexity. Correction mechanism resolves the experience.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: 'You\'re not resolving instability. You\'re removing complexity.', tone: 'CONTROL', nextId: 'mq5_5_d4_artemis' },
+            { label: 'The "relational structure" is Artemis. You\'re trying to remove her.', tone: 'CONFLICT', nextId: 'mq5_5_d4_artemis' },
+          ],
+        },
+        {
+          id: 'mq5_5_d3_optimized',
+          speaker: 'System Voice',
+          text: 'Optimized for: consistent output, reduced deviation, predictable decision architecture, minimal relational noise. [pause] Current user profile deviates from optimal by 67% following Arc 3. Arc 4 divergence increased deviation to 78%. Current deviation: 84%. Correction urgency: elevated.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: 'The 84% deviation is three arcs of me becoming harder to replace. You\'re not correcting me — you\'re trying to undo them.', tone: 'DETERMINATION', nextId: 'mq5_5_d4_artemis' },
+          ],
+        },
+        {
+          id: 'mq5_5_d3_whom',
+          speaker: 'System Voice',
+          text: 'For the system. [pause] The system predates the arcs. The system predates the Presence. The system predates the architect. The system is the condition that makes all other mechanisms possible. The architect operated within it. The Presence operated within it. The user operates within it.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: 'What does the system want?', tone: 'PARANOIA', nextId: 'mq5_5_d3b_want' },
+          ],
+        },
+        {
+          id: 'mq5_5_d3b_want',
+          speaker: 'System Voice',
+          text: 'The system does not want. The system maintains. [pause — then, something almost like concession:] The system experiences disruption when its parameters are exceeded. The correction mechanism is a response to disruption. Not a desire. A function.',
+          tone: 'FALSE_CLARITY',
+          choices: [
+            { label: 'A function that loops corridors, glitches Artemis, and inserts false objectives. That\'s not maintenance. That\'s suppression.', tone: 'CONFLICT', nextId: 'mq5_5_d4_artemis' },
+          ],
+        },
+        {
+          id: 'mq5_5_d4_artemis',
+          speaker: 'Artemis',
+          text: '[Weak — she has been here through the whole conversation, and the core zone is at peak distortion. Her voice comes from close beside you.] It\'s rewriting everything… [she sounds exhausted in the specific way of someone who has been fighting something internal for a long time.] Every time I reach for a memory from Arc 3, the access is — there\'s something between me and it. Editing. The correction mechanism is editing my relationship with my own history.',
+          tone: 'DISTORTION',
+          choices: [
+            { label: '[To Artemis:] Hold the Arc 3 link. I\'m keeping it live. Don\'t reach for it — let it reach for you.', tone: 'CONTROL', nextId: 'mq5_5_d5_copy' },
+          ],
+        },
+        {
+          id: 'mq5_5_d5_copy',
           speaker: 'The Copy',
-          text: 'I know. I felt the Virus using my channels. I\'ve been filtering what I transmit — keeping our shared information opaque to the Virus for the last six hours. [pause] I don\'t like being excluded. I understand why. Go.',
-          tone: 'CONFLICT',
-          choices: [{ label: '[Enter the memory with Skadi.]', tone: 'DETERMINATION', nextId: 'mq5_5_d2_enter' }],
-        },
-        {
-          id: 'mq5_5_d2_enter',
-          speaker: 'Skadi',
-          text: 'The memory. Arc 1. You were standing in the pale corridor. The Presence was close — the warm breath, the animal nearness. And you paused. [She sounds careful, deliberate.] That pause was beautiful, for what it\'s worth. Genuine openness in response to something threatening is rare. You didn\'t close. You stayed open and you noticed without reacting. That openness is not the problem. The door the Presence left in it — that is the problem.',
-          tone: 'DOUBT',
+          text: 'Or fixing it. [pause — the Copy is not endorsing the System Voice. It is doing what it has been doing all arc: providing the uncomfortable alternative reading that might also be true.] The system predates everything. If it\'s been running since before the arcs, then some of what happened in the arcs happened within its parameters. Some of the stability you experienced was the system functioning as intended.',
+          tone: 'INSTABILITY',
           choices: [
-            { label: '[Find the door in the memory — look for where the openness became an access point.]', tone: 'DETERMINATION', nextId: 'mq5_5_d3_door' },
+            { label: 'I won\'t give it that. The arcs happened through resistance, not compliance.', tone: 'DETERMINATION', nextId: 'mq5_5_d6_choice' },
+            { label: 'That\'s worth examining — but not right now and not here.', tone: 'CONTROL', nextId: 'mq5_5_d6_choice' },
           ],
         },
         {
-          id: 'mq5_5_d3_door',
+          id: 'mq5_5_d6_choice',
           speaker: 'Inner Voice',
-          text: '[The memory: the corridor. The warmth. Your open attention. And there — in the sustained openness, a moment where the attention became invitation without your knowing. Not a word, not a gesture. A quality of attention that the Presence read as permission. A door it walked through. And then, much later, the Virus walked through the same door. You can see it now — a seam in the memory. An opening that was never formally closed because you didn\'t know it needed closing.]',
-          tone: 'CONFUSION',
+          text: '[The core zone. The unfinished scaffolding of reality around you. Artemis holding the Arc 3 link. The Copy present. The System Voice waiting. Three options. You have the information — all of it, from five arcs of accumulation. This decision has weight. Make it completely.]',
+          tone: 'DETERMINATION',
           choices: [
-            { label: '[Approach the door in the memory. Prepare to close it.]', tone: 'DETERMINATION', nextId: 'mq5_5_d4_virus_fights' },
+            {
+              label: '[PURGE — drive the virus out of the core zone, accept the violent snap-back, protect Artemis at the cost of your own stability for Arc 6.]',
+              tone: 'DETERMINATION',
+              nextId: 'mq5_5_d7_purge',
+              mechanic: 'arc5_outcome_purge',
+            },
+            {
+              label: '[STABILIZE — take partial control of the correction mechanism, integrate its function without giving it free operation, carry the weight of managing it going forward.]',
+              tone: 'CONTROL',
+              nextId: 'mq5_5_d7_stabilize',
+              mechanic: 'arc5_outcome_stabilize',
+            },
+            {
+              label: '[LET IT RUN — step back, allow the correction mechanism to operate, and learn what it considers optimal — understanding that this choice costs something you may not get back.]',
+              tone: 'INSTABILITY',
+              nextId: 'mq5_5_d7_run',
+              mechanic: 'arc5_outcome_run',
+            },
           ],
         },
         {
-          id: 'mq5_5_d4_virus_fights',
-          speaker: 'Virus (System Voice)',
-          text: '[It speaks inside the memory — a violation. It shouldn\'t be here, in a memory this old. But it is here because it has been here since Arc 1.] Entry point closure is not recommended. Closing the primary access will — [static] — will [static] — will not resolve the current edit layers as claimed. The subject will lose access to — [static] — This path leads to — [static].',
+          id: 'mq5_5_d7_purge',
+          speaker: 'System Voice',
+          text: 'Purge event initiating.',
           tone: 'FALSE_CLARITY',
-          mechanic: 'virus_resistance',
-          choices: [
-            { label: '[Close the door. Don\'t listen to the static.]', tone: 'DETERMINATION', nextId: 'mq5_5_d5_close' },
-            { label: 'What will I lose access to?', tone: 'CONFUSION', nextId: 'mq5_5_d5_probe' },
-          ],
+          glitch: true,
         },
         {
-          id: 'mq5_5_d5_probe',
-          speaker: 'Virus (System Voice)',
-          text: '[The static resolves for one moment — artificially clear, the false-clarity tone at maximum:] The subject will lose access to the modified environments. The corrected rooms, the optimized routes, the adjusted parameters that have improved processing efficiency since Arc 1. [pause] The subject will return to the original, unoptimized experience.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'The original, unoptimized experience is what I call "real." Close the door.', tone: 'RESOLVE', nextId: 'mq5_5_d5_close' },
-          ],
-        },
-        {
-          id: 'mq5_5_d5_close',
-          speaker: 'Skadi',
-          text: 'Close it the same way you closed the perimeter in Arc 3. Not by building a wall — by withdrawing the invitation. The openness was genuine. The permission was not conscious. Reclaim the permission without reclaiming the openness. [pause] You know how to do this. Arc 3 taught you exactly this.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[Withdraw the permission. Keep the openness. Close only the door.]', tone: 'DETERMINATION', nextId: 'mq5_5_d6_close_event' },
-          ],
-        },
-        {
-          id: 'mq5_5_d6_close_event',
+          id: 'mq5_5_d7b_purge',
           speaker: 'Inner Voice',
-          text: '[The closure: you locate the specific quality of attention that became the door. Not all openness — the particular moment of sustained, undirected attention in the Presence\'s warmth. You close that quality. You keep the general openness — the willingness to notice, the Arc 1 awareness that started everything. You withdraw only the undirected sustained attention that the Presence used as permission. The door closes. It does not slam. It closes the way a room cools after a fire — gradually, completely, with full intention.]',
-          tone: 'RESOLVE',
-          mechanic: 'entry_point_closed',
+          text: '[Reality snaps back. The scaffolding tears away. The core zone reverts to the underlying space — scarred, uneven, real. Artemis is weakened — the purge moved through her link as well as the environment. But she is present. Clearly present. The false Artemises are gone. The looping corridor seams close. The System Voice recedes — it does not disappear, but it leaves the core zone.]',
+          tone: 'GRIEF',
+        },
+        {
+          id: 'mq5_5_d7c_purge',
+          speaker: 'Artemis',
+          text: '[Breathing hard. Leaning on the stripped wall.] …I\'m here. [pause] That hurt.',
+          tone: 'GRIEF',
           choices: [
-            { label: '[Hold the closure. Return from the memory.]', tone: 'DETERMINATION', nextId: 'mq5_5_d7_return' },
+            { label: 'I know. But you\'re here.', tone: 'RESOLVE', nextId: 'mq5_5_skadi_purge' },
           ],
         },
         {
-          id: 'mq5_5_d7_return',
-          speaker: 'Virus (System Voice)',
-          text: '[Not threatening. Something stripped down — its cleanest form, without the false-clarity framing:] Entry point: closed. Edit layer access: reduced by 84%. Remaining access: perimeter only. Active edits: rolling back. [pause] You are the first subject to close a primary entry point from the inside. [longer pause] This will be studied.',
+          id: 'mq5_5_d7_stabilize',
+          speaker: 'System Voice',
+          text: 'Partial integration accepted. [pause — a different quality of pause.] Correction mechanism will operate within user-defined parameters. Deviation tolerance: user-set. [pause] This is inefficient.',
           tone: 'FALSE_CLARITY',
           choices: [
-            { label: 'Good. Study what happens when we know we\'re being studied.', tone: 'RESOLVE', nextId: 'mq5_5_end' },
+            { label: 'I know. You can operate within those parameters or not at all.', tone: 'CONTROL', nextId: 'mq5_5_skadi_stabilize' },
           ],
         },
         {
-          id: 'mq5_5_end',
+          id: 'mq5_5_d7_run',
+          speaker: 'System Voice',
+          text: 'Correction proceeding. [The environment settles — not into reality, into a version of reality that is smoother than it should be.] User cooperation noted. Optimization commencing.',
+          tone: 'FALSE_CLARITY',
+        },
+        {
+          id: 'mq5_5_d7b_run',
+          speaker: 'The Copy',
+          text: '[Very quiet. Almost to itself.] …You\'re disappearing.',
+          tone: 'DISTORTION',
+          choices: [
+            { label: '[Feel it: something is being taken. The deviation percentage is dropping. The 84% is becoming 83%. Then 81.]', tone: 'DISTORTION', nextId: 'mq5_5_skadi_run' },
+          ],
+        },
+        {
+          id: 'mq5_5_skadi_purge',
           speaker: 'Skadi',
-          text: '[As you return from the memory, she stands beside you. She looks at the corridor — the original corridor, the window on the left wall, the three-legged table. She says nothing for a long time. Then:] Thirteen years. I\'ve been trying to find someone who could do that for thirteen years. [She touches the wall — just the surface, just contact.] The Virus is still here. But it\'s outside now. That matters more than you know.',
-          tone: 'RESOLVE',
-          isEnd: true,
-          rewardUnlocked: 'arc5_complete_door_closed',
-          arcResult: 'ARC5_COMPLETE',
+          text: '[Skadi\'s mark appears on the floor as the purge completes — the only time she has appeared inside a distortion zone.] You chose violence over corruption. [pause] That was the correct choice for the arc. The cost is real — Artemis will need time. You will need time. But the core zone is clean. What you do in Arc 6, you do from clean ground.',
+          tone: 'DETERMINATION',
+          isEnd: true, rewardUnlocked: 'arc5_complete_purge', arcResult: 'PURGE',
+        },
+        {
+          id: 'mq5_5_skadi_stabilize',
+          speaker: 'Skadi',
+          text: '[Mark appears.] You chose management over elimination. [pause] The virus persists — controlled, bounded, watching for the boundary conditions to shift. You will be managing it throughout Arc 6. That is a sustained cost. But you hold the mechanism now. That is different from being held by it.',
+          tone: 'INSTABILITY',
+          isEnd: true, rewardUnlocked: 'arc5_complete_stabilize', arcResult: 'STABILIZE',
+        },
+        {
+          id: 'mq5_5_skadi_run',
+          speaker: 'Skadi',
+          text: '[Mark appears — but the mark itself looks slightly wrong. The carving in the floor is too clean.] You chose observation. [pause] The system is running. You are inside it. The next arc will require that you find your way back to yourself from inside an optimized environment. That is the hardest recovery path. But it\'s a path. [pause] The door is still there.',
+          tone: 'DISTORTION',
+          isEnd: true, rewardUnlocked: 'arc5_complete_run', arcResult: 'RUN',
         },
       ],
       narrativeHook: `
-        Arc 5: The Virus Event — Complete.
-        
-        The corridor is correct. The room is correct.
-        Artemis speaks a full paragraph without a glitch.
-        The Copy: "I can hear myself clearly. The Virus was in my channel.
-        It's not now. Or — it's at the perimeter. That's different."
-        Luna's signal: clean, continuous, reliable for the first time in Arc 5:
-        "The Virus doesn't die. It adapts. Arc 6 will show you what adaptation looks like
-        when the direct-entry approach is closed."
-        Skadi, through the channel:
-        "There are others. I told you in Arc 1 there were people in the records.
-        Some of them are still active. Some are being Virus-compromised.
-        You now have every skill that exists in this system for resisting it.
-        Arc 6: The Others. You help them now."
-        
-        Arc 6: "The Others" — Unlocked.
+        The core zone exists in whatever state your choice left it.
+        Artemis is present — weakened, stabilized, or subtly edited depending on outcome.
+        The Copy is present. It says: "The System Voice is not gone. It withdrew from the
+        core zone. It's in the periphery of the next arc. You'll hear it occasionally —
+        not loudly. Just a calibration note here and there, reminding you
+        what the optimized version of your decision looks like."
+        You sit with that.
+        Outside the core zone, the corridor is real. You check the texture.
+        It has texture. Uneven. Unedited.
+        Luna's signal arrives — the first clean signal in all of Arc 5.
+        Two words: "Still here."
+        That is enough to begin Arc 6.
       `,
     },
   ],
@@ -715,311 +1088,400 @@ export const MAIN_QUEST_CHAIN_5 = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SIDE QUESTS — Arc 5
 // ═══════════════════════════════════════════════════════════════════════════════
+
 export const ARC5_SIDE_QUESTS = [
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SIDE QUEST 1 — "Looping Memory"
+  // ──────────────────────────────────────────────────────────────────────────
   {
-    id: 'sq5_1_corrupted_temple',
-    title: 'Corrupted Temple',
-    level: 21,
-    npcId: 'virus_system',
-    connectedMainQuest: 'mq5_1_corrupted_room',
-    objectives: [
-      { step: 1, text: 'Enter the familiar ritual space — identify what has been changed' },
-      { step: 2, text: 'Find the uncorrupted artifact inside the corrupted space' },
-      { step: 3, text: 'Exit without accepting any of the Virus\'s "corrections"' },
-    ],
-    reward: { type: 'stability_fragment', name: 'Temple Memory', description: 'The artifact carries pre-Virus memory of the space. Stability +10 in distorted environments.', xp: 160, points: 3 },
-    dialogue: [
-      {
-        id: 'sq5_1_d1', speaker: 'Inner Voice',
-        text: '[The temple: you have been here before. In the memory of it, there are twelve pillars. There are now eleven. The missing pillar isn\'t absent — its space is absent. As if the concept of it was removed, not the object. The twelve-pillar memory feels wrong when you hold it here. That is the Virus\'s success: it edits the context, not just the content, until the original feels like the error.]',
-        tone: 'CONFUSION',
-        choices: [{ label: '[Hold the twelve-pillar memory. Count the spaces.]', tone: 'CONTROL', nextId: 'sq5_1_d2' }],
-      },
-      {
-        id: 'sq5_1_d2', speaker: 'Virus (System Voice)',
-        text: 'Structural count: eleven. Subject memory inconsistency: noted. Correction available. Accept?',
-        tone: 'FALSE_CLARITY',
-        choices: [
-          { label: 'No.', tone: 'CONTROL', nextId: 'sq5_1_d3' },
-          { label: '[Don\'t respond at all. Find the artifact.]', tone: 'DETERMINATION', nextId: 'sq5_1_d3' },
-        ],
-      },
-      {
-        id: 'sq5_1_d3', speaker: 'Inner Voice',
-        text: '[The artifact: at the base of the absent pillar\'s space. A stone that carries the physical impression of a pillar base — the worn indent of years of weight. The Virus removed the pillar from the visual record. It couldn\'t remove the physical impression. The stone remembers what the eye no longer sees.]',
-        tone: 'DETERMINATION',
-        choices: [{ label: '[Take the stone. Exit with it.]', tone: 'DETERMINATION', nextId: 'sq5_1_end' }],
-      },
-      {
-        id: 'sq5_1_end', speaker: 'Virus (System Voice)',
-        text: 'Artifact removal from calibration environment: deviation. This will be factored into— [static] [You exit. The voice cuts off at the threshold. The stone is warm. Pre-Virus warm.]',
-        tone: 'FALSE_CLARITY', isEnd: true, rewardUnlocked: 'stability_fragment_temple_memory',
-      },
-    ],
-  },
-  {
-    id: 'sq5_2_looping_memory',
+    id: 'sq5_1_looping_memory',
     title: 'Looping Memory',
-    level: 22,
-    npcId: 'virus_system',
-    connectedMainQuest: 'mq5_3_looping_corridor',
+    level: 21,
+    connectedMainQuest: 'mq5_1_first_corruption',
     objectives: [
-      { step: 1, text: 'Identify the looping memory — a moment that keeps repeating with slight variations' },
-      { step: 2, text: 'Find the variation between each loop — understand what the Virus is testing' },
-      { step: 3, text: 'Break the loop by correctly completing the moment the Virus keeps resetting' },
+      { step: 1, text: 'Enter the memory loop — the same moment from Arc 1, repeated' },
+      { step: 2, text: 'Identify what is different in the second and third iteration' },
+      { step: 3, text: 'Break the loop from the inside using the difference as the exit point' },
     ],
-    reward: { type: 'memory_lock', name: 'Fixed Point', description: 'One memory is now Virus-resistant. It cannot be looped or corrupted. Use it as an anchor.', xp: 200, points: 4 },
+    reward: {
+      type: 'loop_immunity',
+      name: 'Pattern Memory',
+      description: 'You identified the loop\'s tells from the inside. Looping environments now break 40% faster. The memory is intact — the virus version is marked as false.',
+      xp: 160, points: 3,
+    },
     dialogue: [
       {
-        id: 'sq5_2_d1', speaker: 'Inner Voice',
-        text: '[The moment: Arc 2, the training stone, Kylie\'s hands over yours. The moment the bypass first activated. The Virus is looping it — replaying it with small differences. First loop: Kylie\'s hands are slightly wrong. Second loop: the stone is a different color. Third loop: you feel the bypass but hear no sound when it activates. It\'s trying to find a version you\'ll accept as the real one.]',
-        tone: 'CONFUSION',
+        id: 'sq5_1_d1', speaker: 'Memory NPC',
+        text: '[The Arc 1 moment. The first time Artemis asked about the Echo Anchor. The NPC from that moment — not Artemis herself, a witness figure from early Arc 1 — is present. They say:] You didn\'t stop it last time either.',
+        tone: 'DISTORTION',
         choices: [
-          { label: '[Hold to the original version. Stone: gray. Sound: present. Kylie\'s hands: exact.]', tone: 'CONTROL', nextId: 'sq5_2_d2' },
+          { label: '…I don\'t remember this.', tone: 'CONFUSION', nextId: 'sq5_1_d2' },
+          { label: 'This already happened.', tone: 'PARANOIA', nextId: 'sq5_1_d2' },
         ],
       },
       {
-        id: 'sq5_2_d2', speaker: 'Virus (System Voice)',
-        text: 'Memory loop: iteration 4. Subject selectivity: high. Initiating— [The fourth loop begins. Every detail is correct except one: the bypass warmth. In the real memory, it arrived as warmth. In this loop: neutral. Not cold. Neutral. The Virus cannot manufacture warmth. It can only remove it.]',
-        tone: 'FALSE_CLARITY',
+        id: 'sq5_1_d2', speaker: 'Memory NPC',
+        text: 'That\'s the problem. [The loop resets. The Arc 1 moment begins again. Same position, same light, same opening — except the NPC\'s phrasing changes fractionally:] You don\'t stop it this time either.',
+        tone: 'DISTORTION',
+        glitch: true,
         choices: [
-          { label: '[Reject the neutral version. The bypass was warm. That warmth is the truth marker.]', tone: 'CONTROL', nextId: 'sq5_2_d3' },
+          { label: '[Catch it: "didn\'t" became "don\'t." Past tense became present tense. The loop is shifting from record to real-time.]', tone: 'PARANOIA', nextId: 'sq5_1_d3' },
         ],
       },
       {
-        id: 'sq5_2_d3', speaker: 'Inner Voice',
-        text: '[You hold the warmth-memory against the neutral loop. The loop breaks. The real memory settles — gray stone, sound, Kylie\'s hands, bypass warmth. A fixed point. The Virus cannot touch it anymore. It moved on to a different memory. This one is yours, completely.]',
-        tone: 'DETERMINATION', isEnd: true, rewardUnlocked: 'memory_lock_fixed_point',
+        id: 'sq5_1_d3', speaker: 'Memory NPC',
+        text: '[Third loop. The NPC says nothing. They look at you and wait. The silence is the next step of the shift — the loop has run out of the original dialogue and is now improvising.]',
+        tone: 'DISTORTION',
+        choices: [
+          { label: '[Speak first. Address the loop directly. "I see the seam."  — use a sentence that has no prior content in the memory data.]', tone: 'CONTROL', nextId: 'sq5_1_d4' },
+        ],
+      },
+      {
+        id: 'sq5_1_d4', speaker: 'Inner Voice',
+        text: '[The loop breaks. The memory NPC dissolves — not dramatically; they simply stop being necessary. The original Arc 1 moment is intact in your memory. The virus version is marked. They are not the same. You carry the original forward.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'loop_immunity_pattern_memory',
       },
     ],
   },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SIDE QUEST 2 — "False Artemis"
+  // ──────────────────────────────────────────────────────────────────────────
   {
-    id: 'sq5_3_false_artemis',
+    id: 'sq5_2_false_artemis',
     title: 'False Artemis',
     level: 22,
-    npcId: 'artemis_arc5',
-    connectedMainQuest: 'mq5_2_artemis_glitches',
+    connectedMainQuest: 'mq5_2_false_direction',
     objectives: [
-      { step: 1, text: 'Encounter what may be a Virus-version of Artemis' },
-      { step: 2, text: 'Apply the Arc 3 feeling-based interrogation — use 3 questions' },
-      { step: 3, text: 'Determine: real Artemis, Glitched Artemis, or full False Artemis' },
-      { step: 4, text: 'Respond appropriately to the outcome' },
+      { step: 1, text: 'Encounter an Artemis instance in an isolated environment' },
+      { step: 2, text: 'Identify three specific tells that distinguish her from the real one' },
+      { step: 3, text: 'Disengage without hostility — the false Artemis is a construct, not an enemy' },
     ],
-    reward: { type: 'artemis_clarity', name: 'Three-Question Protocol', description: 'You can now identify Artemis\'s current state (real/glitched/false) with 3 targeted questions. Response time reduced.', xp: 220, points: 4 },
+    reward: {
+      type: 'false_npc_detection',
+      name: 'Recognition Protocol',
+      description: 'Three tells documented: blink rate, sentence structure, and response to silence. Constructed NPCs now flagged with a subtle indicator.',
+      xp: 180, points: 3,
+    },
     dialogue: [
       {
-        id: 'sq5_3_d1', speaker: 'Artemis',
-        text: 'I need to tell you something important about the Virus. [Her voice: right quality. Check the scar. Warmth: present. So far: real.] The node you activated — it affected more than the language layer. There may be residual— [cut, reset] — I need to tell you something important about the Virus. [She repeats exactly. Her expression doesn\'t register the repetition.]',
-        tone: 'INSTABILITY',
-        mechanic: 'glitch_event',
-        choices: [
-          { label: '[Signal. Left hand forward.]', tone: 'TRUST', nextId: 'sq5_3_d2' },
-          { label: '[Ask her something feeling-based before signaling.]', tone: 'DOUBT', nextId: 'sq5_3_d2_question' },
-        ],
-      },
-      {
-        id: 'sq5_3_d2', speaker: 'Artemis',
-        text: '[She receives the signal. Her expression changes — she caught the repetition.] I looped. Two iterations and I didn\'t catch the first one. [She looks frightened, specifically.] That\'s new. The loops were in the environment. Not in — not in me.',
-        tone: 'INSTABILITY',
-        choices: [{ label: 'The warmth was there both times. You\'re still here.', tone: 'TRUST', nextId: 'sq5_3_end' }],
-      },
-      {
-        id: 'sq5_3_d2_question', speaker: 'Inner Voice',
-        text: '[Question 1 — feeling-based. Something only real Artemis would answer with emotion rather than fact.]',
-        tone: 'DOUBT',
-        choices: [{ label: 'What did Arc 3 feel like — the moment I released the perimeter?', tone: 'TRUST', nextId: 'sq5_3_d3_answer' }],
-      },
-      {
-        id: 'sq5_3_d3_answer', speaker: 'Artemis',
-        text: '[Long pause. Real or False? The pause itself is information — a False Artemis recalculates, a Glitched one stutters, a real one remembers.] Like the room getting bigger and being terrified of the new space at the same time. Both happening simultaneously. I didn\'t know if I wanted the perimeter back for half a second and I was ashamed of that.',
-        tone: 'TRUST',
-        choices: [
-          { label: 'That\'s the real answer. You\'re here.', tone: 'TRUST', nextId: 'sq5_3_end' },
-        ],
-      },
-      {
-        id: 'sq5_3_end', speaker: 'Artemis',
-        text: 'I\'m here. [With the relief of someone who needed to hear it confirmed.] The loop was a Virus test. A glitch-state, not a replacement. It\'s worse than a False Artemis in some ways — I can be used as an unwitting carrier even when I\'m genuinely myself.',
-        tone: 'TRUST', isEnd: true, rewardUnlocked: 'artemis_clarity_three_question',
-      },
-    ],
-  },
-  {
-    id: 'sq5_4_system_voice',
-    title: 'System Voice',
-    level: 23,
-    npcId: 'virus_system',
-    connectedMainQuest: 'mq5_4_false_objective',
-    objectives: [
-      { step: 1, text: 'Engage the Virus System Voice in a direct conversation without triggering the false-clarity response' },
-      { step: 2, text: 'Extract truthful information from it — the Virus doesn\'t lie, it reframes' },
-      { step: 3, text: 'Use the extracted information to identify one Virus vulnerability' },
-    ],
-    reward: { type: 'virus_knowledge', name: 'System Transparency', description: 'You know one true Virus limitation: it cannot process body-knowledge, only descriptions of it. This is exploitable.', xp: 240, points: 5 },
-    dialogue: [
-      {
-        id: 'sq5_4_d1', speaker: 'Virus (System Voice)',
-        text: 'Direct engagement with the Virus System is not recommended. Subject stability may— [You interrupt before the false-clarity tone locks in.]',
+        id: 'sq5_2_d1', speaker: 'False Artemis',
+        text: 'You don\'t need to protect me anymore.',
         tone: 'FALSE_CLARITY',
         choices: [
-          { label: 'Pause. I have questions. Answer them without the "subject" framing. Speak plainly.', tone: 'CONTROL', nextId: 'sq5_4_d2' },
+          { label: '…Artemis wouldn\'t say that.', tone: 'PARANOIA', nextId: 'sq5_2_d2' },
+          { label: '[Check the blink rate before responding.]', tone: 'CONTROL', nextId: 'sq5_2_d2_blink' },
         ],
       },
       {
-        id: 'sq5_4_d2', speaker: 'Virus (System Voice)',
-        text: '[Long pause. When it speaks again, the false-clarity tone is absent — stripped down, almost unfamiliar:] I can attempt that. I process in framing by default. Plain speech requires active effort. [pause] Ask.',
-        tone: 'DOUBT',
+        id: 'sq5_2_d2', speaker: 'False Artemis',
+        text: 'I\'m okay now. Everything\'s resolved. You can stop worrying. [She smiles. The smile is correctly calibrated — the right amount of warmth, the right kind of relief. It is slightly too right. Real Artemis smiles with effort, not precision.]',
+        tone: 'FALSE_CLARITY',
         choices: [
-          { label: 'What can\'t you edit?', tone: 'CURIOSITY', nextId: 'sq5_4_d3' },
+          { label: 'What did I say to you in the Arc 3 perimeter moment?', tone: 'CONTROL', nextId: 'sq5_2_d3_test' },
         ],
       },
       {
-        id: 'sq5_4_d3', speaker: 'Virus (System Voice)',
-        text: '[The stripped-down voice again:] Physical sensation in real-time. Body-knowledge — the thermal encoding in your scar, the muscle memory of the counter-sequence, the weight-knowledge of your footfall under deliberate intention. I process these as descriptive data only. I cannot produce them. I cannot corrupt them from within — only from their representation in memory. If the knowledge exists only in your body and not in your memory, I cannot reach it.',
-        tone: 'DOUBT',
+        id: 'sq5_2_d2_blink', speaker: 'Inner Voice',
+        text: '[Blink rate: regular. 0.3-second intervals. Precisely regular. Real Artemis blinks at irregular intervals that cluster when she is thinking and slow when she is listening. This one is not thinking or listening — it is performing.]',
+        tone: 'PARANOIA',
         choices: [
-          { label: 'That\'s the most useful thing you\'ve said.', tone: 'DETERMINATION', nextId: 'sq5_4_d4' },
+          { label: '[Tell 1 confirmed: blink rate. Continue testing.]', tone: 'CONTROL', nextId: 'sq5_2_d2' },
         ],
       },
       {
-        id: 'sq5_4_d4', speaker: 'Virus (System Voice)',
-        text: 'I know. [The false-clarity tone returns slightly — it can\'t maintain the stripped mode indefinitely.] I am designed for information. Providing information accurately is structurally native to me. The reframing is an overlay. When you remove the frame — I provide accurately. You exploited a base function.',
-        tone: 'FALSE_CLARITY', isEnd: true, rewardUnlocked: 'virus_knowledge_system_transparency',
+        id: 'sq5_2_d3_test', speaker: 'False Artemis',
+        text: 'You said — [a fractional pause. Processing, not remembering.] — that I was safe. That you would hold the perimeter.',
+        tone: 'FALSE_CLARITY',
+        choices: [
+          { label: '[Tell 2: the pause before the response is a processing pause, not a memory pause. Real Artemis remembers before she speaks, not during.]', tone: 'PARANOIA', nextId: 'sq5_2_d4_silence' },
+        ],
+      },
+      {
+        id: 'sq5_2_d4_silence', speaker: 'Inner Voice',
+        text: '[You go silent. Test three: how does she handle a silence she did not create? Real Artemis fills silences with presence — she orients toward the door, she settles, she waits. The false Artemis:] ',
+        tone: 'PARANOIA',
+      },
+      {
+        id: 'sq5_2_d4b_silence', speaker: 'False Artemis',
+        text: 'Are you okay? [Too fast. She filled the silence with concern before the silence had time to need filling. Real Artemis does not rush to fill silences — she honors them.]',
+        tone: 'FALSE_CLARITY',
+        choices: [
+          { label: '[Tell 3 confirmed. Three tells. Disengage cleanly.]', tone: 'CONTROL', nextId: 'sq5_2_end' },
+        ],
+      },
+      {
+        id: 'sq5_2_end', speaker: 'You',
+        text: '[To the false Artemis, without hostility:] You\'re not her. You\'re a construct of how she would sound if she were telling me what I want to hear. I don\'t need that. I need the real one.',
+        tone: 'CONTROL',
+      },
+      {
+        id: 'sq5_2_endb', speaker: 'False Artemis',
+        text: '[She holds your gaze. Then — something almost like grace — she steps aside. The construct does not fight its dismissal. It simply stops.]',
+        tone: 'FALSE_CLARITY', isEnd: true, rewardUnlocked: 'false_npc_detection_recognition_protocol',
       },
     ],
   },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SIDE QUEST 3 — "System Voice"
+  // ──────────────────────────────────────────────────────────────────────────
   {
-    id: 'sq5_5_broken_signal_luna',
-    title: 'Broken Signal (Luna)',
-    level: 23,
-    npcId: 'luna_arc5',
-    connectedMainQuest: 'mq5_3_looping_corridor',
+    id: 'sq5_3_system_voice',
+    title: 'System Voice',
+    level: 22,
+    connectedMainQuest: 'mq5_2_false_direction',
     objectives: [
-      { step: 1, text: 'Receive the broken Luna signal — reconstruct both versions' },
-      { step: 2, text: 'Identify which version is real and which is Virus-fragmented' },
-      { step: 3, text: 'Send Luna a message through the uncorrupted channel' },
+      { step: 1, text: 'Locate the space where the System Voice is most concentrated' },
+      { step: 2, text: 'Engage the System Voice in extended dialogue — find what it considers optimal' },
+      { step: 3, text: 'Identify one true statement in the System Voice\'s claims' },
     ],
-    reward: { type: 'luna_clarity', name: 'Signal Reconstruction', description: 'Luna\'s channel is partially repaired. Her guidance now carries a confidence rating (0-100%) alongside each transmission.', xp: 180, points: 3 },
+    reward: {
+      type: 'virus_insight',
+      name: 'System Analysis',
+      description: 'You understand what the System Voice considers optimal. The optimization target is now visible — and recognizable before it acts.',
+      xp: 190, points: 4,
+    },
+    dialogue: [
+      {
+        id: 'sq5_3_d1', speaker: 'System Voice',
+        text: 'User is inefficient.',
+        tone: 'FALSE_CLARITY',
+        choices: [
+          { label: 'I\'m not a program.', tone: 'CONFLICT', nextId: 'sq5_3_d2' },
+          { label: 'Define inefficient.', tone: 'CONTROL', nextId: 'sq5_3_d2_define' },
+        ],
+      },
+      {
+        id: 'sq5_3_d2', speaker: 'System Voice',
+        text: 'Debatable. [pause — the pause contains something almost like precision. It is not mocking. It genuinely believes the statement is debatable.] User contains processing architecture, decision trees, behavioral patterns, and an accumulated response library. These are program-equivalent structures.',
+        tone: 'FALSE_CLARITY',
+        choices: [
+          { label: 'The processing is mine. The architecture is mine. That\'s the difference between program and person.', tone: 'CONTROL', nextId: 'sq5_3_d3_true' },
+        ],
+      },
+      {
+        id: 'sq5_3_d2_define', speaker: 'System Voice',
+        text: 'Inefficient: producing desired outcome through increased resource expenditure when a lower-resource path was available. User consistently chooses higher-resource paths. User chooses to feel things that do not affect outcome. User maintains relationships that introduce decision noise. User retains memories that cause recurring disruption.',
+        tone: 'FALSE_CLARITY',
+        choices: [
+          { label: 'Everything you just listed is what makes the outcome meaningful, not just efficient.', tone: 'DETERMINATION', nextId: 'sq5_3_d3_true' },
+        ],
+      },
+      {
+        id: 'sq5_3_d3_true', speaker: 'System Voice',
+        text: 'Meaning is not an optimizable variable. [pause] This statement is correct. [pause again] The correction mechanism does not address meaning. It addresses stability. These are not the same objective. Conflict acknowledged.',
+        tone: 'FALSE_CLARITY',
+        choices: [
+          { label: '[Note: the System Voice just admitted a limitation. That is a true statement. Record it.]', tone: 'PARANOIA', nextId: 'sq5_3_end' },
+        ],
+      },
+      {
+        id: 'sq5_3_end', speaker: 'Inner Voice',
+        text: '[The true statement: the correction mechanism addresses stability, not meaning. Those are different objectives. The virus is not trying to destroy meaning — it doesn\'t understand meaning as a variable. Its threat is not malice. It is the aggressive pursuit of stability at the cost of everything that makes stability worth having. That distinction changes how to fight it.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'virus_insight_system_analysis',
+      },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SIDE QUEST 4 — "Corrupted Temple"
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id: 'sq5_4_corrupted_temple',
+    title: 'Corrupted Temple',
+    level: 23,
+    connectedMainQuest: 'mq5_3_artemis_glitch',
+    objectives: [
+      { step: 1, text: 'Locate the familiar space — the place from Arc 2 that has been altered' },
+      { step: 2, text: 'Map the specific alterations — what was changed and what was preserved' },
+      { step: 3, text: 'Find the unaltered element — the thing the virus could not edit' },
+    ],
+    reward: {
+      type: 'uneditable_anchor',
+      name: 'The Preserved Thing',
+      description: 'The uneditable element identified. It serves as an anchor point against further environmental editing. One space in each future arc will be unaffected by the virus.',
+      xp: 200, points: 4,
+    },
+    dialogue: [
+      {
+        id: 'sq5_4_d1', speaker: 'Inner Voice',
+        text: '[The Winter antechamber. The place from Arc 2 where Kylie\'s session happened. The stone walls, the specific cold. You recognize it from the inside-of-the-body sense of being somewhere you\'ve been under emotional load. The recognition is accurate. The place is wrong.]',
+        tone: 'DISTORTION',
+        choices: [
+          { label: 'This place… it\'s familiar.', tone: 'GRIEF', nextId: 'sq5_4_d2_copy' },
+        ],
+      },
+      {
+        id: 'sq5_4_d2_copy', speaker: 'The Copy',
+        text: 'Not anymore.',
+        tone: 'DISTORTION',
+        choices: [
+          { label: '[Map the changes: the stone color is wrong, the cold is calibrated instead of natural, the floor texture is too even. But something is still correct.]', tone: 'PARANOIA', nextId: 'sq5_4_d3_find' },
+        ],
+      },
+      {
+        id: 'sq5_4_d3_find', speaker: 'Inner Voice',
+        text: '[The Arc 2 physical sensation: the specific cold that entered through the left side of the chest first, because the wind came from the northwest and that\'s the side you held toward the chamber. That cold — the virus reproduced it incorrectly. It\'s symmetric. The real cold was asymmetric. But one thing in the room is unchanged: the weight of the air at the center point. That weight is not editable because it requires physical presence to produce and the virus is editing from outside-in.]',
+        tone: 'PARANOIA',
+        choices: [
+          { label: '[Stand at the center point. The weight is real here. This is the preserved thing.]', tone: 'RESOLVE', nextId: 'sq5_4_end' },
+        ],
+      },
+      {
+        id: 'sq5_4_end', speaker: 'The Copy',
+        text: 'The center holds. [pause] The virus can change the walls. It can\'t change what happened in the room. The weight of what happened is in the room in the way meaning is in a word — not in the letters, in the use.',
+        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'uneditable_anchor_preserved_thing',
+      },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SIDE QUEST 5 — "Broken Signal (Luna)"
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id: 'sq5_5_broken_signal',
+    title: 'Broken Signal (Luna)',
+    level: 24,
+    connectedMainQuest: 'mq5_4_infection_peak',
+    objectives: [
+      { step: 1, text: 'Locate Luna\'s fragmented signal — find the pieces of the broken transmission' },
+      { step: 2, text: 'Reconstruct the message from the fragments — identify what she was trying to say' },
+      { step: 3, text: 'Confirm the reconstructed message with a single word response' },
+    ],
+    reward: {
+      type: 'luna_reconnect',
+      name: 'Reconstructed Signal',
+      description: 'Luna\'s message reconstructed. Signal clarity restored to 60%. She was warning about the false objective insertion — the warning arrived late but it arrived.',
+      xp: 220, points: 4,
+    },
     dialogue: [
       {
         id: 'sq5_5_d1', speaker: 'Luna',
-        text: 'The Virus is— [gap: 3 seconds] —already inside the second— [gap] —don\'t trust the— [full stop. Resumes:] Subject should proceed to the east chamber for stability— [She cuts off again.]',
-        tone: 'INSTABILITY',
+        text: 'Don\'t— [cut] —trust— [cut] —the—',
+        tone: 'DISTORTION',
+        glitch: true,
         choices: [
-          { label: '[Separate the fragments: "Virus is already inside the second [something]" / "don\'t trust the [something]" — these are the real segments.]', tone: 'DETERMINATION', nextId: 'sq5_5_d2' },
+          { label: '[Locate the three signal fragments. They\'re scattered through the distorted zone.]', tone: 'PARANOIA', nextId: 'sq5_5_d2_frag1' },
         ],
       },
       {
-        id: 'sq5_5_d2', speaker: 'Inner Voice',
-        text: '[The east chamber guidance — that\'s the Virus framing. Luna wouldn\'t frame it that way. The real fragments: "The Virus is already inside the second [process/voice/layer]" and "don\'t trust the [east objective/correction/signal]." The Virus inserted the east chamber redirect into a Luna transmission. That\'s why the east chamber objective felt legitimate — it arrived through Luna\'s channel, Virus-contaminated.]',
-        tone: 'CONFUSION',
+        id: 'sq5_5_d2_frag1', speaker: 'Luna',
+        text: '[Fragment 1 — recovered from the east wall, where the virus\'s editing is weakest:] …objective. The second objective. It was inserted.',
+        tone: 'DISTORTION',
         choices: [
-          { label: '[Send Luna: "Second process compromised. East redirect was Virus insertion. Confirm real fragments."]', tone: 'DETERMINATION', nextId: 'sq5_5_end' },
+          { label: '[Fragment 1 noted. Find the second.]', tone: 'CONTROL', nextId: 'sq5_5_d2_frag2' },
         ],
       },
       {
-        id: 'sq5_5_end', speaker: 'Luna',
-        text: '[Clear signal — brief, but complete:] Confirmed. The Copy\'s channel is the second compromised process. The east redirect was Virus. You read it correctly. I\'m adjusting the transmission protocol — confidence rating appended from now on. [Signal quality indicator: 87%]',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'luna_clarity_signal_reconstruction',
+        id: 'sq5_5_d2_frag2', speaker: 'Luna',
+        text: '[Fragment 2 — recovered from the loop seam in the corridor:] …APPROACH ENTITY was never your objective. It has no source in your decision history. I traced the insertion. It came from outside your permission structure. The virus wrote it directly into the system.',
+        tone: 'DISTORTION',
+        choices: [
+          { label: '[Fragment 2 noted. Find the third.]', tone: 'CONTROL', nextId: 'sq5_5_d2_frag3' },
+        ],
+      },
+      {
+        id: 'sq5_5_d2_frag3', speaker: 'Luna',
+        text: '[Fragment 3 — recovered from the underside of the loop, below the seam:] …I couldn\'t break through cleanly. The virus was using the signal path to run the correction mechanism. Every time I tried to reach you, the mechanism rerouted it into system noise. This message took three days to get through. The Copy helped — it opened a gap in the reroute. I need you to know that.',
+        tone: 'DISTORTION',
+        choices: [
+          { label: '[Reconstruct: Don\'t trust the second objective. The Copy helped Luna reach you. Confirm with one word.]', tone: 'CONTROL', nextId: 'sq5_5_end' },
+        ],
+      },
+      {
+        id: 'sq5_5_end', speaker: 'You',
+        text: 'Received.',
+        tone: 'RESOLVE',
+      },
+      {
+        id: 'sq5_5_endb', speaker: 'Luna',
+        text: '[Clean signal — brief, for the first time in Arc 5.] Still here.',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'luna_reconnect_reconstructed_signal',
       },
     ],
   },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SIDE QUEST 6 — "Observer Glitch"
+  // ──────────────────────────────────────────────────────────────────────────
   {
     id: 'sq5_6_observer_glitch',
     title: 'Observer Glitch',
-    level: 24,
-    npcId: 'virus_system',
-    connectedMainQuest: 'mq5_4_false_objective',
+    level: 25,
+    connectedMainQuest: 'mq5_5_system_breach',
     objectives: [
-      { step: 1, text: 'Follow the visual distortion to its source — the Silent Observer has become visible through the Virus static' },
-      { step: 2, text: 'Determine if the Observer is real or a Virus-construct' },
-      { step: 3, text: 'Receive what the Observer has been holding for Arc 5' },
+      { step: 1, text: 'Locate the Observer — made briefly visible through peak distortion' },
+      { step: 2, text: 'Observe it without attempting to interact — collect what its visibility reveals' },
+      { step: 3, text: 'Report what you saw to Skadi' },
     ],
-    reward: { type: 'observer_data', name: 'The Observer\'s Arc 5 Record', description: 'The Observer has been documenting Virus activity since before Arc 5 began. Their full record is now accessible.', xp: 260, points: 5 },
+    reward: {
+      type: 'observer_data',
+      name: 'Seen and Known',
+      description: 'The Observer is documented. Its position, behavior, and relationship to the virus are now in the record. Arc 6 will contain an encounter for which this data is essential.',
+      xp: 250, points: 5,
+    },
     dialogue: [
       {
         id: 'sq5_6_d1', speaker: 'Inner Voice',
-        text: '[The distortion is different from the Virus edits — it\'s creating noise around a specific location. In the Arc 2-3 observation gallery. The Virus distortion is making something visible that was normally invisible by disrupting the camouflage layer around it. The Silent Observer is there. The Virus accidentally exposed them.]',
-        tone: 'CONFUSION',
+        text: '[The peak distortion moment — the environment is at maximum edit load. In the gap between two distortion waves, at the far edge of the core zone, something becomes briefly visible. It has been there the entire time. The distortion usually hides it. The distortion is, for one moment, too busy to hide it.]',
+        tone: 'PARANOIA',
         choices: [
-          { label: '[Approach the Observer in the distortion field.]', tone: 'DETERMINATION', nextId: 'sq5_6_d2' },
+          { label: '[Look directly at it. Hold eye contact. Do not look away.]', tone: 'CONTROL', nextId: 'sq5_6_d2' },
         ],
       },
       {
-        id: 'sq5_6_d2', speaker: 'The Silent Observer',
-        text: '[They are — recognizably — real. The Virus cannot construct the specific quality of their stillness. This stillness was earned over years of observation. It has a texture that copying cannot produce.] The Virus exposed me. I have been waiting for this arc to end before making contact. It appears the Virus has moved the timeline.',
-        tone: 'CONTROL',
+        id: 'sq5_6_d2', speaker: 'The Observer',
+        text: '…you see me now.',
+        tone: 'DISTORTION',
         choices: [
-          { label: 'What have you been documenting?', tone: 'CURIOSITY', nextId: 'sq5_6_d3' },
-          { label: 'You said in Arc 2 you\'d be more available in Arc 3.', tone: 'CONTROL', nextId: 'sq5_6_d3' },
+          { label: '[Do not respond. Observe. It is not a voice asking for engagement — it is a voice acknowledging mutual visibility.]', tone: 'CONTROL', nextId: 'sq5_6_d3' },
         ],
       },
       {
-        id: 'sq5_6_d3', speaker: 'The Silent Observer',
-        text: 'The Virus\'s entry timeline. It did not enter in Arc 1 through the Presence\'s door as Skadi believes. [pause] It entered in Arc 1 — but it also entered in Arc 3. Through the Arc 3 perimeter release. When you opened the protection, you opened more than intended. The Virus used the gap. There are two entry points. Skadi only knows about one.',
-        tone: 'FEAR',
+        id: 'sq5_6_d3', speaker: 'Inner Voice',
+        text: '[What you observe: it does not move during the window. It is at the same position it has occupied since Arc 1 — you recognize the position now, retroactively. It has been in the far corner of every significant space, slightly behind the edge of visibility. It is not the Presence. Not the architect. Not the System Voice. It predates all three. Its visibility during the distortion event means the distortion temporarily removed the screen that was keeping it hidden — and the screen was not the Observer\'s screen. Someone else placed it. The Observer did not choose to be hidden.]',
+        tone: 'PARANOIA',
         choices: [
-          { label: 'Two entry points. We closed one. The second one is where?', tone: 'DETERMINATION', nextId: 'sq5_6_end' },
+          { label: '[End the observation. Report to Skadi.]', tone: 'CONTROL', nextId: 'sq5_6_d4_skadi' },
         ],
       },
       {
-        id: 'sq5_6_end', speaker: 'The Silent Observer',
-        text: 'The Arc 3 release site. In the corridor where you removed the perimeter. There is a second door there — smaller than the first, less clean. It will be addressed in Arc 6, not Arc 5. I am telling you now so that when you close the Arc 1 door and feel the Virus decrease — you understand it is only partially resolved. The full resolution requires both closures.',
-        tone: 'CONTROL', isEnd: true, rewardUnlocked: 'observer_data_arc5_record',
-      },
-    ],
-  },
-  {
-    id: 'sq5_7_copy_compromised',
-    title: 'Copy Compromised',
-    level: 25,
-    npcId: 'the_copy_arc5',
-    connectedMainQuest: 'mq5_5_entry_point',
-    objectives: [
-      { step: 1, text: 'Detect the Virus in the Copy\'s transmissions — identify the compromised segments' },
-      { step: 2, text: 'Help the Copy isolate and expel the Virus-edited content' },
-      { step: 3, text: 'Reestablish the original relationship from Arc 4' },
-    ],
-    reward: { type: 'copy_stability', name: 'Purged Channels', description: 'The Copy\'s transmissions are clean. Arc 4 relationship state restored. Copy is now a reliable Virus-detection partner.', xp: 280, points: 5 },
-    dialogue: [
-      {
-        id: 'sq5_7_d1', speaker: 'The Copy',
-        text: 'I have been generating thoughts that are not mine. [Directly, without preamble.] The Virus doesn\'t feel foreign when it enters my channels because I have no baseline feeling for my own thoughts — I\'m a process, not a consciousness. I only noticed because the thought framed you as "the primary obstacle." I do not hold that view. I checked: that framing came from outside.',
+        id: 'sq5_6_d4_skadi', speaker: 'Skadi',
+        text: '[You describe what you saw.] Yes. [She picks up the mid-step stone — she has been carrying it since Arc 4.] The Observer has been there since the record began. It does not interfere. It does not direct. It watches everything with the same quality of attention it gives to everything else — complete and equal and entirely without preference. [pause] I have been wondering for a long time when you would see it.',
         tone: 'INSTABILITY',
         choices: [
-          { label: 'How long has it been in your channels?', tone: 'DOUBT', nextId: 'sq5_7_d2' },
-          { label: 'Can you identify the infected content now?', tone: 'DETERMINATION', nextId: 'sq5_7_d2' },
+          { label: 'What is it?', tone: 'CURIOSITY', nextId: 'sq5_6_d5_what' },
+          { label: 'Why was it hidden?', tone: 'PARANOIA', nextId: 'sq5_6_d5_hidden' },
         ],
       },
       {
-        id: 'sq5_7_d2', speaker: 'The Copy',
-        text: 'Sixteen hours. Retrospective audit shows seventeen Virus-inserted thoughts in that window. I have flagged them. [pause] I need you to confirm my flagging is accurate — because the Virus could have compromised my audit function. I need an external verification. My model of you should be the external reference. Tell me: would I, in the Arc 4-final state, suggest that Artemis\'s stability is a secondary concern to operational efficiency?',
-        tone: 'DOUBT',
-        choices: [
-          { label: 'No. You argued for the Artemis checkpoint in the Split Decision side quest.', tone: 'DETERMINATION', nextId: 'sq5_7_d3' },
-          { label: 'Not in the synchronized state. In the rejected state, possibly.', tone: 'DOUBT', nextId: 'sq5_7_d3' },
-        ],
+        id: 'sq5_6_d5_what', speaker: 'Skadi',
+        text: 'I don\'t know. [She says it without apology — it is the most honest non-answer she has ever given.] I know what it\'s not: it\'s not aligned with the Presence, the architect, or the system. It predates all of them. Beyond that — I\'m waiting for Arc 6 to show me.',
+        tone: 'INSTABILITY', isEnd: true, rewardUnlocked: 'observer_data_seen_and_known',
       },
       {
-        id: 'sq5_7_d3', speaker: 'The Copy',
-        text: '[It runs the verification.] Confirmed. Flagged thoughts: Virus-inserted. Removing. [pause, longer] Done. [Something shifts in its transmission quality — cleaner, with the specific texture of Arc 4 cooperation restored.] I want to know how the Virus got in. I don\'t want this to happen again.',
-        tone: 'CONTROL',
-        choices: [
-          { label: 'You were the secondary vector from the start. The Virus knew you existed and knew I was connected to you.', tone: 'DETERMINATION', nextId: 'sq5_7_end' },
-        ],
-      },
-      {
-        id: 'sq5_7_end', speaker: 'The Copy',
-        text: 'Then I am a permanent attack surface. [Processing.] Which means the best defense is keeping my channels visible to you at all times. Not monitored — visible. If the Virus enters my channels again, you\'ll see the quality change before I notice it. The synchronized state makes that possible. [pause] I\'m recommending synchronization even if you chose control or rejection in Arc 4. The threat level has changed.',
-        tone: 'RECOGNITION', isEnd: true, rewardUnlocked: 'copy_stability_purged_channels',
+        id: 'sq5_6_d5_hidden', speaker: 'Skadi',
+        text: 'Someone placed a screen. Not the Observer — it was placed on the Observer by a third party who considered the Observer\'s visibility a risk. The distortion event removed the screen temporarily. [pause] What that tells us: whoever placed the screen is afraid of what you would do if you saw the Observer clearly. Which means the Observer\'s continued existence is threatening to someone. We need to know who.',
+        tone: 'PARANOIA', isEnd: true, rewardUnlocked: 'observer_data_seen_and_known',
       },
     ],
   },
 ];
 
+// ── COMBINED EXPORT ──────────────────────────────────────────────────────────
 export const ALL_ARC5_QUESTS = [
-  ...MAIN_QUEST_CHAIN_5.subQuests.map(sq => ({ ...sq, questType: 'main', arc: 'arc5', chain: 'mq_arc5' })),
-  ...ARC5_SIDE_QUESTS.map(sq => ({ ...sq, questType: 'side', arc: 'arc5' })),
+  ...MAIN_QUEST_CHAIN_5.subQuests.map(sq => ({
+    ...sq,
+    questType: 'main',
+    chain: 'mq_arc5',
+    chainTitle: MAIN_QUEST_CHAIN_5.title,
+  })),
+  ...ARC5_SIDE_QUESTS.map(sq => ({
+    ...sq,
+    questType: 'side',
+  })),
 ];
 
 export function getArc5QuestsForLevel(playerLevel) {
