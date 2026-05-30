@@ -22,6 +22,7 @@ export const WEAPONS = [
   { id: 'bow',          name: 'Bow',          icon: '🏹' },
   { id: 'sword',        name: 'Sword',        icon: '⚔️' },
   { id: 'dual_blades',  name: 'Dual Blades',  icon: '🗡️' },
+  { id: 'sky',          name: 'Sky',          icon: '🌌' },
 ];
 
 // Per-stat synergy map. For each stat, list the weapons that scale with it
@@ -40,6 +41,12 @@ export const STAT_SYNERGY = {
   focus: [],
   constitution: [
     { weaponId: 'sword',       tier: 'B' },
+  ],
+  focus: [
+    { weaponId: 'sky',         tier: 'S' },
+  ],
+  intelligence: [
+    { weaponId: 'sky',         tier: 'A' },
   ],
 };
 
@@ -123,6 +130,27 @@ export const WEAPON_TREES = {
           { id: 'db_shadow',       name: 'Shadow Step',     unlockLevel: 3,  icon: '🌑' },
           { id: 'db_bleed',        name: 'Bleeding Edge',   unlockLevel: 8,  icon: '🩸' },
           { id: 'db_silence',      name: 'Silent Kill',     unlockLevel: 15, icon: '☠️' },
+        ],
+      },
+    ],
+  },
+  sky: {
+    branches: [
+      {
+        id: 'celestial', name: 'Celestial', color: '#818cf8',
+        abilities: [
+          { id: 'sky_ascend',      name: 'Ascend',          unlockLevel: 1,  icon: '🌌' },
+          { id: 'sky_starfall',    name: 'Starfall',        unlockLevel: 5,  icon: '⭐' },
+          { id: 'sky_voidstrike',  name: 'Void Strike',     unlockLevel: 10, icon: '🌠' },
+          { id: 'sky_ultimate',    name: 'Cosmic Collapse', unlockLevel: 20, icon: '💫' },
+        ],
+      },
+      {
+        id: 'stormcaller', name: 'Stormcaller', color: '#38bdf8',
+        abilities: [
+          { id: 'sky_gust',        name: 'Gust Slash',      unlockLevel: 3,  icon: '💨' },
+          { id: 'sky_lightning',   name: 'Sky Lightning',   unlockLevel: 8,  icon: '⚡' },
+          { id: 'sky_tempest',     name: 'Heaven\'s Wrath', unlockLevel: 15, icon: '🌩️' },
         ],
       },
     ],

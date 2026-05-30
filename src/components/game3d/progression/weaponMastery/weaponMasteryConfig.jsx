@@ -15,6 +15,7 @@ export const WEAPON_TYPES = {
   GUARDIAN: 'guardian',
   RANGED: 'ranged',
   FISTS: 'fists',
+  SKY: 'sky',
 };
 
 // Map any existing weapon instance id → canonical type.
@@ -28,6 +29,7 @@ const WEAPON_TYPE_MAP = {
   ranged: WEAPON_TYPES.RANGED,
   fists: WEAPON_TYPES.FISTS,
   brawler: WEAPON_TYPES.FISTS,
+  sky: WEAPON_TYPES.SKY,
 };
 
 export function resolveWeaponType(weaponInstanceId) {
@@ -77,6 +79,11 @@ export const WEAPON_IDENTITY_AT_MAX = {
     chainCap:               5,
     momentumWindowSec:      2.5,  // recent hits expire after this window
   },
+  [WEAPON_TYPES.SKY]: {
+    extraElementalDmgPct:   20,   // +20% elemental damage on top of global
+    aerialBonusPct:         15,   // +15% damage when airborne / vs airborne
+    cooldownReductionPct:   10,   // -10% ability cooldowns
+  },
 };
 
 // ─── Milestone Passives ──────────────────────────────────────────────────
@@ -121,6 +128,15 @@ export const MILESTONE_PASSIVES = {
     50:  { id: 'pressure_point',    name: 'Pressure Point',    desc: 'Every 5th hit is a guaranteed crit', mod: { everyNthCrit: 5 } },
     75:  { id: 'inner_fire',        name: 'Inner Fire',        desc: 'Momentum window +1.5s', mod: { momentumWindowAddSec: 1.5 } },
     100: { id: 'transcendent_form', name: 'Transcendent Form', desc: '+30% damage at full chain', mod: { fullChainDmgPct: 30 } },
+  },
+  [WEAPON_TYPES.SKY]: {
+    5:   { id: 'sky_flow',          name: 'Sky Flow',          desc: '+8% elemental damage', mod: { elementalDmgPct: 8 } },
+    10:  { id: 'aerial_grace',      name: 'Aerial Grace',      desc: '-10% ability cooldowns', mod: { cdrPct: 10 } },
+    20:  { id: 'celestial_edge',    name: 'Celestial Edge',    desc: '+15% damage vs airborne enemies', mod: { aerialDmgPct: 15 } },
+    35:  { id: 'void_resonance',    name: 'Void Resonance',    desc: 'Abilities leave a 3s lingering damage field', mod: { lingerDmgSec: 3 } },
+    50:  { id: 'star_touched',      name: 'Star Touched',      desc: '+20% crit damage for sky abilities', mod: { skyCritDmgPct: 20 } },
+    75:  { id: 'cosmic_will',       name: 'Cosmic Will',       desc: 'Cooldowns reset on kill', mod: { cdrOnKill: true } },
+    100: { id: 'ascendant',         name: 'Ascendant',         desc: '+25% all damage permanently', mod: { damageMultPct: 25 } },
   },
 };
 
