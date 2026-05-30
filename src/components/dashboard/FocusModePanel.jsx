@@ -37,7 +37,6 @@ import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
 import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
-import AIAvatarHomeScreen from './AIAvatarHomeScreen';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1814,10 +1813,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* AI Avatar Home — Immersive Command Center */}
-              <div className="relative mt-3">
-                <AIAvatarHomeScreen />
-              </div>
+              {/* AI Avatar Home — intentionally blank */}
+              <div className="relative mt-3" style={{ height: '512px' }} />
 
               {/* DevSpotlightRibbon removed from here, moved to root of FocusModePanel */}
 
