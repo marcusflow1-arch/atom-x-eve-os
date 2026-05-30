@@ -863,8 +863,9 @@ export default function GameWorld3D() {
       keys.current[k] = false;
       if (k === 'c') crouchTogglePressed.current = false;
     };
+    const rightDragMoved = { current: false };
     const onMouseDown = (e) => {
-      // Left click + hold = rotate camera, middle click = Lock-On, right click = Block
+      // Left click = attack, middle click = Lock-On, right click = camera drag (+ block if no drag)
       if (e.button === 0) {
         rangedClickAttackPressed.current = true;
         attackPressed.current = true;
@@ -873,17 +874,31 @@ export default function GameWorld3D() {
         e.preventDefault();
         const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
         lockOnTargetRef.current = target && lockOnTargetRef.current?.id !== target.id ? target : null;
-      } else {
-        playerStateMachine.setIntent({ blockHeld: true });
-        playerAnim?.setBlocking(true);
+      } else if (e.button === 2) {
+        // Start camera drag on right-click
+        drag.current.active = true;
+        drag.current.x = e.clientX;
+        drag.current.y = e.clientY;
+        rightDragMoved.current = false;
+        e.preventDefault();
       }
     };
     const onMouseUp = (e) => {
       if (e.button === 2) {
-        playerStateMachine.setIntent({ blockHeld: false });
-        playerAnim?.setBlocking(false);
+        drag.current.active = false;
+        // Only activate block if right-click was a tap (no drag movement)
+        if (!rightDragMoved.current) {
+          playerStateMachine.setIntent({ blockHeld: true });
+          playerAnim?.setBlocking(true);
+          setTimeout(() => {
+            playerStateMachine.setIntent({ blockHeld: false });
+            playerAnim?.setBlocking(false);
+          }, 150);
+        }
+        rightDragMoved.current = false;
+      } else {
+        drag.current.active = false;
       }
-      drag.current.active = false;
     };
     const onMouseMove = (e) => {
       if (!drag.current.active) return;
@@ -891,6 +906,7 @@ export default function GameWorld3D() {
       const dy = e.clientY - drag.current.y;
       drag.current.x = e.clientX;
       drag.current.y = e.clientY;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) rightDragMoved.current = true;
       orbit.current.yaw -= dx * 0.005;
       orbit.current.pitch = Math.max(0.1, Math.min(Math.PI / 2.2, orbit.current.pitch + dy * 0.005));
     };
