@@ -1262,31 +1262,17 @@ export function LibraryBannerSection({
               />
             </div>
 
-            {/* ── PS5 Presence Bar: Memories | divider | Friend Slots | Home | Globe ── */}
-            <div
-              className="flex items-center gap-3 h-full px-4 rounded-2xl flex-shrink-0"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                backdropFilter: 'blur(16px)',
-              }}
-            >
+            {/* ── Presence Bar: Memories | divider | Friend Slots | Home | Globe ── */}
+            <div className="flex flex-shrink-0 items-center gap-2 h-full">
               {/* Memories */}
               <button
                 onClick={() => setShowMemoriesDrawer(true)}
-                className="flex flex-col items-center justify-center gap-1 group transition-all"
+                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider transition-colors flex flex-col items-center justify-center gap-0.5"
               >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
-                >
-                  <span className="text-lg leading-none">📷</span>
-                </div>
-                <span className="text-[8px] text-white/35 uppercase tracking-widest group-hover:text-white/60 transition-colors">Memories</span>
+                <span className="text-xl leading-none">📷</span>
+                <span className="leading-none">Memories</span>
               </button>
-
-              {/* Divider */}
-              <div className="w-px h-10 bg-white/8 flex-shrink-0 mx-1" />
+              <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
 
               {/* Online Friends */}
               {(onlineFriends || []).filter(Boolean).map((friend) => (
@@ -1302,37 +1288,18 @@ export function LibraryBannerSection({
                 </div>
               ))}
 
-              {/* PS5-style empty friend slots */}
+              {/* Empty friend slots */}
               {[...Array(emptySlots)].map((_, i) => (
                 <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <div
-                    className="w-16 h-16 rounded-xl flex items-center justify-center transition-all hover:border-white/20 hover:bg-white/5 cursor-pointer group"
-                    style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px dashed rgba(255,255,255,0.10)',
-                    }}
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
-                    >
-                      <Plus className="w-3 h-3 text-white/30 group-hover:text-white/60 transition-colors" />
-                    </div>
-                  </div>
-                  <span className="text-[7px] text-white/20 uppercase tracking-widest">Invite</span>
+                  <Plus className="w-3.5 h-3.5 text-white" />
+                  <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
                 </div>
               ))}
 
-              {/* Divider */}
-              <div className="w-px h-10 bg-white/8 flex-shrink-0 mx-1" />
-
-              {/* Home */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="flex-shrink-0 ml-2">
                 <HomeReference onClick={handleHomeClick} />
               </div>
-
-              {/* Globe / Online Users */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="flex-shrink-0 ml-2 flex items-center justify-center">
                 <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
               </div>
             </div>
