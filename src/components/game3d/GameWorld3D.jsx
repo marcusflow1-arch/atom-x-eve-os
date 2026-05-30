@@ -1916,7 +1916,7 @@ export default function GameWorld3D() {
 
       {/* Dialogue box */}
       {activeDialogue && (
-        <div className="absolute left-1/2 bottom-8 -translate-x-1/2 w-[600px] max-w-[90%] rounded-xl bg-black/80 backdrop-blur-md border border-cyan-400/40 p-5">
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-[160px] w-[600px] max-w-[90%] rounded-xl bg-black/80 backdrop-blur-md border border-cyan-400/40 p-5 z-[9999]">
           <div className="text-cyan-300 font-bold text-sm tracking-wider uppercase mb-2">{activeDialogue.name}</div>
           <div className="text-white/90 text-sm leading-relaxed mb-3">{activeDialogue.text}</div>
           <button
