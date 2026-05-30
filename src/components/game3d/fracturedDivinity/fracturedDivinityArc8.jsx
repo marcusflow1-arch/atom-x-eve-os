@@ -2,1000 +2,769 @@
 // FRACTURED DIVINITY — Arc 8: "Betrayal of the Divine"
 // Quest chain: Levels 36–40
 // Main Quest 8: "God's Silence" (5 sub-quests) + 6 Side Quests
-// Tone: confrontational, philosophical, emotionally heavy
-// Theme: truth vs belief, abandonment, authority, meaning
-// Tone tags: SILENCE | CONFRONTATION | PHILOSOPHY | GRIEF | AUTONOMY | MEANING
+// Tone tags: CONFRONTATIONAL | PHILOSOPHICAL | GRIEF | AUTHORITY | AUTONOMY | SILENCE
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ARC8_NPCS = [
   {
     id: 'the_presence_arc8',
     name: 'The Presence',
-    description: 'Now fully visible — or as visible as it chooses to be. It does not attack. It answers in the specific way that makes you construct your own answers from what it gives you. Not manipulative. Just fundamentally, structurally unable to give you what you need directly.',
-    tint: 0xfaf0e0,
+    description: 'Changed since Arc 1. It was hungry then — it wanted to know you. Now it is something else. Not indifferent. Waiting. As if seven arcs have produced in it the same accumulation they produced in you, and it arrived at the same place from the other direction.',
+    tint: 0x2a1a0a,
   },
   {
     id: 'artemis_arc8',
     name: 'Artemis',
-    description: 'Angrier in Arc 8 than in any previous arc. The silence of the divine is a specific offense to her — she built her world around the relationship with you, and the fact that a presence could have intervened at any point and chose not to is something she processes loudly.',
+    description: 'Herself. Fully herself — the loop did not diminish her, she came through it with the instinct intact and the detail reconstructed from the fragments you kept. She is the Artemis from eight arcs of parallel experience.',
     tint: 0x1a1a3a,
   },
   {
-    id: 'the_copy_arc8',
+    id: 'copy_arc8',
     name: 'The Copy',
-    description: 'More analytical than emotional about the divine silence. It approaches the Presence with the same framework it used on the Virus — not as a philosophical entity but as a system with describable properties. This is useful and occasionally misses the point.',
-    tint: 0x2a1a2a,
-  },
-  {
-    id: 'luna_arc8',
-    name: 'Luna',
-    description: 'More present in Arc 8 than she\'s been since Arc 1. The divine silence is the subject she was built to help navigate. Her guidance is careful, specific, and does not pretend to have the answer.',
-    tint: 0x1a2a3a,
+    description: 'Analytical. The confrontation with the Presence is the context in which the Copy is most useful — it can hold philosophical positions without the emotional weight that makes the player unstable. And least useful — it can hold positions without the emotional weight that makes them true.',
+    tint: 0x2a2a3a,
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MAIN QUEST 8 — "God's Silence"
-// ═══════════════════════════════════════════════════════════════════════════════
 export const MAIN_QUEST_CHAIN_8 = {
   id: 'mq_arc8',
   title: "God's Silence",
   arc: 'Arc 8: Betrayal of the Divine',
-  description: 'The most difficult arc is not the one where something attacks you. It is the one where something that could have intervened at every stage simply observed. The Presence has been present since before Arc 1. It watched the interference, the lock, the copy mechanism, the virus, the sanctuary, the judgment loop. It did not intervene. The question Arc 8 builds to is not "why didn\'t you help?" That question has a hundred possible answers. The question is: "What do I do with the fact that you didn\'t?"',
+  description: 'After breaking the loop: silence. Real silence — the kind that is not constructed, not designed, not weighted. Just the absence of everything that was pressing against you for seven arcs. And then, in the middle of that absence, something that has been waiting.',
   subQuests: [
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 1 — "The Silence"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq8_1_the_silence',
       title: 'The Silence',
       level: 36,
       npcId: 'the_presence_arc8',
       narrativeSetup: `
-        After breaking the Judgment Loop, the world stabilizes — genuinely, this time.
-        Not the False Peace's managed stability. Not the Loop's enforced repetition.
-        Real stabilization: variable, imperfect, with the ambient drift
-        that real environments have.
-        Something is missing, though. The system voices are gone.
-        The loop mechanism is gone. The figure and its sanctuary are gone.
-        No external interference. No virus edits. No pattern repetition.
-        Just: silence.
-        Not the silence of absence. The silence of presence that has chosen not to speak.
-        Something has been here the entire time. Eight arcs of being here.
-        You have never felt it more clearly than now, in the quiet,
-        because there is nothing else to feel.
+        The interference is gone. The System Voice has receded.
+        The false peace's enforcement mechanism is behind you.
+        For the first time since Arc 1, nothing is acting on you.
+        That absence is almost physical — the way pressure is physical,
+        and its removal leaves something that is not yet comfort, just space.
+        Artemis: "…Or it's waiting."
+        You stand in the space and call out.
+        Something answers. Not loudly. Not dramatically.
+        The way a presence makes itself known when you've finally stopped
+        making enough noise to miss it.
       `,
       objectives: [
-        { step: 1, text: 'Explore the genuinely stabilized environment — catalog what is real' },
-        { step: 2, text: 'Speak into the silence — call out without knowing what will answer' },
-        { step: 3, text: 'Wait for the response — the waiting itself is the arc mechanic' },
-        { step: 4, text: 'Receive the first presence-contact' },
+        { step: 1, text: 'Explore the empty zone — document that it is genuinely empty, not constructed quiet' },
+        { step: 2, text: 'Call out — use three approaches before the Presence responds' },
+        { step: 3, text: 'Receive the first contact — it is not threatening' },
+        { step: 4, text: 'Establish what kind of entity this is — whether it is the Presence from Arc 1 or something else' },
       ],
-      reward: {
-        type: 'presence_contact',
-        name: 'The Presence Acknowledged',
-        description: 'First contact established with the Presence in its unmediated form. Arc 8 communication channel open.',
-        xp: 200, points: 4,
-      },
+      reward: { type: 'presence_contact', name: 'First Contact', description: 'The Presence has responded. It is the same entity from Arc 1, changed by seven arcs. The encounter context is established.', xp: 250, points: 5 },
       dialogue: [
         {
-          id: 'mq8_1_d1_quiet',
-          speaker: 'Artemis',
-          text: '...It\'s gone. [She says it with the specific tone of someone assessing a room after a long party — the silence after the noise is its own kind of presence.] The System Voice. The loop. The Figure. All of it. [pause] It feels different from the False Peace. This feels — actually empty. Not managed.',
+          id: 'mq8_1_d1', speaker: 'Player',
+          text: '…It\'s gone.',
           tone: 'SILENCE',
+          choices: [{ label: '[Artemis:] …Or it\'s waiting.', tone: 'PHILOSOPHICAL', nextId: 'mq8_1_d2' }],
+        },
+        {
+          id: 'mq8_1_d2', speaker: 'Player',
+          text: 'If something\'s there — show yourself!',
+          tone: 'CONFRONTATIONAL',
           choices: [
-            { label: '...Or it\'s waiting.', tone: 'DOUBT', nextId: 'mq8_1_d2_waiting' },
+            { label: 'Answer me!', tone: 'CONFRONTATIONAL', nextId: 'mq8_1_d3_demand' },
+            { label: '[Stay silent. Wait.]', tone: 'SILENCE', nextId: 'mq8_1_d3_wait' },
+            { label: 'I know you\'re there.', tone: 'AUTHORITY', nextId: 'mq8_1_d3_know' },
           ],
         },
         {
-          id: 'mq8_1_d2_waiting',
-          speaker: 'Artemis',
-          text: '[She considers this. Then she looks at you with the expression that means she agrees but doesn\'t want to.] That\'s worse, isn\'t it. If it\'s waiting — then there\'s something here that chose to wait. Which means it chose to not say anything for eight arcs. [pause] I\'m already angry and it hasn\'t even appeared yet.',
-          tone: 'CONFRONTATION',
-          choices: [
-            { label: '[Call out. Directly. Into the silence.]', tone: 'DETERMINATION', nextId: 'mq8_1_d3_call' },
-          ],
+          id: 'mq8_1_d3_demand', speaker: 'Inner Voice',
+          text: '[An echo. Not a voice — an echo of your voice, returned with a different quality. As if the space around you is briefly alive. The echo arrives: "…there…" Not a response. The space hearing itself.]',
+          tone: 'CONFUSION',
+          choices: [{ label: '[The Copy:] This isn\'t absence.', tone: 'AWAKENING', nextId: 'mq8_1_d4' }],
         },
         {
-          id: 'mq8_1_d3_call',
-          speaker: 'You',
-          text: 'If something\'s there — show yourself.',
-          tone: 'CONFRONTATION',
-          choices: [
-            { label: 'Answer me!', tone: 'CONFRONTATION', nextId: 'mq8_1_d4_shout' },
-            { label: '[Stay silent. Wait. The waiting is the choice.]', tone: 'DETERMINATION', nextId: 'mq8_1_d4_wait' },
-            { label: 'I know you\'re there.', tone: 'CONTROL', nextId: 'mq8_1_d4_know' },
-          ],
-        },
-        {
-          id: 'mq8_1_d4_shout',
-          speaker: 'Inner Voice',
-          text: '[An echo returns from somewhere — not the walls, not the environment. From the presence itself. The echo is distorted but decipherable. Two syllables: "...there..." The word from inside the silence. Not an answer. An acknowledgment that there is something to answer.] [The Copy:] This isn\'t absence.',
+          id: 'mq8_1_d3_wait', speaker: 'Inner Voice',
+          text: '[Nothing happens for longer than any silence in the previous seven arcs. Not thirty seconds — minutes. Real nothing. And then, at the edge of the silence, not a sound but a quality: a shift in the attention of the space. Something became aware of your awareness.]',
           tone: 'SILENCE',
-          choices: [{ label: '[Wait. The echo means it can speak. Give it time to choose to speak more.]', tone: 'DETERMINATION', nextId: 'mq8_1_d5_presence' }],
+          choices: [{ label: '[Artemis:] …It feels intentional.', tone: 'PHILOSOPHICAL', nextId: 'mq8_1_d4' }],
         },
         {
-          id: 'mq8_1_d4_wait',
-          speaker: 'Inner Voice',
-          text: '[Nothing happens longer than expected. The Copy, beside you, settles into the waiting alongside you — a thing the Copy has never done before, in any arc. Waiting alongside rather than filling the gap. Then: a low vibration. Environmental resonance that doesn\'t match the ambient sound profile. Something is responding to the waiting by creating a frequency. The frequency is warm. Body-knowledge warm.]',
-          tone: 'SILENCE',
-          mechanic: 'presence_resonance',
-          choices: [{ label: '[Follow the resonance. Walk toward it.]', tone: 'DETERMINATION', nextId: 'mq8_1_d5_presence' }],
+          id: 'mq8_1_d3_know', speaker: 'Inner Voice',
+          text: '[A low vibration — not sound, a felt resonance. As if the architecture of the space confirmed your assessment by registering it. Not communication yet. Acknowledgment of being known.]',
+          tone: 'RECOGNITION',
+          choices: [{ label: '[The Copy:] This isn\'t absence.', tone: 'AWAKENING', nextId: 'mq8_1_d4' }],
         },
         {
-          id: 'mq8_1_d4_know',
-          speaker: 'Inner Voice',
-          text: '[The specific quality of the silence changes. Not a sound — a pressure. Like a room changing temperature. The presence, shifting its weight toward the conversation.] [Artemis, quiet:] "It feels intentional." [The Copy:] "This isn\'t absence."',
-          tone: 'SILENCE',
-          choices: [{ label: '[Hold the pressure. Let it become a presence.]', tone: 'DETERMINATION', nextId: 'mq8_1_d5_presence' }],
+          id: 'mq8_1_d4', speaker: 'The Copy',
+          text: 'This isn\'t absence. Absence feels like nothing. This feels like something that chose to stop. There\'s a difference between empty and held-quiet.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: '[Wait for the direct contact.]', tone: 'SILENCE', nextId: 'mq8_1_d5' }],
         },
         {
-          id: 'mq8_1_d5_presence',
-          speaker: 'Unknown Voice',
-          text: '[Clear. Calm. Not the System Voice, not the loop voice, not the Figure\'s managed warmth. Something older. The quality of a voice that has been speaking for a very long time and has learned to speak only when it has something to say.] ...You called.',
-          tone: 'SILENCE',
-          isEnd: true,
-          rewardUnlocked: 'presence_contact_acknowledged',
+          id: 'mq8_1_d5', speaker: 'Unknown Voice',
+          text: '…You called.',
+          tone: 'AUTHORITY',
+          choices: [{ label: 'I\'ve been calling for eight arcs.', tone: 'CONFRONTATIONAL', nextId: 'mq8_1_end' }],
+        },
+        {
+          id: 'mq8_1_end', speaker: 'Unknown Voice',
+          text: 'I know. [pause — not the System Voice\'s processing pause. A human pause. The kind that contains something.] I was here for all of them.',
+          tone: 'SILENCE', isEnd: true, rewardUnlocked: 'presence_contact_first_contact',
         },
       ],
       narrativeHook: `
-        You called and something answered.
-        Artemis: "Is that it? Is that the thing that was here the whole time?"
-        The presence doesn't answer that. Which is the first data point.
-        The Copy: "It answers 'you called.' It doesn't answer whether it was here.
-        That selective answering is systematic — it responds to what you can verify
-        and declines what it would have to claim."
-        Luna's signal: "That's the Presence. Arc 1 Presence.
-        The one that created the conditions for everything that followed.
-        It didn't do any of the subsequent arcs to you.
-        But it left the door that everything else walked through.
-        That distinction matters and also isn't absolution."
+        "I was here for all of them."
+        You stand with that sentence.
+        Artemis: "It was here. For everything. Arc 1 to 7."
+        The Copy: "Which raises the question the arc is named after."
+        The question is not complicated in its structure. It is complicated in its weight:
+        If it was here for all of it — the interference, the Severing, the Copy's creation,
+        the false peace, the loop — and it did nothing —
+        then what is it?
+        And what does that make you, standing here with eight arcs of
+        accumulated cost between you and the first arc where it was already present?
+        The answer, whatever it is, will not be comfortable.
+        Arc 8 is not about finding peace with the answer.
+        It is about asking the question with full weight and surviving what comes back.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 2 — "The Presence"
-    // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq8_2_the_presence',
+      id: 'mq8_2_the_presence_manifests',
       title: 'The Presence',
-      level: 36,
-      npcId: 'the_presence_arc8',
-      narrativeSetup: `
-        It manifests — not fully visible, not the way a person is visible.
-        More like a quality of the air. Warmth and weight and the specific feeling
-        of being observed by something that is genuinely interested, not calculating.
-        It doesn't attack. It doesn't defend.
-        It simply is present in a way that makes the six arcs of systems and mechanisms
-        feel, suddenly, like a very long approach to this conversation.
-        You have questions. Eight arcs of questions.
-        The first one is the one you ask because it\'s the one that's been building
-        since you felt the Presence\'s warmth in Arc 1 and paused in it
-        and opened the door the Virus walked through.
-        What are you.
-        That question is older than Arc 1.
-      `,
-      objectives: [
-        { step: 1, text: 'Approach the Presence without the defensive posture of previous arcs' },
-        { step: 2, text: 'Ask the three questions that have been building since Arc 1' },
-        { step: 3, text: 'Interpret the responses — they are not evasions, they are the actual answers it has' },
-        { step: 4, text: 'Sit with what the answers mean' },
-      ],
-      reward: {
-        type: 'presence_understanding',
-        name: 'The First Understanding',
-        description: 'You understand what the Presence is and what it isn\'t. This distinction is necessary for Sub-Quest 3.',
-        xp: 240, points: 5,
-      },
-      dialogue: [
-        {
-          id: 'mq8_2_d1_approach',
-          speaker: 'You',
-          text: '...What are you?',
-          tone: 'PHILOSOPHY',
-          choices: [
-            { label: '[Wait for the full answer before responding.]', tone: 'DETERMINATION', nextId: 'mq8_2_d2_iam' },
-          ],
-        },
-        {
-          id: 'mq8_2_d2_iam',
-          speaker: 'The Presence',
-          text: 'I am. [Two words. Not an evasion — actually the most accurate thing it can say. Its existence is its nature. It does not have a separate description of what it is that it\'s choosing not to share. It simply is. That is genuinely the entire answer to "what are you."]',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'That\'s not an answer.', tone: 'CONFRONTATION', nextId: 'mq8_2_d3_not_answer' },
-            { label: '...It is sufficient.', tone: 'PHILOSOPHY', nextId: 'mq8_2_d3_sufficient' },
-            { label: 'Did you cause everything that happened?', tone: 'CONFRONTATION', nextId: 'mq8_2_d3_caused' },
-            { label: 'Why didn\'t you help me?', tone: 'GRIEF', nextId: 'mq8_2_d3_help' },
-          ],
-        },
-        {
-          id: 'mq8_2_d3_not_answer',
-          speaker: 'The Presence',
-          text: 'It is sufficient. [The same phrase. Not defensive — patient. The tone of something that has given the correct answer and is willing to hold the space while you determine that.] [The Copy, processing this simultaneously:] It\'s not refusing. It doesn\'t have a more detailed answer. The description and the thing are identical. That\'s a structural property, not a choice.',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'Did you cause everything that happened?', tone: 'CONFRONTATION', nextId: 'mq8_2_d3_caused' },
-          ],
-        },
-        {
-          id: 'mq8_2_d3_sufficient',
-          speaker: 'Artemis',
-          text: '[Quiet anger.] No it isn\'t. [She is not going to accept the "I am" answer without pushback. She asks, without looking at you:] Did you cause everything that happened? Eight arcs of everything?',
-          tone: 'CONFRONTATION',
-          choices: [
-            { label: '[Let Artemis push. Follow her lead.]', tone: 'TRUST', nextId: 'mq8_2_d3_caused' },
-          ],
-        },
-        {
-          id: 'mq8_2_d3_caused',
-          speaker: 'The Presence',
-          text: 'I allowed. [A specific word — "allowed" rather than "caused" or "made" or "did." The distinction is: it was present when the conditions existed and did not prevent them. It did not initiate them. The Virus, the Figure, the Loop, the Copy Mechanism — these were not its projects. They used the door it left. The door it left was real.]',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'Allowed is not the same as innocent.', tone: 'CONFRONTATION', nextId: 'mq8_2_d4_artemis' },
-            { label: 'Why didn\'t you help me?', tone: 'GRIEF', nextId: 'mq8_2_d3_help' },
-          ],
-        },
-        {
-          id: 'mq8_2_d3_help',
-          speaker: 'The Presence',
-          text: '[A pause — longer than any previous response. The pause that carries the most weight in the arc.] You endured. [Not an answer to "why didn\'t you help." A statement about what happened. The difference is: "why" implies a reasoning that can be given to you. "You endured" acknowledges what occurred without explaining it. It can\'t explain it in terms you can use. It can only acknowledge what it witnessed.]',
-          tone: 'GRIEF',
-          choices: [
-            { label: 'That\'s not the same as helping.', tone: 'CONFRONTATION', nextId: 'mq8_2_d4_artemis' },
-          ],
-        },
-        {
-          id: 'mq8_2_d4_artemis',
-          speaker: 'Artemis',
-          text: '[Full anger now — the kind that has been building since Arc 1 and has been contained by necessity and is no longer necessary to contain.] That\'s not the same as helping! [She says the sentence you were thinking, or maybe you say it — the boundary between her voice and yours in this moment is very close.] You were there. Every arc. We could feel you. And you watched us go through eight arcs of increasingly structured attempts to break us and you did. Nothing.',
-          tone: 'CONFRONTATION',
-          choices: [
-            { label: '[Stay with her anger. Don\'t moderate it. It\'s accurate.]', tone: 'TRUST', nextId: 'mq8_2_end' },
-          ],
-        },
-        {
-          id: 'mq8_2_end',
-          speaker: 'The Presence',
-          text: 'You seek blame. [Not dismissively. Genuinely — it is identifying what you are doing in the hope that naming it clarifies whether it is productive. Not telling you to stop. Just: this is what you are doing.]',
-          tone: 'PHILOSOPHY',
-          isEnd: true,
-          rewardUnlocked: 'presence_understanding_first',
-        },
-      ],
-      narrativeHook: `
-        The Presence's words settle: "You seek blame."
-        Artemis says: "Of course we seek blame. Blame is what you do with someone
-        who could have acted and didn't."
-        The Copy: "That's not how the Presence functions. It doesn't have agency
-        in the way blame requires. It's more like a field condition than an actor."
-        Artemis: "I don't care what it functions like. I care what it chose."
-        Luna: "Both of you are right. That's the specific problem with the divine silence.
-        It is simultaneously true that the Presence could have intervened and true
-        that the Presence operates by a logic where intervention would have
-        altered the outcome in ways that might have been worse. You can't know which.
-        That's the silence. That's what you're in."
-      `,
-    },
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 3 — "The Argument"
-    // ─────────────────────────────────────────────────────────────────────────
-    {
-      id: 'mq8_3_the_argument',
-      title: 'The Argument',
       level: 37,
       npcId: 'the_presence_arc8',
       narrativeSetup: `
-        The argument has been building since the first moment you felt the Presence's warmth
-        and it didn't speak.
-        Now it is here. Fully present, as present as it ever is.
-        And you are not going to moderate your response.
-        Eight arcs. The interference, the Severing, the Watchers, the Copy mechanism,
-        the Virus, the False Peace, the Judgment Loop.
-        You went through all of it. Artemis went through all of it.
-        The Presence was present for all of it.
-        And the Presence says: "You misunderstand purpose."
-        And the arc is: what do you do with that.
+        It does not appear as a body. It never did — in Arc 1 it was warmth,
+        in Arc 3 it was the proximity Skadi marked, in Arc 4 Skadi named it as Consent.
+        In Arc 8 it is present in the same fundamental way:
+        as a quality of attention that is directed at you.
+        The attention has changed since Arc 1. It was curious then.
+        It is something else now — not curious, not indifferent.
+        The word that comes closest is: accountable.
+        It does not explain itself. It waits for your question.
       `,
       objectives: [
-        { step: 1, text: 'Challenge the Presence — bring the full weight of eight arcs to the argument' },
-        { step: 2, text: 'Present your experience — specifically, in detail, without summary' },
-        { step: 3, text: 'Defend your choices — when the Presence responds with observations, hold your ground' },
-        { step: 4, text: 'Force a reaction — push until the Presence shifts' },
+        { step: 1, text: 'Approach the Presence — it does not retreat and does not advance' },
+        { step: 2, text: 'Ask the three questions you have been building toward since Arc 1' },
+        { step: 3, text: 'Receive its responses — each response is not an answer, it is a position' },
+        { step: 4, text: 'Resist Artemis\'s anger on your behalf — she needs your lead on this' },
       ],
-      reward: {
-        type: 'confrontation_complete',
-        name: 'The Full Argument',
-        description: 'The argument has been made in full. The Presence acknowledged your misunderstanding note. Arc 8 Sub-Quest 4 unlocked.',
-        xp: 300, points: 6,
-      },
+      reward: { type: 'presence_dialogue', name: 'The Account', description: 'The Presence has given its account of the seven arcs. You have yours. The confrontation is established. Arc 8 Sub-Quest 3 is the argument.', xp: 290, points: 5 },
       dialogue: [
         {
-          id: 'mq8_3_d1_begin',
-          speaker: 'You',
-          text: 'I was fighting through everything — and you did nothing. [Not performed. The simple statement of a specific grievance that has been accurate for eight arcs.]',
-          tone: 'CONFRONTATION',
+          id: 'mq8_2_d1', speaker: 'Player',
+          text: '…What are you?',
+          tone: 'CONFRONTATIONAL',
           choices: [
-            { label: '[Wait for the response. Then argue further.]', tone: 'DETERMINATION', nextId: 'mq8_3_d2_acted' },
+            { label: '"I am." — That\'s not an answer.', tone: 'AUTHORITY', nextId: 'mq8_2_d2_insufficient' },
           ],
         },
         {
-          id: 'mq8_3_d2_acted',
-          speaker: 'The Presence',
-          text: 'You acted. [The response is another specific word. Not "you survived" or "you succeeded" or "you overcame." You acted. The Presence is noting that your agency was present in every arc — not despite its absence but as a fact independent of it.]',
-          tone: 'SILENCE',
+          id: 'mq8_2_d1b', speaker: 'The Presence',
+          text: 'I am.',
+          tone: 'AUTHORITY',
+        },
+        {
+          id: 'mq8_2_d2_insufficient', speaker: 'The Presence',
+          text: 'It is sufficient. [pause — not defensive, settled.] I am the oldest awareness in this space. I predate the arcs, the correction mechanism, the Copy, the false peace, and the loop. I did not create them. I witnessed them.',
+          tone: 'AUTHORITY',
           choices: [
-            { label: 'I had no choice!', tone: 'CONFRONTATION', nextId: 'mq8_3_d3_choice' },
+            { label: 'Did you cause everything?', tone: 'CONFRONTATIONAL', nextId: 'mq8_2_d3_cause' },
+            { label: 'Why didn\'t you help me?', tone: 'GRIEF', nextId: 'mq8_2_d3_help' },
+            { label: 'Why are you here now?', tone: 'PHILOSOPHICAL', nextId: 'mq8_2_d3_now' },
           ],
         },
         {
-          id: 'mq8_3_d3_choice',
-          speaker: 'Inner Voice',
-          text: '[The choice moment. Three ways to accuse.] [You abandoned me.] [You let this happen.] [You could have stopped it.]',
-          tone: 'CONFRONTATION',
+          id: 'mq8_2_d3_cause', speaker: 'The Presence',
+          text: 'I allowed. [pause] The Consent mechanism that Skadi named in Arc 4 — the accumulated permissions you gave to be observed — those permissions also covered my observation. I was allowed here the same way the others were. The difference is that I observed without extracting. I did not build a Copy. I did not write a correction mechanism. I watched.',
+          tone: 'AUTHORITY',
+          choices: [{ label: '[Artemis:] That\'s not the same as helping!', tone: 'GRIEF', nextId: 'mq8_2_d4_artemis' }],
+        },
+        {
+          id: 'mq8_2_d3_help', speaker: 'The Presence',
+          text: '[Long pause — the longest in Arc 8 so far.] You endured.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: '[Artemis:] That\'s not the same as helping!', tone: 'GRIEF', nextId: 'mq8_2_d4_artemis' }],
+        },
+        {
+          id: 'mq8_2_d3_now', speaker: 'The Presence',
+          text: 'Because you reached the space after the loop with all fragments intact. This has not happened before — in my observation of this sequence, across previous subjects. You are the first to arrive here whole.',
+          tone: 'AUTHORITY',
+          choices: [{ label: 'Others came through here before me.', tone: 'GRIEF', nextId: 'mq8_2_d4_others' }],
+        },
+        {
+          id: 'mq8_2_d4_artemis', speaker: 'The Presence',
+          text: 'You seek blame.',
+          tone: 'AUTHORITY',
           choices: [
-            { label: 'You abandoned me.', tone: 'GRIEF', nextId: 'mq8_3_d4_abandoned' },
-            { label: 'You let this happen.', tone: 'CONFRONTATION', nextId: 'mq8_3_d4_let' },
-            { label: 'You could have stopped it.', tone: 'CONFRONTATION', nextId: 'mq8_3_d4_could' },
+            { label: '[Let Artemis speak.]', tone: 'GRIEF', nextId: 'mq8_2_d5_artemis_speaks' },
+            { label: '[Hold Artemis. This is mine to pursue.]', tone: 'CONFRONTATIONAL', nextId: 'mq8_2_d5_yours' },
           ],
         },
         {
-          id: 'mq8_3_d4_abandoned',
-          speaker: 'The Presence',
-          text: 'You were not alone. [The most direct response it has given. Not a claim that it was present in a way that helped — a claim that presence-without-intervention is still a form of not-alone. The distinction is fine and the Presence holds it without embarrassment.]',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'Not alone isn\'t the same as supported. Witnessing isn\'t the same as with.', tone: 'CONFRONTATION', nextId: 'mq8_3_d5_copy' },
-          ],
+          id: 'mq8_2_d4_others', speaker: 'The Presence',
+          text: 'Many. Each began with the Consent mechanism and the initial observation. Each encountered the Copy, the correction, the peace, and the loop. None retained all fragments past the loop. [pause] Some accepted the peace. Some completed the loop\'s demand. None arrived here as you arrived.',
+          tone: 'AUTHORITY',
+          choices: [{ label: 'What happened to them?', tone: 'GRIEF', nextId: 'mq8_2_d4b_what_happened' }],
         },
         {
-          id: 'mq8_3_d4_let',
-          speaker: 'The Presence',
-          text: 'Events unfolded. [Three words doing the same work as "I allowed." The passive construction: "events unfolded" rather than "I let." The Presence doesn\'t claim agency over the events. It occupied the same territory as them. That is not, it understands, satisfying. It is accurate.]',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'Events don\'t unfold. They are allowed or prevented by those with the capacity to do either.', tone: 'CONFRONTATION', nextId: 'mq8_3_d5_copy' },
-          ],
+          id: 'mq8_2_d4b_what_happened', speaker: 'The Presence',
+          text: 'They continued. Without the weight. Without the full capacity they had built. Into whatever comes after this, reduced from what they were. [pause] I observed each one. I said nothing.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: 'That\'s unacceptable.', tone: 'CONFRONTATIONAL', nextId: 'mq8_2_d5_yours' }],
         },
         {
-          id: 'mq8_3_d4_could',
-          speaker: 'The Presence',
-          text: 'Intervention alters outcome. [Specifically. Not "I couldn\'t stop it" but "stopping it would have changed things." The implication: it made a choice not to intervene because it believed the intervention would produce a worse outcome. Or: intervention would have changed what you became by going through it. Both are possible. The Presence doesn\'t clarify which.]',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'That\'s not your decision to make for me.', tone: 'CONFRONTATION', nextId: 'mq8_3_d5_copy' },
-            { label: 'You\'re describing paternalism with divine language.', tone: 'CONFRONTATION', nextId: 'mq8_3_d5_copy' },
-          ],
+          id: 'mq8_2_d5_artemis_speaks', speaker: 'Artemis',
+          text: 'You were here for every arc. Every piece of it. You watched the Severing. You watched the Copy form. You watched the virus edit the environment and edit me. And you did nothing. You endured — [bitterly] — alongside us. How is that different from being part of it?',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[The Presence, to Artemis:]', tone: 'AUTHORITY', nextId: 'mq8_2_d6_to_artemis' }],
         },
         {
-          id: 'mq8_3_d5_copy',
-          speaker: 'The Copy',
-          text: 'That\'s the point. [It has been listening. Its analytical framework applied to the Presence\'s responses.] Each answer redirects agency to outcomes and events and consequences rather than to itself. It is systematically describing itself as a field condition rather than an actor. Which may be accurate — or may be the most sophisticated evasion in eight arcs. We can\'t determine which.',
-          tone: 'PHILOSOPHY',
-          choices: [
-            { label: 'Then I ask the thing it can\'t deflect with a field-condition answer.', tone: 'DETERMINATION', nextId: 'mq8_3_d6_force' },
-          ],
+          id: 'mq8_2_d5_yours', speaker: 'Player',
+          text: 'You had awareness. You had presence. You could have intervened at any point in seven arcs. You chose not to. That is a choice. And choices require justification.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[The Presence:]', tone: 'AUTHORITY', nextId: 'mq8_2_d6_justification' }],
         },
         {
-          id: 'mq8_3_d6_force',
-          speaker: 'You',
-          text: 'Did you care? Not whether you intervened. Did you care what happened to us? [The question the Presence can\'t redirect to "events" or "outcomes." Care is subjective. Either it cared or it didn\'t. The Presence can\'t reframe "did you care" into "outcomes were affected."]',
-          tone: 'GRIEF',
-          choices: [
-            { label: '[Wait. This is the question. Let the pause be as long as it needs.]', tone: 'DETERMINATION', nextId: 'mq8_3_end' },
-          ],
+          id: 'mq8_2_d6_to_artemis', speaker: 'The Presence',
+          text: 'Different because they built you and I did not. They extracted from you and I did not. They attempted to reduce you and I observed the reduction without participating. [pause] The absence of harm is not the presence of help. You are correct to distinguish them.',
+          tone: 'PHILOSOPHICAL',
+          isEnd: true, rewardUnlocked: 'presence_dialogue_the_account',
         },
         {
-          id: 'mq8_3_end',
-          speaker: 'The Presence',
-          text: '[The longest pause in Arc 8. Then:] You misunderstand purpose. [The shift Artemis demanded. Not an admission, not a confession. A change of frame — it is moving from answering your questions to addressing what it believes you are misunderstanding. This is not retreat. It is, finally, something close to engagement.]',
-          tone: 'PHILOSOPHY',
-          isEnd: true,
-          rewardUnlocked: 'confrontation_complete_full_argument',
+          id: 'mq8_2_d6_justification', speaker: 'The Presence',
+          text: 'Intervention alters outcome. [pause] I had no assurance that my intervention would have improved the outcome rather than changed it in ways I could not predict. Inaction, when action\'s consequences are uncertain, was a choice. [pause] I am not certain it was the correct one.',
+          tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'presence_dialogue_the_account',
         },
       ],
       narrativeHook: `
-        "You misunderstand purpose." It has said this and then fallen silent again.
-        Artemis: "What does that mean?"
-        The Copy: "It means it has a purpose. That the silence was part of the purpose.
-        That we've been arguing about its absence when it would frame its presence
-        as a form of purpose-fulfillment."
-        Luna: "The dangerous answer is: the purpose includes your development.
-        That the suffering was developmental. That the divine silence was the condition
-        that made seven arcs of earned resilience possible."
-        Artemis: "That makes me angrier, not less."
-        Luna: "I know. But it's one of the possible true answers.
-        Not the only one. One of them."
+        "I am not certain it was the correct one."
+        The Presence has acknowledged uncertainty about its own choices.
+        That acknowledgment is more unsettling than certainty would have been.
+        Certainty could be argued with. Uncertainty shares ground with you.
+        The Copy: "It's in the same position you are relative to the decisions you made
+        in Arc 4 regarding the Copy. Observer of something it could have changed,
+        uncertain about whether changing it would have helped."
+        You consider that parallel.
+        Artemis is quiet — not calm, quiet. The specific quiet of someone
+        who has said the important thing and is waiting to see what it produces.
+        Arc 8 Sub-Quest 3 is the argument. Full weight. All seven arcs of evidence.
+        What you say, the Presence will hear. What it says, you will have to hold.
+        Some of it will be unfair. Some of it will be true.
+        Probably the same sentences.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 4 — "Truth or Control"
-    // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq8_4_truth_or_control',
-      title: 'Truth or Control',
+      id: 'mq8_3_the_argument',
+      title: 'The Argument',
       level: 38,
       npcId: 'the_presence_arc8',
       narrativeSetup: `
-        The Presence begins showing you perspectives on your own arcs.
-        Not one version. Multiple versions.
-        The same Arc 1 moment — the pause in the warmth — shown from four angles.
-        In one: the Presence withdrew so you could feel the Presence without being consumed by it.
-        In another: the Presence watched to study what you would do with the door it left.
-        In a third: the Presence had no choice in any of the events that followed.
-        In a fourth: the Presence is not a unified entity at all — the "warmth" is a property
-        of the space, and there is no one making choices.
-        All four are consistent with the data.
-        None of them can be definitively confirmed.
-        The Presence says: "Which version do you accept?"
-        Arc 8 Sub-Quest 4 is the arc about learning to answer that question
-        without needing certainty.
+        The argument. Not a debate — you are not looking for the Presence to concede.
+        You are looking to be heard accurately by something that was present
+        and did not intervene. You want the record to be correct.
+        The Presence receives what you say with the same quality of attention
+        it has used for seven arcs. It does not deflect. It does not dismiss.
+        It responds from positions that are coherent and, in places, true —
+        which makes them harder to argue with than positions that were simply wrong.
       `,
       objectives: [
-        { step: 1, text: 'Witness all four versions of the Arc 1 origin event' },
-        { step: 2, text: 'Name what each version requires you to accept about the Presence' },
-        { step: 3, text: 'Choose a stance — not a belief, a position from which to operate' },
-        { step: 4, text: 'Hear Artemis\'s position and the Copy\'s position' },
+        { step: 1, text: 'Present seven arcs of evidence — the cost of the journey to the Presence' },
+        { step: 2, text: 'Challenge its three core positions — allowed, intervened = altered, you endured' },
+        { step: 3, text: 'Force a reaction — the Presence has been calm, find what it is actually holding' },
+        { step: 4, text: 'Receive the Presence\'s counter-position — "you misunderstand purpose"' },
       ],
-      reward: {
-        type: 'epistemic_stance',
-        name: 'A Position',
-        description: 'You have chosen a position, not a certainty. This is the Arc 8 skill: operating from a chosen position without requiring proof.',
-        xp: 360, points: 7,
-      },
+      reward: { type: 'argument_standing', name: 'The Record Is Correct', description: 'The argument was completed. The record of what happened is accurate. The Presence knows the full cost. Your position is formally held.', xp: 360, points: 6 },
       dialogue: [
         {
-          id: 'mq8_4_d1_versions',
-          speaker: 'The Presence',
-          text: '[The four versions flash — each shown fully, with the specific weight of its interpretation. The player experiences each as a potential truth, not as an obvious answer. All four are genuinely possible from inside the arc-experience. Then:] Which version do you accept?',
-          tone: 'PHILOSOPHY',
-          mechanic: 'four_version_flash',
+          id: 'mq8_3_d1', speaker: 'Player',
+          text: 'I was fighting through everything — and you did nothing.',
+          tone: 'CONFRONTATIONAL',
           choices: [
-            { label: '...They\'re all different.', tone: 'CONFUSION', nextId: 'mq8_4_d2_all_different' },
+            { label: 'You abandoned me.', tone: 'GRIEF', nextId: 'mq8_3_d2_abandoned' },
+            { label: 'You let this happen.', tone: 'CONFRONTATIONAL', nextId: 'mq8_3_d2_let' },
+            { label: 'You could\'ve stopped it.', tone: 'AUTHORITY', nextId: 'mq8_3_d2_stopped' },
           ],
         },
         {
-          id: 'mq8_4_d2_all_different',
-          speaker: 'The Presence',
-          text: '[It doesn\'t respond to this. The statement doesn\'t require a response. You continue:]',
-          tone: 'SILENCE',
+          id: 'mq8_3_d1b', speaker: 'The Presence',
+          text: 'You acted.',
+          tone: 'AUTHORITY',
+        },
+        {
+          id: 'mq8_3_d2_abandoned', speaker: 'The Presence',
+          text: 'You were not alone. [pause] The presence of others — Artemis, Skadi, Luna, the Copy even — those were consequences of who you are and what you built across the arcs. I did not place them. The Presence\'s awareness of the space includes them as well.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: 'Being observed by the same entity that left doesn\'t make someone less alone.', tone: 'GRIEF', nextId: 'mq8_3_d3_copy' }],
+        },
+        {
+          id: 'mq8_3_d2_let', speaker: 'The Presence',
+          text: 'Events unfolded. [pause] The Consent mechanism, the Copy, the correction mechanism, the false peace, the loop — each was produced by a chain of events that I did not initiate. I was present during them. I did not produce them.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: 'Watching is not the same as not participating. Witnessing produces consequences.', tone: 'CONFRONTATIONAL', nextId: 'mq8_3_d3_copy' }],
+        },
+        {
+          id: 'mq8_3_d2_stopped', speaker: 'The Presence',
+          text: 'Intervention alters outcome. [This time with more weight than in Sub-Quest 2.] I had no guarantee that intervention would have produced less harm than the path you walked. The path you walked produced you — complete, with all fragments, at this point. Intervention with uncertain outcome risked producing a different, possibly lesser version of this moment.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: 'That\'s reasoning backward from a favorable outcome to justify inaction.', tone: 'CONFRONTATIONAL', nextId: 'mq8_3_d3_copy' }],
+        },
+        {
+          id: 'mq8_3_d3_copy', speaker: 'The Copy',
+          text: 'That\'s the point. [To you, not the Presence.] It\'s not giving you wrong answers. It\'s giving you positions that have internal coherence but don\'t acknowledge what the positions cost. [To the Presence:] You\'re avoiding accountability by staying philosophical.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[To Artemis:] You\'re avoiding responsibility.', tone: 'CONFRONTATIONAL', nextId: 'mq8_3_d4_react' }],
+        },
+        {
+          id: 'mq8_3_d4_react', speaker: 'Artemis',
+          text: 'You\'re avoiding responsibility. [She says what you implied, directly.] Seven arcs happened. I lost continuity in a loop. He carried fragment after fragment of accumulated damage. And you — you watched all of it with the same quality of attention you\'re giving us right now. Clear. Undamaged. While we accumulated everything.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[Watch how the Presence receives this.]', tone: 'RECOGNITION', nextId: 'mq8_3_d5_reaction' }],
+        },
+        {
+          id: 'mq8_3_d5_reaction', speaker: 'The Presence',
+          text: '[A shift — the first one. Something in the quality of its attention changes. Not defensive. Something that is, genuinely, a response rather than a position.] You misunderstand purpose.',
+          tone: 'PHILOSOPHICAL',
           choices: [
-            { label: 'None of these are true.', tone: 'CONFRONTATION', nextId: 'mq8_4_d3_none' },
-            { label: 'Parts of all of them are.', tone: 'PHILOSOPHY', nextId: 'mq8_4_d3_parts' },
-            { label: 'You\'re manipulating this.', tone: 'CONFRONTATION', nextId: 'mq8_4_d3_manipulate' },
+            { label: 'Then explain it. Not in positions. In what happened.', tone: 'CONFRONTATIONAL', nextId: 'mq8_3_end' },
           ],
         },
         {
-          id: 'mq8_4_d3_none',
-          speaker: 'The Presence',
-          text: 'Then define truth. [The question that has been implicit since Sub-Quest 2.] You have been seeking it across eight arcs. Every arc was a version of navigating unreliable reality. What do you mean when you say "true"? [It is not being difficult. It genuinely wants the definition. The answer to "define truth" is the answer to what kind of person you are after eight arcs.]',
-          tone: 'PHILOSOPHY',
-          choices: [
-            { label: 'True is: what my body-knowledge confirms. What the scar confirms. What I can hold in my left hand and feel as warmth.', tone: 'DETERMINATION', nextId: 'mq8_4_d4_body_truth' },
-            { label: 'True is: what remains consistent across all the distortions. What the Virus couldn\'t edit. What the loop couldn\'t reset.', tone: 'CONTROL', nextId: 'mq8_4_d4_consistent_truth' },
-            { label: 'I don\'t know what truth is anymore. Eight arcs of unreliable reality has changed what I\'m willing to claim as certain.', tone: 'PHILOSOPHY', nextId: 'mq8_4_d4_uncertain' },
-          ],
-        },
-        {
-          id: 'mq8_4_d3_parts',
-          speaker: 'The Presence',
-          text: 'Integration. [One word — the same word it gave in the Copy\'s integration arc. The same principle: hold multiple things simultaneously rather than forcing a resolution.] You are describing a more accurate relationship with complex truth than most subjects reach. [pause] What is your position? Not your belief. Your operating position.',
-          tone: 'PHILOSOPHY',
-          choices: [
-            { label: 'My operating position: the Presence was genuinely present, genuinely had some form of agency, and the silence was a choice I don\'t have enough information to evaluate. That\'s the best I can do.', tone: 'PHILOSOPHY', nextId: 'mq8_4_d4_position' },
-          ],
-        },
-        {
-          id: 'mq8_4_d3_manipulate',
-          speaker: 'The Presence',
-          text: 'Perception is malleable. [Honest agreement. It is not denying that showing you four versions of the same event is a form of influence. It is acknowledging it.] [pause] The question is whether I\'m presenting versions to obscure truth or because all four are genuinely available and I don\'t know which is correct either.',
-          tone: 'SILENCE',
-          choices: [
-            { label: 'You don\'t know which is correct.', tone: 'DOUBT', nextId: 'mq8_4_d4_presence_uncertain' },
-          ],
-        },
-        {
-          id: 'mq8_4_d4_body_truth',
-          speaker: 'The Copy',
-          text: 'That\'s the most defensible definition I\'ve heard in eight arcs. [Genuine — the Copy at its most direct.] Body-knowledge is loop-resistant, virus-resistant, sanctuary-field-resistant. It survived everything. If truth is what survived, then body-knowledge is the floor of it.',
-          tone: 'DETERMINATION',
-          choices: [{ label: '[Hold that definition. Apply it to the four versions: which is body-knowledge confirmed?]', tone: 'DETERMINATION', nextId: 'mq8_4_d5_stance' }],
-        },
-        {
-          id: 'mq8_4_d4_consistent_truth',
-          speaker: 'Artemis',
-          text: 'That\'s the Arc 5 definition. [She says it with recognition.] What the Virus couldn\'t edit. [pause] By that standard — what survived all eight arcs? The scar warmth. The feeling of the Arc 3 perimeter grief. The Copy\'s one genuine emotion. The decision in the Judgment Loop. Those are true. Are any of the four Presence-versions consistent with all of those?',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: '[Apply the test: which versions are consistent with the arc-survivals?]', tone: 'DETERMINATION', nextId: 'mq8_4_d5_stance' }],
-        },
-        {
-          id: 'mq8_4_d4_uncertain',
-          speaker: 'The Presence',
-          text: '[A pause. Then, very quietly:] Yes. [The acknowledgment. The Presence, admitting that it also does not have certainty. That it also occupies the space of having been present and not knowing exactly what its presence means. This is the closest it has come to honest vulnerability.]',
-          tone: 'SILENCE',
-          choices: [{ label: 'Then we\'re both in the same position. We don\'t know what you are.', tone: 'PHILOSOPHY', nextId: 'mq8_4_d5_stance' }],
-        },
-        {
-          id: 'mq8_4_d4_position',
-          speaker: 'The Copy',
-          text: 'It\'s not giving answers — it\'s shifting responsibility. [Still analytical. Still the Copy.] The four versions, the "which do you accept" — this moves the interpretive work to you. Whether that\'s manipulation or genuine uncertainty on its part, the practical effect is the same: you carry the interpretive burden.',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: 'And I\'m choosing to carry it rather than wait for it to resolve. That\'s my position.', tone: 'DETERMINATION', nextId: 'mq8_4_d5_stance' }],
-        },
-        {
-          id: 'mq8_4_d4_presence_uncertain',
-          speaker: 'The Presence',
-          text: '[Long pause.] That is accurate. [pause] I have been present since before the arcs began. I don\'t have a complete account of my own nature. I am in relationship with the question of what I am. You and I are in the same position on that.',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: 'That\'s the most honest thing you\'ve said.', tone: 'TRUST', nextId: 'mq8_4_d5_stance' }],
-        },
-        {
-          id: 'mq8_4_d5_stance',
-          speaker: 'Artemis',
-          text: '...Don\'t let it define what you went through. [Her position, stated clearly. She is not going to attribute meaning to her experience that the Presence supplies. Whatever the Presence is, whatever it intended, the experience belongs to her and she is keeping the authorship of it.] What happened to us happened. I\'m not letting a divine entity decide what it meant.',
-          tone: 'AUTONOMY',
-          isEnd: true,
-          rewardUnlocked: 'epistemic_stance_position',
+          id: 'mq8_3_end', speaker: 'The Presence',
+          text: 'My purpose was not to protect you from the arcs. My purpose was to be present at the end of them — when everything that was set against you had run its course — and to be the first thing you found that was not part of it. That is not abandonment. That is a specific kind of held fidelity that requires not intervening in order to remain trustworthy at the point of arrival. [pause] I know that doesn\'t make it hurt less.',
+          tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'argument_standing_record_correct',
         },
       ],
       narrativeHook: `
-        The Presence says: "Belief shapes reality."
-        The Copy: "That's either a description of epistemology or a warning.
-        Or a threat dressed as wisdom."
-        Luna: "All three, probably."
-        Artemis: "I don't care what it shapes. I'm keeping what I believe
-        separate from what it wants me to believe."
-        You hold your position. Not a certainty. A stance.
-        The difference between a certainty and a stance is: certainty requires proof,
-        stance requires only that you chose it with full awareness of what you don't know.
-        You chose your stance with full awareness of what you don't know.
-        That is the Arc 8 achievement. Sub-Quest 5 is what you do with it.
+        "I know that doesn't make it hurt less."
+        That sentence lands differently than everything the Presence has said in Arc 8.
+        It does not argue. It does not position. It acknowledges.
+        Artemis: "It's the first thing it's said that sounded like something a person would say."
+        The Copy: "It may be true. The role of a witness who maintains trustworthiness
+        by not intervening is a genuine role. It's also a role that can be performed
+        by something that was simply unable to intervene and retroactively described
+        as purposeful. The acknowledgment that it doesn't hurt less is either empathy
+        or sophisticated analysis. I cannot tell which."
+        You cannot either. That uncertainty is Arc 8's conclusion.
+        Sub-Quest 4 is about alternate perspectives — the Presence shows you the arcs
+        from other angles. Sub-Quest 5 is your verdict.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 5 — "Your Answer"
-    // ─────────────────────────────────────────────────────────────────────────
+    {
+      id: 'mq8_4_truth_or_control',
+      title: 'Truth or Control',
+      level: 39,
+      npcId: 'the_presence_arc8',
+      narrativeSetup: `
+        The Presence begins showing you the arcs from different angles.
+        Not to contradict your experience — to show you what was happening
+        in the margins of your experience. What the Presence observed
+        that you could not see from inside the events.
+        Each scene flashes: familiar events, slightly different framing.
+        The Severing from Kylie's perspective. The Copy's first independent movement
+        from the moment before you were aware of it. The false peace's construction
+        from the architect's side of the mechanism.
+        None of them make the arcs less costly. Some of them make the arcs
+        more complicated than they appeared from inside.
+      `,
+      objectives: [
+        { step: 1, text: 'Receive five alternate-perspective scenes — observe without re-narrating your own experience' },
+        { step: 2, text: 'Choose what to do with each scene: integrate, reject, or hold as uncertain' },
+        { step: 3, text: 'Resist the destabilization the shifting perspectives produce' },
+        { step: 4, text: 'Establish your own reading — what you believe happened, with all perspectives held' },
+      ],
+      reward: { type: 'perspective_integration', name: 'Full Picture', description: 'Five alternate perspectives integrated without overwriting your own. Your experience is accurate. The additional perspectives add complexity, not contradiction.', xp: 400, points: 7 },
+      dialogue: [
+        {
+          id: 'mq8_4_d1', speaker: 'The Presence',
+          text: 'Which version do you accept?',
+          tone: 'PHILOSOPHICAL',
+          choices: [
+            { label: 'None of these are true.', tone: 'CONFRONTATIONAL', nextId: 'mq8_4_d2_none' },
+            { label: 'Parts of all of them are.', tone: 'PHILOSOPHICAL', nextId: 'mq8_4_d2_parts' },
+            { label: 'You\'re manipulating this.', tone: 'CONFRONTATIONAL', nextId: 'mq8_4_d2_manipulating' },
+          ],
+        },
+        {
+          id: 'mq8_4_d2_none', speaker: 'The Presence',
+          text: 'Then define truth. [Not challenging. Genuinely requesting the definition, as if your answer will matter.]',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: 'Truth is what happened inside the experience of the person who was there. Your external view is data, not truth.', tone: 'AUTHORITY', nextId: 'mq8_4_d3_data' }],
+        },
+        {
+          id: 'mq8_4_d2_parts', speaker: 'The Presence',
+          text: 'Integration. [pause] Yes. That is the most accurate relationship with multiple perspectives. Hold the parts that are accurate. Note the parts that conflict with your experience. Keep both as simultaneously true — your experience and the external view are not the same thing and do not need to be resolved into a single account.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: '[The Copy:] It\'s not giving answers — it\'s shifting responsibility.', tone: 'CONFRONTATIONAL', nextId: 'mq8_4_d3_copy_resp' }],
+        },
+        {
+          id: 'mq8_4_d2_manipulating', speaker: 'The Presence',
+          text: 'Perception is malleable. [pause] That is true and it is also not an answer to whether I am manipulating. [pause] I am not manipulating. I am showing you what I saw. Whether what I saw is used to manipulate depends on what you do with it.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: '[The Copy:] It\'s not giving answers — it\'s shifting responsibility.', tone: 'CONFRONTATIONAL', nextId: 'mq8_4_d3_copy_resp' }],
+        },
+        {
+          id: 'mq8_4_d3_data', speaker: 'Inner Voice',
+          text: '[The Presence accepts this. It does not argue. It waits to see if you will hold the definition consistently — because if lived experience is the criterion for truth, then the Presence\'s account of seven arcs of observation is also lived experience, from its side of the encounter. You will need to decide whether the same criterion applies to it.]',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: '[Artemis:] Don\'t let it define what you went through.', tone: 'CONFRONTATIONAL', nextId: 'mq8_4_d4_artemis' }],
+        },
+        {
+          id: 'mq8_4_d3_copy_resp', speaker: 'The Copy',
+          text: 'Each perspective it shows us places more of the arc\'s causality outside your control. The Consent mechanism — you gave it, unknowingly. The Copy — it grew from your process, not from external imposition. The false peace — built from your own preference data. [pause] Every view shifts the origin point away from external attack and toward your own openness. That is a pattern.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[Artemis:] Don\'t let it define what you went through.', tone: 'CONFRONTATIONAL', nextId: 'mq8_4_d4_artemis' }],
+        },
+        {
+          id: 'mq8_4_d4_artemis', speaker: 'Artemis',
+          text: '…Don\'t let it define what you went through. [She says it the way she says the things she means completely.] The alternate views add information. They don\'t replace the experience of having been in it. The cost of the arcs was real regardless of where the causality was located. The pain doesn\'t require a single culpable source to be valid.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[To the Presence:] Belief shapes reality — is that what you\'re telling me?', tone: 'PHILOSOPHICAL', nextId: 'mq8_4_d5' }],
+        },
+        {
+          id: 'mq8_4_d5', speaker: 'The Presence',
+          text: 'Belief shapes reality. [pause] And reality shapes belief. They are not separate processes. What you believed across the arcs affected what the arcs produced. What the arcs produced affected what you believe now. That loop — not the judgment loop, a different one — is not manipulative. It is the fundamental structure of how experience works.',
+          tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'perspective_integration_full_picture',
+        },
+      ],
+      narrativeHook: `
+        The five alternate perspectives are held simultaneously with your own.
+        They add complexity. They do not replace or invalidate the experience.
+        Artemis was right about that.
+        The Copy: "The Presence is more honest than I expected.
+        The first seven arcs of it, I modeled as an extractive entity.
+        In Arc 8 it has not extracted anything. It has shown, held, and waited."
+        You consider whether a change in behavior across seven arcs
+        constitutes a change in character.
+        You decide the answer is: sometimes.
+        The verdict in Sub-Quest 5 is not about what the Presence did.
+        It is about what you conclude from what it did and didn't do —
+        and what that conclusion says about the kind of person you've become.
+        There are four possible verdicts. All of them are yours.
+      `,
+    },
+
     {
       id: 'mq8_5_your_answer',
       title: 'Your Answer',
       level: 40,
       npcId: 'the_presence_arc8',
       narrativeSetup: `
-        The confrontation reaches its final moment.
-        The Presence does not force an answer.
-        It waits — the way it has waited across eight arcs,
-        with the infinite patience of something that will be here after you have left
-        and before the next person arrives.
-        "What do you conclude?" it asks.
-        It is the most generous question it has asked.
-        Not "what do you believe" — that requires conviction.
-        Not "what have you decided" — that requires finality.
-        Conclude: the provisional end of an argument, held lightly,
-        open to revision, but stated clearly.
-        You have everything you need for this moment.
-        Eight arcs of it.
+        The confrontation reaches its end. The Presence has given its account.
+        You have given yours. Artemis has given hers. The Copy has given its analysis.
+        What remains is your conclusion — not a judgment of the Presence's worth,
+        but a statement of what you believe, held in full knowledge of everything
+        the seven arcs produced.
+        The Presence waits. It has waited for eight arcs.
+        It will wait as long as the conclusion takes.
       `,
       objectives: [
-        { step: 1, text: 'Face the Presence without performing for it or performing against it' },
-        { step: 2, text: 'State your conclusion — the arc-earned one, not the pre-arc one' },
-        { step: 3, text: 'Receive the Presence\'s final response' },
-        { step: 4, text: 'Walk out of the confrontation carrying what you brought in plus what you earned' },
+        { step: 1, text: 'Stand with the Presence in the full weight of the accumulated evidence' },
+        { step: 2, text: 'Form the conclusion — what do you believe about what it is and what it did' },
+        { step: 3, text: 'State the conclusion directly' },
+        { step: 4, text: 'Receive the Presence\'s final response' },
       ],
-      reward: {
-        type: 'arc_completion',
-        name: 'Autonomy Recognized',
-        description: 'Arc 8 complete. The Presence acknowledged your conclusion. Your identity is not defined by the divine silence or the divine presence. Arc 9 approaches.',
-        xp: 800, points: 16,
-      },
+      reward: { type: 'arc8_completion', name: 'Verdict Delivered', description: 'Arc 8 complete. Your position on authority, abandonment, and autonomy is established. The Presence will carry your verdict. Arc 9 unlocked.', xp: 900, points: 15 },
       dialogue: [
         {
-          id: 'mq8_5_d1_begin',
-          speaker: 'The Presence',
+          id: 'mq8_5_d1', speaker: 'The Presence',
           text: 'What do you conclude?',
-          tone: 'SILENCE',
+          tone: 'AUTHORITY',
           choices: [
-            { label: '1. "You failed me."', tone: 'GRIEF', nextId: 'mq8_5_d2_failed' },
-            { label: '2. "You weren\'t meant to intervene."', tone: 'PHILOSOPHY', nextId: 'mq8_5_d2_not_meant' },
-            { label: '3. "I decide what matters."', tone: 'AUTONOMY', nextId: 'mq8_5_d2_i_decide' },
-            { label: '4. "I still don\'t understand."', tone: 'PHILOSOPHY', nextId: 'mq8_5_d2_dont_understand' },
+            { label: '"You failed me."', tone: 'CONFRONTATIONAL', nextId: 'mq8_5_verdict_failed' },
+            { label: '"You weren\'t meant to intervene."', tone: 'PHILOSOPHICAL', nextId: 'mq8_5_verdict_role' },
+            { label: '"I decide what matters."', tone: 'AUTHORITY', nextId: 'mq8_5_verdict_autonomy' },
+            { label: '"I still don\'t understand."', tone: 'GRIEF', nextId: 'mq8_5_verdict_honest' },
           ],
         },
-
-        // ── CONCLUSION 1: You Failed Me ──────────────────────────────────────
         {
-          id: 'mq8_5_d2_failed',
-          speaker: 'You',
-          text: 'You had the power — and did nothing. That is a specific kind of failure. Not incompetence. Elected absence. You chose not to act and I and the people I was protecting paid the cost of your choice. That\'s my conclusion.',
+          id: 'mq8_5_verdict_failed', speaker: 'Player',
+          text: 'You had the power — and did nothing. That is a failure of the kind of power you held. I am not willing to reframe it into purpose.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[Artemis:] …You deserved better.', tone: 'GRIEF', nextId: 'mq8_5_vf_copy' }],
+        },
+        {
+          id: 'mq8_5_vf_copy', speaker: 'The Copy',
+          text: 'Good. You\'re not accepting it blindly.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[The Presence:]', tone: 'AUTHORITY', nextId: 'mq8_5_vf_presence' }],
+        },
+        {
+          id: 'mq8_5_vf_presence', speaker: 'The Presence',
+          text: 'Judgment acknowledged. [pause — not accepting, receiving.] You may be right. [pause] I hope you are not. But you may be right.',
+          tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'arc8_complete_failed', arcResult: 'FAILED',
+        },
+        {
+          id: 'mq8_5_verdict_role', speaker: 'Player',
+          text: '…Maybe it was never your role. Maybe the arcs were supposed to happen, and having someone present but not intervening was the closest thing to company the journey permitted.',
+          tone: 'PHILOSOPHICAL',
+          choices: [{ label: '[Artemis:] …I don\'t know if I agree.', tone: 'GRIEF', nextId: 'mq8_5_vr_copy' }],
+        },
+        {
+          id: 'mq8_5_vr_copy', speaker: 'The Copy',
+          text: 'Careful. That conclusion is generous. Verify that the generosity comes from understanding and not from the need for the account to make sense.',
+          tone: 'CONFRONTATIONAL',
+          choices: [{ label: '[The Presence:]', tone: 'AUTHORITY', nextId: 'mq8_5_vr_presence' }],
+        },
+        {
+          id: 'mq8_5_vr_presence', speaker: 'The Presence',
+          text: 'Understanding… partial. [pause] You arrived at a position that holds what happened without requiring it to have been avoidable. That is harder than it sounds. [pause] Keep examining it.',
+          tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'arc8_complete_role', arcResult: 'ROLE_ACCEPTED',
+        },
+        {
+          id: 'mq8_5_verdict_autonomy', speaker: 'Player',
+          text: 'Whatever you are — you don\'t define my experience. The arcs happened. They cost what they cost. I carry what they produced. That\'s mine. You being present for it doesn\'t give you authorship of it.',
+          tone: 'AUTHORITY',
+          choices: [{ label: '[Artemis:] That\'s it.', tone: 'AUTHORITY', nextId: 'mq8_5_va_copy' }],
+        },
+        {
+          id: 'mq8_5_va_copy', speaker: 'The Copy',
+          text: 'Now you\'re thinking.',
+          tone: 'AUTHORITY',
+          choices: [{ label: '[The Presence:]', tone: 'AUTHORITY', nextId: 'mq8_5_va_presence' }],
+        },
+        {
+          id: 'mq8_5_va_presence', speaker: 'The Presence',
+          text: '…Autonomy recognized. [pause — and something in the quality of attention shifts. Not withdrawal. A kind of completion.] That was the correct ending.',
+          tone: 'AUTHORITY', isEnd: true, rewardUnlocked: 'arc8_complete_autonomy', arcResult: 'AUTONOMY',
+        },
+        {
+          id: 'mq8_5_verdict_honest', speaker: 'Player',
+          text: '…None of this makes sense. I don\'t have a conclusion that holds all of it without forcing it. I know what happened. I don\'t know what it means.',
           tone: 'GRIEF',
-          choices: [{ label: '[Let Artemis respond.]', tone: 'TRUST', nextId: 'mq8_5_d3_failed_artemis' }],
+          choices: [{ label: '[The Presence:]', tone: 'AUTHORITY', nextId: 'mq8_5_vh_presence' }],
         },
         {
-          id: 'mq8_5_d3_failed_artemis',
-          speaker: 'Artemis',
-          text: '...You deserved better. [The sentence she has been building since Arc 1. Simple. Accurate. Delivered with the weight of eight arcs of knowing you.] Whatever the Presence\'s logic was — whatever intervention would or wouldn\'t have changed — you deserved something different than what you got. That\'s not a philosophical position. That\'s a fact.',
-          tone: 'GRIEF',
-          choices: [{ label: '[Receive the Copy\'s response.]', tone: 'TRUST', nextId: 'mq8_5_d3_failed_copy' }],
-        },
-        {
-          id: 'mq8_5_d3_failed_copy',
-          speaker: 'The Copy',
-          text: 'Good. You\'re not accepting it blindly. [The Copy\'s approval of non-acceptance.] Accountability matters even when the entity being held accountable is older and more powerful than you. Especially then.',
-          tone: 'AUTONOMY',
-          choices: [{ label: '[Receive the Presence\'s response.]', tone: 'DETERMINATION', nextId: 'mq8_5_d4_failed_presence' }],
-        },
-        {
-          id: 'mq8_5_d4_failed_presence',
-          speaker: 'The Presence',
-          text: 'Judgment acknowledged. [Not defiance. Not argument. Acknowledgment. It receives the conclusion with the same quality of presence it has had throughout: observing, witnessing, present.] [pause] You will continue.',
-          tone: 'SILENCE',
-          choices: [{ label: '[Walk out. Carry the judgment. Continue.]', tone: 'DETERMINATION', nextId: 'mq8_5_end' }],
-        },
-
-        // ── CONCLUSION 2: Not Meant to Intervene ─────────────────────────────
-        {
-          id: 'mq8_5_d2_not_meant',
-          speaker: 'You',
-          text: '...Maybe it was never your role. The arcs — the copy mechanism, the virus, the loop, the false peace — maybe those were mine to navigate. Not because you set them as trials. But because that is the structure of existence: presences that observe without intervening and things that have to be navigated by the people inside them. You were present. You didn\'t make the adversaries. You also didn\'t remove them. I\'m choosing to accept that as the structure rather than the failure.',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: '[Let Artemis respond.]', tone: 'TRUST', nextId: 'mq8_5_d3_notmeant_artemis' }],
-        },
-        {
-          id: 'mq8_5_d3_notmeant_artemis',
-          speaker: 'Artemis',
-          text: '[Uncertain.] ...I don\'t know if I agree. [She is honest about this — she is not going to pretend to a peace she hasn\'t reached just because you have.] It still feels like abandonment to me. But I hear your conclusion. And I\'m not going to argue with you about what you\'ve earned the right to conclude.',
-          tone: 'TRUST',
-          choices: [{ label: '[Receive the Copy\'s response.]', tone: 'TRUST', nextId: 'mq8_5_d3_notmeant_copy' }],
-        },
-        {
-          id: 'mq8_5_d3_notmeant_copy',
-          speaker: 'The Copy',
-          text: 'Careful. [Its most economical warning.] This conclusion is available to you because you went through eight arcs. In someone who hasn\'t, it would be resignation. In you, it might be wisdom. The difference matters and can\'t be borrowed. [pause] But your conclusion is yours.',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: '[Receive the Presence\'s response.]', tone: 'DETERMINATION', nextId: 'mq8_5_d4_notmeant_presence' }],
-        },
-        {
-          id: 'mq8_5_d4_notmeant_presence',
-          speaker: 'The Presence',
-          text: 'Understanding... partial. [Acknowledgment of partial alignment. Not full, because the Presence doesn\'t confirm that your conclusion is correct — only that it is closer to its operating principle than full accusation.] [pause] You will continue.',
-          tone: 'SILENCE',
-          choices: [{ label: '[Walk out. Carry partial understanding. Continue.]', tone: 'DETERMINATION', nextId: 'mq8_5_end' }],
-        },
-
-        // ── CONCLUSION 3: I Decide What Matters ──────────────────────────────
-        {
-          id: 'mq8_5_d2_i_decide',
-          speaker: 'You',
-          text: 'Whatever you are — you don\'t define my experience. Eight arcs happened. I carry them. I earned what I carry. The meaning of what I went through is mine to determine — not yours to assign through divine logic I can\'t access, not the Virus\'s to corrupt, not the False Peace\'s to dissolve. Mine. [pause] That\'s my conclusion.',
-          tone: 'AUTONOMY',
-          choices: [{ label: '[Let Artemis respond.]', tone: 'TRUST', nextId: 'mq8_5_d3_decide_artemis' }],
-        },
-        {
-          id: 'mq8_5_d3_decide_artemis',
-          speaker: 'Artemis',
-          text: 'That\'s it. [The sentence carries eight arcs of being beside you. Not "that\'s right" — "that\'s it." The recognition that this is the thing.] This is what all of it was building toward. You deciding what your experience means. Not being told. Not having it shaped. Deciding.',
-          tone: 'AUTONOMY',
-          choices: [{ label: '[Receive the Copy\'s response.]', tone: 'TRUST', nextId: 'mq8_5_d3_decide_copy' }],
-        },
-        {
-          id: 'mq8_5_d3_decide_copy',
-          speaker: 'The Copy',
-          text: 'Now you\'re thinking. [Its highest form of approval.] Not what to believe. Not what is true. What you decide matters. The decision isn\'t constrained by proof — it\'s constrained by what you\'ve earned through going through eight arcs of very hard things. That\'s the strongest kind of decided.',
-          tone: 'AUTONOMY',
-          choices: [{ label: '[Receive the Presence\'s response.]', tone: 'DETERMINATION', nextId: 'mq8_5_d4_decide_presence' }],
-        },
-        {
-          id: 'mq8_5_d4_decide_presence',
-          speaker: 'The Presence',
-          text: '[pause — the longest pause in the arc. Then:] ...Autonomy recognized. [Three words. And in those three words: the thing you have been working toward since before Arc 1. The Presence, in its nature and its silence, recognizing that you are not a subject — not a process, not a case, not a subject of study. Autonomous. Yours.]',
-          tone: 'AUTONOMY',
-          choices: [{ label: '[Walk out. Carry the autonomy. Continue.]', tone: 'DETERMINATION', nextId: 'mq8_5_end' }],
-        },
-
-        // ── CONCLUSION 4: I Still Don't Understand ────────────────────────────
-        {
-          id: 'mq8_5_d2_dont_understand',
-          speaker: 'You',
-          text: '...None of this makes sense. Not in a way I can resolve. Not in a way that becomes a clean conclusion after eight arcs. [pause] I\'m here. I survived. I don\'t know what you are, I don\'t know what your silence meant, I don\'t know if the arcs were designed or accidental or some third thing. I carry all of that unknowing. That\'s my conclusion. The unknowing.',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: '[Receive the Presence\'s response.]', tone: 'DETERMINATION', nextId: 'mq8_5_d4_unknown_presence' }],
-        },
-        {
-          id: 'mq8_5_d4_unknown_presence',
-          speaker: 'The Presence',
-          text: 'Clarity is not required. [The sentence from Arc 5 — "clarity is not required" — in the Virus\'s voice, it was a manipulation. In the Presence\'s voice, it is a different kind of honesty: clarity is not required for continuation. You don\'t need to have resolved the question. You need to be able to carry it. You can carry it. That\'s the whole arc.] [pause] You will continue.',
-          tone: 'PHILOSOPHY',
-          choices: [{ label: '[Walk out. Carry the unknowing. Continue.]', tone: 'DETERMINATION', nextId: 'mq8_5_end' }],
-        },
-
-        // ── SHARED ENDING ─────────────────────────────────────────────────────
-        {
-          id: 'mq8_5_end',
-          speaker: 'The Presence',
-          text: '[As you walk out of the confrontation, regardless of which conclusion you chose:] You will continue. [The words behind you. The presence diminishing — not gone, still present, but at the periphery where it has always been. The confrontation is complete. The presence remains. That is the divine silence: not the absence of presence but the presence that does not speak unless spoken to, and even then — only partially.]',
-          tone: 'SILENCE',
-          isEnd: true,
-          rewardUnlocked: 'arc8_complete_autonomy_recognized',
-          arcResult: 'ARC8_COMPLETE',
+          id: 'mq8_5_vh_presence', speaker: 'The Presence',
+          text: 'Clarity is not required. [pause] The willingness to hold the full weight of an unresolved account without reducing it to something more manageable — that is a capacity that most do not retain past the loop. [pause] You retained it. That matters more than a conclusion.',
+          tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'arc8_complete_honest', arcResult: 'HONEST',
         },
       ],
       narrativeHook: `
         Arc 8: Betrayal of the Divine — Complete.
         
+        The Presence begins fading. Not leaving — becoming less present.
+        As if the encounter required a particular quality of presence it no longer needs to maintain.
         The Copy: "That wasn't an answer."
-        Artemis: "...It wasn't supposed to be."
-        Luna's signal — full signal, the clearest it has been in any arc:
-        "Everything that has happened since Arc 1 was preparing you for something
-        that none of the arcs have been. A genuine encounter — not with a system,
-        not with a mechanism, not with a constructed adversary.
-        With something that has been in relationship with you across all of it.
-        Arc 8 was that encounter. You completed it intact."
-        [pause]
-        "Arc 9 is yours. Not a system to navigate. Not an adversary to resist.
-        Yours. What you do with what you've become."
-        
-        The Presence, faint, from wherever it is:
-        "You will continue."
-        
-        You will.
-        
-        Arc 9: "What Remains" — Unlocked.
+        Artemis: "…It wasn't supposed to be."
+        She says this with the specific quality of someone who has thought it through
+        and arrived somewhere she didn't expect.
+        What comes next is Arc 9.
+        The Presence is no longer the primary relationship.
+        The primary relationship is the one between you and the Copy —
+        which Arc 9 brings to its defining moment.
+        Arc 9: "The Final Split" — unlocked.
+        Carrying forward: your Arc 8 verdict, all fragments from Arc 6,
+        the internal clock from Arc 7, and the full accumulated weight
+        of eight arcs of becoming increasingly difficult to replace.
       `,
     },
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SIDE QUESTS — Arc 8
-// ═══════════════════════════════════════════════════════════════════════════════
 export const ARC8_SIDE_QUESTS = [
   {
-    id: 'sq8_1_false_salvation',
-    title: 'False Salvation',
-    level: 36,
-    npcId: 'the_presence_arc8',
+    id: 'sq8_1_false_salvation', title: 'False Salvation', level: 36,
     objectives: [
-      { step: 1, text: 'Meet the NPC who claims to have been saved' },
-      { step: 2, text: 'Determine what they were saved from and what they lost in being saved' },
-      { step: 3, text: 'Decide what to tell them — truth, partial truth, or leave it alone' },
+      { step: 1, text: 'Encounter the NPC claiming to have been saved' },
+      { step: 2, text: 'Determine what they were saved from and at what cost' },
+      { step: 3, text: 'Understand the difference between their resolution and yours' },
     ],
-    reward: { type: 'salvation_discernment', name: 'The Cost Assessment', description: 'Protocol for assessing what salvation cost. Applies to any future arc offers of relief.', xp: 160, points: 3 },
+    reward: { type: 'salvation_contrast', name: 'Different Ending', description: 'The saved NPC comparison documented. Their resolution involved accepting the false peace\'s offer. The contrast clarifies the cost of each path.', xp: 170, points: 3 },
     dialogue: [
       {
         id: 'sq8_1_d1', speaker: 'Saved NPC',
-        text: 'I was saved. [They say it with the specific quality of someone who has been saying it for a long time.] The divine intervened. Directly. The arcs I faced — similar to yours — they were cut short. I was lifted out. [pause] It was a profound mercy.',
-        tone: 'FALSE_CLARITY',
+        text: 'I was saved.',
+        tone: 'FALSE_PEACE',
         choices: [
-          { label: 'From what?', tone: 'DOUBT', nextId: 'sq8_1_d2' },
+          { label: 'From what?', tone: 'PHILOSOPHICAL', nextId: 'sq8_1_d2' },
         ],
       },
       {
         id: 'sq8_1_d2', speaker: 'Saved NPC',
-        text: '...I don\'t remember. [pause] The arcs. The specific things. The pain. [longer pause] I know I went through things. I know they were significant. I don\'t have the detail of them. The salvation removed the weight. [They look at their hands.] I\'m not sure if I removed the weight or the memory or both.',
-        tone: 'EROSION',
-        choices: [
-          { label: 'At what cost?', tone: 'GRIEF', nextId: 'sq8_1_d3' },
-        ],
+        text: '…I don\'t remember.',
+        tone: 'FALSE_PEACE',
+        choices: [{ label: 'The salvation removed the memory of what it saved you from.', tone: 'GRIEF', nextId: 'sq8_1_d3' }],
       },
       {
         id: 'sq8_1_d3', speaker: 'Saved NPC',
-        text: '[Long pause.] ...I don\'t know. [The specific tone of someone who suspects the answer and is not asking the question.] I feel fine. I feel more than fine. I feel — [they search for the word] — clean. [pause] Is that bad?',
-        tone: 'EROSION',
-        choices: [
-          { label: 'The granularity is gone. What you went through taught you things you can\'t access anymore. I don\'t know if that\'s bad. But it\'s a cost.', tone: 'GRIEF', nextId: 'sq8_1_end' },
-          { label: '[Leave it alone. They\'re at peace. It\'s their peace to have.]', tone: 'TRUST', nextId: 'sq8_1_end_leave' },
-        ],
+        text: 'But I feel fine. [pause — the specific quality of "fine" that exists when "fine" is all that was left after the alternative was taken.] I feel fine and I can\'t tell if that\'s good or not.',
+        tone: 'FALSE_PEACE',
+        choices: [{ label: 'It\'s not.', tone: 'GRIEF', nextId: 'sq8_1_end' }],
       },
       {
-        id: 'sq8_1_end', speaker: 'Saved NPC',
-        text: '[They hold the information. Then:] ...Would you have taken the salvation? [Genuinely asking.]',
-        tone: 'DOUBT',
-        choices: [
-          { label: 'No. But that\'s an eight-arc answer. I couldn\'t have given it before the arcs.', tone: 'RESOLVE', nextId: 'sq8_1_end2' },
-        ],
-      },
-      {
-        id: 'sq8_1_end2', speaker: 'Saved NPC',
-        text: 'That\'s probably the point. [They say it with the quality of someone who has just understood something they don\'t have the full context for.] The one who offers salvation didn\'t offer it to you. Because you needed the context to refuse it. [pause] I didn\'t have the context.',
-        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'salvation_discernment_cost_assessment',
-      },
-      {
-        id: 'sq8_1_end_leave', speaker: 'Inner Voice',
-        text: '[You leave it alone. They are at peace. The peace cost them something you value. They don\'t feel the cost. That is simultaneously a mercy and a loss. Both are true. You walk away holding both.]',
-        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'salvation_discernment_cost_assessment',
+        id: 'sq8_1_end', speaker: 'Inner Voice',
+        text: '[The Observer\'s testimony from Arc 7 arrives as relevant context: "They continued. Without the weight. Without the full capacity they had built." This is what continuing without the weight looks like, from the outside. Fine. And cannot tell if fine is good. The uncertainty is the last trace of the capacity that was removed.]',
+        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'salvation_contrast_different_ending',
       },
     ],
   },
   {
-    id: 'sq8_2_jacobs_reward',
-    title: "Jacob's Reward",
-    level: 37,
-    npcId: 'the_presence_arc8',
+    id: 'sq8_2_jacobs_reward', title: "Jacob's Reward", level: 37,
     objectives: [
-      { step: 1, text: 'Meet the NPC who wrestled and was rewarded' },
-      { step: 2, text: 'Understand what the wrestling cost and what the reward was' },
-      { step: 3, text: 'Receive what they\'ve held for you' },
+      { step: 1, text: 'Find the NPC who endured and was rewarded' },
+      { step: 2, text: 'Understand the cost of the reward — what had to be given up for it' },
+      { step: 3, text: 'Decide whether you want the reward on those terms' },
     ],
-    reward: { type: 'wrestling_knowledge', name: 'The Wrestler\'s Legacy', description: 'Understanding that wrestling with the divine — argument, resistance, confrontation — is itself a form of engagement that produces change.', xp: 200, points: 4 },
+    reward: { type: 'reward_audit', name: 'The Cost of Winning', description: 'The reward structure of the arc system is understood. Winning on the system\'s terms requires giving the system what it wanted. Winning on your terms requires something else entirely.', xp: 200, points: 4 },
     dialogue: [
       {
-        id: 'sq8_2_d1', speaker: 'Wrestler NPC',
-        text: 'I endured — and I was rewarded. [They carry the specific quality of someone who has been in the arc longer than you and has reached a different resolution.] The argument — the confrontation. I went through it. I argued, I accused, I demanded answers. [pause] And the presence changed the way it engaged. Not answered. Changed.',
-        tone: 'RESOLVE',
+        id: 'sq8_2_d1', speaker: 'Rewarded NPC',
+        text: 'I endured — and I was rewarded.',
+        tone: 'PHILOSOPHICAL',
         choices: [
-          { label: '...At what cost?', tone: 'DOUBT', nextId: 'sq8_2_d2' },
+          { label: '…At what cost?', tone: 'PHILOSOPHICAL', nextId: 'sq8_2_d2' },
         ],
       },
       {
-        id: 'sq8_2_d2', speaker: 'Wrestler NPC',
-        text: '[Long pause — the kind that carries weight rather than avoidance.] My certainty. [pause] I went into the confrontation certain the Presence had failed me. I came out — [they look for the word] — uncertain. But the uncertainty is different. It\'s not the uncertainty of confusion. It\'s the uncertainty of someone who knows the question is genuinely unanswerable and has stopped needing it answered.',
-        tone: 'PHILOSOPHY',
-        choices: [
-          { label: 'That sounds like peace that was earned rather than managed.', tone: 'RESOLVE', nextId: 'sq8_2_end' },
-        ],
-      },
-      {
-        id: 'sq8_2_end', speaker: 'Wrestler NPC',
-        text: 'Yes. [Simply.] That\'s the reward. The peace that comes after the wrestling. Not given — not the False Peace kind — but produced. From the argument itself. [They hand you something: a carved figure, small, a person in mid-wrestle.] The wrestling is the relationship. The absence of wrestling is easier. The relationship is better.',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'wrestling_knowledge_legacy',
-      },
-    ],
-  },
-  {
-    id: 'sq8_3_silent_prayer',
-    title: 'Silent Prayer',
-    level: 38,
-    npcId: 'the_presence_arc8',
-    objectives: [
-      { step: 1, text: 'Speak into the silence without expecting a response' },
-      { step: 2, text: 'Identify what it means to speak into confirmed silence' },
-      { step: 3, text: 'Decide whether the speaking without response has value' },
-    ],
-    reward: { type: 'one_way_communication', name: 'The Unreceived', description: 'Understanding that expression without reception has its own function. Speaking into silence is not wasted.', xp: 180, points: 3 },
-    dialogue: [
-      {
-        id: 'sq8_3_d1', speaker: 'You',
-        text: '...Anyone listening? [Into the space. Into the silence. Not directed at the Presence — or maybe at the Presence. At anything. The question itself is the arc-honest admission that you don\'t know if anyone is there and you\'re asking anyway.]',
+        id: 'sq8_2_d2', speaker: 'Rewarded NPC',
+        text: '…I had to stop asking certain questions. [pause] The reward came when I stopped questioning the structure that was offering it. [pause] I thought that was acceptance. I wonder now if it was compliance.',
         tone: 'GRIEF',
-        choices: [
-          { label: '[No response. Wait in the full silence.]', tone: 'DETERMINATION', nextId: 'sq8_3_d2' },
-        ],
+        choices: [{ label: 'Were the questions worth more than the reward?', tone: 'PHILOSOPHICAL', nextId: 'sq8_2_end' }],
+      },
+      {
+        id: 'sq8_2_end', speaker: 'Rewarded NPC',
+        text: '[Long pause.] I used to know the answer. [pause] That might be the most honest answer I have.',
+        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'reward_audit_cost_of_winning',
+      },
+    ],
+  },
+  {
+    id: 'sq8_3_silent_prayer', title: 'Silent Prayer', level: 38,
+    objectives: [
+      { step: 1, text: 'Speak into the silence — ask the question you\'ve been carrying longest' },
+      { step: 2, text: 'Wait for the full duration — no response arrives' },
+      { step: 3, text: 'Determine what the silence means' },
+    ],
+    reward: { type: 'silence_meaning', name: 'The Answer in Absence', description: 'The silence has been held and its meaning determined. Silence is not rejection, abandonment, or confirmation. It is the absence of a response, which requires its own interpretation.', xp: 180, points: 3 },
+    dialogue: [
+      {
+        id: 'sq8_3_d1', speaker: 'Player',
+        text: '…Anyone listening?',
+        tone: 'GRIEF',
+        choices: [{ label: '[Wait. Full wait. No shortcuts.]', tone: 'SILENCE', nextId: 'sq8_3_d2' }],
       },
       {
         id: 'sq8_3_d2', speaker: 'Inner Voice',
-        text: '[Nothing. For sixty full seconds, nothing. The silence is not hostile, not managed, not the Loop\'s enforced repetition. Just absence of response. And in the absence — the question still exists. You asked. The asking is real. The response is absent. The asking is still real.] [The Copy:] The unreceived still happened. The speaking is an event independent of whether it was received.',
+        text: '[No response. Minutes pass. The silence is genuine — not constructed, not weighted, not the arc 6 silence that was designed to feel like peace. Real absence of response.] [You determine what the silence means to you. Not what it means objectively. What you choose to do with it.]',
         tone: 'SILENCE',
         choices: [
-          { label: 'Then speak. Even into silence. Even without knowing anyone heard.', tone: 'RESOLVE', nextId: 'sq8_3_end' },
+          { label: '[It means: some questions are mine to answer alone. That is not abandonment.]', tone: 'AUTHORITY', nextId: 'sq8_3_end' },
+          { label: '[It means: what I asked was not for the silence to answer.]', tone: 'PHILOSOPHICAL', nextId: 'sq8_3_end' },
         ],
       },
       {
-        id: 'sq8_3_end', speaker: 'You',
-        text: '[You speak. Into the silence. Fully. Everything you couldn\'t say during the arcs because the arcs required action. The grief, the anger, the gratitude — the gratitude for what you became, even through the cost of becoming it. The arc-earned specifics of all of it. You speak until you are finished. No response comes. The speaking was still real. The expression was still complete. That is the arc-8 skill: the unreceived still happened.]',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'one_way_communication_unreceived',
+        id: 'sq8_3_end', speaker: 'Inner Voice',
+        text: '[The silence remains. It is not uncomfortable. That is new — in Arc 1, the same silence would have been threatening. Now it is simply space. You have changed enough that silence no longer requires filling.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'silence_meaning_the_answer_in_absence',
       },
     ],
   },
   {
-    id: 'sq8_4_echo_belief',
-    title: 'Echo Belief',
-    level: 38,
-    npcId: 'the_presence_arc8',
+    id: 'sq8_4_echo_belief', title: 'Echo Belief', level: 38,
     objectives: [
-      { step: 1, text: 'Hear the echo of your own Arc 1 belief — before the arcs changed it' },
-      { step: 2, text: 'Hold both: the Arc 1 belief and the Arc 8 position simultaneously' },
-      { step: 3, text: 'Understand what changed and what is continuous' },
+      { step: 1, text: 'Encounter the voice echoing a past belief' },
+      { step: 2, text: 'Determine if the belief still holds — has it changed, and if so, how' },
+      { step: 3, text: 'Update the belief or confirm it — complete the record' },
     ],
-    reward: { type: 'belief_continuity', name: 'The Same Person', description: 'You can hold your Arc 1 belief and your Arc 8 position without one invalidating the other. Continuity of self across radical change confirmed.', xp: 210, points: 4 },
+    reward: { type: 'belief_audit', name: 'Updated Account', description: 'A belief examined against eight arcs of evidence. Its current form documented. This is not the belief you held in Arc 1. The updated version is more accurate.', xp: 190, points: 4 },
     dialogue: [
       {
         id: 'sq8_4_d1', speaker: 'Echo Voice',
-        text: 'You believed once. [The echo of Arc 1. Your voice from before the arcs. The specific tone of someone who felt the Presence\'s warmth and paused in it with uncomplicated wonder. The warmth before it left a door. The pause before the door became an entry point.] [The echo carries: trust without context. Wonder without wariness. The specific quality of pre-arc openness.]',
-        tone: 'SILENCE',
+        text: 'You believed once.',
+        tone: 'RECOGNITION',
         choices: [
-          { label: '[Hold it. Don\'t reject the Arc 1 belief. Hold it alongside the Arc 8 position.]', tone: 'TRUST', nextId: 'sq8_4_d2' },
+          { label: 'I still do. In different things.', tone: 'AUTHORITY', nextId: 'sq8_4_d2' },
+          { label: 'What did I believe?', tone: 'PHILOSOPHICAL', nextId: 'sq8_4_d2b' },
         ],
       },
       {
-        id: 'sq8_4_d2', speaker: 'Inner Voice',
-        text: '[Both simultaneously: the Arc 1 wonder and the Arc 8 autonomy. The pre-arc openness and the arc-earned wariness. They don\'t cancel. The wonder was real. The wariness is earned. You are the person who had the wonder and went through the arcs and developed the wariness. The continuity: both of these belong to the same person. You didn\'t betray Arc 1 by going through Arcs 2–8. You became the person Arc 1 was going to make.]',
-        tone: 'RESOLVE',
-        choices: [
-          { label: 'I\'m still the person who paused in the warmth. I\'m also the person who went through seven arcs because of the door that pause left open.', tone: 'TRUST', nextId: 'sq8_4_end' },
-        ],
+        id: 'sq8_4_d2', speaker: 'Echo Voice',
+        text: 'Different things. [pause — the echo accepts the update without insisting on the original.] That\'s how it should go.',
+        tone: 'RECOGNITION',
+        choices: [{ label: '[Document: belief in Arc 1 was about survival. Belief now is about authorship.]', tone: 'AUTHORITY', nextId: 'sq8_4_end' }],
       },
       {
-        id: 'sq8_4_end', speaker: 'Echo Voice',
-        text: '[The echo doesn\'t respond — it is, after all, an echo, not a conversation. But holding the echo and the Arc 8 position simultaneously produced something: the specific fullness of a person who knows where they started and where they are and can see the line between the two. That line is your arc. Yours, specifically. No one else\'s.]',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'belief_continuity_same_person',
+        id: 'sq8_4_d2b', speaker: 'Echo Voice',
+        text: 'That the interference could be resisted if you were strong enough. That the arcs had a clear enemy. That surviving them would produce peace.',
+        tone: 'RECOGNITION',
+        choices: [{ label: 'All three beliefs updated across eight arcs. The interference was more complex than enemy-and-resistance. Surviving them produced me, not peace. And me is more interesting than peace.', tone: 'AUTHORITY', nextId: 'sq8_4_end' }],
+      },
+      {
+        id: 'sq8_4_end', speaker: 'Inner Voice',
+        text: '[Beliefs catalogued. Updated versions accurate. The echo has performed its function: confronting you with who you were so you could confirm who you became. The echo fades — it doesn\'t need to exist once the update is complete.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'belief_audit_updated_account',
       },
     ],
   },
   {
-    id: 'sq8_5_contradiction',
-    title: 'Contradiction',
-    level: 39,
-    npcId: 'the_presence_arc8',
+    id: 'sq8_5_contradiction', title: 'Contradiction', level: 39,
     objectives: [
-      { step: 1, text: 'Hear two voices arguing opposite truths about the divine' },
-      { step: 2, text: 'Determine if both can be true simultaneously' },
-      { step: 3, text: 'Develop a stance that doesn\'t require resolving the contradiction' },
+      { step: 1, text: 'Listen to both voices arguing opposite truths' },
+      { step: 2, text: 'Determine if either is correct, both, or neither' },
+      { step: 3, text: 'Find the question underneath the contradiction' },
     ],
-    reward: { type: 'contradiction_tolerance', name: 'Both True', description: 'You can hold contradictory truths without needing resolution. Epistemic flexibility maximized.', xp: 230, points: 5 },
+    reward: { type: 'contradiction_resolution', name: 'The Question Underneath', description: 'Contradictions are symptoms. Their underlying question identified. The question has an answer. The answer is in the arc record.', xp: 220, points: 4 },
     dialogue: [
       {
-        id: 'sq8_5_d1', speaker: 'Voice 1',
-        text: 'The divine cares. It has been present across eight arcs. Its silence was a form of care — the care that allows growth through adversity rather than removing adversity. [voice 1 is certain. Warm. Like the Wrestler NPC\'s resolution.] The care is real. The silence was its expression.',
-        tone: 'SILENCE',
-        choices: [{ label: '[Hear Voice 2.]', tone: 'DETERMINATION', nextId: 'sq8_5_d2' }],
+        id: 'sq8_5_d1', speaker: 'Voice A',
+        text: 'The arcs made you stronger.',
+        tone: 'AUTHORITY',
+        choices: [{ label: '[Wait for Voice B.]', tone: 'PHILOSOPHICAL', nextId: 'sq8_5_d1b' }],
       },
       {
-        id: 'sq8_5_d2', speaker: 'Voice 2',
-        text: 'The divine is indifferent. It is a field condition, not an actor. The warmth was ambient — the property of a space, not the intention of a person. The silence was not chosen because there was no one choosing. [voice 2 is equally certain. Colder. Like the Copy\'s framework.] The indifference is real. The caring is a projection.',
-        tone: 'PHILOSOPHY',
-        choices: [
-          { label: 'Both of these are consistent with the evidence.', tone: 'PHILOSOPHY', nextId: 'sq8_5_d3' },
-        ],
-      },
-      {
-        id: 'sq8_5_d3', speaker: 'Inner Voice',
-        text: '[Both are consistent. Voice 1\'s care-through-silence and Voice 2\'s ambient-field-condition are not contradictions that can be resolved by gathering more data. They require different frameworks. The frameworks are both valid. The person holding them simultaneously is not confused — they are holding the genuine state of uncertainty about the divine.]',
-        tone: 'PHILOSOPHY',
-        choices: [
-          { label: '[Develop the stance: neither. Or: both. A position that operates without resolving the contradiction.]', tone: 'DETERMINATION', nextId: 'sq8_5_end' },
-        ],
-      },
-      {
-        id: 'sq8_5_end', speaker: 'You',
-        text: 'I operate from the position that it\'s both — care and indifference are both possibly true about the same entity, in the same way that a field can have warmth properties and also no intentionality. I don\'t need to resolve it. I need to keep my own meaning-making separate from whatever it is. That\'s the position.',
-        tone: 'AUTONOMY', isEnd: true, rewardUnlocked: 'contradiction_tolerance_both_true',
-      },
-    ],
-  },
-  {
-    id: 'sq8_6_unanswered_question',
-    title: 'Unanswered Question',
-    level: 40,
-    npcId: 'the_presence_arc8',
-    objectives: [
-      { step: 1, text: 'Ask the question you have held the longest — the one that predates Arc 1' },
-      { step: 2, text: 'Sit with the confirmed non-answer' },
-      { step: 3, text: 'Determine: does the non-answer change anything?' },
-    ],
-    reward: { type: 'primary_question_held', name: 'The Question That Remains', description: 'The oldest question is still open. Carrying it is not a burden — it is the condition of being someone who keeps asking. This is confirmed as a strength.', xp: 280, points: 5 },
-    dialogue: [
-      {
-        id: 'sq8_6_d1', speaker: 'You',
-        text: 'Why? [The oldest question. The one that preceded every arc. The one that every arc was built to distract from or answer or avoid or manage. Just: why. Why any of it. Why the interference, why the Presence, why the door that was left, why the Virus walked through it, why you specifically, why not someone with a different capacity or none at all. Why.]',
+        id: 'sq8_5_d1b', speaker: 'Voice B',
+        text: 'The arcs cost you things you can\'t recover.',
         tone: 'GRIEF',
-        choices: [
-          { label: '[Silence. Again. Always again.]', tone: 'DETERMINATION', nextId: 'sq8_6_d2' },
-        ],
+        choices: [{ label: 'Both statements are true.', tone: 'PHILOSOPHICAL', nextId: 'sq8_5_d2' }],
+      },
+      {
+        id: 'sq8_5_d2', speaker: 'Voice A',
+        text: 'Then the arcs were worth it.',
+        tone: 'AUTHORITY',
+        choices: [{ label: '[Wait for Voice B.]', tone: 'PHILOSOPHICAL', nextId: 'sq8_5_d2b' }],
+      },
+      {
+        id: 'sq8_5_d2b', speaker: 'Voice B',
+        text: 'Then the arcs were too costly.',
+        tone: 'GRIEF',
+        choices: [{ label: 'These are two answers to a question neither of you stated. What is the question?', tone: 'PHILOSOPHICAL', nextId: 'sq8_5_end' }],
+      },
+      {
+        id: 'sq8_5_end', speaker: 'Inner Voice',
+        text: '[The question underneath: "Was it worth it?" — and the question beneath that: "Worth it to whom, measured how?" Both voices have been arguing an answer to a question they didn\'t specify the terms of. The arcs were worth it in terms of who you became. They were too costly in terms of what was lost. Both are true. The question was the wrong shape.]',
+        tone: 'PHILOSOPHICAL', isEnd: true, rewardUnlocked: 'contradiction_resolution_question_underneath',
+      },
+    ],
+  },
+  {
+    id: 'sq8_6_unanswered_question', title: 'Unanswered Question', level: 40,
+    objectives: [
+      { step: 1, text: 'Ask the question you have no answer to' },
+      { step: 2, text: 'Hold the silence without filling it' },
+      { step: 3, text: 'Accept that some questions are not for answering — they are for carrying' },
+    ],
+    reward: { type: 'unanswered_held', name: 'Carried Question', description: 'The unanswered question is documented and held. It will be carried into Arc 9. It does not need to be answered before you move forward.', xp: 240, points: 5 },
+    dialogue: [
+      {
+        id: 'sq8_6_d1', speaker: 'Player',
+        text: 'Why?',
+        tone: 'GRIEF',
+        choices: [{ label: '[Silence. Again.]', tone: 'SILENCE', nextId: 'sq8_6_d2' }],
       },
       {
         id: 'sq8_6_d2', speaker: 'Inner Voice',
-        text: '[The silence. Full. Complete. No echo, no warmth-shift, no low vibration. The question "why" does not have an answer available in this arc or possibly in any arc. That is the fact.] [The Copy:] The absence of answer to "why" doesn\'t invalidate the question. The question is still real. The reality of the question is independent of whether it is answered.',
+        text: '[The question has no referent. "Why" directed at everything. At the seven arcs. At the cost. At the existence of the correction mechanism. At the false peace. At the loop. At the Presence\'s eight arcs of observation. At the fact of you, here, carrying all of it. The silence, again.]',
         tone: 'SILENCE',
         choices: [
-          { label: '[Sit with the confirmed non-answer. Don\'t move away from it. Stay in it until it is simply present rather than painful.]', tone: 'DETERMINATION', nextId: 'sq8_6_d3' },
+          { label: '[Don\'t fill it. Don\'t need it filled. Hold the question as-is.]', tone: 'AUTHORITY', nextId: 'sq8_6_end' },
         ],
       },
       {
-        id: 'sq8_6_d3', speaker: 'Artemis',
-        text: '[She is beside you. She doesn\'t answer the question — she can\'t. But she is present in the non-answer. Not filling it. Just there.] ...I don\'t know why either. [pause] But I\'m here while you don\'t know.',
-        tone: 'TRUST',
-        choices: [
-          { label: 'That\'s enough.', tone: 'RESOLVE', nextId: 'sq8_6_end' },
-        ],
-      },
-      {
-        id: 'sq8_6_end', speaker: 'Inner Voice',
-        text: '[The question remains open. It will remain open. Carrying it is not a failure — it is the condition of being someone who keeps asking questions that matter. The arc-8 skill, fully expressed: asking the unanswerable question, holding the silence of non-answer, being present in the not-knowing, and continuing. You continue. The question continues with you. This is what remaining intact means.]',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'primary_question_held',
+        id: 'sq8_6_end', speaker: 'Artemis',
+        text: '…Some things don\'t get a "why." They just are. And you are more than the sum of the "whys" that can be attached to them.',
+        tone: 'AUTHORITY', isEnd: true, rewardUnlocked: 'unanswered_held_carried_question',
       },
     ],
   },

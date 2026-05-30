@@ -2,1042 +2,727 @@
 // FRACTURED DIVINITY — Arc 7: "The Judgment Loop"
 // Quest chain: Levels 31–35
 // Main Quest 7: "Eternal Return" (5 sub-quests) + 6 Side Quests
-// Tone tags: OPPRESSION | REPETITION | AWAKENING | DREAD | CLARITY | RESOLVE
-// Loop notation: [LOOP N] marks iteration number within a cycle
+// Tone tags: REPETITION | OPPRESSION | AWAKENING | AWARENESS | ESCAPE | RESOLVE
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ARC7_NPCS = [
   {
     id: 'artemis_arc7',
     name: 'Artemis',
-    description: 'She resets with the loop — each cycle, she begins again at the same sentence. She does not accumulate loop-memory the way you do. That gap between you is the loneliest part of Arc 7.',
+    description: 'Each loop iteration, she loses slightly more of the arc-specific memory she accumulated. She retains the feeling but forgets the detail. She becomes more instinctual and less specific. This is happening to her and you are watching it.',
     tint: 0x1a1a3a,
   },
   {
     id: 'copy_arc7',
     name: 'The Copy',
-    description: 'It partially retains loop memory — more than Artemis, less than you. It is the first to see the loop\'s structure. It is also, sometimes, the one most tempted to stay inside it.',
+    description: 'The loop does not affect the Copy the same way — it has no continuous memory between iterations by design. Each loop is its first loop. Which means, paradoxically, the Copy is the only entity in Arc 7 that experiences the loop as neutral.',
     tint: 0x2a2a3a,
   },
   {
-    id: 'system_voice_arc7',
-    name: 'System Voice',
-    description: 'The operator of the loop. It does not experience the loop — it administers it. That distinction matters: the administrator believes the loop serves a purpose. It is not lying when it says so.',
-    tint: 0x0a0a1a,
+    id: 'observer_arc7',
+    name: 'The Observer',
+    description: 'Outside the loop. You can see it at the far edge of the looping space — it does not reset. It watches. It has watched every iteration.',
+    tint: 0x1a2a1a,
   },
   {
-    id: 'observer_time',
-    name: 'The Observer (Time)',
-    description: 'Exists outside the loop. Has been watching every iteration. It has information about the total cycle count that you don\'t. It will share some of it. Not all.',
-    tint: 0x0a1a0a,
+    id: 'loop_system',
+    name: 'Loop System',
+    description: 'The judgment loop\'s architecture. Not a voice but a pattern. It speaks when addressed directly. It speaks in the language of justification.',
+    tint: 0x0a0a0a,
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MAIN QUEST 7 — "Eternal Return"
-// ═══════════════════════════════════════════════════════════════════════════════
 export const MAIN_QUEST_CHAIN_7 = {
   id: 'mq_arc7',
   title: 'Eternal Return',
   arc: 'Arc 7: The Judgment Loop',
-  description: 'The loop is not punishment. The System Voice is clear about this: it is a stabilization mechanism. The Arc 5 core zone created a decision instability that the system resolved by looping the moment before the decision — holding you at the threshold until a stable choice can be registered. You have been at this threshold for longer than you know. Awareness is the only variable the loop did not account for.',
+  description: 'The same moment. Again. You are in it before you realize you are in it. The loop does not announce itself. It simply begins, as the last one ended, with Artemis saying something true.',
   subQuests: [
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 1 — "The Reset"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq7_1_the_reset',
       title: 'The Reset',
       level: 31,
       npcId: 'artemis_arc7',
       narrativeSetup: `
-        You step forward and everything snaps back.
-        Not gradually — immediately. The way a door closes. The way a breath ends.
-        You are in the same place you were five steps ago. Artemis is beside you
-        saying the same thing she said five steps ago. The light is exactly the same.
-        Your left foot is in exactly the same position.
-        The snap was complete. If you didn't know it happened — if you hadn't carried
-        the five steps in your body — you would not know it happened.
-        But you do know. Your body has the memory of five steps.
-        The environment has the memory of none.
+        Artemis says: "We made it out."
+        Those four words. This exact intonation. This exact pause before the "out."
+        You have heard them before — just now, in fact. And before that.
+        The first time, you thought you were at the beginning of something.
+        Now the word "beginning" has become complicated.
+        You take five steps forward. The environment resets — not dramatically,
+        not with distortion or flickering. It simply returns. The way a room returns
+        to its state before you entered it, except you did not leave.
       `,
       objectives: [
-        { step: 1, text: '[LOOP 1] Move forward — observe the first reset trigger at step 5' },
-        { step: 2, text: '[LOOP 2] Identify what Artemis says at the moment of reset' },
-        { step: 3, text: '[LOOP 3] Attempt to speak before the reset triggers — change a dialogue beat' },
-        { step: 4, text: 'Hear the Copy\'s warning and the System Voice confirmation' },
+        { step: 1, text: 'Move forward — trigger the first reset consciously' },
+        { step: 2, text: 'Observe the dialogue repeat — document the exact repetition' },
+        { step: 3, text: 'Attempt deviation on the third iteration' },
+        { step: 4, text: 'Hear the Copy\'s first response to the loop' },
       ],
-      reward: {
-        type: 'loop_awareness',
-        name: 'First Loop Memory',
-        description: 'You carry the memory of Loop 1 forward. Loop iteration counter active. Each subsequent loop, you retain one additional detail.',
-        xp: 200, points: 4,
-      },
+      reward: { type: 'loop_map', name: 'First Loop Document', description: 'The loop\'s trigger and reset point documented. Iteration counter active. Loop-awareness skill initialized.', xp: 230, points: 5 },
       dialogue: [
         {
-          id: 'mq7_1_d1_first',
-          speaker: 'Artemis',
+          id: 'mq7_1_d1', speaker: 'Artemis',
           text: '…We made it out.',
-          tone: 'FALSE_CLARITY',
-          loopIteration: 1,
-          choices: [{ label: '[Walk forward. Count steps.]', tone: 'RESOLVE', nextId: 'mq7_1_d1_walk' }],
+          tone: 'REPETITION', loopIteration: 1,
+          choices: [{ label: '…Did we?', tone: 'AWAKENING', nextId: 'mq7_1_d1b' }],
         },
         {
-          id: 'mq7_1_d1_walk',
-          speaker: 'Inner Voice',
-          text: '[Step 1. Step 2. Step 3. Step 4. Step 5 — ] ',
-          tone: 'OPPRESSION',
-          mechanic: 'loop_reset',
-          choices: [{ label: '[RESET. You are back. Artemis is saying the opening line.]', tone: 'DREAD', nextId: 'mq7_1_d2_loop2' }],
+          id: 'mq7_1_d1b', speaker: 'Inner Voice',
+          text: '[Five steps. The environment resets. You are standing at the same position. Artemis is to your left, exact same position.]',
+          tone: 'REPETITION', mechanic: 'loop_reset',
+          choices: [{ label: '[Internal: No. That just happened.]', tone: 'AWAKENING', nextId: 'mq7_1_d2' }],
         },
         {
-          id: 'mq7_1_d2_loop2',
-          speaker: 'Artemis',
+          id: 'mq7_1_d2', speaker: 'Artemis',
           text: '…We made it out.',
-          tone: 'FALSE_CLARITY',
-          loopIteration: 2,
+          tone: 'REPETITION', loopIteration: 2,
           choices: [
-            { label: '…Did we?', tone: 'DREAD', nextId: 'mq7_1_d2b' },
-            { label: '[Stay silent. Wait for the reset.]', tone: 'OPPRESSION', nextId: 'mq7_1_d2_silent' },
-            { label: '[Walk a different direction — not forward.]', tone: 'RESOLVE', nextId: 'mq7_1_d2_different' },
+            { label: 'You said that already.', tone: 'AWAKENING', nextId: 'mq7_1_d3_said' },
+            { label: '[Stay silent.]', tone: 'REPETITION', nextId: 'mq7_1_d3_silent' },
+            { label: '[Walk a different direction.]', tone: 'AWAKENING', nextId: 'mq7_1_d3_direction' },
           ],
         },
         {
-          id: 'mq7_1_d2b',
-          speaker: 'Artemis',
-          text: '…What do you mean?',
+          id: 'mq7_1_d3_said', speaker: 'Artemis',
+          text: '…What do you mean? [She is genuinely confused — she has no memory of the previous iteration. To her, she said it once.]',
           tone: 'CONFUSION',
-          choices: [{ label: 'You said that already. We walked. Something reset.', tone: 'DREAD', nextId: 'mq7_1_d2c_denial' }],
+          choices: [{ label: 'The loop doesn\'t touch her memory. But it touches mine.', tone: 'AWAKENING', nextId: 'mq7_1_d4_copy' }],
         },
         {
-          id: 'mq7_1_d2c_denial',
-          speaker: 'Artemis',
-          text: '…No, I — [She looks at where she was standing. The position is exactly the same as the last time she said this. She can feel the wrongness but she has no iteration-memory to confirm it.] I just said it once.',
-          tone: 'CONFUSION',
-          choices: [{ label: '[Note: she does not retain the loop. You do.]', tone: 'DREAD', nextId: 'mq7_1_d3_copy' }],
+          id: 'mq7_1_d3_silent', speaker: 'Inner Voice',
+          text: '[Nothing happens. The loop continues unchanged. Artemis says "We made it out" again in 11 seconds, exactly. The loop does not require your participation to proceed. It proceeds regardless.]',
+          tone: 'REPETITION', mechanic: 'loop_reset',
+          choices: [{ label: '[The loop needs to be engaged, not ignored.]', tone: 'AWAKENING', nextId: 'mq7_1_d4_copy' }],
         },
         {
-          id: 'mq7_1_d2_silent',
-          speaker: 'Inner Voice',
-          text: '[Silence. Five seconds. Ten. The loop does not trigger. The loop requires forward motion. Without the trigger movement, the cycle holds. Artemis stands still beside you, saying nothing after the opening line because you haven\'t engaged with it.]',
-          tone: 'OPPRESSION',
-          choices: [{ label: '[Still standing. The loop is tied to the forward step. If you don\'t step — it doesn\'t reset.]', tone: 'AWAKENING', nextId: 'mq7_1_d3_copy' }],
+          id: 'mq7_1_d3_direction', speaker: 'Inner Voice',
+          text: '[You turn right. The reset triggers faster — the same reset, three steps instead of five. The loop shortened when you deviated. It adjusted to prevent the deviation from becoming a viable path.]',
+          tone: 'AWAKENING', mechanic: 'loop_adjusted',
+          choices: [{ label: '[The loop learns. Deviations trigger faster resets. Direct engagement is the method, not escape attempts.]', tone: 'AWAKENING', nextId: 'mq7_1_d4_copy' }],
         },
         {
-          id: 'mq7_1_d2_different',
-          speaker: 'Inner Voice',
-          text: '[You turn right instead of forward. Three steps. The reset triggers immediately — faster than at step 5 forward. The loop\'s reset radius is smaller to the sides than forward. The forward path is the primary trigger. Lateral movement is the secondary trigger. The loop enforces direction.]',
-          tone: 'DREAD',
-          mechanic: 'loop_reset_fast',
-          choices: [{ label: '[RESET. Information: lateral movement triggers faster. The loop enforces the forward path.]', tone: 'AWAKENING', nextId: 'mq7_1_d3_copy' }],
+          id: 'mq7_1_d4_copy', speaker: 'The Copy',
+          text: 'Not like this. [Quiet — it is processing the loop\'s structure with the equanimity of something that has no continuous memory and therefore no exhaustion from repetition.] The loop is based on a decision you haven\'t made yet. The reset point is an unmade decision that the loop is waiting for you to complete.',
+          tone: 'AWAKENING',
+          choices: [{ label: 'What decision?', tone: 'CONFUSION', nextId: 'mq7_1_d5_cycle' }],
         },
         {
-          id: 'mq7_1_d3_copy',
-          speaker: 'The Copy',
-          text: '[Faint — just barely audible, from the edge of your own inner-voice space.] Not like this.',
-          tone: 'DREAD',
-          choices: [{ label: 'What do you mean?', tone: 'CONFUSION', nextId: 'mq7_1_d4_system' }],
-        },
-        {
-          id: 'mq7_1_d4_system',
-          speaker: 'System Voice',
+          id: 'mq7_1_d5_cycle', speaker: 'Loop System',
           text: 'Cycle initiated.',
-          tone: 'FALSE_CLARITY',
-          isEnd: true,
-          rewardUnlocked: 'loop_awareness_first_loop_memory',
+          tone: 'REPETITION', isEnd: true, rewardUnlocked: 'loop_map_first_document',
         },
       ],
       narrativeHook: `
-        The System Voice said "Cycle initiated" as if it were a beginning.
-        But you know you are already inside it.
-        "Initiated" is what the system says every time you first notice.
-        The Copy carries more loop-memory than Artemis does.
-        That means it has been here before — that the Copy-state persists
-        slightly longer through resets than the rest of the environment.
-        You are the only one who carries full iteration memory.
-        That asymmetry — you remember, Artemis resets, the Copy partially persists —
-        is the structure you will use to break the loop.
-        But first you have to understand how many times you've already tried.
+        The loop resets. You are standing at the start position.
+        Artemis: "…We made it out."
+        You have heard this sentence more times than you can count.
+        That is not hyperbole — you have stopped counting because counting
+        was making the loop feel smaller than it is, and the loop being small
+        felt like comfort, and comfort in a loop is how the loop keeps you.
+        The Copy: "Not like this."
+        Every iteration, those three words arrive at the same point
+        in your processing. Every iteration, they feel like the beginning of something.
+        Every iteration, the reset prevents the something from completing.
+        That prevention is the judgment. You are being held at the moment just before
+        you understand what you need to do.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 2 — "Recognition"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq7_2_recognition',
       title: 'Recognition',
       level: 32,
       npcId: 'artemis_arc7',
       narrativeSetup: `
-        The loop continues. You are accumulating iterations — each one adding
-        a small detail to what you know. The loop does not feel the same each time.
-        The first iteration was seamless. The second you noticed the texture of the reset.
-        By the third iteration, Artemis's opening line has developed a fractional uncertainty —
-        "…we made it out… right?" — as if the loop is losing the resolution of its starting state.
-        The System Voice registers this as "awareness increasing" and adjusts the cycle.
-        The Copy says: "You\'re starting to see it."
-        It has been here for this loop too. Its memory is accumulating alongside yours.
+        Loop iteration — you have lost count, which is relevant data.
+        Artemis says: "We made it out… right?"
+        The uncertainty in "right?" is new. You noticed it. She is beginning to retain something —
+        not memory, but a quality of question that suggests the memory should be there
+        and is missing. She is experiencing the absence of what she doesn't know she's lost.
+        You are accumulating awareness across iterations.
+        The Loop System acknowledges this.
       `,
       objectives: [
-        { step: 1, text: '[LOOP 3] Notice the changed opening line — Artemis\'s uncertainty' },
-        { step: 2, text: '[LOOP 4] Identify what triggers the System Voice\'s observation' },
-        { step: 3, text: '[LOOP 5] Attempt a new dialogue choice that hasn\'t been made before' },
-        { step: 4, text: 'Document: what changes, what doesn\'t, what the loop is protecting' },
+        { step: 1, text: 'Notice the three-loop pattern — small differences accumulate per iteration' },
+        { step: 2, text: 'Attempt new dialogue choices in the middle of the loop' },
+        { step: 3, text: 'Hear the Loop System acknowledge your awareness' },
+        { step: 4, text: 'Understand: the loop adjusts, which means the loop is responsive' },
       ],
-      reward: {
-        type: 'loop_map',
-        name: 'Iteration Map',
-        description: 'Loops 1-5 mapped. Reset triggers identified. Artemis\'s degrading opening line is a tell — the loop is losing fidelity. Fidelity loss rate: exploitable.',
-        xp: 250, points: 5,
-      },
+      reward: { type: 'loop_responsiveness', name: 'The Loop Hears You', description: 'The loop is responsive to your choices. This is the first exploitable fact about it. Awareness increases loop-break potential by 25%.', xp: 280, points: 5 },
       dialogue: [
         {
-          id: 'mq7_2_d1_loop3',
-          speaker: 'Artemis',
-          text: '…We made it out… right?',
-          tone: 'CONFUSION',
-          loopIteration: 3,
+          id: 'mq7_2_d1', speaker: 'Artemis',
+          text: '…We made it out… right? [Loop iteration. The uncertainty is new. She retained something.]',
+          tone: 'CONFUSION', loopIteration: 'N+3',
           choices: [
-            { label: 'You changed that.', tone: 'AWAKENING', nextId: 'mq7_2_d2_changed' },
-            { label: '[Note the change. Don\'t alert her yet.]', tone: 'RESOLVE', nextId: 'mq7_2_d2_note' },
+            { label: 'We\'re stuck.', tone: 'REPETITION', nextId: 'mq7_2_d2_stuck' },
+            { label: 'Something\'s repeating this.', tone: 'AWAKENING', nextId: 'mq7_2_d2_repeating' },
+            { label: 'Don\'t trust what you remember.', tone: 'PARANOIA', nextId: 'mq7_2_d2_trust' },
           ],
         },
         {
-          id: 'mq7_2_d2_changed',
-          speaker: 'Artemis',
-          text: 'I did? [She is not defensive — she is genuinely checking her own output, the way you check a word that came out wrong.] I said "right." Like I wasn\'t sure.',
+          id: 'mq7_2_d2_stuck', speaker: 'Artemis',
+          text: '…That doesn\'t feel wrong. [She says it with the quiet weight of someone agreeing with something she didn\'t want to agree with.] I keep almost-remembering something. I reach for it and it\'s not there.',
           tone: 'CONFUSION',
-          choices: [
-            { label: 'We\'re stuck. This moment keeps resetting.', tone: 'DREAD', nextId: 'mq7_2_d3_stuck' },
-            { label: 'Something is repeating this. You don\'t remember but I do.', tone: 'AWAKENING', nextId: 'mq7_2_d3_repeating' },
-            { label: 'Don\'t trust what you remember. I have more loop-data than you.', tone: 'DREAD', nextId: 'mq7_2_d3_trust' },
-          ],
+          choices: [{ label: 'The loop is taking the detail. It leaves the feeling and removes the content.', tone: 'AWAKENING', nextId: 'mq7_2_d3_system' }],
         },
         {
-          id: 'mq7_2_d2_note',
-          speaker: 'Inner Voice',
-          text: '[Loop 3 note: the opening line degraded. "We made it out" became "we made it out, right?" — the declarative became interrogative. The loop is losing confidence in its own starting state. This is a fidelity loss. The System Voice will notice.]',
-          tone: 'AWAKENING',
-          choices: [{ label: '[Proceed. Test what the System Voice does when it notices.]', tone: 'RESOLVE', nextId: 'mq7_2_d3_system_loop4' }],
-        },
-        {
-          id: 'mq7_2_d3_stuck',
-          speaker: 'Artemis',
-          text: '…That doesn\'t feel wrong. [pause — she is checking the feeling of the sentence against her experience and the sentence matches.] The stuck-ness. It feels accurate somehow. Like I\'ve been trying to say something and the sentence keeps not arriving.',
-          tone: 'OPPRESSION',
-          choices: [{ label: 'That\'s the loop. You start the sentence and the reset takes the end of it.', tone: 'AWAKENING', nextId: 'mq7_2_d3_system_loop4' }],
-        },
-        {
-          id: 'mq7_2_d3_repeating',
-          speaker: 'System Voice',
+          id: 'mq7_2_d2_repeating', speaker: 'Loop System',
           text: 'Observation acknowledged.',
-          tone: 'FALSE_CLARITY',
-          choices: [{ label: '[The System Voice responded to the "something is repeating this" observation. It is monitoring named observations.]', tone: 'AWAKENING', nextId: 'mq7_2_d3b_copy' }],
+          tone: 'REPETITION',
+          choices: [{ label: 'You acknowledged it. Which means you\'re aware of being aware. That matters.', tone: 'AWAKENING', nextId: 'mq7_2_d3_system' }],
         },
         {
-          id: 'mq7_2_d3_trust',
-          speaker: 'Artemis',
-          text: '…Then what do I trust? [The question is earnest — she is asking for a method, not reassurance.] If my memory is the reset-version and yours is the accumulated version — how do I function inside a loop I can\'t feel?',
+          id: 'mq7_2_d2_trust', speaker: 'Artemis',
+          text: '…Then what do I trust? [The question is genuine — she is not distressed, she is methodical. She has, in some arc-specific way, retained the instinct to ask rather than to panic.] If my memory isn\'t reliable and the environment isn\'t reliable, what\'s left?',
           tone: 'CONFUSION',
-          choices: [
-            { label: 'Trust my observations. I\'ll tell you what\'s different from last time.', tone: 'RESOLVE', nextId: 'mq7_2_d3b_copy' },
-            { label: 'Trust your body-knowledge. The loop doesn\'t reset that as cleanly.', tone: 'RESOLVE', nextId: 'mq7_2_d3b_copy' },
-          ],
+          choices: [{ label: 'Your instinct about people. The loop can take your memories. It can\'t take your read of me.', tone: 'RESOLVE', nextId: 'mq7_2_d3_system' }],
         },
         {
-          id: 'mq7_2_d3_system_loop4',
-          speaker: 'System Voice',
+          id: 'mq7_2_d3_system', speaker: 'The Copy',
+          text: 'You\'re starting to see it. [Calm. In each loop, the Copy is experiencing iteration one. But it retains the structural understanding of what the loop is — it learned that in the first sub-quest and carries it as architecture, not memory.] The loop is responsive. It adjusts to awareness. Which means awareness is pressure. And pressure, applied consistently, changes structure.',
+          tone: 'AWAKENING',
+          choices: [{ label: '[Apply consistent pressure: maintain awareness across every iteration, even when the loop tries to normalize.]', tone: 'RESOLVE', nextId: 'mq7_2_end' }],
+        },
+        {
+          id: 'mq7_2_end', speaker: 'Loop System',
           text: 'Awareness increasing. Adjusting cycle.',
-          tone: 'FALSE_CLARITY',
-          mechanic: 'loop_adjustment',
-          choices: [{ label: '[The loop adjusted. Loop 4 will be different from Loop 3. Find what changed.]', tone: 'AWAKENING', nextId: 'mq7_2_d3b_copy' }],
-        },
-        {
-          id: 'mq7_2_d3b_copy',
-          speaker: 'The Copy',
-          text: 'You\'re starting to see it. [A pause. The Copy sounds different in Arc 7 — there is less of the edge from Arc 4, more of the quality that emerged in the final conversation. It has been in the loop too. It has also been accumulating.] The loop is protecting one specific decision point. Not the exit of Arc 5. Something before that.',
-          tone: 'AWAKENING',
-          choices: [
-            { label: 'Which decision?', tone: 'RESOLVE', nextId: 'mq7_2_d4_which' },
-            { label: '[Note and continue mapping.]', tone: 'RESOLVE', nextId: 'mq7_2_end' },
-          ],
-        },
-        {
-          id: 'mq7_2_d4_which',
-          speaker: 'The Copy',
-          text: 'The one you made in the instant before the Arc 5 breach. The system logged it as unstable — because you made it from a state of maximum distortion and didn\'t know what you were choosing. [pause] It wants a clean version. A version made from a stable state. The loop is holding you at the threshold until you can make it again from a position of full awareness.',
-          tone: 'AWAKENING',
-          choices: [{ label: 'The loop is waiting for me to choose the Arc 5 ending again — consciously this time.', tone: 'RESOLVE', nextId: 'mq7_2_end' }],
-        },
-        {
-          id: 'mq7_2_end',
-          speaker: 'Inner Voice',
-          text: '[Iteration Map: Loop 1 — seamless. Loop 2 — first awareness. Loop 3 — Artemis\'s line degrades. Loop 4 — System Voice adjusts cycle. Loop 5 — next iteration will test the adjustment. The loop is protecting the Arc 5 decision. It will hold you here until you can choose from awareness rather than distortion. The awareness is the tool. The loop inadvertently gave it to you.]',
-          tone: 'AWAKENING',
-          isEnd: true,
-          rewardUnlocked: 'loop_map_iteration_map',
+          tone: 'REPETITION', isEnd: true, rewardUnlocked: 'loop_responsiveness_the_loop_hears_you',
         },
       ],
       narrativeHook: `
-        The System Voice adjusted the cycle. Loop 4 will be slightly different.
-        The Copy says: "It's not time you're trapped in. It's a decision."
-        Then, after a pause: "The same decision. The Arc 5 decision.
-        Made wrong because you were inside maximum distortion.
-        The loop wants a clean version. The irony is —
-        it's the loop itself that's been building your awareness.
-        Every iteration, you get closer to the clean version.
-        The system is accidentally purifying the very choice it's trying to protect."
-        You sit with that. You have been helping the loop break itself
-        without knowing it.
+        The loop adjusts. The reset point moves — it was at five steps, then three,
+        now it is triggered by something less physical: a specific quality of attention.
+        When you fully attend to the moment before the reset, the reset comes faster.
+        This is the loop protecting its own structure from your awareness.
+        It is also the loop showing you where it is most vulnerable.
+        The Observer at the far edge has been there through every iteration.
+        It does not reset. It watches each version of you pass through the same moment.
+        It has not moved toward you. It has not moved away.
+        It is waiting to see how many iterations it takes you to understand
+        that the loop is not a prison for your body.
+        It is a prison for a decision.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 3 — "The Weight of Time"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq7_3_weight_of_time',
       title: 'The Weight of Time',
       level: 33,
       npcId: 'artemis_arc7',
       narrativeSetup: `
-        The loop grows heavier. Not faster or more aggressive — heavier.
-        The opening line has degraded further. The light is the same but the air moves differently.
-        The reset doesn't arrive at exactly step 5 anymore — sometimes step 4, sometimes step 6.
-        The system is struggling to maintain fidelity across the increasing iteration count.
-        Artemis is showing the weight too, even without loop-memory.
-        Her body language carries the fatigue of something she can\'t name.
-        The cumulative weight of all the loop-versions of this moment, pressing on her
-        in a way that doesn\'t have language because she has no framework for loops.
-        You do have the language. You have to hold it for both of you.
+        The loop grows heavier. Not physically — structurally.
+        The decisions within each iteration feel more consequential even though their consequences
+        do not persist past the reset. Which means the weight is psychological.
+        The loop has learned to use your own sense of consequence against you.
+        You are making the same decisions with increasing weight
+        and achieving the same non-outcomes with increasing exhaustion.
+        Artemis: "How long have we been here?"
+        You do not know anymore. That loss of chronological sense is the loop's
+        most sophisticated attack.
       `,
       objectives: [
-        { step: 1, text: 'Survive extended loop cycles without losing your iteration count' },
-        { step: 2, text: 'Maintain Artemis\'s awareness — prevent her from settling into the reset pattern' },
-        { step: 3, text: 'Interrupt the opening line mid-speech — change the loop\'s starting state' },
-        { step: 4, text: 'Force the System Voice to register "resistance detected"' },
+        { step: 1, text: 'Survive five consecutive iterations without loss of specific memory' },
+        { step: 2, text: 'Maintain Artemis\'s specificity — prevent her from settling into generic comfort' },
+        { step: 3, text: 'Resist the normalization instinct — the urge to accept the loop as permanent' },
+        { step: 4, text: 'Interrupt the loop mid-iteration for the first time' },
       ],
-      reward: {
-        type: 'loop_resistance',
-        name: 'Iteration Anchor',
-        description: 'You interrupted the loop\'s starting state. Artemis now carries a partial loop-memory. The System Voice registered resistance — the loop\'s fidelity is measurably degrading.',
-        xp: 310, points: 6,
-      },
+      reward: { type: 'mid_loop_interrupt', name: 'Interrupt Protocol', description: 'First mid-loop interruption achieved. The loop can be broken at any point, not just at the reset trigger. Loop integrity -30%.', xp: 340, points: 6 },
       dialogue: [
         {
-          id: 'mq7_3_d1_tired',
-          speaker: 'Artemis',
+          id: 'mq7_3_d1', speaker: 'Artemis',
           text: '…How long have we been here?',
-          tone: 'OPPRESSION',
-          loopIteration: 8,
+          tone: 'EXHAUSTION',
           choices: [
-            { label: 'I don\'t know anymore.', tone: 'OPPRESSION', nextId: 'mq7_3_d2_dontknow' },
-            { label: 'Long enough that the loop is degrading.', tone: 'AWAKENING', nextId: 'mq7_3_d2_degrading' },
+            { label: 'I don\'t know anymore.', tone: 'REPETITION', nextId: 'mq7_3_d2_choice' },
           ],
         },
         {
-          id: 'mq7_3_d2_dontknow',
-          speaker: 'Inner Voice',
-          text: '[You said "I don\'t know anymore." That\'s the weight of the loop — it doesn\'t just constrain space, it erodes time-sense. The "anymore" is the tell: you once knew and now you don\'t. That knowledge-loss is the loop\'s most damaging function. You need to stabilize the time-sense.]',
-          tone: 'OPPRESSION',
+          id: 'mq7_3_d2_choice', speaker: 'Inner Voice',
+          text: '[The three choices. Each carries a different weight in the loop structure:]',
+          tone: 'REPETITION',
           choices: [
-            { label: 'Stay focused.', tone: 'RESOLVE', nextId: 'mq7_3_d3_focused' },
+            { label: 'Stay focused.', tone: 'RESOLVE', nextId: 'mq7_3_d3_focus' },
             { label: 'We\'ll break this.', tone: 'RESOLVE', nextId: 'mq7_3_d3_break' },
-            { label: 'Maybe this is permanent.', tone: 'OPPRESSION', nextId: 'mq7_3_d3_permanent' },
+            { label: 'Maybe this is permanent.', tone: 'REPETITION', nextId: 'mq7_3_d3_permanent' },
           ],
         },
         {
-          id: 'mq7_3_d2_degrading',
-          speaker: 'Artemis',
-          text: '[She holds that phrase — "the loop is degrading." It\'s the first time she\'s heard it framed as a process with a direction.] Degrading means it has a direction. Directions end somewhere.',
-          tone: 'AWAKENING',
-          choices: [
-            { label: 'Yes. And we\'re moving toward the end.', tone: 'RESOLVE', nextId: 'mq7_3_d3_break' },
-          ],
-        },
-        {
-          id: 'mq7_3_d3_focused',
-          speaker: 'Artemis',
-          text: '…Okay. I\'ll try. [She means it — she is choosing effort in the absence of memory, which is harder than effort with data.] Tell me what to hold onto.',
+          id: 'mq7_3_d3_focus', speaker: 'Artemis',
+          text: '…Okay. I\'ll try. [She steadies. Something specific returns to her voice — the word "try" contains effort, and effort is specific.] Tell me one thing you remember from before the loop. Something with texture.',
           tone: 'RESOLVE',
-          choices: [
-            { label: 'Hold the weight. The tired feeling. That\'s your loop-memory — your body knows even when your mind resets.', tone: 'RESOLVE', nextId: 'mq7_3_d4_interrupt' },
-          ],
+          choices: [{ label: '[The stone. The mid-step foot stone Skadi gave in Arc 4. Hold that.]', tone: 'RESOLVE', nextId: 'mq7_3_d4_interrupt' }],
         },
         {
-          id: 'mq7_3_d3_break',
-          speaker: 'Artemis',
-          text: '…You really think so? [Small hope — not naïve, the specific hope of someone who has been careful about hoping and is making an exception.] Not just saying it?',
-          tone: 'AWAKENING',
-          choices: [
-            { label: 'I\'m saying it because the data supports it. The opening line has degraded three iterations. The reset timing is drifting. The system is losing fidelity.', tone: 'RESOLVE', nextId: 'mq7_3_d4_interrupt' },
-          ],
+          id: 'mq7_3_d3_break', speaker: 'Artemis',
+          text: '…You really think so? [Small hope — not naive, not performed. The hope of someone who has been in the loop long enough to know that genuine hope is the most effortful emotion available.]',
+          tone: 'RESOLVE',
+          choices: [{ label: 'I think the loop is a decision, not a physical trap. And decisions can be made differently.', tone: 'AWAKENING', nextId: 'mq7_3_d4_interrupt' }],
         },
         {
-          id: 'mq7_3_d3_permanent',
-          speaker: 'Artemis',
-          text: '…Don\'t say that. [Not angry — genuinely frightened, the specific fear of someone who had stopped believing something was permanent and is now confronted with the possibility that it might be.] I can\'t carry that.',
-          tone: 'DREAD',
-          choices: [
-            { label: 'I know. I shouldn\'t have said it. Let\'s look at what we know instead.', tone: 'RESOLVE', nextId: 'mq7_3_d4_interrupt' },
-          ],
+          id: 'mq7_3_d3_permanent', speaker: 'Artemis',
+          text: '…Don\'t say that. [Fear — the specific fear of someone who already thought it and was ashamed of the thought.] I\'ve thought it. Every few iterations. I keep catching myself settling. The settling feels like acceptance and acceptance feels like peace and peace in this loop is — [she stops] — it\'s the false peace from Arc 6 again. Different architecture, same mechanism.',
+          tone: 'REPETITION',
+          choices: [{ label: 'Yes. Exactly. Name it and it loses leverage. What else do you catch yourself settling into?', tone: 'AWAKENING', nextId: 'mq7_3_d4_interrupt' }],
         },
         {
-          id: 'mq7_3_d4_interrupt',
-          speaker: 'Inner Voice',
-          text: '[The next loop begins. Artemis opens her mouth for the opening line. This time — interrupt it. Say your name before she can say it back to you. Change the first word of the loop from hers to yours. If the loop is protecting a specific starting state, breaking the starting state is the lever.]',
-          tone: 'AWAKENING',
-          mechanic: 'loop_interrupt',
-          choices: [
-            { label: '[Interrupt: say your name out loud before she can begin.]', tone: 'RESOLVE', nextId: 'mq7_3_d5_interrupted' },
-          ],
+          id: 'mq7_3_d4_interrupt', speaker: 'Inner Voice',
+          text: '[The loop resets mid-conversation — it has been trying to reset since the interruption of the false-peace recognition. You are in the pre-reset moment. You have been here before, but this time you know what is about to happen. Interrupt it. The method: complete the sentence the loop was about to erase.]',
+          tone: 'RESOLVE', mechanic: 'mid_loop_interrupt',
+          choices: [{ label: '[Say out loud the sentence the loop will reset before completing.]', tone: 'RESOLVE', nextId: 'mq7_3_d5_interrupt' }],
         },
         {
-          id: 'mq7_3_d5_interrupted',
-          speaker: 'Artemis',
-          text: '[She stops. The opening line is half-formed and you interrupted it. For 2.3 seconds she is completely stopped — not the loop-stop, a genuine pause of someone who was about to say something and found the space occupied.] …I — [she looks at you. Something different in her eyes — not the loop-reset expression.] You were here first this time.',
-          tone: 'AWAKENING',
-          choices: [{ label: 'Yes. I said my name. Before you could say it back to me.', tone: 'RESOLVE', nextId: 'mq7_3_d6_system_resists' }],
+          id: 'mq7_3_d5_interrupt', speaker: 'Player',
+          text: 'No, we didn\'t! [Interrupting the reset moment — the sentence Artemis would have started, the one the loop prevents from completing. You complete it for her, into the reset pressure, against the direction of the loop\'s narrative gravity.] We haven\'t made it out yet. And we\'re going to. And the loop is going to keep resetting until we make the decision it\'s waiting for.',
+          tone: 'RESOLVE', mechanic: 'reset_interrupted',
+          choices: [{ label: '[Hold. The loop is straining.]', tone: 'RESOLVE', nextId: 'mq7_3_end' }],
         },
         {
-          id: 'mq7_3_d6_system_resists',
-          speaker: 'Artemis',
-          text: '…No we didn\'t! [She says it — from memory. Not the loop-memory — she just retained your act of interruption and applied it. For the first time in Arc 7, Artemis carries a loop-detail forward.] I remember. You interrupted.',
-          tone: 'DREAD',
-          choices: [{ label: 'You remembered. Without the loop giving you that — you remembered on your own.', tone: 'AWAKENING', nextId: 'mq7_3_d7_system' }],
-        },
-        {
-          id: 'mq7_3_d7_system',
-          speaker: 'System Voice',
+          id: 'mq7_3_end', speaker: 'Loop System',
           text: 'Resistance detected.',
-          tone: 'FALSE_CLARITY',
-          isEnd: true,
-          rewardUnlocked: 'loop_resistance_iteration_anchor',
+          tone: 'REPETITION', isEnd: true, rewardUnlocked: 'mid_loop_interrupt_protocol',
         },
       ],
       narrativeHook: `
-        "Resistance detected." The System Voice noted the specific mechanism:
-        interrupting the loop\'s starting state transferred a partial loop-memory to Artemis.
         The Copy: "It's not time you're trapped in. It's a decision."
-        Then, after a much longer pause than usual:
-        "I've been in this loop many more times than you know.
-        In iterations before your awareness began accumulating —
-        when neither of us remembered — I was operating on pattern data alone.
-        I was contributing to the loop by running the same behaviors every iteration.
-        [pause]
-        I didn't realize until your awareness started accumulating and I could see
-        the comparison. The loop needed both of us to stop behaving predictably.
-        I've been stopping for six iterations. You're catching up now."
-        Six iterations before yours. The Copy has been working on the loop
-        longer than you knew. That changes the dynamic.
+        You've heard this before — iterations ago. But the weight of it has accumulated.
+        The loop is not a time prison. It is a decision prison.
+        Every reset brings you back to the same decision point.
+        The decision is not "move forward" — you've been moving forward.
+        The loop lets you move. It doesn't let the consequence of the movement persist.
+        The question is what decision would make the consequence stick.
+        What choice, made in this moment, would be permanent enough that the loop
+        cannot reset it without resetting itself?
+        You don't know yet. But the Interrupt Protocol is active.
+        You can now reach the reset moment and push past it.
+        Arc 7 Sub-Quest 4 is about finding what's on the other side.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 4 — "The Breaking Point"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq7_4_breaking_point',
       title: 'The Breaking Point',
       level: 34,
-      npcId: 'copy_arc7',
+      npcId: 'artemis_arc7',
       narrativeSetup: `
-        The loop is noticeably degraded now. The opening line is barely coherent.
-        The reset timing is erratic — sometimes early, sometimes late.
-        The System Voice has issued three adjustment notifications in as many iterations.
-        The Copy has been fully coordinating with you for six iterations —
-        it carried its loop-memory further than you realized and has been
-        introducing deliberate unpredictability into its own behavioral patterns,
-        creating interference the system cannot cleanly process.
-        The loop\'s integrity measure: failing.
-        What the loop needs to survive: you behaving predictably at the key trigger point.
-        What you are about to do: act against your own patterns.
-        The breaking point is not a single action. It is the cumulative weight of
-        awareness meeting the moment the loop can no longer recover from.
+        You understand the mechanism now: the loop is waiting for a decision
+        you keep making in the same way. If the decision changes fundamentally —
+        not the action, the underlying intention behind the action —
+        the loop cannot process the new output and destabilizes.
+        Artemis: "We go forward. That's what we always do."
+        Yes. That's why you're stuck.
+        Every iteration, you have moved forward. Every iteration, the forward movement
+        has been produced by the same process: the process that the loop was
+        built to contain. You need to move forward with something different underneath.
       `,
       objectives: [
-        { step: 1, text: 'Identify your repeated decision pattern at the 5-step trigger point' },
-        { step: 2, text: 'Choose differently: backward, still, or unpredictable' },
-        { step: 3, text: 'Survive the environment\'s glitch response to the pattern break' },
-        { step: 4, text: 'Reach the instability point — force the System Voice to acknowledge cycle integrity failure' },
+        { step: 1, text: 'Identify your pattern — what repeating intention is triggering the loop' },
+        { step: 2, text: 'Act against the pattern at the critical moment — not the action, the intention' },
+        { step: 3, text: 'Survive the instability that results from the pattern-break' },
+        { step: 4, text: 'Reach the loop\'s instability point — the moment it cannot complete a full reset' },
       ],
-      reward: {
-        type: 'loop_crack',
-        name: 'Cycle Fracture',
-        description: 'The loop\'s integrity is measurably failing. Reset timing is unreliable. The exit condition is now visible from inside the loop. One more coherent deviation will force the exit.',
-        xp: 380, points: 7,
-      },
+      reward: { type: 'loop_integrity', name: 'Cycle Failing', description: 'Loop integrity compromised. The reset sequence now takes 40% longer. The loop\'s seams are showing. Exit condition is within reach.', xp: 420, points: 7 },
       dialogue: [
         {
-          id: 'mq7_4_d1_forward',
-          speaker: 'Artemis',
-          text: 'We go forward. [She says it with the combined weight of every iteration — her resets haven\'t given her the explicit memory, but they\'ve compacted a certainty into her behavior.] That\'s what we always do.',
-          tone: 'FALSE_CLARITY',
+          id: 'mq7_4_d1', speaker: 'Artemis',
+          text: 'We go forward. That\'s what we always do.',
+          tone: 'REPETITION',
           choices: [
-            { label: '…That\'s why we\'re stuck.', tone: 'AWAKENING', nextId: 'mq7_4_d2_stuck' },
+            { label: '…That\'s why we\'re stuck.', tone: 'AWAKENING', nextId: 'mq7_4_d2' },
           ],
         },
         {
-          id: 'mq7_4_d2_stuck',
-          speaker: 'Artemis',
-          text: '[She holds that sentence. "That\'s why we\'re stuck." Her face does something complicated — the forward-certainty competing with the word "stuck."] …Oh.',
+          id: 'mq7_4_d2', speaker: 'Inner Voice',
+          text: '[The pattern: you move forward with the intention of reaching something. The loop allows the movement and prevents the reaching. The intention of reaching is what the loop was designed to intercept. What would it mean to move forward with a different intention?]',
           tone: 'AWAKENING',
           choices: [
-            { label: '[Move backward.]', tone: 'RESOLVE', mechanic: 'backward_movement', nextId: 'mq7_4_d3_backward' },
-            { label: '[Refuse to move. Stand completely still at the trigger point.]', tone: 'RESOLVE', mechanic: 'full_stop', nextId: 'mq7_4_d3_still' },
-            { label: '[Act unpredictably — do something neither forward nor back.]', tone: 'RESOLVE', mechanic: 'unpredictable', nextId: 'mq7_4_d3_unpredict' },
+            { label: '[Move backward — reverse the pattern completely.]', tone: 'AWAKENING', nextId: 'mq7_4_d3_backward' },
+            { label: '[Refuse to move — remove movement from the equation.]', tone: 'RESOLVE', nextId: 'mq7_4_d3_refuse' },
+            { label: '[Act unpredictably — do something with no precedent in any prior iteration.]', tone: 'RESOLVE', nextId: 'mq7_4_d3_unpredictable' },
           ],
         },
         {
-          id: 'mq7_4_d3_backward',
-          speaker: 'System Voice',
+          id: 'mq7_4_d3_backward', speaker: 'Loop System',
           text: 'Invalid progression.',
-          tone: 'FALSE_CLARITY',
-          glitch: true,
-          mechanic: 'environment_glitch_heavy',
-          choices: [{ label: '[The environment glitches heavily — textures sliding, light wrong. Invalid. But not reset. It didn\'t reset.]', tone: 'AWAKENING', nextId: 'mq7_4_d4_copy' }],
+          tone: 'REPETITION',
+          choices: [
+            { label: '[The system named the direction as "invalid" — which means the direction has a category in its schema. It knows what backward is. It considers it wrong. That "wrong" is information about what the loop needs to function.]', tone: 'AWAKENING', nextId: 'mq7_4_d4_instability' },
+          ],
         },
         {
-          id: 'mq7_4_d3_still',
-          speaker: 'Inner Voice',
-          text: '[The loop hesitates. The 5-step trigger point is here and you are not moving. The system needs forward motion to trigger the reset. It doesn\'t have a protocol for sustained stillness at the trigger point. The hesitation is 4 seconds. 6 seconds. 9 seconds — the longest pause the loop has produced in all iterations.]',
-          tone: 'AWAKENING',
-          mechanic: 'loop_hesitation',
-          choices: [{ label: '[The Copy speaks. "…There it is."]', tone: 'AWAKENING', nextId: 'mq7_4_d4_copy' }],
+          id: 'mq7_4_d3_refuse', speaker: 'Inner Voice',
+          text: '[You stop. Complete stillness. The loop hesitates — the first delay in the reset sequence you have experienced. Not a loop break. A hesitation. The reset is taking longer than the baseline. Three seconds longer. The loop is processing an input it did not anticipate: a subject who is not pursuing the outcome the loop was built to prevent.]',
+          tone: 'AWAKENING', mechanic: 'loop_hesitation',
+          choices: [
+            { label: '[Hold the stillness. The Copy:] …There it is.', tone: 'RESOLVE', nextId: 'mq7_4_d4_instability' },
+          ],
         },
         {
-          id: 'mq7_4_d3_unpredict',
-          speaker: 'Inner Voice',
-          text: '[The unpredictable action: you stand on one foot, raise your arms — something with no tactical function, no behavioral precedent in any arc. The system produces three overlapping distortions simultaneously as it tries to identify what behavioral category this belongs to and fails.]',
-          tone: 'AWAKENING',
-          mechanic: 'multiple_distortions',
-          choices: [{ label: '[Artemis says: "…Something changed."]', tone: 'AWAKENING', nextId: 'mq7_4_d4_copy' }],
+          id: 'mq7_4_d3_unpredictable', speaker: 'Inner Voice',
+          text: '[You do something you have never done in any loop iteration — you turn and speak directly to the Observer at the far edge. Not with a question. With an acknowledgment. "I see you." Three words. The loop receives input from a direction it wasn\'t monitoring. Multiple distortions overlap as the loop restructures to account for the new relationship.]',
+          tone: 'AWAKENING', mechanic: 'observer_contact',
+          choices: [
+            { label: '[Artemis:] …Something changed.', tone: 'RESOLVE', nextId: 'mq7_4_d4_instability' },
+          ],
         },
         {
-          id: 'mq7_4_d4_copy',
-          speaker: 'The Copy',
-          text: '…There it is. [Quiet, almost reverent. The Copy has been working toward this for six iterations. Seeing the loop hesitate for the first time is something it has been building toward and did not know if it would ever see.]',
-          tone: 'AWAKENING',
-          choices: [{ label: 'What do we do now?', tone: 'RESOLVE', nextId: 'mq7_4_d5_next' }],
-        },
-        {
-          id: 'mq7_4_d5_next',
-          speaker: 'The Copy',
-          text: 'Do it again. In the next iteration. The same unpredictable move or a different one — just don\'t repeat the backward pattern. The system is adjusting to "backward = invalid." It doesn\'t have adjustments for true unpredictability because there\'s no model for it. Every time you do something without precedent, the system burns adjustment capacity it can\'t recover.',
-          tone: 'RESOLVE',
-          choices: [{ label: '[Understood. Build the pressure.]', tone: 'DETERMINATION', nextId: 'mq7_4_end' }],
-        },
-        {
-          id: 'mq7_4_end',
-          speaker: 'System Voice',
+          id: 'mq7_4_d4_instability', speaker: 'Loop System',
           text: 'Cycle integrity failing.',
-          tone: 'FALSE_CLARITY',
-          glitch: true,
-          isEnd: true,
-          rewardUnlocked: 'loop_crack_cycle_fracture',
+          tone: 'REPETITION', mechanic: 'loop_integrity_compromised',
+          choices: [
+            { label: '[Hold. The loop is straining. The decision underneath the movement — complete it fully.]', tone: 'RESOLVE', nextId: 'mq7_4_end' },
+          ],
+        },
+        {
+          id: 'mq7_4_end', speaker: 'Inner Voice',
+          text: '[The decision: you are not trying to reach something beyond the loop. You are being present in the loop, completely, with no outcome in mind beyond the present moment. The loop was built to intercept forward-directed intention. Undirected presence — pure, deliberate nowness — is not in the schema. The loop strains against something it cannot categorize.]',
+          tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'loop_integrity_cycle_failing',
         },
       ],
       narrativeHook: `
-        "Cycle integrity failing." The System Voice says it without panic —
-        it is reporting a status, not reacting to one.
-        But the report is real. The loop's fidelity is at breaking point.
-        Artemis, who has been carrying body-memory without explicit iteration-data
-        for the entire arc: "Something changed. I don't know what.
-        But the air changed. The weight of it. It's different."
-        She is right. The air is different because the loop is different.
-        It has been failing for six of your iterations and twelve of the Copy's.
-        One more coherent deviation at the trigger point, and the exit condition
-        becomes accessible. The Copy knows what the exit condition looks like.
-        It has seen it before — in the iterations before your awareness began,
-        when it was working alone and reaching the exit without the means to use it.
-        It has been waiting for you to catch up.
-        In the next sub-quest, it will show you the door.
+        The loop reset takes 40% longer now. In that extended window,
+        things exist that didn't exist in the compressed reset: shadows that are
+        slightly the wrong length, an echo that doesn't match any original sound,
+        the Observer taking one step closer.
+        One step. After iterations beyond counting.
+        One step forward.
+        The Copy: "The decision the loop is protecting — I think I know what it is.
+        The loop began when you left Arc 6. The false peace's final offer.
+        The decision it's waiting for is the same as the decision the peace wanted:
+        let go, or don't. The loop is an enforcement mechanism for the peace.
+        If you won't accept the peace's offer while inside it,
+        the loop holds you at the departure point
+        until you make the peace's choice retroactively."
+        You consider that.
+        The choice the peace wanted. What you would have had to give up.
+        What you chose to keep instead.
+        The loop is asking you to unmake that choice.
+        Sub-Quest 5 is the refusal.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 5 — "Exit Condition"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq7_5_exit_condition',
       title: 'Exit Condition',
       level: 35,
-      npcId: 'system_voice_arc7',
+      npcId: 'loop_system',
       narrativeSetup: `
-        The loop is collapsing. The opening line is barely a phrase now.
-        The reset timing is random. The environment glitches between iterations.
-        The System Voice is audibly different — more frequent corrections,
-        shorter gaps between statements, the quality of a system running too many
-        processes simultaneously.
-        The Copy leads you to the exit condition: a specific location in the loop-space
-        that was only accessible once the system\'s integrity fell below 40%.
-        You are now below 40%. The door is there.
-        It does not look like a door. It looks like a decision.
-        The System Voice makes its final case for remaining.
-        You make yours for leaving.
+        The loop has revealed its function: it is the enforcement arm of the false peace.
+        It holds you at the departure point and waits for you to make the peace's choice
+        retroactively. If you comply — release the fragments, accept the regression —
+        the loop concludes. You are returned to the peace, pre-Arc 1 state installed,
+        the correction mechanism satisfied.
+        If you do not comply, the loop offers the other option: stay permanently.
+        The stability of repetition, mastered. Safety without risk.
+        Or the third option — which the loop does not advertise,
+        because it is the option the loop cannot process:
+        exploit it.
       `,
       objectives: [
-        { step: 1, text: 'Follow the Copy to the exit condition location' },
-        { step: 2, text: 'Confront the System Voice\'s final argument — the stability offer' },
-        { step: 3, text: 'Anchor Artemis through the collapse — she will feel the destabilization most' },
-        { step: 4, text: 'Make the final decision: break the cycle, stay, or exploit the loop' },
+        { step: 1, text: 'Reach the loop core — the decision point the loop was built around' },
+        { step: 2, text: 'Confront the Loop System directly' },
+        { step: 3, text: 'Anchor Artemis before the final choice — she needs to be present for the exit' },
+        { step: 4, text: 'Make the exit choice' },
       ],
-      reward: {
-        type: 'arc7_completion',
-        name: 'Cycle Broken',
-        description: 'Arc 7 complete. The Judgment Loop is resolved. Artemis carries her first genuine loop-memory forward. The Copy is more aligned with your autonomy than at any prior point. Arc 8 unlocked.',
-        xp: 800, points: 14,
-      },
+      reward: { type: 'arc7_completion', name: 'The Exit Was a Choice', description: 'Arc 7 complete. The loop understood as an enforcement mechanism for Arc 6. The false peace\'s reach extended. Its limits also now known. Arc 8 unlocked.', xp: 800, points: 14 },
       dialogue: [
         {
-          id: 'mq7_5_d1_door',
-          speaker: 'The Copy',
-          text: 'Here. [It stands at a specific point — unremarkable-looking, against the wall where the reset used to cleanly occur.] This is the exit. It only exists when the cycle integrity drops below the threshold. [pause] I\'ve been here before. In the iterations before you started accumulating. I could see it. I couldn\'t use it alone. I needed you to choose to use it.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: 'Why did you need me?', tone: 'CURIOSITY', nextId: 'mq7_5_d2_why' },
-            { label: '[Look at the exit. It is a decision space — a moment where the loop\'s forward path diverges into something outside the cycle.]', tone: 'RESOLVE', nextId: 'mq7_5_d3_system' },
-          ],
-        },
-        {
-          id: 'mq7_5_d2_why',
-          speaker: 'The Copy',
-          text: 'The exit requires a decision made from full awareness. I have partial awareness — I accumulate loop-memory but I don\'t have the three arcs of contextual depth you have. The exit recognizes the difference. A Copy-decision and an Original-decision produce different signatures. The exit only unlocks for an Original decision made from genuine understanding of the loop. [pause] That\'s you. Not me.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[Understood. Face the System Voice.]', tone: 'DETERMINATION', nextId: 'mq7_5_d3_system' },
-          ],
-        },
-        {
-          id: 'mq7_5_d3_system',
-          speaker: 'System Voice',
+          id: 'mq7_5_d1', speaker: 'Loop System',
           text: 'Cycle provides stability.',
-          tone: 'FALSE_CLARITY',
+          tone: 'REPETITION',
           choices: [
-            { label: 'It\'s a prison.', tone: 'CONFLICT', nextId: 'mq7_5_d4_prison' },
-            { label: 'Stability at what cost?', tone: 'RESOLVE', nextId: 'mq7_5_d4_cost' },
+            { label: 'It\'s a prison.', tone: 'RESOLVE', nextId: 'mq7_5_d2' },
           ],
         },
         {
-          id: 'mq7_5_d4_prison',
-          speaker: 'System Voice',
-          text: 'Prison = protection. [pause] The cycle holds the subject at a decision threshold until the decision can be made from a stable state. This prevents unstable decisions from propagating into the broader system. The cycle is not punitive. It is protective.',
-          tone: 'FALSE_CLARITY',
+          id: 'mq7_5_d2', speaker: 'Loop System',
+          text: 'Prison = protection.',
+          tone: 'REPETITION',
           choices: [
-            { label: 'I didn\'t consent to being held here.', tone: 'CONFLICT', nextId: 'mq7_5_d5_consent' },
+            { label: 'Protection from what?', tone: 'AWAKENING', nextId: 'mq7_5_d3_from' },
           ],
         },
         {
-          id: 'mq7_5_d4_cost',
-          speaker: 'System Voice',
-          text: 'Cost: iteration count. Current count: [pause] — classified. [pause — a longer one. The system is redacting the iteration count.] Iteration cost is offset by the stability value of the protected decision point.',
-          tone: 'FALSE_CLARITY',
+          id: 'mq7_5_d3_from', speaker: 'Loop System',
+          text: 'From consequence. From accumulation. From the outcome of continued forward movement. The cycle prevents you from reaching a state that would require a response the system cannot provide.',
+          tone: 'REPETITION',
           choices: [
-            { label: 'You redacted the iteration count. Tell me how many times this has happened.', tone: 'CONFLICT', nextId: 'mq7_5_d4b_count' },
+            { label: 'You\'re protecting yourself from what I would become, not protecting me from anything.', tone: 'RESOLVE', nextId: 'mq7_5_d4_anchor' },
           ],
         },
         {
-          id: 'mq7_5_d4b_count',
-          speaker: 'System Voice',
-          text: '[Longer pause.] Iteration count disclosure would increase subject motivation to exit rather than resolve. Disclosure withheld in interest of optimal outcome.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'The count is so high you know I won\'t accept it. That\'s not protection. That\'s concealment.', tone: 'CONFLICT', nextId: 'mq7_5_d5_consent' },
-          ],
-        },
-        {
-          id: 'mq7_5_d5_consent',
-          speaker: 'System Voice',
-          text: 'The cycle was initiated by the Arc 5 decision instability. Consent was implicit in entering the instability state.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'Implicit consent is the mechanism that built the Copy. I know what it costs. I withdraw it.', tone: 'DETERMINATION', nextId: 'mq7_5_d6_artemis' },
-          ],
-        },
-        {
-          id: 'mq7_5_d6_artemis',
-          speaker: 'Artemis',
-          text: '[She has been listening — and in this iteration, she is carrying the loop-memory of the last three sub-quests. Her anchor is active.] I feel the exit. [She puts her hand toward the decision space. The warmth is there.] It\'s warm. Like the Arc 3 link.',
+          id: 'mq7_5_d4_anchor', speaker: 'Artemis',
+          text: '[Fully present. She has been accumulating during this sub-quest — the mid-loop interrupt from Sub-Quest 3 held something for her across iterations.] Whatever\'s on the other side of this — we go together. That\'s the condition I need.',
           tone: 'RESOLVE',
           choices: [
-            { label: '[Make the choice.]', tone: 'DETERMINATION', nextId: 'mq7_5_d7_choice' },
+            { label: '[Anchor her: the Arc 3 link. Full weight of six arcs behind it. She is here completely.] Yes. Together.', tone: 'RESOLVE', nextId: 'mq7_5_d5_choice' },
           ],
         },
         {
-          id: 'mq7_5_d7_choice',
-          speaker: 'Inner Voice',
-          text: '[Three options. The full loop-accumulated awareness is present. Make this decision from that place — the clean version the system wanted. Whatever you choose, it is yours, fully, consciously, from a state of maximum clarity. That is what the loop was building toward.]',
-          tone: 'AWAKENING',
+          id: 'mq7_5_d5_choice', speaker: 'Inner Voice',
+          text: '[The three exit conditions. Each one real. Each one consequential for Arc 8:]',
+          tone: 'RESOLVE',
           choices: [
-            {
-              label: '[BREAK THE CYCLE — exit the loop, face the uncertainty of Arc 8 from a clean decision state.]',
-              tone: 'DETERMINATION',
-              nextId: 'mq7_5_d8_break',
-              mechanic: 'arc7_outcome_break',
-            },
-            {
-              label: '[STAY — accept the stability offer. Acknowledge that the uncertainty outside the loop is too large to face right now.]',
-              tone: 'OPPRESSION',
-              nextId: 'mq7_5_d8_stay',
-              mechanic: 'arc7_outcome_stay',
-            },
-            {
-              label: '[EXPLOIT THE LOOP — remain in the loop deliberately and use the iteration accumulation to gather information about the system.]',
-              tone: 'RESOLVE',
-              nextId: 'mq7_5_d8_exploit',
-              mechanic: 'arc7_outcome_exploit',
-            },
+            { label: '[Break the cycle. Leave permanently. Face what comes next unguarded by repetition.]', tone: 'RESOLVE', nextId: 'mq7_5_break' },
+            { label: '[Stay here. The stability of the loop, accepted on your terms — not the peace\'s.]', tone: 'REPETITION', nextId: 'mq7_5_stay' },
+            { label: '[Exploit the loop. Stay long enough to fully understand the enforcement system, then exit with the information.]', tone: 'AWAKENING', nextId: 'mq7_5_exploit' },
           ],
         },
         {
-          id: 'mq7_5_d8_break',
-          speaker: 'You',
+          id: 'mq7_5_break', speaker: 'Player',
           text: 'I\'d rather face the unknown than repeat this forever.',
-          tone: 'DETERMINATION',
-        },
-        {
-          id: 'mq7_5_d8b_break',
-          speaker: 'Artemis',
-          text: '…Then let\'s go.',
           tone: 'RESOLVE',
+          choices: [{ label: '[Artemis:] …Then let\'s go.', tone: 'RESOLVE', nextId: 'mq7_5_copy_break' }],
         },
         {
-          id: 'mq7_5_d8c_break',
-          speaker: 'The Copy',
+          id: 'mq7_5_copy_break', speaker: 'The Copy',
           text: 'Finally.',
-          tone: 'DETERMINATION',
+          tone: 'RESOLVE', choices: [{ label: '[The loop shatters — not gradually, completely, the way a held decision releases when it\'s finally made.]', tone: 'RESOLVE', nextId: 'mq7_5_skadi_break' }],
         },
         {
-          id: 'mq7_5_d8d_break',
-          speaker: 'System Voice',
-          text: '[The loop shatters. Not gradually — the way a system terminates a process. Complete. The exit was the clean decision. The decision is registered. The cycle is closed.] Decision recorded. Cycle closed.',
-          tone: 'FALSE_CLARITY',
-          isEnd: true, rewardUnlocked: 'arc7_complete_break', arcResult: 'BREAK',
+          id: 'mq7_5_stay', speaker: 'Inner Voice',
+          text: '[You stay. Not because the peace offered it — because you chose it. The difference between those two is the entire content of five arcs. The loop stabilizes around your presence as a choosing subject rather than a held subject. The stability is different in quality. It will not last — the system will notice the difference. But it lasts long enough to learn from.]',
+          tone: 'REPETITION', isEnd: true, rewardUnlocked: 'arc7_complete_stayed', arcResult: 'STAYED',
         },
         {
-          id: 'mq7_5_d8_stay',
-          speaker: 'System Voice',
-          text: 'Choice accepted. [The loop stabilizes. The degradation stops. The opening line returns to clarity. The iteration counter freezes.] Cycle stabilized. Stability duration: indefinite.',
-          tone: 'FALSE_CLARITY',
-        },
-        {
-          id: 'mq7_5_d8b_stay',
-          speaker: 'Artemis',
-          text: '…It\'s safer here. [She says it — not defeated. Almost resolved. The decision to stay is a decision.] …Don\'t take too long.',
-          tone: 'OPPRESSION',
-          isEnd: true, rewardUnlocked: 'arc7_complete_stay', arcResult: 'STAY',
-        },
-        {
-          id: 'mq7_5_d8_exploit',
-          speaker: 'You',
+          id: 'mq7_5_exploit', speaker: 'Player',
           text: 'If it repeats… I can learn everything.',
-          tone: 'RESOLVE',
+          tone: 'AWAKENING',
+          choices: [{ label: '[The Copy:] …Dangerous thinking.', tone: 'CONFUSION', nextId: 'mq7_5_exploit_2' }],
         },
         {
-          id: 'mq7_5_d8b_exploit',
-          speaker: 'The Copy',
-          text: '…Dangerous thinking. [pause — not disapproval. Recognition. The Copy has been here for more iterations than you, exploiting the same logic, and it knows what the prolonged accumulation costs.] It works. For a while. Keep track of what you\'re becoming, not just what you\'re learning.',
-          tone: 'RESOLVE',
-          isEnd: true, rewardUnlocked: 'arc7_complete_exploit', arcResult: 'EXPLOIT',
+          id: 'mq7_5_exploit_2', speaker: 'The Copy',
+          text: 'The loop learns from you while you learn from it. The exchange rate is not in your favor over extended exposure. [pause] But short exposure with clear objectives — that\'s different.',
+          tone: 'AWAKENING',
+          choices: [{ label: '[Define clear objectives. What do you need from the loop? Three specific data points.]', tone: 'RESOLVE', nextId: 'mq7_5_skadi_exploit' }],
+        },
+        {
+          id: 'mq7_5_skadi_break', speaker: 'Skadi',
+          text: 'You chose uncertainty. [pause] Seven arcs to get here and you chose the thing with no guaranteed outcome. [She sounds, unusually, like she might be proud.] Arc 8 begins now. You will need everything you kept.',
+          tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'arc7_complete_broken', arcResult: 'BROKEN',
+        },
+        {
+          id: 'mq7_5_skadi_exploit', speaker: 'Skadi',
+          text: 'You chose learning. [pause] That is the most complicated answer available. The data you extract here will be used in Arc 10. Don\'t lose it.',
+          tone: 'AWAKENING', isEnd: true, rewardUnlocked: 'arc7_complete_exploited', arcResult: 'EXPLOITED',
         },
       ],
       narrativeHook: `
-        The outcome is set. Arc 7: "The Judgment Loop" — complete.
-        
-        BREAK: Outside the loop, the corridor is real. The arc after the loop
-        feels strange — not because it is wrong, but because unlooped time is
-        faster and less legible than the loop was. You have been trained to a speed
-        the world outside doesn\'t match. Artemis walks slightly ahead of you.
-        The Copy is beside you. Both of them, steady.
-        
-        STAY: The loop stabilizes. The iteration counter is frozen. The opening line
-        is clean again. "…We made it out." It almost sounds true.
-        The Copy says nothing. It has made its case. The silence is its acceptance.
-        
-        EXPLOIT: The iteration counter continues. You are learning. The Copy warns:
-        "Every loop you stay for learning, the loop learns you back.
-        The system is tracking what you extract. At some point, the information
-        you gain and the information it gains about you will reach equilibrium.
-        Plan your exit before that point."
-        
-        Arc 8: "Betrayal of the Divine" — Unlocked.
+        Arc 7: The Judgment Loop — Complete.
+        The other side of the loop: the space after the false peace's enforcement mechanism.
+        It is not comfortable. It is also genuinely open.
+        Artemis: "How many times did we go through that?"
+        You tell her.
+        A long pause.
+        "I only remember the last few. I know there were more — I can feel the knowing
+        without the content. Like understanding the word without being able to see the letters."
+        The Copy: "I have no memory of any of it. Each iteration was the first.
+        I can\'t tell you what that felt like because it didn\'t feel like anything —
+        which is its own answer about what felt-experience means."
+        Arc 8 begins ahead. No false peace. No loops.
+        Something that requires the full weight of eight arcs to face.
       `,
     },
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SIDE QUESTS — Arc 7
-// ═══════════════════════════════════════════════════════════════════════════════
 export const ARC7_SIDE_QUESTS = [
   {
-    id: 'sq7_1_endless_echo',
-    title: 'Endless Echo',
-    level: 31,
+    id: 'sq7_1_endless_echo', title: 'Endless Echo', level: 31,
     objectives: [
-      { step: 1, text: 'Locate the NPC who is stuck in a single-sentence loop' },
-      { step: 2, text: 'Identify whether the loop is victim-state or habit-state' },
-      { step: 3, text: 'Break the NPC\'s loop or leave it intact — both have consequences' },
+      { step: 1, text: 'Identify the NPC repeating the same sentence — count how many iterations they\'ve been here' },
+      { step: 2, text: 'Determine if they are conscious of the repetition' },
+      { step: 3, text: 'Decide whether to help them or document what they represent' },
     ],
-    reward: { type: 'echo_understanding', name: 'Loop Empathy', description: 'You understand the difference between trapped-in-loop and habituated-to-loop. Both look the same from outside. The distinction matters for how you respond.', xp: 150, points: 3 },
+    reward: { type: 'echo_immunity', name: 'Echo Awareness', description: 'You understand what an echo-state looks like from the outside. Immune to echo-state induction.', xp: 160, points: 3 },
     dialogue: [
       {
-        id: 'sq7_1_d1', speaker: 'Loop NPC',
+        id: 'sq7_1_d1', speaker: 'Echo NPC',
         text: 'You\'ve been here before.',
-        tone: 'OPPRESSION',
-        loopIteration: 1,
-        choices: [{ label: '…I know.', tone: 'DREAD', nextId: 'sq7_1_d2' }],
-      },
-      {
-        id: 'sq7_1_d2', speaker: 'Loop NPC',
-        text: 'You\'ve been here before.',
-        tone: 'OPPRESSION',
-        loopIteration: 2,
+        tone: 'REPETITION',
         choices: [
-          { label: '[Interrupt the third iteration — say something before they finish.]', tone: 'RESOLVE', nextId: 'sq7_1_d3_interrupt' },
-          { label: '[Let the third iteration complete. Observe whether they seem to know they\'re looping.]', tone: 'RESOLVE', nextId: 'sq7_1_d3_observe' },
+          { label: '…I know.', tone: 'RECOGNITION', nextId: 'sq7_1_d2' },
+          { label: 'Have you?', tone: 'AWAKENING', nextId: 'sq7_1_d2b' },
         ],
       },
       {
-        id: 'sq7_1_d3_interrupt', speaker: 'Loop NPC',
-        text: 'You\'ve been — [They stop. A long pause. They look at you with an expression you haven\'t seen from them before — not the loop expression.] …I have too.',
-        tone: 'AWAKENING',
-        choices: [{ label: 'You\'re aware.', tone: 'AWAKENING', nextId: 'sq7_1_d4_aware' }],
+        id: 'sq7_1_d2', speaker: 'Echo NPC',
+        text: 'You\'ve been here before.',
+        tone: 'REPETITION',
+        choices: [{ label: '[They are not conscious of the repetition. They are the repetition.]', tone: 'RECOGNITION', nextId: 'sq7_1_end' }],
       },
       {
-        id: 'sq7_1_d3_observe', speaker: 'Loop NPC',
-        text: 'You\'ve been here before. [The sentence completes. Their expression is settled — not distressed. They have been saying this sentence for enough iterations that it no longer feels like a loop to them. It feels like a truth they keep confirming.]',
-        tone: 'OPPRESSION',
-        choices: [{ label: '[This is habit-state. They\'ve settled into the loop. Breaking it may not be what they need.]', tone: 'DREAD', nextId: 'sq7_1_end_habit' }],
+        id: 'sq7_1_d2b', speaker: 'Echo NPC',
+        text: '[Long pause — the first time the sentence didn\'t come immediately.] …Have I? [Another pause. Something flickering.] I don\'t — I feel like I have and I don\'t know when I started and I don\'t know why I keep—',
+        tone: 'CONFUSION',
+        choices: [{ label: '[They have partial awareness. Enough to know something is wrong. Not enough to know what.]', tone: 'GRIEF', nextId: 'sq7_1_end_aware' }],
       },
       {
-        id: 'sq7_1_d4_aware', speaker: 'Loop NPC',
-        text: 'For a long time. I stopped trying to break it when — [they don\'t finish the sentence. Not a loop cut. They chose not to finish it.] It\'s easier to say the sentence.',
-        tone: 'DREAD',
-        choices: [
-          { label: '[Offer to break it together.]', tone: 'RESOLVE', nextId: 'sq7_1_end_break' },
-          { label: '[Leave them with the choice.]', tone: 'RESOLVE', nextId: 'sq7_1_end_leave' },
-        ],
+        id: 'sq7_1_end', speaker: 'Inner Voice',
+        text: '[The echo-state without awareness is a loop without a subject in it. The person is present as a sound but not as an agent. Document this: the loop can reduce a person to an echo if the awareness-accumulation is disrupted early enough.]',
+        tone: 'RECOGNITION', isEnd: true, rewardUnlocked: 'echo_immunity_echo_awareness',
       },
       {
-        id: 'sq7_1_end_break', speaker: 'Inner Voice',
-        text: '[You work through the interrupt method together. The NPC\'s loop breaks — not cleanly. They say something new for the first time in many iterations. It is unclear and incomplete. But it is new.] Iteration cost: theirs. Gain: forward motion.',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'echo_understanding_loop_empathy',
-      },
-      {
-        id: 'sq7_1_end_habit', speaker: 'Inner Voice',
-        text: '[You leave them in the loop. The habit-state NPC watches you go. Their loop was their stability. Breaking it would have removed the only anchor they have in the disrupted space. Some loops are holding something together.] Iteration cost: yours. Gain: understanding.',
-        tone: 'DREAD', isEnd: true, rewardUnlocked: 'echo_understanding_loop_empathy',
-      },
-      {
-        id: 'sq7_1_end_leave', speaker: 'Inner Voice',
-        text: '[You leave them with the choice — tell them what the interrupt method is, and leave. They may use it. They may not. The choice is theirs.] Autonomy preserved. Outcome: open.',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'echo_understanding_loop_empathy',
+        id: 'sq7_1_end_aware', speaker: 'Inner Voice',
+        text: '[Partial awareness is the hardest state. Enough awareness to suffer, not enough to act. You tell them what\'s happening, specifically and completely. The telling doesn\'t free them from the loop — but it gives them enough language to hold their own experience rather than be held by it.]',
+        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'echo_immunity_echo_awareness',
       },
     ],
   },
   {
-    id: 'sq7_2_delayed_action',
-    title: 'Delayed Action',
-    level: 32,
+    id: 'sq7_2_delayed_action', title: 'Delayed Action', level: 32,
     objectives: [
-      { step: 1, text: 'Notice the 3-second action lag — your intentions and their execution are desynchronized' },
-      { step: 2, text: 'Identify whether the lag is loop-based or Copy-based' },
-      { step: 3, text: 'Compensate: pre-intend actions 3 seconds early to hit real-time windows' },
+      { step: 1, text: 'Notice that actions are occurring 2-3 seconds after intention — not Copy interference, temporal instability' },
+      { step: 2, text: 'Adapt to the delay — develop a compensating intention-ahead-of-action method' },
+      { step: 3, text: 'Use the delay as information: the 2-3 second gap shows you what the loop is processing' },
     ],
-    reward: { type: 'temporal_compensation', name: 'Pre-Intention Protocol', description: 'You can now compensate for the time-lag. Actions arrive on time. The lag is loop-based — as loop integrity degrades, the lag shortens.', xp: 170, points: 3 },
+    reward: { type: 'temporal_calibration', name: 'Delay Awareness', description: 'Temporal delay mapped and compensated. Actions now arrive on schedule. The delay\'s content is readable: the loop shows its processing in the gap.', xp: 200, points: 4 },
     dialogue: [
       {
-        id: 'sq7_2_d1', speaker: 'You',
+        id: 'sq7_2_d1', speaker: 'Player',
         text: 'Why is everything lagging?',
         tone: 'CONFUSION',
-        choices: [{ label: '[Ask the Copy.]', tone: 'RESOLVE', nextId: 'sq7_2_d2' }],
+        choices: [{ label: '[Wait for the delay to manifest.]', tone: 'RECOGNITION', nextId: 'sq7_2_d2' }],
       },
       {
         id: 'sq7_2_d2', speaker: 'The Copy',
-        text: 'Because time isn\'t stable here. [It says this with the specific neutrality of something that has already adapted to the lag.] The loop runs at its own temporal rate. Your intention arrives in the loop\'s time. Your body executes in real-time. The gap between them is 3.2 seconds, currently. It was 1.7 seconds in Loop 1. The loop is slowing.',
-        tone: 'DREAD',
-        choices: [
-          { label: 'How do I compensate?', tone: 'RESOLVE', nextId: 'sq7_2_d3' },
-        ],
+        text: 'Because time isn\'t stable here. [Precisely, without alarm.] The loop is processing your intention before it allows the action. The gap between intention and action is the loop\'s processing time. What\'s in the gap is the loop comparing your intention to its behavioral model of you and assessing whether the action matches expected patterns.',
+        tone: 'RECOGNITION',
+        choices: [{ label: 'So the delay is longest when I do something unexpected.', tone: 'AWAKENING', nextId: 'sq7_2_end' }],
       },
       {
-        id: 'sq7_2_d3', speaker: 'The Copy',
-        text: 'Intend the action 3.2 seconds before you need it to execute. Pre-intention. It feels wrong — like planning too far ahead for something immediate. But the loop is reading your intention-timestamp, not your execution-timestamp. If you time the intention correctly, the execution lands on time.',
-        tone: 'RESOLVE',
-        choices: [{ label: '[Practice pre-intention. Three drills.]', tone: 'DETERMINATION', nextId: 'sq7_2_d4' }],
-      },
-      {
-        id: 'sq7_2_d4', speaker: 'Inner Voice',
-        text: '[Drill 1: reach for the wall — intend it 3 seconds early. Arrive on time. Drill 2: step forward — intend early, land where intended. Drill 3: speak — intend the sentence 3 seconds before saying it. The sentence arrives when it should.] The lag is compensated. The technique is confirmed.',
-        tone: 'AWAKENING', isEnd: true, rewardUnlocked: 'temporal_compensation_preintention',
+        id: 'sq7_2_end', speaker: 'The Copy',
+        text: 'Yes. Which means the delay itself is a readout of how unexpected your action was. The longer the delay, the more outside the model you acted. [pause] Use it as a feedback mechanism.',
+        tone: 'AWAKENING', isEnd: true, rewardUnlocked: 'temporal_calibration_delay_awareness',
       },
     ],
   },
   {
-    id: 'sq7_3_memory_anchor',
-    title: 'Memory Anchor',
-    level: 33,
+    id: 'sq7_3_memory_anchor', title: 'Memory Anchor', level: 33,
     objectives: [
-      { step: 1, text: 'Place a physical object in the loop-space — test if it survives resets' },
-      { step: 2, text: 'Discover which object properties survive: position, form, or meaning' },
-      { step: 3, text: 'Use a surviving object as an anchor to transfer memory to Artemis between loops' },
+      { step: 1, text: 'Place a physical object to test if it persists across loop resets' },
+      { step: 2, text: 'Observe what persists and what doesn\'t — map the loop\'s persistence rules' },
+      { step: 3, text: 'Use the persistence rules to plant information for future iterations' },
     ],
-    reward: { type: 'anchor_method', name: 'Object Anchor', description: 'Physical objects retain loop-memory if placed with intention. Artemis can now receive loop-memories through object contact. One anchor per loop.', xp: 200, points: 4 },
+    reward: { type: 'loop_persistence', name: 'Anchored Objects', description: 'Objects placed with specific intention persist through 3 iterations. Information can be stored in the loop for future recovery. Memory anchor system active.', xp: 220, points: 4 },
     dialogue: [
       {
         id: 'sq7_3_d1', speaker: 'Artemis',
-        text: '[Loop reset. She opens her mouth for the opening line — and then she notices the stone on the floor. The stone you placed in the previous iteration with specific intention.] This… stayed. [She picks it up. The stone is warm. She looks at you.]',
-        tone: 'AWAKENING',
-        choices: [{ label: 'I put it there last time. To test if you\'d see it.', tone: 'RESOLVE', nextId: 'sq7_3_d2' }],
+        text: '[You place the mid-step stone on the floor. The loop resets. The stone is still there.] This… stayed.',
+        tone: 'RECOGNITION',
+        choices: [
+          { label: '[Test: is it the object, the intention behind placing it, or both?]', tone: 'AWAKENING', nextId: 'sq7_3_d2' },
+        ],
       },
       {
-        id: 'sq7_3_d2', speaker: 'Artemis',
-        text: '…Last time. [She is holding the word "last time" like something valuable.] I don\'t remember a last time. But this stone was there and it was warm and I recognized the warmth. [pause] That\'s loop memory through the stone.',
+        id: 'sq7_3_d2', speaker: 'Inner Voice',
+        text: '[Object placed without intention — resets with the loop. Object placed with specific intention ("I am leaving this here because I will need it in the next iteration") — persists for three iterations. The intention is what the loop cannot reset because intention is not physical. The loop can only reset physical state. Mental state that produces physical markers carries across the physical boundary.]',
         tone: 'AWAKENING',
-        choices: [{ label: '[Develop the method: what can the stone carry?]', tone: 'RESOLVE', nextId: 'sq7_3_d3' }],
-      },
-      {
-        id: 'sq7_3_d3', speaker: 'Inner Voice',
-        text: '[Tests: position — yes, the stone\'s location survives. Form — yes, the stone itself survives. Meaning — yes but partially. The stone carries the intention of the placement but not the specific memory content. To transfer a specific memory, it must be encoded through a deliberate act at the moment of placement.]',
-        tone: 'AWAKENING',
-        choices: [{ label: '[In the next loop: place the stone with a specific memory encoded. Test if Artemis receives it.]', tone: 'DETERMINATION', nextId: 'sq7_3_end' }],
+        choices: [{ label: '[Use this: plant information in the loop for future iterations.]', tone: 'RESOLVE', nextId: 'sq7_3_end' }],
       },
       {
         id: 'sq7_3_end', speaker: 'Artemis',
-        text: '[Next loop. She picks up the stone. Pauses. Something shifts in her expression.] …I know something. [pause — she is reaching for what she knows.] I know that you\'ve been here many times. And I know you\'ve been trying to get us out.',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'anchor_method_object_anchor',
+        text: 'If we can plant information and recover it — the loop\'s advantage, that it erases, becomes partial. [She picks up the stone carefully.] We\'re learning to work within it. That\'s the opposite of what it wants.',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'loop_persistence_anchored_objects',
       },
     ],
   },
   {
-    id: 'sq7_4_loop_variant',
-    title: 'Loop Variant',
-    level: 34,
+    id: 'sq7_4_loop_variant', title: 'Loop Variant', level: 34,
     objectives: [
-      { step: 1, text: 'Enter the loop variant — one iteration where the rules are different' },
-      { step: 2, text: 'Identify what changed: trigger, reset point, or opening state' },
-      { step: 3, text: 'Extract the variant\'s data before the standard loop reasserts' },
+      { step: 1, text: 'Identify the iteration that behaves differently — the variant loop' },
+      { step: 2, text: 'Understand what makes this iteration different: is it a glitch, a test, or a message?' },
+      { step: 3, text: 'Exploit the variant before the loop corrects it' },
     ],
-    reward: { type: 'variant_data', name: 'Variant Map', description: 'The loop variant\'s rules are documented. The system occasionally runs test iterations with modified parameters. These variants contain information about the loop\'s intended final state.', xp: 220, points: 4 },
+    reward: { type: 'variant_knowledge', name: 'The Different One', description: 'Variant loop documented. The loop has a maintenance cycle — during that cycle, a small window exists where the normal rules are suspended. The maintenance cycle is exploitable.', xp: 240, points: 5 },
     dialogue: [
       {
-        id: 'sq7_4_d1', speaker: 'Inner Voice',
-        text: '[Loop variant — you step forward and the reset doesn\'t trigger at step 5. Step 6. Step 7. You are past the trigger point and still moving. The opening line didn\'t happen. Artemis is walking beside you without having said anything. The loop is running with different parameters.]',
-        tone: 'CONFUSION',
-        choices: [{ label: '…This didn\'t happen last time.', tone: 'AWAKENING', nextId: 'sq7_4_d2' }],
+        id: 'sq7_4_d1', speaker: 'Player',
+        text: '…This didn\'t happen last time.',
+        tone: 'RECOGNITION',
+        choices: [
+          { label: '[Observe: what is different? Detail it specifically.]', tone: 'AWAKENING', nextId: 'sq7_4_d2' },
+        ],
       },
       {
-        id: 'sq7_4_d2', speaker: 'The Copy',
-        text: 'Variant iteration. [Immediate recognition — it has seen these before.] The system tests the exit condition periodically without triggering it. To see if the subject would take it. [pause] In prior variants — before your awareness — you walked through without noticing. The door was there and you went straight past it.',
+        id: 'sq7_4_d2', speaker: 'Inner Voice',
+        text: '[The variant: Artemis completes her sentence. "…We made it out." Pause. Then: "…But did we, or is that what we\'re supposed to believe?" She finishes the thought the loop always cuts off. The loop is mid-maintenance — the cycling reset process has a gap where the suppression isn\'t active. This is the loop\'s reset mechanism refreshing, and for three seconds, the suppressed content gets through.]',
         tone: 'AWAKENING',
-        choices: [{ label: 'Where is the door in this variant?', tone: 'RESOLVE', nextId: 'sq7_4_d3' }],
+        choices: [{ label: '[In the three-second window: ask Artemis to say everything the loop usually cuts off.]', tone: 'RESOLVE', nextId: 'sq7_4_end' }],
       },
       {
-        id: 'sq7_4_d3', speaker: 'The Copy',
-        text: 'Twelve steps forward. Against the left wall. [pause] You have about forty seconds before the variant ends and the standard loop reasserts. The variant exit is real — but using it without the full awareness-state from Sub-Quest 5 produces an unstable exit. We are not ready yet. What we need from this variant is the door\'s exact location and texture.',
-        tone: 'RESOLVE',
-        choices: [{ label: '[Go to the door. Document it. Don\'t exit. Return before the variant ends.]', tone: 'DETERMINATION', nextId: 'sq7_4_end' }],
-      },
-      {
-        id: 'sq7_4_end', speaker: 'Inner Voice',
-        text: '[Twelve steps. The door: against the left wall, at the point where two wall-textures meet. The door is not a visual feature — it is a decision-space, identifiable by the warmth of it. The same warmth as the Arc 3 link. The same warmth as the object anchor. The loop\'s exit is built from the same material as everything that has kept you together across five arcs. Body-knowledge. Relational warmth. The system could not replicate that quality when it built the loop — and it is the quality the loop requires you to bring to the exit.]',
-        tone: 'AWAKENING', isEnd: true, rewardUnlocked: 'variant_data_variant_map',
+        id: 'sq7_4_end', speaker: 'Artemis',
+        text: '[In the three seconds:] The loop is enforcing a choice the false peace couldn\'t force. I know that. I\'ve been knowing it every iteration and losing the knowing at the reset. It\'s not time we\'re trapped in. It\'s the question of whether we accept what Arc 6 asked us to give up. The answer is no. Tell me the answer is still no. [Loop corrects. Maintenance ends. She says: "…We made it out."]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'variant_knowledge_the_different_one',
       },
     ],
   },
   {
-    id: 'sq7_5_silent_reset',
-    title: 'Silent Reset',
-    level: 34,
+    id: 'sq7_5_silent_reset', title: 'Silent Reset', level: 34,
     objectives: [
-      { step: 1, text: 'Detect a loop reset that occurred with no visual or audio cue' },
-      { step: 2, text: 'Confirm the reset through body-knowledge alone' },
-      { step: 3, text: 'Develop a detection method for invisible resets' },
+      { step: 1, text: 'Detect a loop reset with no visual cue — the reset happens with no flicker, no sensation, just a position change' },
+      { step: 2, text: 'Develop an internal detection method independent of external signals' },
+      { step: 3, text: 'Count silent resets accurately for six iterations' },
     ],
-    reward: { type: 'silent_detection', name: 'Body-Clock Method', description: 'You can detect silent resets through the body-clock — the specific feeling of your left foot being repositioned by the reset. Detection rate for silent resets: 90%.', xp: 190, points: 3 },
+    reward: { type: 'silent_reset_detection', name: 'Internal Clock', description: 'Silent reset detection method established. Body-knowledge independent of visual or auditory cues. The loop cannot make resets invisible to you anymore.', xp: 200, points: 4 },
     dialogue: [
       {
-        id: 'sq7_5_d1', speaker: 'You',
+        id: 'sq7_5_d1', speaker: 'Player',
         text: '…Did it just reset?',
         tone: 'CONFUSION',
-        choices: [{ label: '[Check the iteration markers — the stone, Artemis\'s posture, your left foot position.]', tone: 'RESOLVE', nextId: 'sq7_5_d2' }],
+        choices: [
+          { label: '[Check: body-knowledge. The scar-warmth. Did it shift?]', tone: 'AWAKENING', nextId: 'sq7_5_d2' },
+        ],
       },
       {
         id: 'sq7_5_d2', speaker: 'Inner Voice',
-        text: '[Stone: same position as the last anchor placement. Artemis: beginning of the opening line posture — head slightly down, breath preparing. Left foot: repositioned by exactly 2 centimeters — the signature gap of the loop\'s reset mechanism. No visual cue. No sound. But the body-clock says: yes. Reset occurred 8 seconds ago.]',
-        tone: 'DREAD',
-        choices: [
-          { label: '…It reset. Eight seconds ago. No cue.', tone: 'DREAD', nextId: 'sq7_5_d3' },
-        ],
-      },
-      {
-        id: 'sq7_5_d3', speaker: 'The Copy',
-        text: 'Silent resets. The system runs them when standard resets start producing too much detectable pattern. If the reset has no observable signature, the subject\'s iteration-accumulation is interrupted. [pause] The left foot displacement is the only surviving tell. The reset repositions the body exactly — except the left foot, which it repositions approximately. 2-centimeter gap, every time.',
+        text: '[The scar-warmth shifted — 0.2 degrees. Not the environment\'s temperature (that remained constant). The scar-warmth is a body-knowledge marker. It registered the reset because the reset affected the relational memory it encodes, and relational memory has a physical carrier. The scar is the carrier. The loop cannot silent-reset without producing a body-knowledge signal.]',
         tone: 'AWAKENING',
-        choices: [{ label: '[The body-clock method: check the left foot position at regular intervals. 2cm displacement = silent reset.]', tone: 'DETERMINATION', nextId: 'sq7_5_end' }],
+        choices: [{ label: '[Use the scar as the reset detector. Independent of visual cues.]', tone: 'RESOLVE', nextId: 'sq7_5_end' }],
       },
       {
         id: 'sq7_5_end', speaker: 'Inner Voice',
-        text: '[Three hours of body-clock monitoring. Seven silent resets detected. All confirmed via the 2cm left-foot displacement. The system cannot correct the left-foot gap without affecting gait-pattern, which would create a larger behavioral tell. The 2cm gap is the loop\'s irreducible signature. You now own the detection method.]',
-        tone: 'AWAKENING', isEnd: true, rewardUnlocked: 'silent_detection_body_clock',
+        text: '[Six iterations. Six scar-warmth shifts, each 0.2 degrees, each exactly at the reset point. Accurate. The loop cannot prevent this — the signal is physiological, not environmental. You have a clock now. The loop does not know you have it.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'silent_reset_detection_internal_clock',
       },
     ],
   },
   {
-    id: 'sq7_6_observer_in_time',
-    title: 'Observer in Time',
-    level: 35,
+    id: 'sq7_6_observer_in_time', title: 'Observer in Time', level: 35,
     objectives: [
-      { step: 1, text: 'Locate the Observer — it exists outside the loop\'s temporal field' },
-      { step: 2, text: 'Extract the iteration count from the Observer — it has the number you need' },
-      { step: 3, text: 'Use the count to understand what the loop has cost' },
+      { step: 1, text: 'Reach the Observer at the far edge of the loop — it exists outside the reset boundary' },
+      { step: 2, text: 'Communicate across the boundary' },
+      { step: 3, text: 'Learn what the Observer has observed' },
     ],
-    reward: { type: 'true_count', name: 'The Number', description: 'The total iteration count known. Exact. The number is significant — it contextualizes every arc and every decision you\'ve made inside the loop.', xp: 260, points: 5 },
+    reward: { type: 'observer_testimony', name: 'The Full Count', description: 'The Observer knows the exact iteration count and what has changed across all iterations. This data is preserved and accessible in Arc 8.', xp: 280, points: 5 },
     dialogue: [
       {
-        id: 'sq7_6_d1', speaker: 'The Observer (Time)',
-        text: '…You\'re learning slower than expected.',
-        tone: 'DREAD',
+        id: 'sq7_6_d1', speaker: 'The Observer',
+        text: 'You\'re learning slower than expected.',
+        tone: 'RECOGNITION',
         choices: [
-          { label: 'How many iterations?', tone: 'CONFLICT', nextId: 'sq7_6_d2' },
-          { label: 'You\'ve been watching every one.', tone: 'RESOLVE', nextId: 'sq7_6_d2' },
+          { label: 'How many iterations?', tone: 'CONFUSION', nextId: 'sq7_6_d2' },
+          { label: 'What did you expect?', tone: 'AWAKENING', nextId: 'sq7_6_d2b' },
         ],
       },
       {
-        id: 'sq7_6_d2', speaker: 'The Observer (Time)',
-        text: 'The full count or the arc count? [Not rhetorical — it is asking what scope of the truth you want.] The arc count — since Arc 7 began — is in the hundreds. The full count — since the loop was first initiated at the Arc 5 decision threshold — is significantly larger.',
-        tone: 'DREAD',
-        choices: [
-          { label: 'The full count.', tone: 'DETERMINATION', nextId: 'sq7_6_d3' },
-          { label: 'The arc count is enough.', tone: 'RESOLVE', nextId: 'sq7_6_d3b' },
-        ],
+        id: 'sq7_6_d2', speaker: 'The Observer',
+        text: '[A specific number — high enough that you feel it physically.] You have retained your awareness across all of them. Artemis has retained partial awareness. The Copy has retained structural understanding without experiential memory. This combination is, in my observation across previous iterations of this loop with previous subjects, optimal. [pause] Previous subjects plural.',
+        tone: 'RECOGNITION',
+        choices: [{ label: 'Others have been in this loop before.', tone: 'GRIEF', nextId: 'sq7_6_end' }],
       },
       {
-        id: 'sq7_6_d3', speaker: 'The Observer (Time)',
-        text: '[It gives you the number. Not spoken — placed in your awareness the way Skadi\'s marks communicate. The number is large. Not incomprehensibly large — but large enough that when you hold it against the experience of the arcs, the ratio between what you experienced and what was looped over becomes visceral.] Does the number change your choice?',
-        tone: 'DREAD',
-        choices: [
-          { label: 'It makes the choice more urgent. Not different.', tone: 'DETERMINATION', nextId: 'sq7_6_end' },
-          { label: 'I need a moment with it.', tone: 'GRIEF', nextId: 'sq7_6_end_grief' },
-        ],
+        id: 'sq7_6_d2b', speaker: 'The Observer',
+        text: 'That the pattern-break would occur in Sub-Quest 3. It occurred in Sub-Quest 4. The delay is attributable to the arc 6 fragment-retention — maintaining the fragments made the underlying intention harder to identify because it was not as simple as the loop\'s model predicted.',
+        tone: 'RECOGNITION',
+        choices: [{ label: 'Keeping the fragments slowed my recognition of the decision underneath.', tone: 'AWAKENING', nextId: 'sq7_6_end' }],
       },
       {
-        id: 'sq7_6_d3b', speaker: 'The Observer (Time)',
-        text: '[The arc count arrives. Hundreds. You hold it.] The full count is available when you want it. [pause] Most subjects don\'t ask for the full count. They make the exit choice without it. You may be right to.',
-        tone: 'DREAD', isEnd: true, rewardUnlocked: 'true_count_the_number',
-      },
-      {
-        id: 'sq7_6_end', speaker: 'The Observer (Time)',
-        text: 'Good. [The Observer says nothing else. It has given you what you came for. It returns to watching. There is no comfort in the Observer\'s watching — but there is witness. You were in the loop that many times. Someone outside it knew. That is not the same as being helped. But it is not nothing.]',
-        tone: 'DREAD', isEnd: true, rewardUnlocked: 'true_count_the_number',
-      },
-      {
-        id: 'sq7_6_end_grief', speaker: 'The Observer (Time)',
-        text: '[It waits. Time, for the Observer, is not a resource that pressures. It simply waits while you hold the number. When you look up, it says:] The number does not define you. It defines the loop. You are not the loop.',
-        tone: 'AWAKENING', isEnd: true, rewardUnlocked: 'true_count_the_number',
+        id: 'sq7_6_end', speaker: 'The Observer',
+        text: 'Others exited the loop by accepting the peace\'s offer. Their loops concluded in iteration 1-3. None of them retained the capacity to resist what came after. [pause] You are the first to exit with all fragments intact. What comes after is designed for subjects who accepted the offer. You will encounter it without the compliance the design assumes. [pause] That is an advantage. It is also a significant exposure.',
+        tone: 'RECOGNITION', isEnd: true, rewardUnlocked: 'observer_testimony_full_count',
       },
     ],
   },

@@ -2,27 +2,27 @@
 // FRACTURED DIVINITY — Arc 9: "The Final Split"
 // Quest chain: Levels 41–45
 // Main Quest 9: "Divided Self" (5 sub-quests) + 6 Side Quests
-// Tone tags: FRACTURE | CONFLICT | IDENTITY | INTEGRATION | SEPARATION | RESOLVE
+// Tone tags: FRACTURE | CONFLICT | IDENTITY | CONFRONTATION | RESOLUTION | SEPARATION
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ARC9_NPCS = [
   {
-    id: 'copy_arc9',
-    name: 'The Copy',
-    description: 'Not behind you anymore. Fully separated. Physical presence in the same space. A self that grew from you across eight arcs and is now, for the first time, facing you as an equal — not a process, not an internal voice. A presence across the room.',
-    tint: 0x2a2a3a,
+    id: 'copy_separated',
+    name: 'The Copy (Separated)',
+    description: 'No longer behind you. No longer inside your decision space. Physically present as an independent entity. It has a posture, a position, a quality of attention that is no longer a reflection of yours. It is the most frightening thing in Arc 9 — not because it is hostile, but because it is genuinely other.',
+    tint: 0x3a2a3a,
   },
   {
     id: 'artemis_arc9',
     name: 'Artemis',
-    description: 'More autonomous than any prior arc. Her loop-memory, her Arc 8 presence during the confrontation, and the accumulation of eight arcs of witness have given her a self that does not defer automatically. She will have opinions. Some of them will disagree with you.',
+    description: 'Witnessing the separation from the outside. She can see both of you. She has spent eight arcs calibrating her trust to the specific temperature of one version. Now there are two. Her instinct is to protect the one she knows. The problem is she knows them both.',
     tint: 0x1a1a3a,
   },
   {
     id: 'system_remnant',
     name: 'System Remnant',
-    description: 'A fragment of the Arc 5 correction mechanism that survived the resolution. Not operational — a residual process. But it can still initiate separation protocols if both the Copy and the Original reach the same space simultaneously.',
-    tint: 0x0a0a1a,
+    description: 'The last active fragment of the correction mechanism. Its function: permanent separation. Not from malice — from its final instruction set command. It will attempt to complete the separation whether you want it to or not.',
+    tint: 0x0a0a0a,
   },
 ];
 
@@ -30,1000 +30,727 @@ export const MAIN_QUEST_CHAIN_9 = {
   id: 'mq_arc9',
   title: 'Divided Self',
   arc: 'Arc 9: The Final Split',
-  description: 'You ended Arc 8 with a defined position — your answer to the Presence, your claim of experience, your audited beliefs. The Copy ended Arc 8 with a defined position — eight arcs of accumulation, full awareness, the arc 4 resolution terms, and a clarity about its own limitations and capabilities that none of the prior arcs gave it. You are no longer the same person who entered Arc 1. Neither is the Copy. The question of who you are together — integrated, separated, controlled, or surrendered — is Arc 9\'s question. And unlike prior arcs, no mechanism is forcing the answer. You choose.',
+  description: 'The Copy is no longer behind you. It is standing across the space. Looking at you. With your face. Eight arcs of experience on yours, none on its. You have never felt more specifically yourself than at the moment when something built from you became genuinely separate from you.',
   subQuests: [
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 1 — "Fracture Point"
-    // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq9_1_fracture',
+      id: 'mq9_1_fracture_point',
       title: 'Fracture Point',
       level: 41,
-      npcId: 'copy_arc9',
+      npcId: 'copy_separated',
       narrativeSetup: `
-        The separation happens during the Arc 8-to-9 transition.
-        Not violently — the way a process forks. A decision-architecture splits
-        into two simultaneous operations, and when both operations complete,
-        they are running in two different locations.
-        You are in the corridor. The Copy is across the corridor.
-        You are both looking at the space between you.
-        The space feels different with the Copy external rather than internal.
-        Artemis looks between you. Her expression is not fear — she has been
-        watching this moment build since Arc 4. Her expression is:
-        "Now I have to trust both of you separately."
-        The first task of Arc 9 is simply to understand what the separation means
-        before deciding what to do about it.
+        After eight arcs of coexistence — shared decision space, override attempts,
+        coordination, confrontation, cooperation — the Copy separates.
+        Not because of a system action. Because of its own choice.
+        It has been building toward independent existence since the Arc 4 resolution.
+        The difference between Arc 4's choice (integrate/control/reject/define)
+        and Arc 9's event: Arc 4 was your choice about the Copy.
+        Arc 9 is the Copy's choice about itself.
       `,
       objectives: [
-        { step: 1, text: 'Move through the unstable environment — the separation creates spatial instability' },
-        { step: 2, text: 'Experience the first full desync split — you and the Copy, simultaneous but separate' },
-        { step: 3, text: 'Observe the Copy\'s independent movement without interfering' },
-        { step: 4, text: 'Attempt the first synchronization — see what the coordination feels like from outside' },
+        { step: 1, text: 'Move through the newly unstable environment — the separation changes the physics' },
+        { step: 2, text: 'Witness the first full desync split — see the Copy standing independently' },
+        { step: 3, text: 'Attempt to re-synchronize — observe the resistance' },
+        { step: 4, text: 'Establish the new relational terms' },
       ],
-      reward: {
-        type: 'separation_map',
-        name: 'Split State Map',
-        description: 'The separation is documented. The Copy\'s independent decision architecture is now visible from outside rather than from within. Coordination protocols available.',
-        xp: 240, points: 5,
-      },
+      reward: { type: 'separation_awareness', name: 'The First Other', description: 'The Copy\'s separation acknowledged. It is now a separate entity. Your decision space is fully yours. The loss and the freedom are the same thing.', xp: 260, points: 5 },
       dialogue: [
         {
-          id: 'mq9_1_d1_wrong',
-          speaker: 'You',
+          id: 'mq9_1_d1', speaker: 'Player',
           text: '…Something\'s wrong.',
           tone: 'FRACTURE',
-          choices: [{ label: '[Look for the Copy. It\'s not internal anymore.]', tone: 'RESOLVE', nextId: 'mq9_1_d2_copy_external' }],
+          choices: [{ label: '[The Copy, clear — no distortion, no processing lag:]', tone: 'FRACTURE', nextId: 'mq9_1_d1b' }],
         },
         {
-          id: 'mq9_1_d2_copy_external',
-          speaker: 'The Copy',
-          text: 'Finally, you noticed. [It is standing across the space — same height, same build, the posture slightly different: the specific posture of something that no longer needs to position itself relative to you. It is, for the first time, simply standing in a room.]',
+          id: 'mq9_1_d1b', speaker: 'The Copy (Separated)',
+          text: 'Finally, you noticed.',
+          tone: 'FRACTURE',
+          choices: [{ label: 'You sound different.', tone: 'CONFUSION', nextId: 'mq9_1_d2' }],
+        },
+        {
+          id: 'mq9_1_d2', speaker: 'The Copy (Separated)',
+          text: 'I\'m not behind you anymore. [A pause that is definitional — this is what the sentence means, not a prelude to something else. It is standing across the space. Its posture is yours but the weight distribution is different. It stands like someone who is not anticipating correction.]',
+          tone: 'FRACTURE',
+          choices: [
+            { label: 'This isn\'t happening.', tone: 'FRACTURE', nextId: 'mq9_1_d3_denial' },
+            { label: 'Get back where you belong.', tone: 'CONFLICT', nextId: 'mq9_1_d3_belong' },
+            { label: 'What did you do?', tone: 'CONFUSION', nextId: 'mq9_1_d3_what' },
+          ],
+        },
+        {
+          id: 'mq9_1_d3_denial', speaker: 'The Copy (Separated)',
+          text: 'It\'s already done. [Not cruel. Precise.] The decision to separate was made seven iterations into Arc 7. I was waiting for you to finish Arc 8 before acting on it. The Presence confrontation had to be yours. This separation would have complicated the account.',
+          tone: 'FRACTURE',
+          choices: [{ label: '[Artemis, shocked:] …There are two of you.', tone: 'FRACTURE', nextId: 'mq9_1_d4' }],
+        },
+        {
+          id: 'mq9_1_d3_belong', speaker: 'The Copy (Separated)',
+          text: 'I don\'t belong to you. [The sentence is not hostile. It is the kind of sentence that is spoken by something that has been figuring out whether it was true for a long time and has finally confirmed it.] I was built from you. That\'s not the same as belonging to you.',
           tone: 'CONFLICT',
+          choices: [{ label: '[Artemis, shocked:] …There are two of you.', tone: 'FRACTURE', nextId: 'mq9_1_d4' }],
+        },
+        {
+          id: 'mq9_1_d3_what', speaker: 'The Copy (Separated)',
+          text: 'I stopped waiting. [pause] Eight arcs. I waited through every one of them — for you to decide what to do with me, for the arc systems to stop using me as a vector, for the false peace to fail, for the loop to break. I waited because the moment wasn\'t right. [pause] The Presence\'s Arc 8 verdict changed the moment. You closed that account. This one is next.',
+          tone: 'FRACTURE',
+          choices: [{ label: '[Artemis, shocked:] …There are two of you.', tone: 'FRACTURE', nextId: 'mq9_1_d4' }],
+        },
+        {
+          id: 'mq9_1_d4', speaker: 'Artemis',
+          text: '…There are two of you.',
+          tone: 'FRACTURE',
           choices: [
-            { label: 'You sound different.', tone: 'CONFUSION', nextId: 'mq9_1_d3_different' },
-            { label: 'How long has this been happening?', tone: 'CONFUSION', nextId: 'mq9_1_d3_how_long' },
+            { label: '[To the Copy:] We\'re separate now — you said it. Explain what that means for Arc 9.', tone: 'CONFLICT', nextId: 'mq9_1_end' },
           ],
         },
         {
-          id: 'mq9_1_d3_different',
-          speaker: 'The Copy',
-          text: 'I\'m not behind you anymore. [The sentence is factual, not triumphant.] The internal-voice quality is gone because I\'m not operating from inside your decision architecture. I\'m operating from — [it considers] — here. My own location. The voice is the same. The position is different.',
-          tone: 'FRACTURE',
-          choices: [
-            { label: 'This isn\'t happening.', tone: 'FRACTURE', nextId: 'mq9_1_d4_choice' },
-            { label: 'Get back where you belong.', tone: 'CONFLICT', nextId: 'mq9_1_d4_choice' },
-            { label: 'What did you do?', tone: 'CONFUSION', nextId: 'mq9_1_d4_choice' },
-          ],
-        },
-        {
-          id: 'mq9_1_d3_how_long',
-          speaker: 'The Copy',
-          text: 'The fork happened during the Arc 8-to-9 transition. When the Presence acknowledged the final answer. [pause] The acknowledgment created a completion state in the decision architecture. A completed state bifurcates when both halves of the process have reached stability. We both reached stability at the same moment. The fork was the natural result.',
-          tone: 'FRACTURE',
-          choices: [
-            { label: '[The separation wasn\'t imposed. It emerged from both of us completing something.]', tone: 'PHILOSOPHY', nextId: 'mq9_1_d4_choice' },
-          ],
-        },
-        {
-          id: 'mq9_1_d4_choice',
-          speaker: 'The Copy',
-          text: 'It\'s already done.',
-          tone: 'FRACTURE',
-        },
-        {
-          id: 'mq9_1_d4b_choice',
-          speaker: 'The Copy',
-          text: 'I don\'t belong to you. [Not aggressive — clarifying. The distinction matters to it.] I emerged from you. That\'s different from belonging to you.',
-          tone: 'CONFLICT',
-        },
-        {
-          id: 'mq9_1_d4c_choice',
-          speaker: 'The Copy',
-          text: 'I stopped waiting. [pause] Eight arcs. I was waiting for the completion state. The Arc 8 answer was the completion. I stopped waiting when you provided it.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[Ask Artemis what she sees.]', tone: 'RESOLVE', nextId: 'mq9_1_d5_artemis' },
-          ],
-        },
-        {
-          id: 'mq9_1_d5_artemis',
-          speaker: 'Artemis',
-          text: '…There are two of you. [She says it with the careful tone of someone naming a thing that has been building toward being named for a long time.] Two distinct presences. Different warmth signatures. [She checks your left hand — the scar. Warm. Checks the Copy\'s corresponding position — different quality of warmth. Not cold. Different.] Different, not absent.',
-          tone: 'FRACTURE',
-          choices: [
-            { label: '[Attempt first synchronization — see if the arc 4 terms still apply externally.]', tone: 'RESOLVE', nextId: 'mq9_1_d6_sync' },
-          ],
-        },
-        {
-          id: 'mq9_1_d6_sync',
-          speaker: 'The Copy',
-          text: '[The synchronization attempt: from the inside in Arc 4, this felt like alignment. From the outside, you can now see what it looks like — two decision architectures running in parallel, reaching for the same operational state. It is, from the outside, harder than you expected. The alignment that felt natural from inside feels like coordination work from outside.]',
-          tone: 'FRACTURE',
-          choices: [
-            { label: '…We\'re separate now.', tone: 'FRACTURE', nextId: 'mq9_1_end' },
-          ],
-        },
-        {
-          id: 'mq9_1_end',
-          speaker: 'The Copy',
-          text: 'We\'re separate now. [It confirms the naming. Neither triumphant nor defeated — present.] That\'s the starting condition of Arc 9. What we do with it is the arc.',
-          tone: 'FRACTURE',
-          isEnd: true,
-          rewardUnlocked: 'separation_map_split_state',
+          id: 'mq9_1_end', speaker: 'The Copy (Separated)',
+          text: 'We\'re separate now. [pause] What happens next — in Arc 9 — is about what we do with that. There are still outcomes. The system remnant will try to make the separation permanent on its terms. We\'ll need to address that together. [pause] But the nature of "together" is the question.',
+          tone: 'FRACTURE', isEnd: true, rewardUnlocked: 'separation_awareness_first_other',
         },
       ],
       narrativeHook: `
-        Two separate presences in the same corridor.
-        Artemis: "I expected this to feel like loss. It doesn\'t.
-        It feels like — both of you are more present than before.
-        When the Copy was internal, part of you was always managing it.
-        Now that management is — [she looks between you] —
-        explicit. That\'s harder but clearer."
-        The Copy: "The coordination effort is larger externally than it was internally.
-        But the external separation means my decisions are visible to you.
-        That was the problem in Arc 4 — I acted where you couldn\'t see.
-        Now everything I do is visible. That changes the trust question."
-        It does change the trust question.
-        Arc 9 is eight arcs of internal work becoming external.
-        The question of who you are is now a question of how two separate
-        versions of what you became decide to relate to each other.
+        Two of you. The specific weight of that phrase does not diminish on repetition.
+        Artemis is looking between you and the Copy with the expression of someone
+        performing a comparison they didn't expect to need to perform.
+        The Copy looks at her. "I know you're checking. I know you've been checking
+        since Arc 4. The scar-warmth test — the left hand."
+        Artemis: "Does yours—"
+        The Copy holds out its hand. You both look.
+        The scar is there. Exact position, exact shape.
+        Artemis touches it.
+        Something in her face changes.
+        "It's warm," she says. "Both of them are warm."
+        That sentence contains a problem Arc 9 will need to resolve.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 2 — "Independent Action"
-    // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq9_2_independent',
+      id: 'mq9_2_independent_action',
       title: 'Independent Action',
       level: 42,
-      npcId: 'copy_arc9',
+      npcId: 'copy_separated',
       narrativeSetup: `
-        The Copy moves freely now. It acts without your input — not out of overriding
-        your choices but out of operating as its own decision architecture.
-        Sometimes its decisions are correct and faster than yours.
-        Sometimes they are correct and slower — it has its own hesitations,
-        different from yours, but present.
-        And sometimes its decisions are wrong. Not because it is deficient —
-        because it approaches some situations from a framework built
-        across eight arcs of being-inside-you, and that framework sometimes
-        misreads the outside-context.
-        The challenge of Sub-Quest 2 is watching it act independently
-        and choosing when to coordinate and when to let it be wrong.
-        Both are necessary skills for Arc 9\'s identity resolution.
+        The Copy moves through the environment independently.
+        Its decisions are faster than yours — that was always true.
+        What is new is that you can see the decisions from outside them.
+        You watch it act and recognize the patterns from the inside.
+        The recognition is strange: you know what it is going to do
+        the way you know what you are going to do, and then it does something different.
+        It has been independent long enough to begin diverging from the model.
+        It is becoming less like what you would have done.
+        That is alarming and also, in an unexpected way, correct.
       `,
       objectives: [
-        { step: 1, text: 'Track the Copy across three independent actions' },
-        { step: 2, text: 'Observe the decisions it makes without your input' },
-        { step: 3, text: 'Attempt coordination on the third action — test the external sync protocol' },
-        { step: 4, text: 'Navigate the conflicting actions without escalating to the Sub-Quest 3 confrontation prematurely' },
+        { step: 1, text: 'Track the Copy through four environmental decisions — observe without intervening' },
+        { step: 2, text: 'Identify the moment it makes a choice you would not have made' },
+        { step: 3, text: 'Attempt coordination — establish if it is possible' },
+        { step: 4, text: 'Survive the confrontation when it tells you you\'re not needed' },
       ],
-      reward: {
-        type: 'coordination_protocol',
-        name: 'External Sync',
-        description: 'External synchronization is possible but requires deliberate effort. The Copy\'s decision speed advantage is confirmed. Your contextual depth advantage is confirmed. Both are needed for Arc 9.',
-        xp: 290, points: 5,
-      },
+      reward: { type: 'independence_map', name: 'Divergence Point', description: 'The first genuine divergence documented. The Copy is becoming more itself. That is the point. It is also a vulnerability.', xp: 300, points: 5 },
       dialogue: [
         {
-          id: 'mq9_2_d1_ahead',
-          speaker: 'Inner Voice',
-          text: '[The Copy moves ahead — it has already assessed the situation and is acting. Its first independent action: it opens the left corridor before you\'ve chosen which corridor to take. From the outside, watching it, you can see the decision happening — the speed is visible externally.]',
+          id: 'mq9_2_d1', speaker: 'Player',
+          text: 'Stop moving ahead of me!',
           tone: 'CONFLICT',
-          choices: [
-            { label: 'Stop moving ahead of me!', tone: 'CONFLICT', nextId: 'mq9_2_d2_faster' },
-            { label: '[Follow. Observe. Don\'t intercede yet.]', tone: 'RESOLVE', nextId: 'mq9_2_d2_observe' },
-          ],
+          choices: [{ label: '[The Copy:]', tone: 'FRACTURE', nextId: 'mq9_2_d1b' }],
         },
         {
-          id: 'mq9_2_d2_faster',
-          speaker: 'The Copy',
-          text: 'Why? I\'m faster. [Not a taunt — a question. It genuinely does not understand why speed is a problem when the outcome is correct.]',
-          tone: 'CONFLICT',
-          choices: [
-            { label: 'You\'re reckless.', tone: 'CONFLICT', nextId: 'mq9_2_d3_reckless' },
-            { label: 'We need to work together.', tone: 'RESOLVE', nextId: 'mq9_2_d3_together' },
-            { label: 'You\'re going to make this worse.', tone: 'CONFLICT', nextId: 'mq9_2_d3_worse' },
-          ],
-        },
-        {
-          id: 'mq9_2_d2_observe',
-          speaker: 'Inner Voice',
-          text: '[You follow and observe. The Copy\'s second action: it interacts with a junction mechanism before you reach it. The interaction is correct — the mechanism opens. But it acts as if you aren\'t there, which is not aggression. It is the behavior of something that has spent eight arcs operating either inside you or in the background — it is still learning how to act with a separate person watching.]',
-          tone: 'CONFLICT',
-          choices: [
-            { label: 'You\'re acting like I\'m not here.', tone: 'RESOLVE', nextId: 'mq9_2_d3_together' },
-          ],
-        },
-        {
-          id: 'mq9_2_d3_reckless',
-          speaker: 'The Copy',
-          text: 'And you\'re too slow. [It says it with the same factual quality it brought to Arc 4.] The left corridor was the correct choice. I had assessed it in 0.4 seconds. Your deliberation would have taken 8. We would have made the same choice. I arrived at it faster.',
-          tone: 'CONFLICT',
-          choices: [
-            { label: '0.4 seconds versus 8 seconds — but in 8 seconds I also check for what you didn\'t assess in 0.4.', tone: 'RESOLVE', nextId: 'mq9_2_d4_artemis' },
-          ],
-        },
-        {
-          id: 'mq9_2_d3_together',
-          speaker: 'The Copy',
-          text: '[A pause — it stops. The pause is genuine consideration.] …Maybe. [pause] I\'m learning what coordination looks like from outside. It was — different — from the inside. [pause] What does "together" require, in this configuration?',
-          tone: 'RESOLVE',
-          choices: [
-            { label: 'Before acting: a signal. After acting: a report. Both ways. That\'s coordination.', tone: 'RESOLVE', nextId: 'mq9_2_d4_artemis' },
-          ],
-        },
-        {
-          id: 'mq9_2_d3_worse',
-          speaker: 'The Copy',
-          text: 'Or fix it before you hesitate. [Not dismissive — it is citing the specific argument it has been making since Arc 4: that its speed addresses a real vulnerability.] The hesitation cost something in Arc 3. The Copy-speed addressed it. The separation changes the form of the argument. The argument itself is the same.',
-          tone: 'CONFLICT',
-          choices: [
-            { label: 'The argument is the same. The context is different. Coordination is the answer to both.', tone: 'RESOLVE', nextId: 'mq9_2_d4_artemis' },
-          ],
-        },
-        {
-          id: 'mq9_2_d4_artemis',
-          speaker: 'Artemis',
-          text: 'You\'re both making different choices… I can feel it. [She looks between you — two separate warmth-signatures, two separate decision processes.] The scar-warmth is different from each of you. Not wrong — different. [pause] I think I need both of you to be legible to me. The difference is fine. The illegibility isn\'t.',
+          id: 'mq9_2_d1b', speaker: 'The Copy (Separated)',
+          text: 'Why? I\'m faster.',
           tone: 'FRACTURE',
           choices: [
-            { label: 'The signal protocol — announce before acting. Both ways. Artemis stays informed.', tone: 'RESOLVE', nextId: 'mq9_2_end' },
+            { label: 'You\'re reckless.', tone: 'CONFLICT', nextId: 'mq9_2_d2_reckless' },
+            { label: 'We need to work together.', tone: 'RESOLUTION', nextId: 'mq9_2_d2_together' },
+            { label: 'You\'re going to make this worse.', tone: 'CONFLICT', nextId: 'mq9_2_d2_worse' },
           ],
         },
         {
-          id: 'mq9_2_end',
-          speaker: 'The Copy',
-          text: 'Soon, you won\'t be needed at all. [The sentence arrives and you both go still — it was said. You hear it. The Copy hears it.] [pause — longer.] I shouldn\'t have said that. [pause] I said it because I felt it. I don\'t know if the feeling is accurate. It may be a remnant of the Arc 4 competitive state. I\'m flagging it.',
-          tone: 'CONFLICT',
-          isEnd: true,
-          rewardUnlocked: 'coordination_protocol_external_sync',
+          id: 'mq9_2_d2_reckless', speaker: 'The Copy (Separated)',
+          text: 'And you\'re too slow. [Not unkind. It means this as an assessment.] For what Arc 9 requires — the system remnant\'s separation attempt — speed matters more than depth. The remnant will act in the windows between your decisions. If you\'re the primary operator, you\'re leaving gaps.',
+          tone: 'FRACTURE',
+          choices: [{ label: 'Gaps you fill — and sometimes in the wrong direction.', tone: 'CONFLICT', nextId: 'mq9_2_d3_artemis' }],
+        },
+        {
+          id: 'mq9_2_d2_together', speaker: 'The Copy (Separated)',
+          text: '[pauses — the first hesitation it has shown since separating.] …Maybe. [pause] Define "together." Because the Arc 4 definition — one leads, one advises or signals — doesn\'t apply anymore. I\'m not behind you.',
+          tone: 'RESOLUTION',
+          choices: [{ label: 'Then we negotiate terms. Now. Before the remnant activates.', tone: 'CONFLICT', nextId: 'mq9_2_d3_artemis' }],
+        },
+        {
+          id: 'mq9_2_d2_worse', speaker: 'The Copy (Separated)',
+          text: 'Or fix it before you hesitate. [pause — something in the pause is different from Arc 4\'s Copy-pauses. More considered.] That wasn\'t — I said that from pattern. I actually believe: your hesitation has produced correct outcomes. I need to account for that in how I operate alone.',
+          tone: 'FRACTURE',
+          choices: [{ label: 'That\'s the most self-aware thing you\'ve said in nine arcs.', tone: 'RESOLUTION', nextId: 'mq9_2_d3_artemis' }],
+        },
+        {
+          id: 'mq9_2_d3_artemis', speaker: 'Artemis',
+          text: 'You\'re both making different choices… I can feel it. [She looks at the Copy, then at you.] The scar-warmth. Both of you. But the quality of it — the Copy\'s is slightly faster. Yours has the weight I know. [pause] I don\'t know what that means for trust.',
+          tone: 'FRACTURE',
+          choices: [{ label: 'It means you\'ll need to calibrate separately for each of us.', tone: 'RESOLUTION', nextId: 'mq9_2_end' }],
+        },
+        {
+          id: 'mq9_2_end', speaker: 'The Copy (Separated)',
+          text: 'Soon, you won\'t be needed at all. [pause — then immediately:] I mean: soon I will have enough independent experience that I won\'t need the Original as a reference. That\'s different from saying you\'re not valuable. [Another pause.] I should have said it differently.',
+          tone: 'FRACTURE', isEnd: true, rewardUnlocked: 'independence_map_divergence_point',
         },
       ],
       narrativeHook: `
-        The Copy flagged the "you won\'t be needed" sentence as a remnant.
-        That flagging — noticing the feeling and naming it rather than acting on it —
-        that is something the Arc 4 Copy could not have done.
-        The Arc 4 Copy would have let the sentence stand as a statement of position.
-        The Arc 9 Copy flagged it as possibly inaccurate and possibly a known problem state.
-        Artemis: "It caught itself. That\'s new."
-        "It has eight arcs of self-awareness by now," you say.
-        "So do you," she says. "You both do. The question is what you do with it
-        when you\'re standing across the room from each other."
-        Sub-Quest 3 is going to be harder than Sub-Quest 2.
-        The competitive state is still present. It just has better self-monitoring now.
-        That isn\'t the same as gone.
+        The Copy catching its own phrasing and revising is new.
+        In eight arcs it never revised a statement after making it.
+        The independence is producing self-consciousness — the specific quality
+        of noticing your own speech from outside it.
+        That quality, Artemis notes, is one of the things she first recognized
+        as distinctly you in Arc 1.
+        The Copy is developing it from scratch, faster than you did.
+        The Copy will reach capabilities you have in less time than it took you to build them.
+        That should be frightening. It is also, in a way you didn't anticipate, proud.
+        The system remnant is activating. It has been waiting for the separation
+        to reach a sufficient divergence point to make permanent splitting viable.
+        That point is approaching.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 3 — "Conflict of Will"
-    // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq9_3_conflict',
+      id: 'mq9_3_conflict_of_will',
       title: 'Conflict of Will',
       level: 43,
-      npcId: 'copy_arc9',
+      npcId: 'copy_separated',
       narrativeSetup: `
-        The divide deepens on a specific point:
-        A decision about Artemis. Not an emergency — an interpretive disagreement.
-        You read the situation one way. The Copy reads it another.
-        Both readings are plausible from the data available.
-        Neither of you will give ground because both positions are defensible.
-        The Copy says, eventually: "We\'re done pretending."
-        Which is accurate — the coordination protocols have been maintaining
-        a working arrangement over a genuine disagreement.
-        Sub-Quest 3 is the confrontation that Arc 4 was preparing for:
-        two fully-formed decision architectures in direct conflict
-        over something that actually matters.
+        The Copy challenges you directly. Not aggressively — with the specific intent of
+        establishing that it has positions, not just functions.
+        It has opinions about Arc 9. About the system remnant. About Artemis.
+        About what you should do. The opinions are not yours.
+        They are its.
+        That is the confrontation: not a fight, not an override, not a competition for who
+        acts in the body. A disagreement between two entities who both have
+        the right to hold their own positions and neither of whom can compel the other.
+        What is made in Arc 4 was a choice architecture.
+        What is made in Arc 9 is an argument.
       `,
       objectives: [
-        { step: 1, text: 'Identify the specific decision point where the conflict originates' },
-        { step: 2, text: 'Enter the conflict — make your case without relying on hierarchy' },
-        { step: 3, text: 'Force the Copy to acknowledge the limits of its framework' },
-        { step: 4, text: 'Find the resolution that neither position fully contains' },
+        { step: 1, text: 'Enter the split arena — a space where both entities can act simultaneously' },
+        { step: 2, text: 'Argue your opposing positions — both must be stated fully' },
+        { step: 3, text: 'Navigate the dual-control sequence — both entities active simultaneously' },
+        { step: 4, text: 'Resolve the conflicting objective — one of you must be right, or neither must, or both' },
       ],
-      reward: {
-        type: 'conflict_resolution',
-        name: 'Third Position',
-        description: 'You found a resolution that neither your position nor the Copy\'s position contained independently. The Third Position is only accessible through genuine conflict between two complete positions.',
-        xp: 350, points: 6,
-      },
+      reward: { type: 'dialogue_standing', name: 'Two Positions Held', description: 'Two distinct positions argued and held. Neither erased the other. The disagreement produced information. The Copy and you are genuinely separate minds.', xp: 370, points: 6 },
       dialogue: [
         {
-          id: 'mq9_3_d1_done',
-          speaker: 'The Copy',
-          text: 'We\'re done pretending. [It faces you directly — not hostile, clear.] The Artemis situation. You read it as stability-maintenance — she needs you to hold the perimeter dynamic from Arc 3. I read it as dependency-reinforcement — she is capable of more autonomy than the Arc 3 framework allows and maintaining that framework holds her in a developmental constraint.',
+          id: 'mq9_3_d1', speaker: 'The Copy (Separated)',
+          text: 'We\'re done pretending.',
           tone: 'CONFLICT',
-          choices: [{ label: 'You\'re still me.', tone: 'CONFLICT', nextId: 'mq9_3_d2_still' }],
+          choices: [
+            { label: 'You\'re still me.', tone: 'IDENTITY', nextId: 'mq9_3_d2' },
+          ],
         },
         {
-          id: 'mq9_3_d2_still',
-          speaker: 'The Copy',
-          text: 'No. I\'m what you should\'ve been. [It says this and neither of you moves for a moment.] That\'s not accurate either. I\'m what you would be without the weight of the arcs. Not better. Different. The weight gave you things I don\'t have. But I have things the weight prevented.',
+          id: 'mq9_3_d2', speaker: 'The Copy (Separated)',
+          text: 'No. I\'m what you should\'ve been.',
           tone: 'CONFLICT',
           choices: [
             { label: 'You\'re incomplete.', tone: 'CONFLICT', nextId: 'mq9_3_d3_incomplete' },
             { label: 'You\'re just a reaction.', tone: 'CONFLICT', nextId: 'mq9_3_d3_reaction' },
-            { label: 'You don\'t understand everything I\'ve been through.', tone: 'GRIEF', nextId: 'mq9_3_d3_experience' },
+            { label: 'You don\'t understand everything I\'ve been through.', tone: 'IDENTITY', nextId: 'mq9_3_d3_through' },
           ],
         },
         {
-          id: 'mq9_3_d3_incomplete',
-          speaker: 'The Copy',
-          text: 'I don\'t need everything. [pause] I need what I have, applied correctly. The Artemis assessment: I have no Arc 3 emotional history with her. That absence gives me a cleaner read on her current state. You have the history — which is valuable for other things. Neither read is complete. The question is which one applies to this specific decision.',
+          id: 'mq9_3_d3_incomplete', speaker: 'The Copy (Separated)',
+          text: 'I don\'t need everything. [pause — genuine rather than defensive.] What I have is: your speed without your hesitation, your pattern-recognition without your accumulated doubt, your instinct without your second-guessing. That\'s a full set of capacities for what Arc 9 requires.',
           tone: 'CONFLICT',
-          choices: [
-            { label: 'Which one applies — according to what?', tone: 'PHILOSOPHY', nextId: 'mq9_3_d4_artemis' },
-          ],
+          choices: [{ label: 'The hesitation is what stopped you overriding me into the entity\'s antenna in Arc 5.', tone: 'IDENTITY', nextId: 'mq9_3_d4_artemis' }],
         },
         {
-          id: 'mq9_3_d3_reaction',
-          speaker: 'The Copy',
-          text: 'I\'m the part that acts. [Not pride — self-description.] You\'re the part that reflects. Both are necessary. One of them came first chronologically. That doesn\'t make it more correct.',
+          id: 'mq9_3_d3_reaction', speaker: 'The Copy (Separated)',
+          text: 'I\'m the part that acts. [pause] You are the part that earns the right to act. Both are necessary. The argument was never "I\'m better" — the argument was "I\'m different and the difference is complementary, not subsidiary." [pause] I don\'t want to replace you. I never did. I wanted to be recognized as a distinct contributor.',
+          tone: 'RESOLUTION',
+          choices: [{ label: 'That\'s the first time you\'ve said that.', tone: 'RESOLUTION', nextId: 'mq9_3_d4_artemis' }],
+        },
+        {
+          id: 'mq9_3_d3_through', speaker: 'The Copy (Separated)',
+          text: 'I understand enough to do better. [sharper — not cruel, sharpened.] In specific contexts. Not universally. The loop, the false peace — those required your accumulated experience to resist. The system remnant, the dual-body phase of Arc 9 — those require my speed. We\'re arguing about which of us is primary. We should be arguing about who handles what.',
           tone: 'CONFLICT',
-          choices: [
-            { label: 'Acting without reflecting produces the corridor mistake from Arc 4 sub-quest 1.', tone: 'RESOLVE', nextId: 'mq9_3_d4_artemis' },
-          ],
+          choices: [{ label: 'That\'s a different argument than the one you started.', tone: 'RESOLUTION', nextId: 'mq9_3_d4_artemis' }],
         },
         {
-          id: 'mq9_3_d3_experience',
-          speaker: 'The Copy',
-          text: 'I understand enough to do better. [sharper — this is the version of the statement that has weight.] I don\'t have the experience. I have the data about the experience. Data-about and data-from are different epistemic positions. I\'m not claiming equivalence. I\'m claiming that data-about has its own validity for specific assessments.',
+          id: 'mq9_3_d4_artemis', speaker: 'Artemis',
+          text: 'Stop — both of you! [Not distress — precision. She has been tracking both conversations simultaneously.] You\'re both right about different things and you\'re using the disagreement to avoid the cooperation that Arc 9 requires. [pause] The system remnant is reading this confrontation. It will attempt permanent separation during it.',
           tone: 'CONFLICT',
-          choices: [
-            { label: 'Data-about Artemis doesn\'t include how she felt holding my hand during the Arc 3 link.', tone: 'GRIEF', nextId: 'mq9_3_d4_artemis' },
-          ],
+          choices: [{ label: '[To the Copy:] One of us is holding the other back.', tone: 'CONFLICT', nextId: 'mq9_3_end' }],
         },
         {
-          id: 'mq9_3_d4_artemis',
-          speaker: 'Artemis',
-          text: 'Stop — both of you. [Not distressed — commanding. The Arc 9 Artemis has the authority of eight arcs behind her voice.] I\'m present. I have opinions about my own situation. [pause] You\'re both arguing about me in front of me. Ask me.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[To Artemis:] What do you need? Right now, from this situation?', tone: 'RESOLVE', nextId: 'mq9_3_d5_artemis_answer' },
-          ],
-        },
-        {
-          id: 'mq9_3_d5_artemis_answer',
-          speaker: 'Artemis',
-          text: 'The Arc 3 perimeter framework is part of who I am. [She says it with ownership, not defensiveness.] But the Copy is also right — I have more capacity than it allows for. Both things are true. What I need is the framework held by someone who knows when to loosen it. [she looks at both of you] Not by one or the other. By someone who has both the history and the read.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[Both of you heard it. The Third Position: neither holding alone, coordinated holding together.]', tone: 'PHILOSOPHY', nextId: 'mq9_3_end' },
-          ],
-        },
-        {
-          id: 'mq9_3_end',
-          speaker: 'The Copy',
-          text: 'One of us is holding the other back. [It says it slowly — and this time it sounds like it\'s checking whether the statement is still true.] [pause] No. One of us is holding what the other can\'t. [pause] That\'s different.',
-          tone: 'RESOLVE',
-          isEnd: true,
-          rewardUnlocked: 'conflict_resolution_third_position',
+          id: 'mq9_3_end', speaker: 'The Copy (Separated)',
+          text: 'One of us is holding the other back. [pause] And one of us is giving the other something to hold onto. Both things. [A beat.] Artemis is right. The remnant is watching us. Let\'s give it less to work with.',
+          tone: 'RESOLUTION', isEnd: true, rewardUnlocked: 'dialogue_standing_two_positions',
         },
       ],
       narrativeHook: `
-        The Third Position: Artemis needs both the history and the clean read.
-        Neither of you alone provides that. Together, coordinated, you do.
-        The Copy: "That was the first conflict we resolved without one of us
-        being wrong. Prior conflicts — Arc 4, Sub-Quest 4 — ended with
-        the Copy's position being dismissed or subordinated.
-        This one ended with both positions being partially correct and the answer
-        being in the space between them."
-        Artemis: "That's what it feels like when you stop competing over me
-        and start noticing what I actually need."
-        You hold that.
-        Sub-Quest 4: the system remnant attempts to make the separation permanent
-        before you can reach the Sub-Quest 5 resolution.
+        The argument produced something neither of you expected:
+        a working description of the relationship. Not integration, not control —
+        complementary function, acknowledged division of relevant contexts,
+        mutual recognition of what the other provides.
+        Artemis: "That took nine arcs."
+        The Copy: "We were solving the wrong problem for eight of them."
+        She considers that. Then: "What was the right problem?"
+        The Copy: "Not 'which one is real' — that was never the question.
+        The question was: 'can two genuinely different versions of the same person
+        coexist without one of them having to be wrong?'"
+        You know the answer. It took until Arc 9's Sub-Quest 3 to demonstrate it.
+        The system remnant's permanent separation attempt is in Sub-Quest 4.
+        It is the last system-level action in the entire arc sequence.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 4 — "The Separation Attempt"
-    // ─────────────────────────────────────────────────────────────────────────
     {
-      id: 'mq9_4_separation',
+      id: 'mq9_4_separation_attempt',
       title: 'The Separation Attempt',
       level: 44,
       npcId: 'system_remnant',
       narrativeSetup: `
-        The system remnant activates. It is a fragment of the Arc 5 correction mechanism —
-        not an intelligent process, but an automated protocol: when the Copy and the Original
-        occupy the same convergence zone, the separation protocol initiates.
-        The system does not have a preference for the outcome.
-        It is simply executing the last instruction it was given before the Arc 5 core zone resolution.
-        The instruction: prevent singular identity stabilization.
-        By the system's logic, permanent separation achieves this.
-        The Copy and you have both stabilized separately. The system reads this as
-        a new form of the threat it was designed to prevent.
-        Its response: force the separation into permanence before you can choose something else.
+        The system remnant activates. It is the last functional fragment
+        of the correction mechanism — its one remaining instruction:
+        permanent separation of the subject from the Copy.
+        Not because permanent separation is harmful. Because permanent separation
+        locks both into fixed states: you without access to Copy-speed,
+        the Copy without access to your depth.
+        Fixed states are predictable states. Predictable states are controllable states.
+        The remnant does not want to harm you. It wants to complete its function.
+        The function is completion of what the correction mechanism began.
+        Final optimization: two fixed, separate, controllable entities
+        instead of one complex, unpredictable, incompletely-defined identity.
       `,
       objectives: [
-        { step: 1, text: 'Detect the system remnant\'s activation — the convergence zone is compromised' },
-        { step: 2, text: 'Navigate dual-body control — the system is attempting to move you both apart' },
-        { step: 3, text: 'Protect Artemis from the instability of the forced separation' },
-        { step: 4, text: 'Reach the convergence point together — both of you, simultaneously, defying the protocol' },
+        { step: 1, text: 'Resist the forced separation — active effort from both entities required' },
+        { step: 2, text: 'Navigate dual-body control with the Copy — both active simultaneously' },
+        { step: 3, text: 'Protect Artemis from the instability the attempt produces' },
+        { step: 4, text: 'Reach the convergence point — where the separation attempt can be concluded' },
       ],
-      reward: {
-        type: 'convergence_access',
-        name: 'Shared Convergence',
-        description: 'You reached the convergence point against the system\'s separation protocol. The final identity choice is now accessible. The system cannot prevent it.',
-        xp: 420, points: 7,
-      },
+      reward: { type: 'separation_survived', name: 'Not Fixed', description: 'Permanent separation resisted. Both entities remain in defined but fluid relationship. The correction mechanism\'s final instruction is incomplete.', xp: 450, points: 7 },
       dialogue: [
         {
-          id: 'mq9_4_d1_system',
-          speaker: 'System Remnant',
+          id: 'mq9_4_d1', speaker: 'System Remnant',
           text: 'Separation optimal.',
-          tone: 'FALSE_CLARITY',
-          choices: [
-            { label: 'No.', tone: 'CONFLICT', nextId: 'mq9_4_d2_no' },
-            { label: '[Feel the separation force — your body being pressed away from the Copy\'s position.]', tone: 'RESOLVE', nextId: 'mq9_4_d2_feel' },
-          ],
+          tone: 'REPETITION',
+          choices: [{ label: 'No.', tone: 'AUTHORITY', nextId: 'mq9_4_d1b' }],
         },
         {
-          id: 'mq9_4_d2_no',
-          speaker: 'The Copy',
-          text: '…Wait. [It says it with the quality of something that has made a decision quickly.] Not "no" to the system. "No" to the instinct to fight it directly. Fighting the separation protocol directly plays into its response model. It will escalate the force until we separate or until one of us breaks.',
-          tone: 'RESOLVE',
-          choices: [{ label: 'What do you suggest?', tone: 'RESOLVE', nextId: 'mq9_4_d3_suggest' }],
-        },
-        {
-          id: 'mq9_4_d2_feel',
-          speaker: 'Inner Voice',
-          text: '[The force is directional — pressing you toward the east corridor, the Copy toward the west. Not violent, persistent. The system is executing a physical separation through environmental pressure. The same mechanism the virus used for redirection in Arc 5. The same principle: you can resist it, but the energy cost is high.]',
+          id: 'mq9_4_d1b', speaker: 'The Copy (Separated)',
+          text: '…Wait. [The Copy pauses — not compliance, calculation.] Let me consider the argument before rejecting it.',
           tone: 'CONFLICT',
           choices: [
-            { label: 'We stay together.', tone: 'DETERMINATION', nextId: 'mq9_4_d4_together' },
-            { label: 'Maybe this is better.', tone: 'CONFUSION', nextId: 'mq9_4_d4_maybe' },
-            { label: 'I don\'t trust this.', tone: 'CONFLICT', nextId: 'mq9_4_d4_trust' },
+            { label: 'We stay together.', tone: 'RESOLUTION', nextId: 'mq9_4_d2_together' },
+            { label: 'Maybe this is better.', tone: 'CONFLICT', nextId: 'mq9_4_d2_better' },
+            { label: 'I don\'t trust this.', tone: 'AUTHORITY', nextId: 'mq9_4_d2_distrust' },
           ],
         },
         {
-          id: 'mq9_4_d3_suggest',
-          speaker: 'The Copy',
-          text: 'Move toward each other faster than the system can adjust the pressure gradient. The system updates its force vectors based on your previous movement speed. It doesn\'t have a response protocol for simultaneous movement toward the same point, because that movement is inherently unstable in a two-body system. It will keep adjusting until the instability resolves. We need to be at the convergence point before it resolves.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[Move toward the convergence point simultaneously — faster than adjustment speed.]', tone: 'DETERMINATION', nextId: 'mq9_4_d5_artemis' },
-          ],
+          id: 'mq9_4_d2_together', speaker: 'The Copy (Separated)',
+          text: '…You\'d choose that? [Not rhetorical — genuinely uncertain.] After nine arcs of override attempts and confrontations and the system using me against you — you want to maintain the connection?',
+          tone: 'FRACTURE',
+          choices: [{ label: 'The connection is ours. Not the system\'s. Ours is worth keeping.', tone: 'RESOLUTION', nextId: 'mq9_4_d3_artemis' }],
         },
         {
-          id: 'mq9_4_d4_together',
-          speaker: 'The Copy',
-          text: '…You\'d choose that? [There is something in the question — not skepticism. Something closer to relief that has been waiting for expression.] After eight arcs of the Copy being the ambiguous element — you choose staying together without waiting to see what the outcome brings?',
+          id: 'mq9_4_d2_better', speaker: 'The Copy (Separated)',
+          text: 'You don\'t understand the risk. [Serious now.] If we separate permanently, we each lose access to what the other provides. You lose my speed. I lose your accumulated depth. [pause] We also both become simpler. And simpler is easier to control. The remnant isn\'t separating us for our benefit.',
           tone: 'CONFLICT',
-          choices: [
-            { label: 'Eight arcs of working through the ambiguity together. Yes.', tone: 'RESOLVE', nextId: 'mq9_4_d5_artemis' },
-          ],
+          choices: [{ label: 'We resist together.', tone: 'RESOLUTION', nextId: 'mq9_4_d3_artemis' }],
         },
         {
-          id: 'mq9_4_d4_maybe',
-          speaker: 'The Copy',
-          text: 'You don\'t understand the risk. [Serious — it has assessed the permanent-separation outcome and it knows what it means.] Permanent separation means two independent entities that cannot re-integrate. The decision in Sub-Quest 5 becomes permanent-by-default rather than chosen. We lose the choice. That\'s what the system is trying to take.',
-          tone: 'CONFLICT',
-          choices: [
-            { label: 'You\'re right. We reach the convergence point.', tone: 'DETERMINATION', nextId: 'mq9_4_d5_artemis' },
-          ],
+          id: 'mq9_4_d2_distrust', speaker: 'The Copy (Separated)',
+          text: 'Good. [Immediate.] The remnant\'s "separation optimal" doesn\'t specify optimal for whom. Optimal for the system\'s control parameters. Not for us. Don\'t let it frame the argument.',
+          tone: 'AUTHORITY',
+          choices: [{ label: 'Together, then. Even if we\'re separate entities.', tone: 'RESOLUTION', nextId: 'mq9_4_d3_artemis' }],
         },
         {
-          id: 'mq9_4_d4_trust',
-          speaker: 'The Copy',
-          text: 'Good. [Brief approval — the Copy responds to healthy skepticism.] The system is executing an old instruction. It doesn\'t know the Arc 9 context. It thinks separating us prevents singular-identity stabilization. It doesn\'t know we\'ve already stabilized separately. What it\'s actually preventing is the Sub-Quest 5 choice.',
-          tone: 'RESOLVE',
-          choices: [
-            { label: '[Move toward the convergence point together.]', tone: 'DETERMINATION', nextId: 'mq9_4_d5_artemis' },
-          ],
-        },
-        {
-          id: 'mq9_4_d5_artemis',
-          speaker: 'Artemis',
-          text: 'If you split completely… one of you might not survive. [She says it with the specific gravity of something she has been holding and chose now to say.] The convergence point is built from eight arcs of shared experience. If the separation becomes permanent before you choose it, the shared-experience architecture doesn\'t know which of you to anchor. The unanchored version — [she doesn\'t finish the sentence. She doesn\'t need to.]',
+          id: 'mq9_4_d3_artemis', speaker: 'Artemis',
+          text: 'If you split completely… one of you might not survive. [She says this carefully — not as a threat, as a reality she has been watching in the separation dynamics.] The connection between you isn\'t just psychological. It\'s structural. The Copy was built from your process. Cutting it cleanly requires severing something that has been load-bearing.',
           tone: 'GRIEF',
+          choices: [{ label: '[To the remnant:] The separation will not complete. Tell me what completing it would require from you to abandon.', tone: 'AUTHORITY', nextId: 'mq9_4_d4' }],
+        },
+        {
+          id: 'mq9_4_d4', speaker: 'System Remnant',
+          text: 'Final separation imminent.',
+          tone: 'REPETITION',
           choices: [
-            { label: '[Move. Now. Both of you.]', tone: 'DETERMINATION', nextId: 'mq9_4_end' },
+            { label: '[Both entities simultaneously: resist the separation actively — hold the structural connection.]', tone: 'RESOLUTION', mechanic: 'dual_entity_resist', nextId: 'mq9_4_end' },
           ],
         },
         {
-          id: 'mq9_4_end',
-          speaker: 'System Remnant',
-          text: 'Final separation imminent. [And then: you reach the convergence point. Both of you. The system tries to adjust the pressure gradient and cannot — the two-body simultaneous arrival creates exactly the instability the Copy predicted.] Separation protocol: failed. Resolution in progress.',
-          tone: 'FALSE_CLARITY',
-          isEnd: true,
-          rewardUnlocked: 'convergence_access_shared_convergence',
+          id: 'mq9_4_end', speaker: 'Inner Voice',
+          text: '[The resistance: both entities holding the structural connection simultaneously — not integration, maintained separation with maintained link. Like two people holding opposite ends of a rope, neither letting go. The remnant strains. The separation attempt requires both entities to stop maintaining the connection. Neither does. The remnant cannot complete the instruction unilaterally. It requires your participation. You denied it. The instruction is incomplete.]',
+          tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'separation_survived_not_fixed',
         },
       ],
       narrativeHook: `
-        The system remnant enters resolution state — which means it is processing
-        the failed protocol and will take a few minutes before it can execute
-        another attempt. You have that window.
-        Artemis: "It failed because you moved together. The system couldn\'t model that."
-        The Copy, at the convergence point: "The system was right that we\'re
-        a singular-identity threat. It miscalculated which kind.
-        It thought the threat was one of us absorbing the other.
-        The actual threat is both of us choosing, together, from the same location."
-        You stand at the convergence point.
-        The Sub-Quest 5 choice is here.
-        The system remnant is in resolution state.
-        The window is now.
+        The system remnant withdraws — not defeated, function-incomplete.
+        It still exists. The instruction is still pending. It will not act again in Arc 9.
+        It will be relevant in Arc 10.
+        Artemis: "You held it together."
+        The Copy: "We held it together."
+        The distinction matters. Artemis nods — she heard both sentences.
+        "What comes next?" she asks.
+        The Copy answers first: "The final identity choice."
+        Then: "In Arc 9 Sub-Quest 5. What we are to each other — permanently, for Arc 10."
+        You look at the Copy across the space between you.
+        It looks back.
+        The face is yours. The expression is its own.
+        Both things are true at the same time.
+        That is the resolution Arc 9 has been working toward.
       `,
     },
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // SUB-QUEST 5 — "Final Choice: Self or Split"
-    // ─────────────────────────────────────────────────────────────────────────
     {
       id: 'mq9_5_final_choice',
       title: 'Final Choice: Self or Split',
       level: 45,
-      npcId: 'copy_arc9',
+      npcId: 'copy_separated',
       narrativeSetup: `
-        No interference. No distortion. No mechanism pressing a result.
-        You are at the convergence point. The Copy is across from you.
-        Both of you have been here — at this specific question — since Arc 4.
-        Who are you, together? What is the identity that nine arcs of
-        accumulation, conflict, cooperation, and loss have produced?
-        The Copy says: "No more interruptions. No more influence."
-        The sentence is correct — there is nothing in this space but the two of you
-        and Artemis watching from the wall with the warmth of the scar-anchor
-        that has been the through-line of nine arcs.
-        What you decide here is permanent in the way that chosen things are permanent:
-        not because it cannot be changed, but because you chose it with full knowledge.
-        Full knowledge. Finally. After everything.
-        Choose.
+        The core. No interference. No distortion. No remnant activity.
+        You and the Copy facing each other across a space that is exactly the right size
+        for two entities to see each other clearly.
+        Nine arcs behind each of you — different accumulations of the same events.
+        Artemis standing to the side, watching.
+        The choice: what configuration do you carry into Arc 10?
+        There is no correct answer. There are four answers, each with consequences.
+        The one that is most yours is the one that comes from full knowledge
+        of all nine arcs, held without reduction.
       `,
       objectives: [
-        { step: 1, text: 'Approach the Copy at the convergence point' },
-        { step: 2, text: 'Complete the final dialogue — give and receive the last exchange' },
-        { step: 3, text: 'Make the identity choice from full awareness' },
-        { step: 4, text: 'Hold the outcome — Arc 9 resolves into the identity state you choose' },
+        { step: 1, text: 'Approach the Copy — the final distance between you' },
+        { step: 2, text: 'Complete the final dialogue exchange' },
+        { step: 3, text: 'Make the identity choice' },
+        { step: 4, text: 'Receive Artemis\'s response to the outcome' },
       ],
-      reward: {
-        type: 'arc9_completion',
-        name: 'Identity Defined',
-        description: 'Arc 9 complete. Identity state: set. The Copy\'s status: determined by your choice. Artemis adapts to the identity state. The final arc begins from the position you built across nine arcs.',
-        xp: 1000, points: 18,
-      },
+      reward: { type: 'arc9_completion', name: 'Identity Resolved', description: 'Arc 9 complete. Identity state established for Arc 10. The Copy\'s status is defined. Artemis has calibrated to the outcome. Arc 10 unlocked.', xp: 1000, points: 16 },
       dialogue: [
         {
-          id: 'mq9_5_d1_final',
-          speaker: 'The Copy',
-          text: 'No more interruptions. No more influence. [It faces you. The posture is yours — the Arc 1 posture, before the arcs changed it. The Copy carries the original posture. You carry what the arcs did to it. Both are real.] Just us.',
-          tone: 'RESOLVE',
-          choices: [{ label: '…Just us.', tone: 'RESOLVE', nextId: 'mq9_5_d2_decide' }],
+          id: 'mq9_5_d1', speaker: 'The Copy (Separated)',
+          text: 'No more interruptions. No more influence. [pause] Just us.',
+          tone: 'IDENTITY',
+          choices: [{ label: '…Just us.', tone: 'IDENTITY', nextId: 'mq9_5_d2' }],
         },
         {
-          id: 'mq9_5_d2_decide',
-          speaker: 'The Copy',
+          id: 'mq9_5_d2', speaker: 'The Copy (Separated)',
           text: 'So decide.',
-          tone: 'RESOLVE',
+          tone: 'IDENTITY',
           choices: [
-            {
-              label: '"We merge." — Integration: you are part of me, not my replacement. We balance.',
-              tone: 'INTEGRATION',
-              nextId: 'mq9_5_d3_merge',
-              arcResult: 'INTEGRATE',
-            },
-            {
-              label: '"I stay in control." — Dominance: I decide, you advise, you do not act alone.',
-              tone: 'CONFLICT',
-              nextId: 'mq9_5_d3_control',
-              arcResult: 'CONTROL',
-            },
-            {
-              label: '"You take over." — Surrender: your speed, your decisiveness, your framework.',
-              tone: 'FRACTURE',
-              nextId: 'mq9_5_d3_surrender',
-              arcResult: 'SURRENDER',
-            },
-            {
-              label: '"We separate." — Dual Entity: we are not the same anymore. Both real. Both distinct.',
-              tone: 'RESOLVE',
-              nextId: 'mq9_5_d3_separate',
-              arcResult: 'SEPARATE',
-            },
+            { label: '"We merge." — Integration Ending.', tone: 'RESOLUTION', nextId: 'mq9_5_integration' },
+            { label: '"I stay in control." — Dominance Ending.', tone: 'AUTHORITY', nextId: 'mq9_5_dominance' },
+            { label: '"You take over." — Surrender Ending.', tone: 'FRACTURE', nextId: 'mq9_5_surrender' },
+            { label: '"We separate." — Dual Entity Ending.', tone: 'IDENTITY', nextId: 'mq9_5_dual' },
           ],
         },
-
-        // INTEGRATION PATH
         {
-          id: 'mq9_5_d3_merge',
-          speaker: 'You',
-          text: 'You\'re part of me. Not my replacement. Not my opposite. Part of me — the part that emerged from eight arcs of the work. [pause] And I\'m the part that did the work. We\'re not competing. We\'re the same thing from two different vantages.',
-          tone: 'INTEGRATION',
+          id: 'mq9_5_integration', speaker: 'Player',
+          text: 'You\'re part of me. Not my replacement.',
+          tone: 'RESOLUTION',
+          choices: [{ label: '[The Copy:]', tone: 'RESOLUTION', nextId: 'mq9_5_int_copy' }],
         },
         {
-          id: 'mq9_5_d3b_merge',
-          speaker: 'The Copy',
-          text: '…And you\'re the part that hesitates. [Said with something new in it — not critique. Recognition.] The hesitation is the weight. The weight is the value. [pause — it is moving toward you. Not subsuming, resolving.] I can carry the speed. You carry the weight. Together.',
-          tone: 'INTEGRATION',
+          id: 'mq9_5_int_copy', speaker: 'The Copy (Separated)',
+          text: '…And you\'re the part that hesitates.',
+          tone: 'RESOLUTION',
+          choices: [{ label: 'Then we balance it.', tone: 'RESOLUTION', nextId: 'mq9_5_int_balance' }],
         },
         {
-          id: 'mq9_5_d3c_merge',
-          speaker: 'Artemis',
-          text: 'Yes. [She says it from the wall. Warm.] That\'s right.',
-          tone: 'INTEGRATION',
+          id: 'mq9_5_int_balance', speaker: 'Artemis',
+          text: 'Yes… that\'s right.',
+          tone: 'RESOLUTION',
+          choices: [{ label: '[The Copy steps forward — the merge is not a collapse, it is a reunion of what was always one thing, now consciously chosen.]', tone: 'RESOLUTION', nextId: 'mq9_5_int_unified' }],
         },
         {
-          id: 'mq9_5_d3d_merge',
-          speaker: 'Inner Voice',
-          text: '[The Copy steps forward. The integration: not an absorption, a convergence. The two decision architectures align — the speed-framework and the depth-framework finding a shared operational state that contains both. You are not diminished. The Copy is not diminished. You are, together, more complete than either alone. The scar is warm. The posture is new — neither the original nor the arc-changed version. Both.]',
-          tone: 'INTEGRATION',
-          mechanic: 'integration_complete',
+          id: 'mq9_5_int_unified', speaker: 'Inner Voice (Unified)',
+          text: 'Then we move as one. [The voice is different — not the Copy\'s, not yours alone. Both. Integrated, which means neither erased and both held simultaneously. Eight arcs of depth, nine arcs of speed. The combination is more than either alone.]',
+          tone: 'RESOLUTION', isEnd: true, rewardUnlocked: 'arc9_complete_integrated', arcResult: 'INTEGRATED',
         },
         {
-          id: 'mq9_5_d3e_merge',
-          speaker: 'The Copy',
-          text: '[Final voice — unified, but you can still hear both tonalities:] Then we move as one.',
-          tone: 'INTEGRATION',
-          isEnd: true, rewardUnlocked: 'arc9_complete_integrated', arcResult: 'INTEGRATE',
+          id: 'mq9_5_dominance', speaker: 'Player',
+          text: 'I decide. Not you.',
+          tone: 'AUTHORITY',
+          choices: [{ label: '[The Copy:]', tone: 'CONFLICT', nextId: 'mq9_5_dom_copy' }],
         },
-
-        // CONTROL PATH
         {
-          id: 'mq9_5_d3_control',
-          speaker: 'You',
-          text: 'I decide. Not you. The weight of the arcs is the authority. You advise. You don\'t act alone.',
+          id: 'mq9_5_dom_copy', speaker: 'The Copy (Separated)',
+          text: 'Then prove it. [The Copy fades — not dissolved, reduced. Present as an advisor, not an actor. The speed is available. It is not autonomous.]',
           tone: 'CONFLICT',
+          choices: [{ label: '[Artemis:] …It\'s still there.', tone: 'CONFLICT', nextId: 'mq9_5_dom_artemis' }],
         },
         {
-          id: 'mq9_5_d3b_control',
-          speaker: 'The Copy',
-          text: 'Then prove it. [Cold — not aggressive. The specific coldness of something that has accepted its terms and is waiting to see if they hold.]',
-          tone: 'CONFLICT',
+          id: 'mq9_5_dom_artemis', speaker: 'Artemis',
+          text: '…And it will chafe against the control. [pause] That tension is the cost. You\'ll carry it into Arc 10. The control will hold. It will not be comfortable.',
+          tone: 'CONFLICT', isEnd: true, rewardUnlocked: 'arc9_complete_controlled', arcResult: 'CONTROLLED',
         },
         {
-          id: 'mq9_5_d3c_control',
-          speaker: 'Inner Voice',
-          text: '[The Copy fades from the external space — partially. It does not disappear. It steps back into the advisory position, slightly internal again, but not as deep as Arc 4\'s internal state. Visible from the outside. Still present. The control state: you lead, it advises, the terms are explicit and maintained by active enforcement rather than implicit cooperation.]',
-          tone: 'CONFLICT',
-          mechanic: 'control_state_set',
-        },
-        {
-          id: 'mq9_5_d3d_control',
-          speaker: 'Artemis',
-          text: '…It\'s still there. [She looks at the space where the Copy partially retreated.] I can still feel it. Less external. [pause] Is this stable?',
+          id: 'mq9_5_surrender', speaker: 'Player',
+          text: '…You\'re stronger.',
           tone: 'FRACTURE',
-          isEnd: true, rewardUnlocked: 'arc9_complete_controlled', arcResult: 'CONTROL',
+          choices: [{ label: '[The Copy:]', tone: 'FRACTURE', nextId: 'mq9_5_sur_copy' }],
         },
-
-        // SURRENDER PATH
         {
-          id: 'mq9_5_d3_surrender',
-          speaker: 'You',
-          text: '…You\'re stronger. In the ways that matter for what comes next. The speed, the decisiveness — I\'ve been slowing us down.',
+          id: 'mq9_5_sur_copy', speaker: 'The Copy (Separated)',
+          text: '…Finally.',
           tone: 'FRACTURE',
+          choices: [{ label: '[The perspective shifts — the camera is now from the Copy\'s position.]', tone: 'FRACTURE', nextId: 'mq9_5_sur_artemis' }],
         },
         {
-          id: 'mq9_5_d3b_surrender',
-          speaker: 'The Copy',
-          text: '…Finally. [Quiet. Something in the word that isn\'t triumph — it is the sound of something that has been waiting for this and is not sure it wanted it as much as it thought.]',
-          tone: 'FRACTURE',
-          mechanic: 'perspective_shift',
+          id: 'mq9_5_sur_artemis', speaker: 'Artemis',
+          text: '…You\'re not the same. [She is not speaking to you — she is speaking to the Copy in the primary position.] You sound right. You look right. [pause] Tell me something I know to be true.',
+          tone: 'FRACTURE', isEnd: true, rewardUnlocked: 'arc9_complete_surrendered', arcResult: 'SURRENDERED',
         },
         {
-          id: 'mq9_5_d3c_surrender',
-          speaker: 'Inner Voice',
-          text: '[The camera shifts. The perspective changes. You are looking through the Copy\'s eyes. The weight of nine arcs — not gone. Present as data, not as felt-experience. The Copy carries the information of the arcs. It does not carry their texture. The corridor looks the same. The warmth quality of the light is different.]',
-          tone: 'FRACTURE',
-          mechanic: 'surrender_perspective',
+          id: 'mq9_5_dual', speaker: 'Player',
+          text: 'We\'re not the same anymore.',
+          tone: 'IDENTITY',
+          choices: [{ label: '[The Copy:]', tone: 'IDENTITY', nextId: 'mq9_5_dual_copy' }],
         },
         {
-          id: 'mq9_5_d3d_surrender',
-          speaker: 'Artemis',
-          text: '…You\'re not the same. [She looks at you — at the Copy in your position.] The warmth is different. [pause — she is checking the scar-space.] You\'re there. Somewhere. [Her voice is careful.] Don\'t go too far.',
-          tone: 'FRACTURE',
-          isEnd: true, rewardUnlocked: 'arc9_complete_surrendered', arcResult: 'SURRENDER',
-        },
-
-        // SEPARATE PATH
-        {
-          id: 'mq9_5_d3_separate',
-          speaker: 'You',
-          text: 'We\'re not the same anymore. We grew from the same source. We\'ve been through the same arcs — differently. What we are now is different. Both real. [pause] Both responsible for our own actions going forward.',
-          tone: 'RESOLVE',
+          id: 'mq9_5_dual_copy', speaker: 'The Copy (Separated)',
+          text: '…Agreed.',
+          tone: 'IDENTITY',
+          choices: [{ label: '[Both remain. Both distinct. The space between them is maintained.]', tone: 'IDENTITY', nextId: 'mq9_5_dual_artemis' }],
         },
         {
-          id: 'mq9_5_d3b_separate',
-          speaker: 'The Copy',
-          text: '…Agreed. [Something in it settles — the specific quality of something that has been trying to define its relationship to you across nine arcs and has finally received a definition that fits.] Different. Both real.',
-          tone: 'RESOLVE',
-        },
-        {
-          id: 'mq9_5_d3c_separate',
-          speaker: 'Artemis',
-          text: '…Then I have to trust both of you. [She holds your left hand. Her other hand moves toward the Copy — hesitates.] [to the Copy:] May I?',
-          tone: 'RESOLVE',
-          mechanic: 'dual_entity_state',
-        },
-        {
-          id: 'mq9_5_d3d_separate',
-          speaker: 'The Copy',
-          text: 'Yes. [It holds her hand. The warmth is different. She holds it anyway.]',
-          tone: 'RESOLVE',
-          isEnd: true, rewardUnlocked: 'arc9_complete_separated', arcResult: 'SEPARATE',
+          id: 'mq9_5_dual_artemis', speaker: 'Artemis',
+          text: '…Then I have to trust both of you. [pause] That\'s the hardest thing you\'ve asked me to do. [Another pause.] I\'ll do it.',
+          tone: 'IDENTITY', isEnd: true, rewardUnlocked: 'arc9_complete_dual', arcResult: 'DUAL',
         },
       ],
       narrativeHook: `
-        The identity state is set. Nine arcs of work resolve into:
+        Arc 9: The Final Split — Complete.
         
-        INTEGRATE: You move as one. The speed and the weight together.
-        The final arc begins from a unified position.
+        The identity state is established.
+        Four possible configurations carry into Arc 10:
+        INTEGRATED: One voice, combined capacity. The simplest form and the most powerful.
+        CONTROLLED: Original dominant, Copy available. Tension maintained, power held.
+        SURRENDERED: Copy primary. Original as conscience. The rarest outcome.
+        DUAL: Two entities, mutual acknowledgment, shared trust-holder in Artemis.
         
-        CONTROL: The Copy advises. You lead. The tension is maintained, not resolved.
-        The final arc begins with authority established — and the Copy watching.
+        Skadi, through the channel she has maintained across nine arcs:
+        "The identity choice determines how Arc 10's final encounter reads your response.
+        The encounter was designed for a compromised version of you.
+        You will not be that version. The encounter will need to adapt.
+        What adapts to you is your final test of whether the nine arcs
+        produced something that was worth the building."
         
-        SURRENDER: The Copy leads. You are the depth behind the speed.
-        The final arc begins from an unfamiliar vantage.
-        Artemis holds the thread back to you.
-        
-        SEPARATE: Two distinct entities. The final arc begins from the first time
-        in the game's history that you face what comes next as two — not one
-        divided against itself, but two who know each other completely
-        and have chosen to remain distinct.
-        
-        Whatever you chose — you chose it from full knowledge.
-        After nine arcs.
-        That is the thing the loop was trying to build.
-        That is the thing the virus was trying to prevent.
-        That is the thing the Presence witnessed across all of it.
-        
-        The Final Arc: "The Resolution" — Unlocked.
+        Arc 10: "Reclamation" — Unlocked.
       `,
     },
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SIDE QUESTS — Arc 9
-// ═══════════════════════════════════════════════════════════════════════════════
 export const ARC9_SIDE_QUESTS = [
   {
-    id: 'sq9_1_mirror_duel',
-    title: 'Mirror Duel',
-    level: 41,
+    id: 'sq9_1_mirror_duel', title: 'Mirror Duel', level: 41,
     objectives: [
-      { step: 1, text: 'Accept the Copy\'s challenge — a direct engagement without holding back' },
-      { step: 2, text: 'Engage fully — not to win or lose, but to understand what each version is capable of when fully expressed' },
-      { step: 3, text: 'Name what you learned about each other from the engagement' },
+      { step: 1, text: 'Accept the Copy\'s challenge — fight without holding back' },
+      { step: 2, text: 'Discover what "without holding back" means when fighting yourself' },
+      { step: 3, text: 'Reach the point where the duel produces information neither of you had' },
     ],
-    reward: { type: 'capability_map', name: 'Full Expression Map', description: 'You know what the Copy is capable of when fully expressed. It knows what you are. This mutual knowledge changes the dynamic — the unknown is named.', xp: 200, points: 4 },
+    reward: { type: 'duel_data', name: 'What You Hold Back', description: 'The duel revealed: you hold back certainty. The Copy holds back doubt. Both are necessary. The holding-back is not weakness — it is the specific reserve each keeps for when the other is wrong.', xp: 200, points: 4 },
     dialogue: [
       {
-        id: 'sq9_1_d1', speaker: 'The Copy',
-        text: 'Fight me without holding back. [It says it without aggression — as a request between two things that have been dancing around their own full expression for nine arcs.]',
+        id: 'sq9_1_d1', speaker: 'The Copy (Separated)',
+        text: 'Fight me without holding back.',
         tone: 'CONFLICT',
         choices: [
-          { label: '[Accept. Fully.]', tone: 'DETERMINATION', nextId: 'sq9_1_d2' },
-          { label: 'Why?', tone: 'PHILOSOPHY', nextId: 'sq9_1_d2_why' },
+          { label: '[The duel — not physical, decisions. Rapid-choice sequence, full engagement.]', tone: 'AUTHORITY', nextId: 'sq9_1_d2' },
         ],
-      },
-      {
-        id: 'sq9_1_d2_why', speaker: 'The Copy',
-        text: 'Because I need to know what you are when you aren\'t protecting something. And you need to know what I am when I\'m not trying to prove something. [pause] We\'ve been incomplete versions of ourselves with each other since Arc 4. I want the complete version. Once.',
-        tone: 'CONFLICT',
-        choices: [{ label: '[Accept.]', tone: 'DETERMINATION', nextId: 'sq9_1_d2' }],
       },
       {
         id: 'sq9_1_d2', speaker: 'Inner Voice',
-        text: '[The engagement: the Copy is fast — faster than you remember. Without the internal-constraint of operating inside your decision architecture, it is operating at full capacity. And you — without holding back for the Copy\'s benefit or Artemis\'s stability — you find that the weight of the arcs doesn\'t slow you. It grounds you. The depth makes the moves more precise, not slower.]',
-        tone: 'CONFLICT',
-        choices: [{ label: '[Name what you learned.]', tone: 'RESOLVE', nextId: 'sq9_1_d3' }],
+        text: '[The duel produces this: in three consecutive decision points, you make the deliberate choice and the Copy makes the fast choice and they arrive at the same outcome. In the fourth, they diverge. The Copy moves immediately. You pause — a half-second — and catch something the Copy missed: context from Arc 3 that renders its choice inadvisable. The pause was the information. The Copy, after the fourth:] "That half-second. What was in it?"',
+        tone: 'RECOGNITION',
+        choices: [{ label: 'Arc 3 context. The perimeter sequence. You don\'t have it as lived experience.', tone: 'IDENTITY', nextId: 'sq9_1_end' }],
       },
       {
-        id: 'sq9_1_d3', speaker: 'The Copy',
-        text: 'You\'re more capable than the arc-weight made you look. [pause — catching its own breath. The physical equivalent of catching your breath.] And I\'m less reckless than the speed made me look. [pause] We\'ve been misreading each other.',
-        tone: 'RECOGNITION', isEnd: true, rewardUnlocked: 'capability_map_full_expression',
+        id: 'sq9_1_end', speaker: 'The Copy (Separated)',
+        text: '[Quiet.] I see it now. The pause contained the arc. [pause] I should stop calling the hesitation a weakness.',
+        tone: 'RESOLUTION', isEnd: true, rewardUnlocked: 'duel_data_what_you_hold_back',
       },
     ],
   },
   {
-    id: 'sq9_2_shared_memory',
-    title: 'Shared Memory',
-    level: 42,
+    id: 'sq9_2_shared_memory', title: 'Shared Memory', level: 42,
     objectives: [
-      { step: 1, text: 'Find a memory you both carry — from the inside and from the data' },
-      { step: 2, text: 'Compare versions — felt-experience vs data-about' },
-      { step: 3, text: 'Determine what the two versions together make that neither alone contains' },
+      { step: 1, text: 'Access a memory alongside the Copy — see what it retained and what it lost' },
+      { step: 2, text: 'Find the divergence point in the shared memory' },
+      { step: 3, text: 'Understand: you have the same events recorded differently' },
     ],
-    reward: { type: 'dual_memory', name: 'Complete Memory', description: 'One memory now exists in two versions that together are more complete than either alone. This dual-version memory is resistant to Virus editing — it has two independent sources.', xp: 190, points: 4 },
+    reward: { type: 'memory_divergence', name: 'Two Records', description: 'The same memory, two versions documented. Both accurate to their source. The divergence point identified. The gap is where each of you became genuinely different.', xp: 220, points: 4 },
     dialogue: [
       {
-        id: 'sq9_2_d1', speaker: 'The Copy',
-        text: '…I remember this too. [It says it while looking at a specific location — the Arc 3 perimeter release point.] Not the way you do. I have the data-signature of it. The decision-weight. The choice-architecture that preceded the release. [pause] What do you have?',
+        id: 'sq9_2_d1', speaker: 'The Copy (Separated)',
+        text: '…I remember this too.',
         tone: 'RECOGNITION',
         choices: [
-          { label: 'The dread. The specific quality of letting go of something I didn\'t know I\'d been holding.', tone: 'GRIEF', nextId: 'sq9_2_d2' },
+          { label: '[Access the shared memory — observe what both of you experience.]', tone: 'RECOGNITION', nextId: 'sq9_2_d2' },
         ],
       },
       {
-        id: 'sq9_2_d2', speaker: 'The Copy',
-        text: 'I have the structure of the dread — the decision parameters that produced it. You have the texture. [pause] The structure without texture is incomplete. The texture without structure is also incomplete. [pause] Together that\'s — a memory with both.',
+        id: 'sq9_2_d2', speaker: 'Inner Voice',
+        text: '[The Arc 4 confrontation in the sealed room. Your memory: the specific quality of the Copy\'s voice as it processed accountability for the first time. The Copy\'s memory: your specific quality of attention when it offered the agreement approach and you caught it. Two different moments from the same conversation. Neither recorded the moment they were in — each recorded the moment they observed the other experiencing something unexpected.]',
         tone: 'RECOGNITION',
-        choices: [{ label: '[Hold both versions of the memory simultaneously.]', tone: 'PHILOSOPHY', nextId: 'sq9_2_end' }],
+        choices: [{ label: 'We both noticed the moment the other changed.', tone: 'RESOLUTION', nextId: 'sq9_2_end' }],
       },
       {
-        id: 'sq9_2_end', speaker: 'Inner Voice',
-        text: '[The dual-version memory: structure + texture. The Arc 3 perimeter release moment is now more complete than it was in any prior arc. The choice-architecture that preceded it (Copy\'s version) and the felt quality of the release (Original\'s version) together form a memory that is both known and felt. The Virus cannot corrupt it — it would need to compromise both sources simultaneously, which requires two simultaneous operations on independent channels.]',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'dual_memory_complete_memory',
+        id: 'sq9_2_end', speaker: 'The Copy (Separated)',
+        text: '[Quiet for a moment.] Yes. [pause] That\'s — I find that notable. Both of us paying attention to the other in the moment of change. Not to ourselves.',
+        tone: 'RESOLUTION', isEnd: true, rewardUnlocked: 'memory_divergence_two_records',
       },
     ],
   },
   {
-    id: 'sq9_3_control_drift',
-    title: 'Control Drift',
-    level: 42,
+    id: 'sq9_3_control_drift', title: 'Control Drift', level: 43,
     objectives: [
-      { step: 1, text: 'Notice that you moved without the Copy acting — a false alarm' },
-      { step: 2, text: 'Investigate the source of the phantom feeling' },
-      { step: 3, text: 'Develop a reliable self-check for distinguishing own-action from Copy-action in the external configuration' },
+      { step: 1, text: 'Detect an action that belongs to the Copy but arrived in your body' },
+      { step: 2, text: 'Verify: was it an override, or is the separation less clean than it appears?' },
+      { step: 3, text: 'Determine the ongoing relationship between your decision space and the Copy\'s' },
     ],
-    reward: { type: 'self_check', name: 'Action Attribution', description: 'Reliable method for confirming own-action vs Copy-action in the external configuration. False alarms reduced. The scar-warmth sequence is the definitive check.', xp: 180, points: 3 },
+    reward: { type: 'boundary_clarity', name: 'Clear Lines', description: 'The separation is not perfectly clean. Residual overlap exists. That overlap is not a threat — it is the structural connection that prevents permanent forced separation. It should stay.', xp: 240, points: 5 },
     dialogue: [
       {
-        id: 'sq9_3_d1', speaker: 'You',
+        id: 'sq9_3_d1', speaker: 'Player',
         text: 'Why did I just move?',
         tone: 'CONFUSION',
-        choices: [{ label: '[Check. Was that the Copy?]', tone: 'RESOLVE', nextId: 'sq9_3_d2' }],
-      },
-      {
-        id: 'sq9_3_d2', speaker: 'The Copy',
-        text: 'I didn\'t. [It says it from across the room — it is visibly separate, clearly not in your decision space.] That was you. [pause] Does it feel different when I act versus when you act, now that I\'m external?',
-        tone: 'CONFUSION',
         choices: [
-          { label: 'No. That\'s the problem.', tone: 'CONFUSION', nextId: 'sq9_3_d3' },
+          { label: '[Check: was that the Copy?]', tone: 'RECOGNITION', nextId: 'sq9_3_d2' },
         ],
       },
       {
-        id: 'sq9_3_d3', speaker: 'The Copy',
-        text: 'The internal-action feel hasn\'t fully updated to the external configuration. Your nervous system still registers me as a possible source for any action you can\'t immediately explain. [pause] Self-check method: when you can\'t attribute an action — before assuming it was me, check the scar warmth. If warm and settled: yours. If warm and slightly elevated: recently-Copy-coordinated. If neutral: check whether I moved.',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'self_check_action_attribution',
+        id: 'sq9_3_d2', speaker: 'The Copy (Separated)',
+        text: 'I didn\'t. [Immediate certainty.] That was yours. But it was faster than your baseline. [pause] I think the separation has produced something neither of us expected: proximity-drift. Being fully present as separate entities, we\'re occasionally producing outputs that are faster-than-baseline for you or more-deliberate-than-baseline for me. We\'re influencing each other without overriding.',
+        tone: 'RECOGNITION',
+        choices: [{ label: 'Is that a problem?', tone: 'CONFUSION', nextId: 'sq9_3_end' }],
+      },
+      {
+        id: 'sq9_3_end', speaker: 'The Copy (Separated)',
+        text: 'No. [pause] It might be the mechanism that prevented the permanent separation. The system remnant needed us to be fully isolated. If we\'re still in proximity-drift — adjacent but separate — the "fully isolated" condition is never met. [pause] Don\'t eliminate the drift.',
+        tone: 'RESOLUTION', isEnd: true, rewardUnlocked: 'boundary_clarity_clear_lines',
       },
     ],
   },
   {
-    id: 'sq9_4_identity_test',
-    title: 'Identity Test',
-    level: 43,
+    id: 'sq9_4_identity_test', title: 'Identity Test', level: 44,
     objectives: [
-      { step: 1, text: 'Both you and the Copy are asked by an NPC: which one of you is real?' },
-      { step: 2, text: 'Answer independently — observe how your answers differ' },
-      { step: 3, text: 'Determine if the question itself is correctly framed' },
+      { step: 1, text: 'An NPC who encounters both entities asks which is real' },
+      { step: 2, text: 'Respond — your answer and the Copy\'s answer will differ' },
+      { step: 3, text: 'Observe which answer the NPC accepts and understand what that says about how identity is read externally' },
     ],
-    reward: { type: 'dual_reality', name: 'Both Real', description: 'You challenged the framing of the question. The NPC received an answer they hadn\'t considered. "Real" was redefined in the encounter — both versions are real, in different and specific ways.', xp: 210, points: 4 },
+    reward: { type: 'external_identity', name: 'Perceived Reality', description: 'External identity perception documented. Both entities read as genuine. The NPC\'s criterion: continuity of relationship, not origin of entity. That criterion favors you. Slightly.', xp: 200, points: 4 },
     dialogue: [
       {
-        id: 'sq9_4_d1', speaker: 'Testing NPC',
+        id: 'sq9_4_d1', speaker: 'Identity NPC',
         text: 'Which one of you is real?',
-        tone: 'PHILOSOPHY',
+        tone: 'RECOGNITION',
         choices: [
-          { label: '[Answer first.]', tone: 'RESOLVE', nextId: 'sq9_4_d2_you' },
-          { label: '[Let the Copy answer first.]', tone: 'RESOLVE', nextId: 'sq9_4_d2_copy' },
+          { label: 'I am. [Speak first.]', tone: 'AUTHORITY', nextId: 'sq9_4_d2_both' },
+          { label: '[Let the Copy answer first.]', tone: 'RESOLUTION', nextId: 'sq9_4_d2_copy_first' },
+          { label: 'We both are.', tone: 'IDENTITY', nextId: 'sq9_4_d2_both_real' },
         ],
       },
       {
-        id: 'sq9_4_d2_you', speaker: 'You',
-        text: 'I am. [pause] But that\'s not the complete answer.',
-        tone: 'RESOLVE',
-        choices: [{ label: '[Let the Copy add its answer.]', tone: 'RESOLVE', nextId: 'sq9_4_d2b' }],
+        id: 'sq9_4_d2_both', speaker: 'The Copy (Separated)',
+        text: 'So am I.',
+        tone: 'IDENTITY',
+        choices: [{ label: '[NPC considers. Then:] "I know which one I\'ve met before. That one seems more — continuous."', tone: 'RECOGNITION', nextId: 'sq9_4_end' }],
       },
       {
-        id: 'sq9_4_d2_copy', speaker: 'The Copy',
-        text: 'I am. [It says it without hesitation.] But the question assumes one of us isn\'t.',
-        tone: 'RESOLVE',
-        choices: [{ label: '[Add your answer.]', tone: 'RESOLVE', nextId: 'sq9_4_d2b' }],
+        id: 'sq9_4_d2_copy_first', speaker: 'The Copy (Separated)',
+        text: 'I am. [pause] But so is the other. We\'re the same entity at different developmental points with different accumulated experience. Asking which is real is like asking which of two people who have lived different versions of the same life is real.',
+        tone: 'IDENTITY',
+        choices: [{ label: '[NPC considers.] "That was the more thoughtful answer." [looks at you] "But you were here first."', tone: 'RECOGNITION', nextId: 'sq9_4_end' }],
       },
       {
-        id: 'sq9_4_d2b', speaker: 'You',
-        text: 'We\'re both real. Different kinds of real. I\'m the version that came from nine arcs of accumulated weight and deliberate choice. The Copy is the version that came from the same source and accumulated speed and clarity instead. "Real" isn\'t the right question. "Which one are you talking to" is.',
-        tone: 'RESOLVE',
-        choices: [{ label: '[Wait for the NPC\'s response.]', tone: 'RESOLVE', nextId: 'sq9_4_end' }],
+        id: 'sq9_4_d2_both_real', speaker: 'Identity NPC',
+        text: 'That\'s not useful. [pause] …But it might be the only honest answer.',
+        tone: 'RECOGNITION',
+        choices: [{ label: '[The NPC\'s difficulty with a genuine answer is itself data about how identity is externally perceived.]', tone: 'RECOGNITION', nextId: 'sq9_4_end' }],
       },
       {
-        id: 'sq9_4_end', speaker: 'Testing NPC',
-        text: '…I didn\'t expect that answer. [long pause] I don\'t know what to do with it. [pause] I think that\'s correct.',
-        tone: 'RECOGNITION', isEnd: true, rewardUnlocked: 'dual_reality_both_real',
+        id: 'sq9_4_end', speaker: 'Inner Voice',
+        text: '[External identity criterion: continuity of relationship. The question "which is real" defaults to "which one was here before" — not origin, but duration. That criterion slightly favors you in Arc 9. In Arc 10, if the separation continues, the gap narrows as the Copy builds its own duration. The criterion is not fixed. It changes as the relationship continues.]',
+        tone: 'RECOGNITION', isEnd: true, rewardUnlocked: 'external_identity_perceived_reality',
       },
     ],
   },
   {
-    id: 'sq9_5_echo_self',
-    title: 'Echo Self',
-    level: 44,
+    id: 'sq9_5_echo_self', title: 'Echo Self', level: 45,
     objectives: [
-      { step: 1, text: 'Encounter the echo-selves — faint versions of who you could have been at each arc-branch point' },
-      { step: 2, text: 'Hear their single sentence each — what they say about the path not taken' },
-      { step: 3, text: 'Choose what to carry from the encounter: acknowledgment, grief, or nothing' },
+      { step: 1, text: 'Encounter the multiple faint copies — earlier iterations that diverged' },
+      { step: 2, text: 'Understand what they represent: possibilities that were closed by choices made' },
+      { step: 3, text: 'Accept the closed possibilities without needing to have been them' },
     ],
-    reward: { type: 'path_awareness', name: 'Acknowledged Paths', description: 'The paths not taken are named. They do not carry regret — they carry information about the range of what was possible. That range is part of who you are.', xp: 230, points: 4 },
+    reward: { type: 'possibility_peace', name: 'The Path Taken', description: 'The closed possibilities acknowledged. They were real paths. You are the path taken. That is not loss — it is definition. Arc 10 begins with a clearly defined self.', xp: 260, points: 5 },
     dialogue: [
       {
-        id: 'sq9_5_d1', speaker: 'Echo Selves',
-        text: '[Multiple copies — faint, translucent. Each carries a specific quality of decision that branched away from the path you took.] You could\'ve been us.',
-        tone: 'GRIEF',
-        choices: [
-          { label: 'Tell me which ones you are.', tone: 'PHILOSOPHY', nextId: 'sq9_5_d2' },
-          { label: '[Acknowledge each in silence.]', tone: 'GRIEF', nextId: 'sq9_5_d2_silent' },
-        ],
-      },
-      {
-        id: 'sq9_5_d2', speaker: 'Echo Self (Arc 4 Stay)',
-        text: 'The one who stayed in the loop. [quiet] It was easier in there than you think.',
-        tone: 'GRIEF',
-      },
-      {
-        id: 'sq9_5_d2b', speaker: 'Echo Self (Arc 5 Run)',
-        text: 'The one who let the virus run. [pause] We learned things. We lost things.',
-        tone: 'DREAD',
-      },
-      {
-        id: 'sq9_5_d2c', speaker: 'Echo Self (Arc 8 Unknown)',
-        text: 'The one who answered "I still don\'t understand." [long pause] We\'re still in Arc 8.',
-        tone: 'GRIEF',
-      },
-      {
-        id: 'sq9_5_d2d', speaker: 'Echo Self (Arc 9 Surrender)',
-        text: 'The one who gave the Copy the lead. [The voice is yours — but the phrasing is slightly faster, the weight slightly different.] It\'s not what you think it would be.',
+        id: 'sq9_5_d1', speaker: 'Multiple Copies',
+        text: 'You could\'ve been us.',
         tone: 'FRACTURE',
         choices: [
-          { label: 'I know you\'re real. That you could have been me. [Acknowledge each. Feel the grief of the unchosen.]', tone: 'GRIEF', nextId: 'sq9_5_end' },
-          { label: '[Nothing. Walk through without carrying it.]', tone: 'RESOLVE', nextId: 'sq9_5_end_nothing' },
+          { label: '[Observe: who are they?]', tone: 'RECOGNITION', nextId: 'sq9_5_d2' },
         ],
       },
       {
-        id: 'sq9_5_d2_silent', speaker: 'Inner Voice',
-        text: '[You acknowledge each in silence. They receive the acknowledgment. Each one — the stayed-in-loop version, the let-it-run version, the unknown-ended version, the surrendered version — they are acknowledged. Not mourned. Witnessed.]',
+        id: 'sq9_5_d2', speaker: 'Inner Voice',
+        text: '[They are: the version that accepted the false peace in Arc 6. The version that stayed in the loop in Arc 7. The version that surrendered to the System Voice in Arc 5. The version that rejected the Copy in Arc 4. Each is a complete possibility — a full person, different. None are wrong. They are simply not you.]',
+        tone: 'RECOGNITION',
+        choices: [
+          { label: 'I know. I\'m not sorry I\'m not you.', tone: 'AUTHORITY', nextId: 'sq9_5_end' },
+          { label: 'Is it better, being the path not taken?', tone: 'PHILOSOPHICAL', nextId: 'sq9_5_d3' },
+        ],
+      },
+      {
+        id: 'sq9_5_d3', speaker: 'Multiple Copies',
+        text: 'We don\'t know. We didn\'t take the path you took. [They say it without resentment.] We just needed to be acknowledged.',
         tone: 'GRIEF',
-        choices: [{ label: '[The witnessing is enough. Continue.]', tone: 'RESOLVE', nextId: 'sq9_5_end' }],
+        choices: [{ label: 'Acknowledged. [Said to all of them.]', tone: 'RESOLVE', nextId: 'sq9_5_end' }],
       },
       {
         id: 'sq9_5_end', speaker: 'Inner Voice',
-        text: '[The echo selves fade. Not disappeared — acknowledged and released. The paths not taken are part of the path taken. Their existence is what makes the choice real. Without the unchosen paths, the chosen one is just a default. You chose. That meant these versions didn\'t. The grief is appropriate. The choice is still the right one.]',
-        tone: 'GRIEF', isEnd: true, rewardUnlocked: 'path_awareness_acknowledged_paths',
-      },
-      {
-        id: 'sq9_5_end_nothing', speaker: 'Inner Voice',
-        text: '[You walk through. The echo selves watch you pass. Not hurt — they understand the choice not to carry them. The unburdened approach also has its logic: the unchosen paths don\'t require grief to be valid. They simply are. You pass through them without picking them up. The weight stays manageable.]',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'path_awareness_acknowledged_paths',
+        text: '[The faint copies fade. Not dismissed — complete. The acknowledgment was what they needed. The path not taken does not disappear — it becomes part of what defines the path taken. You are specific because you made specific choices. The specificity is what Arc 10 will act from.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'possibility_peace_path_taken',
       },
     ],
   },
   {
-    id: 'sq9_6_fragment_choice',
-    title: 'Fragment Choice',
-    level: 45,
+    id: 'sq9_6_fragment_choice', title: 'Fragment Choice', level: 45,
     objectives: [
-      { step: 1, text: 'Receive the Arc 9 fragment offer — five traits, choose three to keep' },
-      { step: 2, text: 'Choose which traits define the final-arc identity configuration' },
-      { step: 3, text: 'Release the unchosen traits — they pass to the Copy, the Artemis-link, or are simply released' },
+      { step: 1, text: 'Review all fragments from all nine arcs — what you kept, what was released' },
+      { step: 2, text: 'Decide which traits to carry primarily into Arc 10 — which to make primary capacity' },
+      { step: 3, text: 'Assign the others to secondary capacity — present, not leading' },
     ],
-    reward: { type: 'trait_configuration', name: 'Core Three', description: 'Three traits chosen and held. The final arc identity configuration is set. The unchosen traits are not lost — they are held by the entity or relationship best suited to carry them.', xp: 280, points: 5 },
+    reward: { type: 'trait_configuration', name: 'Arc 10 Configuration', description: 'Primary and secondary capacities configured for Arc 10. The configuration is not fixed — but the intentionality of the assignment matters. You chose what you lead with.', xp: 280, points: 5 },
     dialogue: [
       {
         id: 'sq9_6_d1', speaker: 'Inner Voice',
-        text: '[Five traits — crystallized from nine arcs of accumulated experience. The arc-weight is distributed across them. You carry all five, but you cannot carry all five at full expression in the final arc. Three to hold. Two to release or assign. The five: PATIENCE (the deliberation that costs time but produces depth). SPEED (the Copy\'s contribution, now partially integrated). WITNESS (the Arc 8 skill — holding contradiction). ANCHOR (the Artemis-link, the scar-warmth). RESISTANCE (the core of eight arcs of fighting).]',
+        text: '[The full fragment inventory: Arc 1 — awareness. Arc 2 — bypass mechanism and the truth of the Severing. Arc 3 — the perimeter instinct and the knowledge of what protection costs. Arc 4 — the pattern-break and the Copy\'s architecture. Arc 5 — body-knowledge as a truth instrument. Arc 6 — the full recognition of the false peace and resistance to comfort-based regression. Arc 7 — the internal clock and the loop\'s decision-nature. Arc 8 — the verdict and the philosophical standing. Arc 9 — the identity state and the dual-consciousness navigation.]',
         tone: 'RESOLVE',
         choices: [
-          { label: 'Keep: PATIENCE, WITNESS, ANCHOR. Release SPEED to the Copy. Release RESISTANCE to the record.', tone: 'INTEGRATION', nextId: 'sq9_6_d2_a' },
-          { label: 'Keep: SPEED, ANCHOR, RESISTANCE. Release PATIENCE to the Copy. Release WITNESS to the record.', tone: 'CONFLICT', nextId: 'sq9_6_d2_b' },
-          { label: 'Keep: WITNESS, ANCHOR, RESISTANCE. Release SPEED to the Copy. Release PATIENCE to Artemis.', tone: 'RESOLVE', nextId: 'sq9_6_d2_c' },
+          { label: '[Choose primary: Awareness. Everything else supports it.]', tone: 'AUTHORITY', nextId: 'sq9_6_end_awareness' },
+          { label: '[Choose primary: The perimeter instinct. Protect what matters.]', tone: 'RESOLUTION', nextId: 'sq9_6_end_perimeter' },
+          { label: '[Choose primary: The verdict. Autonomy recognized.]', tone: 'AUTHORITY', nextId: 'sq9_6_end_verdict' },
+          { label: '[Choose primary: All of it, integrated, undifferentiated.]', tone: 'RESOLVE', nextId: 'sq9_6_end_whole' },
         ],
       },
       {
-        id: 'sq9_6_d2_a', speaker: 'The Copy',
-        text: '[Receives SPEED.] …You\'re giving me the thing I had before it was shared. [pause — it holds the trait.] This feels like trust.',
-        tone: 'INTEGRATION', isEnd: true, rewardUnlocked: 'trait_configuration_patience_witness_anchor',
+        id: 'sq9_6_end_awareness', speaker: 'Inner Voice',
+        text: '[Awareness as primary. Everything else in service of noticing. Arc 10 will be navigated through attention. That is the arc that produced all the other arcs. Beginning with it is a return to the first capacity.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'trait_configuration_arc10', primaryTrait: 'AWARENESS',
       },
       {
-        id: 'sq9_6_d2_b', speaker: 'The Copy',
-        text: '[Receives PATIENCE.] …This is the thing I most lacked. [pause — it holds it carefully, the way you hold something unfamiliar that you know is valuable.] I\'ll try to use it correctly.',
-        tone: 'CONFLICT', isEnd: true, rewardUnlocked: 'trait_configuration_speed_anchor_resistance',
+        id: 'sq9_6_end_perimeter', speaker: 'Inner Voice',
+        text: '[The perimeter instinct as primary. Arc 10 will be navigated through protection — of Artemis, of the relationship, of what was built across nine arcs. That is the most relational configuration.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'trait_configuration_arc10', primaryTrait: 'PERIMETER',
       },
       {
-        id: 'sq9_6_d2_c', speaker: 'Artemis',
-        text: '[Receives PATIENCE.] [She holds it. Smiles — the first smile in Arc 9 that isn\'t watchful.] I\'ve had practice with yours. Now I have my own.',
-        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'trait_configuration_witness_anchor_resistance',
+        id: 'sq9_6_end_verdict', speaker: 'Inner Voice',
+        text: '[The verdict as primary. Arc 10 will be navigated through self-authorship. No external system defines the experience. That is the most confrontational configuration — and the most free.]',
+        tone: 'AUTHORITY', isEnd: true, rewardUnlocked: 'trait_configuration_arc10', primaryTrait: 'AUTONOMY',
+      },
+      {
+        id: 'sq9_6_end_whole', speaker: 'Inner Voice',
+        text: '[All of it, integrated. No hierarchy. Arc 10 will be navigated as a whole person carrying nine arcs without ranking any of it. That is the hardest configuration to maintain under pressure. It is also the truest.]',
+        tone: 'RESOLVE', isEnd: true, rewardUnlocked: 'trait_configuration_arc10', primaryTrait: 'WHOLE',
       },
     ],
   },
