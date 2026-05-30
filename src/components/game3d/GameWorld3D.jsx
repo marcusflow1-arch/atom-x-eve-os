@@ -78,7 +78,7 @@ import {
 } from './gameWorldConfig';
 import { attachContextGuard } from './webglContextGuard';
 import { buildGrassEnvironment } from './buildGrassEnvironment';
-import { loadPlayerAnimationClips } from './player/playerAnimationLibrary';
+import { loadPlayerAnimationClips, tryBindEmbeddedClips } from './player/playerAnimationLibrary';
 import { createLunaDashboardPlayerController as createPlayerAnimationController } from './player/LunaDashboardPlayerController';
 import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
@@ -733,15 +733,22 @@ export default function GameWorld3D() {
       playerAnim = createPlayerAnimationController({ mixer, blend: BLEND, oneShotRef: oneShotPlaying });
       coreAnimationController = new CoreAnimationController({ legacyController: playerAnim });
 
-      loadPlayerAnimationClips(loader)
-        .then((clipsByKey) => {
-          playerAnim.bindClips(clipsByKey);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error('Player AnimationFBX library load error:', err);
-          setLoading(false);
-        });
+      // If the model already has multiple embedded clips (Sketchfab-style FBX),
+      // bind them directly — no external AnimationFBX library needed.
+      if (tryBindEmbeddedClips(playerAnim, fbx)) {
+        setLoading(false);
+      } else {
+        // Normal path: load separate per-animation FBX files from the library.
+        loadPlayerAnimationClips(loader)
+          .then((clipsByKey) => {
+            playerAnim.bindClips(clipsByKey);
+            setLoading(false);
+          })
+          .catch((err) => {
+            console.error('Player AnimationFBX library load error:', err);
+            setLoading(false);
+          });
+      }
     }, undefined, (err) => {
       console.error('Archer load error:', err);
       setLoading(false);

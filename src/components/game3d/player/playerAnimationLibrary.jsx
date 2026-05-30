@@ -49,7 +49,13 @@ export async function loadPlayerAnimationClips(loader) {
     loader.load(
       row.file_url,
       (fbx) => {
-        const clip = fbx.animations?.[0];
+        // If this FBX ships with multiple embedded clips (Sketchfab-style),
+        // pick the one whose name best matches the requested key rather than
+        // blindly using animations[0].
+        const clip = fbx.animations?.length > 1
+          ? fbx.animations.find((c) => pickRequestedKey(c.name) === key) ?? fbx.animations[0]
+          : fbx.animations?.[0];
+
         if (clip) {
           const finalClip = makeRunClipInPlace(key, clip);
           finalClip.name = key;
@@ -64,4 +70,24 @@ export async function loadPlayerAnimationClips(loader) {
 
   await Promise.all(rows.map(loadOne));
   return clipsByKey;
+}
+
+/**
+ * When the player model FBX already contains all animations (idle, walk, run
+ * baked in), use this instead of loadPlayerAnimationClips.
+ * Returns null if the fbx has no animations.
+ *
+ * Usage in GameWorld3D (after loader.load of the player FBX):
+ *   if (fbx.animations?.length > 1) {
+ *     playerAnim.bindEmbeddedClips(fbx);
+ *   } else {
+ *     loadPlayerAnimationClips(loader).then(clips => playerAnim.bindClips(clips));
+ *   }
+ */
+export function tryBindEmbeddedClips(playerAnim, fbx) {
+  if (!fbx?.animations?.length) return false;
+  // Only treat as embedded when there are multiple clips — a single external
+  // idle file still goes through the normal library path.
+  if (fbx.animations.length < 2) return false;
+  return playerAnim.bindEmbeddedClips(fbx);
 }
