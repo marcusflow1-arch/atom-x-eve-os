@@ -16,7 +16,7 @@ export const NPC_DEFS = [
     alignment: 'mirror',
     color: '#f97316',
     accent: 'rgba(249,115,22,0.15)',
-    position: { left: '15%', top: '65%' },
+    position: { left: '60%', top: '55%' },
     quests: ['stranger_mirror', 'stranger_verdict'],
     trustGate: -50,
     // Uses CharacterSprite instead of emoji
