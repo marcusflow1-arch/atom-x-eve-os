@@ -12,6 +12,8 @@ import AdvancedClassPanel from '../../../game3d/talents/AdvancedClassPanel';
 import PerkTreePanel from '../perkTree/PerkTreePanel';
 import WeaponRunePanel from '../weaponMastery/WeaponRunePanel';
 import WeaponUpgradePanel from '../weaponMastery/WeaponUpgradePanel';
+import { subscribeRune, getRuneData, getTotalRuneBonus, RUNE_TIERS, RUNE_SLOT_UNLOCK_LEVELS, MAX_RUNE_SLOTS, getRuneTier } from '../weaponMastery/weaponRuneStore';
+import { subscribeUpgrade, getUpgrade, getDamageAtLevel, getUpgradeRarity, MAX_UPGRADE_LEVEL, UPGRADE_RARITY_TIERS } from '../weaponMastery/weaponUpgradeStore';
 
 // Weapon Mastery — picker grid → per-weapon two-branch skill tree page.
 export default function WeaponMasteryTab() {
@@ -132,13 +134,21 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
   const weaponType = resolveWeaponType(weaponId);
   const [view, setView] = useState('enchant'); // 'enchant' | 'tree' | 'perks' | 'rune' | 'upgrade'
 
-  // Live enchantment level — connected to enchantmentStore so it updates in real-time
+  // Live enchantment level
   const [enchantLevel, setEnchantLevel] = useState(() => getEnchantment(weaponId)?.level ?? 0);
   useEffect(() => {
     return subscribeEnchantment(() => {
       setEnchantLevel(getEnchantment(weaponId)?.level ?? 0);
     });
   }, [weaponId]);
+
+  // Live rune data
+  const [, forceRune] = useState(0);
+  useEffect(() => subscribeRune(() => forceRune((x) => x + 1)), []);
+
+  // Live upgrade data
+  const [, forceUpgrade] = useState(0);
+  useEffect(() => subscribeUpgrade(() => forceUpgrade((x) => x + 1)), []);
 
   // Mastery perks that have been toggled active by the player (persist per weapon)
   const storageKey = `mastery_active_perks_${weaponId}`;
@@ -198,9 +208,8 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
         <div className="w-64 flex flex-col items-center overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
 
           {view === 'enchant' ? (
-            /* ── ENCHANTMENT left: mastery level disc + proficiency bar + perks ── */
+            /* ── ENCHANTMENT left ── */
             <>
-              {/* Mastery Level disc */}
               <div
                 className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
@@ -222,8 +231,6 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                   </div>
                 )}
               </div>
-
-              {/* XP bar */}
               <div className="w-full mt-6 px-1">
                 <div className="flex justify-between text-[9px] text-white/45 mb-1.5">
                   <span>Proficiency XP</span>
@@ -237,13 +244,11 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                   {masteryEntry.isMaxLevel ? 'All proficiency earned' : `${masteryEntry.killsForNextLevel - masteryEntry.killsIntoLevel} more to Level ${masteryEntry.level + 1}`}
                 </div>
               </div>
-
-              {/* Unlocked Perks */}
               <div className="w-full mt-5 px-1">
                 <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Weapon Perks</div>
                 {milestonePassives.length === 0 ? (
                   <div className="text-[10px] text-white/30 text-center py-3 px-2 rounded-sm border border-white/[0.06]">
-                    {nextMilestone ? `Reach Level ${nextMilestone} to unlock your first perk` : 'No perks available'}
+                    {nextMilestone ? `Reach Level ${nextMilestone} to unlock` : 'No perks available'}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1.5">
@@ -280,10 +285,182 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                 )}
               </div>
             </>
-          ) : (
-            /* ── MASTERY ART left: level 1–20 progress + advanced class + XP + perks ── */
+
+          ) : view === 'rune' ? (
+            /* ── RUNE left: total ATK bonus disc + per-slot summary ── */
+            (() => {
+              const runeData = getRuneData(weaponId);
+              const totalBonus = getTotalRuneBonus(runeData.slots);
+              const filledSlots = runeData.slots.filter(Boolean).length;
+              return (
+                <>
+                  {/* Total Rune ATK ring */}
+                  <div
+                    className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: 'radial-gradient(circle, rgba(52,211,153,0.10) 0%, rgba(52,211,153,0.03) 50%, transparent 75%)',
+                      border: `1.5px solid ${totalBonus > 0 ? 'rgba(52,211,153,0.45)' : 'rgba(255,255,255,0.12)'}`,
+                      boxShadow: totalBonus > 0 ? '0 0 24px rgba(52,211,153,0.15)' : 'none',
+                    }}
+                  >
+                    <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
+                    <div className="text-center">
+                      <div className="text-[10px] tracking-[0.35em] uppercase text-emerald-300/60 mb-1">Rune ATK</div>
+                      <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: totalBonus > 0 ? '#34d399' : 'rgba(255,255,255,0.25)' }}>
+                        +{totalBonus}
+                      </div>
+                      <div className="mt-1.5 text-[9px] tracking-[0.2em] uppercase text-white/35">{filledSlots} / {MAX_RUNE_SLOTS} socketed</div>
+                    </div>
+                  </div>
+
+                  {/* Per-slot status */}
+                  <div className="w-full mt-5 px-1">
+                    <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Slot Overview</div>
+                    <div className="flex flex-col gap-1.5">
+                      {runeData.slots.map((slot, i) => {
+                        const unlockLevel = RUNE_SLOT_UNLOCK_LEVELS[i];
+                        const unlocked = masteryEntry.level >= unlockLevel;
+                        const rt = slot ? getRuneTier(slot.tier) : null;
+                        return (
+                          <div key={i} className="flex items-center justify-between px-2.5 py-1.5 rounded-sm"
+                            style={{
+                              background: rt ? `${rt.color}0d` : 'rgba(255,255,255,0.02)',
+                              border: rt ? `1px solid ${rt.color}44` : '1px solid rgba(255,255,255,0.07)',
+                            }}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-white/35">Slot {i + 1}</span>
+                              {!unlocked && <span className="text-[9px] text-white/20">Lv {unlockLevel} req.</span>}
+                            </div>
+                            {rt ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-semibold" style={{ color: rt.color }}>{rt.name}</span>
+                                <span className="text-[9px] text-white/40">+{rt.atkBonus}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[9px] text-white/25">{unlocked ? 'Empty' : 'Locked'}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Rune tier legend */}
+                  <div className="w-full mt-4 px-1">
+                    <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Tier Legend</div>
+                    <div className="flex flex-col gap-1">
+                      {RUNE_TIERS.map((rt) => (
+                        <div key={rt.tier} className="flex items-center justify-between text-[9px]">
+                          <span style={{ color: rt.color }}>{rt.name}</span>
+                          <span className="text-white/40">+{rt.atkBonus} ATK</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              );
+            })()
+
+          ) : view === 'upgrade' ? (
+            /* ── UPGRADE left: current level disc + damage stats + tier status ── */
+            (() => {
+              const upEntry = getUpgrade(weaponId);
+              const upLevel = upEntry.level;
+              const isMax = upLevel >= MAX_UPGRADE_LEVEL;
+              const rarity = getUpgradeRarity(upLevel);
+              const currentDmg = getDamageAtLevel(upLevel);
+              const nextDmg = !isMax ? getDamageAtLevel(upLevel + 1) : null;
+              const pct = ((upLevel - 1) / (MAX_UPGRADE_LEVEL - 1)) * 100;
+              return (
+                <>
+                  {/* Level ring */}
+                  <div
+                    className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: `radial-gradient(circle, ${rarity.color}18 0%, ${rarity.color}06 50%, transparent 75%)`,
+                      border: `1.5px solid ${rarity.color}55`,
+                      boxShadow: upLevel > 1 ? `0 0 24px ${rarity.color}22` : 'none',
+                    }}
+                  >
+                    <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
+                    <div className="text-center">
+                      <div className="text-[10px] tracking-[0.35em] uppercase mb-1" style={{ color: `${rarity.color}99` }}>
+                        {rarity.name}
+                      </div>
+                      <div className="text-5xl font-bold tabular-nums leading-none" style={{ color: rarity.color }}>
+                        {upLevel}
+                      </div>
+                      <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">/ {MAX_UPGRADE_LEVEL}</div>
+                    </div>
+                    {isMax && (
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] tracking-[0.35em] uppercase font-semibold rounded-sm"
+                        style={{ background: `${rarity.color}22`, border: `1px solid ${rarity.color}66`, color: rarity.color }}>
+                        Max Level
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Level progress bar */}
+                  <div className="w-full mt-6 px-1">
+                    <div className="flex justify-between text-[9px] text-white/45 mb-1.5">
+                      <span>Level Progress</span>
+                      <span className="tabular-nums">{upLevel} / {MAX_UPGRADE_LEVEL}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, pct)}%`, background: `linear-gradient(90deg, ${rarity.color}88, ${rarity.color})`, boxShadow: `0 0 6px ${rarity.color}55` }} />
+                    </div>
+                    {!isMax && (
+                      <div className="text-[9px] text-white/35 mt-1.5 text-center">
+                        {MAX_UPGRADE_LEVEL - upLevel} levels to max
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Base damage stat */}
+                  <div className="w-full mt-4 px-1">
+                    <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Base Damage</div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between px-2.5 py-2 rounded-sm"
+                        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        <span className="text-[10px] text-white/45">Current</span>
+                        <span className="text-lg font-bold tabular-nums text-white/90">{currentDmg}</span>
+                      </div>
+                      {!isMax && (
+                        <div className="flex items-center justify-between px-2.5 py-2 rounded-sm"
+                          style={{ background: `${rarity.color}0a`, border: `1px solid ${rarity.color}33` }}>
+                          <span className="text-[10px] text-white/45">After Upgrade</span>
+                          <div className="text-right">
+                            <span className="text-lg font-bold tabular-nums" style={{ color: rarity.color }}>{nextDmg}</span>
+                            <span className="text-[9px] text-emerald-300/80 ml-1.5">+{nextDmg - currentDmg}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tier milestones */}
+                  <div className="w-full mt-4 px-1">
+                    <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Tier Milestones</div>
+                    <div className="flex flex-col gap-1">
+                      {UPGRADE_RARITY_TIERS.map((t) => {
+                        const reached = upLevel >= t.upTo;
+                        return (
+                          <div key={t.upTo} className="flex items-center justify-between text-[9px]">
+                            <span style={{ color: reached ? t.color : 'rgba(255,255,255,0.25)' }}>{t.name}</span>
+                            <span className="text-white/30">Lv {t.upTo} · +{(t.upTo - 1) * 18} ATK</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              );
+            })()
+
+          ) : view === 'tree' ? (
+            /* ── MASTERY ART left ── */
             <>
-              {/* Mastery Art level ring */}
               <div className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
                   background: 'radial-gradient(circle, rgba(251,191,36,0.10) 0%, rgba(245,158,11,0.04) 50%, transparent 75%)',
@@ -303,8 +480,6 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                   </div>
                 )}
               </div>
-
-              {/* Advanced class unlock badge */}
               <div className="w-full mt-6 px-1">
                 <div className="flex items-center gap-2 px-3 py-2 rounded"
                   style={{
@@ -325,8 +500,6 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                   </div>
                 </div>
               </div>
-
-              {/* XP bar */}
               <div className="w-full mt-4 px-1">
                 <div className="flex justify-between text-[9px] text-white/45 mb-1.5">
                   <span>Mastery XP</span>
@@ -340,13 +513,11 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                   {masteryEntry.isMaxLevel ? 'Grand Mastery achieved' : `${masteryEntry.killsForNextLevel - masteryEntry.killsIntoLevel} kills to Level ${masteryEntry.level + 1}`}
                 </div>
               </div>
-
-              {/* Weapon Perks for Mastery Art */}
               <div className="w-full mt-4 px-1">
                 <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Mastery Perks</div>
                 {milestonePassives.length === 0 ? (
                   <div className="text-[10px] text-white/30 text-center py-3 px-2 rounded-sm border border-white/[0.06]">
-                    {nextMilestone ? `Reach Level ${nextMilestone} to unlock your first perk` : 'No perks available'}
+                    {nextMilestone ? `Reach Level ${nextMilestone} to unlock` : 'No perks available'}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1.5">
@@ -371,6 +542,43 @@ function WeaponDetail({ weaponId, masteryEntry, onBack, onSetActive, isActive })
                     })}
                   </div>
                 )}
+              </div>
+            </>
+
+          ) : (
+            /* ── PERKS left — show mastery level as context ── */
+            <>
+              <div className="relative w-44 h-44 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: 'radial-gradient(circle, rgba(167,139,250,0.10) 0%, rgba(167,139,250,0.03) 50%, transparent 75%)',
+                  border: '1.5px solid rgba(167,139,250,0.35)',
+                  boxShadow: masteryEntry.level > 1 ? '0 0 24px rgba(167,139,250,0.14)' : 'none',
+                }}>
+                <div className="absolute inset-2 rounded-full border border-white/[0.07]" />
+                <div className="text-center">
+                  <div className="text-[10px] tracking-[0.35em] uppercase text-violet-300/60 mb-1">Perk Tree</div>
+                  <div className="text-5xl font-light text-white tabular-nums leading-none">{masteryEntry.level}</div>
+                  <div className="mt-1.5 text-[9px] tracking-[0.25em] uppercase text-white/40">Mastery Lv</div>
+                </div>
+              </div>
+              <div className="w-full mt-6 px-1">
+                <div className="flex justify-between text-[9px] text-white/45 mb-1.5">
+                  <span>Mastery Progress</span>
+                  <span>{masteryEntry.isMaxLevel ? 'Complete' : `${masteryEntry.killsIntoLevel} / ${masteryEntry.killsForNextLevel}`}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, xpPct)}%`, background: 'linear-gradient(90deg, #a78bfa, #c4b5fd)', boxShadow: '0 0 6px rgba(167,139,250,0.4)' }} />
+                </div>
+              </div>
+              <div className="w-full mt-4 px-1">
+                <div className="text-[10px] tracking-[0.35em] uppercase text-white/50 mb-2">Perk Points</div>
+                <div className="flex items-center justify-between px-2.5 py-2 rounded-sm"
+                  style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                  <span className="text-[10px] text-white/45">Available</span>
+                  <span className="text-xl font-bold text-violet-300 tabular-nums">{Math.floor(masteryEntry.level / 5)}</span>
+                </div>
+                <div className="text-[9px] text-white/30 mt-1.5 text-center">+1 point every 5 mastery levels</div>
               </div>
             </>
           )}
