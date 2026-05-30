@@ -351,7 +351,7 @@ export const MAIN_QUEST_CHAIN_7 = {
         {
           id: 'mq7_3_d2_degrading',
           speaker: 'Artemis',
-          text: '[She holds that phrase — "the loop is degrading." It's the first time she's heard it framed as a process with a direction.] Degrading means it has a direction. Directions end somewhere.',
+          text: '[She holds that phrase — "the loop is degrading." It\'s the first time she\'s heard it framed as a process with a direction.] Degrading means it has a direction. Directions end somewhere.',
           tone: 'AWAKENING',
           choices: [
             { label: 'Yes. And we\'re moving toward the end.', tone: 'RESOLVE', nextId: 'mq7_3_d3_break' },
