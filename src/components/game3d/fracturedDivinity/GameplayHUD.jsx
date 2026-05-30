@@ -3,7 +3,7 @@ import {
   GameState, subscribeGameState, modifyControl, togglePerception,
   loadGame, saveGame, resetGame, setFlag, advanceArc, unlockAbility,
 } from './gameplayState';
-import { Enemy, ENEMY_TYPES, ABILITIES, useAbility as applyAbility, DIALOGUE_TRIGGERS } from './gameplayCombat';
+import { Enemy, ENEMY_TYPES, ABILITIES, applyAbility, DIALOGUE_TRIGGERS } from './gameplayCombat';
 import {
   onArcAdvance, virusEvent, getActiveMechanics, startLoopMechanic,
 } from './gameplayArcEngine';

@@ -225,7 +225,7 @@ export function calculatePlayerDamage(abilityId) {
   return Math.round(dmg);
 }
 
-export function useAbility(abilityId, enemy) {
+export function applyAbility(abilityId, enemy) {
   if (!GameState.unlockedAbilities.includes(abilityId)) {
     return { ok: false, reason: 'not_unlocked' };
   }
