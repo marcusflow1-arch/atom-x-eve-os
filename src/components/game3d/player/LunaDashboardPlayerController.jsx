@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { EmbeddedClipController } from './EmbeddedClipController';
 
 const STATES = {
   IDLE: 'idle',
@@ -61,14 +60,6 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const hasAction = (state) => !!actions[state];
 
   const playState = (state, options = {}) => {
-    // Delegate to embedded controller when present
-    if (embeddedCtrl) {
-      const ok = options.force
-        ? embeddedCtrl.play(state, options.timeScale || 1)
-        : embeddedCtrl.transitionTo(state, options.fade ?? 0.25, options.timeScale || 1);
-      if (ok) currentState = state;
-      return ok || false;
-    }
     if (isDead || !hasAction(state)) return false;
     if (!options.force && currentState === state) return true;
 
@@ -110,13 +101,6 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
     lastMovement = { moving: !!moving, running: !!running, direction, aiming: !!aiming };
     if (isDead || isBusy) return;
 
-    // Embedded-clip path: simple idle/walk/run state machine
-    if (embeddedCtrl) {
-      embeddedCtrl.updateFromMovement({ moving: !!moving, running: !!running });
-      currentState = embeddedCtrl.getCurrent() || STATES.IDLE;
-      return;
-    }
-
     if (previousMoving && !moving && hasAction(STATES.RUN_STOP)) {
       previousMoving = false;
       isBusy = true;
@@ -130,26 +114,7 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
     playState(movementStateFor(lastMovement));
   };
 
-  // ── Embedded-clip override ─────────────────────────────────────────────
-  // When the player FBX ships with ALL animations inside a single file,
-  // bindEmbeddedClips() takes over all movement/state management via
-  // EmbeddedClipController.  The external-clip API (bindClips) still works
-  // normally for models that use separate AnimationFBX library files.
-  let embeddedCtrl = null;
-
-  const bindEmbeddedClips = (fbx) => {
-    if (!fbx?.animations?.length) return false;
-    embeddedCtrl = new EmbeddedClipController(mixer, fbx.animations);
-    embeddedCtrl.init();
-    // Mirror current state into legacy currentState for getCurrent()
-    currentState = STATES.IDLE;
-    return true;
-  };
-
   const bindClips = (clipsByKey = {}) => {
-    // If an embedded controller already owns the mixer, skip
-    if (embeddedCtrl) return;
-
     Object.entries(clipsByKey).forEach(([key, clip]) => {
       const action = mixer.clipAction(clip);
       action.enabled = true;
@@ -224,7 +189,6 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   return {
     actions,
     bindClips,
-    bindEmbeddedClips,
     ChangeState: playState,
     PlayAnimation: playState,
     HandleMovement: handleMovement,
