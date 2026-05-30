@@ -30,23 +30,24 @@ export const WEAPONS = [
 export const STAT_SYNERGY = {
   strength: [
     { weaponId: 'sword',       tier: 'S' },
-    { weaponId: 'dual_blades', tier: 'A' },
   ],
   dexterity: [
     { weaponId: 'bow',         tier: 'S' },
     { weaponId: 'dual_blades', tier: 'S' },
     { weaponId: 'sword',       tier: 'B' },
   ],
-  intelligence: [],
-  focus: [],
   constitution: [
     { weaponId: 'sword',       tier: 'B' },
+    { weaponId: 'dual_blades', tier: 'B' },  // survivability role
   ],
   focus: [
     { weaponId: 'sky',         tier: 'S' },
   ],
   intelligence: [
     { weaponId: 'sky',         tier: 'A' },
+  ],
+  defense: [
+    { weaponId: 'dual_blades', tier: 'A' },  // deflect/counter system
   ],
 };
 
