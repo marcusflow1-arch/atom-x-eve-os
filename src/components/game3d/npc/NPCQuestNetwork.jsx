@@ -13,6 +13,7 @@ import NPCNode from './NPCNode';
 import BranchingDialogueBox from './BranchingDialogueBox';
 import TrustPanel from './TrustPanel';
 import NetworkQuestLog from './NetworkQuestLog';
+import CharacterSprite from './CharacterSprite';
 import { QUEST_DEFS } from './questNetwork';
 import { ScrollText, BarChart2, Bug, RotateCcw, Swords, Zap } from 'lucide-react';
 
@@ -285,17 +286,7 @@ export default function NPCQuestNetwork() {
             className="absolute z-20"
             style={{ transform: 'translate(-50%,-50%)' }}
           >
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-xl"
-                style={{
-                  background: 'rgba(99,102,241,0.2)',
-                  border: '2px solid rgba(99,102,241,0.6)',
-                  boxShadow: '0 0 16px rgba(99,102,241,0.3)',
-                }}>
-                🧑‍🦯
-              </div>
-              <div className="text-[8px] tracking-[0.2em] uppercase text-indigo-300/50">Player</div>
-            </div>
+            <CharacterSprite color="#6366f1" label="Player" isNPC={false} glow={true} />
           </motion.div>
 
           {/* Hint */}

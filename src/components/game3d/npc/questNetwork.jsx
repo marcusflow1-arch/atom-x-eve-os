@@ -10,6 +10,19 @@ export const QuestState = {
 // ── NPC Definitions ───────────────────────────────────────────────────────────
 export const NPC_DEFS = [
   {
+    id: 'npc_stranger',
+    name: 'The Stranger',
+    icon: '🧑',
+    alignment: 'mirror',
+    color: '#f97316',
+    accent: 'rgba(249,115,22,0.15)',
+    position: { left: '15%', top: '65%' },
+    quests: ['stranger_mirror', 'stranger_verdict'],
+    trustGate: -50,
+    // Uses CharacterSprite instead of emoji
+    usesSprite: true,
+  },
+  {
     id: 'npc_artemis',
     name: 'Artemis',
     icon: '🧍‍♀️',
@@ -203,6 +216,56 @@ export const QUEST_DEFS = {
     },
     rewards: { xp: 500, currency: 260, flag: 'system_exposed', pathScore: { control: 4, mercy: 2 } },
     trustEffects: { npc_skadi: +25, npc_system: -30, npc_artemis: +15 },
+  },
+
+  // ── STRANGER QUESTLINE (mirror / rival) ──────────────────────────────────
+  stranger_mirror: {
+    id: 'stranger_mirror',
+    title: 'The Mirror Test',
+    npcId: 'npc_stranger',
+    description: 'The Stranger is a version of you. Face your own echo — defeat three mirror projections of yourself.',
+    killTarget: 3,
+    hasBranching: false,
+    dialogue: {
+      NONE:     "I know your moves because they're mine. Same origin, different choices. Three mirror echoes are out there — reflections of your worst decisions. Destroy them, and I'll respect you. Maybe.",
+      ACTIVE:   "Destroy {killTarget} mirror echoes. They fight like you — because they are you.",
+      READY_TO_TURN: "You did it. You overcame yourself. That's harder than it sounds. Come back.",
+      COMPLETED:"You're not just a player anymore. You're a variable the loop didn't account for.",
+    },
+    rewards: { xp: 320, currency: 160, flag: 'passed_mirror_test', pathScore: { combat: 2, control: 2 } },
+    trustEffects: { npc_stranger: +30, npc_skadi: +10 },
+  },
+
+  stranger_verdict: {
+    id: 'stranger_verdict',
+    title: 'Verdict of Two Paths',
+    npcId: 'npc_stranger',
+    description: 'The Stranger demands you answer: are you the same, or different?',
+    killTarget: 0,
+    requiredFlag: 'passed_mirror_test',
+    hasBranching: true,
+    branches: {
+      diverge:  { label: 'We are different. I forge my own path.', icon: '🔀' },
+      converge: { label: 'We are the same. I embrace the parallel.', icon: '🔗' },
+    },
+    dialogue: {
+      NONE:     "You passed the mirror test. Now answer the only question that matters: are you me, or aren't you?",
+      ACTIVE:   "Make your choice. The loop is watching.",
+      READY_TO_TURN: "Speak your verdict.",
+      COMPLETED:"The parallel is settled. The loop registers your answer.",
+    },
+    memoryDialogue: {
+      diverge:  "Different paths. Same war. I'll see you on the other side.",
+      converge: "At last. Two become one pattern. We'll be unstoppable.",
+    },
+    rewards: {
+      diverge:  { xp: 220, currency: 110, flag: 'diverged_from_stranger', pathScore: { mercy: 2, control: 1 } },
+      converge: { xp: 220, currency: 110, flag: 'converged_with_stranger', pathScore: { combat: 3 } },
+    },
+    trustEffects: {
+      diverge:  { npc_stranger: -10, npc_artemis: +15, npc_skadi: +10 },
+      converge: { npc_stranger: +40, npc_kali: +10 },
+    },
   },
 
   // ── SYSTEM QUESTLINE (control path) ──────────────────────────────────────

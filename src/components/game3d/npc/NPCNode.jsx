@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuestState } from './questNetwork';
+import CharacterSprite from './CharacterSprite';
 
 const STATE_MARKER = {
   [QuestState.NONE]:           { icon: '❕', color: '#fbbf24', pulse: true  },
@@ -46,14 +47,18 @@ export default function NPCNode({ npc, questEntry, questId, trust, playerNearby,
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
-        <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-          style={{
-            background: npc.accent,
-            border: `2px solid ${npc.color}60`,
-            boxShadow: playerNearby ? `0 0 16px ${npc.color}50` : 'none',
-          }}>
-          {npc.icon}
-        </div>
+        {(npc.id === 'npc_stranger' || npc.usesSprite) ? (
+          <CharacterSprite color={npc.color} isNPC={true} glow={playerNearby} size="md" />
+        ) : (
+          <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+            style={{
+              background: npc.accent,
+              border: `2px solid ${npc.color}60`,
+              boxShadow: playerNearby ? `0 0 16px ${npc.color}50` : 'none',
+            }}>
+            {npc.icon}
+          </div>
+        )}
 
         {/* Trust ring */}
         <div className="absolute -bottom-1 -right-1 px-1 rounded text-[8px] font-bold"

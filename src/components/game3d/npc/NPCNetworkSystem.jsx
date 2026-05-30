@@ -10,6 +10,7 @@ import BranchingDialogueBox from './BranchingDialogueBox';
 import TrustMeter from './TrustMeter';
 import WorldStatePanel from './WorldStatePanel';
 import QuestNotifications from './QuestNotification';
+import CharacterSprite from './CharacterSprite';
 import { ScrollText, Globe, Bug, RotateCcw, Swords, ChevronRight, Eye, EyeOff } from 'lucide-react';
 
 const STATE_INDICATOR = {
@@ -41,17 +42,22 @@ function NPCToken({ npc, questEntry, trust, playerNearby, onClick }) {
       </motion.div>
 
       <div onClick={onClick}
-        className="w-14 h-20 rounded-xl flex flex-col items-center justify-center text-3xl cursor-pointer transition-all"
+        className="cursor-pointer transition-all px-2 py-1.5 rounded-xl flex flex-col items-center"
         style={{
-          background: playerNearby ? `${npcColor}14` : 'rgba(255,255,255,0.03)',
-          border: playerNearby ? `1.5px solid ${npcColor}55` : '1px solid rgba(255,255,255,0.08)',
+          background: playerNearby ? `${npcColor}14` : 'rgba(255,255,255,0.02)',
+          border: playerNearby ? `1.5px solid ${npcColor}55` : '1px solid rgba(255,255,255,0.06)',
           boxShadow: playerNearby ? `0 0 18px ${npcColor}20` : 'none',
-          translateY: bobY,
         }}>
-        <span>{npc.icon}</span>
-        <span className="text-[8px] tracking-[0.12em] uppercase mt-1" style={{ color: playerNearby ? npcColor : 'rgba(255,255,255,0.25)' }}>
-          {npc.name}
-        </span>
+        {npc.id === 'npc_stranger' ? (
+          <CharacterSprite color={npcColor} label={npc.name} isNPC={true} glow={playerNearby} />
+        ) : (
+          <>
+            <span className="text-3xl">{npc.icon}</span>
+            <span className="text-[8px] tracking-[0.12em] uppercase mt-1" style={{ color: playerNearby ? npcColor : 'rgba(255,255,255,0.25)' }}>
+              {npc.name}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Proximity prompt */}
@@ -249,13 +255,7 @@ export default function NPCNetworkSystem() {
           <motion.div animate={{ left: `${playerPos.x}%`, top: `${playerPos.y}%` }}
             transition={{ type: 'spring', damping: 18, stiffness: 180 }}
             className="absolute z-10" style={{ transform: 'translate(-50%,-50%)' }}>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-base"
-                style={{ background: 'rgba(99,102,241,0.18)', border: '2px solid rgba(99,102,241,0.55)', boxShadow: '0 0 12px rgba(99,102,241,0.25)' }}>
-                🧑
-              </div>
-              <div className="text-[7px] tracking-[0.2em] uppercase text-indigo-300/40">You</div>
-            </div>
+            <CharacterSprite color="#6366f1" label="You" isNPC={false} glow={true} />
           </motion.div>
 
           {/* Hints */}
