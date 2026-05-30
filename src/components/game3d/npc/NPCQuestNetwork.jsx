@@ -284,7 +284,7 @@ export default function NPCQuestNetwork() {
             animate={{ left: `${playerPos.x}%`, top: `${playerPos.y}%` }}
             transition={{ type: 'spring', damping: 20, stiffness: 200 }}
             className="absolute z-20"
-            style={{ transform: 'translate(-50%,-50%)' }}
+            style={{ translateX: '-50%', translateY: '-50%' }}
           >
             <CharacterSprite color="#6366f1" label="Player" isNPC={false} glow={true} />
           </motion.div>

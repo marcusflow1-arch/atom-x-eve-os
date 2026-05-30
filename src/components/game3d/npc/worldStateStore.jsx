@@ -7,10 +7,11 @@ const DEFAULT = {
   flags: {},
   // NPC trust: -100 (hostile) → 0 (neutral) → 100 (ally)
   trust: {
-    npc_artemis: 0,
-    npc_skadi:   0,
-    npc_kali:    0,
-    npc_system:  0,
+    npc_artemis:  0,
+    npc_skadi:    0,
+    npc_kali:     0,
+    npc_system:   0,
+    npc_stranger: 0,
   },
   // Aggregate path scores
   pathScores: { combat: 0, control: 0, mercy: 0, chaos: 0 },

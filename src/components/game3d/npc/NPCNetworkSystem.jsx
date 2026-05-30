@@ -254,7 +254,7 @@ export default function NPCNetworkSystem() {
           {/* Player */}
           <motion.div animate={{ left: `${playerPos.x}%`, top: `${playerPos.y}%` }}
             transition={{ type: 'spring', damping: 18, stiffness: 180 }}
-            className="absolute z-10" style={{ transform: 'translate(-50%,-50%)' }}>
+            className="absolute z-10" style={{ translateX: '-50%', translateY: '-50%' }}>
             <CharacterSprite color="#6366f1" label="You" isNPC={false} glow={true} />
           </motion.div>
 
