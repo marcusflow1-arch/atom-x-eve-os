@@ -14,6 +14,7 @@ import GameHub from './pages/GameHub';
 import Studio from './pages/Studio';
 import DevStudio from './pages/DevStudio';
 import NetworkTest from './pages/NetworkTest';
+import ChainBreak from './pages/ChainBreak';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -99,6 +100,7 @@ const AuthenticatedApp = () => {
       />
       {/* Slice A — isolated realtime networking test. No Layout, no gameplay systems. */}
       <Route path="/NetworkTest" element={<NetworkTest />} />
+      <Route path="/ChainBreak" element={<ChainBreak />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
