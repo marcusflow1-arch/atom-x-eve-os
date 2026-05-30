@@ -1310,7 +1310,7 @@ export default function LunaTemplate() {
 
             </div>
 
-
+            {/* Developer Spotlight removed from AI Avatar Home — it lives in its own dedicated section */}
             </>
                   }
 
