@@ -1104,13 +1104,6 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       </AnimatePresence>
 
       {!hideNav && <div className="flex items-center justify-center w-full h-full relative">
-        <div className="absolute left-6 flex items-center gap-2">
-          <span className="text-white/50 text-xs font-bold uppercase tracking-widest">Environment</span>
-          <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${isEnvironmentActive ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-white/40 border border-white/10'}`}>
-            {isEnvironmentActive ? 'Active' : 'Off'}
-          </span>
-        </div>
-        
         <div className="flex items-center">
           <button
             onClick={() => handleTabClick('home')}
