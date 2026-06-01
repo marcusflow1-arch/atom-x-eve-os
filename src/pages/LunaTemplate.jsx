@@ -85,6 +85,7 @@ import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
+import MoonlightBackground from '../components/dashboard/MoonlightBackground';
 import AvatarFocusMenu from '../components/dashboard/AvatarFocusMenu';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
@@ -602,7 +603,7 @@ export default function LunaTemplate() {
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
-    <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
+    <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#070a11' }}>
       {/* 5% Left Area for Global Icons */}
       {sidebarVisible && (
         <LunaLeftRail
@@ -612,12 +613,9 @@ export default function LunaTemplate() {
       )}
 
       {/* 95% Main Area */}
-      <div className="flex-1 relative h-full overflow-hidden" style={{
-            backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}>
+      <div className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
+        {/* Dark moonlight aesthetic background */}
+        <MoonlightBackground />
         <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
 
         {/* Home Section Switcher — left arrow + bottom arrow, only on default dashboard view */}
@@ -642,7 +640,7 @@ export default function LunaTemplate() {
           }
         </AnimatePresence>
 
-        <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
+        <div className="w-full h-full p-8 pt-0 overflow-hidden relative custom-scrollbar">
 
 
 
@@ -657,7 +655,7 @@ export default function LunaTemplate() {
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             <div
               className="pointer-events-auto flex flex-col overflow-hidden flex-1 min-h-0"
-              style={{ borderRadius: '0 14px 14px 0', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: 'none' }}
+              style={{ borderRadius: '0 14px 14px 0', background: 'linear-gradient(160deg, rgba(150,180,230,0.10) 0%, rgba(40,55,85,0.10) 45%, rgba(12,18,30,0.18) 100%)', backdropFilter: 'blur(30px) saturate(160%)', WebkitBackdropFilter: 'blur(30px) saturate(160%)', border: '1px solid rgba(150,185,255,0.16)', borderLeft: 'none', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 30px rgba(90,140,220,0.06), 0 12px 40px rgba(0,0,0,0.45)' }}
             >
               <div className="flex-shrink-0">
                 <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
@@ -689,8 +687,8 @@ export default function LunaTemplate() {
           ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             /* Avatar focus mode: 3D viewer book + the 5-option focus menu below it */
             <div
-              className="pointer-events-auto flex flex-col overflow-y-auto flex-1 min-h-0 pb-6"
-              style={{ borderRadius: '0 14px 14px 0', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: 'none', scrollbarWidth: 'none' }}
+              className="pointer-events-auto flex flex-col overflow-y-auto overscroll-contain flex-1 min-h-0 pb-6"
+              style={{ borderRadius: '0 14px 14px 0', background: 'linear-gradient(160deg, rgba(150,180,230,0.10) 0%, rgba(40,55,85,0.10) 45%, rgba(12,18,30,0.18) 100%)', backdropFilter: 'blur(30px) saturate(160%)', WebkitBackdropFilter: 'blur(30px) saturate(160%)', border: '1px solid rgba(150,185,255,0.16)', borderLeft: 'none', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 30px rgba(90,140,220,0.06), 0 12px 40px rgba(0,0,0,0.45)', scrollbarWidth: 'none' }}
             >
               <div className="flex-shrink-0">
                 <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
@@ -825,7 +823,7 @@ export default function LunaTemplate() {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="absolute z-30 pointer-events-auto overflow-hidden"
-            style={{ left: '330px', top: '64px', right: '60px', bottom: '32px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+            style={{ left: '330px', top: '64px', right: '60px', bottom: '32px', borderRadius: '14px', background: 'linear-gradient(160deg, rgba(150,180,230,0.07) 0%, rgba(30,42,68,0.10) 50%, rgba(10,15,26,0.16) 100%)', backdropFilter: 'blur(28px) saturate(150%)', WebkitBackdropFilter: 'blur(28px) saturate(150%)', border: '1px solid rgba(150,185,255,0.12)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 40px rgba(0,0,0,0.4)' }}
           >
             <LibraryLandingPage onClose={() => setShowLibraryLanding(false)} />
           </motion.div>

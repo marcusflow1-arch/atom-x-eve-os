@@ -86,7 +86,7 @@ export default function GameList({ games, selectedGame, onSelectGame }) {
       </div>
 
       {/* Game Rows */}
-      <div className="flex-1 overflow-y-auto py-1" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto overscroll-contain py-1" style={{ scrollbarWidth: 'none' }}>
         {games.map((game, i) => {
           const isSelected = selectedGame?.id === game.id;
           return (

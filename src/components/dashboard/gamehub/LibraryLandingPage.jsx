@@ -104,7 +104,7 @@ export default function LibraryLandingPage({ games, onClose }) {
         <div
           ref={gridScrollRef}
           onScroll={handleGridScroll}
-          className="overflow-y-auto flex-1 min-w-0"
+          className="overflow-y-auto overscroll-contain flex-1 min-w-0"
           style={{ scrollbarWidth: 'none' }}
         >
           <div
