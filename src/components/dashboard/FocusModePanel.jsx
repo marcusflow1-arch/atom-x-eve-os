@@ -36,7 +36,7 @@ import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
-import GameHubArea from '@/components/dashboard/gamehub/GameHubArea';
+import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
 
 
 import { useQuery } from '@tanstack/react-query';
