@@ -59,8 +59,8 @@ export default function AvatarStatCard() {
         border: '1px solid rgba(255, 255, 255, 0.08)',
         borderLeft: 'none',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-        height: '280px',
-        width: '190px',
+        height: '240px',
+        width: '160px',
         transformOrigin: 'left center',
         transform: 'rotateY(-8deg)',
       }}

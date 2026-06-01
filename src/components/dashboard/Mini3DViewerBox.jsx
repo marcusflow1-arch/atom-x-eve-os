@@ -273,8 +273,8 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRight: 'none',
             boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-            width: '200px',
-            height: '280px',
+            width: '160px',
+            height: '240px',
             transformOrigin: 'right center',
             transform: 'rotateY(8deg)',
           }}
