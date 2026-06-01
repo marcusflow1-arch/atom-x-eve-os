@@ -169,16 +169,19 @@ export const AuthProvider = ({ children }) => {
                         last_login: new Date().toISOString()
                     });
 
-                    // Attempt state recovery on login/load
-                    try {
-                        const recovery = await base44.functions.invoke('recoverState');
-                        if (recovery.data?.restored && recovery.data?.activity) {
-                            console.log('State recovered:', recovery.data.changes);
-                            // Update local user state with recovered activity
-                            setUser(prev => ({ ...prev, current_activity: recovery.data.activity }));
+                    // Attempt state recovery once per session (guarded to prevent rate-limit on re-renders)
+                    const recoveryKey = `state_recovered_${currentUser.id}`;
+                    if (!sessionStorage.getItem(recoveryKey)) {
+                        sessionStorage.setItem(recoveryKey, '1');
+                        try {
+                            const recovery = await base44.functions.invoke('recoverState');
+                            if (recovery.data?.restored && recovery.data?.activity) {
+                                console.log('State recovered:', recovery.data.changes);
+                                setUser(prev => ({ ...prev, current_activity: recovery.data.activity }));
+                            }
+                        } catch (err) {
+                            console.warn('State recovery failed (non-critical):', err);
                         }
-                    } catch (err) {
-                        console.warn('State recovery failed:', err);
                     }
 
                     if (!currentUser.unlocked_achievements?.includes('first_login')) {
