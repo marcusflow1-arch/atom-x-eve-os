@@ -650,9 +650,9 @@ export default function LunaTemplate() {
           
           {!avatarFocusMode && !uiVisible &&
                 <div className="flex flex-col gap-6">
-              {homeSection === 'avatar' && slot2Content !== 'none' && (
-                <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>
-                  {slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}
+              {homeSection === 'avatar' && slot2Content === 'friendsList' && (
+                <div className="w-full" style={{ height: 380 }}>
+                  <FriendsNetworkWidget />
                 </div>
               )}
               {homeSection === 'developer' && (

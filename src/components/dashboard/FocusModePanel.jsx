@@ -35,8 +35,8 @@ import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
-import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
+import GameHubArea from '@/components/dashboard/gamehub/GameHubArea';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1780,8 +1780,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* AI Avatar Home — intentionally blank */}
-              <div className="relative mt-3" style={{ height: '512px' }} />
+              {/* Game Hub Area — Carousel (left) + Detail Panel (right) */}
+              <div className="relative mt-4 pointer-events-auto" style={{ height: '400px' }}>
+                <GameHubArea />
+              </div>
 
               {/* DevSpotlightRibbon removed from here, moved to root of FocusModePanel */}
 
