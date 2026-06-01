@@ -1390,8 +1390,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
   const ref = React.useRef(null);
   const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [joiningId, setJoiningId] = useState(null);
-  const [invitedUsers, setInvitedUsers] = useState({});
+  const [friendStatus, setFriendStatus] = useState({});
 
   // Query actual users via PlayerState for real-time multiplayer presence
   const { data: dbUsers } = useQuery({
@@ -1405,18 +1404,17 @@ function OnlineUsersDropdown({ onSelectEnv }) {
 
     const now = new Date();
     const isOnline = (p) => {
-      if (p.player_id === user?.id) return true; // Always show self
       if (p.last_update) {
         return (now.getTime() - p.last_update) < 120000; // Consider online if updated in last 2 mins
       }
       return true; // Fallback if no last_update
     };
 
-    // Filter to only show users who are actually online and remove duplicates
+    // Show all other online people (exclude self) so users can find people to add as friends
     const usersList = [];
     const seenIds = new Set();
     
-    (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && p.player_id && isOnline(p)).forEach(p => {
+    (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && p.player_id && p.player_id !== user?.id && isOnline(p)).forEach(p => {
       if (!seenIds.has(p.player_id)) {
         seenIds.add(p.player_id);
         usersList.push({
@@ -1424,31 +1422,9 @@ function OnlineUsersDropdown({ onSelectEnv }) {
           name: p.display_name || 'Unknown',
           avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.player_id}`,
           status: p.status || 'online',
-          isMe: p.player_id === user?.id,
-          modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-          envUrl: p.env_url || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
         });
       }
     });
-
-    // Ensure current user is always at the top
-    const meIndex = usersList.findIndex(u => u.isMe);
-    if (meIndex > -1) {
-      const me = usersList.splice(meIndex, 1)[0];
-      me.name = me.name + ' (You)';
-      usersList.unshift(me);
-    } else if (user) {
-       // Fallback if current user not in list yet
-       usersList.unshift({
-           id: user.id,
-           name: (user.full_name || user.username || user.email?.split('@')[0] || 'Me') + ' (You)',
-           avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
-           status: 'online',
-           isMe: true,
-           modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-           envUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
-       });
-    }
 
     setOnlineUsers(usersList);
   }, [dbUsers, user]);
@@ -1460,38 +1436,22 @@ function OnlineUsersDropdown({ onSelectEnv }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const handleJoin = (u) => {
-    setJoiningId(u.id);
-    setTimeout(() => {
-      setJoiningId(null);
-      setOpen(false);
-      
-      // Switch environment to match theirs
-      if (onSelectEnv) {
-        onSelectEnv({
-          id: `joined_${u.id}`,
-          modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
-        });
-      }
-
-      // Connect to their world instance channel
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name }
-      }));
-    }, 1500);
-  };
-  
-  const handleInvite = (e, u) => {
+  const handleAddFriend = async (e, u) => {
     e.stopPropagation();
-    setInvitedUsers(prev => ({ ...prev, [u.id]: 'inviting' }));
-    setTimeout(() => {
-      setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
-      
-      // Simulate them joining us
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' }
-      }));
-    }, 2000);
+    if (!user) return;
+    setFriendStatus(prev => ({ ...prev, [u.id]: 'sending' }));
+    try {
+      await base44.entities.FriendRequest.create({
+        sender_id: user.id,
+        sender_name: user.full_name || user.username || user.email?.split('@')[0] || 'A player',
+        sender_avatar: user.avatar_url || '',
+        receiver_id: u.id,
+        status: 'pending',
+      });
+      setFriendStatus(prev => ({ ...prev, [u.id]: 'sent' }));
+    } catch {
+      setFriendStatus(prev => ({ ...prev, [u.id]: undefined }));
+    }
   };
 
   const filteredUsers = onlineUsers.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -1502,7 +1462,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(v => !v)}
-        title="Online Users"
+        title="Find People"
         className="w-8 h-8 rounded-xl flex items-center justify-center transition-all border"
         style={{
           background: open ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.06)',
@@ -1510,7 +1470,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
           boxShadow: open ? '0 0 10px rgba(59,130,246,0.2)' : 'none',
         }}
       >
-        <Globe className="w-4 h-4 text-blue-300" />
+        <UserPlus className="w-4 h-4 text-blue-300" />
       </motion.button>
 
       <AnimatePresence>
@@ -1532,8 +1492,8 @@ function OnlineUsersDropdown({ onSelectEnv }) {
             {/* Header */}
             <div className="px-3 pt-3 pb-2 border-b border-white/5 flex items-center justify-between">
               <p className="text-xs font-bold text-white/90 flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-blue-400" />
-                Global Online
+                <UserPlus className="w-3.5 h-3.5 text-blue-400" />
+                Find People
               </p>
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -1573,38 +1533,27 @@ function OnlineUsersDropdown({ onSelectEnv }) {
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <span className="text-[11px] font-medium text-white/90 truncate">{u.name}</span>
-                    <span className="text-[9px] text-white/40 truncate">{u.isMe ? 'Browsing Dashboard' : 'In Luna Dashboard'}</span>
+                    <span className="text-[9px] text-white/40 truncate">Online now</span>
                   </div>
-                  {!u.isMe && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => handleInvite(e, u)}
-                        disabled={invitedUsers[u.id] === 'inviting' || invitedUsers[u.id] === 'accepted'}
-                        className="w-6 h-6 rounded border border-white/10 hover:border-purple-400/50 hover:bg-purple-400/20 text-white/50 hover:text-purple-300 transition-colors flex items-center justify-center disabled:opacity-50"
-                        title="Invite to your dashboard"
-                      >
-                        {invitedUsers[u.id] === 'inviting' ? <span className="text-[8px]">...</span> : 
-                         invitedUsers[u.id] === 'accepted' ? <Check className="w-3 h-3 text-green-400" /> : 
-                         <Plus className="w-3 h-3" />}
-                      </button>
-                      <button
-                        onClick={() => handleJoin(u)}
-                        disabled={joiningId === u.id}
-                        className="text-[9px] font-bold px-2 py-1 rounded border transition-colors flex-shrink-0 cursor-pointer"
-                        style={{
-                          borderColor: joiningId === u.id ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.1)',
-                          background: joiningId === u.id ? 'rgba(59,130,246,0.2)' : 'transparent',
-                          color: joiningId === u.id ? '#60a5fa' : 'rgba(255,255,255,0.7)',
-                        }}
-                      >
-                        {joiningId === u.id ? 'Joining...' : 'Join'}
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    onClick={(e) => handleAddFriend(e, u)}
+                    disabled={friendStatus[u.id] === 'sending' || friendStatus[u.id] === 'sent'}
+                    className="text-[9px] font-bold px-2 py-1 rounded border transition-colors flex-shrink-0 cursor-pointer flex items-center gap-1 disabled:opacity-60"
+                    style={{
+                      borderColor: friendStatus[u.id] === 'sent' ? 'rgba(34,197,94,0.5)' : 'rgba(59,130,246,0.4)',
+                      background: friendStatus[u.id] === 'sent' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)',
+                      color: friendStatus[u.id] === 'sent' ? '#4ade80' : '#60a5fa',
+                    }}
+                    title="Send friend request"
+                  >
+                    {friendStatus[u.id] === 'sending' ? '...' :
+                     friendStatus[u.id] === 'sent' ? <><Check className="w-3 h-3" /> Sent</> :
+                     <><UserPlus className="w-3 h-3" /> Add</>}
+                  </button>
                 </div>
               ))}
               {filteredUsers.length === 0 && (
-                <p className="text-center text-[10px] text-white/30 py-4">No players found</p>
+                <p className="text-center text-[10px] text-white/30 py-4">No people found</p>
               )}
             </div>
           </motion.div>
