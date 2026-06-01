@@ -52,7 +52,7 @@ export default function LibraryLandingPage({ games, onClose }) {
   }, [search, activeFilter, gamesList]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden" style={{ background: 'rgba(5,8,14,0.92)' }}>
+    <div className="h-full flex flex-col overflow-hidden" style={{ background: 'transparent' }}>
       {/* Header bar */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-white/[0.06] flex-shrink-0">
         <span className="text-white/80 text-xs font-bold uppercase tracking-widest">Full Library</span>
@@ -181,7 +181,7 @@ export default function LibraryLandingPage({ games, onClose }) {
               exit={{ opacity: 0, x: 24 }}
               transition={{ duration: 0.25 }}
               className="flex-shrink-0 flex flex-col overflow-hidden border-l border-white/[0.06]"
-              style={{ width: '220px' }}
+              style={{ width: '300px' }}
             >
               {/* Hero image */}
               <div className="relative flex-shrink-0" style={{ height: '140px' }}>

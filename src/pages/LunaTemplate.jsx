@@ -823,7 +823,7 @@ export default function LunaTemplate() {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="absolute z-30 pointer-events-auto overflow-hidden"
-            style={{ left: '330px', top: '64px', right: '60px', bottom: '32px', borderRadius: '14px', background: 'linear-gradient(160deg, rgba(150,180,230,0.07) 0%, rgba(30,42,68,0.10) 50%, rgba(10,15,26,0.16) 100%)', backdropFilter: 'blur(28px) saturate(150%)', WebkitBackdropFilter: 'blur(28px) saturate(150%)', border: '1px solid rgba(150,185,255,0.12)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 40px rgba(0,0,0,0.4)' }}
+            style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
             <LibraryLandingPage onClose={() => setShowLibraryLanding(false)} />
           </motion.div>
@@ -1280,7 +1280,7 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, y: 16 }}
                   transition={{ duration: 0.3 }}
                   className={`pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                  style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none', overflow: 'hidden', height: 'calc(100vh - 360px)' }}
+                  style={{ background: 'transparent', border: 'none', overflow: 'hidden', height: 'calc(100vh - 360px)' }}
                 >
                   <GameLandingPage
                     game={{
