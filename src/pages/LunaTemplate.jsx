@@ -189,6 +189,7 @@ export default function LunaTemplate() {
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
   const [selectedConsoleGame, setSelectedConsoleGame] = useState(null);
+  const [selectedFocusGame, setSelectedFocusGame] = useState(null);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
@@ -650,6 +651,27 @@ export default function LunaTemplate() {
               } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+
+          {/* Game Library List — below the 3D viewer, avatar home only */}
+          {!avatarFocusMode && !uiVisible && homeSection === 'avatar' && (
+            <div
+              className="pointer-events-auto overflow-hidden flex-shrink-0"
+              style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', height: '280px' }}
+            >
+              <GameList
+                games={[
+                  { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
+                  { id: 'neon-legends', title: 'Neon Legends', genre: 'Action / Brawler', thumb: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=120', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200', status: 'In Progress', progress: 45, playtime: '12.8h', achievements: '6/30', rating: 8.7, players: '880K', description: 'Battle across neon-lit arenas in fast-paced combat.', tags: ['Fighting', 'Multiplayer'] },
+                  { id: 'stellar-odyssey', title: 'Stellar Odyssey', genre: 'Space Sim', thumb: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=120', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1200', status: 'Installed', progress: 10, playtime: '3.1h', achievements: '2/40', rating: 8.1, players: '320K', description: 'Chart unexplored galaxies and forge alliances.', tags: ['Space', 'Exploration'] },
+                  { id: 'shadow-realm', title: 'Shadow Realm', genre: 'Fantasy RPG', thumb: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=120', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1200', status: 'New', progress: 0, playtime: '0h', achievements: '0/45', rating: 9.1, players: '1.4M', description: 'A dark fantasy epic where ancient gods clash.', tags: ['Dark Fantasy', 'RPG'] },
+                  { id: 'apex-surge', title: 'Apex Surge', genre: 'Battle Royale', thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200', status: 'Installed', progress: 33, playtime: '20.5h', achievements: '9/25', rating: 8.5, players: '3.8M', description: 'Drop into high-stakes arenas where only the most skilled survive.', tags: ['Battle Royale', 'FPS'] },
+                  { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1200', status: 'Playing', progress: 88, playtime: '210h', achievements: '44/50', rating: 9.6, players: '5.2M', description: 'A massive living world of mythic quests and guild wars.', tags: ['MMORPG', 'PvP', 'Guild'] },
+                ]}
+                selectedGame={selectedFocusGame}
+                onSelectGame={setSelectedFocusGame}
+              />
+            </div>
+          )}
           
           {!avatarFocusMode && !uiVisible &&
                 <div className="flex flex-col gap-6">
@@ -839,7 +861,7 @@ export default function LunaTemplate() {
                     bottom: '32px'
                   }}>
 
-            <div className="h-full overflow-visible">
+            <div className="h-full overflow-visible flex flex-col gap-3">
               <FocusModePanel
                       onOpenCalendar={() => setShowCalendar(true)}
                       onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
@@ -849,7 +871,26 @@ export default function LunaTemplate() {
                       onOpenDevSpotlight={() => setShowDevSpotlight(true)}
                       isEnvironmentActive={isEnvironmentActive}
                       onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)} />
-                    
+
+              {/* Game Landing Page — fills all remaining space below FocusModePanel when a game is selected */}
+              <AnimatePresence>
+                {selectedFocusGame && (
+                  <motion.div
+                    key={selectedFocusGame.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 16 }}
+                    transition={{ duration: 0.3 }}
+                    className="pointer-events-auto flex-1 min-h-0 overflow-hidden"
+                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
+                  >
+                    <GameLandingPage
+                      game={selectedFocusGame}
+                      onClose={() => setSelectedFocusGame(null)}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
                 }
