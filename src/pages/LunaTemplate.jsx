@@ -861,7 +861,7 @@ export default function LunaTemplate() {
                     bottom: '32px'
                   }}>
 
-            <div className="h-full overflow-visible flex flex-col gap-3">
+            <div className="h-full overflow-visible">
               <FocusModePanel
                       onOpenCalendar={() => setShowCalendar(true)}
                       onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
@@ -870,27 +870,9 @@ export default function LunaTemplate() {
                       onSelectEnv={handleEnvSelect}
                       onOpenDevSpotlight={() => setShowDevSpotlight(true)}
                       isEnvironmentActive={isEnvironmentActive}
-                      onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)} />
-
-              {/* Game Landing Page — fills all remaining space below FocusModePanel when a game is selected */}
-              <AnimatePresence>
-                {selectedFocusGame && (
-                  <motion.div
-                    key={selectedFocusGame.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 16 }}
-                    transition={{ duration: 0.3 }}
-                    className="pointer-events-auto flex-1 min-h-0 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
-                  >
-                    <GameLandingPage
-                      game={selectedFocusGame}
-                      onClose={() => setSelectedFocusGame(null)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
+                      selectedFocusGame={selectedFocusGame}
+                      onSelectFocusGame={setSelectedFocusGame} />
             </div>
           </motion.div>
                 }

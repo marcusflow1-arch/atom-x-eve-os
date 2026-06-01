@@ -37,6 +37,7 @@ import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
 import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
+import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1641,7 +1642,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1780,9 +1781,25 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* Game Hub space — handled by console mode GameList + GameLandingPage */}
-
-              {/* DevSpotlightRibbon removed from here, moved to root of FocusModePanel */}
+              {/* Game Landing Page — appears below the banner when a game is selected from the left GameList */}
+              <AnimatePresence>
+                {selectedFocusGame && (
+                  <motion.div
+                    key={selectedFocusGame.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 16 }}
+                    transition={{ duration: 0.3 }}
+                    className="pointer-events-auto mt-3 overflow-hidden"
+                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', height: '420px' }}
+                  >
+                    <GameLandingPage
+                      game={selectedFocusGame}
+                      onClose={() => onSelectFocusGame?.(null)}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
             </div>
           </div>
