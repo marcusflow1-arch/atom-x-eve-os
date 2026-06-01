@@ -218,7 +218,10 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
 
   return (
     <div 
-      className={`pointer-events-auto flex items-start gap-0 relative ${isUiVisible ? 'h-full' : ''}`}
+      className={`pointer-events-auto flex items-start gap-0 cursor-pointer transition-transform hover:scale-[1.02] relative ${isUiVisible ? 'h-full' : ''}`}
+      onClick={() => {
+        if (!isUiVisible) window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
+      }}
       style={isUiVisible ? { width: '100%', height: '100%' } : { transformStyle: 'preserve-3d', perspective: '1000px' }}
     >
       {!isUiVisible && (

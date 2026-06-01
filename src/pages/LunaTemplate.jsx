@@ -85,6 +85,7 @@ import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
+import AvatarFocusMenu from '../components/dashboard/AvatarFocusMenu';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
@@ -684,6 +685,18 @@ export default function LunaTemplate() {
                 selectedGame={selectedFocusGame}
                 onSelectGame={(g) => { setSelectedFocusGame(g); if (g) setShowLibraryLanding(false); }}
               />
+            </div>
+          ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
+            /* Avatar focus mode: 3D viewer book + the 5-option focus menu below it */
+            <div
+              className="pointer-events-auto flex flex-col overflow-y-auto flex-1 min-h-0 pb-6"
+              style={{ borderRadius: '0 14px 14px 0', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: 'none', scrollbarWidth: 'none' }}
+            >
+              <div className="flex-shrink-0">
+                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+              </div>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} className="mb-3" />
+              <AvatarFocusMenu activeView={activeAvatarFocusView} onSelect={setActiveAvatarFocusView} />
             </div>
           ) : (
             /* Non-avatar sections: just show the 3D viewer standalone */
