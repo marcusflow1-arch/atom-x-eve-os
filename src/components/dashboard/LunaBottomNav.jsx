@@ -246,6 +246,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [developerSearch, setDeveloperSearch] = useState('');
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
+  const [selectedEnvGenre, setSelectedEnvGenre] = useState(null);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(false);
 
   const GENRE_FILTERS = [
@@ -324,7 +325,11 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       }
       return all;
     }
-    if (activeTab === 'environment') return ENV_GENRES.map(g => ({ ...g, displayTitle: g.name, displayImage: g.image }));
+    if (activeTab === 'environment') {
+      let envs = ENV_GENRES.map(g => ({ ...g, displayTitle: g.name, displayImage: g.image }));
+      if (selectedEnvGenre) envs = envs.filter(g => g.id === selectedEnvGenre);
+      return envs;
+    }
     return [];
   };
 
@@ -966,19 +971,44 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             {/* ── Persistent filter bar — always visible (hidden in expanded library) ── */}
             {!(isLibraryExpanded && activeTab === 'library') && (
               <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-                {/* Left: Library icon + label, or Back button when in game detail */}
+                {/* Left: icon + label */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                  {activeTab === 'environment' ? <Globe className="w-4 h-4 text-purple-400" /> : <Library className="w-4 h-4 text-cyan-400" />}
                   <button
-                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                    onClick={() => { if (activeTab === 'library') setIsLibraryExpanded(!isLibraryExpanded); }}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    Store Library
+                    {activeTab === 'environment' ? 'Environment Hub Collection' : 'Store Library'}
                   </button>
                 </div>
 
-                {/* Spacer pushes row nav to far right */}
-                <div className="flex-1" />
+                {/* Environment genre filter — right of the label */}
+                {activeTab === 'environment' && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+                    <button
+                      onClick={() => setSelectedEnvGenre(null)}
+                      className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-all flex-shrink-0 ${
+                        !selectedEnvGenre ? 'bg-purple-500/25 border-purple-400/60 text-purple-300' : 'bg-white/[0.05] border-white/10 text-white/50 hover:text-white'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {ENV_GENRES.map((g) => (
+                      <button
+                        key={g.id}
+                        onClick={() => setSelectedEnvGenre(selectedEnvGenre === g.id ? null : g.id)}
+                        className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-all flex-shrink-0 ${
+                          selectedEnvGenre === g.id ? 'bg-purple-500/25 border-purple-400/60 text-purple-300' : 'bg-white/[0.05] border-white/10 text-white/50 hover:text-white'
+                        }`}
+                      >
+                        {g.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Spacer pushes row nav to far right (library only) */}
+                {activeTab !== 'environment' && <div className="flex-1" />}
 
                 {/* Row nav */}
                 <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
