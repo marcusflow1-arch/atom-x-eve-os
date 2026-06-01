@@ -7,6 +7,7 @@ import {
 import GameLandingDLC from './GameLandingDLC';
 import GameLandingAchievements from './GameLandingAchievements';
 import CommunityMomentsSection from '@/components/store/CommunityMomentsSection';
+import ReviewSection from '@/components/store/ReviewSection';
 
 const TABS = ['Overview', 'Achievements', 'Community Moments', 'News', 'Friends'];
 
@@ -252,6 +253,29 @@ export default function GameLandingPage({ game, onClose }) {
                   <GameLandingDLC />
                 </div>
 
+                {/* Updates */}
+                <div className="px-5 py-4 border-b border-white/[0.04]">
+                  <p className="text-white/20 text-[9px] uppercase tracking-widest mb-3">Updates</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { ver: 'Patch v4.2.1', date: 'May 17', text: 'Season 4 — Void Ascendancy launch. New map, heroes & major balance changes.', color: 'text-purple-300 bg-purple-500/15' },
+                      { ver: 'Hotfix v4.2.0', date: 'Mar 18', text: 'Multiple hero adjustments and bug fixes across all game modes.', color: 'text-blue-300 bg-blue-500/15' },
+                      { ver: 'Update v4.1.0', date: 'Feb 25', text: 'Added The Shattered Keep map with unique mechanics & performance fixes.', color: 'text-green-300 bg-green-500/15' },
+                    ].map(({ ver, date, text, color }, i) => (
+                      <div key={i} className="flex gap-3 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div className="w-1 rounded-full flex-shrink-0" style={{ background: 'linear-gradient(180deg, #22d3ee, #818cf8)' }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-semibold ${color}`}>{ver}</span>
+                            <span className="text-white/25 text-[9px]">{date}</span>
+                          </div>
+                          <p className="text-white/45 text-[10px] leading-relaxed">{text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Recent Activity */}
                 <div className="px-5 py-4">
                   <p className="text-white/20 text-[9px] uppercase tracking-widest mb-3">Recent Activity</p>
@@ -268,6 +292,11 @@ export default function GameLandingPage({ game, onClose }) {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Community Feedback */}
+                <div className="px-5 pb-4">
+                  <ReviewSection />
                 </div>
               </div>
             )}
