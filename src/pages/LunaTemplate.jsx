@@ -643,21 +643,22 @@ export default function LunaTemplate() {
 
 
 
-      {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
+      {/* Mini 3D Viewer Box + Game Library — unified left column, flush to left edge */}
       {!showConsoleMode && !showAchievements &&
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
-                left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
-              } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
-             
-          <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+                left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
+              } : { left: '0px', top: '64px', width: '330px', gap: '0px' }}>
 
-          {/* Game Library List — below the 3D viewer, avatar home only */}
-          {!avatarFocusMode && !uiVisible && homeSection === 'avatar' && (
+          {/* Unified card: 3D viewer on top, game list below — one seamless box */}
+          {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             <div
-              className="pointer-events-auto overflow-hidden flex-shrink-0"
-              style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', height: '280px' }}
+              className="pointer-events-auto flex flex-col overflow-hidden flex-shrink-0"
+              style={{ borderRadius: '0 14px 14px 0', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: 'none' }}
             >
+              <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+              {/* Subtle divider between viewer and game list */}
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
               <GameList
                 games={[
                   { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
@@ -671,8 +672,11 @@ export default function LunaTemplate() {
                 onSelectGame={setSelectedFocusGame}
               />
             </div>
+          ) : (
+            /* Non-avatar sections: just show the 3D viewer standalone */
+            <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           )}
-          
+
           {!avatarFocusMode && !uiVisible &&
                 <div className="flex flex-col gap-6">
               {homeSection === 'avatar' && slot2Content === 'friendsList' && (
@@ -745,11 +749,11 @@ export default function LunaTemplate() {
                   transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
                   className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
                   style={{
-                    left: '440px',
-                    top: '80px',
+                    left: '330px',
+                    top: '64px',
                     bottom: '32px',
                     width: '1000px',
-                    maxWidth: 'calc(100vw - 480px)',
+                    maxWidth: 'calc(100vw - 340px)',
                     background: 'transparent'
                   }}>
                   
@@ -856,8 +860,8 @@ export default function LunaTemplate() {
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                   className="absolute right-0 z-30 pointer-events-none"
                   style={{
-                    left: '440px',
-                    top: '80px',
+                    left: '330px',
+                    top: '64px',
                     bottom: '32px'
                   }}>
 
@@ -1237,7 +1241,7 @@ export default function LunaTemplate() {
             {/* LEFT COLUMN GAME LIST — sits under the 3D viewer book */}
             <div
               className={`absolute pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-              style={{ left: '32px', top: '320px', width: '322px', bottom: '32px', overflow: 'hidden', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
+              style={{ left: '0px', top: '320px', width: '330px', bottom: '32px', overflow: 'hidden', borderRadius: '0 14px 14px 0', borderLeft: 'none', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
             >
               <GameList
                 games={[
@@ -1254,7 +1258,7 @@ export default function LunaTemplate() {
             </div>
 
             {/* QUICK ACCESS BOXES */}
-            <div style={{ paddingLeft: '440px' }}>
+            <div style={{ paddingLeft: '340px' }}>
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile
@@ -1323,7 +1327,7 @@ export default function LunaTemplate() {
                   }
 
             {showAvatarProgression &&
-                  <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
+                  <div className="pt-4 pr-8" style={{ paddingLeft: '340px' }}>
                 <div className="max-w-5xl mx-auto pointer-events-auto">
                   <AvatarProgressionBox />
                 </div>
