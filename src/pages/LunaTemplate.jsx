@@ -650,7 +650,7 @@ export default function LunaTemplate() {
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
                 left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
-              } : { left: '0px', top: '64px', bottom: '120px', width: '330px', gap: '0px' }}>
+              } : { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }}>
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
@@ -687,66 +687,6 @@ export default function LunaTemplate() {
             /* Non-avatar sections: just show the 3D viewer standalone */
             <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           )}
-
-          {!avatarFocusMode && !uiVisible &&
-                <div className="flex flex-col gap-6">
-              {homeSection === 'avatar' && slot2Content === 'friendsList' && (
-                <div className="w-full" style={{ height: 380 }}>
-                  <FriendsNetworkWidget />
-                </div>
-              )}
-              {homeSection === 'developer' && (
-                <div className="w-full rounded-2xl bg-black/40 border border-purple-400/20 p-4">
-                  <p className="text-purple-300 text-xs font-bold uppercase tracking-widest mb-2">Dev Notes</p>
-                  <ul className="space-y-2">
-                    {['Boss phase AI rework','Terrain streaming v2','Weapon synergy trees','Clan hall decor system'].map(note => (
-                      <li key={note} className="text-white/50 text-xs flex items-center gap-2">
-                        <span className="w-1 h-1 rounded-full bg-purple-400 flex-shrink-0" />{note}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {homeSection === 'discover' && (
-                <div className="w-full rounded-2xl bg-black/40 border border-amber-400/20 p-4">
-                  <p className="text-amber-300 text-xs font-bold uppercase tracking-widest mb-2">Quick Links</p>
-                  <ul className="space-y-2">
-                    {['New Cards Available','Live Aura Streams','Clan Events','Leaderboard'].map(link => (
-                      <li key={link} className="text-white/50 text-xs flex items-center gap-2">
-                        <span className="w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />{link}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-                }
-
-          <AnimatePresence>
-            {avatarFocusMode && !uiVisible &&
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex flex-col gap-3 mt-2">
-                    
-                {['AI Story', 'AI Battle', 'Leaderboard', 'Stats', 'Live'].map((opt) =>
-                    <button
-                      key={opt}
-                      onClick={() => setActiveAvatarFocusView(activeAvatarFocusView === opt ? null : opt)}
-                      className={`w-full py-4 rounded-xl border transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center font-bold ${
-                      activeAvatarFocusView === opt ?
-                      'bg-cyan-500/20 border-cyan-400/50 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]' :
-                      'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'}`
-                      }>
-                      
-                    {opt}
-                  </button>
-                    )}
-              </motion.div>
-                  }
-          </AnimatePresence>
         </div>
               }
 
