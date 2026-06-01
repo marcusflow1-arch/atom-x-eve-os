@@ -4,17 +4,10 @@ import {
   Play, X, Trophy, Clock, Users, Star, Download,
   Heart, Settings, Radio, Zap, ChevronUp, ChevronRight,
 } from 'lucide-react';
+import GameLandingDLC from './GameLandingDLC';
+import GameLandingAchievements from './GameLandingAchievements';
 
 const TABS = ['Overview', 'Achievements', 'News', 'Friends'];
-
-const MOCK_ACHIEVEMENTS = [
-  { name: 'First Blood', icon: '⚔️', desc: 'Win your first match', unlocked: true, rarity: 'Common' },
-  { name: 'Dragon Slayer', icon: '🐉', desc: 'Defeat the final boss', unlocked: true, rarity: 'Legendary' },
-  { name: 'Speed Demon', icon: '⚡', desc: 'Complete a run under 5 min', unlocked: true, rarity: 'Epic' },
-  { name: 'Lorekeeper', icon: '📖', desc: 'Read all in-game codex entries', unlocked: false, rarity: 'Rare' },
-  { name: 'Untouchable', icon: '🛡️', desc: 'Finish a chapter without taking damage', unlocked: false, rarity: 'Epic' },
-  { name: 'World Ender', icon: '💀', desc: 'Reach the true ending', unlocked: false, rarity: 'Legendary' },
-];
 
 const MOCK_NEWS = [
   { title: 'Season 4 — Void Ascendancy Launch', desc: 'A new era begins. New map, new heroes, and massive balance changes.', time: 'May 17', tag: 'New Season', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300' },
@@ -253,6 +246,11 @@ export default function GameLandingPage({ game, onClose }) {
                   </div>
                 </div>
 
+                {/* DLC & Add-ons */}
+                <div className="px-5 py-4 border-b border-white/[0.04]">
+                  <GameLandingDLC />
+                </div>
+
                 {/* Recent Activity */}
                 <div className="px-5 py-4">
                   <p className="text-white/20 text-[9px] uppercase tracking-widest mb-3">Recent Activity</p>
@@ -275,30 +273,7 @@ export default function GameLandingPage({ game, onClose }) {
 
             {/* ACHIEVEMENTS */}
             {activeTab === 'Achievements' && (
-              <div className="px-5 py-4 space-y-2">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-white/35 text-[10px]">{game.achievements} unlocked</p>
-                </div>
-                {MOCK_ACHIEVEMENTS.map((ach, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${ach.unlocked ? '' : 'opacity-40'}`}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                      style={{ background: ach.unlocked ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)' }}>
-                      {ach.unlocked ? ach.icon : '🔒'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-[11px] font-semibold truncate">{ach.name}</p>
-                      <p className="text-white/30 text-[9px] truncate mt-0.5">{ach.desc}</p>
-                    </div>
-                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-semibold flex-shrink-0 ${RARITY_COLOR[ach.rarity]}`}>
-                      {ach.rarity}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <GameLandingAchievements summary={game.achievements} />
             )}
 
             {/* NEWS */}
