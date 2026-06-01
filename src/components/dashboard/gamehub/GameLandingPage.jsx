@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import GameLandingDLC from './GameLandingDLC';
 import GameLandingAchievements from './GameLandingAchievements';
+import CommunityMomentsSection from '@/components/store/CommunityMomentsSection';
 
-const TABS = ['Overview', 'Achievements', 'News', 'Friends'];
+const TABS = ['Overview', 'Achievements', 'Community Moments', 'News', 'Friends'];
 
 const MOCK_NEWS = [
   { title: 'Season 4 — Void Ascendancy Launch', desc: 'A new era begins. New map, new heroes, and massive balance changes.', time: 'May 17', tag: 'New Season', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300' },
@@ -274,6 +275,13 @@ export default function GameLandingPage({ game, onClose }) {
             {/* ACHIEVEMENTS */}
             {activeTab === 'Achievements' && (
               <GameLandingAchievements summary={game.achievements} />
+            )}
+
+            {/* COMMUNITY MOMENTS */}
+            {activeTab === 'Community Moments' && (
+              <div className="px-5 pb-4">
+                <CommunityMomentsSection game={game} />
+              </div>
             )}
 
             {/* NEWS */}
