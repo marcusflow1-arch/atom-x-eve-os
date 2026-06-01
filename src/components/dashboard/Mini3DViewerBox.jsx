@@ -218,10 +218,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
 
   return (
     <div 
-      className="pointer-events-auto flex items-start gap-0 h-full cursor-pointer transition-transform hover:scale-[1.02] relative"
-      onClick={() => {
-        if (!isUiVisible) window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
-      }}
+      className={`pointer-events-auto flex items-start gap-0 relative ${isUiVisible ? 'h-full' : ''}`}
       style={isUiVisible ? { width: '100%', height: '100%' } : { transformStyle: 'preserve-3d', perspective: '1000px' }}
     >
       {!isUiVisible && (
@@ -256,7 +253,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
       )}
 
       {/* Pages Container */}
-      <div className="relative z-20 flex w-full h-full gap-0" style={{ transformStyle: 'preserve-3d' }}>
+      <div className={`relative z-20 flex w-full gap-0 ${isUiVisible ? 'h-full' : ''}`} style={{ transformStyle: 'preserve-3d' }}>
         {/* 3D Viewer - Left Page */}
         <div
           className={`overflow-hidden flex-shrink-0 transition-all duration-500 relative ${isUiVisible ? 'rounded-2xl' : 'rounded-l-2xl rounded-r-none'}`}

@@ -658,7 +658,9 @@ export default function LunaTemplate() {
               className="pointer-events-auto flex flex-col overflow-hidden flex-1 min-h-0"
               style={{ borderRadius: '0 14px 14px 0', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: 'none' }}
             >
-              <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+              <div className="flex-shrink-0">
+                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+              </div>
               {/* Subtle divider between viewer and game list */}
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
               {/* Library header button */}
