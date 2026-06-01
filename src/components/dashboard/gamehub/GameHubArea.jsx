@@ -95,14 +95,17 @@ const GAMES = [
   },
 ];
 
+const stopWheelPropagation = (e) => e.stopPropagation();
+
 export default function GameHubArea() {
   const [selectedGame, setSelectedGame] = useState(null);
 
   return (
     <div className="flex gap-3 h-full" style={{ minHeight: 0 }}>
-      {/* LEFT — compact game list */}
+      {/* LEFT — compact game list, isolated scroll */}
       <div
         className="flex flex-col flex-shrink-0"
+        onWheel={stopWheelPropagation}
         style={{
           width: selectedGame ? '220px' : '100%',
           transition: 'width 0.4s cubic-bezier(0.4,0,0.2,1)',
@@ -121,10 +124,11 @@ export default function GameHubArea() {
         />
       </div>
 
-      {/* RIGHT — game landing page (slides in) */}
+      {/* RIGHT — game landing page, isolated scroll */}
       {selectedGame && (
         <div
           className="flex-1 min-w-0 flex flex-col"
+          onWheel={stopWheelPropagation}
           style={{
             borderRadius: '14px',
             background: 'rgba(255,255,255,0.02)',
