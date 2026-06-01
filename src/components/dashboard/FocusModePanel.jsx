@@ -1780,10 +1780,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* Game Hub Area — Carousel (left) + Detail Panel (right) */}
-              <div className="relative mt-4 pointer-events-auto" style={{ height: '400px' }}>
-                <GameHubArea />
-              </div>
+              {/* Game Hub space — handled by console mode GameList + GameLandingPage */}
 
               {/* DevSpotlightRibbon removed from here, moved to root of FocusModePanel */}
 

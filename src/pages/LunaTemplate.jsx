@@ -71,6 +71,8 @@ import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
 import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
+import GameList from '../components/dashboard/gamehub/GameList';
+import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
@@ -186,6 +188,7 @@ export default function LunaTemplate() {
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
+  const [selectedConsoleGame, setSelectedConsoleGame] = useState(null);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
@@ -1208,6 +1211,25 @@ export default function LunaTemplate() {
             {/* Divider Line under Game Banner */}
             <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
 
+            {/* LEFT COLUMN GAME LIST — sits under the 3D viewer book */}
+            <div
+              className={`absolute pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+              style={{ left: '32px', top: '320px', width: '322px', bottom: '32px', overflow: 'hidden', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              <GameList
+                games={[
+                  { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', status: 'Playing' },
+                  { id: 'neon-legends', title: 'Neon Legends', genre: 'Action / Brawler', thumb: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=120', status: 'In Progress' },
+                  { id: 'stellar-odyssey', title: 'Stellar Odyssey', genre: 'Space Sim', thumb: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=120', status: 'Installed' },
+                  { id: 'shadow-realm', title: 'Shadow Realm', genre: 'Fantasy RPG', thumb: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=120', status: 'New' },
+                  { id: 'apex-surge', title: 'Apex Surge', genre: 'Battle Royale', thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120', status: 'Installed' },
+                  { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', status: 'Playing' },
+                ]}
+                selectedGame={selectedConsoleGame}
+                onSelectGame={setSelectedConsoleGame}
+              />
+            </div>
+
             {/* QUICK ACCESS BOXES */}
             <div style={{ paddingLeft: '440px' }}>
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
@@ -1241,13 +1263,35 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* GAME HUB AREA — Two-column: Carousel (left 60%) + Detail Panel (right 40%) */}
-            <div
-              className={`pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-              style={{ height: '320px' }}
-            >
-              <GameHubArea />
-            </div>
+            {/* GAME LANDING PAGE — full right space, shown when a game is selected */}
+            <AnimatePresence>
+              {selectedConsoleGame && (
+                <motion.div
+                  key={selectedConsoleGame.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 16 }}
+                  transition={{ duration: 0.3 }}
+                  className={`pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                  style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', height: '420px' }}
+                >
+                  <GameLandingPage
+                    game={{
+                      ...selectedConsoleGame,
+                      image: selectedConsoleGame.image || selectedConsoleGame.thumb?.replace('w=120','w=1200'),
+                      progress: selectedConsoleGame.progress || 0,
+                      playtime: selectedConsoleGame.playtime || '0h',
+                      achievements: selectedConsoleGame.achievements || '0/0',
+                      rating: selectedConsoleGame.rating || 8.5,
+                      players: selectedConsoleGame.players || '500K',
+                      description: selectedConsoleGame.description || 'An epic adventure awaits.',
+                      tags: selectedConsoleGame.tags || [],
+                    }}
+                    onClose={() => setSelectedConsoleGame(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             </div>
 
