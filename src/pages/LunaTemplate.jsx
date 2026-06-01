@@ -1280,7 +1280,7 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, y: 16 }}
                   transition={{ duration: 0.3 }}
                   className={`pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                  style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none', overflow: 'hidden', minHeight: '520px' }}
+                  style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none', overflow: 'hidden', height: 'calc(100vh - 360px)' }}
                 >
                   <GameLandingPage
                     game={{
