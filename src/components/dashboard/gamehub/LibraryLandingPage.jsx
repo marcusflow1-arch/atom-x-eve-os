@@ -108,18 +108,18 @@ export default function LibraryLandingPage({ games, onClose }) {
           style={{ scrollbarWidth: 'none' }}
         >
           <div
-            className="grid p-3 gap-2"
-            style={{ gridTemplateColumns: selectedGame ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)' }}
+            className="grid p-2.5 gap-1.5"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))' }}
           >
             {filtered.map((game, i) => {
               const isSelected = selectedGame?.id === game.id;
               return (
                 <motion.button
                   key={game.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.02, duration: 0.2 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
                   onClick={() => setSelectedGame(isSelected ? null : game)}
                   className={`relative rounded-lg overflow-hidden group cursor-pointer text-left transition-all ${
                     isSelected ? 'ring-2 ring-cyan-400/60' : 'hover:ring-1 hover:ring-white/20'
