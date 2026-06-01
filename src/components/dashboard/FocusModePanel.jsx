@@ -1791,7 +1791,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     exit={{ opacity: 0, y: 16 }}
                     transition={{ duration: 0.3 }}
                     className="pointer-events-auto mt-3 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', height: '420px' }}
+                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none', minHeight: '520px' }}
                   >
                     <GameLandingPage
                       game={selectedFocusGame}
