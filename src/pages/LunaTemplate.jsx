@@ -598,6 +598,8 @@ export default function LunaTemplate() {
     <GlassPageFrame
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
+      onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
+      libraryActive={showLibraryLanding}
       bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}
     >
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
@@ -662,15 +664,6 @@ export default function LunaTemplate() {
               </div>
               {/* Subtle divider between viewer and game list */}
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
-              {/* Library header button */}
-              <button
-                onClick={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
-                className={`flex items-center gap-2 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-all flex-shrink-0 ${showLibraryLanding ? 'text-cyan-300 bg-cyan-500/10' : 'text-white/30 hover:text-white/70 hover:bg-white/[0.04]'}`}
-              >
-                <BookOpen className="w-3 h-3" />
-                Library
-              </button>
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }} />
               <GameList
                 games={[
                   { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },

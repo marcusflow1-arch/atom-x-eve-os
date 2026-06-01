@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Mic, MicOff, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Search, Mic, MicOff, PanelLeftClose, PanelLeftOpen, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LiveStreamBox from './LiveStreamBox';
 import StudioOverlayContent from './StudioOverlayContent';
@@ -186,7 +186,7 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
   );
 }
 
-export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle, onToggleLibrary, libraryActive }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
 
@@ -348,6 +348,17 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
                   ? <PanelLeftClose className="w-4 h-4" />
                   : <PanelLeftOpen className="w-4 h-4" />
                 }
+              </button>
+            )}
+            {/* Library toggle — moved here from the left 3D-viewer column */}
+            {onToggleLibrary && (
+              <button
+                onClick={onToggleLibrary}
+                title="Library"
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 h-7 rounded-md text-[10px] font-semibold uppercase tracking-widest transition-all ${libraryActive ? 'text-cyan-300 bg-cyan-500/10' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Library
               </button>
             )}
             <div className="flex-1 flex items-center justify-center">
