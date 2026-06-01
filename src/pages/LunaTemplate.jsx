@@ -73,6 +73,7 @@ import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
+import LibraryLandingPage from '../components/dashboard/gamehub/LibraryLandingPage';
 import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
@@ -190,6 +191,7 @@ export default function LunaTemplate() {
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
   const [selectedConsoleGame, setSelectedConsoleGame] = useState(null);
   const [selectedFocusGame, setSelectedFocusGame] = useState(null);
+  const [showLibraryLanding, setShowLibraryLanding] = useState(false);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
@@ -659,6 +661,15 @@ export default function LunaTemplate() {
               <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
               {/* Subtle divider between viewer and game list */}
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
+              {/* Library header button */}
+              <button
+                onClick={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
+                className={`flex items-center gap-2 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-all flex-shrink-0 ${showLibraryLanding ? 'text-cyan-300 bg-cyan-500/10' : 'text-white/30 hover:text-white/70 hover:bg-white/[0.04]'}`}
+              >
+                <BookOpen className="w-3 h-3" />
+                Library
+              </button>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }} />
               <GameList
                 games={[
                   { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
@@ -669,7 +680,7 @@ export default function LunaTemplate() {
                   { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1200', status: 'Playing', progress: 88, playtime: '210h', achievements: '44/50', rating: 9.6, players: '5.2M', description: 'A massive living world of mythic quests and guild wars.', tags: ['MMORPG', 'PvP', 'Guild'] },
                 ]}
                 selectedGame={selectedFocusGame}
-                onSelectGame={setSelectedFocusGame}
+                onSelectGame={(g) => { setSelectedFocusGame(g); if (g) setShowLibraryLanding(false); }}
               />
             </div>
           ) : (
@@ -850,9 +861,25 @@ export default function LunaTemplate() {
                 }
       </AnimatePresence>
 
+      {/* Library Landing Page — full panel to the right of the left column */}
+      <AnimatePresence>
+        {showLibraryLanding && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' && !selectedFocusGame &&
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="absolute z-30 pointer-events-auto overflow-hidden"
+            style={{ left: '330px', top: '64px', right: '60px', bottom: '32px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+          >
+            <LibraryLandingPage onClose={() => setShowLibraryLanding(false)} />
+          </motion.div>
+        }
+      </AnimatePresence>
+
       {/* Focus Mode Panel - Shows only on avatar section, hidden when sidebar is hidden */}
       <AnimatePresence>
-        {sidebarVisible && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' &&
+        {sidebarVisible && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' && !showLibraryLanding &&
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
