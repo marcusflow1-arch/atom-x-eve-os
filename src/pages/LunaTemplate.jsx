@@ -70,6 +70,7 @@ import CombatXPHandler from '../components/combat/CombatXPHandler';
 import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
 import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
+import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
@@ -1240,72 +1241,12 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* DASHBOARD STAGE: EnvironmentSelector always in normal flow */}
-            {/* Stage overlay (Stats/Friends/Live) floats on top without affecting layout */}
+            {/* GAME HUB AREA — Two-column: Carousel (left 60%) + Detail Panel (right 40%) */}
             <div
-                        className={`mb-6 relative transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                        ref={stageContainerRef}>
-                        
-              {/* Always-visible default content — EnvironmentSelector only, DevSpotlight moved to right column */}
-              <div className="flex flex-col gap-4">
-                <EnvironmentSelector
-                            currentEnvId={currentEnvId}
-                            onSelect={handleEnvSelect}
-                            isEnvironmentActive={isEnvironmentActive}
-                            onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)} />
-                          
-                {/* Open space below — Stats/Friends/Live overlay fills this exactly */}
-                <div style={{ height: '140px' }} />
-              </div>
-
-              {/* Overlay panel — floats ON TOP of the open space, no layout impact */}
-              <AnimatePresence>
-                {stageMode !== 'default' &&
-                          <motion.div
-                            key={stageMode}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.25 }}
-                            className="absolute z-30 rounded-2xl overflow-hidden"
-                            style={{
-                              top: 'calc(100% - 140px)',
-                              left: 0,
-                              right: 0,
-                              height: '140px',
-                              background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
-                              backdropFilter: 'blur(24px)',
-                              WebkitBackdropFilter: 'blur(24px)',
-                              border: stageMode === 'stats' ? '1px solid rgba(34,211,238,0.30)' :
-                              stageMode === 'friends' ? '1px solid rgba(74,222,128,0.30)' :
-                              '1px solid rgba(248,113,113,0.30)',
-                              boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)'
-                            }}>
-                            
-                    {/* Close button */}
-                    <button
-                              onClick={() => setStageMode('default')}
-                              className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
-                              
-                      <X className="w-3 h-3 text-white/60" />
-                    </button>
-
-                    {stageMode === 'stats' &&
-                            <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                        <div className="text-white/40 text-xs text-center py-8">Click a stat button below to expand</div>
-                      </div>
-                            }
-
-                    {stageMode === 'friends' &&
-                            <div className="h-full overflow-hidden">
-                        <FriendsListContent />
-                      </div>
-                            }
-
-
-                  </motion.div>
-                          }
-              </AnimatePresence>
+              className={`pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+              style={{ height: '320px' }}
+            >
+              <GameHubArea />
             </div>
 
             </div>
