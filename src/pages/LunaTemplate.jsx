@@ -650,12 +650,12 @@ export default function LunaTemplate() {
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
                 left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
-              } : { left: '0px', top: '64px', width: '330px', gap: '0px' }}>
+              } : { left: '0px', top: '64px', bottom: '120px', width: '330px', gap: '0px' }}>
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             <div
-              className="pointer-events-auto flex flex-col overflow-hidden flex-shrink-0"
+              className="pointer-events-auto flex flex-col overflow-hidden flex-1 min-h-0"
               style={{ borderRadius: '0 14px 14px 0', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: 'none' }}
             >
               <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
