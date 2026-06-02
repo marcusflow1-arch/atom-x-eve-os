@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, MessageCircle, Send, Camera, Video, User2 } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Send, Camera, Video, User2, X } from 'lucide-react';
 
 const MOCK_MOMENTS = [
   {
@@ -52,12 +52,103 @@ const MOCK_MOMENTS = [
   },
 ];
 
+function MomentCard({ moment, liked, onLike, onReply }) {
+  const [activeMedia, setActiveMedia] = useState(null);
+  const active = activeMedia || { url: moment.url, type: moment.type, name: moment.name };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col rounded-xl overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+    >
+      {/* Main media */}
+      <div className="relative overflow-hidden" style={{ aspectRatio: '16/9' }}>
+        {active.type === 'video' ? (
+          <video key={active.url} src={active.url} className="w-full h-full object-cover" controls />
+        ) : (
+          <img src={active.url} alt={active.name} className="w-full h-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 px-3 py-2">
+          <p className="text-white font-black text-xs leading-tight drop-shadow-lg">{active.name}</p>
+          <p className="text-white/50 text-[10px] mt-0.5 flex items-center gap-1"><User2 className="w-2.5 h-2.5" />{moment.user}</p>
+        </div>
+        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
+          {active.type === 'video' ? <Video className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
+          {active.type}
+        </div>
+      </div>
+
+      {/* Thumbnail strip */}
+      {moment.extras && moment.extras.length > 0 && (
+        <div className="flex gap-1 px-2 pt-2">
+          <div
+            onClick={() => setActiveMedia(null)}
+            className="relative rounded-md overflow-hidden cursor-pointer group flex-1"
+            style={{ aspectRatio: '16/9', outline: !activeMedia ? '2px solid rgba(34,211,238,0.7)' : '2px solid transparent' }}
+          >
+            <img src={moment.url} alt={moment.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
+          </div>
+          {moment.extras.map((ex, ei) => {
+            const isActive = activeMedia?.url === ex.url && activeMedia?.name === ex.name;
+            return (
+              <div
+                key={ei}
+                onClick={() => setActiveMedia(ex)}
+                className="relative rounded-md overflow-hidden cursor-pointer group flex-1"
+                style={{ aspectRatio: '16/9', outline: isActive ? '2px solid rgba(34,211,238,0.7)' : '2px solid transparent' }}
+              >
+                {ex.type === 'video' ? (
+                  <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <Video className="w-3 h-3 text-white/50" />
+                  </div>
+                ) : (
+                  <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                )}
+                <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Like / reply row */}
+      <div className="flex items-center gap-2 px-2 py-2 mt-auto">
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          onClick={() => onLike(moment.id)}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${liked ? 'text-cyan-300' : 'text-white/40 hover:text-white/70'}`}
+          style={{ background: liked ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${liked ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.08)'}` }}
+        >
+          <ThumbsUp className="w-3 h-3" /> {moment.likes}
+        </motion.button>
+        <button className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-white/30 hover:text-white/60 transition-all" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <ThumbsUp className="w-3 h-3 rotate-180" />
+        </button>
+        <button
+          onClick={() => onReply(moment.id)}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-white/40 hover:text-white/70 transition-all ml-auto"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <MessageCircle className="w-3 h-3" /> Reply ({moment.comments.length})
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function CommunityMomentsSection({ game, user }) {
   const [moments, setMoments] = useState(MOCK_MOMENTS);
   const [likedMoments, setLikedMoments] = useState({});
-  const [openComment, setOpenComment] = useState(null);
   const [commentDraft, setCommentDraft] = useState('');
-  const [activeMedia, setActiveMedia] = useState({});
+  const [chatMomentId, setChatMomentId] = useState(null);
+
+  // Drag-to-scroll wheel
+  const scrollRef = useRef(null);
+  const dragState = useRef({ down: false, startX: 0, startScroll: 0 });
 
   const handleLike = (id) => {
     const wasLiked = likedMoments[id];
@@ -73,114 +164,89 @@ export default function CommunityMomentsSection({ game, user }) {
       : m
     ));
     setCommentDraft('');
-    setOpenComment(null);
   };
 
+  const onPointerDown = (e) => {
+    dragState.current = { down: true, startX: e.clientX, startScroll: scrollRef.current.scrollLeft };
+  };
+  const onPointerMove = (e) => {
+    if (!dragState.current.down) return;
+    scrollRef.current.scrollLeft = dragState.current.startScroll - (e.clientX - dragState.current.startX);
+  };
+  const onPointerUp = () => { dragState.current.down = false; };
+
+  const chatMoment = moments.find(m => m.id === chatMomentId);
+
   return (
-    <div className="border-t border-white/10 pt-8 space-y-5">
+    <div className="border-t border-white/10 pt-8 space-y-5 relative">
       <div className="flex items-center gap-2 mb-1">
         <Camera className="w-4 h-4 text-cyan-400" />
         <span className="text-white font-black text-sm">Community Moments</span>
         <span className="ml-auto text-white/30 text-[10px]">{moments.length} captures</span>
       </div>
 
-      {moments.map((moment) => (
-        <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex gap-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px' }}>
+      {/* 4 boxes — two side by side per row */}
+      <div className="grid grid-cols-2 gap-4">
+        {moments.map((moment) => (
+          <MomentCard
+            key={moment.id}
+            moment={moment}
+            liked={likedMoments[moment.id]}
+            onLike={handleLike}
+            onReply={(id) => { setChatMomentId(id); setCommentDraft(''); }}
+          />
+        ))}
+      </div>
 
-            {/* LEFT: image + thumbnails + actions */}
-            <div className="flex flex-col" style={{ width: '58%', flexShrink: 0 }}>
-              {/* Main image */}
-              {(() => {
-                const active = activeMedia[moment.id] || { url: moment.url, type: moment.type, name: moment.name };
-                return (
-                  <div className="relative overflow-hidden" style={{ aspectRatio: '16/8.4' }}>
-                    {active.type === 'video' ? (
-                      <video key={active.url} src={active.url} className="w-full h-full object-cover" controls />
-                    ) : (
-                      <img src={active.url} alt={active.name} className="w-full h-full object-cover" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 right-0 px-3 py-2">
-                      <p className="text-white font-black text-xs leading-tight drop-shadow-lg">{active.name}</p>
-                      <p className="text-white/50 text-[10px] mt-0.5 flex items-center gap-1"><User2 className="w-2.5 h-2.5" />{moment.user}</p>
-                    </div>
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
-                      {active.type === 'video' ? <Video className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
-                      {active.type}
-                    </div>
-                  </div>
-                );
-              })()}
+      {/* Drag scroll wheel — hold and drag left/right */}
+      <div
+        ref={scrollRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+        className="flex gap-3 overflow-x-auto cursor-grab active:cursor-grabbing select-none pb-2"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        {moments.concat(moments).map((moment, i) => (
+          <div
+            key={i}
+            className="relative rounded-lg overflow-hidden flex-shrink-0"
+            style={{ width: '140px', aspectRatio: '16/9', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <img src={moment.url} alt={moment.name} className="w-full h-full object-cover pointer-events-none" draggable={false} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+            <p className="absolute bottom-1 left-2 right-2 text-white/80 text-[9px] font-bold truncate">{moment.name}</p>
+          </div>
+        ))}
+      </div>
 
-              {/* Thumbnail strip */}
-              {moment.extras && moment.extras.length > 0 && (
-                <div className="flex gap-1 px-2 pt-3 pb-1">
-                  {/* Main thumbnail */}
-                  <div
-                    onClick={() => setActiveMedia(prev => ({ ...prev, [moment.id]: { url: moment.url, type: moment.type, name: moment.name } }))}
-                    className="relative rounded-md overflow-hidden cursor-pointer group flex-1"
-                    style={{ aspectRatio: '16/9', outline: !activeMedia[moment.id] ? '2px solid rgba(34,211,238,0.7)' : '2px solid transparent' }}
-                  >
-                    <img src={moment.url} alt={moment.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
-                  </div>
-                  {moment.extras.map((ex, ei) => {
-                    const isActive = activeMedia[moment.id]?.url === ex.url;
-                    return (
-                      <div
-                        key={ei}
-                        onClick={() => setActiveMedia(prev => ({ ...prev, [moment.id]: ex }))}
-                        className="relative rounded-md overflow-hidden cursor-pointer group flex-1"
-                        style={{ aspectRatio: '16/9', outline: isActive ? '2px solid rgba(34,211,238,0.7)' : '2px solid transparent' }}
-                      >
-                        {ex.type === 'video' ? (
-                          <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                            <Video className="w-3 h-3 text-white/50" />
-                          </div>
-                        ) : (
-                          <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        )}
-                        <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
-                        <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }}>
-                          <p className="text-white/70 text-[7px] font-semibold truncate leading-tight">{ex.name}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Like / Dislike row */}
-              <div className="flex items-center gap-2 px-2 pb-2 pt-1">
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => handleLike(moment.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${likedMoments[moment.id] ? 'text-cyan-300' : 'text-white/40 hover:text-white/70'}`}
-                  style={{ background: likedMoments[moment.id] ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${likedMoments[moment.id] ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.08)'}` }}
-                >
-                  <ThumbsUp className="w-3 h-3" /> {moment.likes}
-                </motion.button>
-                <button className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-white/30 hover:text-white/60 transition-all" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <ThumbsUp className="w-3 h-3 rotate-180" />
-                </button>
-                <button
-                  onClick={() => setOpenComment(openComment === moment.id ? null : moment.id)}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-white/40 hover:text-white/70 transition-all ml-auto"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  <MessageCircle className="w-3 h-3" /> {moment.comments.length} replies
-                </button>
+      {/* Slide-out chat box (~15% of landing page) from right */}
+      <AnimatePresence>
+        {chatMoment && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/30"
+              onClick={() => setChatMomentId(null)}
+            />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+              className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
+              style={{ width: '15%', minWidth: '260px', background: 'rgba(14,18,26,0.97)', backdropFilter: 'blur(20px)', borderLeft: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+                <MessageCircle className="w-4 h-4 text-cyan-400" />
+                <span className="text-white font-bold text-sm truncate flex-1">{chatMoment.name}</span>
+                <button onClick={() => setChatMomentId(null)} className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
               </div>
-            </div>
 
-            {/* RIGHT: comments panel */}
-            <div className="flex-1 flex flex-col border-l" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
-              <div className="flex-1 overflow-y-auto px-3 pt-3 pb-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
-                {moment.comments.length === 0 ? (
+              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                {chatMoment.comments.length === 0 ? (
                   <p className="text-white/20 text-xs text-center mt-4">No replies yet — be first!</p>
                 ) : (
-                  moment.comments.map((c, ci) => (
+                  chatMoment.comments.map((c, ci) => (
                     <div key={ci} className="flex items-start gap-2 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5" style={{ background: `hsl(${ci * 80 + 40},55%,28%)` }}>{c.user[0]}</div>
                       <div className="min-w-0 flex-1">
@@ -192,27 +258,25 @@ export default function CommunityMomentsSection({ game, user }) {
                 )}
               </div>
 
-              {/* Comment input */}
-              <div className="px-3 pb-3 pt-2 mt-auto">
+              <div className="px-3 pb-3 pt-2 border-t border-white/10">
                 <div className="flex gap-1.5">
                   <textarea
                     placeholder="Share your thoughts… 😄"
-                    value={openComment === moment.id ? commentDraft : ''}
-                    onChange={e => { setOpenComment(moment.id); setCommentDraft(e.target.value); }}
-                    onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAddComment(moment.id)}
+                    value={commentDraft}
+                    onChange={e => setCommentDraft(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddComment(chatMoment.id); } }}
                     rows={2}
                     className="flex-1 px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40 resize-none leading-relaxed"
                   />
-                  <button onClick={() => handleAddComment(moment.id)} className="px-2.5 py-1.5 rounded-lg text-cyan-400 hover:text-cyan-200 transition-all self-end" style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>
+                  <button onClick={() => handleAddComment(chatMoment.id)} className="px-2.5 py-1.5 rounded-lg text-cyan-400 hover:text-cyan-200 transition-all self-end" style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>
                     <Send className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-            </div>
-
-          </div>
-        </motion.div>
-      ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
