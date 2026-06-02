@@ -17,6 +17,7 @@ import NetworkTest from './pages/NetworkTest';
 import ChainBreak from './pages/ChainBreak';
 import NPCQuests from './pages/NPCQuests';
 import NPCNetwork from './pages/NPCNetwork';
+import LivingQuest from './pages/LivingQuest';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -105,6 +106,7 @@ const AuthenticatedApp = () => {
       <Route path="/ChainBreak" element={<ChainBreak />} />
       <Route path="/NPCQuests" element={<NPCQuests />} />
       <Route path="/NPCNetwork" element={<NPCNetwork />} />
+      <Route path="/LivingQuest" element={<LivingQuest />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

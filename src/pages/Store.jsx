@@ -842,13 +842,13 @@ export default function Store() {
 
                             {/* TEST QUEST SCENARIO LAUNCHER */}
                             <button
-                                onClick={() => navigate('/NPCQuests')}
+                                onClick={() => navigate('/LivingQuest')}
                                 className="fixed bottom-20 right-6 z-[60] flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-105"
-                                style={{ background: 'linear-gradient(135deg, rgba(110,195,255,0.9), rgba(99,102,241,0.9))', boxShadow: '0 4px 24px rgba(99,102,241,0.4)' }}
-                                title="Launch the interactive quest + dialogue test scenario"
+                                style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.9), rgba(99,102,241,0.9))', boxShadow: '0 4px 24px rgba(99,102,241,0.4)' }}
+                                title="Launch the Living Quest — story + continuous branching dialogue"
                             >
                                 <ScrollText className="w-4 h-4" />
-                                Test Quest Scenario
+                                Living Quest
                             </button>
 
                             {/* IN-PAGE STORE VIEW OVERLAY */}
