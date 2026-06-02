@@ -1,7 +1,9 @@
 // NPCQuestNetwork.jsx — Main orchestrator for the Multi-NPC Quest Network
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import LivingQuestNPC from './LivingQuestNPC';
 import {
   subscribeQuestNetwork, openDialogue, closeDialogue,
   recordNetworkKill, debugCompleteQuest, resetNetwork,
@@ -80,6 +82,7 @@ function RewardFlash({ rewards, npcColor }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function NPCQuestNetwork() {
+  const navigate = useNavigate();
   const [store, setStore]       = useState({ quests: {}, notifications: [], dialogueOpen: null });
   const [world, setWorld]       = useState(getWorldState());
   const [playerPos, setPlayerPos] = useState({ x: 50, y: 55 });
@@ -278,6 +281,20 @@ export default function NPCQuestNetwork() {
               </div>
             );
           })}
+
+          {/* Living Quest NPC — placed away from other quest-givers, larger, on-map */}
+          {(() => {
+            const lqPos = { left: 14, top: 24 };
+            const dx = lqPos.left - playerPos.x;
+            const dy = lqPos.top - playerPos.y;
+            const near = Math.sqrt(dx * dx + dy * dy) < 18;
+            return (
+              <div className="absolute z-20"
+                style={{ left: `${lqPos.left}%`, top: `${lqPos.top}%`, transform: 'translate(-50%,-50%)' }}>
+                <LivingQuestNPC playerNearby={near} onLaunch={() => navigate('/LivingQuest')} />
+              </div>
+            );
+          })()}
 
           {/* Player token */}
           <motion.div
