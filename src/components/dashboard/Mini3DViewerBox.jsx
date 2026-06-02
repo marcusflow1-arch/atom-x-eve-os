@@ -218,48 +218,17 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
 
   return (
     <div 
-      className={`pointer-events-auto flex items-start gap-0 cursor-pointer transition-transform hover:scale-[1.02] relative ${isUiVisible ? 'h-full' : ''}`}
+      className={`pointer-events-auto flex items-start gap-3 cursor-pointer transition-transform relative ${isUiVisible ? 'h-full' : 'px-3 pt-3'}`}
       onClick={() => {
         if (!isUiVisible) window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
       }}
-      style={isUiVisible ? { width: '100%', height: '100%' } : { transformStyle: 'preserve-3d', perspective: '1000px' }}
+      style={isUiVisible ? { width: '100%', height: '100%' } : {}}
     >
-      {!isUiVisible && (
-        <>
-          {/* Back layers */}
-          <div
-            className="absolute -inset-x-2 rounded-2xl pointer-events-none"
-            style={{
-              top: '-4px', bottom: '-4px', transform: 'translateZ(-12px)',
-              background: 'linear-gradient(135deg, rgba(15, 20, 30, 0.9) 0%, rgba(10, 15, 20, 0.95) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-            }}
-          />
-          <div
-            className="absolute -inset-x-1 rounded-2xl pointer-events-none"
-            style={{
-              top: '-2px', bottom: '-2px', transform: 'translateZ(-6px)',
-              background: 'linear-gradient(135deg, rgba(20, 25, 35, 0.9) 0%, rgba(15, 20, 25, 0.95) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.07)', boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-            }}
-          />
-          {/* Spine */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 w-6 rounded-sm pointer-events-none z-30"
-            style={{
-              top: '-4px', bottom: '-4px',
-              background: 'linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(255,255,255,0.06) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.06) 65%, rgba(0,0,0,0.4) 100%)',
-              boxShadow: 'inset 2px 0 4px rgba(0,0,0,0.4), inset -2px 0 4px rgba(0,0,0,0.4), 0 0 12px rgba(0,0,0,0.5)',
-            }}
-          />
-        </>
-      )}
-
       {/* Pages Container */}
-      <div className={`relative z-20 flex w-full gap-0 ${isUiVisible ? 'h-full' : ''}`} style={{ transformStyle: 'preserve-3d' }}>
+      <div className={`relative z-20 flex w-full gap-3 ${isUiVisible ? 'h-full' : ''}`}>
         {/* 3D Viewer - Left Page */}
         <div
-          className={`overflow-hidden flex-shrink-0 transition-all duration-500 relative ${isUiVisible ? 'rounded-2xl' : 'rounded-l-2xl rounded-r-none'}`}
+          className={`overflow-hidden flex-shrink-0 transition-all duration-500 relative rounded-xl`}
           style={isUiVisible ? {
             background: 'transparent',
             border: 'none',
@@ -267,33 +236,13 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
             width: '100%',
             height: '100%',
           } : {
-            background: 'rgba(255, 255, 255, 0.03)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRight: 'none',
-            boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-            width: '160px',
+            background: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+            width: '150px',
             height: '240px',
-            transformOrigin: 'right center',
-            transform: 'rotateY(8deg)',
           }}
         >
-          {/* Page shading for left page */}
-          {!isUiVisible && (
-            <>
-              <div className="absolute top-0 bottom-0 w-[2px] right-0 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
-              />
-              <div
-                className="absolute top-0 bottom-0 pointer-events-none z-10 right-0 w-8"
-                style={{
-                  background: 'linear-gradient(to left, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
-                  borderRadius: '0 12px 12px 0',
-                }}
-              />
-            </>
-          )}
           <div ref={containerRef} className="w-full h-full relative z-0">
             {webglFailed && (
               <div className="absolute inset-0 flex items-center justify-center text-center p-4 text-white/50 text-xs">
