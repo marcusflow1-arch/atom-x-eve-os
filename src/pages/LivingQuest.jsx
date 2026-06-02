@@ -6,6 +6,7 @@ import { ArrowLeft, GitBranch } from 'lucide-react';
 import { BEATS, FIRST_BEAT } from '@/components/livingquest/livingQuestData';
 import StoryBeatCard from '@/components/livingquest/StoryBeatCard';
 import DialogueBeatCard from '@/components/livingquest/DialogueBeatCard';
+import ObjectiveBeatCard from '@/components/livingquest/ObjectiveBeatCard';
 
 export default function LivingQuest() {
   const navigate = useNavigate();
@@ -54,6 +55,8 @@ export default function LivingQuest() {
         <AnimatePresence mode="wait">
           {beat.type === 'dialogue' ? (
             <DialogueBeatCard key={beat.id} beat={beat} onChoose={handleChoose} />
+          ) : beat.type === 'objective' ? (
+            <ObjectiveBeatCard key={beat.id} beat={beat} onComplete={handleAdvance} />
           ) : (
             <StoryBeatCard key={beat.id} beat={beat} onAdvance={handleAdvance} />
           )}
