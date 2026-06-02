@@ -231,6 +231,13 @@ export default function GameView() {
     return () => window.removeEventListener('gamePlayerAction', onAction);
   }, [user?.id, user?.full_name, user?.username]);
 
+  // Living Quest NPC in the world dispatches this → open the Living Quest scenario
+  useEffect(() => {
+    const open = () => navigate('/LivingQuest');
+    window.addEventListener('openLivingQuest', open);
+    return () => window.removeEventListener('openLivingQuest', open);
+  }, [navigate]);
+
   // Live-update audio volume when slider changes (without reloading the track)
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = themeVolume;

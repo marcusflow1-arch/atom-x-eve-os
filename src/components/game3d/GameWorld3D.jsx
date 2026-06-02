@@ -86,6 +86,8 @@ import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { loadDeepSpaceSkybox } from './worldSkybox';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
 import { createQuestEnemySpawner } from './questEnemySpawner';
+import { spawnLivingQuestNPC } from './npc/spawnLivingQuestNPC';
+import LivingQuestWorldOverlay from './npc/LivingQuestWorldOverlay';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -99,6 +101,9 @@ export default function GameWorld3D() {
   const [enemiesUI, setEnemiesUI] = useState([]); // [{ id, x, y, hp, maxHp, level, visible }]
   const [questNPCsUI, setQuestNPCsUI] = useState([]); // [{ id, x, y, status }]
   const [nearbyQuestNPC, setNearbyQuestNPC] = useState(null); // { id, name }
+  const [livingQuestUI, setLivingQuestUI] = useState(null); // projected head label { x, y }
+  const [nearbyLivingQuest, setNearbyLivingQuest] = useState(false);
+  const livingQuestNearRef = useRef(false);
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const spawnQuestEnemiesRef = useRef(null); // set inside useEffect once scene is ready
   const [questState, setQuestState] = useState(getQuestState());
@@ -366,6 +371,7 @@ export default function GameWorld3D() {
 
     // Quest NPC — cloned archer model, spawned right next to the player.
     const questNPCs = []; // populated after ARCHER_URL loads below
+    let livingQuestEntity = null; // { group, mixer } — oversized Living Quest NPC
 
         // COMPANION SPAWN — rideable mount (GLB w/ embedded clips OR FBX w/ separate idle+walk anim files).
     const companionDef = companionDefRef.current;
@@ -808,6 +814,12 @@ export default function GameWorld3D() {
               }
             });
           }
+          // Spawn the oversized Living Quest NPC away from the cluster
+          spawnLivingQuestNPC({
+            scene, loader, archerUrl: ARCHER_URL, snapToGround,
+            idleClip: clipsByKey['idle'] || null,
+            onReady: (h) => { livingQuestEntity = h; },
+          });
           setLoading(false);
         })
         .catch((err) => {
@@ -1227,21 +1239,8 @@ export default function GameWorld3D() {
         // Smooth camera system: damped lock-on yaw, combat distance, and sprint pullback without per-frame object spam.
         playerCameraSystem.update(delta, playerStateMachine.intent);
 
-        // ─── NPC proximity & interaction ───
+        // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
-        let closestNPCDist = NPC_INTERACT_RANGE;
-        npcs.forEach((npc) => {
-          const dx = npc.mesh.position.x - model.position.x;
-          const dz = npc.mesh.position.z - model.position.z;
-          const d = Math.sqrt(dx * dx + dz * dz);
-          if (d < closestNPCDist) { closestNPCDist = d; closestNPC = npc; }
-          // pulse the ring
-          npc.ringMesh.material.opacity = 0.4 + Math.sin(clock.elapsedTime * 2) * 0.2;
-        });
-        if (closestNPC?.id !== nearbyNPCRef.current?.id) {
-          nearbyNPCRef.current = closestNPC;
-          setNearbyNPC(closestNPC ? { id: closestNPC.id, name: closestNPC.name } : null);
-        }
         // ─── Quest NPC proximity ───
         let closestQuestNPC = null;
         let closestQuestDist = NPC_INTERACT_RANGE;
@@ -1258,6 +1257,19 @@ export default function GameWorld3D() {
           setNearbyQuestNPC(closestQuestNPC ? { id: closestQuestNPC.id, name: closestQuestNPC.name } : null);
         }
 
+        // ─── Living Quest NPC proximity ───
+        if (livingQuestEntity?.group) {
+          if (livingQuestEntity.mixer) livingQuestEntity.mixer.update(delta);
+          const dxL = livingQuestEntity.group.position.x - model.position.x;
+          const dzL = livingQuestEntity.group.position.z - model.position.z;
+          const nearL = Math.sqrt(dxL * dxL + dzL * dzL) < NPC_INTERACT_RANGE;
+          if (nearL !== livingQuestNearRef.current) { livingQuestNearRef.current = nearL; setNearbyLivingQuest(nearL); }
+        }
+
+        if (interactPressed.current && livingQuestNearRef.current) {
+          interactPressed.current = false;
+          window.dispatchEvent(new CustomEvent('openLivingQuest'));
+        }
         if (interactPressed.current) {
           interactPressed.current = false;
           // Prefer quest NPC if also nearby (they take priority over generic NPCs)
@@ -1859,6 +1871,8 @@ export default function GameWorld3D() {
           </div>
         </div>
       )}
+
+      {!loading && <LivingQuestWorldOverlay labelPos={livingQuestUI} nearby={nearbyLivingQuest} suppress={!!activeQuestDialogue || !!activeDialogue} />}
 
       {/* Quest NPC interact prompt (golden) */}
       {!loading && nearbyQuestNPC && !activeQuestDialogue && !activeDialogue && (
