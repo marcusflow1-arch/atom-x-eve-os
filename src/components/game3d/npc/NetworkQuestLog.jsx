@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { NPC_DEFS, QUEST_DEFS, QuestState } from './questNetwork';
+import { getQuestProgress } from './questNetworkStore';
 import { CheckCircle2, Circle, Clock } from 'lucide-react';
 
 const STATE_ICON = {
@@ -55,6 +56,31 @@ export default function NetworkQuestLog({ questEntries, flags }) {
                           {entry.killProgress || 0} / {entry.killTarget || quest.killTarget} kills
                         </div>
                       )}
+
+                      {/* Milestone progress bar — fills as quest is accepted, progressed, and turned in */}
+                      {(state === QuestState.ACTIVE || state === QuestState.READY_TO_TURN || state === QuestState.COMPLETED) && (() => {
+                        const pct = getQuestProgress(quest.id);
+                        const done = state === QuestState.COMPLETED;
+                        const ready = state === QuestState.READY_TO_TURN;
+                        return (
+                          <div className="mt-1.5">
+                            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                              <div
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${pct}%`,
+                                  background: done
+                                    ? 'linear-gradient(90deg, #a78bfa, #c4b5fd)'
+                                    : ready
+                                      ? 'linear-gradient(90deg, #34d399, #6ee7b7)'
+                                      : `linear-gradient(90deg, ${npc.color}, ${npc.color}aa)`,
+                                }}
+                              />
+                            </div>
+                            <div className="text-[8px] text-white/25 tabular-nums mt-0.5">{pct}%</div>
+                          </div>
+                        );
+                      })()}
                       {state === QuestState.COMPLETED && entry.branchChoice && (
                         <div className="text-[9px] mt-0.5" style={{ color: npc.color }}>
                           {BRANCH_LABELS[entry.branchChoice] || entry.branchChoice}

@@ -41,6 +41,21 @@ export function subscribeQuestNetwork(fn) {
 
 export function getQuestNetworkState() { return { ..._state }; }
 
+// ── Milestone progress (0–100) ─────────────────────────────────────────────────
+// Combines lifecycle stage with kill progress so the Quest Board bar fills as the
+// player accepts the quest (dialogue), completes the objective, and turns it in.
+export function getQuestProgress(questId) {
+  const entry = _state.quests[questId];
+  if (!entry || entry.state === QuestState.NONE) return 0;
+  if (entry.state === QuestState.COMPLETED) return 100;
+  if (entry.state === QuestState.READY_TO_TURN) return 90; // objective done, awaiting turn-in dialogue
+
+  // ACTIVE: 15% for accepting + up to 75% for objective progress
+  const target = entry.killTarget || 1;
+  const frac = target > 0 ? Math.min(1, (entry.killProgress || 0) / target) : 0;
+  return Math.round(15 + frac * 75);
+}
+
 // ── Dialogue ──────────────────────────────────────────────────────────────────
 export function openDialogue(npcId, questId) {
   _state = { ..._state, dialogueOpen: { npcId, questId } };
