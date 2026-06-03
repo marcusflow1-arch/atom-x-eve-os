@@ -50,6 +50,7 @@ import GameStateProvider from '../components/game3d/state/GameStateProvider';
 import CombatMusicTrigger from '../components/game3d/CombatMusicTrigger';
 import DeathFlowController from '../components/game3d/death/DeathFlowController';
 import ClanOverlay from '../components/game3d/clan/ClanOverlay';
+import CinematicQuestDialogue from '../components/game3d/npc/CinematicQuestDialogue';
 import {
   bindWorldAudio,
   setWorldTargetVolume,
@@ -231,12 +232,8 @@ export default function GameView() {
     return () => window.removeEventListener('gamePlayerAction', onAction);
   }, [user?.id, user?.full_name, user?.username]);
 
-  // Living Quest NPC in the world dispatches this → open the Living Quest scenario
-  useEffect(() => {
-    const open = () => navigate('/LivingQuest');
-    window.addEventListener('openLivingQuest', open);
-    return () => window.removeEventListener('openLivingQuest', open);
-  }, [navigate]);
+  // Living Quest NPC interaction is now handled in-world by CinematicQuestDialogue
+  // (mounted below), which listens for the same 'openLivingQuest' event.
 
   // Live-update audio volume when slider changes (without reloading the track)
   useEffect(() => {
@@ -356,6 +353,9 @@ export default function GameView() {
 
       {/* Guild Wars 2-style clan overlay — opened by G key */}
       <ClanOverlay open={clanOverlayOpen} onClose={() => setClanOverlayOpen(false)} userId={user?.id} />
+
+      {/* In-world cinematic dialogue → quest flow for the Living Quest NPC (Artemis) */}
+      <CinematicQuestDialogue />
 
       {/* Pause menu — opened by ESC */}
       <PauseMenu

@@ -803,10 +803,8 @@ export default function GameWorld3D() {
       });
 
       // Wire up the quest enemy spawner — set on the ref so the React layer can call it
-      spawnQuestEnemiesRef.current = createQuestEnemySpawner({
-        scene, enemies, loader, snapToGround,
-        walkClipPromise, idleClipPromise, setEnemyCount,
-      });
+      spawnQuestEnemiesRef.current = createQuestEnemySpawner({ scene, enemies, loader, snapToGround, walkClipPromise, idleClipPromise, setEnemyCount });
+      window.__gw3dSpawnQuestEnemies = spawnQuestEnemiesRef.current;
 
       // Load player animation clips once — bind to player AND reuse for quest NPC idle
       loadPlayerAnimationClips(loader)
@@ -828,7 +826,7 @@ export default function GameWorld3D() {
           spawnLivingQuestNPC({
             scene, loader, archerUrl: ARCHER_URL, snapToGround,
             idleClip: clipsByKey['idle'] || null,
-            onReady: (h) => { livingQuestEntity = h; },
+            onReady: (h) => { livingQuestEntity = h; window.__gw3dLivingQuestNPC = h?.group || null; },
           });
           renderer.shadowMap.needsUpdate = true; setLoading(false);
         })

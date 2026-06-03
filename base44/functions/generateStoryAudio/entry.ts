@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         text: truncatedText,
-        model_id: "eleven_monolingual_v1", // Using cheaper model
+        model_id: "eleven_turbo_v2_5", // current low-latency model
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
