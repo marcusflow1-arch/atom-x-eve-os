@@ -87,6 +87,7 @@ import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
 import MoonlightBackground from '../components/dashboard/MoonlightBackground';
 import AvatarFocusMenu from '../components/dashboard/AvatarFocusMenu';
+import AvatarFocusClonePanel from '../components/dashboard/AvatarFocusClonePanel';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
@@ -771,6 +772,23 @@ export default function LunaTemplate() {
             </div>
           </motion.div>
                 }
+      </AnimatePresence>
+
+      {/* Avatar Focus Clone Panel — cloned dashboard header boxes + 7 colored boxes,
+          shown when avatar is clicked (focus mode) and no specific view selected */}
+      <AnimatePresence>
+        {avatarFocusMode && !activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' &&
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="absolute z-10 pointer-events-auto overflow-y-auto"
+            style={{ left: '350px', top: '88px', right: '60px', bottom: '160px', scrollbarWidth: 'none' }}
+          >
+            <AvatarFocusClonePanel />
+          </motion.div>
+        }
       </AnimatePresence>
 
       {/* 3D Model Viewer - Disabled */}
