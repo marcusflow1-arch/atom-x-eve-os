@@ -274,12 +274,19 @@ export default function GameWorld3D() {
     // Width/height may be 0 on first paint inside hidden tabs — guard against that.
     const w0 = container.clientWidth || window.innerWidth;
     const h0 = container.clientHeight || window.innerHeight;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Perf: cap pixel ratio at 1.5 — halves fragment-shader work on hi-DPI
+    // screens with virtually no visible quality loss.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(w0, h0, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
+    // Perf: cheaper shadow filtering + don't re-render the shadow map every
+    // frame (the sun is static, so shadows only need an occasional refresh).
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.BasicShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
     // Guard against WebGL context loss + post-dispose render calls — without
     // this, three.js shadow-map pass crashes inside getUniforms() with
     // "Cannot read properties of null (reading 'trim')".
@@ -302,11 +309,14 @@ export default function GameWorld3D() {
     const sun = new THREE.DirectionalLight(0xfff4d6, 2.2);
     sun.position.set(20, 30, 10);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -30;
-    sun.shadow.camera.right = 30;
-    sun.shadow.camera.top = 30;
-    sun.shadow.camera.bottom = -30;
+    // Perf: 1024 shadow map (down from 2048) + tighter shadow frustum around
+    // the playable arena — quarter of the texture memory & fill cost.
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -25;
+    sun.shadow.camera.right = 25;
+    sun.shadow.camera.top = 25;
+    sun.shadow.camera.bottom = -25;
+    sun.shadow.camera.far = 80;
     scene.add(sun);
 
     const worldGltfLoader = new GLTFLoader();
@@ -820,7 +830,7 @@ export default function GameWorld3D() {
             idleClip: clipsByKey['idle'] || null,
             onReady: (h) => { livingQuestEntity = h; },
           });
-          setLoading(false);
+          renderer.shadowMap.needsUpdate = true; setLoading(false);
         })
         .catch((err) => {
           console.error('Player AnimationFBX library load error:', err);
