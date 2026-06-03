@@ -786,7 +786,12 @@ export default function LunaTemplate() {
             className="absolute z-10 pointer-events-auto overflow-y-auto"
             style={{ left: '350px', top: '88px', right: '60px', bottom: '160px', scrollbarWidth: 'none' }}
           >
-            <AvatarFocusClonePanel />
+            <AvatarFocusClonePanel
+              currentEnvId={currentEnvId}
+              onSelectEnv={handleEnvSelect}
+              isEnvironmentActive={isEnvironmentActive}
+              onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
+            />
           </motion.div>
         }
       </AnimatePresence>
