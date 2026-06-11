@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import ViewModeToggle from '@/components/mobile/ViewModeToggle';
 
 export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSearchChange, onSearchOpen }) {
   const navigate = useNavigate();
@@ -28,8 +29,8 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
 
   return (
     <div className="flex items-center w-full gap-4">
-      {/* Left brand + nav pills + search (right of Cards) */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+      {/* Left — brand + nav pills */}
+      <div className="flex items-center gap-4 flex-shrink-0">
         <span className="text-base font-black tracking-widest text-white whitespace-nowrap">ATOM X EVE</span>
         <div className="hidden md:flex items-center gap-1 flex-shrink-0">
           <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/55 hover:text-white hover:bg-white/[0.06] transition-all">Luna</button>
@@ -37,10 +38,12 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
           <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/55 hover:text-white hover:bg-white/[0.06] transition-all">Cards</button>
           <button onClick={() => navigate(createPageUrl('Community'))} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/55 hover:text-white hover:bg-white/[0.06] transition-all">Community</button>
         </div>
+      </div>
 
-        {/* Search — immediately to the right of the nav pills (right of Cards) */}
+      {/* Center — search */}
+      <div className="flex-1 flex justify-center min-w-0">
         <div onClick={onSearchOpen}
-          className="group flex items-center gap-2 flex-1 max-w-[420px] min-w-0 px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] hover:border-cyan-400/30 transition-all cursor-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+          className="group flex items-center gap-2 w-full max-w-[460px] min-w-0 px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] hover:border-cyan-400/30 transition-all cursor-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
           <Search className="w-4 h-4 text-white/40 flex-shrink-0 group-hover:text-cyan-300 transition-colors" />
           <input
             value={searchTerm || ''}
@@ -57,7 +60,7 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
         </div>
       </div>
 
-      {/* Right cluster — credits, cart, notifications, profile */}
+      {/* Right cluster — credits, cart, notifications, view-mode toggle, profile */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
           <Coins className="w-3.5 h-3.5 text-yellow-400" />
@@ -75,6 +78,9 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
           <Bell className="w-4 h-4" />
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
         </button>
+
+        {/* Desktop / Mobile mode switch */}
+        <ViewModeToggle />
 
         <button className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all">
           <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
