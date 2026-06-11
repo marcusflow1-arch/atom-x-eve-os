@@ -1083,23 +1083,25 @@ function LayoutContent({ children, currentPageName }) {
 
             </div>
 
-            {/* Settings + View Mode Toggle - right side */}
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              <button
-                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
-                style={{
-                  background: 'rgba(10, 14, 20, 0.85)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                }}
-                title="Settings"
-              >
-                <Settings className="w-3.5 h-3.5 text-white/60" />
-              </button>
-              <ViewModeToggle />
-            </div>
+            {/* Settings + View Mode Toggle - right side (hidden on Store, which has its own StorefrontTopBar cluster) */}
+            {!showStoreHeader && (
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                  style={{
+                    background: 'rgba(10, 14, 20, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                  }}
+                  title="Settings"
+                >
+                  <Settings className="w-3.5 h-3.5 text-white/60" />
+                </button>
+                <ViewModeToggle />
+              </div>
+            )}
             </div>
 
 
