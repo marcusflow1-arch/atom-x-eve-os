@@ -15,6 +15,7 @@ const CATEGORY_PILLS = [
 
 
 export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -125,8 +126,26 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
           </motion.button>
         </div>
 
-        {/* Spacer keeps tabs left-aligned (search moved to top header) */}
+        {/* Spacer pushes the controls to the far right */}
         <div className="flex-1" />
+
+        {/* Far right — view-mode toggle + settings gear */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <ViewModeToggle />
+          <button
+            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+            style={{
+              background: 'rgba(10, 14, 20, 0.85)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            }}
+            title="Settings"
+          >
+            <Settings className="w-3.5 h-3.5 text-white/60" />
+          </button>
+        </div>
       </div>
     </div>
   );
