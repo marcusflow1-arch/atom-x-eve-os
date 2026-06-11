@@ -15,20 +15,41 @@ const TOP_ICONS = {
 
 export default function GenreSidebar({ active, onSelect }) {
   return (
-    <div className="h-full flex flex-col rounded-2xl border border-white/10 overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)' }}>
+    <div className="relative h-full flex flex-col rounded-2xl border border-white/[0.12] overflow-hidden"
+      style={{
+        background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        backdropFilter: 'blur(16px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+        boxShadow: '0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)',
+      }}>
       <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
         {/* Top nav */}
-        <div className="space-y-0.5 mb-4">
+        <div className="space-y-1 mb-4">
           {TOP_NAV_GENRES.map((label, i) => {
             const Icon = TOP_ICONS[label] || Gamepad2;
             const isActive = active === label || (i === 0 && !active);
             return (
               <button key={label} onClick={() => onSelect?.(label)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${isActive ? 'bg-purple-500/20 text-white border border-purple-400/20' : 'text-white/55 hover:text-white hover:bg-white/[0.04] border border-transparent'}`}>
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                <span className="text-xs font-semibold flex-1">{label}</span>
-                {isActive && <ChevronRight className="w-3.5 h-3.5" />}
+                className={`group relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all duration-300 overflow-hidden ${
+                  isActive
+                    ? 'text-white border border-cyan-300/40'
+                    : 'text-white/55 hover:text-white hover:bg-white/[0.05] border border-transparent'
+                }`}
+                style={isActive ? {
+                  background: 'linear-gradient(110deg, rgba(34,211,238,0.22) 0%, rgba(99,102,241,0.16) 55%, rgba(168,85,247,0.12) 100%)',
+                  boxShadow: '0 0 18px rgba(34,211,238,0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
+                } : undefined}
+              >
+                {/* Vibrant left accent bar + glow on active */}
+                {isActive && (
+                  <>
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-cyan-300" style={{ boxShadow: '0 0 10px rgba(34,211,238,0.9)' }} />
+                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-cyan-400/20 blur-xl pointer-events-none" />
+                  </>
+                )}
+                <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${isActive ? 'text-cyan-200 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]' : ''}`} />
+                <span className="text-xs font-semibold flex-1 relative z-10">{label}</span>
+                {isActive && <ChevronRight className="w-3.5 h-3.5 relative z-10 text-cyan-200" />}
               </button>
             );
           })}

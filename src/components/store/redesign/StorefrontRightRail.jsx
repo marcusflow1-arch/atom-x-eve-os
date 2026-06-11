@@ -4,10 +4,29 @@ import { Star, Clock } from 'lucide-react';
 import { PERSONALIZED, DAILY_DEAL, TRENDING_NOW, MEGA_DEAL } from './storefrontData';
 
 const Card = ({ children, className = '' }) => (
-  <div className={`rounded-2xl p-4 border border-white/10 ${className}`} style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)' }}>
+  <div
+    className={`relative rounded-2xl p-4 border border-white/[0.12] overflow-hidden ${className}`}
+    style={{
+      background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+      backdropFilter: 'blur(16px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+      boxShadow: '0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)',
+    }}
+  >
+    {/* subtle top sheen for glass texture */}
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
     {children}
   </div>
 );
+
+// Vibrant per-rank colors (1 → 4+) for the Trending list
+const RANK_COLORS = [
+  { text: 'text-yellow-300', glow: 'rgba(253,224,71,0.9)', star: 'text-yellow-400' },
+  { text: 'text-cyan-300', glow: 'rgba(34,211,238,0.9)', star: 'text-cyan-400' },
+  { text: 'text-fuchsia-300', glow: 'rgba(232,121,249,0.9)', star: 'text-fuchsia-400' },
+  { text: 'text-emerald-300', glow: 'rgba(52,211,153,0.9)', star: 'text-emerald-400' },
+  { text: 'text-orange-300', glow: 'rgba(253,186,116,0.9)', star: 'text-orange-400' },
+];
 
 export default function StorefrontRightRail({ onSelect }) {
   return (
@@ -63,17 +82,20 @@ export default function StorefrontRightRail({ onSelect }) {
           <button className="text-cyan-300 text-[10px] font-semibold uppercase tracking-wider">View All</button>
         </div>
         <div className="space-y-2.5">
-          {TRENDING_NOW.map(t => (
-            <button key={t.rank} onClick={() => onSelect?.(t.title)} className="flex items-center gap-2.5 w-full text-left group">
-              <span className="text-white/25 font-black text-sm w-5 flex-shrink-0">{t.rank}</span>
-              <img src={t.image} alt={t.title} className="w-9 h-9 rounded-lg object-cover border border-white/10 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-white text-xs font-semibold truncate group-hover:text-cyan-300 transition-colors">{t.title}</div>
-                <span className="flex items-center gap-0.5 text-yellow-400 text-[9px]"><Star className="w-2.5 h-2.5 fill-current" />{t.rating}</span>
-              </div>
-              <span className="text-white/60 text-[10px] font-bold flex-shrink-0">${t.price}</span>
-            </button>
-          ))}
+          {TRENDING_NOW.map((t, i) => {
+            const c = RANK_COLORS[i] || RANK_COLORS[RANK_COLORS.length - 1];
+            return (
+              <button key={t.rank} onClick={() => onSelect?.(t.title)} className="flex items-center gap-2.5 w-full text-left group">
+                <span className={`font-black text-base w-6 flex-shrink-0 text-center ${c.text}`} style={{ textShadow: `0 0 10px ${c.glow}` }}>{t.rank}</span>
+                <img src={t.image} alt={t.title} className="w-9 h-9 rounded-lg object-cover border border-white/10 flex-shrink-0 group-hover:border-cyan-400/30 transition-colors" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-xs font-semibold truncate group-hover:text-cyan-300 transition-colors">{t.title}</div>
+                  <span className={`flex items-center gap-0.5 text-[9px] font-bold ${c.star}`}><Star className="w-2.5 h-2.5 fill-current" />{t.rating}</span>
+                </div>
+                <span className="text-white/70 text-[10px] font-bold flex-shrink-0">${t.price}</span>
+              </button>
+            );
+          })}
         </div>
       </Card>
 

@@ -1,38 +1,56 @@
 // StorefrontTopBar.jsx — Top header: nav pills, search, credits, cart, notifications, profile
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSearchChange, onSearchOpen }) {
   const navigate = useNavigate();
   const displayName = user?.username || user?.full_name || 'Player';
   const level = user?.level || 12;
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const handleMic = (e) => {
+    e.stopPropagation();
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.continuous = false; rec.interimResults = false; rec.lang = 'en-US';
+    rec.onresult = (ev) => onSearchChange?.(ev.results[0][0].transcript);
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    rec.start();
+    setIsListening(true);
+  };
 
   return (
     <div className="flex items-center w-full gap-4">
-      {/* Left brand + nav pills */}
-      <div className="flex items-center gap-5 flex-shrink-0">
+      {/* Left brand + nav pills + search (right of Cards) */}
+      <div className="flex items-center gap-4 flex-1 min-w-0">
         <span className="text-base font-black tracking-widest text-white whitespace-nowrap">ATOM X EVE</span>
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex items-center gap-1 flex-shrink-0">
           <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/55 hover:text-white hover:bg-white/[0.06] transition-all">Luna</button>
           <button className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/[0.1] border border-white/15">Store</button>
           <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/55 hover:text-white hover:bg-white/[0.06] transition-all">Cards</button>
           <button onClick={() => navigate(createPageUrl('Community'))} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/55 hover:text-white hover:bg-white/[0.06] transition-all">Community</button>
         </div>
-      </div>
 
-      {/* Center search */}
-      <div className="flex-1 flex justify-center min-w-0">
+        {/* Search — immediately to the right of the nav pills (right of Cards) */}
         <div onClick={onSearchOpen}
-          className="flex items-center gap-2 w-full max-w-[440px] px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] transition-all cursor-text">
-          <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
+          className="group flex items-center gap-2 flex-1 max-w-[420px] min-w-0 px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] hover:border-cyan-400/30 transition-all cursor-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+          <Search className="w-4 h-4 text-white/40 flex-shrink-0 group-hover:text-cyan-300 transition-colors" />
           <input
             value={searchTerm || ''}
             onChange={(e) => onSearchChange?.(e.target.value)}
             placeholder="Search games, studios, genres..."
             className="flex-1 bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none min-w-0"
           />
+          <button onClick={handleMic} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
+            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+          </button>
           <button onClick={(e) => { e.stopPropagation(); onSearchOpen?.(); }} className="flex-shrink-0 w-6 h-6 rounded-md bg-white/[0.06] flex items-center justify-center text-white/40 hover:text-white">
             <SlidersHorizontal className="w-3.5 h-3.5" />
           </button>

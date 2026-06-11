@@ -122,26 +122,8 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
           </motion.button>
         </div>
 
-        {/* Spacer pushes search to far right */}
+        {/* Spacer keeps tabs left-aligned (search moved to top header) */}
         <div className="flex-1" />
-
-        {/* Search — far right */}
-        <div className="w-px h-4 bg-white/10 mr-3" />
-        <div className="flex items-center gap-2 min-w-[180px]">
-          <Search className="w-3.5 h-3.5 flex-shrink-0 text-white/30" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchValue}
-            onChange={handleChange}
-            onFocus={() => { if (!libraryActive) onLibraryToggle?.(); }}
-            placeholder="Search bar"
-            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-          />
-          <button onClick={handleMic} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
-            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-          </button>
-        </div>
       </div>
     </div>
   );
