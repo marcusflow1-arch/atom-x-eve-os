@@ -3,7 +3,6 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import ViewModeToggle from '@/components/mobile/ViewModeToggle';
 
 export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSearchChange, onSearchOpen }) {
   const navigate = useNavigate();
@@ -78,9 +77,6 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
           <Bell className="w-4 h-4" />
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
         </button>
-
-        {/* Desktop / Mobile mode switch */}
-        <ViewModeToggle />
 
         <button className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all">
           <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">

@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRightLeft, Mic, MicOff, Search, Sparkles, Clock, Trophy, Flame, Gem } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRightLeft, Mic, MicOff, Search, Sparkles, Clock, Trophy, Flame, Gem, Settings } from 'lucide-react';
+import { createPageUrl } from '@/utils';
+import ViewModeToggle from '@/components/mobile/ViewModeToggle';
 
 const CATEGORY_PILLS = [
   { id: 'new_releases', label: 'New Release', icon: Clock },
