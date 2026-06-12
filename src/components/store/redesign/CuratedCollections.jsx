@@ -10,9 +10,12 @@ export default function CuratedCollections({ onSelect }) {
       <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-3">Curated Collections</h3>
       <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-3">
         {COLLECTIONS.map(c => (
-          <motion.button key={c.id} onClick={() => onSelect?.(c.id)} whileHover={{ y: -3 }}
-            className="relative h-[110px] rounded-xl overflow-hidden border border-white/10 group text-left">
-            <img src={c.image} alt={c.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <motion.button key={c.id} onClick={() => onSelect?.(c.id)} whileHover={{ y: -5, scale: 1.02 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="relative h-[120px] rounded-2xl overflow-hidden border border-white/10 hover:border-cyan-400/40 group text-left"
+            style={{ boxShadow: '0 8px 24px -10px rgba(0,0,0,0.6)' }}>
+            <img src={c.image} alt={c.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+            <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" style={{ boxShadow: 'inset 0 0 0 1px rgba(56,189,248,0.45), inset 0 0 24px rgba(56,189,248,0.16)' }} />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(110deg, rgba(8,10,18,0.92) 0%, rgba(8,10,18,0.4) 60%, transparent 100%)' }} />
             <div className="absolute inset-0 flex flex-col justify-center px-4">
               <div className="text-white/70 font-bold text-xs tracking-widest leading-none">{c.title}</div>

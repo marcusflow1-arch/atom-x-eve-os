@@ -16,11 +16,14 @@ export default function BrowseByGenre({ onSelect }) {
             const Icon = ICONS[g.icon] || Swords;
             return (
               <motion.button key={g.id} onClick={() => onSelect?.(g.id)}
-                whileHover={{ y: -4 }}
-                className="relative flex-shrink-0 w-[180px] h-[150px] rounded-xl overflow-hidden border border-white/10 group"
+                whileHover={{ y: -6, scale: 1.03 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                className="relative flex-shrink-0 w-[180px] h-[150px] rounded-2xl overflow-hidden border border-white/10 hover:border-white/25 group"
+                style={{ boxShadow: '0 8px 24px -10px rgba(0,0,0,0.6)' }}
               >
-                <img src={g.image} alt={g.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={g.image} alt={g.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                 <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${g.glow}22 70%, rgba(8,10,18,0.95) 100%)` }} />
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ boxShadow: `inset 0 0 0 1px ${g.glow}77, inset 0 0 26px ${g.glow}33` }} />
                 <div className="absolute inset-0 flex flex-col justify-end p-3">
                   <Icon className="w-5 h-5 mb-1.5" style={{ color: g.glow }} />
                   <div className="text-white font-bold text-base leading-none">{g.label}</div>

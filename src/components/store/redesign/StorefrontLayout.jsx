@@ -1,5 +1,5 @@
 // StorefrontLayout.jsx — Composes the full redesigned Store front page
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import GenreSidebar from './GenreSidebar';
 import StorefrontHero from './StorefrontHero';
@@ -10,38 +10,46 @@ import ExploreAllGames from './ExploreAllGames';
 import StorefrontRightRail from './StorefrontRightRail';
 
 export default function StorefrontLayout({ onNavigateToGame }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      className="h-full w-full overflow-y-auto custom-scrollbar px-5 pb-24"
-      style={{ scrollbarWidth: 'none' }}
-    >
-      <div className="flex gap-5 max-w-[1700px] mx-auto pt-4">
-        {/* LEFT: Genre/Discover sidebar */}
-        <div className="w-[230px] flex-shrink-0 hidden lg:block sticky top-4 self-start" style={{ height: 'calc(100vh - 140px)' }}>
-          <GenreSidebar onSelect={() => {}} />
-        </div>
+  // Lifted state: hovering a game card updates the spotlight dynamically
+  const [spotlightGame, setSpotlightGame] = useState(null);
 
-        {/* CENTER: main content */}
-        <div className="flex-1 min-w-0 space-y-6">
-          {/* Hero + Quick Access */}
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4 h-[300px]">
-            <StorefrontHero onPlay={() => {}} />
-            <div className="hidden xl:block">
-              <QuickAccessPanel onSelect={() => {}} />
-            </div>
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      {/* Atmospheric background — deep navy → black with subtle moon glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 75% 0%, rgba(99,102,241,0.10) 0%, transparent 45%), radial-gradient(circle at 10% 100%, rgba(56,189,248,0.07) 0%, transparent 50%), linear-gradient(180deg, #0A0F1C 0%, #060912 60%, #04060d 100%)' }} />
+
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="relative h-full w-full overflow-y-auto custom-scrollbar px-6 pb-28"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        <div className="flex gap-6 max-w-[1700px] mx-auto pt-5">
+          {/* LEFT: Genre/Discover sidebar */}
+          <div className="w-[230px] flex-shrink-0 hidden lg:block sticky top-5 self-start" style={{ height: 'calc(100vh - 150px)' }}>
+            <GenreSidebar onSelect={() => {}} />
           </div>
 
-          <BrowseByGenre onSelect={() => {}} />
-          <CuratedCollections onSelect={() => {}} />
-          <ExploreAllGames onSelect={onNavigateToGame} />
-        </div>
+          {/* CENTER: main content — strong vertical rhythm (32px) */}
+          <div className="flex-1 min-w-0 space-y-8">
+            {/* Hero + Quick Access — dominant spotlight */}
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4 h-[360px]">
+              <StorefrontHero game={spotlightGame} onPlay={() => {}} />
+              <div className="hidden xl:block">
+                <QuickAccessPanel onSelect={() => {}} />
+              </div>
+            </div>
 
-        {/* RIGHT: rail */}
-        <div className="w-[280px] flex-shrink-0 hidden 2xl:block">
-          <StorefrontRightRail onSelect={() => {}} />
+            <BrowseByGenre onSelect={() => {}} />
+            <CuratedCollections onSelect={() => {}} />
+            <ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} />
+          </div>
+
+          {/* RIGHT: rail */}
+          <div className="w-[280px] flex-shrink-0 hidden 2xl:block">
+            <StorefrontRightRail onSelect={() => {}} />
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
