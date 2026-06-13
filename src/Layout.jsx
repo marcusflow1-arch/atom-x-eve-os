@@ -25,7 +25,6 @@ import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeConte
 import ViewModeToggle from './components/mobile/ViewModeToggle';
 import MobileLayoutShell from './components/mobile/MobileLayoutShell';
 import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsDrawer';
-import HeaderSearchCluster from './components/store/HeaderSearchCluster';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
@@ -957,9 +956,6 @@ function LayoutContent({ children, currentPageName }) {
                           </button>
 
                         </div>
-
-                        {/* Centered search bar + right-side options (filter, bell, cart, credits, profile) */}
-                        <HeaderSearchCluster user={user} cartCount={typeof getCartCount === 'function' ? getCartCount() : 0} />
                       </>
                     )}
 

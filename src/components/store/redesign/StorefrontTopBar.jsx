@@ -28,6 +28,17 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
 
   return (
     <div className="flex items-center w-full gap-4">
+      <style>{`
+        .search-underline-line {
+          background: rgba(255,255,255,0.18);
+          transition: background 0.25s ease, box-shadow 0.25s ease;
+        }
+        .search-underline:hover .search-underline-line,
+        .search-underline:focus-within .search-underline-line {
+          background: #22d3ee;
+          box-shadow: 0 0 8px 1px rgba(34,211,238,0.65), 0 0 16px 2px rgba(34,211,238,0.35);
+        }
+      `}</style>
       {/* Left — brand + nav pills */}
       <div className="flex items-center gap-4 flex-shrink-0">
         <span className="text-base font-black tracking-widest text-white whitespace-nowrap">ATOM X EVE</span>
@@ -39,23 +50,26 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
         </div>
       </div>
 
-      {/* Center — search */}
-      <div className="flex-1 flex justify-center min-w-0">
+      {/* Center-left — minimal underline search (right of the Luna/Store/Cards tabs) */}
+      <div className="flex-1 flex justify-center min-w-0 pl-6">
         <div onClick={onSearchOpen}
-          className="group flex items-center gap-2 w-full max-w-[460px] min-w-0 px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] hover:border-cyan-400/30 transition-all cursor-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-          <Search className="w-4 h-4 text-white/40 flex-shrink-0 group-hover:text-cyan-300 transition-colors" />
+          className="search-underline group flex items-center gap-2 w-full max-w-[420px] min-w-0 px-1 py-2 cursor-text relative">
+          <Search className="w-4 h-4 text-white/40 flex-shrink-0 group-hover:text-cyan-300 group-focus-within:text-cyan-300 transition-colors" />
           <input
             value={searchTerm || ''}
             onChange={(e) => onSearchChange?.(e.target.value)}
+            onFocus={() => onSearchOpen?.()}
             placeholder="Search games, studios, genres..."
             className="flex-1 bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none min-w-0"
           />
           <button onClick={handleMic} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
             {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onSearchOpen?.(); }} className="flex-shrink-0 w-6 h-6 rounded-md bg-white/[0.06] flex items-center justify-center text-white/40 hover:text-white">
+          <button onClick={(e) => { e.stopPropagation(); onSearchOpen?.(); }} className="flex-shrink-0 text-white/40 hover:text-cyan-300 transition-colors">
             <SlidersHorizontal className="w-3.5 h-3.5" />
           </button>
+          {/* underline */}
+          <span className="search-underline-line pointer-events-none absolute left-0 right-0 bottom-0 h-[1.5px] rounded-full" />
         </div>
       </div>
 
