@@ -5,8 +5,14 @@ import GenreSidebar from './GenreSidebar';
 import StorefrontHero from './StorefrontHero';
 import QuickAccessPanel from './QuickAccessPanel';
 import BrowseByGenre from './BrowseByGenre';
+import NewReleases from './NewReleases';
 import CuratedCollections from './CuratedCollections';
+import TopSellers from './TopSellers';
+import ComingSoon from './ComingSoon';
 import ExploreAllGames from './ExploreAllGames';
+import FreeToPlay from './FreeToPlay';
+import SpecialOffers from './SpecialOffers';
+import EditorsChoice from './EditorsChoice';
 import StorefrontRightRail from './StorefrontRightRail';
 
 export default function StorefrontLayout({ onNavigateToGame }) {
@@ -40,8 +46,14 @@ export default function StorefrontLayout({ onNavigateToGame }) {
             </div>
 
             <BrowseByGenre onSelect={() => {}} />
+            <NewReleases onSelect={onNavigateToGame} />
             <CuratedCollections onSelect={() => {}} />
+            <TopSellers onSelect={onNavigateToGame} />
+            <ComingSoon onSelect={() => {}} />
             <ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} />
+            <SpecialOffers onSelect={onNavigateToGame} />
+            <FreeToPlay onSelect={onNavigateToGame} />
+            <EditorsChoice onSelect={onNavigateToGame} />
           </div>
 
           {/* RIGHT: rail */}
