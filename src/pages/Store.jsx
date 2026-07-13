@@ -13,6 +13,7 @@ import { aiGamesList, otherSampleGames, androidGames } from '../components/store
 import { googlePlayGames } from '../components/store/androidGamesData';
 import MarketplaceContent from '../components/store/MarketplaceContent';
 import TradingPostContent from '../components/store/TradingPostContent';
+import TradingPostSearchBar from '../components/store/tradingpost/TradingPostSearchBar';
 import { NAV_HIERARCHY } from '../components/dashboard/NavigationConfig';
 import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -199,6 +200,7 @@ export default function Store() {
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
     const [activeStoreTab, setActiveStoreTab] = useState('store');
     const [storeFilters, setStoreFilters] = useState({});
+    const [tradingSearch, setTradingSearch] = useState('');
 
     useEffect(() => {
         const subview = searchParams.get('subview');
@@ -604,6 +606,14 @@ export default function Store() {
                                   )}
                                 </AnimatePresence>
                               </div>
+
+                              {/* Search bar with voice — Trading Post only */}
+                              {storeMode === 'trading' && (
+                                <TradingPostSearchBar
+                                  value={tradingSearch}
+                                  onChange={setTradingSearch}
+                                />
+                              )}
                           </div>
                         </div>}
 
@@ -701,7 +711,7 @@ export default function Store() {
                                     </motion.div>
                                 ) : (
                                     <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                                        <TradingPostContent />
+                                        <TradingPostContent genreFilter={storeFilters.genre} searchTerm={tradingSearch} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

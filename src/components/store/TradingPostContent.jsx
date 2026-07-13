@@ -8,10 +8,9 @@ import TradingPostGameGrid from './tradingpost/TradingPostGameGrid';
 import TradingPostCardGrid from './tradingpost/TradingPostCardGrid';
 import TradingPostListingBoard from './tradingpost/TradingPostListingBoard';
 
-export default function TradingPostContent() {
+export default function TradingPostContent({ genreFilter, searchTerm }) {
   const [allGames, setAllGames] = useState([]);
   const [filters, setFilters] = useState({ category: 'all', rarity: [], priceRange: [0, 10000] });
-  const [search, setSearch] = useState('');
 
   // Navigation: level 1 (games) → 2 (cards) → 3 (listings)
   const [selectedGame, setSelectedGame] = useState(null);
@@ -30,12 +29,13 @@ export default function TradingPostContent() {
   }, []);
 
   const filteredGames = useMemo(() => {
+    const search = searchTerm || '';
     return allGames.filter((g) => {
-      if (filters.category !== 'all' && g.genre !== filters.category) return false;
+      if (genreFilter && g.genre !== genreFilter) return false;
       if (search && !g.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [allGames, filters.category, search]);
+  }, [allGames, genreFilter, searchTerm]);
 
   const level = selectedCard ? 3 : selectedGame ? 2 : 1;
 
@@ -100,11 +100,11 @@ export default function TradingPostContent() {
         )}
       </div>
 
-      {/* BODY: filters + content */}
+      {/* BODY: level 1 = full-width grid (genre + search are in the top sub-nav); levels 2-3 = filters + content */}
       <div className="flex-1 flex gap-6 overflow-hidden px-6 py-4">
-        <TradingPostFilters filters={filters} setFilters={setFilters} search={search} setSearch={setSearch} />
+        {level > 1 && <TradingPostFilters filters={filters} setFilters={setFilters} />}
 
-        <div className="flex-1 min-w-0 overflow-hidden">
+        <div className={`min-w-0 overflow-hidden ${level === 1 ? 'flex-1' : 'flex-1'}`}>
           <AnimatePresence mode="wait">
             {level === 1 && (
               <motion.div key="games" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="h-full">
