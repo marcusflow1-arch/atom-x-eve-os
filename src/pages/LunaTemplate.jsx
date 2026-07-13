@@ -848,7 +848,7 @@ export default function LunaTemplate() {
 
       {/* Focus Mode Panel - Shows only on avatar section, hidden when sidebar is hidden */}
       <AnimatePresence>
-        {sidebarVisible && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' && !showLibraryLanding &&
+        {!uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' && !showLibraryLanding &&
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1880,7 +1880,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Side Access Menu - hidden when sidebar is hidden */}
-      {sidebarVisible && !clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
               // SideAccessMenu stays visible even when hideUI is true, per user request:
               // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
               // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
