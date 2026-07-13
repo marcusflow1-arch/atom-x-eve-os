@@ -4,6 +4,7 @@ import {
   Search, X, Play, Clock, Trophy, Star, Download,
   Radio, Heart, Settings, Users, Zap, ChevronUp, Filter
 } from 'lucide-react';
+import LibraryCommunityMoments from './LibraryCommunityMoments';
 
 const FILTERS = ['All', 'Playing', 'Installed', 'New'];
 
@@ -100,11 +101,13 @@ export default function LibraryLandingPage({ games, onClose }) {
 
       {/* Body: grid + detail panel */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Game Grid */}
+        {/* Left column: 50-50 vertical split */}
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
+        {/* Game Grid - top half */}
         <div
           ref={gridScrollRef}
           onScroll={handleGridScroll}
-          className="overflow-y-auto overscroll-contain flex-1 min-w-0"
+          className="overflow-y-auto overscroll-contain flex-1 min-h-0"
           style={{ scrollbarWidth: 'none' }}
         >
           <div
@@ -169,6 +172,15 @@ export default function LibraryLandingPage({ games, onClose }) {
           )}
 
           <div className="h-4" />
+        </div>
+
+          {/* Invisible divider line */}
+          <div className="h-px bg-white/[0.06] flex-shrink-0" />
+
+          {/* Community Moments - bottom half */}
+          <div className="flex-1 min-h-0 flex-shrink-0 overflow-hidden">
+            <LibraryCommunityMoments game={selectedGame} />
+          </div>
         </div>
 
         {/* Game Detail Panel */}
