@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, X, Play, Clock, Trophy, Star, Download,
-  Radio, Heart, Settings, Users, Zap, ChevronUp, Filter
+  Radio, Heart, Settings, Users, Zap, ChevronUp, Filter, ChevronDown
 } from 'lucide-react';
 import LibraryCommunityMoments from './LibraryCommunityMoments';
 
@@ -31,7 +31,14 @@ export default function LibraryLandingPage({ games, onClose }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [wishlisted, setWishlisted] = useState({});
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [genreFilterOpen, setGenreFilterOpen] = useState(false);
+  const [activeGenre, setActiveGenre] = useState('All');
   const gridScrollRef = useRef(null);
+
+  const genres = useMemo(() => {
+    const set = new Set(gamesList.map(g => g.genre).filter(Boolean));
+    return ['All', ...Array.from(set).sort()];
+  }, [gamesList]);
 
   const handleGridScroll = (e) => setShowScrollTop(e.target.scrollTop > 100);
   const scrollToTop = () => gridScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -49,8 +56,11 @@ export default function LibraryLandingPage({ games, onClose }) {
           : g.status === activeFilter
       );
     }
+    if (activeGenre !== 'All') {
+      result = result.filter(g => g.genre === activeGenre);
+    }
     return result;
-  }, [search, activeFilter, gamesList]);
+  }, [search, activeFilter, activeGenre, gamesList]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: 'transparent' }}>
@@ -58,7 +68,42 @@ export default function LibraryLandingPage({ games, onClose }) {
       <div className="flex items-center gap-3 px-4 py-3 border-b border-white/[0.06] flex-shrink-0">
         <span className="text-white/80 text-xs font-bold uppercase tracking-widest">Full Library</span>
         <span className="text-white/20 text-[10px]">{filtered.length} games</span>
-        <div className="flex-1" />
+
+        {/* Genre dropdown filter */}
+        <div className="relative">
+          <button
+            onClick={() => setGenreFilterOpen(v => !v)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-medium transition-all bg-white/[0.04] text-white/50 border border-white/[0.06] hover:text-white/70 hover:bg-white/[0.07]"
+          >
+            <Filter className="w-2.5 h-2.5" />
+            {activeGenre}
+            <ChevronDown className={`w-2.5 h-2.5 transition-transform ${genreFilterOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <AnimatePresence>
+            {genreFilterOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 mt-1 w-44 max-h-60 overflow-y-auto rounded-lg shadow-2xl z-50"
+                style={{ background: 'rgba(10,14,22,0.97)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', scrollbarWidth: 'none' }}
+              >
+                {genres.map(g => (
+                  <button
+                    key={g}
+                    onClick={() => { setActiveGenre(g); setGenreFilterOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-[10px] transition-colors border-b border-white/[0.04] last:border-b-0 ${
+                      activeGenre === g ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Search */}
         <div className="relative">
@@ -71,6 +116,8 @@ export default function LibraryLandingPage({ games, onClose }) {
             className="w-44 bg-white/[0.06] border border-white/[0.07] rounded-lg pl-7 pr-3 py-1.5 text-[10px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/15"
           />
         </div>
+
+        <div className="flex-1" />
 
         {/* Filters */}
         <div className="flex items-center gap-1">
@@ -174,6 +221,8 @@ export default function LibraryLandingPage({ games, onClose }) {
           <div className="h-4" />
         </div>
 
+          {selectedGame && (
+            <>
           {/* Invisible divider line */}
           <div className="h-px bg-white/[0.06] flex-shrink-0" />
 
@@ -181,6 +230,8 @@ export default function LibraryLandingPage({ games, onClose }) {
           <div className="flex-1 min-h-0 flex-shrink-0 overflow-hidden">
             <LibraryCommunityMoments game={selectedGame} />
           </div>
+            </>
+          )}
         </div>
 
         {/* Game Detail Panel */}
