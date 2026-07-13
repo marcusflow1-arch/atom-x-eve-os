@@ -438,6 +438,8 @@ export default function Store() {
         setActiveStoreTab(tabId);
         if (tabId === 'trading') {
             setStoreMode('trading');
+        } else if (tabId === 'devcards') {
+            setStoreMode('devcards');
         } else {
             setStoreMode('store');
         }
@@ -512,7 +514,7 @@ export default function Store() {
 
                         {/* ═══ GENRE MASTERY SUB-NAV (matches Depth Cards style) ═══ */}
                         {/* Hidden on the redesigned storefront (it has its own Discover/genre sidebar) */}
-                        {!inPageStoreGameId && !(storeMode === 'store' && storeSubView === 'games' && viewMode === 'cross') && <div className="flex-shrink-0 mt-16 relative z-30">
+                        {!inPageStoreGameId && storeMode !== 'devcards' && !(storeMode === 'store' && storeSubView === 'games' && viewMode === 'cross') && <div className="flex-shrink-0 mt-16 relative z-30">
                           <div className="flex items-center px-6 py-2 gap-0"
                             style={{
                               background: 'rgba(8, 12, 18, 0.5)',
@@ -705,9 +707,9 @@ export default function Store() {
                                             )}
                                         </motion.div>
                                     )
-                                ) : storeMode === 'shooter' ? (
-                                    <motion.div key="shooter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden pt-16">
-                                        <ShooterContent games={games} onNavigateToGame={handleNavigateToGame} />
+                                ) : storeMode === 'devcards' ? (
+                                    <motion.div key="devcards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden pt-16">
+                                        <DevCardsContent onNavigateToGame={handleNavigateToGame} />
                                     </motion.div>
                                 ) : (
                                     <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
