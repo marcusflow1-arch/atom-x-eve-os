@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Orbit, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Orbit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Game } from '@/entities/Game';
 import { aiGamesList, otherSampleGames } from './mockData';
 import TradingPostFilters from './tradingpost/TradingPostFilters';
@@ -59,19 +59,6 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
           <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
             Player-to-Player Item Exchange
           </p>
-        </div>
-
-        <div
-          className="px-4 py-3 rounded-2xl flex items-center gap-3"
-          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-            <DollarSign className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
-            <p className="text-lg font-bold text-white font-mono">24,500 AGP</p>
-          </div>
         </div>
       </div>
 
