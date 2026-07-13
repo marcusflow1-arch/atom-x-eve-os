@@ -1,23 +1,25 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRightLeft, Mic, MicOff, Search, Sparkles, Clock, Trophy, Flame, Gem, Settings } from 'lucide-react';
+import { ArrowRightLeft, Mic, MicOff, Search, Sparkles, Clock, Trophy, Flame, Gem, Settings, ChevronUp } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import ViewModeToggle from '@/components/mobile/ViewModeToggle';
+import CategoryFloatingMenu from './CategoryFloatingMenu';
 
-const CATEGORY_PILLS = [
-  { id: 'new_releases', label: 'New Release', icon: Clock },
-  { id: 'recommended', label: 'Recommended', icon: Sparkles },
-  { id: 'hidden_gems', label: 'Hidden Gems', icon: Gem },
-  { id: 'trending', label: 'Trendy', icon: Flame },
-  { id: 'top_rated', label: 'Top Rated', icon: Trophy },
-];
+const CATEGORY_LABELS = {
+  new_releases: 'New Release',
+  recommended: 'Recommended',
+  hidden_gems: 'Hidden Gems',
+  trending: 'Trending',
+  top_rated: 'Top Rated',
+};
 
 
 export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [catMenuOpen, setCatMenuOpen] = useState(false);
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -46,24 +48,30 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
   return (
     <div className="flex items-center w-full relative">
 
-      {/* ── LEFT: Category pills, flush left, no button styling ── */}
+      {/* ── LEFT: Category trigger button ── */}
       <div className="flex items-center gap-5 flex-1">
-        {CATEGORY_PILLS.map(({ id, label, icon: Icon }) => {
-          const isActive = activeCategory === id;
-          return (
-            <button
-              key={id}
-              onClick={() => onCategoryChange?.(isActive ? null : id)}
-              className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-                isActive ? 'text-cyan-300' : 'text-white/45 hover:text-white'
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : ''}`} />
-              <span>{label}</span>
-            </button>
-          );
-        })}
+        <motion.button
+          onClick={() => setCatMenuOpen(true)}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${
+            activeCategory
+              ? 'text-cyan-300 bg-cyan-500/10 border border-cyan-500/20'
+              : 'text-white/45 hover:text-white bg-white/[0.04] border border-white/10 hover:border-white/20'
+          }`}
+        >
+          <span>{activeCategory ? CATEGORY_LABELS[activeCategory] : 'Categories'}</span>
+          <ChevronUp className={`w-3.5 h-3.5 ${catMenuOpen ? 'rotate-180' : ''} transition-transform`} />
+        </motion.button>
       </div>
+
+      {/* Floating Category Menu — slides up from the bottom header */}
+      <CategoryFloatingMenu
+        isOpen={catMenuOpen}
+        onClose={() => setCatMenuOpen(false)}
+        activeCategory={activeCategory}
+        onCategoryChange={onCategoryChange}
+      />
 
       {/* ── CENTER: Divider | Store | Divider ── */}
       <div className="flex items-center flex-shrink-0">
