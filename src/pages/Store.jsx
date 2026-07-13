@@ -609,20 +609,22 @@ export default function Store() {
                                 </AnimatePresence>
                               </div>
 
-                              {/* Search bar + balance — Trading Post only */}
+                              {/* Search bar — Trading Post only */}
                               {storeMode === 'trading' && (
-                                <div className="flex flex-col gap-1.5">
-                                  <TradingPostSearchBar
-                                    value={tradingSearch}
-                                    onChange={setTradingSearch}
-                                  />
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center">
-                                      <DollarSign className="w-3 h-3 text-white" />
-                                    </div>
-                                    <span className="text-[9px] text-white/50 uppercase font-bold tracking-wider">Balance</span>
-                                    <span className="text-xs font-bold text-white font-mono ml-auto">24,500 AGP</span>
+                                <TradingPostSearchBar
+                                  value={tradingSearch}
+                                  onChange={setTradingSearch}
+                                />
+                              )}
+
+                              {/* Balance — far right, no box */}
+                              {storeMode === 'trading' && (
+                                <div className="flex items-center gap-2 ml-auto">
+                                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center">
+                                    <DollarSign className="w-3 h-3 text-white" />
                                   </div>
+                                  <span className="text-[9px] text-white/50 uppercase font-bold tracking-wider">Balance</span>
+                                  <span className="text-xs font-bold text-white font-mono">24,500 AGP</span>
                                 </div>
                               )}
                           </div>
