@@ -61,11 +61,15 @@ function GameCard({ g, i, onSelect, onHoverGame }) {
   );
 }
 
-export default function ExploreAllGames({ onSelect, onHoverGame }) {
+export default function ExploreAllGames({ onSelect, onHoverGame, games }) {
   const [sortBy, setSortBy] = useState('Featured');
   const [price, setPrice] = useState('All Prices');
   const [platform, setPlatform] = useState('All Platforms');
   const [view, setView] = useState('grid');
+
+  const items = games && games.length > 0
+    ? games.map(g => ({ id: g.id, title: g.title, sub: g.genre || '', rating: g.rating || 4.5, price: g.price ?? 0, cover_image: g.cover_image || g.image }))
+    : EXPLORE_GAMES;
 
   return (
     <section
@@ -86,7 +90,7 @@ export default function ExploreAllGames({ onSelect, onHoverGame }) {
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {EXPLORE_GAMES.map((g, i) => (
+        {items.map((g, i) => (
           <GameCard key={g.id} g={g} i={i} onSelect={onSelect} onHoverGame={onHoverGame} />
         ))}
       </div>

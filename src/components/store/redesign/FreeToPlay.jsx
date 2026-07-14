@@ -4,7 +4,10 @@ import { motion } from 'framer-motion';
 import { Star, Users, ChevronRight, Gift } from 'lucide-react';
 import { FREE_TO_PLAY } from './storefrontData';
 
-export default function FreeToPlay({ onSelect }) {
+export default function FreeToPlay({ onSelect, games }) {
+  const items = games && games.length > 0
+    ? games.map(g => ({ id: g.id, title: g.title, genre: g.genre || 'Game', players: `${Math.floor(Math.random() * 15) + 1}M`, rating: g.rating || 4.5, cover_image: g.cover_image || g.image }))
+    : FREE_TO_PLAY;
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
@@ -17,7 +20,7 @@ export default function FreeToPlay({ onSelect }) {
         </button>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-        {FREE_TO_PLAY.map((g, i) => (
+        {items.map((g, i) => (
           <motion.button
             key={g.id}
             onClick={() => onSelect?.(g.id)}

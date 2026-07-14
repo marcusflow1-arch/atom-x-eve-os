@@ -15,9 +15,13 @@ import SpecialOffers from './SpecialOffers';
 import EditorsChoice from './EditorsChoice';
 import StorefrontRightRail from './StorefrontRightRail';
 
-export default function StorefrontLayout({ onNavigateToGame }) {
+export default function StorefrontLayout({ onNavigateToGame, games = [] }) {
   // Lifted state: hovering a game card updates the spotlight dynamically
   const [spotlightGame, setSpotlightGame] = useState(null);
+
+  // Map real DB games into each section's format; fall back to mock if no real games
+  const hasReal = games.length > 0;
+  const pick = (n, offset = 0) => games.slice(offset, offset + n);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -46,14 +50,14 @@ export default function StorefrontLayout({ onNavigateToGame }) {
             </div>
 
             <BrowseByGenre onSelect={() => {}} />
-            <NewReleases onSelect={onNavigateToGame} />
+            <NewReleases onSelect={onNavigateToGame} games={hasReal ? pick(8) : undefined} />
             <CuratedCollections onSelect={() => {}} />
-            <TopSellers onSelect={onNavigateToGame} />
+            <TopSellers onSelect={onNavigateToGame} games={hasReal ? pick(6, 8) : undefined} />
             <ComingSoon onSelect={() => {}} />
-            <ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} />
-            <SpecialOffers onSelect={onNavigateToGame} />
-            <FreeToPlay onSelect={onNavigateToGame} />
-            <EditorsChoice onSelect={onNavigateToGame} />
+            <ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} games={hasReal ? games : undefined} />
+            <SpecialOffers onSelect={onNavigateToGame} games={hasReal ? pick(6, 14) : undefined} />
+            <FreeToPlay onSelect={onNavigateToGame} games={hasReal ? games.filter(g => g.price === 0 || g.price == null).slice(0, 6) : undefined} />
+            <EditorsChoice onSelect={onNavigateToGame} games={hasReal ? pick(4, 20) : undefined} />
           </div>
 
           {/* RIGHT: rail */}

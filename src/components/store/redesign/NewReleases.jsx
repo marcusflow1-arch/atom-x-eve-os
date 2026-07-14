@@ -4,7 +4,10 @@ import { motion } from 'framer-motion';
 import { Star, ChevronRight, Calendar } from 'lucide-react';
 import { NEW_RELEASES } from './storefrontData';
 
-export default function NewReleases({ onSelect }) {
+export default function NewReleases({ onSelect, games }) {
+  const items = games && games.length > 0
+    ? games.map(g => ({ id: g.id, title: g.title, genre: g.genre || 'Game', date: g.original_year || '2026', rating: g.rating || 4.5, price: g.price ?? 0, cover_image: g.cover_image || g.image }))
+    : NEW_RELEASES;
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
@@ -15,7 +18,7 @@ export default function NewReleases({ onSelect }) {
       </div>
       <div className="relative">
         <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {NEW_RELEASES.map((g, i) => (
+          {items.map((g, i) => (
             <motion.button
               key={g.id}
               onClick={() => onSelect?.(g.id)}

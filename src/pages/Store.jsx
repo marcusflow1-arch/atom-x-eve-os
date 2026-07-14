@@ -714,7 +714,7 @@ export default function Store() {
                                             {loading ? (
                                                 <LoadingState fullScreen message="Loading Store..." />
                                             ) : (
-                                                <StorefrontLayout onNavigateToGame={handleNavigateToGame} />
+                                                <StorefrontLayout onNavigateToGame={handleNavigateToGame} games={games} />
                                             )}
                                         </motion.div>
                                     )

@@ -4,7 +4,11 @@ import { motion } from 'framer-motion';
 import { Star, Quote, ChevronRight } from 'lucide-react';
 import { EDITORS_CHOICE } from './storefrontData';
 
-export default function EditorsChoice({ onSelect }) {
+export default function EditorsChoice({ onSelect, games }) {
+  const QUOTES = ['A masterclass in narrative RPG design', 'Roguelike perfection with heart', 'The greatest mystery in gaming', 'The deck-builder that started it all', 'An unforgettable journey', 'Pure gameplay bliss'];
+  const items = games && games.length > 0
+    ? games.map((g, i) => ({ id: g.id, title: g.title, rating: g.rating || 4.5, cover_image: g.cover_image || g.image, quote: QUOTES[i % QUOTES.length], author: '— Staff Review' }))
+    : EDITORS_CHOICE;
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
@@ -17,7 +21,7 @@ export default function EditorsChoice({ onSelect }) {
         </button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {EDITORS_CHOICE.map((g, i) => (
+        {items.map((g, i) => (
           <motion.button
             key={g.id}
             onClick={() => onSelect?.(g.id)}

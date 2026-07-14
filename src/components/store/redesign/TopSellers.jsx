@@ -13,7 +13,10 @@ const RANK_COLORS = [
   'text-purple-300',
 ];
 
-export default function TopSellers({ onSelect }) {
+export default function TopSellers({ onSelect, games }) {
+  const items = games && games.length > 0
+    ? games.map((g, i) => ({ id: g.id, rank: i + 1, title: g.title, genre: g.genre || 'Game', rating: g.rating || 4.5, price: g.price ?? 0, cover_image: g.cover_image || g.image }))
+    : TOP_SELLERS;
   return (
     <section
       className="rounded-2xl border border-white/[0.07] p-6"
@@ -29,7 +32,7 @@ export default function TopSellers({ onSelect }) {
         </button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {TOP_SELLERS.map((g, i) => (
+        {items.map((g, i) => (
           <motion.button
             key={g.id}
             onClick={() => onSelect?.(g.id)}

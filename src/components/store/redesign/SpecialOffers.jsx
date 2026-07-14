@@ -4,7 +4,14 @@ import { motion } from 'framer-motion';
 import { Star, ChevronRight, Flame } from 'lucide-react';
 import { SPECIAL_OFFERS } from './storefrontData';
 
-export default function SpecialOffers({ onSelect }) {
+export default function SpecialOffers({ onSelect, games }) {
+  const items = games && games.length > 0
+    ? games.map(g => {
+        const oldPrice = (g.price || 0) * 1.5;
+        const pct = Math.round((1 - (g.price || 0) / oldPrice) * 100);
+        return { id: g.id, title: g.title, genre: g.genre || 'Game', discount: `-${pct}%`, oldPrice: oldPrice.toFixed(2), price: g.price ?? 0, cover_image: g.cover_image || g.image };
+      })
+    : SPECIAL_OFFERS;
   return (
     <section
       className="rounded-2xl border border-white/[0.07] p-6 relative overflow-hidden"
@@ -21,7 +28,7 @@ export default function SpecialOffers({ onSelect }) {
         </button>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 relative">
-        {SPECIAL_OFFERS.map((g, i) => (
+        {items.map((g, i) => (
           <motion.button
             key={g.id}
             onClick={() => onSelect?.(g.id)}
