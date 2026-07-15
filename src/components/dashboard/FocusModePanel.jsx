@@ -38,7 +38,6 @@ import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
 import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
 import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
-import ConsoleFeedPanel from '@/components/dashboard/ConsoleFeedPanel';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1749,11 +1748,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     />
                   </motion.div>
                 )}
-              </AnimatePresence>
-
-              {/* Console Feed Panel — fills empty space when no game is selected */}
-              <AnimatePresence>
-                {!selectedFocusGame && <ConsoleFeedPanel />}
               </AnimatePresence>
 
             </div>
