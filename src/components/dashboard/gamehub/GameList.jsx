@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Download, Settings, Heart, Share2, Trash2, Info, Star } from 'lucide-react';
+import { Play, Download, Settings, Heart, Share2, Trash2, Info, Star, BookOpen } from 'lucide-react';
 
 const STATUS_DOT = {
   Playing: 'bg-green-400',
@@ -68,7 +68,7 @@ function ContextMenu({ game, pos, onClose, onPlay }) {
   );
 }
 
-export default function GameList({ games, selectedGame, onSelectGame }) {
+export default function GameList({ games, selectedGame, onSelectGame, onToggleLibrary, libraryActive }) {
   const [contextMenu, setContextMenu] = useState(null);
 
   const handleContextMenu = (e, game) => {
@@ -81,7 +81,18 @@ export default function GameList({ games, selectedGame, onSelectGame }) {
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-        <span className="text-white/70 text-xs font-bold uppercase tracking-widest">Library</span>
+        {onToggleLibrary ? (
+          <button
+            onClick={onToggleLibrary}
+            title="Library"
+            className={`flex items-center gap-1.5 px-3 h-7 rounded-md text-[10px] font-semibold uppercase tracking-widest transition-all ${libraryActive ? 'text-cyan-300 bg-cyan-500/10' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Library
+          </button>
+        ) : (
+          <span className="text-white/70 text-xs font-bold uppercase tracking-widest">Library</span>
+        )}
         <span className="text-white/30 text-[10px]">{games.length} games</span>
       </div>
 

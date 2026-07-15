@@ -599,8 +599,7 @@ export default function LunaTemplate() {
     <GlassPageFrame
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
-      onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
-      libraryActive={showLibraryLanding}
+
       bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}
     >
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
@@ -676,6 +675,8 @@ export default function LunaTemplate() {
                 ]}
                 selectedGame={selectedFocusGame}
                 onSelectGame={(g) => { setSelectedFocusGame(g); if (g) setShowLibraryLanding(false); }}
+                onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
+                libraryActive={showLibraryLanding}
               />
             </div>
           ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
