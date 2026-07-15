@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
@@ -37,8 +37,7 @@ export default function CrossRoleCardBrowser() {
   const [userCards, setUserCards] = useState([]);
   const [cardTemplates, setCardTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedGenre, setSelectedGenre] = useState(null);
-  const [selectedGame, setSelectedGame] = useState(null);
+  const [expandedGameId, setExpandedGameId] = useState(null);
   const [detailCard, setDetailCard] = useState(null);
   const [gameAchievements, setGameAchievements] = useState([]);
   const [loadingAchievements, setLoadingAchievements] = useState(false);
@@ -80,15 +79,6 @@ export default function CrossRoleCardBrowser() {
 
   const genres = useMemo(() => Object.keys(gamesByGenre).sort(), [gamesByGenre]);
 
-  // Auto-select first genre
-  useEffect(() => {
-    if (!selectedGenre && genres.length > 0) setSelectedGenre(genres[0]);
-  }, [genres, selectedGenre]);
-
-  const gamesInGenre = useMemo(() => {
-    if (!selectedGenre) return [];
-    return gamesByGenre[selectedGenre] || [];
-  }, [selectedGenre, gamesByGenre]);
 
   // Map owned cards by game title for quick lookup
   const ownedCardsByGame = useMemo(() => {
@@ -101,11 +91,10 @@ export default function CrossRoleCardBrowser() {
     return map;
   }, [userCards]);
 
-  // Build card list for selected game: owned (colored) + locked templates + question-mark placeholders
-  // Build card lists for every game in the selected genre (owned + locked + placeholders)
+  // Build card lists for every game across all genres (owned + locked + placeholders)
   const cardsByGameId = useMemo(() => {
     const map = {};
-    gamesInGenre.forEach((game) => {
+    games.forEach((game) => {
       const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
       const templatesForGame = cardTemplates.filter((ct) => ct.source_game_id === game.id);
       const ownedNames = new Set(owned.map((c) => (c.card_name || '').toLowerCase()));
@@ -134,7 +123,7 @@ export default function CrossRoleCardBrowser() {
       map[game.id] = cards;
     });
     return map;
-  }, [gamesInGenre, ownedCardsByGame, cardTemplates]);
+  }, [games, ownedCardsByGame, cardTemplates]);
 
   // Fetch achievements for the detail card's game
   useEffect(() => {
@@ -167,63 +156,77 @@ export default function CrossRoleCardBrowser() {
 
   return (
     <div className="pointer-events-auto p-1">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="cards-view"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2 }}
-          className="mt-2 flex flex-col"
-          style={{ height: 'calc(100vh - 300px)', minHeight: '280px' }}
-        >
-            {/* XMB-style horizontal genre bar */}
-            <GenreBar
-              genres={genres}
-              selectedGenre={selectedGenre}
-              onSelect={setSelectedGenre}
-              gamesByGenre={gamesByGenre}
-              ownedCardsByGame={ownedCardsByGame}
-            />
+      <div className="overflow-y-auto" style={{ height: 'calc(100vh - 300px)', minHeight: '280px', scrollbarWidth: 'none' }}>
+        {genres.length === 0 ? (
+          <p className="text-white/30 text-xs text-center py-8">No games found in catalog.</p>
+        ) : (
+          genres.map((genre) => {
+            const genreGames = (gamesByGenre[genre] || []).slice(0, 2);
+            const expandedGame = expandedGameId && genreGames.find((g) => g.id === expandedGameId);
+            return (
+              <div key={genre} className="mb-2">
+                {/* Genre header */}
+                <div className="flex items-center gap-2 px-1 py-1.5">
+                  <span className="text-white/80 text-xs font-bold uppercase tracking-widest">{genre}</span>
+                  <div className="flex-1 h-px bg-white/8" />
+                </div>
 
-            {/* Vertical scroll of game card rows below the selected genre */}
-            <div className="flex-1 overflow-y-auto mt-2" style={{ scrollbarWidth: 'none' }}>
-              {gamesInGenre.length === 0 ? (
-                <p className="text-white/30 text-xs text-center py-8">No games in this genre.</p>
-              ) : (
-                gamesInGenre.map((game) => {
-                  const cards = cardsByGameId[game.id] || [];
-                  const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
-                  return (
-                    <div key={game.id} className="mb-4">
-                      {/* Game label row */}
-                      <div className="flex items-center gap-2 mb-1.5 px-1">
+                {/* Games row — horizontal */}
+                <div className="flex gap-2 px-1">
+                  {genreGames.map((game) => {
+                    const isExpanded = expandedGameId === game.id;
+                    const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
+                    return (
+                      <button
+                        key={game.id}
+                        onClick={() => setExpandedGameId(isExpanded ? null : game.id)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                          isExpanded
+                            ? 'bg-white/15 border-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.12)]'
+                            : 'bg-white/[0.03] border-white/8 text-white/60 hover:text-white hover:bg-white/[0.07]'
+                        }`}
+                      >
                         {game.cover_image ? (
-                          <img src={game.cover_image} alt="" className="w-5 h-5 rounded object-cover flex-shrink-0" />
+                          <img src={game.cover_image} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
                         ) : (
-                          <Gamepad2 className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
+                          <Gamepad2 className="w-4 h-4 flex-shrink-0" />
                         )}
-                        <span className="text-white/70 text-xs font-bold uppercase tracking-wide truncate">{game.title}</span>
-                        <span className={`text-[9px] ${owned.length > 0 ? 'text-cyan-400/60' : 'text-white/25'}`}>
-                          {owned.length > 0 ? `${owned.length} unlocked` : 'Not played'}
-                        </span>
-                        <div className="flex-1 h-px bg-white/5 ml-2" />
+                        <span className="text-xs font-semibold truncate max-w-[120px]">{game.title}</span>
+                        {owned.length > 0 && <span className="text-[9px] text-cyan-400/60">{owned.length}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Expanded card row — pushes genres below down */}
+                <AnimatePresence initial={false}>
+                  {expandedGame && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex gap-2 overflow-x-auto py-2 px-1" style={{ scrollbarWidth: 'none' }}>
+                        {(cardsByGameId[expandedGame.id] || []).length === 0 ? (
+                          <p className="text-white/30 text-xs py-3 px-2">No cards for this game.</p>
+                        ) : (
+                          (cardsByGameId[expandedGame.id] || []).map((card, idx) => (
+                            <div key={card.id || idx} className="flex-shrink-0 w-[100px]">
+                              <CardTile card={card} onClick={() => card._owned && setDetailCard(card)} />
+                            </div>
+                          ))
+                        )}
                       </div>
-                      {/* Horizontal card scroll */}
-                      <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                        {cards.map((card, idx) => (
-                          <div key={card.id || idx} className="flex-shrink-0 w-[100px]">
-                            <CardTile card={card} onClick={() => card._owned && setDetailCard(card)} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-        </motion.div>
-      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })
+        )}
+      </div>
 
       {/* ── Card detail modal (blurred background) ── */}
       <AnimatePresence>
@@ -298,58 +301,6 @@ function CardTile({ card, onClick }) {
         <p className="text-[7px] text-white/30 uppercase">{card._type}</p>
       </div>
     </button>
-  );
-}
-
-// ── XMB-style horizontal genre bar ──
-function GenreBar({ genres, selectedGenre, onSelect, gamesByGenre, ownedCardsByGame }) {
-  const scrollRef = useRef(null);
-
-  // Auto-scroll the selected genre into center view
-  useEffect(() => {
-    if (!scrollRef.current || !selectedGenre) return;
-    const el = scrollRef.current.querySelector(`[data-genre="${selectedGenre}"]`);
-    if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-  }, [selectedGenre]);
-
-  if (genres.length === 0) {
-    return (
-      <div className="rounded-xl border border-white/8 p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-        <p className="text-white/30 text-xs">No games found in catalog.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      ref={scrollRef}
-      className="flex items-center gap-1 overflow-x-auto rounded-xl border border-white/8 p-1.5"
-      style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)', scrollbarWidth: 'none' }}
-    >
-      {genres.map((g) => {
-        const ownedInGenre = (gamesByGenre[g] || []).filter(game =>
-          (ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || []).length > 0
-        ).length;
-        const isSelected = selectedGenre === g;
-        return (
-          <button
-            key={g}
-            data-genre={g}
-            onClick={() => onSelect(g)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all flex items-center gap-1.5 ${
-              isSelected
-                ? 'bg-white/15 text-white shadow-[0_0_12px_rgba(255,255,255,0.12)] border border-white/15'
-                : 'text-white/45 hover:text-white/80 hover:bg-white/5 border border-transparent'
-            }`}
-          >
-            <span>{g}</span>
-            {ownedInGenre > 0 && <span className="text-[8px] text-cyan-400/60">{ownedInGenre}</span>}
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
