@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
-  Trophy, Library as LibraryIcon, ChevronRight, ChevronLeft, Lock, X,
-  Sparkles, Sword, Shield, Zap, Users, Star, Loader2, Gamepad2, HelpCircle
+  Trophy, Lock, X,
+  Sparkles, Shield, Zap, Users, Star, Loader2, Gamepad2, HelpCircle
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -33,7 +33,6 @@ function rarityStyle(rarity) {
 
 export default function CrossRoleCardBrowser() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('cards');
   const [games, setGames] = useState([]);
   const [userCards, setUserCards] = useState([]);
   const [cardTemplates, setCardTemplates] = useState([]);
@@ -168,19 +167,16 @@ export default function CrossRoleCardBrowser() {
 
   return (
     <div className="pointer-events-auto p-1">
-      <TabBar activeTab={activeTab} onTab={setActiveTab} />
-
       <AnimatePresence mode="wait">
-        {activeTab === 'cards' ? (
-          <motion.div
-            key="cards-view"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="mt-2 flex flex-col"
-            style={{ height: 'calc(100vh - 300px)', minHeight: '280px' }}
-          >
+        <motion.div
+          key="cards-view"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="mt-2 flex flex-col"
+          style={{ height: 'calc(100vh - 300px)', minHeight: '280px' }}
+        >
             {/* XMB-style horizontal genre bar */}
             <GenreBar
               genres={genres}
@@ -226,21 +222,7 @@ export default function CrossRoleCardBrowser() {
                 })
               )}
             </div>
-          </motion.div>
-        ) : (
-          /* ── Library tab ── */
-          <motion.div
-            key="library-view"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="mt-2"
-            style={{ height: 'calc(100vh - 300px)', minHeight: '280px' }}
-          >
-            <LibrarySummary userCards={userCards} gamesByGenre={gamesByGenre} ownedCardsByGame={ownedCardsByGame} />
-          </motion.div>
-        )}
+        </motion.div>
       </AnimatePresence>
 
       {/* ── Card detail modal (blurred background) ── */}
@@ -367,110 +349,6 @@ function GenreBar({ genres, selectedGenre, onSelect, gamesByGenre, ownedCardsByG
           </button>
         );
       })}
-    </div>
-  );
-}
-
-// ── Tab bar ──
-function TabBar({ activeTab, onTab }) {
-  return (
-    <div className="flex items-center gap-1 p-1 rounded-xl border border-white/8 inline-flex w-fit" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)' }}>
-      <button
-        onClick={() => onTab('cards')}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all ${
-          activeTab === 'cards' ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'text-white/45 hover:text-white/70'
-        }`}
-      >
-        <Trophy className="w-3.5 h-3.5" /> Cards
-      </button>
-      <button
-        onClick={() => onTab('library')}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all ${
-          activeTab === 'library' ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'text-white/45 hover:text-white/70'
-        }`}
-      >
-        <LibraryIcon className="w-3.5 h-3.5" /> Library
-      </button>
-    </div>
-  );
-}
-
-// ── Library summary tab ──
-function LibrarySummary({ userCards, gamesByGenre, ownedCardsByGame }) {
-  const totalCards = userCards.length;
-  const totalGames = Object.values(gamesByGenre).reduce((acc, list) => acc + list.length, 0);
-  const totalGenres = Object.keys(gamesByGenre).length;
-  const rarityCount = userCards.reduce((acc, c) => {
-    const r = c.card_rarity || 'Common';
-    acc[r] = (acc[r] || 0) + 1;
-    return acc;
-  }, {});
-
-  return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <StatCard label="Unlocked Cards" value={totalCards} icon={Trophy} color="text-cyan-300" />
-        <StatCard label="Total Games" value={totalGames} icon={Gamepad2} color="text-purple-300" />
-        <StatCard label="Genres" value={totalGenres} icon={Star} color="text-amber-300" />
-      </div>
-
-      {/* Rarity breakdown */}
-      {Object.keys(rarityCount).length > 0 && (
-        <div className="rounded-xl border border-white/8 p-3 mb-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">By Rarity</p>
-          <div className="flex flex-wrap gap-1.5">
-            {Object.entries(rarityCount).sort((a, b) => b[1] - a[1]).map(([rarity, count]) => {
-              const rs = rarityStyle(rarity);
-              return (
-                <span key={rarity} className={`px-2 py-1 rounded-lg text-[10px] font-bold ${rs.badge} border ${rs.border}`}>
-                  {rarity}: {count}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Games list — all games from catalog, showing unlocked count */}
-      <div className="rounded-xl border border-white/8 p-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">All Games</p>
-        <div className="space-y-1.5">
-          {Object.entries(gamesByGenre).sort().map(([genre, gameList]) =>
-            gameList.map((game) => {
-              const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
-              return (
-                <div key={genre + game.id} className="flex items-center gap-2.5 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.015)' }}>
-                  <div className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {game.cover_image ? (
-                      <img src={game.cover_image} alt="" className="w-full h-full object-cover" />
-                    ) : owned[0]?.card_image ? (
-                      <img src={owned[0].card_image} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <HelpCircle className="w-3.5 h-3.5 text-white/25" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-white/70 text-xs font-medium truncate">{game.title}</p>
-                    <p className="text-white/30 text-[9px] uppercase">{genre}</p>
-                  </div>
-                  <span className={`text-[10px] font-mono ${owned.length > 0 ? 'text-cyan-400/70' : 'text-white/25'}`}>{owned.length}</span>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon: Icon, color }) {
-  return (
-    <div className="rounded-xl border border-white/8 p-2.5 flex flex-col items-center justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-      <Icon className={`w-4 h-4 ${color} mb-1`} />
-      <span className="text-white text-lg font-bold leading-none">{value}</span>
-      <span className="text-white/35 text-[8px] uppercase tracking-wide mt-0.5">{label}</span>
     </div>
   );
 }
