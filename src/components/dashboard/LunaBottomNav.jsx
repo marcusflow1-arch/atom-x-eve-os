@@ -231,14 +231,15 @@ function LunaSearchBar({ isLibraryActive, onFocus, value, onChange }) {
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange, games: propGames }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
   // Sync forced open state
   useEffect(() => {
     if (forceLibraryOpen) setActiveTab('library');
     else if (activeTab === 'library') setActiveTab('home');
   }, [forceLibraryOpen]);
-  const [games, setGames] = useState([]);
+  const [gamesState, setGamesState] = useState([]);
+  const games = propGames || gamesState;
   const [currentRow, setCurrentRow] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null); // game whose cards are shown in the row
@@ -274,8 +275,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const { addToCart } = useCart();
 
   useEffect(() => {
-    base44.entities.Game.list().then(setGames);
-  }, []);
+    if (propGames) return; // use games passed from parent (avoids duplicate API call)
+    base44.entities.Game.list().then(setGamesState);
+  }, [propGames]);
 
   const handleTabClick = (tab) => {
     setSelectedItem(null);

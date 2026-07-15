@@ -482,6 +482,7 @@ export default function Store() {
                       forceLibraryOpen={storeLibraryOpen}
                       onLibraryClose={() => setStoreLibraryOpen(false)}
                       libraryLabel="Store Library"
+                      games={games}
                       searchTerm={searchTerm}
                       activeCategoryLabel={activeCategoryOverlay ? { recommended: 'Recommended', new_releases: 'New Releases', top_rated: 'Top Games', trending: 'Trending', hidden_gems: 'Hidden Gems' }[activeCategoryOverlay] : null}
                       activeFilters={storeFilters}
