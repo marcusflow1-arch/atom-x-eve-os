@@ -171,7 +171,7 @@ export default function CrossRoleCardBrowser() {
                   <div className="flex-1 h-px bg-white/8" />
                 </div>
 
-                {/* Games row — horizontal */}
+                {/* Games row — horizontal card tiles */}
                 <div className="flex gap-2 px-1">
                   {genreGames.map((game) => {
                     const isExpanded = expandedGameId === game.id;
@@ -180,19 +180,29 @@ export default function CrossRoleCardBrowser() {
                       <button
                         key={game.id}
                         onClick={() => setExpandedGameId(isExpanded ? null : game.id)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                        className={`flex-shrink-0 w-[100px] relative rounded-lg border overflow-hidden transition-all ${
                           isExpanded
-                            ? 'bg-white/15 border-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.12)]'
-                            : 'bg-white/[0.03] border-white/8 text-white/60 hover:text-white hover:bg-white/[0.07]'
+                            ? 'border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.12)]'
+                            : 'border-white/8 hover:border-white/15'
                         }`}
+                        style={{ background: 'rgba(255,255,255,0.03)' }}
                       >
-                        {game.cover_image ? (
-                          <img src={game.cover_image} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
-                        ) : (
-                          <Gamepad2 className="w-4 h-4 flex-shrink-0" />
-                        )}
-                        <span className="text-xs font-semibold truncate max-w-[120px]">{game.title}</span>
-                        {owned.length > 0 && <span className="text-[9px] text-cyan-400/60">{owned.length}</span>}
+                        <div className="aspect-[3/4] relative">
+                          {game.cover_image ? (
+                            <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-white/5">
+                              <Gamepad2 className="w-6 h-6 text-white/30" />
+                            </div>
+                          )}
+                          {/* Game name at top, centered */}
+                          <div className="absolute top-0 left-0 right-0 px-1 py-0.5 text-center" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)' }}>
+                            <p className="text-[9px] font-semibold text-white truncate drop-shadow">{game.title}</p>
+                          </div>
+                          {owned.length > 0 && (
+                            <span className="absolute bottom-1 right-1 text-[8px] font-bold text-cyan-300 bg-black/50 px-1 rounded">{owned.length}</span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
