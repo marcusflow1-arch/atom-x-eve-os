@@ -354,11 +354,11 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
             {onToggleLibrary && (
               <button
                 onClick={onToggleLibrary}
-                title="Library"
+                title="Next"
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3 h-7 rounded-md text-[10px] font-semibold uppercase tracking-widest transition-all ${libraryActive ? 'text-cyan-300 bg-cyan-500/10' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                Library
+                Next
               </button>
             )}
             <div className="flex-1 flex items-center justify-center">
