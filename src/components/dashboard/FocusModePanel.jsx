@@ -38,6 +38,7 @@ import PS5AvatarHomePanel from '@/components/dashboard/PS5AvatarHomePanel';
 import LiveIntelligenceFeed from './LiveIntelligenceFeed';
 import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
 import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
+import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1746,6 +1747,22 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                       game={selectedFocusGame}
                       onClose={() => onSelectFocusGame?.(null)}
                     />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Cross-Role Card Browser — fills the open space below the banner when no game is selected */}
+              <AnimatePresence>
+                {!selectedFocusGame && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 16 }}
+                    transition={{ duration: 0.3 }}
+                    className="pointer-events-auto mt-3 overflow-hidden"
+                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none' }}
+                  >
+                    <CrossRoleCardBrowser />
                   </motion.div>
                 )}
               </AnimatePresence>
