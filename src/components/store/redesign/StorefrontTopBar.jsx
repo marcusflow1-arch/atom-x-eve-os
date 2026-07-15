@@ -1,7 +1,7 @@
 // StorefrontTopBar.jsx — Top header: nav pills, search, credits, cart, notifications, profile
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff } from 'lucide-react';
+import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff, Settings } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSearchChange, onSearchOpen }) {
@@ -90,6 +90,14 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
         <button onClick={() => navigate(createPageUrl('Notifications'))} className="relative w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all">
           <Bell className="w-4 h-4" />
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
+        </button>
+
+        <button
+          onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+          className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all"
+          title="Settings"
+        >
+          <Settings className="w-4 h-4" />
         </button>
 
         <button className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all">

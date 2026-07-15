@@ -471,6 +471,7 @@ export default function Store() {
                 activeCategory={storeFilters.category || null}
                 onCategoryChange={(catId) => setStoreFilters(prev => ({ ...prev, category: catId }))}
                 showDevLabel={true}
+                onSearchOpen={() => setHeaderSearchOpen(true)}
               />
             }>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>

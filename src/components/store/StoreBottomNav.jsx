@@ -1,9 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRightLeft, Mic, MicOff, Search, Sparkles, Clock, Trophy, Flame, Gem, Settings, ChevronUp } from 'lucide-react';
-import { createPageUrl } from '@/utils';
-import ViewModeToggle from '@/components/mobile/ViewModeToggle';
+import { Mic, MicOff, Search, ChevronUp } from 'lucide-react';
 import CategoryFloatingMenu from './CategoryFloatingMenu';
 
 const CATEGORY_LABELS = {
@@ -15,8 +12,7 @@ const CATEGORY_LABELS = {
 };
 
 
-export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
-  const navigate = useNavigate();
+export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, onSearchOpen, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [catMenuOpen, setCatMenuOpen] = useState(false);
@@ -134,26 +130,26 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
           </motion.button>
         </div>
 
-        {/* Spacer pushes the controls to the far right */}
-        <div className="flex-1" />
-
-        {/* Far right — view-mode toggle + settings gear */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <ViewModeToggle />
+        {/* Search bar — right of Dev Cards, opens the search panel UI */}
+        <motion.button
+          onClick={() => onSearchOpen?.()}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-lg text-xs text-white/45 hover:text-white bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all min-w-[200px]"
+        >
+          <Search className="w-3.5 h-3.5" />
+          <span className="truncate">Search games, studios...</span>
           <button
-            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
-            style={{
-              background: 'rgba(10, 14, 20, 0.85)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-            }}
-            title="Settings"
+            onClick={(e) => { e.stopPropagation(); handleMic(); }}
+            className={`ml-auto flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
+            title="Voice search"
           >
-            <Settings className="w-3.5 h-3.5 text-white/60" />
+            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
           </button>
-        </div>
+        </motion.button>
+
+        {/* Spacer pushes remaining space to the right */}
+        <div className="flex-1" />
       </div>
     </div>
   );
