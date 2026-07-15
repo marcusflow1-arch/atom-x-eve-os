@@ -2,21 +2,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
-  Trophy, Lock, X,
-  Sparkles, Shield, Zap, Users, Star, Loader2, Gamepad2, HelpCircle
+  Trophy, X, Star, Loader2, Gamepad2, Heart, Zap, Shield, Users, Sparkles, ChevronRight
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
 
 const RARITY_STYLES = {
-  Common:    { border: 'border-slate-400/40',  glow: 'shadow-[0_0_8px_rgba(148,163,184,0.25)]',  text: 'text-slate-300',  badge: 'bg-slate-500/20 text-slate-300' },
-  Uncommon:  { border: 'border-green-400/40',  glow: 'shadow-[0_0_10px_rgba(74,222,128,0.3)]',  text: 'text-green-300',  badge: 'bg-green-500/20 text-green-300' },
-  Rare:      { border: 'border-blue-400/50',   glow: 'shadow-[0_0_12px_rgba(96,165,250,0.35)]', text: 'text-blue-300',   badge: 'bg-blue-500/20 text-blue-300' },
-  Epic:      { border: 'border-purple-400/50', glow: 'shadow-[0_0_14px_rgba(192,132,252,0.4)]', text: 'text-purple-300', badge: 'bg-purple-500/20 text-purple-300' },
-  Legendary: { border: 'border-amber-400/60',   glow: 'shadow-[0_0_16px_rgba(251,191,36,0.45)]', text: 'text-amber-300',  badge: 'bg-amber-500/20 text-amber-300' },
-  Mythic:    { border: 'border-red-400/60',    glow: 'shadow-[0_0_18px_rgba(248,113,113,0.5)]', text: 'text-red-300',    badge: 'bg-red-500/20 text-red-300' },
-  Mythical:  { border: 'border-pink-400/60',   glow: 'shadow-[0_0_18px_rgba(244,114,182,0.5)]', text: 'text-pink-300',   badge: 'bg-pink-500/20 text-pink-300' },
-  Unique:    { border: 'border-cyan-400/60',   glow: 'shadow-[0_0_18px_rgba(34,211,238,0.5)]',  text: 'text-cyan-300',   badge: 'bg-cyan-500/20 text-cyan-300' },
+  Common:    { border: 'border-slate-400/40',  glow: 'shadow-[0_0_8px_rgba(148,163,184,0.25)]',  badge: 'bg-slate-500/20 text-slate-300' },
+  Uncommon:  { border: 'border-green-400/40',  glow: 'shadow-[0_0_10px_rgba(74,222,128,0.3)]',  badge: 'bg-green-500/20 text-green-300' },
+  Rare:      { border: 'border-blue-400/50',   glow: 'shadow-[0_0_12px_rgba(96,165,250,0.35)]', badge: 'bg-blue-500/20 text-blue-300' },
+  Epic:      { border: 'border-purple-400/50', glow: 'shadow-[0_0_14px_rgba(192,132,252,0.4)]', badge: 'bg-purple-500/20 text-purple-300' },
+  Legendary: { border: 'border-amber-400/60',   glow: 'shadow-[0_0_16px_rgba(251,191,36,0.45)]', badge: 'bg-amber-500/20 text-amber-300' },
+  Mythic:    { border: 'border-red-400/60',    glow: 'shadow-[0_0_18px_rgba(248,113,113,0.5)]', badge: 'bg-red-500/20 text-red-300' },
+  Mythical:  { border: 'border-pink-400/60',   glow: 'shadow-[0_0_18px_rgba(244,114,182,0.5)]', badge: 'bg-pink-500/20 text-pink-300' },
+  Unique:    { border: 'border-cyan-400/60',   glow: 'shadow-[0_0_18px_rgba(34,211,238,0.5)]',  badge: 'bg-cyan-500/20 text-cyan-300' },
 };
 
 const CARD_TYPE_ICON = {
@@ -24,41 +23,50 @@ const CARD_TYPE_ICON = {
   Item: Gamepad2, Passive: Star, AI_Trait: Sparkles, AI_Teacher: Sparkles,
 };
 
-// Default number of placeholder slots shown for a game with no/unlocked cards
-const DEFAULT_PLACEHOLDER_COUNT = 8;
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function rarityStyle(rarity) {
   return RARITY_STYLES[rarity] || RARITY_STYLES.Common;
 }
 
+function relativeDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const diffDays = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+  if (diffDays <= 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export default function CrossRoleCardBrowser() {
   const { user } = useAuth();
-  const [games, setGames] = useState([]);
   const [userCards, setUserCards] = useState([]);
-  const [cardTemplates, setCardTemplates] = useState([]);
+  const [games, setGames] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [userAchievements, setUserAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedGameId, setExpandedGameId] = useState(null);
   const [detailCard, setDetailCard] = useState(null);
-  const [gameAchievements, setGameAchievements] = useState([]);
-  const [loadingAchievements, setLoadingAchievements] = useState(false);
 
-  // Fetch all games + owned cards + templates
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (!user?.id) { setLoading(false); return; }
       setLoading(true);
       try {
-        const fetches = [base44.entities.Game.list()];
-        if (user?.id) fetches.push(base44.entities.UserCard.filter({ user_id: user.id }));
-        else fetches.push(Promise.resolve([]));
-        fetches.push(base44.entities.CardTemplate.list());
-        const [gamesRes, ownedRes, templatesRes] = await Promise.all(fetches);
+        const [cardsRes, gamesRes, achRes, uaRes] = await Promise.all([
+          base44.entities.UserCard.filter({ user_id: user.id }),
+          base44.entities.Game.list(),
+          base44.entities.Achievement.list(),
+          base44.entities.UserAchievement.filter({ user_id: user.id }),
+        ]);
         if (cancelled) return;
+        setUserCards(Array.isArray(cardsRes) ? cardsRes : (cardsRes?.data || []));
         setGames(Array.isArray(gamesRes) ? gamesRes : (gamesRes?.data || []));
-        setUserCards(Array.isArray(ownedRes) ? ownedRes : (ownedRes?.data || []));
-        setCardTemplates(Array.isArray(templatesRes) ? templatesRes : (templatesRes?.data || []));
+        setAchievements(Array.isArray(achRes) ? achRes : (achRes?.data || []));
+        setUserAchievements(Array.isArray(uaRes) ? uaRes : (uaRes?.data || []));
       } catch (e) {
-        console.error('CrossRoleCardBrowser fetch error', e);
+        console.error('RecentlyPlayed fetch error', e);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -66,258 +74,231 @@ export default function CrossRoleCardBrowser() {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  // Group ALL games by genre (from Game entity, not just owned cards)
-  const gamesByGenre = useMemo(() => {
-    const map = {};
-    games.forEach((g) => {
-      const genre = g.genre || 'other';
-      if (!map[genre]) map[genre] = [];
-      map[genre].push(g);
-    });
-    return map;
-  }, [games]);
-
-  const genres = useMemo(() => Object.keys(gamesByGenre).sort(), [gamesByGenre]);
-
-
-  // Map owned cards by game title for quick lookup
-  const ownedCardsByGame = useMemo(() => {
+  // Group all user cards by game
+  const cardsByGame = useMemo(() => {
     const map = {};
     userCards.forEach((uc) => {
-      const key = uc.game_name || uc.game_id;
-      if (!map[key]) map[key] = [];
-      map[key].push(uc);
+      const key = uc.game_id || uc.game_name;
+      if (!key) return;
+      if (!map[key]) map[key] = { gameId: uc.game_id, gameName: uc.game_name, genre: uc.genre, cards: [] };
+      map[key].cards.push(uc);
     });
     return map;
   }, [userCards]);
 
-  // Build card lists for every game across all genres (owned + locked + placeholders)
-  const cardsByGameId = useMemo(() => {
-    const map = {};
-    games.forEach((game) => {
-      const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
-      const templatesForGame = cardTemplates.filter((ct) => ct.source_game_id === game.id);
-      const ownedNames = new Set(owned.map((c) => (c.card_name || '').toLowerCase()));
-      const locked = templatesForGame.filter((ct) => !ownedNames.has((ct.name || '').toLowerCase()));
-
-      const cards = [
-        ...owned.map((c) => ({
-          ...c, _owned: true, _placeholder: false, _gameTitle: game.title,
-          _name: c.card_name, _rarity: c.card_rarity, _image: c.card_image, _type: c.card_type, _desc: c.card_description || '',
-        })),
-        ...locked.map((ct) => ({
-          ...ct, _owned: false, _placeholder: false, _gameTitle: game.title,
-          _name: ct.name, _rarity: ct.base_rarity, _image: ct.image_url, _type: ct.type, _desc: ct.description || '',
-        })),
-      ];
-
-      const totalKnown = owned.length + locked.length;
-      const fillCount = Math.max(0, DEFAULT_PLACEHOLDER_COUNT - totalKnown);
-      for (let i = 0; i < fillCount; i++) {
-        cards.push({
-          id: `placeholder_${game.id}_${i}`,
-          _owned: false, _placeholder: true, _gameTitle: game.title,
-          _name: '???', _rarity: 'Common', _image: null, _type: 'Unknown', _desc: '',
-        });
+  // Recently played: games with at least one unlock in last 7 days
+  const recentlyPlayed = useMemo(() => {
+    const cutoff = Date.now() - SEVEN_DAYS_MS;
+    const result = [];
+    Object.values(cardsByGame).forEach((entry) => {
+      const recent = entry.cards
+        .filter((c) => c.unlocked_date && new Date(c.unlocked_date).getTime() >= cutoff)
+        .sort((a, b) => new Date(b.unlocked_date) - new Date(a.unlocked_date));
+      if (recent.length > 0) {
+        result.push({ ...entry, recentUnlocks: recent, totalCards: entry.cards.length });
       }
-      map[game.id] = cards;
     });
-    return map;
-  }, [games, ownedCardsByGame, cardTemplates]);
+    return result.sort((a, b) =>
+      new Date(b.recentUnlocks[0].unlocked_date) - new Date(a.recentUnlocks[0].unlocked_date)
+    );
+  }, [cardsByGame]);
 
-  // Fetch achievements for the detail card's game
-  useEffect(() => {
-    if (!detailCard) { setGameAchievements([]); return; }
-    let cancelled = false;
-    (async () => {
-      setLoadingAchievements(true);
-      try {
-        const gameName = detailCard._gameTitle || detailCard.game_name || detailCard.game;
-        const res = await base44.entities.Achievement.filter({ game: gameName });
-        if (!cancelled) setGameAchievements(Array.isArray(res) ? res : (res?.data || []));
-      } catch (e) {
-        if (!cancelled) setGameAchievements([]);
-      } finally {
-        if (!cancelled) setLoadingAchievements(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [detailCard]);
+  const gameMap = useMemo(() => {
+    const m = {};
+    games.forEach((g) => { m[g.id] = g; });
+    return m;
+  }, [games]);
 
-  // ── Loading state ──
+  // Achievement progress per game name
+  const achProgress = useMemo(() => {
+    const totals = {};
+    achievements.forEach((a) => { totals[a.game] = (totals[a.game] || 0) + 1; });
+    const unlocked = {};
+    userAchievements.forEach((ua) => {
+      if (ua.status !== 'unlocked') return;
+      const ach = achievements.find((a) => a.id === ua.achievement_id);
+      if (ach) unlocked[ach.game] = (unlocked[ach.game] || 0) + 1;
+    });
+    return { totals, unlocked };
+  }, [achievements, userAchievements]);
+
+  const userName = user?.username || user?.full_name || user?.email?.split('@')[0];
+
+  // ── Loading ──
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full pointer-events-auto p-8">
         <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
-        <span className="ml-3 text-white/50 text-sm">Loading card collection…</span>
+        <span className="ml-3 text-white/50 text-sm">Loading your journey…</span>
       </div>
     );
   }
 
+  // ── Empty welcome state ──
+  if (recentlyPlayed.length === 0) {
+    return (
+      <div className="pointer-events-auto flex flex-col items-center justify-center text-center py-10 px-4">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+          style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)' }}>
+          <Heart className="w-7 h-7 text-cyan-400/70" />
+        </div>
+        <h3 className="text-white text-base font-bold mb-1">
+          Welcome{userName ? `, ${userName}` : ''}!
+        </h3>
+        <p className="text-white/40 text-xs max-w-[220px] leading-relaxed">
+          Your journey begins here. Play games and unlock achievements to see your progress light up here.
+        </p>
+      </div>
+    );
+  }
+
+  const totalWeekUnlocks = recentlyPlayed.reduce((sum, g) => sum + g.recentUnlocks.length, 0);
+
   return (
     <div className="pointer-events-auto p-1">
-      <div className="overflow-y-auto" style={{ height: 'calc(100vh - 300px)', minHeight: '280px', scrollbarWidth: 'none' }}>
-        {genres.length === 0 ? (
-          <p className="text-white/30 text-xs text-center py-8">No games found in catalog.</p>
-        ) : (
-          genres.map((genre) => {
-            const genreGames = (gamesByGenre[genre] || []).slice(0, 2);
-            const expandedGame = expandedGameId && genreGames.find((g) => g.id === expandedGameId);
-            return (
-              <div key={genre} className="mb-2">
-                {/* Genre header */}
-                <div className="flex items-center gap-2 px-1 py-1.5">
-                  <span className="text-white/80 text-xs font-bold uppercase tracking-widest">{genre}</span>
-                  <div className="flex-1 h-px bg-white/8" />
-                </div>
-
-                {/* Games row — horizontal card tiles */}
-                <div className="flex gap-2 px-1">
-                  {genreGames.map((game) => {
-                    const isExpanded = expandedGameId === game.id;
-                    const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
-                    return (
-                      <button
-                        key={game.id}
-                        onClick={() => setExpandedGameId(isExpanded ? null : game.id)}
-                        className={`flex-shrink-0 w-[100px] relative rounded-lg border overflow-hidden transition-all ${
-                          isExpanded
-                            ? 'border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.12)]'
-                            : 'border-white/8 hover:border-white/15'
-                        }`}
-                        style={{ background: 'rgba(255,255,255,0.03)' }}
-                      >
-                        <div className="aspect-[3/4] relative">
-                          {game.cover_image ? (
-                            <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-white/5">
-                              <Gamepad2 className="w-6 h-6 text-white/30" />
-                            </div>
-                          )}
-                          {/* Game name at top, centered */}
-                          <div className="absolute top-0 left-0 right-0 px-1 py-0.5 text-center" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)' }}>
-                            <p className="text-[9px] font-semibold text-white truncate drop-shadow">{game.title}</p>
-                          </div>
-                          {owned.length > 0 && (
-                            <span className="absolute bottom-1 right-1 text-[8px] font-bold text-cyan-300 bg-black/50 px-1 rounded">{owned.length}</span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Expanded card row — pushes genres below down */}
-                <AnimatePresence initial={false}>
-                  {expandedGame && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="flex gap-2 overflow-x-auto py-2 px-1" style={{ scrollbarWidth: 'none' }}>
-                        {(cardsByGameId[expandedGame.id] || []).length === 0 ? (
-                          <p className="text-white/30 text-xs py-3 px-2">No cards for this game.</p>
-                        ) : (
-                          (cardsByGameId[expandedGame.id] || []).map((card, idx) => (
-                            <div key={card.id || idx} className="flex-shrink-0 w-[100px]">
-                              <CardTile card={card} onClick={() => card._owned && setDetailCard(card)} />
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })
-        )}
+      {/* Welcome header */}
+      <div className="px-1 py-1.5 mb-1">
+        <h2 className="text-white text-lg font-bold">
+          Welcome back{userName ? `, ${userName}` : ''}
+        </h2>
+        <p className="text-white/40 text-xs">
+          {totalWeekUnlocks} unlock{totalWeekUnlocks !== 1 ? 's' : ''} across {recentlyPlayed.length} game{recentlyPlayed.length !== 1 ? 's' : ''} this week
+        </p>
       </div>
 
-      {/* ── Card detail modal (blurred background) ── */}
+      {/* Recently played progression cards */}
+      <div className="overflow-y-auto space-y-2.5" style={{ height: 'calc(100vh - 340px)', minHeight: '260px', scrollbarWidth: 'none' }}>
+        {recentlyPlayed.map((entry) => (
+          <GameProgressionCard
+            key={entry.gameId || entry.gameName}
+            entry={entry}
+            game={gameMap[entry.gameId]}
+            achTotal={achProgress.totals[entry.gameName] || 0}
+            achUnlocked={achProgress.unlocked[entry.gameName] || 0}
+            onCardClick={setDetailCard}
+          />
+        ))}
+      </div>
+
+      {/* Card detail modal */}
       <AnimatePresence>
         {detailCard && (
-          <CardDetailModal
-            card={detailCard}
-            achievements={gameAchievements}
-            loadingAchievements={loadingAchievements}
-            gameTitle={detailCard?._gameTitle}
-            onClose={() => setDetailCard(null)}
-          />
+          <CardDetailModal card={detailCard} onClose={() => setDetailCard(null)} />
         )}
       </AnimatePresence>
     </div>
   );
 }
 
-// ── Individual card tile (owned / locked / placeholder question-mark) ──
-function CardTile({ card, onClick }) {
-  const rs = rarityStyle(card._rarity);
-  const TypeIcon = CARD_TYPE_ICON[card._type] || Star;
+// ── One game's progression strip ──
+function GameProgressionCard({ entry, game, achTotal, achUnlocked, onCardClick }) {
+  const cover = game?.cover_image;
+  const genre = game?.genre || entry.genre || 'game';
+  const title = game?.title || entry.gameName;
+  // Journey: oldest → newest (left to right = forward progression)
+  const journey = [...entry.recentUnlocks].reverse();
+  const achPct = achTotal > 0 ? Math.round((achUnlocked / achTotal) * 100) : 0;
 
-  // Question-mark placeholder card
-  if (card._placeholder) {
-    return (
-      <div
-        className="relative rounded-lg border border-white/8 overflow-hidden opacity-50"
-        style={{ background: 'rgba(255,255,255,0.015)' }}
-      >
-        <div className="aspect-[3/4] flex items-center justify-center">
-          <HelpCircle className="w-8 h-8 text-white/20" />
+  return (
+    <div className="rounded-xl border border-white/8 overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.025)' }}>
+      {/* Game header */}
+      <div className="flex items-center gap-3 p-2.5">
+        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+          {cover ? (
+            <img src={cover} alt={title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-white/5">
+              <Gamepad2 className="w-4 h-4 text-white/30" />
+            </div>
+          )}
         </div>
-        <div className="p-1.5">
-          <p className="text-[9px] font-semibold text-white/30 truncate">???</p>
-          <p className="text-[7px] text-white/15 uppercase">Locked</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-bold truncate">{title}</p>
+          <p className="text-white/40 text-[9px] uppercase tracking-wide">{genre}</p>
+        </div>
+        {/* Progress stats */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="text-center">
+            <p className="text-cyan-300 text-sm font-bold leading-none">{entry.totalCards}</p>
+            <p className="text-white/30 text-[7px] uppercase mt-0.5">Cards</p>
+          </div>
+          {achTotal > 0 && (
+            <div className="text-center">
+              <p className="text-amber-300 text-sm font-bold leading-none">{achUnlocked}<span className="text-white/30 text-[10px]">/{achTotal}</span></p>
+              <p className="text-white/30 text-[7px] uppercase mt-0.5">Achv</p>
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
 
-  // Owned or locked card
+      {/* Achievement progress bar */}
+      {achTotal > 0 && (
+        <div className="px-2.5 pb-2">
+          <div className="h-1 rounded-full bg-white/8 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${achPct}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="h-full bg-gradient-to-r from-amber-400/50 to-amber-300 rounded-full"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Journey timeline — A → B → C */}
+      <div className="px-2.5 pb-2.5 pt-0.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {journey.map((card, idx) => (
+            <React.Fragment key={card.id || idx}>
+              {idx > 0 && (
+                <div className="flex-shrink-0 flex items-center">
+                  <div className="w-3 h-px bg-white/20" />
+                  <ChevronRight className="w-3 h-3 text-white/20 -ml-1" />
+                </div>
+              )}
+              <UnlockNode card={card} onClick={() => onCardClick(card)} />
+            </React.Fragment>
+          ))}
+          {/* Forward arrow suggesting continued journey */}
+          <div className="flex-shrink-0 flex items-center pl-1">
+            <ChevronRight className="w-4 h-4 text-white/15" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Single unlock node in the journey ──
+function UnlockNode({ card, onClick }) {
+  const rs = rarityStyle(card.card_rarity);
+  const TypeIcon = CARD_TYPE_ICON[card.card_type] || Trophy;
   return (
-    <button
-      onClick={onClick}
-      disabled={!card._owned}
-      className={`group relative rounded-lg border ${rs.border} ${card._owned ? rs.glow + ' cursor-pointer hover:scale-[1.04]' : 'opacity-40 cursor-not-allowed'} transition-all overflow-hidden`}
-      style={{ background: 'rgba(255,255,255,0.03)' }}
-    >
-      {/* Card image */}
-      <div className="aspect-[3/4] relative overflow-hidden">
-        {card._image ? (
-          <img src={card._image} alt={card._name} className="w-full h-full object-cover" />
+    <button onClick={onClick} className="flex-shrink-0 w-[60px] flex flex-col items-center gap-0.5 group">
+      <div className={`relative w-[60px] h-[80px] rounded-lg border ${rs.border} ${rs.glow} overflow-hidden group-hover:scale-105 transition-transform`}
+        style={{ background: 'rgba(255,255,255,0.03)' }}>
+        {card.card_image ? (
+          <img src={card.card_image} alt={card.card_name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-white/5">
-            <TypeIcon className="w-6 h-6 text-white/30" />
+            <TypeIcon className="w-5 h-5 text-white/30" />
           </div>
         )}
-        {/* Locked overlay */}
-        {!card._owned && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Lock className="w-5 h-5 text-white/50" />
-          </div>
-        )}
-        {/* Rarity badge */}
-        <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-bold uppercase ${rs.badge}`}>
-          {card._rarity}
+        <span className={`absolute top-0.5 left-0.5 px-0.5 py-0 rounded text-[6px] font-bold uppercase ${rs.badge}`}>
+          {card.card_rarity}
         </span>
       </div>
-      {/* Card name */}
-      <div className="p-1.5">
-        <p className={`text-[9px] font-semibold truncate ${card._owned ? 'text-white/80' : 'text-white/40'}`}>{card._name}</p>
-        <p className="text-[7px] text-white/30 uppercase">{card._type}</p>
-      </div>
+      <p className="text-white/70 text-[8px] font-semibold text-center truncate w-full leading-tight">{card.card_name}</p>
+      <p className="text-cyan-400/50 text-[7px]">{relativeDate(card.unlocked_date)}</p>
     </button>
   );
 }
 
-// ── Blurred card detail modal ──
-function CardDetailModal({ card, achievements, loadingAchievements, onClose, gameTitle }) {
-  const rs = rarityStyle(card._rarity);
-  const TypeIcon = CARD_TYPE_ICON[card._type] || Star;
+// ── Card detail modal ──
+function CardDetailModal({ card, onClose }) {
+  const rs = rarityStyle(card.card_rarity);
+  const TypeIcon = CARD_TYPE_ICON[card.card_type] || Trophy;
   const modal = (
     <motion.div
       initial={{ opacity: 0 }}
@@ -334,21 +315,17 @@ function CardDetailModal({ card, achievements, loadingAchievements, onClose, gam
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: 'spring', damping: 24, stiffness: 280 }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-md rounded-2xl border ${rs.border} ${rs.glow} overflow-hidden flex flex-col max-h-[90vh]`}
-        style={{ background: 'linear-gradient(160deg, rgba(20,24,35,0.96) 0%, rgba(10,14,22,0.98) 100%)', backdropFilter: 'blur(24px)' }}
+        className={`relative w-full max-w-sm rounded-2xl border ${rs.border} ${rs.glow} overflow-hidden flex flex-col max-h-[80vh]`}
+        style={{ background: 'linear-gradient(160deg, rgba(20,24,35,0.96) 0%, rgba(10,14,22,0.98) 100%)' }}
       >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 flex items-center justify-center transition-colors"
-        >
+        <button onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 flex items-center justify-center transition-colors">
           <X className="w-4 h-4 text-white/60" />
         </button>
 
-        {/* Card image header */}
-        <div className="relative h-48 overflow-hidden flex-shrink-0">
-          {card._image ? (
-            <img src={card._image} alt={card._name} className="w-full h-full object-cover" />
+        <div className="relative h-40 overflow-hidden flex-shrink-0">
+          {card.card_image ? (
+            <img src={card.card_image} alt={card.card_name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-white/5">
               <TypeIcon className="w-12 h-12 text-white/30" />
@@ -356,75 +333,26 @@ function CardDetailModal({ card, achievements, loadingAchievements, onClose, gam
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e16] via-transparent to-transparent" />
           <span className={`absolute top-3 left-3 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${rs.badge}`}>
-            {card._rarity}
+            {card.card_rarity}
           </span>
         </div>
 
-        {/* Card info */}
         <div className="p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
           <div className="flex items-center gap-2 mb-1">
-            <TypeIcon className={`w-4 h-4 ${rs.text}`} />
-            <span className="text-white/40 text-[10px] uppercase tracking-wide font-bold">{card._type}</span>
+            <TypeIcon className={`w-4 h-4 ${rs.text || 'text-white/60'}`} />
+            <span className="text-white/40 text-[10px] uppercase tracking-wide font-bold">{card.card_type}</span>
           </div>
-          <h3 className="text-white text-xl font-bold mb-1">{card._name}</h3>
+          <h3 className="text-white text-xl font-bold mb-1">{card.card_name}</h3>
           <p className="text-white/50 text-xs mb-3">
-            {card.game_name || card.game || gameTitle} · <span className="uppercase">{card.genre}</span>
+            {card.game_name || card.game} · <span className="uppercase">{card.genre}</span>
           </p>
 
-          {card._desc && (
-            <p className="text-white/60 text-sm leading-relaxed mb-3">{card._desc}</p>
-          )}
-
-          {/* Stats */}
-          {card.stats && Object.keys(card.stats).length > 0 && (
-            <div className="mb-3">
-              <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-1.5">Stats</p>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(card.stats).map(([k, v]) => (
-                  <span key={k} className="px-2 py-0.5 rounded-lg bg-white/6 text-white/70 text-[10px] font-mono">
-                    {k}: {v}
-                  </span>
-                ))}
-              </div>
+          {card.unlocked_date && (
+            <div className="flex items-center gap-2 text-white/50 text-xs">
+              <Trophy className="w-3.5 h-3.5 text-amber-400/70" />
+              <span>Unlocked {relativeDate(card.unlocked_date)}</span>
             </div>
           )}
-
-          {/* Acquisition info */}
-          {card.unlocked_date && (
-            <p className="text-white/35 text-[10px] mb-3">
-              Unlocked: {new Date(card.unlocked_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-            </p>
-          )}
-
-          {/* Achievements */}
-          <div>
-            <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-1.5 flex items-center gap-1">
-              <Trophy className="w-3 h-3" /> Achievements
-            </p>
-            {loadingAchievements ? (
-              <div className="flex items-center gap-2 py-2">
-                <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-                <span className="text-white/40 text-xs">Loading achievements…</span>
-              </div>
-            ) : achievements.length === 0 ? (
-              <p className="text-white/30 text-xs py-2">No achievements found for this game.</p>
-            ) : (
-              <div className="space-y-1.5">
-                {achievements.slice(0, 6).map((ach) => (
-                  <div key={ach.id} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <span className="text-lg flex-shrink-0 leading-none">{ach.icon || '🏆'}</span>
-                    <div className="min-w-0">
-                      <p className="text-white/70 text-xs font-semibold truncate">{ach.title}</p>
-                      <p className="text-white/35 text-[10px] leading-tight line-clamp-2">{ach.description}</p>
-                    </div>
-                    <span className={`ml-auto flex-shrink-0 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${rarityStyle(ach.rarity).badge}`}>
-                      {ach.rarity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </motion.div>
     </motion.div>
