@@ -1,7 +1,7 @@
 // StorefrontTopBar.jsx — Top header: nav pills, search, credits, cart, notifications, profile
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff, Settings } from 'lucide-react';
+import { Search, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff, Settings } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSearchChange, onSearchOpen }) {
@@ -64,9 +64,6 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
           />
           <button onClick={handleMic} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
             {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); onSearchOpen?.(); }} className="flex-shrink-0 text-white/40 hover:text-cyan-300 transition-colors">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
           </button>
           {/* underline */}
           <span className="search-underline-line pointer-events-none absolute left-0 right-0 bottom-0 h-[1.5px] rounded-full" />
