@@ -28,7 +28,6 @@ export const NAV_HIERARCHY = [
         icon: ShoppingBag,
         path: createPageUrl('Store'),
         subPages: [
-            { name: 'Library', icon: Library, path: createPageUrl('Store') + '?subview=library' },
             { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
         ]
     },
