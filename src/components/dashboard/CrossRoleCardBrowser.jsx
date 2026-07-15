@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
   Trophy, Library as LibraryIcon, ChevronRight, ChevronLeft, Lock, X,
-  Sparkles, Sword, Shield, Zap, Users, Star, Loader2, Gamepad2
+  Sparkles, Sword, Shield, Zap, Users, Star, Loader2, Gamepad2, HelpCircle
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -24,13 +24,17 @@ const CARD_TYPE_ICON = {
   Item: Gamepad2, Passive: Star, AI_Trait: Sparkles, AI_Teacher: Sparkles,
 };
 
+// Default number of placeholder slots shown for a game with no/unlocked cards
+const DEFAULT_PLACEHOLDER_COUNT = 8;
+
 function rarityStyle(rarity) {
   return RARITY_STYLES[rarity] || RARITY_STYLES.Common;
 }
 
 export default function CrossRoleCardBrowser() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'library'
+  const [activeTab, setActiveTab] = useState('cards');
+  const [games, setGames] = useState([]);
   const [userCards, setUserCards] = useState([]);
   const [cardTemplates, setCardTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,18 +44,19 @@ export default function CrossRoleCardBrowser() {
   const [gameAchievements, setGameAchievements] = useState([]);
   const [loadingAchievements, setLoadingAchievements] = useState(false);
 
-  // Fetch owned cards + all templates
+  // Fetch all games + owned cards + templates
   useEffect(() => {
-    if (!user?.id) { setLoading(false); return; }
     let cancelled = false;
     (async () => {
       setLoading(true);
       try {
-        const [ownedRes, templatesRes] = await Promise.all([
-          base44.entities.UserCard.filter({ user_id: user.id }),
-          base44.entities.CardTemplate.list(),
-        ]);
+        const fetches = [base44.entities.Game.list()];
+        if (user?.id) fetches.push(base44.entities.UserCard.filter({ user_id: user.id }));
+        else fetches.push(Promise.resolve([]));
+        fetches.push(base44.entities.CardTemplate.list());
+        const [gamesRes, ownedRes, templatesRes] = await Promise.all(fetches);
         if (cancelled) return;
+        setGames(Array.isArray(gamesRes) ? gamesRes : (gamesRes?.data || []));
         setUserCards(Array.isArray(ownedRes) ? ownedRes : (ownedRes?.data || []));
         setCardTemplates(Array.isArray(templatesRes) ? templatesRes : (templatesRes?.data || []));
       } catch (e) {
@@ -63,25 +68,18 @@ export default function CrossRoleCardBrowser() {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  // Build genre → game → cards map from owned UserCards
-  const genreGameMap = useMemo(() => {
+  // Group ALL games by genre (from Game entity, not just owned cards)
+  const gamesByGenre = useMemo(() => {
     const map = {};
-    userCards.forEach((uc) => {
-      const genre = uc.genre || 'other';
-      const game = uc.game_name || 'Unknown Game';
-      if (!map[genre]) map[genre] = {};
-      if (!map[genre][game]) map[genre][game] = { ownedCards: [], gameId: uc.game_id, gameName: game, genre };
-      map[genre][game].ownedCards.push(uc);
-    });
-    // Also include CardTemplates grouped under their game/genre
-    cardTemplates.forEach((ct) => {
-      // We don't have genre on CardTemplate directly; match by source_game_id to owned games
-      // Templates without a matching owned game are shown under "other" genre
+    games.forEach((g) => {
+      const genre = g.genre || 'other';
+      if (!map[genre]) map[genre] = [];
+      map[genre].push(g);
     });
     return map;
-  }, [userCards, cardTemplates]);
+  }, [games]);
 
-  const genres = useMemo(() => Object.keys(genreGameMap).sort(), [genreGameMap]);
+  const genres = useMemo(() => Object.keys(gamesByGenre).sort(), [gamesByGenre]);
 
   // Auto-select first genre
   useEffect(() => {
@@ -90,27 +88,55 @@ export default function CrossRoleCardBrowser() {
 
   const gamesInGenre = useMemo(() => {
     if (!selectedGenre) return [];
-    const g = genreGameMap[selectedGenre] || {};
-    return Object.values(g);
-  }, [selectedGenre, genreGameMap]);
+    return gamesByGenre[selectedGenre] || [];
+  }, [selectedGenre, gamesByGenre]);
 
-  // When game selected, build the full card list: owned + locked templates
+  // Map owned cards by game title for quick lookup
+  const ownedCardsByGame = useMemo(() => {
+    const map = {};
+    userCards.forEach((uc) => {
+      const key = uc.game_name || uc.game_id;
+      if (!map[key]) map[key] = [];
+      map[key].push(uc);
+    });
+    return map;
+  }, [userCards]);
+
+  // Build card list for selected game: owned (colored) + locked templates + question-mark placeholders
   const gameCards = useMemo(() => {
     if (!selectedGame) return [];
-    const owned = selectedGame.ownedCards || [];
-    // Templates that belong to this game (by source_game_id matching game_id, or by name matching)
-    const templatesForGame = cardTemplates.filter((ct) => {
-      if (selectedGame.gameId && ct.source_game_id === selectedGame.gameId) return true;
-      return false;
-    });
-    // Merge: owned cards first, then locked templates
-    const ownedNames = new Set(owned.map((c) => c.card_name?.toLowerCase()));
-    const locked = templatesForGame.filter((ct) => !ownedNames.has(ct.name?.toLowerCase()));
-    return [
-      ...owned.map((c) => ({ ...c, _owned: true, _name: c.card_name, _rarity: c.card_rarity, _image: c.card_image, _type: c.card_type, _desc: '' })),
-      ...locked.map((ct) => ({ ...ct, _owned: false, _name: ct.name, _rarity: ct.base_rarity, _image: ct.image_url, _type: ct.type, _desc: ct.description })),
+    const gameTitle = selectedGame.title;
+    const owned = ownedCardsByGame[gameTitle] || ownedCardsByGame[selectedGame.id] || [];
+
+    // Templates belonging to this game
+    const templatesForGame = cardTemplates.filter((ct) => ct.source_game_id === selectedGame.id);
+    const ownedNames = new Set(owned.map((c) => (c.card_name || '').toLowerCase()));
+    const locked = templatesForGame.filter((ct) => !ownedNames.has((ct.name || '').toLowerCase()));
+
+    const cards = [
+      ...owned.map((c) => ({
+        ...c, _owned: true, _placeholder: false,
+        _name: c.card_name, _rarity: c.card_rarity, _image: c.card_image, _type: c.card_type, _desc: c.card_description || '',
+      })),
+      ...locked.map((ct) => ({
+        ...ct, _owned: false, _placeholder: false,
+        _name: ct.name, _rarity: ct.base_rarity, _image: ct.image_url, _type: ct.type, _desc: ct.description || '',
+      })),
     ];
-  }, [selectedGame, cardTemplates]);
+
+    // Fill remaining slots with question-mark placeholders
+    const totalKnown = owned.length + locked.length;
+    const fillCount = Math.max(0, DEFAULT_PLACEHOLDER_COUNT - totalKnown);
+    for (let i = 0; i < fillCount; i++) {
+      cards.push({
+        id: `placeholder_${selectedGame.id}_${i}`,
+        _owned: false, _placeholder: true,
+        _name: '???', _rarity: 'Common', _image: null, _type: 'Unknown', _desc: '',
+      });
+    }
+
+    return cards;
+  }, [selectedGame, ownedCardsByGame, cardTemplates]);
 
   // Fetch achievements for the detail card's game
   useEffect(() => {
@@ -119,7 +145,7 @@ export default function CrossRoleCardBrowser() {
     (async () => {
       setLoadingAchievements(true);
       try {
-        const gameName = detailCard.game_name || detailCard.game;
+        const gameName = detailCard.game_name || detailCard.game || selectedGame?.title;
         const res = await base44.entities.Achievement.filter({ game: gameName });
         if (!cancelled) setGameAchievements(Array.isArray(res) ? res : (res?.data || []));
       } catch (e) {
@@ -129,33 +155,20 @@ export default function CrossRoleCardBrowser() {
       }
     })();
     return () => { cancelled = true; };
-  }, [detailCard]);
+  }, [detailCard, selectedGame]);
 
   // ── Loading state ──
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full pointer-events-auto">
+      <div className="flex items-center justify-center h-full pointer-events-auto p-8">
         <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
         <span className="ml-3 text-white/50 text-sm">Loading card collection…</span>
       </div>
     );
   }
 
-  // ── Empty state ──
-  if (userCards.length === 0) {
-    return (
-      <div className="pointer-events-auto">
-        <TabBar activeTab={activeTab} onTab={setActiveTab} />
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Trophy className="w-12 h-12 text-white/15 mb-3" />
-          <p className="text-white/40 text-sm">No cards unlocked yet. Play games and earn achievements to collect cards!</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="pointer-events-auto">
+    <div className="pointer-events-auto p-1">
       <TabBar activeTab={activeTab} onTab={setActiveTab} />
 
       <AnimatePresence mode="wait">
@@ -169,25 +182,36 @@ export default function CrossRoleCardBrowser() {
             className="flex gap-3 mt-2"
             style={{ height: 'calc(100vh - 300px)', minHeight: '280px' }}
           >
-            {/* Genre sidebar — vertical scroll */}
+            {/* Genre sidebar — all genres from the Game catalog */}
             <div
-              className="w-[120px] flex-shrink-0 overflow-y-auto rounded-xl border border-white/8 p-2"
+              className="w-[130px] flex-shrink-0 overflow-y-auto rounded-xl border border-white/8 p-2"
               style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(12px)', scrollbarWidth: 'none' }}
             >
               <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold px-1 pb-1.5">Genres</p>
-              {genres.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => { setSelectedGenre(g); setSelectedGame(null); }}
-                  className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all mb-0.5 ${
-                    selectedGenre === g
-                      ? 'bg-white/12 text-white border border-white/15'
-                      : 'text-white/45 hover:text-white/80 hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  {g}
-                </button>
-              ))}
+              {genres.length === 0 && (
+                <p className="text-white/30 text-[10px] px-1 py-2">No games found.</p>
+              )}
+              {genres.map((g) => {
+                const ownedInGenre = (gamesByGenre[g] || []).filter(game =>
+                  (ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || []).length > 0
+                ).length;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => { setSelectedGenre(g); setSelectedGame(null); }}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg text-[11px] font-medium uppercase tracking-wide transition-all mb-0.5 flex items-center justify-between ${
+                      selectedGenre === g
+                        ? 'bg-white/12 text-white border border-white/15'
+                        : 'text-white/45 hover:text-white/80 hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    <span className="truncate">{g}</span>
+                    {ownedInGenre > 0 && (
+                      <span className="text-[8px] text-cyan-400/60 flex-shrink-0 ml-1">{ownedInGenre}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Games list for selected genre */}
@@ -197,31 +221,43 @@ export default function CrossRoleCardBrowser() {
                 style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(12px)', scrollbarWidth: 'none' }}
               >
                 <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">
-                  {selectedGenre ? `${selectedGenre} Games` : 'Select a genre'}
+                  {selectedGenre ? `${selectedGenre} — ${gamesInGenre.length} game${gamesInGenre.length !== 1 ? 's' : ''}` : 'Select a genre'}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {gamesInGenre.map((g) => (
-                    <button
-                      key={g.gameName}
-                      onClick={() => setSelectedGame(g)}
-                      className="group flex items-center gap-2.5 p-2.5 rounded-lg border border-white/8 hover:border-white/20 hover:bg-white/5 transition-all text-left"
-                      style={{ background: 'rgba(255,255,255,0.015)' }}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {g.ownedCards[0]?.card_image ? (
-                          <img src={g.ownedCards[0].card_image} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <Gamepad2 className="w-4 h-4 text-white/40" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-white/80 text-xs font-semibold truncate">{g.gameName}</p>
-                        <p className="text-white/35 text-[10px]">{g.ownedCards.length} card{g.ownedCards.length !== 1 ? 's' : ''}</p>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
-                    </button>
-                  ))}
-                </div>
+                {gamesInGenre.length === 0 ? (
+                  <p className="text-white/30 text-xs py-8 text-center">No games in this genre.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {gamesInGenre.map((game) => {
+                      const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
+                      const hasCards = owned.length > 0;
+                      return (
+                        <button
+                          key={game.id}
+                          onClick={() => setSelectedGame(game)}
+                          className="group flex items-center gap-2.5 p-2.5 rounded-lg border border-white/8 hover:border-white/20 hover:bg-white/5 transition-all text-left"
+                          style={{ background: 'rgba(255,255,255,0.015)' }}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {game.cover_image ? (
+                              <img src={game.cover_image} alt="" className="w-full h-full object-cover" />
+                            ) : hasCards && owned[0]?.card_image ? (
+                              <img src={owned[0].card_image} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <HelpCircle className="w-4 h-4 text-white/40" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white/80 text-xs font-semibold truncate">{game.title}</p>
+                            <p className={`text-[10px] ${hasCards ? 'text-cyan-400/60' : 'text-white/25'}`}>
+                              {hasCards ? `${owned.length} unlocked` : 'Not played'}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -239,55 +275,19 @@ export default function CrossRoleCardBrowser() {
                   >
                     <ChevronLeft className="w-4 h-4 text-white/60" />
                   </button>
-                  <span className="text-white/80 text-xs font-bold uppercase tracking-wide truncate">{selectedGame.gameName}</span>
+                  <span className="text-white/80 text-xs font-bold uppercase tracking-wide truncate">{selectedGame.title}</span>
                   <span className="text-white/30 text-[10px] ml-auto">{gameCards.length} cards</span>
                 </div>
 
                 {/* Card grid — scrollable */}
                 <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
                   {gameCards.length === 0 ? (
-                    <p className="text-white/30 text-xs text-center py-8">No cards available for this game.</p>
+                    <p className="text-white/30 text-xs text-center py-8">No cards available.</p>
                   ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
-                      {gameCards.map((card, idx) => {
-                        const rs = rarityStyle(card._rarity);
-                        const TypeIcon = CARD_TYPE_ICON[card._type] || Star;
-                        return (
-                          <button
-                            key={card.id || idx}
-                            onClick={() => card._owned && setDetailCard(card)}
-                            disabled={!card._owned}
-                            className={`group relative rounded-lg border ${rs.border} ${card._owned ? rs.glow + ' cursor-pointer hover:scale-[1.04]' : 'opacity-40 grayscale cursor-not-allowed'} transition-all overflow-hidden`}
-                            style={{ background: 'rgba(255,255,255,0.03)' }}
-                          >
-                            {/* Card image */}
-                            <div className="aspect-[3/4] relative overflow-hidden">
-                              {card._image ? (
-                                <img src={card._image} alt={card._name} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                  <TypeIcon className="w-6 h-6 text-white/30" />
-                                </div>
-                              )}
-                              {/* Locked overlay */}
-                              {!card._owned && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                  <Lock className="w-5 h-5 text-white/50" />
-                                </div>
-                              )}
-                              {/* Rarity badge */}
-                              <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-bold uppercase ${rs.badge}`}>
-                                {card._rarity}
-                              </span>
-                            </div>
-                            {/* Card name */}
-                            <div className="p-1.5">
-                              <p className={`text-[9px] font-semibold truncate ${card._owned ? 'text-white/80' : 'text-white/40'}`}>{card._name}</p>
-                              <p className="text-[7px] text-white/30 uppercase">{card._type}</p>
-                            </div>
-                          </button>
-                        );
-                      })}
+                      {gameCards.map((card, idx) => (
+                        <CardTile key={card.id || idx} card={card} onClick={() => card._owned && setDetailCard(card)} />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -305,7 +305,7 @@ export default function CrossRoleCardBrowser() {
             className="mt-2"
             style={{ height: 'calc(100vh - 300px)', minHeight: '280px' }}
           >
-            <LibrarySummary userCards={userCards} genreGameMap={genreGameMap} />
+            <LibrarySummary userCards={userCards} gamesByGenre={gamesByGenre} ownedCardsByGame={ownedCardsByGame} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -317,11 +317,72 @@ export default function CrossRoleCardBrowser() {
             card={detailCard}
             achievements={gameAchievements}
             loadingAchievements={loadingAchievements}
+            gameTitle={selectedGame?.title}
             onClose={() => setDetailCard(null)}
           />
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+// ── Individual card tile (owned / locked / placeholder question-mark) ──
+function CardTile({ card, onClick }) {
+  const rs = rarityStyle(card._rarity);
+  const TypeIcon = CARD_TYPE_ICON[card._type] || Star;
+
+  // Question-mark placeholder card
+  if (card._placeholder) {
+    return (
+      <div
+        className="relative rounded-lg border border-white/8 overflow-hidden opacity-50"
+        style={{ background: 'rgba(255,255,255,0.015)' }}
+      >
+        <div className="aspect-[3/4] flex items-center justify-center">
+          <HelpCircle className="w-8 h-8 text-white/20" />
+        </div>
+        <div className="p-1.5">
+          <p className="text-[9px] font-semibold text-white/30 truncate">???</p>
+          <p className="text-[7px] text-white/15 uppercase">Locked</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Owned or locked card
+  return (
+    <button
+      onClick={onClick}
+      disabled={!card._owned}
+      className={`group relative rounded-lg border ${rs.border} ${card._owned ? rs.glow + ' cursor-pointer hover:scale-[1.04]' : 'opacity-40 cursor-not-allowed'} transition-all overflow-hidden`}
+      style={{ background: 'rgba(255,255,255,0.03)' }}
+    >
+      {/* Card image */}
+      <div className="aspect-[3/4] relative overflow-hidden">
+        {card._image ? (
+          <img src={card._image} alt={card._name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-white/5">
+            <TypeIcon className="w-6 h-6 text-white/30" />
+          </div>
+        )}
+        {/* Locked overlay */}
+        {!card._owned && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <Lock className="w-5 h-5 text-white/50" />
+          </div>
+        )}
+        {/* Rarity badge */}
+        <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-bold uppercase ${rs.badge}`}>
+          {card._rarity}
+        </span>
+      </div>
+      {/* Card name */}
+      <div className="p-1.5">
+        <p className={`text-[9px] font-semibold truncate ${card._owned ? 'text-white/80' : 'text-white/40'}`}>{card._name}</p>
+        <p className="text-[7px] text-white/30 uppercase">{card._type}</p>
+      </div>
+    </button>
   );
 }
 
@@ -350,10 +411,10 @@ function TabBar({ activeTab, onTab }) {
 }
 
 // ── Library summary tab ──
-function LibrarySummary({ userCards, genreGameMap }) {
+function LibrarySummary({ userCards, gamesByGenre, ownedCardsByGame }) {
   const totalCards = userCards.length;
-  const totalGames = Object.values(genreGameMap).reduce((acc, games) => acc + Object.keys(games).length, 0);
-  const totalGenres = Object.keys(genreGameMap).length;
+  const totalGames = Object.values(gamesByGenre).reduce((acc, list) => acc + list.length, 0);
+  const totalGenres = Object.keys(gamesByGenre).length;
   const rarityCount = userCards.reduce((acc, c) => {
     const r = c.card_rarity || 'Common';
     acc[r] = (acc[r] || 0) + 1;
@@ -364,48 +425,55 @@ function LibrarySummary({ userCards, genreGameMap }) {
     <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <StatCard label="Total Cards" value={totalCards} icon={Trophy} color="text-cyan-300" />
-        <StatCard label="Games" value={totalGames} icon={Gamepad2} color="text-purple-300" />
+        <StatCard label="Unlocked Cards" value={totalCards} icon={Trophy} color="text-cyan-300" />
+        <StatCard label="Total Games" value={totalGames} icon={Gamepad2} color="text-purple-300" />
         <StatCard label="Genres" value={totalGenres} icon={Star} color="text-amber-300" />
       </div>
 
       {/* Rarity breakdown */}
-      <div className="rounded-xl border border-white/8 p-3 mb-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">By Rarity</p>
-        <div className="flex flex-wrap gap-1.5">
-          {Object.entries(rarityCount).sort((a, b) => b[1] - a[1]).map(([rarity, count]) => {
-            const rs = rarityStyle(rarity);
-            return (
-              <span key={rarity} className={`px-2 py-1 rounded-lg text-[10px] font-bold ${rs.badge} border ${rs.border}`}>
-                {rarity}: {count}
-              </span>
-            );
-          })}
+      {Object.keys(rarityCount).length > 0 && (
+        <div className="rounded-xl border border-white/8 p-3 mb-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
+          <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">By Rarity</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(rarityCount).sort((a, b) => b[1] - a[1]).map(([rarity, count]) => {
+              const rs = rarityStyle(rarity);
+              return (
+                <span key={rarity} className={`px-2 py-1 rounded-lg text-[10px] font-bold ${rs.badge} border ${rs.border}`}>
+                  {rarity}: {count}
+                </span>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Games list */}
+      {/* Games list — all games from catalog, showing unlocked count */}
       <div className="rounded-xl border border-white/8 p-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">Your Games</p>
+        <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-2">All Games</p>
         <div className="space-y-1.5">
-          {Object.entries(genreGameMap).sort().map(([genre, games]) => (
-            Object.entries(games).map(([gameName, data]) => (
-              <div key={genre + gameName} className="flex items-center gap-2.5 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.015)' }}>
-                <div className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {data.ownedCards[0]?.card_image ? (
-                    <img src={data.ownedCards[0].card_image} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Gamepad2 className="w-3.5 h-3.5 text-white/30" />
-                  )}
+          {Object.entries(gamesByGenre).sort().map(([genre, gameList]) =>
+            gameList.map((game) => {
+              const owned = ownedCardsByGame[game.title] || ownedCardsByGame[game.id] || [];
+              return (
+                <div key={genre + game.id} className="flex items-center gap-2.5 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.015)' }}>
+                  <div className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {game.cover_image ? (
+                      <img src={game.cover_image} alt="" className="w-full h-full object-cover" />
+                    ) : owned[0]?.card_image ? (
+                      <img src={owned[0].card_image} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <HelpCircle className="w-3.5 h-3.5 text-white/25" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white/70 text-xs font-medium truncate">{game.title}</p>
+                    <p className="text-white/30 text-[9px] uppercase">{genre}</p>
+                  </div>
+                  <span className={`text-[10px] font-mono ${owned.length > 0 ? 'text-cyan-400/70' : 'text-white/25'}`}>{owned.length}</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-white/70 text-xs font-medium truncate">{gameName}</p>
-                  <p className="text-white/30 text-[9px] uppercase">{genre}</p>
-                </div>
-                <span className="text-white/40 text-[10px] font-mono">{data.ownedCards.length}</span>
-              </div>
-            ))
-          ))}
+              );
+            })
+          )}
         </div>
       </div>
     </div>
@@ -423,7 +491,7 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 // ── Blurred card detail modal ──
-function CardDetailModal({ card, achievements, loadingAchievements, onClose }) {
+function CardDetailModal({ card, achievements, loadingAchievements, onClose, gameTitle }) {
   const rs = rarityStyle(card._rarity);
   const TypeIcon = CARD_TYPE_ICON[card._type] || Star;
   const modal = (
@@ -442,7 +510,7 @@ function CardDetailModal({ card, achievements, loadingAchievements, onClose }) {
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: 'spring', damping: 24, stiffness: 280 }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-md rounded-2xl border ${rs.border} ${rs.glow} overflow-hidden flex flex-col`}
+        className={`relative w-full max-w-md rounded-2xl border ${rs.border} ${rs.glow} overflow-hidden flex flex-col max-h-[90vh]`}
         style={{ background: 'linear-gradient(160deg, rgba(20,24,35,0.96) 0%, rgba(10,14,22,0.98) 100%)', backdropFilter: 'blur(24px)' }}
       >
         {/* Close */}
@@ -476,7 +544,7 @@ function CardDetailModal({ card, achievements, loadingAchievements, onClose }) {
           </div>
           <h3 className="text-white text-xl font-bold mb-1">{card._name}</h3>
           <p className="text-white/50 text-xs mb-3">
-            {card.game_name || card.game} · <span className="uppercase">{card.genre}</span>
+            {card.game_name || card.game || gameTitle} · <span className="uppercase">{card.genre}</span>
           </p>
 
           {card._desc && (
