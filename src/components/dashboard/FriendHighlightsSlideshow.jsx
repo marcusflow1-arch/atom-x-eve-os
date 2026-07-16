@@ -1,51 +1,32 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, User } from 'lucide-react';
-
-const PLACEHOLDER_COUNT = 8;
-const ITEM_WIDTH = 56;
-const STRIDE = ITEM_WIDTH + 6;
+import React from 'react';
+import { User } from 'lucide-react';
 
 export default function FriendHighlightsSlideshow() {
-  const [index, setIndex] = useState(0);
-  const maxIndex = PLACEHOLDER_COUNT - 3;
-
   return (
-    <div className="flex items-center gap-1.5 mb-2">
-      <button
-        onClick={() => setIndex((p) => Math.max(0, p - 1))}
-        disabled={index === 0}
-        className="flex-shrink-0 w-6 h-11 rounded-md flex items-center justify-center transition-all border border-white/10 disabled:opacity-40"
-        style={{ background: 'rgba(255,255,255,0.04)' }}
-      >
-        <ChevronLeft className="w-4 h-4 text-white/60" />
-      </button>
-
-      <div className="flex-1 overflow-hidden">
-        <div
-          className="flex gap-1.5 transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${index * STRIDE}px)` }}
-        >
-          {Array.from({ length: PLACEHOLDER_COUNT }).map((_, i) => (
-            <div
-              key={i}
-              className="flex-shrink-0 rounded-md border border-white/10 flex flex-col items-center justify-center gap-0.5"
-              style={{ width: `${ITEM_WIDTH}px`, height: '44px', background: 'rgba(255,255,255,0.02)' }}
-            >
-              <User className="w-3 h-3 text-white/15" />
-              <div className="w-8 h-1 rounded-full bg-white/8" />
-            </div>
-          ))}
+    <div className="flex items-center gap-2.5 mb-2 px-1">
+      {/* Friend on far left */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center flex-shrink-0"
+          style={{ background: 'rgba(255,255,255,0.04)' }}>
+          <User className="w-3.5 h-3.5 text-white/30" />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <div className="w-14 h-1.5 rounded-full bg-white/12" />
+          <div className="w-9 h-1 rounded-full bg-white/8" />
         </div>
       </div>
 
-      <button
-        onClick={() => setIndex((p) => Math.min(maxIndex, p + 1))}
-        disabled={index >= maxIndex}
-        className="flex-shrink-0 w-6 h-11 rounded-md flex items-center justify-center transition-all border border-white/10 disabled:opacity-40"
-        style={{ background: 'rgba(255,255,255,0.04)' }}
-      >
-        <ChevronRight className="w-4 h-4 text-white/60" />
-      </button>
+      {/* Short vertical divider — doesn't span full height */}
+      <div className="self-stretch flex items-center">
+        <div className="w-px h-5 bg-white/20" />
+      </div>
+
+      {/* Recent activity info on the right of the line */}
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <div className="w-full h-1.5 rounded-full bg-white/8" />
+        <div className="w-3/4 h-1.5 rounded-full bg-white/6" />
+        <div className="w-1/2 h-1 rounded-full bg-white/5" />
+      </div>
     </div>
   );
 }
