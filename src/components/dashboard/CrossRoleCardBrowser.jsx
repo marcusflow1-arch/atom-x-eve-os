@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
+import FriendHighlightsSlideshow from './FriendHighlightsSlideshow';
 
 const RARITY_STYLES = {
   Common:    { border: 'border-slate-400/40',  glow: 'shadow-[0_0_8px_rgba(148,163,184,0.25)]',  badge: 'bg-slate-500/20 text-slate-300' },
@@ -156,7 +157,10 @@ export default function CrossRoleCardBrowser() {
 
   return (
     <div className="pointer-events-auto p-1" style={{ marginTop: '220px' }}>
-      {/* White horizontal line — more content goes above this */}
+      {/* Friend highlights slideshow */}
+      <FriendHighlightsSlideshow />
+
+      {/* White horizontal line */}
       <div className="w-full h-px bg-white/40 mb-2" />
 
       {/* Recently played progression cards */}
