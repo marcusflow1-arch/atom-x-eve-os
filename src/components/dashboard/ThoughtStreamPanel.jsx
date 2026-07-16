@@ -8,6 +8,14 @@ const MOOD_LABELS = {
   contemplative: 'deep in thought', energetic: 'energized', tired: 'resting', curious: 'curious'
 };
 
+const MOOD_ACCENTS = {
+  joyful: 'rgba(251, 191, 36, 0.12)', content: 'rgba(52, 211, 153, 0.12)',
+  neutral: 'rgba(168, 85, 247, 0.12)', melancholic: 'rgba(96, 165, 250, 0.12)',
+  irritable: 'rgba(251, 113, 133, 0.12)', aggressive: 'rgba(248, 113, 113, 0.12)',
+  contemplative: 'rgba(168, 85, 247, 0.12)', energetic: 'rgba(34, 211, 238, 0.12)',
+  tired: 'rgba(148, 163, 184, 0.10)', curious: 'rgba(168, 85, 247, 0.12)',
+};
+
 function alignmentLabel(moral) {
   if (moral > 20) return 'benevolent';
   if (moral < -20) return 'shadowed';
@@ -17,6 +25,7 @@ function alignmentLabel(moral) {
 export default function ThoughtStreamPanel({ thoughts, mood, moralAlignment, onClose }) {
   const moodLabel = MOOD_LABELS[mood] || 'contemplating';
   const align = alignmentLabel(moralAlignment);
+  const accentBg = MOOD_ACCENTS[mood] || MOOD_ACCENTS.neutral;
 
   return (
     <motion.div
@@ -45,7 +54,7 @@ export default function ThoughtStreamPanel({ thoughts, mood, moralAlignment, onC
         </button>
 
         <div className="p-5 border-b border-white/[0.08] flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(168, 85, 247, 0.12)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: accentBg }}>
             <Sparkles className="w-5 h-5 text-purple-300" />
           </div>
           <div>
@@ -63,7 +72,7 @@ export default function ThoughtStreamPanel({ thoughts, mood, moralAlignment, onC
             </div>
           ) : (
             thoughts.map((t, i) => (
-              <div key={t.id || i} className="p-3 rounded-xl border" style={{ background: 'rgba(168, 85, 247, 0.04)', borderColor: 'rgba(168, 85, 247, 0.08)' }}>
+              <div key={t.id || i} className="p-3 rounded-xl border" style={{ background: accentBg, borderColor: 'rgba(168, 85, 247, 0.08)' }}>
                 <p className="text-white/80 text-sm leading-relaxed italic">"{t.ai_reaction}"</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-purple-300/60 text-[9px] uppercase tracking-wider">{(t.decision_type || '').replace(/_/g, ' ')}</span>

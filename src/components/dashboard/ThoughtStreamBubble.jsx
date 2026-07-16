@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -11,6 +11,19 @@ const MOOD_LABELS = {
   contemplative: 'deep in thought', energetic: 'energized', tired: 'resting', curious: 'curious'
 };
 
+const MOOD_COLORS = {
+  joyful:        { border: 'rgba(251, 191, 36, 0.30)', shadow: 'rgba(251, 191, 36, 0.12)', icon: 'text-amber-300' },
+  content:       { border: 'rgba(52, 211, 153, 0.25)',  shadow: 'rgba(52, 211, 153, 0.10)', icon: 'text-emerald-300' },
+  neutral:       { border: 'rgba(168, 85, 247, 0.25)',  shadow: 'rgba(168, 85, 247, 0.12)', icon: 'text-purple-300' },
+  melancholic:   { border: 'rgba(96, 165, 250, 0.25)',  shadow: 'rgba(96, 165, 250, 0.10)', icon: 'text-blue-300' },
+  irritable:     { border: 'rgba(251, 113, 133, 0.25)', shadow: 'rgba(251, 113, 133, 0.12)', icon: 'text-rose-300' },
+  aggressive:    { border: 'rgba(248, 113, 113, 0.30)', shadow: 'rgba(248, 113, 113, 0.15)', icon: 'text-red-300' },
+  contemplative: { border: 'rgba(168, 85, 247, 0.25)',  shadow: 'rgba(168, 85, 247, 0.12)', icon: 'text-purple-300' },
+  energetic:     { border: 'rgba(34, 211, 238, 0.25)',  shadow: 'rgba(34, 211, 238, 0.12)', icon: 'text-cyan-300' },
+  tired:         { border: 'rgba(148, 163, 184, 0.20)', shadow: 'rgba(148, 163, 184, 0.08)', icon: 'text-slate-300' },
+  curious:       { border: 'rgba(168, 85, 247, 0.25)',  shadow: 'rgba(168, 85, 247, 0.12)', icon: 'text-purple-300' },
+};
+
 export default function ThoughtStreamBubble() {
   const { user } = useAuth();
   const [thoughts, setThoughts] = useState([]);
@@ -18,6 +31,8 @@ export default function ThoughtStreamBubble() {
   const [moralAlignment, setMoralAlignment] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [displayedText, setDisplayedText] = useState('');
+  const typeTimerRef = useRef(null);
 
   useEffect(() => {
     if (!user?.id) { setLoading(false); return; }
@@ -51,6 +66,24 @@ export default function ThoughtStreamBubble() {
 
   const latestThought = thoughts[0];
   const moodLabel = MOOD_LABELS[mood] || 'contemplating';
+  const moodColor = MOOD_COLORS[mood] || MOOD_COLORS.neutral;
+  const fullText = latestThought ? latestThought.ai_reaction : `AI is ${moodLabel}…`;
+
+  // Typewriter effect — types out the latest thought character by character
+  useEffect(() => {
+    setDisplayedText('');
+    if (typeTimerRef.current) clearInterval(typeTimerRef.current);
+    let i = 0;
+    typeTimerRef.current = setInterval(() => {
+      if (i <= fullText.length) {
+        setDisplayedText(fullText.slice(0, i));
+        i++;
+      } else {
+        clearInterval(typeTimerRef.current);
+      }
+    }, 35);
+    return () => { if (typeTimerRef.current) clearInterval(typeTimerRef.current); };
+  }, [fullText]);
 
   return (
     <>
@@ -66,15 +99,16 @@ export default function ThoughtStreamBubble() {
             background: 'rgba(10, 14, 20, 0.75)',
             backdropFilter: 'blur(20px) saturate(160%)',
             WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-            borderColor: 'rgba(168, 85, 247, 0.25)',
-            boxShadow: '0 4px 24px rgba(168, 85, 247, 0.12)',
+            borderColor: moodColor.border,
+            boxShadow: `0 4px 24px ${moodColor.shadow}`,
           }}
         >
           <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
-            <Brain className="w-3.5 h-3.5 text-purple-300" />
+            <Brain className={`w-3.5 h-3.5 ${moodColor.icon}`} />
           </motion.div>
           <span className="text-white/70 text-[11px] font-medium max-w-[280px] truncate">
-            {latestThought ? latestThought.ai_reaction : `AI is ${moodLabel}…`}
+            {displayedText}
+            <span className="animate-pulse ml-0.5">▋</span>
           </span>
         </button>
       </motion.div>
