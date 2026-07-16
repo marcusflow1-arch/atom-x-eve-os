@@ -156,15 +156,8 @@ export default function CrossRoleCardBrowser() {
 
   return (
     <div className="pointer-events-auto p-1" style={{ marginTop: '220px' }}>
-      {/* Welcome header */}
-      <div className="px-1 py-1.5 mb-1">
-        <h2 className="text-white text-lg font-bold">
-          Welcome back{userName ? `, ${userName}` : ''}
-        </h2>
-        <p className="text-white/40 text-xs">
-          {totalWeekUnlocks} unlock{totalWeekUnlocks !== 1 ? 's' : ''} across {recentlyPlayed.length} game{recentlyPlayed.length !== 1 ? 's' : ''} this week
-        </p>
-      </div>
+      {/* White horizontal line — more content goes above this */}
+      <div className="w-full h-px bg-white/40 mb-2" />
 
       {/* Recently played progression cards */}
       <div className="overflow-y-auto space-y-1.5" style={{ height: 'calc(100vh - 560px)', minHeight: '130px', scrollbarWidth: 'none' }}>
@@ -178,6 +171,16 @@ export default function CrossRoleCardBrowser() {
             onCardClick={setDetailCard}
           />
         ))}
+      </div>
+
+      {/* Welcome header — below the cards */}
+      <div className="px-1 py-1.5 mt-1">
+        <h2 className="text-white text-lg font-bold">
+          Welcome back{userName ? `, ${userName}` : ''}
+        </h2>
+        <p className="text-white/40 text-xs">
+          {totalWeekUnlocks} unlock{totalWeekUnlocks !== 1 ? 's' : ''} across {recentlyPlayed.length} game{recentlyPlayed.length !== 1 ? 's' : ''} this week
+        </p>
       </div>
 
       {/* Card detail modal */}
