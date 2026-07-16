@@ -1312,6 +1312,13 @@ export function LibraryBannerSection({
             </div>
           </div>
 
+          {/* Achv Games highlights — under the environment box */}
+          <div className="w-[247px] pl-1 pt-0.5">
+            <p className="text-white text-sm font-bold truncate">
+              {(() => { const n = user?.username || user?.full_name || user?.email?.split('@')[0]; return n ? `${n}, ` : ''; })()}Achv Games highlights
+            </p>
+          </div>
+
           {/* Bottom Row: Nav Boxes + Intelligence Feed */}
           <div className="flex justify-between items-start w-full">
             <div className="w-[330px] flex justify-center">

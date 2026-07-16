@@ -173,16 +173,6 @@ export default function CrossRoleCardBrowser() {
         ))}
       </div>
 
-      {/* Welcome header — below the cards */}
-      <div className="px-1 py-1.5 mt-1">
-        <h2 className="text-white text-lg font-bold">
-          {userName ? `${userName}, welcome back to` : 'Welcome back to'} Achievement Highlights
-        </h2>
-        <p className="text-white/40 text-xs">
-          {totalWeekUnlocks} unlock{totalWeekUnlocks !== 1 ? 's' : ''} across {recentlyPlayed.length} game{recentlyPlayed.length !== 1 ? 's' : ''} this week
-        </p>
-      </div>
-
       {/* Card detail modal */}
       <AnimatePresence>
         {detailCard && (
