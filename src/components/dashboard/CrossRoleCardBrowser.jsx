@@ -156,7 +156,7 @@ export default function CrossRoleCardBrowser() {
   const totalWeekUnlocks = recentlyPlayed.reduce((sum, g) => sum + g.recentUnlocks.length, 0);
 
   return (
-    <div className="pointer-events-auto p-1" style={{ marginTop: '220px' }}>
+    <div className="pointer-events-auto p-1" style={{ marginTop: '8px' }}>
       {/* Friend highlights slideshow */}
       <FriendHighlightsSlideshow />
 
@@ -164,7 +164,7 @@ export default function CrossRoleCardBrowser() {
       <div className="w-full h-px bg-white/40 mb-2" />
 
       {/* Recently played progression cards */}
-      <div className="overflow-y-auto space-y-1.5" style={{ height: 'calc(100vh - 560px)', minHeight: '130px', scrollbarWidth: 'none' }}>
+      <div className="overflow-y-auto space-y-1.5" style={{ height: 'calc(100vh - 460px)', minHeight: '130px', scrollbarWidth: 'none' }}>
         {recentlyPlayed.map((entry) => (
           <GameProgressionCard
             key={entry.gameId || entry.gameName}
