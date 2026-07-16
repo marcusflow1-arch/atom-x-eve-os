@@ -25,6 +25,9 @@ import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeConte
 import ViewModeToggle from './components/mobile/ViewModeToggle';
 import MobileLayoutShell from './components/mobile/MobileLayoutShell';
 import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsDrawer';
+import ThoughtStreamBubble from './components/dashboard/ThoughtStreamBubble';
+import { AIPresenceProvider } from './components/dashboard/AIPresenceContext';
+import MoodAuraLayer from './components/dashboard/MoodAuraLayer';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
@@ -544,6 +547,7 @@ function LayoutContent({ children, currentPageName }) {
         <div className="absolute inset-0 -z-10">
           <ThemeBackground themeId="moon_essence" />
         </div>
+        <MoodAuraLayer />
         <EnvStatus />
         <Toaster position="top-right" />
         <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
@@ -560,6 +564,8 @@ function LayoutContent({ children, currentPageName }) {
         {showSignUp && isAuthenticated && (
           <SignUpForm onComplete={completeSignUp} onCancel={() => setShowSignUp(false)} />
         )}
+        {/* AI Thought Stream — global, mobile */}
+        {isAuthenticated && user?.id && <ThoughtStreamBubble />}
         <CartDrawer />
       </div>
     );
@@ -571,6 +577,9 @@ function LayoutContent({ children, currentPageName }) {
       <div className="absolute inset-0 -z-10">
         <ThemeBackground themeId="moon_essence" />
       </div>
+
+      {/* AI Mood Aura — subtle ambient glow that shifts with AI mood */}
+      <MoodAuraLayer />
 
       <EnvStatus />
       <Toaster position="top-right" />
@@ -1211,6 +1220,9 @@ function LayoutContent({ children, currentPageName }) {
 
       <AuraWatchedStreamsDrawer isOpen={auraStreamsDrawerOpen} onClose={() => setAuraStreamsDrawerOpen(false)} />
 
+      {/* AI Thought Stream — global, shows on every desktop page */}
+      {isAuthenticated && user?.id && <ThoughtStreamBubble />}
+
       {/* Guided Tour for First-Time Users */}
       {showGuidedTour && (
         <GuidedTour onComplete={() => {
@@ -1253,7 +1265,9 @@ export default function Layout({ children, currentPageName }) {
           <ViewModeProvider>
             <CartProvider>
               <Suspense fallback={<LoadingFallback />}>
-                <LayoutContent children={children} currentPageName={currentPageName} />
+                <AIPresenceProvider>
+                  <LayoutContent children={children} currentPageName={currentPageName} />
+                </AIPresenceProvider>
               </Suspense>
             </CartProvider>
           </ViewModeProvider>

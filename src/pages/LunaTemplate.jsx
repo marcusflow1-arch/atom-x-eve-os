@@ -45,7 +45,6 @@ import { useAuth } from '../components/auth/AuthContext';
 import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
-import ThoughtStreamBubble from '../components/dashboard/ThoughtStreamBubble';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
@@ -1888,11 +1887,6 @@ export default function LunaTemplate() {
               // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
               <SideAccessMenu />
               }
-
-      {/* AI Thought Stream — subtle bubble showing what the AI is "thinking" */}
-      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
-        <ThoughtStreamBubble />
-      }
 
       {/* Calendar Overlay */}
       <AnimatePresence>

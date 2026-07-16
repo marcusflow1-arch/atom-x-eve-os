@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/components/auth/AuthContext';
+import { useAIPresence } from './AIPresenceContext';
 import ThoughtStreamPanel from './ThoughtStreamPanel';
 
 const MOOD_LABELS = {
@@ -25,51 +24,16 @@ const MOOD_COLORS = {
 };
 
 export default function ThoughtStreamBubble() {
-  const { user } = useAuth();
-  const [thoughts, setThoughts] = useState([]);
-  const [mood, setMood] = useState('neutral');
-  const [moralAlignment, setMoralAlignment] = useState(0);
+  const { thoughts, mood, moralAlignment, loading } = useAIPresence();
   const [expanded, setExpanded] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [displayedText, setDisplayedText] = useState('');
   const typeTimerRef = useRef(null);
-
-  useEffect(() => {
-    if (!user?.id) { setLoading(false); return; }
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const [decisions, states] = await Promise.all([
-          base44.entities.AIDecisionLog.filter({ user_id: user.id }),
-          base44.entities.AIBehaviorState.filter({ user_id: user.id }),
-        ]);
-        if (cancelled) return;
-        const recent = (Array.isArray(decisions) ? decisions : decisions?.data || [])
-          .filter(d => d.ai_reaction)
-          .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-          .slice(0, 8);
-        setThoughts(recent);
-        const state = (Array.isArray(states) ? states : states?.data || [])[0];
-        if (state) {
-          setMood(state.current_mood || 'neutral');
-          setMoralAlignment(state.moral_alignment || 0);
-        }
-      } catch (e) {
-        console.error('ThoughtStream load error:', e);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [user?.id]);
 
   const latestThought = thoughts[0];
   const moodLabel = MOOD_LABELS[mood] || 'contemplating';
   const moodColor = MOOD_COLORS[mood] || MOOD_COLORS.neutral;
   const fullText = latestThought ? latestThought.ai_reaction : `AI is ${moodLabel}…`;
 
-  // Typewriter effect — types out the latest thought character by character
   useEffect(() => {
     setDisplayedText('');
     if (typeTimerRef.current) clearInterval(typeTimerRef.current);
