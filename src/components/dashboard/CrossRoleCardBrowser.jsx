@@ -155,7 +155,7 @@ export default function CrossRoleCardBrowser() {
   const totalWeekUnlocks = recentlyPlayed.reduce((sum, g) => sum + g.recentUnlocks.length, 0);
 
   return (
-    <div className="pointer-events-auto p-1">
+    <div className="pointer-events-auto p-1" style={{ marginTop: '220px' }}>
       {/* Welcome header */}
       <div className="px-1 py-1.5 mb-1">
         <h2 className="text-white text-lg font-bold">
@@ -167,7 +167,7 @@ export default function CrossRoleCardBrowser() {
       </div>
 
       {/* Recently played progression cards */}
-      <div className="overflow-y-auto space-y-2.5" style={{ height: 'calc(100vh - 340px)', minHeight: '260px', scrollbarWidth: 'none' }}>
+      <div className="overflow-y-auto space-y-1.5" style={{ height: 'calc(100vh - 560px)', minHeight: '130px', scrollbarWidth: 'none' }}>
         {recentlyPlayed.map((entry) => (
           <GameProgressionCard
             key={entry.gameId || entry.gameName}
@@ -203,13 +203,13 @@ function GameProgressionCard({ entry, game, achTotal, achUnlocked, onCardClick }
     <div className="rounded-xl border border-white/8 overflow-hidden"
       style={{ background: 'rgba(255,255,255,0.025)' }}>
       {/* Game header */}
-      <div className="flex items-center gap-3 p-2.5">
-        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+      <div className="flex items-center gap-2 p-1.5">
+        <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 border border-white/10">
           {cover ? (
             <img src={cover} alt={title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-white/5">
-              <Gamepad2 className="w-4 h-4 text-white/30" />
+              <Gamepad2 className="w-2 h-2 text-white/30" />
             </div>
           )}
         </div>
@@ -234,7 +234,7 @@ function GameProgressionCard({ entry, game, achTotal, achUnlocked, onCardClick }
 
       {/* Achievement progress bar */}
       {achTotal > 0 && (
-        <div className="px-2.5 pb-2">
+        <div className="px-1.5 pb-1">
           <div className="h-1 rounded-full bg-white/8 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -247,14 +247,14 @@ function GameProgressionCard({ entry, game, achTotal, achUnlocked, onCardClick }
       )}
 
       {/* Journey timeline — A → B → C */}
-      <div className="px-2.5 pb-2.5 pt-0.5">
-        <div className="flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="px-1.5 pb-1.5 pt-0.5">
+        <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {journey.map((card, idx) => (
             <React.Fragment key={card.id || idx}>
               {idx > 0 && (
                 <div className="flex-shrink-0 flex items-center">
-                  <div className="w-3 h-px bg-white/20" />
-                  <ChevronRight className="w-3 h-3 text-white/20 -ml-1" />
+                  <div className="w-1.5 h-px bg-white/20" />
+                  <ChevronRight className="w-2 h-2 text-white/20 -ml-0.5" />
                 </div>
               )}
               <UnlockNode card={card} onClick={() => onCardClick(card)} />
@@ -275,14 +275,14 @@ function UnlockNode({ card, onClick }) {
   const rs = rarityStyle(card.card_rarity);
   const TypeIcon = CARD_TYPE_ICON[card.card_type] || Trophy;
   return (
-    <button onClick={onClick} className="flex-shrink-0 w-[60px] flex flex-col items-center gap-0.5 group">
-      <div className={`relative w-[60px] h-[80px] rounded-lg border ${rs.border} ${rs.glow} overflow-hidden group-hover:scale-105 transition-transform`}
+    <button onClick={onClick} className="flex-shrink-0 w-[30px] flex flex-col items-center gap-0.5 group">
+      <div className={`relative w-[30px] h-[40px] rounded-md border ${rs.border} ${rs.glow} overflow-hidden group-hover:scale-105 transition-transform`}
         style={{ background: 'rgba(255,255,255,0.03)' }}>
         {card.card_image ? (
           <img src={card.card_image} alt={card.card_name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-white/5">
-            <TypeIcon className="w-5 h-5 text-white/30" />
+            <TypeIcon className="w-2.5 h-2.5 text-white/30" />
           </div>
         )}
         <span className={`absolute top-0.5 left-0.5 px-0.5 py-0 rounded text-[6px] font-bold uppercase ${rs.badge}`}>
