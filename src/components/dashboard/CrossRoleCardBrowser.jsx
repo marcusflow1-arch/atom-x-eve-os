@@ -40,8 +40,9 @@ function relativeDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function CrossRoleCardBrowser() {
+export default function CrossRoleCardBrowser({ selectedFriend }) {
   const { user } = useAuth();
+  const targetUserId = selectedFriend?.id || user?.id;
   const [userCards, setUserCards] = useState([]);
   const [games, setGames] = useState([]);
   const [achievements, setAchievements] = useState([]);
@@ -52,14 +53,14 @@ export default function CrossRoleCardBrowser() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!user?.id) { setLoading(false); return; }
+      if (!targetUserId) { setLoading(false); return; }
       setLoading(true);
       try {
         const [cardsRes, gamesRes, achRes, uaRes] = await Promise.all([
-          base44.entities.UserCard.filter({ user_id: user.id }),
+          base44.entities.UserCard.filter({ user_id: targetUserId }),
           base44.entities.Game.list(),
           base44.entities.Achievement.list(),
-          base44.entities.UserAchievement.filter({ user_id: user.id }),
+          base44.entities.UserAchievement.filter({ user_id: targetUserId }),
         ]);
         if (cancelled) return;
         setUserCards(Array.isArray(cardsRes) ? cardsRes : (cardsRes?.data || []));
@@ -73,7 +74,7 @@ export default function CrossRoleCardBrowser() {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [targetUserId]);
 
   // Group all user cards by game
   const cardsByGame = useMemo(() => {
@@ -158,7 +159,7 @@ export default function CrossRoleCardBrowser() {
   return (
     <div className="pointer-events-auto p-1" style={{ marginTop: '8px' }}>
       {/* Friend highlights slideshow */}
-      <FriendHighlightsSlideshow />
+      <FriendHighlightsSlideshow selectedFriend={selectedFriend} />
 
       {/* White horizontal line */}
       <div className="w-full h-px bg-white/40 mb-2" />

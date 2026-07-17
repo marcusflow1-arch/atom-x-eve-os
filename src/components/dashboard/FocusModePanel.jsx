@@ -1176,10 +1176,10 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment
+  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
+  activeFriend, onActiveFriendChange
 }) {
   const envDropdownRef = useRef(null);
-  const [activeFriend, setActiveFriend] = useState(null);
   const [onlineFriends, setOnlineFriends] = useState([]);
   const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
   const [memoriesExpanded, setMemoriesExpanded] = useState(false);
@@ -1218,10 +1218,10 @@ export function LibraryBannerSection({
     setOnlineFriends(usersList.filter(f => f && f.id).slice(0, 5));
   }, [dbUsers, user]);
 
-  const handleFriendClick = (friend) => setActiveFriend(activeFriend?.id === friend.id ? null : friend);
+  const handleFriendClick = (friend) => onActiveFriendChange(activeFriend?.id === friend.id ? null : friend);
 
   const handleJoin = (u) => {
-    setActiveFriend(null);
+    onActiveFriendChange(null);
     if (onSelectEnv) onSelectEnv({ id: `joined_${u.id}`, modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' });
     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name } }));
   };
@@ -1231,14 +1231,14 @@ export function LibraryBannerSection({
     setTimeout(() => {
       setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' } }));
-      setActiveFriend(null);
+      onActiveFriendChange(null);
     }, 2000);
   };
 
-  const handlePartyInvite = (u) => setActiveFriend(null);
+  const handlePartyInvite = (u) => onActiveFriendChange(null);
 
   const handleHomeClick = () => {
-    setActiveFriend(null);
+    onActiveFriendChange(null);
     if (onSelectEnv) onSelectEnv({ id: 'default_room', modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' });
     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' } }));
   };
@@ -1602,6 +1602,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const [activeFriend, setActiveFriend] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [showGamePanel, setShowGamePanel] = useState(false);
   const [activeGenre, setActiveGenre] = useState('Action');
@@ -1721,6 +1722,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
                 isEnvironmentActive={isEnvironmentActive}
                 onToggleEnvironment={onToggleEnvironment}
+                activeFriend={activeFriend}
+                onActiveFriendChange={setActiveFriend}
                 navBoxes={
                   <BottomNavBoxes 
                     navigate={navigate} 
@@ -1769,7 +1772,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     className="pointer-events-auto mt-3 overflow-hidden"
                     style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none' }}
                   >
-                    <CrossRoleCardBrowser />
+                    <CrossRoleCardBrowser selectedFriend={activeFriend} />
                   </motion.div>
                 )}
               </AnimatePresence>
