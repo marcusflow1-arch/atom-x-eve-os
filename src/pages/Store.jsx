@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
-    X, Mic, MicOff, Loader2, LayoutGrid, Flame, Smartphone, ShoppingBag, ScrollText
+    X, Mic, MicOff, Loader2, LayoutGrid, Flame, Smartphone, ShoppingBag
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
@@ -739,17 +739,6 @@ export default function Store() {
                                     if (url) navigate(url);
                                 }} />
                             )}
-
-                            {/* TEST QUEST SCENARIO LAUNCHER */}
-                            <button
-                                onClick={() => navigate('/LivingQuest')}
-                                className="fixed bottom-20 right-6 z-[60] flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-105"
-                                style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.9), rgba(99,102,241,0.9))', boxShadow: '0 4px 24px rgba(99,102,241,0.4)' }}
-                                title="Launch the Living Quest — story + continuous branching dialogue"
-                            >
-                                <ScrollText className="w-4 h-4" />
-                                Living Quest
-                            </button>
 
                             {/* IN-PAGE STORE VIEW OVERLAY */}
                             <AnimatePresence>
