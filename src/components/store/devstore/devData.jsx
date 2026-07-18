@@ -15,6 +15,11 @@ export const DEVELOPERS = [
     gamesReleased: 8,
     followers: 124000,
     socials: { website: 'https://neonstudios.dev', twitter: '@neonstudios' },
+    releasedGames: [
+      { title: 'Neon Protocol', genre: 'Action RPG', year: 2024, cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=500&fit=crop', description: 'The original cyberpunk RPG that put Neon Studios on the map. Explore Neo-Tokyo in a branching narrative.' },
+      { title: 'Ghost in the Grid', genre: 'Stealth', year: 2022, cover: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400&h=500&fit=crop', description: 'A stealth-action game set in a digital underworld. Hack, sneak, and survive.' },
+      { title: 'Synthwave Dreams', genre: 'Visual Novel', year: 2021, cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=500&fit=crop', description: 'A narrative-driven visual novel exploring identity in a digitized future.' },
+    ],
     inDevelopment: [
       {
         title: 'Neon Protocol 2',
@@ -60,7 +65,7 @@ export const DEVELOPERS = [
     tagline: 'Masters of action-packed adventures',
     description: 'Phantom Games has been delivering adrenaline-fueled action titles since 2015. Known for their fluid combat systems and expansive open worlds, the studio pushes the boundaries of real-time physics and enemy AI.',
     logo: 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=200&h=200&fit=crop',
-    heroImage: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1920&h=600&fit=crop',
+    heroImage: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=1920&h=600&fit=crop',
     accentColor: 'orange',
     founded: 2015,
     teamSize: 78,
@@ -68,6 +73,12 @@ export const DEVELOPERS = [
     gamesReleased: 12,
     followers: 289000,
     socials: { website: 'https://phantomgames.io', twitter: '@phantomgames' },
+    releasedGames: [
+      { title: 'Phantom Blade', genre: 'Action RPG', year: 2024, cover: 'https://images.unsplash.com/photo-1551103782-8ab07d457281?w=400&h=500&fit=crop', description: 'The original spirit-blade action RPG. Master phantom energy combos across 12 bosses.' },
+      { title: 'Last Stand', genre: 'Survival', year: 2022, cover: 'https://images.unsplash.com/photo-1509248961158-e54f69343a01?w=400&h=500&fit=crop', description: 'A post-apocalyptic survival game. Build, scavenge, and survive against the horde.' },
+      { title: 'Storm Front', genre: 'Strategy', year: 2020, cover: 'https://images.unsplash.com/photo-1518182170546-0766ba6f0f2f?w=400&h=500&fit=crop', description: 'Real-time strategy in a war-torn fantasy realm. Command armies and forge alliances.' },
+      { title: 'Shadow Strike', genre: 'Stealth Action', year: 2018, cover: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=400&h=500&fit=crop', description: 'A ninja stealth-action game with 30 missions and a deep parkour movement system.' },
+    ],
     inDevelopment: [
       {
         title: 'Phantom Blade: Awakening',
@@ -132,6 +143,12 @@ export const DEVELOPERS = [
     gamesReleased: 15,
     followers: 512000,
     socials: { website: 'https://ethereal.gg', twitter: '@etherealdev' },
+    releasedGames: [
+      { title: 'Realms of Aetheria', genre: 'Open-World RPG', year: 2024, cover: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&h=500&fit=crop', description: 'A massive open-world RPG with 6 playable origin stories and a living economy.' },
+      { title: 'Chronicles of the Void', genre: 'Narrative RPG', year: 2021, cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=500&fit=crop', description: 'A story-first RPG set in a dying universe with branching dialogue and deep companion relationships.' },
+      { title: 'Kingdoms Reborn', genre: 'Strategy RPG', year: 2019, cover: 'https://images.unsplash.com/photo-1518182170546-0766ba6f0f2f?w=400&h=500&fit=crop', description: 'A tactical RPG with base building and a dynamic political system.' },
+      { title: 'Eternal Quest', genre: 'JRPG', year: 2016, cover: 'https://images.unsplash.com/photo-1551103782-8ab07d457281?w=400&h=500&fit=crop', description: 'A classic turn-based RPG with 80+ hours of content and a beloved soundtrack.' },
+    ],
     inDevelopment: [
       {
         title: 'Realms of Aetheria',
@@ -185,6 +202,11 @@ export const DEVELOPERS = [
     gamesReleased: 6,
     followers: 87000,
     socials: { website: 'https://quantum.games', twitter: '@quantumgames' },
+    releasedGames: [
+      { title: 'Orbital Mechanics', genre: 'Space Sim', year: 2023, cover: 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400&h=500&fit=crop', description: 'A hard sci-fi space simulation with realistic Newtonian physics and orbital mechanics.' },
+      { title: 'Ecosystem', genre: 'Simulation', year: 2020, cover: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=500&fit=crop', description: 'Model and evolve a complete ecosystem from microscopic organisms to apex predators.' },
+      { title: 'Quantum Leap', genre: 'Puzzle', year: 2018, cover: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=400&h=500&fit=crop', description: 'A mind-bending puzzle game based on quantum mechanics and probability.' },
+    ],
     inDevelopment: [
       {
         title: 'Stellar Diaspora',
@@ -236,6 +258,11 @@ export const DEVELOPERS = [
     gamesReleased: 9,
     followers: 156000,
     socials: { website: 'https://ironwolf.games', twitter: '@ironwolfdev' },
+    releasedGames: [
+      { title: 'Frostfall', genre: 'Survival', year: 2023, cover: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=400&h=500&fit=crop', description: 'The original brutal winter survival game. Hypothermia, hunger, and despair in a frozen wasteland.' },
+      { title: 'Iron Kingdoms', genre: 'Grand Strategy', year: 2021, cover: 'https://images.unsplash.com/photo-1518182170546-0766ba6f0f2f?w=400&h=500&fit=crop', description: 'A grand strategy game spanning 500 years of alternate history. Manage dynasties and wage wars.' },
+      { title: 'Wolfpack', genre: 'Tactical Shooter', year: 2019, cover: 'https://images.unsplash.com/photo-1509248961158-e54f69343a01?w=400&h=500&fit=crop', description: 'A hardcore tactical FPS with realistic ballistics and permadeath.' },
+    ],
     inDevelopment: [
       {
         title: 'Frostfall: Last Hearth',
@@ -264,7 +291,7 @@ export const DEVELOPERS = [
       { name: 'Winter Wolf', rarity: 'Epic', art: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=300&h=420&fit=crop', power: 6600 },
     ],
     updates: [
-      { date: 'Jul 9, 2026', title: 'Frostfall — Beta Hard Mode', body: 'New " permadeath" mode is live. One life, no respawns. How long can you survive the endless winter?' },
+      { date: 'Jul 9, 2026', title: 'Frostfall — Beta Hard Mode', body: 'New "permadeath" mode is live. One life, no respawns. How long can you survive the endless winter?' },
       { date: 'Jun 25, 2026', title: 'Iron Conquest — Map Reveal', body: 'First look at the world map. 400+ provinces, 60+ starting nations, and a dynamic climate system.' },
     ],
     milestones: [
@@ -288,6 +315,12 @@ export const DEVELOPERS = [
     gamesReleased: 11,
     followers: 93000,
     socials: { website: 'https://pixelforge.dev', twitter: '@pixelforge' },
+    releasedGames: [
+      { title: 'Pixel Dungeon', genre: 'Roguelike', year: 2023, cover: 'https://images.unsplash.com/photo-1551103782-8ab07d457281?w=400&h=500&fit=crop', description: 'A classic first-person dungeon crawler with procedural levels and permanent death.' },
+      { title: 'Mega Pixel', genre: 'Platformer', year: 2021, cover: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=400&h=500&fit=crop', description: 'A precision platformer with 50 hand-crafted levels and a beloved chiptune soundtrack.' },
+      { title: 'Retro Racer', genre: 'Racing', year: 2020, cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=500&fit=crop', description: 'An arcade-style top-down racer with 24 tracks and local multiplayer.' },
+      { title: 'Bit Quest', genre: 'Adventure', year: 2019, cover: 'https://images.unsplash.com/photo-1531259683007-016a7c1a34a5?w=400&h=500&fit=crop', description: 'A retro adventure RPG with a charming 8-bit art style and 30+ hours of content.' },
+    ],
     inDevelopment: [
       {
         title: 'Bit Knight',
