@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Building2, ChevronUp, ChevronDown } from 'lucide-react';
 import { DEVELOPERS } from './devstore/devData';
 import DeveloperShowcaseSection from './devstore/DeveloperShowcaseSection';
 import DeveloperProfilePage from './devstore/DeveloperProfilePage';
 import StudioScrollRail from './devstore/StudioScrollRail';
+import DevSearchBar from './devstore/DevSearchBar';
 
 export default function DevCardsContent({ onNavigateToGame }) {
   const [selectedDev, setSelectedDev] = useState(null);
@@ -12,6 +13,9 @@ export default function DevCardsContent({ onNavigateToGame }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const railRef = useRef(null);
   const wheelTsRef = useRef(0);
+
+  // Stable callback for search changes
+  const handleSearchChange = useCallback((q) => setSearch(q), []);
 
   // Alphabetically sorted studios
   const sortedDevs = useMemo(() => {
@@ -109,17 +113,12 @@ export default function DevCardsContent({ onNavigateToGame }) {
                 </div>
               </div>
 
-              {/* Search */}
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                <input
-                  type="text"
-                  placeholder="Search studios or projects..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-white/[0.04] border border-white/10 rounded-lg text-white text-xs placeholder-white/40 focus:outline-none focus:border-amber-400/40 transition-all"
-                />
-              </div>
+              {/* Search with voice + autocomplete */}
+              <DevSearchBar
+                studios={sortedDevs}
+                onSelectStudio={(idx) => setActiveIndex(idx)}
+                onSearchChange={handleSearchChange}
+              />
             </div>
 
             {/* Two-column: left studio rail + right content */}
