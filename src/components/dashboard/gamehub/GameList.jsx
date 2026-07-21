@@ -68,13 +68,30 @@ function ContextMenu({ game, pos, onClose, onPlay }) {
   );
 }
 
-export default function GameList({ games, selectedGame, onSelectGame, onToggleLibrary, libraryActive }) {
+export default function GameList({ games, selectedGame, onSelectGame, onOpenGame, onToggleLibrary, libraryActive }) {
   const [contextMenu, setContextMenu] = useState(null);
+  const clickTimerRef = useRef(null);
 
   const handleContextMenu = (e, game) => {
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({ game, pos: { x: e.clientX, y: e.clientY } });
+  };
+
+  // Single click = select (progress hub), Double click = open full detail
+  const handleGameClick = (game) => {
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      // Double click — open full game detail
+      onOpenGame?.(game);
+      return;
+    }
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null;
+      // Single click — select / deselect
+      onSelectGame(selectedGame?.id === game.id ? null : game);
+    }, 250);
   };
 
   return (
@@ -106,7 +123,7 @@ export default function GameList({ games, selectedGame, onSelectGame, onToggleLi
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.04 }}
-              onClick={() => onSelectGame(isSelected ? null : game)}
+              onClick={() => handleGameClick(game)}
               onContextMenu={(e) => handleContextMenu(e, game)}
               className={`relative flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl cursor-pointer transition-all group ${
                 isSelected
@@ -137,7 +154,7 @@ export default function GameList({ games, selectedGame, onSelectGame, onToggleLi
 
               {/* Play button — shows on hover/selected */}
               <button
-                onClick={(e) => { e.stopPropagation(); onSelectGame(game); }}
+                onClick={(e) => { e.stopPropagation(); onOpenGame?.(game); }}
                 className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                   isSelected
                     ? 'bg-cyan-500/30 border border-cyan-400/50 opacity-100'

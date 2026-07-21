@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video } from
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video, Car, Cpu } from
 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -73,6 +73,7 @@ import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
+import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
 import LibraryLandingPage from '../components/dashboard/gamehub/LibraryLandingPage';
 import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
@@ -193,6 +194,8 @@ export default function LunaTemplate() {
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
   const [selectedConsoleGame, setSelectedConsoleGame] = useState(null);
+  const [openedGame, setOpenedGame] = useState(null);
+  const [viewingFriend, setViewingFriend] = useState(null);
   const [selectedFocusGame, setSelectedFocusGame] = useState(null);
   const [showLibraryLanding, setShowLibraryLanding] = useState(false);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
@@ -1251,6 +1254,11 @@ export default function LunaTemplate() {
                 ]}
                 selectedGame={selectedConsoleGame}
                 onSelectGame={setSelectedConsoleGame}
+                onOpenGame={(game) => {
+                  setSelectedConsoleGame(game);
+                  setOpenedGame(game);
+                  setViewingFriend(null);
+                }}
               />
             </div>
 
@@ -1287,31 +1295,68 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* GAME LANDING PAGE — full right space, shown when a game is selected */}
-            <AnimatePresence>
+            {/* GAME PROGRESS HUB — right side, shown when a game is single-click selected */}
+            <AnimatePresence mode="wait">
               {selectedConsoleGame && (
                 <motion.div
-                  key={selectedConsoleGame.id}
+                  key={viewingFriend ? `friend-${viewingFriend.name}` : selectedConsoleGame.id}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 16 }}
                   transition={{ duration: 0.3 }}
                   className={`pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                  style={{ background: 'transparent', border: 'none', overflow: 'hidden', height: 'calc(100vh - 268px)' }}
+                  style={{ background: 'rgba(8,12,18,0.35)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', overflow: 'hidden', height: 'calc(100vh - 268px)' }}
+                >
+                  <GameProgressHub
+                    game={selectedConsoleGame}
+                    friendData={viewingFriend}
+                    onOpenFriend={(f) => setViewingFriend({
+                      ...f,
+                      progress: 78, storyAct: 'Act 3', storyChapter: 'Search the Dam',
+                      objective: 'Locate the entrance', level: 51, genreLevel: 9, combatStyle: 'Netrunner',
+                      playtime: '41h', achievements: '289 / 320', achievementPct: 90,
+                      equipment: [
+                        { label: 'Equipped Weapon', value: 'Malorian Arms', icon: Sword },
+                        { label: 'Armor Set', value: 'Media Set', icon: Shield },
+                        { label: 'Vehicle', value: 'Rayfield', icon: Car },
+                        { label: 'Cyberware', value: '12 Installed', icon: Cpu },
+                      ],
+                      abilities: [
+                        { name: 'Sandevistan', desc: 'Slow time briefly', cooldown: '30s', rank: 5 },
+                        { name: 'Quick Hack', desc: 'Hack remotely', cooldown: '12s', rank: 5 },
+                      ],
+                    })}
+                    onBackToSelf={() => setViewingFriend(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* FULL GAME LANDING PAGE — overlay, opened on double-click */}
+            <AnimatePresence>
+              {openedGame && (
+                <motion.div
+                  key={`opened-${openedGame.id}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="pointer-events-auto absolute inset-0 z-50"
+                  style={{ background: 'rgba(8,12,18,0.92)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}
                 >
                   <GameLandingPage
                     game={{
-                      ...selectedConsoleGame,
-                      image: selectedConsoleGame.image || selectedConsoleGame.thumb?.replace('w=120','w=1200'),
-                      progress: selectedConsoleGame.progress || 0,
-                      playtime: selectedConsoleGame.playtime || '0h',
-                      achievements: selectedConsoleGame.achievements || '0/0',
-                      rating: selectedConsoleGame.rating || 8.5,
-                      players: selectedConsoleGame.players || '500K',
-                      description: selectedConsoleGame.description || 'An epic adventure awaits.',
-                      tags: selectedConsoleGame.tags || [],
+                      ...openedGame,
+                      image: openedGame.image || openedGame.thumb?.replace('w=120','w=1200'),
+                      progress: openedGame.progress || 0,
+                      playtime: openedGame.playtime || '0h',
+                      achievements: openedGame.achievements || '0/0',
+                      rating: openedGame.rating || 8.5,
+                      players: openedGame.players || '500K',
+                      description: openedGame.description || 'An epic adventure awaits.',
+                      tags: openedGame.tags || [],
                     }}
-                    onClose={() => setSelectedConsoleGame(null)}
+                    onClose={() => setOpenedGame(null)}
                   />
                 </motion.div>
               )}
