@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video, Car, Cpu } from
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video } from
 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -1310,22 +1310,7 @@ export default function LunaTemplate() {
                   <GameProgressHub
                     game={selectedConsoleGame}
                     friendData={viewingFriend}
-                    onOpenFriend={(f) => setViewingFriend({
-                      ...f,
-                      progress: 78, storyAct: 'Act 3', storyChapter: 'Search the Dam',
-                      objective: 'Locate the entrance', level: 51, genreLevel: 9, combatStyle: 'Netrunner',
-                      playtime: '41h', achievements: '289 / 320', achievementPct: 90,
-                      equipment: [
-                        { label: 'Equipped Weapon', value: 'Malorian Arms', icon: Sword },
-                        { label: 'Armor Set', value: 'Media Set', icon: Shield },
-                        { label: 'Vehicle', value: 'Rayfield', icon: Car },
-                        { label: 'Cyberware', value: '12 Installed', icon: Cpu },
-                      ],
-                      abilities: [
-                        { name: 'Sandevistan', desc: 'Slow time briefly', cooldown: '30s', rank: 5 },
-                        { name: 'Quick Hack', desc: 'Hack remotely', cooldown: '12s', rank: 5 },
-                      ],
-                    })}
+                    onOpenFriend={(f) => setViewingFriend(f)}
                     onBackToSelf={() => setViewingFriend(null)}
                   />
                 </motion.div>
