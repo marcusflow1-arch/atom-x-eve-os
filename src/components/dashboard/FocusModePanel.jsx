@@ -39,6 +39,7 @@ import LiveIntelligenceFeed from './LiveIntelligenceFeed';
 import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
 import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
+import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1177,7 +1178,7 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
   navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
-  activeFriend, onActiveFriendChange
+  activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
   const [onlineFriends, setOnlineFriends] = useState([]);
@@ -1312,10 +1313,10 @@ export function LibraryBannerSection({
             </div>
           </div>
 
-          {/* Achv Games highlights — under the environment box */}
+          {/* Game label — shows selected game name or default */}
           <div className="w-[247px] pl-1 pt-0.5">
             <p className="text-white text-sm font-bold truncate">
-              {(() => { const n = user?.username || user?.full_name || user?.email?.split('@')[0]; return n ? `${n}, ` : ''; })()}Achv Games highlights
+              {selectedFocusGame ? selectedFocusGame.title : 'Select a Game'}
             </p>
           </div>
 
@@ -1713,17 +1714,18 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
             {/* Banner area — Environment Hub always stays fixed */}
             <div className="pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
-                games={ownedGames}
-                onBackgroundChange={onBackgroundChange}
-                currentEnvId={currentEnvId}
-                onSelectEnv={onSelectEnv}
-                showEnvDropdown={false}
-                setShowEnvDropdown={() => setShowEnvDrawer(true)}
-                onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
-                isEnvironmentActive={isEnvironmentActive}
-                onToggleEnvironment={onToggleEnvironment}
-                activeFriend={activeFriend}
-                onActiveFriendChange={setActiveFriend}
+                 games={ownedGames}
+                 onBackgroundChange={onBackgroundChange}
+                 currentEnvId={currentEnvId}
+                 onSelectEnv={onSelectEnv}
+                 showEnvDropdown={false}
+                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
+                 onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
+                 isEnvironmentActive={isEnvironmentActive}
+                 onToggleEnvironment={onToggleEnvironment}
+                 activeFriend={activeFriend}
+                 onActiveFriendChange={setActiveFriend}
+                 selectedFocusGame={selectedFocusGame}
                 navBoxes={
                   <BottomNavBoxes 
                     navigate={navigate} 
@@ -1741,7 +1743,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* Game Landing Page — appears below the banner when a game is selected from the left GameList */}
+              {/* GAME PROGRESS HUB — per-game view, replaces old multi-game highlights */}
               <AnimatePresence>
                 {selectedFocusGame && (
                   <motion.div
@@ -1751,17 +1753,19 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     exit={{ opacity: 0, y: 16 }}
                     transition={{ duration: 0.3 }}
                     className="pointer-events-auto mt-3 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none', height: 'calc(100vh - 268px)' }}
+                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.35)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', height: 'calc(100vh - 268px)' }}
                   >
-                    <GameLandingPage
+                    <GameProgressHub
                       game={selectedFocusGame}
-                      onClose={() => onSelectFocusGame?.(null)}
+                      friendData={null}
+                      onOpenFriend={() => {}}
+                      onBackToSelf={() => onSelectFocusGame?.(null)}
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Cross-Role Card Browser — fills the open space below the banner when no game is selected */}
+              {/* Placeholder when no game is selected — no more multi-game highlights */}
               <AnimatePresence>
                 {!selectedFocusGame && (
                   <motion.div
@@ -1769,10 +1773,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 16 }}
                     transition={{ duration: 0.3 }}
-                    className="pointer-events-auto mt-3 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: 'none' }}
+                    className="pointer-events-auto mt-3 overflow-hidden flex items-center justify-center"
+                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.35)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', height: 'calc(100vh - 268px)' }}
                   >
-                    <CrossRoleCardBrowser selectedFriend={activeFriend} />
+                    <div className="text-center">
+                      <Gamepad2 className="w-10 h-10 text-white/15 mx-auto mb-3" />
+                      <p className="text-white/30 text-sm font-medium">Select a game to view progress</p>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

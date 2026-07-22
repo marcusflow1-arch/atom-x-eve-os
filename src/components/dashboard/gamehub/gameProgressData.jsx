@@ -426,5 +426,29 @@ export const DEFAULT_GAME_DATA = {
 };
 
 export function getGameData(gameId) {
-  return GAME_DATA[gameId] || DEFAULT_GAME_DATA;
+  if (!gameId) return DEFAULT_GAME_DATA;
+  // Direct key match
+  if (GAME_DATA[gameId]) return GAME_DATA[gameId];
+  // Try matching by title (game objects from the list may use numeric IDs)
+  const titleMap = {
+    cyberpunk: ['cyberpunk'],
+    'neon-legends': ['neon legends', 'neon'],
+    'stellar-odyssey': ['stellar odyssey', 'stellar'],
+    'shadow-realm': ['shadow realm', 'shadow'],
+    'apex-surge': ['apex surge', 'apex'],
+    mythforge: ['mythforge', 'myth forge'],
+  };
+  if (typeof gameId === 'object' && gameId.title) {
+    const title = gameId.title.toLowerCase();
+    for (const [key, patterns] of Object.entries(titleMap)) {
+      if (patterns.some(p => title.includes(p))) return GAME_DATA[key];
+    }
+  }
+  if (typeof gameId === 'string') {
+    const lower = gameId.toLowerCase();
+    for (const [key, patterns] of Object.entries(titleMap)) {
+      if (patterns.some(p => lower.includes(p))) return GAME_DATA[key];
+    }
+  }
+  return DEFAULT_GAME_DATA;
 }
