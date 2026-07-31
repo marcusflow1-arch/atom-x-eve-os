@@ -46,8 +46,12 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
   const [focusIndex, setFocusIndex] = useState(initial);
   const [achIndex, setAchIndex] = useState(0);
   const wheelLock = useRef(0);
+  const achWheelLock = useRef(0);
   const lpTimer = useRef(null);
+  const longPressedRef = useRef(false);
   const containerRef = useRef(null);
+  const gamesRef = useRef(null);
+  const achRef = useRef(null);
 
   const focused = sorted[focusIndex];
   const achievements = useMemo(() => (focused ? achievementsFor(focused) : []), [focused]);
@@ -88,11 +92,9 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
     return () => window.removeEventListener('keydown', onKey);
   }, [moveGame, moveAch, focused, onSelectGame]);
 
-  // non-passive wheel so we can preventDefault page scroll
+  // Hover-scoped wheel: games column scrolls vertically, achievement strip scrolls horizontally.
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const onWheel = (e) => {
+    const onGameWheel = (e) => {
       e.preventDefault();
       const now = Date.now();
       if (now - wheelLock.current < 220) return;
@@ -100,14 +102,31 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       wheelLock.current = now;
       moveGame(e.deltaY > 0 ? 1 : -1);
     };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [moveGame]);
+    const onAchWheel = (e) => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - achWheelLock.current < 180) return;
+      if (Math.abs(e.deltaY) < 6 && Math.abs(e.deltaX) < 6) return;
+      achWheelLock.current = now;
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      moveAch(delta > 0 ? 1 : -1);
+    };
+    const g = gamesRef.current;
+    const a = achRef.current;
+    g?.addEventListener('wheel', onGameWheel, { passive: false });
+    a?.addEventListener('wheel', onAchWheel, { passive: false });
+    return () => {
+      g?.removeEventListener('wheel', onGameWheel);
+      a?.removeEventListener('wheel', onAchWheel);
+    };
+  }, [moveGame, moveAch]);
 
-  // long-press on focused disc -> blank UI
+  // long-press on focused disc -> blank UI; regular click -> default UI
   const startLP = () => {
+    longPressedRef.current = false;
     clearTimeout(lpTimer.current);
     lpTimer.current = setTimeout(() => {
+      longPressedRef.current = true;
       if (focused) onLongPressGame?.(focused);
     }, 1500);
   };
@@ -131,7 +150,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30" style={{ height: '10%', background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)' }} />
 
       {/* Vertical game disc column (alphabetical — the games ARE the A-Z) */}
-      <div className="absolute left-0 right-0" style={{ top: '50%' }}>
+      <div ref={gamesRef} className="absolute left-0 right-0" style={{ top: '50%' }}>
         <div
           className="relative"
           style={{
@@ -153,6 +172,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
                   onTouchStart={startLP}
                   onTouchEnd={endLP}
                   onClick={() => {
+                    if (longPressedRef.current) { longPressedRef.current = false; return; }
                     if (!isFocus) { setFocusIndex(i); setAchIndex(0); onSelectGame?.(g); }
                     else { onSelectGame?.(g); }
                   }}
@@ -200,7 +220,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       </AnimatePresence>
 
       {/* Achievement strip — horizontal, extends right from the focused game */}
-      <div className="absolute z-20" style={{ left: 138, top: 'calc(50% + 12px)' }}>
+      <div ref={achRef} className="absolute z-20" style={{ left: 138, top: 'calc(50% + 12px)' }}>
         <div className="relative flex items-center" style={{ height: 70 }}>
           <div
             className="pointer-events-none absolute inset-0 z-10"
@@ -249,7 +269,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
 
       {/* hint */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 pointer-events-none text-white/30 tracking-wider" style={{ fontSize: 10 }}>
-        ↑↓ Games · ←→ Achievements
+        ↑↓/Wheel Games · ←→/A D Achievements · Hold 1.5s = Focus
       </div>
     </div>
   );
