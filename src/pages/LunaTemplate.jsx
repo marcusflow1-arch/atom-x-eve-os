@@ -514,9 +514,6 @@ export default function LunaTemplate() {
       if (key === 'g') {
         setShowFriendsHub((v) => !v);
       }
-      if (key === 'l') {
-        navigate(createPageUrl('Library'));
-      }
       if (key === 'p') {
         setShowDevSpotlight((v) => !v);
       }
