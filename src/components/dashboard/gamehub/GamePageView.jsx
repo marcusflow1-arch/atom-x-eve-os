@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown, Trophy, Zap, Clock, Target, BookOpen, Star,
-  UserPlus, Home, Lock, Play, Radio, Gamepad2, Crown,
+  Lock, Play, Radio, Gamepad2, Crown,
 } from 'lucide-react';
 import QuestCard from './QuestCard';
 import { getGameData } from './gameProgressData';
-
-const FRIEND_SLOTS = 5;
 
 // Small stat tile
 function StatTile({ icon: Icon, value, label, tint }) {
@@ -48,25 +46,6 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
     ...abilities.map(ab => ({ type: 'ability', ...ab })),
   ] : [];
 
-  const friends = gameData.friends || [];
-  const friendSlots = Array.from({ length: FRIEND_SLOTS }, (_, i) => friends[i] || null);
-
-  const handleHome = () => onBackToSelf?.();
-  const handleFriendClick = (friend, idx) => {
-    if (!friend) return;
-    onOpenFriend?.({
-      ...friend,
-      progress: Math.max(5, gameData.progress - 10 + idx * 7),
-      storyAct: gameData.storyAct,
-      storyChapter: gameData.storyChapter,
-      objective: gameData.objective,
-      level: Math.max(1, gameData.level + (idx - 1) * 4),
-      genreLevel: gameData.genreLevel,
-      combatStyle: gameData.combatStyle,
-      playtime: `${Math.floor(Math.random() * 40) + 8}h`,
-    });
-  };
-
   const cover = game?.image || game?.thumb;
 
   return (
@@ -86,35 +65,8 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
         )}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(7,10,17,0.55) 0%, rgba(7,10,17,0.92) 100%)' }} />
 
-        {/* Friend slots + Home */}
-        <div className="relative flex items-center gap-2 px-4 pt-3 pb-2">
-          <span className="text-[9px] font-black uppercase tracking-widest text-white/35 mr-1">Squad</span>
-          <div className="flex items-center gap-1.5">
-            {friendSlots.map((friend, i) => (
-              <button key={i} onClick={() => handleFriendClick(friend, i)}
-                className="relative flex flex-col items-center group" title={friend ? friend.name : 'Add friend'}>
-                <div className="mb-0.5 w-3.5 h-3.5 rounded-full bg-white/8 border border-white/10 flex items-center justify-center">
-                  {friend ? <div className="w-1.5 h-1.5 rounded-full bg-green-400" /> : <UserPlus className="w-2 h-2 text-white/25" />}
-                </div>
-                <div className={`w-9 h-9 rounded-lg border overflow-hidden transition-all ${
-                  friend ? 'border-cyan-400/20 hover:border-cyan-400/50 hover:scale-105 cursor-pointer' : 'border-dashed border-white/10 hover:border-white/25 cursor-pointer'
-                }`} style={friend ? { background: 'rgba(255,255,255,0.04)' } : { background: 'rgba(255,255,255,0.02)' }}>
-                  {friend ? <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center"><UserPlus className="w-3 h-3 text-white/15" /></div>}
-                </div>
-                <span className="text-[7px] text-white/35 mt-0.5 max-w-[36px] truncate">{friend ? friend.name : ''}</span>
-              </button>
-            ))}
-          </div>
-          <button onClick={handleHome}
-            className="ml-auto w-9 h-9 rounded-lg border border-white/10 hover:border-cyan-400/40 bg-white/5 hover:bg-cyan-500/10 flex items-center justify-center transition-all group"
-            title="Back to my progress">
-            <Home className="w-4 h-4 text-white/50 group-hover:text-cyan-400 transition-colors" />
-          </button>
-        </div>
-
         {/* Identity row */}
-        <div className="relative flex items-center gap-3 px-4 pb-3">
+        <div className="relative flex items-center gap-3 px-4 pt-3 pb-3">
           <div className="w-14 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/15 shadow-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
             {cover ? <img src={game?.thumb || cover} alt={game?.title} className="w-full h-full object-cover" />
               : <div className="w-full h-full flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-white/30" /></div>}
