@@ -658,15 +658,24 @@ export default function LunaTemplate() {
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
-            <div
-              className="pointer-events-auto flex flex-col overflow-hidden flex-1 min-h-0"
-              style={{ borderRadius: '0 14px 14px 0', background: 'linear-gradient(160deg, rgba(150,180,230,0.10) 0%, rgba(40,55,85,0.10) 45%, rgba(12,18,30,0.18) 100%)', backdropFilter: 'blur(30px) saturate(160%)', WebkitBackdropFilter: 'blur(30px) saturate(160%)', border: '1px solid rgba(150,185,255,0.16)', borderLeft: 'none', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 30px rgba(90,140,220,0.06), 0 12px 40px rgba(0,0,0,0.45)' }}
-            >
-              <div className="flex-shrink-0">
+            <>
+              {/* Avatar + Stats — taken out of the box, placed directly on the page */}
+              <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
                 <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
               </div>
-              {/* Subtle divider between viewer and game list */}
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
+
+              {/* Gap between the now-separated sections */}
+              <div style={{ height: '12px', flexShrink: 0 }} />
+
+              {/* Games list — fully separated, double-outline glass-light effect */}
+              <div
+                className="pointer-events-auto flex-1 min-h-0 flex flex-col overflow-hidden"
+                style={{ borderRadius: '0 14px 14px 0', border: '1px solid rgba(150,185,255,0.24)', borderLeft: 'none', background: 'rgba(150,180,230,0.05)', backdropFilter: 'blur(16px) saturate(150%)', WebkitBackdropFilter: 'blur(16px) saturate(150%)', boxShadow: '0 8px 30px rgba(0,0,0,0.35)', padding: '5px' }}
+              >
+                <div
+                  className="flex flex-col overflow-hidden flex-1 min-h-0"
+                  style={{ borderRadius: '10px', border: '1px solid rgba(150,185,255,0.16)', background: 'linear-gradient(160deg, rgba(150,180,230,0.08) 0%, rgba(40,55,85,0.06) 45%, rgba(12,18,30,0.16) 100%)', backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)' }}
+                >
               <GameList
                 games={[
                   { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
@@ -681,7 +690,9 @@ export default function LunaTemplate() {
                 onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
                 libraryActive={showLibraryLanding}
               />
-            </div>
+                </div>
+              </div>
+            </>
           ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             /* Avatar focus mode: 3D viewer book + the 5-option focus menu below it */
             <div

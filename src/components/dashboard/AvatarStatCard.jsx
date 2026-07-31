@@ -55,9 +55,11 @@ export default function AvatarStatCard() {
     <div
       className="rounded-xl overflow-hidden flex-shrink-0 flex flex-col relative"
       style={{
-        background: 'transparent',
-        border: 'none',
-        boxShadow: 'none',
+        background: 'rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.20)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(255,255,255,0.06), 0 6px 24px rgba(0,0,0,0.28)',
         height: '240px',
         width: '150px',
       }}
