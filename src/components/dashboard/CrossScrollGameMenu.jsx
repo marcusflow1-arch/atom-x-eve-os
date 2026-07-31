@@ -128,7 +128,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
     lpTimer.current = setTimeout(() => {
       longPressedRef.current = true;
       if (focused) onLongPressGame?.(focused);
-    }, 1500);
+    }, 700);
   };
   const endLP = () => clearTimeout(lpTimer.current);
 
