@@ -161,11 +161,15 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
           {sorted.map((g, i) => {
             const isFocus = i === focusIndex;
             const st = itemStyle(i);
+            const W = 84, H = 108, R = 12;
+            const completion = Math.min(100, Math.max(0, g.completion != null ? g.completion : Math.round((g.title?.length || 0) * 8)));
+            const done = completion >= 100;
+            const ringColor = done ? 'rgba(34,211,238,0.95)' : 'rgba(255,255,255,0.92)';
             return (
-              <div key={g.id} className="flex items-center justify-start" style={{ height: SLOT, paddingLeft: 26 }}>
+              <div key={g.id} className="flex items-center justify-start" style={{ height: SLOT, paddingLeft: 22 }}>
                 <div
                   className="relative shrink-0 cursor-pointer"
-                  style={{ width: 96, height: 96, ...st, transition: 'transform 0.4s, opacity 0.4s, filter 0.4s' }}
+                  style={{ width: W, height: H, ...st, transition: 'transform 0.4s, opacity 0.4s, filter 0.4s' }}
                   onMouseDown={startLP}
                   onMouseUp={endLP}
                   onMouseLeave={endLP}
@@ -173,23 +177,32 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
                   onTouchEnd={endLP}
                   onClick={() => {
                     if (longPressedRef.current) { longPressedRef.current = false; return; }
-                    if (!isFocus) { setFocusIndex(i); setAchIndex(0); onSelectGame?.(g); }
-                    else { onSelectGame?.(g); }
+                    if (!isFocus) { setFocusIndex(i); setAchIndex(0); if (done) onLongPressGame?.(g); else onSelectGame?.(g); }
+                    else { if (done) onLongPressGame?.(g); else onSelectGame?.(g); }
                   }}
                 >
                   <div
-                    className="relative rounded-full overflow-hidden"
-                    style={{
-                      width: 96,
-                      height: 96,
-                      boxShadow: isFocus
-                        ? '0 0 0 2px rgba(255,255,255,0.92), 0 0 34px rgba(120,180,255,0.50)'
-                        : '0 0 0 1px rgba(255,255,255,0.10)',
-                    }}
+                    className="relative overflow-hidden"
+                    style={{ width: W, height: H, borderRadius: R }}
                   >
                     <img src={g.thumb || g.image} alt={g.title} className="w-full h-full object-cover" draggable={false} />
-                    <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.28), transparent 62%)' }} />
+                    <div className="absolute inset-0" style={{ borderRadius: R, background: 'radial-gradient(circle at 32% 24%, rgba(255,255,255,0.22), transparent 65%)' }} />
                   </div>
+                  {/* Progress outline around the whole card */}
+                  <svg className="absolute" width={W} height={H} style={{ overflow: 'visible', left: 0, top: 0, pointerEvents: 'none' }}>
+                    <rect x={1.5} y={1.5} width={W - 3} height={H - 3} rx={R} ry={R}
+                      fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth={2} pathLength={100}
+                      strokeDasharray="100 100" />
+                    <rect x={1.5} y={1.5} width={W - 3} height={H - 3} rx={R} ry={R}
+                      fill="none" stroke={ringColor} strokeWidth={2.5} pathLength={100}
+                      strokeDasharray={`${completion} 100`} strokeLinecap="round"
+                      style={{ filter: done || isFocus ? `drop-shadow(0 0 6px ${ringColor})` : 'none', transition: 'stroke-dasharray 0.5s ease, stroke 0.4s' }} />
+                  </svg>
+                  {done && (
+                    <div className="absolute -top-1 -right-1 z-10 flex items-center justify-center" style={{ width: 18, height: 18, borderRadius: 999, background: 'rgba(34,211,238,0.95)', boxShadow: '0 0 10px rgba(34,211,238,0.7)' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#04121a" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    </div>
+                  )}
                 </div>
               </div>
             );
