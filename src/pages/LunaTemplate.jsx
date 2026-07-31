@@ -670,7 +670,16 @@ export default function LunaTemplate() {
               <div style={{ height: '12px', flexShrink: 0 }} />
 
               {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
-              <div className="pointer-events-auto flex-1 min-h-0">
+              <div className="pointer-events-auto flex-1 min-h-0 relative">
+                {/* Full Library button — opens the full library grid to the right */}
+                <button
+                  onClick={() => setShowLibraryLanding(true)}
+                  className="absolute top-1 right-3 z-40 group flex items-center gap-1 text-white/70 hover:text-cyan-300 text-[11px] font-semibold tracking-wide transition-colors"
+                  title="View full library"
+                >
+                  Full Library
+                  <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                </button>
                 <CrossScrollGameMenu
                   games={[
                   { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
