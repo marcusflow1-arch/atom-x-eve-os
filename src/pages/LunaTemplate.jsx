@@ -72,6 +72,7 @@ import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSys
 import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
+import CrossScrollGameMenu from '../components/dashboard/CrossScrollGameMenu';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
 import LibraryLandingPage from '../components/dashboard/gamehub/LibraryLandingPage';
@@ -668,17 +669,10 @@ export default function LunaTemplate() {
               {/* Gap between the now-separated sections */}
               <div style={{ height: '12px', flexShrink: 0 }} />
 
-              {/* Games list — fully separated, double-outline glass-light effect */}
-              <div
-                className="pointer-events-auto flex-1 min-h-0 flex flex-col overflow-hidden"
-                style={{ borderRadius: '0 14px 14px 0', border: '1px solid rgba(150,185,255,0.24)', borderLeft: 'none', background: 'rgba(150,180,230,0.05)', backdropFilter: 'blur(16px) saturate(150%)', WebkitBackdropFilter: 'blur(16px) saturate(150%)', boxShadow: '0 8px 30px rgba(0,0,0,0.35)', padding: '5px' }}
-              >
-                <div
-                  className="flex flex-col overflow-hidden flex-1 min-h-0"
-                  style={{ borderRadius: '10px', border: '1px solid rgba(150,185,255,0.16)', background: 'linear-gradient(160deg, rgba(150,180,230,0.08) 0%, rgba(40,55,85,0.06) 45%, rgba(12,18,30,0.16) 100%)', backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)' }}
-                >
-              <GameList
-                games={[
+              {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
+              <div className="pointer-events-auto flex-1 min-h-0">
+                <CrossScrollGameMenu
+                  games={[
                   { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
                   { id: 'neon-legends', title: 'Neon Legends', genre: 'Action / Brawler', thumb: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=120', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200', status: 'In Progress', progress: 45, playtime: '12.8h', achievements: '6/30', rating: 8.7, players: '880K', description: 'Battle across neon-lit arenas in fast-paced combat.', tags: ['Fighting', 'Multiplayer'] },
                   { id: 'stellar-odyssey', title: 'Stellar Odyssey', genre: 'Space Sim', thumb: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=120', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1200', status: 'Installed', progress: 10, playtime: '3.1h', achievements: '2/40', rating: 8.1, players: '320K', description: 'Chart unexplored galaxies and forge alliances.', tags: ['Space', 'Exploration'] },
@@ -686,13 +680,10 @@ export default function LunaTemplate() {
                   { id: 'apex-surge', title: 'Apex Surge', genre: 'Battle Royale', thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200', status: 'Installed', progress: 33, playtime: '20.5h', achievements: '9/25', rating: 8.5, players: '3.8M', description: 'Drop into high-stakes arenas where only the most skilled survive.', tags: ['Battle Royale', 'FPS'] },
                   { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1200', status: 'Playing', progress: 88, playtime: '210h', achievements: '44/50', rating: 9.6, players: '5.2M', description: 'A massive living world of mythic quests and guild wars.', tags: ['MMORPG', 'PvP', 'Guild'] },
                 ]}
-                selectedGame={selectedFocusGame}
-                onSelectGame={(g) => { setSelectedFocusGame(g); setLongPressGame(null); if (g) setShowLibraryLanding(false); }}
-                onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); setLongPressGame(null); }}
-                onLongPressGame={(g) => { setLongPressGame(g); }}
-                libraryActive={showLibraryLanding}
-              />
-                </div>
+                  selectedGame={selectedFocusGame}
+                  onSelectGame={(g) => { setSelectedFocusGame(g); setLongPressGame(null); if (g) setShowLibraryLanding(false); }}
+                  onLongPressGame={(g) => { setLongPressGame(g); }}
+                />
               </div>
             </>
           ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
