@@ -126,10 +126,9 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ background: 'transparent' }}>
-      {/* Invisible box — heavy vignette at top & bottom */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30" style={{ height: '40%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.62) 45%, rgba(0,0,0,0) 100%)' }} />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30" style={{ height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.62) 45%, rgba(0,0,0,0) 100%)' }} />
-      <div className="pointer-events-none absolute inset-0 z-20" style={{ boxShadow: 'inset 0 0 70px rgba(0,0,0,0.65)' }} />
+      {/* Soft edge fade — blends into the page (10% top, 10% bottom) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30" style={{ height: '10%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)' }} />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30" style={{ height: '10%', background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)' }} />
 
       {/* Vertical game disc column (alphabetical — the games ARE the A-Z) */}
       <div className="absolute left-0 right-0" style={{ top: '50%' }}>
