@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, Bell, Settings } from 'lucide-react';
 export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
   const [time, setTime] = useState(new Date());
   const [currentReminderIdx, setCurrentReminderIdx] = useState(0);
+  const [currentUpdateIdx, setCurrentUpdateIdx] = useState(0);
 
   const reminders = [
     "Raid at 8:00 PM tonight",
@@ -13,16 +14,27 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
     "Clan meeting tomorrow"
   ];
 
+  const systemUpdates = [
+    "New patch arriving Aug 5",
+    "Seasonal event starts soon",
+    "Marketplace expansion incoming",
+    "Performance improvements live"
+  ];
+
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     const reminderTimer = setInterval(() => {
       setCurrentReminderIdx((prev) => (prev + 1) % reminders.length);
     }, 5000);
+    const updateTimer = setInterval(() => {
+      setCurrentUpdateIdx((prev) => (prev + 1) % systemUpdates.length);
+    }, 5000);
     return () => {
       clearInterval(timer);
       clearInterval(reminderTimer);
+      clearInterval(updateTimer);
     };
-  }, [reminders.length]);
+  }, [reminders.length, systemUpdates.length]);
 
   const timeString = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -71,7 +83,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
               {timeString}
             </div>
             
-            <div className="flex-1 flex items-stretch gap-4 overflow-hidden border-l border-white/10 pl-4 h-10">
+            <div className="flex-1 flex items-stretch gap-3 overflow-hidden border-l border-white/10 pl-4 h-10">
               {/* Reminders Side */}
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <div className="flex items-center gap-1 mb-1">
@@ -94,7 +106,30 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
                 </div>
               </div>
 
+              {/* Vertical divider between reminders and system updates */}
+              <div className="w-px self-stretch bg-white/10 flex-shrink-0" />
 
+              {/* System Updates Side */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-1 mb-1">
+                  <Settings className="w-3 h-3 text-cyan-400" />
+                  <span className="text-[10px] uppercase tracking-wider text-cyan-400/80 font-bold truncate">System Updates</span>
+                </div>
+                <div className="relative w-full h-5 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentUpdateIdx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0 text-xs text-white/80 font-medium truncate"
+                    >
+                      {systemUpdates[currentUpdateIdx]}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
             </div>
           </div>
         </div>
