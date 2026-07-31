@@ -40,6 +40,7 @@ import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
 import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
+import GamePageView from '@/components/dashboard/gamehub/GamePageView';
 import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
@@ -1314,10 +1315,11 @@ export function LibraryBannerSection({
             </div>
           </div>
 
-          {/* Game label — shows selected game name or default */}
+          {/* Game Header label — dynamic per selected game */}
           <div className="w-[247px] pl-1 pt-0.5">
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Game Header</p>
             <p className="text-white text-sm font-bold truncate">
-              {selectedFocusGame ? selectedFocusGame.title : 'Select a Game'}
+              {selectedFocusGame ? selectedFocusGame.title : 'No game selected'}
             </p>
           </div>
 
@@ -1755,7 +1757,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 )}
               </AnimatePresence>
 
-              {/* GAME PROGRESS HUB — per-game view, replaces old multi-game highlights */}
+              {/* GAME PAGE VIEW — redesigned per-game view with Game Header */}
               <AnimatePresence>
                 {selectedFocusGame && !longPressGame && (
                   <motion.div
@@ -1765,9 +1767,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     exit={{ opacity: 0, y: 16 }}
                     transition={{ duration: 0.3 }}
                     className="pointer-events-auto mt-3 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.35)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', height: 'calc(100vh - 268px)' }}
+                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.45)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)', height: 'calc(100vh - 268px)' }}
                   >
-                    <GameProgressHub
+                    <GamePageView
                       game={selectedFocusGame}
                       friendData={null}
                       onOpenFriend={() => {}}
