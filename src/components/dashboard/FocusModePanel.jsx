@@ -40,6 +40,7 @@ import GameHubArea from '@/components/dashboard/gamehub/GameHubArea.jsx';
 import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
+import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1600,7 +1601,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame, longPressGame, onCloseLongPress }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [activeFriend, setActiveFriend] = useState(null);
@@ -1743,9 +1744,20 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
+              {/* LONG-PRESS BLANK UI — shown when a game is held >1.5s */}
+              <AnimatePresence>
+                {longPressGame && (
+                  <BlankGameUI
+                    key="blank-ui"
+                    game={longPressGame}
+                    onClose={onCloseLongPress}
+                  />
+                )}
+              </AnimatePresence>
+
               {/* GAME PROGRESS HUB — per-game view, replaces old multi-game highlights */}
               <AnimatePresence>
-                {selectedFocusGame && (
+                {selectedFocusGame && !longPressGame && (
                   <motion.div
                     key={selectedFocusGame.id}
                     initial={{ opacity: 0, y: 16 }}
@@ -1767,7 +1779,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
               {/* Placeholder when no game is selected — no more multi-game highlights */}
               <AnimatePresence>
-                {!selectedFocusGame && (
+                {!selectedFocusGame && !longPressGame && (
                   <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}

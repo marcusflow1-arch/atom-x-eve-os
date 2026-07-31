@@ -197,6 +197,7 @@ export default function LunaTemplate() {
   const [openedGame, setOpenedGame] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
   const [selectedFocusGame, setSelectedFocusGame] = useState(null);
+  const [longPressGame, setLongPressGame] = useState(null);
   const [showLibraryLanding, setShowLibraryLanding] = useState(false);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
@@ -686,8 +687,9 @@ export default function LunaTemplate() {
                   { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1200', status: 'Playing', progress: 88, playtime: '210h', achievements: '44/50', rating: 9.6, players: '5.2M', description: 'A massive living world of mythic quests and guild wars.', tags: ['MMORPG', 'PvP', 'Guild'] },
                 ]}
                 selectedGame={selectedFocusGame}
-                onSelectGame={(g) => { setSelectedFocusGame(g); if (g) setShowLibraryLanding(false); }}
-                onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); }}
+                onSelectGame={(g) => { setSelectedFocusGame(g); setLongPressGame(null); if (g) setShowLibraryLanding(false); }}
+                onToggleLibrary={() => { setShowLibraryLanding(v => !v); setSelectedFocusGame(null); setLongPressGame(null); }}
+                onLongPressGame={(g) => { setLongPressGame(g); }}
                 libraryActive={showLibraryLanding}
               />
                 </div>
@@ -887,7 +889,9 @@ export default function LunaTemplate() {
                       isEnvironmentActive={isEnvironmentActive}
                       onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
                       selectedFocusGame={selectedFocusGame}
-                      onSelectFocusGame={setSelectedFocusGame} />
+                      onSelectFocusGame={setSelectedFocusGame}
+                      longPressGame={longPressGame}
+                      onCloseLongPress={() => setLongPressGame(null)} />
             </div>
           </motion.div>
                 }

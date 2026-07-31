@@ -68,9 +68,27 @@ function ContextMenu({ game, pos, onClose, onPlay }) {
   );
 }
 
-export default function GameList({ games, selectedGame, onSelectGame, onOpenGame, onToggleLibrary, libraryActive }) {
+export default function GameList({ games, selectedGame, onSelectGame, onOpenGame, onToggleLibrary, libraryActive, onLongPressGame }) {
   const [contextMenu, setContextMenu] = useState(null);
   const clickTimerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const longPressFiredRef = useRef(false);
+  const LONG_PRESS_MS = 1500;
+
+  const startLongPress = (game) => {
+    longPressFiredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      onLongPressGame?.(game);
+    }, LONG_PRESS_MS);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   const handleContextMenu = (e, game) => {
     e.preventDefault();
@@ -80,6 +98,11 @@ export default function GameList({ games, selectedGame, onSelectGame, onOpenGame
 
   // Single click = select (progress hub), Double click = open full detail
   const handleGameClick = (game) => {
+    // Suppress the click that follows a long-press
+    if (longPressFiredRef.current) {
+      longPressFiredRef.current = false;
+      return;
+    }
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
@@ -125,6 +148,11 @@ export default function GameList({ games, selectedGame, onSelectGame, onOpenGame
               transition={{ delay: i * 0.04 }}
               onClick={() => handleGameClick(game)}
               onContextMenu={(e) => handleContextMenu(e, game)}
+              onMouseDown={() => startLongPress(game)}
+              onMouseUp={cancelLongPress}
+              onMouseLeave={cancelLongPress}
+              onTouchStart={() => startLongPress(game)}
+              onTouchEnd={cancelLongPress}
               className={`relative flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl cursor-pointer transition-all group ${
                 isSelected
                   ? 'bg-white/[0.09] border border-white/10'
