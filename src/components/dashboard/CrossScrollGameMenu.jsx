@@ -1,81 +1,125 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// XMB-style cross-scroll: vertical alphabetical games, horizontal achievement cards.
-const SLOT = 120; // px height per game slot
+// XMB-style cross-scroll grouped by letter:
+// - Vertical column: ONE representative game per letter (A-Z). Each box "represents the letter".
+// - Horizontal strip: the OTHER games whose title starts with that same letter (padded with blank placeholder boxes for testing).
+// - Clicking a strip game swaps it into the focused letter slot (new representative).
+// - The strip is vertically aligned (centered) with the disc, and the focused title sits above so it never overlaps the strip.
+const SLOT = 120; // px height per letter slot
+const STRIP_THUMB_W = 58;
+const STRIP_THUMB_H = 74;
+const STRIP_ROW_H = 94; // thumb + label + breathing room (prevents label clipping)
 
-const RARITY = {
-  common: { ring: 'rgba(156,163,175,0.75)', glow: 'rgba(156,163,175,0.25)' },
-  uncommon: { ring: 'rgba(52,211,153,0.85)', glow: 'rgba(52,211,153,0.30)' },
-  rare: { ring: 'rgba(96,165,250,0.90)', glow: 'rgba(96,165,250,0.38)' },
-  epic: { ring: 'rgba(167,139,250,0.92)', glow: 'rgba(167,139,250,0.42)' },
-  legendary: { ring: 'rgba(251,191,36,0.95)', glow: 'rgba(251,191,36,0.48)' },
-  mythical: { ring: 'rgba(244,114,182,0.95)', glow: 'rgba(244,114,182,0.50)' },
-};
-
-const ACH_POOL = [
-  { name: 'First Light', icon: '🎯', rarity: 'common' },
-  { name: 'Initiate', icon: '✨', rarity: 'uncommon' },
-  { name: 'Halfway Hero', icon: '⚔️', rarity: 'rare' },
-  { name: 'Untouchable', icon: '🛡️', rarity: 'rare' },
-  { name: 'Collector', icon: '💎', rarity: 'epic' },
-  { name: 'Legend', icon: '👑', rarity: 'legendary' },
-  { name: 'Speedrun', icon: '⚡', rarity: 'uncommon' },
-  { name: 'Completionist', icon: '🏆', rarity: 'mythical' },
-];
-
-function achievementsFor(game) {
-  const start = (game?.title?.charCodeAt(0) || 0) % ACH_POOL.length;
-  return ACH_POOL.map((_, i) => ACH_POOL[(i + start) % ACH_POOL.length]);
-}
+// Random-name pool for blank placeholder boxes
+const PH_POOL = ['Echo', 'Nova', 'Rogue', 'Cipher', 'Zenith', 'Onyx', 'Vortex', 'Halo', 'Specter', 'Rift', 'Mirage', 'Pulse', 'Aegis', 'Bolt', 'Crest', 'Dusk', 'Ember', 'Flux', 'Gale', 'Havoc'];
 
 export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame, onLongPressGame }) {
-  const sorted = useMemo(
-    () => [...(games || [])].sort((a, b) => (a.title || '').localeCompare(b.title || '')),
-    [games]
-  );
+  // Group games by first letter of title, padding each group with blank placeholder boxes
+  const letterGroups = useMemo(() => {
+    const map = {};
+    (games || []).forEach((g) => {
+      const raw = (g.title || '#').trim().charAt(0).toUpperCase();
+      const key = /[A-Z]/.test(raw) ? raw : '#';
+      (map[key] = map[key] || []).push(g);
+    });
+    return Object.keys(map)
+      .sort()
+      .map((L) => {
+        const realGames = map[L];
+        const padded = [...realGames];
+        let n = 0;
+        while (padded.length < 4) {
+          const suffix = PH_POOL[(L.charCodeAt(0) + n * 3) % PH_POOL.length];
+          padded.push({
+            id: `ph_${L}_${n}`,
+            title: `${L}-${suffix}`,
+            genre: realGames[0]?.genre || 'Unknown',
+            thumb: null,
+            image: null,
+            placeholder: true,
+            completion: 0,
+          });
+          n++;
+        }
+        return { letter: L, games: padded };
+      });
+  }, [games]);
+
+  // One representative per letter (swappable). Seeded from the first REAL game of each group.
+  const [reps, setReps] = useState(() => letterGroups.map((grp) => grp.games.find((g) => !g.placeholder) || grp.games[0]));
+
+  // Seed reps when the letter set changes (e.g. games just loaded). Preserve user swaps otherwise —
+  // only re-seed if the number of letters no longer matches (new data arrived), never overwrite on a mere re-render.
+  useEffect(() => {
+    setReps((prev) => {
+      if (prev.length === letterGroups.length) return prev;
+      return letterGroups.map((grp) => grp.games.find((g) => !g.placeholder) || grp.games[0]);
+    });
+  }, [letterGroups]);
 
   const initial = useMemo(() => {
     if (selectedGame) {
-      const idx = sorted.findIndex((g) => g.id === selectedGame.id);
+      const L = (selectedGame.title || '#').trim().charAt(0).toUpperCase();
+      const key = /[A-Z]/.test(L) ? L : '#';
+      const idx = letterGroups.findIndex((grp) => grp.letter === key);
       if (idx >= 0) return idx;
     }
     return 0;
-  }, [sorted, selectedGame]);
+  }, [letterGroups, selectedGame]);
 
   const [focusIndex, setFocusIndex] = useState(initial);
-  const [achIndex, setAchIndex] = useState(0);
+  const [catIndex, setCatIndex] = useState(0);
   const wheelLock = useRef(0);
-  const achWheelLock = useRef(0);
+  const catWheelLock = useRef(0);
   const lpTimer = useRef(null);
   const longPressedRef = useRef(false);
   const containerRef = useRef(null);
   const gamesRef = useRef(null);
-  const achRef = useRef(null);
+  const catRef = useRef(null);
 
-  const focused = sorted[focusIndex];
-  const achievements = useMemo(() => (focused ? achievementsFor(focused) : []), [focused]);
-  const safeAch = Math.min(achIndex, Math.max(0, achievements.length - 1));
+  const focused = reps[focusIndex];
+  const group = letterGroups[focusIndex];
+
+  // Games in the same letter group (the horizontal strip) — includes blank placeholders
+  const categoryGames = useMemo(() => (group ? group.games : []), [group]);
+
+  // Keep the strip cursor on the focused game when it changes
+  useEffect(() => {
+    const idx = categoryGames.findIndex((g) => g.id === focused?.id);
+    setCatIndex(idx >= 0 ? idx : 0);
+  }, [focused, categoryGames]);
+
+  const safeCat = categoryGames.length ? Math.min(catIndex, categoryGames.length - 1) : 0;
 
   const moveGame = useCallback(
     (dir) => {
       setFocusIndex((prev) => {
-        const next = Math.min(sorted.length - 1, Math.max(0, prev + dir));
+        const next = Math.min(reps.length - 1, Math.max(0, prev + dir));
         if (next !== prev) {
-          setAchIndex(0);
-          onSelectGame?.(sorted[next]);
+          onSelectGame?.(reps[next]);
         }
         return next;
       });
     },
-    [sorted, onSelectGame]
+    [reps, onSelectGame]
   );
 
-  const moveAch = useCallback(
+  const moveCat = useCallback(
     (dir) => {
-      setAchIndex((prev) => Math.min(achievements.length - 1, Math.max(0, prev + dir)));
+      setCatIndex((prev) => Math.min(categoryGames.length - 1, Math.max(0, prev + dir)));
     },
-    [achievements.length]
+    [categoryGames.length]
+  );
+
+  // Swap a strip game into the focused letter slot, making it the new representative.
+  const swapIn = useCallback(
+    (g) => {
+      if (!g) return;
+      setReps((prev) => prev.map((item, i) => (i === focusIndex ? g : item)));
+      onSelectGame?.(g);
+    },
+    [focusIndex, onSelectGame]
   );
 
   // keyboard navigation
@@ -84,15 +128,15 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       const k = e.key;
       if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); moveGame(-1); }
       else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); moveGame(1); }
-      else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); moveAch(-1); }
-      else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); moveAch(1); }
+      else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); moveCat(-1); }
+      else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); moveCat(1); }
       else if (k === 'Enter') { if (focused) onSelectGame?.(focused); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [moveGame, moveAch, focused, onSelectGame]);
+  }, [moveGame, moveCat, focused, onSelectGame]);
 
-  // Hover-scoped wheel: games column scrolls vertically, achievement strip scrolls horizontally.
+  // Hover-scoped wheel: letters column scrolls vertically, category strip scrolls horizontally.
   useEffect(() => {
     const onGameWheel = (e) => {
       e.preventDefault();
@@ -102,24 +146,24 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       wheelLock.current = now;
       moveGame(e.deltaY > 0 ? 1 : -1);
     };
-    const onAchWheel = (e) => {
+    const onCatWheel = (e) => {
       e.preventDefault();
       const now = Date.now();
-      if (now - achWheelLock.current < 180) return;
+      if (now - catWheelLock.current < 180) return;
       if (Math.abs(e.deltaY) < 6 && Math.abs(e.deltaX) < 6) return;
-      achWheelLock.current = now;
+      catWheelLock.current = now;
       const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      moveAch(delta > 0 ? 1 : -1);
+      moveCat(delta > 0 ? 1 : -1);
     };
     const g = gamesRef.current;
-    const a = achRef.current;
+    const c = catRef.current;
     g?.addEventListener('wheel', onGameWheel, { passive: false });
-    a?.addEventListener('wheel', onAchWheel, { passive: false });
+    c?.addEventListener('wheel', onCatWheel, { passive: false });
     return () => {
       g?.removeEventListener('wheel', onGameWheel);
-      a?.removeEventListener('wheel', onAchWheel);
+      c?.removeEventListener('wheel', onCatWheel);
     };
-  }, [moveGame, moveAch]);
+  }, [moveGame, moveCat]);
 
   // long-press on focused disc -> blank UI; regular click -> default UI
   const startLP = () => {
@@ -143,13 +187,34 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
     };
   };
 
+  // Render a game thumbnail — real games show art; blank placeholders show a gradient box with a faint letter.
+  const renderThumb = (g, w, h, r, extraStyle = {}) => {
+    const bg = g.placeholder
+      ? 'linear-gradient(135deg, rgba(40,52,72,0.92) 0%, rgba(18,26,40,0.96) 100%)'
+      : 'transparent';
+    return (
+      <div className="relative overflow-hidden" style={{ width: w, height: h, borderRadius: r, ...extraStyle, background: extraStyle.background || bg }}>
+        {g.placeholder ? (
+          <div className="absolute inset-0 flex items-center justify-center" style={{ border: '1px dashed rgba(255,255,255,0.14)', borderRadius: r }}>
+            <span className="text-white/25 font-bold" style={{ fontSize: Math.max(14, Math.round(w / 4)) }}>{(g.title || '?').charAt(0)}</span>
+          </div>
+        ) : (
+          <>
+            <img src={g.thumb || g.image} alt={g.title} className="w-full h-full object-cover" draggable={false} />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 32% 24%, rgba(255,255,255,0.2), transparent 65%)' }} />
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ background: 'transparent' }}>
       {/* Soft edge fade — blends into the page (10% top, 10% bottom) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30" style={{ height: '10%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)' }} />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30" style={{ height: '10%', background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)' }} />
 
-      {/* Vertical game disc column (alphabetical — the games ARE the A-Z) */}
+      {/* Vertical letter column — one representative game per letter */}
       <div ref={gamesRef} className="absolute left-0 right-0" style={{ top: '50%' }}>
         <div
           className="relative"
@@ -158,15 +223,16 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
             transition: 'transform 0.45s cubic-bezier(0.22,1,0.36,1)',
           }}
         >
-          {sorted.map((g, i) => {
+          {reps.map((g, i) => {
             const isFocus = i === focusIndex;
             const st = itemStyle(i);
             const W = 84, H = 108, R = 12;
+            const letter = letterGroups[i]?.letter || '?';
             const completion = Math.min(100, Math.max(0, g.completion != null ? g.completion : Math.round((g.title?.length || 0) * 8)));
             const done = completion >= 100;
             const ringColor = done ? 'rgba(34,211,238,0.95)' : 'rgba(255,255,255,0.92)';
             return (
-              <div key={g.id} className="flex items-center justify-start" style={{ height: SLOT, paddingLeft: 22 }}>
+              <div key={letter} className="flex items-center justify-start" style={{ height: SLOT, paddingLeft: 22 }}>
                 <div
                   className="relative shrink-0 cursor-pointer"
                   style={{ width: W, height: H, ...st, transition: 'transform 0.4s, opacity 0.4s, filter 0.4s' }}
@@ -177,16 +243,14 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
                   onTouchEnd={endLP}
                   onClick={() => {
                     if (longPressedRef.current) { longPressedRef.current = false; return; }
-                    if (!isFocus) { setFocusIndex(i); setAchIndex(0); if (done) onLongPressGame?.(g); else onSelectGame?.(g); }
+                    if (!isFocus) { setFocusIndex(i); if (done) onLongPressGame?.(g); else onSelectGame?.(g); }
                     else { if (done) onLongPressGame?.(g); else onSelectGame?.(g); }
                   }}
                 >
-                  <div
-                    className="relative overflow-hidden"
-                    style={{ width: W, height: H, borderRadius: R }}
-                  >
-                    <img src={g.thumb || g.image} alt={g.title} className="w-full h-full object-cover" draggable={false} />
-                    <div className="absolute inset-0" style={{ borderRadius: R, background: 'radial-gradient(circle at 32% 24%, rgba(255,255,255,0.22), transparent 65%)' }} />
+                  {renderThumb(g, W, H, R)}
+                  {/* Letter badge — this box represents the letter */}
+                  <div className="absolute top-1 left-1 z-10 flex items-center justify-center" style={{ width: 18, height: 18, borderRadius: 6, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
+                    <span className="text-white font-bold" style={{ fontSize: 10 }}>{letter}</span>
                   </div>
                   {/* Progress outline around the whole card */}
                   <svg className="absolute" width={W} height={H} style={{ overflow: 'visible', left: 0, top: 0, pointerEvents: 'none' }}>
@@ -210,17 +274,17 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
         </div>
       </div>
 
-      {/* Focused game title (right of disc) */}
+      {/* Focused game title — moved ABOVE the row so it never overlaps the strip boxes */}
       <AnimatePresence mode="wait">
         {focused && (
           <motion.div
             key={focused.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.25 }}
             className="absolute z-20 pointer-events-none"
-            style={{ left: 138, top: 'calc(50% - 40px)' }}
+            style={{ left: 138, top: 'calc(50% - 92px)' }}
           >
             <div className="text-white font-semibold tracking-wide truncate" style={{ fontSize: 22, textShadow: '0 2px 12px rgba(0,0,0,0.85)', maxWidth: 220 }}>
               {focused.title}
@@ -232,9 +296,10 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
         )}
       </AnimatePresence>
 
-      {/* Achievement strip — horizontal, extends right from the focused game */}
-      <div ref={achRef} className="absolute z-20" style={{ left: 138, top: 'calc(50% + 12px)' }}>
-        <div className="relative flex items-center" style={{ height: 70 }}>
+      {/* Same-letter games strip — horizontal, vertically ALIGNED (centered) with the disc.
+          Clicking a game here swaps it into the focused letter slot (new representative). */}
+      <div ref={catRef} className="absolute z-20" style={{ left: 138, top: `calc(50% - ${STRIP_THUMB_H / 2}px)` }}>
+        <div className="relative flex items-center" style={{ height: STRIP_ROW_H }}>
           <div
             className="pointer-events-none absolute inset-0 z-10"
             style={{
@@ -245,33 +310,30 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
           <div
             className="flex items-center gap-3"
             style={{
-              transform: `translateX(${-safeAch * 74}px)`,
+              transform: `translateX(${-safeCat * 78}px)`,
               transition: 'transform 0.4s cubic-bezier(0.22,1,0.36,1)',
             }}
           >
-            {achievements.map((a, idx) => {
-              const active = idx === safeAch;
-              const rc = RARITY[a.rarity] || RARITY.common;
+            {categoryGames.map((g, idx) => {
+              const active = g.id === focused?.id;
               return (
                 <div
-                  key={idx}
-                  className="flex flex-col items-center justify-center shrink-0"
+                  key={g.id}
+                  onClick={() => swapIn(g)}
+                  className="flex flex-col items-center justify-start shrink-0 cursor-pointer"
                   style={{
-                    width: 62,
-                    height: 62,
-                    borderRadius: 14,
-                    background: 'rgba(14,18,28,0.78)',
-                    backdropFilter: 'blur(8px)',
-                    border: `1px solid ${active ? rc.ring : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: active ? `0 0 18px ${rc.glow}` : 'none',
-                    transform: active ? 'scale(1.1)' : 'scale(0.84)',
-                    opacity: active ? 1 : 0.46,
+                    width: 66,
+                    transform: active ? 'scale(1.12)' : 'scale(0.86)',
+                    opacity: active ? 1 : 0.6,
                     transition: 'all 0.35s',
                   }}
                 >
-                  <div style={{ fontSize: 22, lineHeight: 1 }}>{a.icon}</div>
-                  <div className="text-white/70 leading-tight text-center px-1 mt-1" style={{ fontSize: 7.5 }}>
-                    {a.name}
+                  {renderThumb(g, STRIP_THUMB_W, STRIP_THUMB_H, 10, {
+                    border: `1px solid ${active ? 'rgba(34,211,238,0.9)' : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: active ? '0 0 18px rgba(34,211,238,0.35)' : 'none',
+                  })}
+                  <div className="text-white/70 leading-tight text-center px-1 mt-1 truncate" style={{ fontSize: 7.5, maxWidth: 64 }}>
+                    {g.title}
                   </div>
                 </div>
               );
@@ -282,7 +344,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
 
       {/* hint */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 pointer-events-none text-white/30 tracking-wider" style={{ fontSize: 10 }}>
-        ↑↓/Wheel Games · ←→/A D Achievements · Hold 1.5s = Focus
+        ↑↓/Wheel Letters · ←→/A D Same-Letter Games · Click = Swap · Hold 0.7s = Focus
       </div>
     </div>
   );
