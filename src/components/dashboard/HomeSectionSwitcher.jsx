@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ChevronDown, Home, Star } from 'lucide-react';
+import { ChevronRight, Home, Star } from 'lucide-react';
 
 const SECTIONS = [
   { id: 'avatar',    label: 'AI Avatar Home',       icon: Home, color: 'cyan' },
@@ -25,26 +25,12 @@ const ARROW_STYLE = {
 export default function HomeSectionSwitcher({ currentSection, onSectionChange }) {
   const currentIdx = SECTIONS.findIndex(s => s.id === currentSection);
 
-  const goLeft  = () => onSectionChange(SECTIONS[(currentIdx - 1 + SECTIONS.length) % SECTIONS.length].id);
   const goRight = () => onSectionChange(SECTIONS[(currentIdx + 1) % SECTIONS.length].id);
-  const goDown  = () => onSectionChange(SECTIONS[(currentIdx + 1) % SECTIONS.length].id);
 
   const section = SECTIONS[currentIdx];
 
   return (
     <>
-      {/* LEFT arrow — vertically centered, right next to the left sidebar rail */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={goLeft}
-        title="Previous section"
-        className={`${ARROW_BASE} absolute z-50 pointer-events-auto`}
-        style={{ left: '52px', top: '50%', transform: 'translateY(-50%)', ...ARROW_STYLE }}
-      >
-        <ChevronLeft className="w-5 h-5 text-white/80" />
-      </motion.button>
-
       {/* RIGHT arrow — vertically centered, at far right */}
       <motion.button
         whileHover={{ scale: 1.1 }}
@@ -55,18 +41,6 @@ export default function HomeSectionSwitcher({ currentSection, onSectionChange })
         style={{ right: '16px', top: '50%', transform: 'translateY(-50%)', ...ARROW_STYLE }}
       >
         <ChevronRight className="w-5 h-5 text-white/80" />
-      </motion.button>
-
-      {/* BOTTOM center — just the down arrow button, floating above the bottom nav */}
-      <motion.button
-        whileHover={{ scale: 1.15, y: 2 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={goDown}
-        title="Next section"
-        className={`${ARROW_BASE} absolute z-50 pointer-events-auto`}
-        style={{ bottom: '76px', left: '50%', transform: 'translateX(-50%)', ...ARROW_STYLE }}
-      >
-        <ChevronDown className="w-5 h-5 text-white/80" />
       </motion.button>
     </>
   );
