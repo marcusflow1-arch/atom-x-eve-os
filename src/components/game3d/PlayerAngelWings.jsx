@@ -127,15 +127,13 @@ export default function PlayerAngelWings() {
       const color = new THREE.Color(colorHex);
 
       // Feather material — glassy, glowing, lit.
-      const featherMat = new THREE.MeshPhysicalMaterial({
+      // NOTE: no `transmission` here — transmissive materials force Three.js
+      // to re-render the whole scene into an offscreen target every frame,
+      // which tanks the framerate. Transparency + emissive reads just as glassy.
+      const featherMat = new THREE.MeshStandardMaterial({
         color: color.clone(),
         roughness: 0.22,
         metalness: 0.0,
-        transmission: 0.55,
-        thickness: 0.25,
-        ior: 1.35,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.08,
         emissive: color.clone(),
         emissiveIntensity: 0.35 + tier * 0.05,
         transparent: true,

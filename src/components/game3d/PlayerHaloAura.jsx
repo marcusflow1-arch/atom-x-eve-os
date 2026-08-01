@@ -46,15 +46,11 @@ export default function PlayerHaloAura() {
     // ── Build a liquid-glass ring (physical-material with transmission) ──
     const makeGlassRing = (radius, tubeRadius, color = 0xfff2a8, opacity = 0.85) => {
       const geo = new THREE.TorusGeometry(radius, tubeRadius, 24, 96);
-      const mat = new THREE.MeshPhysicalMaterial({
+      // No `transmission` — it forces a full extra scene render pass per frame.
+      const mat = new THREE.MeshStandardMaterial({
         color,
         roughness: 0.15,
         metalness: 0.0,
-        transmission: 0.9,
-        thickness: 0.4,
-        ior: 1.3,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.05,
         emissive: color,
         emissiveIntensity: 0.6,
         transparent: true,
@@ -83,12 +79,9 @@ export default function PlayerHaloAura() {
     // ── A tiny glass mote (sphere) that orbits the halo ──
     const makeMote = (color = 0xfff4c0) => {
       const geo = new THREE.SphereGeometry(0.012, 10, 10);
-      const mat = new THREE.MeshPhysicalMaterial({
+      const mat = new THREE.MeshStandardMaterial({
         color,
         roughness: 0.1,
-        transmission: 0.9,
-        thickness: 0.2,
-        ior: 1.4,
         emissive: color,
         emissiveIntensity: 0.7,
         transparent: true,
