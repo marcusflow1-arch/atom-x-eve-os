@@ -533,6 +533,8 @@ export default function LunaTemplate() {
         }
       }
       if (key === 'escape') {
+        if (selectedFocusGame) { setSelectedFocusGame(null); setLongPressGame(null); return; }
+        if (longPressGame) { setLongPressGame(null); return; }
         if (showLibraryLanding) { setShowLibraryLanding(false); return; }
         if (showDevSpotlight) {setShowDevSpotlight(false);return;}
         if (hideUI) setHideUI(false);
@@ -546,7 +548,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, showDevSpotlight, hideUI]);
+  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, showDevSpotlight, hideUI, selectedFocusGame, longPressGame]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -688,7 +690,11 @@ export default function LunaTemplate() {
                   { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1200', status: 'Playing', progress: 88, playtime: '210h', achievements: '44/50', rating: 9.6, players: '5.2M', description: 'A massive living world of mythic quests and guild wars.', tags: ['MMORPG', 'PvP', 'Guild'] },
                 ]}
                   selectedGame={selectedFocusGame}
-                  onSelectGame={(g) => { setSelectedFocusGame(g); setLongPressGame(null); if (g) setShowLibraryLanding(false); }}
+                  onSelectGame={(g) => {
+                    setLongPressGame(null);
+                    setShowLibraryLanding(false);
+                    setSelectedFocusGame(prev => (prev?.id === g.id ? null : g));
+                  }}
                   onLongPressGame={(g) => { setLongPressGame(g); }}
                 />
               </div>
