@@ -86,6 +86,7 @@ import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { loadDeepSpaceSkybox } from './worldSkybox';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
+import { getDetroitWeather } from '@/functions/getDetroitWeather';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
 import { createQuestEnemySpawner } from './questEnemySpawner';
 import { spawnLivingQuestNPC } from './npc/spawnLivingQuestNPC';
@@ -330,6 +331,21 @@ export default function GameWorld3D() {
     const envSystem = createWorldEnvironmentSystem({ scene, sun, hemi, fog: scene.fog, camera, renderer });
     setEnvSystem(envSystem);
     window.__worldEnv = envSystem;
+
+    // Fetch the real 7-day Detroit forecast from the NWS and feed it to the
+    // environment system so rain/snow/storm/fog/cloud cover mirror the actual
+    // weather at that time. Re-fetch every 30 minutes to stay current.
+    const fetchWeather = async () => {
+      try {
+        const res = await getDetroitWeather({});
+        const data = res?.data;
+        if (data && Array.isArray(data.hours) && data.hours.length > 0) {
+          envSystem.loadForecast(data);
+        }
+      } catch (e) { /* keep the probabilistic fallback until the next fetch */ }
+    };
+    fetchWeather();
+    const weatherInterval = setInterval(fetchWeather, 30 * 60 * 1000);
 
     // (Ocean backdrop removed — replaced by simple flat green grass ground below.)
 
@@ -1809,6 +1825,7 @@ export default function GameWorld3D() {
       rendererGuard.markDisposed();
       cancelAnimationFrame(frameId);
       rendererGuard.dispose();
+      clearInterval(weatherInterval);
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);

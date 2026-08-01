@@ -189,6 +189,12 @@ export function createWorldEnvironmentSystem({
     lightningFlash: 0,
     forecast: null,
     currentWeather: 'clear',
+    // Real NWS 7-day forecast for Detroit, MI (loaded by GameWorld3D).
+    hours: null,            // 168 normalized hourly records
+    days: null,             // 7-day summary
+    fetchedAt: null,
+    useRealForecast: false,
+    currentHour: null,      // resolved forecast hour object
   };
 
   const climateOf = (id) => CLIMATE_PROFILES[id] || CLIMATE_PROFILES.michigan;
@@ -211,7 +217,11 @@ export function createWorldEnvironmentSystem({
   };
 
   const rollDaily = () => {
-    state.forecast = rollForecast(climateOf(state.climateId), monthIndexFor());
+    // Weather comes from the real NWS forecast once loaded; only fall back to
+    // the probabilistic climate model before the first fetch succeeds.
+    if (!state.useRealForecast) {
+      state.forecast = rollForecast(climateOf(state.climateId), monthIndexFor());
+    }
     state.manualWeather = null;
     // Eclipse roll: only at a full moon, ~6% of full-moon days.
     const phase = (state.lunarDay % SYODIC) / SYODIC;
@@ -222,6 +232,26 @@ export function createWorldEnvironmentSystem({
   };
 
   rollDaily();
+
+  // Resolve the forecast hour that matches the current in-game day/hour.
+  // In-game day d (0-based) → forecast day d; hour h → hour h. The 7-day
+  // forecast is replayed over 7 in-game days, then re-fetched by the host.
+  const resolveForecastHour = () => {
+    if (!state.hours || state.hours.length === 0) return null;
+    const dayInCycle = state.dayCounter % 7;
+    const idx = dayInCycle * 24 + Math.floor(state.time);
+    return state.hours[Math.min(idx, state.hours.length - 1)] || null;
+  };
+
+  // Load a freshly-fetched NWS forecast (called by GameWorld3D).
+  const loadForecast = (data) => {
+    if (!data || !Array.isArray(data.hours) || data.hours.length === 0) return;
+    state.hours = data.hours;
+    state.days = data.days || null;
+    state.fetchedAt = data.fetchedAt || new Date().toISOString();
+    state.useRealForecast = true;
+    state.manualWeather = null;
+  };
 
   // ── Sky dome (gradient shader) ────────────────────────────────────────
   const skyUniforms = {
@@ -385,12 +415,15 @@ export function createWorldEnvironmentSystem({
     const moonIllum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
     const weather = state.currentWeather;
     let precipActive = false;
-    if (state.forecast) {
+    if (state.useRealForecast) {
+      precipActive = !!(state.currentHour && state.currentHour.precipType);
+    } else if (state.forecast) {
       for (const w of state.forecast.windows) {
         if (state.time >= w.start && state.time < w.end) { precipActive = true; break; }
       }
     }
     const climate = climateOf(state.climateId);
+    const ch = state.currentHour;
     return {
       time: state.time,
       hours: Math.floor(state.time),
@@ -398,7 +431,7 @@ export function createWorldEnvironmentSystem({
       seasonId: SEASONS[state.seasonIndex].id,
       seasonLabel: SEASONS[state.seasonIndex].label,
       weather,
-      weatherLabel: WEATHER_LABELS[weather] || weather,
+      weatherLabel: ch?.shortForecast || WEATHER_LABELS[weather] || weather,
       dayCounter: state.dayCounter,
       climate: state.climateId,
       climateLabel: climate.label,
@@ -410,6 +443,16 @@ export function createWorldEnvironmentSystem({
       eclipse: state.eclipse,
       precipActive,
       forecast: state.forecast,
+      // Live NWS detail for the current hour.
+      tempF: ch?.tempF ?? null,
+      windMph: ch?.windMph ?? null,
+      windDir: ch?.windDir ?? null,
+      precipProb: ch?.precipProb ?? null,
+      humidity: ch?.humidity ?? null,
+      shortForecast: ch?.shortForecast ?? null,
+      isDaytime: ch?.isDaytime ?? null,
+      days: state.days,
+      fetchedAt: state.fetchedAt,
       isNight: state.time < 6 || state.time > 19,
     };
   };
@@ -433,18 +476,42 @@ export function createWorldEnvironmentSystem({
     }
     // Season tracks the calendar month (winter months read as winter, etc.).
     state.seasonIndex = seasonForMonth(monthIndexFor());
-    // New in-game day → roll a fresh probabilistic forecast.
+    // New in-game day → roll a fresh probabilistic forecast (fallback only).
     if (state.dayCounter !== prevDay) rollDaily();
 
     // Lunar phase
     const phase = (state.lunarDay % SYODIC) / SYODIC;
     const moonIllumRaw = (1 - Math.cos(2 * Math.PI * phase)) / 2; // 0 new .. 1 full
 
-    // Resolve today's weather
-    state.currentWeather = resolveWeather(state.time, state.forecast, state.manualWeather);
+    // Resolve the current weather. When a real NWS forecast is loaded, the
+    // weather category + cloud cover + precip intensity all come from the
+    // forecast hour that maps to the current in-game day/hour. Otherwise fall
+    // back to the probabilistic climate model.
+    if (state.useRealForecast) {
+      state.currentHour = resolveForecastHour();
+      if (state.manualWeather) {
+        state.currentWeather = state.manualWeather;
+      } else if (state.currentHour) {
+        state.currentWeather = state.currentHour.category;
+      } else {
+        state.currentWeather = 'clear';
+      }
+      // Precip intensity scales with the forecast's precip probability so a
+      // "slight chance" hour drizzles and a "heavy rain" hour pours.
+      if (state.currentHour && state.currentHour.precipType) {
+        const p = state.currentHour.precipProb ?? 60;
+        state.intensity = 0.4 + Math.min(1, p / 100) * 0.6;
+      } else {
+        state.intensity = 1;
+      }
+    } else {
+      state.currentHour = null;
+      state.currentWeather = resolveWeather(state.time, state.forecast, state.manualWeather);
+      state.intensity = 1;
+    }
     const weather = state.currentWeather;
     const mod = WEATHER_MOD[weather] || WEATHER_MOD.clear;
-    const cloudCover = CLOUD_COVER[weather] ?? 0.1;
+    const cloudCover = state.currentHour?.cloudCover ?? (CLOUD_COVER[weather] ?? 0.1);
 
     // Eclipse window: full-moon night only, ~0.6 in-game hours.
     const night = Math.max(0, -Math.sin(((state.time - 6) / 12) * Math.PI)); // 0..1 at midnight
@@ -626,6 +693,6 @@ export function createWorldEnvironmentSystem({
     if (window.__worldEnv === api) window.__worldEnv = null;
   };
 
-  const api = { update, getState, setSeason, setWeather, setTime, setClimate, cycleClimate, dispose };
+  const api = { update, getState, setSeason, setWeather, setTime, setClimate, cycleClimate, loadForecast, dispose };
   return api;
 }
