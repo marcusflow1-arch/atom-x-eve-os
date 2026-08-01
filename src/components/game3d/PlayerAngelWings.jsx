@@ -52,7 +52,8 @@ const STROKE_POSES = [
   { dihedral:  0.10, sweep:  0.00, lift:  0.01 },
   { dihedral:  0.42, sweep: -0.10, lift:  0.06 },
 ];
-const STEP_DURATION = 0.30;   // seconds per fade-in → fade-out beat
+const STEP_DURATION = 1.40;   // seconds per slow fade-in → fade-out beat
+const MIN_FADE = 0.35;        // never fully vanish — fade down, not blink off
 
 const tierForLevel = (lvl) => {
   if (lvl >= 170) return 6;
@@ -371,10 +372,13 @@ export default function PlayerAngelWings() {
       const u = cycle - Math.floor(cycle);                 // 0..1 within the step
       const pose = STROKE_POSES[stepIdx];
       const nextPose = STROKE_POSES[(stepIdx + 1) % STROKE_POSES.length];
-      // Fade envelope: 0 at the step edges, 1 mid-step.
-      const alpha = Math.pow(Math.sin(Math.PI * u), 0.65);
-      // Drift a fraction of the way toward the next pose while visible.
-      const drift = u * 0.35;
+      // Fade envelope: eased sine, floored so the wings dim and swell
+      // smoothly instead of snapping off and back on.
+      const s = Math.sin(Math.PI * u);
+      const eased = s * s * (3 - 2 * s);                   // smoothstep on the sine
+      const alpha = MIN_FADE + (1 - MIN_FADE) * eased;
+      // Ease smoothly all the way into the next pose — no jump at the edge.
+      const drift = u * u * (3 - 2 * u);
       const dihedral = pose.dihedral + (nextPose.dihedral - pose.dihedral) * drift;
       const sweep = pose.sweep + (nextPose.sweep - pose.sweep) * drift;
       const lift = pose.lift + (nextPose.lift - pose.lift) * drift;
