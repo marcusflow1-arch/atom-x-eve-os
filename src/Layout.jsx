@@ -704,10 +704,14 @@ function LayoutContent({ children, currentPageName }) {
                               const subParams = new URLSearchParams(subUrl.search);
                               const panel = subParams.get('panel');
                               const subview = subParams.get('subview');
-                              
-                              const isSubActive = 
-                                (panel && location.pathname === mainItem.path && searchParams.get('panel') === panel) ||
-                                (subview && location.pathname === mainItem.path && searchParams.get('subview') === subview);
+                              const mode = subParams.get('mode');
+                              const hasQuery = !!(panel || subview || mode);
+
+                              const isSubActive = hasQuery
+                                ? ((panel && location.pathname === mainItem.path && searchParams.get('panel') === panel) ||
+                                   (subview && location.pathname === mainItem.path && searchParams.get('subview') === subview) ||
+                                   (mode && location.pathname === mainItem.path && searchParams.get('mode') === mode))
+                                : (location.pathname === subUrl.pathname);
 
                               return (
                                 <Link

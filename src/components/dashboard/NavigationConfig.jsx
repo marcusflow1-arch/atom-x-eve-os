@@ -2,25 +2,19 @@ import {
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
     Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, 
-    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe, TrendingUp, Cpu
+    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe, TrendingUp, Calendar, Award, Cpu
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 // Hierarchical navigation structure with main pages and sub-pages
 export const NAV_HIERARCHY = [
     {
-        name: 'Welcome',
-        icon: Globe,
-        path: createPageUrl('OnboardingHome'),
-        subPages: []
-    },
-    {
         name: 'Luna Dashboard',
         icon: Home,
         path: createPageUrl('LunaTemplate'),
         subPages: [
-            { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
             { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
+            { name: 'Plan', icon: Calendar, path: createPageUrl('Plan') },
         ]
     },
     {
@@ -28,14 +22,28 @@ export const NAV_HIERARCHY = [
         icon: ShoppingBag,
         path: createPageUrl('Store'),
         subPages: [
-            { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
+            { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('Store') + '?mode=trading' },
+            { name: 'Dev Post', icon: Hammer, path: createPageUrl('Store') + '?mode=devcards' },
+        ]
+    },
+    {
+        name: 'Cards',
+        icon: Trophy,
+        path: createPageUrl('GenreMastery'),
+        subPages: [
+            { name: 'Achievements', icon: Award, path: createPageUrl('Achievements') },
+            { name: 'Card Collection', icon: Layers, path: createPageUrl('CardCollection') },
         ]
     },
     {
         name: 'Aura',
         icon: Radio,
         path: createPageUrl('Aura'),
-        subPages: []
+        subPages: [
+            { name: 'Home Dashboard', icon: Home, path: createPageUrl('StreamingHome') },
+            { name: 'Discovery', icon: Globe, path: createPageUrl('Discover') },
+            { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
+        ]
     },
     {
         name: 'Engine',
