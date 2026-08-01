@@ -636,12 +636,20 @@ export function createWorldEnvironmentSystem({
 
     // Effective moonlight: full-moon bright, clouds dim it, eclipse zeroes it.
     const effMoonIllum = state.eclipse ? 0 : moonIllumRaw * (1 - 0.6 * cloudCover);
-    const moonlight = 0.22 * effMoonIllum;       // ~0.22 lux-equivalent at full clear moon
-    const starlight = 0.02 * (1 - 0.8 * cloudCover); // never pure black (except eclipse+overcast)
+    // Moonlight is strong enough that a full moon visibly lights the ground
+    // (cool blue glow) — not pitch black. Fades with phase + cloud cover, and
+    // vanishes on a new-moon night (which stays genuinely dark).
+    const moonlight = 0.55 * effMoonIllum;
+    const starlight = 0.04 * (1 - 0.8 * cloudCover); // never pure black (except eclipse+overcast)
 
     // Hemisphere light: day palette by day, moon+star floor at night.
-    const dayHemi = pal.hi * (0.4 + 0.6 * day) * mod.hi;
-    const nightFloor = (starlight + moonlight * 0.6) * nightFactor;
+    // Daytime ambient floor is high enough that the ground stays clearly visible
+    // even at low sun angles or under overcast — the sun then adds the bright
+    // grazing highlight on top.
+    const dayHemi = pal.hi * (0.55 + 0.45 * day) * mod.hi;
+    // Visible moonlit ambient floor on the ground at night — the ground gets a
+    // soft blue glow under a full moon instead of rendering pitch black.
+    const nightFloor = (starlight + moonlight * 0.9) * nightFactor;
     hemi.intensity = Math.max(dayHemi, nightFloor);
     hemi.color.copy(pal.hemi);
     hemi.groundColor.setHex(0x2a2418);

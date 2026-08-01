@@ -23,10 +23,12 @@ const loadRepeatingTexture = (url, repeatX, repeatY, colorSpace = THREE.SRGBColo
 export function buildGrassEnvironment(scene) {
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(37.5, 96),
-    new THREE.MeshStandardMaterial({ color: 0x555555 }),
+    new THREE.MeshStandardMaterial({ color: 0x86a86a, roughness: 1, metalness: 0 }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
+  // MeshStandardMaterial reacts to the scene's sun + moon + hemisphere lights,
+  // so as the sun and moon move the ground brightens and dims with them.
   scene.add(ground);
 
   const barrier = new THREE.Mesh(
