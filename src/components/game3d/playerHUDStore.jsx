@@ -5,6 +5,12 @@
 // survives logout and page reloads.
 import { DEFAULT_PLAYER_STATS, computeDerivedStats, migrateBaseStats } from './statsSystem';
 import { getHaloBonuses, subscribeHalo } from './progression/haloStore';
+import { getAuraBonuses, subscribeAura } from './progression/auraStore';
+import {
+  getEquippedWingsMultiplierBonuses,
+  getEquippedWingsFlatBonuses,
+  subscribeWings,
+} from './progression/wingsStore';
 import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
 import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
@@ -13,12 +19,28 @@ import { characterScopedStorage, subscribeCharacterChange } from './characterSto
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
 
-// Pull current halo+title bonuses for every derived-stat recompute. Halo
-// bonuses are treated as VIRTUAL ATTRIBUTE POINTS — they pass through the
-// same statsSystem formulas as allocated points (e.g. +1 STR → +3 phys dmg).
+// Pull current halo+aura+wings+title bonuses for every derived-stat recompute.
+// Halo + Aura + equipped-wing multiplier are all VIRTUAL ATTRIBUTE POINTS —
+// they pass through the same statsSystem formulas as allocated points
+// (e.g. +1 STR → +3 phys dmg). Equipped-wing specialization + title are FLAT
+// FINAL stats applied after the formulas.
+const sumAttr = (...objs) => {
+  const out = {
+    strength: 0, constitution: 0, dexterity: 0, intelligence: 0, focus: 0,
+    vitality: 0, spirit: 0, criticalChance: 0, criticalDefense: 0, criticalDamage: 0,
+  };
+  objs.forEach((o) => { if (!o) return; Object.keys(out).forEach((k) => { out[k] += o[k] || 0; }); });
+  return out;
+};
+const sumFlat = (...objs) => {
+  const out = { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
+  objs.forEach((o) => { if (!o) return; Object.keys(out).forEach((k) => { out[k] += o[k] || 0; }); });
+  return out;
+};
+
 const getBonuses = () => ({
-  halo:  getHaloBonuses(),
-  title: getEquippedTitleBonuses(),
+  halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses()),
+  title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses()),
 });
 
 const buildDefault = () => {
@@ -177,6 +199,8 @@ function recomputeFromBonuses() {
   emit();
 }
 subscribeHalo(recomputeFromBonuses);
+subscribeAura(recomputeFromBonuses);
+subscribeWings(recomputeFromBonuses);
 subscribeTitles(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
