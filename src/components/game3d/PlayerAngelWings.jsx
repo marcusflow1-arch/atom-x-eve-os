@@ -31,9 +31,28 @@ import * as THREE from 'three';
 import { subscribeWings } from './progression/wingsStore';
 import { getWingPathById } from './progression/wingsData';
 import { subscribePlayerPosition, getPlayerPosition } from './playerPositionStore';
+import { createSpineEnergyFlow } from './wings/spineEnergyFlow';
 
-const SHOULDER_Y = 1.45;       // above the player's ground position
-const BACK_OFFSET = 0.28;     // behind the player along facing
+// Anchor on the MID-BACK (shoulder-blade height), not up by the head/halo.
+const BACK_Y = 1.02;          // above the player's ground position
+const BACK_OFFSET = 0.34;     // behind the player along facing
+
+// ── Flap cycle ────────────────────────────────────────────────────────
+// Instead of a continuous oscillation, the wings step through stroke poses.
+// Each step FADES IN at its pose, drifts a little, then FADES OUT — and the
+// jump to the next pose happens while invisible, so the wings appear to
+// "re-materialise" higher/lower on every beat, like a bird mid-flight.
+const STROKE_POSES = [
+  { dihedral:  0.66, sweep: -0.16, lift:  0.10 },  // high, thrown outward + up
+  { dihedral:  0.36, sweep: -0.06, lift:  0.05 },
+  { dihedral:  0.04, sweep:  0.02, lift:  0.00 },  // level
+  { dihedral: -0.30, sweep:  0.10, lift: -0.05 },
+  { dihedral: -0.52, sweep:  0.14, lift: -0.09 },  // bottom of the downstroke
+  { dihedral: -0.24, sweep:  0.08, lift: -0.04 },
+  { dihedral:  0.10, sweep:  0.00, lift:  0.01 },
+  { dihedral:  0.42, sweep: -0.10, lift:  0.06 },
+];
+const STEP_DURATION = 0.30;   // seconds per fade-in → fade-out beat
 
 const tierForLevel = (lvl) => {
   if (lvl >= 170) return 6;
@@ -176,12 +195,12 @@ export default function PlayerAngelWings() {
           m.rotation.set(row.pitch, 0, fan - Math.PI / 2);
           m.userData = { baseRotZ: m.rotation.z, basePitch: row.pitch, fan, shimmer: Math.random() * Math.PI * 2 };
           pivot.add(m);
-          if (!parts) parts = { feathers: [], motes: [], glow: null, light: null };
+          if (!parts) parts = { feathers: [], motes: [], glow: null, light: null, spine: null };
           parts.feathers.push(m);
         }
       });
 
-      // Slight upward dihedral for the whole wing.
+      // Neutral pose — the flap cycle drives rotation each frame.
       pivot.rotation.z = isLeft ? 0.22 : -0.22;
       // Mirror for left wing.
       if (isLeft) pivot.scale.x = -1;
@@ -197,6 +216,7 @@ export default function PlayerAngelWings() {
         parts.motes = [];
       }
       if (parts.glow) { group?.remove(parts.glow); disposeNode(parts.glow); parts.glow = null; }
+      if (parts.spine) { parts.spine.dispose(); parts.spine = null; }
     };
 
     const buildForTier = (tier, colorHex) => {
@@ -267,6 +287,9 @@ export default function PlayerAngelWings() {
       }
       parts.light.intensity = 0.6 + tier * 0.12;
 
+      // Spine → wing energy conduit (always present; scales with tier).
+      parts.spine = createSpineEnergyFlow({ parent: group, colorHex, tier });
+
       currentTier = tier;
       currentColor = new THREE.Color(colorHex);
     };
@@ -277,7 +300,7 @@ export default function PlayerAngelWings() {
       group = new THREE.Group();
       group.visible = false;
       scene.add(group);
-      parts = { feathers: [], motes: [], glow: null, light: null };
+      parts = { feathers: [], motes: [], glow: null, light: null, spine: null };
       return true;
     };
 
@@ -330,19 +353,39 @@ export default function PlayerAngelWings() {
       const fwdX = Math.sin(yaw);
       const fwdZ = Math.cos(yaw);
 
-      // Anchor at the back: pos minus a little along facing, at shoulder height.
+      // Anchor on the mid-back: behind the player along facing, shoulder-blade height.
       group.position.set(
         pos.x - fwdX * BACK_OFFSET,
-        pos.y + SHOULDER_Y,
+        pos.y + BACK_Y,
         pos.z - fwdZ * BACK_OFFSET,
       );
       group.rotation.y = yaw;
 
-      // Gentle flap — oscillate both wings' dihedral together.
+      // ── Fade-and-reposition flap ─────────────────────────────────────
+      // Step through stroke poses. Within a step the wings fade in, drift
+      // slightly toward the next pose, then fade out — so the jump to the
+      // next pose lands while they're invisible and they "reappear" higher
+      // or lower on the next beat.
+      const cycle = timeRef / STEP_DURATION;
+      const stepIdx = Math.floor(cycle) % STROKE_POSES.length;
+      const u = cycle - Math.floor(cycle);                 // 0..1 within the step
+      const pose = STROKE_POSES[stepIdx];
+      const nextPose = STROKE_POSES[(stepIdx + 1) % STROKE_POSES.length];
+      // Fade envelope: 0 at the step edges, 1 mid-step.
+      const alpha = Math.pow(Math.sin(Math.PI * u), 0.65);
+      // Drift a fraction of the way toward the next pose while visible.
+      const drift = u * 0.35;
+      const dihedral = pose.dihedral + (nextPose.dihedral - pose.dihedral) * drift;
+      const sweep = pose.sweep + (nextPose.sweep - pose.sweep) * drift;
+      const lift = pose.lift + (nextPose.lift - pose.lift) * drift;
+
       if (leftWing && rightWing) {
-        const flap = Math.sin(timeRef * 2.2) * 0.18;
-        leftWing.rotation.z = 0.22 + flap;
-        rightWing.rotation.z = -0.22 - flap;
+        leftWing.rotation.z = dihedral;
+        rightWing.rotation.z = -dihedral;
+        leftWing.rotation.y = sweep;
+        rightWing.rotation.y = -sweep;
+        leftWing.position.y = lift;
+        rightWing.position.y = lift;
       }
 
       // Feather shimmer — subtle per-feather emissive + pitch wave.
@@ -354,13 +397,22 @@ export default function PlayerAngelWings() {
           const wave = Math.sin(timeRef * 1.6 + u.shimmer) * 0.04;
           f.rotation.x = u.basePitch + wave;
         }
-        // Brightness pulse scaled with level.
+        // Brightness pulse scaled with level, gated by the flap fade.
         const pulse = 0.10 * Math.sin(timeRef * 1.8) + Math.min(0.5, level * 0.0025);
-        // Apply to shared materials (left + right share none, so iterate feathers).
         for (let i = 0; i < parts.feathers.length; i++) {
           const m = parts.feathers[i].material;
-          if (m) m.emissiveIntensity = shimmer + pulse;
+          if (!m) continue;
+          m.emissiveIntensity = (shimmer + pulse) * (0.25 + alpha * 0.75);
+          m.opacity = 0.94 * alpha;
         }
+      }
+
+      // Spine energy conduit — streams out of the back, brightest mid-stroke.
+      if (parts?.spine) parts.spine.update(timeRef, dt, 0.45 + alpha * 0.55);
+
+      // Root light pulses with the stroke.
+      if (parts?.light) {
+        parts.light.intensity = (0.6 + currentTier * 0.12) * (0.4 + alpha * 0.6);
       }
 
       // Trailing motes drift behind the wings.
@@ -379,9 +431,10 @@ export default function PlayerAngelWings() {
         }
       }
 
-      // Glow disc pulse.
+      // Glow disc pulse (also gated by the flap fade).
       if (parts?.glow?.material) {
-        parts.glow.material.opacity = 0.18 + currentTier * 0.02 + 0.06 * Math.sin(timeRef * 1.5);
+        parts.glow.material.opacity =
+          (0.18 + currentTier * 0.02 + 0.06 * Math.sin(timeRef * 1.5)) * (0.4 + alpha * 0.6);
       }
     };
     frameId = requestAnimationFrame(tick);
