@@ -206,6 +206,18 @@ export default function SideAccessMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isExpanded]);
 
+  // Escape closes the friends list box / expanded menu
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (showAIBattle) { setShowAIBattle(false); return; }
+      if (showAIStory) { setShowAIStory(false); return; }
+      if (activeItem || isExpanded) { setIsExpanded(false); setActiveItem(null); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showAIBattle, showAIStory, activeItem, isExpanded]);
+
   const handleAnchorClick = () => {
     if (isExpanded) {
       setIsExpanded(false);

@@ -533,6 +533,7 @@ export default function LunaTemplate() {
         }
       }
       if (key === 'escape') {
+        if (showFriendsHub) { setShowFriendsHub(false); return; }
         if (selectedFocusGame) { setSelectedFocusGame(null); setLongPressGame(null); return; }
         if (longPressGame) { setLongPressGame(null); return; }
         if (showLibraryLanding) { setShowLibraryLanding(false); return; }
@@ -548,7 +549,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, showDevSpotlight, hideUI, selectedFocusGame, longPressGame]);
+  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
