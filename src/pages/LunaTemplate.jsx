@@ -847,7 +847,7 @@ export default function LunaTemplate() {
 
       {/* Library Landing Page — full panel to the right of the left column */}
       <AnimatePresence>
-        {showLibraryLanding && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' && !selectedFocusGame &&
+        {showLibraryLanding && !uiVisible && !showConsoleMode && !avatarFocusMode && !activeSubTab && homeSection === 'avatar' &&
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
