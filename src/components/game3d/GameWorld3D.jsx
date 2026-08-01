@@ -328,7 +328,7 @@ export default function GameWorld3D() {
     const disposeSkybox = loadDeepSpaceSkybox({ scene, gltfLoader: worldGltfLoader });
 
     // Day/night + seasons + dynamic weather (rain, snow, storm, fog)
-    const envSystem = createWorldEnvironmentSystem({ scene, sun, hemi, fog: scene.fog, camera, renderer });
+    const envSystem = createWorldEnvironmentSystem({ scene, sun, hemi, fog: scene.fog, camera, renderer, dayLengthSeconds: 86400 });
     setEnvSystem(envSystem);
     window.__worldEnv = envSystem;
 

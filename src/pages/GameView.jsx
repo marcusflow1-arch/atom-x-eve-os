@@ -289,7 +289,7 @@ export default function GameView() {
       {/* Hybrid host-authoritative simulation layer.
           Owns enemies / loot / pvp damage / player hp.
           GameWorld3D is becoming a renderer that reads from this. */}
-      <GameStateProvider>
+      <GameStateProvider showDebugHUD={false}>
       <GameWorld3D />
       <GameHUD />
       <RogueBossHPTank />

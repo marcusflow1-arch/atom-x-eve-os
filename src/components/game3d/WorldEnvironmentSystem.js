@@ -193,6 +193,8 @@ export function createWorldEnvironmentSystem({
     hours: null,            // 168 normalized hourly records
     days: null,             // 7-day summary
     fetchedAt: null,
+    fetchEpoch: null,        // Date.now() at last successful fetch
+    realMonth: null,         // real Detroit month at fetch (0-11)
     useRealForecast: false,
     currentHour: null,      // resolved forecast hour object
   };
@@ -214,6 +216,27 @@ export function createWorldEnvironmentSystem({
     if (m >= 2 && m <= 4) return 0;               // spring
     if (m >= 5 && m <= 7) return 1;               // summer
     return 2;                                      // autumn
+  };
+
+  // Current wall-clock time in Detroit (America/Detroit = US Eastern), as an
+  // hour-of-day fraction (0..24) and a 0-based month index. Used to snap the
+  // in-game clock to real time when a real forecast is loaded.
+  const detroitClock = () => {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Detroit', hour: '2-digit', minute: '2-digit',
+      second: '2-digit', hour12: false,
+    }).formatToParts(now);
+    const get = (type) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
+    const hh = get('hour') % 24;
+    const mm = get('minute');
+    const ss = get('second');
+    const monthIndex = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: 'America/Detroit', month: 'numeric' }).format(now),
+      10,
+    ) - 1;
+    const hourFraction = hh + mm / 60 + ss / 3600;
+    return { hourFraction, monthIndex };
   };
 
   const rollDaily = () => {
@@ -238,8 +261,10 @@ export function createWorldEnvironmentSystem({
   // forecast is replayed over 7 in-game days, then re-fetched by the host.
   const resolveForecastHour = () => {
     if (!state.hours || state.hours.length === 0) return null;
-    const dayInCycle = state.dayCounter % 7;
-    const idx = dayInCycle * 24 + Math.floor(state.time);
+    // Index by real hours elapsed since the forecast was fetched — the first
+    // forecast hour is "now", the next is +1h, etc.
+    const elapsedH = (Date.now() - (state.fetchEpoch || Date.now())) / 3600000;
+    const idx = Math.floor(elapsedH);
     return state.hours[Math.min(idx, state.hours.length - 1)] || null;
   };
 
@@ -249,8 +274,16 @@ export function createWorldEnvironmentSystem({
     state.hours = data.hours;
     state.days = data.days || null;
     state.fetchedAt = data.fetchedAt || new Date().toISOString();
+    state.fetchEpoch = Date.now();
     state.useRealForecast = true;
     state.manualWeather = null;
+    // Snap the in-game clock to the real current time in Detroit (Eastern) and
+    // set the season from the real current month. The clock then advances 1:1
+    // with real time, so "right now" in the world matches Detroit right now.
+    const dt = detroitClock();
+    state.time = dt.hourFraction;
+    state.realMonth = dt.monthIndex;
+    state.seasonIndex = seasonForMonth(dt.monthIndex);
   };
 
   // ── Sky dome (gradient shader) ────────────────────────────────────────
@@ -474,8 +507,12 @@ export function createWorldEnvironmentSystem({
       // advance lunar day (one synodic day per in-game day)
       state.lunarDay += 1;
     }
-    // Season tracks the calendar month (winter months read as winter, etc.).
-    state.seasonIndex = seasonForMonth(monthIndexFor());
+    // Season tracks the calendar month. In real-forecast mode the season was
+    // fixed from the real Detroit month at fetch time; otherwise derive it
+    // from the in-game calendar so the fallback model still changes seasons.
+    if (!state.useRealForecast) {
+      state.seasonIndex = seasonForMonth(monthIndexFor());
+    }
     // New in-game day → roll a fresh probabilistic forecast (fallback only).
     if (state.dayCounter !== prevDay) rollDaily();
 
