@@ -41,7 +41,6 @@ import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
 import GamePageView from '@/components/dashboard/gamehub/GamePageView';
-import ConsoleHomePanel from '@/components/dashboard/gamehub/ConsoleHomePanel';
 import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
@@ -1772,26 +1771,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 )}
               </AnimatePresence>
 
-              {/* CONSOLE HOME PANEL — console-like default shown when no game is selected */}
-              <AnimatePresence>
-                {!selectedFocusGame && !longPressGame && (
-                  <motion.div
-                    key="console-home"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 16 }}
-                    transition={{ duration: 0.3 }}
-                    className="pointer-events-auto mt-2 overflow-hidden relative"
-                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.45)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)', height: 'calc(100vh - 224px)' }}
-                  >
-                    <div className="h-full p-3 relative">
-                      <ConsoleHomePanel onOpenGame={(g) => onSelectFocusGame?.(g)} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Empty by default — game info fades in only when a game is selected */}
+              {/* Empty by default — content fades in only when a game is selected or Full Library is opened */}
 
             </div>
           </div>
