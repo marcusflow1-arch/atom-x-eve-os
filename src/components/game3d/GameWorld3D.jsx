@@ -84,6 +84,8 @@ import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { loadDeepSpaceSkybox } from './worldSkybox';
+import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
+import WorldEnvironmentHUD from './WorldEnvironmentHUD';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
 import { createQuestEnemySpawner } from './questEnemySpawner';
 import { spawnLivingQuestNPC } from './npc/spawnLivingQuestNPC';
@@ -92,6 +94,7 @@ import LivingQuestWorldOverlay from './npc/LivingQuestWorldOverlay';
 export default function GameWorld3D() {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [envSystem, setEnvSystem] = useState(null);
   const [activeDialogue, setActiveDialogue] = useState(null); // { name, text }
   const [nearbyNPC, setNearbyNPC] = useState(null);
   const [enemyCount, setEnemyCount] = useState(ENEMY_SPAWNS.length);
@@ -305,7 +308,8 @@ export default function GameWorld3D() {
     window.__gw3dScene = scene;
     window.__gw3dCamera = camera;
     window.__gw3dLegacyRemoteManager = remoteManagerRef.current;
-    scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0));
+    const hemi = new THREE.HemisphereLight(0xcfe4ff, 0x4a3a2a, 1.0);
+    scene.add(hemi);
     const sun = new THREE.DirectionalLight(0xfff4d6, 2.2);
     sun.position.set(20, 30, 10);
     sun.castShadow = true;
@@ -321,6 +325,11 @@ export default function GameWorld3D() {
 
     const worldGltfLoader = new GLTFLoader();
     const disposeSkybox = loadDeepSpaceSkybox({ scene, gltfLoader: worldGltfLoader });
+
+    // Day/night + seasons + dynamic weather (rain, snow, storm, fog)
+    const envSystem = createWorldEnvironmentSystem({ scene, sun, hemi, fog: scene.fog, camera, renderer });
+    setEnvSystem(envSystem);
+    window.__worldEnv = envSystem;
 
     // (Ocean backdrop removed — replaced by simple flat green grass ground below.)
 
@@ -1048,6 +1057,7 @@ export default function GameWorld3D() {
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
+      envSystem.update(delta);
       if (mixer) mixer.update(delta);
       if (dodgeVanish.active) {
         dodgeVanish.timer += delta;
@@ -1810,6 +1820,7 @@ export default function GameWorld3D() {
       window.removeEventListener('webrtcRemoteAction', handleRemoteAction);
       detachBossBus();
       resetCompanionAutoCombat();
+      envSystem.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
       stopLoopSound('player_walk');
@@ -1974,6 +1985,9 @@ export default function GameWorld3D() {
 
       {/* Equipment menu (I) — Where Winds Meet–style layout */}
       <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
+
+      {/* Day/night + season + weather HUD */}
+      {!loading && envSystem && <WorldEnvironmentHUD system={envSystem} />}
       <PlayerInteractionMenu
         open={!!playerMenu}
         x={playerMenu?.x || 0}
