@@ -142,6 +142,11 @@ export default function QuestDialogueBox({
           <div className="text-sm text-yellow-200 font-semibold">
             +{quest.reward.xp} XP · +{quest.reward.points} pt
           </div>
+          {quest.reward.unlock && (
+            <div className="text-xs text-amber-300 font-semibold mt-0.5">
+              {quest.reward.unlock.icon} {quest.reward.unlock.type === 'class' ? 'Class Change' : 'Ability'}: {quest.reward.unlock.name}
+            </div>
+          )}
         </div>
       </div>
 

@@ -90,6 +90,8 @@ import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
 import { createQuestEnemySpawner } from './questEnemySpawner';
 import { spawnLivingQuestNPC } from './npc/spawnLivingQuestNPC';
 import LivingQuestWorldOverlay from './npc/LivingQuestWorldOverlay';
+import { grantQuestReward } from './questRewards';
+import QuestRewardToast from './QuestRewardToast';
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -532,7 +534,7 @@ export default function GameWorld3D() {
       const d = e.detail; if (!d || d.kind !== 'enemy_killed') return;
       const t = enemies.find((en) => en.id === d.enemy_id && en.alive && !en.dying);
       if (!t) return;
-      t.respawnAt = performance.now() + 10000; t.dying = true; t.deathTimer = 0; t.hp = 0;
+      t.respawnAt = t.isQuestSpawn ? null : performance.now() + 10000; t.dying = true; t.deathTimer = 0; t.hp = 0;
       if (t.walkAction) t.walkAction.fadeOut(0.15);
       if (t.idleAction) t.idleAction.fadeOut(0.15);
       if (cachedDeathClip && t.mixer) { const da = t.mixer.clipAction(cachedDeathClip); da.setLoop(THREE.LoopOnce); da.clampWhenFinished = true; da.reset().fadeIn(0.15).play(); }
@@ -1350,7 +1352,9 @@ export default function GameWorld3D() {
 
         // ─── Enemy AI: wander state machine (walk ~3s → idle ~5s → repeat) ───
         enemies.forEach((enemy) => {
-          if (!enemy.alive) return;
+          // Dying enemies must keep processing so the death animation, fade-out
+          // and removal actually run (combat sets alive=false at 0 HP).
+          if (!enemy.alive && !enemy.dying) return;
           if (enemy.mixer) enemy.mixer.update(delta);
 
           // BOSS PATH — delegate to BossBrain (state machine + abilities + threat).
@@ -1383,10 +1387,26 @@ export default function GameWorld3D() {
               if (fadeT >= 1 && enemy.group.visible) {
                 enemy.group.visible = false;
                 if (enemy.mixer) enemy.mixer.stopAllAction();
+                // Quest-spawned enemies die for good — remove the model from
+                // the scene and free its memory. No respawn, no lingering body.
+                if (enemy.isQuestSpawn) {
+                  scene.remove(enemy.group);
+                  enemy.group.traverse((c) => {
+                    if (c.geometry) c.geometry.dispose?.();
+                    if (c.material) {
+                      const ms = Array.isArray(c.material) ? c.material : [c.material];
+                      ms.forEach((m) => m?.dispose?.());
+                    }
+                  });
+                  enemy.alive = false;
+                  enemy.dying = false; // fully done — skip all further processing
+                  enemy.respawnAt = null;
+                }
                 setEnemyCount(enemies.filter(e => e.alive && !e.dying).length);
               }
             }
             if (enemy.respawnAt && performance.now() >= enemy.respawnAt) {
+              enemy.alive = true;
               enemy.dying = false; enemy.deathTimer = 0; enemy.respawnAt = null;
               enemy.hp = enemy.maxHp; enemy.state = 'idle'; enemy.stateTimer = 0;
               enemy.target = null; enemy.attacking = false; enemy.attackCooldown = 0; enemy.hitCooldown = 0;
@@ -1563,7 +1583,7 @@ export default function GameWorld3D() {
               // Lethal — start death sequence + broadcast kill to all peers so
               // every player sees this enemy die in real time. 10s respawn is
               // scheduled inside killEnemyLocal.
-              closestEnemy.respawnAt = performance.now() + 10000;
+              closestEnemy.respawnAt = closestEnemy.isQuestSpawn ? null : performance.now() + 10000;
               closestEnemy.dying = true;
               closestEnemy.deathTimer = 0;
               closestEnemy.hp = 0;
@@ -1955,6 +1975,8 @@ export default function GameWorld3D() {
           onClaim={() => {
             const q = activeQuestDialogue.quest;
             completeQuest(q.id);
+            // Milestone unlocks: new abilities / class changes
+            grantQuestReward(q);
             // Pay the reward: XP + stat points
             let newXP = playerXPRef.current + q.reward.xp;
             let newLevel = playerLevelRef.current;
@@ -2002,6 +2024,9 @@ export default function GameWorld3D() {
 
       {/* Equipment menu (I) — Where Winds Meet–style layout */}
       <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
+
+      {/* Milestone quest unlock announcements (abilities / class changes) */}
+      <QuestRewardToast />
 
       {/* Day/night + season + weather HUD */}
       {!loading && envSystem && <WorldEnvironmentHUD system={envSystem} />}

@@ -126,6 +126,133 @@ export const QUESTS = [
     spawnCount: 25,
     spawnTier: 'normal',
   },
+
+  // ───────────────────────────────────────────
+  // STORY ARC — "The Hollow Crown" (q11–q20)
+  // The arena stands atop a sealed divine reactor. Its seal is cracking, and
+  // the corrupted spill out. Quests chain via `requires` — each unlocks after
+  // the previous is completed — and milestones grant abilities or a class change.
+  // ───────────────────────────────────────────
+  {
+    id: 'q11_echoes_below',
+    unlockLevel: 2,
+    requires: 'q1_first_blood',
+    npcId: 'archer_lyra',
+    title: 'Echoes Below',
+    description: "Have you heard it, traveler? A heartbeat under the arena floor. The old ones built a reactor down there to cage a fractured god — and its seal is cracking. The creatures pouring out are its echoes. Cut down eight of them while I read the fault lines.",
+    objective: { type: 'kill', count: 8 },
+    reward: { xp: 250, points: 2 },
+    spawnCount: 8,
+    spawnTier: 'normal',
+  },
+  {
+    id: 'q12_shadow_rift',
+    unlockLevel: 3,
+    requires: 'q11_echoes_below',
+    npcId: 'archer_zephyr',
+    title: 'The Shadow Rift',
+    description: "Lyra's fault lines end at a rift of pure shadow. Two elite wardens guard it — twisted keepers who once served the seal. Destroy them both, and I will teach you the step-between-shadows they used to patrol the deep halls.",
+    objective: { type: 'kill_tier', tier: 'elite', count: 2 },
+    reward: { xp: 350, points: 2, unlock: { type: 'ability', id: 'shadow_teleport', name: 'Shadow Teleport', icon: '🌀' } },
+    spawnCount: 2,
+    spawnTier: 'elite',
+  },
+  {
+    id: 'q13_sparks_old_war',
+    unlockLevel: 4,
+    requires: 'q12_shadow_rift',
+    npcId: 'archer_vex',
+    title: 'Sparks of the Old War',
+    description: "The rift you closed was one of twelve. In the first war, we sealed them with blood and lightning. The reactor remembers — and so do its spawn. Twelve rifts, twelve sparks: slay twelve of the corrupted before they reignite the old war.",
+    objective: { type: 'kill', count: 12 },
+    reward: { xp: 450, points: 3 },
+    spawnCount: 12,
+    spawnTier: 'normal',
+  },
+  {
+    id: 'q14_trial_of_rage',
+    unlockLevel: 5,
+    requires: 'q13_sparks_old_war',
+    npcId: 'archer_noor',
+    title: 'Trial of Rage',
+    description: "You fight with discipline — but discipline alone will not survive what sleeps below. The god's rage seeps upward, and one champion has drunk deep of it. Face it. Kill it. Take its fury for yourself and be reforged as a Berserker.",
+    objective: { type: 'kill_tier', tier: 'champion', count: 1 },
+    reward: { xp: 600, points: 3, unlock: { type: 'class', id: 'berserker', name: 'Berserker', icon: '🔥' } },
+    spawnCount: 1,
+    spawnTier: 'champion',
+  },
+  {
+    id: 'q15_reactors_pulse',
+    unlockLevel: 6,
+    requires: 'q14_trial_of_rage',
+    npcId: 'archer_kira',
+    title: "The Reactor's Pulse",
+    description: "The heartbeat is faster now — the reactor pulses with every kill you make, feeding on violence yet weakened by it. A paradox the old ones designed: only a warrior can drain it. Fifteen more echoes must fall before the pulse steadies.",
+    objective: { type: 'kill', count: 15 },
+    reward: { xp: 750, points: 3 },
+    spawnCount: 15,
+    spawnTier: 'normal',
+  },
+  {
+    id: 'q16_stormcallers_rite',
+    unlockLevel: 7,
+    requires: 'q15_reactors_pulse',
+    npcId: 'archer_lyra',
+    title: "Stormcaller's Rite",
+    description: "In the first war, the Stormcallers bound lightning itself to hold the seal. Their rite demands three elite hearts, offered under an open sky. Bring them down, and the storm will answer to your hand as it once answered theirs.",
+    objective: { type: 'kill_tier', tier: 'elite', count: 3 },
+    reward: { xp: 900, points: 4, unlock: { type: 'ability', id: 'lightning_strike', name: 'Lightning Strike', icon: '⚡' } },
+    spawnCount: 3,
+    spawnTier: 'elite',
+  },
+  {
+    id: 'q17_vanguard_hollow',
+    unlockLevel: 8,
+    requires: 'q16_stormcallers_rite',
+    npcId: 'archer_vex',
+    title: 'Vanguard of the Hollow',
+    description: "It knows your name now. The fractured god has raised a vanguard from the Hollow — eighteen soldiers of ash and memory marching on the arena. If one reaches the seal stone, everything we've bled for is undone. None may pass.",
+    objective: { type: 'kill', count: 18 },
+    reward: { xp: 1100, points: 4 },
+    spawnCount: 18,
+    spawnTier: 'normal',
+  },
+  {
+    id: 'q18_oath_of_dawn',
+    unlockLevel: 9,
+    requires: 'q17_vanguard_hollow',
+    npcId: 'archer_noor',
+    title: 'Oath of the Dawn',
+    description: "Rage carried you this far — but rage cannot hold a seal. That takes an oath. Two crowned champions carry fragments of the god's crown; reclaim both fragments and swear them to the light. Do this, and rise as a Paladin of the Dawn.",
+    objective: { type: 'kill_tier', tier: 'champion', count: 2 },
+    reward: { xp: 1400, points: 5, unlock: { type: 'class', id: 'paladin', name: 'Paladin', icon: '⛪' } },
+    spawnCount: 2,
+    spawnTier: 'champion',
+  },
+  {
+    id: 'q19_winters_requiem',
+    unlockLevel: 10,
+    requires: 'q18_oath_of_dawn',
+    npcId: 'archer_kira',
+    title: "Winter's Requiem",
+    description: "The god burns — so we answer with winter. The final rite of sealing was sung in frost, a requiem that froze the Hollow shut for a thousand years. Twenty echoes stand between you and the last verse. Silence them, and the frost is yours.",
+    objective: { type: 'kill', count: 20 },
+    reward: { xp: 1700, points: 5, unlock: { type: 'ability', id: 'frost_tornado', name: 'Frost Tornado', icon: '🌪️' } },
+    spawnCount: 20,
+    spawnTier: 'normal',
+  },
+  {
+    id: 'q20_hollow_crown',
+    unlockLevel: 12,
+    requires: 'q19_winters_requiem',
+    npcId: 'archer_zephyr',
+    title: 'The Hollow Crown',
+    description: "This is the end of it. Three champions — the god's last regalia — hold the broken crown above the reactor core. Destroy all three and the seal closes for another age. Walk out of that darkness alive, and you will have earned its deepest secret: the way of the Shadow Ranger.",
+    objective: { type: 'kill_tier', tier: 'champion', count: 3 },
+    reward: { xp: 2500, points: 6, unlock: { type: 'class', id: 'shadow_ranger', name: 'Shadow Ranger', icon: '🌑' } },
+    spawnCount: 3,
+    spawnTier: 'champion',
+  },
 ];
 
 // Helper: which quest (if any) is currently available from this NPC for this player?
@@ -136,6 +263,7 @@ export function getAvailableQuestForNPC(npcId, playerLevel, acceptedIds, complet
     (q) =>
       q.npcId === npcId &&
       q.unlockLevel <= playerLevel &&
+      (!q.requires || completedIds.includes(q.requires)) &&
       !acceptedIds.includes(q.id) &&
       !completedIds.includes(q.id)
   ) || null;
