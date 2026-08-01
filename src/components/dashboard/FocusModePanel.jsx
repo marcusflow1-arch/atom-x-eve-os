@@ -1315,13 +1315,21 @@ export function LibraryBannerSection({
             </div>
           </div>
 
-          {/* Game Header label — dynamic per selected game */}
-          <div className="w-[247px] pl-1 pt-0.5">
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Game Header</p>
-            <p className="text-white text-sm font-bold truncate">
-              {selectedFocusGame ? selectedFocusGame.title : 'No game selected'}
-            </p>
-          </div>
+          {/* Game Header label — only appears once a game is selected */}
+          <AnimatePresence>
+            {selectedFocusGame && (
+              <motion.div
+                className="w-[247px] pl-1 pt-0.5"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.3 }}
+              >
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Game Header</p>
+                <p className="text-white text-sm font-bold truncate">{selectedFocusGame.title}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Bottom Row: Nav Boxes + Intelligence Feed */}
           <div className="flex justify-between items-start w-full">
@@ -1779,24 +1787,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 )}
               </AnimatePresence>
 
-              {/* Placeholder when no game is selected — no more multi-game highlights */}
-              <AnimatePresence>
-                {!selectedFocusGame && !longPressGame && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 16 }}
-                    transition={{ duration: 0.3 }}
-                    className="pointer-events-auto mt-3 overflow-hidden flex items-center justify-center"
-                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.35)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', height: 'calc(100vh - 268px)' }}
-                  >
-                    <div className="text-center">
-                      <Gamepad2 className="w-10 h-10 text-white/15 mx-auto mb-3" />
-                      <p className="text-white/30 text-sm font-medium">Select a game to view progress</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Empty by default — game info fades in only when a game is selected */}
 
             </div>
           </div>

@@ -533,6 +533,7 @@ export default function LunaTemplate() {
         }
       }
       if (key === 'escape') {
+        if (showLibraryLanding) { setShowLibraryLanding(false); return; }
         if (showDevSpotlight) {setShowDevSpotlight(false);return;}
         if (hideUI) setHideUI(false);
         if (showAvatarProgression) setShowAvatarProgression(false);
@@ -545,7 +546,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate]);
+  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, showDevSpotlight, hideUI]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -670,7 +671,7 @@ export default function LunaTemplate() {
               <div className="pointer-events-auto flex-1 min-h-0 relative">
                 {/* Full Library button — opens the full library grid to the right */}
                 <button
-                  onClick={() => setShowLibraryLanding(true)}
+                  onClick={() => setShowLibraryLanding((v) => !v)}
                   className="absolute top-1 right-3 z-40 group flex items-center gap-1 text-white/70 hover:text-cyan-300 text-[11px] font-semibold tracking-wide transition-colors"
                   title="View full library"
                 >
