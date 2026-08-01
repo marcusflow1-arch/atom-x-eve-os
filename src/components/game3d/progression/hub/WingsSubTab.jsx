@@ -5,8 +5,10 @@ import {
   unequipWings,
   attemptWingEnhancement,
   attemptWingEnhancementBatch,
+  setWingLevel,
 } from '../wingsStore';
 import { MAX_WING_LEVEL } from '../wingsData';
+import MaxOutButton from './devMaxOut';
 
 const BATCH_PRESETS = [10, 15, 25, 35];
 
@@ -133,6 +135,17 @@ export default function WingsSubTab() {
           <Stat label="Attempt Cost" value={wings.attemptCost} />
           <Stat label="Success Chance" value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
           <Stat label="Total Attempts" value={path.totalAttempts} />
+          <div className="col-span-2 flex items-end justify-end gap-2">
+            <MaxOutButton
+              accent={path.color}
+              label={`Max ${path.name}`}
+              onClick={() => {
+                setWingLevel(selectedId, MAX_WING_LEVEL);
+                if (!isEquipped) equipWings(path.id);
+              }}
+              title="Editor only — max out this wing type + equip it"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">

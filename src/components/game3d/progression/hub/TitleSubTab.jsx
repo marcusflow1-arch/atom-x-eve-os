@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeTitles, equipTitle, unequipTitle } from '../titleStore';
+import { subscribeTitles, equipTitle, unequipTitle, setTitleLevel } from '../titleStore';
 import { MAX_TITLE_LEVEL } from '../titleData';
+import MaxOutButton from './devMaxOut';
 
 export default function TitleSubTab() {
   const [titles, setTitles] = useState(null);
@@ -105,6 +106,18 @@ export default function TitleSubTab() {
           <div className="text-[10px] text-white/40 mt-1">
             Total kills tracked: {path.totalKills.toLocaleString()}
           </div>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <MaxOutButton
+            accent={path.rarity.color}
+            label={`Max ${path.name}`}
+            onClick={() => {
+              setTitleLevel(selectedId, MAX_TITLE_LEVEL);
+              if (!isEquipped) equipTitle(path.id);
+            }}
+            title="Editor only — max out this title path + equip it"
+          />
         </div>
 
         {/* Current vs next bonuses */}

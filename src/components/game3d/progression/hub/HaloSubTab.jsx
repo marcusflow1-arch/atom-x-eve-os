@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeHalo, attemptEnhancement, attemptEnhancementBatch } from '../haloStore';
+import { subscribeHalo, attemptEnhancement, attemptEnhancementBatch, setHaloLevel } from '../haloStore';
 import { MAX_HALO_LEVEL } from '../haloData';
+import MaxOutButton from './devMaxOut';
 
 const BATCH_PRESETS = [10, 15, 25, 35];
 
@@ -95,6 +96,14 @@ export default function HaloSubTab() {
           <Stat label="Attempt Cost"     value={halo.attemptCost} />
           <Stat label="Success Chance"   value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
           <Stat label="Total Attempts"   value={halo.totalAttempts} />
+          <div className="col-span-2 flex items-end justify-end">
+            <MaxOutButton
+              accent="#ffd86b"
+              label="Max Halo"
+              onClick={() => setHaloLevel(MAX_HALO_LEVEL)}
+              title="Editor only — set Halo to max level"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">

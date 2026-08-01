@@ -40,6 +40,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from 'react-hot-toast';
 import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
 import PlayerHaloAura from '../components/game3d/PlayerHaloAura';
+import PlayerAngelWings from '../components/game3d/PlayerAngelWings';
 import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
 import { runOneTimeProgressionReset } from '../components/game3d/progression/oneTimeReset';
 import SlashEffectLayer from '../components/game3d/SlashEffect';
@@ -333,8 +334,11 @@ export default function GameView() {
       {/* Passive skill aura visual effects rendered over the player */}
       <PassiveSkillAuraEffects activeSkillIds={[...learnedSkillIds]} />
 
-      {/* 3D angelic halo + wings above the player's head — scales with Halo level */}
+      {/* 3D angelic halo above the player's head — scales with Halo level */}
       <PlayerHaloAura />
+
+      {/* 3D angel wings on the player's back — scales with equipped Wings level */}
+      <PlayerAngelWings />
 
       {/* Slash visual effects — fires on basic attack and skill activations */}
       <SlashEffectLayer />

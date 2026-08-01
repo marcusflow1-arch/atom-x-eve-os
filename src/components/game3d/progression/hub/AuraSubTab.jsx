@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeAura, attemptAuraEnhancement, attemptAuraEnhancementBatch } from '../auraStore';
+import { subscribeAura, attemptAuraEnhancement, attemptAuraEnhancementBatch, setAuraLevel } from '../auraStore';
 import { MAX_AURA_LEVEL } from '../auraData';
+import MaxOutButton from './devMaxOut';
 
 const BATCH_PRESETS = [10, 15, 25, 35];
 
@@ -85,6 +86,14 @@ export default function AuraSubTab() {
           <Stat label="Attempt Cost" value={aura.attemptCost} />
           <Stat label="Success Chance" value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
           <Stat label="Total Attempts" value={aura.totalAttempts} />
+          <div className="col-span-2 flex items-end justify-end">
+            <MaxOutButton
+              accent="#7dd3fc"
+              label="Max Aura"
+              onClick={() => setAuraLevel(MAX_AURA_LEVEL)}
+              title="Editor only — set Aura to max level"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
