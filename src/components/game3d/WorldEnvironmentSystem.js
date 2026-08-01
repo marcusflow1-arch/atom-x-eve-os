@@ -185,6 +185,8 @@ export function createWorldEnvironmentSystem({
     eclipseStart: 0,
     weatherTimer: 0,
     intensity: 1,
+    cloudOpacity: 0,        // smoothed cloud-cover opacity (0..1)
+    cloudDrift: 0,          // accumulated cloud drift angle (radians)
     lightningTimer: 0,
     lightningFlash: 0,
     forecast: null,
@@ -374,6 +376,56 @@ export function createWorldEnvironmentSystem({
   const moonLight = new THREE.DirectionalLight(0x9fb4ff, 0);
   moonLight.castShadow = false;
   scene.add(moonLight);
+
+  // ── Clouds ─────────────────────────────────────────────────────────────
+  // A drifting layer of soft cloud puffs high above the world. Their opacity
+  // tracks the current cloud cover (clear → few wisps, overcast → thick sheet)
+  // and their color tints with the weather + season: white on a clear summer
+  // day, heavy grey for rain, near-black for storms, soft pearl for snow.
+  const makeCloudTexture = () => {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = c.getContext('2d');
+    // build a soft, irregular blob from several overlapping radial blobs
+    const blobs = 7;
+    for (let i = 0; i < blobs; i++) {
+      const bx = 128 + (Math.random() - 0.5) * 120;
+      const by = 128 + (Math.random() - 0.5) * 70;
+      const br = 40 + Math.random() * 70;
+      const grad = g.createRadialGradient(bx, by, 0, bx, by, br);
+      grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+      grad.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = grad; g.fillRect(0, 0, 256, 256);
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  const cloudTex = makeCloudTexture();
+  const CLOUD_COUNT = 26;
+  const CLOUD_RADIUS = 150;
+  const cloudPuffs = [];
+  const cloudGroup = new THREE.Group();
+  cloudGroup.renderOrder = -850;
+  cloudGroup.frustumCulled = false;
+  for (let i = 0; i < CLOUD_COUNT; i++) {
+    const mat = new THREE.SpriteMaterial({
+      map: cloudTex, color: 0xffffff, transparent: true, opacity: 0,
+      depthWrite: false, depthTest: false, fog: false,
+    });
+    const s = new THREE.Sprite(mat);
+    const ang = (i / CLOUD_COUNT) * Math.PI * 2 + Math.random() * 0.4;
+    const rad = 40 + Math.random() * (CLOUD_RADIUS - 40);
+    s.position.set(
+      Math.cos(ang) * rad,
+      62 + Math.random() * 26,                 // altitude band
+      Math.sin(ang) * rad,
+    );
+    const sc = 36 + Math.random() * 40;
+    s.scale.set(sc, sc * 0.62, 1);
+    s.userData = { baseAng: ang, baseRad: rad, drift: 0.6 + Math.random() * 0.8 };
+    cloudPuffs.push(s);
+    cloudGroup.add(s);
+  }
+  scene.add(cloudGroup);
 
   // ── Rain ───────────────────────────────────────────────────────────────
   const RAIN_COUNT = 2600;
@@ -646,6 +698,42 @@ export function createWorldEnvironmentSystem({
     fog.far = far;
     fog.near = Math.min(far * 0.35, 90);
 
+    // Clouds — opacity follows cloud cover (smoothed), color follows weather +
+    // season, brightness follows the sun so clouds dim at night (moonlit, not
+    // pitch black). The whole layer drifts slowly overhead.
+    const cloudTarget = cloudCover;
+    state.cloudOpacity += (cloudTarget - state.cloudOpacity) * Math.min(1, dt * 0.6);
+    let cloudTint;
+    switch (weather) {
+      case 'storm':  cloudTint = new THREE.Color(0.30, 0.32, 0.37); break;
+      case 'rain':   cloudTint = new THREE.Color(0.55, 0.58, 0.64); break;
+      case 'snow':   cloudTint = new THREE.Color(0.86, 0.89, 0.94); break;
+      case 'fog':    cloudTint = new THREE.Color(0.72, 0.74, 0.78); break;
+      case 'cloudy': cloudTint = new THREE.Color(0.92, 0.93, 0.96); break;
+      default:       cloudTint = new THREE.Color(1.00, 1.00, 1.00); break;
+    }
+    // Seasonal blush: summer brighter, autumn warmer, winter cooler/blueish.
+    if (season.id === 'autumn') cloudTint.lerp(new THREE.Color(1.0, 0.92, 0.80), 0.10);
+    else if (season.id === 'winter') cloudTint.lerp(new THREE.Color(0.86, 0.90, 1.0), 0.10);
+    else if (season.id === 'summer') cloudTint.lerp(new THREE.Color(1.0, 0.98, 0.92), 0.06);
+    // Day/night brightness: clouds are sunlit by day, moonlit at night.
+    const cloudLight = 0.35 + 0.65 * day + nightFactor * effMoonIllum * 0.35;
+    cloudTint.multiplyScalar(cloudLight);
+    // Drift the layer; faster in storms/windy weather.
+    const driftSpeed = (weather === 'storm' ? 0.05 : weather === 'rain' ? 0.035 : 0.02) * (0.7 + state.intensity * 0.6);
+    state.cloudDrift += dt * driftSpeed;
+    for (let i = 0; i < CLOUD_COUNT; i++) {
+      const p = cloudPuffs[i];
+      const u = p.userData;
+      const ang = u.baseAng + state.cloudDrift * u.drift;
+      p.position.x = Math.cos(ang) * u.baseRad;
+      p.position.z = Math.sin(ang) * u.baseRad;
+      p.material.color.copy(cloudTint);
+      // Vary per-puff opacity so the sheet looks like distinct clouds.
+      const variance = 0.7 + 0.3 * Math.sin(i * 1.7);
+      p.material.opacity = state.cloudOpacity * variance;
+    }
+
     // Lightning during storms
     if (weather === 'storm' && state.intensity > 0.4) {
       state.lightningTimer -= dt;
@@ -720,13 +808,15 @@ export function createWorldEnvironmentSystem({
 
   // ── Dispose ────────────────────────────────────────────────────────────
   const dispose = () => {
-    scene.remove(skyDome, sunDisc, moonDisc, stars, rain, snow, lightning, moonLight);
+    scene.remove(skyDome, sunDisc, moonDisc, stars, rain, snow, lightning, moonLight, cloudGroup);
     skyDome.geometry.dispose(); skyMat.dispose();
     sunDisc.material.map?.dispose(); sunDisc.material.dispose();
     moonDisc.material.map?.dispose(); moonDisc.material.dispose();
     starGeo.dispose(); starMat.dispose();
     rainGeo.dispose(); rainMat.dispose();
     snowGeo.dispose(); snowMat.dispose();
+    cloudTex.dispose();
+    for (const p of cloudPuffs) p.material.dispose();
     if (window.__worldEnv === api) window.__worldEnv = null;
   };
 

@@ -83,7 +83,6 @@ import { createLunaDashboardPlayerController as createPlayerAnimationController 
 import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
-import { loadDeepSpaceSkybox } from './worldSkybox';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
 import { getDetroitWeather } from '@/functions/getDetroitWeather';
@@ -247,10 +246,12 @@ export default function GameWorld3D() {
     if (!containerRef.current) return;
     const container = containerRef.current;
 
-    // Scene — deep-space world skybox + retained terrain fog depth.
+    // Scene — natural sky dome + retained terrain fog depth.
+    // No static skybox: the WorldEnvironmentSystem paints a gradient sky
+    // (day/night/season/weather) and drives the sun + moon across it.
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x080b18, 90, 260);
-    scene.background = new THREE.Color(0x050711);
+    scene.background = null;
 
     // Renderer — keep it simple and proven. Create a canvas explicitly so we
     // can attach the WebGL context-loss listener BEFORE THREE allocates the
@@ -324,10 +325,10 @@ export default function GameWorld3D() {
     sun.shadow.camera.far = 80;
     scene.add(sun);
 
+    // GLTF loader shared by runtime VFX (e.g. player cast beam).
     const worldGltfLoader = new GLTFLoader();
-    const disposeSkybox = loadDeepSpaceSkybox({ scene, gltfLoader: worldGltfLoader });
 
-    // Day/night + seasons + dynamic weather (rain, snow, storm, fog)
+    // Day/night + seasons + dynamic weather (rain, snow, storm, fog, clouds)
     const envSystem = createWorldEnvironmentSystem({ scene, sun, hemi, fog: scene.fog, camera, renderer, dayLengthSeconds: 86400 });
     setEnvSystem(envSystem);
     window.__worldEnv = envSystem;
@@ -1830,7 +1831,6 @@ export default function GameWorld3D() {
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
       window.removeEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
-      disposeSkybox?.();
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('wheel', onWheel);
       renderer.domElement.removeEventListener('contextmenu', onContext);
