@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Trophy, Zap, Clock, Target, BookOpen, Star,
   Lock, Play, Radio, Gamepad2, Crown, Sparkles,
-  MessageSquare, Package, ShoppingCart, ChevronRight,
+  Package,
 } from 'lucide-react';
-import QuestCard from './QuestCard';
 import { getGameData } from './gameProgressData';
 
 // Circular progress ring
@@ -49,8 +48,6 @@ function RibbonStat({ icon: Icon, value, label, tint, last }) {
 }
 
 export default function GamePageView({ game, friendData, onOpenFriend, onBackToSelf }) {
-  const [tab, setTab] = useState('overview'); // 'overview' | 'quests' | 'awards'
-
   const gameData = getGameData(game?.id);
   const isFriendView = !!friendData;
 
@@ -68,37 +65,51 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
   const nextAchievement = gameData.nextAchievement;
   const quests = gameData.quests || { active: [], available: [] };
 
-  // Steam-style overview data (real fields only — no fabricated content)
   const dlc = Array.isArray(game?.dlc) ? game.dlc : [];
-  const reviewCount = game?.reviewCount ?? game?.reviews ?? 0;
-  const reviewCountStr = reviewCount ? reviewCount.toLocaleString() : '0';
-  const reviewLabel = (() => {
-    const r = game?.rating;
-    if (r == null) return '';
-    if (r >= 4.7) return 'Overwhelmingly Positive';
-    if (r >= 4.3) return 'Very Positive';
-    if (r >= 4.0) return 'Mostly Positive';
-    if (r >= 3.5) return 'Mixed';
-    if (r >= 3.0) return 'Mostly Negative';
-    return 'Overwhelmingly Negative';
-  })();
-  const reviewColor = (() => {
-    const r = game?.rating;
-    if (r == null) return 'text-white/60';
-    if (r >= 4.0) return 'text-emerald-400';
-    if (r >= 3.5) return 'text-amber-400';
-    return 'text-red-400';
-  })();
-  const mediaThumb = game?.banner || game?.screenshots?.[0] || game?.image || game?.thumb;
-
   const cover = game?.image || game?.thumb;
   const thumb = game?.thumb || cover;
 
-  const TABS = [
-    { id: 'overview', label: 'Overview', icon: BookOpen },
-    { id: 'quests', label: 'Quests', icon: Target },
-    { id: 'awards', label: 'Awards', icon: Trophy },
-  ];
+  // ── Build a clean Updates feed from real game data ──
+  const updates = [];
+  if (game?.updated_date || game?.version) {
+    updates.push({
+      kind: 'patch',
+      title: `${game?.title || 'Game'} — Latest Patch`,
+      body: game?.description || 'A new update has been installed. Performance improvements and bug fixes.',
+      meta: game?.version ? `v${game.version}` : 'Installed',
+    });
+  }
+  dlc.forEach(d => updates.push({
+    kind: 'dlc',
+    title: d.title || d.name || 'New Content',
+    body: d.description || 'New downloadable content is available.',
+    meta: d.price != null && d.price > 0 ? `$${Number(d.price).toFixed(2)}` : 'Free',
+    image: d.image,
+  }));
+  quests.active.forEach(q => updates.push({
+    kind: 'quest',
+    title: q.title,
+    body: q.objective || q.description || 'Quest in progress.',
+    meta: `Tracking · ${q.giver || 'Quest'}`,
+  }));
+  if (showCardData && nextAchievement) {
+    updates.push({
+      kind: 'award',
+      title: nextAchievement.name,
+      body: `Achievement progress at ${nextAchievement.pct}%.`,
+      meta: `${nextAchievement.pct}%`,
+    });
+  }
+  if (updates.length === 0) {
+    updates.push({
+      kind: 'system',
+      title: 'No recent updates',
+      body: game?.description || 'Updates will appear here as they arrive.',
+      meta: '—',
+    });
+  }
+
+  const allQuests = [...quests.active, ...quests.available];
 
   return (
     <motion.div
@@ -118,7 +129,6 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(7,10,17,0.30) 0%, rgba(7,10,17,0.55) 45%, rgba(7,10,17,0.98) 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(7,10,17,0.65) 0%, transparent 55%, rgba(7,10,17,0.4) 100%)' }} />
 
-        {/* Top row: tag + actions */}
         <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between">
           <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest text-white/70 border border-white/15" style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}>
             {game?.genre || 'Game'}
@@ -138,7 +148,6 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
           </div>
         </div>
 
-        {/* Bottom row: title + ring */}
         <div className="absolute bottom-2.5 left-3 right-3 flex items-end gap-3">
           <div className="w-12 h-14 rounded-md overflow-hidden flex-shrink-0 border border-white/20 shadow-xl">
             {thumb ? <img src={thumb} alt={game?.title} className="w-full h-full object-cover" />
@@ -161,218 +170,124 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
         <RibbonStat icon={Sparkles} value={`${gameData.genreLabel} ${genreLevel}`} label="Job" tint="text-cyan-400" last />
       </div>
 
-      {/* ══════ TAB BAR ══════ */}
-      <div className="flex-shrink-0 flex items-center gap-1 px-3 mt-3 mb-1">
-        {TABS.map(t => {
-          const active = tab === t.id;
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
-                active ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-              style={active ? { background: 'rgba(255,255,255,0.06)', borderBottom: '2px solid #22d3ee' } : { borderBottom: '2px solid transparent' }}>
-              <t.icon className="w-3 h-3" /> {t.label}
-              {t.id === 'quests' && quests.active.length > 0 && (
-                <span className="ml-0.5 px-1 rounded-full bg-cyan-500/30 text-cyan-200 text-[8px] font-black">{quests.active.length}</span>
-              )}
-            </button>
-          );
-        })}
-        <div className="ml-auto text-[8px] text-white/25 uppercase tracking-widest">{showCardData ? 'Synced from Cards' : 'Friend preview'}</div>
-      </div>
-
-      {/* ══════ TAB BODY ══════ */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-3">
-        <AnimatePresence mode="wait">
-          {tab === 'overview' && (
-            <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-3">
-              {/* Media + short description (Steam-style two-column) */}
-              <div className="flex gap-2.5">
-                <button
-                  className="relative w-[42%] flex-shrink-0 aspect-video rounded-lg overflow-hidden border border-white/10 group"
-                  style={{ background: 'rgba(255,255,255,0.03)' }}
-                >
-                  {mediaThumb ? (
-                    <img src={mediaThumb} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-white/20" /></div>
-                  )}
-                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/45 transition-colors flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
-                    </div>
+      {/* ══════ BODY: Updates feed (70%) | divider | Quests + Wars (30%) ══════ */}
+      <div className="flex-1 flex min-h-0 px-3 pb-3 pt-2 gap-0">
+        {/* LEFT — Updates feed */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden pr-3">
+          <div className="flex items-center gap-1.5 px-0.5 mb-2">
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Updates</span>
+            <span className="ml-1 px-1.5 rounded-full bg-white/8 text-white/50 text-[8px] font-bold">{updates.length}</span>
+          </div>
+          <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1">
+            {updates.map((u, i) => {
+              const isPatch = u.kind === 'patch';
+              const isDlc = u.kind === 'dlc';
+              const isQuest = u.kind === 'quest';
+              const isAward = u.kind === 'award';
+              const Icon = isPatch ? Zap : isDlc ? Package : isQuest ? Target : isAward ? Trophy : BookOpen;
+              const tint = isPatch ? 'text-cyan-400' : isDlc ? 'text-purple-400' : isQuest ? 'text-blue-400' : isAward ? 'text-amber-400' : 'text-white/40';
+              const badge = isPatch ? 'Patch' : isDlc ? 'DLC' : isQuest ? 'Quest' : isAward ? 'Award' : 'System';
+              const badgeColor = isPatch ? 'bg-cyan-500/20 text-cyan-200' : isDlc ? 'bg-purple-500/20 text-purple-200' : isQuest ? 'bg-blue-500/20 text-blue-200' : isAward ? 'bg-amber-500/20 text-amber-200' : 'bg-white/10 text-white/60';
+              return (
+                <div key={i} className="relative rounded-xl border border-white/8 p-2.5 flex gap-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center border border-white/10 ${badgeColor}`}>
+                    <Icon className={`w-4 h-4 ${tint}`} />
                   </div>
-                </button>
-                <div className="flex-1 min-w-0 flex flex-col">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">About This Game</span>
-                  <p className="text-[10.5px] text-white/65 leading-relaxed line-clamp-6">
-                    {game?.description || 'No description available.'}
-                  </p>
-                  <div className="mt-auto flex flex-wrap gap-1 pt-1.5">
-                    {(game?.tags || []).slice(0, 3).map(t => (
-                      <span key={t} className="px-1.5 py-0.5 rounded-full text-[8px] font-semibold text-white/55 border border-white/10" style={{ background: 'rgba(255,255,255,0.04)' }}>{t}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Review summary */}
-              {game?.rating != null && (
-                <div className="rounded-xl border border-white/8 px-3 py-2.5 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                  <div className="flex flex-col items-center justify-center px-1 min-w-[88px]">
-                    <span className={`text-[10px] font-black leading-tight text-center ${reviewColor}`}>{reviewLabel}</span>
-                    <span className="text-[8px] text-white/35 mt-1 flex items-center gap-1"><MessageSquare className="w-2.5 h-2.5" /> {reviewCountStr}</span>
-                  </div>
-                  <div className="w-px self-stretch bg-white/8" />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-1 mb-1">
-                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      <span className="text-base font-black text-white tabular-nums leading-none">{Number(game.rating).toFixed(1)}</span>
-                      <span className="text-[9px] text-white/40">/ 5</span>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-wider ${badgeColor}`}>{badge}</span>
+                      {u.meta && <span className="text-[8px] text-white/35 tabular-nums">{u.meta}</span>}
                     </div>
-                    <p className="text-[9px] text-white/40 truncate">{game?.developer || game?.genre || '—'}</p>
+                    <p className="text-[11px] font-bold text-white/90 leading-tight truncate">{u.title}</p>
+                    <p className="text-[9.5px] text-white/50 leading-snug mt-0.5 line-clamp-3">{u.body}</p>
                   </div>
-                </div>
-              )}
-
-              {/* Downloadable content */}
-              <div>
-                <div className="flex items-center gap-1.5 mb-1.5 px-0.5">
-                  <Package className="w-3 h-3 text-cyan-400" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-white/45">Downloadable Content</span>
-                </div>
-                {dlc.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {dlc.map(d => (
-                      <div key={d.id || d.title || d.name} className="flex items-center gap-2.5 rounded-lg border border-white/8 px-2.5 py-2" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <div className="w-12 h-9 rounded overflow-hidden flex-shrink-0 border border-white/10">
-                          {d.image ? <img src={d.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Package className="w-3.5 h-3.5 text-white/20" /></div>}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-semibold text-white/90 truncate">{d.title || d.name}</p>
-                          <p className="text-[9px] text-white/40 truncate">{d.description}</p>
-                        </div>
-                        <button className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 text-[9px] font-bold hover:bg-cyan-500/30 transition-colors">
-                          <ShoppingCart className="w-3 h-3" />
-                          {d.price != null && d.price > 0 ? `$${Number(d.price).toFixed(2)}` : 'Free'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <Package className="w-4 h-4 text-white/15 mx-auto mb-1" />
-                    <p className="text-[10px] text-white/35">No DLC available for this title</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Quest log snapshot */}
-              {(quests.active.length > 0 || quests.available.length > 0) && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5 px-0.5">
-                    <BookOpen className="w-3 h-3 text-cyan-400" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-white/45">Quest Log</span>
-                    {quests.active.length > 0 && (
-                      <span className="ml-1 px-1.5 rounded-full bg-cyan-500/25 text-cyan-200 text-[8px] font-black">{quests.active.length} active</span>
-                    )}
-                  </div>
-                  {quests.active[0] && (
-                    <div className="relative rounded-lg overflow-hidden border border-white/8" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-blue-500" />
-                      <div className="px-3 py-2 pl-3.5">
-                        <p className="text-[11px] font-bold text-white/90 truncate">{quests.active[0].title}</p>
-                        <p className="text-[9px] text-white/45 truncate flex items-center gap-1"><Target className="w-2.5 h-2.5 text-cyan-400/60" /> {quests.active[0].objective}</p>
-                      </div>
+                  {u.image && (
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                      <img src={u.image} alt="" className="w-full h-full object-cover" />
                     </div>
                   )}
-                  {quests.available.length > 0 && (
-                    <p className="text-[9px] text-white/35 mt-1 px-0.5 flex items-center gap-1">
-                      {quests.available.length} more available
-                      <ChevronRight className="w-2.5 h-2.5" />
-                      <button onClick={() => setTab('quests')} className="text-cyan-400/70 hover:text-cyan-300 font-semibold">Quests tab</button>
-                    </p>
-                  )}
                 </div>
-              )}
-            </motion.div>
-          )}
+              );
+            })}
+          </div>
+        </div>
 
-          {tab === 'quests' && (
-            <motion.div key="quests" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-2.5 pt-1">
+        {/* Vertical divider line */}
+        <div className="w-px flex-shrink-0 my-1 bg-gradient-to-b from-transparent via-white/15 to-transparent" />
+
+        {/* RIGHT — Quest Log + Wars */}
+        <div className="w-[32%] min-w-[190px] flex flex-col gap-2 pl-3 overflow-hidden">
+          {/* Quest Log */}
+          <div className="flex flex-col min-h-0 flex-1">
+            <div className="flex items-center gap-1.5 px-0.5 mb-2">
+              <Target className="w-3.5 h-3.5 text-blue-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Quest Log</span>
               {quests.active.length > 0 && (
-                <div>
-                  <p className="text-[9px] text-cyan-400/60 uppercase tracking-wide mb-1.5 flex items-center gap-1 px-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Active · {quests.active.length}
-                  </p>
-                  <div className="space-y-1.5">{quests.active.map(q => <QuestCard key={q.id} quest={q} variant="active" />)}</div>
-                </div>
+                <span className="ml-1 px-1.5 rounded-full bg-blue-500/25 text-blue-200 text-[8px] font-bold">{quests.active.length}</span>
               )}
-              {quests.available.length > 0 && (
-                <div>
-                  <p className="text-[9px] text-white/35 uppercase tracking-wide mb-1.5 flex items-center gap-1 px-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/30" /> Available · {quests.available.length}
-                  </p>
-                  <div className="space-y-1.5">{quests.available.map(q => <QuestCard key={q.id} quest={q} variant="available" />)}</div>
-                </div>
-              )}
-              {quests.active.length === 0 && quests.available.length === 0 && (
-                <div className="rounded-lg border border-dashed border-white/10 p-6 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  <Target className="w-5 h-5 text-white/15 mx-auto mb-1.5" />
-                  <p className="text-[11px] text-white/35 italic">No quests available</p>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {tab === 'awards' && (
-            <motion.div key="awards" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-2.5 pt-1">
-              {showCardData ? (
-                <>
-                  {/* Big achievement header */}
-                  <div className="relative rounded-xl overflow-hidden border border-amber-400/20 p-3.5"
-                    style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.10), rgba(249,115,22,0.06))' }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-400/25 to-orange-500/25 border border-amber-400/30 flex items-center justify-center">
-                        <Trophy className="w-6 h-6 text-amber-300" />
+            </div>
+            <div className="flex-1 overflow-y-auto scrollbar-hide space-y-1.5 pr-1">
+              {allQuests.length > 0 ? allQuests.map((q, idx) => {
+                const active = idx < quests.active.length;
+                return (
+                  <div key={q.id} className="relative rounded-lg border border-white/8 px-2.5 py-2" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l ${active ? 'bg-gradient-to-b from-cyan-400 to-blue-500' : 'bg-white/20'}`} />
+                    <div className="pl-1.5">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-[10px] font-bold text-white/90 truncate">{q.title}</p>
+                        {active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-white tabular-nums leading-none">{achievementsTotal}</span>
-                          <span className="text-[10px] text-amber-300/70 font-bold">{achievementsPct}% complete</span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-black/30 overflow-hidden mt-2">
-                          <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #f59e0b, #f97316)' }}
-                            initial={{ width: 0 }} animate={{ width: `${achievementsPct}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} />
-                        </div>
-                      </div>
+                      <p className="text-[8.5px] text-white/45 truncate mt-0.5">{q.objective || q.description}</p>
+                      <p className="text-[8px] text-white/30 mt-0.5">{active ? 'Active' : 'Available'} · {q.giver || '—'}</p>
                     </div>
                   </div>
-
-                  {/* Next achievement */}
-                  <div className="rounded-xl border border-white/8 p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Star className="w-3 h-3 text-amber-400/70" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Next Up</span>
-                    </div>
-                    <p className="text-xs font-bold text-white/90 mb-1.5">{nextAchievement?.name}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500" style={{ width: `${nextAchievement?.pct}%` }} />
-                      </div>
-                      <span className="text-[9px] text-white/50 tabular-nums font-bold">{nextAchievement?.pct}%</span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="rounded-lg border border-white/8 p-4 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  <Lock className="w-4 h-4 text-white/15 mx-auto mb-1" />
-                  <p className="text-[10px] text-white/35">Award details are private.</p>
+                );
+              }) : (
+                <div className="rounded-lg border border-dashed border-white/10 p-4 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <Target className="w-4 h-4 text-white/15 mx-auto mb-1" />
+                  <p className="text-[10px] text-white/35 italic">No quests</p>
                 </div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Wars / Awards */}
+          <div className="flex flex-col flex-shrink-0">
+            <div className="flex items-center gap-1.5 px-0.5 mb-2">
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Wars</span>
+            </div>
+            {showCardData ? (
+              <div className="rounded-xl border border-amber-400/20 p-2.5" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.10), rgba(249,115,22,0.06))' }}>
+                <div className="flex items-baseline gap-1.5 mb-1.5">
+                  <span className="text-lg font-black text-white tabular-nums leading-none">{achievementsTotal}</span>
+                  <span className="text-[9px] text-amber-300/70 font-bold">{achievementsPct}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-black/30 overflow-hidden mb-2">
+                  <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #f59e0b, #f97316)' }}
+                    initial={{ width: 0 }} animate={{ width: `${achievementsPct}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} />
+                </div>
+                <div className="flex items-center gap-1 mb-1">
+                  <Star className="w-2.5 h-2.5 text-amber-400/70" />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Next Up</span>
+                </div>
+                <p className="text-[10px] font-bold text-white/90 truncate">{nextAchievement?.name}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500" style={{ width: `${nextAchievement?.pct}%` }} />
+                  </div>
+                  <span className="text-[8px] text-white/50 tabular-nums font-bold">{nextAchievement?.pct}%</span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-white/8 p-3 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <Lock className="w-4 h-4 text-white/15 mx-auto mb-1" />
+                <p className="text-[10px] text-white/35">War details private</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </motion.div>
   );
