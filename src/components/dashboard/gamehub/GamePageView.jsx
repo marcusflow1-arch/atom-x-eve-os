@@ -110,7 +110,7 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
       className="h-full flex flex-col"
     >
       {/* ══════ CINEMATIC HERO ══════ */}
-      <div className="relative flex-shrink-0 h-32 overflow-hidden">
+      <div className="relative flex-shrink-0 h-44 overflow-hidden">
         {cover && (
           <motion.img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover"
             initial={{ scale: 1.15 }} animate={{ scale: 1 }} transition={{ duration: 1.2, ease: 'easeOut' }} />

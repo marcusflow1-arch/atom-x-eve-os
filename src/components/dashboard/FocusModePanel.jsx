@@ -1315,22 +1315,6 @@ export function LibraryBannerSection({
             </div>
           </div>
 
-          {/* Game Header label — only appears once a game is selected */}
-          <AnimatePresence>
-            {selectedFocusGame && (
-              <motion.div
-                className="w-[247px] pl-1 pt-0.5"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                transition={{ duration: 0.3 }}
-              >
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Game Header</p>
-                <p className="text-white text-sm font-bold truncate">{selectedFocusGame.title}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Bottom Row: Nav Boxes + Intelligence Feed */}
           <div className="flex justify-between items-start w-full">
             <div className="w-[330px] flex justify-center">
@@ -1774,8 +1758,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 16 }}
                     transition={{ duration: 0.3 }}
-                    className="pointer-events-auto mt-3 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.45)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)', height: 'calc(100vh - 268px)' }}
+                    className="pointer-events-auto mt-2 overflow-hidden"
+                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.45)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)', height: 'calc(100vh - 224px)' }}
                   >
                     <GamePageView
                       game={selectedFocusGame}
