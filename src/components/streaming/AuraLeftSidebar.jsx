@@ -7,7 +7,9 @@ export default function AuraLeftSidebar() {
   const navigate = useNavigate();
 
   return (
-    <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
+    <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r border-white/20 z-40 flex flex-col items-center py-6"
+      style={{ background: 'rgba(8, 12, 18, 0.58)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
+    >
       
       {/* Recently Watched Streams Section */}
       <div className="flex flex-col items-center w-full px-2 mt-16">

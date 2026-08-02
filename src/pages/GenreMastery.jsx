@@ -167,9 +167,11 @@ export default function GenreMastery({ onClose }) {
       bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}
     >
       <div className="flex w-full h-full">
-        {/* 5% Left Sidebar for Global Icons */}
+        {/* Left rail — overlay extension: floats over the page instead of pushing it */}
         {sidebarVisible && (
-          <div className="w-[5%] min-w-[80px] border-r border-white/10 flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm" />
+          <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r border-white/10 z-50 flex flex-col items-center"
+            style={{ background: 'rgba(8, 12, 18, 0.58)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
+          />
         )}
         
         {/* Main Content Area */}

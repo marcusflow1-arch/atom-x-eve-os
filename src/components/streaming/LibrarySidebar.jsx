@@ -225,6 +225,10 @@ export default function LibrarySidebar() {
   const isGameView = pathname.includes('/gameview');
 
   const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || isGameView || pathname.includes('/gamedetail'));
+
+  // Pages whose left rail is a 132px overlay extension — center the floating buttons within it
+  const hasOverlayRail = ['/store', '/genremastery', '/community', '/clan', '/aura'].some(s => pathname.includes(s));
+  const railLeftClass = hasOverlayRail ? 'left-[46px]' : 'left-6';
   
   // On gamedetail page, use fixed positioning so the sidebar shows over the page
   const positionClass = isGameDetail ? 'fixed' : 'absolute';
@@ -340,7 +344,7 @@ export default function LibrarySidebar() {
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`${positionClass} left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100 overflow-y-auto`}
+              className={`${positionClass} ${railLeftClass} z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100 overflow-y-auto`}
               style={{ bottom: 'calc(55% + 24px)', scrollbarWidth: 'none' }}
             >
               <button 
@@ -443,7 +447,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`${positionClass} left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
+            className={`${positionClass} ${railLeftClass} top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
           >
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (

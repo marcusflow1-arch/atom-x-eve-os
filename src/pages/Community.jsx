@@ -405,9 +405,11 @@ export default function CommunityPage() {
             bottomContent={<ForumBottomNav activeTab="hub" onTabSelect={handleTabSelect} />}
         >
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-            {/* 5% Left Area for Global Icons */}
+            {/* Left rail — overlay extension: floats over the page instead of pushing it */}
             {sidebarVisible && (
-              <div className="w-[5%] min-w-[80px] border-r border-white/20 h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm" />
+              <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r border-white/20 z-40 flex flex-col items-center"
+                style={{ background: 'rgba(8, 12, 18, 0.58)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
+              />
             )}
 
             {/* 95% Main Area */}

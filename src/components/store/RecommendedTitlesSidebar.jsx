@@ -64,10 +64,10 @@ export default function RecommendedTitlesSidebar({ games = [], onGameClick }) {
             key={game.id}
             onClick={() => onGameClick?.(game.id)}
             title={game.title || game.name}
-            className="group w-full flex flex-col items-center gap-1"
+            className="group w-full flex items-center gap-2 p-1 rounded-lg hover:bg-white/5 transition-colors text-left"
           >
             <div
-              className="w-full aspect-[3/4] rounded-xl border border-white/10 group-hover:border-cyan-400/50 overflow-hidden transition-all relative"
+              className="w-11 h-11 flex-shrink-0 rounded-xl border border-white/10 group-hover:border-cyan-400/50 overflow-hidden transition-all"
               style={{ background: 'rgba(255,255,255,0.04)' }}
             >
               {game.cover_image || game.image ? (
@@ -79,9 +79,8 @@ export default function RecommendedTitlesSidebar({ games = [], onGameClick }) {
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">?</div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <span className="text-[9px] text-white/70 group-hover:text-white leading-tight text-center line-clamp-2 transition-colors">
+            <span className="flex-1 min-w-0 text-[9px] text-white/70 group-hover:text-white leading-tight line-clamp-2 transition-colors">
               {game.title || game.name}
             </span>
           </button>
