@@ -40,7 +40,7 @@ import { WishlistProvider } from '../components/store/WishlistContext';
 import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
 import CategorySearchBar from '../components/store/CategorySearchBar';
-import RecentlyPlayedSidebar from '../components/store/RecentlyPlayedSidebar';
+import RecommendedTitlesSidebar from '../components/store/RecommendedTitlesSidebar';
 import DevCardsContent from '../components/store/DevCardsContent';
 import ShooterContent from '../components/store/ShooterContent';
 import { DollarSign, Building2 } from 'lucide-react';
@@ -489,19 +489,20 @@ export default function Store() {
                       onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
                     />
 
-                    {/* 5% Left Sidebar — split into 3 bounded sections (Recently Played | Launch zone | Options) */}
-                    {!inPageStoreGameId && sidebarVisible && <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center"
+                    {/* Left Sidebar — overlay extension: floats over the store UI instead of pushing it.
+                        Slightly shaded + blurred so the UI stays visible behind it while text remains readable. */}
+                    {!inPageStoreGameId && sidebarVisible && <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r z-40 flex flex-col items-center"
                         style={{
-                            background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
-                            backdropFilter: 'blur(24px) saturate(160%)',
-                            WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+                            background: 'rgba(8, 12, 18, 0.58)',
+                            backdropFilter: 'blur(10px) saturate(140%)',
+                            WebkitBackdropFilter: 'blur(10px) saturate(140%)',
                             borderColor: 'rgba(200,210,220,0.18)',
-                            boxShadow: '4px 0 20px rgba(0,0,0,0.35), inset 1px 0 0 rgba(255,255,255,0.08)'
+                            boxShadow: '4px 0 24px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.06)'
                         }}
                     >
-                        {/* TOP — Recently Played (bounded, scrollable, ends above center) */}
+                        {/* TOP — Recommended titles based on last purchase (bounded, scrollable, ends above center) */}
                         <div className="w-full flex-1 min-h-0 overflow-y-auto pt-4 pb-2" style={{ scrollbarWidth: 'none' }}>
-                            <RecentlyPlayedSidebar games={games} onGameClick={handleNavigateToGame} />
+                            <RecommendedTitlesSidebar games={games} onGameClick={handleNavigateToGame} />
                         </div>
 
                         {/* MIDDLE — Reserved zone for Launch button (floating LibrarySidebar renders here at top-[45%]) */}
