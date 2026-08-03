@@ -50,14 +50,14 @@ const CLOUD_COVER = {
 // Time-of-day keyframes: top sky, bottom sky, sun color, sun intensity, hemi
 // color, hemi intensity, fog color.
 const TIME_KEYS = [
-  { h: 0,    top: 0x05070f, bot: 0x0a0f1c, sun: 0x2a3550, si: 0.00, hemi: 0x1a2238, hi: 0.22, fog: 0x06080f },
-  { h: 5,    top: 0x1a1f3a, bot: 0x3a2a4a, sun: 0xff8a4a, si: 0.35, hemi: 0x3a4060, hi: 0.45, fog: 0x2a2535 },
+  { h: 0,    top: 0x05070f, bot: 0x0a0f1c, sun: 0x2a3550, si: 0.00, hemi: 0x2a3350, hi: 0.38, fog: 0x06080f },
+  { h: 5,    top: 0x1a1f3a, bot: 0x3a2a4a, sun: 0xff8a4a, si: 0.35, hemi: 0x3a4060, hi: 0.50, fog: 0x2a2535 },
   { h: 6.5,  top: 0x4a6a9a, bot: 0xff9a5a, sun: 0xffb070, si: 1.20, hemi: 0x88a0c0, hi: 0.70, fog: 0x6a5a55 },
   { h: 12,   top: 0x4a86c8, bot: 0xb0d0f0, sun: 0xfff4d6, si: 2.20, hemi: 0xcfe4ff, hi: 1.00, fog: 0x90a8c0 },
-  { h: 17,   top: 0x5a7ab0, bot: 0xe0b080, sun: 0xffd090, si: 1.55, hemi: 0xaab8d0, hi: 0.80, fog: 0x807060 },
-  { h: 18.5, top: 0x3a4a7a, bot: 0xd07050, sun: 0xff7050, si: 0.65, hemi: 0x6a6080, hi: 0.50, fog: 0x5a4040 },
-  { h: 20,   top: 0x1a1f3a, bot: 0x2a2540, sun: 0x40355a, si: 0.18, hemi: 0x3a3550, hi: 0.34, fog: 0x1a1825 },
-  { h: 24,   top: 0x05070f, bot: 0x0a0f1c, sun: 0x2a3550, si: 0.00, hemi: 0x1a2238, hi: 0.22, fog: 0x06080f },
+  { h: 17,   top: 0x5a7ab0, bot: 0xe0b080, sun: 0xffd090, si: 1.55, hemi: 0xbac6da, hi: 0.92, fog: 0x807060 },
+  { h: 18.5, top: 0x3a4a7a, bot: 0xd07050, sun: 0xff7050, si: 0.65, hemi: 0x8a8098, hi: 0.62, fog: 0x5a4040 },
+  { h: 20,   top: 0x1a1f3a, bot: 0x2a2540, sun: 0x40355a, si: 0.18, hemi: 0x3a3550, hi: 0.44, fog: 0x1a1825 },
+  { h: 24,   top: 0x05070f, bot: 0x0a0f1c, sun: 0x2a3550, si: 0.00, hemi: 0x2a3350, hi: 0.38, fog: 0x06080f },
 ];
 
 // Weather multipliers layered on top of the time palette.
@@ -220,6 +220,18 @@ export function createWorldEnvironmentSystem({
     return 2;                                      // autumn
   };
 
+  // Detroit-area daylight model: hours of daylight per calendar month and the
+  // local solar noon (DST pushes noon later Mar–Oct). Summer sunset lands
+  // around 9 PM — so 7–8 PM in summer is still daylight; winter sunset ~5 PM.
+  const DAYLIGHT_HOURS = [9.2, 10.3, 11.8, 13.4, 14.7, 15.3, 15.0, 13.9, 12.4, 10.9, 9.6, 9.0];
+  const currentMonth = () => (state.useRealForecast && state.realMonth != null) ? state.realMonth : monthIndexFor();
+  const sunTimes = () => {
+    const m = currentMonth();
+    const noon = (m >= 2 && m <= 9) ? 13.35 : 12.35; // DST vs standard time
+    const dl = DAYLIGHT_HOURS[m];
+    return { sunrise: noon - dl / 2, sunset: noon + dl / 2, daylight: dl };
+  };
+
   // Current wall-clock time in Detroit (America/Detroit = US Eastern), as an
   // hour-of-day fraction (0..24) and a 0-based month index. Used to snap the
   // in-game clock to real time when a real forecast is loaded.
@@ -347,7 +359,7 @@ export function createWorldEnvironmentSystem({
     return s;
   };
   const sunDisc = makeDisc(0xfff4d6, 14);
-  const moonDisc = makeDisc(0xcfd8ff, 8);
+  const moonDisc = makeDisc(0xcfd8ff, 11);
   scene.add(sunDisc, moonDisc);
 
   // ── Starfield ──────────────────────────────────────────────────────────
@@ -538,7 +550,9 @@ export function createWorldEnvironmentSystem({
       isDaytime: ch?.isDaytime ?? null,
       days: state.days,
       fetchedAt: state.fetchedAt,
-      isNight: state.time < 6 || state.time > 19,
+      isNight: (() => { const st = sunTimes(); return state.time < st.sunrise || state.time > st.sunset; })(),
+      sunrise: sunTimes().sunrise,
+      sunset: sunTimes().sunset,
     };
   };
 
@@ -610,12 +624,25 @@ export function createWorldEnvironmentSystem({
       state.eclipse = false;
     }
 
-    const pal = sampleTime(state.time);
-    const season = SEASONS[state.seasonIndex];
+    // Sun elevation + direction — daylight hours follow the real season, so a
+    // summer evening at 7–8 PM is still bright while winter darkens by ~5 PM.
+    const { sunrise, sunset, daylight } = sunTimes();
+    let elev, solarT;
+    if (state.time >= sunrise && state.time <= sunset) {
+      const dayProg = (state.time - sunrise) / daylight;
+      elev = Math.sin(dayProg * Math.PI);
+      solarT = 6 + dayProg * 12;             // remap to the palette's 6→18 day
+    } else {
+      const nightLen = 24 - daylight;
+      const sinceSet = state.time > sunset ? state.time - sunset : state.time + 24 - sunset;
+      const nightProg = Math.min(1, sinceSet / nightLen);
+      elev = -Math.sin(nightProg * Math.PI);
+      solarT = (18 + nightProg * 12) % 24;   // remap to the palette's 18→6 night
+    }
+    const azimuth = (solarT / 24) * Math.PI * 2;
 
-    // Sun elevation + direction
-    const elev = Math.sin(((state.time - 6) / 12) * Math.PI);  // -1..1
-    const azimuth = (state.time / 24) * Math.PI * 2;
+    const pal = sampleTime(solarT);
+    const season = SEASONS[state.seasonIndex];
     const cosEl = Math.cos(elev);
     tmpDir.set(
       Math.cos(azimuth) * cosEl,
@@ -628,10 +655,13 @@ export function createWorldEnvironmentSystem({
 
     const day = Math.max(0, elev);
     const nightFactor = Math.max(0, -elev);
+    // Softened daylight curve — real evenings stay bright until close to
+    // sunset instead of dimming linearly with sun elevation.
+    const daySoft = Math.pow(day, 0.45);
 
     // Sun (directional) intensity/color
     sun.position.copy(tmpDir).multiplyScalar(60);
-    sun.intensity = pal.si * day * season.sunBoost * mod.si;
+    sun.intensity = pal.si * daySoft * season.sunBoost * mod.si;
     sun.color.copy(pal.sun);
 
     // Effective moonlight: full-moon bright, clouds dim it, eclipse zeroes it.
@@ -639,18 +669,20 @@ export function createWorldEnvironmentSystem({
     // Moonlight is strong enough that a full moon visibly lights the ground
     // (cool blue glow) — not pitch black. Fades with phase + cloud cover, and
     // vanishes on a new-moon night (which stays genuinely dark).
-    const moonlight = 0.55 * effMoonIllum;
-    const starlight = 0.04 * (1 - 0.8 * cloudCover); // never pure black (except eclipse+overcast)
+    const moonlight = 0.80 * effMoonIllum;
+    const starlight = 0.10 * (1 - 0.6 * cloudCover); // ambient floor — never pure black
 
     // Hemisphere light: day palette by day, moon+star floor at night.
     // Daytime ambient floor is high enough that the ground stays clearly visible
     // even at low sun angles or under overcast — the sun then adds the bright
     // grazing highlight on top.
-    const dayHemi = pal.hi * (0.55 + 0.45 * day) * mod.hi;
+    const dayHemi = pal.hi * (0.78 + 0.22 * daySoft) * mod.hi;
     // Visible moonlit ambient floor on the ground at night — the ground gets a
     // soft blue glow under a full moon instead of rendering pitch black.
     const nightFloor = (starlight + moonlight * 0.9) * nightFactor;
-    hemi.intensity = Math.max(dayHemi, nightFloor);
+    // Global ambient floor so the world is always readable, even on the
+    // darkest new-moon night.
+    hemi.intensity = Math.max(dayHemi, nightFloor, state.eclipse ? 0.06 : 0.16);
     hemi.color.copy(pal.hemi);
     hemi.groundColor.setHex(0x2a2418);
 
@@ -691,8 +723,8 @@ export function createWorldEnvironmentSystem({
     sunDisc.material.color.copy(pal.sun);
     moonDisc.position.copy(moonDir).multiplyScalar(180);
     // Moon disc visible at night, brightness tracks phase + eclipse.
-    const moonVis = state.eclipse ? 0 : Math.min(1, nightFactor * 1.4) * (0.25 + 0.75 * moonIllumRaw);
-    moonDisc.material.opacity = (1 - cloudCover) * moonVis;
+    const moonVis = state.eclipse ? 0 : Math.min(1, nightFactor * 1.6) * (0.4 + 0.6 * moonIllumRaw);
+    moonDisc.material.opacity = (1 - cloudCover * 0.85) * moonVis;
     moonDisc.material.color.set(0xcfd8ff);
 
     // Stars fade in at night, dimmed by clouds + eclipses.
@@ -725,7 +757,7 @@ export function createWorldEnvironmentSystem({
     else if (season.id === 'winter') cloudTint.lerp(new THREE.Color(0.86, 0.90, 1.0), 0.10);
     else if (season.id === 'summer') cloudTint.lerp(new THREE.Color(1.0, 0.98, 0.92), 0.06);
     // Day/night brightness: clouds are sunlit by day, moonlit at night.
-    const cloudLight = 0.35 + 0.65 * day + nightFactor * effMoonIllum * 0.35;
+    const cloudLight = 0.35 + 0.65 * daySoft + nightFactor * effMoonIllum * 0.35;
     cloudTint.multiplyScalar(cloudLight);
     // Drift the layer; faster in storms/windy weather.
     const driftSpeed = (weather === 'storm' ? 0.05 : weather === 'rain' ? 0.035 : 0.02) * (0.7 + state.intensity * 0.6);
