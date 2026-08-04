@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, TrendingUp, Clock, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import SkillPathTree from './skilltree/SkillPathTree';
+import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
 
 export default function SkillTreeContent({ genre }) {
   if (!genre) return null;
@@ -39,7 +39,7 @@ export default function SkillTreeContent({ genre }) {
       <div className="flex-1 overflow-y-auto px-6 pb-8">
         {/* Progression Paths */}
         <div className="mb-10">
-          <SkillPathTree genre={genre} />
+          <SkillTreeSystem genre={genre} />
         </div>
 
         {/* Stats */}

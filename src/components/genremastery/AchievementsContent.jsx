@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Gamepad2, ScrollText, Hammer, Sparkles } from 'lucide-react';
-import AchievementSection from './achievements/AchievementSection';
+import { Trophy, Gamepad2, Sparkles, Shield, PawPrint } from 'lucide-react';
+import CardGridSection from './achievements/CardGridSection';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -75,9 +75,10 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
           stats: ach.reward.stats || {},
           group: (() => {
             const t = (ach.reward.type || '').toLowerCase();
-            if (t.includes('equip') || t.includes('material') || t.includes('gear')) return 'forge';
+            if (t.includes('companion') || t.includes('pet') || t.includes('mount')) return 'companion';
+            if (t.includes('equip') || t.includes('material') || t.includes('gear') || t.includes('weapon') || t.includes('armor')) return 'equipment';
             if (t.includes('abilit') || t.includes('skill')) return 'skill';
-            return 'record';
+            return 'achievement';
           })(),
           isPurchased: userCard?.acquisition_method === 'purchased',
           isUnlocked,
@@ -98,7 +99,7 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
       image: game.cover_image || game.cover,
       description: `A collectible trading card from ${game.title}.`,
       stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) },
-      group: ['record', 'forge', 'skill'][i % 3],
+      group: ['achievement', 'skill', 'equipment', 'companion'][i % 4],
     }));
   }, []);
 
@@ -170,35 +171,43 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
 
           {/* Grouped vertical layout */}
           <div className="relative flex-1 overflow-hidden">
-            <div className="flex-1 h-full overflow-y-auto p-5 space-y-4 max-w-3xl mx-auto w-full">
+            <div className="flex-1 h-full overflow-y-auto p-5 w-full">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
           </div>
         ) : displayCards.length > 0 ? (
           <>
-            <AchievementSection
-              title="Records"
+            <CardGridSection
+              title="Achievements"
               subtitle="Milestones you've earned in this game"
-              icon={ScrollText}
+              icon={Trophy}
               accent="#67e8f9"
-              items={displayCards.filter(c => c.group === 'record')}
+              items={displayCards.filter(c => c.group === 'achievement')}
               onSelect={setSelectedCard}
             />
-            <AchievementSection
-              title="Forge Items"
-              subtitle="Gear and materials for upgrading"
-              icon={Hammer}
-              accent="#fb923c"
-              items={displayCards.filter(c => c.group === 'forge')}
-              onSelect={setSelectedCard}
-            />
-            <AchievementSection
-              title="Skills"
-              subtitle="Abilities unlocked through play"
+            <CardGridSection
+              title="Abilities"
+              subtitle="Skills unlocked through play"
               icon={Sparkles}
               accent="#c084fc"
               items={displayCards.filter(c => c.group === 'skill')}
+              onSelect={setSelectedCard}
+            />
+            <CardGridSection
+              title="Equipment"
+              subtitle="Gear earned from this game"
+              icon={Shield}
+              accent="#fb923c"
+              items={displayCards.filter(c => c.group === 'equipment')}
+              onSelect={setSelectedCard}
+            />
+            <CardGridSection
+              title="Companions"
+              subtitle="Allies that fight alongside you"
+              icon={PawPrint}
+              accent="#4ade80"
+              items={displayCards.filter(c => c.group === 'companion')}
               onSelect={setSelectedCard}
             />
           </>
