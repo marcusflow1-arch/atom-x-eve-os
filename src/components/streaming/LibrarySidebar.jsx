@@ -202,7 +202,7 @@ export default function LibrarySidebar() {
   const [isEnvironmentEnabled, setIsEnvironmentEnabled] = useState(() => {
     return localStorage.getItem(`environment_enabled_${currentEnvironmentPageKey}`) !== 'false';
   });
-  const isAura = pathname.includes('/aura') || pathname.includes('/streaming');
+  const isAura = pathname.includes('/aura') || pathname.includes('/streaming') || pathname.includes('/discover');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
   const isClan = pathname.includes('/clan');

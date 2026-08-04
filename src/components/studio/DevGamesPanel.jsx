@@ -88,7 +88,9 @@ export default function DevGamesPanel({ open, game }) {
   });
 
   const openGame = (g) => {
-    if (g.storeId) navigate(`/GameDetail?id=${g.storeId}`);
+    if (g.storeId) { navigate(`/GameDetail?id=${g.storeId}&from=store`); return; }
+    const match = storeGames.find((s) => (s.title || '').toLowerCase() === (g.title || '').toLowerCase());
+    if (match) navigate(`/GameDetail?id=${match.id}&from=store`);
   };
 
   return (

@@ -79,10 +79,9 @@ export default function AuraStreamersPullout({ railLeftClass = 'left-[46px]' }) 
               className="fixed z-[71] flex flex-col overflow-hidden rounded-2xl"
               style={{
                 left: 'calc(46px + 52px)',
-                top: '50%',
-                transform: 'translateY(-50%)',
+                top: '64px',
+                bottom: '52px',
                 width: '248px',
-                maxHeight: '70vh',
                 background: 'rgba(12, 16, 22, 0.55)',
                 backdropFilter: 'blur(28px) saturate(160%)',
                 WebkitBackdropFilter: 'blur(28px) saturate(160%)',
