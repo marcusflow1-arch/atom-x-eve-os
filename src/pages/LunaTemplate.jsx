@@ -87,7 +87,7 @@ import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
-import MoonlightBackground from '../components/dashboard/MoonlightBackground';
+import RealTimeMoonSky from '../components/dashboard/RealTimeMoonSky';
 import AvatarFocusMenu from '../components/dashboard/AvatarFocusMenu';
 import AvatarFocusClonePanel from '../components/dashboard/AvatarFocusClonePanel';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
@@ -623,7 +623,7 @@ export default function LunaTemplate() {
       {/* 95% Main Area */}
       <div className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
         {/* Dark moonlight aesthetic background */}
-        <MoonlightBackground />
+        <RealTimeMoonSky />
         <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
 
         {/* Home Section Switcher — left arrow + bottom arrow, only on default dashboard view */}
