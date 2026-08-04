@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Trophy, TrendingUp, Clock, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
+import MasteryCardsRow from './skilltree/MasteryCardsRow';
+import ProgressionTrack from './skilltree/ProgressionTrack';
 
 export default function SkillTreeContent({ genre }) {
   if (!genre) return null;
@@ -41,6 +43,12 @@ export default function SkillTreeContent({ genre }) {
         <div className="mb-10">
           <SkillTreeSystem genre={genre} />
         </div>
+
+        {/* Mastery Reward Cards */}
+        <MasteryCardsRow genre={genre} />
+
+        {/* Progression Track */}
+        <ProgressionTrack genre={genre} />
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-3">

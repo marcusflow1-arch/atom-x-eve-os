@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Gamepad2, Sparkles, Shield, PawPrint } from 'lucide-react';
-import CardGridSection from './achievements/CardGridSection';
+import { Trophy, Gamepad2 } from 'lucide-react';
+import AchievementCardGrid from './achievements/AchievementCardGrid';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -164,7 +164,7 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
               <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre || genre.name}</Badge>
-                <span className="text-white/30 text-xs">{displayCards.length} entries</span>
+                <span className="text-white/30 text-xs">{displayCards.length} cards</span>
               </div>
             </div>
           </div>
@@ -177,40 +177,7 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
             <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
           </div>
         ) : displayCards.length > 0 ? (
-          <>
-            <CardGridSection
-              title="Achievements"
-              subtitle="Milestones you've earned in this game"
-              icon={Trophy}
-              accent="#67e8f9"
-              items={displayCards.filter(c => c.group === 'achievement')}
-              onSelect={setSelectedCard}
-            />
-            <CardGridSection
-              title="Abilities"
-              subtitle="Skills unlocked through play"
-              icon={Sparkles}
-              accent="#c084fc"
-              items={displayCards.filter(c => c.group === 'skill')}
-              onSelect={setSelectedCard}
-            />
-            <CardGridSection
-              title="Equipment"
-              subtitle="Gear earned from this game"
-              icon={Shield}
-              accent="#fb923c"
-              items={displayCards.filter(c => c.group === 'equipment')}
-              onSelect={setSelectedCard}
-            />
-            <CardGridSection
-              title="Companions"
-              subtitle="Allies that fight alongside you"
-              icon={PawPrint}
-              accent="#4ade80"
-              items={displayCards.filter(c => c.group === 'companion')}
-              onSelect={setSelectedCard}
-            />
-          </>
+          <AchievementCardGrid cards={displayCards} onSelect={setSelectedCard} />
         ) : (
           <div className="h-64 flex flex-col items-center justify-center text-slate-500">
             <Trophy className="w-12 h-12 mb-3 opacity-20" />
