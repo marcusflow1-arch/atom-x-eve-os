@@ -17,6 +17,7 @@ import DevZoneSection from '@/components/game/DevZoneSection';
 import LibraryGameDetailModal from './LibraryGameDetailModal';
 import LibraryAchievementsUniverse from './LibraryAchievementsUniverse';
 import LivestreamOverlay from './LivestreamOverlay';
+import AuraStreamersPullout from './AuraStreamersPullout';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -452,6 +453,19 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`${positionClass} ${railLeftClass} top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
           >
+            {/* Glass backing panel behind the rail icons (Aura + Luna) so icons sit on a glass finish */}
+            {(isAura || pathname.includes('/lunatemplate')) && (
+              <div
+                className="absolute inset-x-[-10px] inset-y-[-14px] rounded-2xl pointer-events-none -z-10"
+                style={{
+                  background: 'rgba(10, 14, 20, 0.42)',
+                  backdropFilter: 'blur(22px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(22px) saturate(160%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)',
+                }}
+              />
+            )}
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (
               <div className="flex flex-col items-center gap-3">
@@ -515,15 +529,9 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Aura Specific Button — opens the slide-out sidebar on the Aura tab */}
+            {/* Aura — purple Watch Stream button opens a glass pullout to its right */}
             {isAura && (
-              <button
-                onClick={() => { setIsOpen(true); setActiveSub('aura'); }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
-                title="Watch Stream — Recently Watched"
-              >
-                <Tv className="w-4 h-4" />
-              </button>
+              <AuraStreamersPullout railLeftClass={railLeftClass} />
             )}
 
             {(isGameDetail || pathname.includes('/game/')) && (
