@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
 import GameDetailPanel from '../components/game/GameDetailPanel';
 import { createPageUrl } from '@/utils';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
@@ -13,6 +14,13 @@ export default function GameDetail() {
   const query = new URLSearchParams(location.search);
   const gameId = query.get('id');
   const from = query.get('from') || 'store';
+  const [game, setGame] = useState(null);
+
+  // Needed so the Dev Info panels can resolve THIS game's real studio
+  useEffect(() => {
+    if (!gameId) return;
+    base44.entities.Game.get(gameId).then(setGame).catch(() => setGame(null));
+  }, [gameId]);
 
   const handleClose = () => {
     const backUrl = createPageUrl(from === 'library' ? 'Library' : 'Store');
@@ -31,6 +39,7 @@ export default function GameDetail() {
   return (
     <GlassPageFrame
       showTriggerTab={true}
+      gameData={game}
       topContent={null}
       bottomContent={
         <StoreBottomNav

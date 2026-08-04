@@ -1,0 +1,67 @@
+{
+  "name": "StudioProfile",
+  "type": "object",
+  "properties": {
+    "game_key": {
+      "type": "string",
+      "description": "Lowercased game title this profile was first resolved from"
+    },
+    "developer_name": {
+      "type": "string",
+      "description": "Real developer/studio name"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "founded_year": {
+      "type": "number"
+    },
+    "headquarters": {
+      "type": "string"
+    },
+    "employees": {
+      "type": "string",
+      "description": "Approximate studio size, e.g. '400+'"
+    },
+    "parent_company": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "known_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "notable_games": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "year": {
+            "type": "number"
+          }
+        }
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "developer_name"
+  ]
+}
