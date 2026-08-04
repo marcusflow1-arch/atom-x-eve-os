@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Gamepad2, Layers, DollarSign } from 'lucide-react';
+import { Trophy, Gamepad2, ScrollText, Hammer, Sparkles } from 'lucide-react';
+import AchievementSection from './achievements/AchievementSection';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -72,6 +73,12 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
           image: selectedGame.cover_image || selectedGame.cover,
           description: ach.reward.description || ach.description,
           stats: ach.reward.stats || {},
+          group: (() => {
+            const t = (ach.reward.type || '').toLowerCase();
+            if (t.includes('equip') || t.includes('material') || t.includes('gear')) return 'forge';
+            if (t.includes('abilit') || t.includes('skill')) return 'skill';
+            return 'record';
+          })(),
           isPurchased: userCard?.acquisition_method === 'purchased',
           isUnlocked,
         });
@@ -91,6 +98,7 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
       image: game.cover_image || game.cover,
       description: `A collectible trading card from ${game.title}.`,
       stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) },
+      group: ['record', 'forge', 'skill'][i % 3],
     }));
   }, []);
 
@@ -155,67 +163,50 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
               <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre || genre.name}</Badge>
-                <span className="text-white/30 text-xs">{displayCards.length} cards</span>
+                <span className="text-white/30 text-xs">{displayCards.length} entries</span>
               </div>
             </div>
           </div>
 
-          {/* Cards Grid */}
+          {/* Grouped vertical layout */}
           <div className="relative flex-1 overflow-hidden">
-            <div className="flex-1 h-full overflow-y-auto p-5">
+            <div className="flex-1 h-full overflow-y-auto p-5 space-y-4 max-w-3xl mx-auto w-full">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
           </div>
         ) : displayCards.length > 0 ? (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {displayCards.map((card, i) => (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.02 }}
-                onClick={() => setSelectedCard(card)}
-                whileHover={{ scale: 1.05, y: -4 }}
-                className="aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/25 transition-all relative bg-slate-900/80 shadow-lg hover:shadow-xl hover:shadow-blue-500/10"
-              >
-                <div className="relative w-full h-3/5 overflow-hidden">
-                  <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
-                  {card.isPurchased && !card.isUnlocked && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-green-500/90 flex items-center justify-center border border-white/20">
-                      <DollarSign className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-2 flex flex-col gap-1">
-                  <h3 className="text-white font-bold text-[10px] leading-tight line-clamp-2">{card.title}</h3>
-                  <div className="flex gap-1 flex-wrap">
-                    <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border ${
-                      card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                      card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                      card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                      card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                      'border-slate-500/50 text-slate-400'
-                    }`}>
-                      {card.rarity}
-                    </Badge>
-                    {card.isPurchased && (
-                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[8px] h-3.5 px-1">
-                        BOUGHT
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
-              </motion.div>
-            ))}
-          </div>
+          <>
+            <AchievementSection
+              title="Records"
+              subtitle="Milestones you've earned in this game"
+              icon={ScrollText}
+              accent="#67e8f9"
+              items={displayCards.filter(c => c.group === 'record')}
+              onSelect={setSelectedCard}
+            />
+            <AchievementSection
+              title="Forge Items"
+              subtitle="Gear and materials for upgrading"
+              icon={Hammer}
+              accent="#fb923c"
+              items={displayCards.filter(c => c.group === 'forge')}
+              onSelect={setSelectedCard}
+            />
+            <AchievementSection
+              title="Skills"
+              subtitle="Abilities unlocked through play"
+              icon={Sparkles}
+              accent="#c084fc"
+              items={displayCards.filter(c => c.group === 'skill')}
+              onSelect={setSelectedCard}
+            />
+          </>
         ) : (
           <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-            <Layers className="w-12 h-12 mb-3 opacity-20" />
-            <p className="text-sm font-medium">No trading cards found</p>
-            <p className="text-xs text-white/20 mt-1">Unlock achievements to earn cards</p>
+            <Trophy className="w-12 h-12 mb-3 opacity-20" />
+            <p className="text-sm font-medium">No achievements yet</p>
+            <p className="text-xs text-white/20 mt-1">Play to earn records, forge items and skills</p>
           </div>
         )}
             </div>
