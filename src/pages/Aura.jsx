@@ -6,7 +6,7 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
-import AuraLeftSidebar from '@/components/streaming/AuraLeftSidebar';
+import RecentlyWatchedPanel from '@/components/streaming/aura/RecentlyWatchedPanel';
 
 export default function Aura() {
   const navigate = useNavigate();
@@ -16,10 +16,10 @@ export default function Aura() {
     <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
     <SideAccessMenu />
     <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]">
-      {sidebarVisible && <AuraLeftSidebar />}
+      <RecentlyWatchedPanel visible={sidebarVisible} onToggle={toggleSidebar} />
 
-      {/* 95% Main Area */}
-      <div className="flex-1 relative h-full overflow-y-auto">
+      {/* Main Area */}
+      <div className={`flex-1 relative h-full overflow-y-auto transition-all ${sidebarVisible ? 'pl-[140px]' : 'pl-6'}`}>
         {/* Main Content */}
         <div className="pt-20 pb-28 min-h-screen">
           <StreamingGamesLive />

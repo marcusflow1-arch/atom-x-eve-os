@@ -21,7 +21,8 @@ import StreamChatBox from '@/components/streaming/StreamChatBox';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
-import AuraLeftSidebar from '@/components/streaming/AuraLeftSidebar';
+import RecentlyWatchedPanel from '@/components/streaming/aura/RecentlyWatchedPanel';
+import { useSidebarVisible } from '../hooks/useSidebarVisible';
 
 export default function StreamingHome() {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export default function StreamingHome() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
+  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
   // --- Creator Edit Mode System ---
   const {
@@ -55,11 +57,11 @@ export default function StreamingHome() {
   const pinnedGames = activeLayout?.pinned_games || [];
 
   return (
-    <GlassPageFrame bottomContent={<AuraBottomNav />}>
+    <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
       <SideAccessMenu />
       <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]">
-        <AuraLeftSidebar />
-        <div className="flex-1 relative h-full overflow-y-auto">
+        <RecentlyWatchedPanel visible={sidebarVisible} onToggle={toggleSidebar} />
+        <div className={`flex-1 relative h-full overflow-y-auto transition-all ${sidebarVisible ? 'pl-[140px]' : 'pl-6'}`}>
           <div className="w-full min-h-full pt-20 pb-24 px-4 md:px-8 relative">
 
         {/* Edit Mode Grid Overlay */}

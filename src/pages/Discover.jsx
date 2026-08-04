@@ -1,22 +1,21 @@
 import React from 'react';
-import DiscoverStreamingList from '../components/streaming/DiscoverStreamingList';
-import LibrarySidebar from '../components/streaming/LibrarySidebar';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
-import AuraLeftSidebar from '@/components/streaming/AuraLeftSidebar';
+import RecentlyWatchedPanel from '@/components/streaming/aura/RecentlyWatchedPanel';
+import DiscoverHub from '@/components/streaming/discover/DiscoverHub';
+import { useSidebarVisible } from '../hooks/useSidebarVisible';
 
 export default function Discover() {
+  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
+
   return (
-    <GlassPageFrame bottomContent={<AuraBottomNav />}>
+    <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
       <SideAccessMenu />
       <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]">
-        <AuraLeftSidebar />
-        <div className="flex-1 relative h-full overflow-y-auto">
-          <div className="min-h-full w-full relative">
-            <LibrarySidebar />
-            <DiscoverStreamingList />
-          </div>
+        <RecentlyWatchedPanel visible={sidebarVisible} onToggle={toggleSidebar} />
+        <div className={`flex-1 relative h-full overflow-y-auto transition-all ${sidebarVisible ? 'pl-[140px]' : 'pl-6'}`}>
+          <DiscoverHub />
         </div>
       </div>
     </GlassPageFrame>

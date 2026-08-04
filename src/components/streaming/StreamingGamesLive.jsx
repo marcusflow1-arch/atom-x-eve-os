@@ -6,7 +6,7 @@ import { Search, Flame, Users as UsersIcon, Clock3, Sparkles, LayoutGrid, Gamepa
 import { Badge } from "@/components/ui/badge";
 import StreamPlayerBox from "@/components/streaming/StreamPlayerBox";
 import { Button } from "@/components/ui/button";
-import GameStreamersView from "@/components/streaming/GameStreamersView";
+import GameStreamerHub from "@/components/streaming/aura/GameStreamerHub";
 import StreamChatBox from "@/components/streaming/StreamChatBox";
 
 // Small utility to format large numbers
@@ -315,7 +315,7 @@ export default function StreamingGamesLive() {
 
     <AnimatePresence>
       {selectedGame && (
-        <GameStreamersView game={selectedGame} onClose={() => setSelectedGame(null)} />
+        <GameStreamerHub game={selectedGame} onClose={() => setSelectedGame(null)} />
       )}
     </AnimatePresence>
   </>);
