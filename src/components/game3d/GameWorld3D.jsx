@@ -1059,6 +1059,22 @@ export default function GameWorld3D() {
     };
     const onContext = (e) => e.preventDefault();
 
+    // Respawn: teleport the player to the map spawn point they chose on the
+    // death screen and snap them to the terrain there.
+    const onPlayerRespawn = (e) => {
+      const target = e.detail;
+      const m = modelRef.current || playerModelRef.current;
+      if (!m || !target) return;
+      m.position.x = target.x;
+      m.position.z = target.z;
+      const gy = sampleGroundY(target.x, target.z);
+      m.position.y = gy ?? 0;
+      m.visible = true;
+      playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
+      window.__localPlayerPos = { x: m.position.x, y: m.position.y, z: m.position.z };
+    };
+    window.addEventListener('playerRespawn', onPlayerRespawn);
+
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     renderer.domElement.addEventListener('mousedown', onMouseDown);
@@ -1897,6 +1913,7 @@ export default function GameWorld3D() {
       cancelAnimationFrame(frameId);
       rendererGuard.dispose();
       clearInterval(weatherInterval);
+      window.removeEventListener('playerRespawn', onPlayerRespawn);
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);

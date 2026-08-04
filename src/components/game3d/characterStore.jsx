@@ -11,10 +11,16 @@
 
 import {
   notifyCharacterChange,
+  subscribeCharacterChange,
+  userScopedKey,
 } from './characterStorage';
 
-const ROSTER_KEY = 'wwm_character_roster_v1';
-const ACTIVE_KEY = 'wwm_character_active_v1';
+// Roster + active-character keys are scoped to the signed-in user, so one
+// account's roster is never visible to another account on the same browser.
+const ROSTER_BASE = 'wwm_character_roster_v1';
+const ACTIVE_BASE = 'wwm_character_active_v1';
+const rosterKey = () => userScopedKey(ROSTER_BASE);
+const activeKey = () => userScopedKey(ACTIVE_BASE);
 
 // Default appearance — only one option per slot for now. More can be added later.
 export const APPEARANCE_OPTIONS = {
@@ -40,12 +46,12 @@ const DEV_TEST_CHARACTER = {
 
 function load() {
   try {
-    const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || '[]');
+    const stored = JSON.parse(localStorage.getItem(rosterKey()) || '[]');
     // Ensure the Dev Test slot is always present at the top of the roster
     // (editor-only — safe to leave in for now; will be the first to display).
     const withoutDev = stored.filter((c) => c.id !== DEV_TEST_ID);
     const roster = [DEV_TEST_CHARACTER, ...withoutDev];
-    const activeId = localStorage.getItem(ACTIVE_KEY) || DEV_TEST_ID;
+    const activeId = localStorage.getItem(activeKey()) || DEV_TEST_ID;
     return { roster, activeId };
   } catch {
     return { roster: [DEV_TEST_CHARACTER], activeId: DEV_TEST_ID };
@@ -61,11 +67,18 @@ const persist = () => {
     // on every load() so it's always present without polluting the saved
     // user-created roster.
     const persistable = state.roster.filter((c) => c.id !== DEV_TEST_ID);
-    localStorage.setItem(ROSTER_KEY, JSON.stringify(persistable));
-    if (state.activeId) localStorage.setItem(ACTIVE_KEY, state.activeId);
+    localStorage.setItem(rosterKey(), JSON.stringify(persistable));
+    if (state.activeId) localStorage.setItem(activeKey(), state.activeId);
   } catch {}
 };
 const emit = () => { persist(); listeners.forEach((fn) => fn(state)); };
+
+// When the signed-in user changes, drop this roster and re-read the new
+// user's own roster + active character (never carry the old one over).
+subscribeCharacterChange(() => {
+  state = load();
+  listeners.forEach((fn) => fn(state));
+});
 
 export function getCharacterState() { return state; }
 

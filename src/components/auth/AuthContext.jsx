@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { setStorageUser } from '@/components/game3d/characterStorage';
 
 const AuthContext = createContext(null);
 
@@ -28,6 +29,10 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+
+    // Bind persistent character storage to this account, so saves, rosters and
+    // checkpoints are never shared between users on the same device.
+    useEffect(() => { setStorageUser(user?.id || null); }, [user?.id]);
     const [avatar, setAvatar] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showSignUp, setShowSignUp] = useState(false);
