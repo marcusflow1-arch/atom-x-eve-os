@@ -34,9 +34,6 @@ import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
-import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
-import StreamChatBox from '@/components/streaming/StreamChatBox';
-import StreamSetupPanel from '@/components/streaming/StreamSetupPanel';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
@@ -48,7 +45,6 @@ import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
-import Leaderboard from './Leaderboard';
 import EntertainmentHub from '../components/dashboard/EntertainmentHub.jsx';
 import useLunaStore from '../components/luna/useLunaStore';
 import { useEquipment } from '../components/luna/hooks/useEquipment';
@@ -58,7 +54,6 @@ import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
-import AvatarStatsOverlay from '../components/dashboard/AvatarStatsOverlay';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
@@ -88,8 +83,7 @@ import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
 import RealTimeMoonSky from '../components/dashboard/RealTimeMoonSky';
-import AvatarFocusMenu from '../components/dashboard/AvatarFocusMenu';
-import AvatarFocusClonePanel from '../components/dashboard/AvatarFocusClonePanel';
+import AvatarFocusHub from '../components/dashboard/avatarFocus/AvatarFocusHub';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
@@ -189,7 +183,6 @@ export default function LunaTemplate() {
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
   const [slot1Content, setSlot1Content] = useState('questBook');
   const [slot2Content, setSlot2Content] = useState('cardCollection');
-  const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
@@ -202,13 +195,6 @@ export default function LunaTemplate() {
   const [showLibraryLanding, setShowLibraryLanding] = useState(false);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
-
-  // Stream Player State
-  const [isLive, setIsLive] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(80);
-  const [showStreamSettings, setShowStreamSettings] = useState(false);
-  const [settingsMaximized, setSettingsMaximized] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -242,10 +228,7 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const handler = () => {
-      setAvatarFocusMode((prev) => {
-        if (prev) setActiveAvatarFocusView(null);
-        return !prev;
-      });
+      setAvatarFocusMode((prev) => !prev);
     };
     window.addEventListener('toggleAvatarFocusMode', handler);
     return () => {
@@ -701,16 +684,9 @@ export default function LunaTemplate() {
               </div>
             </>
           ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
-            /* Avatar focus mode: 3D viewer book + the 5-option focus menu below it */
-            <div
-              className="pointer-events-auto flex flex-col overflow-y-auto overscroll-contain flex-1 min-h-0 pb-6"
-              style={{ borderRadius: '0 14px 14px 0', background: 'linear-gradient(160deg, rgba(150,180,230,0.10) 0%, rgba(40,55,85,0.10) 45%, rgba(12,18,30,0.18) 100%)', backdropFilter: 'blur(30px) saturate(160%)', WebkitBackdropFilter: 'blur(30px) saturate(160%)', border: '1px solid rgba(150,185,255,0.16)', borderLeft: 'none', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 30px rgba(90,140,220,0.06), 0 12px 40px rgba(0,0,0,0.45)', scrollbarWidth: 'none' }}
-            >
-              <div className="flex-shrink-0">
-                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
-              </div>
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} className="mb-3" />
-              <AvatarFocusMenu activeView={activeAvatarFocusView} onSelect={setActiveAvatarFocusView} />
+            /* Avatar focus mode: just the 3D viewer — the Focus Hub renders the rest */
+            <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
+              <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
             </div>
           ) : (
             /* Non-avatar sections: just show the 3D viewer standalone */
@@ -719,102 +695,10 @@ export default function LunaTemplate() {
         </div>
               }
 
-      {/* Avatar Focus Content Panel (Appears to the right) */}
+      {/* Avatar Focus Hub — blank UI on avatar click; A/D rotates full-page section UIs */}
       <AnimatePresence>
-        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements &&
-                <motion.div
-                  initial={{ opacity: 0, x: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 20, scale: 0.95 }}
-                  transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-                  className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
-                  style={{
-                    left: '330px',
-                    top: '64px',
-                    bottom: '32px',
-                    width: '1000px',
-                    maxWidth: 'calc(100vw - 340px)',
-                    background: 'transparent'
-                  }}>
-                  
-            {/* Header */}
-            <div className="px-6 py-4 flex justify-between items-center bg-transparent">
-              <h2 className="text-xl font-bold text-white tracking-wider uppercase flex items-center gap-3">
-                {activeAvatarFocusView === 'AI Story' && <Sparkles className="w-5 h-5 text-cyan-400" />}
-                {activeAvatarFocusView === 'AI Battle' && <Swords className="w-5 h-5 text-red-400" />}
-                {activeAvatarFocusView === 'Leaderboard' && <Crown className="w-5 h-5 text-yellow-400" />}
-                {activeAvatarFocusView === 'Stats' && <Layers className="w-5 h-5 text-purple-400" />}
-                {activeAvatarFocusView === 'Live' && <Radio className="w-5 h-5 text-green-400" />}
-                {activeAvatarFocusView}
-              </h2>
-              <button
-                      onClick={() => setActiveAvatarFocusView(null)}
-                      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 text-white/60 hover:text-white">
-                      
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Content Area */}
-            <div className="flex-1 overflow-y-auto relative bg-transparent" style={{ scrollbarWidth: 'none' }}>
-              {activeAvatarFocusView === 'AI Story' && <AIStoryOverlay onClose={() => setActiveAvatarFocusView(null)} />}
-              {activeAvatarFocusView === 'AI Battle' && <BattleModeOverlay onClose={() => setActiveAvatarFocusView(null)} />}
-              {activeAvatarFocusView === 'Stats' && <AvatarStatsOverlay onClose={() => setActiveAvatarFocusView(null)} />}
-              {activeAvatarFocusView === 'Leaderboard' &&
-                    <div className="absolute inset-0 bg-transparent overflow-y-auto overflow-x-hidden">
-                  <Leaderboard isEmbedded={true} />
-                </div>
-                    }
-              {activeAvatarFocusView === 'Live' &&
-                    <div className="absolute inset-0 flex gap-4 p-6 pt-0">
-                  <div className="flex-1 min-w-0 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md overflow-hidden">
-                    <StreamPlayerBox
-                          isLive={isLive}
-                          onToggleLive={() => setIsLive(!isLive)}
-                          isPlaying={isPlaying}
-                          onTogglePlay={() => setIsPlaying(!isPlaying)}
-                          volume={volume}
-                          onVolumeChange={setVolume}
-                          onOpenSettings={() => setShowStreamSettings(true)}
-                          settingsOpen={showStreamSettings}
-                          onCloseSettings={() => setShowStreamSettings(false)}
-                          isSettingsMaximized={settingsMaximized}
-                          onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)} />
-                        
-                  </div>
-                  <div className="w-[320px] bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md overflow-hidden flex-shrink-0">
-                    {isLive ?
-                        <StreamChatBox isLive={isLive} /> :
-
-                        <StreamSetupPanel onStartStream={() => {setIsLive(true);setIsPlaying(true);}} />
-                        }
-                  </div>
-                </div>
-                    }
-            </div>
-          </motion.div>
-                }
-      </AnimatePresence>
-
-      {/* Avatar Focus Clone Panel — cloned dashboard header boxes + 7 colored boxes,
-          shown when avatar is clicked (focus mode) and no specific view selected */}
-      <AnimatePresence>
-        {avatarFocusMode && !activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' &&
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="absolute z-10 pointer-events-auto overflow-y-auto"
-            style={{ left: '350px', top: '88px', right: '60px', bottom: '160px', scrollbarWidth: 'none' }}
-          >
-            <AvatarFocusClonePanel
-              currentEnvId={currentEnvId}
-              onSelectEnv={handleEnvSelect}
-              isEnvironmentActive={isEnvironmentActive}
-              onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
-            />
-          </motion.div>
+        {avatarFocusMode && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' &&
+          <AvatarFocusHub onClose={() => setAvatarFocusMode(false)} />
         }
       </AnimatePresence>
 
