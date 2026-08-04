@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createHailLayer } from './weather/hailLayer';
 import { CLIMATE_PROFILES, CLIMATE_LIST, MONTH_LABELS, moonPhaseLabel } from './worldClimateData';
 
 /**
@@ -39,12 +40,12 @@ const SEASONS = [
 
 const WEATHER_LABELS = {
   clear: 'Clear', cloudy: 'Cloudy', rain: 'Rain',
-  snow: 'Snow', storm: 'Storm', fog: 'Fog',
+  snow: 'Snow', storm: 'Storm', fog: 'Fog', hail: 'Hail',
 };
 
 // Cloud-cover factor per weather state (0 = none, 1 = overcast).
 const CLOUD_COVER = {
-  clear: 0.10, cloudy: 0.60, rain: 0.85, storm: 0.95, snow: 0.75, fog: 0.90,
+  clear: 0.10, cloudy: 0.60, rain: 0.85, storm: 0.95, snow: 0.75, fog: 0.90, hail: 0.92,
 };
 
 // Time-of-day keyframes: top sky, bottom sky, sun color, sun intensity, hemi
@@ -68,6 +69,7 @@ const WEATHER_MOD = {
   storm:  { si: 0.15, hi: 0.70, fogFar: 0.45, fogMul: 0.60, dim: 0.60 },
   snow:   { si: 0.60, hi: 1.0,  fogFar: 0.70, fogMul: 1.15, dim: 0.15 },
   fog:    { si: 0.40, hi: 0.9,  fogFar: 0.22, fogMul: 0.90, dim: 0.40 },
+  hail:   { si: 0.22, hi: 0.80, fogFar: 0.55, fogMul: 0.85, dim: 0.50 },
 };
 
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -179,6 +181,7 @@ export function createWorldEnvironmentSystem({
     dayCounter: 0,
     climateId: initialClimate,
     manualWeather: null,   // setWeather override, cleared at next midnight roll
+    seasonLock: false,     // true once a season was picked by hand
     lunarDay: 7.4,          // start near a waxing gibbous moon
     eclipse: false,         // lunar eclipse active right now
     eclipseToday: false,
@@ -484,6 +487,9 @@ export function createWorldEnvironmentSystem({
   snow.frustumCulled = false;
   scene.add(snow);
 
+  // ── Hail ───────────────────────────────────────────────────────────────
+  const hail = createHailLayer({ scene });
+
   // ── Lightning ──────────────────────────────────────────────────────────
   const lightning = new THREE.PointLight(0xbfd0ff, 0, 120, 2);
   scene.add(lightning);
@@ -491,7 +497,13 @@ export function createWorldEnvironmentSystem({
   // ── Public controls ────────────────────────────────────────────────────
   const setSeason = (id) => {
     const idx = SEASONS.findIndex((s) => s.id === id);
-    if (idx >= 0) { state.seasonIndex = idx; rollDaily(); }
+    // Manual pick sticks — stop the calendar from overwriting it each frame.
+    if (idx < 0) return;
+    const keepWeather = state.manualWeather;   // a season pick must not undo a forced weather
+    state.seasonIndex = idx;
+    state.seasonLock = true;
+    rollDaily();
+    state.manualWeather = keepWeather;
   };
   const setWeather = (id) => {
     if (WEATHER_LABELS[id]) state.manualWeather = id;
@@ -527,10 +539,13 @@ export function createWorldEnvironmentSystem({
       time: state.time,
       hours: Math.floor(state.time),
       minutes: Math.floor((state.time % 1) * 60),
+      manualWeather: state.manualWeather,
       seasonId: SEASONS[state.seasonIndex].id,
       seasonLabel: SEASONS[state.seasonIndex].label,
       weather,
-      weatherLabel: ch?.shortForecast || WEATHER_LABELS[weather] || weather,
+      weatherLabel: state.manualWeather
+        ? (WEATHER_LABELS[state.manualWeather] || state.manualWeather)
+        : (ch?.shortForecast || WEATHER_LABELS[weather] || weather),
       dayCounter: state.dayCounter,
       climate: state.climateId,
       climateLabel: climate.label,
@@ -578,7 +593,7 @@ export function createWorldEnvironmentSystem({
     // Season tracks the calendar month. In real-forecast mode the season was
     // fixed from the real Detroit month at fetch time; otherwise derive it
     // from the in-game calendar so the fallback model still changes seasons.
-    if (!state.useRealForecast) {
+    if (!state.useRealForecast && !state.seasonLock) {
       state.seasonIndex = seasonForMonth(monthIndexFor());
     }
     // New in-game day → roll a fresh probabilistic forecast (fallback only).
@@ -802,6 +817,7 @@ export function createWorldEnvironmentSystem({
     // Particle systems
     const showRain = (weather === 'rain' || weather === 'storm') ? state.intensity : 0;
     const showSnow = weather === 'snow' ? state.intensity : 0;
+    hail.update(dt, { camera, intensity: weather === 'hail' ? state.intensity : 0 });
     rainMat.opacity = showRain * 0.6;
     snowMat.opacity = showSnow * 0.85;
     const cx = camera.position.x, cz = camera.position.z;
@@ -857,6 +873,7 @@ export function createWorldEnvironmentSystem({
     starGeo.dispose(); starMat.dispose();
     rainGeo.dispose(); rainMat.dispose();
     snowGeo.dispose(); snowMat.dispose();
+    hail.dispose();
     cloudTex.dispose();
     for (const p of cloudPuffs) p.material.dispose();
     if (window.__worldEnv === api) window.__worldEnv = null;
