@@ -92,12 +92,11 @@ export default function DevGamesPanel({ open, game }) {
       ? g.storeId
       : storeGames.find((s) => (s.title || '').toLowerCase() === (g.title || '').toLowerCase())?.id;
     if (target) { navigate(`/GameDetail?id=${target}&from=store`); return; }
-    // Web-sourced title with no store match yet — look it up by name, then switch the game page
+    // Web-sourced title with no store match yet — resolve by name, then go straight to its landing page
     try {
       const rows = await base44.entities.Game.filter({ title: g.title });
-      if (rows && rows.length > 0) { navigate(`/GameDetail?id=${rows[0].id}&from=store`); return; }
+      if (rows && rows.length > 0) navigate(`/GameDetail?id=${rows[0].id}&from=store`);
     } catch {}
-    navigate(`/Store?search=${encodeURIComponent(g.title)}`);
   };
 
   return (
