@@ -8,7 +8,7 @@ import StudioLogo from './StudioLogo';
 
 /**
  * "Games" panel of the Dev Info bar — the developer behind THIS game and their titles.
- * Layout: search (far left) → studio name over studio picture → vertical genre scroll → games grid.
+ * Layout: studio picture (far left) → search → genre filters → games grid.
  */
 export default function DevGamesPanel({ open, game }) {
   const navigate = useNavigate();
@@ -110,7 +110,19 @@ export default function DevGamesPanel({ open, game }) {
             WebkitBackdropFilter: 'blur(22px) saturate(150%)',
           }}
         >
-          {/* ── Far left: search (with voice) ── */}
+          {/* ── Far left: studio picture + name ── */}
+          <div className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ width: '150px' }}>
+            <p className="text-white font-extrabold text-[11px] uppercase tracking-widest text-center leading-tight line-clamp-2">
+              {profile?.developer_name || (loading ? '—' : 'Unknown Studio')}
+            </p>
+            <StudioLogo
+              name={profile?.developer_name || ''}
+              logoUrl={profile?.logo_url}
+              className="w-[104px] h-[104px] text-2xl"
+            />
+          </div>
+
+          {/* ── Search (with voice), right of the studio picture ── */}
           <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '190px' }}>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-white/10 bg-white/[0.05]">
               <Search className="w-3.5 h-3.5 flex-shrink-0 text-white/35" />
@@ -135,19 +147,7 @@ export default function DevGamesPanel({ open, game }) {
             </p>
           </div>
 
-          {/* ── Studio name above studio picture ── */}
-          <div className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ width: '150px' }}>
-            <p className="text-white font-extrabold text-[11px] uppercase tracking-widest text-center leading-tight line-clamp-2">
-              {profile?.developer_name || (loading ? '—' : 'Unknown Studio')}
-            </p>
-            <StudioLogo
-              name={profile?.developer_name || ''}
-              logoUrl={profile?.logo_url}
-              className="w-[104px] h-[104px] text-2xl"
-            />
-          </div>
-
-          {/* ── Vertical line + vertical genre scroll ── */}
+          {/* ── Filters: vertical genre scroll, right of the search bar ── */}
           <div className="flex gap-3 flex-shrink-0">
             <div className="w-px self-stretch bg-gradient-to-b from-transparent via-white/20 to-transparent" />
             <div className="overflow-y-auto pr-1" style={{ width: '104px', scrollbarWidth: 'none' }}>

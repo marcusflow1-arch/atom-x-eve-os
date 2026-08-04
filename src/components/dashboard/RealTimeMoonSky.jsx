@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getMoonPosition, getSkyPalette } from './moonPhase';
+import { getMoonPosition } from './moonPhase';
 
 /**
  * Dashboard sky that tracks real life: the sky colour follows the actual
@@ -14,7 +14,9 @@ export default function RealTimeMoonSky() {
     return () => clearInterval(id);
   }, []);
 
-  const sky = getSkyPalette(now);
+  // Dashboard keeps its native dark moonlight look — the sky never brightens
+  // into daylight, only the moon's phase and position track real time.
+  const sky = { top: '#050914', mid: '#0a1226', bot: '#101a2e', light: 0.06 };
   const moon = getMoonPosition(now);
 
   const MOON_SIZE = 340;

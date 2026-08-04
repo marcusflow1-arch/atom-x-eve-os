@@ -33,6 +33,9 @@ const RESPONSE_SCHEMA = {
  * Results are cached per studio (and per game) so games sharing a developer
  * reuse the same profile instead of re-fetching.
  */
+// In-session cache so re-opening the same studio is instant (no re-lookup).
+const memoryCache = new Map();
+
 export default function useStudioProfile(game) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -46,17 +49,26 @@ export default function useStudioProfile(game) {
     if (!title) return;
     let cancelled = false;
 
+    const gameKey = title.toLowerCase().trim();
+
+    // 0. Instant: already resolved this session
+    const cached = memoryCache.get(knownDev || gameKey);
+    if (cached) {
+      setProfile(cached);
+      setLoading(false);
+      return;
+    }
+
     const run = async () => {
       setLoading(true);
       setError(null);
       setProfile(null);
 
-      const gameKey = title.toLowerCase().trim();
-
       // 1. Cached by studio name (shared across that studio's games)
       if (knownDev) {
         const byDev = await base44.entities.StudioProfile.filter({ developer_name: knownDev });
         if (byDev?.length) {
+          memoryCache.set(knownDev, byDev[0]);
           if (!cancelled) { setProfile(byDev[0]); setLoading(false); }
           return;
         }
@@ -65,6 +77,8 @@ export default function useStudioProfile(game) {
       // 2. Cached by game
       const byGame = await base44.entities.StudioProfile.filter({ game_key: gameKey });
       if (byGame?.length) {
+        memoryCache.set(gameKey, byGame[0]);
+        if (byGame[0].developer_name) memoryCache.set(byGame[0].developer_name, byGame[0]);
         if (!cancelled) { setProfile(byGame[0]); setLoading(false); }
         return;
       }
@@ -87,10 +101,12 @@ Include: official studio name, a short tagline, a 2-3 sentence description of th
           developer_name: data?.developer_name || knownDev || 'Unknown Studio',
           game_key: gameKey,
         };
+        memoryCache.set(gameKey, resolved);
+        memoryCache.set(resolved.developer_name, resolved);
         setProfile(resolved);
         setLoading(false);
 
-        // Cache for next time (best effort)
+        // Auto-save so it never has to be looked up again
         base44.entities.StudioProfile.create(resolved).catch(() => {});
       } catch (err) {
         if (!cancelled) {
