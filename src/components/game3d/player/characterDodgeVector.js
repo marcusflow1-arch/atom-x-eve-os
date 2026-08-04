@@ -28,8 +28,19 @@ export function getCharacterPlanarVectors(facingSource) {
   );
   const yaw = _euler.y;
   _forward.set(Math.sin(yaw), 0, Math.cos(yaw));
-  _right.set(-Math.cos(yaw), 0, -Math.sin(yaw));
+  // Right is DERIVED from forward — (-f.z, 0, f.x) — never hand-signed, so
+  // left/right can't skew into a diagonal at some yaws.
+  _right.set(-_forward.z, 0, _forward.x);
   return { forward: _forward, right: _right };
+}
+
+// Shared planar basis for camera-yaw-driven movement. Forward is the camera's
+// ground-plane facing; right is derived from it so the strafe axis is always a
+// true perpendicular.
+export function getPlanarBasisFromYaw(yaw) {
+  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize();
+  const right = new THREE.Vector3(-forward.z, 0, forward.x).normalize();
+  return { forward, right };
 }
 
 // input: { forward, backward, left, right } booleans (WASD).

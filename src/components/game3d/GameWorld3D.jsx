@@ -85,7 +85,7 @@ import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
 import { createCharacterReadabilityLights } from './CharacterReadabilityLights';
-import { getCharacterDodge } from './player/characterDodgeVector';
+import { getCharacterDodge, getPlanarBasisFromYaw } from './player/characterDodgeVector';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
 import { getDetroitWeather } from '@/functions/getDetroitWeather';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
@@ -1139,13 +1139,13 @@ export default function GameWorld3D() {
           if (keys.current['a']) move.add(combatAxes.cameraRight.clone().multiplyScalar(-1));
           if (keys.current['d']) move.add(combatAxes.cameraRight);
         } else {
-          // Camera-relative movement: Forward = -sin/cos of yaw, Right = cross(up, forward)
-          const fx = -Math.sin(yaw), fz = -Math.cos(yaw); // forward
-          const rx =  Math.cos(yaw), rz = Math.sin(yaw);  // right (fixed: A=left, D=right)
-          if (keys.current['w']) { move.x += fx; move.z += fz; }
-          if (keys.current['s']) { move.x -= fx; move.z -= fz; }
-          if (keys.current['a']) { move.x -= rx; move.z -= rz; } // left = -right
-          if (keys.current['d']) { move.x += rx; move.z += rz; } // right = +right
+          // Camera-relative movement on a correct planar basis (right is derived
+          // from forward, so A/D can never skew into a diagonal).
+          const { forward, right } = getPlanarBasisFromYaw(yaw);
+          if (keys.current['w']) move.add(forward);
+          if (keys.current['s']) move.sub(forward);
+          if (keys.current['a']) move.sub(right);
+          if (keys.current['d']) move.add(right);
         }
 
         const isMoving = move.lengthSq() > 0;
