@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 const PHASE_LABEL = {
   forming: 'Tornado forming — winds rising',
   active: 'Tornado on the ground',
-  lifted: 'Caught in the funnel',
-  levitating: 'Above the storm — look up',
+  coreOrbit: 'Caught — spinning around the core',
+  lifted: 'Rocketing up the funnel',
+  levitating: 'The eye — calm above the storm',
   landing: 'Drifting back down',
   dissipating: 'Storm winding down',
 };

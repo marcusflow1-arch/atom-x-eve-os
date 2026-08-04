@@ -1316,6 +1316,16 @@ export default function GameWorld3D() {
         // Smooth camera system: damped lock-on yaw, combat distance, and sprint pullback without per-frame object spam.
         playerCameraSystem.update(delta, playerStateMachine.intent);
 
+        // Tornado turbulence: the camera trembles near the funnel and inside the
+        // core, then steadies almost completely once you're up in the eye.
+        if (tornadoRes.shake > 0.01) {
+          const s = tornadoRes.shake * 0.22;
+          const ts = performance.now() / 1000;
+          camera.position.x += Math.sin(ts * 37.1) * s;
+          camera.position.y += Math.sin(ts * 29.7) * s * 0.7;
+          camera.position.z += Math.cos(ts * 41.3) * s;
+        }
+
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
         // ─── Quest NPC proximity ───
