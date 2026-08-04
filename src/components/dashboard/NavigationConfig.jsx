@@ -31,8 +31,8 @@ export const NAV_HIERARCHY = [
         icon: Trophy,
         path: createPageUrl('GenreMastery'),
         subPages: [
-            { name: 'Achievements', icon: Award, path: createPageUrl('Achievements') },
-            { name: 'Card Collection', icon: Layers, path: createPageUrl('CardCollection') },
+            { name: 'Achievements', icon: Award, path: createPageUrl('GenreMastery') + '?mode=achievements' },
+            { name: 'Skill Tree', icon: Layers, path: createPageUrl('GenreMastery') + '?mode=skilltree' },
         ]
     },
     {

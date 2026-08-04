@@ -5,7 +5,7 @@ import {
   ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft, DollarSign, Search, Mic, ArrowLeftRight
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
@@ -88,9 +88,13 @@ function GenreScrollTabs({ genres, selectedGenre, onSelect }) {
 
 export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', or 'achievements'
+  const [rightPanel, setRightPanel] = useState(() => {
+    const m = new URLSearchParams(window.location.search).get('mode');
+    return m === 'achievements' || m === 'skilltree' ? m : 'games';
+  }); // 'games', 'skilltree', or 'achievements'
   const [marketView, setMarketView] = useState('cards'); // 'cards' | 'blackmarket' | 'tradingpost'
   const [cardSearchQuery, setCardSearchQuery] = useState('');
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
@@ -143,6 +147,12 @@ export default function GenreMastery({ onClose }) {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // Sync panel with ?mode= from the navigation drawer
+  useEffect(() => {
+    const m = new URLSearchParams(location.search).get('mode');
+    if (m === 'achievements' || m === 'skilltree') setRightPanel(m);
+  }, [location.search]);
 
   // Reset selected game when switching to skill tree
   useEffect(() => {

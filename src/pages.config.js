@@ -60,7 +60,6 @@ import Aura from './pages/Aura';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import BlankTransition from './pages/BlankTransition';
-import CardCollection from './pages/CardCollection';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
@@ -122,7 +121,6 @@ export const PAGES = {
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "BlankTransition": BlankTransition,
-    "CardCollection": CardCollection,
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
