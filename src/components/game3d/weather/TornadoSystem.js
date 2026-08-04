@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createTornadoVisuals, funnelRadius } from './tornadoVisuals';
 
 /**
  * TornadoSystem — a real-time tornado weather event.
@@ -31,41 +32,13 @@ const CAPTURE_RADIUS = 2.6;  // inside this you get sucked into the core
 const MAX_LIFT = 62;         // how high the core throws you
 const FUNNEL_HEIGHT = 70;
 
-function makeSmokeTexture() {
-  const c = document.createElement('canvas'); c.width = c.height = 128;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-  grad.addColorStop(0, 'rgba(255,255,255,0.9)');
-  grad.addColorStop(0.45, 'rgba(255,255,255,0.35)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
-
 export function createTornadoSystem({ scene }) {
   const group = new THREE.Group();
   group.visible = false;
   scene.add(group);
 
-  const smokeTex = makeSmokeTexture();
-
-  // ── Funnel: stacked rotating rings, wide at the cloud deck, narrow at the ground.
-  const RINGS = 22;
-  const rings = [];
-  for (let i = 0; i < RINGS; i++) {
-    const t = i / (RINGS - 1);
-    const radius = 1.6 + Math.pow(t, 1.8) * 15;
-    const mat = new THREE.SpriteMaterial({
-      map: smokeTex, color: 0x8e93a0, transparent: true, opacity: 0,
-      depthWrite: false, fog: true,
-    });
-    const s = new THREE.Sprite(mat);
-    s.scale.set(radius * 2.1, radius * 1.5, 1);
-    s.position.y = t * FUNNEL_HEIGHT;
-    s.userData = { t, radius, spin: 1.2 + Math.random() * 0.7, phase: Math.random() * Math.PI * 2 };
-    rings.push(s);
-    group.add(s);
-  }
+  // Funnel look (wind streaks + vapour core + wall cloud) lives in its own module.
+  const visuals = createTornadoVisuals({ group, height: FUNNEL_HEIGHT });
 
   // ── Ground wind: dust streaks spiralling inward along the floor.
   const DUST = 420;
@@ -82,7 +55,7 @@ export function createTornadoSystem({ scene }) {
   const dustGeo = new THREE.BufferGeometry();
   dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
   const dustMat = new THREE.PointsMaterial({
-    color: 0xb9a98c, size: 0.5, sizeAttenuation: true,
+    color: 0xd8cfc0, size: 0.2, sizeAttenuation: true,
     transparent: true, opacity: 0, depthWrite: false,
   });
   const dust = new THREE.Points(dustGeo, dustMat);
@@ -99,7 +72,7 @@ export function createTornadoSystem({ scene }) {
   const debGeo = new THREE.BufferGeometry();
   debGeo.setAttribute('position', new THREE.BufferAttribute(debPos, 3));
   const debMat = new THREE.PointsMaterial({
-    color: 0x6b6357, size: 0.42, sizeAttenuation: true,
+    color: 0x8d857a, size: 0.16, sizeAttenuation: true,
     transparent: true, opacity: 0, depthWrite: false,
   });
   const debris = new THREE.Points(debGeo, debMat);
@@ -134,11 +107,7 @@ export function createTornadoSystem({ scene }) {
 
   const setOpacity = () => {
     const s = state.strength;
-    rings.forEach((r) => {
-      // The funnel builds from the cloud deck downward, so the tip touches down last.
-      const reach = THREE.MathUtils.clamp((s - (1 - r.userData.t) * 0.55) / 0.45, 0, 1);
-      r.material.opacity = reach * 0.5;
-    });
+    visuals.setStrength(s);
     dustMat.opacity = s * 0.75;
     debMat.opacity = s * 0.8;
   };
@@ -180,16 +149,9 @@ export function createTornadoSystem({ scene }) {
     setOpacity();
     group.position.y = groundY;
 
-    // ── Animate rings (counter-rotating wobble = churning funnel)
+    // ── Animate the funnel look
     const spinT = performance.now() / 1000;
-    rings.forEach((r) => {
-      const u = r.userData;
-      const ang = spinT * u.spin + u.phase;
-      const wob = (1 - u.t) * 1.4; // tip wanders more than the top
-      r.position.x = Math.cos(ang) * wob;
-      r.position.z = Math.sin(ang) * wob;
-      r.material.rotation = ang;
-    });
+    visuals.update(delta, spinT);
 
     // ── Ground wind: spiral inward, respawn at the rim
     for (let i = 0; i < DUST; i++) {
@@ -211,7 +173,7 @@ export function createTornadoSystem({ scene }) {
       d.y += delta * d.climb * state.strength;
       if (d.y > FUNNEL_HEIGHT) d.y = 0;
       const tNorm = d.y / FUNNEL_HEIGHT;
-      const rad = 1.4 + Math.pow(tNorm, 1.8) * 14;
+      const rad = funnelRadius(tNorm, FUNNEL_HEIGHT) * 0.9;
       debPos[i * 3] = Math.cos(d.ang) * rad;
       debPos[i * 3 + 1] = d.y;
       debPos[i * 3 + 2] = Math.sin(d.ang) * rad;
@@ -276,8 +238,7 @@ export function createTornadoSystem({ scene }) {
 
   const dispose = () => {
     scene.remove(group);
-    rings.forEach((r) => r.material.dispose());
-    smokeTex.dispose();
+    visuals.dispose();
     dustGeo.dispose(); dustMat.dispose();
     debGeo.dispose(); debMat.dispose();
   };
