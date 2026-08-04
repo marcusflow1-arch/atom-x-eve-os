@@ -151,52 +151,44 @@ const generateTreeData = (genreId) => {
   return nodes;
 };
 
-// --- SVG CONNECTION LAYER ---
+// --- SVG CONNECTION LAYER (curved, energy-flow style) ---
 const ConnectionLines = ({ nodes, unlockedNodes, theme }) => {
+  const curve = (p, n) => {
+    const mx = (p.x + n.x) / 2;
+    return `M ${p.x} ${p.y} C ${mx} ${p.y}, ${mx} ${n.y}, ${n.x} ${n.y}`;
+  };
+
   return (
-    <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
       {nodes.map(node => {
-        // Handle multiple parents if they exist (for reconverging paths), otherwise single parent
         const parentIds = node.parents || (node.parent ? [node.parent] : []);
-        
         return parentIds.map(parentId => {
           const parent = nodes.find(n => n.id === parentId);
           if (!parent) return null;
-
           const isUnlocked = unlockedNodes.includes(node.id) && unlockedNodes.includes(parent.id);
           const isReachable = unlockedNodes.includes(parent.id);
+          const d = curve(parent, node);
 
           return (
             <g key={`${parent.id}-${node.id}`}>
-              {/* Background Line (Inactive) */}
-              <line 
-                x1={`${parent.x}%`} y1={`${parent.y}%`} 
-                x2={`${node.x}%`} y2={`${node.y}%`} 
-                stroke="#334155" 
-                strokeWidth="2"
-                strokeOpacity="0.5"
-              />
-              
-              {/* Active/Reachable Line */}
-              <line 
-                x1={`${parent.x}%`} y1={`${parent.y}%`} 
-                x2={`${node.x}%`} y2={`${node.y}%`} 
-                stroke={isUnlocked ? theme.secondary : isReachable ? '#64748b' : 'transparent'} 
-                strokeWidth={isUnlocked ? "3" : "2"}
-                strokeOpacity={isUnlocked ? "1" : "0.5"}
+              {/* Track */}
+              <path d={d} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+              {/* Live conduit */}
+              <path
+                d={d}
+                fill="none"
+                stroke={isUnlocked ? theme.secondary : isReachable ? 'rgba(255,255,255,0.30)' : 'transparent'}
+                strokeWidth={isUnlocked ? 2.5 : 2}
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
                 className="transition-all duration-500"
+                style={isUnlocked ? { filter: `drop-shadow(0 0 4px ${theme.primary})` } : undefined}
               />
-              
-              {/* Animated Pulse for Unlocked Paths */}
+              {/* Flowing energy dashes on active paths */}
               {isUnlocked && (
-                <circle r="3" fill="white">
-                  <animateMotion 
-                    dur="3s" 
-                    repeatCount="indefinite"
-                    path={`M${parent.x * 10},${parent.y * 5} L${node.x * 10},${node.y * 5}`} // Note: SVG coordinate scaling might be needed depending on viewBox, but for % lines usually animateMotion needs explicit path data matching the line
-                    // Simplified: We'll skip complex animateMotion on % coords without a proper viewBox transform or use CSS animations on the stroke
-                  />
-                </circle>
+                <path d={d} fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="1 9" vectorEffect="non-scaling-stroke" opacity="0.85">
+                  <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.1s" repeatCount="indefinite" />
+                </path>
               )}
             </g>
           );
@@ -205,7 +197,6 @@ const ConnectionLines = ({ nodes, unlockedNodes, theme }) => {
     </svg>
   );
 };
-
 
 // --- NODE COMPONENT ---
 const SkillNode = ({ node, status, isSelected, onClick, theme }) => {
@@ -234,10 +225,15 @@ const SkillNode = ({ node, status, isSelected, onClick, theme }) => {
 
   return (
     <div 
-      className="absolute flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+      className="group absolute flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
       style={{ left: `${node.x}%`, top: `${node.y}%`, width: size, height: size, zIndex: isSelected ? 50 : 10 }}
       onClick={() => onClick(node)}
     >
+      {/* Halo for unlocked nodes */}
+      {status === 'unlocked' && (
+        <div className="absolute -inset-3 rounded-full blur-xl pointer-events-none" style={{ background: `${theme.primary}40` }} />
+      )}
+
       {/* Selection Ring (Outer) */}
       {isSelected && (
         <motion.div 
@@ -256,14 +252,15 @@ const SkillNode = ({ node, status, isSelected, onClick, theme }) => {
         animate={isSelected ? 'selected' : status}
         whileHover={{ scale: 1.1 }}
         className={cn(
-          "relative flex items-center justify-center rounded-full border-2 transition-colors duration-300",
-          "bg-slate-950 shadow-xl"
+          "relative flex items-center justify-center rounded-full border-2 transition-colors duration-300 shadow-xl"
         )}
         style={{ 
           width: '100%', 
           height: '100%',
-          borderColor: status === 'locked' ? '#334155' : statusColor,
-          boxShadow: status === 'unlocked' ? `0 0 15px ${glowColor}60` : 'none'
+          background: status === 'unlocked' ? `linear-gradient(160deg, ${theme.primary}33, rgba(2,6,16,0.85))` : 'rgba(2,6,16,0.72)',
+          backdropFilter: 'blur(10px)',
+          borderColor: status === 'locked' ? 'rgba(255,255,255,0.10)' : statusColor,
+          boxShadow: status === 'unlocked' ? `0 0 22px ${glowColor}70, inset 0 1px 0 rgba(255,255,255,0.15)` : 'inset 0 1px 0 rgba(255,255,255,0.06)'
         }}
       >
         {/* Fill Background for Unlocked */}
@@ -382,13 +379,28 @@ export default function SkillTreeSystem({ genre }) {
 
         {/* --- MAIN TREE AREA (contained, no scroll needed) --- */}
         <div
-          className="relative flex-1 rounded-2xl border border-white/5 overflow-hidden"
+          className="relative flex-1 rounded-2xl overflow-hidden"
           style={{
-            background: 'rgba(0,0,0,0.25)',
+            background: `radial-gradient(circle at 12% 50%, ${theme.primary}18, transparent 55%), rgba(148,163,184,0.05)`,
+            backdropFilter: 'blur(26px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(26px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 50px rgba(0,0,0,0.4)',
             aspectRatio: '16 / 9',
             minHeight: '400px',
           }}
         >
+          {/* Blueprint grid backdrop */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+              backgroundSize: '44px 44px',
+              maskImage: 'radial-gradient(circle at 50% 50%, black 45%, transparent 88%)',
+              WebkitMaskImage: 'radial-gradient(circle at 50% 50%, black 45%, transparent 88%)',
+            }}
+          />
+          <div className="pointer-events-none absolute inset-[1px] rounded-[15px] border border-white/[0.05]" />
           <ConnectionLines nodes={nodes} unlockedNodes={unlockedNodes} theme={theme} />
           {nodes.map(node => (
             <SkillNode
