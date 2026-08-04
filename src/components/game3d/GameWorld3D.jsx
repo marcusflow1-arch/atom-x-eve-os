@@ -84,6 +84,7 @@ import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
+import { createCharacterReadabilityLights } from './CharacterReadabilityLights';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
 import { getDetroitWeather } from '@/functions/getDetroitWeather';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
@@ -334,6 +335,12 @@ export default function GameWorld3D() {
     const envSystem = createWorldEnvironmentSystem({ scene, sun, hemi, fog: scene.fog, camera, renderer, dayLengthSeconds: 86400 });
     setEnvSystem(envSystem);
     window.__worldEnv = envSystem;
+
+    // Character readability layer — fill + rim lights that follow the player
+    // and camera so avatars stay visible at dusk/night while the WORLD stays
+    // dark. Applied after envSystem.update each frame so weather/time can't
+    // crush character visibility.
+    const charLights = createCharacterReadabilityLights({ scene });
 
     // Fetch the real 7-day Detroit forecast from the NWS and feed it to the
     // environment system so rain/snow/storm/fog/cloud cover mirror the actual
@@ -1077,6 +1084,7 @@ export default function GameWorld3D() {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       envSystem.update(delta);
+      charLights.update(delta, envSystem.getState, modelRef.current, camera);
       if (mixer) mixer.update(delta);
       if (dodgeVanish.active) {
         dodgeVanish.timer += delta;
@@ -1857,6 +1865,7 @@ export default function GameWorld3D() {
       window.removeEventListener('webrtcRemoteAction', handleRemoteAction);
       detachBossBus();
       resetCompanionAutoCombat();
+      charLights.dispose();
       envSystem.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
