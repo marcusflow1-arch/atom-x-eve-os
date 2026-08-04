@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import TransparentModel3DViewer from '@/components/dashboard/TransparentModel3DViewer';
-import ClanChat from '@/components/clan/ClanChat';
 import MemberList from '@/components/clan/MemberList';
 import { useRef } from 'react';
 import { Shield, Crown, Users, Coins, Zap, Calendar, Settings, Image as ImageIcon, Box, Activity, ChevronDown, Check } from 'lucide-react';
@@ -12,7 +11,6 @@ import { Button } from '@/components/ui/button';
 export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen, isStrongholdEnabled }) {
   const [environmentUrl, setEnvironmentUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx');
   const [upgradesOpen, setUpgradesOpen] = useState(false);
-  const [isChatExpanded, setIsChatExpanded] = useState(false);
   const upgradesDropdownRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -42,17 +40,6 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen, i
     },
     enabled: !!clan?.id
   });
-
-  const { data: channels } = useQuery({
-    queryKey: ['clanChannels', clan?.id],
-    queryFn: async () => {
-      if (!clan?.id) return [];
-      return await base44.entities.ClanChannel.filter({ divisionId: clan.id });
-    },
-    enabled: !!clan?.id
-  });
-
-  const generalChannel = channels?.find(c => c.name.toLowerCase() === 'general') || channels?.[0];
 
   const GlassWidget = ({ children, className = '' }) => (
     <div className={`bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl ${className}`}>
@@ -159,22 +146,6 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen, i
         </div>
 
 
-
-        {/* Bottom Right: Clan Chat */}
-        <div className={`absolute bottom-[90px] right-8 ${isChatExpanded ? 'left-[360px]' : 'w-[450px]'} h-[380px] flex pointer-events-auto shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl z-20 transition-all duration-500 ease-in-out`}>
-          <div className="flex-1 flex flex-col min-w-0">
-            {generalChannel ? (
-              <ClanChat 
-                clan={clan} 
-                channel={generalChannel} 
-                isExpanded={isChatExpanded} 
-                onToggleExpand={() => setIsChatExpanded(!isChatExpanded)} 
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-white/50">No channel available</div>
-            )}
-          </div>
-        </div>
 
       </div>
     </div>

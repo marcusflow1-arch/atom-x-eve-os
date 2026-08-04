@@ -178,7 +178,7 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
   );
 }
 
-function LunaSearchBar({ isLibraryActive, onFocus, value, onChange }) {
+function LunaSearchBar({ isLibraryActive, onFocus, onOpen, value, onChange }) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -207,6 +207,7 @@ function LunaSearchBar({ isLibraryActive, onFocus, value, onChange }) {
 
   return (
     <div
+      onClick={onOpen}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
         isLibraryActive ? 'border-white/10 bg-white/[0.04]' : 'border-transparent bg-transparent'
       }`}
@@ -278,6 +279,16 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
     if (propGames) return; // use games passed from parent (avoids duplicate API call)
     base44.entities.Game.list().then(setGamesState);
   }, [propGames]);
+
+  const closePanels = () => {
+    setActiveTab('home');
+    setSelectedGame(null);
+    setSelectedItem(null);
+    setCurrentRow(0);
+    onLibraryClose?.();
+    window.dispatchEvent(new CustomEvent('libraryPanelClose'));
+    window.dispatchEvent(new CustomEvent('environmentPanelClose'));
+  };
 
   const handleTabClick = (tab) => {
     setSelectedItem(null);
@@ -673,14 +684,15 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
-      {/* ── Blur overlay behind panels ── */}
+      {/* ── Blur overlay behind panels — click off to close ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[85] pointer-events-none"
+            onClick={closePanels}
+            className="fixed inset-0 z-[85] pointer-events-auto"
             style={{
               background: 'rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(6px)',
@@ -982,6 +994,13 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   >
                     {activeTab === 'environment' ? 'Environment Hub Collection' : 'Store Library'}
                   </button>
+                  {activeTab === 'library' && selectedGame && (
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-black uppercase tracking-wider transition-all shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+                    >
+                      <Play className="w-3 h-3 fill-current" /> Play
+                    </button>
+                  )}
                 </div>
 
                 {/* Environment genre filter — right of the label */}
@@ -1174,6 +1193,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
           <LunaSearchBar
             isLibraryActive={activeTab === 'library'}
             onFocus={() => { if (activeTab !== 'library') handleTabClick('library'); }}
+            onOpen={() => { if (activeTab !== 'library') handleTabClick('library'); }}
             value={searchTerm || ''}
             onChange={onSearchChange}
           />
