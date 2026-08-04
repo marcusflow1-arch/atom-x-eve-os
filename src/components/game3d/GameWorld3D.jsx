@@ -84,6 +84,8 @@ import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
+import { createTornadoSystem } from './weather/TornadoSystem';
+import TornadoHUD from './weather/TornadoHUD';
 import { createCharacterReadabilityLights } from './CharacterReadabilityLights';
 import { getCharacterDodge, getPlanarBasisFromYaw } from './player/characterDodgeVector';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
@@ -99,6 +101,7 @@ export default function GameWorld3D() {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [envSystem, setEnvSystem] = useState(null);
+  const [tornadoSystemState, setTornadoSystemState] = useState(null);
   const [activeDialogue, setActiveDialogue] = useState(null); // { name, text }
   const [nearbyNPC, setNearbyNPC] = useState(null);
   const [enemyCount, setEnemyCount] = useState(ENEMY_SPAWNS.length);
@@ -342,6 +345,14 @@ export default function GameWorld3D() {
     // dark. Applied after envSystem.update each frame so weather/time can't
     // crush character visibility.
     const charLights = createCharacterReadabilityLights({ scene });
+
+    // Tornado weather event — spawned on demand (T key or the HUD button).
+    const tornado = createTornadoSystem({ scene });
+    setTornadoSystemState(tornado);
+    window.__tornado = tornado;
+    // Set each frame from the tornado: while above the storm the camera is
+    // allowed to crane up at the open sky.
+    const tornadoView = { allowLookUp: false, wasActive: false };
 
     // Fetch the real 7-day Detroit forecast from the NWS and feed it to the
     // environment system so rain/snow/storm/fog/cloud cover mirror the actual
@@ -975,6 +986,12 @@ export default function GameWorld3D() {
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
+      // T = spawn / stop the tornado weather event (test control)
+      if (k === 't') {
+        if (tornado.getState().active) tornado.stop();
+        else tornado.spawn({ x: (model?.position.x || 0) + 14, z: (model?.position.z || 0) + 10 });
+        e.preventDefault();
+      }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
@@ -1032,7 +1049,8 @@ export default function GameWorld3D() {
       drag.current.y = e.clientY;
       if (Math.abs(dx) > 1 || Math.abs(dy) > 1) rightDragMoved.current = true;
       orbit.current.yaw -= dx * 0.005;
-      orbit.current.pitch = Math.max(0.1, Math.min(Math.PI / 2.2, orbit.current.pitch + dy * 0.005));
+      const minPitch = tornadoView.allowLookUp ? -0.95 : 0.1; // look up at the sky above the storm
+      orbit.current.pitch = Math.max(minPitch, Math.min(Math.PI / 2.2, orbit.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
       orbit.current.distance = Math.max(2, Math.min(12, orbit.current.distance + e.deltaY * 0.003));
@@ -1133,6 +1151,19 @@ export default function GameWorld3D() {
         const yaw = orbit.current.yaw;
         const move = new THREE.Vector3();
         const combatAxes = getCombatAxes();
+
+        // ─── Tornado: ground wind, suction, capture, lift and levitation ───
+        const tGround = mapReady ? (sampleGroundY(model.position.x, model.position.z) ?? model.position.y) : model.position.y;
+        const tornadoRes = tornado.update(delta, { player: model, groundY: tGround });
+        tornadoView.allowLookUp = tornadoRes.allowLookUp;
+        const tornadoActive = tornado.getState().active;
+        if (tornadoRes.allowLookUp) {
+          // Above the storm the sky is open — sun, stars and the wide view.
+          envSystem.setWeather('clear');
+        } else if (tornadoView.wasActive && !tornadoActive) {
+          envSystem.clearWeatherOverride();
+        }
+        tornadoView.wasActive = tornadoActive;
         if (combatAxes) {
           if (keys.current['w']) move.add(combatAxes.forward);
           if (keys.current['s']) move.add(combatAxes.forward.clone().multiplyScalar(-1));
@@ -1158,7 +1189,7 @@ export default function GameWorld3D() {
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
         const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
         const speed = (baseMoveSpeed * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
-        if (isMoving && !movementOverridden) {
+        if (isMoving && !movementOverridden && !tornadoRes.lockMovement) {
           move.normalize();
           model.position.x += move.x * speed * delta;
           model.position.z += move.z * speed * delta;
@@ -1183,6 +1214,9 @@ export default function GameWorld3D() {
         } else if (playerAnim) {
           playerAnim.updateMotion(model, delta, model.position.y);
         }
+        // Tornado lift is applied after the feet-to-ground pass so the funnel
+        // can actually carry the player up out of the storm.
+        if (tornadoRes.liftY > 0) model.position.y += tornadoRes.liftY;
         // Rogue-AI body collision — push player out so they can't walk through hostile player-AIs
         { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } }
 
@@ -1863,6 +1897,8 @@ export default function GameWorld3D() {
       detachBossBus();
       resetCompanionAutoCombat();
       charLights.dispose();
+      tornado.dispose();
+      if (window.__tornado === tornado) window.__tornado = null;
       envSystem.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
@@ -2036,6 +2072,7 @@ export default function GameWorld3D() {
 
       {/* Day/night + season + weather HUD */}
       {!loading && envSystem && <WorldEnvironmentHUD system={envSystem} />}
+      {!loading && tornadoSystemState && <TornadoHUD system={tornadoSystemState} />}
       <PlayerInteractionMenu
         open={!!playerMenu}
         x={playerMenu?.x || 0}

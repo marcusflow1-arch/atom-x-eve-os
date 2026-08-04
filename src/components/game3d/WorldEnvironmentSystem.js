@@ -496,6 +496,8 @@ export function createWorldEnvironmentSystem({
   const setWeather = (id) => {
     if (WEATHER_LABELS[id]) state.manualWeather = id;
   };
+  // Drop a setWeather() override and go back to the forecast-driven weather.
+  const clearWeatherOverride = () => { state.manualWeather = null; };
   const setTime = (h) => { state.time = ((h % 24) + 24) % 24; };
   const setClimate = (id) => {
     if (CLIMATE_PROFILES[id]) { state.climateId = id; rollDaily(); }
@@ -860,6 +862,6 @@ export function createWorldEnvironmentSystem({
     if (window.__worldEnv === api) window.__worldEnv = null;
   };
 
-  const api = { update, getState, setSeason, setWeather, setTime, setClimate, cycleClimate, loadForecast, dispose };
+  const api = { update, getState, setSeason, setWeather, clearWeatherOverride, setTime, setClimate, cycleClimate, loadForecast, dispose };
   return api;
 }
