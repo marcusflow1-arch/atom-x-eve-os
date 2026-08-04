@@ -169,18 +169,21 @@ export default function LibrarySidebar() {
     { id: 12, name: 'SilverWolf', status: 'idle', game: 'World of Warcraft', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' },
   ];
 
-  // Mock Data
+  // Mock Data — Twitch-style recently watched streamers (name + game they're playing)
   const recentChannels = [
     { name: "NeonNinja", game: "Valorant", avatar: "https://source.unsplash.com/random/100x100?face,1", isLive: true, viewers: "12.5k" },
     { name: "CyberQueen", game: "Cyberpunk 2077", avatar: "https://source.unsplash.com/random/100x100?face,2", isLive: true, viewers: "8.2k" },
     { name: "TechRunner", game: "Apex Legends", avatar: "https://source.unsplash.com/random/100x100?face,3", isLive: false, viewers: "5.4k" },
+    { name: "PixelPhantom", game: "Elden Ring", avatar: "https://source.unsplash.com/random/100x100?face,4", isLive: true, viewers: "3.1k" },
+    { name: "GlitchGod", game: "League of Legends", avatar: "https://source.unsplash.com/random/100x100?face,5", isLive: true, viewers: "9.7k" },
+    { name: "VortexVibe", game: "Grand Theft Auto V", avatar: "https://source.unsplash.com/random/100x100?face,6", isLive: false, viewers: "2.2k" },
   ];
 
-  const recentGames = [
-    { name: "Baldur's Gate 3", image: "https://source.unsplash.com/random/200x300?fantasy,game" },
-    { name: "Starfield", image: "https://source.unsplash.com/random/200x300?space,game" },
-    { name: "Elden Ring", image: "https://source.unsplash.com/random/200x300?dragon,game" },
-  ];
+  // Recently played games — pulled from the user's library (real games they own/play)
+  const recentGames = (libraryGames || []).slice(0, 9).map(g => ({
+    name: g.title || g.name,
+    image: g.cover || g.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+  }));
 
   const entertainmentApps = [
             { name: "YouTube", category: "Video", url: "https://www.youtube.com", image: "https://source.unsplash.com/random/200x200?youtube,logo" },
@@ -512,12 +515,12 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Aura Specific Button */}
+            {/* Aura Specific Button — opens the slide-out sidebar on the Aura tab */}
             {isAura && (
               <button
-                onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
+                onClick={() => { setIsOpen(true); setActiveSub('aura'); }}
                 className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
-                title="Watched Streams"
+                title="Watch Stream — Recently Watched"
               >
                 <Tv className="w-4 h-4" />
               </button>
