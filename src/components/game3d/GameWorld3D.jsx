@@ -85,6 +85,7 @@ import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
 import { createCharacterReadabilityLights } from './CharacterReadabilityLights';
+import { getCharacterDodge } from './player/characterDodgeVector';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
 import { getDetroitWeather } from '@/functions/getDetroitWeather';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
@@ -904,21 +905,17 @@ export default function GameWorld3D() {
       return { forward, right: cameraRight, cameraForward, cameraRight };
     };
 
+    // Dodge is resolved in the CHARACTER's frame — camera angle/pitch has no
+    // influence. The tapped key decides the side; any other WASD key still
+    // held blends in, all relative to the body's facing.
     const getDodgeVectorAndName = (key) => {
-      const axes = getCombatAxes();
-      const yaw = orbit.current.yaw;
-      const freeMap = {
-        w: { direction: 'forward',  vector: new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)) },
-        s: { direction: 'backward', vector: new THREE.Vector3( Math.sin(yaw), 0,  Math.cos(yaw)) },
-        a: { direction: 'left',     vector: new THREE.Vector3(-Math.cos(yaw), 0, -Math.sin(yaw)) }, // fixed A=left
-        d: { direction: 'right',    vector: new THREE.Vector3( Math.cos(yaw), 0,  Math.sin(yaw)) }, // fixed D=right
-      };
-      if (!axes) return freeMap[key] || { direction: 'forward', vector: new THREE.Vector3(0, 0, -1).applyQuaternion(model.quaternion) };
-      if (keys.current['a']) return { direction: 'left', vector: axes.cameraRight.clone().multiplyScalar(-1) };
-      if (keys.current['d']) return { direction: 'right', vector: axes.cameraRight.clone() };
-      if (keys.current['s']) return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
-      if (keys.current['w']) return { direction: 'forward', vector: axes.forward.clone() };
-      return { direction: 'backward', vector: axes.forward.clone().multiplyScalar(-1) };
+      if (!model) return { direction: 'forward', vector: new THREE.Vector3(0, 0, 1) };
+      return getCharacterDodge(model, {
+        forward: key === 'w' || !!keys.current['w'],
+        backward: key === 's' || !!keys.current['s'],
+        left: key === 'a' || !!keys.current['a'],
+        right: key === 'd' || !!keys.current['d'],
+      });
     };
 
     const updateLockOnRotation = (delta) => {
