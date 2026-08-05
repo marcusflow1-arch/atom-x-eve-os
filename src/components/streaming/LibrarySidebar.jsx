@@ -635,7 +635,7 @@ export default function LibrarySidebar() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`${positionClass} ${railLeftClass} z-[70] grid grid-cols-2 gap-2 place-items-center w-24`}
+              className={`${positionClass} ${railLeftClass} z-[70] inline-grid grid-cols-2 gap-1 place-items-center`}
               style={{ bottom: '76px' }}
             >
               <button
