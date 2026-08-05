@@ -209,6 +209,7 @@ export default function LibrarySidebar() {
   const isClan = pathname.includes('/clan');
   const isForum = pathname.includes('/community');
   const isFarm = pathname.includes('/farm');
+  const isStore = pathname.includes('/store');
 
   const defaultQuickNavGames = [
     { id: 'g1', name: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' },
@@ -358,12 +359,24 @@ export default function LibrarySidebar() {
     setFullLibraryDetailGame(null);
   };
 
+  // Per-page "Recently [X]" label for the top of the rail (matches LunaLeftRail's "Recently Played" header).
+  const recentLabelParts = (() => {
+    if (sidebarMode !== 'context') return ['Recently', 'Played'];
+    if (isClan) return ['Recently', 'Visited'];
+    if (isForum) return ['Recent', 'Forums'];
+    if (isFarm) return ['Recent', 'Farm Hub'];
+    if (isGenreMastery) return ['Recent', 'Cards'];
+    if (isStore) return ['Recent', 'Games'];
+    if (isAura) return ['Recently', 'Watched'];
+    return ['Recently', 'Played'];
+  })();
+
   return (
     <>
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
+          {!isSidebarCollapsed && !pathname.includes('/lunatemplate') && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -371,17 +384,23 @@ export default function LibrarySidebar() {
               className={`${positionClass} ${railLeftClass} z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100 overflow-y-auto`}
               style={{ bottom: 'calc(55% + 24px)', scrollbarWidth: 'none' }}
             >
+              {/* Luna Dashboard rail backing — matches LunaLeftRail's glass/black finish + right border */}
+              <div
+                className="absolute inset-x-[-8px] inset-y-[-12px] rounded-2xl pointer-events-none -z-10"
+                style={{
+                  background: 'rgba(0,0,0,0.20)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  borderRight: '1px solid rgba(255,255,255,0.20)',
+                  boxShadow: '5px 0 15px rgba(0,0,0,0.35)',
+                }}
+              />
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
                 className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
               >
-                 {sidebarMode === 'context' ? (
-                   isClan ? <>Recently<br/>Visited</> : 
-                   isForum ? <>Recent<br/>Forums</> : 
-                   isFarm ? <>Recent<br/>Farm Hub</> :
-                   <>Recent<br/>Cards</>
-                 ) : <>Recently<br/>Played</>}
-              </button>
+                 {recentLabelParts[0]}<br/>{recentLabelParts[1]}
+                 </button>
               <div className="w-8 h-px bg-white/20 -mt-1" />
 
               {/* The 5 boxes */}
@@ -453,6 +472,15 @@ export default function LibrarySidebar() {
                         </div>
                       ))}
                     </>
+                  )}
+
+                  {/* Luna Dashboard-style placeholder boxes for pages without recent data (Store, Aura, Library, etc.) */}
+                  {!isClan && !isForum && !isFarm && !isGenreMastery && (
+                    [1, 2, 3, 4, 5].map(i => (
+                      <div key={`recent-ph-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                        <span className="text-white/30 text-lg font-bold">?</span>
+                      </div>
+                    ))
                   )}
                 </>
               ) : (
