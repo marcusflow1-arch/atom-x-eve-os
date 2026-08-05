@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
-    X, Mic, MicOff, Loader2, LayoutGrid, Flame, Smartphone, ShoppingBag
+    X, Mic, MicOff, Loader2, LayoutGrid, Flame, Smartphone, ShoppingBag, Play
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
@@ -40,7 +40,6 @@ import { WishlistProvider } from '../components/store/WishlistContext';
 import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
 import CategorySearchBar from '../components/store/CategorySearchBar';
-import RecommendedTitlesSidebar from '../components/store/RecommendedTitlesSidebar';
 import DevCardsContent from '../components/store/DevCardsContent';
 import ShooterContent from '../components/store/ShooterContent';
 import { DollarSign, Building2 } from 'lucide-react';
@@ -500,13 +499,46 @@ export default function Store() {
                             boxShadow: '4px 0 24px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.06)'
                         }}
                     >
-                        {/* TOP — Recommended titles based on last purchase (bounded, scrollable, ends above center) */}
-                        <div className="w-full flex-1 min-h-0 overflow-y-auto pt-4 pb-2" style={{ scrollbarWidth: 'none' }}>
-                            <RecommendedTitlesSidebar games={games} onGameClick={handleNavigateToGame} />
+                        {/* TOP — Recent Games (the floating LibrarySidebar rail renders its label + boxes here). Kept empty so the rail shows through without the old "Recommended" overlap. */}
+                        <div className="w-full flex-1 min-h-0" aria-hidden="true" />
+
+                        {/* Jeweled divider — separates Recent Games from the Play launcher */}
+                        <div className="w-full flex items-center gap-2 px-3 py-1 shrink-0">
+                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
+                            <span className="w-1.5 h-1.5 rotate-45 bg-white/40" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.5)' }} />
+                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
                         </div>
 
-                        {/* MIDDLE — Reserved zone for Launch button (floating LibrarySidebar renders here at top-[45%]) */}
-                        <div className="w-full flex-shrink-0 h-24" aria-hidden="true" />
+                        {/* MIDDLE — Play launcher (moved here from the hero cluster; sits between Recent Games and the bottom nav) */}
+                        <div className="w-full flex-shrink-0 flex flex-col items-center gap-2 py-2">
+                            <button
+                                onClick={() => {
+                                    const scroller = document.querySelector('.page-container');
+                                    if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+                                    else window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    setTimeout(() => {
+                                        const heroPlay = [...document.querySelectorAll('button')].find(b => /PLAY NOW/i.test((b.textContent || '')));
+                                        heroPlay?.click();
+                                    }, 350);
+                                }}
+                                className="group flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-2xl text-white transition-all duration-300 hover:scale-105"
+                                style={{
+                                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                                    boxShadow: '0 6px 22px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.25)'
+                                }}
+                                title="Play featured game"
+                            >
+                                <Play className="w-5 h-5 fill-white" />
+                                <span className="text-[8px] font-bold uppercase tracking-wider">Play</span>
+                            </button>
+                        </div>
+
+                        {/* Jeweled divider — separates the Play launcher from the bottom nav */}
+                        <div className="w-full flex items-center gap-2 px-3 py-1 shrink-0">
+                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
+                            <span className="w-1.5 h-1.5 rotate-45 bg-white/40" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.5)' }} />
+                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
+                        </div>
 
                         {/* BOTTOM — Reserved for Library/Entertainment/Rewards options (floating LibrarySidebar) */}
                         <div className="w-full flex-1 min-h-0" aria-hidden="true" />
