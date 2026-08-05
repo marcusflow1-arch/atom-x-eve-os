@@ -18,6 +18,7 @@ import LibraryGameDetailModal from './LibraryGameDetailModal';
 import LibraryAchievementsUniverse from './LibraryAchievementsUniverse';
 import LivestreamOverlay from './LivestreamOverlay';
 import AuraStreamersPullout from './AuraStreamersPullout';
+import SidebarBottomSection from './SidebarBottomSection';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -235,7 +236,9 @@ export default function LibrarySidebar() {
   const railLeftClass = hasOverlayRail ? 'left-[46px]' : 'left-6';
   
   // On gamedetail page, use fixed positioning so the sidebar shows over the page
-  const positionClass = isGameDetail ? 'fixed' : 'absolute';
+  // Overlay mode: the rail and drawer are always fixed to the viewport so page
+  // content keeps its full width and never reflows when the sidebar opens/closes.
+  const positionClass = 'fixed';
 
   useEffect(() => {
     const enabled = localStorage.getItem(`environment_enabled_${currentEnvironmentPageKey}`) !== 'false';
@@ -336,6 +339,23 @@ export default function LibrarySidebar() {
   };
   const handleMoreInfo = () => {
     // Placeholder for navigating to details page
+  };
+
+  // Shared handler for the bottom-section panel toggles (Friends/Library/Rewards/Entertainment).
+  // Clears sibling panel/overlay state so only one panel is ever open at a time.
+  const handlePanel = (key) => {
+    setExpandedPanel(p => p === key ? null : key);
+    setOpenDropdown(null);
+    setIsOpen(false);
+    setShowAchievementsUniverse(false);
+    setIsExpandedRewardsInventory(false);
+    setSelectedEntertainmentApp(null);
+    setShowAddLink(false);
+    setTradingFriend(null);
+    setViewingFriend(null);
+    setMessagingFriend(null);
+    setDetailGame(null);
+    setFullLibraryDetailGame(null);
   };
 
   return (
@@ -557,31 +577,7 @@ export default function LibrarySidebar() {
               </>
             )}
 
-            {/* Original Library Button with Restore Arrow */}
-            <div className="relative flex items-center">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('launchEnvironment', {
-                  detail: { pageKey: currentEnvironmentPageKey }
-                }))}
-                className="w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15 backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1"
-                title="Launch environment"
-              >
-                <Play className="w-4 h-4" />
-                <span className="text-[7px] font-bold uppercase tracking-wider">Launch</span>
-              </button>
-              {isSidebarCollapsed && (
-                <button
-                  onClick={() => {
-                      localStorage.setItem('sidebarCollapsed', 'false');
-                      window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: false }));
-                  }}
-                  className="absolute left-[44px] top-1/2 -translate-y-1/2 w-6 h-10 bg-black/60 border border-white/20 border-l-0 rounded-r-xl flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md shadow-lg"
-                  title="Restore Sidebar"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            {/* Launch + bottom panel toggles now live in the shared SidebarBottomSection at the bottom of the rail */}
 
             {/* Roster Button for Clan */}
             {isClan && !isSidebarCollapsed && (
@@ -629,115 +625,24 @@ export default function LibrarySidebar() {
 
           </motion.div>}
 
-          {/* Bottom 2x2 grid: Friends + Library (top row), Rewards + Entertainment (bottom row) */}
+          {/* Shared bottom section: Launch + Friends/Library/Rewards/Entertainment.
+               Narrow rail → single vertical column (flex-col, items-center, w-full, min-w-0,
+               no fixed pixel widths) so the icons can never be wider than the rail.
+               overflow-hidden on the wrapper is a safety net. */}
           {!isSidebarCollapsed && (
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`${positionClass} ${railLeftClass} z-[70] inline-grid grid-cols-2 gap-1 place-items-center`}
-              style={{ bottom: '76px' }}
+              className={`${positionClass} ${railLeftClass} z-[70] w-10 overflow-hidden`}
+              style={{ bottom: '72px' }}
             >
-              <button
-                onClick={() => {
-                  setExpandedPanel(p => p === 'friends' ? null : 'friends');
-                  setOpenDropdown(null);
-                  setIsOpen(false);
-                  setShowAchievementsUniverse(false);
-                  setIsExpandedRewardsInventory(false);
-                  setSelectedEntertainmentApp(null);
-                  setShowAddLink(false);
-                  setTradingFriend(null);
-                  setViewingFriend(null);
-                  setMessagingFriend(null);
-                  setDetailGame(null);
-                  setFullLibraryDetailGame(null);
-                }}
-                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                  expandedPanel === 'friends'
-                    ? 'border-green-400/50 bg-green-500/20 text-green-400'
-                    : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
-                }`}
-                title="Friends"
-              >
-                <UsersIcon className="w-4 h-4" />
-                <span className="text-[7px] font-bold uppercase tracking-wider"></span>
-              </button>
-              <button
-                onClick={() => {
-                  setExpandedPanel(p => p === 'library' ? null : 'library');
-                  setShowAchievementsUniverse(false);
-                  setOpenDropdown(null);
-                  setIsOpen(false);
-                  setIsExpandedRewardsInventory(false);
-                  setSelectedEntertainmentApp(null);
-                  setShowAddLink(false);
-                  setTradingFriend(null);
-                  setViewingFriend(null);
-                  setMessagingFriend(null);
-                  setDetailGame(null);
-                  setFullLibraryDetailGame(null);
-                }}
-                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                  expandedPanel === 'library'
-                    ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
-                    : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
-                }`}
-                title="Library"
-              >
-                <Library className="w-4 h-4" />
-                <span className="text-[7px] font-bold uppercase tracking-wider"></span>
-              </button>
-              <button
-                onClick={() => {
-                  setExpandedPanel(p => p === 'rewards' ? null : 'rewards');
-                  setOpenDropdown(null);
-                  setIsOpen(false);
-                  setIsExpandedRewardsInventory(false);
-                  setShowAchievementsUniverse(false);
-                  setSelectedEntertainmentApp(null);
-                  setShowAddLink(false);
-                  setTradingFriend(null);
-                  setViewingFriend(null);
-                  setMessagingFriend(null);
-                  setDetailGame(null);
-                  setFullLibraryDetailGame(null);
-                }}
-                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                  expandedPanel === 'rewards'
-                    ? 'border-amber-400/50 bg-amber-500/20 text-amber-400'
-                    : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'
-                }`}
-                title="Rewards"
-              >
-                <Trophy className="w-4 h-4" />
-                <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
-              </button>
-              <button
-                onClick={() => {
-                  setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment');
-                  setOpenDropdown(null);
-                  setIsOpen(false);
-                  setSelectedEntertainmentApp(null);
-                  setShowAddLink(false);
-                  setIsExpandedRewardsInventory(false);
-                  setShowAchievementsUniverse(false);
-                  setTradingFriend(null);
-                  setViewingFriend(null);
-                  setMessagingFriend(null);
-                  setDetailGame(null);
-                  setFullLibraryDetailGame(null);
-                }}
-                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                  expandedPanel === 'entertainment'
-                    ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400'
-                    : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'
-                }`}
-                title="Entertainment"
-              >
-                <Tv className="w-4 h-4" />
-                <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
-              </button>
+              <SidebarBottomSection
+                narrow
+                expandedPanel={expandedPanel}
+                onPanel={handlePanel}
+                onLaunch={() => window.dispatchEvent(new CustomEvent('launchEnvironment', { detail: { pageKey: currentEnvironmentPageKey } }))}
+              />
             </motion.div>
           )}
 
