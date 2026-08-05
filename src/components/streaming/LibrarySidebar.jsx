@@ -627,109 +627,119 @@ export default function LibrarySidebar() {
               </div>
             )}
 
-            {/* Friends & Library expand buttons */}
-            <button
-              onClick={() => {
-                setExpandedPanel(p => p === 'friends' ? null : 'friends');
-                setOpenDropdown(null);
-                setIsOpen(false);
-                setShowAchievementsUniverse(false);
-                setIsExpandedRewardsInventory(false);
-                setSelectedEntertainmentApp(null);
-                setShowAddLink(false);
-                setTradingFriend(null);
-                setViewingFriend(null);
-                setMessagingFriend(null);
-                setDetailGame(null);
-                setFullLibraryDetailGame(null);
-              }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'friends'
-                  ? 'border-green-400/50 bg-green-500/20 text-green-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
-              }`}
-              title="Friends"
-            >
-              <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider"></span>
-            </button>
-            <button
-              onClick={() => {
-                setExpandedPanel(p => p === 'library' ? null : 'library');
-                setShowAchievementsUniverse(false);
-                setOpenDropdown(null);
-                setIsOpen(false);
-                setIsExpandedRewardsInventory(false);
-                setSelectedEntertainmentApp(null);
-                setShowAddLink(false);
-                setTradingFriend(null);
-                setViewingFriend(null);
-                setMessagingFriend(null);
-                setDetailGame(null);
-                setFullLibraryDetailGame(null);
-              }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'library'
-                  ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
-              }`}
-              title="Library"
-            >
-              <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider"></span>
-            </button>
-            <button
-              onClick={() => {
-                setExpandedPanel(p => p === 'rewards' ? null : 'rewards');
-                setOpenDropdown(null);
-                setIsOpen(false);
-                setIsExpandedRewardsInventory(false);
-                setShowAchievementsUniverse(false);
-                setSelectedEntertainmentApp(null);
-                setShowAddLink(false);
-                setTradingFriend(null);
-                setViewingFriend(null);
-                setMessagingFriend(null);
-                setDetailGame(null);
-                setFullLibraryDetailGame(null);
-              }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'rewards'
-                  ? 'border-amber-400/50 bg-amber-500/20 text-amber-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'
-              }`}
-              title="Rewards"
-            >
-              <Trophy className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
-            </button>
-            <button
-              onClick={() => {
-                setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment');
-                setOpenDropdown(null);
-                setIsOpen(false);
-                setSelectedEntertainmentApp(null);
-                setShowAddLink(false);
-                setIsExpandedRewardsInventory(false);
-                setShowAchievementsUniverse(false);
-                setTradingFriend(null);
-                setViewingFriend(null);
-                setMessagingFriend(null);
-                setDetailGame(null);
-                setFullLibraryDetailGame(null);
-              }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'entertainment'
-                  ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'
-              }`}
-              title="Entertainment"
-            >
-              <Tv className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
-            </button>
-
           </motion.div>}
+
+          {/* Bottom 2x2 grid: Friends + Library (top row), Rewards + Entertainment (bottom row) */}
+          {!isSidebarCollapsed && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={`${positionClass} ${railLeftClass} z-[70] grid grid-cols-2 gap-2 place-items-center w-24`}
+              style={{ bottom: '76px' }}
+            >
+              <button
+                onClick={() => {
+                  setExpandedPanel(p => p === 'friends' ? null : 'friends');
+                  setOpenDropdown(null);
+                  setIsOpen(false);
+                  setShowAchievementsUniverse(false);
+                  setIsExpandedRewardsInventory(false);
+                  setSelectedEntertainmentApp(null);
+                  setShowAddLink(false);
+                  setTradingFriend(null);
+                  setViewingFriend(null);
+                  setMessagingFriend(null);
+                  setDetailGame(null);
+                  setFullLibraryDetailGame(null);
+                }}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'friends'
+                    ? 'border-green-400/50 bg-green-500/20 text-green-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
+                }`}
+                title="Friends"
+              >
+                <UsersIcon className="w-4 h-4" />
+                <span className="text-[7px] font-bold uppercase tracking-wider"></span>
+              </button>
+              <button
+                onClick={() => {
+                  setExpandedPanel(p => p === 'library' ? null : 'library');
+                  setShowAchievementsUniverse(false);
+                  setOpenDropdown(null);
+                  setIsOpen(false);
+                  setIsExpandedRewardsInventory(false);
+                  setSelectedEntertainmentApp(null);
+                  setShowAddLink(false);
+                  setTradingFriend(null);
+                  setViewingFriend(null);
+                  setMessagingFriend(null);
+                  setDetailGame(null);
+                  setFullLibraryDetailGame(null);
+                }}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'library'
+                    ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
+                }`}
+                title="Library"
+              >
+                <Library className="w-4 h-4" />
+                <span className="text-[7px] font-bold uppercase tracking-wider"></span>
+              </button>
+              <button
+                onClick={() => {
+                  setExpandedPanel(p => p === 'rewards' ? null : 'rewards');
+                  setOpenDropdown(null);
+                  setIsOpen(false);
+                  setIsExpandedRewardsInventory(false);
+                  setShowAchievementsUniverse(false);
+                  setSelectedEntertainmentApp(null);
+                  setShowAddLink(false);
+                  setTradingFriend(null);
+                  setViewingFriend(null);
+                  setMessagingFriend(null);
+                  setDetailGame(null);
+                  setFullLibraryDetailGame(null);
+                }}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'rewards'
+                    ? 'border-amber-400/50 bg-amber-500/20 text-amber-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'
+                }`}
+                title="Rewards"
+              >
+                <Trophy className="w-4 h-4" />
+                <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
+              </button>
+              <button
+                onClick={() => {
+                  setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment');
+                  setOpenDropdown(null);
+                  setIsOpen(false);
+                  setSelectedEntertainmentApp(null);
+                  setShowAddLink(false);
+                  setIsExpandedRewardsInventory(false);
+                  setShowAchievementsUniverse(false);
+                  setTradingFriend(null);
+                  setViewingFriend(null);
+                  setMessagingFriend(null);
+                  setDetailGame(null);
+                  setFullLibraryDetailGame(null);
+                }}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'entertainment'
+                    ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'
+                }`}
+                title="Entertainment"
+              >
+                <Tv className="w-4 h-4" />
+                <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
+              </button>
+            </motion.div>
+          )}
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
