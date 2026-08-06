@@ -680,7 +680,11 @@ export default function GameWorld3D() {
     let bossEncounterAutoStarted = false;
     let bossAutoAttackTimer = 6;        // first scripted attack ~6s after load
     let bossAutoAttackIndex = 0;
-    const BOSS_AUTO_ATTACK_INTERVAL = 8; // seconds between scripted patterns
+    const BOSS_AUTO_ATTACK_INTERVAL = 8; // seconds between beam/meteor patterns
+    // Tornado-lift-beam is on its own ~60s cooldown so it doesn't spam: it
+    // fires roughly once per minute at a random point in the window.
+    const BOSS_TORNADO_COOLDOWN = 60;
+    let bossTornadoTimer = 20 + Math.random() * 40; // first tornado: 20–60s in
 
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
@@ -1625,19 +1629,24 @@ export default function GameWorld3D() {
           setTimeout(() => bossEncounter.beginCombat(), 1200);
         }
         if (bossEncounter.isActive() && !bossTornadoLiftBeam.isActive()) {
+          // Tornado-lift-beam — its own ~60s cooldown, fires once per minute at
+          // a random point in the window so it doesn't spam the player.
+          bossTornadoTimer -= delta;
+          if (bossTornadoTimer <= 0) {
+            bossTornadoTimer = BOSS_TORNADO_COOLDOWN + (Math.random() * 20 - 10);
+            const tornadoBoss = bossEntities[0] || {
+              group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
+            };
+            bossDialogue.queueLine({ id: 'auto_tornado', name: 'Kali', text: 'Rise inside the cyclone.', duration: 2.8, cooldown: 10 });
+            bossTornadoLiftBeam.start({ boss: tornadoBoss, player: model });
+          }
+          // Beam / meteor — fast 8s rotation (tornado removed from the cycle).
           bossAutoAttackTimer -= delta;
           if (bossAutoAttackTimer <= 0) {
             bossAutoAttackTimer = BOSS_AUTO_ATTACK_INTERVAL;
-            const boss = bossEntities[0] || {
-              group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
-            };
-            const pattern = bossAutoAttackIndex % 3;
+            const pattern = bossAutoAttackIndex % 2;
             bossAutoAttackIndex += 1;
             if (pattern === 0) {
-              // Tornado-lift-beam: cyclone captures + lifts the player, then beam + knockback.
-              bossDialogue.queueLine({ id: 'auto_tornado', name: 'Kali', text: 'Rise inside the cyclone.', duration: 2.8, cooldown: 10 });
-              bossTornadoLiftBeam.start({ boss, player: model });
-            } else if (pattern === 1) {
               // Telegraphed line beam (yellow lane warning → fire).
               bossDialogue.queueLine({ id: 'auto_beam', name: 'Kali', text: 'The heavens answer my call.', duration: 2.5, cooldown: 8 });
               const ang = Math.random() * Math.PI * 2;
