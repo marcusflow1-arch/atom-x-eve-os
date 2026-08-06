@@ -20,6 +20,7 @@ import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData'
 import { setBosses, updateBoss } from './bossStore';
 import { createBossBrain } from './boss/BossBrain';
 import { attachBossEventBus } from './boss/useBossEventBus';
+import { createBossEncounterController } from './boss/BossEncounterController';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
@@ -104,6 +105,8 @@ export default function GameWorld3D() {
   const [envSystem, setEnvSystem] = useState(null);
   const [tornadoSystemState, setTornadoSystemState] = useState(null);
   const [activeDialogue, setActiveDialogue] = useState(null); // { name, text }
+  // Boss encounter — suppresses quest NPCs + gates boss music/dialogue while active.
+  const [questNPCSuppressed, setQuestNPCSuppressed] = useState(false);
   const [nearbyNPC, setNearbyNPC] = useState(null);
   const [enemyCount, setEnemyCount] = useState(ENEMY_SPAWNS.length);
   const [score, setScore] = useState(0);
@@ -599,6 +602,24 @@ export default function GameWorld3D() {
       playerInvulTimer.current = Math.max(playerInvulTimer.current, 0.1);
     };
 
+    // ─── Boss Encounter Controller ──────────────────────────────────────────
+    // Single source of truth for "boss encounter" mode. While active: quest NPCs
+    // hide, boss music plays, combat dialogue is scoped to the fight. Boss attack
+    // patterns (tornado-lift-beam, telegraphs, grab chains) gate on this later.
+    const bossEncounter = createBossEncounterController({
+      setActiveDialogue,
+      setQuestNPCSuppressed,
+      startBossMusic: () => {
+        stopLoopSound('bgm_character_select');
+        stopLoopSound('bgm_dashboard');
+        startLoopSound('bgm_boss', { volume: 0.55 });
+      },
+      stopBossMusic: () => {
+        stopLoopSound('bgm_boss');
+      },
+    });
+    window.__gw3dBossEncounter = bossEncounter;
+
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
@@ -993,6 +1014,19 @@ export default function GameWorld3D() {
         else tornado.spawn({ x: (model?.position.x || 0) + 14, z: (model?.position.z || 0) + 10 });
         e.preventDefault();
       }
+      // 9 = toggle boss encounter mode (test trigger until the real boss is wired)
+      if (k === '9' && !e.repeat) {
+        if (!bossEncounter.isActive()) {
+          bossEncounter.start({
+            bossId: 'kali',
+            introLine: { name: 'Kali', text: 'You have entered my storm.', duration: 4 },
+          });
+          setTimeout(() => bossEncounter.beginCombat(), 1200);
+        } else {
+          bossEncounter.end({ outroLine: { name: 'Kali', text: 'This battle is not yet over.', duration: 3 } });
+        }
+        e.preventDefault();
+      }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
@@ -1116,6 +1150,7 @@ export default function GameWorld3D() {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       envSystem.update(delta);
+      bossEncounter.update(delta);
       charLights.update(delta, envSystem.getState, modelRef.current, camera);
       if (mixer) mixer.update(delta);
       if (dodgeVanish.active) {
@@ -1345,28 +1380,38 @@ export default function GameWorld3D() {
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
         // ─── Quest NPC proximity ───
+        const npcSuppressed = bossEncounter.isNPCSuppressed();
         let closestQuestNPC = null;
         let closestQuestDist = NPC_INTERACT_RANGE;
         questNPCs.forEach((qn) => {
+          if (qn.group) qn.group.visible = !npcSuppressed;
           if (qn.mixer) qn.mixer.update(delta);
+          if (npcSuppressed) return;
           const dx = qn.group.position.x - model.position.x;
           const dz = qn.group.position.z - model.position.z;
           const d = Math.sqrt(dx * dx + dz * dz);
           if (d < closestQuestDist) { closestQuestDist = d; closestQuestNPC = qn; }
           if (qn.ringMesh) qn.ringMesh.material.opacity = 0.4 + Math.sin(clock.elapsedTime * 2) * 0.2;
         });
-        if (closestQuestNPC?.id !== nearbyQuestNPCRef.current?.id) {
+        if (npcSuppressed) {
+          if (nearbyQuestNPCRef.current) { nearbyQuestNPCRef.current = null; setNearbyQuestNPC(null); }
+        } else if (closestQuestNPC?.id !== nearbyQuestNPCRef.current?.id) {
           nearbyQuestNPCRef.current = closestQuestNPC;
           setNearbyQuestNPC(closestQuestNPC ? { id: closestQuestNPC.id, name: closestQuestNPC.name } : null);
         }
 
         // ─── Living Quest NPC proximity ───
         if (livingQuestEntity?.group) {
+          livingQuestEntity.group.visible = !npcSuppressed;
           if (livingQuestEntity.mixer) livingQuestEntity.mixer.update(delta);
-          const dxL = livingQuestEntity.group.position.x - model.position.x;
-          const dzL = livingQuestEntity.group.position.z - model.position.z;
-          const nearL = Math.sqrt(dxL * dxL + dzL * dzL) < NPC_INTERACT_RANGE;
-          if (nearL !== livingQuestNearRef.current) { livingQuestNearRef.current = nearL; setNearbyLivingQuest(nearL); }
+          if (npcSuppressed) {
+            if (livingQuestNearRef.current) { livingQuestNearRef.current = false; setNearbyLivingQuest(false); }
+          } else {
+            const dxL = livingQuestEntity.group.position.x - model.position.x;
+            const dzL = livingQuestEntity.group.position.z - model.position.z;
+            const nearL = Math.sqrt(dxL * dxL + dzL * dzL) < NPC_INTERACT_RANGE;
+            if (nearL !== livingQuestNearRef.current) { livingQuestNearRef.current = nearL; setNearbyLivingQuest(nearL); }
+          }
         }
 
         if (interactPressed.current && livingQuestNearRef.current) {
@@ -1791,6 +1836,7 @@ export default function GameWorld3D() {
         const qs = getQuestState();
         const lvl = playerLevelStateRef.current;
         const qUI = [];
+        if (bossEncounter.isNPCSuppressed()) { setQuestNPCsUI([]); } else
         questNPCs.forEach((qn) => {
           if (!qn.group) return;
           // Decide label status: turn_in > available > nothing
