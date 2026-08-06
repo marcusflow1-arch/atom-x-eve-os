@@ -26,6 +26,7 @@ import { createBossTelegraphSystem } from './boss/BossTelegraphSystem';
 import { createCameraShakeController } from './camera/CameraShakeController';
 import { createBossCombatDialogue } from './boss/BossCombatDialogue';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
+import { spawnWorldBoss } from './boss/spawnWorldBoss';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
@@ -740,7 +741,13 @@ export default function GameWorld3D() {
       }
     };
 
-    // World boss spawning is currently disabled; boss brain support remains available for active boss entities.
+    // Spawn the visible world boss (creature model x7, 1000x HP). isBoss=true
+    // keeps it outside the '=' visibility toggle. The autonomous attack cycle
+    // above fires scripted patterns using this entity as the beam origin.
+    spawnWorldBoss({
+      loader, scene, snapToGround, bossEntities, setBosses,
+      walkClipPromise, idleClipPromise,
+    });
 
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(CREATURE_MODEL_URL, (fbx) => {
@@ -1656,6 +1663,20 @@ export default function GameWorld3D() {
             }
           }
         }
+
+        // Tick boss animation mixers (idle clip) and make each boss face the
+        // player so it feels present. The autonomous attack cycle fires
+        // scripted patterns from the boss entity's position.
+        bossEntities.forEach((b) => {
+          if (b.mixer) b.mixer.update(delta);
+          if (b.group && model) {
+            const dx = model.position.x - b.group.position.x;
+            const dz = model.position.z - b.group.position.z;
+            if (Math.abs(dx) + Math.abs(dz) > 0.001) {
+              b.group.rotation.y = Math.atan2(dx, dz);
+            }
+          }
+        });
 
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
