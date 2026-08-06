@@ -21,6 +21,7 @@ import { setBosses, updateBoss } from './bossStore';
 import { createBossBrain } from './boss/BossBrain';
 import { attachBossEventBus } from './boss/useBossEventBus';
 import { createBossEncounterController } from './boss/BossEncounterController';
+import { createBossTornadoLiftBeam } from './boss/BossTornadoLiftBeam';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
@@ -620,6 +621,21 @@ export default function GameWorld3D() {
     });
     window.__gw3dBossEncounter = bossEncounter;
 
+    // Boss pattern controller — orchestrates the tornado as a scripted boss move
+    // (spawn → pull → capture → lift → beam → knockback → fall). The world passes
+    // its already-computed tornado result in each frame so tornado physics only
+    // update once per tick.
+    const bossTornadoLiftBeam = createBossTornadoLiftBeam({
+      tornadoSystem: tornado,
+      modelRef,
+      setHP,
+      getPlayerHUD,
+      spawnDamageFloat,
+      playActionSound,
+      bossEncounter,
+    });
+    window.__gw3dBossTornadoLiftBeam = bossTornadoLiftBeam;
+
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
@@ -1027,6 +1043,18 @@ export default function GameWorld3D() {
         }
         e.preventDefault();
       }
+      // 0 = trigger the tornado-lift-beam boss pattern (only during an encounter).
+      // Falls back to a stand-in boss origin when no boss entity is loaded so the
+      // pattern stays testable before boss AI selection is wired in.
+      if (k === '0' && !e.repeat) {
+        if (model && bossEncounter.isActive()) {
+          const boss = bossEntities[0] || {
+            group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
+          };
+          bossTornadoLiftBeam.start({ boss, player: model });
+        }
+        e.preventDefault();
+      }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
@@ -1207,6 +1235,23 @@ export default function GameWorld3D() {
         // ─── Tornado: ground wind, suction, capture, lift and levitation ───
         const tGround = mapReady ? (sampleGroundY(model.position.x, model.position.z) ?? model.position.y) : model.position.y;
         const tornadoRes = tornado.update(delta, { player: model, groundY: tGround });
+        // Boss tornado-lift-beam pattern — drives the tornado as a scripted boss
+        // move. Receives the tornado result the world already computed this frame
+        // (single update, no double-advance). While active it can lock movement,
+        // tick damage, fire a beam, knock the player out, and run a short fall.
+        let bossSpecialLock = false;
+        let bossFallActive = false;
+        if (model && bossEntities.length > 0) {
+          const tornadoBossResult = bossTornadoLiftBeam.update(delta, {
+            boss: bossEntities[0],
+            player: model,
+            groundY: tGround,
+            playerAnim,
+            tornadoResult: tornadoRes,
+          });
+          bossSpecialLock = !!tornadoBossResult?.lockMovement;
+          bossFallActive = !!tornadoBossResult?.forcedFall;
+        }
         tornadoView.allowLookUp = tornadoRes.allowLookUp;
         const tornadoActive = tornado.getState().active;
         if (tornadoRes.allowLookUp) {
@@ -1241,7 +1286,7 @@ export default function GameWorld3D() {
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
         const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
         const speed = (baseMoveSpeed * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
-        if (isMoving && !movementOverridden && !tornadoRes.lockMovement) {
+        if (isMoving && !movementOverridden && !tornadoRes.lockMovement && !bossSpecialLock) {
           move.normalize();
           model.position.x += move.x * speed * delta;
           model.position.z += move.z * speed * delta;
@@ -1259,16 +1304,17 @@ export default function GameWorld3D() {
           }
         }
         // Glue player feet to terrain, then let the manual controller add jump/roll offsets.
-        if (mapReady) {
+        // Skip during the boss pattern's forced fall — the controller owns Y until landing.
+        if (mapReady && !bossFallActive) {
           const gy = sampleGroundY(model.position.x, model.position.z);
           if (gy !== null) model.position.y = gy;
           if (playerAnim) playerAnim.updateMotion(model, delta, gy ?? model.position.y);
-        } else if (playerAnim) {
+        } else if (playerAnim && !bossFallActive) {
           playerAnim.updateMotion(model, delta, model.position.y);
         }
         // Tornado lift is applied after the feet-to-ground pass so the funnel
         // can actually carry the player up out of the storm.
-        if (tornadoRes.liftY > 0) model.position.y += tornadoRes.liftY;
+        if (tornadoRes.liftY > 0 && !bossFallActive) model.position.y += tornadoRes.liftY;
         // Rogue-AI body collision — push player out so they can't walk through hostile player-AIs
         { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } }
 
