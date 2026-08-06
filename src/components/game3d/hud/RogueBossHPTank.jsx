@@ -14,9 +14,12 @@ export default function RogueBossHPTank() {
       frameCounter += 1;
       if (frameCounter % 3 !== 0) return;
 
+      const bosses = window.__gw3dBosses || [];
       const rogues = window.__gw3dRogues || [];
       const player = window.__localPlayerPos;
-      const activeBoss = rogues.find((r) => r.alive && !r.dying && r.group?.visible);
+      // Prefer the world boss; fall back to rogue-AI arena bosses.
+      const activeBoss = bosses.find((b) => b.alive && !b.dying && b.group?.visible) ||
+        rogues.find((r) => r.alive && !r.dying && r.group?.visible);
 
       if (!activeBoss || !player) {
         setBoss(null);

@@ -9,7 +9,7 @@ const raycaster = new THREE.Raycaster();
  *   2. Hits on an enemy → lock camera/combat target.
  *   3. Empty space → clear current target.
  */
-export function handleMiddleClick({ event, renderer, camera, enemies, remoteManager, setPlayerMenu, rogues = [] }) {
+export function handleMiddleClick({ event, renderer, camera, enemies, remoteManager, setPlayerMenu, rogues = [], bosses = [] }) {
   const rect = renderer.domElement.getBoundingClientRect();
   const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -66,7 +66,7 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
     }
   }
 
-  // 2. Enemies + hostile rogue-AI (treated as targetable enemies)
+  // 2. Enemies + hostile rogue-AI + world bosses (all targetable via lock-on)
   const enemyMeshes = [];
   enemies.forEach((en) => {
     if (!en.alive || en.dying) return;
@@ -76,13 +76,23 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
     if (!r.alive || r.dying || !r.group?.visible) return;
     r.group.traverse((node) => { if (node.isMesh) enemyMeshes.push(node); });
   });
+  bosses.forEach((b) => {
+    if (!b.alive || b.dying || !b.group?.visible) return;
+    b.group.traverse((node) => { if (node.isMesh) enemyMeshes.push(node); });
+  });
   const hits = raycaster.intersectObjects(enemyMeshes, false);
   if (hits.length > 0) {
-    let hitMesh = hits[0].object;
+    const hitMesh = hits[0].object;
     let foundEnemy = null;
     for (const en of enemies) {
       en.group.traverse((node) => { if (node === hitMesh) foundEnemy = en; });
       if (foundEnemy) break;
+    }
+    if (!foundEnemy) {
+      for (const b of bosses) {
+        b.group.traverse((node) => { if (node === hitMesh) foundEnemy = b; });
+        if (foundEnemy) break;
+      }
     }
     if (!foundEnemy) {
       for (const r of rogues) {
@@ -91,20 +101,21 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
       }
     }
     if (foundEnemy) {
+      const isWorldBoss = !!foundEnemy.isBoss;
       setTarget({
         id: foundEnemy.id,
         name: foundEnemy.name || foundEnemy.bossName || (foundEnemy.tier ? `${foundEnemy.tier.charAt(0).toUpperCase() + foundEnemy.tier.slice(1)} Enemy` : 'Enemy'),
         hp: foundEnemy.hp,
         maxHp: foundEnemy.maxHp,
         level: foundEnemy.level,
-        tier: foundEnemy.tier || (foundEnemy.color !== undefined ? 'rogue' : 'normal'),
-        bossName: foundEnemy.bossName || null,
+        tier: isWorldBoss ? 'boss' : (foundEnemy.tier || (foundEnemy.color !== undefined ? 'rogue' : 'normal')),
+        bossName: foundEnemy.bossName || foundEnemy.name || null,
       });
       return {
         id: foundEnemy.id,
         group: foundEnemy.group,
         name: foundEnemy.name || foundEnemy.bossName || 'Enemy',
-        kind: foundEnemy.color !== undefined ? 'rogue' : 'enemy',
+        kind: isWorldBoss ? 'boss' : (foundEnemy.color !== undefined ? 'rogue' : 'enemy'),
         aliveRef: () => !!foundEnemy.alive && !foundEnemy.dying && foundEnemy.group?.visible !== false,
       };
     }

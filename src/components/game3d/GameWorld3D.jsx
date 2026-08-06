@@ -4,6 +4,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
+import BossHeadHPTank from './hud/BossHeadHPTank';
 import PlayerXPHUD from './PlayerXPHUD';
 import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
@@ -27,6 +28,7 @@ import { createCameraShakeController } from './camera/CameraShakeController';
 import { createBossCombatDialogue } from './boss/BossCombatDialogue';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { spawnWorldBoss } from './boss/spawnWorldBoss';
+import { updateBossMovement, projectBossHead } from './boss/updateBossMovement';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
@@ -118,6 +120,7 @@ export default function GameWorld3D() {
   const [playerLevel, setPlayerLevel] = useState(1);
   const [playerXP, setPlayerXP] = useState(0);
   const [enemiesUI, setEnemiesUI] = useState([]); // [{ id, x, y, hp, maxHp, level, visible }]
+  const [bossHeadUI, setBossHeadUI] = useState(null); // { x, y, hp, maxHp, hpTanks, hpTankSize, name, level }
   const [questNPCsUI, setQuestNPCsUI] = useState([]); // [{ id, x, y, status }]
   const [nearbyQuestNPC, setNearbyQuestNPC] = useState(null); // { id, name }
   const [livingQuestUI, setLivingQuestUI] = useState(null); // projected head label { x, y }
@@ -1222,7 +1225,7 @@ export default function GameWorld3D() {
         e.preventDefault();
       } else if (e.button === 1) {
         e.preventDefault();
-        const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [] });
+        const target = handleMiddleClick({ event: e, renderer, camera, enemies, remoteManager: remoteManagerRef.current, setPlayerMenu, rogues: window.__gw3dRogues || [], bosses: bossEntities });
         lockOnTargetRef.current = target && lockOnTargetRef.current?.id !== target.id ? target : null;
       } else if (e.button === 2) {
         // Start camera drag on right-click
@@ -1664,19 +1667,10 @@ export default function GameWorld3D() {
           }
         }
 
-        // Tick boss animation mixers (idle clip) and make each boss face the
-        // player so it feels present. The autonomous attack cycle fires
-        // scripted patterns from the boss entity's position.
-        bossEntities.forEach((b) => {
-          if (b.mixer) b.mixer.update(delta);
-          if (b.group && model) {
-            const dx = model.position.x - b.group.position.x;
-            const dz = model.position.z - b.group.position.z;
-            if (Math.abs(dx) + Math.abs(dz) > 0.001) {
-              b.group.rotation.y = Math.atan2(dx, dz);
-            }
-          }
-        });
+        // Move + animate each world boss (chase/wander/idle). Extracted into
+        // updateBossMovement to keep this file compact. The autonomous attack
+        // cycle fires scripted patterns from the boss entity's position.
+        updateBossMovement(delta, bossEntities, model, mapReady, sampleGroundY);
 
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
@@ -2136,6 +2130,9 @@ export default function GameWorld3D() {
         });
         setEnemiesUI(ui);
 
+        // World boss head → floating HP tank (projected above its head).
+        setBossHeadUI(projectBossHead(bossEntities[0], camera, w, h));
+
         // ─── Project quest NPC heads → screen-space for floating "QUEST" labels ───
         const qs = getQuestState();
         const lvl = playerLevelStateRef.current;
@@ -2305,6 +2302,19 @@ export default function GameWorld3D() {
           {enemiesUI.map((e) => (
             <EnemyHealthBar key={e.id} x={e.x} y={e.y} hp={e.hp} maxHp={e.maxHp} level={e.level} name={e.name} visible />
           ))}
+          {/* World boss HP tank — projected above the boss's head */}
+          {bossHeadUI && (
+            <BossHeadHPTank
+              x={bossHeadUI.x}
+              y={bossHeadUI.y}
+              name={bossHeadUI.name}
+              level={bossHeadUI.level}
+              hp={bossHeadUI.hp}
+              maxHp={bossHeadUI.maxHp}
+              hpTanks={bossHeadUI.hpTanks}
+              hpTankSize={bossHeadUI.hpTankSize}
+            />
+          )}
           {/* Companion HP bar above pet's head (when not mounted) */}
           {companionUI && (
             <CompanionHealthBar x={companionUI.x} y={companionUI.y} hp={companionUI.hp} maxHp={companionUI.maxHp} level={companionUI.level} name={companionDefRef.current?.name || 'Companion'} visible />

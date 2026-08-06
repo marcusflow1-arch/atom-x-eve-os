@@ -84,6 +84,16 @@ export function spawnWorldBoss({
         level: 1,
         xpReward: 0,
         tintMaterials: bossTintMaterials,
+        // Segmented HP tanks (10 tanks) — consumed by the top-center
+        // RogueBossHPTank HUD and the floating BossHeadHPTank bar.
+        hpTanks: 10,
+        hpTankSize: Math.round(bossHp / 10),
+        // Wander/chase state — the boss walks toward the player when far,
+        // wanders at mid range, and idles when close, so it roams the arena.
+        state: 'idle',
+        stateTimer: 0,
+        target: null,
+        speed: 1.6,
       };
       bossEntities.push(bossEntry);
       try { setBosses(bossEntities); } catch (e) { /* store sync is non-fatal */ }
