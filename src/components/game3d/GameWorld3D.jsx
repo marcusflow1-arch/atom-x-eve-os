@@ -207,6 +207,9 @@ export default function GameWorld3D() {
   const playerAttackCooldown = useRef(0);
   const playerInvulTimer = useRef(0);
   const nearbyQuestNPCRef = useRef(null);
+  // Master visibility flag for all non-boss entities on the map (quest NPCs,
+  // mutant enemies, companion). Hidden by default; press '=' to toggle back.
+  const npcsVisibleRef = useRef(false);
   const playerLevelStateRef = useRef(1); // kept in sync with playerLevel for quest gating
 
   // Hydrate persistent progression (level, XP, stats, HP) from localStorage.
@@ -1154,6 +1157,12 @@ export default function GameWorld3D() {
         }
         e.preventDefault();
       }
+      // = = toggle all non-boss entities (quest NPCs, mutant enemies, companion)
+      //      on/off the map. Hidden by default so only the boss remains.
+      if (k === '=' && !e.repeat) {
+        npcsVisibleRef.current = !npcsVisibleRef.current;
+        e.preventDefault();
+      }
       // 8 = queue a generic combat banter line (test the dialogue queue).
       if (k === '8' && !e.repeat) {
         bossDialogue.queueLine({
@@ -1297,6 +1306,7 @@ export default function GameWorld3D() {
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
+      const npcsVisible = npcsVisibleRef.current; // '=' toggles all non-boss entities (NPCs/enemies/companion)
       envSystem.update(delta);
       bossEncounter.update(delta);
       charLights.update(delta, envSystem.getState, modelRef.current, camera);
@@ -1490,6 +1500,7 @@ export default function GameWorld3D() {
           companionSystem.update(delta, { ownerMoving: isMoving, ownerRunning: isRunning, ownerYaw: orbit.current.yaw });
         }
 
+        if (compGroup) compGroup.visible = npcsVisible;
         // ─── Companion proximity prompt ───
         if (compGroup && !mounted) {
           const dx = compGroup.position.x - model.position.x;
@@ -1582,7 +1593,7 @@ export default function GameWorld3D() {
         let closestQuestNPC = null;
         let closestQuestDist = NPC_INTERACT_RANGE;
         questNPCs.forEach((qn) => {
-          if (qn.group) qn.group.visible = !npcSuppressed;
+          if (qn.group) qn.group.visible = !npcSuppressed && npcsVisible;
           if (qn.mixer) qn.mixer.update(delta);
           if (npcSuppressed) return;
           const dx = qn.group.position.x - model.position.x;
@@ -1600,7 +1611,7 @@ export default function GameWorld3D() {
 
         // ─── Living Quest NPC proximity ───
         if (livingQuestEntity?.group) {
-          livingQuestEntity.group.visible = !npcSuppressed;
+          livingQuestEntity.group.visible = !npcSuppressed && npcsVisible;
           if (livingQuestEntity.mixer) livingQuestEntity.mixer.update(delta);
           if (npcSuppressed) {
             if (livingQuestNearRef.current) { livingQuestNearRef.current = false; setNearbyLivingQuest(false); }
@@ -1664,6 +1675,8 @@ export default function GameWorld3D() {
           // Dying enemies must keep processing so the death animation, fade-out
           // and removal actually run (combat sets alive=false at 0 HP).
           if (!enemy.alive && !enemy.dying) return;
+          // Hide all non-boss entities off the map unless toggled on with '='.
+          if (!enemy.isBoss) enemy.group.visible = npcsVisible;
           if (enemy.mixer) enemy.mixer.update(delta);
 
           // BOSS PATH — delegate to BossBrain (state machine + abilities + threat).
@@ -2013,6 +2026,7 @@ export default function GameWorld3D() {
         const tmpVec = new THREE.Vector3();
         enemies.forEach((enemy) => {
           if (!enemy.alive || enemy.dying || !enemy.group) return;
+          if (!npcsVisible && !enemy.isBoss) return;
           // Position above head — model height ~1.7, scaled
           tmpVec.set(enemy.group.position.x, enemy.group.position.y + 2.2, enemy.group.position.z);
           tmpVec.project(camera);
@@ -2034,7 +2048,7 @@ export default function GameWorld3D() {
         const qs = getQuestState();
         const lvl = playerLevelStateRef.current;
         const qUI = [];
-        if (bossEncounter.isNPCSuppressed()) { setQuestNPCsUI([]); } else
+        if (bossEncounter.isNPCSuppressed() || !npcsVisible) { setQuestNPCsUI([]); } else
         questNPCs.forEach((qn) => {
           if (!qn.group) return;
           // Decide label status: turn_in > available > nothing
@@ -2109,7 +2123,7 @@ export default function GameWorld3D() {
         const cg = companionGroupRef.current;
         const cs = companionStatsRef.current;
         if (cg) { window.__localCompanionPos = { x: cg.position.x, y: cg.position.y, z: cg.position.z, yaw: cg.rotation.y }; }
-        if (cg && cs && !isMountedRef.current) {
+        if (cg && cs && !isMountedRef.current && npcsVisible) {
           tmpVec.set(cg.position.x, cg.position.y + 2.4, cg.position.z); tmpVec.project(camera);
           const iv = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
           setCompanionUI(iv ? { x: (tmpVec.x * 0.5 + 0.5) * w, y: (-tmpVec.y * 0.5 + 0.5) * h, hp: cs.hp, maxHp: cs.maxHp, level: cs.level } : null);
