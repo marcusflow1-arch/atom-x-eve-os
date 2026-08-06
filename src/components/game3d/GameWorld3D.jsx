@@ -22,6 +22,8 @@ import { createBossBrain } from './boss/BossBrain';
 import { attachBossEventBus } from './boss/useBossEventBus';
 import { createBossEncounterController } from './boss/BossEncounterController';
 import { createBossTornadoLiftBeam } from './boss/BossTornadoLiftBeam';
+import { createBossTelegraphSystem } from './boss/BossTelegraphSystem';
+import { createCameraShakeController } from './camera/CameraShakeController';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
@@ -636,6 +638,25 @@ export default function GameWorld3D() {
     });
     window.__gw3dBossTornadoLiftBeam = bossTornadoLiftBeam;
 
+    // Camera shake controller — meteor impacts and crit jolts. Created without
+    // `orbit` so it adds offsets directly to camera.position (same pattern as
+    // the tornado turbulence); the camera system recomputes position each
+    // frame, so there's no drift or orbit corruption.
+    const cameraShake = createCameraShakeController({ camera });
+    window.__gw3dCameraShake = cameraShake;
+
+    // Boss telegraph system — ground circles (meteors/stomps) and lines (beams/
+    // lanes) that warn, then fire + deal damage if the player is still inside.
+    const bossTelegraphs = createBossTelegraphSystem({
+      scene,
+      setHP,
+      getPlayerHUD,
+      spawnDamageFloat,
+      playActionSound,
+      cameraShake,
+    });
+    window.__gw3dBossTelegraphs = bossTelegraphs;
+
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
@@ -1055,6 +1076,43 @@ export default function GameWorld3D() {
         }
         e.preventDefault();
       }
+      // - = test a telegraphed line beam (yellow lane warning → fire).
+      if (k === '-' && !e.repeat) {
+        if (model) {
+          bossTelegraphs.spawnLine({
+            from: { x: model.position.x - 8, z: model.position.z },
+            to: { x: model.position.x + 8, z: model.position.z },
+            width: 1.4,
+            delay: 1.0,
+            damage: 34,
+            color: 0xfacc15,
+            onFire: ({ hit, from, to }) => {
+              playActionSound('light_beam');
+              window.dispatchEvent(new CustomEvent('bossBeamImpact', { detail: { hit, from, to } }));
+            },
+          });
+        }
+        e.preventDefault();
+      }
+      // [ = test a telegraphed meteor strike (circle warning → impact + shake).
+      if (k === '[' && !e.repeat) {
+        if (model) {
+          bossTelegraphs.spawnCircle({
+            x: model.position.x,
+            z: model.position.z,
+            radius: 2.8,
+            delay: 1.2,
+            damage: 40,
+            color: 0xfb7185,
+            onFire: ({ hit, x, z }) => {
+              playActionSound('meteor_impact');
+              cameraShake.shake({ amplitude: 0.16, duration: 0.32, frequency: 24 });
+              window.dispatchEvent(new CustomEvent('bossMeteorImpact', { detail: { hit, x, z } }));
+            },
+          });
+        }
+        e.preventDefault();
+      }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
       handleCompanionKey(k, companionAbilityPressed);
       if (e.code === 'Backquote' || k === '`') {
@@ -1422,6 +1480,17 @@ export default function GameWorld3D() {
           camera.position.y += Math.sin(ts * 29.7) * s * 0.7;
           camera.position.z += Math.cos(ts * 41.3) * s;
         }
+
+        // Camera shake (meteor impacts, crit jolts) — applied after the camera
+        // system finalizes position so it never drifts (offset is recomputed
+        // fresh each frame, same pattern as the tornado turbulence above).
+        cameraShake.update(delta);
+
+        // Boss telegraph warnings — ground circles/lines that fire after a delay.
+        bossTelegraphs.update(delta, {
+          player: model,
+          groundY: model ? (sampleGroundY(model.position.x, model.position.z) ?? model.position.y) : 0,
+        });
 
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
