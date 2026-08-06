@@ -1572,6 +1572,9 @@ export default function GameWorld3D() {
         // gameplay.
         bossDialogue.update(delta);
 
+        // Boss encounter controller — ticks encounter phase + dialogue auto-clear.
+        bossEncounter.update(delta);
+
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
         // ─── Quest NPC proximity ───
