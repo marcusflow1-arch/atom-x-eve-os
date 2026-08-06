@@ -109,32 +109,23 @@ export default function GameView() {
     return () => { cancelled = true; };
   }, [phase]);
 
-  // Single persistent audio player — one instance, owned by audioRef.
-  // Cleans up on URL change AND on component unmount (e.g. navigating away from /GameView).
+  // Theme audio (login "game 1" + world "game 2" exploration music) is disabled
+  // by request — only combat music (combatMusicController, a separate track) is
+  // kept. We still bind the (empty) world ref so the combat controller has a
+  // stable handle; with .current === null its duck/resume calls are no-ops.
   useEffect(() => {
-    // Always tear down any existing audio first to prevent overlap
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = '';
       audioRef.current.load();
       audioRef.current = null;
     }
-    if (!themeAudioUrl) return;
-
-    const audio = new Audio(themeAudioUrl);
-    audio.loop = true;
-    audio.volume = themeVolume;
-    audioRef.current = audio;
-    audio.play().catch((err) => console.warn('Audio play blocked:', err));
-
-    // Let the combat music controller duck this audio during combat.
     bindWorldAudio(audioRef, themeVolume);
-
     return () => {
-      if (audioRef.current === audio) {
-        audio.pause();
-        audio.src = '';
-        audio.load();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current.load();
         audioRef.current = null;
       }
     };

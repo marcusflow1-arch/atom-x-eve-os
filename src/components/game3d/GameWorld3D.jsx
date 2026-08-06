@@ -668,6 +668,16 @@ export default function GameWorld3D() {
     const bossDialogue = createBossCombatDialogue({ setActiveDialogue });
     window.__gw3dBossDialogue = bossDialogue;
 
+    // ─── Boss auto-attack cycle ─────────────────────────────────────────────
+    // The boss fires its scripted patterns (tornado-lift-beam → line beam →
+    // meteor strike) on a rotating timer while the encounter is active, so it
+    // attacks on its own instead of requiring the 0 / - / [ test keys. The
+    // encounter also auto-starts once the player model is ready.
+    let bossEncounterAutoStarted = false;
+    let bossAutoAttackTimer = 6;        // first scripted attack ~6s after load
+    let bossAutoAttackIndex = 0;
+    const BOSS_AUTO_ATTACK_INTERVAL = 8; // seconds between scripted patterns
+
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
@@ -1371,9 +1381,15 @@ export default function GameWorld3D() {
         // tick damage, fire a beam, knock the player out, and run a short fall.
         let bossSpecialLock = false;
         let bossFallActive = false;
-        if (model && bossEntities.length > 0) {
+        if (model) {
+          // Use a stand-in boss origin near the player when no boss entity is
+          // spawned, so the scripted tornado-lift-beam pattern still advances
+          // (auto-attack + 0 test key) instead of stalling after start().
+          const bossForPattern = bossEntities[0] || {
+            group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
+          };
           const tornadoBossResult = bossTornadoLiftBeam.update(delta, {
-            boss: bossEntities[0],
+            boss: bossForPattern,
             player: model,
             groundY: tGround,
             playerAnim,
@@ -1585,6 +1601,61 @@ export default function GameWorld3D() {
 
         // Boss encounter controller — ticks encounter phase + dialogue auto-clear.
         bossEncounter.update(delta);
+
+        // ─── Auto-start the encounter + cycle scripted boss attack patterns ───
+        // Rotates tornado-lift-beam → line beam → meteor strike so the boss
+        // attacks on its own. The tornado-lift-beam locks movement while active,
+        // so the timer pauses until it finishes before the next pattern fires.
+        if (!bossEncounterAutoStarted) {
+          bossEncounterAutoStarted = true;
+          bossEncounter.start({
+            bossId: 'kali',
+            introLine: { name: 'Kali', text: 'You have entered my storm.', duration: 4 },
+          });
+          setTimeout(() => bossEncounter.beginCombat(), 1200);
+        }
+        if (bossEncounter.isActive() && !bossTornadoLiftBeam.isActive()) {
+          bossAutoAttackTimer -= delta;
+          if (bossAutoAttackTimer <= 0) {
+            bossAutoAttackTimer = BOSS_AUTO_ATTACK_INTERVAL;
+            const boss = bossEntities[0] || {
+              group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
+            };
+            const pattern = bossAutoAttackIndex % 3;
+            bossAutoAttackIndex += 1;
+            if (pattern === 0) {
+              // Tornado-lift-beam: cyclone captures + lifts the player, then beam + knockback.
+              bossDialogue.queueLine({ id: 'auto_tornado', name: 'Kali', text: 'Rise inside the cyclone.', duration: 2.8, cooldown: 10 });
+              bossTornadoLiftBeam.start({ boss, player: model });
+            } else if (pattern === 1) {
+              // Telegraphed line beam (yellow lane warning → fire).
+              bossDialogue.queueLine({ id: 'auto_beam', name: 'Kali', text: 'The heavens answer my call.', duration: 2.5, cooldown: 8 });
+              const ang = Math.random() * Math.PI * 2;
+              const len = 10;
+              const cx = model.position.x, cz = model.position.z;
+              bossTelegraphs.spawnLine({
+                from: { x: cx + Math.cos(ang) * len, z: cz + Math.sin(ang) * len },
+                to: { x: cx - Math.cos(ang) * len, z: cz - Math.sin(ang) * len },
+                width: 1.4, delay: 1.0, damage: 34, color: 0xfacc15,
+                onFire: ({ hit, from, to }) => {
+                  playActionSound('light_beam');
+                  window.dispatchEvent(new CustomEvent('bossBeamImpact', { detail: { hit, from, to } }));
+                },
+              });
+            } else {
+              // Telegraphed meteor strike (circle warning → impact + camera shake).
+              bossDialogue.queueLine({ id: 'auto_meteor', name: 'Kali', text: 'The sky itself falls upon you.', duration: 2.8, cooldown: 10 });
+              bossTelegraphs.spawnCircle({
+                x: model.position.x, z: model.position.z, radius: 2.8, delay: 1.2, damage: 40, color: 0xfb7185,
+                onFire: ({ hit, x, z }) => {
+                  playActionSound('meteor_impact');
+                  cameraShake.shake({ amplitude: 0.16, duration: 0.32, frequency: 24 });
+                  window.dispatchEvent(new CustomEvent('bossMeteorImpact', { detail: { hit, x, z } }));
+                },
+              });
+            }
+          }
+        }
 
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
