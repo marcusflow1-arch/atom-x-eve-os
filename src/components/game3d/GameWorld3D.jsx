@@ -24,6 +24,7 @@ import { createBossEncounterController } from './boss/BossEncounterController';
 import { createBossTornadoLiftBeam } from './boss/BossTornadoLiftBeam';
 import { createBossTelegraphSystem } from './boss/BossTelegraphSystem';
 import { createCameraShakeController } from './camera/CameraShakeController';
+import { createBossCombatDialogue } from './boss/BossCombatDialogue';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
@@ -657,6 +658,13 @@ export default function GameWorld3D() {
     });
     window.__gw3dBossTelegraphs = bossTelegraphs;
 
+    // Boss combat dialogue — non-blocking banter queue (intro, attack callouts,
+    // HP thresholds, outro). Shows one line at a time and auto-hides; never
+    // pauses gameplay. Owns combat dialogue display so the encounter controller
+    // only needs to start/stop music + suppress NPCs.
+    const bossDialogue = createBossCombatDialogue({ setActiveDialogue });
+    window.__gw3dBossDialogue = bossDialogue;
+
     const detachBossBus = attachBossEventBus({
       scene, getPlayerHUD, setHP, spawnDamageFloat,
       activeEffectsRef: activeEffects,
@@ -1054,13 +1062,25 @@ export default function GameWorld3D() {
       // 9 = toggle boss encounter mode (test trigger until the real boss is wired)
       if (k === '9' && !e.repeat) {
         if (!bossEncounter.isActive()) {
-          bossEncounter.start({
-            bossId: 'kali',
-            introLine: { name: 'Kali', text: 'You have entered my storm.', duration: 4 },
+          bossEncounter.start({ bossId: 'kali' });
+          bossDialogue.queueLine({
+            id: 'boss_intro',
+            name: 'Kali',
+            text: 'You have entered my storm.',
+            duration: 4,
+            once: true,
           });
           setTimeout(() => bossEncounter.beginCombat(), 1200);
         } else {
-          bossEncounter.end({ outroLine: { name: 'Kali', text: 'This battle is not yet over.', duration: 3 } });
+          bossEncounter.end();
+          bossDialogue.reset();
+          bossDialogue.queueLine({
+            id: 'boss_outro',
+            name: 'Kali',
+            text: 'This form fades... but the storm remains.',
+            duration: 4,
+            once: true,
+          });
         }
         e.preventDefault();
       }
@@ -1069,6 +1089,13 @@ export default function GameWorld3D() {
       // pattern stays testable before boss AI selection is wired in.
       if (k === '0' && !e.repeat) {
         if (model && bossEncounter.isActive()) {
+          bossDialogue.queueLine({
+            id: 'boss_tornado_call',
+            name: 'Kali',
+            text: 'Rise inside the cyclone.',
+            duration: 2.8,
+            cooldown: 10,
+          });
           const boss = bossEntities[0] || {
             group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
           };
@@ -1079,6 +1106,13 @@ export default function GameWorld3D() {
       // - = test a telegraphed line beam (yellow lane warning → fire).
       if (k === '-' && !e.repeat) {
         if (model) {
+          bossDialogue.queueLine({
+            id: 'boss_beam_call',
+            name: 'Kali',
+            text: 'The heavens answer my call.',
+            duration: 2.5,
+            cooldown: 8,
+          });
           bossTelegraphs.spawnLine({
             from: { x: model.position.x - 8, z: model.position.z },
             to: { x: model.position.x + 8, z: model.position.z },
@@ -1097,6 +1131,13 @@ export default function GameWorld3D() {
       // [ = test a telegraphed meteor strike (circle warning → impact + shake).
       if (k === '[' && !e.repeat) {
         if (model) {
+          bossDialogue.queueLine({
+            id: 'boss_meteor_call',
+            name: 'Kali',
+            text: 'The sky itself falls upon you.',
+            duration: 2.8,
+            cooldown: 10,
+          });
           bossTelegraphs.spawnCircle({
             x: model.position.x,
             z: model.position.z,
@@ -1111,6 +1152,27 @@ export default function GameWorld3D() {
             },
           });
         }
+        e.preventDefault();
+      }
+      // 8 = queue a generic combat banter line (test the dialogue queue).
+      if (k === '8' && !e.repeat) {
+        bossDialogue.queueLine({
+          id: `test_${Date.now()}`,
+          name: 'Kali',
+          text: 'You are beneath the storm.',
+          duration: 3,
+        });
+        e.preventDefault();
+      }
+      // 7 = queue a once-style threshold line (test once: true behavior).
+      if (k === '7' && !e.repeat) {
+        bossDialogue.queueLine({
+          id: 'boss_40_test',
+          name: 'Kali',
+          text: 'Then face the heart of the storm!',
+          duration: 3.4,
+          once: true,
+        });
         e.preventDefault();
       }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
@@ -1310,6 +1372,19 @@ export default function GameWorld3D() {
           bossSpecialLock = !!tornadoBossResult?.lockMovement;
           bossFallActive = !!tornadoBossResult?.forcedFall;
         }
+        // HP threshold combat dialogue (Kali) — fires once per threshold.
+        if (bossEncounter.isActive() && bossEntities.length > 0) {
+          const b = bossEntities[0];
+          if (b && b.maxHp > 0) {
+            const hpRatio = b.hp / b.maxHp;
+            if (hpRatio <= 0.75 && !bossDialogue.hasShown('boss_75')) {
+              bossDialogue.queueLine({ id: 'boss_75', name: 'Kali', text: 'You persist longer than the others.', duration: 3.2, once: true });
+            }
+            if (hpRatio <= 0.4 && !bossDialogue.hasShown('boss_40')) {
+              bossDialogue.queueLine({ id: 'boss_40', name: 'Kali', text: 'Then face the heart of the storm!', duration: 3.4, once: true });
+            }
+          }
+        }
         tornadoView.allowLookUp = tornadoRes.allowLookUp;
         const tornadoActive = tornado.getState().active;
         if (tornadoRes.allowLookUp) {
@@ -1491,6 +1566,11 @@ export default function GameWorld3D() {
           player: model,
           groundY: model ? (sampleGroundY(model.position.x, model.position.z) ?? model.position.y) : 0,
         });
+
+        // Boss combat dialogue — non-blocking banter queue (intro/callouts/
+        // thresholds/outro). Shows one line at a time, auto-hides; never pauses
+        // gameplay.
+        bossDialogue.update(delta);
 
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
         let closestNPC = null;
