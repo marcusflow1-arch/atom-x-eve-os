@@ -230,7 +230,7 @@ export default function LibrarySidebar() {
   const isGameDetail = pathname.includes('/gamedetail');
   const isGameView = pathname.includes('/gameview');
 
-  const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || isGameView || pathname.includes('/gamedetail') || isStore);
+  const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || isGameView || pathname.includes('/gamedetail'));
 
   // Pages whose left rail is a 132px overlay extension — center the floating buttons within it
   const hasOverlayRail = ['/store', '/genremastery', '/community', '/clan', '/aura'].some(s => pathname.includes(s));
