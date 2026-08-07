@@ -489,7 +489,34 @@ export default function Store() {
                       onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
                     />
 
-                    {/* Master sidebar is rendered globally by GlassPageFrame (fixed left column; this content area reflows via its left padding). */}
+                    {/* Master left sidebar — identical frame on every page (profile → recent list → slots+Play → 4 panel boxes). */}
+                    {!inPageStoreGameId && (
+                      <MasterSidebar
+                        pageKey="store"
+                        recentLabel="Recent Games"
+                        recentContent={
+                          <div className="flex flex-col gap-2 py-1">
+                            {games.slice(0, 6).map((g, i) => (
+                              <button key={g.id || i} onClick={() => handleNavigateToGame(g.id)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors text-left">
+                                <div className="w-9 h-12 rounded flex-shrink-0 overflow-hidden bg-black/40">
+                                  <img src={g.cover_image || g.image} alt={g.title} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-white/70 text-[11px] font-medium truncate flex-1">{g.title}</span>
+                              </button>
+                            ))}
+                          </div>
+                        }
+                        onLaunch={() => {
+                          const scroller = document.querySelector('.page-container');
+                          if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+                          else window.scrollTo({ top: 0, behavior: 'smooth' });
+                          setTimeout(() => {
+                            const heroPlay = [...document.querySelectorAll('button')].find(b => /PLAY NOW/i.test((b.textContent || '')));
+                            heroPlay?.click();
+                          }, 350);
+                        }}
+                      />
+                    )}
 
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">

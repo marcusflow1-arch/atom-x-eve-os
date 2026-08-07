@@ -4,8 +4,6 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import LiveStreamBox from './LiveStreamBox';
 import StudioProfileView from '@/components/studio/StudioProfileView';
 import DevGamesPanel from '@/components/studio/DevGamesPanel';
-import MasterSidebar from './MasterSidebar';
-import { useSidebarVisible } from '@/hooks/useSidebarVisible';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -17,7 +15,6 @@ export const glassStyle = {
 export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
-  const [sidebarVisibleState] = useSidebarVisible();
 
   const closeAll = () => {
     setOverlay(null);
@@ -64,11 +61,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
       {/* Games Top Panel */}
       {showTriggerTab && <DevGamesPanel open={gamesOpen} game={gameData} />}
 
-      {/* Master sidebar — identical frame on every GlassFrame page (profile → recent → slots+Play → 4 panel boxes). Fixed between the top (64px) and bottom (48px) glass bars; page content reflows via left padding. */}
-      <MasterSidebar mode="fixed" />
-
       {/* Page Content */}
-      <div className="relative z-[1]" style={{ paddingLeft: sidebarVisibleState ? 330 : 0, transition: 'padding-left 0.3s ease' }}>
+      <div className="relative z-[1]">
         {children}
       </div>
 
