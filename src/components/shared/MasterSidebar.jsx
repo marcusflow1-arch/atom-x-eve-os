@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Library as LibraryIcon, Trophy, Tv, Play, X, ChevronRight,
   Search, Trash2, RefreshCw, Download, Package, Zap, Shield, User,
   ExternalLink, Maximize2, Minimize2, ArrowLeftRight, UserCircle, UserPlus,
   LogIn, Plus, PanelLeftClose, Eye, EyeOff,
+  MessageSquare, Wheat, Radio, ShoppingBag,
 } from 'lucide-react';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import { libraryGames } from '@/components/dashboard/gamehub/mockLibraryData';
@@ -53,17 +54,46 @@ const PANELS = [
 
 const SIDEBAR_WIDTH = 330;
 
+function MenuBox({ Icon, onClick, title }) {
+  return (
+    <button onClick={onClick} title={title} className="w-full h-full flex items-center justify-center text-white/60 hover:text-white transition-colors">
+      <Icon className="w-5 h-5" />
+    </button>
+  );
+}
+
 export default function MasterSidebar({
-  pageKey = 'global',
-  recentLabel = 'Recently Played',
-  recentContent = null,
-  slotTop = null,   // node for the upper middle box (e.g. "?" placeholder or Clan Menu)
-  slotBottom = null, // node for the lower middle box (e.g. "?" placeholder or Roster)
-  onLaunch = null,  // Play button handler (launch 3D environment)
-  quickMenuType = null, // 'clan' | 'forum' | 'farm' | null — drives QuickGamesDrawer
+  mode = 'inflow', // 'inflow' (flex child) | 'fixed' (fixed column inside GlassPageFrame)
+  pageKey: pageKeyProp,
+  recentLabel: recentLabelProp,
+  recentContent: recentContentProp,
+  slotTop: slotTopProp,
+  slotBottom: slotBottomProp,
+  onLaunch = null,
+  quickMenuType: quickMenuTypeProp = null,
 }) {
   const [visible, toggle] = useSidebarVisible();
   const navigate = useNavigate();
+  const location = useLocation();
+  const path = location.pathname.toLowerCase();
+
+  // Auto-detect page config so the same global sidebar adapts per route.
+  const auto = (() => {
+    if (path.includes('/clan')) return { pageKey: 'clan', recentLabel: 'Recently Visited', quickMenuType: 'clan', slotTop: <MenuBox Icon={Shield} title="Clan Menu" />, slotBottom: <MenuBox Icon={Users} title="Roster" onClick={() => window.dispatchEvent(new Event('openClanRoster'))} /> };
+    if (path.includes('/community') || path.includes('/forum')) return { pageKey: 'forum', recentLabel: 'Recent Forums', quickMenuType: 'forum', slotTop: <MenuBox Icon={MessageSquare} title="Forum" />, slotBottom: null };
+    if (path.includes('/farm')) return { pageKey: 'farm', recentLabel: 'Recent Farm Games', quickMenuType: 'farm', slotTop: <MenuBox Icon={Wheat} title="Farm" />, slotBottom: null };
+    if (path.includes('/genremastery') || path.includes('/cards')) return { pageKey: 'cards', recentLabel: 'Recent Cards', quickMenuType: null, slotTop: <MenuBox Icon={Trophy} title="Cards" />, slotBottom: null };
+    if (path.includes('/aura') || path.includes('/streaming') || path.includes('/discover')) return { pageKey: 'aura', recentLabel: 'Recently Watched', quickMenuType: null, slotTop: <MenuBox Icon={Radio} title="Aura" />, slotBottom: null };
+    if (path.includes('/store')) return { pageKey: 'store', recentLabel: 'Recent Games', quickMenuType: null, slotTop: <MenuBox Icon={ShoppingBag} title="Store" />, slotBottom: null };
+    return { pageKey: 'global', recentLabel: 'Recently Played', quickMenuType: null, slotTop: null, slotBottom: null };
+  })();
+
+  const pageKey = pageKeyProp || auto.pageKey;
+  const recentLabel = recentLabelProp || auto.recentLabel;
+  const recentContent = recentContentProp || null;
+  const slotTop = slotTopProp !== undefined ? slotTopProp : auto.slotTop;
+  const slotBottom = slotBottomProp !== undefined ? slotBottomProp : auto.slotBottom;
+  const quickMenuType = quickMenuTypeProp || auto.quickMenuType;
 
   const [expandedPanel, setExpandedPanel] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -158,9 +188,10 @@ export default function MasterSidebar({
   return (
     <>
       <aside
-        className="flex-shrink-0 h-full flex flex-col relative z-30 overflow-hidden"
+        className={mode === 'fixed' ? 'flex flex-col overflow-hidden fixed z-30' : 'flex-shrink-0 h-full flex flex-col relative z-30 overflow-hidden'}
         style={{
           width: `${SIDEBAR_WIDTH}px`,
+          ...(mode === 'fixed' ? { position: 'fixed', left: 0, top: '64px', bottom: '48px', height: 'auto' } : {}),
           background: 'rgba(8, 12, 18, 0.42)',
           backdropFilter: 'blur(30px) saturate(150%)',
           WebkitBackdropFilter: 'blur(30px) saturate(150%)',
@@ -185,7 +216,7 @@ export default function MasterSidebar({
             <div className="flex flex-col gap-2 py-1">
               {libraryGames.slice(0, 6).map((g, i) => (
                 <button
-                  key={g.id || i}
+                  key={i}
                   onClick={() => setDetailGame(g)}
                   className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors text-left"
                 >
@@ -207,9 +238,11 @@ export default function MasterSidebar({
         </div>
 
         <div className="flex-shrink-0 flex items-center justify-center gap-2 px-3 py-2">
-          <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-            {slotTop || <span className="text-white/30 text-lg font-bold">?</span>}
-          </div>
+          {slotTop != null && (
+            <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+              {slotTop}
+            </div>
+          )}
 
           {/* Play button — standalone, always between the two slots. */}
           <button
@@ -225,9 +258,11 @@ export default function MasterSidebar({
             <span className="text-[7px] font-bold uppercase tracking-wider">Play</span>
           </button>
 
-          <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-            {slotBottom || <span className="text-white/30 text-lg font-bold">?</span>}
-          </div>
+          {slotBottom != null && (
+            <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+              {slotBottom}
+            </div>
+          )}
         </div>
 
         <div className="w-full flex items-center gap-2 px-3 py-1 shrink-0">
