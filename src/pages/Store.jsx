@@ -29,6 +29,7 @@ import { showError } from '@/components/error/ErrorToast';
 import LoadingState from '@/components/error/LoadingState';
 import { useGameFilters } from '../components/store/hooks/useGameFilters';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import MasterSidebar from '@/components/shared/MasterSidebar';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
@@ -488,61 +489,34 @@ export default function Store() {
                       onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
                     />
 
-                    {/* Left Sidebar — overlay extension: floats over the store UI instead of pushing it.
-                        Slightly shaded + blurred so the UI stays visible behind it while text remains readable. */}
-                    {!inPageStoreGameId && sidebarVisible && <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r z-40 flex flex-col items-center"
-                        style={{
-                            background: 'rgba(8, 12, 18, 0.58)',
-                            backdropFilter: 'blur(10px) saturate(140%)',
-                            WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-                            borderColor: 'rgba(200,210,220,0.18)',
-                            boxShadow: '4px 0 24px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.06)'
+                    {/* Master left sidebar — identical frame on every page (profile → recent list → slots+Play → 4 panel boxes). */}
+                    {!inPageStoreGameId && (
+                      <MasterSidebar
+                        pageKey="store"
+                        recentLabel="Recent Games"
+                        recentContent={
+                          <div className="flex flex-col gap-2 py-1">
+                            {games.slice(0, 6).map((g, i) => (
+                              <button key={g.id || i} onClick={() => handleNavigateToGame(g.id)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors text-left">
+                                <div className="w-9 h-12 rounded flex-shrink-0 overflow-hidden bg-black/40">
+                                  <img src={g.cover_image || g.image} alt={g.title} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-white/70 text-[11px] font-medium truncate flex-1">{g.title}</span>
+                              </button>
+                            ))}
+                          </div>
+                        }
+                        onLaunch={() => {
+                          const scroller = document.querySelector('.page-container');
+                          if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+                          else window.scrollTo({ top: 0, behavior: 'smooth' });
+                          setTimeout(() => {
+                            const heroPlay = [...document.querySelectorAll('button')].find(b => /PLAY NOW/i.test((b.textContent || '')));
+                            heroPlay?.click();
+                          }, 350);
                         }}
-                    >
-                        {/* TOP — Recent Games (the floating LibrarySidebar rail renders its label + boxes here). Kept empty so the rail shows through without the old "Recommended" overlap. */}
-                        <div className="w-full flex-1 min-h-0" aria-hidden="true" />
-
-                        {/* Jeweled divider — separates Recent Games from the Play launcher */}
-                        <div className="w-full flex items-center gap-2 px-3 py-1 shrink-0">
-                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
-                            <span className="w-1.5 h-1.5 rotate-45 bg-white/40" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.5)' }} />
-                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
-                        </div>
-
-                        {/* MIDDLE — Play launcher (moved here from the hero cluster; sits between Recent Games and the bottom nav) */}
-                        <div className="w-full flex-shrink-0 flex flex-col items-center gap-2 py-2">
-                            <button
-                                onClick={() => {
-                                    const scroller = document.querySelector('.page-container');
-                                    if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
-                                    else window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    setTimeout(() => {
-                                        const heroPlay = [...document.querySelectorAll('button')].find(b => /PLAY NOW/i.test((b.textContent || '')));
-                                        heroPlay?.click();
-                                    }, 350);
-                                }}
-                                className="group flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-2xl text-white transition-all duration-300 hover:scale-105"
-                                style={{
-                                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                                    boxShadow: '0 6px 22px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.25)'
-                                }}
-                                title="Play featured game"
-                            >
-                                <Play className="w-5 h-5 fill-white" />
-                                <span className="text-[8px] font-bold uppercase tracking-wider">Play</span>
-                            </button>
-                        </div>
-
-                        {/* Jeweled divider — separates the Play launcher from the bottom nav */}
-                        <div className="w-full flex items-center gap-2 px-3 py-1 shrink-0">
-                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
-                            <span className="w-1.5 h-1.5 rotate-45 bg-white/40" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.5)' }} />
-                            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
-                        </div>
-
-                        {/* BOTTOM — Reserved for Library/Entertainment/Rewards options (floating LibrarySidebar) */}
-                        <div className="w-full flex-1 min-h-0" aria-hidden="true" />
-                    </div>}
+                      />
+                    )}
 
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
