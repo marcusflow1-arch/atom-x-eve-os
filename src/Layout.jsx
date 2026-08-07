@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar, PanelLeftClose, PanelLeftOpen
-} from 'lucide-react';
+                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
+                } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
@@ -28,8 +28,6 @@ import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsD
 import ThoughtStreamBubble from './components/dashboard/ThoughtStreamBubble';
 import { AIPresenceProvider } from './components/dashboard/AIPresenceContext';
 import MoodAuraLayer from './components/dashboard/MoodAuraLayer';
-import LunaLeftRail from './components/dashboard/LunaLeftRail';
-import { useSidebarVisible } from './hooks/useSidebarVisible';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
@@ -300,12 +298,6 @@ function LayoutContent({ children, currentPageName }) {
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
   const p_lower = location.pathname.toLowerCase();
-  // Global Luna sidebar rail — shared visibility state with LunaTemplate/Store
-  // (same persisted hook), so the rail stays consistent across navigation.
-  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
-  // LunaTemplate, Store, and Clan each manage their own rails via GlassPageFrame.
-  const hasOwnRail = p_lower.includes('/lunatemplate') || p_lower.includes('/store') || p_lower.includes('/clan');
-  const showGlobalRail = !hasOwnRail;
   // Store header for store/gamedetail pages (kept separate as user likes it)
   const showStoreHeader = ['/store', '/gamedetail'].some(s => p_lower.includes(s));
   const showNotificationsHeader = !showStoreHeader && p_lower.includes('/notifications');
@@ -1144,23 +1136,7 @@ function LayoutContent({ children, currentPageName }) {
       })()}
 
       {/* Main Content with Error Boundary */}
-      {/* Global Luna sidebar rail — for pages without their own (LunaTemplate & Store manage theirs) */}
-      {showGlobalRail && sidebarVisible && (
-        <div className="fixed left-0 z-30" style={{ top: 64, bottom: 0, width: 80 }}>
-          <LunaLeftRail className="w-full h-full" />
-        </div>
-      )}
-      {showGlobalRail && (
-        <button
-          onClick={toggleSidebar}
-          title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
-          className="fixed z-50 w-8 h-8 rounded-md flex items-center justify-center transition-all hover:bg-white/10 text-white/50 hover:text-white"
-          style={{ bottom: 16, left: 16, background: 'rgba(8,12,18,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          {sidebarVisible ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
-        </button>
-      )}
-      <main className="flex-grow overflow-hidden transition-all duration-300" style={{ marginLeft: showGlobalRail && sidebarVisible ? 80 : 0 }}>
+      <main className="flex-grow overflow-hidden">
         <div className="page-container">
           <ErrorBoundary>
             <Suspense fallback={<RouteLoadingFallback />}>
