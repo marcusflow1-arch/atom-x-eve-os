@@ -1,0 +1,58 @@
+{
+  "name": "VideoFrame",
+  "type": "object",
+  "properties": {
+    "video_analysis_id": {
+      "type": "string",
+      "description": "Parent VideoAnalysis record id"
+    },
+    "scene_id": {
+      "type": "string",
+      "default": "",
+      "description": "Linked VideoScene id"
+    },
+    "frame_index": {
+      "type": "number",
+      "default": 0
+    },
+    "timestamp_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "default": ""
+    },
+    "frame_summary": {
+      "type": "string",
+      "default": ""
+    },
+    "ocr_text": {
+      "type": "string",
+      "default": ""
+    },
+    "detected_objects_json": {
+      "type": "string",
+      "default": "[]"
+    },
+    "detected_entities_json": {
+      "type": "string",
+      "default": "[]"
+    },
+    "notes": {
+      "type": "string",
+      "default": ""
+    },
+    "is_representative": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "video_analysis_id"
+  ]
+}

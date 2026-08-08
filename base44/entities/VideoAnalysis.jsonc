@@ -4,11 +4,128 @@
   "properties": {
     "video_url": {
       "type": "string",
-      "description": "URL of the analyzed video"
+      "description": "Source URL of the analyzed video"
     },
     "analysis_result": {
       "type": "string",
-      "description": "The Markdown result of the video analysis"
+      "description": "Compact markdown summary of the analysis"
+    },
+    "title": {
+      "type": "string",
+      "description": "Video title (custom or auto-detected)"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "youtube",
+        "direct",
+        "upload"
+      ],
+      "default": "youtube"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "packaged"
+      ],
+      "default": "pending"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "transcript_text": {
+      "type": "string",
+      "default": ""
+    },
+    "transcript_available": {
+      "type": "boolean",
+      "default": false
+    },
+    "total_frames": {
+      "type": "number",
+      "default": 0
+    },
+    "total_scenes": {
+      "type": "number",
+      "default": 0
+    },
+    "total_segments": {
+      "type": "number",
+      "default": 0
+    },
+    "analysis_depth": {
+      "type": "string",
+      "enum": [
+        "light",
+        "medium",
+        "deep"
+      ],
+      "default": "medium"
+    },
+    "sampling_mode": {
+      "type": "string",
+      "enum": [
+        "interval",
+        "scene",
+        "hybrid"
+      ],
+      "default": "hybrid"
+    },
+    "sample_interval_seconds": {
+      "type": "number",
+      "default": 5
+    },
+    "max_frames": {
+      "type": "number",
+      "default": 24
+    },
+    "include_transcript": {
+      "type": "boolean",
+      "default": true
+    },
+    "run_ocr": {
+      "type": "boolean",
+      "default": true
+    },
+    "detect_objects": {
+      "type": "boolean",
+      "default": true
+    },
+    "auto_fallback_package": {
+      "type": "boolean",
+      "default": false
+    },
+    "fallback_package_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "fallback_package_url": {
+      "type": "string",
+      "default": ""
+    },
+    "summary_markdown": {
+      "type": "string",
+      "default": ""
+    },
+    "cover_image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "notes": {
+      "type": "string",
+      "default": ""
     }
   },
   "required": [

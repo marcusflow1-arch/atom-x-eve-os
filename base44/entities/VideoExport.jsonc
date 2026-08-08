@@ -1,0 +1,38 @@
+{
+  "name": "VideoExport",
+  "type": "object",
+  "properties": {
+    "video_analysis_id": {
+      "type": "string",
+      "description": "Parent VideoAnalysis record id"
+    },
+    "export_type": {
+      "type": "string",
+      "enum": [
+        "zip",
+        "json",
+        "csv",
+        "frames",
+        "md",
+        "txt"
+      ],
+      "default": "json"
+    },
+    "file_url": {
+      "type": "string",
+      "default": ""
+    },
+    "label": {
+      "type": "string",
+      "default": ""
+    },
+    "frame_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "video_analysis_id",
+    "export_type"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "VideoScene",
+  "type": "object",
+  "properties": {
+    "video_analysis_id": {
+      "type": "string",
+      "description": "Parent VideoAnalysis record id"
+    },
+    "scene_index": {
+      "type": "number",
+      "default": 0
+    },
+    "start_time_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "end_time_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "representative_frame_url": {
+      "type": "string",
+      "default": ""
+    },
+    "scene_summary": {
+      "type": "string",
+      "default": ""
+    },
+    "transcript_excerpt": {
+      "type": "string",
+      "default": ""
+    },
+    "detected_entities_json": {
+      "type": "string",
+      "default": "[]"
+    },
+    "detected_objects_json": {
+      "type": "string",
+      "default": "[]"
+    },
+    "ocr_text": {
+      "type": "string",
+      "default": ""
+    },
+    "importance_score": {
+      "type": "number",
+      "default": 0
+    },
+    "actions_json": {
+      "type": "string",
+      "default": "[]"
+    },
+    "visual_description": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "video_analysis_id"
+  ]
+}

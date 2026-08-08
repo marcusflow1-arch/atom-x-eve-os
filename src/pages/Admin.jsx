@@ -23,6 +23,7 @@ import ReactorEditor from '../components/admin/ReactorEditor';
 import AttachmentEditor from '../components/admin/AttachmentEditor';
 import AssetFilesManager from '../components/admin/AssetFilesManager';
 import VideoAnalyzer from '../components/admin/VideoAnalyzer';
+import VideoIntelligence from '../components/admin/videoIntelligence/VideoIntelligence';
 import NPCActionAudioManager from '../components/admin/NPCActionAudioManager';
 import SoundLibraryManager from '../components/admin/SoundLibraryManager';
 import KnowledgeEngineManager from '../components/admin/KnowledgeEngineManager';
@@ -476,6 +477,7 @@ export default function Admin() {
             <TabsTrigger value="attachment-editor">Attachment Editor</TabsTrigger>
             <TabsTrigger value="asset-files">Asset Files</TabsTrigger>
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
+            <TabsTrigger value="video-intel">Video Intelligence</TabsTrigger>
             <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
             <TabsTrigger value="knowledge-engine">Knowledge Engine</TabsTrigger>
             </TabsList>
@@ -983,6 +985,10 @@ export default function Admin() {
 
           <TabsContent value="video-analyzer">
             <VideoAnalyzer />
+          </TabsContent>
+
+          <TabsContent value="video-intel">
+            <VideoIntelligence />
           </TabsContent>
 
           <TabsContent value="quest-audio">
