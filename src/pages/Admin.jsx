@@ -25,6 +25,7 @@ import AssetFilesManager from '../components/admin/AssetFilesManager';
 import VideoAnalyzer from '../components/admin/VideoAnalyzer';
 import VideoIntelligence from '../components/admin/videoIntelligence/VideoIntelligence';
 import AttachmentVisualValidator from '../components/admin/attachmentValidator/AttachmentVisualValidator';
+import AttachmentCorrectionLab from '../components/admin/attachmentCorrection/AttachmentCorrectionLab';
 import NPCActionAudioManager from '../components/admin/NPCActionAudioManager';
 import SoundLibraryManager from '../components/admin/SoundLibraryManager';
 import KnowledgeEngineManager from '../components/admin/KnowledgeEngineManager';
@@ -480,6 +481,7 @@ export default function Admin() {
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
             <TabsTrigger value="video-intel">Video Intelligence</TabsTrigger>
             <TabsTrigger value="attachment-validator">Attachment Validator</TabsTrigger>
+            <TabsTrigger value="attachment-correction">Attachment Correction Lab</TabsTrigger>
             <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
             <TabsTrigger value="knowledge-engine">Knowledge Engine</TabsTrigger>
             </TabsList>
@@ -995,6 +997,10 @@ export default function Admin() {
 
           <TabsContent value="attachment-validator">
             <AttachmentVisualValidator />
+          </TabsContent>
+
+          <TabsContent value="attachment-correction">
+            <AttachmentCorrectionLab />
           </TabsContent>
 
           <TabsContent value="quest-audio">

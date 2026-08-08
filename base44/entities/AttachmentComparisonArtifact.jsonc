@@ -1,0 +1,31 @@
+{
+  "name": "AttachmentComparisonArtifact",
+  "type": "object",
+  "properties": {
+    "correction_session_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "type": "string",
+      "enum": [
+        "before_image",
+        "after_image",
+        "comparison_export",
+        "keyframe"
+      ],
+      "default": "before_image"
+    },
+    "file_url": {
+      "type": "string",
+      "default": ""
+    },
+    "label": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "correction_session_id",
+    "artifact_type"
+  ]
+}

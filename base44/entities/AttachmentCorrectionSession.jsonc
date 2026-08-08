@@ -1,0 +1,181 @@
+{
+  "name": "AttachmentCorrectionSession",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "character_model": {
+      "type": "string",
+      "default": ""
+    },
+    "rig_profile_name": {
+      "type": "string",
+      "default": ""
+    },
+    "prop_name": {
+      "type": "string",
+      "default": ""
+    },
+    "attachment_rule_name": {
+      "type": "string",
+      "default": ""
+    },
+    "animation_clip_name": {
+      "type": "string",
+      "default": ""
+    },
+    "base_position_offset_x": {
+      "type": "number",
+      "default": 0
+    },
+    "base_position_offset_y": {
+      "type": "number",
+      "default": 0
+    },
+    "base_position_offset_z": {
+      "type": "number",
+      "default": 0
+    },
+    "base_rotation_offset_x": {
+      "type": "number",
+      "default": 0
+    },
+    "base_rotation_offset_y": {
+      "type": "number",
+      "default": 0
+    },
+    "base_rotation_offset_z": {
+      "type": "number",
+      "default": 0
+    },
+    "base_scale_x": {
+      "type": "number",
+      "default": 1
+    },
+    "base_scale_y": {
+      "type": "number",
+      "default": 1
+    },
+    "base_scale_z": {
+      "type": "number",
+      "default": 1
+    },
+    "base_offhand_position_x": {
+      "type": "number",
+      "default": 0
+    },
+    "base_offhand_position_y": {
+      "type": "number",
+      "default": 0
+    },
+    "base_offhand_position_z": {
+      "type": "number",
+      "default": 0
+    },
+    "base_offhand_rotation_x": {
+      "type": "number",
+      "default": 0
+    },
+    "base_offhand_rotation_y": {
+      "type": "number",
+      "default": 0
+    },
+    "base_offhand_rotation_z": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_position_offset_x": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_position_offset_y": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_position_offset_z": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_rotation_offset_x": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_rotation_offset_y": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_rotation_offset_z": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_scale_x": {
+      "type": "number",
+      "default": 1
+    },
+    "corrected_scale_y": {
+      "type": "number",
+      "default": 1
+    },
+    "corrected_scale_z": {
+      "type": "number",
+      "default": 1
+    },
+    "corrected_offhand_position_x": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_offhand_position_y": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_offhand_position_z": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_offhand_rotation_x": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_offhand_rotation_y": {
+      "type": "number",
+      "default": 0
+    },
+    "corrected_offhand_rotation_z": {
+      "type": "number",
+      "default": 0
+    },
+    "correction_type": {
+      "type": "string",
+      "enum": [
+        "base_rule",
+        "animation_override",
+        "model_override"
+      ],
+      "default": "base_rule"
+    },
+    "notes": {
+      "type": "string",
+      "default": ""
+    },
+    "approved": {
+      "type": "boolean",
+      "default": false
+    },
+    "before_image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "after_image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "issue_notes": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
