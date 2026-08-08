@@ -1,0 +1,36 @@
+{
+  "name": "AttachmentValidationExport",
+  "type": "object",
+  "properties": {
+    "validation_session_id": {
+      "type": "string"
+    },
+    "export_type": {
+      "type": "string",
+      "enum": [
+        "zip",
+        "json",
+        "csv",
+        "images",
+        "md"
+      ],
+      "default": "zip"
+    },
+    "file_url": {
+      "type": "string",
+      "default": ""
+    },
+    "label": {
+      "type": "string",
+      "default": ""
+    },
+    "frame_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "validation_session_id",
+    "export_type"
+  ]
+}

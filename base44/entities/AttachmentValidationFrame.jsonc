@@ -1,0 +1,52 @@
+{
+  "name": "AttachmentValidationFrame",
+  "type": "object",
+  "properties": {
+    "validation_session_id": {
+      "type": "string"
+    },
+    "frame_index": {
+      "type": "number",
+      "default": 0
+    },
+    "timestamp_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "default": ""
+    },
+    "visual_summary": {
+      "type": "string",
+      "default": ""
+    },
+    "alignment_notes": {
+      "type": "string",
+      "default": ""
+    },
+    "clipping_detected": {
+      "type": "boolean",
+      "default": false
+    },
+    "drift_detected": {
+      "type": "boolean",
+      "default": false
+    },
+    "occlusion_detected": {
+      "type": "boolean",
+      "default": false
+    },
+    "admin_notes": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "validation_session_id"
+  ]
+}

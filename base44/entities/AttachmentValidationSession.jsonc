@@ -1,0 +1,76 @@
+{
+  "name": "AttachmentValidationSession",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "character_model": {
+      "type": "string",
+      "default": ""
+    },
+    "rig_profile_name": {
+      "type": "string",
+      "default": ""
+    },
+    "weapon_or_prop_name": {
+      "type": "string",
+      "default": ""
+    },
+    "attachment_rule_name": {
+      "type": "string",
+      "default": ""
+    },
+    "animation_clip_name": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "packaged"
+      ],
+      "default": "pending"
+    },
+    "frame_sampling_mode": {
+      "type": "string",
+      "enum": [
+        "interval",
+        "keyframes",
+        "hybrid"
+      ],
+      "default": "interval"
+    },
+    "frame_interval_seconds": {
+      "type": "number",
+      "default": 0.25
+    },
+    "max_frames": {
+      "type": "number",
+      "default": 8
+    },
+    "ai_issue_detection": {
+      "type": "boolean",
+      "default": true
+    },
+    "total_frames": {
+      "type": "number",
+      "default": 0
+    },
+    "summary": {
+      "type": "string",
+      "default": ""
+    },
+    "packaged": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
