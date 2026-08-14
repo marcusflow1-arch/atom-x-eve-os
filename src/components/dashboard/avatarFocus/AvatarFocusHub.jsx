@@ -46,6 +46,7 @@ export default function AvatarFocusHub({ onClose }) {
 
   return (
     <motion.div
+      data-avatar-focus-hub="true"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
