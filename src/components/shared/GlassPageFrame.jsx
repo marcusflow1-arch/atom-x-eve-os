@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import LiveStreamBox from './LiveStreamBox';
+import GameStreamPanel from './GameStreamPanel';
 import StudioProfileView from '@/components/studio/StudioProfileView';
 import DevGamesPanel from '@/components/studio/DevGamesPanel';
 
@@ -79,18 +79,18 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
             style={{
               top: '64px',
               bottom: '48px',
-              background: 'rgba(6, 8, 14, 0.92)',
-              backdropFilter: 'blur(40px) saturate(160%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(160%)',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              background: 'rgba(22, 26, 32, 0.58)',
+              backdropFilter: 'blur(40px) saturate(165%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(165%)',
+              borderTop: '1px solid rgba(255,255,255,0.07)',
+              borderBottom: '1px solid rgba(255,255,255,0.07)',
               overflowY: 'auto',
             }}
           >
             {overlay === 'stream' && gameData && (
-              <LiveStreamBox game={gameData} />
+              <GameStreamPanel game={gameData} />
             )}
-            {overlay === 'studio' && (
+            {overlay === 'studio' && gameData && (
               <StudioProfileView game={gameData} />
             )}
           </motion.div>
@@ -134,29 +134,29 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
                 boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
               }}
             >
-            {/* Games */}
-            <div
-              onClick={toggleGames}
-              className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${gamesOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
-            >
-              <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${gamesOpen ? 'text-white/90' : 'text-white/50'}`}>Games</span>
-            </div>
+              {/* Games */}
+              <div
+                onClick={toggleGames}
+                className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${gamesOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
+              >
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${gamesOpen ? 'text-white/90' : 'text-white/50'}`}>Games</span>
+              </div>
 
-            {/* Studio */}
-            <div
-              onClick={() => toggleOverlay('studio')}
-              className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${overlay === 'studio' ? 'bg-white/10' : 'hover:bg-white/5'}`}
-            >
-              <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'studio' ? 'text-white/90' : 'text-white/50'}`}>Studio</span>
-            </div>
+              {/* Studio */}
+              <div
+                onClick={() => toggleOverlay('studio')}
+                className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${overlay === 'studio' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+              >
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'studio' ? 'text-white/90' : 'text-white/50'}`}>Studio</span>
+              </div>
 
-            {/* Stream */}
-            <div
-              onClick={() => toggleOverlay('stream')}
-              className={`flex-1 flex items-center justify-center cursor-pointer transition-colors ${overlay === 'stream' ? 'bg-white/10' : 'hover:bg-white/5'}`}
-            >
-              <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'stream' ? 'text-white/90' : 'text-white/50'}`}>Stream</span>
-            </div>
+              {/* Stream */}
+              <div
+                onClick={() => toggleOverlay('stream')}
+                className={`flex-1 flex items-center justify-center cursor-pointer transition-colors ${overlay === 'stream' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+              >
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'stream' ? 'text-white/90' : 'text-white/50'}`}>Stream</span>
+              </div>
             </div>
           </>
         )}
