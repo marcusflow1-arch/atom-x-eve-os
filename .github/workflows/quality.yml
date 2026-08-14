@@ -1,0 +1,31 @@
+name: Atom x Eve Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Check for accidentally committed payment credentials
+        shell: bash
+        run: |
+          if grep -RniE "(PAYPAL_CLIENT_ID|PAYPAL_APP_SECRET|sk_live_|-----BEGIN (RSA|OPENSSH|EC) PRIVATE KEY-----)" src base44 --exclude-dir=node_modules --exclude='*.map' 2>/dev/null; then
+            echo "Potential secret or private credential found in source tree."
+            exit 1
+          fi
