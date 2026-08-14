@@ -6,6 +6,7 @@ const RESPONSE_SCHEMA = {
   properties: {
     developer_name: { type: 'string' },
     tagline: { type: 'string' },
+    studio_type: { type: 'string' },
     description: { type: 'string' },
     founded_year: { type: 'number' },
     headquarters: { type: 'string' },
@@ -33,7 +34,6 @@ const RESPONSE_SCHEMA = {
  * Results are cached per studio (and per game) so games sharing a developer
  * reuse the same profile instead of re-fetching.
  */
-// In-session cache so re-opening the same studio is instant (no re-lookup).
 const memoryCache = new Map();
 
 export default function useStudioProfile(game) {
@@ -51,7 +51,6 @@ export default function useStudioProfile(game) {
 
     const gameKey = title.toLowerCase().trim();
 
-    // 0. Instant: already resolved this session
     const cached = memoryCache.get(knownDev || gameKey);
     if (cached) {
       setProfile(cached);
@@ -64,7 +63,6 @@ export default function useStudioProfile(game) {
       setError(null);
       setProfile(null);
 
-      // 1. Cached by studio name (shared across that studio's games)
       if (knownDev) {
         const byDev = await base44.entities.StudioProfile.filter({ developer_name: knownDev });
         if (byDev?.length) {
@@ -74,7 +72,6 @@ export default function useStudioProfile(game) {
         }
       }
 
-      // 2. Cached by game
       const byGame = await base44.entities.StudioProfile.filter({ game_key: gameKey });
       if (byGame?.length) {
         memoryCache.set(gameKey, byGame[0]);
@@ -83,12 +80,11 @@ export default function useStudioProfile(game) {
         return;
       }
 
-      // 3. Look it up live
       try {
         const data = await base44.integrations.Core.InvokeLLM({
           prompt: `Identify the real game development studio that developed the video game "${title}"${knownDev ? ` (listed developer: ${knownDev})` : ''}.
 Return factual, real-world information about that studio only — never invent a studio.
-Include: official studio name, a short tagline, a 2-3 sentence description of the studio and what it is known for, the year it was founded, headquarters city and country, approximate studio size, parent company (empty string if independent), official website URL, a direct URL to the studio's logo image if one is publicly available (otherwise empty string), 3-6 short "known for" phrases, and up to 8 notable games the studio developed with each game's primary genre and release year.`,
+Include: official studio name, a short tagline, what type of studio/company it is (for example first-party, third-party, indie, AAA, internal division, etc.), a 2-3 sentence description of the studio and what it is known for, the year it was founded, headquarters city and country, approximate studio/team size, parent company (empty string if independent), official website URL, a direct URL to the studio's logo image if one is publicly available (otherwise empty string), 3-6 short "known for" phrases, and up to 8 notable games the studio developed with each game's primary genre and release year. Prefer authoritative sources and clearly established public facts.`,
           add_context_from_internet: true,
           model: 'gemini_3_flash',
           response_json_schema: RESPONSE_SCHEMA,
@@ -106,7 +102,6 @@ Include: official studio name, a short tagline, a 2-3 sentence description of th
         setProfile(resolved);
         setLoading(false);
 
-        // Auto-save so it never has to be looked up again
         base44.entities.StudioProfile.create(resolved).catch(() => {});
       } catch (err) {
         if (!cancelled) {
