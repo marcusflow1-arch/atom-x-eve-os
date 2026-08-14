@@ -15,15 +15,38 @@ function findEnvironmentHubTile() {
   return heading.parentElement?.parentElement || null;
 }
 
-function pageIsInLibraryOrGameMode() {
-  // Full Library marks its root explicitly. Game detail uses the existing
-  // visible "Game Details" heading from the dashboard game panel.
-  if (document.querySelector('[data-library-landing="true"]')) return true;
+function isVisible(el) {
+  if (!el) return false;
+  const style = window.getComputedStyle(el);
+  const rect = el.getBoundingClientRect();
+  return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+}
 
-  return Array.from(document.querySelectorAll('h2')).some(node => {
-    if (!node || node.offsetParent === null) return false;
-    return node.textContent?.trim() === 'Game Details';
-  });
+function pageIsInLibraryOrGameMode() {
+  // Full Library is a dedicated landing surface. Prefer the explicit marker
+  // when available, with a text fallback for older synced builds.
+  if (document.querySelector('[data-library-landing="true"]')) return true;
+  const fullLibraryText = Array.from(document.querySelectorAll('span,h1,h2,h3,h4,div')).find(
+    node => isVisible(node) && node.textContent?.trim() === 'Full Library'
+  );
+  if (fullLibraryText) return true;
+
+  // The selected-game panel exposes the existing tab row. Hide the dashboard
+  // rail while that panel is open; restore it when the panel closes.
+  const gameDetailTabs = new Set(['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements', 'Affiliate']);
+  const labels = new Set(
+    Array.from(document.querySelectorAll('button'))
+      .filter(isVisible)
+      .map(button => button.textContent?.trim())
+      .filter(Boolean)
+  );
+  let matched = 0;
+  gameDetailTabs.forEach(label => { if (labels.has(label)) matched += 1; });
+  if (matched >= 4) return true;
+
+  // Older/current game-detail builds also use a Game Details heading.
+  return Array.from(document.querySelectorAll('h2,h3'))
+    .some(node => isVisible(node) && node.textContent?.trim() === 'Game Details');
 }
 
 export default function DashboardAvatarFeaturePortal() {
@@ -33,14 +56,17 @@ export default function DashboardAvatarFeaturePortal() {
   useEffect(() => {
     let frame = 0;
     let marker = null;
+    let lastHidden = null;
 
     const sync = () => {
       const hub = findEnvironmentHubTile();
       const focusOpen = Boolean(document.querySelector('[data-avatar-focus-hub="true"]'));
       const inGameOrLibrary = pageIsInLibraryOrGameMode();
-      setHidden(focusOpen || inGameOrLibrary || !hub);
+      const nextHidden = focusOpen || inGameOrLibrary || !hub;
+      setHidden(nextHidden);
+      lastHidden = nextHidden;
 
-      if (!hub || focusOpen || inGameOrLibrary) {
+      if (!hub) {
         if (marker?.isConnected) marker.remove();
         marker = null;
         setHost(null);
@@ -54,6 +80,7 @@ export default function DashboardAvatarFeaturePortal() {
         marker.style.position = 'fixed';
         marker.style.zIndex = '35';
         marker.style.pointerEvents = 'auto';
+        marker.style.transition = 'opacity 220ms ease, transform 220ms ease';
         document.body.appendChild(marker);
         setHost(marker);
       }
@@ -64,6 +91,9 @@ export default function DashboardAvatarFeaturePortal() {
       marker.style.maxHeight = `${Math.max(220, window.innerHeight - rect.bottom - 28)}px`;
       marker.style.overflow = 'auto';
       marker.style.scrollbarWidth = 'none';
+      marker.style.opacity = nextHidden ? '0' : '1';
+      marker.style.transform = nextHidden ? 'translateY(-6px)' : 'translateY(0)';
+      marker.style.pointerEvents = nextHidden ? 'none' : 'auto';
     };
 
     const schedule = () => {
@@ -72,7 +102,7 @@ export default function DashboardAvatarFeaturePortal() {
     };
 
     const observer = new MutationObserver(schedule);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
     window.addEventListener('resize', schedule);
     window.addEventListener('scroll', schedule, true);
     schedule();
@@ -86,7 +116,7 @@ export default function DashboardAvatarFeaturePortal() {
     };
   }, []);
 
-  if (!host || hidden) return null;
+  if (!host) return null;
   return createPortal(
     <div className="w-full">
       <AvatarFeatureRail />
