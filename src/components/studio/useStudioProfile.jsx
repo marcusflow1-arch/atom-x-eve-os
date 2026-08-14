@@ -31,12 +31,25 @@ export default function useStudioProfile(game) {
 
     const run = async () => {
       setLoading(true); setError(null); setProfile(null);
+      let existingByDev = null;
+      let existingByGame = null;
+
       if (knownDev) {
-        const byDev = await base44.entities.StudioProfile.filter({ developer_name: knownDev });
-        if (byDev?.length && profileIsModern(byDev[0])) { memoryCache.set(knownDev, byDev[0]); if (!cancelled) { setProfile(byDev[0]); setLoading(false); } return; }
+        existingByDev = (await base44.entities.StudioProfile.filter({ developer_name: knownDev }))?.[0] || null;
+        if (existingByDev && profileIsModern(existingByDev)) {
+          memoryCache.set(knownDev, existingByDev);
+          if (!cancelled) { setProfile(existingByDev); setLoading(false); }
+          return;
+        }
       }
-      const byGame = await base44.entities.StudioProfile.filter({ game_key: gameKey });
-      if (byGame?.length && profileIsModern(byGame[0])) { memoryCache.set(gameKey, byGame[0]); if (byGame[0].developer_name) memoryCache.set(byGame[0].developer_name, byGame[0]); if (!cancelled) { setProfile(byGame[0]); setLoading(false); } return; }
+
+      existingByGame = (await base44.entities.StudioProfile.filter({ game_key: gameKey }))?.[0] || null;
+      if (existingByGame && profileIsModern(existingByGame)) {
+        memoryCache.set(gameKey, existingByGame);
+        if (existingByGame.developer_name) memoryCache.set(existingByGame.developer_name, existingByGame);
+        if (!cancelled) { setProfile(existingByGame); setLoading(false); }
+        return;
+      }
 
       try {
         const data = await base44.integrations.Core.InvokeLLM({
@@ -48,8 +61,8 @@ export default function useStudioProfile(game) {
         if (cancelled) return;
         const resolved = { ...data, developer_name: data?.developer_name || knownDev || 'Unknown Studio', game_key: gameKey };
         memoryCache.set(gameKey, resolved); memoryCache.set(resolved.developer_name, resolved); setProfile(resolved); setLoading(false);
-        if (byDev?.[0]?.id) await base44.entities.StudioProfile.update(byDev[0].id, resolved).catch(() => {});
-        else if (byGame?.[0]?.id) await base44.entities.StudioProfile.update(byGame[0].id, resolved).catch(() => {});
+        if (existingByDev?.id) await base44.entities.StudioProfile.update(existingByDev.id, resolved).catch(() => {});
+        else if (existingByGame?.id) await base44.entities.StudioProfile.update(existingByGame.id, resolved).catch(() => {});
         else await base44.entities.StudioProfile.create(resolved).catch(() => {});
       } catch (err) { if (!cancelled) { setError(err); setLoading(false); } }
     };
