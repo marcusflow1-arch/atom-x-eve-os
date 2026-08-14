@@ -1,0 +1,19 @@
+{
+  "name": "DLC",
+  "type": "object",
+  "properties": {
+    "game_id": {"type": "string", "description": "Parent Game ID"},
+    "name": {"type": "string"},
+    "description": {"type": "string"},
+    "price": {"type": "number", "description": "Authoritative USD price"},
+    "currency": {"type": "string", "default": "usd"},
+    "cover_image": {"type": "string"},
+    "status": {"type": "string", "enum": ["draft", "active", "retired"], "default": "active"},
+    "version": {"type": "string"},
+    "install_size_mb": {"type": "number"},
+    "download_url": {"type": "string", "description": "Authenticated installer/update target managed by the platform"},
+    "content": {"type": "array", "items": {"type": "object"}, "description": "DLC features, quests, cards, abilities, and rewards"},
+    "release_date": {"type": "string", "format": "date-time"}
+  },
+  "required": ["game_id", "name", "description", "price", "status"]
+}
