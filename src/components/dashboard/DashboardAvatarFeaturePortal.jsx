@@ -15,6 +15,17 @@ function findEnvironmentHubTile() {
   return heading.parentElement?.parentElement || null;
 }
 
+function pageIsInLibraryOrGameMode() {
+  // Full Library marks its root explicitly. Game detail uses the existing
+  // visible "Game Details" heading from the dashboard game panel.
+  if (document.querySelector('[data-library-landing="true"]')) return true;
+
+  return Array.from(document.querySelectorAll('h2')).some(node => {
+    if (!node || node.offsetParent === null) return false;
+    return node.textContent?.trim() === 'Game Details';
+  });
+}
+
 export default function DashboardAvatarFeaturePortal() {
   const [host, setHost] = useState(null);
   const [hidden, setHidden] = useState(false);
@@ -26,9 +37,10 @@ export default function DashboardAvatarFeaturePortal() {
     const sync = () => {
       const hub = findEnvironmentHubTile();
       const focusOpen = Boolean(document.querySelector('[data-avatar-focus-hub="true"]'));
-      setHidden(focusOpen || !hub);
+      const inGameOrLibrary = pageIsInLibraryOrGameMode();
+      setHidden(focusOpen || inGameOrLibrary || !hub);
 
-      if (!hub) {
+      if (!hub || focusOpen || inGameOrLibrary) {
         if (marker?.isConnected) marker.remove();
         marker = null;
         setHost(null);
