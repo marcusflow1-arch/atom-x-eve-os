@@ -20,8 +20,8 @@ const SECTIONS = [
   { id: 'worlds', label: 'Worlds', icon: Globe, hex: '#f472b6', Component: WorldsSection },
 ];
 
-// Avatar Focus Hub — the 7 feature selectors run horizontally beside the avatar panel.
-// The selected section content renders directly underneath that row, not beside it.
+// Avatar Focus Hub — seven feature selectors run horizontally in the main
+// content area, with the selected content rendered directly underneath.
 export default function AvatarFocusHub({ onClose }) {
   const [index, setIndex] = useState(0);
 
@@ -52,10 +52,13 @@ export default function AvatarFocusHub({ onClose }) {
       className="absolute z-30 pointer-events-auto"
       style={{ left: '338px', top: '88px', right: '24px', bottom: '56px' }}
     >
-      <div className="h-full flex flex-col min-w-0 overflow-hidden">
-        {/* Seven section selectors — horizontal, scrollable, directly to the right of the avatar area. */}
-        <div className="flex-shrink-0 overflow-x-auto pb-3" style={{ scrollbarWidth: 'thin' }}>
-          <div className="flex gap-2 min-w-max">
+      <div className="h-full flex flex-col min-w-0">
+        {/* Horizontal selector row — directly to the right of the avatar/stats column. */}
+        <div
+          className="flex-shrink-0 overflow-x-auto pb-3"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <div className="flex items-center gap-2 min-w-max px-1">
             {SECTIONS.map((s, i) => {
               const Icon = s.icon;
               const active = i === index;
@@ -80,8 +83,8 @@ export default function AvatarFocusHub({ onClose }) {
           </div>
         </div>
 
-        {/* Selected section content — directly below the horizontal selector row. */}
-        <div className="flex-1 min-h-0 relative overflow-hidden">
+        {/* Selected content is directly below the horizontal selector row. */}
+        <div className="flex-1 min-h-0 relative overflow-hidden mt-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={section.id}
