@@ -4,11 +4,10 @@ import { DEVELOPERS } from './devstore/devData';
 
 const filters = ['All', 'Upcoming', 'Early Access', 'Hidden Indie'];
 
-export default function DevCardsContent({ onNavigateToGame }) {
+export default function DevCardsContent() {
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
-
   const studios = useMemo(() => {
     const q = search.trim().toLowerCase();
     return DEVELOPERS.filter(dev => {
