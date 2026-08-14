@@ -13,55 +13,87 @@ Deno.serve(async (req) => {
     }
 
     const { sessionId } = await req.json();
-
-    // Retrieve the checkout session from Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (session.payment_status !== 'paid') {
-      return Response.json({ 
-        error: 'Payment not completed' 
-      }, { status: 400 });
+    if (!sessionId || typeof sessionId !== 'string') {
+      return Response.json({ error: 'Missing Stripe session ID' }, { status: 400 });
     }
 
-    // Parse items from metadata
-    const items = JSON.parse(session.metadata.items);
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    // Create Order in Database
+    // Prevent a user from verifying another user's checkout session.
+    if (session.client_reference_id !== user.id && session.metadata?.user_id !== user.id) {
+      return Response.json({ error: 'Session does not belong to this user' }, { status: 403 });
+    }
+
+    if (session.payment_status !== 'paid') {
+      return Response.json({ error: 'Payment not completed' }, { status: 400 });
+    }
+
+    const items = JSON.parse(session.metadata?.items || '[]');
+    if (!Array.isArray(items) || items.length === 0) {
+      return Response.json({ error: 'Checkout contains no valid items' }, { status: 400 });
+    }
+
+    // Idempotency: refreshing the confirmation page must never create another order.
+    const existingOrders = await base44.asServiceRole.entities.Order.filter({
+      stripe_session_id: sessionId
+    });
+
+    if (existingOrders?.length) {
+      return Response.json({ success: true, order: existingOrders[0], alreadyProcessed: true });
+    }
+
+    // Reconcile the paid amount against the server catalog before granting ownership.
+    let catalogTotal = 0;
+    const verifiedItems = [];
+
+    for (const item of items) {
+      if (item.type !== 'game') {
+        return Response.json({ error: 'Unsupported paid item type' }, { status: 400 });
+      }
+
+      const game = await base44.asServiceRole.entities.Game.get(item.id);
+      if (!game || game.price == null) {
+        return Response.json({ error: `Catalog item ${item.id} is unavailable` }, { status: 400 });
+      }
+
+      const price = Number(game.price);
+      catalogTotal += price;
+      verifiedItems.push({
+        id: game.id,
+        type: 'game',
+        title: game.title,
+        price
+      });
+    }
+
+    const paidTotal = Number(session.amount_total || 0) / 100;
+    if (Math.round(catalogTotal * 100) !== Math.round(paidTotal * 100)) {
+      console.error('Stripe/catalog amount mismatch', { sessionId, catalogTotal, paidTotal });
+      return Response.json({ error: 'Payment amount does not match the current catalog' }, { status: 409 });
+    }
+
     const order = await base44.asServiceRole.entities.Order.create({
       user_id: user.id,
-      total_amount: session.amount_total / 100, // Convert from cents
+      total_amount: paidTotal,
       status: 'completed',
-      items: items,
+      items: verifiedItems,
       transaction_id: session.payment_intent,
       stripe_session_id: sessionId
     });
 
-    // Add games to user's library
-    const gameItems = items.filter(item => item.type === 'game');
-    if (gameItems.length > 0) {
-      const currentPurchased = user.purchased_items || [];
-      const newPurchased = [...new Set([...currentPurchased, ...gameItems.map(g => g.id)])];
-      
-      await base44.auth.updateMe({
+    const gameIds = verifiedItems.map((item) => item.id);
+    const currentPurchased = user.purchased_items || [];
+    const newPurchased = [...new Set([...currentPurchased, ...gameIds])];
+
+    if (newPurchased.length !== currentPurchased.length) {
+      await base44.asServiceRole.entities.User.update(user.id, {
         purchased_items: newPurchased
       });
     }
 
-    // Add marketplace items to user's inventory (if applicable)
-    const marketplaceItems = items.filter(item => item.type === 'marketplace_item');
-    for (const item of marketplaceItems) {
-      // Create inventory entry or update existing
-      // This would depend on your Item/Inventory entity structure
-    }
-
-    return Response.json({ 
-      success: true,
-      order: order
-    });
+    return Response.json({ success: true, order, alreadyProcessed: false });
   } catch (error) {
     console.error('Verify session error:', error);
-    return Response.json({ 
-      error: error.message 
-    }, { status: 500 });
+    return Response.json({ error: error?.message || 'Unable to verify payment' }, { status: 500 });
   }
 });
