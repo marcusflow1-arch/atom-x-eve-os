@@ -1,191 +1,46 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, ChevronUp, ChevronDown } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Building2, CalendarDays, ChevronRight, Eye, Film, Flag, Gem, Image as ImageIcon, MapPin, Rocket, Sparkles, Users } from 'lucide-react';
 import { DEVELOPERS } from './devstore/devData';
-import DeveloperShowcaseSection from './devstore/DeveloperShowcaseSection';
-import DeveloperProfilePage from './devstore/DeveloperProfilePage';
-import StudioScrollRail from './devstore/StudioScrollRail';
-import DevSearchBar from './devstore/DevSearchBar';
+
+const filters = ['All', 'Upcoming', 'Early Access', 'Hidden Indie'];
 
 export default function DevCardsContent({ onNavigateToGame }) {
-  const [selectedDev, setSelectedDev] = useState(null);
+  const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
-  const [activeIndex, setActiveIndex] = useState(0);
-  const railRef = useRef(null);
-  const wheelTsRef = useRef(0);
+  const [selected, setSelected] = useState(null);
 
-  // Stable callback for search changes
-  const handleSearchChange = useCallback((q) => setSearch(q), []);
-
-  // Alphabetically sorted studios
-  const sortedDevs = useMemo(() => {
-    return [...DEVELOPERS].sort((a, b) => a.name.localeCompare(b.name));
-  }, []);
-
-  // Filtered list (respects search)
-  const filteredDevs = useMemo(() => {
-    if (!search.trim()) return sortedDevs;
-    const q = search.toLowerCase();
-    return sortedDevs.filter(
-      (d) =>
-        d.name.toLowerCase().includes(q) ||
-        d.tagline.toLowerCase().includes(q) ||
-        d.inDevelopment.some((p) => p.title.toLowerCase().includes(q))
-    );
-  }, [sortedDevs, search]);
-
-  // Clamp active index when filtered list changes
-  useEffect(() => {
-    if (activeIndex >= filteredDevs.length) {
-      setActiveIndex(Math.max(0, filteredDevs.length - 1));
-    }
-  }, [filteredDevs.length, activeIndex]);
-
-  const activeDev = filteredDevs[activeIndex] || filteredDevs[0];
-
-  // Wheel-based studio cycling on the left rail — scroll up/down to change studio
-  const handleRailWheel = (e) => {
-    if (filteredDevs.length <= 1) return;
-    e.preventDefault();
-    const now = Date.now();
-    if (now - wheelTsRef.current < 120) return;
-    wheelTsRef.current = now;
-    const dir = e.deltaY > 0 ? 1 : -1;
-    setActiveIndex((prev) => {
-      const next = Math.min(filteredDevs.length - 1, Math.max(0, prev + dir));
-      return next;
+  const studios = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return DEVELOPERS.filter(dev => {
+      if (q && !`${dev.name} ${dev.tagline} ${dev.description}`.toLowerCase().includes(q)) return false;
+      if (filter === 'Upcoming') return dev.inDevelopment?.length > 0;
+      if (filter === 'Early Access') return dev.inDevelopment?.some(p => /alpha|beta|early/i.test(p.status || ''));
+      if (filter === 'Hidden Indie') return (dev.teamSize || 999) <= 40 || (dev.followers || 999999999) < 50000;
+      return true;
     });
-  };
+  }, [filter, search]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const onKey = (e) => {
-      if (selectedDev) return;
-      if (document.activeElement?.tagName === 'INPUT') return;
-      const key = e.key.toLowerCase();
-      if (key === 'arrowup' || key === 'w') {
-        e.preventDefault();
-        setActiveIndex((prev) => Math.max(0, prev - 1));
-      } else if (key === 'arrowdown' || key === 's') {
-        e.preventDefault();
-        setActiveIndex((prev) => Math.min(filteredDevs.length - 1, prev + 1));
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [selectedDev, filteredDevs.length]);
+  if (selected) return (
+    <div className="h-full overflow-y-auto pt-16 p-6 md:p-10 text-white">
+      <button onClick={() => setSelected(null)} className="text-xs text-white/50 hover:text-white mb-5">← Back to Developer Hub</button>
+      <div className="max-w-6xl mx-auto space-y-8">
+        <section className="rounded-3xl overflow-hidden border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+          <div className="h-52 md:h-64 bg-black relative"><img src={selected.heroImage} alt="" className="w-full h-full object-cover opacity-60" /><div className="absolute inset-0 bg-gradient-to-t from-[#090d13] via-transparent to-transparent" /><div className="absolute bottom-6 left-6 md:left-8"><h1 className="text-3xl md:text-4xl font-black">{selected.name}</h1><p className="text-white/55 mt-1">{selected.tagline}</p></div></div>
+          <div className="p-6 md:p-8 grid grid-cols-2 md:grid-cols-5 gap-3">{[['Team',selected.teamSize],['Founded',selected.founded],['Released',selected.gamesReleased],['Followers',selected.followers?.toLocaleString()],['Location',selected.location]].map(([label,value]) => <div key={label} className="rounded-xl bg-black/20 border border-white/5 p-3"><div className="text-[9px] uppercase tracking-widest text-white/25">{label}</div><div className="font-bold text-white mt-1">{value || '—'}</div></div>)}</div>
+        </section>
 
-  return (
-    <div className="w-full h-full pt-16 overflow-hidden">
-      <AnimatePresence mode="wait">
-        {selectedDev ? (
-          <motion.div
-            key={`dev-profile-${selectedDev.id}`}
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.25 }}
-            className="h-full"
-          >
-            <DeveloperProfilePage dev={selectedDev} onBack={() => setSelectedDev(null)} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="dev-storefront"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="h-full flex flex-col"
-          >
-            {/* Header bar */}
-            <div className="flex-shrink-0 px-6 py-4 flex items-center justify-between"
-              style={{ background: 'rgba(8, 12, 18, 0.6)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 border border-amber-500/20 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-black tracking-tight text-white">Developer Showcase</h1>
-                  <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">
-                    {sortedDevs.length} studios · {sortedDevs.reduce((s, d) => s + d.inDevelopment.length, 0)} active projects
-                  </p>
-                </div>
-              </div>
+        <section><div className="flex items-center gap-2 mb-4"><Rocket className="w-5 h-5 text-cyan-300" /><h2 className="text-xl font-black">Upcoming Projects & Early Access</h2></div><div className="grid grid-cols-1 md:grid-cols-2 gap-5">{(selected.inDevelopment || []).map(project => <article key={project.title} className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden"><div className="aspect-[16/7] bg-black/40"><img src={project.cover} alt="" className="w-full h-full object-cover" /></div><div className="p-5"><div className="flex justify-between gap-3"><span className="px-2 py-1 rounded-md bg-cyan-400/10 border border-cyan-400/20 text-[9px] uppercase font-black text-cyan-200">{project.status}</span><span className="text-xs text-white/35">{project.releaseWindow}</span></div><h3 className="text-lg font-black mt-3">{project.title}</h3><p className="text-sm text-white/50 mt-2">{project.description}</p><div className="mt-4"><div className="flex justify-between text-[10px] uppercase tracking-wider text-white/30"><span>Development</span><span>{project.progress}%</span></div><div className="h-1.5 rounded-full bg-white/5 mt-1 overflow-hidden"><div className="h-full bg-cyan-400/60 rounded-full" style={{ width: `${project.progress}%` }} /></div></div><div className="flex flex-wrap gap-2 mt-4">{(project.features || []).map(f => <span key={f} className="px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] text-white/45">{f}</span>)}</div></div></article>)}</div></section>
 
-              {/* Search with voice + autocomplete */}
-              <DevSearchBar
-                studios={sortedDevs}
-                onSelectStudio={(idx) => setActiveIndex(idx)}
-                onSearchChange={handleSearchChange}
-              />
-            </div>
+        <section><div className="flex items-center gap-2 mb-4"><Gem className="w-5 h-5 text-violet-300" /><h2 className="text-xl font-black">Developer Card Collection</h2></div><div className="flex gap-4 overflow-x-auto pb-3">{(selected.customCards || []).map(card => <div key={card.name} className="w-40 flex-shrink-0 rounded-2xl border border-white/10 bg-black/30 overflow-hidden"><div className="aspect-[3/4]"><img src={card.art} alt="" className="w-full h-full object-cover" /></div><div className="p-3"><div className="text-[9px] uppercase text-violet-300 font-black">{card.rarity}</div><div className="font-bold text-sm mt-1">{card.name}</div><div className="text-[10px] text-white/35 mt-1">Power {card.power}</div></div></div>)}</div></section>
 
-            {/* Two-column: left studio rail + right content */}
-            <div className="flex-1 flex overflow-hidden">
-              {/* Left rail — scrollable studio list */}
-              {filteredDevs.length > 0 && (
-                <div ref={railRef} onWheel={handleRailWheel} className="flex-shrink-0 h-full">
-                  <StudioScrollRail
-                    studios={filteredDevs}
-                    activeIndex={activeIndex}
-                    onSelect={(idx) => setActiveIndex(idx)}
-                  />
-                </div>
-              )}
-
-              {/* Right content — active studio showcase */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {activeDev ? (
-                  <div className="max-w-5xl mx-auto px-6 py-8">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={activeDev.id}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        <DeveloperShowcaseSection
-                          dev={activeDev}
-                          index={0}
-                          onSelect={setSelectedDev}
-                        />
-                      </motion.div>
-                    </AnimatePresence>
-
-                    {/* Navigation hint */}
-                    <div className="flex items-center justify-center gap-4 mt-2 mb-6 text-white/20 text-[10px]">
-                      <button
-                        onClick={() => setActiveIndex(prev => Math.max(0, prev - 1))}
-                        disabled={activeIndex === 0}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      >
-                        <ChevronUp className="w-3 h-3" />
-                        Prev
-                      </button>
-                      <span className="font-mono">{activeIndex + 1} / {filteredDevs.length}</span>
-                      <button
-                        onClick={() => setActiveIndex(prev => Math.min(filteredDevs.length - 1, prev + 1))}
-                        disabled={activeIndex === filteredDevs.length - 1}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      >
-                        Next
-                        <ChevronDown className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-white/30">
-                    <Building2 className="w-16 h-16 mb-4 opacity-20" />
-                    <p className="text-sm font-medium">No developers match your search</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-5"><div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6"><div className="flex items-center gap-2 mb-4"><CalendarDays className="w-5 h-5 text-cyan-300" /><h2 className="font-black">Dev Logs & Roadmap</h2></div><div className="space-y-3">{(selected.updates || []).map(update => <div key={update.title} className="border-l-2 border-cyan-400/30 pl-4"><div className="text-[10px] text-cyan-300">{update.date}</div><div className="font-bold text-sm mt-1">{update.title}</div><p className="text-xs text-white/40 mt-1">{update.body}</p></div>)}</div></div><div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6"><div className="flex items-center gap-2 mb-4"><Flag className="w-5 h-5 text-amber-300" /><h2 className="font-black">Studio Milestones</h2></div><div className="grid grid-cols-2 gap-3">{(selected.milestones || []).map(m => <div key={m.label} className="rounded-xl bg-black/20 border border-white/5 p-4"><div className="text-2xl font-black text-white">{m.value}</div><div className="text-[10px] uppercase tracking-wider text-white/30 mt-1">{m.label}</div></div>)}</div></div></section>
+      </div>
     </div>
   );
+
+  return <div className="w-full h-full pt-16 overflow-y-auto text-white"><div className="max-w-7xl mx-auto px-6 md:px-8 py-6">
+    <header className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 md:p-8 mb-6"><div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5"><div><div className="flex items-center gap-2 text-amber-300 text-[10px] font-black uppercase tracking-[0.22em]"><Building2 className="w-4 h-4" /> Developer Visibility Hub</div><h1 className="text-3xl md:text-4xl font-black mt-2">Dev Cards</h1><p className="text-white/45 max-w-2xl mt-2">Upcoming projects, early-access builds, hidden indie discoveries, developer logs, concept art, milestones, and collectible studio cards.</p></div><div className="flex items-center gap-2 text-xs text-white/30"><Users className="w-4 h-4" /> {studios.length} studios</div></div><div className="flex flex-col md:flex-row gap-3 mt-6"><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search studios, projects, genres…" className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/30" /><div className="flex gap-2 overflow-x-auto">{filters.map(item => <button key={item} onClick={() => setFilter(item)} className={`px-3 py-2 rounded-xl border text-xs font-bold whitespace-nowrap ${filter === item ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`}>{item}</button>)}</div></div></header>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">{studios.map(dev => <button key={dev.id} onClick={() => setSelected(dev)} className="text-left rounded-2xl overflow-hidden border border-white/10 bg-white/[0.035] hover:border-cyan-400/25 hover:-translate-y-1 transition-all group"><div className="h-40 bg-black/40 relative"><img src={dev.heroImage} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" /><div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" /><div className="absolute bottom-4 left-4"><h2 className="font-black text-xl">{dev.name}</h2><p className="text-xs text-white/45">{dev.tagline}</p></div></div><div className="p-5"><div className="grid grid-cols-3 gap-2 text-[10px] mb-4"><span className="rounded-lg bg-white/5 p-2"><b className="block text-white">{dev.teamSize || '—'}</b>TEAM</span><span className="rounded-lg bg-white/5 p-2"><b className="block text-white">{dev.inDevelopment?.length || 0}</b>PROJECTS</span><span className="rounded-lg bg-white/5 p-2"><b className="block text-white">{dev.followers ? `${Math.round(dev.followers / 1000)}K` : '—'}</b>FOLLOWERS</span></div><div className="flex flex-wrap gap-2">{(dev.inDevelopment || []).slice(0,3).map(p => <span key={p.title} className="px-2 py-1 rounded-md bg-cyan-400/5 border border-cyan-400/10 text-[9px] text-cyan-200">{p.status} • {p.title}</span>)}</div><div className="mt-4 flex items-center justify-between text-xs"><span className="text-white/30">View portfolio</span><ChevronRight className="w-4 h-4 text-cyan-300" /></div></div></button>)}</div>
+    {studios.length === 0 && <div className="py-20 text-center text-white/30">No developer showcases match your search.</div>}
+  </div></div>;
 }
