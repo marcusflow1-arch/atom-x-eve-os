@@ -1,31 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
-import GameDetailPanel from '../components/game/GameDetailPanel';
 import { createPageUrl } from '@/utils';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import GameHubTabs from '@/components/game/GameHubTabs';
 
 export default function GameDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeStoreTab, setActiveStoreTab] = useState('store');
-  
   const query = new URLSearchParams(location.search);
   const gameId = query.get('id');
   const from = query.get('from') || 'store';
-  const [game, setGame] = useState(null);
 
-  // Needed so the Dev Info panels can resolve THIS game's real studio
-  useEffect(() => {
-    if (!gameId) return;
-    base44.entities.Game.get(gameId).then(setGame).catch(() => setGame(null));
-  }, [gameId]);
-
-  const handleClose = () => {
-    const backUrl = createPageUrl(from === 'library' ? 'Library' : 'Store');
-    navigate(backUrl);
-  };
+  const handleClose = () => navigate(createPageUrl(from === 'library' ? 'Library' : 'Store'));
 
   const handleStoreTabChange = (tabId) => {
     setActiveStoreTab(tabId);
@@ -36,24 +24,11 @@ export default function GameDetail() {
     else if (tabId === 'overview') navigate(createPageUrl('Store'));
   };
 
+  if (!gameId) return <div className="h-screen flex items-center justify-center bg-[#0d0d0d] text-white/40">No game selected.</div>;
+
   return (
-    <GlassPageFrame
-      showTriggerTab={true}
-      gameData={game}
-      topContent={null}
-      bottomContent={
-        <StoreBottomNav
-          activeTab={activeStoreTab}
-          onTabChange={handleStoreTabChange}
-        />
-      }
-    >
-      <GameDetailPanel 
-        gameId={gameId} 
-        onClose={handleClose}
-        showBackButton={true}
-        from={from}
-      />
+    <GlassPageFrame showTriggerTab={true} topContent={null} bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
+      <GameHubTabs gameId={gameId} onClose={handleClose} />
     </GlassPageFrame>
   );
 }
