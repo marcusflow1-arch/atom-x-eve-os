@@ -2,61 +2,18 @@
   "name": "User",
   "type": "object",
   "properties": {
-    "presence_status": {
-      "type": "string",
-      "enum": [
-        "online",
-        "idle",
-        "dnd",
-        "offline"
-      ],
-      "default": "offline",
-      "description": "Current online status"
-    },
-    "last_seen": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Timestamp of last heartbeat"
-    },
-    "current_activity": {
-      "type": "object",
-      "properties": {
-        "clanId": {
-          "type": "string"
-        },
-        "gameId": {
-          "type": "string"
-        },
-        "workspaceId": {
-          "type": "string"
-        },
-        "voiceRoomId": {
-          "type": "string"
-        },
-        "partyId": {
-          "type": "string"
-        },
-        "sessionId": {
-          "type": "string"
-        }
-      },
-      "description": "Context of what the user is currently doing"
-    },
-    "username": {
-      "type": "string"
-    },
-    "bio": {
-      "type": "string"
-    },
-    "avatar_url": {
-      "type": "string"
-    },
-    "unlocked_achievements": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    }
+    "presence_status": {"type": "string", "enum": ["online", "idle", "dnd", "offline"], "default": "offline", "description": "Current online status"},
+    "last_seen": {"type": "string", "format": "date-time", "description": "Timestamp of last heartbeat"},
+    "current_activity": {"type": "object", "properties": {"clanId": {"type": "string"}, "gameId": {"type": "string"}, "workspaceId": {"type": "string"}, "voiceRoomId": {"type": "string"}, "partyId": {"type": "string"}, "sessionId": {"type": "string"}}, "description": "Context of what the user is currently doing"},
+    "username": {"type": "string"},
+    "bio": {"type": "string"},
+    "avatar_url": {"type": "string"},
+    "unlocked_achievements": {"type": "array", "items": {"type": "string"}},
+    "unlocked_gear": {"type": "array", "items": {"type": "object"}, "description": "Persistent avatar equipment unlocked through achievements."},
+    "unlocked_abilities": {"type": "array", "items": {"type": "object"}, "description": "Persistent abilities unlocked through achievements and progression."},
+    "companions": {"type": "array", "items": {"type": "object"}, "description": "Persistent AI companions/followers earned through platform progression."},
+    "teachers": {"type": "array", "items": {"type": "object"}, "description": "Game-specific teachers or mentors unlocked through achievements."},
+    "achievement_rewards": {"type": "array", "items": {"type": "object"}, "description": "Idempotent record of rewards granted from unlocked achievements."}
   },
   "required": []
 }
