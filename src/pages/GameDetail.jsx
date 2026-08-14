@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
@@ -9,6 +9,7 @@ export default function GameDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeStoreTab, setActiveStoreTab] = useState('store');
+  const [game, setGame] = useState(null);
   const query = new URLSearchParams(location.search);
   const gameId = query.get('id');
   const from = query.get('from') || 'store';
@@ -24,11 +25,20 @@ export default function GameDetail() {
     else if (tabId === 'overview') navigate(createPageUrl('Store'));
   };
 
+  const handleGameLoaded = useCallback((loadedGame) => {
+    setGame(loadedGame);
+  }, []);
+
   if (!gameId) return <div className="h-screen flex items-center justify-center bg-[#0d0d0d] text-white/40">No game selected.</div>;
 
   return (
-    <GlassPageFrame showTriggerTab={true} topContent={null} bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
-      <GameHubTabs gameId={gameId} onClose={handleClose} />
+    <GlassPageFrame
+      showTriggerTab={true}
+      gameData={game}
+      topContent={null}
+      bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}
+    >
+      <GameHubTabs gameId={gameId} onClose={handleClose} onGameLoaded={handleGameLoaded} />
     </GlassPageFrame>
   );
 }
