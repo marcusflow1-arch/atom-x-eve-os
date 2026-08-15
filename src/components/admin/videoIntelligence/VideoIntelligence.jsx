@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScanSearch, Terminal, AlertCircle } from 'lucide-react';
+import { ScanSearch, Terminal, AlertCircle, Brain, Database, Images, BookOpen } from 'lucide-react';
 import { useVideoIntelligence } from './useVideoIntelligence';
 import VideoInputPanel from './VideoInputPanel';
 import ProcessingOptions from './ProcessingOptions';
@@ -13,12 +13,27 @@ export default function VideoIntelligence() {
   return (
     <section className="space-y-6">
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <ScanSearch className="w-6 h-6 text-cyan-500" /> Video Intelligence
-        </h2>
-        <p className="text-slate-400 text-sm mt-2 max-w-3xl">
-          This tool converts a video into structured visual timeline data using scene segmentation, frame extraction, transcript alignment, and fallback frame packaging for additional review.
-        </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Brain className="w-6 h-6 text-cyan-400" /> Video Learning & Knowledge Engine
+            </h2>
+            <p className="text-slate-400 text-sm mt-2 max-w-4xl">
+              Turn YouTube walkthroughs, completed-game playthroughs, Unreal Engine tutorials, and other instructional videos into persistent structured project knowledge. The engine builds a visual timeline, scene records, frame records, transcript/OCR data, detected entities and objects, actions, summaries, and reusable export packages.
+            </p>
+          </div>
+          <div className="flex gap-2 text-xs">
+            <span className="inline-flex items-center gap-1 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-cyan-300">
+              <Images className="w-3.5 h-3.5" /> Frame memory
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-emerald-300">
+              <Database className="w-3.5 h-3.5" /> Database memory
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-violet-300">
+              <BookOpen className="w-3.5 h-3.5" /> Reusable knowledge
+            </span>
+          </div>
+        </div>
       </div>
 
       {v.error && (
@@ -43,7 +58,7 @@ export default function VideoIntelligence() {
         <div className="rounded-xl border border-slate-700 bg-black/60 font-mono text-sm overflow-hidden">
           <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center gap-2 text-green-400">
             <Terminal className="w-4 h-4" />
-            <span className="font-bold">Processing log</span>
+            <span className="font-bold">Learning pipeline log</span>
             {v.busy && <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse ml-2" />}
           </div>
           <div className="p-4 h-44 overflow-y-auto flex flex-col-reverse gap-1">
