@@ -23,10 +23,18 @@ Deno.serve(async (req) => {
         add_context_from_internet:true,
         response_json_schema:{type:'object',properties:{videos:{type:'array',items:{type:'string'}}},required:['videos']}
       });
-      const urls=[...new Set((r?.videos||[]).filter(u=>VIDEO.test(u)))]; let queued=0;
-      for(const url of urls){try{const child=await base44.asServiceRole.entities.VideoLearningJob.create({source_url:url,source_type:'video',parent_job_id:jobId,status:'queued',current_stage:'Queued from channel',progress_percent:0});await base44.asServiceRole.entities.VideoLearningProfile.create({job_id:child.id,knowledge_type:knowledgeType,learning_goal:learningGoal,priority:profile?.priority||80});queued++;}catch{}}
-      await save({status:'completed',current_stage:`Channel crawl complete; ${knowledgeType} jobs queued`,progress_percent:100,video_count:queued,notes:`Queued ${queued} verified videos for ${knowledgeType}.`});
-      return Response.json({success:true,queued,knowledge_type:knowledgeType});
+      const urls=[...new Set((r?.videos||[]).filter(u=>VIDEO.test(u)))]; let queued=0; let started=0;
+      for(const url of urls){
+        try{
+          const child=await base44.asServiceRole.entities.VideoLearningJob.create({source_url:url,source_type:'video',parent_job_id:jobId,status:'queued',current_stage:'Queued from channel',progress_percent:0});
+          await base44.asServiceRole.entities.VideoLearningProfile.create({job_id:child.id,knowledge_type:knowledgeType,learning_goal:learningGoal,priority:profile?.priority||80});
+          queued++;
+          // Start the child immediately on the backend. The channel crawl does not depend on the Admin page remaining open.
+          try { await base44.asServiceRole.functions.invoke('videoLearningAutopilot', { jobId: child.id }); started++; } catch (e) { console.log('Child learning dispatch warning', e?.message || e); }
+        }catch(e){ console.log('Queue child warning', e?.message || e); }
+      }
+      await save({status:'completed',current_stage:`Channel crawl complete; ${started}/${queued} video jobs started`,progress_percent:100,video_count:queued,notes:`Queued ${queued} verified videos for ${knowledgeType}; started ${started} backend learning jobs.`});
+      return Response.json({success:true,queued,started,knowledge_type:knowledgeType});
     }
 
     const match=job.source_url.match(VIDEO); if(!match) throw new Error('Invalid YouTube video URL');
@@ -40,15 +48,7 @@ Deno.serve(async (req) => {
 
     const visualSource=spec?`Real YouTube storyboard/frame source is available. Study the chronological imagery across the entire timeline rather than a thumbnail or transcript. Storyboard source:\n${spec}`:`Storyboard metadata was not exposed. Do not pretend unseen frames were inspected; use available evidence and lower confidence.`;
     const analysis=await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt:`You are Atom x Eve's persistent visual learning engine. Study the ENTIRE video chronologically like a picture book. Do not produce a shallow summary. Convert visual observations into reusable project knowledge. Separate observed facts from inference.
-
-SOURCE: ${job.source_url}\nTITLE: ${title}\nCOLLECTION: ${knowledgeType}\nGOAL: ${learningGoal}\n${visualSource}
-
-Collection focus: gameplay_reference learns how an existing game plays and is structured; game_tutorial learns how games/Unreal are made; environment_reference learns world/environment construction; animation_reference learns motion, poses, timing and animation states; game_design_reference learns systems, UX, progression and player flow.
-
-Study player loop, controls, movement, camera, combat, weapons, abilities, enemies, bosses, UI, menus, inventory, progression, quests, dialogue, level/world structure, interactions, objectives, feedback, VFX, animation, NPC behavior, economy, checkpoints, failure/retry, multiplayer indicators, and development workflows when present. Return concrete relationships and implementation guidance for future Atom x Eve builders. Never claim source code was learned when only behavior was visible.
-
-Return JSON: summary,visual_observations,gameplay_knowledge,tutorial_knowledge,environment_knowledge,animation_knowledge,implementation_blueprint,mechanics,controls,progression,systems,scenes,architecture_inferences,confidence,tags. Scenes must preserve chronological start/end timestamps and describe visible actions, UI, actors, objects and state changes.`,
+      prompt:`You are Atom x Eve's persistent visual learning engine. Study the ENTIRE video chronologically like a picture book. Do not produce a shallow summary. Convert visual observations into reusable project knowledge. Separate observed facts from inference.\n\nSOURCE: ${job.source_url}\nTITLE: ${title}\nCOLLECTION: ${knowledgeType}\nGOAL: ${learningGoal}\n${visualSource}\n\nCollection focus: gameplay_reference learns how an existing game plays and is structured; game_tutorial learns how games/Unreal are made; environment_reference learns world/environment construction; animation_reference learns motion, poses, timing and animation states; game_design_reference learns systems, UX, progression and player flow.\n\nStudy player loop, controls, movement, camera, combat, weapons, abilities, enemies, bosses, UI, menus, inventory, progression, quests, dialogue, level/world structure, interactions, objectives, feedback, VFX, animation, NPC behavior, economy, checkpoints, failure/retry, multiplayer indicators, and development workflows when present. Return concrete relationships and implementation guidance for future Atom x Eve builders. Never claim source code was learned when only behavior was visible.\n\nReturn JSON: summary,visual_observations,gameplay_knowledge,tutorial_knowledge,environment_knowledge,animation_knowledge,implementation_blueprint,mechanics,controls,progression,systems,scenes,architecture_inferences,confidence,tags. Scenes must preserve chronological start/end timestamps and describe visible actions, UI, actors, objects and state changes.`,
       add_context_from_internet:true,
       response_json_schema:{type:'object',properties:{summary:{type:'string'},visual_observations:{type:'string'},gameplay_knowledge:{type:'string'},tutorial_knowledge:{type:'string'},environment_knowledge:{type:'string'},animation_knowledge:{type:'string'},implementation_blueprint:{type:'string'},mechanics:{type:'array'},controls:{type:'array'},progression:{type:'string'},systems:{type:'array'},scenes:{type:'array'},architecture_inferences:{type:'string'},confidence:{type:'number'},tags:{type:'array'}},required:['summary','visual_observations','implementation_blueprint','scenes','confidence','tags']}
     });
