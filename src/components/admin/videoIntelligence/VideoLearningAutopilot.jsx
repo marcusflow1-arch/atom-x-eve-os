@@ -33,12 +33,13 @@ export default function VideoLearningAutopilot() {
     if (!source) return showError('Paste a YouTube video or channel URL.');
     setBusy(true);
     try {
-      const sourceType = isChannelUrl(source) ? 'channel' : 'video';
-      const job = await base44.entities.VideoLearningJob.create({ source_url: source, source_type: sourceType, status: 'queued', current_stage: `Queued for ${selectedMode.label}`, notes });
-      await base44.entities.VideoLearningProfile.create({ job_id: job.id, knowledge_type: mode, learning_goal: notes, priority: sourceType === 'channel' ? 90 : 80 });
+      const sourceType = isChannelUrl(source) ? 'youtube_channel' : 'youtube_video';
+      await base44.entities.VideoLearningSource.create({ source_type: sourceType, url: source, title: sourceType === 'youtube_channel' ? 'YouTube Learning Channel' : 'YouTube Learning Video', status: 'queued', auto_learn: true, video_count: 0 });
+      const job = await base44.entities.VideoLearningJob.create({ source_url: source, source_type: sourceType === 'youtube_channel' ? 'channel' : 'video', status: 'queued', current_stage: `Queued for ${selectedMode.label}`, notes });
+      await base44.entities.VideoLearningProfile.create({ job_id: job.id, knowledge_type: mode, learning_goal: notes, priority: sourceType === 'youtube_channel' ? 90 : 80 });
       try { await base44.functions.invoke('videoLearningAutopilot', { jobId: job.id }); } catch {}
       setUrl(''); setNotes(''); await load();
-      showSuccess(sourceType === 'channel' ? `Channel queued for ${selectedMode.label}. Its videos will be processed automatically.` : `Video queued for ${selectedMode.label}. Learning continues in the backend.`);
+      showSuccess(sourceType === 'youtube_channel' ? `Channel saved for ${selectedMode.label}. Its videos are queued for autonomous learning.` : `Video saved for ${selectedMode.label}. Learning continues in the backend.`);
     } catch (e) { showError(e, 'Start Video Learning'); } finally { setBusy(false); }
   };
   return (
@@ -62,7 +63,7 @@ export default function VideoLearningAutopilot() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
           <Info icon={Images} title="Frame-book study" text="Processes visual evidence chronologically so the system can learn what happens across a video rather than relying on one thumbnail or a shallow summary." />
           <Info icon={Database} title="Project memory" text="Writes reusable knowledge records and searchable chunks so later Atom × Eve builders can retrieve what was learned for implementation work." />
-          <Info icon={Bot} title="Autopilot" text="Jobs persist in the database and continue through backend execution after you leave the Admin page. Channels can enqueue their videos as individual learning jobs." />
+          <Info icon={Bot} title="Autopilot" text="Sources and jobs persist in the database. Backend workers can continue after you leave the Admin page, and channel videos become individual learning jobs." />
         </div>
       </div>
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
