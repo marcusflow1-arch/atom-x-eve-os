@@ -1,0 +1,24 @@
+{
+  "name": "VideoKnowledgeRecord",
+  "type": "object",
+  "properties": {
+    "knowledge_type": { "type": "string", "enum": ["gameplay_reference", "game_tutorial", "environment_reference", "animation_reference", "game_design_reference", "general_video"], "default": "general_video" },
+    "source_url": { "type": "string" },
+    "source_title": { "type": "string", "default": "" },
+    "source_job_id": { "type": "string", "default": "" },
+    "knowledge_entry_id": { "type": "string", "default": "" },
+    "summary": { "type": "string", "default": "" },
+    "visual_observations": { "type": "string", "default": "" },
+    "gameplay_knowledge": { "type": "string", "default": "" },
+    "tutorial_knowledge": { "type": "string", "default": "" },
+    "environment_knowledge": { "type": "string", "default": "" },
+    "animation_knowledge": { "type": "string", "default": "" },
+    "implementation_blueprint": { "type": "string", "default": "" },
+    "scene_timeline": { "type": "string", "default": "" },
+    "confidence": { "type": "number", "default": 0 },
+    "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "frame_count": { "type": "number", "default": 0 },
+    "is_active": { "type": "boolean", "default": true }
+  },
+  "required": ["source_url", "knowledge_type", "summary"]
+}
