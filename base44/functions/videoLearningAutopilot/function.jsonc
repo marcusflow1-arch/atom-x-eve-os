@@ -9,17 +9,6 @@
       "is_active": true,
       "entity_name": "VideoLearningJob",
       "event_types": ["create"]
-    },
-    {
-      "type": "scheduled",
-      "name": "video_learning_queue_sweeper",
-      "description": "Keep queued autonomous video-learning jobs moving even when the Admin page is closed.",
-      "is_active": true,
-      "schedule_mode": "recurring",
-      "schedule_type": "simple",
-      "repeat_unit": "minutes",
-      "repeat_interval": 5,
-      "ends_type": "never"
     }
   ]
 }
