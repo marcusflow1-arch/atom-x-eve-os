@@ -1,0 +1,17 @@
+{
+  "name": "videoLearningQueueSweeper",
+  "entry": "entry.ts",
+  "automations": [
+    {
+      "type": "scheduled",
+      "name": "sweep_video_learning_queue",
+      "description": "Process queued video-learning jobs automatically every five minutes.",
+      "is_active": true,
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "minutes",
+      "repeat_interval": 5,
+      "ends_type": "never"
+    }
+  ]
+}
