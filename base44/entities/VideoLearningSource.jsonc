@@ -1,0 +1,18 @@
+{
+  "name": "VideoLearningSource",
+  "type": "object",
+  "properties": {
+    "source_type": { "type": "string", "enum": ["youtube_channel", "youtube_video"] },
+    "url": { "type": "string" },
+    "channel_id": { "type": "string" },
+    "channel_title": { "type": "string" },
+    "title": { "type": "string" },
+    "status": { "type": "string", "enum": ["queued", "discovering", "learning", "paused", "completed", "error"], "default": "queued" },
+    "last_discovered_at": { "type": "string" },
+    "last_learned_at": { "type": "string" },
+    "video_count": { "type": "number", "default": 0 },
+    "error_message": { "type": "string" },
+    "auto_learn": { "type": "boolean", "default": true }
+  },
+  "required": ["source_type", "url", "status"]
+}
