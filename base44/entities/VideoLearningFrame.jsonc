@@ -1,0 +1,15 @@
+{
+  "name": "VideoLearningFrame",
+  "type": "object",
+  "properties": {
+    "job_id": { "type": "string" },
+    "video_id": { "type": "string" },
+    "timestamp_seconds": { "type": "number" },
+    "image_url": { "type": "string" },
+    "caption": { "type": "string" },
+    "visual_summary": { "type": "string" },
+    "transcript_context": { "type": "string" },
+    "concept_tags": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["job_id", "timestamp_seconds"]
+}
