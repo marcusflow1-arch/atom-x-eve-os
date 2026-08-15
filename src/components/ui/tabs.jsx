@@ -5,15 +5,25 @@ import { cn } from "@/lib/utils"
 
 const Tabs = TabsPrimitive.Root
 
-const TabsList = React.forwardRef(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
-      className
-    )}
-    {...props} />
-))
+const TabsList = React.forwardRef(({ className, children, ...props }, ref) => {
+  const childCount = React.Children.count(children)
+  const manyTabs = childCount > 10
+
+  return (
+    <TabsPrimitive.List
+      ref={ref}
+      className={cn(
+        manyTabs
+          ? "grid w-full grid-cols-10 h-auto items-stretch justify-start gap-1 rounded-lg bg-muted p-1 text-muted-foreground"
+          : "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </TabsPrimitive.List>
+  )
+})
 TabsList.displayName = TabsPrimitive.List.displayName
 
 const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
