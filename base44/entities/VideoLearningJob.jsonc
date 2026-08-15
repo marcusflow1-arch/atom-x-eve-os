@@ -1,0 +1,21 @@
+{
+  "name": "VideoLearningJob",
+  "type": "object",
+  "properties": {
+    "source_url": { "type": "string", "description": "YouTube video or channel URL" },
+    "source_type": { "type": "string", "enum": ["video", "channel"], "default": "video" },
+    "parent_job_id": { "type": "string", "default": "" },
+    "title": { "type": "string", "default": "" },
+    "status": { "type": "string", "enum": ["queued", "discovering", "extracting", "analyzing", "learning", "completed", "failed"], "default": "queued" },
+    "progress_percent": { "type": "number", "default": 0 },
+    "current_stage": { "type": "string", "default": "Queued" },
+    "video_count": { "type": "number", "default": 0 },
+    "completed_video_count": { "type": "number", "default": 0 },
+    "frame_count": { "type": "number", "default": 0 },
+    "knowledge_chunk_count": { "type": "number", "default": 0 },
+    "error_message": { "type": "string", "default": "" },
+    "learned_knowledge_ids": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "notes": { "type": "string", "default": "" }
+  },
+  "required": ["source_url"]
+}
