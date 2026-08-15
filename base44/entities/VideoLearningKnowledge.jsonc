@@ -1,0 +1,20 @@
+{
+  "name": "VideoLearningKnowledge",
+  "type": "object",
+  "properties": {
+    "source_id": { "type": "string" },
+    "job_id": { "type": "string" },
+    "video_id": { "type": "string" },
+    "title": { "type": "string" },
+    "chapter": { "type": "string" },
+    "content": { "type": "string" },
+    "concepts": { "type": "array", "items": { "type": "string" } },
+    "visual_evidence_ids": { "type": "array", "items": { "type": "string" } },
+    "timestamp_start": { "type": "number" },
+    "timestamp_end": { "type": "number" },
+    "source_url": { "type": "string" },
+    "confidence": { "type": "number", "default": 0.5 },
+    "last_verified_at": { "type": "string" }
+  },
+  "required": ["content"]
+}
