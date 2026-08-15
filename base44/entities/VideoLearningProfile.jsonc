@@ -1,0 +1,11 @@
+{
+  "name": "VideoLearningProfile",
+  "type": "object",
+  "properties": {
+    "job_id": { "type": "string" },
+    "knowledge_type": { "type": "string", "enum": ["gameplay_reference", "game_tutorial", "environment_reference", "animation_reference", "game_design_reference", "general_video"], "default": "general_video" },
+    "learning_goal": { "type": "string", "default": "" },
+    "priority": { "type": "number", "default": 50 }
+  },
+  "required": ["job_id", "knowledge_type"]
+}
