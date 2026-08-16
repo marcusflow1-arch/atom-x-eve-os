@@ -110,12 +110,20 @@ function applyLockedRogueDamage(targetId, amount, source = 'charged_bow') {
     },
   }));
 
-  // Let the existing rogue AI lifecycle handle death/respawn when its HP
-  // reaches zero. The event is emitted so that lifecycle/reward systems can
-  // subscribe without creating a second kill implementation here.
+  // Preserve the existing rogue AI's death/respawn loop. The regular kill
+  // handler remains responsible for its normal reward path when it receives
+  // ordinary in-range attacks; the bridge supplies the same lifecycle fields
+  // for a long-range locked kill.
   if (rogue.hp <= 0) {
     rogue.hp = 0;
     rogue.alive = false;
+    rogue.dying = true;
+    rogue.deathTimer = 0;
+    rogue.respawnAt = performance.now() + 25_000;
+    rogue.currentAnim = 'death';
+    rogue.idleAction?.fadeOut?.(0.1);
+    rogue.runAction?.fadeOut?.(0.1);
+    rogue.deathAction?.reset?.().fadeIn?.(0.1).play?.();
     window.dispatchEvent(new CustomEvent('rogueBossDefeated', {
       detail: { bossId: rogue.id, bossName: rogue.name, maxHp: rogue.maxHp },
     }));
