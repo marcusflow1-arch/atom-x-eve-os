@@ -1,14 +1,6 @@
 {
   "name": "videoLearningAutopilot",
   "entry": "entry.ts",
-  "automations": [
-    {
-      "type": "entity",
-      "name": "on_video_learning_job_created",
-      "description": "Automatically start autonomous YouTube frame-book learning whenever a VideoLearningJob is created.",
-      "is_active": true,
-      "entity_name": "VideoLearningJob",
-      "event_types": ["create"]
-    }
-  ]
+  "description": "Backend worker for autonomous YouTube visual learning. Jobs are dispatched immediately by the learning UI/backend and continue independently of the page session.",
+  "automations": []
 }
