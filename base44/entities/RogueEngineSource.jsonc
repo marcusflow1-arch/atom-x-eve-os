@@ -1,0 +1,21 @@
+{
+  "name": "RogueEngineSource",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "description": "Human-readable engine knowledge source name" },
+    "repository_url": { "type": "string", "description": "GitHub repository containing the Rogue Engine export" },
+    "branch": { "type": "string", "default": "main" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "syncing", "ready", "failed"],
+      "default": "pending"
+    },
+    "source_type": { "type": "string", "default": "rogue_engine_export" },
+    "knowledge_scope": { "type": "string", "default": "engine_building" },
+    "last_synced_at": { "type": "string", "format": "date-time" },
+    "last_commit": { "type": "string" },
+    "files_analyzed": { "type": "number", "default": 0 },
+    "notes": { "type": "string" }
+  },
+  "required": ["name", "repository_url", "status"]
+}
