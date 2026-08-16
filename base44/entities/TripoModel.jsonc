@@ -1,0 +1,20 @@
+{
+  "name": "TripoModel",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "description": "Display name for the generated 3D asset" },
+    "prompt": { "type": "string", "default": "", "description": "Text prompt used for generation" },
+    "source_image_url": { "type": "string", "default": "", "description": "Reference image URL" },
+    "source_views": { "type": "object", "default": {}, "description": "Optional front/left/back/right reference URLs" },
+    "task_id": { "type": "string", "default": "", "description": "Tripo asynchronous task ID" },
+    "status": { "type": "string", "enum": ["creating", "queued", "running", "success", "failed", "cancelled", "banned"], "default": "creating" },
+    "progress": { "type": "number", "default": 0 },
+    "model_url": { "type": "string", "default": "", "description": "Generated GLB URL; download immediately because Tripo URLs expire" },
+    "preview_url": { "type": "string", "default": "" },
+    "error_message": { "type": "string", "default": "" },
+    "model_version": { "type": "string", "default": "v3.1-20260211" },
+    "generation_type": { "type": "string", "enum": ["text_to_model", "image_to_model", "multiview_to_model"], "default": "text_to_model" },
+    "metadata": { "type": "object", "default": {} }
+  },
+  "required": ["name", "task_id", "status", "generation_type"]
+}
