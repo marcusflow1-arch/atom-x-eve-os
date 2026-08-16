@@ -1,0 +1,21 @@
+{
+  "name": "RogueEngineRuntime",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "repository_url": { "type": "string" },
+    "branch": { "type": "string", "default": "main" },
+    "entry_url": { "type": "string" },
+    "runtime_bundle_url": { "type": "string" },
+    "scene_url": { "type": "string" },
+    "third_person_prefab_url": { "type": "string" },
+    "first_person_prefab_url": { "type": "string" },
+    "material_url": { "type": "string" },
+    "large_prefab_url": { "type": "string" },
+    "asset_manifest": { "type": "array", "items": { "type": "object" }, "default": [] },
+    "status": { "type": "string", "enum": ["pending", "ready", "error"], "default": "pending" },
+    "last_synced_at": { "type": "string", "format": "date-time" },
+    "notes": { "type": "string" }
+  },
+  "required": ["name", "repository_url", "entry_url", "runtime_bundle_url", "status"]
+}
