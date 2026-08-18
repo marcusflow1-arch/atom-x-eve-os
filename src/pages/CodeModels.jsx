@@ -9,6 +9,18 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+const BUILT_IN_ARTEMIS = {
+  id: 'builtin-artemis',
+  name: 'Artemis',
+  displayName: 'Artemis',
+  description: 'Stylized low-poly moon huntress with ceremonial armor, crown, and bow.',
+  file_url: 'https://raw.githubusercontent.com/marcusflow1-arch/atom-x-eve-os/main/public/models/artemis.gltf',
+  file_type: 'gltf',
+  category: 'code-model',
+  tags: ['code-model', 'atom-xe-created', 'ai-generated', 'artemis', 'moon-huntress'],
+  source: 'Built-in',
+};
+
 function getExt(url = '', fileType = '') {
   if (fileType) return fileType.toLowerCase();
   return (url.split('?')[0].split('.').pop() || '').toLowerCase();
@@ -191,7 +203,8 @@ export default function CodeModels() {
       const remote = generated
         .filter((m) => m.status === 'success' && m.model_url)
         .map((m) => ({ id: `tripo-${m.id}`, name: m.name, displayName: m.name, file_url: m.model_url, file_type: 'glb', description: m.prompt, source: 'TripoModel' }));
-      return [...local, ...remote];
+      const hasArtemis = [...local, ...remote].some((m) => String(m.name || '').toLowerCase() === 'artemis');
+      return hasArtemis ? [...local, ...remote] : [BUILT_IN_ARTEMIS, ...local, ...remote];
     },
     enabled: user?.role === 'admin',
   });
