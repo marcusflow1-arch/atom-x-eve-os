@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Pencil, X, Cpu } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import GameWorldEditDock from './hud/GameWorldEditDock';
 
 /**
- * Game Viewer engine entry point.
- * The editor stays inside the existing Game Viewer world. It never replaces
- * the live 3D scene with a second viewport or a full-screen editor.
+ * In-world editor entry point for the Luna Dashboard -> Game Viewer.
  *
- * Layout when open:
- *   80% = the existing live GameWorld3D scene
- *   20% = liquid-glass editor dock
+ * IMPORTANT: this never mounts a second Three.js viewport and never replaces
+ * the current preview world. GameWorldEditDock reads the live scene exposed by
+ * GameWorld3D (window.__gw3dScene / __gw3dCamera / __worldEnv) and edits it in
+ * place. The right dock consumes only ~20% of the screen so the existing world,
+ * HUD, bosses, player, terrain, sky, weather and combat remain visible.
  */
 export default function GameEngineEditLauncher() {
   const [open, setOpen] = useState(false);
@@ -18,40 +18,26 @@ export default function GameEngineEditLauncher() {
     const onKey = (event) => {
       if (event.target?.matches?.('input, textarea, select')) return;
       if (event.key.toLowerCase() === 'f2') setOpen((value) => !value);
-      if (event.key === 'Escape' && open) setOpen(false);
+      if (event.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        title="Open Atom XE Game Editor"
-        className="fixed top-[72px] left-1/2 z-[80] -translate-x-1/2 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 backdrop-blur-xl transition hover:bg-white/10 hover:text-white pointer-events-auto"
-      >
-        <span className="inline-flex items-center gap-1.5"><Pencil className="h-3 w-3" /> Edit</span>
-      </button>
-    );
-  }
+  }, []);
 
   return (
     <>
-      <div className="fixed left-1/2 top-3 z-[122] -translate-x-1/2 rounded-full border border-white/10 bg-slate-950/65 px-3 py-1.5 text-[10px] shadow-xl backdrop-blur-2xl">
-        <span className="mr-2 inline-flex items-center gap-1.5 text-orange-300"><Cpu className="h-3 w-3" /> GAME WORLD EDITOR</span>
-        <span className="text-white/35">Live world · F2 toggles</span>
-      </div>
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          title="Edit the current Game Viewer world"
+          data-editor-entry="live-world"
+          className="fixed left-1/2 top-[72px] z-[80] -translate-x-1/2 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 backdrop-blur-xl transition hover:bg-white/10 hover:text-white pointer-events-auto"
+        >
+          <span className="inline-flex items-center gap-1.5"><Pencil className="h-3 w-3" /> Edit</span>
+        </button>
+      )}
 
-      <GameWorldEditDock onClose={() => setOpen(false)} />
-
-      <button
-        onClick={() => setOpen(false)}
-        title="Close editor"
-        className="fixed right-[21vw] top-4 z-[123] rounded-full border border-white/10 bg-black/35 p-2 text-white/55 backdrop-blur-xl transition hover:bg-white/10 hover:text-white"
-      >
-        <X className="h-4 w-4" />
-      </button>
+      {open && <GameWorldEditDock onClose={() => setOpen(false)} />}
     </>
   );
 }
