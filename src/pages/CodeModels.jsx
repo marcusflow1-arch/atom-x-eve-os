@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, ChevronLeft, ChevronRight, Loader2, Play, RotateCcw } from 'lucide-react';
+import { Box, Loader2, Play } from 'lucide-react';
+import { useAuth } from '../components/auth/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import * as THREE from 'three';
@@ -76,32 +76,39 @@ function CodeModelViewer({ model, selectedAnimation, onAnimationsDetected }) {
     const loader = ext === 'fbx' ? new FBXLoader(manager) : new GLTFLoader(manager);
 
     const finish = (asset) => {
-      const object = asset?.scene || asset;
-      if (!object?.isObject3D) throw new Error('Unsupported 3D asset');
-      const box = new THREE.Box3().setFromObject(object);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.75 / maxDim;
-      object.scale.multiplyScalar(scale);
-      object.position.sub(center.multiplyScalar(scale));
-      scene.add(object);
+      try {
+        const object = asset?.scene || asset;
+        if (!object?.isObject3D) throw new Error('Unsupported 3D asset');
+        const box = new THREE.Box3().setFromObject(object);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+        const scale = 2.75 / maxDim;
+        object.scale.multiplyScalar(scale);
+        object.position.sub(center.multiplyScalar(scale));
+        scene.add(object);
 
-      const clips = (asset?.animations || object?.animations || []).filter(Boolean);
-      if (clips.length) {
-        const mixer = new THREE.AnimationMixer(object);
-        mixerRef.current = mixer;
-        const mapped = clips.map((clip) => {
-          const action = mixer.clipAction(clip);
-          action.loop = THREE.LoopRepeat;
-          actionsRef.current.set(clip.name || `Animation ${actionsRef.current.size + 1}`, action);
-          return { name: clip.name || `Animation ${actionsRef.current.size + 1}`, duration: clip.duration };
-        });
-        onAnimationsDetected(mapped);
-      } else {
+        const clips = (asset?.animations || object?.animations || []).filter(Boolean);
+        if (clips.length) {
+          const mixer = new THREE.AnimationMixer(object);
+          mixerRef.current = mixer;
+          const mapped = clips.map((clip, index) => {
+            const name = clip.name || `Animation ${index + 1}`;
+            const action = mixer.clipAction(clip);
+            action.loop = THREE.LoopRepeat;
+            actionsRef.current.set(name, action);
+            return { name, duration: clip.duration };
+          });
+          onAnimationsDetected(mapped);
+        } else {
+          onAnimationsDetected([]);
+        }
+        setLoading(false);
+      } catch (e) {
+        setError(e?.message || 'Unable to load model');
+        setLoading(false);
         onAnimationsDetected([]);
       }
-      setLoading(false);
     };
 
     loader.load(model.file_url, finish, undefined, (err) => {
@@ -115,8 +122,7 @@ function CodeModelViewer({ model, selectedAnimation, onAnimationsDetected }) {
     const clock = new THREE.Clock();
     const animate = () => {
       frame = requestAnimationFrame(animate);
-      const dt = clock.getDelta();
-      mixerRef.current?.update(dt);
+      mixerRef.current?.update(clock.getDelta());
       controls.update();
       renderer.render(scene, camera);
     };
@@ -139,12 +145,11 @@ function CodeModelViewer({ model, selectedAnimation, onAnimationsDetected }) {
       renderer.domElement.remove();
       actionsRef.current.clear();
     };
-  }, [model?.id, model?.file_url, model?.file_type]);
+  }, [model?.id, model?.file_url, model?.file_type, model?.bundle_manifest, onAnimationsDetected]);
 
   useEffect(() => {
     if (!selectedAnimation) return;
-    const actions = actionsRef.current;
-    const next = actions.get(selectedAnimation);
+    const next = actionsRef.current.get(selectedAnimation);
     if (!next) return;
     activeActionRef.current?.fadeOut(0.2);
     next.reset().fadeIn(0.2).play();
@@ -170,6 +175,11 @@ function CodeModelViewer({ model, selectedAnimation, onAnimationsDetected }) {
 }
 
 export default function CodeModels() {
+  const { user } = useAuth();
+  const [selectedId, setSelectedId] = useState(null);
+  const [animations, setAnimations] = useState([]);
+  const [selectedAnimation, setSelectedAnimation] = useState('');
+
   const { data: models = [], isLoading } = useQuery({
     queryKey: ['codeModels'],
     queryFn: async () => {
@@ -183,11 +193,8 @@ export default function CodeModels() {
         .map((m) => ({ id: `tripo-${m.id}`, name: m.name, displayName: m.name, file_url: m.model_url, file_type: 'glb', description: m.prompt, source: 'TripoModel' }));
       return [...local, ...remote];
     },
+    enabled: user?.role === 'admin',
   });
-
-  const [selectedId, setSelectedId] = useState(null);
-  const [animations, setAnimations] = useState([]);
-  const [selectedAnimation, setSelectedAnimation] = useState('');
 
   const selectedModel = useMemo(() => models.find((m) => m.id === selectedId) || models[0] || null, [models, selectedId]);
 
@@ -199,6 +206,11 @@ export default function CodeModels() {
     setAnimations([]);
     setSelectedAnimation('');
   }, [selectedModel?.id]);
+
+  const isAdmin = user?.role === 'admin';
+  if (!isAdmin) {
+    return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">Access Denied</h1><p className="text-slate-400">You need admin privileges to access Code Models.</p></div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
@@ -222,10 +234,7 @@ export default function CodeModels() {
                 <button key={model.id} onClick={() => setSelectedId(model.id)} className={`w-full rounded-2xl border p-2 text-left transition ${selectedModel?.id === model.id ? 'border-white/20 bg-white/10' : 'border-transparent bg-transparent hover:bg-white/[0.04]'}`}>
                   <div className="flex items-center gap-2">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-slate-900"><Box className="h-4 w-4 text-slate-400" /></div>
-                    <div className="min-w-0">
-                      <div className="truncate text-xs font-semibold text-slate-200">{model.displayName || model.name}</div>
-                      <div className="truncate text-[10px] text-slate-500">{model.file_type || 'model'}</div>
-                    </div>
+                    <div className="min-w-0"><div className="truncate text-xs font-semibold text-slate-200">{model.displayName || model.name}</div><div className="truncate text-[10px] text-slate-500">{model.file_type || 'model'}</div></div>
                   </div>
                 </button>
               ))}
@@ -235,14 +244,9 @@ export default function CodeModels() {
           <main className="min-w-0 bg-slate-950/30 p-4 md:p-5">
             {selectedModel ? (
               <div className="flex h-full min-h-[680px] flex-col">
-                <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                  <div>
-                    <div className="text-lg font-bold">{selectedModel.displayName || selectedModel.name}</div>
-                    <div className="text-xs text-slate-500">{selectedModel.description || 'Interactive 3D code model preview'}</div>
-                  </div>
-                  <Button variant="outline" size="sm" className="border-white/10 bg-white/[0.03] text-slate-300" onClick={() => { setSelectedAnimation(''); activeActionRef; }}>
-                    <RotateCcw className="mr-2 h-3.5 w-3.5" /> Reset View
-                  </Button>
+                <div className="mb-3 px-1">
+                  <div className="text-lg font-bold">{selectedModel.displayName || selectedModel.name}</div>
+                  <div className="text-xs text-slate-500">{selectedModel.description || 'Interactive 3D code model preview'}</div>
                 </div>
                 <div className="min-h-0 flex-1"><CodeModelViewer model={selectedModel} selectedAnimation={selectedAnimation} onAnimationsDetected={setAnimations} /></div>
               </div>
