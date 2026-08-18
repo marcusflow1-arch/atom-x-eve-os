@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { useAuth } from '../components/auth/AuthContext';
 
 function cylinderBetween(a,b,r,material,segments=12){
   const dir=new THREE.Vector3().subVectors(b,a); const len=dir.length();
@@ -36,8 +37,8 @@ function createArtemis(){
   root.add(cylinderBetween(new THREE.Vector3(-.55,2.52,.02),new THREE.Vector3(.55,2.52,.02),.055,bronze,8)); return root;
 }
 export default function AdminArtemis3D(){
-  const ref=useRef(null);
-  useEffect(()=>{ const el=ref.current; if(!el)return;
+  const { user } = useAuth(); const ref=useRef(null);
+  useEffect(()=>{ if(user?.role!=='admin') return; const el=ref.current; if(!el)return;
     const scene=new THREE.Scene(); scene.background=new THREE.Color(0x090d16);
     const camera=new THREE.PerspectiveCamera(42,el.clientWidth/el.clientHeight,.1,100); camera.position.set(0,2,6);
     const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2)); renderer.setSize(el.clientWidth,el.clientHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; el.appendChild(renderer.domElement);
@@ -48,7 +49,8 @@ export default function AdminArtemis3D(){
     let frame; const animate=()=>{frame=requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}; animate();
     const resize=()=>{camera.aspect=el.clientWidth/el.clientHeight;camera.updateProjectionMatrix();renderer.setSize(el.clientWidth,el.clientHeight)}; window.addEventListener('resize',resize);
     return()=>{cancelAnimationFrame(frame);window.removeEventListener('resize',resize);controls.dispose();renderer.dispose();el.innerHTML=''};
-  },[]);
+  },[user?.role]);
+  if(user?.role!=='admin') return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">Access Denied</h1><p className="text-slate-400">You need admin privileges to access this page.</p></div></div>;
   return <div className="min-h-screen bg-slate-950 text-white p-8"><div className="max-w-6xl mx-auto">
     <div className="mb-5"><div className="text-xs uppercase tracking-[.28em] text-slate-500">Admin • 3D Library • Demo Asset</div><h1 className="text-3xl font-semibold mt-2">Artemis</h1><p className="text-slate-400 mt-1">Atom XE procedural 3D proof-of-concept — orbit, pan and zoom.</p></div>
     <div className="rounded-3xl border border-white/10 bg-white/[.035] overflow-hidden shadow-2xl"><div ref={ref} className="w-full h-[680px]"/></div>
