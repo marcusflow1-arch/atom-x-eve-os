@@ -22,6 +22,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
 import ClanHub from './pages/ClanHub';
+import CodeModels from './pages/CodeModels';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
 import Discover from './pages/Discover';
@@ -83,6 +84,7 @@ export const PAGES = {
     "Checkout": Checkout,
     "Clan": Clan,
     "ClanHub": ClanHub,
+    "CodeModels": CodeModels,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
     "Discover": Discover,
