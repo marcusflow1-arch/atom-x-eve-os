@@ -21,10 +21,6 @@ import LivingQuest from './pages/LivingQuest';
 import Plan from './pages/Plan';
 
 const { Pages, Layout, mainPage } = pagesConfig;
-// Admin tools remain in the source for the Base44/editor workflow, but are never routed in a production/live build.
-const livePages = import.meta.env.PROD
-  ? Object.entries(Pages).filter(([path]) => !['Admin', 'AdminUIBuilder'].includes(path))
-  : Object.entries(Pages);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
@@ -33,8 +29,9 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
 
+  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -43,14 +40,18 @@ const AuthenticatedApp = () => {
     );
   }
 
+  // Handle authentication errors
   if (authError) {
-    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
-    if (authError.type === 'auth_required') {
+    if (authError.type === 'user_not_registered') {
+      return <UserNotRegisteredError />;
+    } else if (authError.type === 'auth_required') {
+      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
+  // Render the main app
   return (
     <Routes>
       <Route path="/" element={
@@ -58,7 +59,7 @@ const AuthenticatedApp = () => {
           <MainPage />
         </LayoutWrapper>
       } />
-      {livePages.map(([path, Page]) => (
+      {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path}`}
@@ -69,22 +70,60 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
-      <Route path="/DepsArt" element={<LayoutWrapper currentPageName="DepsArt"><DepsArt /></LayoutWrapper>} />
-      <Route path="/game/:gameId" element={<LayoutWrapper currentPageName="GameHub"><GameHub /></LayoutWrapper>} />
-      <Route path="/studio" element={<LayoutWrapper currentPageName="Studio"><Studio /></LayoutWrapper>} />
-      <Route path="/dev-studio/:studioId" element={<LayoutWrapper currentPageName="DevStudio"><DevStudio /></LayoutWrapper>} />
+      <Route
+        path="/DepsArt"
+        element={
+          <LayoutWrapper currentPageName="DepsArt">
+            <DepsArt />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/game/:gameId"
+        element={
+          <LayoutWrapper currentPageName="GameHub">
+            <GameHub />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/studio"
+        element={
+          <LayoutWrapper currentPageName="Studio">
+            <Studio />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/dev-studio/:studioId"
+        element={
+          <LayoutWrapper currentPageName="DevStudio">
+            <DevStudio />
+          </LayoutWrapper>
+        }
+      />
+      {/* Slice A — isolated realtime networking test. No Layout, no gameplay systems. */}
       <Route path="/NetworkTest" element={<NetworkTest />} />
       <Route path="/ChainBreak" element={<ChainBreak />} />
       <Route path="/NPCQuests" element={<NPCQuests />} />
       <Route path="/NPCNetwork" element={<NPCNetwork />} />
       <Route path="/LivingQuest" element={<LivingQuest />} />
-      <Route path="/Plan" element={<LayoutWrapper currentPageName="Plan"><Plan /></LayoutWrapper>} />
+      <Route
+        path="/Plan"
+        element={
+          <LayoutWrapper currentPageName="Plan">
+            <Plan />
+          </LayoutWrapper>
+        }
+      />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
+
 function App() {
+
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
