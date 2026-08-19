@@ -55,13 +55,21 @@ function clickEditorControl(label) {
 }
 
 function hideLegacyEditLauncher() {
-  const buttons = [...document.querySelectorAll('#atomxe-live-world-editor-root button')];
+  const buttons = [...document.querySelectorAll('button')];
   buttons.forEach(button => {
+    if (button.closest('#atomxe-editor-shell')) return;
     const text = button.textContent?.trim().toLowerCase() || '';
     if (text.includes('edit world')) {
       button.style.setProperty('display', 'none', 'important');
       button.style.setProperty('visibility', 'hidden', 'important');
+      button.style.setProperty('opacity', '0', 'important');
       button.style.setProperty('pointer-events', 'none', 'important');
+      button.style.setProperty('width', '0', 'important');
+      button.style.setProperty('height', '0', 'important');
+      button.style.setProperty('min-width', '0', 'important');
+      button.style.setProperty('min-height', '0', 'important');
+      button.style.setProperty('margin', '0', 'important');
+      button.style.setProperty('padding', '0', 'important');
       button.setAttribute('aria-hidden', 'true');
     }
   });
