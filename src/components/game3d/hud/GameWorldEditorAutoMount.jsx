@@ -8,6 +8,8 @@ let host = null;
 let poll = null;
 let shellObserver = null;
 let shell = null;
+let importedAssets = [];
+let bottomFilter = 'all';
 const STYLE_ID = 'atomxe-editor-unified-layout-style';
 const TAB_LABELS = ['World','Models','Physics','Effects','Damage','Actors','Equipment','Animation','Stats','Camera'];
 
@@ -157,9 +159,16 @@ function createShell() {
   bottom.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div><div style="font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.42);">CONTENT BROWSER · WORLD ASSET LIBRARY</div><div style="font-size:8px;color:rgba(255,255,255,.28);margin-top:2px;">Models · animations · montages · effects · PC imports · live scene assets</div></div><div id="atomxe-bottom-status" style="font-size:8px;color:rgba(255,255,255,.30);">Live world</div></div>';
   const toolbar=document.createElement('div'); toolbar.style.cssText='display:flex;gap:7px;margin-top:8px;align-items:center;flex-wrap:wrap;';
   const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.multiple=true; fileInput.accept='.glb,.gltf,.fbx,.obj,.bin'; fileInput.style.display='none';
-  fileInput.addEventListener('change',()=>{window.dispatchEvent(new CustomEvent('gameEditorImportFiles',{detail:{files:[...fileInput.files]}}));fileInput.value='';});
+  fileInput.addEventListener('change',()=>{
+    const files=[...fileInput.files];
+    files.forEach(file=>{importedAssets.push({id:`pc-${Date.now()}-${Math.random().toString(36).slice(2)}`,name:file.name,type:file.name.split('.').pop()?.toLowerCase()||'asset',file});});
+    window.dispatchEvent(new CustomEvent('gameEditorImportFiles',{detail:{files}}));
+    refreshBottomAssets();
+    fileInput.value='';
+  });
   toolbar.appendChild(fileInput);
   toolbar.appendChild(glassButton('IMPORT FROM PC',()=>fileInput.click()));
+  ['all','models','animations','effects'].forEach(filter=>toolbar.appendChild(glassButton(filter.toUpperCase(),()=>{bottomFilter=filter;refreshBottomAssets();},true)));
   ['+ Box','+ Sphere','+ Cylinder'].forEach(label=>{
     toolbar.appendChild(glassButton(label,()=>window.dispatchEvent(new CustomEvent('gameEditorPrimitive',{detail:{type:label.replace('+ ','').toLowerCase()}}))));
   });
@@ -168,6 +177,18 @@ function createShell() {
   shell.appendChild(bottom);
 
   document.body.appendChild(shell);
+  const canvas=canvasElement();
+  if(canvas){
+    const drop=e=>{
+      const id=e.dataTransfer?.getData('application/x-atomxe-pending-file');
+      const asset=importedAssets.find(a=>a.id===id);
+      if(!asset)return;
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('gameEditorImportFiles',{detail:{files:[asset.file]}}));
+    };
+    canvas.addEventListener('dragover',e=>e.preventDefault());
+    canvas.addEventListener('drop',drop);
+  }
   window.addEventListener('gameEditorObjectSelected',event=>{
     const label=document.getElementById('atomxe-left-selected');
     const kind=document.getElementById('atomxe-left-kind');
@@ -197,14 +218,21 @@ function createShell() {
 function refreshBottomAssets(assetRows=[]){
   const box=document.getElementById('atomxe-bottom-scene-assets'); if(!box)return;
   box.innerHTML='';
-  assetRows.slice(0,12).forEach(a=>{
-    const b=glassButton(a.name||a.type||'Asset',()=>window.dispatchEvent(new CustomEvent('gameEditorAssetActivate',{detail:{id:a.id}})),true);
+  const matchesFilter=(name,type)=>{
+    if(bottomFilter==='all')return true;
+    if(bottomFilter==='models')return ['glb','gltf','fbx','obj'].includes(type)||/mesh|model|actor|npc|enemy|player/i.test(name);
+    if(bottomFilter==='animations')return /anim|montage|clip/i.test(name)||type==='fbx';
+    if(bottomFilter==='effects')return /effect|vfx|particle|niagara|spark/i.test(name);
+    return true;
+  };
+  importedAssets.filter(a=>matchesFilter(a.name,a.type)).slice(0,16).forEach(a=>{
+    const b=glassButton(a.name||'PC asset',()=>window.dispatchEvent(new CustomEvent('gameEditorImportFiles',{detail:{files:[a.file]}})),true);
     b.draggable=true;
-    b.addEventListener('dragstart',e=>e.dataTransfer.setData('application/x-game-editor-asset',a.id));
+    b.addEventListener('dragstart',e=>e.dataTransfer.setData('application/x-atomxe-pending-file',a.id));
     b.style.overflow='hidden'; b.style.textOverflow='ellipsis'; b.style.width='100%'; box.appendChild(b);
   });
   const sceneLabel=document.createElement('div'); sceneLabel.style.cssText='grid-column:1/-1;font-size:8px;color:rgba(255,255,255,.28);margin-top:4px;'; sceneLabel.textContent='LIVE WORLD OBJECTS'; box.appendChild(sceneLabel);
-  getSceneObjects('').slice(0,12).forEach(o=>{
+  getSceneObjects('').filter(o=>matchesFilter(o.name||o.type||'', o.userData?.assetType||'')).slice(0,16).forEach(o=>{
     const b=glassButton(o.name||o.type||'Unnamed',()=>window.dispatchEvent(new CustomEvent('gameEditorSearchSelect',{detail:{uuid:o.uuid}})),true);
     b.style.overflow='hidden'; b.style.textOverflow='ellipsis'; b.style.width='100%'; box.appendChild(b);
   });
