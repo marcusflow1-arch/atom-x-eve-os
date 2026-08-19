@@ -54,30 +54,76 @@ function clickEditorControl(label) {
   target?.click();
 }
 
+function hideButton(button) {
+  button.style.setProperty('display', 'none', 'important');
+  button.style.setProperty('visibility', 'hidden', 'important');
+  button.style.setProperty('opacity', '0', 'important');
+  button.style.setProperty('pointer-events', 'none', 'important');
+  button.style.setProperty('width', '0', 'important');
+  button.style.setProperty('height', '0', 'important');
+  button.style.setProperty('min-width', '0', 'important');
+  button.style.setProperty('min-height', '0', 'important');
+  button.style.setProperty('margin', '0', 'important');
+  button.style.setProperty('padding', '0', 'important');
+  button.setAttribute('aria-hidden', 'true');
+}
+
 function hideLegacyEditLauncher() {
-  const buttons = [...document.querySelectorAll('button')];
-  buttons.forEach(button => {
-    if (button.closest('#atomxe-editor-shell')) return;
-    const text = button.textContent?.trim().toLowerCase() || '';
-    if (text.includes('edit world')) {
-      button.style.setProperty('display', 'none', 'important');
-      button.style.setProperty('visibility', 'hidden', 'important');
-      button.style.setProperty('opacity', '0', 'important');
-      button.style.setProperty('pointer-events', 'none', 'important');
-      button.style.setProperty('width', '0', 'important');
-      button.style.setProperty('height', '0', 'important');
-      button.style.setProperty('min-width', '0', 'important');
-      button.style.setProperty('min-height', '0', 'important');
-      button.style.setProperty('margin', '0', 'important');
-      button.style.setProperty('padding', '0', 'important');
-      button.setAttribute('aria-hidden', 'true');
-    }
+  const editorRoot = document.querySelector('#atomxe-live-world-editor-root');
+  if (editorRoot) {
+    // The old GameWorldEditDock launcher is the wider EDIT/Edit World button.
+    // Keep the new compact shell button, but hide every legacy launcher rendered
+    // inside the mounted editor root, including nested React wrappers.
+    [...editorRoot.querySelectorAll('button')].forEach(button => {
+      const text = button.textContent?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
+      const isLegacyLauncher = text === 'edit' || text === 'edit world' || text.includes('edit world');
+      if (isLegacyLauncher) hideButton(button);
+    });
+  }
+
+  // Also remove any older launcher that Base44/game-viewer may render outside
+  // our editor root. Never touch buttons belonging to the compact shell.
+  [...document.querySelectorAll('button')].forEach(button => {
+    if (button.closest('#atomxe-editor-shell') || button.closest('#atomxe-live-world-editor-root')) return;
+    const text = button.textContent?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
+    if (text === 'edit world' || text.includes('edit world')) hideButton(button);
   });
 }
 
 function openOriginalEdit() {
-  const original = document.querySelector('#atomxe-live-world-editor-root > button');
-  original?.click();
+  const editorRoot = document.querySelector('#atomxe-live-world-editor-root');
+  if (!editorRoot) return;
+  const buttons = [...editorRoot.querySelectorAll('button')];
+  const original = buttons.find(button => {
+    const text = button.textContent?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
+    return text === 'edit' || text === 'edit world' || text.includes('edit world');
+  });
+  if (original) {
+    // Temporarily restore interaction because the legacy launcher is intentionally
+    // hidden from the UI but remains the canonical toggle for GameWorldEditDock.
+    const previous = {
+      pointerEvents: original.style.pointerEvents,
+      display: original.style.display,
+      visibility: original.style.visibility,
+      opacity: original.style.opacity,
+      width: original.style.width,
+      height: original.style.height,
+      minWidth: original.style.minWidth,
+      minHeight: original.style.minHeight,
+      margin: original.style.margin,
+      padding: original.style.padding,
+    };
+    original.style.setProperty('display', 'block', 'important');
+    original.style.setProperty('visibility', 'visible', 'important');
+    original.style.setProperty('opacity', '0', 'important');
+    original.style.setProperty('pointer-events', 'auto', 'important');
+    original.click();
+    Object.entries(previous).forEach(([key, value]) => {
+      if (value) original.style[key] = value;
+      else original.style.removeProperty(key.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`));
+    });
+    hideLegacyEditLauncher();
+  }
 }
 
 function createShell() {
