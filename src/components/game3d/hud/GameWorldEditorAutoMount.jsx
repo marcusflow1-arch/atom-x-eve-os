@@ -27,6 +27,8 @@ function injectLayoutStyle() {
     }
     #atomxe-live-world-editor-root > button {
       display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
     }
     #atomxe-editor-shell button {
       font: inherit;
@@ -50,6 +52,19 @@ function clickEditorControl(label) {
   const buttons = [...document.querySelectorAll('#atomxe-live-world-editor-root aside button')];
   const target = buttons.find(button => button.textContent?.trim().toLowerCase().includes(label.toLowerCase()));
   target?.click();
+}
+
+function hideLegacyEditLauncher() {
+  const buttons = [...document.querySelectorAll('#atomxe-live-world-editor-root button')];
+  buttons.forEach(button => {
+    const text = button.textContent?.trim().toLowerCase() || '';
+    if (text.includes('edit world')) {
+      button.style.setProperty('display', 'none', 'important');
+      button.style.setProperty('visibility', 'hidden', 'important');
+      button.style.setProperty('pointer-events', 'none', 'important');
+      button.setAttribute('aria-hidden', 'true');
+    }
+  });
 }
 
 function openOriginalEdit() {
@@ -107,6 +122,7 @@ function createShell() {
 
 function syncShell() {
   if (!shell) return;
+  hideLegacyEditLauncher();
   const editorOpen = !!document.querySelector('#atomxe-live-world-editor-root > aside');
   shell.style.display = 'block';
   const editButton = shell.querySelector(':scope > button');
