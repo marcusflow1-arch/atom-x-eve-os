@@ -3,286 +3,123 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
-const glass = 'bg-slate-950/80 backdrop-blur-xl border border-white/10 shadow-2xl';
+const glass = 'bg-slate-950/85 backdrop-blur-xl border border-white/10 shadow-2xl';
 
-function classifyObject(object) {
-  const n = `${object?.name || ''} ${object?.parent?.name || ''}`.toLowerCase();
-  if (n.includes('ground') || n.includes('terrain') || n.includes('grass')) return 'terrain';
-  if (n.includes('boss') || n.includes('devourer') || n.includes('shifter') || object?.userData?.isBoss) return 'enemy';
-  if (n.includes('enemy') || n.includes('rogue') || object?.userData?.isEnemy) return 'enemy';
-  if (n.includes('companion')) return 'companion';
-  if (n.includes('pet')) return 'pet';
-  if (n.includes('mount')) return 'mount';
-  if (n.includes('player') || object?.userData?.isPlayer) return 'player';
+function kindOf(o) {
+  const n = `${o?.name || ''} ${o?.parent?.name || ''}`.toLowerCase();
+  if (o?.userData?.isTerrain || /terrain|ground|grass|floor/.test(n)) return 'terrain';
+  if (o?.userData?.isBoss || /boss|devourer|shifter/.test(n)) return 'enemy';
+  if (o?.userData?.isEnemy || /enemy|npc/.test(n)) return 'enemy';
+  if (o?.userData?.isPlayer || /player|character/.test(n)) return 'player';
+  if (/companion/.test(n)) return 'companion';
+  if (/pet/.test(n)) return 'pet';
+  if (/mount/.test(n)) return 'mount';
   return 'model';
 }
 
-function EditableNumber({ label, value, onChange, step = 0.1 }) {
-  return <label className="block text-[10px] text-white/50 uppercase tracking-wider">
-    {label}
-    <input type="number" step={step} value={Number.isFinite(value) ? value : 0}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-400/50" />
-  </label>;
+function Num({ label, value, onChange }) {
+  return <label className="block text-[10px] text-white/55 uppercase tracking-wider">{label}<input type="number" value={Number.isFinite(value) ? value : 0} onChange={e => onChange(Number(e.target.value))} className="mt-1 w-full rounded-md bg-white/5 border border-white/10 px-2 py-1 text-xs text-white" /></label>;
 }
 
 export default function GameWorldEditorOverlay() {
-  const [active, setActive] = useState(false);
+  const [edit, setEdit] = useState(false);
   const [gameplay, setGameplay] = useState(false);
-  const [movement, setMovement] = useState(true);
+  const [movement, setMovement] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [terrainTool, setTerrainTool] = useState('select');
-  const [brush, setBrush] = useState(2.5);
+  const [tool, setTool] = useState('select');
+  const [brush, setBrush] = useState(3);
   const [strength, setStrength] = useState(0.25);
   const [assets, setAssets] = useState([]);
-  const [worldTick, setWorldTick] = useState(0);
-  const helperRef = useRef(null);
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const helper = useRef(null);
+  const ray = useMemo(() => new THREE.Raycaster(), []);
   const pointer = useMemo(() => new THREE.Vector2(), []);
 
-  const getScene = () => window.__gw3dScene || null;
-  const getCamera = () => window.__gw3dCamera || null;
-  const getCanvas = () => document.querySelector('.fixed.inset-0 canvas') || getScene()?.userData?.editorCanvas || document.querySelector('canvas');
+  const scene = () => window.__gw3dScene || null;
+  const camera = () => window.__gw3dCamera || null;
+  const canvasAt = (e) => document.elementsFromPoint(e.clientX, e.clientY).find(x => x instanceof HTMLCanvasElement) || document.querySelector('canvas');
 
-  const selectObject = (hit) => {
-    let object = hit?.object;
-    if (!object) return;
-    while (object.parent && object.parent.type !== 'Scene' && !object.userData?.editorSelectable) object = object.parent;
-    if (object.userData?.editorHelper) return;
-    const kind = classifyObject(object);
-    object.userData.editorSelectable = true;
-    object.userData.editorKind = kind;
-    object.userData.editorConfig ||= {
-      physics: { mass: 1, friction: 0.5, restitution: 0.15, gravity: 1 },
-      stats: { hp: 100, maxHP: 100, defense: 0, armor: 0, strength: 10, agility: 10, intelligence: 10, stamina: 10, mana: 0 },
-      damage: [{ name: 'Physical', type: 'physical', amount: 10, multiplier: 1, teamDamage: false, elemental: false }],
-      effects: [],
-    };
-    setSelected(object);
-    if (helperRef.current) {
-      getScene()?.remove(helperRef.current);
-      helperRef.current.dispose?.();
-    }
-    const helper = new THREE.BoxHelper(object, 0x22d3ee);
-    helper.userData.editorHelper = true;
-    getScene()?.add(helper);
-    helperRef.current = helper;
-    window.dispatchEvent(new CustomEvent('gameEditorObjectSelected', { detail: { object, kind, config: object.userData.editorConfig } }));
-    setWorldTick((v) => v + 1);
+  const ensureConfig = (o) => {
+    o.userData.editorConfig ||= { physics: { mass: 1, friction: .5, restitution: .15, gravity: 1 }, stats: { hp: 100, maxHP: 100, defense: 0, armor: 0, strength: 10, agility: 10, intelligence: 10, stamina: 10, mana: 0 }, damage: [], effects: [] };
+    return o.userData.editorConfig;
   };
 
-  const raycastAt = (event) => {
-    const canvas = getCanvas(); const scene = getScene(); const camera = getCamera();
-    if (!canvas || !scene || !camera) return null;
-    const rect = canvas.getBoundingClientRect();
-    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(scene.children, true).filter((h) => !h.object.userData?.editorHelper && h.object.visible);
-    return hits[0] || null;
+  const pick = (e) => {
+    const s = scene(), c = camera(), canvas = canvasAt(e);
+    if (!s || !c || !canvas) return null;
+    const r = canvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(pointer, c);
+    const hits = ray.intersectObjects(s.children, true).filter(h => h.object.visible && !h.object.userData?.editorHelper);
+    return hits[0]?.object || null;
   };
 
-  const sculptTerrain = (event) => {
-    const hit = raycastAt(event);
-    if (!hit?.object?.isMesh || classifyObject(hit.object) !== 'terrain') return;
-    const geometry = hit.object.geometry;
-    const position = geometry?.attributes?.position;
-    if (!position) return;
-    const localPoint = hit.object.worldToLocal(hit.point.clone());
-    for (let i = 0; i < position.count; i++) {
-      const x = position.getX(i); const z = position.getZ(i);
-      const dx = x - localPoint.x; const dz = z - localPoint.z;
-      const distance = Math.sqrt(dx * dx + dz * dz);
-      if (distance > brush) continue;
-      const falloff = 1 - distance / brush;
-      const delta = strength * falloff * (terrainTool === 'lower' ? -1 : 1);
-      if (terrainTool === 'raise' || terrainTool === 'lower') position.setY(i, position.getY(i) + delta);
-      if (terrainTool === 'flatten') position.setY(i, localPoint.y);
-      if (terrainTool === 'smooth') position.setY(i, position.getY(i) + (localPoint.y - position.getY(i)) * falloff * 0.25);
+  const select = (raw) => {
+    let o = raw;
+    while (o?.parent && o.parent.type !== 'Scene' && !o.userData?.editorSelectable) o = o.parent;
+    if (!o) return;
+    o.userData.editorSelectable = true;
+    o.userData.editorKind = kindOf(o);
+    ensureConfig(o);
+    if (helper.current) scene()?.remove(helper.current);
+    const h = new THREE.BoxHelper(o, 0x22d3ee); h.userData.editorHelper = true; scene()?.add(h); helper.current = h;
+    setSelected(o);
+    window.dispatchEvent(new CustomEvent('gameEditorObjectSelected', { detail: { object: o, kind: kindOf(o), config: o.userData.editorConfig } }));
+  };
+
+  const sculpt = (e) => {
+    const o = pick(e); if (!o?.isMesh || kindOf(o) !== 'terrain') return;
+    const pos = o.geometry?.attributes?.position; if (!pos) return;
+    const p = o.worldToLocal(ray.intersectObject(o, true)[0]?.point?.clone() || new THREE.Vector3());
+    for (let i=0;i<pos.count;i++) {
+      const dx=pos.getX(i)-p.x, dz=pos.getZ(i)-p.z, d=Math.hypot(dx,dz); if(d>brush) continue;
+      const f=1-d/brush, y=pos.getY(i);
+      if(tool==='raise') pos.setY(i,y+strength*f);
+      if(tool==='lower') pos.setY(i,y-strength*f);
+      if(tool==='flatten') pos.setY(i,p.y);
+      if(tool==='smooth') pos.setY(i,y+(p.y-y)*f*.2);
     }
-    position.needsUpdate = true;
-    geometry.computeVertexNormals?.();
-    hit.object.userData.editorTerrainDirty = true;
-    window.dispatchEvent(new CustomEvent('gameEditorTerrainChanged', { detail: { object: hit.object, geometry } }));
-    setWorldTick((v) => v + 1);
+    pos.needsUpdate=true; o.geometry.computeVertexNormals?.(); o.userData.editorTerrainDirty=true;
+    window.dispatchEvent(new CustomEvent('gameEditorTerrainChanged',{detail:{object:o,geometry:o.geometry}}));
   };
 
   useEffect(() => {
-    const onMouseDown = (e) => {
-      if (!active) return;
-      if (e.button !== 0) return;
-      const hit = raycastAt(e);
-      if (!hit) return;
-      const kind = classifyObject(hit.object);
-      if (kind === 'terrain' && terrainTool !== 'select') sculptTerrain(e);
-      else selectObject(hit);
-      e.preventDefault();
-      e.stopPropagation();
+    if (!edit) return;
+    const down = (e) => {
+      if(e.button!==0) return;
+      const o=pick(e); if(!o) return;
+      if(kindOf(o)==='terrain' && tool!=='select') sculpt(e); else select(o);
+      e.preventDefault(); e.stopPropagation();
     };
-    const onMouseMove = (e) => {
-      if (!active || terrainTool === 'select' || !(e.buttons & 1)) return;
-      sculptTerrain(e);
-    };
-    const onContext = (e) => { if (active) e.preventDefault(); };
-    const onKeyDown = (e) => {
-      if (!active || gameplay) return;
-      const target = e.target;
-      if (target?.matches?.('input, textarea, select')) return;
-      if (['w','a','s','d','f','e','q','r','1','2','3','4','5','6','7','8','9','0',' '].includes(e.key.toLowerCase()) || e.button !== undefined) {
-        if (!movement || ['f','e','q','r','1','2','3','4','5','6','7','8','9','0',' '].includes(e.key.toLowerCase())) {
-          e.preventDefault(); e.stopPropagation();
-        }
-      }
-    };
-    const canvas = getCanvas();
-    canvas?.addEventListener('mousedown', onMouseDown, true);
-    canvas?.addEventListener('mousemove', onMouseMove, true);
-    canvas?.addEventListener('contextmenu', onContext, true);
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => {
-      canvas?.removeEventListener('mousedown', onMouseDown, true);
-      canvas?.removeEventListener('mousemove', onMouseMove, true);
-      canvas?.removeEventListener('contextmenu', onContext, true);
-      window.removeEventListener('keydown', onKeyDown, true);
-    };
-  }, [active, gameplay, movement, terrainTool, brush, strength]);
+    const move = e => { if(e.buttons&1 && tool!=='select') sculpt(e); };
+    const key = e => { if(!edit || gameplay) return; if(e.target?.matches?.('input,textarea,select')) return; if(!movement) e.preventDefault(); };
+    document.addEventListener('mousedown',down,true); document.addEventListener('mousemove',move,true); window.addEventListener('keydown',key,true);
+    return () => { document.removeEventListener('mousedown',down,true); document.removeEventListener('mousemove',move,true); window.removeEventListener('keydown',key,true); };
+  },[edit,gameplay,movement,tool,brush,strength]);
 
-  useEffect(() => {
-    const onReady = () => setWorldTick((v) => v + 1);
-    window.addEventListener('gw3dSceneReady', onReady);
-    window.addEventListener('gw3dSceneTeardown', () => setSelected(null));
-    return () => window.removeEventListener('gw3dSceneReady', onReady);
-  }, []);
+  useEffect(()=>()=>{ if(helper.current) scene()?.remove(helper.current); },[]);
 
-  const updateConfig = (section, key, value) => {
-    if (!selected) return;
-    selected.userData.editorConfig ||= { physics: {}, stats: {}, damage: [], effects: [] };
-    selected.userData.editorConfig[section] ||= {};
-    selected.userData.editorConfig[section][key] = value;
-    window.dispatchEvent(new CustomEvent('gameEditorObjectChanged', { detail: { object: selected, section, key, value, config: selected.userData.editorConfig } }));
-    setWorldTick((v) => v + 1);
-  };
+  const change = (section,key,value) => { if(!selected) return; const cfg=ensureConfig(selected); cfg[section] ||= {}; cfg[section][key]=value; window.dispatchEvent(new CustomEvent('gameEditorObjectChanged',{detail:{object:selected,section,key,value,config:cfg}})); setSelected({...selected}); };
+  const remove = () => { if(!selected) return; scene()?.remove(selected); if(helper.current) scene()?.remove(helper.current); window.dispatchEvent(new CustomEvent('gameEditorObjectRemoved',{detail:{object:selected}})); setSelected(null); };
+  const addPrimitive = (type) => { const s=scene(); if(!s)return; const g=type==='sphere'?new THREE.SphereGeometry(.8,24,16):type==='cylinder'?new THREE.CylinderGeometry(.65,.65,1.5,24):new THREE.BoxGeometry(1.4,1.4,1.4); const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0x8b5cf6})); m.name=`Editor ${type}`; m.position.set(0,1,0); m.userData.editorSource='user_asset'; s.add(m); select(m); };
+  const importFile = file => { if(!file)return; const url=URL.createObjectURL(file); const type=/\.fbx$/i.test(file.name)?'model':/\.anim$/i.test(file.name)?'animation':'model'; setAssets(a=>[...a,{id:`${Date.now()}-${file.name}`,name:file.name,url,type}]); };
+  const drop = asset => { if(!asset?.url)return; if(asset.type==='animation'){window.dispatchEvent(new CustomEvent('gameEditorAnimationImported',{detail:asset}));return;} const done=root=>{root.name=asset.name;root.userData.editorSource='user_asset';scene()?.add(root);select(root);}; if(asset.type==='model'&&/\.fbx$/i.test(asset.name))new FBXLoader().load(asset.url,done,undefined,console.error); else new GLTFLoader().load(asset.url,g=>done(g.scene||g.scenes?.[0]),undefined,console.error); };
 
-  const addDamage = () => {
-    if (!selected) return;
-    selected.userData.editorConfig.damage ||= [];
-    selected.userData.editorConfig.damage.push({ name: 'New Damage', type: 'physical', amount: 10, multiplier: 1, teamDamage: false, elemental: false });
-    setWorldTick((v) => v + 1);
-  };
-
-  const removeSelected = () => {
-    if (!selected) return;
-    const scene = getScene();
-    scene?.remove(selected);
-    if (helperRef.current) scene?.remove(helperRef.current);
-    window.dispatchEvent(new CustomEvent('gameEditorObjectRemoved', { detail: { object: selected } }));
-    setSelected(null);
-    setWorldTick((v) => v + 1);
-  };
-
-  const addPrimitive = (type) => {
-    const scene = getScene(); if (!scene) return;
-    let geometry;
-    if (type === 'sphere') geometry = new THREE.SphereGeometry(0.8, 32, 20);
-    else if (type === 'box') geometry = new THREE.BoxGeometry(1.4, 1.4, 1.4);
-    else if (type === 'cylinder') geometry = new THREE.CylinderGeometry(0.65, 0.65, 1.5, 24);
-    else geometry = new THREE.CapsuleGeometry(0.5, 1.2, 8, 16);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.65, metalness: 0.1 });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.name = `Editor ${type}`;
-    mesh.position.copy(window.__localPlayerPos ? new THREE.Vector3(window.__localPlayerPos.x + 2, window.__localPlayerPos.y + 1, window.__localPlayerPos.z) : new THREE.Vector3(0, 1, 0));
-    mesh.userData.editorSource = 'user_asset';
-    mesh.userData.editorSelectable = true;
-    scene.add(mesh);
-    selectObject({ object: mesh });
-  };
-
-  const importFile = (file) => {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAssets((items) => [...items, { id: `${Date.now()}-${file.name}`, name: file.name, url, type: file.name.toLowerCase().endsWith('.fbx') ? 'model' : file.name.toLowerCase().endsWith('.anim') ? 'animation' : 'model' }]);
-  };
-
-  const dropAsset = (asset) => {
-    const scene = getScene(); if (!scene || !asset?.url) return;
-    if (asset.type === 'animation') {
-      window.dispatchEvent(new CustomEvent('gameEditorAnimationImported', { detail: { url: asset.url, name: asset.name } }));
-      return;
-    }
-    const onLoaded = (root) => {
-      root.name = asset.name;
-      root.position.copy(window.__localPlayerPos ? new THREE.Vector3(window.__localPlayerPos.x + 2, window.__localPlayerPos.y, window.__localPlayerPos.z) : new THREE.Vector3(0, 0, 0));
-      root.userData.editorSource = 'user_asset';
-      root.userData.editorSelectable = true;
-      scene.add(root);
-      selectObject({ object: root });
-    };
-    if (/\.fbx$/i.test(asset.name)) new FBXLoader().load(asset.url, onLoaded, undefined, console.error);
-    else new GLTFLoader().load(asset.url, (gltf) => onLoaded(gltf.scene || gltf.scenes?.[0]), undefined, console.error);
-  };
-
-  if (!active) return <button onClick={() => setActive(true)} className="fixed top-5 left-1/2 -translate-x-1/2 z-[10000] rounded-full px-5 py-2 text-xs font-semibold tracking-wider text-cyan-100 border border-cyan-300/30 bg-slate-950/75 backdrop-blur-xl shadow-lg hover:bg-slate-900/90">EDIT</button>;
-
-  const config = selected?.userData?.editorConfig || {};
-  const stats = config.stats || {};
-  const physics = config.physics || {};
-  const damages = config.damage || [];
-
+  if(!edit) return <button onClick={()=>setEdit(true)} className="fixed top-5 left-1/2 -translate-x-1/2 z-[10000] rounded-full px-5 py-2 text-xs font-semibold text-cyan-100 border border-cyan-300/30 bg-slate-950/80 backdrop-blur-xl">EDIT</button>;
+  const cfg=selected?ensureConfig(selected):null, stats=cfg?.stats||{}, physics=cfg?.physics||{};
   return <>
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-2 rounded-full px-3 py-2 text-xs text-white border border-white/10 bg-slate-950/80 backdrop-blur-xl shadow-xl">
-      <span className="text-cyan-300 font-semibold">EDIT MODE</span>
-      <button onClick={() => setGameplay((v) => !v)} className="rounded-full px-2 py-1 bg-white/10 hover:bg-white/15">Gameplay {gameplay ? 'ON' : 'OFF'}</button>
-      <button onClick={() => setMovement((v) => !v)} className="rounded-full px-2 py-1 bg-white/10 hover:bg-white/15">Move {movement ? 'ON' : 'OFF'}</button>
-      <button onClick={() => { setActive(false); setSelected(null); }} className="rounded-full px-2 py-1 bg-cyan-400/15 text-cyan-200">DONE</button>
-    </div>
-
-    <aside className={`fixed left-0 top-0 bottom-[15%] w-[15vw] min-w-[230px] max-w-[360px] z-[9999] p-3 ${glass} text-white overflow-y-auto`}>
-      <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">Selected Object</div>
-      {selected ? <>
-        <div className="text-sm font-semibold text-cyan-200 truncate">{selected.name || 'Unnamed Object'}</div>
-        <div className="text-[10px] text-white/40 mb-3">{classifyObject(selected)} · live scene object</div>
-        <section className="space-y-2 mb-4">
-          <div className="text-xs font-semibold">Transform</div>
-          <EditableNumber label="X" value={selected.position.x} onChange={(v) => { selected.position.x = v; }} />
-          <EditableNumber label="Y" value={selected.position.y} onChange={(v) => { selected.position.y = v; }} />
-          <EditableNumber label="Z" value={selected.position.z} onChange={(v) => { selected.position.z = v; }} />
-          <EditableNumber label="Scale" value={selected.scale.x} onChange={(v) => selected.scale.setScalar(v)} />
-        </section>
-        <section className="space-y-2 mb-4">
-          <div className="text-xs font-semibold">Physics</div>
-          {Object.entries({ mass: physics.mass ?? 1, friction: physics.friction ?? 0.5, restitution: physics.restitution ?? 0.15, gravity: physics.gravity ?? 1 }).map(([k,v]) => <EditableNumber key={k} label={k} value={v} onChange={(n) => updateConfig('physics', k, n)} />)}
-        </section>
-        <section className="space-y-2 mb-4">
-          <div className="text-xs font-semibold">Stats</div>
-          {['hp','maxHP','defense','armor','strength','agility','intelligence','stamina','mana'].map((k) => <EditableNumber key={k} label={k} value={stats[k] ?? 0} onChange={(n) => updateConfig('stats', k, n)} step={1} />)}
-        </section>
-        <section className="space-y-2 mb-4">
-          <div className="flex items-center justify-between"><div className="text-xs font-semibold">Damage</div><button onClick={addDamage} className="rounded-md px-2 py-1 bg-cyan-400/15 text-cyan-200">+</button></div>
-          {damages.map((d, i) => <div key={i} className="rounded-lg bg-white/5 border border-white/10 p-2 space-y-1">
-            <input value={d.name} onChange={(e) => { d.name = e.target.value; setWorldTick((v) => v + 1); }} className="w-full bg-transparent border-b border-white/10 text-xs text-white" />
-            <select value={d.type} onChange={(e) => { d.type = e.target.value; setWorldTick((v) => v + 1); }} className="w-full bg-slate-900 text-xs p-1 rounded"><option>physical</option><option>fire</option><option>ice</option><option>electric</option><option>poison</option><option>arcane</option><option>holy</option><option>shadow</option></select>
-            <EditableNumber label="Amount" value={d.amount} onChange={(n) => { d.amount = n; setWorldTick((v) => v + 1); }} step={1} />
-            <EditableNumber label="Multiplier" value={d.multiplier} onChange={(n) => { d.multiplier = n; setWorldTick((v) => v + 1); }} />
-          </div>)}
-        </section>
-        <button onClick={removeSelected} className="w-full rounded-lg px-3 py-2 bg-red-500/15 border border-red-400/20 text-red-200 text-xs">Remove Object</button>
-      </> : <div className="text-xs text-white/50 leading-relaxed">Click any existing object in the Three.js world. Base44-created objects and imported objects are selectable here. Select terrain and choose a terrain brush to edit it directly.</div>}
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10001] flex gap-2 rounded-full p-2 text-xs text-white border border-white/10 bg-slate-950/85 backdrop-blur-xl"><b className="text-cyan-300">EDIT MODE</b><button onClick={()=>setGameplay(v=>!v)} className="px-2 py-1 rounded bg-white/10">Gameplay {gameplay?'ON':'OFF'}</button><button onClick={()=>setMovement(v=>!v)} className="px-2 py-1 rounded bg-white/10">Move {movement?'ON':'OFF'}</button><button onClick={()=>{setEdit(false);setSelected(null)}} className="px-2 py-1 rounded bg-cyan-400/20">DONE</button></div>
+    <aside className={`${glass} fixed left-0 top-0 bottom-[15%] w-[15vw] min-w-[240px] max-w-[380px] z-[10000] p-3 text-white overflow-y-auto`}>
+      <div className="text-[10px] uppercase tracking-widest text-white/40">OBJECT INSPECTOR</div>
+      {selected?<><h3 className="mt-2 text-sm text-cyan-200 truncate">{selected.name||'Unnamed object'}</h3><p className="text-[10px] text-white/40">{kindOf(selected)} · live Three.js object</p>
+      <div className="mt-4 space-y-2"><b className="text-xs">Transform</b><Num label="X" value={selected.position.x} onChange={v=>selected.position.x=v}/><Num label="Y" value={selected.position.y} onChange={v=>selected.position.y=v}/><Num label="Z" value={selected.position.z} onChange={v=>selected.position.z=v}/><Num label="Scale" value={selected.scale.x} onChange={v=>selected.scale.setScalar(v)}/></div>
+      <div className="mt-4 space-y-2"><b className="text-xs">Physics</b>{['mass','friction','restitution','gravity'].map(k=><Num key={k} label={k} value={physics[k]} onChange={v=>change('physics',k,v)}/>)}</div>
+      <div className="mt-4 space-y-2"><b className="text-xs">Stats</b>{['hp','maxHP','defense','armor','strength','agility','intelligence','stamina','mana'].map(k=><Num key={k} label={k} value={stats[k]} onChange={v=>change('stats',k,v)}/>)}</div>
+      <button onClick={()=>change('damage','base',Number(cfg.damage?.base||10))} className="mt-4 w-full rounded bg-white/10 px-2 py-2 text-xs">Damage: {cfg.damage?.base||10}</button><button onClick={remove} className="mt-2 w-full rounded bg-red-500/15 text-red-200 px-2 py-2 text-xs">Remove Object</button></>:<p className="mt-4 text-xs text-white/45">Click any object in the existing world. Base44-created and imported objects are selectable.</p>}
     </aside>
-
-    <aside className={`fixed left-0 right-0 bottom-0 h-[15vh] min-h-[130px] z-[9998] p-3 ${glass} text-white`}>
-      <div className="flex items-center justify-between mb-2">
-        <div><div className="text-[10px] uppercase tracking-[0.2em] text-white/40">World Asset Dock</div><div className="text-xs text-white/70">Drag an asset onto the Game Viewer to add it to the actual scene.</div></div>
-        <label className="cursor-pointer rounded-lg px-3 py-2 bg-cyan-400/15 text-cyan-200 text-xs">Import from PC<input type="file" multiple accept=".glb,.gltf,.fbx,.obj,.anim,.png,.jpg,.jpeg,.webp,.hdr,.exr" className="hidden" onChange={(e) => Array.from(e.target.files || []).forEach(importFile)} /></label>
-      </div>
-      <div className="flex gap-2 overflow-x-auto h-[70px]" onDragOver={(e) => e.preventDefault()}>
-        {['sphere','box','cylinder','capsule'].map((type) => <button key={type} draggable onDragEnd={() => addPrimitive(type)} onClick={() => addPrimitive(type)} className="min-w-[92px] rounded-lg bg-white/5 border border-white/10 hover:border-cyan-300/30 text-xs">+ {type}</button>)}
-        {assets.map((asset) => <button key={asset.id} draggable onDragEnd={() => dropAsset(asset)} onClick={() => dropAsset(asset)} className="min-w-[150px] rounded-lg bg-white/5 border border-white/10 hover:border-cyan-300/30 text-xs text-left px-3"><div className="truncate">{asset.name}</div><div className="text-white/40 text-[10px]">{asset.type} · PC</div></button>)}
-        {!assets.length && <div className="flex items-center text-xs text-white/30 px-3">Imported models and animations will live here.</div>}
-      </div>
-      <div className="absolute right-4 bottom-3 flex gap-1">
-        {['select','raise','lower','flatten','smooth'].map((tool) => <button key={tool} onClick={() => setTerrainTool(tool)} className={`px-2 py-1 rounded text-[10px] ${terrainTool === tool ? 'bg-cyan-400/20 text-cyan-200' : 'bg-white/5 text-white/50'}`}>{tool}</button>)}
-        {terrainTool !== 'select' && <><label className="text-[10px] text-white/50 px-2">Brush <input type="range" min="0.5" max="8" step="0.25" value={brush} onChange={(e) => setBrush(Number(e.target.value))} /></label><label className="text-[10px] text-white/50 px-2">Strength <input type="range" min="0.02" max="1" step="0.02" value={strength} onChange={(e) => setStrength(Number(e.target.value))} /></label></>}
-      </div>
+    <aside className={`${glass} fixed bottom-0 left-0 right-0 h-[15vh] min-h-[110px] z-[9998] p-3 text-white overflow-x-auto`}>
+      <div className="flex items-center gap-3"><b className="text-xs text-cyan-200">WORLD ASSETS</b><label className="cursor-pointer rounded bg-white/10 px-3 py-2 text-xs">IMPORT<input type="file" accept=".glb,.gltf,.fbx,.obj,.anim" className="hidden" onChange={e=>importFile(e.target.files?.[0])}/></label>{['box','sphere','cylinder'].map(t=><button key={t} onClick={()=>addPrimitive(t)} className="rounded bg-white/10 px-3 py-2 text-xs">+ {t}</button>)}{assets.map(a=><div key={a.id} draggable onDragEnd={()=>drop(a)} onDoubleClick={()=>drop(a)} className="min-w-[130px] rounded-lg border border-white/10 bg-white/5 p-2 cursor-grab"><div className="text-xs truncate">{a.name}</div><div className="text-[10px] text-white/40">{a.type} · drag to world</div></div>)}</div>
     </aside>
+    <aside className="fixed right-3 bottom-[16vh] z-[9999] rounded-xl p-2 bg-slate-950/75 backdrop-blur-xl border border-white/10 text-white"><div className="text-[10px] text-white/40 mb-1">TERRAIN</div>{['select','raise','lower','flatten','smooth'].map(t=><button key={t} onClick={()=>setTool(t)} className={`block w-20 mb-1 rounded px-2 py-1 text-[10px] ${tool===t?'bg-cyan-400/20 text-cyan-200':'bg-white/5'}`}>{t}</button>)}<Num label="Brush" value={brush} onChange={setBrush}/><Num label="Strength" value={strength} onChange={setStrength}/></aside>
   </>;
 }
