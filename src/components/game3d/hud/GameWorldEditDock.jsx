@@ -204,7 +204,68 @@ export default function GameWorldEditDock({ onClose }) {
       {tab==='effects'&&<Section title="Effects / Ability Attachment">{selected?<><div className="grid grid-cols-2 gap-2"><Toggle label="Enabled" value={cfg.effects.enabled} onChange={v=>changeConfig('effects','enabled',v)}/><Toggle label="Loop" value={cfg.effects.loop} onChange={v=>changeConfig('effects','loop',v)}/><Num label="Scale" value={cfg.effects.scale} onChange={v=>changeConfig('effects','scale',v)}/><Num label="Speed" value={cfg.effects.speed} onChange={v=>changeConfig('effects','speed',v)}/><Num label="Frequency" value={cfg.effects.frequency} onChange={v=>changeConfig('effects','frequency',v)}/><label className="text-[9px] uppercase text-white/45">Bone / Socket<input value={cfg.effects.socket||''} onChange={e=>changeConfig('effects','socket',e.target.value)} className="mt-1 h-8 w-full rounded-lg border border-white/10 bg-black/30 px-2 text-[10px] text-white"/></label></div><div className="mt-2 grid grid-cols-3 gap-2">{[['offsetX','Offset X'],['offsetY','Offset Y'],['offsetZ','Offset Z'],['dirX','Direction X'],['dirY','Direction Y'],['dirZ','Direction Z']].map(([k,l])=><Num key={k} label={l} value={cfg.effects[k]} onChange={v=>changeConfig('effects',k,v)}/>)}</div></>:<div className="text-[9px] text-white/40">Select a 3D object to configure an effect.</div>}</Section>}
       {tab==='damage'&&<><div className="grid grid-cols-5 gap-1">{ROLES.map(r=><button key={r} onClick={()=>setActorRole(r)} className={`rounded-lg border px-1 py-1.5 text-[8px] capitalize ${actorRole===r?'border-cyan-300/30 bg-cyan-300/10 text-cyan-100':'border-white/10 text-white/45'}`}>{r==='enemy'?'Enemy AI':r}</button>)}</div><Section title="Detailed Damage System" right={<button onClick={addDamage} className="rounded-md bg-white/5 px-2 py-1 text-[8px] text-white/65"><Plus className="mr-1 inline h-3 w-3"/>Add</button>}><div className="space-y-2">{damageProfiles.map(d=><div key={d.id} className="rounded-xl border border-white/10 bg-white/[.02] p-2"><div className="grid grid-cols-2 gap-1"><input value={d.name} onChange={e=>updateDamage(d.id,'name',e.target.value)} className="h-7 rounded-lg border border-white/10 bg-black/30 px-2 text-[9px] text-white"/><select value={d.type} onChange={e=>updateDamage(d.id,'type',e.target.value)} className="h-7 rounded-lg border border-white/10 bg-black/30 px-1 text-[9px] text-white">{DAMAGE_TYPES.map(t=><option key={t}>{t}</option>)}</select></div><div className="mt-1 grid grid-cols-4 gap-1">{[['amount','Amount'],['multiplier','Multiplier'],['defenseMultiplier','Defense Mult.'],['elemental','Elemental']].map(([k,l])=><input key={k} type="number" value={d[k]} onChange={e=>updateDamage(d.id,k,e.target.value)} placeholder={l} className="h-7 rounded-lg border border-white/10 bg-black/30 px-2 text-[8px] text-white"/>)}</div><div className="mt-1 grid grid-cols-4 gap-1">{[['teamDamage','Team'],['hits','Hits'],['cooldown','Cooldown'],['selfDamage','Self']].map(([k,l])=><input key={k} type="number" value={d[k]} onChange={e=>updateDamage(d.id,k,e.target.value)} placeholder={l} className="h-7 rounded-lg border border-white/10 bg-black/30 px-2 text-[8px] text-white"/>)}</div><button onClick={()=>removeDamage(d.id)} className="mt-1 text-[8px] text-red-300/70">Remove</button></div>)}</div></Section></>}
       {tab==='actors'&&<><div className="grid grid-cols-5 gap-1">{ROLES.map(r=><button key={r} onClick={()=>setActorRole(r)} className={`rounded-lg border px-1 py-1.5 text-[8px] capitalize ${actorRole===r?'border-cyan-300/30 bg-cyan-300/10 text-cyan-100':'border-white/10 text-white/45'}`}>{r==='enemy'?'Enemy AI':r}</button>)}</div><Section title={`${actorRole==='enemy'?'Enemy AI':actorRole} Stats`}><div className="grid grid-cols-2 gap-2">{Object.keys(DEFAULT_STATS).map(k=><Num key={k} label={k} value={actors[actorRole]?.[k]??0} onChange={v=>updateActor(k,v)}/>)}</div></Section></>}
-      {tab==='equipment'&&<><Section title="Selected Equipment">{selected?<><div className="text-[9px] text-white/40">Stats attach to the selected 3D equipment model.</div>{(equipment[selected.uuid]?.stats||[]).map((s,i)=><div key={i} className="mt-1 grid grid-cols-3 gap-1"><input value={s.name} onChange={e=>setEquipment(x=>({...x,[selected.uuid]:{...(x[selected.uuid]||{}),stats:(x[selected.uuid]?.stats||[]).map((a,n)=>n===i?{...a,name:e.target.value}:a)}}))} className="h-7 rounded border border-white/10 bg-black/30 px-2 text-[8px] text-white"/><select value={s.type} onChange={e=>setEquipment(x=>({...x,[selected.uuid]:{...(x[selected.uuid]||{}),stats:(x[selected.uuid]?.stats||[]).map((a,n)=>n===i?{...a,type:e.target.value}:a)}}))} className="h-7 rounded border border-white/10 bg-black/30 text-[8px] text-white"><option>HP</option><option>Defense</option><option>Armor</option><option>Damage</option><option>Elemental</option><option>Passive</option></select><input type="number" value={s.value} onChange={e=>setEquipment(x=>({...x,[selected.uuid]:{...(x[selected.uuid]||{}),stats:(x[selected.uuid]?.stats||[]).map((a,n)=>n===i?{...a,value:Number(e.target.value)}:a)}}))} className="h-7 rounded border border-white/10 bg-black/30 px-2 text-[8px] text-white"/></div>)}<button onClick={()=>setEquipment(x=>({...x,[selected.uuid]:{...(x[selected.uuid]||{}),stats:[...(x[selected.uuid]?.stats||[]),{name:'New Stat',type:'HP',value:0}]}})} className="mt-2 w-full rounded-lg bg-white/5 py-2 text-[9px] text-white/65"><Plus className="mr-1 inline h-3 w-3"/>Add equipment stat</button><textarea value={equipment[selected.uuid]?.text||''} onChange={e=>setEquipment(x=>({...x,[selected.uuid]:{...(x[selected.uuid]||{}),text:e.target.value}}))} placeholder="Text shown on item" className="mt-2 h-16 w-full rounded-lg border border-white/10 bg-black/30 p-2 text-[9px] text-white"/></>:<div className="text-[9px] text-white/40">Select a 3D equipment model first.</div>}</Section><Section title="Set Bonuses" right={<button onClick={addSet} className="rounded bg-white/5 px-2 py-1 text-[8px] text-white/65"><Plus className="mr-1 inline h-3 w-3"/>Add</button>}>{setBonuses.map(s=><div key={s.id} className="mb-2 rounded-xl border border-white/10 bg-white/[.02] p-2"><input value={s.name} onChange={e=>updateSet(s.id,'name',e.target.value)} className="h-7 w-full rounded border border-white/10 bg-black/30 px-2 text-[9px] text-white"/><input value={s.description} onChange={e=>updateSet(s.id,'description',e.target.value)} placeholder="Description" className="mt-1 h-7 w-full rounded border border-white/10 bg-black/30 px-2 text-[9px] text-white"/><input value={s.effect} onChange={e=>updateSet(s.id,'effect',e.target.value)} placeholder="Effect" className="mt-1 h-7 w-full rounded border border-white/10 bg-black/30 px-2 text-[9px] text-white"/><Num label="Pieces Required" value={s.piecesRequired} onChange={v=>updateSet(s.id,'piecesRequired',v)}/></div>)}</Section></>}
+      {tab==='equipment'&&(
+        <>
+          <Section title="Selected Equipment">
+            {selected ? (
+              <>
+                <div className="text-[9px] text-white/40">Stats attach to the selected 3D equipment model.</div>
+                {(equipment[selected.uuid]?.stats || []).map((s, i) => (
+                  <div key={i} className="mt-1 grid grid-cols-3 gap-1">
+                    <input
+                      value={s.name}
+                      onChange={e => setEquipment(x => ({ ...x, [selected.uuid]: { ...(x[selected.uuid] || {}), stats: (x[selected.uuid]?.stats || []).map((a, n) => n === i ? { ...a, name: e.target.value } : a) } }))}
+                      className="h-7 rounded border border-white/10 bg-black/30 px-2 text-[8px] text-white"
+                    />
+                    <select
+                      value={s.type}
+                      onChange={e => setEquipment(x => ({ ...x, [selected.uuid]: { ...(x[selected.uuid] || {}), stats: (x[selected.uuid]?.stats || []).map((a, n) => n === i ? { ...a, type: e.target.value } : a) } }))}
+                      className="h-7 rounded border border-white/10 bg-black/30 text-[8px] text-white"
+                    >
+                      <option>HP</option>
+                      <option>Defense</option>
+                      <option>Armor</option>
+                      <option>Damage</option>
+                      <option>Elemental</option>
+                      <option>Passive</option>
+                    </select>
+                    <input
+                      type="number"
+                      value={s.value}
+                      onChange={e => setEquipment(x => ({ ...x, [selected.uuid]: { ...(x[selected.uuid] || {}), stats: (x[selected.uuid]?.stats || []).map((a, n) => n === i ? { ...a, value: Number(e.target.value) } : a) } }))}
+                      className="h-7 rounded border border-white/10 bg-black/30 px-2 text-[8px] text-white"
+                    />
+                  </div>
+                ))}
+                <button
+                  onClick={() => setEquipment(x => ({ ...x, [selected.uuid]: { ...(x[selected.uuid] || {}), stats: [...(x[selected.uuid]?.stats || []), { name: 'New Stat', type: 'HP', value: 0 }] } }))}
+                  className="mt-2 w-full rounded-lg bg-white/5 py-2 text-[9px] text-white/65"
+                >
+                  <Plus className="mr-1 inline h-3 w-3" />Add equipment stat
+                </button>
+                <textarea
+                  value={equipment[selected.uuid]?.text || ''}
+                  onChange={e => setEquipment(x => ({ ...x, [selected.uuid]: { ...(x[selected.uuid] || {}), text: e.target.value } }))}
+                  placeholder="Text shown on item"
+                  className="mt-2 h-16 w-full rounded-lg border border-white/10 bg-black/30 p-2 text-[9px] text-white"
+                />
+              </>
+            ) : (
+              <div className="text-[9px] text-white/40">Select a 3D equipment model first.</div>
+            )}
+          </Section>
+          <Section title="Set Bonuses" right={<button onClick={addSet} className="rounded bg-white/5 px-2 py-1 text-[8px] text-white/65"><Plus className="mr-1 inline h-3 w-3" />Add</button>}>
+            {setBonuses.map(s => (
+              <div key={s.id} className="mb-2 rounded-xl border border-white/10 bg-white/[.02] p-2">
+                <input value={s.name} onChange={e => updateSet(s.id, 'name', e.target.value)} className="h-7 w-full rounded border border-white/10 bg-black/30 px-2 text-[9px] text-white" />
+                <input value={s.description} onChange={e => updateSet(s.id, 'description', e.target.value)} placeholder="Description" className="mt-1 h-7 w-full rounded border border-white/10 bg-black/30 px-2 text-[9px] text-white" />
+                <input value={s.effect} onChange={e => updateSet(s.id, 'effect', e.target.value)} placeholder="Effect" className="mt-1 h-7 w-full rounded border border-white/10 bg-black/30 px-2 text-[9px] text-white" />
+                <Num label="Pieces Required" value={s.piecesRequired} onChange={v => updateSet(s.id, 'piecesRequired', v)} />
+              </div>
+            ))}
+          </Section>
+        </>
+      )}
       {tab==='animation'&&<Section title="Animation / Montage"><div className="grid grid-cols-2 gap-2"><Toggle label="Root Motion" value={animationConfig.rootMotion} onChange={v=>setAnimationConfig(x=>({...x,rootMotion:v}))}/><Toggle label="Snap To Root" value={animationConfig.snapToRoot} onChange={v=>setAnimationConfig(x=>({...x,snapToRoot:v}))}/><Num label="Playback Rate" value={animationConfig.playbackRate} onChange={v=>setAnimationConfig(x=>({...x,playbackRate:v}))}/><Num label="Blend In" value={animationConfig.blendIn} onChange={v=>setAnimationConfig(x=>({...x,blendIn:v}))}/><Num label="Blend Out" value={animationConfig.blendOut} onChange={v=>setAnimationConfig(x=>({...x,blendOut:v}))}/></div>{selected&&<div className="mt-2 flex gap-1"><button onClick={playAnimation} className="flex-1 rounded-lg bg-cyan-400/10 py-2 text-[9px] text-cyan-100"><Play className="mr-1 inline h-3 w-3"/>Play</button><button onClick={stopAnimation} className="flex-1 rounded-lg bg-white/5 py-2 text-[9px] text-white/60"><Square className="mr-1 inline h-3 w-3"/>Stop</button></div>}<div className="mt-2 text-[9px] text-white/35">Animation chain</div>{animationConfig.chain.map((c,i)=><div key={i} className="mt-1 grid grid-cols-3 gap-1"><input value={c.name} onChange={e=>setAnimationConfig(x=>({...x,chain:x.chain.map((a,n)=>n===i?{...a,name:e.target.value}:a)}))} className="h-7 rounded border border-white/10 bg-black/30 px-2 text-[8px] text-white"/><input type="number" value={c.startDamage??0} onChange={e=>setAnimationConfig(x=>({...x,chain:x.chain.map((a,n)=>n===i?{...a,startDamage:Number(e.target.value)}:a)}))} placeholder="Damage" className="h-7 rounded border border-white/10 bg-black/30 px-2 text-[8px] text-white"/><button onClick={()=>setAnimationConfig(x=>({...x,chain:x.chain.filter((_,n)=>n!==i)}))} className="rounded bg-red-400/10 text-[8px] text-red-100">×</button></div>)}<button onClick={()=>setAnimationConfig(x=>({...x,chain:[...x.chain,{name:'Next Animation',startDamage:0}]}))} className="mt-2 w-full rounded-lg bg-white/5 py-2 text-[9px] text-white/65"><Plus className="mr-1 inline h-3 w-3"/>Add animation chain step</button></Section>}
       {tab==='stats'&&<Section title="Live Character Save"><div className="grid grid-cols-2 gap-2">{Object.keys(DEFAULT_STATS).map(k=><Num key={k} label={k} value={player[k]??0} onChange={v=>setPlayerHUD({[k]:v})}/>)}</div></Section>}
       {tab==='camera'&&<Section title="Live Camera"><Num label="FOV" value={cameraState.fov} onChange={v=>{const c=window.__gw3dCamera;const f=clamp(v,35,100);if(c){c.fov=f;c.updateProjectionMatrix();}setCameraState(s=>({...s,fov:f}));}}/><div className="mt-2 text-[9px] text-white/35">Camera edits remain on the current live Game Viewer camera.</div></Section>}
