@@ -63,7 +63,7 @@ function createShell() {
 
   shell = document.createElement('div');
   shell.id = 'atomxe-editor-shell';
-  shell.style.cssText = 'position:fixed;inset:0;z-index:119;pointer-events:none;display:none;';
+  shell.style.cssText = 'position:fixed;inset:0;z-index:119;pointer-events:none;display:block;';
 
   const editButton = document.createElement('button');
   editButton.type = 'button';
@@ -73,7 +73,8 @@ function createShell() {
   shell.appendChild(editButton);
 
   const left = document.createElement('section');
-  left.style.cssText = 'position:absolute;left:0;top:0;bottom:15vh;width:15vw;pointer-events:auto;overflow:auto;border-right:1px solid rgba(255,255,255,.10);background:rgba(7,10,18,.76);box-shadow:0 24px 60px rgba(0,0,0,.24);backdrop-filter:blur(28px);padding:12px;box-sizing:border-box;';
+  left.id = 'atomxe-editor-left-panel';
+  left.style.cssText = 'position:absolute;left:0;top:0;bottom:15vh;width:15vw;pointer-events:auto;overflow:auto;border-right:1px solid rgba(255,255,255,.10);background:rgba(7,10,18,.76);box-shadow:0 24px 60px rgba(0,0,0,.24);backdrop-filter:blur(28px);padding:12px;box-sizing:border-box;display:none;';
   left.innerHTML = '<div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.42);">OBJECT EDITOR</div><div id="atomxe-left-selected" style="margin-top:4px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No object selected</div><div style="margin-top:6px;font-size:9px;line-height:1.5;color:rgba(255,255,255,.38);">Select anything in the live Three.js world. Its existing editor controls remain on the right.</div>';
   const leftActions = document.createElement('div');
   leftActions.style.cssText = 'display:grid;gap:5px;margin-top:12px;';
@@ -82,7 +83,8 @@ function createShell() {
   shell.appendChild(left);
 
   const bottom = document.createElement('section');
-  bottom.style.cssText = 'position:absolute;left:15vw;right:15vw;bottom:0;height:15vh;pointer-events:auto;border-top:1px solid rgba(255,255,255,.10);background:rgba(7,10,18,.78);box-shadow:0 -18px 50px rgba(0,0,0,.25);backdrop-filter:blur(28px);padding:10px 14px;box-sizing:border-box;overflow:auto;';
+  bottom.id = 'atomxe-editor-bottom-panel';
+  bottom.style.cssText = 'position:absolute;left:15vw;right:15vw;bottom:0;height:15vh;pointer-events:auto;border-top:1px solid rgba(255,255,255,.10);background:rgba(7,10,18,.78);box-shadow:0 -18px 50px rgba(0,0,0,.25);backdrop-filter:blur(28px);padding:10px 14px;box-sizing:border-box;overflow:auto;display:none;';
   bottom.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.42);">WORLD ASSET LIBRARY</div><div style="font-size:8px;color:rgba(255,255,255,.28);">PC assets · primitives · drag into the live world</div></div>';
   const bottomActions = document.createElement('div');
   bottomActions.style.cssText = 'display:flex;gap:7px;margin-top:8px;align-items:center;flex-wrap:wrap;';
@@ -106,7 +108,13 @@ function createShell() {
 function syncShell() {
   if (!shell) return;
   const editorOpen = !!document.querySelector('#atomxe-live-world-editor-root > aside');
-  shell.style.display = editorOpen ? 'block' : 'none';
+  shell.style.display = 'block';
+  const editButton = shell.querySelector(':scope > button');
+  const left = document.getElementById('atomxe-editor-left-panel');
+  const bottom = document.getElementById('atomxe-editor-bottom-panel');
+  if (editButton) editButton.style.display = editorOpen ? 'none' : 'block';
+  if (left) left.style.display = editorOpen ? 'block' : 'none';
+  if (bottom) bottom.style.display = editorOpen ? 'block' : 'none';
 }
 
 function mountEditor() {
