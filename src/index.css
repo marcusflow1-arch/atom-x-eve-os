@@ -6,7 +6,7 @@
   :root {
     --background: 0 0% 100%; --foreground: 0 0% 3.9%; --card: 0 0% 100%; --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%; --popover-foreground: 0 0% 3.9%; --primary: 0 0% 9%; --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%; --secondary-foreground: 0 0% 9%; --muted: 0 0% 96.1%; --muted-foreground: 0 0% 45.1%; --accent: 0 0% 96.1%; --accent-foreground: 0 0% 9%; --destructive: 0 84.2% 60.2%; --destructive-foreground: 0 0% 98%; --border: 0 0% 89.8%; --input: 0 0% 89.8%; --ring: 0 0% 3.9%; --radius: 0.5rem;
+    --secondary: 0 0% 96.1%; --secondary-foreground: 0 0% 9%; --muted: 0 0% 96.1%; --muted-foreground: 0 0% 45.1%; --accent: 0 0% 96.1%; --accent-foreground: 0 0% 9%; --destructive: 0 84.2% 60.2%; --destructive-foreground: 0 0% 98%; --border: 0 0% 89.8%; --input: 0 0% 89.8%; --ring: 0 0% 3.9%;
     --sidebar-background: 240 5.9% 10%; --sidebar-foreground: 240 4.8% 95.9%; --sidebar-primary: 224.3 76.3% 48%; --sidebar-primary-foreground: 0 0% 100%; --sidebar-accent: 240 3.7% 15.9%; --sidebar-accent-foreground: 240 4.8% 95.9%; --sidebar-border: 240 3.7% 15.9%; --sidebar-ring: 217.2 91.2% 59.8%;
     --ax-sidebar-width: 72px; --ax-sidebar-expanded-width: 260px; --ax-sidebar-padding: 12px;
     --ax-glass-bg: rgba(255,255,255,.055); --ax-glass-bg-strong: rgba(255,255,255,.09); --ax-glass-border: rgba(255,255,255,.11); --ax-glass-blur: 18px; --ax-radius: 14px; --ax-accent: #22d3ee;
@@ -46,3 +46,22 @@
 @media (max-width:700px) { div[role="tablist"]:has(> button[value="backgrounds"]) { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:900px) { :root { --ax-sidebar-width:60px; --ax-sidebar-padding:8px; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; } }
+
+/* Game Viewer editor: keep exactly one launcher. The dark shell EDIT control is the sole visible entry point; the legacy dock launcher remains programmatically clickable but is never visible. */
+#atomxe-live-world-editor-root button:not(aside button) {
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  width:0 !important;
+  height:0 !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  max-width:0 !important;
+  max-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  position:absolute !important;
+}
