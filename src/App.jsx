@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
-import GameWorldEditorOverlay from '@/components/GameWorldEditorOverlay'
+import GameWorldEditorGate from '@/components/GameWorldEditorGate'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
@@ -79,9 +79,7 @@ function App() {
         </Router>
         <Toaster />
         <VisualEditAgent />
-        {/* Game Viewer-only: the component activates itself only when the live
-            Three.js GameWorld3D scene/canvas exists. It is not an Admin tool. */}
-        <GameWorldEditorOverlay />
+        <GameWorldEditorGate />
       </QueryClientProvider>
     </AuthProvider>
   );
