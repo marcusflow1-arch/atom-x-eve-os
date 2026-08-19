@@ -1,16 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import GameWorldEditorOverlay from './GameWorldEditorOverlay';
+import React from 'react';
 
+// The Game Viewer already mounts the original GameWorldEditController.
+// This gate intentionally renders nothing so a second, duplicate editor cannot appear.
 export default function GameWorldEditorGate() {
-  const isGameRoute = () => /gameview|game-view|game/i.test(window.location.pathname);
-  const [ready, setReady] = useState(() => isGameRoute() && !!window.__gw3dScene);
-  useEffect(() => {
-    const refresh = () => setReady(isGameRoute() && !!window.__gw3dScene);
-    window.addEventListener('gw3dSceneReady', refresh);
-    window.addEventListener('gw3dSceneTeardown', refresh);
-    window.addEventListener('popstate', refresh);
-    const timer = setInterval(refresh, 500);
-    return () => { clearInterval(timer); window.removeEventListener('gw3dSceneReady', refresh); window.removeEventListener('gw3dSceneTeardown', refresh); window.removeEventListener('popstate', refresh); };
-  }, []);
-  return ready ? <GameWorldEditorOverlay /> : null;
+  return null;
 }
