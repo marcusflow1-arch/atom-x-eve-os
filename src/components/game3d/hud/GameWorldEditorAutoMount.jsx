@@ -4,6 +4,7 @@ import GameWorldEditDock from './GameWorldEditDock';
 
 let root = null;
 let host = null;
+let poll = null;
 
 function mountEditor() {
   if (root || typeof document === 'undefined') return;
@@ -18,15 +19,23 @@ function mountEditor() {
   root.render(<GameWorldEditDock onClose={() => {}} />);
 }
 
+function unmountEditor() {
+  root?.unmount();
+  root = null;
+  host?.remove();
+  host = null;
+}
+
 if (typeof window !== 'undefined') {
-  const start = () => mountEditor();
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-  else setTimeout(start, 0);
+  const sync = () => {
+    if (window.__gw3dScene) mountEditor();
+    else if (root) unmountEditor();
+  };
+  poll = window.setInterval(sync, 500);
+  sync();
   window.addEventListener('beforeunload', () => {
-    root?.unmount();
-    root = null;
-    host?.remove();
-    host = null;
+    if (poll) window.clearInterval(poll);
+    unmountEditor();
   }, { once: true });
 }
 
