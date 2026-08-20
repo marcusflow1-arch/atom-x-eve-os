@@ -29,165 +29,48 @@ const saveJSON = (key, value) => { try { localStorage.setItem(key, JSON.stringif
 const uid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const emit = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
 
-function isEditorHelper(o) {
-  const n = String(o?.name || '').toLowerCase();
-  return !o || o.isLight || o.isCamera || o.userData?.editorOnly || o.userData?.editorHelper || n.includes('gridhelper') || n.includes('editorhelper');
-}
-function classify(o) {
-  const t = `${o?.name || ''} ${o?.userData?.role || ''} ${o?.userData?.type || ''}`.toLowerCase();
-  if (t.includes('enemy') || t.includes('boss')) return 'enemy';
-  if (t.includes('companion')) return 'companion';
-  if (t.includes('pet')) return 'pet';
-  if (t.includes('mount')) return 'mount';
-  if (t.includes('player') || o?.userData?.role === 'player') return 'player';
-  return 'object';
-}
-function isTerrain(o) {
-  const t = `${o?.name || ''} ${o?.userData?.type || ''}`.toLowerCase();
-  return !!o?.isMesh && (o.userData?.isTerrain || /terrain|ground|grass|floor|map/.test(t));
-}
-function ensureConfig(o) {
-  o.userData ||= {};
-  o.userData.editorConfig ||= {
-    physics: { mass: 1, friction: .5, restitution: .15, gravity: 1, collision: true, windResponse: 1, airResistance: .02, rollingResistance: .01, maxSpeed: 100, breakSoundBarrierAt: 343 },
-    effects: { enabled: false, name: '', socket: '', offsetX: 0, offsetY: 0, offsetZ: 0, dirX: 0, dirY: 0, dirZ: 1, scale: 1, speed: 1, loop: false, frequency: 1 },
-    damage: { base: 10, multiplier: 1, defenseMultiplier: 1, type: 'physical', elemental: 0, teamDamage: 0, hits: 1, cooldown: 0, selfDamage: 0 },
-    animation: { name: '', speed: 1, loop: false, rootMotion: false, snapToRoot: true, blendIn: .1, blendOut: .1, chain: [] },
-    stats: { ...DEFAULT_STATS }, equipment: { stats: [], text: '', setId: '' },
-  };
-  return o.userData.editorConfig;
-}
+function isEditorHelper(o) { const n = String(o?.name || '').toLowerCase(); return !o || o.isLight || o.isCamera || o.userData?.editorOnly || o.userData?.editorHelper || n.includes('gridhelper') || n.includes('editorhelper'); }
+function classify(o) { const t = `${o?.name || ''} ${o?.userData?.role || ''} ${o?.userData?.type || ''}`.toLowerCase(); if (t.includes('enemy') || t.includes('boss')) return 'enemy'; if (t.includes('companion')) return 'companion'; if (t.includes('pet')) return 'pet'; if (t.includes('mount')) return 'mount'; if (t.includes('player') || o?.userData?.role === 'player') return 'player'; return 'object'; }
+function isTerrain(o) { const t = `${o?.name || ''} ${o?.userData?.type || ''}`.toLowerCase(); return !!o?.isMesh && (o.userData?.isTerrain || /terrain|ground|grass|floor|map/.test(t)); }
+function ensureConfig(o) { o.userData ||= {}; o.userData.editorConfig ||= { physics: { mass: 1, friction: .5, restitution: .15, gravity: 1, collision: true, windResponse: 1, airResistance: .02, rollingResistance: .01, maxSpeed: 100, breakSoundBarrierAt: 343 }, effects: { enabled: false, name: '', socket: '', offsetX: 0, offsetY: 0, offsetZ: 0, dirX: 0, dirY: 0, dirZ: 1, scale: 1, speed: 1, loop: false, frequency: 1 }, damage: { base: 10, multiplier: 1, defenseMultiplier: 1, type: 'physical', elemental: 0, teamDamage: 0, hits: 1, cooldown: 0, selfDamage: 0 }, animation: { name: '', speed: 1, loop: false, rootMotion: false, snapToRoot: true, blendIn: .1, blendOut: .1, chain: [] }, stats: { ...DEFAULT_STATS }, equipment: { stats: [], text: '', setId: '' } }; return o.userData.editorConfig; }
 function Section({ title, children, right }) { return <section className="rounded-2xl border border-white/10 bg-white/[.035] p-3 shadow-lg backdrop-blur-2xl"><div className="mb-2 flex items-center justify-between"><h3 className="text-[10px] font-bold uppercase tracking-[.22em] text-white/55">{title}</h3>{right}</div>{children}</section>; }
 function Num({ label, value, onChange, step='any' }) { return <label className="block text-[9px] uppercase tracking-wider text-white/45">{label}<input type="number" step={step} value={Number.isFinite(Number(value)) ? value : 0} onChange={e=>onChange(Number(e.target.value))} className="mt-1 h-8 w-full rounded-lg border border-white/10 bg-black/30 px-2 text-[10px] text-white outline-none focus:border-cyan-300/40" /></label>; }
 function Toggle({ label, value, onChange }) { return <label className="flex items-center justify-between gap-2 text-[9px] text-white/55"><span>{label}</span><input type="checkbox" checked={!!value} onChange={e=>onChange(e.target.checked)} /></label>; }
 
 export default function GameWorldEditDock({ onClose }) {
-  const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState('world');
-  const [worldReady, setWorldReady] = useState(false);
-  const [selectedId, setSelectedId] = useState('');
-  const [version, setVersion] = useState(0);
-  const [gameplay, setGameplay] = useState(false);
-  const [movement, setMovement] = useState(false);
-  const [terrainMode, setTerrainMode] = useState('raise');
-  const [brush, setBrush] = useState(5);
-  const [strength, setStrength] = useState(.25);
-  const [terrainTargetId, setTerrainTargetId] = useState('');
-  const [weather, setWeather] = useState({ time: 8, weather: 'clear', season: 'summer' });
-  const [player, setPlayer] = useState(() => getPlayerHUD());
-  const [damageProfiles, setDamageProfiles] = useState(() => loadJSON(DAMAGE_KEY, [{ id: uid(), name: 'Basic Attack', type: 'physical', amount: 50, multiplier: 1, defenseMultiplier: 1, elemental: 0, teamDamage: 0, hits: 1, cooldown: 0, selfDamage: 0 }]));
-  const [actors, setActors] = useState(() => loadJSON(ACTOR_KEY, Object.fromEntries(ROLES.map(r => [r, { ...DEFAULT_STATS, role: r }]))));
-  const [actorRole, setActorRole] = useState('player');
-  const [equipment, setEquipment] = useState(() => loadJSON(EQUIPMENT_KEY, {}));
-  const [setBonuses, setSetBonuses] = useState(() => loadJSON(SET_KEY, []));
-  const [assets, setAssets] = useState([]);
-  const [animationConfig, setAnimationConfig] = useState(() => loadJSON(ANIM_KEY, { rootMotion: false, snapToRoot: true, playbackRate: 1, blendIn: .1, blendOut: .1, chain: [] }));
-  const [cameraState, setCameraState] = useState({ fov: 55, distance: 5 });
-  const [envState, setEnvState] = useState({});
-  const [savedMessage, setSavedMessage] = useState('');
-  const [montageOpen, setMontageOpen] = useState(false);
-  const mixerRef = useRef(null);
-  const actionRef = useRef(null);
-  const helperRef = useRef(null);
-
-  const scene = window.__gw3dScene || null;
-  const camera = window.__gw3dCamera || null;
-  const env = window.__worldEnv || null;
-  const objects = useMemo(() => {
-    if (!scene) return [];
-    const rows = [];
-    scene.traverse(o => { if (!isEditorHelper(o) && o.visible !== false && (o.isMesh || o.isGroup || o.isObject3D) && o !== scene) rows.push(o); });
-    return rows.slice(0, 400);
-  }, [scene, version, open]);
-  const terrainObjects = useMemo(() => objects.filter(isTerrain), [objects]);
-  const selected = objects.find(o => o.uuid === selectedId) || null;
-  const selectedTerrain = terrainObjects.find(o => o.uuid === terrainTargetId) || (isTerrain(selected) ? selected : terrainObjects[0]) || null;
+  const [open, setOpen] = useState(false), [tab, setTab] = useState('world'), [worldReady, setWorldReady] = useState(false), [selectedId, setSelectedId] = useState(''), [version, setVersion] = useState(0), [gameplay, setGameplay] = useState(false), [movement, setMovement] = useState(false), [terrainMode, setTerrainMode] = useState('raise'), [brush, setBrush] = useState(5), [strength, setStrength] = useState(.25), [terrainTargetId, setTerrainTargetId] = useState(''), [weather, setWeather] = useState({ time: 8, weather: 'clear', season: 'summer' }), [player, setPlayer] = useState(() => getPlayerHUD()), [damageProfiles, setDamageProfiles] = useState(() => loadJSON(DAMAGE_KEY, [{ id: uid(), name: 'Basic Attack', type: 'physical', amount: 50, multiplier: 1, defenseMultiplier: 1, elemental: 0, teamDamage: 0, hits: 1, cooldown: 0, selfDamage: 0 }])), [actors, setActors] = useState(() => loadJSON(ACTOR_KEY, Object.fromEntries(ROLES.map(r => [r, { ...DEFAULT_STATS, role: r }])))), [actorRole, setActorRole] = useState('player'), [equipment, setEquipment] = useState(() => loadJSON(EQUIPMENT_KEY, {})), [setBonuses, setSetBonuses] = useState(() => loadJSON(SET_KEY, [])), [assets, setAssets] = useState([]), [animationConfig, setAnimationConfig] = useState(() => loadJSON(ANIM_KEY, { rootMotion: false, snapToRoot: true, playbackRate: 1, blendIn: .1, blendOut: .1, chain: [] })), [cameraState, setCameraState] = useState({ fov: 55, distance: 5 }), [envState, setEnvState] = useState({}), [savedMessage, setSavedMessage] = useState(''), [montageOpen, setMontageOpen] = useState(false);
+  const mixerRef = useRef(null), actionRef = useRef(null), helperRef = useRef(null);
+  const scene = window.__gw3dScene || null, camera = window.__gw3dCamera || null, env = window.__worldEnv || null;
+  const objects = useMemo(() => { if (!scene) return []; const rows=[]; scene.traverse(o=>{if(!isEditorHelper(o)&&o.visible!==false&&(o.isMesh||o.isGroup||o.isObject3D)&&o!==scene)rows.push(o);}); return rows.slice(0,400); }, [scene,version,open]);
+  const terrainObjects = useMemo(()=>objects.filter(isTerrain),[objects]);
+  const selected = objects.find(o=>o.uuid===selectedId)||null;
+  const selectedTerrain = terrainObjects.find(o=>o.uuid===terrainTargetId)||(isTerrain(selected)?selected:terrainObjects[0])||null;
   const cfg = selected ? ensureConfig(selected) : null;
 
-  useEffect(() => subscribePlayerHUD(setPlayer), []);
-  useEffect(() => {
-    if (!open) return;
-    setWorldReady(!!window.__gw3dScene);
-    const id = setInterval(() => {
-      setWorldReady(!!window.__gw3dScene);
-      const s = window.__worldEnv?.getState?.();
-      if (s) setEnvState(s), setWeather(w => ({ ...w, time: s.time ?? w.time, weather: s.manualWeather || s.currentWeather || s.weather || w.weather, season: s.seasonId || s.season || w.season }));
-      const c = window.__gw3dCamera;
-      if (c) setCameraState(v => ({ ...v, fov: c.fov, distance: c.position.length() }));
-      setVersion(v => v + 1);
-    }, 700);
-    return () => clearInterval(id);
-  }, [open]);
-  useEffect(() => { saveJSON(DAMAGE_KEY, damageProfiles); }, [damageProfiles]);
-  useEffect(() => { saveJSON(ACTOR_KEY, actors); emit('atomXeEditorActorsChanged', actors); }, [actors]);
-  useEffect(() => { saveJSON(EQUIPMENT_KEY, equipment); emit('atomXeEditorEquipmentChanged', equipment); }, [equipment]);
-  useEffect(() => { saveJSON(SET_KEY, setBonuses); emit('atomXeEditorSetBonusesChanged', setBonuses); }, [setBonuses]);
-  useEffect(() => { saveJSON(ANIM_KEY, animationConfig); emit('atomXeEditorAnimationChanged', animationConfig); }, [animationConfig]);
-  useEffect(() => {
-    document.body.dataset.atomXeEditorMode = open ? '1' : '0';
-    window.__atomXeEditorMode = open;
-    emit('atomXeEditorModeChanged', { enabled: open, gameplay, movement });
-    return () => { delete document.body.dataset.atomXeEditorMode; window.__atomXeEditorMode = false; };
-  }, [open, gameplay, movement]);
+  useEffect(()=>subscribePlayerHUD(setPlayer),[]);
+  useEffect(()=>{if(!open)return;setWorldReady(!!window.__gw3dScene);const id=setInterval(()=>{setWorldReady(!!window.__gw3dScene);const s=window.__worldEnv?.getState?.();if(s){setEnvState(s);setWeather(w=>({...w,time:s.time??w.time,weather:s.manualWeather||s.currentWeather||s.weather||w.weather,season:s.seasonId||s.season||w.season}));}const c=window.__gw3dCamera;if(c)setCameraState(v=>({...v,fov:c.fov,distance:c.position.length()}));setVersion(v=>v+1);},700);return()=>clearInterval(id);},[open]);
+  useEffect(()=>saveJSON(DAMAGE_KEY,damageProfiles),[damageProfiles]);
+  useEffect(()=>{saveJSON(ACTOR_KEY,actors);emit('atomXeEditorActorsChanged',actors);},[actors]);
+  useEffect(()=>{saveJSON(EQUIPMENT_KEY,equipment);emit('atomXeEditorEquipmentChanged',equipment);},[equipment]);
+  useEffect(()=>{saveJSON(SET_KEY,setBonuses);emit('atomXeEditorSetBonusesChanged',setBonuses);},[setBonuses]);
+  useEffect(()=>{saveJSON(ANIM_KEY,animationConfig);emit('atomXeEditorAnimationChanged',animationConfig);},[animationConfig]);
+  useEffect(()=>{document.body.dataset.atomXeEditorMode=open?'1':'0';window.__atomXeEditorMode=open;emit('atomXeEditorModeChanged',{enabled:open,gameplay,movement});return()=>{delete document.body.dataset.atomXeEditorMode;window.__atomXeEditorMode=false;};},[open,gameplay,movement]);
 
-  const selectObject = raw => {
-    if (!raw || !scene) return;
-    let root = raw;
-    while (root.parent && root.parent !== scene && root.parent.type !== 'Scene' && !root.userData?.editorSelectable) root = root.parent;
-    root.userData ||= {};
-    root.userData.editorSelectable = true;
-    root.userData.editorKind = classify(root);
-    ensureConfig(root);
-    setSelectedId(root.uuid);
-    if (isTerrain(root)) setTab('world');
-    else if (classify(root) !== 'object') { setActorRole(classify(root)); setTab('actors'); }
-    else setTab('models');
-    setVersion(v => v + 1);
-    emit('gameEditorObjectSelected', { object: root, kind: classify(root), config: root.userData.editorConfig });
-  };
+  const selectObject=raw=>{if(!raw||!scene)return;let root=raw;while(root.parent&&root.parent!==scene&&root.parent.type!=='Scene'&&!root.userData?.editorSelectable)root=root.parent;root.userData ||= {};root.userData.editorSelectable=true;root.userData.editorKind=classify(root);ensureConfig(root);setSelectedId(root.uuid);if(isTerrain(root))setTab('world');else if(classify(root)!=='object'){setActorRole(classify(root));setTab('actors');}else setTab('models');setVersion(v=>v+1);emit('gameEditorObjectSelected',{object:root,kind:classify(root),config:root.userData.editorConfig});};
+  useEffect(()=>{if(!open||!scene||!camera)return;const canvas=scene.userData?.renderer?.domElement||document.querySelector('#game-world-canvas')||document.querySelector('canvas');if(!canvas)return;const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();const pick=e=>{if(e.target!==canvas&&!canvas.contains?.(e.target))return;if(gameplay&&!movement)return;const r=canvas.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(scene.children,true).find(h=>h.object&&!isEditorHelper(h.object)&&h.object.visible!==false);if(!hit?.object)return;selectObject(hit.object);if(!gameplay){e.preventDefault();e.stopPropagation();}};canvas.addEventListener('pointerdown',pick,true);return()=>canvas.removeEventListener('pointerdown',pick,true);},[open,gameplay,movement,scene,camera]);
+  useEffect(()=>{if(!open||!scene||!camera||!selectedTerrain||tab!=='world'||gameplay)return;const canvas=scene.userData?.renderer?.domElement||document.querySelector('#game-world-canvas')||document.querySelector('canvas');if(!canvas)return;const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();const sculpt=e=>{if(e.buttons!==1)return;const r=canvas.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hit=ray.intersectObject(selectedTerrain,true)[0],pos=selectedTerrain.geometry?.attributes?.position;if(!hit?.point||!pos)return;const local=selectedTerrain.worldToLocal(hit.point.clone());for(let i=0;i<pos.count;i++){const dx=pos.getX(i)-local.x,dz=pos.getZ(i)-local.z,d=Math.hypot(dx,dz);if(d>brush)continue;const f=1-d/brush,y=pos.getY(i);if(terrainMode==='raise')pos.setY(i,y+strength*f*.08);if(terrainMode==='lower')pos.setY(i,y-strength*f*.08);if(terrainMode==='flatten')pos.setY(i,y+(local.y-y)*strength*f*.15);if(terrainMode==='smooth')pos.setY(i,y+(local.y-y)*strength*f*.04);}pos.needsUpdate=true;selectedTerrain.geometry.computeVertexNormals?.();selectedTerrain.geometry.computeBoundingSphere?.();selectedTerrain.userData.isTerrain=true;selectedTerrain.userData.editorTerrainDirty=true;setVersion(v=>v+1);emit('gameEditorTerrainChanged',{object:selectedTerrain,mode:terrainMode});};canvas.addEventListener('pointermove',sculpt,true);return()=>canvas.removeEventListener('pointermove',sculpt,true);},[open,scene,camera,selectedTerrain,tab,terrainMode,brush,strength,gameplay]);
+  useEffect(()=>{if(helperRef.current&&scene)scene.remove(helperRef.current);helperRef.current=null;if(selected&&scene){const h=new THREE.BoxHelper(selected,0x63e6ff);h.name='EditorHelperSelection';h.userData.editorOnly=true;h.userData.editorHelper=true;scene.add(h);helperRef.current=h;}return()=>{if(helperRef.current&&scene)scene.remove(helperRef.current);};},[selected,scene]);
 
-  useEffect(() => {
-    if (!open || !scene || !camera) return;
-    const canvas = scene.userData?.renderer?.domElement || document.querySelector('#game-world-canvas') || document.querySelector('canvas');
-    if (!canvas) return;
-    const ray = new THREE.Raycaster(); const pointer = new THREE.Vector2();
-    const pick = e => {
-      if (e.target !== canvas && !canvas.contains?.(e.target)) return;
-      if (gameplay && !movement) return;
-      const r = canvas.getBoundingClientRect(); pointer.x=((e.clientX-r.left)/r.width)*2-1; pointer.y=-((e.clientY-r.top)/r.height)*2+1;
-      ray.setFromCamera(pointer,camera);
-      const hit=ray.intersectObjects(scene.children,true).find(h=>h.object&&!isEditorHelper(h.object)&&h.object.visible!==false);
-      if (!hit?.object) return;
-      selectObject(hit.object);
-      if (!gameplay) { e.preventDefault(); e.stopPropagation(); }
-    };
-    canvas.addEventListener('pointerdown',pick,true); return()=>canvas.removeEventListener('pointerdown',pick,true);
-  }, [open, gameplay, movement, scene, camera]);
-
-  useEffect(() => {
-    if (!open || !scene || !camera || !selectedTerrain || tab !== 'world' || gameplay) return;
-    const canvas=scene.userData?.renderer?.domElement||document.querySelector('#game-world-canvas')||document.querySelector('canvas'); if(!canvas)return;
-    const ray=new THREE.Raycaster(); const pointer=new THREE.Vector2();
-    const sculpt=e=>{if(e.buttons!==1)return;const r=canvas.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hit=ray.intersectObject(selectedTerrain,true)[0];const pos=selectedTerrain.geometry?.attributes?.position;if(!hit?.point||!pos)return;const local=selectedTerrain.worldToLocal(hit.point.clone());for(let i=0;i<pos.count;i++){const dx=pos.getX(i)-local.x,dz=pos.getZ(i)-local.z,d=Math.hypot(dx,dz);if(d>brush)continue;const f=1-d/brush,y=pos.getY(i);if(terrainMode==='raise')pos.setY(i,y+strength*f*.08);if(terrainMode==='lower')pos.setY(i,y-strength*f*.08);if(terrainMode==='flatten')pos.setY(i,y+(local.y-y)*strength*f*.15);if(terrainMode==='smooth')pos.setY(i,y+(local.y-y)*strength*f*.04);}pos.needsUpdate=true;selectedTerrain.geometry.computeVertexNormals?.();selectedTerrain.geometry.computeBoundingSphere?.();selectedTerrain.userData.isTerrain=true;selectedTerrain.userData.editorTerrainDirty=true;setVersion(v=>v+1);emit('gameEditorTerrainChanged',{object:selectedTerrain,mode:terrainMode});};
-    canvas.addEventListener('pointermove',sculpt,true); return()=>canvas.removeEventListener('pointermove',sculpt,true);
-  }, [open,scene,camera,selectedTerrain,tab,terrainMode,brush,strength,gameplay]);
-
-  useEffect(() => {
-    if (helperRef.current && scene) scene.remove(helperRef.current); helperRef.current=null;
-    if(selected&&scene){const h=new THREE.BoxHelper(selected,0x63e6ff);h.name='EditorHelperSelection';h.userData.editorOnly=true;h.userData.editorHelper=true;scene.add(h);helperRef.current=h;}
-    return()=>{if(helperRef.current&&scene)scene.remove(helperRef.current);};
-  }, [selected,scene]);
-
-  const updateTransform=(key,value)=>{if(!selected)return;const n=asNum(value);const map={px:['position','x'],py:['position','y'],pz:['position','z'],rx:['rotation','x'],ry:['rotation','y'],rz:['rotation','z'],sx:['scale','x'],sy:['scale','y'],sz:['scale','z']};const[g,a]=map[key];selected[g][a]=g==='scale'?Math.max(.001,n):n;setVersion(v=>v+1);emit('gameEditorObjectChanged',{object:selected,section:'transform',key,value:n});};
+  const updateTransform=(key,value)=>{if(!selected)return;const n=asNum(value),map={px:['position','x'],py:['position','y'],pz:['position','z'],rx:['rotation','x'],ry:['rotation','y'],rz:['rotation','z'],sx:['scale','x'],sy:['scale','y'],sz:['scale','z']},[g,a]=map[key];selected[g][a]=g==='scale'?Math.max(.001,n):n;setVersion(v=>v+1);emit('gameEditorObjectChanged',{object:selected,section:'transform',key,value:n});};
   const changeConfig=(section,key,value)=>{if(!selected)return;const c=ensureConfig(selected);c[section] ||= {};c[section][key]=value;selected.userData.editorConfig=c;setVersion(v=>v+1);emit('gameEditorObjectChanged',{object:selected,section,key,value,config:c});};
   const updateActor=(key,value)=>setActors(a=>({...a,[actorRole]:{...a[actorRole],[key]:asNum(value)}}));
   const removeSelected=()=>{if(!selected||!scene)return;scene.remove(selected);setSelectedId('');setVersion(v=>v+1);emit('gameEditorObjectRemoved',{object:selected});};
-  const addPrimitive=type=>{if(!scene)return;let g=type==='sphere'?new THREE.SphereGeometry(.5,24,24):type==='cylinder'?new THREE.CylinderGeometry(.5,.5,1,24):type==='plane'?new THREE.PlaneGeometry(2,2,16,16):new THREE.BoxGeometry(1,1,1);const m=new THREE.MeshStandardMaterial({color:0x7dd3fc,metalness:.2,roughness:.45});const o=new THREE.Mesh(g,m);o.name=`Editor ${type}`;o.position.set(0,type==='plane'?0:.5,0);o.userData.editorAsset=true;ensureConfig(o);scene.add(o);selectObject(o);};
+  const addPrimitive=type=>{if(!scene)return;const g=type==='sphere'?new THREE.SphereGeometry(.5,24,24):type==='cylinder'?new THREE.CylinderGeometry(.5,.5,1,24):new THREE.BoxGeometry(1,1,1);const m=new THREE.MeshStandardMaterial({color:0x7dd3fc,metalness:.2,roughness:.45}),o=new THREE.Mesh(g,m);o.name=`Editor ${type}`;o.position.set(0,.5,0);o.userData.editorAsset=true;ensureConfig(o);scene.add(o);selectObject(o);};
   const loadAsset=async asset=>{if(!scene||!asset)return;try{let root;if(asset.type==='gltf'||asset.type==='glb')root=(await new GLTFLoader().loadAsync(asset.url)).scene;else if(asset.type==='fbx')root=await new FBXLoader().loadAsync(asset.url);else root=await new OBJLoader().loadAsync(asset.url);root.name=asset.name.replace(/\.[^.]+$/,'');root.userData.editorAsset=true;ensureConfig(root);scene.add(root);selectObject(root);}catch(e){console.error('[GameWorldEditDock] asset load failed',e);}};
   const importFiles=files=>[...files].forEach(file=>{const ext=file.name.split('.').pop().toLowerCase();if(!['glb','gltf','fbx','obj'].includes(ext))return;const url=URL.createObjectURL(file);setAssets(v=>[...v,{id:uid(),name:file.name,type:ext,url}]);});
   const addDamage=()=>setDamageProfiles(p=>[...p,{id:uid(),name:`Damage ${p.length+1}`,type:'physical',amount:25,multiplier:1,defenseMultiplier:1,elemental:0,teamDamage:0,hits:1,cooldown:0,selfDamage:0}]);
-  const updateDamage=(id,key,value)=>setDamageProfiles(p=>p.map(d=>d.id===id?{...d,[key],...(['name','type'].includes(key)?{[key]:value}:{[key]:asNum(value)})}:d));
-  const removeDamage=id=>setDamageProfiles(p=>p.filter(d=>d.id!==id));
+  const updateDamage=(id,key,value)=>setDamageProfiles(p=>p.map(d=>d.id===id?{...d,[key]:['name','type'].includes(key)?value:asNum(value)}:d));
+  const removeDamage=id=>setDamageProfiles(p=>p.filter(d=>d.id!==id);
   const addSet=()=>setSetBonuses(p=>[...p,{id:uid(),name:'New Set',description:'',effect:'',piecesRequired:2,pieces:[],trigger:'equip',enabled:true}]);
   const updateSet=(id,key,value)=>setSetBonuses(p=>p.map(s=>s.id===id?{...s,[key]:value}:s));
   const saveWorld=()=>{const state={version:5,objects:objects.map(o=>({id:o.uuid,name:o.name,role:classify(o),position:o.position.toArray(),rotation:[o.rotation.x,o.rotation.y,o.rotation.z],scale:o.scale.toArray(),userData:o.userData?.editorConfig||{}})),terrain:terrainObjects.map(o=>({id:o.uuid,name:o.name,modified:!!o.userData?.editorTerrainDirty})),weather:env?.getState?.()||weather,actors,equipment,setBonuses};saveJSON(WORLD_KEY,state);emit('atomXeEditorWorldSaved',state);setSavedMessage('Current live world saved');setTimeout(()=>setSavedMessage(''),1600);};
