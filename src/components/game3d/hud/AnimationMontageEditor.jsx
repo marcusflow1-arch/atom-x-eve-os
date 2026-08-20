@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 import { Film, Play, Square, Plus, Save, Trash2, ChevronRight, GripVertical, RotateCcw, Bell, GitBranch, X, CircleDot } from 'lucide-react';
 
 const STORAGE_KEY = 'atomxe_animation_montages_v3';
