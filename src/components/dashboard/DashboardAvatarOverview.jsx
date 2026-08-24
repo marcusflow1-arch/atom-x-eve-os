@@ -152,14 +152,15 @@ export default function DashboardAvatarOverview() {
       className="fixed left-[390px] right-0 top-[245px] bottom-[48px] z-[25] pointer-events-none overflow-visible"
       aria-label="AI avatar dashboard area"
     >
-      {/* Seven compact glass boxes start directly below Environment Hub and run rightward. */}
-      <div className={`flex items-center gap-[4px] h-[54px] w-fit transition-all duration-500 ${hideCards ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
+      {/* Navigation slots are a separate row directly beneath Environment Hub.
+          They are outside the 3D viewer's bounds and never sit inside its stage. */}
+      <div className={`relative z-40 flex items-center gap-[4px] h-[54px] w-fit transition-all duration-500 ${hideCards ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
         {slotItems.map((item) => <GlassSlot key={item.label} icon={item.icon} label={item.label} />)}
       </div>
 
-      {/* Transparent 3D stage. Library/game surfaces keep the avatar as a subdued background. */}
+      {/* The 3D viewer starts below the navigation row, leaving a clear separation. */}
       <div
-        className={`absolute left-0 right-0 top-[62px] bottom-0 pointer-events-auto transition-all duration-500 ${gameActive ? 'blur-[10px] opacity-25 scale-[0.995]' : surface === 'library' ? 'opacity-15' : surface === 'section' ? 'opacity-20' : 'opacity-100'}`}
+        className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${gameActive ? 'blur-[10px] opacity-25 scale-[0.995]' : surface === 'library' ? 'opacity-15' : surface === 'section' ? 'opacity-20' : 'opacity-100'}`}
         aria-label="AI avatar 3D viewer"
       >
         <DashboardAvatarScene />
