@@ -104,9 +104,9 @@ export default function DashboardAvatarScene() {
       // Fit vertically with generous breathing room. This is intentionally
       // calculated from the final normalized height rather than hard-coded.
       const verticalFov = THREE.MathUtils.degToRad(camera.fov);
-      const fitDistance = (scaledSize.y / 2) / Math.tan(verticalFov / 2) * 1.08;
+      const fitDistance = (scaledSize.y / 2) / Math.tan(verticalFov / 2) * 1.04;
       camera.position.set(0, scaledSize.y * 0.50, Math.max(4.0, fitDistance));
-      camera.lookAt(0, scaledSize.y * 0.50, 0);
+      camera.lookAt(0, scaledSize.y * 0.44, 0);
 
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
