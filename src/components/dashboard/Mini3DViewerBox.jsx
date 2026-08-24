@@ -3,147 +3,374 @@ import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import AvatarStatCard from './AvatarStatCard';
-import { Mic, MicOff, Check, X, Bot, Sparkles, Shield, Zap, Heart, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react';
+import { Mic, MicOff, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
-const DECK_CARDS = [['AI AVATAR', 'White Bot', Bot], ['STATUS', 'Online', Sparkles], ['CORE', 'Adaptive', Zap], ['DEFENSE', 'Guardian', Shield], ['BOND', 'Active', Heart]];
 
 export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
-  const containerRef = useRef(null); const rootRef = useRef(null); const rendererRef = useRef(null); const sceneRef = useRef(null); const cameraRef = useRef(null); const mixerRef = useRef(null); const modelRef = useRef(null); const clockRef = useRef(new THREE.Clock()); const animIdRef = useRef(null);
-  const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot'); const [voiceEnabled, setVoiceEnabled] = useState(true); const [activeInvite, setActiveInvite] = useState(null); const [webglFailed, setWebglFailed] = useState(false); const [deckVisible, setDeckVisible] = useState(true); const [deckIndex, setDeckIndex] = useState(0); const [viewerBlurred, setViewerBlurred] = useState(false); const [selectedGame, setSelectedGame] = useState(null);
-
-  useEffect(() => { const h = e => setActiveInvite(e.detail); window.addEventListener('incomingInvite', h); return () => window.removeEventListener('incomingInvite', h); }, []);
-  useEffect(() => {
-    const key = e => { if (e.key === 'Escape' && deckVisible) { setDeckVisible(false); setViewerBlurred(true); } if (e.key === '`') setVoiceEnabled(v => { const n = !v; window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: n } })); return n; }); };
-    const mic = () => setVoiceEnabled(false);
-    const outside = e => { if (!deckVisible || !rootRef.current || rootRef.current.contains(e.target)) return; setDeckVisible(false); setViewerBlurred(true); setSelectedGame(null); };
-    const game = e => { setSelectedGame(e.detail?.game || e.detail || null); setDeckVisible(false); setViewerBlurred(true); };
-    const restore = () => { setDeckVisible(true); setViewerBlurred(false); setSelectedGame(null); };
-    window.addEventListener('keydown', key); window.addEventListener('dashboardMicDisabled', mic); window.addEventListener('click', outside, true); window.addEventListener('libraryGameSelected', game); window.addEventListener('restoreAvatarDashboardDeck', restore);
-    return () => { window.removeEventListener('keydown', key); window.removeEventListener('dashboardMicDisabled', mic); window.removeEventListener('click', outside, true); window.removeEventListener('libraryGameSelected', game); window.removeEventListener('restoreAvatarDashboardDeck', restore); };
-  }, [deckVisible]);
-  const isUiVisibleRef = useRef(isUiVisible); const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0)); useEffect(() => { isUiVisibleRef.current = isUiVisible; }, [isUiVisible]);
-  useEffect(() => { const h = e => setActiveChar(e.detail.active); window.addEventListener('characterSwitched', h); return () => window.removeEventListener('characterSwitched', h); }, []);
+  const containerRef = useRef(null);
+  const rendererRef = useRef(null);
+  const sceneRef = useRef(null);
+  const cameraRef = useRef(null);
+  const mixerRef = useRef(null);
+  const modelRef = useRef(null);
+  const clockRef = useRef(new THREE.Clock());
+  const animIdRef = useRef(null);
+  const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [activeInvite, setActiveInvite] = useState(null);
+  const [webglFailed, setWebglFailed] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return; if (animIdRef.current) cancelAnimationFrame(animIdRef.current); if (rendererRef.current) { rendererRef.current.dispose(); rendererRef.current.domElement?.remove(); rendererRef.current = null; }
-    const w = containerRef.current.clientWidth, h = containerRef.current.clientHeight, scene = new THREE.Scene(); sceneRef.current = scene;
-    const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 100); camera.position.set(0, 1.85, -1.4); camera.lookAt(0, 1.7, 0); cameraRef.current = camera; let renderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power', failIfMajorPerformanceCaveat: false }); } catch (err) { setWebglFailed(true); return; }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.setSize(w, h); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
-    const canvas = renderer.domElement; const lost = e => { e.preventDefault(); setWebglFailed(true); if (animIdRef.current) cancelAnimationFrame(animIdRef.current); }; canvas.addEventListener('webglcontextlost', lost, false); containerRef.current.appendChild(canvas); rendererRef.current = renderer;
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const key = new THREE.DirectionalLight(0xffffff, 2); key.position.set(2, 3, 2); scene.add(key); const fill = new THREE.DirectionalLight(0xffffff, 1); fill.position.set(-2, 2, -1); scene.add(fill); const rim = new THREE.DirectionalLight(0xffffff, 1.5); rim.position.set(0, 1.5, -3); scene.add(rim);
-    const loader = new FBXLoader(); const modelUrl = activeChar === 'ybot' ? YBOT_URL : C1_URL; clockRef.current = new THREE.Clock();
-    loader.load(modelUrl, fbx => { const box = new THREE.Box3().setFromObject(fbx), size = box.getSize(new THREE.Vector3()), maxDim = Math.max(size.x, size.y, size.z), scale = 2 / maxDim; fbx.scale.setScalar(scale); const center = box.getCenter(new THREE.Vector3()); fbx.position.sub(center.multiplyScalar(scale)); fbx.position.y += size.y * scale / 2; fbx.rotation.y = Math.PI; fbx.traverse(node => { if (node.isMesh && node.material) (Array.isArray(node.material) ? node.material : [node.material]).forEach(mat => { mat.side = THREE.DoubleSide; mat.envMapIntensity = 1.2; mat.needsUpdate = true; }); }); scene.add(fbx); modelRef.current = fbx; const mixer = new THREE.AnimationMixer(fbx); mixerRef.current = mixer; loader.load(IDLE_URL, idle => { if (idle.animations?.length) mixer.clipAction(idle.animations[0]).play(); }); });
-    const animate = () => { animIdRef.current = requestAnimationFrame(animate); const delta = clockRef.current.getDelta(); if (mixerRef.current) mixerRef.current.update(delta); if (cameraRef.current) { const z = isUiVisibleRef.current ? -4.5 : -1.4, y = isUiVisibleRef.current ? 1 : 1.85, ly = isUiVisibleRef.current ? 1 : 1.7; cameraRef.current.position.z += (z - cameraRef.current.position.z) * .05; cameraRef.current.position.y += (y - cameraRef.current.position.y) * .05; lookTargetRef.current.y += (ly - lookTargetRef.current.y) * .05; cameraRef.current.lookAt(lookTargetRef.current); } renderer.render(scene, camera); }; animate();
-    const resize = () => { if (!containerRef.current) return; const nw = containerRef.current.clientWidth, nh = containerRef.current.clientHeight; camera.aspect = nw / nh; camera.updateProjectionMatrix(); renderer.setSize(nw, nh); }; window.addEventListener('resize', resize); const ro = new ResizeObserver(resize); ro.observe(containerRef.current);
-    return () => { cancelAnimationFrame(animIdRef.current); window.removeEventListener('resize', resize); ro.disconnect(); renderer.dispose(); };
+     const handleInvite = (e) => setActiveInvite(e.detail);
+     window.addEventListener('incomingInvite', handleInvite);
+     return () => window.removeEventListener('incomingInvite', handleInvite);
+  }, []);
+  const isUiVisibleRef = useRef(isUiVisible);
+  const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '`') {
+        setVoiceEnabled(v => {
+          const newState = !v;
+          window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: newState } }));
+          return newState;
+        });
+      }
+    };
+    const handleMicDisabled = () => setVoiceEnabled(false);
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('dashboardMicDisabled', handleMicDisabled);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('dashboardMicDisabled', handleMicDisabled);
+    };
+  }, []);
+
+  useEffect(() => {
+    isUiVisibleRef.current = isUiVisible;
+  }, [isUiVisible]);
+
+  // Listen for character switch events from the main 3D viewer
+  useEffect(() => {
+    const handler = (e) => setActiveChar(e.detail.active);
+    window.addEventListener('characterSwitched', handler);
+    return () => window.removeEventListener('characterSwitched', handler);
+  }, []);
+
+  // Rebuild the mini 3D scene whenever activeChar changes
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Cleanup previous scene
+    if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      rendererRef.current.domElement?.remove();
+      rendererRef.current = null;
+    }
+
+    const w = containerRef.current.clientWidth;
+    const h = containerRef.current.clientHeight;
+
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
+    camera.position.set(0, 1.85, -1.4);
+    camera.lookAt(0, 1.7, 0);
+    cameraRef.current = camera;
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power', failIfMajorPerformanceCaveat: false });
+    } catch (err) {
+      console.warn('[Mini3DViewerBox] WebGL context unavailable, falling back to 2D placeholder:', err?.message);
+      setWebglFailed(true);
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(w, h);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    // Handle context loss gracefully (browser may evict contexts under pressure)
+    const canvas = renderer.domElement;
+    const onContextLost = (e) => {
+      e.preventDefault();
+      console.warn('[Mini3DViewerBox] WebGL context lost');
+      setWebglFailed(true);
+      if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    };
+    canvas.addEventListener('webglcontextlost', onContextLost, false);
+
+    containerRef.current.appendChild(canvas);
+    rendererRef.current = renderer;
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    keyLight.position.set(2, 3, 2);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    fillLight.position.set(-2, 2, -1);
+    scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    rimLight.position.set(0, 1.5, -3);
+    scene.add(rimLight);
+
+    const modelUrl = activeChar === 'ybot' ? YBOT_URL : C1_URL;
+    let mixer = null;
+    const loader = new FBXLoader();
+    clockRef.current = new THREE.Clock();
+
+    loader.load(modelUrl, (fbx) => {
+      // Auto-scale
+      const box = new THREE.Box3().setFromObject(fbx);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 2 / maxDim;
+      fbx.scale.setScalar(scale);
+
+      const center = box.getCenter(new THREE.Vector3());
+      fbx.position.sub(center.multiplyScalar(scale));
+      fbx.position.y += (size.y * scale) / 2;
+
+      // Face the camera
+      fbx.rotation.y = Math.PI;
+
+      // Fix materials
+      fbx.traverse((node) => {
+        if (node.isMesh && node.material) {
+          const mats = Array.isArray(node.material) ? node.material : [node.material];
+          mats.forEach(mat => {
+            mat.side = THREE.DoubleSide;
+            mat.envMapIntensity = 1.2;
+            mat.needsUpdate = true;
+          });
+        }
+      });
+
+      scene.add(fbx);
+      modelRef.current = fbx;
+      mixer = new THREE.AnimationMixer(fbx);
+      mixerRef.current = mixer;
+
+      // Load idle animation
+      loader.load(IDLE_URL, (idleFbx) => {
+        if (idleFbx.animations && idleFbx.animations.length > 0) {
+          const clip = idleFbx.animations[0];
+          mixer.clipAction(clip).play();
+        }
+      });
+    });
+
+    // Render loop
+    const animate = () => {
+      animIdRef.current = requestAnimationFrame(animate);
+      const delta = clockRef.current.getDelta();
+      if (mixerRef.current) mixerRef.current.update(delta);
+
+      if (cameraRef.current) {
+         const targetZ = isUiVisibleRef.current ? -4.5 : -1.4;
+         const targetY = isUiVisibleRef.current ? 1.0 : 1.85;
+         const targetLookY = isUiVisibleRef.current ? 1.0 : 1.7;
+
+         cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.05;
+         cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.05;
+         
+         lookTargetRef.current.y += (targetLookY - lookTargetRef.current.y) * 0.05;
+         cameraRef.current.lookAt(lookTargetRef.current);
+      }
+
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const nw = containerRef.current.clientWidth;
+      const nh = containerRef.current.clientHeight;
+      camera.aspect = nw / nh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(nw, nh);
+    };
+    window.addEventListener('resize', handleResize);
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      cancelAnimationFrame(animIdRef.current);
+      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
+      renderer.dispose();
+    };
   }, [activeChar]);
 
-  const openDeck = e => { e?.stopPropagation(); setDeckVisible(true); setViewerBlurred(false); setSelectedGame(null); };
   return (
-    <div ref={rootRef} className={`pointer-events-auto flex flex-col gap-2 relative ${isUiVisible ? 'h-full' : 'px-3 pt-3'}`} onClick={e => { if (e.target !== e.currentTarget) return; if (!isUiVisible) { if (deckVisible) window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode')); else openDeck(e); } }} style={isUiVisible ? { width: '100%', height: '100%' } : { width: '100%' }}>
-      {!isUiVisible && deckVisible && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="w-full rounded-2xl px-2 py-2 overflow-hidden" style={{ background: 'linear-gradient(120deg, rgba(255,255,255,.12), rgba(100,160,190,.07))', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,.16)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.22), 0 10px 28px rgba(0,0,0,.20)' }}>
-          <div className="flex items-center gap-1.5">
-            <button onClick={e => { e.stopPropagation(); setDeckIndex(i => (i - 1 + DECK_CARDS.length) % DECK_CARDS.length); }} className="w-6 h-6 shrink-0 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <ChevronLeft className="w-3 h-3 text-white/60" />
-            </button>
-            <div className="flex-1 flex gap-1.5 overflow-hidden">
-              {DECK_CARDS.map(([label, value, Icon], i) => (
-                <button key={label} onClick={e => { e.stopPropagation(); setDeckIndex(i); }} className="flex-1 min-w-0 rounded-xl px-2 py-1.5 text-left" style={{ background: i === deckIndex ? 'rgba(255,255,255,.11)' : 'rgba(255,255,255,.035)', border: `1px solid ${i === deckIndex ? 'rgba(255,255,255,.20)' : 'rgba(255,255,255,.08)'}` }}>
-                  <div className="flex items-center gap-1">
-                    <Icon className={`w-3 h-3 ${i === deckIndex ? 'text-cyan-300' : 'text-white/45'}`} />
-                    <span className="text-[7px] uppercase tracking-wider text-white/40 truncate">{label}</span>
-                  </div>
-                  <div className="text-[9px] font-semibold text-white/80 truncate mt-0.5">{value}</div>
-                </button>
-              ))}
-            </div>
-            <button onClick={e => { e.stopPropagation(); setDeckIndex(i => (i + 1) % DECK_CARDS.length); }} className="w-6 h-6 shrink-0 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <ChevronRight className="w-3 h-3 text-white/60" />
-            </button>
-            <button onClick={e => { e.stopPropagation(); setDeckVisible(false); setViewerBlurred(true); }} className="w-6 h-6 shrink-0 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <X className="w-3 h-3 text-white/50" />
-            </button>
-          </div>
-        </motion.div>
-      )}
+    <div 
+      className={`pointer-events-auto flex items-start gap-3 cursor-pointer transition-transform relative ${isUiVisible ? 'h-full' : 'px-3 pt-3'}`}
+      onClick={() => {
+        if (!isUiVisible) window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
+      }}
+      style={isUiVisible ? { width: '100%', height: '100%' } : {}}
+    >
+      {/* Pages Container */}
       <div className={`relative z-20 flex w-full gap-3 ${isUiVisible ? 'h-full' : ''}`}>
-        <div className={`overflow-hidden flex-shrink-0 transition-all duration-500 relative rounded-xl ${viewerBlurred && !isUiVisible ? 'blur-[3px] scale-[0.99]' : ''}`} style={isUiVisible ? { background: 'transparent', border: 'none', boxShadow: 'none', width: '100%', height: '100%' } : { background: 'transparent', border: 'none', boxShadow: 'none', width: '150px', height: '240px' }} onDoubleClick={openDeck}>
+        {/* 3D Viewer - Left Page */}
+        <div
+          className={`overflow-hidden flex-shrink-0 transition-all duration-500 relative rounded-xl`}
+          style={isUiVisible ? {
+            background: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+            width: '100%',
+            height: '100%',
+          } : {
+            background: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+            width: '150px',
+            height: '240px',
+          }}
+        >
           <div ref={containerRef} className="w-full h-full relative z-0">
-            {webglFailed && <div className="absolute inset-0 flex items-center justify-center text-center p-4 text-white/50 text-xs"><span>3D preview unavailable</span></div>}
+            {webglFailed && (
+              <div className="absolute inset-0 flex items-center justify-center text-center p-4 text-white/50 text-xs">
+                <span>3D preview unavailable</span>
+              </div>
+            )}
           </div>
-          {activeInvite && !isUiVisible && (
-            <div className="absolute bottom-2 left-2 right-2 z-30 flex items-center justify-between gap-2 px-1">
-              <span className="text-[11px] text-white font-bold drop-shadow-md truncate">Join {activeInvite.fromUser?.friend_name} dashboard?</span>
-              <div className="flex items-center gap-2 flex-shrink-0 drop-shadow-md">
-                <button onClick={e => { e.stopPropagation(); setActiveInvite(null); window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } })); }} className="text-red-500 hover:text-red-400 flex justify-center items-center transition-colors" title="Decline">
-                  <X className="w-4 h-4" strokeWidth={3} />
-                </button>
-                <button onClick={e => { e.stopPropagation(); setActiveInvite(null); if (activeInvite.fromUser?.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } })); window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } })); }} className="text-green-500 hover:text-green-400 flex justify-center items-center transition-colors" title="Accept">
-                  <Check className="w-4 h-4" strokeWidth={3} />
-                </button>
-              </div>
+        
+        {/* Incoming Invite Notification */}
+        {activeInvite && !isUiVisible && (
+          <div className="absolute bottom-2 left-2 right-2 z-30 flex items-center justify-between gap-2 px-1">
+            <span className="text-[11px] text-white font-bold drop-shadow-md truncate">
+              Join {activeInvite.fromUser?.friend_name} dashboard?
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0 drop-shadow-md">
+              <button 
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setActiveInvite(null);
+                   window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } }));
+                }}
+                className="text-red-500 hover:text-red-400 flex justify-center items-center transition-colors"
+                title="Decline"
+              >
+                <X className="w-4 h-4" strokeWidth={3} />
+              </button>
+              <button 
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setActiveInvite(null);
+                   if (activeInvite.fromUser?.envUrl) {
+                      window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } }));
+                   }
+                   window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } }));
+                }}
+                className="text-green-500 hover:text-green-400 flex justify-center items-center transition-colors"
+                title="Accept"
+              >
+                <Check className="w-4 h-4" strokeWidth={3} />
+              </button>
             </div>
-          )}
-          {hostName && !isUiVisible && !activeInvite && (
-            <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-md rounded px-2 py-1.5 border border-white/10 flex items-start gap-1.5 shadow-lg pointer-events-none max-w-[150px]">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0 mt-[3px]" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-white uppercase tracking-wider truncate leading-tight">{hostName.toLowerCase() === 'my' ? 'My' : hostName}</span>
-                <span className="text-[7px] text-white/60 uppercase tracking-wider leading-none mt-0.5">Dashboard</span>
-              </div>
+          </div>
+        )}
+
+        {/* Host Name Badge */}
+        {hostName && !isUiVisible && !activeInvite && (
+          <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-md rounded px-2 py-1.5 border border-white/10 flex items-start gap-1.5 shadow-lg pointer-events-none max-w-[150px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0 mt-[3px]" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-white uppercase tracking-wider truncate leading-tight">
+                {hostName.toLowerCase() === 'my' ? 'My' : hostName}
+              </span>
+              <span className="text-[7px] text-white/60 uppercase tracking-wider leading-none mt-0.5">
+                Dashboard
+              </span>
             </div>
-          )}
-          {!isUiVisible && (
-            <div className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md cursor-pointer hover:bg-white/10 transition-colors" onClick={e => { e.stopPropagation(); setVoiceEnabled(v => { const n = !v; window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: n } })); return n; }); }}>
-              {voiceEnabled ? <Mic className="w-3.5 h-3.5 text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]" /> : <MicOff className="w-3.5 h-3.5 text-red-400/80" />}
-            </div>
-          )}
-        </div>
-        {!isUiVisible && <AvatarStatCard />}
+          </div>
+        )}
+
+        {/* Voice Chat Icon */}
+        {!isUiVisible && (
+          <div 
+            className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md cursor-pointer hover:bg-white/10 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setVoiceEnabled(v => {
+                const newState = !v;
+                window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: newState } }));
+                return newState;
+              });
+            }}
+          >
+             {voiceEnabled ? (
+               <Mic className="w-3.5 h-3.5 text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]" />
+             ) : (
+               <MicOff className="w-3.5 h-3.5 text-red-400/80" />
+             )}
+          </div>
+        )}
       </div>
-      {!isUiVisible && deckVisible && (
-        <div className="grid grid-cols-[1.35fr_1fr_1fr] gap-1.5">
-          <div className="rounded-2xl p-2.5 min-h-[82px]" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,.12), rgba(168,85,247,.08))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.12)' }}>
-            <div className="flex items-center gap-1.5 mb-1">
-              <Bot className="w-3 h-3 text-cyan-300" />
-              <span className="text-[8px] font-bold uppercase tracking-wider text-cyan-200">AI Avatar Spotlight</span>
-            </div>
-            <div className="text-[11px] font-bold text-white/90">White Bot</div>
-            <div className="text-[8px] leading-relaxed text-white/45 mt-1">Persistent AI avatar with real stats, abilities, equipment, and effects.</div>
-          </div>
-          <div className="rounded-2xl p-2.5 min-h-[82px]" style={{ background: 'rgba(255,255,255,.055)', backdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,.10)' }}>
-            <Sparkles className="w-3 h-3 text-white/55 mb-2" />
-            <div className="text-[9px] font-semibold text-white/80">Personality</div>
-            <div className="text-[7px] text-white/35 mt-1">Adaptive and contextual.</div>
-          </div>
-          <div className="rounded-2xl p-2.5 min-h-[82px]" style={{ background: 'rgba(255,255,255,.055)', backdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,.10)' }}>
-            <Shield className="w-3 h-3 text-white/55 mb-2" />
-            <div className="text-[9px] font-semibold text-white/80">Equipment</div>
-            <div className="text-[7px] text-white/35 mt-1">Stats and effects apply at runtime.</div>
-          </div>
-        </div>
+
+      {/* Avatar Stats Card */}
+      {!isUiVisible && <AvatarStatCard />}
+      </div>
+
+      {/* Global Bottom-Right Invite Notification */}
+      {createPortal(
+        <AnimatePresence>
+          {activeInvite && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-6 right-6 z-[9999] flex items-center gap-3 drop-shadow-xl"
+            >
+              <span className="text-sm text-white font-bold drop-shadow-md">
+                Join {activeInvite.fromUser?.friend_name} dashboard?
+              </span>
+              <div className="flex items-center gap-3 drop-shadow-md">
+                <button 
+                  onClick={() => {
+                    setActiveInvite(null);
+                    window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } }));
+                  }}
+                  className="text-red-500 hover:text-red-400 transition-colors"
+                  title="Decline"
+                >
+                  <X className="w-6 h-6" strokeWidth={3} />
+                </button>
+                <button 
+                  onClick={() => {
+                    setActiveInvite(null);
+                    if (activeInvite.fromUser?.envUrl) {
+                      window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } }));
+                    }
+                    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } }));
+                  }}
+                  className="text-green-500 hover:text-green-400 transition-colors"
+                  title="Accept"
+                >
+                  <Check className="w-6 h-6" strokeWidth={3} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
-      {!deckVisible && !isUiVisible && (
-        <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={openDeck} className="self-start text-[8px] uppercase tracking-widest text-white/45 hover:text-white/75 px-2 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur">
-          AI Avatar
-        </motion.button>
-      )}
-      {selectedGame && !deckVisible && !isUiVisible && (
-        <div className="rounded-xl px-3 py-2" style={{ background: 'rgba(8,12,18,.35)', backdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,.08)' }}>
-          <div className="flex items-center gap-2">
-            <Gamepad2 className="w-3.5 h-3.5 text-cyan-300" />
-            <span className="text-[10px] font-bold text-white/80">{selectedGame.title || 'Selected Game'}</span>
-          </div>
-          <p className="text-[8px] text-white/40 mt-1">Game information is active while the Y-Bot remains visible.</p>
-        </div>
-      )}
-      {createPortal(<AnimatePresence>{activeInvite && <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-6 right-6 z-[9999] flex items-center gap-3 drop-shadow-xl"><span className="text-sm text-white font-bold drop-shadow-md">Join {activeInvite.fromUser?.friend_name} dashboard?</span><div className="flex items-center gap-3 drop-shadow-md"><button onClick={() => { setActiveInvite(null); window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } })); }} className="text-red-500 hover:text-red-400 transition-colors" title="Decline"><X className="w-6 h-6" strokeWidth={3} /></button><button onClick={() => { setActiveInvite(null); if (activeInvite.fromUser?.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } })); window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } })); }} className="text-green-500 hover:text-green-400 transition-colors" title="Accept"><Check className="w-6 h-6" strokeWidth={3} /></button></div></motion.div>}</AnimatePresence>, document.body)}
     </div>
   );
 }
