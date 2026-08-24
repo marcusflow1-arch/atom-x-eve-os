@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield,
-  ChevronRight, BarChart3, Gauge, Target, Sparkles
+  ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, Radio, Crown
 } from 'lucide-react';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -13,11 +13,11 @@ function GlassSlot({ icon: Icon, label }) {
   return (
     <div
       aria-label={label}
-      className="relative h-[58px] w-[58px] flex-shrink-0 rounded-xl border border-white/[0.16] bg-white/[0.055] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_8px_24px_rgba(0,0,0,0.18)]"
+      className="relative h-[54px] w-[54px] flex-shrink-0 rounded-xl border border-white/[0.16] bg-white/[0.055] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_8px_24px_rgba(0,0,0,0.18)]"
     >
       <div className="absolute inset-0 rounded-xl border border-cyan-300/[0.04]" />
-      {Icon && <Icon className="absolute left-1/2 top-[15px] -translate-x-1/2 w-4 h-4 text-white/55" />}
-      <span className="absolute bottom-[6px] left-0 right-0 text-center text-[7px] uppercase tracking-wider text-white/45">{label}</span>
+      {Icon && <Icon className="absolute left-1/2 top-[12px] -translate-x-1/2 w-4 h-4 text-white/55" />}
+      <span className="absolute bottom-[5px] left-0 right-0 text-center text-[6px] uppercase tracking-wider text-white/45">{label}</span>
     </div>
   );
 }
@@ -118,82 +118,87 @@ export default function DashboardAvatarOverview() {
     intelligence: Number(progression?.intelligence || 10),
     willpower: Number(progression?.willpower || 10),
     tenacity: Number(progression?.tenacity || 10),
+    defense: Number(progression?.defense || progression?.armor || 0),
+    agility: Number(progression?.agility || 10),
+    endurance: Number(progression?.endurance || 10),
+    luck: Number(progression?.luck || 10),
+    totalGenreXP: Number(progression?.total_genre_xp || progression?.genre_xp || 0),
   }), [progression, user]);
 
   const levelProgress = Math.min(100, (stats.currentXP / stats.nextXP) * 100);
   const gameActive = surface === 'game';
-  const dimViewer = surface === 'library' || surface === 'game' || surface === 'section';
   const hideCards = surface !== 'dashboard';
 
   const slotItems = [
     { icon: BarChart3, label: 'Stats' },
-    { icon: Target, label: 'Quests' },
-    { icon: Gamepad2, label: 'Games' },
+    { icon: Users, label: 'Friends' },
+    { icon: Radio, label: 'Live' },
     { icon: Trophy, label: 'Cards' },
     { icon: Sparkles, label: 'AI Story' },
-    { icon: Shield, label: 'Battle' },
-    { icon: Star, label: 'Season' },
+    { icon: Shield, label: 'AI Battle' },
+    { icon: Crown, label: 'Season' },
+  ];
+
+  const circleOptions = [
+    { id: 'blank-1', label: 'View 1', icon: Activity },
+    { id: 'blank-2', label: 'View 2', icon: Gauge },
+    { id: 'blank-3', label: 'View 3', icon: BarChart3 },
+    { id: 'blank-4', label: 'View 4', icon: Target },
+    { id: 'blank-5', label: 'View 5', icon: Sparkles },
   ];
 
   return (
     <div
-      className="fixed left-[330px] right-0 top-[250px] bottom-[48px] z-[25] pointer-events-none overflow-visible"
+      className="fixed left-[390px] right-0 top-[245px] bottom-[48px] z-[25] pointer-events-none overflow-visible"
       aria-label="AI avatar dashboard area"
     >
-      {/* The seven boxes live below the existing Environment Hub / presence row.
-          They are intentionally separate from the left profile and skill-tree UI. */}
-      <div className={`flex items-center gap-3 h-[58px] w-fit transition-all duration-500 ${hideCards ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
+      {/* Seven compact glass boxes start directly below Environment Hub and run rightward. */}
+      <div className={`flex items-center gap-[4px] h-[54px] w-fit transition-all duration-500 ${hideCards ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
         {slotItems.map((item) => <GlassSlot key={item.label} icon={item.icon} label={item.label} />)}
       </div>
 
-      {/* Transparent 3D stage. The page background/screen-saver remains visible. */}
+      {/* Transparent 3D stage. Library/game surfaces keep the avatar as a subdued background. */}
       <div
-        className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${gameActive ? 'blur-[8px] opacity-35 scale-[0.995]' : surface === 'library' ? 'opacity-20' : surface === 'section' ? 'opacity-25' : 'opacity-100'}`}
+        className={`absolute left-0 right-0 top-[62px] bottom-0 pointer-events-auto transition-all duration-500 ${gameActive ? 'blur-[10px] opacity-25 scale-[0.995]' : surface === 'library' ? 'opacity-15' : surface === 'section' ? 'opacity-20' : 'opacity-100'}`}
         aria-label="AI avatar 3D viewer"
       >
         <DashboardAvatarScene />
       </div>
 
-      {/* Far-right AI Attribute Box. It disappears on Library/Game/other surfaces
-          while the avatar stage remains as the visual background. */}
+      {/* Large far-right AI Attribute Box. It shifts left when its five option bubbles open. */}
       <aside
-        className={`absolute right-0 top-0 w-[304px] max-w-[28vw] max-h-[calc(100%-12px)] overflow-visible transition-all duration-500 ${hideCards ? 'opacity-0 translate-x-5 pointer-events-none' : 'opacity-100 translate-x-0 pointer-events-auto'}`}
+        className={`absolute ${attributeMenuOpen ? 'right-[58px]' : 'right-0'} top-0 w-[338px] max-w-[30vw] min-h-[620px] max-h-[calc(100vh-305px)] overflow-visible transition-all duration-300 ${hideCards ? 'opacity-0 translate-x-5 pointer-events-none' : 'opacity-100 translate-x-0 pointer-events-auto'}`}
         aria-label="AI Attribute Box"
       >
-        <div className="relative rounded-2xl border-2 border-white/[0.22] bg-slate-950/[0.48] backdrop-blur-2xl shadow-[0_14px_45px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.16)] overflow-visible">
+        <div className="relative h-full min-h-[620px] rounded-2xl border-2 border-white/[0.22] bg-slate-950/[0.48] backdrop-blur-2xl shadow-[0_14px_45px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.16)] overflow-visible">
           <div className="absolute inset-[1px] rounded-[14px] border border-cyan-300/[0.08] pointer-events-none" />
 
-          <div className="relative px-4 pt-3 pb-2 border-b border-white/10">
+          <div className="relative px-5 pt-4 pb-3 border-b border-white/10">
             <div className="flex items-center gap-2 pr-7">
               <span className="w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
               <div>
                 <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div>
-                <div className="text-white font-bold text-sm">AI Avatar</div>
+                <div className="text-white font-bold text-base">AI Avatar</div>
               </div>
             </div>
 
-            {/* Repurposed right-edge arrow. It expands the information modes. */}
             <button
               onClick={() => setAttributeMenuOpen(v => !v)}
-              aria-label="Change AI attribute view"
-              className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-16 rounded-r-xl border border-white/[0.22] border-l-0 bg-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/65 hover:text-cyan-200 hover:bg-cyan-300/[0.10] transition-all z-20"
+              aria-label="Open AI attribute options"
+              className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-16 rounded-r-xl border border-white/[0.22] border-l-0 bg-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/65 hover:text-cyan-200 hover:bg-cyan-300/[0.10] transition-all z-30"
             >
               <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${attributeMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {attributeMenuOpen && (
-              <div className="absolute right-[-54px] top-[58px] z-40 flex flex-col gap-1.5">
-                {[
-                  ['overview', Activity],
-                  ['attributes', Gauge],
-                  ['progress', BarChart3],
-                  ['genres', Trophy],
-                ].map(([key, Icon]) => (
+              <div className="absolute right-[-54px] top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
+                {circleOptions.map(({ id, label, icon: Icon }) => (
                   <button
-                    key={key}
-                    onClick={() => { setAttributeView(key); setAttributeMenuOpen(false); }}
-                    className={`w-12 h-10 rounded-lg border backdrop-blur-xl flex items-center justify-center transition-all ${attributeView === key ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-200' : 'border-white/10 bg-white/10 text-white/55 hover:text-white'}`}
-                    title={key}
+                    key={id}
+                    onClick={() => setAttributeView(id)}
+                    aria-label={label}
+                    title={label}
+                    className="w-10 h-10 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/55 hover:text-cyan-200 hover:border-cyan-300/35 hover:bg-cyan-300/10 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
                   >
                     <Icon className="w-4 h-4" />
                   </button>
@@ -202,67 +207,63 @@ export default function DashboardAvatarOverview() {
             )}
           </div>
 
-          <div className="relative px-4 py-2 max-h-[calc(100vh-390px)] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="relative px-5 py-3 h-[calc(100%-78px)] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {attributeView === 'overview' && (
               <>
                 <StatRow icon={<Zap className="w-3.5 h-3.5" />} label="Power" value={stats.power} accent="text-yellow-300" />
                 <StatRow icon={<Heart className="w-3.5 h-3.5" />} label="HP" value={stats.hp} accent="text-red-300" />
                 <StatRow icon={<Shield className="w-3.5 h-3.5" />} label="Rank" value={stats.rank} accent="text-blue-300" />
                 <StatRow icon={<Star className="w-3.5 h-3.5" />} label="Global Level" value={stats.level} />
+                <StatRow icon={<BarChart3 className="w-3.5 h-3.5" />} label="Global XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />
                 <StatRow icon={<Trophy className="w-3.5 h-3.5" />} label="Gamer Score" value={stats.gamerScore.toLocaleString()} accent="text-amber-300" />
+                <StatRow icon={<Zap className="w-3.5 h-3.5" />} label="AI Points" value={stats.aiPoints.toLocaleString()} accent="text-purple-300" />
                 <StatRow icon={<Gamepad2 className="w-3.5 h-3.5" />} label="Games Played" value={stats.gamesPlayed} accent="text-green-300" />
+                <StatRow icon={<Target className="w-3.5 h-3.5" />} label="Available Points" value={stats.availablePoints} accent="text-yellow-300" />
+                <StatRow icon={<Shield className="w-3.5 h-3.5" />} label="Defense" value={stats.defense} accent="text-blue-300" />
+                <StatRow icon={<Activity className="w-3.5 h-3.5" />} label="Agility" value={stats.agility} accent="text-cyan-300" />
+                <StatRow icon={<Heart className="w-3.5 h-3.5" />} label="Endurance" value={stats.endurance} accent="text-green-300" />
+                <StatRow icon={<Star className="w-3.5 h-3.5" />} label="Luck" value={stats.luck} accent="text-purple-300" />
               </>
             )}
 
-            {attributeView === 'attributes' && (
-              <>
-                <StatRow icon={<Zap className="w-3.5 h-3.5" />} label="Available Points" value={stats.availablePoints} accent="text-yellow-300" />
-                <StatRow icon={<Shield className="w-3.5 h-3.5" />} label="Strength" value={stats.strength} accent="text-red-300" />
-                <StatRow icon={<Star className="w-3.5 h-3.5" />} label="Intelligence" value={stats.intelligence} accent="text-cyan-300" />
-                <StatRow icon={<Activity className="w-3.5 h-3.5" />} label="Willpower" value={stats.willpower} accent="text-purple-300" />
-                <StatRow icon={<Heart className="w-3.5 h-3.5" />} label="Tenacity" value={stats.tenacity} accent="text-green-300" />
-              </>
-            )}
+            {attributeView === 'blank-1' && <div className="h-full min-h-[500px]" />}
+            {attributeView === 'blank-2' && <div className="h-full min-h-[500px]" />}
+            {attributeView === 'blank-3' && <div className="h-full min-h-[500px]" />}
+            {attributeView === 'blank-4' && <div className="h-full min-h-[500px]" />}
+            {attributeView === 'blank-5' && <div className="h-full min-h-[500px]" />}
 
-            {attributeView === 'progress' && (
-              <div className="py-2">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-white/50 text-[9px] uppercase tracking-wider">Overall Progress</span>
-                  <span className="text-cyan-300 text-[9px]">{stats.currentXP.toLocaleString()} / {stats.nextXP.toLocaleString()} XP</span>
-                </div>
-                <ProgressBar value={levelProgress} />
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {[
-                    ['Level', stats.level],
-                    ['Rank', stats.rank],
-                    ['AI Points', stats.aiPoints.toLocaleString()],
-                    ['Available', stats.availablePoints],
-                  ].map(([label, value]) => (
-                    <div key={label} className="rounded-lg border border-white/10 bg-white/[0.035] px-2 py-2">
-                      <div className="text-white/35 text-[8px] uppercase">{label}</div>
-                      <div className="text-white text-[11px] font-semibold mt-0.5">{value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {attributeView === 'genres' && (
-              <div className="py-2">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-white/60 text-[9px] uppercase tracking-wider">Genre Experience</span>
-                  <span className="text-white/30 text-[8px]">XP / Level</span>
-                </div>
-                <GenreRows genres={progression?.genres} />
-              </div>
-            )}
-
-            <div className="mt-3 pt-3 border-t border-white/10">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-white/40 text-[8px] uppercase tracking-wider">Current Level XP</span>
-                <span className="text-cyan-300/80 text-[8px]">{stats.currentXP.toLocaleString()} / {stats.nextXP.toLocaleString()}</span>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-white/40 text-[8px] uppercase tracking-wider">Overall Level Progress</span>
+                <span className="text-cyan-300/80 text-[8px]">{Math.round(levelProgress)}%</span>
               </div>
               <ProgressBar value={levelProgress} />
+              <div className="flex items-center justify-between mt-1 text-[7px] text-white/25">
+                <span>{stats.currentXP.toLocaleString()} XP</span>
+                <span>Next: {stats.nextXP.toLocaleString()} XP</span>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-white/60 text-[9px] uppercase tracking-wider">Top Genres</span>
+                <span className="text-white/30 text-[8px]">XP / Level</span>
+              </div>
+              <GenreRows genres={progression?.genres} />
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 gap-2">
+              {[
+                ['Strength', stats.strength],
+                ['Intelligence', stats.intelligence],
+                ['Willpower', stats.willpower],
+                ['Tenacity', stats.tenacity],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2.5">
+                  <div className="text-white/35 text-[8px] uppercase">{label}</div>
+                  <div className="text-white text-sm font-semibold mt-0.5">{value}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
