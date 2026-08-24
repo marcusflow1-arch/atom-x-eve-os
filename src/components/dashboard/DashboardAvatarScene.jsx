@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
-const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
-const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
+const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
 export default function DashboardAvatarScene() {
   const containerRef = useRef(null);
