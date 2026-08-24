@@ -196,6 +196,26 @@ export default function LunaTemplate() {
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
+  // Keep the dashboard avatar overlay aware of which surface currently owns
+  // the right side of the dashboard. The overlay disappears for Full Library
+  // and replaces its stats panel with a blurred avatar while a game is open.
+  useEffect(() => {
+    const mode = showLibraryLanding
+      ? 'library'
+      : homeSection !== 'avatar'
+        ? 'section'
+        : (selectedFocusGame || openedGame)
+          ? 'game'
+          : 'dashboard';
+
+    window.dispatchEvent(new CustomEvent('lunaDashboardOverlayState', {
+      detail: {
+        mode,
+        game: selectedFocusGame || openedGame || null,
+      },
+    }));
+  }, [showLibraryLanding, homeSection, selectedFocusGame, openedGame]);
+
   useEffect(() => {
     if (user) {
       setCurrentHostName(user.full_name || user.username || 'My');
