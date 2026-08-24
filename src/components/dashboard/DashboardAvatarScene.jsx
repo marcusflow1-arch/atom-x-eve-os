@@ -34,9 +34,12 @@ export default function DashboardAvatarScene() {
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 100);
-    camera.position.set(0, 1.35, -2.7);
-    camera.lookAt(0, 1.05, 0);
+
+    // Wider field of view + comfortable camera distance keeps the full avatar
+    // visible even when the transparent viewer is rendered in a wide 70% panel.
+    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+    camera.position.set(0, 1.45, 4.6);
+    camera.lookAt(0, 1.15, 0);
 
     let renderer;
     try {
@@ -74,14 +77,21 @@ export default function DashboardAvatarScene() {
 
     loader.load(modelUrl, (fbx) => {
       if (disposed) return;
-      const box = new THREE.Box3().setFromObject(fbx);
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.5 / maxDim;
+
+      // Normalize the model and then fit the camera from the actual bounds so
+      // head, hands and feet remain visible instead of being cropped.
+      const initialBox = new THREE.Box3().setFromObject(fbx);
+      const initialSize = initialBox.getSize(new THREE.Vector3());
+      const maxDim = Math.max(initialSize.x, initialSize.y, initialSize.z) || 1;
+      const scale = 2.05 / maxDim;
       fbx.scale.setScalar(scale);
-      const center = box.getCenter(new THREE.Vector3());
-      fbx.position.sub(center.multiplyScalar(scale));
-      fbx.position.y += (size.y * scale) / 2;
+
+      const scaledBox = new THREE.Box3().setFromObject(fbx);
+      const scaledSize = scaledBox.getSize(new THREE.Vector3());
+      const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+
+      fbx.position.sub(scaledCenter);
+      fbx.position.y += scaledSize.y / 2;
       fbx.rotation.y = Math.PI;
 
       fbx.traverse((node) => {
@@ -95,6 +105,14 @@ export default function DashboardAvatarScene() {
       });
 
       scene.add(fbx);
+
+      // Fit vertically with generous breathing room. This is intentionally
+      // calculated from the final normalized height rather than hard-coded.
+      const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+      const fitDistance = (scaledSize.y / 2) / Math.tan(verticalFov / 2) * 1.18;
+      camera.position.set(0, scaledSize.y * 0.52, Math.max(3.7, fitDistance));
+      camera.lookAt(0, scaledSize.y * 0.52, 0);
+
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
       loader.load(IDLE_URL, (idle) => {
@@ -123,6 +141,7 @@ export default function DashboardAvatarScene() {
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
+
     const observer = new ResizeObserver(resize);
     observer.observe(container);
     window.addEventListener('resize', resize);
