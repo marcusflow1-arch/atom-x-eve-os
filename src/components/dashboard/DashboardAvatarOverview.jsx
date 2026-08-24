@@ -8,6 +8,88 @@ const FALLBACK_GENRES = ['Action', 'RPG', 'Strategy', 'Adventure', 'Shooter', 'S
 
 function Stat({ icon, label, value, accent = 'text-cyan-300' }) {
   return (
+    <div className="flex items-center justify-between py-[3px]">
+      <div className="flex items-center gap-2">
+        <span className={accent}>{icon}</span>
+        <span className="text-white/50 text-[11px]">{label}</span>
+      </div>
+      <span className="text-white font-semibold text-[11px] tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function GenreXP({ genres }) {
+  const list = genres && genres.length
+    ? genres
+    : FALLBACK_GENRES.map((name, i) => ({ name, level: 1 + i }));
+  return (
+    <div className="mt-3 pt-3 border-t border-white/10">
+      <p className="text-white/50 text-[9px] uppercase tracking-wider mb-2">Genre Mastery</p>
+      <div className="space-y-1.5">
+        {list.slice(0, 6).map((g) => (
+          <div key={g.name}>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-white/60 text-[10px]">{g.name}</span>
+              <span className="text-cyan-300 text-[9px] tabular-nums">Lv. {g.level || 1}</span>
+            </div>
+            <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+              <div
+                className="h-full bg-cyan-400/50 rounded-full"
+                style={{ width: `${Math.min(100, ((g.level || 1) / 10) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardAvatarOverview({ hostName = 'My' }) {
+  const { user } = useAuth();
+  const [progression, setProgression] = useState(null);
+  const [gameActive, setGameActive] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setGameActive(true);
+    const clear = () => setGameActive(false);
+    window.addEventListener('dashboardGameLaunched', handler);
+    window.addEventListener('dashboardGameClosed', clear);
+    return () => {
+      window.removeEventListener('dashboardGameLaunched', handler);
+      window.removeEventListener('dashboardGameClosed', clear);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const items = await base44.entities.AvatarProgression.filter({ user_id: user.id });
+        if (items.length > 0) setProgression(items[0]);
+      } catch (e) {
+        console.error('Failed to load avatar progression:', e);
+      }
+    })();
+  }, [user?.id]);
+
+  const stats = useMemo(() => ({
+    power: progression?.power || 0,
+    hp: progression?.hp || 100,
+    rank: user?.rank || 'Recruit',
+    level: progression?.global_level || user?.level || 1,
+    gamerScore: user?.gamer_score || 0,
+    aiPoints: user?.ai_achievement_points || 0,
+    gamesPlayed: user?.games_played || 0,
+    currentXP: progression?.current_xp || 0,
+    nextXP: progression?.next_xp || 1000,
+  }), [progression, user]);
+
+  const levelProgress = stats.nextXP > 0
+    ? Math.min(100, (stats.currentXP / stats.nextXP) * 100)
+    : 0;
+
+  return (
     <div
       className="fixed left-[360px] right-0 top-[150px] bottom-[104px] z-[25] pointer-events-none flex flex-col gap-3 overflow-hidden"
       aria-label="AI avatar dashboard area"

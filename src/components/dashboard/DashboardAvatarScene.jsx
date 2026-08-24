@@ -12,7 +12,8 @@ export default function DashboardAvatarScene() {
   const mixerRef = useRef(null);
   const animationRef = useRef(null);
   const [failed, setFailed] = useState(false);
-  // This dashboard viewer is intentionally locked to the Y-Bot requested for the screensaver.\n  const activeChar = 'ybot';
+  // This dashboard viewer is intentionally locked to the Y-Bot requested for the screensaver.
+  const [activeChar, setActiveChar] = useState('ybot');
 
   useEffect(() => {
     const handler = (event) => setActiveChar(event.detail?.active || 'ybot');
