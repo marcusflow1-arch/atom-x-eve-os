@@ -13,13 +13,7 @@ export default function DashboardAvatarScene() {
   const animationRef = useRef(null);
   const [failed, setFailed] = useState(false);
   // This dashboard viewer is intentionally locked to the Y-Bot requested for the screensaver.
-  const [activeChar, setActiveChar] = useState('ybot');
-
-  useEffect(() => {
-    const handler = (event) => setActiveChar(event.detail?.active || 'ybot');
-    window.addEventListener('characterSwitched', handler);
-    return () => window.removeEventListener('characterSwitched', handler);
-  }, []);
+  const activeChar = 'ybot';
 
   useEffect(() => {
     const container = containerRef.current;
@@ -93,7 +87,7 @@ export default function DashboardAvatarScene() {
 
       fbx.position.sub(scaledCenter);
       fbx.position.y += scaledSize.y / 2;
-      fbx.rotation.y = Math.PI;
+      // Face the viewer; the dashboard Y-Bot is presented front-on for the screensaver.\n      fbx.rotation.y = 0;
 
       fbx.traverse((node) => {
         if (!node.isMesh || !node.material) return;
@@ -110,9 +104,9 @@ export default function DashboardAvatarScene() {
       // Fit vertically with generous breathing room. This is intentionally
       // calculated from the final normalized height rather than hard-coded.
       const verticalFov = THREE.MathUtils.degToRad(camera.fov);
-      const fitDistance = (scaledSize.y / 2) / Math.tan(verticalFov / 2) * 1.28;
-      camera.position.set(0, scaledSize.y * 0.50, Math.max(4.2, fitDistance));
-      camera.lookAt(0, scaledSize.y * 0.52, 0);
+      const fitDistance = (scaledSize.y / 2) / Math.tan(verticalFov / 2) * 1.08;
+      camera.position.set(0, scaledSize.y * 0.50, Math.max(4.0, fitDistance));
+      camera.lookAt(0, scaledSize.y * 0.50, 0);
 
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
