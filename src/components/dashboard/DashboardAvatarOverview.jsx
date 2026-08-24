@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield } from 'lucide-react';
-import Mini3DViewerBox from './Mini3DViewerBox';
+import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
 
 const FALLBACK_GENRES = ['Action', 'RPG', 'Strategy', 'Adventure', 'Shooter', 'Sci-Fi', 'Horror', 'Sports', 'Racing', 'Simulation', 'Puzzle'];
@@ -83,7 +83,7 @@ export default function DashboardAvatarOverview({ hostName }) {
     const nextXP = Math.max(1, Number(progression?.xp_to_next_level ?? progression?.next_level_xp ?? 1000));
     return {
       power: avatar?.power ?? progression?.power ?? user?.power ?? 0,
-      hp: avatar?.hp ?? avatar?.health ?? progression?.hp ?? user?.hp ?? 100,
+      hp: avatar?.hp ?? avatar?.health ?? progression?.hp ?? 100,
       level: globalLevel,
       currentXP,
       nextXP,
@@ -98,8 +98,7 @@ export default function DashboardAvatarOverview({ hostName }) {
   const levelProgress = Math.max(0, Math.min(100, (stats.currentXP / stats.nextXP) * 100));
 
   return (
-    <div className="absolute left-[330px] right-[390px] top-[188px] bottom-[104px] z-[25] pointer-events-none flex flex-col gap-3 overflow-hidden">
-      {/* Seven empty liquid-glass option boxes */}
+    <div className="fixed left-[330px] right-[390px] top-[188px] bottom-[104px] z-[25] pointer-events-none flex flex-col gap-3 overflow-hidden">
       <div className="pointer-events-none flex items-center gap-2 w-full h-12 flex-shrink-0">
         {Array.from({ length: 7 }).map((_, index) => (
           <div
@@ -110,12 +109,9 @@ export default function DashboardAvatarOverview({ hostName }) {
         ))}
       </div>
 
-      {/* Invisible dashboard composition: 70% 3D viewer / 30% general information */}
       <div className="flex-1 min-h-0 w-full flex gap-3 pointer-events-none">
         <div className="relative basis-[70%] min-w-0 h-full overflow-hidden pointer-events-auto">
-          <div className="absolute inset-0">
-            <Mini3DViewerBox isUiVisible={true} hostName={hostName} />
-          </div>
+          <DashboardAvatarScene />
         </div>
 
         <aside className="basis-[30%] min-w-0 h-full overflow-y-auto rounded-2xl bg-white/[0.025] border border-white/8 backdrop-blur-sm pointer-events-auto px-4 py-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
