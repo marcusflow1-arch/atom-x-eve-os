@@ -1,6 +1,7 @@
 // StorefrontLayout.jsx — Interactive redesigned Store front page
 import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ExternalLink, ShoppingCart, X, Star } from 'lucide-react';
 import GenreSidebar from './GenreSidebar';
 import StorefrontHero from './StorefrontHero';
 import QuickAccessPanel from './QuickAccessPanel';
@@ -30,17 +31,44 @@ function matchesFilter(game, filter) {
     case 'trending': return reviews >= 500 || rating >= 4.3 || tags.includes('trending');
     case 'new releases': return year >= 2023 || tags.includes('new release') || tags.includes('new releases');
     case 'top rated': return rating >= 4.5;
-    case 'coming soon': return ['planned', 'in development', 'in_development'].includes(normalize(game.status));
+    case 'coming soon': return ['planned', 'in development', 'in_development', 'coming soon'].includes(normalize(game.status));
     case 'free to play': return game.price === 0 || game.price == null || game.free_to_play || game.isFree;
-    case 'special offers': return Boolean(game.sale_price || game.discount || game.on_sale);
+    case 'special offers': return Boolean(game.sale_price || game.discount || game.on_sale || game.original_price);
     case 'action': case 'rpg': case 'shooter': case 'strategy': case 'adventure': case 'sports': case 'racing': case 'simulation': case 'horror': case 'puzzle': case 'romance': case 'sci fi': return genre === normalize(filter) || haystack.includes(normalize(filter));
     default: return haystack.includes(normalize(filter));
   }
 }
 
+function addToCart(game) {
+  if (!game) return;
+  window.dispatchEvent(new CustomEvent('storeAddToCart', { detail: { game } }));
+}
+
+function SlideGameItem({ game, onSelect, onStore, onCart }) {
+  const title = game.title || game.name || 'Untitled Game';
+  const image = game.cover_image || game.image || game.thumbnail;
+  const price = game.sale_price ?? game.price;
+  return (
+    <div className="group grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-3 py-2.5 border-b border-white/[0.07] last:border-b-0">
+      <button onClick={() => onSelect(game)} className="w-12 h-12 overflow-hidden bg-white/[0.025] border border-white/[0.08]" aria-label={`Highlight ${title}`}>
+        {image ? <img src={image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/20 text-[9px]">GAME</div>}
+      </button>
+      <button onClick={() => onSelect(game)} className="min-w-0 text-left">
+        <div className="text-white text-[11px] font-semibold truncate group-hover:text-cyan-300 transition-colors">{title}</div>
+        <div className="flex items-center gap-2 mt-1"><span className="text-white/35 text-[8px] truncate">{game.genre || 'Game'}</span>{game.rating != null && <span className="flex items-center gap-0.5 text-yellow-300/70 text-[8px]"><Star className="w-2.5 h-2.5 fill-current"/>{game.rating}</span>}{price != null && <span className="text-white/60 text-[8px]">${Number(price).toFixed(2)}</span>}</div>
+      </button>
+      <div className="flex items-center gap-1">
+        <button onClick={() => onStore(game)} className="w-7 h-7 flex items-center justify-center border border-white/[0.10] bg-white/[0.025] text-white/45 hover:text-white hover:bg-white/[0.07]" aria-label={`Open ${title} store page`}><ExternalLink className="w-3 h-3"/></button>
+        <button onClick={() => onCart(game)} className="w-7 h-7 flex items-center justify-center border border-white/[0.10] bg-white/[0.025] text-white/45 hover:text-cyan-300 hover:bg-white/[0.07]" aria-label={`Add ${title} to cart`}><ShoppingCart className="w-3 h-3"/></button>
+      </div>
+    </div>
+  );
+}
+
 export default function StorefrontLayout({ onNavigateToGame, games = [] }) {
   const [spotlightGame, setSpotlightGame] = useState(null);
   const [activeFilter, setActiveFilter] = useState('Discover');
+  const [activeQuickAccess, setActiveQuickAccess] = useState(null);
   const hasReal = games.length > 0;
   const filteredGames = useMemo(() => games.filter(g => matchesFilter(g, activeFilter)), [games, activeFilter]);
   const visibleGames = filteredGames.length ? filteredGames : games;
@@ -50,52 +78,53 @@ export default function StorefrontLayout({ onNavigateToGame, games = [] }) {
     if (value && typeof value === 'object' && value.id) return onNavigateToGame?.(value.id);
     if (typeof value === 'string') setActiveFilter(value);
   };
+  const handleQuickAccess = id => setActiveQuickAccess(current => current === id ? null : id);
   const handlePlay = () => {
     const game = spotlightGame || visibleGames[0] || games[0];
     if (game?.id) onNavigateToGame?.(game.id);
   };
+  const overlayGames = useMemo(() => {
+    if (!activeQuickAccess) return [];
+    const source = games.length ? [...games] : [...visibleGames];
+    let list;
+    if (activeQuickAccess === 'top_sellers') list = source.sort((a,b) => (Number(b.reviews)||0) - (Number(a.reviews)||0) || (Number(b.rating)||0) - (Number(a.rating)||0));
+    else if (activeQuickAccess === 'new_releases') list = source.filter(g => matchesFilter(g, 'New Releases')).sort((a,b) => (Number(b.release_year||b.year)||0) - (Number(a.release_year||a.year)||0));
+    else if (activeQuickAccess === 'coming_soon') list = source.filter(g => matchesFilter(g, 'Coming Soon'));
+    else list = source.filter(g => matchesFilter(g, 'Special Offers')).sort((a,b) => (Number(b.discount)||0) - (Number(a.discount)||0));
+    return (list.length ? list : source).slice(0, 10);
+  }, [activeQuickAccess, games, visibleGames]);
+  const activeQuickLabel = { top_sellers: 'Top Sellers', new_releases: 'New Releases', coming_soon: 'Coming Soon', special_offers: 'Special Offers' }[activeQuickAccess] || '';
+  const handleOverlayStore = game => onNavigateToGame?.(game?.id);
+  const handleOverlayCart = game => addToCart(game);
 
   return (
     <div className="storefront-aaa-surface relative h-full w-full overflow-hidden">
-      <style>{`
-        .storefront-aaa-surface div[class*="rounded-"] {
-          border-radius: 0 !important;
-          border-color: rgba(255,255,255,0.075) !important;
-          background-color: rgba(255,255,255,0.018) !important;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.035), 0 8px 24px rgba(0,0,0,0.08) !important;
-        }
-        .storefront-aaa-surface div[class*="rounded-"]:hover {
-          border-color: rgba(255,255,255,0.12) !important;
-          background-color: rgba(255,255,255,0.028) !important;
-        }
-      `}</style>
+      <style>{` .storefront-aaa-surface div[class*="rounded-"] { border-radius:0 !important; border-color:rgba(255,255,255,0.075) !important; background-color:rgba(255,255,255,0.018) !important; box-shadow:inset 0 1px 0 rgba(255,255,255,0.035),0 8px 24px rgba(0,0,0,0.08) !important; } .storefront-aaa-surface div[class*="rounded-"]:hover { border-color:rgba(255,255,255,0.12) !important; background-color:rgba(255,255,255,0.028) !important; }`}</style>
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 75% 0%, rgba(99,102,241,0.10) 0%, transparent 45%), radial-gradient(circle at 10% 100%, rgba(56,189,248,0.07) 0%, transparent 50%), linear-gradient(180deg, #0A0F1C 0%, #060912 60%, #04060d 100%)' }} />
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative h-full w-full overflow-y-auto custom-scrollbar px-6 pb-28" style={{ scrollbarWidth: 'none' }}>
         <div className="flex gap-6 max-w-[1700px] mx-auto pt-5">
-          <div className="w-[230px] flex-shrink-0 hidden lg:block sticky top-5 self-start" style={{ height: 'calc(100vh - 150px)' }}>
-            <GenreSidebar active={activeFilter} onSelect={handleSelect} />
-          </div>
+          <div className="w-[230px] flex-shrink-0 hidden lg:block sticky top-5 self-start" style={{ height: 'calc(100vh - 150px)' }}><GenreSidebar active={activeFilter} onSelect={handleSelect} /></div>
           <div className="flex-1 min-w-0 space-y-8">
-            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-xs">
-              <span className="text-white/40 uppercase tracking-widest">Store filter</span>
-              <button onClick={() => setActiveFilter('Discover')} className="text-cyan-300 hover:text-white font-bold">{activeFilter} <span className="text-white/30 ml-2">×</span></button>
-            </div>
+            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-xs"><span className="text-white/40 uppercase tracking-widest">Store filter</span><button onClick={() => setActiveFilter('Discover')} className="text-cyan-300 hover:text-white font-bold">{activeFilter} <span className="text-white/30 ml-2">×</span></button></div>
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4 h-[360px]">
-              <StorefrontHero game={spotlightGame || visibleGames[0]} onPlay={handlePlay} />
-              <div className="hidden xl:block"><QuickAccessPanel onSelect={handleSelect} /></div>
+              <StorefrontHero game={spotlightGame || visibleGames[0]} onPlay={handlePlay} onStore={handleOverlayStore} onAddToCart={handleOverlayCart} />
+              <div className="hidden xl:block"><QuickAccessPanel onSelect={handleQuickAccess} activeId={activeQuickAccess} /></div>
             </div>
-            <BrowseByGenre onSelect={handleSelect} />
-            <NewReleases onSelect={onNavigateToGame} games={hasReal ? pick(8) : undefined} />
-            <CuratedCollections onSelect={handleSelect} />
-            <TopSellers onSelect={onNavigateToGame} games={hasReal ? pick(6, 8) : undefined} />
-            <ComingSoon onSelect={handleSelect} />
-            <ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} games={hasReal ? visibleGames : undefined} />
-            <SpecialOffers onSelect={onNavigateToGame} games={hasReal ? pick(6, 14) : undefined} />
-            <FreeToPlay onSelect={onNavigateToGame} games={hasReal ? visibleGames.filter(g => g.price === 0 || g.price == null).slice(0, 6) : undefined} />
-            <EditorsChoice onSelect={onNavigateToGame} games={hasReal ? pick(4, 20) : undefined} />
+            <BrowseByGenre onSelect={handleSelect} /><NewReleases onSelect={onNavigateToGame} games={hasReal ? pick(8) : undefined} /><CuratedCollections onSelect={handleSelect} /><TopSellers onSelect={onNavigateToGame} games={hasReal ? pick(6, 8) : undefined} /><ComingSoon onSelect={handleSelect} /><ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} games={hasReal ? visibleGames : undefined} /><SpecialOffers onSelect={onNavigateToGame} games={hasReal ? pick(6, 14) : undefined} /><FreeToPlay onSelect={onNavigateToGame} games={hasReal ? visibleGames.filter(g => g.price === 0 || g.price == null).slice(0, 6) : undefined} /><EditorsChoice onSelect={onNavigateToGame} games={hasReal ? pick(4, 20) : undefined} />
           </div>
           <div className="w-[280px] flex-shrink-0 hidden 2xl:block"><StorefrontRightRail onSelect={handleSelect} /></div>
         </div>
+
+        <AnimatePresence>
+          {activeQuickAccess && (
+            <motion.aside initial={{ x: '105%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '105%', opacity: 0 }} transition={{ duration: 0.32, ease: 'easeOut' }} className="absolute z-50 top-5 bottom-5 w-[280px] overflow-hidden border-l border-white/[0.10] bg-[#070b14]/95 backdrop-blur-2xl shadow-[-18px_0_50px_rgba(0,0,0,0.35)]" style={{ right: 'max(24px, calc((100% - 1700px) / 2))' }}>
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08] flex-shrink-0"><div><div className="text-white/35 text-[8px] uppercase tracking-[0.2em]">Quick Access</div><div className="text-white font-bold text-sm">{activeQuickLabel}</div></div><button onClick={() => setActiveQuickAccess(null)} className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white" aria-label="Close quick access"><X className="w-4 h-4"/></button></div>
+                <div className="flex-1 overflow-y-auto px-4 pb-4"><div className="pt-1">{overlayGames.map(game => <SlideGameItem key={game.id || game.title} game={game} onSelect={setSpotlightGame} onStore={handleOverlayStore} onCart={handleOverlayCart}/>)}</div></div>
+              </div>
+            </motion.aside>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
