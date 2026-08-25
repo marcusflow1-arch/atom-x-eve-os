@@ -22,6 +22,11 @@ import LivingQuest from './pages/LivingQuest';
 import Plan from './pages/Plan';
 
 const { Pages, Layout, mainPage } = pagesConfig;
+// Admin tooling stays registered in the source for the Base44/editor workflow,
+// but is excluded from the published production build.
+const livePages = import.meta.env.PROD
+  ? Object.entries(Pages).filter(([path]) => !['Admin', 'AdminUIBuilder'].includes(path))
+  : Object.entries(Pages);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
@@ -51,7 +56,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper>} />
-      {Object.entries(Pages).map(([path, Page]) => (
+      {livePages.map(([path, Page]) => (
         <Route key={path} path={`/${path}`} element={<LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>} />
       ))}
       <Route path="/DepsArt" element={<LayoutWrapper currentPageName="DepsArt"><DepsArt /></LayoutWrapper>} />
