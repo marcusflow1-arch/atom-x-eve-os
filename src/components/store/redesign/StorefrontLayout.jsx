@@ -56,7 +56,19 @@ export default function StorefrontLayout({ onNavigateToGame, games = [] }) {
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="storefront-aaa-surface relative h-full w-full overflow-hidden">
+      <style>{`
+        .storefront-aaa-surface div[class*="rounded-"] {
+          border-radius: 0 !important;
+          border-color: rgba(255,255,255,0.075) !important;
+          background-color: rgba(255,255,255,0.018) !important;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.035), 0 8px 24px rgba(0,0,0,0.08) !important;
+        }
+        .storefront-aaa-surface div[class*="rounded-"]:hover {
+          border-color: rgba(255,255,255,0.12) !important;
+          background-color: rgba(255,255,255,0.028) !important;
+        }
+      `}</style>
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 75% 0%, rgba(99,102,241,0.10) 0%, transparent 45%), radial-gradient(circle at 10% 100%, rgba(56,189,248,0.07) 0%, transparent 50%), linear-gradient(180deg, #0A0F1C 0%, #060912 60%, #04060d 100%)' }} />
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative h-full w-full overflow-y-auto custom-scrollbar px-6 pb-28" style={{ scrollbarWidth: 'none' }}>
         <div className="flex gap-6 max-w-[1700px] mx-auto pt-5">
