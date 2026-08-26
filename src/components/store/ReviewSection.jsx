@@ -1,46 +1,28 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ThumbsUp, ThumbsDown, MessageSquare, Send, ChevronLeft, ChevronRight, X, Clock, Calendar, Check } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Heart,
+  MessageSquare, Send, Star, ThumbsDown, ThumbsUp, Users, X, Zap
+} from 'lucide-react';
 
 const MOCK_REVIEWS = [
   {
-    id: 'r1',
-    user: 'ShadowAce',
-    avatar: 'S',
-    rating: 5,
-    recommended: true,
-    hoursAtReview: 142,
-    totalHours: 312,
-    date: '2025-11-14',
-    time: '9:32 PM',
-    content: 'Absolutely mind-blowing experience. The card system is unlike anything I\'ve played before — every achievement feels earned and meaningful. The world design is incredible and the story kept me hooked from start to finish.',
+    id: 'r1', user: 'ShadowAce', avatar: 'S', rating: 5, recommended: true,
+    hoursAtReview: 142, totalHours: 312, date: '2025-11-14', time: '9:32 PM',
+    content: 'Absolutely mind-blowing experience. The card system is unlike anything I have played before — every achievement feels earned and meaningful. The world design is incredible and the story kept me hooked from start to finish.',
     votes: { up: 48, down: 3 },
     comments: [
-      { id: 'c1', user: 'VoidWalker', text: 'Totally agree! The card system is what keeps me coming back.', votes: { up: 12, down: 1 }, date: '2025-11-15' },
+      { id: 'c1', user: 'VoidWalker', text: 'Totally agree! The card system is what keeps me coming back.', votes: { up: 12, down: 1 }, date: '2025-11-15', replies: [{ id: 'c1-r1', user: 'NeuroGamer', text: 'Same here. The deeper synergies are where it really opens up.', votes: { up: 4, down: 0 }, date: '2025-11-16' }] },
       { id: 'c2', user: 'NeuroGamer', text: 'Same experience here. 300+ hours and still going strong!', votes: { up: 9, down: 0 }, date: '2025-11-16' },
       { id: 'c3', user: 'CryptoKnight', text: 'Agreed on the world design. The neon cityscapes are gorgeous.', votes: { up: 7, down: 0 }, date: '2025-11-17' },
       { id: 'c4', user: 'NovaPulse', text: 'The story had me up until 4am multiple nights lol', votes: { up: 15, down: 2 }, date: '2025-11-18' },
       { id: 'c5', user: 'StarForge', text: 'Card synergies are insane once you get deep into it.', votes: { up: 6, down: 1 }, date: '2025-11-19' },
-      { id: 'c6', user: 'DarkMatter', text: 'New player here — is there a good guide to start with?', votes: { up: 4, down: 0 }, date: '2025-11-20' },
-      { id: 'c7', user: 'PhaseShift', text: 'Check the Farm Hub for farming guides, super helpful.', votes: { up: 8, down: 0 }, date: '2025-11-21' },
-      { id: 'c8', user: 'ByteRunner', text: 'The achievement system is what keeps the game fresh long term.', votes: { up: 11, down: 1 }, date: '2025-11-22' },
-      { id: 'c9', user: 'NeonWarden', text: '142 hours is nothing wait til you hit 500 lol', votes: { up: 18, down: 0 }, date: '2025-11-23' },
-      { id: 'c10', user: 'GridLock', text: 'What build were you running at 142h?', votes: { up: 3, down: 0 }, date: '2025-11-24' },
-      { id: 'c11', user: 'QuantumDrift', text: 'Stealth + Void abilities is the meta right now.', votes: { up: 14, down: 2 }, date: '2025-11-25' },
-      { id: 'c12', user: 'IronVeil', text: 'Best purchase of the year honestly.', votes: { up: 20, down: 1 }, date: '2025-11-26' },
     ]
   },
   {
-    id: 'r2',
-    user: 'CryptoKnight',
-    avatar: 'C',
-    rating: 4,
-    recommended: true,
-    hoursAtReview: 89,
-    totalHours: 156,
-    date: '2025-10-22',
-    time: '3:15 PM',
-    content: 'Great game overall. Combat is fluid and the achievement card system adds a unique RPG layer. Minor performance hiccups on older hardware but nothing game-breaking. Would definitely recommend for fans of the genre.',
+    id: 'r2', user: 'CryptoKnight', avatar: 'C', rating: 4, recommended: true,
+    hoursAtReview: 89, totalHours: 156, date: '2025-10-22', time: '3:15 PM',
+    content: 'Great game overall. Combat is fluid and the achievement card system adds a unique RPG layer. Minor performance hiccups on older hardware but nothing game-breaking.',
     votes: { up: 31, down: 5 },
     comments: [
       { id: 'c1', user: 'ShadowAce', text: 'Performance improved a lot with the last patch!', votes: { up: 8, down: 0 }, date: '2025-10-23' },
@@ -49,527 +31,170 @@ const MOCK_REVIEWS = [
     ]
   },
   {
-    id: 'r3',
-    user: 'NovaPulse',
-    avatar: 'N',
-    rating: 5,
-    recommended: true,
-    hoursAtReview: 312,
-    totalHours: 489,
-    date: '2025-09-08',
-    time: '11:47 AM',
-    content: 'I\'ve been playing since early access and the game has evolved beautifully. The developers listen to the community, updates are regular, and the card ecosystem keeps expanding. This is a live-service done right.',
+    id: 'r3', user: 'NovaPulse', avatar: 'N', rating: 5, recommended: true,
+    hoursAtReview: 312, totalHours: 489, date: '2025-09-08', time: '11:47 AM',
+    content: 'I have been playing since early access and the game has evolved beautifully. The developers listen to the community, updates are regular, and the card ecosystem keeps expanding.',
     votes: { up: 67, down: 2 },
     comments: [
-      { id: 'c1', user: 'GridLock', text: 'Early access was rough but yes they\'ve polished it a lot.', votes: { up: 11, down: 1 }, date: '2025-09-09' },
+      { id: 'c1', user: 'GridLock', text: 'Early access was rough but yes they have polished it a lot.', votes: { up: 11, down: 1 }, date: '2025-09-09' },
       { id: 'c2', user: 'ByteRunner', text: '312 hours at time of review, respect 🔥', votes: { up: 22, down: 0 }, date: '2025-09-10' },
     ]
   },
   {
-    id: 'r4',
-    user: 'VoidWalker',
-    avatar: 'V',
-    rating: 3,
-    recommended: false,
-    hoursAtReview: 44,
-    totalHours: 44,
-    date: '2025-08-30',
-    time: '7:20 PM',
-    content: 'It\'s decent but not for everyone. The learning curve is steep and the tutorial doesn\'t explain the card mechanics well. Once it clicks it\'s great, but getting there took too long for my patience.',
+    id: 'r4', user: 'VoidWalker', avatar: 'V', rating: 3, recommended: false,
+    hoursAtReview: 44, totalHours: 44, date: '2025-08-30', time: '7:20 PM',
+    content: 'It is decent but not for everyone. The learning curve is steep and the tutorial does not explain the card mechanics well. Once it clicks it is great, but getting there took too long for my patience.',
     votes: { up: 19, down: 8 },
     comments: [
       { id: 'c1', user: 'ShadowAce', text: 'Totally fair — the onboarding needs work.', votes: { up: 7, down: 0 }, date: '2025-08-31' },
       { id: 'c2', user: 'NovaPulse', text: 'Check the Farm Hub section, there are player-written guides!', votes: { up: 14, down: 0 }, date: '2025-09-01' },
       { id: 'c3', user: 'PhaseShift', text: 'Same felt that way at first. Give it 10 more hours.', votes: { up: 9, down: 2 }, date: '2025-09-02' },
     ]
-  },
+  }
 ];
 
-const COMMENTS_PER_PAGE = 10;
+const REACTIONS = ['👍', '👎', '🔥', '😂', '🤯', '❤️', '🎮', '💯'];
 
-function StarDisplay({ rating, size = 'sm' }) {
-  const s = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4';
-  return (
-    <div className="flex gap-0.5">
-      {[1,2,3,4,5].map(i => (
-        <Star key={i} className={`${s} ${i <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20 fill-white/20'}`} />
-      ))}
-    </div>
-  );
+function StarDisplay({ rating, large = false }) {
+  return <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} className={`${large ? 'w-4 h-4' : 'w-3.5 h-3.5'} ${i <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/15'}`} />)}</div>;
 }
 
-const EMOJI_GROUPS = [
-  { label: '😂 Reactions', emojis: ['😂','🤣','😭','😅','🥲','😤','😡','🤯','😱','🥹','😍','🤩','😎','🤔','😒','🫡','💀','🫠','🤡','👀'] },
-  { label: '🎮 Gaming', emojis: ['🎮','🕹️','🏆','⚔️','🛡️','💎','🔥','💥','⚡','🌀','🎯','👑','🦾','🤖','👾','🧠','🚀','💣','🪄','🎲'] },
-  { label: '👋 Gestures', emojis: ['👍','👎','🙌','👏','🤝','🫶','❤️','💔','🫂','💪','🤘','✌️','🖖','🤙','👌','🤌','🫵','🙏','🤞','💯'] },
-  { label: '✨ Glyphs', emojis: ['✨','🌟','⭐','💫','🔮','🌈','❄️','🌊','🌙','☀️','⚙️','🧩','🔑','🗝️','📜','🪙','💰','🎪','🎭','🎬'] },
-];
-
-function EmojiPicker({ onSelect }) {
-  const [activeGroup, setActiveGroup] = useState(0);
-  return (
-    <div className="rounded-xl overflow-hidden shadow-2xl" style={{ background: 'rgba(15,20,30,0.97)', border: '1px solid rgba(255,255,255,0.12)', width: '260px' }}>
-      {/* Group tabs */}
-      <div className="flex border-b border-white/10">
-        {EMOJI_GROUPS.map((g, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveGroup(i)}
-            className={`flex-1 py-2 text-[11px] font-bold transition-all truncate px-1 ${activeGroup === i ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-400/5' : 'text-white/30 hover:text-white/60'}`}
-          >
-            {g.emojis[0]}
-          </button>
-        ))}
-      </div>
-      {/* Emoji grid */}
-      <div className="grid grid-cols-10 gap-0.5 p-2">
-        {EMOJI_GROUPS[activeGroup].emojis.map((e, i) => (
-          <button
-            key={i}
-            onClick={() => onSelect(e)}
-            className="w-6 h-6 flex items-center justify-center text-base hover:bg-white/10 rounded transition-all"
-          >
-            {e}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+function GlassDivider({ vertical = false }) {
+  return <div className={vertical ? 'w-px self-stretch bg-gradient-to-b from-transparent via-white/20 to-transparent' : 'h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent'} />;
 }
 
-function CommentView({ review, onClose, user }) {
-  const [page, setPage] = useState(0);
-  const [comments, setComments] = useState(review.comments);
-  const [commentVotes, setCommentVotes] = useState({});
-  const [replyDraft, setReplyDraft] = useState('');
-  const [showReplyBox, setShowReplyBox] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const textareaRef = React.useRef(null);
-
-  const totalPages = Math.ceil(comments.length / COMMENTS_PER_PAGE);
-  const pageComments = comments.slice(page * COMMENTS_PER_PAGE, (page + 1) * COMMENTS_PER_PAGE);
-
-  const handleVote = (commentId, type) => {
-    setCommentVotes(prev => {
-      const existing = prev[commentId];
-      if (existing === type) return { ...prev, [commentId]: null };
-      return { ...prev, [commentId]: type };
-    });
-  };
-
-  const handleInsertEmoji = (emoji) => {
-    const el = textareaRef.current;
-    if (el) {
-      const start = el.selectionStart;
-      const end = el.selectionEnd;
-      const next = replyDraft.slice(0, start) + emoji + replyDraft.slice(end);
-      setReplyDraft(next);
-      // Restore cursor after emoji
-      setTimeout(() => { el.focus(); el.setSelectionRange(start + emoji.length, start + emoji.length); }, 0);
-    } else {
-      setReplyDraft(prev => prev + emoji);
-    }
-    setShowEmojiPicker(false);
-  };
-
-  const handleSendReply = () => {
-    if (!replyDraft.trim()) return;
-    const name = user?.full_name || user?.email?.split('@')[0] || 'Player';
-    const newComment = {
-      id: `c_${Date.now()}`,
-      user: name,
-      text: replyDraft.trim(),
-      votes: { up: 0, down: 0 },
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
-    };
-    setComments(prev => [...prev, newComment]);
-    setReplyDraft('');
-    setShowReplyBox(false);
-    setShowEmojiPicker(false);
-    // Jump to last page to show new comment
-    setPage(Math.floor(comments.length / COMMENTS_PER_PAGE));
-  };
-
+function ReviewerProfile({ review }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex flex-col h-full"
-    >
-      {/* Original review compact header */}
-      <div className="flex items-start gap-3 p-4 border-b border-white/10 bg-white/3 flex-shrink-0">
-        <button
-          onClick={onClose}
-          className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all"
-        >
-          <ChevronLeft className="w-4 h-4 text-white/60" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="font-bold text-white text-sm">{review.user}</span>
-            <StarDisplay rating={review.rating} />
-            <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${review.recommended ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
-              {review.recommended ? <Check className="w-2.5 h-2.5" /> : <X className="w-2.5 h-2.5" />}
-              {review.recommended ? 'Recommended' : 'Not Recommended'}
-            </span>
-          </div>
-          <p className="text-white/60 text-xs line-clamp-2">{review.content}</p>
+    <aside className="w-[31%] min-w-[260px] shrink-0 px-7 py-8 border-r border-white/[0.06] bg-white/[0.018]">
+      <div className="text-[9px] uppercase tracking-[0.25em] text-cyan-300/55 mb-6">Reviewer Profile</div>
+      <div className="flex items-center gap-4 mb-7">
+        <div className="w-16 h-16 flex items-center justify-center text-xl font-black text-white bg-gradient-to-br from-cyan-400/25 to-purple-500/25 border border-white/10">{review.avatar}</div>
+        <div className="min-w-0">
+          <div className="text-white font-bold text-lg truncate">{review.user}</div>
+          <div className="text-white/35 text-[10px] uppercase tracking-wider">Verified Player</div>
         </div>
       </div>
+      <div className="flex items-center gap-2 mb-7"><StarDisplay rating={review.rating} large /><span className="text-white/40 text-xs">{review.recommended ? 'Recommended' : 'Not Recommended'}</span></div>
+      <div className="space-y-0 border-y border-white/[0.07]">
+        <div className="flex items-center justify-between py-4"><span className="text-white/35 text-[10px] uppercase tracking-wider">Account Level</span><span className="text-white text-sm font-semibold">{Math.max(1, Math.floor(review.totalHours / 20))}</span></div>
+        <div className="flex items-center justify-between py-4 border-t border-white/[0.05]"><span className="text-white/35 text-[10px] uppercase tracking-wider">Games Owned</span><span className="text-white text-sm font-semibold">{Math.max(8, Math.floor(review.totalHours / 12))}</span></div>
+        <div className="flex items-center justify-between py-4 border-t border-white/[0.05]"><span className="text-white/35 text-[10px] uppercase tracking-wider">Playtime</span><span className="text-white text-sm font-semibold">{review.totalHours}h</span></div>
+      </div>
+      <div className="mt-7">
+        <div className="flex items-center gap-2 text-white/35 text-[9px] uppercase tracking-[0.18em] mb-3"><TrophyIcon /> Badge Showcase</div>
+        <div className="grid grid-cols-4 gap-2">{['★','⚡','◆','◈','✦','◉','✚','◇'].map((b,i)=><div key={i} className="h-11 flex items-center justify-center border border-white/[0.07] text-cyan-300/45 text-sm bg-white/[0.02]">{b}</div>)}</div>
+      </div>
+    </aside>
+  );
+}
+function TrophyIcon(){return <span className="text-cyan-300/50">✦</span>}
 
-      {/* Comments list */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-white/40 text-[10px] uppercase tracking-wider font-bold">{comments.length} Replies</span>
-          <button
-            onClick={() => setShowReplyBox(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold text-cyan-300 hover:text-cyan-100 transition-all"
-            style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}
-          >
-            <MessageSquare className="w-3 h-3" /> Reply
-          </button>
-        </div>
-
-        {/* Inline reply box */}
-        <AnimatePresence>
-          {showReplyBox && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mb-2"
-            >
-              <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.15)' }}>
-                <textarea
-                  ref={textareaRef}
-                  autoFocus
-                  placeholder="Leave a reply… use 😂 emojis, ⚔️ glyphs, anything!"
-                  value={replyDraft}
-                  onChange={e => setReplyDraft(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendReply()}
-                  rows={2}
-                  className="w-full px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40 resize-none leading-relaxed"
-                />
-                <div className="flex items-center gap-2 relative">
-                  {/* Emoji toggle */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowEmojiPicker(v => !v)}
-                      className="px-2.5 py-1.5 rounded-lg text-base hover:bg-white/10 transition-all"
-                      title="Add emoji / glyph"
-                    >
-                      😊
-                    </button>
-                    <AnimatePresence>
-                      {showEmojiPicker && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute bottom-full mb-2 left-0 z-50"
-                        >
-                          <EmojiPicker onSelect={handleInsertEmoji} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                  <button
-                    onClick={handleSendReply}
-                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-cyan-400 hover:text-cyan-200 transition-all"
-                    style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}
-                  >
-                    <Send className="w-3 h-3" /> Send
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {pageComments.map((c) => {
-          const myVote = commentVotes[c.id];
-          return (
-            <div key={c.id} className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 bg-gradient-to-br from-blue-500/60 to-purple-500/60 mt-0.5">
-                {c.user[0]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-white/70 text-[11px] font-bold">{c.user}</span>
-                  <span className="text-white/25 text-[9px]">{c.date}</span>
-                </div>
-                <p className="text-white/75 text-xs leading-relaxed">{c.text}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <button
-                    onClick={() => handleVote(c.id, 'up')}
-                    className={`flex items-center gap-1 text-[10px] transition-all ${myVote === 'up' ? 'text-cyan-300' : 'text-white/30 hover:text-white/60'}`}
-                  >
-                    <ThumbsUp className="w-2.5 h-2.5" /> {c.votes.up + (myVote === 'up' ? 1 : 0)}
-                  </button>
-                  <button
-                    onClick={() => handleVote(c.id, 'down')}
-                    className={`flex items-center gap-1 text-[10px] transition-all ${myVote === 'down' ? 'text-red-400' : 'text-white/30 hover:text-white/60'}`}
-                  >
-                    <ThumbsDown className="w-2.5 h-2.5" /> {c.votes.down + (myVote === 'down' ? 1 : 0)}
-                  </button>
-                </div>
-              </div>
+function Thread({ comment, depth = 0, onVote, onReply, reactionState, onReaction }) {
+  const [expanded, setExpanded] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const myVote = reactionState.votes[comment.id];
+  const replies = comment.replies || [];
+  return (
+    <motion.div layout className={`${depth ? 'ml-8 pl-4 border-l border-white/[0.07]' : ''}`}>
+      <div className="py-4 border-b border-white/[0.055]">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 shrink-0 flex items-center justify-center text-[10px] font-bold text-white/80 border border-white/[0.08] bg-white/[0.035]">{comment.user?.[0] || 'P'}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2"><span className="text-white/75 text-[11px] font-bold">{comment.user}</span><span className="text-white/20 text-[9px]">{comment.date}</span></div>
+            <p className="text-white/65 text-sm leading-relaxed mt-1.5">{comment.text}</p>
+            <div className="flex items-center gap-4 mt-2">
+              <button onClick={() => onVote(comment.id, 'up')} className={`flex items-center gap-1 text-[10px] ${myVote === 'up' ? 'text-cyan-300' : 'text-white/30 hover:text-white/60'}`}><ThumbsUp className="w-3 h-3"/>{(comment.votes?.up || 0) + (myVote === 'up' ? 1 : 0)}</button>
+              <button onClick={() => onVote(comment.id, 'down')} className={`flex items-center gap-1 text-[10px] ${myVote === 'down' ? 'text-red-400' : 'text-white/30 hover:text-white/60'}`}><ThumbsDown className="w-3 h-3"/>{(comment.votes?.down || 0) + (myVote === 'down' ? 1 : 0)}</button>
+              <button onClick={() => setReplyOpen(v => !v)} className="text-[10px] text-white/35 hover:text-cyan-300">Reply <ChevronDown className={`inline w-3 h-3 transition-transform ${replyOpen ? 'rotate-180' : ''}`}/></button>
+              <div className="relative flex items-center gap-1">{REACTIONS.slice(0,4).map(e=><button key={e} onClick={()=>onReaction(comment.id,e)} className={`text-[12px] opacity-50 hover:opacity-100 ${reactionState.reactions[comment.id]===e?'opacity-100':''}`}>{e}</button>)}</div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 flex-shrink-0">
-          <button
-            onClick={() => setPage(p => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-25"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            <ChevronLeft className="w-4 h-4 text-white/70" />
-          </button>
-          <span className="text-white/30 text-xs">{page + 1} / {totalPages}</span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={page === totalPages - 1}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-25"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            <ChevronRight className="w-4 h-4 text-white/70" />
-          </button>
+            {replyOpen && <div className="mt-3 pl-3 border-l border-cyan-300/10"><button onClick={()=>onReply(comment.id)} className="text-[10px] text-cyan-300/70 hover:text-cyan-200 flex items-center gap-1"><MessageSquare className="w-3 h-3"/>Open reply field</button></div>}
+            {replies.length > 0 && <button onClick={()=>setExpanded(v=>!v)} className="mt-3 text-[10px] text-cyan-300/70 hover:text-cyan-200 flex items-center gap-1">{expanded?'Hide':'View'} {replies.length} {replies.length===1?'reply':'replies'} <ChevronDown className={`w-3 h-3 transition-transform ${expanded?'rotate-180':''}`}/></button>}
+          </div>
         </div>
-      )}
+      </div>
+      <AnimatePresence>{expanded && replies.map(reply=><motion.div key={reply.id} initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={{opacity:0,height:0}}><Thread comment={reply} depth={depth+1} onVote={onVote} onReply={onReply} reactionState={reactionState} onReaction={onReaction}/></motion.div>)}</AnimatePresence>
     </motion.div>
   );
 }
 
-export default function ReviewSection({ reviews: dbReviews, user }) {
-  const reviews = dbReviews?.length > 0 ? dbReviews.map((r, i) => ({
-    id: r.id,
-    user: r.created_by || 'Anonymous',
-    avatar: (r.created_by || 'A')[0].toUpperCase(),
-    rating: r.rating || 5,
-    recommended: (r.rating || 5) >= 3,
-    hoursAtReview: Math.floor(Math.random() * 200 + 20),
-    totalHours: Math.floor(Math.random() * 400 + 100),
-    date: new Date(r.created_date).toLocaleDateString('en-CA'),
-    time: new Date(r.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-    content: r.content || '',
-    votes: { up: Math.floor(Math.random() * 50), down: Math.floor(Math.random() * 10) },
-    comments: []
-  })) : MOCK_REVIEWS;
+function ReviewDrawer({ review, user, onClose }) {
+  const [comments, setComments] = useState(review.comments || []);
+  const [votes, setVotes] = useState({});
+  const [reactions, setReactions] = useState({});
+  const [draft, setDraft] = useState('');
+  const [replyTarget, setReplyTarget] = useState(null);
+  const [showComposer, setShowComposer] = useState(false);
+  const [showReactionBar, setShowReactionBar] = useState(false);
 
-  const [openComments, setOpenComments] = useState(null); // reviewId
-  const [reviewVotes, setReviewVotes] = useState({});
-  const [newReviewDraft, setNewReviewDraft] = useState('');
-  const [newRating, setNewRating] = useState(5);
-  const [showWriteBox, setShowWriteBox] = useState(false);
-  const [localReviews, setLocalReviews] = useState(reviews);
-
-  const handleReviewVote = (id, type) => {
-    setReviewVotes(prev => {
-      const existing = prev[id];
-      if (existing === type) return { ...prev, [id]: null };
-      return { ...prev, [id]: type };
-    });
-  };
-
-  const handleSubmitReview = () => {
-    if (!newReviewDraft.trim()) return;
+  const handleVote = (id, type) => setVotes(prev => ({...prev, [id]: prev[id] === type ? null : type}));
+  const handleReaction = (id, emoji) => setReactions(prev => ({...prev, [id]: prev[id] === emoji ? null : emoji}));
+  const handleReply = (id) => { setReplyTarget(id); setShowComposer(true); };
+  const handleSend = () => {
+    if (!draft.trim()) return;
     const name = user?.full_name || user?.email?.split('@')[0] || 'Player';
-    const now = new Date();
-    setLocalReviews(prev => [{
-      id: `local_${Date.now()}`,
-      user: name,
-      avatar: name[0].toUpperCase(),
-      rating: newRating,
-      recommended: newRating >= 3,
-      hoursAtReview: 0,
-      totalHours: 0,
-      date: now.toLocaleDateString('en-CA'),
-      time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      content: newReviewDraft.trim(),
-      votes: { up: 0, down: 0 },
-      comments: []
-    }, ...prev]);
-    setNewReviewDraft('');
-    setNewRating(5);
-    setShowWriteBox(false);
+    const newComment = { id:`local_${Date.now()}`, user:name, text:draft.trim(), votes:{up:0,down:0}, date:new Date().toLocaleDateString('en-US'), replies:[] };
+    if (replyTarget) {
+      setComments(prev => prev.map(c => c.id === replyTarget ? {...c, replies:[...(c.replies||[]),newComment]} : c));
+    } else setComments(prev => [...prev, newComment]);
+    setDraft(''); setReplyTarget(null); setShowComposer(false);
   };
-
-  const activeReview = openComments ? localReviews.find(r => r.id === openComments) : null;
-
-  return (
-    <div className="border-t border-white/10 pt-10 mt-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-2xl font-bold text-white mb-1">Customer Reviews</h3>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-0.5">
-              {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-cyan-400 fill-cyan-400" />)}
-            </div>
-            <span className="text-white/50 text-sm">Very Positive ({localReviews.length.toLocaleString()} reviews)</span>
-          </div>
+  return <motion.div className="fixed inset-0 z-[120] flex items-stretch justify-end" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
+    <div className="absolute inset-0 bg-black/45 backdrop-blur-[7px]" onClick={onClose}/>
+    <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'tween',duration:.38}} className="relative w-[min(1180px,calc(100vw-72px))] h-full bg-[#0c1118]/90 backdrop-blur-3xl border-l border-white/[0.09] shadow-[-24px_0_80px_rgba(0,0,0,.35)] flex overflow-hidden">
+      <ReviewerProfile review={review}/>
+      <section className="flex-1 min-w-0 flex flex-col">
+        <header className="px-7 py-5 flex items-center gap-4 border-b border-white/[0.07] shrink-0">
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center text-white/45 hover:text-white border border-white/[0.07] bg-white/[0.025]"><ChevronRight className="w-4 h-4"/></button>
+          <div className="min-w-0 flex-1"><div className="text-[9px] uppercase tracking-[.22em] text-cyan-300/50">Review Discussion</div><div className="text-white font-bold text-lg truncate">{review.user}'s review</div></div>
+          <div className="text-right"><div className="text-white/30 text-[8px] uppercase">Helpful</div><div className="text-white text-sm font-semibold">{review.votes.up}</div></div>
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center text-white/30 hover:text-white"><X className="w-4 h-4"/></button>
+        </header>
+        <div className="px-7 py-5 shrink-0 bg-white/[0.012]">
+          <div className="flex items-center gap-3 mb-3"><StarDisplay rating={review.rating}/><span className={review.recommended?'text-green-400/75':'text-red-400/75'}>{review.recommended?'Recommended':'Not Recommended'}</span><span className="text-white/20">•</span><span className="text-white/30 text-[10px]">{review.hoursAtReview}h at review · {review.totalHours}h total</span></div>
+          <p className="text-white/72 text-sm leading-7 max-w-4xl">{review.content}</p>
+          <div className="flex items-center gap-3 mt-4"><button className="text-[10px] text-white/35 flex items-center gap-1"><ThumbsUp className="w-3 h-3"/>{review.votes.up}</button><button className="text-[10px] text-white/35 flex items-center gap-1"><ThumbsDown className="w-3 h-3"/>{review.votes.down}</button><span className="text-white/20 text-[10px]">{review.date} · {review.time}</span></div>
         </div>
-        <button
-          onClick={() => setShowWriteBox(v => !v)}
-          className="flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-sm transition-all hover:scale-105"
-          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)' }}
-        >
-          <MessageSquare className="w-4 h-4" /> Write a Review
-        </button>
-      </div>
+        <GlassDivider/>
+        <div className="flex-1 overflow-y-auto px-7" style={{scrollbarWidth:'thin'}}>
+          <div className="flex items-center justify-between py-4"><div className="text-white/35 text-[9px] uppercase tracking-[.2em]">Thread · {comments.length} comments</div><button onClick={()=>{setReplyTarget(null);setShowComposer(v=>!v)}} className="text-[10px] text-cyan-300/80 hover:text-cyan-200 flex items-center gap-1"><MessageSquare className="w-3 h-3"/> New comment</button></div>
+          {comments.map(c=><Thread key={c.id} comment={c} onVote={handleVote} onReply={handleReply} reactionState={{votes,reactions}} onReaction={handleReaction}/>) }
+          {comments.length===0 && <div className="py-20 text-center text-white/25 text-sm">No comments yet.</div>}
+        </div>
+        <div className="shrink-0 border-t border-white/[0.07] px-7 py-4 bg-black/10">
+          <AnimatePresence>{showComposer && <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:8}} className="mb-3"><div className="text-[9px] uppercase tracking-wider text-cyan-300/45 mb-2">{replyTarget?'Replying in thread':'Add to discussion'}</div><textarea autoFocus value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSend();}}} rows={3} placeholder={replyTarget?'Write your reply…':'Share your thoughts…'} className="w-full resize-none bg-white/[0.025] border border-white/[0.08] outline-none focus:border-cyan-300/25 px-4 py-3 text-sm text-white/75 placeholder-white/20"/></motion.div>}</AnimatePresence>
+          <div className="flex items-center gap-3"><button onClick={()=>{setReplyTarget(null);setShowComposer(v=>!v)}} className="text-[10px] text-white/35 hover:text-white flex items-center gap-1"><ChevronDown className={`w-3 h-3 transition-transform ${showComposer?'rotate-180':''}`}/> {showComposer?'Hide':'Comment'}</button><div className="relative"><button onClick={()=>setShowReactionBar(v=>!v)} className="text-[12px] text-white/35 hover:text-white">☺</button>{showReactionBar&&<div className="absolute bottom-8 left-0 flex gap-1 p-2 bg-[#111822]/95 border border-white/10 backdrop-blur-xl">{REACTIONS.map(e=><button key={e} onClick={()=>{setDraft(d=>d+e);setShowReactionBar(false)}} className="text-sm hover:scale-110">{e}</button>)}</div>}</div><span className="text-white/15 text-[9px]">Enter to send · Shift+Enter for a new line</span><button onClick={handleSend} disabled={!draft.trim()} className="ml-auto flex items-center gap-2 px-4 py-2 text-[10px] font-bold text-cyan-200 border border-cyan-300/15 bg-cyan-300/[0.06] disabled:opacity-25"><Send className="w-3 h-3"/> Send</button></div>
+        </div>
+      </section>
+    </motion.div>
+  </motion.div>;
+}
 
-      {/* Write Review Box */}
-      <AnimatePresence>
-        {showWriteBox && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mb-6"
-          >
-            <div className="p-5 rounded-2xl space-y-4" style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.15)' }}>
-              <div className="flex items-center gap-3">
-                <span className="text-white/50 text-sm">Your rating:</span>
-                <div className="flex gap-1">
-                  {[1,2,3,4,5].map(i => (
-                    <button key={i} onClick={() => setNewRating(i)}>
-                      <Star className={`w-5 h-5 transition-all ${i <= newRating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20 fill-white/20'}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <textarea
-                placeholder="Share your thoughts about the game…"
-                value={newReviewDraft}
-                onChange={e => setNewReviewDraft(e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl text-sm text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40 resize-none leading-relaxed"
-              />
-              <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowWriteBox(false)} className="px-4 py-2 rounded-xl text-sm text-white/50 hover:text-white transition-all">Cancel</button>
-                <button
-                  onClick={handleSubmitReview}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
-                  style={{ background: 'rgba(34,211,238,0.2)', border: '1px solid rgba(34,211,238,0.3)', color: 'rgba(150,240,255,1)' }}
-                >
-                  <Send className="w-3.5 h-3.5" /> Post Review
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+export default function ReviewSection({ reviews: dbReviews, user }) {
+  const reviews = useMemo(() => dbReviews?.length ? dbReviews.map(r => ({
+    id:r.id, user:r.created_by||'Anonymous', avatar:(r.created_by||'A')[0].toUpperCase(), rating:r.rating||5,
+    recommended:(r.rating||5)>=3, hoursAtReview:Math.floor(Math.random()*200+20), totalHours:Math.floor(Math.random()*400+100),
+    date:r.created_date?new Date(r.created_date).toLocaleDateString('en-CA'):'—', time:r.created_date?new Date(r.created_date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'', content:r.content||'', votes:{up:Math.floor(Math.random()*50),down:Math.floor(Math.random()*10)}, comments:[]
+  })) : MOCK_REVIEWS, [dbReviews]);
+  const [localReviews,setLocalReviews]=useState(reviews);
+  const [openComments,setOpenComments]=useState(null);
+  const [reviewVotes,setReviewVotes]=useState({});
+  const [newReviewDraft,setNewReviewDraft]=useState('');
+  const [newRating,setNewRating]=useState(5);
+  const [showWriteBox,setShowWriteBox]=useState(false);
 
-      {/* Reviews list */}
-      <div className="space-y-4">
-        {localReviews.length === 0 ? (
-          <div className="py-16 text-center rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-            <MessageSquare className="w-12 h-12 text-white/15 mx-auto mb-3" />
-            <p className="text-white/30 font-medium">No reviews yet. Be the first to share your thoughts!</p>
-          </div>
-        ) : localReviews.map((review) => {
-          const isShowingComments = openComments === review.id;
-          const myVote = reviewVotes[review.id];
+  const handleReviewVote=(id,type)=>setReviewVotes(prev=>({...prev,[id]:prev[id]===type?null:type}));
+  const handleSubmitReview=()=>{if(!newReviewDraft.trim())return;const name=user?.full_name||user?.email?.split('@')[0]||'Player';const now=new Date();setLocalReviews(prev=>[{id:`local_${Date.now()}`,user:name,avatar:name[0]?.toUpperCase()||'P',rating:newRating,recommended:newRating>=3,hoursAtReview:0,totalHours:0,date:now.toLocaleDateString('en-CA'),time:now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),content:newReviewDraft.trim(),votes:{up:0,down:0},comments:[]},...prev]);setNewReviewDraft('');setNewRating(5);setShowWriteBox(false);};
 
-          return (
-            <motion.div
-              key={review.id}
-              layout
-              className="rounded-2xl overflow-hidden"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <AnimatePresence mode="wait">
-                {isShowingComments ? (
-                  <motion.div
-                    key="comments"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="h-[480px] flex flex-col"
-                  >
-                    <CommentView
-                      review={review}
-                      onClose={() => setOpenComments(null)}
-                      user={user}
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="review"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="p-5 space-y-4"
-                  >
-                    {/* Review Header */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/70 to-purple-600/70 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {review.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="font-bold text-white text-sm">{review.user}</span>
-                          <StarDisplay rating={review.rating} />
-                        </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {/* Recommended badge */}
-                          <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${review.recommended ? 'text-green-400 bg-green-500/10 border border-green-500/20' : 'text-red-400 bg-red-500/10 border border-red-500/20'}`}>
-                            {review.recommended ? <Check className="w-2.5 h-2.5" /> : <X className="w-2.5 h-2.5" />}
-                            {review.recommended ? 'Recommended' : 'Not Recommended'}
-                          </span>
-                          {/* Hours */}
-                          <span className="flex items-center gap-1 text-white/35 text-[10px]">
-                            <Clock className="w-2.5 h-2.5" /> {review.hoursAtReview}h at review · {review.totalHours}h total
-                          </span>
-                          {/* Date & Time */}
-                          <span className="flex items-center gap-1 text-white/35 text-[10px]">
-                            <Calendar className="w-2.5 h-2.5" /> {review.date} · {review.time}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Review Content */}
-                    <p className="text-white/75 text-sm leading-relaxed">"{review.content}"</p>
-
-                    {/* Footer: votes + comment trigger */}
-                    <div className="flex items-center gap-3 pt-2 border-t border-white/6">
-                      <span className="text-white/30 text-[10px] mr-1">Was this helpful?</span>
-                      <button
-                        onClick={() => handleReviewVote(review.id, 'up')}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${myVote === 'up' ? 'text-cyan-300 bg-cyan-500/15 border border-cyan-400/30' : 'text-white/40 hover:text-white/70 bg-white/5 border border-white/10'}`}
-                      >
-                        <ThumbsUp className="w-3 h-3" /> {review.votes.up + (myVote === 'up' ? 1 : 0)}
-                      </button>
-                      <button
-                        onClick={() => handleReviewVote(review.id, 'down')}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${myVote === 'down' ? 'text-red-400 bg-red-500/15 border border-red-400/30' : 'text-white/40 hover:text-white/70 bg-white/5 border border-white/10'}`}
-                      >
-                        <ThumbsDown className="w-3 h-3" /> {review.votes.down + (myVote === 'down' ? 1 : 0)}
-                      </button>
-                      <button
-                        onClick={() => setOpenComments(review.id)}
-                        className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold text-white/50 hover:text-white transition-all"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        {review.comments.length} {review.comments.length === 1 ? 'comment' : 'comments'}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return <div className="w-full max-w-[1600px] mx-auto border-t border-white/[0.08] pt-10 mt-4 px-4 sm:px-6 lg:px-10">
+    <div className="flex items-center justify-between mb-7"><div><h3 className="text-2xl font-bold text-white mb-1">Customer Reviews</h3><div className="flex items-center gap-3"><div className="flex gap-0.5">{[1,2,3,4,5].map(i=><Star key={i} className="w-4 h-4 text-cyan-400 fill-cyan-400"/>)}</div><span className="text-white/40 text-sm">Very Positive ({localReviews.length.toLocaleString()} reviews)</span></div></div><button onClick={()=>setShowWriteBox(v=>!v)} className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white/70 border border-white/[0.09] bg-white/[0.025] hover:bg-white/[0.05]"><MessageSquare className="w-4 h-4"/> Write a Review</button></div>
+    <GlassDivider/>
+    <AnimatePresence>{showWriteBox&&<motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} className="overflow-hidden"><div className="py-6 max-w-4xl"><div className="flex items-center gap-3 mb-4"><span className="text-white/35 text-[10px] uppercase tracking-wider">Your rating</span>{[1,2,3,4,5].map(i=><button key={i} onClick={()=>setNewRating(i)}><Star className={`w-5 h-5 ${i<=newRating?'text-yellow-400 fill-yellow-400':'text-white/15'}`}/></button>)}</div><textarea value={newReviewDraft} onChange={e=>setNewReviewDraft(e.target.value)} rows={4} placeholder="Share your thoughts about the game…" className="w-full resize-none bg-white/[0.025] border border-white/[0.08] outline-none focus:border-cyan-300/25 px-4 py-3 text-sm text-white/75 placeholder-white/20"/><div className="flex justify-end gap-3 mt-3"><button onClick={()=>setShowWriteBox(false)} className="px-4 py-2 text-xs text-white/35">Cancel</button><button onClick={handleSubmitReview} className="px-4 py-2 text-xs font-bold text-cyan-200 border border-cyan-300/15 bg-cyan-300/[0.06]">Post Review</button></div></div></motion.div>}</AnimatePresence>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-12 gap-y-2 py-4">{localReviews.map(review=>{const myVote=reviewVotes[review.id];return <motion.article layout key={review.id} className="py-7 border-b border-white/[0.055]">
+      <div className="flex items-start gap-4"><div className="w-11 h-11 shrink-0 flex items-center justify-center text-white font-bold bg-white/[0.035] border border-white/[0.07]">{review.avatar}</div><div className="flex-1 min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="text-white font-bold text-sm">{review.user}</span><StarDisplay rating={review.rating}/><span className={review.recommended?'text-green-400/65 text-[9px]':'text-red-400/65 text-[9px]'}>{review.recommended?'RECOMMENDED':'NOT RECOMMENDED'}</span></div><div className="flex items-center gap-3 mt-1.5 text-white/25 text-[9px] flex-wrap"><span className="flex items-center gap-1"><Clock className="w-3 h-3"/>{review.hoursAtReview}h at review · {review.totalHours}h total</span><span className="flex items-center gap-1"><Calendar className="w-3 h-3"/>{review.date} · {review.time}</span></div></div></div>
+      <p className="text-white/65 text-sm leading-7 mt-5 max-w-3xl">{review.content}</p>
+      <div className="flex items-center gap-4 mt-5 pt-3 border-t border-white/[0.04]"><span className="text-white/20 text-[9px] uppercase tracking-wider">Helpful</span><button onClick={()=>handleReviewVote(review.id,'up')} className={`flex items-center gap-1 text-[10px] ${myVote==='up'?'text-cyan-300':'text-white/30 hover:text-white/60'}`}><ThumbsUp className="w-3 h-3"/>{review.votes.up+(myVote==='up'?1:0)}</button><button onClick={()=>handleReviewVote(review.id,'down')} className={`flex items-center gap-1 text-[10px] ${myVote==='down'?'text-red-400':'text-white/30 hover:text-white/60'}`}><ThumbsDown className="w-3 h-3"/>{review.votes.down+(myVote==='down'?1:0)}</button><button onClick={()=>setOpenComments(review.id)} className="ml-auto flex items-center gap-1.5 text-[10px] text-white/40 hover:text-cyan-300"><MessageSquare className="w-3 h-3"/>{review.comments.length} comments <ChevronRight className="w-3 h-3"/></button></div>
+    </motion.article>})}</div>
+    <AnimatePresence>{openComments&&<ReviewDrawer review={localReviews.find(r=>r.id===openComments)} user={user} onClose={()=>setOpenComments(null)}/>}</AnimatePresence>
+  </div>;
 }
