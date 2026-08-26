@@ -7,6 +7,7 @@ type GlobalOverlayLayerProps = {
   onEscape?: () => void;
 };
 
+/** Root-level modal host. Use this wrapper for every Luna Dashboard overlay. */
 export default function GlobalOverlayLayer({ open, children, onEscape }: GlobalOverlayLayerProps) {
   useEffect(() => {
     if (!open || !onEscape) return;
@@ -20,9 +21,19 @@ export default function GlobalOverlayLayer({ open, children, onEscape }: GlobalO
   if (!open || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div data-luna-global-overlay="true" className="fixed inset-0 z-[99999] isolate pointer-events-auto" style={{ zIndex: 99999 }}>
-      <div aria-hidden="true" className="absolute inset-0 bg-black/55 backdrop-blur-md" />
-      <div className="relative z-[100000] h-full w-full">{children}</div>
+    <div
+      data-luna-global-overlay="true"
+      className="fixed inset-0 isolate"
+      style={{ zIndex: 99999, isolation: 'isolate' }}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-black/55 backdrop-blur-md"
+        style={{ zIndex: 0 }}
+      />
+      <div className="relative h-full w-full" style={{ zIndex: 1 }}>
+        {children}
+      </div>
     </div>,
     document.body
   );
