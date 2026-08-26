@@ -22,8 +22,27 @@ function FadedDivider({ vertical = false }) {
   return <div className={vertical ? 'w-px h-full shrink-0 bg-gradient-to-b from-transparent via-white/35 to-transparent' : 'h-px w-full bg-gradient-to-r from-transparent via-white/35 to-transparent'} />;
 }
 
+function formatReminderDate(value) {
+  if (!value) return 'Upcoming';
+  if (typeof value === 'string' && /^(Today|Tomorrow|Upcoming|Recent)$/i.test(value.trim())) return value;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function normalizeReminder(item, index, source = 'reminder') {
+  const dateValue = item.date || item.scheduled_date || item.reminder_date || item.event_date || item.start_date || item.due_date || item.created_date;
+  return {
+    ...item,
+    id: item.id || `${source}-${index}`,
+    date: formatReminderDate(dateValue),
+    title: item.title || item.name || item.subject || item.event_name || 'Reminder',
+    detail: item.detail || item.description || item.notes || item.content || item.message || 'No additional details available.',
+  };
+}
+
 export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClose }) {
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [expanded, setExpanded] = useState({});
   const { data: updates = [] } = useQuery({
     queryKey: ['platform-updates-reminder-overlay'],
@@ -38,17 +57,57 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClos
     }, staleTime: 60000, retry: 1,
   });
 
+  const { data: savedReminders = [] } = useQuery({
+    queryKey: ['luna-dashboard-reminders-overlay'],
+    queryFn: async () => {
+      try {
+        const reminderEntity = base44.entities.Reminder;
+        if (reminderEntity?.filter) {
+          const result = await reminderEntity.filter({});
+          if (Array.isArray(result) && result.length) return result.map((item, i) => normalizeReminder(item, i, 'reminder'));
+        }
+      } catch (error) {
+        console.warn('Reminder records unavailable; checking calendar events.', error);
+      }
+
+      try {
+        const calendarEntity = base44.entities.CalendarEvent;
+        if (calendarEntity?.filter) {
+          const result = await calendarEntity.filter({});
+          if (Array.isArray(result) && result.length) return result.map((item, i) => normalizeReminder(item, i, 'calendar'));
+        }
+      } catch (error) {
+        console.warn('Calendar event records unavailable; using local dashboard reminders.', error);
+      }
+
+      return [];
+    }, staleTime: 60000, retry: 1,
+  });
+
   const items = useMemo(() => {
-    if (mode === 'reminders') return fallbackReminders;
+    if (mode === 'reminders') return savedReminders.length ? savedReminders : fallbackReminders;
     const remoteItems = updates.map((u, i) => ({
       ...u, id: u.id || `update-${i}`,
       date: u.created_date ? new Date(u.created_date).toLocaleDateString() : (u.date || 'Recent'),
       detail: u.full_content || u.detail || u.description || u.release_notes || 'No additional details available.',
     }));
     return remoteItems.length ? remoteItems : fallbackUpdates;
-  }, [mode, updates]);
+  }, [mode, updates, savedReminders]);
 
-  useEffect(() => { setSelected(items[0] || null); setExpanded({}); }, [mode, items]);
+  const itemIds = useMemo(() => items.map(item => String(item.id)), [items]);
+  useEffect(() => {
+    setSelectedId(current => {
+      if (current && itemIds.includes(String(current))) return current;
+      return items[0]?.id ?? null;
+    });
+    setExpanded({});
+  }, [mode, itemIds.join('|')]);
+
+  const selected = useMemo(
+    () => items.find(item => String(item.id) === String(selectedId)) || null,
+    [items, selectedId]
+  );
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
     window.addEventListener('keydown', onKey);
@@ -94,7 +153,7 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClos
                   <span className="flex items-center gap-2 text-[9px] uppercase tracking-[.18em]"><CalendarDays className="w-3 h-3"/>{date}</span><ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}/>
                 </button>
                 <AnimatePresence initial={false}>{isExpanded && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-1 space-y-0.5 overflow-hidden">
-                  {group.map(item => <motion.button layout key={item.id} onClick={() => setSelected(item)} className={`w-full text-left py-3 px-1 flex gap-3 transition-colors ${selected?.id === item.id ? 'text-white bg-white/[0.035]' : 'text-white/50 hover:text-white/80 hover:bg-white/[0.018]'}`}>
+                  {group.map(item => <motion.button layout key={item.id} onClick={() => setSelectedId(item.id)} className={`w-full text-left py-3 px-1 flex gap-3 transition-colors ${String(selectedId) === String(item.id) ? 'text-white bg-white/[0.035]' : 'text-white/50 hover:text-white/80 hover:bg-white/[0.018]'}`}>
                     <span className="pt-0.5 text-cyan-300/60">{mode === 'reminders' ? <Bell className="w-3.5 h-3.5"/> : item.update_type === 'required' ? <AlertCircle className="w-3.5 h-3.5 text-red-300/70"/> : <Info className="w-3.5 h-3.5"/>}</span>
                     <span className="min-w-0 flex-1"><span className="block text-[11px] font-medium truncate">{item.title}</span><span className="block text-[9px] text-white/25 truncate mt-1">{item.description || item.detail}</span></span><ChevronRight className="w-3 h-3 mt-1 text-white/15"/>
                   </motion.button>)}
