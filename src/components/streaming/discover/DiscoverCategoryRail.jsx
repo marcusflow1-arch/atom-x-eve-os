@@ -1,44 +1,42 @@
-import React from 'react';
-import { Eye } from 'lucide-react';
-import { formatViewers } from '../aura/streamerMockData';
+import React, { useEffect, useRef } from 'react';
 
-/** Horizontal category (game) rail — the way people browse on Twitch. */
+/** PlayStation-style vertical crossbar: the active category stays centered. */
 export default function DiscoverCategoryRail({ categories = [], activeCategory, onSelect }) {
-  return (
-    <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-2">
-      <button
-        onClick={() => onSelect?.(null)}
-        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
-          !activeCategory
-            ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40'
-            : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
-        }`}
-      >
-        All Categories
-      </button>
+  const railRef = useRef(null);
+  const activeIndex = Math.max(0, categories.findIndex((c) => c.title === activeCategory));
 
-      {categories.map((c) => {
-        const active = activeCategory === c.title;
-        return (
-          <button
-            key={c.title}
-            onClick={() => onSelect?.(c.title)}
-            className={`group flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl border whitespace-nowrap transition-all ${
-              active
-                ? 'bg-cyan-500/20 border-cyan-400/40'
-                : 'bg-white/5 border-white/10 hover:bg-white/10'
-            }`}
-          >
-            <img src={c.image} alt={c.title} className="w-9 h-12 rounded-lg object-cover border border-white/10" />
-            <span className="text-left">
-              <span className={`block text-xs font-bold ${active ? 'text-cyan-200' : 'text-white'}`}>{c.title}</span>
-              <span className="block text-[10px] text-white/50 inline-flex items-center gap-1">
-                <Eye className="w-2.5 h-2.5" /> {formatViewers(c.viewers)}
-              </span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
+  useEffect(() => {
+    const node = railRef.current?.querySelector(`[data-index="${activeIndex}"]`);
+    node?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [activeIndex, categories.length]);
+
+  return (
+    <aside className="w-[250px] shrink-0 h-[calc(100vh-190px)] min-h-[520px] border-r border-white/15 relative overflow-hidden">
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-24 pointer-events-none border-y border-white/20 bg-white/[0.025]" />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-20 bg-cyan-300/80 shadow-[0_0_14px_rgba(34,211,238,.45)]" />
+      <div ref={railRef} className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide py-[calc(50vh-220px)]">
+        <button
+          data-index="-1"
+          onClick={() => onSelect?.(null)}
+          className={`w-full h-20 snap-center px-6 text-left uppercase tracking-widest text-xs font-bold transition-all ${!activeCategory ? 'text-cyan-200 scale-105' : 'text-white/35 hover:text-white/70'}`}
+        >
+          All Streams
+        </button>
+        {categories.map((category, index) => {
+          const active = activeCategory === category.title;
+          return (
+            <button
+              key={category.title}
+              data-index={index}
+              onClick={() => onSelect?.(category.title)}
+              className={`w-full h-20 snap-center px-6 text-left uppercase tracking-widest transition-all duration-200 ${active ? 'text-white scale-105' : 'text-white/30 hover:text-white/65'}`}
+            >
+              <span className="block text-sm font-black truncate">{category.title}</span>
+              <span className="block mt-1 text-[10px] tracking-normal text-white/30">{category.streamerCount} LIVE CREATORS</span>
+            </button>
+          );
+        })}
+      </div>
+    </aside>
   );
 }
