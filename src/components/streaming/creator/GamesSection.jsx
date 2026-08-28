@@ -106,6 +106,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
       role="dialog"
       aria-label="Games played"
     >
+      <style>{`body:has([data-games-overlay="true"]) > div.fixed.inset-0 > section { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`}</style>
       <div className={fullscreen ? 'h-full w-full flex flex-col p-6 md:p-10' : 'h-full w-full flex flex-col p-4 md:p-5'}>
         <div className="flex items-center justify-between gap-4 shrink-0 border-b border-white/10 pb-3">
           <div className="min-w-0">
