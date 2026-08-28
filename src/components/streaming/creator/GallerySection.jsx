@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Upload, Plus, Trash2 } from 'lucide-react';
+import { Upload, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
@@ -35,14 +35,11 @@ export default function GallerySection({ isEditMode, galleryImages = [], onUpdat
           Gallery
           {isEditMode && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
         </h3>
-        <div className="flex items-center gap-2">
-          {isEditMode && (
-            <Button size="sm" className="bg-white text-black hover:bg-slate-200" onClick={handleUpload}>
-              <Upload className="w-3 h-3 mr-2" /> Upload
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={onClose}><X className="w-4 h-4" /></Button>
-        </div>
+        {isEditMode && (
+          <Button size="sm" className="bg-white text-black hover:bg-slate-200" onClick={handleUpload}>
+            <Upload className="w-3 h-3 mr-2" /> Upload
+          </Button>
+        )}
       </div>
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
         {isEditMode && (
