@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, X, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,6 @@ export default function ScheduleSection({
           <Button onClick={() => setScheduleBaseDate(prev => subDays(prev, 14))} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-4 h-4" /></Button>
           <Button onClick={() => setScheduleBaseDate(new Date())} variant="outline" className="h-8 px-4 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 text-xs font-semibold">Today</Button>
           <Button onClick={() => setScheduleBaseDate(prev => addDays(prev, 14))} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronRight className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={onClose}><X className="w-4 h-4" /></Button>
         </div>
       </div>
 
@@ -116,7 +115,6 @@ export default function ScheduleSection({
 
       <p className="text-center text-white/30 text-xs mt-4">Double-click content to collapse • Timezone is localized</p>
 
-      {/* Schedule Edit Modal */}
       <Dialog open={!!editingDay} onOpenChange={(open) => !open && setEditingDay(null)}>
         <DialogContent className="bg-[#1a1f2e] border-white/10 text-white">
           <DialogHeader>
