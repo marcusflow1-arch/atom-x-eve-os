@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Plus, Trash2, Search, Gamepad2, Mic, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,10 +21,31 @@ const GAME_META = {
 const getMeta = (title) => GAME_META[title] || { genre: 'Game', image: '' };
 
 export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGames, onClose, fullscreen = false, onToggleFullscreen }) {
+  const panelRef = useRef(null);
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
   const [genre, setGenre] = useState('All');
   const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    const overlay = panel?.closest('[role="dialog"]');
+    if (!overlay) return undefined;
+
+    overlay.dataset.gamesOverlay = 'true';
+    const style = document.createElement('style');
+    style.dataset.gamesOverlayStyle = 'true';
+    style.textContent = `
+      section[data-games-overlay="true"] { transform: none !important; background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border: 0 !important; box-shadow: none !important; pointer-events: none !important; }
+      section[data-games-overlay="true"] > div { padding: 0 !important; }
+      section[data-games-overlay="true"] [data-games-panel="true"] { pointer-events: auto !important; }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      overlay.removeAttribute('data-games-overlay');
+      style.remove();
+    };
+  }, []);
 
   const { data: libraryGames = [] } = useQuery({
     queryKey: ['libraryGames'],
@@ -59,7 +81,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
   };
 
   return (
-    <div className={`${fullscreen ? 'absolute inset-0' : 'absolute inset-x-0 bottom-0 h-[40%] min-h-[220px]'} z-50 overflow-hidden select-none bg-slate-950/88 backdrop-blur-xl border-t border-white/15 shadow-[0_-24px_70px_rgba(0,0,0,.55)]`}>
+    <motion.div ref={panelRef} data-games-panel="true" initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className={`${fullscreen ? 'absolute inset-0' : 'absolute inset-x-0 bottom-0 h-[40%] min-h-[220px]'} z-50 overflow-hidden select-none bg-slate-950/88 backdrop-blur-xl border-t border-white/15 shadow-[0_-24px_70px_rgba(0,0,0,.55)]`}>
       <div className="h-full w-full flex flex-col px-5 py-4 md:px-7 md:py-5">
         <div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10">
           <div className="min-w-0">
@@ -95,6 +117,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
                   {isEditMode && pinnedGames.includes(game) && <button type="button" className="text-red-400 hover:text-red-300 p-2" onClick={() => handleRemoveGame(game)} aria-label={`Remove ${game}`}><Trash2 className="w-3.5 h-3.5" /></button>}
                 </div>;
               })}
+              {filteredGames.length === 0 && <div className="col-span-full text-center text-white/30 text-sm py-10">No games match your search.</div>}
             </div>
           ) : (
             <div className="h-full overflow-x-auto overflow-y-hidden scrollbar-hide flex items-center gap-4 pr-2">
@@ -122,5 +145,6 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
           </DialogContent>
         </Dialog>
       </div>
+    </motion.div>
   );
 }
