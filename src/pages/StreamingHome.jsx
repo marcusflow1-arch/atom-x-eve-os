@@ -65,7 +65,7 @@ export default function StreamingHome() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [cardTilt, setCardTilt] = useState({ x: 0, y: 0 });
 
-  const { saving, isEditMode, activeProfile, activeLayout, activeSponsors, enterEditMode, cancelEdit, saveEdit, updateEditProfile, updateEditLayout, addEditSponsor, removeEditSponsor, updateEditSp } = useCreatorEditMode();
+  const { saving, isEditMode, activeProfile, activeLayout, activeSponsors, enterEditMode, cancelEdit, saveEdit, updateEditProfile, updateEditLayout, addEditSponsor, removeEditSponsor, updateEditSponsors } = useCreatorEditMode();
   const scheduleData = activeLayout?.schedule_data || {};
   const galleryImages = activeLayout?.gallery_images || [];
   const pinnedGames = activeLayout?.pinned_games || [];
@@ -118,29 +118,29 @@ export default function StreamingHome() {
     <div className="h-full min-h-0 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-4 pb-3 shrink-0 border-b border-white/10">
         <div><div className="text-[9px] uppercase tracking-[0.3em] text-cyan-300/60">Collector Showcase</div><h3 className="text-lg md:text-xl font-bold text-white truncate">Achievement Cards</h3></div>
-        <button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="h-8 w-8 shrink-0 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors"><Maximize2 className="w-4 h-4" /></button>
+        <button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="h-8 w-8 shrink-0 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white">{overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
       </div>
       <div className="flex-1 min-h-0 flex overflow-hidden">
         <aside className="w-1/5 shrink-0 pr-4 md:pr-5 pt-4 flex flex-col min-h-0">
           <div className="text-[9px] uppercase tracking-[0.24em] text-white/35 mb-2">Filter Games</div>
-          <div className="relative"><select value={cardGenre} onChange={(event) => setCardGenre(event.target.value)} className="w-full h-9 appearance-none bg-white/[0.035] border border-white/10 rounded-lg px-3 text-sm text-white/90 focus:outline-none focus:border-cyan-300/50 cursor-pointer" /><Sparkles className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" /></div>
+          <div className="relative"><select value={cardGenre} onChange={(event) => setCardGenre(event.target.value)} className="w-full h-9 appearance-none bg-white/[0.035] border border-white/10 rounded text-white/80 text-sm cursor-pointer"><option value="All Genres">All Genres</option>{GENRES.filter((g) => g !== 'All Genres').map((genre) => <option key={genre} value={genre}>{genre}</option>)}</select><Sparkles className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-cyan-300/50" /></div>
           <div className="my-4 h-px w-full bg-gradient-to-r from-white/20 via-cyan-300/30 to-transparent" />
-          <div className="relative mb-3"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" /><input value={cardSearch} onChange={(event) => setCardSearch(event.target.value)} type="text" placeholder="Search..." className="w-full h-8 appearance-none bg-white/[0.035] border border-white/10 rounded-lg pl-7 pr-3 text-sm text-white/90 placeholder-white/30 focus:outline-none focus:border-cyan-300/50" /></div>
+          <div className="relative mb-3"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" /><input value={cardSearch} onChange={(event) => setCardSearch(event.target.value)} placeholder="Search games..." className="w-full pl-8 pr-2.5 h-9 bg-white/[0.035] border border-white/10 rounded text-white/70 placeholder-white/30 text-sm outline-none focus:border-cyan-300/40 focus:bg-white/[0.06]" /></div>
           <div className="text-[9px] uppercase tracking-[0.24em] text-white/30 mb-2">Games</div>
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-hide space-y-1">{filteredGames.map((game) => <button key={game.id} type="button" onClick={() => setSelectedCardGame(game.id)} className={`w-full h-8 flex items-center gap-2 px-2 rounded-lg text-sm transition-all duration-200 ${selectedCardGame === game.id ? 'bg-cyan-600/30 border border-cyan-300/60 text-cyan-100' : 'bg-white/[0.035] border border-white/10 text-white/60 hover:text-white/90'}`}><div className={`w-3 h-3 rounded-full shrink-0 ${game.color}`} /><span className="truncate">{game.name}</span></button>)}</div>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-hide space-y-1">{filteredGames.map((game) => <button key={game.id} type="button" onClick={() => setSelectedCardGame(game.id)} className={`w-full px-2.5 py-2 text-left text-sm rounded transition-all duration-200 ${selectedCardGame === game.id ? 'bg-gradient-to-r from-cyan-500/30 to-cyan-500/10 border border-cyan-300/50 text-white' : 'text-white/50 hover:text-white/70 hover:bg-white/5'}`}>{game.name}</button>)}</div>
         </aside>
         <div className="relative w-px self-center h-[62%] shrink-0 bg-gradient-to-b from-transparent via-cyan-200/50 to-transparent shadow-[0_0_18px_rgba(103,232,249,.18)]" />
         <section className="w-4/5 min-w-0 pl-5 md:pl-7 pt-4 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex items-center justify-between gap-4 shrink-0 mb-3"><div className="min-w-0"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-cyan-300/80" /><span className="text-[9px] uppercase tracking-[0.24em] text-white/35">{CARD_LIBRARY[selectedCardGame]?.length || 0} Cards</span></div><h4 className="text-sm font-semibold text-white/80 truncate">{CARD_GAMES.find((g) => g.id === selectedCardGame)?.name}</h4></div><div className="flex items-center gap-2 shrink-0"><select value={cardFilter} onChange={(event) => setCardFilter(event.target.value)} className="h-7 appearance-none bg-white/[0.035] border border-white/10 rounded px-2 text-xs text-white/80 focus:outline-none focus:border-cyan-300/50 cursor-pointer"><option value="All">All Rarities</option>{RARITIES.filter((r) => r !== 'All').map((r) => <option key={r} value={r}>{r}</option>)}</select></div></div>
-          <div className="flex-1 min-h-0 overflow-y-auto pr-2 scrollbar-hide"><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-4">{cardItems.map((name, index) => { const rarity = index % 5 === 0 ? 'Legendary' : index % 3 === 0 ? 'Epic' : index % 2 === 0 ? 'Rare' : 'Common'; const rarityStyle = RARITY_STYLES[rarity]; return (<motion.div key={`${selectedCardGame}-${index}`} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.02 }} onPointerMove={(e) => handleCardPointerMove(e, `${selectedCardGame}-${index}`)} onPointerLeave={handleCardPointerLeave} className="relative group cursor-pointer h-64 perspective" style={{ perspective: '1000px' }}><motion.div initial={{ rotateX: 0, rotateY: 0 }} animate={{ rotateX: hoveredCard === `${selectedCardGame}-${index}` ? cardTilt.x : 0, rotateY: hoveredCard === `${selectedCardGame}-${index}` ? cardTilt.y : 0 }} transition={{ type: 'spring', stiffness: 400, damping: 40 }} className="w-full h-full" style={{ transformStyle: 'preserve-3d' }} onClick={() => setSelectedCard(`${selectedCardGame}-${index}`)}><div className="relative w-full h-full rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl" style={{ boxShadow: `0 0 30px ${rarityStyle.glow}, inset 0 1px 0 ${rarityStyle.edge}` }}><div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" /><div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center"><div className="mb-2"><Badge className="text-xs font-bold" style={{ backgroundColor: rarityStyle.accent, color: '#000' }}>{rarity}</Badge></div><h5 className="text-sm font-bold text-white mb-1">{name}</h5><p className="text-[9px] text-white/40">{selectedCardGame.replace('-', ' ').toUpperCase()}</p></div></div></motion.div></motion.div>); })}</div></div>
+          <div className="flex items-center justify-between gap-4 shrink-0 mb-3"><div className="min-w-0"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-cyan-300/80" /><span className="text-[10px] uppercase tracking-[0.24em] text-cyan-300/60">Collection</span></div><h3 className="text-lg font-semibold text-white truncate">{streamingGame.name}</h3></div><div className="flex items-center gap-2 shrink-0"><select value={cardFilter} onChange={(event) => setCardFilter(event.target.value)} className="h-8 px-2 appearance-none bg-white/[0.035] border border-white/10 rounded text-white/60 text-xs outline-none hover:bg-white/[0.055]"><option>All</option>{RARITIES.filter((r) => r !== 'All').map((rarity) => <option key={rarity} value={rarity}>{rarity}</option>)}</select></div></div>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-2 scrollbar-hide"><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-4">{cardItems.map((name, index) => { const rarity = index % 5 === 0 ? 'Legendary' : index % 3 === 0 ? 'Epic' : index % 2 === 0 ? 'Rare' : 'Common'; const rarityStyle = RARITY_STYLES[rarity]; return <motion.div key={`${name}-${index}`} layoutId={`card-${selectedCardGame}-${name}`} onClick={() => setSelectedCard({ game: selectedCardGame, name, rarity })} onPointerMove={(event) => handleCardPointerMove(event, `${selectedCardGame}-${name}`)} onPointerLeave={handleCardPointerLeave} whileHover={{ scale: 1.02 }} className="group relative h-64 md:h-72 cursor-pointer rounded-lg overflow-hidden" style={{ perspective: '1000px' }}><motion.div style={{ rotateX: cardTilt.x, rotateY: cardTilt.y, transformStyle: 'preserve-3d' }} transition={{ type: 'spring', stiffness: 400, damping: 60 }} className="w-full h-full"><div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityStyle.glow}, transparent 70%)` }} /><div className="absolute inset-0 border border-transparent rounded-lg group-hover:border-opacity-100 transition-all duration-300" style={{ borderColor: rarityStyle.edge, boxShadow: `0 0 20px ${rarityStyle.glow}, inset 0 0 20px ${rarityStyle.glow}33` }} /><div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center p-3 relative"><div className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity" style={{ backgroundImage: `linear-gradient(45deg, ${rarityStyle.accent}15 1px, transparent 1px)`, backgroundSize: '20px 20px' }} /><Badge className="mb-2 text-xs" variant="outline">{rarity}</Badge><p className="text-center font-semibold text-white text-sm">{name}</p></div></div></motion.div></motion.div>; })}</div></div>
         </section>
       </div>
     </div>
   );
 
   const renderGameAchievementOverlay = () => (
-    <motion.div initial={{ y: '-100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className="absolute top-0 left-0 right-0 h-full w-full rounded-2xl overflow-hidden bg-gradient-to-br from-amber-600/20 via-orange-600/10 to-red-600/5 backdrop-blur-xl border border-white/10">
-      <div className="h-full w-full p-4 md:p-5 flex flex-col overflow-hidden"><div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10"><div className="min-w-0"><h3 className="text-lg md:text-xl font-bold text-white truncate">Game Achievements</h3></div><button type="button" onClick={() => setShowGameAchievements(false)} className="h-8 w-8 shrink-0 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors"><Minimize2 className="w-4 h-4" /></button></div><div className="flex-1 min-h-0 overflow-y-auto pr-2 scrollbar-hide mt-3"><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{gameAchievementItems.map((name, index) => { const rarity = index % 5 === 0 ? 'Legendary' : index % 3 === 0 ? 'Epic' : index % 2 === 0 ? 'Rare' : 'Common'; const rarityStyle = RARITY_STYLES[rarity]; return (<div key={`achievement-${index}`} className="relative group h-48 rounded-lg overflow-hidden border border-white/10 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl flex flex-col items-center justify-center p-3 text-center transition-all duration-300 hover:border-white/30" style={{ boxShadow: `0 0 20px ${rarityStyle.glow}` }}><Badge className="mb-2 text-xs font-bold" style={{ backgroundColor: rarityStyle.accent, color: '#000' }}>{rarity}</Badge><h5 className="text-xs font-bold text-white">{name}</h5></div>); })}</div></div></div>
+    <motion.div initial={{ y: '-100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl rounded-lg overflow-hidden">
+      <div className="h-full w-full p-4 md:p-5 flex flex-col overflow-hidden"><div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10"><div className="min-w-0"><div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Achievements</div><h2 className="text-xl md:text-2xl font-bold text-white">{streamingGame.name}</h2></div><button type="button" onClick={() => setShowGameAchievements(false)} className="w-8 h-8 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white"><Minimize2 className="w-4 h-4" /></button></div><div className="flex-1 min-h-0 overflow-y-auto pr-2 scrollbar-hide"><div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">{gameAchievementItems.map((name, index) => <motion.div key={`achievement-${index}`} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.05 }} onClick={() => { setShowGameAchievements(false); setSelectedCard({ game: streamingGame.id, name, rarity: 'Legendary' }); }} className="relative group cursor-pointer rounded-lg overflow-hidden aspect-square"><div className="absolute inset-0 bg-gradient-to-br from-amber-600/40 to-orange-900/60 rounded-lg" /><div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(245,158,11,.4), transparent 70%)' }} /><div className="absolute inset-0 flex items-center justify-center p-2"><p className="text-[9px] font-bold text-center text-white group-hover:scale-105 transition-transform">{name}</p></div></motion.div>)}</div></div></div>
     </motion.div>
   );
 
@@ -157,7 +157,39 @@ export default function StreamingHome() {
       <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]">
         <div className="flex-1 relative h-full overflow-y-auto pl-6">
           <div className="w-full min-h-full pt-20 pb-24 px-4 md:px-8 relative">
-            {/* Main content */}
+            <div className="mx-auto max-w-none w-full flex flex-col gap-8">
+              <ProfileInfoBar activeProfile={activeProfile} isEditMode={isEditMode} onEdit={enterEditMode} />
+              {isEditMode && <EditModeToolbar onSave={saveEdit} onCancel={cancelEdit} saving={saving} />}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <StreamPlayerBox isLive={isLive} isPlaying={isPlaying} onPlayToggle={setIsPlaying} volume={volume} onVolumeChange={setVolume} />
+                  <StreamChatBox />
+                </div>
+                <aside className="space-y-6">
+                  <SponsorsSection sponsors={activeSponsors} isEditMode={isEditMode} onEdit={enterEditMode} />
+                  <ProductsGrid />
+                  <ViewerSeasonalPass />
+                </aside>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onClick={() => openTab('schedule')} className="p-4 bg-white/5 border border-white/10 hover:border-cyan-300/50 rounded-lg text-white hover:bg-white/10 transition-all">
+                  <div className="text-xs uppercase tracking-[0.2em] text-cyan-300/60">Manage</div>
+                  <div className="text-sm font-semibold">Schedule</div>
+                </button>
+                <button onClick={() => openTab('gallery')} className="p-4 bg-white/5 border border-white/10 hover:border-cyan-300/50 rounded-lg text-white hover:bg-white/10 transition-all">
+                  <div className="text-xs uppercase tracking-[0.2em] text-cyan-300/60">View</div>
+                  <div className="text-sm font-semibold">Gallery</div>
+                </button>
+                <button onClick={() => openTab('games')} className="p-4 bg-white/5 border border-white/10 hover:border-cyan-300/50 rounded-lg text-white hover:bg-white/10 transition-all">
+                  <div className="text-xs uppercase tracking-[0.2em] text-cyan-300/60">Pin</div>
+                  <div className="text-sm font-semibold">Games</div>
+                </button>
+                <button onClick={() => openTab('cards')} className="p-4 bg-white/5 border border-white/10 hover:border-cyan-300/50 rounded-lg text-white hover:bg-white/10 transition-all">
+                  <div className="text-xs uppercase tracking-[0.2em] text-cyan-300/60">Collect</div>
+                  <div className="text-sm font-semibold">Cards</div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -165,28 +197,38 @@ export default function StreamingHome() {
         <AnimatePresence>
           <motion.div
             key="streaming-home-overlay"
-            className="fixed inset-0 z-[99999] pointer-events-none"
+            className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm pointer-events-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            onClick={closeOverlay}
           >
             <motion.section
               role="dialog"
               aria-modal="true"
               aria-label={`${activeTabLabel} overlay`}
-              className="absolute inset-0 pointer-events-auto flex items-center justify-center p-4"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={closeOverlay}
+              initial={activeTab === 'games' || activeTab === 'cards' ? { x: '-100%' } : { y: '100%' }}
+              animate={{ x: 0, y: 0 }}
+              exit={activeTab === 'games' || activeTab === 'cards' ? { x: '-100%' } : { y: '100%' }}
+              transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+              className={activeTab === 'games' || activeTab === 'cards' ? `absolute left-0 top-0 bottom-0 ${overlayFullscreen ? 'right-0' : 'w-[80vw]'} overflow-hidden border-r border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[24px_0_80px_rgba(0,0,0,0.55)] pointer-events-auto` : activeTab === 'gallery' ? `absolute left-0 bottom-0 ${overlayFullscreen ? 'right-0 h-screen' : 'right-0 h-[40vh] min-h-[300px] max-h-[560px]'} overflow-hidden border-t border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[0_-24px_80px_rgba(0,0,0,0.55)] pointer-events-auto` : `absolute left-0 bottom-0 ${overlayFullscreen ? 'right-0 h-screen' : 'w-[75vw] h-[40vh] min-h-[300px] max-h-[560px]'} overflow-hidden border-t border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[0_-24px_80px_rgba(0,0,0,0.55)] pointer-events-auto`}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="w-full h-full max-w-4xl max-h-[90vh] rounded-2xl bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-white/[0.02] backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {renderOverlayContent()}
+              <div className="h-full w-full p-5 md:p-7 flex flex-col overflow-hidden">
+                {activeTab !== 'cards' && (
+                  <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Streamer Profile</div>
+                      <h2 className="text-2xl font-bold text-white">{activeTabLabel}</h2>
+                    </div>
+                    <button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white">
+                      {overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {renderOverlayContent()}
+                </div>
               </div>
             </motion.section>
           </motion.div>
