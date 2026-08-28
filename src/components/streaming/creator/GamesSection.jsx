@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Plus, Trash2, Search, Gamepad2 } from 'lucide-react';
+import { Plus, Trash2, Search, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -32,10 +32,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
     <div className="w-full h-full min-h-0 flex flex-col select-none bg-transparent">
       <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10 shrink-0">
         <div><div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Library History</div><h3 className="text-white font-bold text-lg flex items-center gap-2"><Gamepad2 className="w-4 h-4 text-cyan-300" />Games Played {isEditMode && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}</h3></div>
-        <div className="flex items-center gap-2">
-          {isEditMode && <Button size="sm" className="bg-white text-black hover:bg-slate-200" onClick={() => setShowPicker(true)}><Plus className="w-3 h-3 mr-2" /> Add Game</Button>}
-          <button type="button" onClick={onClose} className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white" aria-label="Close games overlay"><X className="w-4 h-4" /></button>
-        </div>
+        {isEditMode && <Button size="sm" className="bg-white text-black hover:bg-slate-200" onClick={() => setShowPicker(true)}><Plus className="w-3 h-3 mr-2" /> Add Game</Button>}
       </div>
 
       <div className="relative py-4 shrink-0">
