@@ -4,8 +4,6 @@ import { Plus, Trash2, Search, Gamepad2, Mic, Maximize2, Minimize2 } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 
 const FALLBACK_GAMES = ['The Elder Scrolls', 'SMITE 2', 'Fallout', 'Cyberpunk 2077', 'Destiny 2', 'Call of Duty', 'Fortnite', 'Rocket League'];
 const GENRES = ['All', 'MMORPG', 'RPG', 'Action RPG', 'MOBA', 'Shooter', 'Fantasy', 'Sci-Fi'];
@@ -49,11 +47,6 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
       style.remove();
     };
   }, []);
-
-  const { data: libraryGames = [] } = useQuery({
-    queryKey: ['libraryGames'],
-    queryFn: () => base44.entities.Game.list(),
-  });
 
   const visibleGames = pinnedGames.length ? pinnedGames : FALLBACK_GAMES;
   const filteredGames = useMemo(() => visibleGames.filter((game) => {
@@ -140,10 +133,9 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
 
         <Dialog open={showPicker} onOpenChange={setShowPicker}>
           <DialogContent className="bg-[#1a1f2e] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-            <DialogHeader><DialogTitle>Add Game from Library</DialogTitle></DialogHeader>
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-4">
-              {libraryGames.map((game) => <div key={game.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/10 cursor-pointer border border-transparent hover:border-white/20 transition-all" onClick={() => handleAddGame(game.title)}><div className="w-full aspect-[3/4] rounded-md overflow-hidden bg-black/20">{game.cover_image ? <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/20">No Image</div>}</div><span className="text-xs text-center font-medium text-white/80 line-clamp-2">{game.title}</span></div>)}
-              {libraryGames.length === 0 && FALLBACK_GAMES.slice(0, 4).map((g) => <div key={g} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/10 cursor-pointer border border-transparent hover:border-white/20 transition-all" onClick={() => handleAddGame(g)}><div className="w-full aspect-[3/4] bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white/30 font-bold">{g.charAt(0)}</div><span className="text-xs text-center font-medium text-white/80 line-clamp-2">{g}</span></div>)}
+            <DialogHeader><DialogTitle>Add Game</DialogTitle></DialogHeader>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {FALLBACK_GAMES.map((game) => <div key={game} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/10 cursor-pointer border border-transparent hover:border-white/20 transition-all" onClick={() => handleAddGame(game)}><div className="w-full aspect-[16/9] overflow-hidden bg-black/20">{getMeta(game).image ? <img src={getMeta(game).image} alt={game} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/20">No Image</div>}</div><span className="text-xs text-center font-medium text-white/80 line-clamp-2">{game}</span></div>)}
             </div>
           </DialogContent>
         </Dialog>
