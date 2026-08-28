@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { X, Maximize2, Minimize2, Search, Layers, Sparkles } from 'lucide-react';
+import { Maximize2, Minimize2, Search, Layers, Sparkles } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/AuthContext';
 import useCreatorEditMode from '@/components/streaming/hooks/useCreatorEditMode';
@@ -94,7 +94,6 @@ export default function StreamingHome() {
         <div><div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Collectibles</div><h3 className="text-lg md:text-xl font-bold text-white">Achievement Cards</h3></div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="h-8 w-8 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white" aria-label={overlayFullscreen ? 'Exit full screen' : 'Full screen'}>{overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
-          <button type="button" onClick={closeOverlay} className="h-8 w-8 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white" aria-label="Close cards overlay"><X className="w-4 h-4" /></button>
         </div>
       </div>
       <div className="flex items-center gap-2 py-3 shrink-0 overflow-x-auto scrollbar-hide">
@@ -145,11 +144,44 @@ export default function StreamingHome() {
 
       {activeTab && typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
-          <motion.div key="streaming-home-overlay" className="fixed inset-0 z-[99999]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <button type="button" aria-label="Close overlay" onClick={closeOverlay} className="absolute inset-0 w-full h-full bg-black/45 backdrop-blur-md" />
-            <motion.section role="dialog" aria-modal="true" aria-label={`${activeTabLabel} overlay`} initial={activeTab === 'games' ? { x: '-100%' } : { y: '100%' }} animate={{ x: 0, y: 0 }} exit={activeTab === 'games' ? { x: '-100%' } : { y: '100%' }} transition={{ type: 'spring', stiffness: 260, damping: 30 }} className={activeTab === 'games' ? `absolute left-0 top-0 bottom-0 ${overlayFullscreen ? 'right-0' : 'w-[min(520px,88vw)]'} overflow-hidden border-r border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[24px_0_80px_rgba(0,0,0,0.55)]` : `absolute left-0 right-0 bottom-0 ${overlayFullscreen ? 'h-screen' : 'h-[40vh] min-h-[300px] max-h-[560px]'} overflow-hidden border-t border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[0_-24px_80px_rgba(0,0,0,0.55)]`}>
+          <motion.div
+            key="streaming-home-overlay"
+            className="fixed inset-0 z-[99999] pointer-events-none"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 1 }}
+          >
+            <motion.section
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${activeTabLabel} overlay`}
+              initial={activeTab === 'games' ? { x: '-100%' } : { y: '100%' }}
+              animate={{ x: 0, y: 0 }}
+              exit={activeTab === 'games' ? { x: '-100%' } : { y: '100%' }}
+              transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+              className={
+                activeTab === 'games'
+                  ? `absolute left-0 top-0 bottom-0 ${overlayFullscreen ? 'right-0' : 'w-[75vw]'} overflow-hidden border-r border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[24px_0_80px_rgba(0,0,0,0.55)] pointer-events-auto`
+                  : `absolute left-0 bottom-0 ${overlayFullscreen ? 'right-0 h-screen' : 'w-[75vw] h-[40vh] min-h-[300px] max-h-[560px]'} overflow-hidden border-t border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[0_-24px_80px_rgba(0,0,0,0.55)] pointer-events-auto`
+              }
+            >
               <div className="h-full w-full p-5 md:p-7 flex flex-col overflow-hidden">
-                {activeTab !== 'cards' && <div className="flex items-center justify-between gap-4 mb-4 shrink-0"><div><div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Streamer Profile</div><h2 className="text-2xl font-bold text-white">{activeTabLabel}</h2></div><div className="flex items-center gap-2"><button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white" aria-label={overlayFullscreen ? 'Exit full screen' : 'Full screen'}>{overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button><button type="button" onClick={closeOverlay} className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white" aria-label="Close"><X className="w-4 h-4" /></button></div></div>}
+                {activeTab !== 'cards' && (
+                  <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Streamer Profile</div>
+                      <h2 className="text-2xl font-bold text-white">{activeTabLabel}</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOverlayFullscreen((value) => !value)}
+                      className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white"
+                      aria-label={overlayFullscreen ? 'Exit full screen' : 'Full screen'}
+                    >
+                      {overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
                 <div className="flex-1 min-h-0 overflow-hidden">{renderOverlayContent()}</div>
               </div>
             </motion.section>
