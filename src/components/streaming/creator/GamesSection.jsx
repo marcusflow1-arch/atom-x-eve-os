@@ -20,12 +20,15 @@ const GAME_META = {
 
 const getMeta = (title) => GAME_META[title] || { genre: 'Game', image: '' };
 
-export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGames, onClose, fullscreen = false, onToggleFullscreen }) {
+export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGames, onClose, fullscreen, onToggleFullscreen }) {
   const panelRef = useRef(null);
+  const [localFullscreen, setLocalFullscreen] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
   const [genre, setGenre] = useState('All');
   const [isListening, setIsListening] = useState(false);
+  const isFullscreen = typeof fullscreen === 'boolean' ? fullscreen : localFullscreen;
+  const toggleFullscreen = onToggleFullscreen || (() => setLocalFullscreen((value) => !value));
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -81,20 +84,20 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
   };
 
   return (
-    <motion.div ref={panelRef} data-games-panel="true" initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className={`${fullscreen ? 'absolute inset-0' : 'absolute inset-x-0 bottom-0 h-[40%] min-h-[220px]'} z-50 overflow-hidden select-none bg-slate-950/88 backdrop-blur-xl border-t border-white/15 shadow-[0_-24px_70px_rgba(0,0,0,.55)]`}>
+    <motion.div ref={panelRef} data-games-panel="true" initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className={`${isFullscreen ? 'absolute inset-0' : 'absolute inset-x-0 bottom-0 h-[40%] min-h-[220px]'} z-50 overflow-hidden select-none bg-slate-950/88 backdrop-blur-xl border-t border-white/15 shadow-[0_-24px_70px_rgba(0,0,0,.55)]`}>
       <div className="h-full w-full flex flex-col px-5 py-4 md:px-7 md:py-5">
         <div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10">
           <div className="min-w-0">
-            <div className="text-[9px] uppercase tracking-[0.28em] text-cyan-300/60">{fullscreen ? 'Games Directory' : 'Games Played'}</div>
+            <div className="text-[9px] uppercase tracking-[0.28em] text-cyan-300/60">{isFullscreen ? 'Games Directory' : 'Games Played'}</div>
             <h3 className="text-white font-bold text-lg md:text-xl flex items-center gap-2 truncate"><Gamepad2 className="w-4 h-4 text-cyan-300 shrink-0" />Games Played {isEditMode && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}</h3>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {isEditMode && <Button size="sm" className="bg-white text-black hover:bg-slate-200" onClick={() => setShowPicker(true)}><Plus className="w-3 h-3 mr-2" /> Add Game</Button>}
-            {onToggleFullscreen && <button type="button" onClick={onToggleFullscreen} className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white border border-white/10 bg-white/5 hover:bg-white/10" aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}>{fullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>}
+            <button type="button" onClick={toggleFullscreen} className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white border border-white/10 bg-white/5 hover:bg-white/10" aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'}>{isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
           </div>
         </div>
 
-        <div className={`${fullscreen ? 'flex-1 min-h-0 flex flex-col' : 'shrink-0'}`}>
+        <div className={`${isFullscreen ? 'flex-1 min-h-0 flex flex-col' : 'shrink-0'}`}>
           <div className="flex items-center gap-5 overflow-x-auto scrollbar-hide py-3 border-b border-white/10">
             {GENRES.map((item) => <button key={item} type="button" onClick={() => setGenre(item)} className={`relative shrink-0 pb-1 text-[10px] uppercase tracking-[0.16em] font-semibold transition-colors ${genre === item ? 'text-cyan-200' : 'text-white/35 hover:text-white/70'}`}>{item}{genre === item && <span className="absolute left-0 right-0 -bottom-[1px] h-px bg-cyan-300" />}</button>)}
           </div>
@@ -107,7 +110,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
         </div>
 
         <div className="flex-1 min-h-0 overflow-hidden pt-3">
-          {fullscreen ? (
+          {isFullscreen ? (
             <div className="h-full overflow-y-auto pr-1 scrollbar-hide grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredGames.map((game, i) => {
                 const meta = getMeta(game);
