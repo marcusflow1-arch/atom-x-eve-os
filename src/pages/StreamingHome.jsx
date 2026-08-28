@@ -24,11 +24,11 @@ import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 
 const CARD_GAMES = [
-  { id: 'elder-scrolls', name: 'The Elder Scrolls', genre: 'Fantasy', color: 'from-indigo-700/70 to-cyan-700/50' },
-  { id: 'smite-2', name: 'SMITE 2', genre: 'MOBA', color: 'from-cyan-700/70 to-blue-900/60' },
-  { id: 'fallout', name: 'Fallout', genre: 'RPG', color: 'from-emerald-700/70 to-slate-900/70' },
-  { id: 'cyberpunk', name: 'Cyberpunk 2077', genre: 'Action RPG', color: 'from-fuchsia-700/60 to-purple-900/70' },
-  { id: 'destiny', name: 'Destiny 2', genre: 'Shooter', color: 'from-sky-700/70 to-slate-900/70' },
+  { id: 'elder-scrolls', name: 'The Elder Scrolls', genre: 'Fantasy', color: 'from-indigo-700/70 to-cyan-700/50', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/306130/header.jpg' },
+  { id: 'smite-2', name: 'SMITE 2', genre: 'MOBA', color: 'from-cyan-700/70 to-blue-900/60', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2687550/header.jpg' },
+  { id: 'fallout', name: 'Fallout', genre: 'RPG', color: 'from-emerald-700/70 to-slate-900/70', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/377160/header.jpg' },
+  { id: 'cyberpunk', name: 'Cyberpunk 2077', genre: 'Action RPG', color: 'from-fuchsia-700/60 to-purple-900/70', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg' },
+  { id: 'destiny', name: 'Destiny 2', genre: 'Shooter', color: 'from-sky-700/70 to-slate-900/70', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1085660/header.jpg' },
 ];
 
 const CARD_LIBRARY = {
@@ -50,23 +50,26 @@ export default function StreamingHome() {
   const [overlayFullscreen, setOverlayFullscreen] = useState(false);
   const [selectedCardGame, setSelectedCardGame] = useState(CARD_GAMES[0].id);
   const [cardFilter, setCardFilter] = useState('All');
+  const [showGameAchievements, setShowGameAchievements] = useState(false);
 
   const { saving, isEditMode, activeProfile, activeLayout, activeSponsors, enterEditMode, cancelEdit, saveEdit, updateEditProfile, updateEditLayout, addEditSponsor, removeEditSponsor, updateEditSponsor } = useCreatorEditMode(user?.id);
   const scheduleData = activeLayout?.schedule_data || {};
   const galleryImages = activeLayout?.gallery_images || [];
   const pinnedGames = activeLayout?.pinned_games || [];
+  const streamingGame = CARD_GAMES.find((game) => game.id === (activeLayout?.current_game_id || activeProfile?.current_game_id)) || CARD_GAMES[0];
 
   useEffect(() => {
-    if (!activeTab) return;
+    if (!activeTab && !showGameAchievements) return;
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
         setActiveTab(null);
         setOverlayFullscreen(false);
+        setShowGameAchievements(false);
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [activeTab]);
+  }, [activeTab, showGameAchievements]);
 
   useEffect(() => setOverlayFullscreen(false), [activeTab]);
 
@@ -77,6 +80,8 @@ export default function StreamingHome() {
     if (cardFilter === 'Rare') return names.filter((name) => name.length % 2 === 0);
     return names.filter((name) => name.length % 2 === 1);
   }, [selectedCardGame, cardFilter]);
+
+  const gameAchievementItems = CARD_LIBRARY[streamingGame.id] || [];
 
   const closeOverlay = () => {
     setActiveTab(null);
@@ -108,6 +113,48 @@ export default function StreamingHome() {
     </div>
   );
 
+  const renderGameAchievementOverlay = () => (
+    <motion.div
+      initial={{ y: '-100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: '-100%', opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+      className="absolute left-0 right-0 top-0 z-50 h-[62%] min-h-[260px] overflow-hidden border-b border-cyan-300/20 bg-slate-950/88 backdrop-blur-xl shadow-[0_20px_70px_rgba(0,0,0,0.6)]"
+      role="dialog"
+      aria-label={`${streamingGame.name} game achievements and cards`}
+    >
+      <div className="h-full w-full p-4 md:p-5 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10">
+          <div className="min-w-0">
+            <div className="text-[9px] uppercase tracking-[0.28em] text-cyan-300/60">Game Achievements</div>
+            <h3 className="text-lg md:text-xl font-bold text-white truncate">{streamingGame.name} — Cards</h3>
+          </div>
+          <button type="button" onClick={() => setShowGameAchievements(false)} className="text-[11px] font-semibold text-white/50 hover:text-cyan-200 underline underline-offset-4 whitespace-nowrap">Close Achievements</button>
+        </div>
+        <div className="flex items-center gap-3 py-3 shrink-0 overflow-x-auto scrollbar-hide">
+          {gameAchievementItems.map((name, index) => (
+            <button key={name} type="button" onClick={() => setSelectedCard({ name, id: `${streamingGame.id}-achievement-${index}` })} className="relative w-32 md:w-40 h-20 shrink-0 overflow-hidden border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950/70 hover:border-cyan-300/60 hover:-translate-y-0.5 transition-all text-left">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_25%,rgba(103,232,249,0.2),transparent_35%),linear-gradient(145deg,transparent,rgba(124,58,237,0.18))]" />
+              <div className="absolute top-2 left-2"><Badge className="bg-black/40 border-white/10 text-[8px] h-4 px-1">{index % 4 === 0 ? 'Rare' : 'Common'}</Badge></div>
+              <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/95 to-transparent"><div className="text-[10px] font-bold text-white leading-tight">{name}</div><div className="text-[8px] uppercase tracking-wider text-cyan-200/50 mt-1">Collectible</div></div>
+            </button>
+          ))}
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {gameAchievementItems.map((name, index) => (
+              <button key={`${name}-detail`} type="button" onClick={() => setSelectedCard({ name, id: `${streamingGame.id}-detail-${index}` })} className="group relative aspect-[3/4] overflow-hidden border border-white/10 bg-white/[0.03] hover:border-cyan-300/50 transition-all text-left">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/70 via-slate-900 to-purple-950/70" />
+                <Sparkles className="absolute top-3 right-3 w-4 h-4 text-cyan-300/70" />
+                <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/95 to-transparent"><div className="text-xs font-bold text-white">{name}</div><div className="text-[8px] uppercase tracking-wider text-white/40 mt-1">Game Achievement</div></div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
   const renderOverlayContent = () => {
     if (activeTab === 'schedule') return <ScheduleSection isEditMode={isEditMode} scheduleData={scheduleData} onUpdateSchedule={(data) => updateEditLayout('schedule_data', data)} onClose={closeOverlay} />;
     if (activeTab === 'gallery') return <GallerySection isEditMode={isEditMode} galleryImages={galleryImages} onUpdateImages={(imgs) => updateEditLayout('gallery_images', imgs)} onClose={closeOverlay} />;
@@ -125,7 +172,24 @@ export default function StreamingHome() {
             <AnimatePresence>{isEditMode && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 pointer-events-none z-10" style={{ backgroundImage: 'linear-gradient(rgba(34,211,238,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />}</AnimatePresence>
             <div className="mx-auto max-w-none w-full flex flex-col gap-8 relative z-20">
               <div className="grid grid-cols-12 gap-4 h-[420px] md:h-[480px] lg:h-[520px]">
-                <div className="col-span-12 lg:col-span-9 xl:col-span-10"><div className={`h-full transition-all ${isEditMode ? 'ring-1 ring-cyan-500/20 rounded-xl' : ''}`}><StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={isPlaying} onTogglePlay={() => setIsPlaying(!isPlaying)} volume={volume} onVolumeChange={setVolume} /></div></div>
+                <div className="col-span-12 lg:col-span-9 xl:col-span-10 flex flex-col min-h-0">
+                  <div className="h-14 shrink-0 flex items-center gap-3 px-1 md:px-2">
+                    <div className="w-12 h-12 shrink-0 overflow-hidden border border-white/15 bg-slate-900/70 shadow-lg">
+                      <img src={streamingGame.image} alt={`${streamingGame.name} game`} className="w-full h-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                    </div>
+                    <div className="min-w-0 flex items-center gap-4">
+                      <div className="min-w-0">
+                        <div className="text-[9px] uppercase tracking-[0.25em] text-white/35">Now Streaming</div>
+                        <div className="text-base md:text-lg font-bold text-white truncate">{streamingGame.name}</div>
+                      </div>
+                      <button type="button" onClick={() => setShowGameAchievements((value) => !value)} aria-expanded={showGameAchievements} className={`text-sm md:text-base font-semibold underline underline-offset-4 decoration-cyan-300/60 transition-colors whitespace-nowrap ${showGameAchievements ? 'text-cyan-200' : 'text-white hover:text-cyan-200'}`}>Game Achievements, Cards</button>
+                    </div>
+                  </div>
+                  <div className={`relative flex-1 min-h-0 transition-all ${isEditMode ? 'ring-1 ring-cyan-500/20 rounded-xl' : ''}`}>
+                    <StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={isPlaying} onTogglePlay={() => setIsPlaying(!isPlaying)} volume={volume} onVolumeChange={setVolume} />
+                    <AnimatePresence>{showGameAchievements && renderGameAchievementOverlay()}</AnimatePresence>
+                  </div>
+                </div>
                 <div className={`col-span-12 lg:col-span-3 xl:col-span-2 order-first lg:order-none h-full transition-all ${isEditMode ? 'ring-1 ring-cyan-500/20 rounded-xl' : ''}`}><StreamChatBox isLive={isLive} /></div>
               </div>
               <div className="flex flex-col">
