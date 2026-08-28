@@ -4,8 +4,8 @@ import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import AuraStreamBrowserOverlay from '@/components/streaming/AuraStreamBrowserOverlay.jsx';
-import StreamingGamesLive from '@/components/streaming/StreamingGamesLive';
 import GameStreamerHub from '@/components/streaming/aura/GameStreamerHub';
+import AuraLandingHub from '@/components/streaming/aura/AuraLandingHub';
 
 const GAME_SELECTED_EVENT = 'atomxe:aura-game-selected';
 
@@ -21,8 +21,6 @@ export default function Aura() {
     return () => window.removeEventListener(GAME_SELECTED_EVENT, onGameSelected);
   }, []);
 
-  const clearSelectedGame = () => setSelectedGame(null);
-
   return (
     <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
       <SideAccessMenu />
@@ -30,12 +28,9 @@ export default function Aura() {
         <div className="flex-1 relative h-full overflow-y-auto pl-6">
           <div className="pt-20 pb-28 min-h-screen">
             {selectedGame ? (
-              <GameStreamerHub
-                game={selectedGame}
-                onClose={clearSelectedGame}
-              />
+              <GameStreamerHub game={selectedGame} onClose={() => setSelectedGame(null)} />
             ) : (
-              <StreamingGamesLive />
+              <AuraLandingHub />
             )}
           </div>
         </div>
