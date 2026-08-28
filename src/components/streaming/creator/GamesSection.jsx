@@ -21,6 +21,7 @@ const getMeta = (title) => GAME_META[title] || { genre: 'Game', image: '' };
 export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGames, onClose, fullscreen, onToggleFullscreen }) {
   const panelRef = useRef(null);
   const [localFullscreen, setLocalFullscreen] = useState(false);
+  const [playerBounds, setPlayerBounds] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
   const [genre, setGenre] = useState('All');
@@ -47,6 +48,29 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
       style.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (isFullscreen) return undefined;
+    const updateBounds = () => {
+      const liveButton = document.querySelector('button[title="Go Live"]');
+      const player = liveButton?.closest('.group');
+      if (!player) return;
+      const rect = player.getBoundingClientRect();
+      setPlayerBounds({ left: rect.left, top: rect.top + rect.height * 0.6, width: rect.width, height: rect.height * 0.4 });
+    };
+    updateBounds();
+    window.addEventListener('resize', updateBounds);
+    window.addEventListener('scroll', updateBounds, true);
+    const observer = new ResizeObserver(updateBounds);
+    const liveButton = document.querySelector('button[title="Go Live"]');
+    const player = liveButton?.closest('.group');
+    if (player) observer.observe(player);
+    return () => {
+      window.removeEventListener('resize', updateBounds);
+      window.removeEventListener('scroll', updateBounds, true);
+      observer.disconnect();
+    };
+  }, [isFullscreen]);
 
   const visibleGames = pinnedGames.length ? pinnedGames : FALLBACK_GAMES;
   const filteredGames = useMemo(() => visibleGames.filter((game) => {
@@ -76,8 +100,14 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
     recognition.start();
   };
 
+  const panelStyle = isFullscreen
+    ? { position: 'fixed', inset: 0 }
+    : playerBounds
+      ? { position: 'fixed', left: playerBounds.left, top: playerBounds.top, width: playerBounds.width, height: playerBounds.height }
+      : { position: 'fixed', left: 0, right: 0, bottom: 0, height: '40vh' };
+
   return (
-    <motion.div ref={panelRef} data-games-panel="true" initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className={`${isFullscreen ? 'absolute inset-0' : 'absolute inset-x-0 bottom-0 h-[40%] min-h-[220px]'} z-50 overflow-hidden select-none bg-slate-950/88 backdrop-blur-xl border-t border-white/15 shadow-[0_-24px_70px_rgba(0,0,0,.55)]`}>
+    <motion.div ref={panelRef} data-games-panel="true" initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} style={panelStyle} className="z-50 overflow-hidden select-none bg-slate-950/88 backdrop-blur-xl border-t border-white/15 shadow-[0_-24px_70px_rgba(0,0,0,.55)]">
       <div className="h-full w-full flex flex-col px-5 py-4 md:px-7 md:py-5">
         <div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10">
           <div className="min-w-0">
