@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 
 export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTogglePlay, volume, onVolumeChange, onOpenSettings, settingsOpen, onCloseSettings, isSettingsMaximized, onToggleSettingsMaximize }) {
-  // Featured streams/videos for offline state
   const [featured, setFeatured] = React.useState([]);
   const [current, setCurrent] = React.useState(0);
   const [loadingFeatured, setLoadingFeatured] = React.useState(true);
@@ -14,7 +13,6 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
     let timer;
     (async () => {
       try {
-        // Try live streams first
         const liveRes = await base44.entities.Stream.filter({ is_live: true }, '-started_at', 10);
         const live = liveRes?.data || liveRes || [];
         let items = live.map((s) => ({
@@ -25,7 +23,6 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
           live: true,
         }));
         if (items.length === 0) {
-          // Fallback: recorded videos
           const vidRes = await base44.entities.StreamVideo.list();
           const vids = vidRes?.data || vidRes || [];
           items = vids.slice(0, 10).map((v) => ({
@@ -55,7 +52,8 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
     };
   }, []);
   return (
-    <div 
+    <div
+        data-stream-player-box="true"
         className="h-full rounded-3xl overflow-hidden min-h-[320px] relative group border border-white/10 shadow-2xl"
         style={{
             background: 'rgba(255, 255, 255, 0.03)',
@@ -63,7 +61,6 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         }}
     >
-        {/* Go Live trigger - top-left over the box */}
         <button
           onClick={() => (typeof onOpenSettings === 'function' ? onOpenSettings() : (typeof onToggleLive === 'function' ? onToggleLive() : null))}
           className="absolute top-2 left-2 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 border border-white/15 text-white/90 backdrop-blur-md hover:bg-black/70 transition"
@@ -77,203 +74,40 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
             <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10">
               <div className="text-white font-bold">Stream Settings</div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={onToggleSettingsMaximize}
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                  title={isSettingsMaximized ? 'Restore' : 'Maximize'}
-                >
-                  {isSettingsMaximized ? <Minimize className="w-4 h-4 text-white" /> : <Maximize className="w-4 h-4 text-white" />}
-                </button>
-                <span
-                  onClick={onCloseSettings}
-                  className="ml-1 text-white/70 hover:text-white cursor-pointer select-none text-lg leading-none"
-                  title="Close"
-                >
-                  x
-                </span>
+                <button onClick={onToggleSettingsMaximize} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors" title={isSettingsMaximized ? 'Restore' : 'Maximize'}>{isSettingsMaximized ? <Minimize className="w-4 h-4 text-white" /> : <Maximize className="w-4 h-4 text-white" />}</button>
+                <span onClick={onCloseSettings} className="ml-1 text-white/70 hover:text-white cursor-pointer select-none text-lg leading-none" title="Close">x</span>
               </div>
             </div>
             <div className="flex-1 overflow-auto bg-black/50 p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
-                  <h4 className="text-white font-semibold mb-3 text-sm">General</h4>
-                  <div className="space-y-3 text-sm text-white/80">
-                    <label className="flex items-center justify-between">
-                      <span>Auto record</span>
-                      <input type="checkbox" defaultChecked className="accent-cyan-400" />
-                    </label>
-                    <label className="flex items-center justify-between">
-                      <span>Show chat overlay</span>
-                      <input type="checkbox" className="accent-cyan-400" />
-                    </label>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
-                  <h4 className="text-white font-semibold mb-3 text-sm">Video</h4>
-                  <div className="space-y-3 text-sm text-white/80">
-                    <label className="flex items-center justify-between gap-3">
-                      <span>Resolution</span>
-                      <select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90">
-                        <option>1080p</option>
-                        <option>720p</option>
-                        <option>480p</option>
-                      </select>
-                    </label>
-                    <label className="flex items-center justify-between gap-3">
-                      <span>Bitrate</span>
-                      <select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90">
-                        <option>High</option>
-                        <option>Medium</option>
-                        <option>Low</option>
-                      </select>
-                    </label>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
-                  <h4 className="text-white font-semibold mb-3 text-sm">Audio</h4>
-                  <div className="space-y-3 text-sm text-white/80">
-                    <label className="flex items-center justify-between">
-                      <span>Mic Enabled</span>
-                      <input type="checkbox" defaultChecked className="accent-cyan-400" />
-                    </label>
-                    <label className="flex items-center justify-between gap-3">
-                      <span>Audio Bitrate</span>
-                      <select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90">
-                        <option>High</option>
-                        <option>Medium</option>
-                        <option>Low</option>
-                      </select>
-                    </label>
-                  </div>
-                </div>
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5"><h4 className="text-white font-semibold mb-3 text-sm">General</h4><div className="space-y-3 text-sm text-white/80"><label className="flex items-center justify-between"><span>Auto record</span><input type="checkbox" defaultChecked className="accent-cyan-400" /></label><label className="flex items-center justify-between"><span>Show chat overlay</span><input type="checkbox" className="accent-cyan-400" /></label></div></div>
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5"><h4 className="text-white font-semibold mb-3 text-sm">Video</h4><div className="space-y-3 text-sm text-white/80"><label className="flex items-center justify-between gap-3"><span>Resolution</span><select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90"><option>1080p</option><option>720p</option><option>480p</option></select></label><label className="flex items-center justify-between gap-3"><span>Bitrate</span><select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90"><option>High</option><option>Medium</option><option>Low</option></select></label></div></div>
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5"><h4 className="text-white font-semibold mb-3 text-sm">Audio</h4><div className="space-y-3 text-sm text-white/80"><label className="flex items-center justify-between"><span>Mic Enabled</span><input type="checkbox" defaultChecked className="accent-cyan-400" /></label><label className="flex items-center justify-between gap-3"><span>Audio Bitrate</span><select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90"><option>High</option><option>Medium</option><option>Low</option></select></label></div></div>
               </div>
-              <div className="flex justify-end mt-4">
-                <Button onClick={onToggleLive} className="bg-red-600 hover:bg-red-700 text-white border-none">Go Live</Button>
-              </div>
+              <div className="flex justify-end mt-4"><Button onClick={onToggleLive} className="bg-red-600 hover:bg-red-700 text-white border-none">Go Live</Button></div>
             </div>
           </div>
         )}
         {isLive ? (
             <div className="w-full h-full relative">
-                 {/* Mock Live Stream Content removed */}
-                 
-                 {/* Overlay Gradient */}
-                 
-
-                 {/* Top Status */}
-                 <div className="absolute top-6 left-6">
-                   <div className="bg-red-600 px-3 py-1 rounded text-white text-xs font-bold uppercase animate-pulse shadow-lg shadow-red-600/20">
-                     LIVE
-                   </div>
-                 </div>
-                 <div className="absolute top-6 right-6">
-                   <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2 border border-white/10">
-                     <MessageSquare className="w-3 h-3 text-white/60" />
-                     1.2k Viewers
-                   </div>
-                 </div>
-
-                 {/* Play/Pause near top center */}
-                  <div className="absolute z-30 top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                     <button 
-                         onClick={onTogglePlay}
-                         className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center pointer-events-auto hover:bg-white/20 hover:scale-110 transition-all"
-                         title={isPlaying ? 'Pause' : 'Play'}
-                     >
-                         {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white" />}
-                     </button>
-                  </div>
-
-                 {/* Bottom Controls */}
-                 <div className="absolute bottom-0 left-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {/* Stream Info */}
-                    <div className="mb-4">
-                        <h3 className="font-bold text-xl text-white drop-shadow-md">My Awesome Stream Title</h3>
-                        <p className="text-sm text-cyan-400 font-medium">Playing: Valorant</p>
-                    </div>
-
-                    {/* Control Bar */}
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <button onClick={onTogglePlay} className="text-white hover:text-cyan-400 transition-colors">
-                                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                            </button>
-                            
-                            <div className="flex items-center gap-2 group/vol">
-                                <Volume2 className="w-5 h-5 text-white" />
-                                <div className="w-0 overflow-hidden group-hover/vol:w-24 transition-all duration-300">
-                                    <div className="w-20 h-1 bg-white/30 rounded-full ml-2 relative cursor-pointer">
-                                        <div className="absolute left-0 top-0 bottom-0 bg-white rounded-full" style={{ width: `${volume}%` }} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 text-xs text-white/60 font-mono">
-                                <span className="text-red-500">●</span> 02:14:35
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <button className="text-white/70 hover:text-white transition-colors" title="Settings">
-                                <Settings className="w-5 h-5" />
-                            </button>
-                            <button className="text-white/70 hover:text-white transition-colors" title="Fullscreen">
-                                <Maximize className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                 </div>
+                 <div className="absolute top-6 left-6"><div className="bg-red-600 px-3 py-1 rounded text-white text-xs font-bold uppercase animate-pulse shadow-lg shadow-red-600/20">LIVE</div></div>
+                 <div className="absolute top-6 right-6"><div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2 border border-white/10"><MessageSquare className="w-3 h-3 text-white/60" />1.2k Viewers</div></div>
+                 <div className="absolute z-30 top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"><button onClick={onTogglePlay} className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center pointer-events-auto hover:bg-white/20 hover:scale-110 transition-all" title={isPlaying ? 'Pause' : 'Play'}>{isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white" />}</button></div>
+                 <div className="absolute bottom-0 left-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><div className="mb-4"><h3 className="font-bold text-xl text-white drop-shadow-md">My Awesome Stream Title</h3><p className="text-sm text-cyan-400 font-medium">Playing: Valorant</p></div><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-4"><button onClick={onTogglePlay} className="text-white hover:text-cyan-400 transition-colors">{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}</button><div className="flex items-center gap-2 group/vol"><Volume2 className="w-5 h-5 text-white" /><div className="w-0 overflow-hidden group-hover/vol:w-24 transition-all duration-300"><div className="w-20 h-1 bg-white/30 rounded-full ml-2 relative cursor-pointer"><div className="absolute left-0 top-0 bottom-0 bg-white rounded-full" style={{ width: `${volume}%` }} /></div></div></div><div className="flex items-center gap-2 text-xs text-white/60 font-mono"><span className="text-red-500">●</span> 02:14:35</div></div><div className="flex items-center gap-4"><button className="text-white/70 hover:text-white transition-colors" title="Settings"><Settings className="w-5 h-5" /></button><button className="text-white/70 hover:text-white transition-colors" title="Fullscreen"><Maximize className="w-5 h-5" /></button></div></div></div>
             </div>
         ) : (
             <div className="w-full h-full relative">
-              {/* Featured media background */}
               {loadingFeatured && featured.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 border-4 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
-                </div>
+                <div className="absolute inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-white/20 border-t-cyan-400 rounded-full animate-spin" /></div>
               ) : featured.length > 0 ? (
                 <>
-                  <img
-                    src={featured[current]?.image}
-                    alt={featured[current]?.title || 'Featured'}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={featured[current]?.image} alt={featured[current]?.title || 'Featured'} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                  {/* Top badges */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2">
-                    <div className="px-3 py-1 rounded text-[10px] font-bold uppercase shadow bg-cyan-500/20 text-cyan-200 border border-cyan-400/30">
-                      Game of the Day
-                    </div>
-                    {featured[current]?.live && (
-                      <div className="px-3 py-1 rounded text-[10px] font-bold uppercase shadow bg-red-600 text-white">
-                        Live
-                      </div>
-                    )}
-                    {featured[current]?.sub && (
-                      <div className="px-3 py-1 rounded text-[10px] bg-black/50 text-white/80 border border-white/10 backdrop-blur-md flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3 text-white/60" />
-                        {featured[current].sub}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Center play */}
-                  <div className="absolute inset-0 flex items-start justify-center pt-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="w-16 h-16 rounded-full bg-white/10 border border-white/20 backdrop-blur-lg flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all">
-                      <Play className="w-6 h-6 text-white" />
-                    </button>
-                  </div>
-
-                  {/* Bottom info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="text-white font-bold text-xl drop-shadow-md line-clamp-1">{featured[current]?.title}</h3>
-                    <p className="text-sm text-white/60">{featured[current]?.live ? 'Happening now' : 'Recommended for you'}</p>
-                  </div>
+                  <div className="absolute top-4 left-4 flex items-center gap-2"><div className="px-3 py-1 rounded text-[10px] font-bold uppercase shadow bg-cyan-500/20 text-cyan-200 border border-cyan-400/30">Game of the Day</div>{featured[current]?.live && <div className="px-3 py-1 rounded text-[10px] font-bold uppercase shadow bg-red-600 text-white">Live</div>}{featured[current]?.sub && <div className="px-3 py-1 rounded text-[10px] bg-black/50 text-white/80 border border-white/10 backdrop-blur-md flex items-center gap-1"><MessageSquare className="w-3 h-3 text-white/60" />{featured[current].sub}</div>}</div>
+                  <div className="absolute inset-0 flex items-start justify-center pt-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><button className="w-16 h-16 rounded-full bg-white/10 border border-white/20 backdrop-blur-lg flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all"><Play className="w-6 h-6 text-white" /></button></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6"><h3 className="text-white font-bold text-xl drop-shadow-md line-clamp-1">{featured[current]?.title}</h3><p className="text-sm text-white/60">{featured[current]?.live ? 'Happening now' : 'Recommended for you'}</p></div>
                 </>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-white/50">No featured content available</div>
-              )}
+              ) : <div className="absolute inset-0 flex items-center justify-center text-white/50">No featured content available</div>}
             </div>
         )}
     </div>
