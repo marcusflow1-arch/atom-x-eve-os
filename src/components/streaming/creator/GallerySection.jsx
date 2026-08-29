@@ -197,35 +197,42 @@ export default function GallerySection({ isEditMode, galleryImages = [], onUpdat
           <Timeline compact />
         </div>
 
-        <div className="relative shrink-0 border-b border-white/10 px-5 pb-4 md:px-7">
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
-          <div className="absolute bottom-0 left-[15%] right-[15%] h-[3px] bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pt-2">
-            {dateMoments.map((moment) => (
-              <button key={moment.id} type="button" onClick={() => selectMoment(moment)} className={`relative h-20 w-36 shrink-0 overflow-hidden border text-left transition-all ${selectedMoment?.id === moment.id ? 'border-cyan-300/60' : 'border-white/10 hover:border-white/30'}`}>
-                <MediaPreview moment={moment} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
-                <div className="absolute bottom-1.5 left-2 right-2"><div className="text-[6px] uppercase tracking-wider text-cyan-200/70">{moment.time}</div><div className="truncate text-[9px] font-bold">{moment.title}</div></div>
-                {moment.type === 'video' && <Play className="absolute right-2 top-2 h-3 w-3" fill="currentColor" />}
-              </button>
-            ))}
-            {isEditMode && <button type="button" onClick={handleUpload} className="flex h-20 w-28 shrink-0 flex-col items-center justify-center border border-dashed border-white/15 text-white/30 hover:border-white/30 hover:text-white/70"><Plus className="h-4 w-4" /><span className="mt-1 text-[7px] uppercase tracking-wider">Add Moment</span></button>}
-          </div>
-        </div>
+        <div className="relative min-h-0 flex-1 border-t border-white/10">
+          <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+          <div className="grid h-full min-h-0 grid-cols-[minmax(0,7fr)_minmax(220px,3fr)]">
+            <section className="min-w-0 overflow-y-auto px-5 py-4 scrollbar-hide md:px-7">
+              <div className="mb-3 text-[8px] uppercase tracking-[0.25em] text-white/25">Moments · {selectedDate}</div>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+                {dateMoments.map((moment) => (
+                  <button key={moment.id} type="button" onClick={() => selectMoment(moment)} className={`relative aspect-video min-w-0 overflow-hidden border text-left transition-all ${selectedMoment?.id === moment.id ? 'border-cyan-300/65 shadow-[0_0_24px_rgba(34,211,238,.12)]' : 'border-white/10 hover:border-white/30'}`}>
+                    <MediaPreview moment={moment} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2"><div className="text-[6px] uppercase tracking-wider text-cyan-200/70">{moment.tag} · {moment.time}</div><div className="truncate text-[9px] font-bold">{moment.title}</div></div>
+                    {moment.type === 'video' && <Play className="absolute right-2 top-2 h-3.5 w-3.5" fill="currentColor" />}
+                  </button>
+                ))}
+                {isEditMode && <button type="button" onClick={handleUpload} className="flex aspect-video items-center justify-center border border-dashed border-white/15 text-white/30 hover:border-white/30 hover:text-white/70"><div className="flex flex-col items-center"><Plus className="h-5 w-5" /><span className="mt-1 text-[7px] uppercase tracking-wider">Add Moment</span></div></button>}
+              </div>
+              {!dateMoments.length && <div className="flex h-full min-h-[180px] items-center justify-center text-xs text-white/25">No moments saved for this date.</div>}
+            </section>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 scrollbar-hide md:px-7">
-          {selectedMoment ? <div className="grid min-h-[180px] grid-cols-1 gap-5 md:grid-cols-[1.55fr_.45fr]">
-            <div className="relative min-h-[180px] overflow-hidden bg-black/25">
-              <MediaPreview moment={selectedMoment} large />
-              {!selectedMoment.url && <div className="absolute inset-0 flex items-center justify-center"><div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/5"><Play className="h-5 w-5" fill="currentColor" /></div></div>}
-            </div>
-            <div className="flex flex-col justify-center">
-              <div className="text-[7px] uppercase tracking-[0.25em] text-cyan-300/55">{selectedMoment.game} · {selectedMoment.time}</div>
-              <h3 className="mt-1.5 text-lg font-bold">{selectedMoment.title}</h3>
-              <p className="mt-2 text-[10px] leading-4 text-white/40">{selectedMoment.description}</p>
-              <div className="mt-3 flex gap-2"><Badge className="border border-white/10 bg-white/5 text-[8px] text-white/50">{selectedMoment.tag}</Badge><Badge className="border border-white/10 bg-white/5 text-[8px] text-white/50">{selectedMoment.type}</Badge></div>
-            </div>
-          </div> : <div className="flex h-full items-center justify-center text-xs text-white/25">No moments saved for this date.</div>}
+            <aside className="relative min-w-0 overflow-hidden border-l border-white/10 bg-white/[0.015] px-5 py-4 md:px-6">
+              <div className="absolute left-0 top-[12%] h-[76%] w-px bg-gradient-to-b from-transparent via-cyan-200/30 to-transparent" />
+              {selectedMoment ? <div className="flex h-full min-h-0 flex-col">
+                <div className="mb-3 shrink-0 text-[8px] uppercase tracking-[0.25em] text-white/25">Selected Moment</div>
+                <div className="relative min-h-0 flex-1 overflow-hidden bg-black/35">
+                  <MediaPreview moment={selectedMoment} large />
+                  {!selectedMoment.url && <div className="absolute inset-0 flex items-center justify-center"><div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/5"><Play className="h-4 w-4" fill="currentColor" /></div></div>}
+                </div>
+                <div className="shrink-0 pt-4">
+                  <div className="text-[7px] uppercase tracking-[0.25em] text-cyan-300/55">{selectedMoment.game} · {selectedMoment.time}</div>
+                  <h3 className="mt-1.5 text-lg font-bold">{selectedMoment.title}</h3>
+                  <p className="mt-2 text-[10px] leading-4 text-white/40">{selectedMoment.description}</p>
+                  <div className="mt-3 flex gap-2"><Badge className="border border-white/10 bg-white/5 text-[8px] text-white/50">{selectedMoment.tag}</Badge><Badge className="border border-white/10 bg-white/5 text-[8px] text-white/50">{selectedMoment.type}</Badge></div>
+                </div>
+              </div> : <div className="flex h-full items-center justify-center text-xs text-white/25">Select a moment.</div>}
+            </aside>
+          </div>
         </div>
       </div>
     </div>
