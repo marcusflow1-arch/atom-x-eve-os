@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
+import '@/styles/streaming-home-achievement-cards.css'
 
 // Suppress harmless Three.js WebGL shader warnings that don't affect gameplay
 const origError = console.error;
