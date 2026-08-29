@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Badge } from '@/components/ui/badge';
-import { Maximize2, Minimize2, Search, Layers, Sparkles } from 'lucide-react';
+import { Maximize2, Minimize2, Search, Layers, Sparkles, Play, X } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/AuthContext';
 import useCreatorEditMode from '@/components/streaming/hooks/useCreatorEditMode';
@@ -41,6 +40,7 @@ const CARD_LIBRARY = {
 
 const GENRES = ['All Genres', 'MMORPG', 'RPG', 'Action RPG', 'MOBA', 'Shooter', 'Fantasy', 'Sci-Fi'];
 const RARITIES = ['All', 'Common', 'Rare', 'Epic', 'Legendary'];
+const ACHIEVEMENT_TYPES = ['All', 'Ability', 'Equipment', 'Companion'];
 const RARITY_STYLES = {
   Common: { glow: 'rgba(148,163,184,.22)', edge: 'rgba(226,232,240,.38)', accent: '#cbd5e1' },
   Rare: { glow: 'rgba(59,130,246,.34)', edge: 'rgba(96,165,250,.72)', accent: '#93c5fd' },
@@ -53,6 +53,7 @@ export default function StreamingHome() {
   const [isLive, setIsLive] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedGameAchievement, setSelectedGameAchievement] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
@@ -61,9 +62,14 @@ export default function StreamingHome() {
   const [cardFilter, setCardFilter] = useState('All');
   const [cardGenre, setCardGenre] = useState('All Genres');
   const [cardSearch, setCardSearch] = useState('');
+  const [achievementType, setAchievementType] = useState('All');
+  const [achievementOverlayFullscreen, setAchievementOverlayFullscreen] = useState(false);
+  const [achievementVideoFullscreen, setAchievementVideoFullscreen] = useState(false);
   const [showGameAchievements, setShowGameAchievements] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredAchievement, setHoveredAchievement] = useState(null);
   const [cardTilt, setCardTilt] = useState({ x: 0, y: 0 });
+  const [achievementTilt, setAchievementTilt] = useState({ x: 0, y: 0 });
 
   const { saving, isEditMode, activeProfile, activeLayout, activeSponsors, enterEditMode, cancelEdit, saveEdit, updateEditProfile, updateEditLayout, addEditSponsor, removeEditSponsor, updateEditSponsor } = useCreatorEditMode(user?.id);
   const scheduleData = activeLayout?.schedule_data || {};
@@ -72,18 +78,28 @@ export default function StreamingHome() {
   const streamingGame = CARD_GAMES.find((game) => game.id === (activeLayout?.current_game_id || activeProfile?.current_game_id)) || CARD_GAMES[0];
 
   useEffect(() => {
-    if (!activeTab && !showGameAchievements) return;
+    if (!activeTab && !showGameAchievements && !selectedGameAchievement && !achievementVideoFullscreen) return;
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
+        if (achievementVideoFullscreen) {
+          setAchievementVideoFullscreen(false);
+          return;
+        }
+        if (selectedGameAchievement) {
+          setSelectedGameAchievement(null);
+          setAchievementOverlayFullscreen(false);
+          return;
+        }
         setActiveTab(null);
         setOverlayFullscreen(false);
         setShowGameAchievements(false);
         setHoveredCard(null);
+        setHoveredAchievement(null);
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [activeTab, showGameAchievements]);
+  }, [activeTab, showGameAchievements, selectedGameAchievement, achievementVideoFullscreen]);
 
   useEffect(() => setOverlayFullscreen(false), [activeTab]);
 
@@ -102,6 +118,10 @@ export default function StreamingHome() {
     });
   }, [selectedCardGame, cardFilter]);
   const gameAchievementItems = CARD_LIBRARY[streamingGame.id] || [];
+  const filteredAchievementItems = useMemo(() => gameAchievementItems.filter((name, index) => {
+    const type = ['Ability', 'Equipment', 'Companion'][index % 3];
+    return achievementType === 'All' || achievementType === type;
+  }), [gameAchievementItems, achievementType]);
 
   const closeOverlay = () => { setActiveTab(null); setOverlayFullscreen(false); setHoveredCard(null); };
   const openTab = (tab) => { setActiveTab(activeTab === tab ? null : tab); setOverlayFullscreen(false); };
@@ -113,6 +133,20 @@ export default function StreamingHome() {
     setCardTilt({ x: (0.5 - py) * 12, y: (px - 0.5) * 14 });
   };
   const handleCardPointerLeave = () => { setHoveredCard(null); setCardTilt({ x: 0, y: 0 }); };
+  const handleAchievementPointerMove = (event, cardKey) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width;
+    const py = (event.clientY - rect.top) / rect.height;
+    setHoveredAchievement(cardKey);
+    setAchievementTilt({ x: (0.5 - py) * 10, y: (px - 0.5) * 13 });
+  };
+  const handleAchievementPointerLeave = () => { setHoveredAchievement(null); setAchievementTilt({ x: 0, y: 0 }); };
+  const getAchievementMeta = (name, index, gameId = streamingGame.id) => {
+    const rarity = index % 5 === 0 ? 'Legendary' : index % 3 === 0 ? 'Epic' : index % 2 === 0 ? 'Rare' : 'Common';
+    const type = ['Ability', 'Equipment', 'Companion'][index % 3];
+    const game = CARD_GAMES.find((item) => item.id === gameId) || streamingGame;
+    return { name, rarity, type, game, id: `${gameId}-achievement-${name}-${index}` };
+  };
 
   const renderCardsOverlay = () => (
     <div className="h-full min-h-0 flex flex-col overflow-hidden rounded-none bg-white/[0.025] backdrop-blur-2xl border border-white/[0.08] shadow-[0_24px_90px_rgba(0,0,0,.48)]">
@@ -138,11 +172,133 @@ export default function StreamingHome() {
     </div>
   );
 
-  const renderGameAchievementOverlay = () => (
-    <motion.div initial={{ y: '-100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className="absolute left-0 right-0 top-0 z-50 h-[62%] min-h-[260px] max-h-[560px] overflow-hidden border-b border-cyan-300/20 bg-slate-950/88 backdrop-blur-xl shadow-[0_20px_70px_rgba(0,0,0,0.6)]" role="dialog" aria-label={`${streamingGame.name} game achievements and cards`}>
-      <div className="h-full w-full p-4 md:p-5 flex flex-col overflow-hidden"><div className="flex items-center justify-between gap-4 shrink-0 pb-3 border-b border-white/10"><div className="min-w-0"><div className="text-[9px] uppercase tracking-[0.28em] text-cyan-300/60">Game Achievements</div><h3 className="text-lg md:text-xl font-bold text-white truncate">{streamingGame.name} — Cards</h3></div><button type="button" onClick={() => setShowGameAchievements(false)} className="text-[11px] font-semibold text-white/50 hover:text-cyan-200 underline underline-offset-4 whitespace-nowrap">Close Achievements</button></div><div className="flex items-center gap-3 py-3 shrink-0 overflow-x-auto scrollbar-hide">{gameAchievementItems.map((name, index) => <button key={name} type="button" onClick={() => setSelectedCard({ name, id: `${streamingGame.id}-achievement-${index}` })} className="relative w-32 md:w-40 h-20 shrink-0 overflow-hidden border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950/70 hover:border-cyan-300/60 hover:-translate-y-0.5 transition-all text-left"><div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_25%,rgba(103,232,249,0.2),transparent_35%),linear-gradient(145deg,transparent,rgba(124,58,237,0.18))]" /><Badge className="bg-black/40 border-white/10 text-[8px] h-4 px-1 absolute top-2 left-2">{index % 4 === 0 ? 'Rare' : 'Common'}</Badge><div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/95 to-transparent"><div className="text-[10px] font-bold text-white">{name}</div><div className="text-[8px] uppercase tracking-wider text-white/40 mt-1">Game Achievement</div></div></button>)}</div><div className="flex-1 min-h-0 overflow-y-auto pr-1"><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">{gameAchievementItems.map((name, index) => <button key={`${name}-detail`} type="button" onClick={() => setSelectedCard({ name, id: `${streamingGame.id}-detail-${index}` })} className="group relative aspect-[3/4] overflow-hidden border border-white/10 bg-white/[0.03] hover:border-cyan-300/50 transition-all text-left"><div className="absolute inset-0 bg-gradient-to-br from-cyan-950/70 via-slate-900 to-purple-950/70" /><Sparkles className="absolute top-3 right-3 w-4 h-4 text-cyan-300/70" /><div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/95 to-transparent"><div className="text-xs font-bold text-white">{name}</div><div className="text-[8px] uppercase tracking-wider text-cyan-200/50 mt-1">Collectible</div></div></button>)}</div></div></div>
-    </motion.div>
-  );
+  const renderAchievementCardFace = (meta, compact = false) => {
+    const style = RARITY_STYLES[meta.rarity];
+    const key = meta.id;
+    const hovered = hoveredAchievement === key;
+    return (
+      <div className={`relative ${compact ? 'w-[112px] h-[168px] sm:w-[124px] sm:h-[184px]' : 'w-[150px] h-[220px] sm:w-[170px] sm:h-[246px]'} shrink-0`} style={{ perspective: '1100px' }}>
+        <motion.div
+          animate={{ rotateX: hovered ? achievementTilt.x : 0, rotateY: hovered ? achievementTilt.y : 0, y: hovered ? -6 : 0, scale: hovered ? 1.035 : 1 }}
+          transition={{ type: 'spring', stiffness: 250, damping: 23 }}
+          className="absolute inset-0 overflow-hidden rounded-[16px] border bg-slate-950/55 shadow-[0_20px_55px_rgba(0,0,0,.45)]"
+          style={{ borderColor: hovered ? style.edge : style.edge, boxShadow: `0 0 26px ${style.glow}, inset 0 0 24px ${style.glow}` }}
+        >
+          <div className="absolute -inset-10" style={{ background: `radial-gradient(circle at 70% 18%, ${style.glow}, transparent 34%), linear-gradient(145deg, rgba(255,255,255,.13), transparent 24%, rgba(124,58,237,.13) 70%, rgba(2,6,23,.94))` }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-black/45 pointer-events-none" />
+          <div className="absolute inset-[4px] rounded-[12px] border border-white/10 pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-[58%] overflow-hidden">
+            <img src={meta.game.image} alt="" className="w-full h-full object-cover opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/5 to-slate-950/90" />
+          </div>
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+            <span className="rounded-full px-2 py-1 text-[7px] uppercase tracking-[0.16em] font-black bg-black/40 backdrop-blur-sm border" style={{ color: style.accent, borderColor: style.edge }}>{meta.rarity}</span>
+            <Sparkles className="w-3.5 h-3.5" style={{ color: style.accent }} />
+          </div>
+          <div className="absolute left-3 right-3 bottom-3">
+            <div className="text-[7px] uppercase tracking-[0.18em] text-white/45">{meta.type}</div>
+            <div className={`${compact ? 'text-[11px]' : 'text-sm'} font-extrabold text-white leading-tight mt-1`}>{meta.name}</div>
+          </div>
+          {hovered && <motion.div initial={{ x: '-130%', opacity: 0 }} animate={{ x: '130%', opacity: [0, .9, 0] }} transition={{ duration: .95, ease: 'easeInOut' }} className="absolute top-0 bottom-0 w-9 -skew-x-12 bg-gradient-to-r from-transparent via-white to-transparent blur-[2px] pointer-events-none" />}
+        </motion.div>
+      </div>
+    );
+  };
+
+  const renderGameAchievementOverlay = () => {
+    const selectedMeta = selectedGameAchievement;
+    const detailStyle = selectedMeta ? RARITY_STYLES[selectedMeta.rarity] : RARITY_STYLES.Rare;
+    return (
+      <motion.div initial={{ y: '-100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 30 }} className={`${achievementOverlayFullscreen ? 'fixed inset-0' : 'absolute inset-0'} z-50 overflow-hidden border border-white/10 bg-white/[0.045] backdrop-blur-2xl shadow-[0_24px_80px_rgba(0,0,0,.48)]`} role="dialog" aria-label={`${streamingGame.name} game achievements and cards`}>
+        {!selectedMeta ? (
+          <div className="h-full w-full flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-2.5 shrink-0 bg-white/[0.025] border-b border-white/10">
+              <div className="min-w-0">
+                <div className="text-[8px] uppercase tracking-[0.3em] text-cyan-200/60">Living Glass Collection</div>
+                <h3 className="text-base md:text-lg font-bold text-white truncate">{streamingGame.name} · Game Achievement Cards</h3>
+              </div>
+              <button type="button" onClick={() => setAchievementOverlayFullscreen((value) => !value)} className="h-8 w-8 shrink-0 flex items-center justify-center rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/65 hover:text-white" aria-label={achievementOverlayFullscreen ? 'Exit full screen' : 'Expand achievement cards'}>{achievementOverlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
+            </div>
+            <div className="flex items-center justify-center gap-6 md:gap-10 shrink-0 px-4 pt-3 pb-2 overflow-x-auto scrollbar-hide border-b border-white/[0.06]">
+              {ACHIEVEMENT_TYPES.map((type) => <button key={type} type="button" onClick={() => setAchievementType(type)} className={`relative pb-2 text-[10px] md:text-[11px] font-semibold whitespace-nowrap transition-colors ${achievementType === type ? 'text-white' : 'text-white/40 hover:text-white/75'}`}>{type}<span className={`absolute left-0 right-0 bottom-0 h-px bg-cyan-200 transition-opacity ${achievementType === type ? 'opacity-100 shadow-[0_0_10px_rgba(165,243,252,.7)]' : 'opacity-0'}`} /></button>)}
+            </div>
+            <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden scrollbar-hide px-4 md:px-7 py-4">
+              <div className="h-full min-w-max flex items-center gap-5 md:gap-7 pr-8">
+                {filteredAchievementItems.map((name, index) => {
+                  const meta = getAchievementMeta(name, index);
+                  return <button key={meta.id} type="button" onClick={() => setSelectedGameAchievement(meta)} onMouseMove={(event) => handleAchievementPointerMove(event, meta.id)} onMouseLeave={handleAchievementPointerLeave} className="text-left outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/60 rounded-[18px]">{renderAchievementCardFace(meta)}</button>;
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 overflow-hidden bg-slate-950/58 backdrop-blur-md">
+            <div className="h-full w-full flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between gap-3 px-4 md:px-6 py-3 shrink-0 bg-black/20 border-b border-white/10">
+                <div className="min-w-0"><div className="text-[8px] uppercase tracking-[0.3em] text-cyan-200/55">Card Record · {selectedMeta.game.name}</div><h3 className="text-base md:text-lg font-bold text-white truncate">{selectedMeta.name}</h3></div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button type="button" onClick={() => setSelectedGameAchievement(null)} className="px-3 py-1.5 rounded-full text-[9px] font-semibold text-white/65 hover:text-white bg-white/[0.06] hover:bg-white/[0.11]">Back to cards</button>
+                  <button type="button" onClick={() => setSelectedGameAchievement(null)} className="h-8 w-8 rounded-full flex items-center justify-center text-white/55 hover:text-white bg-white/[0.05]" aria-label="Close card details"><X className="w-4 h-4" /></button>
+                </div>
+              </div>
+              <div className="flex-1 min-h-0 flex overflow-hidden px-4 md:px-7 py-4 md:py-6">
+                <section className="w-[15%] min-w-[112px] max-w-[190px] shrink-0 flex flex-col items-center justify-center pr-3 md:pr-5 min-h-0 overflow-hidden">
+                  <button type="button" onMouseMove={(event) => handleAchievementPointerMove(event, selectedMeta.id)} onMouseLeave={handleAchievementPointerLeave} onClick={() => setAchievementVideoFullscreen(false)} className="outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/60 rounded-[18px]">
+                    {renderAchievementCardFace(selectedMeta, true)}
+                  </button>
+                  <div className="w-full mt-3 text-center min-w-0">
+                    <div className="text-[8px] uppercase tracking-[0.18em] text-white/35">{selectedMeta.type}</div>
+                    <div className="text-[11px] font-bold text-white truncate mt-1">{selectedMeta.name}</div>
+                    <div className="text-[8px] uppercase tracking-[0.16em] mt-1" style={{ color: detailStyle.accent }}>{selectedMeta.rarity}</div>
+                    <p className="text-[8px] leading-relaxed text-white/40 mt-2 line-clamp-4">A collectible achievement from the {selectedMeta.game.name} collection.</p>
+                  </div>
+                </section>
+                <div className="relative w-px h-[72%] self-center shrink-0 bg-gradient-to-b from-transparent via-white/20 to-transparent">
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[3px] h-[38%] bg-gradient-to-b from-transparent via-cyan-100/75 to-transparent blur-[1px]" />
+                </div>
+                <section className="w-[85%] min-w-0 pl-4 md:pl-7 flex flex-col overflow-y-auto scrollbar-hide">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-5">
+                    <div className="rounded-2xl bg-white/[0.035] border border-white/[0.07] p-4 md:p-5">
+                      <div className="text-[8px] uppercase tracking-[0.25em] text-cyan-200/55 mb-2">Card Information</div>
+                      <h4 className="text-xl md:text-2xl font-black text-white">{selectedMeta.name}</h4>
+                      <div className="flex flex-wrap gap-2 mt-3"><span className="rounded-full px-2.5 py-1 text-[8px] uppercase tracking-wider border" style={{ color: detailStyle.accent, borderColor: detailStyle.edge, background: `${detailStyle.glow}` }}>{selectedMeta.rarity}</span><span className="rounded-full px-2.5 py-1 text-[8px] uppercase tracking-wider text-white/55 border border-white/10 bg-white/[0.025]">{selectedMeta.type}</span></div>
+                      <p className="text-xs leading-6 text-white/55 mt-5">This collectible represents a notable {selectedMeta.type.toLowerCase()} achievement earned while playing {selectedMeta.game.name}. It is part of the creator's showcased collection.</p>
+                      <div className="grid grid-cols-2 gap-3 mt-5">
+                        <div><div className="text-[8px] uppercase tracking-wider text-white/30">Collection</div><div className="text-[10px] font-semibold text-white/75 mt-1">{selectedMeta.game.name}</div></div>
+                        <div><div className="text-[8px] uppercase tracking-wider text-white/30">Found</div><div className="text-[10px] font-semibold text-white/75 mt-1">Gameplay reward</div></div>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.035] border border-white/[0.07] p-4 md:p-5">
+                      <div className="text-[8px] uppercase tracking-[0.25em] text-cyan-200/55 mb-3">Card Stats</div>
+                      <div className="space-y-4">
+                        {[['Power', 82], ['Skill', 74], ['Defense', 91], ['Rarity Score', selectedMeta.rarity === 'Legendary' ? 98 : selectedMeta.rarity === 'Epic' ? 86 : selectedMeta.rarity === 'Rare' ? 68 : 42]].map(([label, value]) => <div key={label}><div className="flex items-center justify-between text-[9px] mb-1.5"><span className="uppercase tracking-wider text-white/35">{label}</span><span className="font-bold text-white/70">{value}</span></div><div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden"><div className="h-full rounded-full" style={{ width: `${value}%`, background: `linear-gradient(90deg, ${detailStyle.accent}, rgba(255,255,255,.7))`, boxShadow: `0 0 12px ${detailStyle.glow}` }} /></div></div>)}
+                      </div>
+                    </div>
+                    <div className="xl:col-span-2 rounded-2xl bg-white/[0.035] border border-white/[0.07] p-3 md:p-4">
+                      <div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[8px] uppercase tracking-[0.25em] text-cyan-200/55">Card Video</div><div className="text-[10px] text-white/40 mt-1">No media has been attached to this collectible yet.</div></div><button type="button" onClick={() => setAchievementVideoFullscreen(true)} className="h-8 w-8 rounded-full flex items-center justify-center bg-white/[0.07] hover:bg-white/[0.13] text-white/65 hover:text-white" aria-label="Open video full screen"><Maximize2 className="w-4 h-4" /></button></div>
+                      <button type="button" onClick={() => setAchievementVideoFullscreen(true)} className="relative w-full aspect-video overflow-hidden rounded-xl bg-black/35 border border-white/[0.08] group">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(103,232,249,.09),transparent_40%)]" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2"><div className="w-12 h-12 rounded-full border border-white/15 bg-white/[0.04] flex items-center justify-center text-white/45 group-hover:text-cyan-100 group-hover:border-cyan-200/35 transition-all"><Play className="w-5 h-5 ml-0.5" /></div><span className="text-[9px] uppercase tracking-[0.2em] text-white/30 group-hover:text-white/55">? · Video unavailable</span></div>
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <AnimatePresence>
+              {achievementVideoFullscreen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100000] bg-black/90 backdrop-blur-lg flex items-center justify-center p-5 md:p-10">
+                <div className="relative w-full max-w-6xl aspect-video rounded-2xl overflow-hidden border border-white/10 bg-slate-950 shadow-[0_30px_120px_rgba(0,0,0,.7)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(103,232,249,.08),transparent_45%)]" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"><div className="text-5xl font-black text-white/20">?</div><div className="text-[10px] uppercase tracking-[0.3em] text-white/35">Video not available</div><div className="text-xs text-white/25">This card does not have a video attached yet.</div></div>
+                  <button type="button" onClick={() => setAchievementVideoFullscreen(false)} className="absolute top-4 right-4 h-9 w-9 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white/60 hover:text-white" aria-label="Close full screen video"><X className="w-4 h-4" /></button>
+                </div>
+              </motion.div>}
+            </AnimatePresence>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
 
   const renderOverlayContent = () => {
     if (activeTab === 'schedule') return <ScheduleSection isEditMode={isEditMode} scheduleData={scheduleData} onUpdateSchedule={(data) => updateEditLayout('schedule_data', data)} onClose={closeOverlay} />;
