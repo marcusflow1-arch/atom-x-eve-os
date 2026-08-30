@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Home, Radio, Compass, ListVideo } from 'lucide-react';
-import { openAuraStreamBrowser } from './AuraStreamBrowserOverlay.jsx';
 
 export default function AuraBottomNav() {
   const navigate = useNavigate();
@@ -10,6 +9,7 @@ export default function AuraBottomNav() {
   const isDiscover = path.includes('/discover');
   const isHome = path.includes('/streaminghome');
   const isAura = path.includes('/aura') && !isHome;
+  const isStreamingGames = path.includes('/streaming');
 
   return (
     <div className="flex items-center justify-center w-full h-full">
@@ -28,12 +28,11 @@ export default function AuraBottomNav() {
           {isAura && <div className="absolute inset-0 bg-purple-400/20 blur-md rounded-full -z-10 pointer-events-none" />}
           <Radio className="w-4 h-4" /><span>Aura</span>
         </button>
-        {isAura && <>
-          <div className="w-px h-5 bg-white/10 mx-2" />
-          <button onClick={openAuraStreamBrowser} className="relative px-5 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase text-white/60 hover:text-white transition-all duration-300 mx-1" title="Browse streaming games">
-            <ListVideo className="w-4 h-4" /><span>Streaming Games</span>
-          </button>
-        </>}
+        <div className="w-px h-5 bg-white/10 mx-2" />
+        <button onClick={() => navigate(createPageUrl('Streaming'))} className={`relative px-5 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${isStreamingGames ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'}`} title="Streaming Games">
+          {isStreamingGames && <div className="absolute inset-0 bg-white/10 blur-md rounded-full -z-10 pointer-events-none" />}
+          <ListVideo className="w-4 h-4" /><span>Streaming Games</span>
+        </button>
       </div>
     </div>
   );
