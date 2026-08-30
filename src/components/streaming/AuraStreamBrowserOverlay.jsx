@@ -9,14 +9,18 @@ export const openAuraStreamBrowser = () => window.dispatchEvent(new CustomEvent(
 
 export default function AuraStreamBrowserOverlay() {
   const [open, setOpen] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  // Streaming Games opens in full-screen mode by default on the Aura landing page.
+  const [fullscreen, setFullscreen] = useState(true);
   const [games, setGames] = useState([]);
   const [query, setQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedGame, setSelectedGame] = useState(null);
 
   useEffect(() => {
-    const handler = () => setOpen((v) => !v);
+    const handler = () => {
+      setFullscreen(true);
+      setOpen((v) => !v);
+    };
     window.addEventListener(OPEN_EVENT, handler);
     const onKey = (e) => e.key === 'Escape' && setOpen(false);
     window.addEventListener('keydown', onKey);
