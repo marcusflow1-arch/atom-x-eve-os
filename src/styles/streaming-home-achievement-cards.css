@@ -1,20 +1,26 @@
 /* StreamingHome: Game Achievement Cards overlay finish.
    Scoped to the existing Cards overlay root so the rest of the profile page is untouched. */
 
+/* The achievement-card drawer is constrained to 2/5 of its containing streaming box.
+   Keep it anchored to the bottom instead of allowing it to become a page-sized panel. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] {
   position: relative;
   isolation: isolate;
+  height: 40% !important;
+  min-height: 0 !important;
+  max-height: 40% !important;
+  align-self: flex-end;
   background:
-    linear-gradient(115deg, rgba(255,255,255,.055), rgba(255,255,255,.018) 35%, rgba(8,15,28,.28) 72%, rgba(255,255,255,.028)),
-    rgba(7,13,24,.38) !important;
-  backdrop-filter: blur(28px) saturate(165%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(165%) !important;
-  border-color: rgba(255,255,255,.11) !important;
+    linear-gradient(115deg, rgba(16,36,58,.46), rgba(7,24,42,.30) 35%, rgba(5,13,27,.42) 72%, rgba(27,42,66,.28)),
+    rgba(5,14,28,.42) !important;
+  backdrop-filter: blur(28px) saturate(175%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(175%) !important;
+  border-color: rgba(120,210,255,.13) !important;
   box-shadow:
     0 30px 90px rgba(0,0,0,.58),
-    0 0 70px rgba(90,190,255,.07),
-    inset 0 1px 0 rgba(255,255,255,.075),
-    inset 0 -1px 0 rgba(255,255,255,.025) !important;
+    0 0 70px rgba(60,190,255,.09),
+    inset 0 1px 0 rgba(190,235,255,.075),
+    inset 0 -1px 0 rgba(0,0,0,.10) !important;
 }
 
 [class~="backdrop-blur-2xl"][class~="rounded-none"]::before {
@@ -24,8 +30,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 42%, rgba(103,232,249,.09) 0%, transparent 48%),
-    linear-gradient(90deg, rgba(103,232,249,.12), transparent 14%, transparent 86%, rgba(168,85,247,.10));
+    radial-gradient(ellipse at 50% 42%, rgba(103,232,249,.10) 0%, transparent 48%),
+    linear-gradient(90deg, rgba(103,232,249,.12), transparent 14%, transparent 86%, rgba(99,102,241,.10));
   filter: blur(18px);
   opacity: .9;
 }
@@ -39,6 +45,31 @@
   background: linear-gradient(180deg, rgba(255,255,255,.045), transparent 22%, transparent 76%, rgba(0,0,0,.18));
   mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+
+/* Keep the overlay header compact so the game-achievement title sits in the same
+   control band as the filtering controls instead of consuming a large header block. */
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child {
+  min-height: 42px;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+  background: transparent !important;
+  border-bottom-color: rgba(255,255,255,.08) !important;
+}
+
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > div:first-child > div:first-child {
+  display: none !important;
+}
+
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child h3 {
+  font-size: 13px !important;
+  letter-spacing: .01em;
+}
+
+/* Fullscreen control stays at the far-right end of the top control row. */
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > button {
+  margin-left: auto;
+  order: 10;
 }
 
 /* Single-row achievement rail: no wrapping and no vertical second row. */
