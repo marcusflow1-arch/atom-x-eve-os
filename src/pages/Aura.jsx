@@ -3,7 +3,6 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
-import AuraStreamBrowserOverlay from '@/components/streaming/AuraStreamBrowserOverlay.jsx';
 import StreamingGamesLive from '@/components/streaming/StreamingGamesLive';
 
 export default function Aura() {
@@ -19,8 +18,6 @@ export default function Aura() {
           </div>
         </div>
       </div>
-      {/* Game selection stays entirely inside this overlay. The Aura landing page is not replaced. */}
-      <AuraStreamBrowserOverlay />
     </GlassPageFrame>
   );
 }
