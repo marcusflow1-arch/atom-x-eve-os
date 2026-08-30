@@ -1,8 +1,6 @@
 /* StreamingHome: Game Achievement Cards overlay finish.
    Scoped to the existing Cards overlay root so the rest of the profile page is untouched. */
 
-/* The achievement-card drawer is constrained to 2/5 of its containing streaming box.
-   Keep it anchored to the bottom instead of allowing it to become a page-sized panel. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] {
   position: relative;
   isolation: isolate;
@@ -47,8 +45,6 @@
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
 }
 
-/* Keep the overlay header compact so the game-achievement title sits in the same
-   control band as the filtering controls instead of consuming a large header block. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child {
   min-height: 42px;
   padding-top: 7px !important;
@@ -66,13 +62,11 @@
   letter-spacing: .01em;
 }
 
-/* Fullscreen control stays at the far-right end of the top control row. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > button {
   margin-left: auto;
   order: 10;
 }
 
-/* Single-row achievement rail: no wrapping and no vertical second row. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto {
   display: flex;
   flex-wrap: nowrap !important;
@@ -93,19 +87,16 @@
   display: none;
 }
 
-/* Every achievement card remains one fixed item in the horizontal rail. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start {
   flex: 0 0 auto !important;
   width: clamp(132px, 13vw, 188px);
   scroll-snap-align: start;
 }
 
-/* Do not render accidental empty/placeholder rail items. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start:empty {
   display: none !important;
 }
 
-/* Glossy protective cases with preserved 3D space for cursor-driven tilt. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div {
   position: relative;
   min-height: 190px;
@@ -127,7 +118,6 @@
   filter: brightness(1.08) saturate(1.12);
 }
 
-/* Frosted protective rim. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div::before {
   content: "";
   position: absolute;
@@ -139,7 +129,6 @@
   box-shadow: inset 0 0 16px rgba(255,255,255,.035);
 }
 
-/* Diagonal diamond/glass reflection. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div::after {
   content: "";
   position: absolute;
@@ -157,15 +146,11 @@
   opacity: .72;
 }
 
-/* Keep card imagery/text above the reflective glass layers. */
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div > * {
   position: relative;
   z-index: 6;
 }
 
-/* Latest Game Achievement Cards control-band treatment.
-   The existing dynamic title is visually moved onto the same horizontal row as
-   All / Ability / Equipment / Companion without changing the React data flow. */
 div[role="dialog"][aria-label*="game achievements and cards"] {
   border: 1px solid rgba(148, 220, 255, .10) !important;
   background:
@@ -180,8 +165,6 @@ div[role="dialog"][aria-label*="game achievements and cards"] {
     inset 0 0 35px rgba(100,180,255,.025) !important;
 }
 
-/* Remove the separate title band from the flow. The dynamic h3 remains visible,
-   but is positioned into the same control band as the achievement-type filters. */
 div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child {
   position: absolute !important;
   inset: 0 0 auto 0 !important;
@@ -234,7 +217,6 @@ div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child 
   box-shadow: 0 8px 24px rgba(0,0,0,.20);
 }
 
-/* Achievement type filters now occupy the title's former line. */
 div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) {
   position: relative;
   z-index: 10;
@@ -253,10 +235,56 @@ div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2)
   text-shadow: 0 0 14px rgba(165,243,252,.08);
 }
 
-/* Make the glass read as part of the streaming surface rather than a solid gray box. */
 div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:first-child,
 div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:last-child {
   background: transparent !important;
+}
+
+/* Preserve the collectible achievement-card row beneath the filters. */
+div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  gap: 1.25rem;
+  scrollbar-width: none;
+  background: transparent !important;
+}
+
+div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto > div {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  min-width: max-content;
+}
+
+div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto > div > button {
+  flex: 0 0 auto !important;
+}
+
+/* 50% taller player/chat row. Width is untouched. The top edge remains anchored;
+   the extra height extends downward and naturally pushes everything below it down. */
+.grid.grid-cols-12.gap-4[class~="h-[420px]"] {
+  height: 630px !important;
+}
+
+@media (min-width: 768px) {
+  .grid.grid-cols-12.gap-4[class~="h-[420px]"] {
+    height: 720px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid.grid-cols-12.gap-4[class~="h-[420px]"] {
+    height: 780px !important;
+  }
 }
 
 @media (max-width: 900px) {
