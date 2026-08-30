@@ -18,17 +18,13 @@ const NAMES = [
 ];
 
 const TAGLINES = [
-  'Ranked grind — road to top 100',
-  'Chill run, come hang out',
-  'No-hit challenge attempt',
-  'Story mode, first playthrough',
-  'Speedrun practice + tips',
-  'Community night — viewer games',
-  'Endgame build showcase',
-  'Late night co-op session',
+  'Ranked grind — road to top 100', 'Chill run, come hang out', 'No-hit challenge attempt',
+  'Story mode, first playthrough', 'Speedrun practice + tips', 'Community night — viewer games',
+  'Endgame build showcase', 'Late night co-op session',
 ];
 
 const TAGS = ['English', 'Competitive', 'Chill', 'Educational', 'Comedy', 'Interactive', 'Speedrun'];
+const PERSONALITIES = ['Moody', 'Talkative', 'Interactive', 'Chill', 'Competitive', 'Energetic', 'Educational'];
 
 function hash(str) {
   let h = 0;
@@ -53,8 +49,16 @@ export function getStreamersForGame(game, count = 12) {
       viewers: 180 + ((s * 7) % 9800),
       followers: 900 + ((s * 13) % 240000),
       tags: [TAGS[s % TAGS.length], TAGS[(s + 3) % TAGS.length]],
+      personality: PERSONALITIES[s % PERSONALITIES.length],
+      isNoCommentary: s % 5 === 0,
+      isNoCam: s % 4 === 0,
       uptimeMinutes: 12 + (s % 320),
       isLive: true,
+      highlights: [
+        { title: 'Featured moment', image: THUMBS[(s + 2) % THUMBS.length] },
+        { title: 'Recent highlight', image: THUMBS[(s + 5) % THUMBS.length] },
+        { title: 'Community moment', image: THUMBS[(s + 7) % THUMBS.length] },
+      ],
     };
   });
 }
