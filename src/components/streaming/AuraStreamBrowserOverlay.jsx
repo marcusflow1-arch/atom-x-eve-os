@@ -14,8 +14,10 @@ const FILTERS = [
   ['competitive','Competitive'], ['educational','Educational']
 ];
 
-export default function AuraStreamBrowserOverlay() {
-  const [open, setOpen] = useState(false);
+// Can be used as an independent page or as a legacy event-driven overlay.
+// The independent page has no dependency on Aura.jsx.
+export default function AuraStreamBrowserOverlay({ standalone = false }) {
+  const [open, setOpen] = useState(standalone);
   const [fullscreen, setFullscreen] = useState(true);
   const [games, setGames] = useState([]);
   const [query, setQuery] = useState('');
@@ -24,20 +26,26 @@ export default function AuraStreamBrowserOverlay() {
   const [streamFilter, setStreamFilter] = useState('all');
 
   useEffect(() => {
+    if (standalone) return undefined;
     const handler = () => {
       setFullscreen(true);
       setSelectedGame(null);
       setStreamFilter('all');
       setOpen(v => !v);
     };
+    window.addEventListener(OPEN_EVENT, handler);
+    return () => window.removeEventListener(OPEN_EVENT, handler);
+  }, [standalone]);
+
+  useEffect(() => {
     const onKey = e => {
       if (e.key !== 'Escape') return;
-      if (selectedGame) setSelectedGame(null); else setOpen(false);
+      if (selectedGame) setSelectedGame(null);
+      else if (!standalone) setOpen(false);
     };
-    window.addEventListener(OPEN_EVENT, handler);
     window.addEventListener('keydown', onKey);
-    return () => { window.removeEventListener(OPEN_EVENT, handler); window.removeEventListener('keydown', onKey); };
-  }, [selectedGame]);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedGame, standalone]);
 
   useEffect(() => {
     if (!open || games.length) return;
@@ -67,15 +75,8 @@ export default function AuraStreamBrowserOverlay() {
     }).sort((a,b) => b.viewers - a.viewers);
   }, [selectedGame, streamFilter]);
 
-  // This is deliberately an overlay-local state transition.
-  // Selecting a game NEVER closes this overlay and NEVER changes /aura.
   const chooseGame = game => setSelectedGame(game);
-
-  const closeOverlay = () => {
-    setSelectedGame(null);
-    setOpen(false);
-  };
-
+  const closeOverlay = () => { setSelectedGame(null); setOpen(false); };
   const chooseStreamer = streamer => {
     const params = new URLSearchParams({ streamerId: streamer.id || '', gameId: selectedGame?.id || '', game: selectedGame?.title || streamer.game || '' });
     window.location.assign(`/streaminghome?${params.toString()}`);
@@ -94,7 +95,7 @@ export default function AuraStreamBrowserOverlay() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setFullscreen(v=>!v)} className="p-2 text-white/60 hover:text-white" title={fullscreen?'Minimize':'Fullscreen'}>{fullscreen?<Minimize2 size={16}/>:<Maximize2 size={16}/>}</button>
-              <button onClick={closeOverlay} className="p-2 text-white/60 hover:text-white" title="Close"><X size={17}/></button>
+              {!standalone && <button onClick={closeOverlay} className="p-2 text-white/60 hover:text-white" title="Close"><X size={17}/></button>}
             </div>
           </header>
 
