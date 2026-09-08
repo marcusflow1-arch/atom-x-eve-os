@@ -1,0 +1,38 @@
+{
+  "name": "Guild Join/Leave Notifier",
+  "description": "Posts a system message in the guild chat whenever a member joins or leaves.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "delete"
+      ],
+      "entity_name": "ClanMember"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "guild_join_leave_notifier",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "clanMembershipNotifier",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "clanMembershipNotifier"
+  }
+}
