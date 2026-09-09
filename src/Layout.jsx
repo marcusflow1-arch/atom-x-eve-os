@@ -795,11 +795,8 @@ function LayoutContent({ children, currentPageName }) {
         } else if (p.includes('/steamlibrary')) {
           headerConfig.hidden = true;
         } else if (p.includes('/store')) {
-          headerConfig.hidden = false;
-          headerConfig.showMenu = true;
-          headerConfig.title = "";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
+          // The Store supplies its own complete top bar with centered search and account controls.
+          headerConfig.hidden = true;
         } else if (p.includes('/gamedetail')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;

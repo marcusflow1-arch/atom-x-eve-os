@@ -1,7 +1,7 @@
 // StorefrontTopBar.jsx — Top header: nav pills, search, credits, cart, notifications, profile
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, Coins, ChevronDown, Mic, MicOff, Settings } from 'lucide-react';
+import { Search, ShoppingCart, Coins, ChevronDown, Mic, MicOff, Settings } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSearchChange, onSearchOpen }) {
@@ -27,7 +27,7 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
   };
 
   return (
-    <div className="flex items-center w-full gap-4">
+    <div className="flex lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)_minmax(0,1fr)] items-center w-full gap-4">
       <style>{`
         .search-underline-line {
           background: rgba(255,255,255,0.18);
@@ -50,8 +50,8 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
         </div>
       </div>
 
-      {/* Center-left — minimal underline search (right of the Luna/Store/Cards tabs) */}
-      <div className="flex-1 flex justify-center min-w-0 pl-6">
+      {/* Center — primary Store search */}
+      <div className="flex-1 lg:flex-none flex justify-center min-w-0">
         <div onClick={onSearchOpen}
           className="search-underline group flex items-center gap-2 w-full max-w-[420px] min-w-0 px-1 py-2 cursor-text relative">
           <Search className="w-4 h-4 text-white/40 flex-shrink-0 group-hover:text-cyan-300 group-focus-within:text-cyan-300 transition-colors" />
@@ -70,23 +70,19 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
         </div>
       </div>
 
-      {/* Right cluster — credits, cart, notifications, view-mode toggle, profile */}
-      <div className="flex items-center gap-2.5 flex-shrink-0">
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
+      {/* Right cluster — balance, cart, profile settings */}
+      <div className="flex items-center gap-2.5 flex-shrink-0 lg:justify-self-end">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
           <Coins className="w-3.5 h-3.5 text-yellow-400" />
-          <span className="text-sm font-bold text-white">5,240</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Balance</span>
+          <span className="text-sm font-bold text-white">5,240 AGP</span>
         </div>
 
-        <button onClick={() => navigate(createPageUrl('Cart'))} className="relative w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all">
+        <button onClick={() => navigate(createPageUrl('Cart'))} title="Shopping cart" className="relative w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all">
           <ShoppingCart className="w-4 h-4" />
           {cartCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-cyan-500 text-white text-[9px] font-bold flex items-center justify-center">{cartCount}</span>
           )}
-        </button>
-
-        <button onClick={() => navigate(createPageUrl('Notifications'))} className="relative w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
         </button>
 
         <button
@@ -97,7 +93,7 @@ export default function StorefrontTopBar({ user, cartCount = 0, searchTerm, onSe
           <Settings className="w-4 h-4" />
         </button>
 
-        <button className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all">
+        <button onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=profile')} title="Profile" className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all">
           <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
           </div>

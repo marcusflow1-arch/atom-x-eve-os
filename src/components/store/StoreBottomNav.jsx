@@ -1,32 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Search } from 'lucide-react';
 
 
-export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, onSearchOpen, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
-  const [searchValue, setSearchValue] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const handleMic = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
-    const rec = new SR();
-    recognitionRef.current = rec;
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = 'en-US';
-    rec.onresult = (e) => { const text = e.results[0][0].transcript; setSearchValue(text); onSearch?.(text); };
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
-    rec.start();
-    setIsListening(true);
-  };
-
-  const handleChange = (e) => { setSearchValue(e.target.value); onSearch?.(e.target.value); };
-
+export default function StoreBottomNav({ activeTab, onTabChange }) {
   const isDevCardActive = activeTab === 'devcards';
   const isStoreActive = activeTab === 'store';
   const isTradingActive = activeTab === 'trading';
@@ -97,24 +73,6 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
             )}
           </motion.button>
         </div>
-
-        {/* Search bar — right of Dev Cards, opens the search panel UI */}
-        <motion.button
-          onClick={() => onSearchOpen?.()}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-lg text-xs text-white/45 hover:text-white bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all min-w-[200px]"
-        >
-          <Search className="w-3.5 h-3.5" />
-          <span className="truncate">Search games, studios...</span>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleMic(); }}
-            className={`ml-auto flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
-            title="Voice search"
-          >
-            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-          </button>
-        </motion.button>
 
         {/* Spacer pushes remaining space to the right */}
         <div className="flex-1" />
