@@ -1,0 +1,26 @@
+{
+  "name": "StreamGameVoteBallot",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "ID of the StreamGameVoteSession this ballot belongs to"
+    },
+    "game_key": {
+      "type": "string",
+      "description": "Key (title) of the game being voted for"
+    },
+    "game_name": {
+      "type": "string",
+      "description": "Display name of the game being voted for"
+    },
+    "voter_name": {
+      "type": "string",
+      "description": "Display name of the voter"
+    }
+  },
+  "required": [
+    "session_id",
+    "game_key"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "StreamGameVoteSession",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "ended"
+      ],
+      "default": "active",
+      "description": "Whether the audience vote is still accepting ballots"
+    },
+    "winner_game_key": {
+      "type": "string",
+      "description": "Key (title) of the winning game once the vote ends"
+    },
+    "winner_game_name": {
+      "type": "string",
+      "description": "Display name of the winning game once the vote ends"
+    },
+    "total_votes": {
+      "type": "number",
+      "default": 0,
+      "description": "Total ballots cast when the vote ended"
+    }
+  },
+  "required": []
+}
