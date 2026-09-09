@@ -253,13 +253,14 @@ export default function StreamingHome() {
           user={user}
           channelId={activeProfile?.user_id || user?.id}
           anchorRef={galleryAnchorRef}
+          sidebarVisible={sidebarVisible}
         />}
       </AnimatePresence>,
       document.body
     )}
     {activeTab && activeTab !== 'gallery' && typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
-        <motion.div key="streaming-home-overlay" className="fixed inset-0 z-[99999] pointer-events-none">
+        <motion.div key="streaming-home-overlay" className={`fixed top-0 bottom-0 right-0 z-[99999] pointer-events-none ${sidebarVisible ? 'left-0 md:left-[10vw]' : 'left-0'}`}>
           <motion.section role="dialog" aria-modal="true" aria-label={`${activeTabLabel} overlay`} initial={activeTab === 'games' || activeTab === 'cards' || activeTab === 'achievements' ? { x: '-100%' } : { y: '100%' }} animate={{ x: 0, y: 0 }} exit={activeTab === 'games' || activeTab === 'cards' || activeTab === 'achievements' ? { x: '-100%' } : { y: '100%' }} transition={{ type: 'spring', stiffness: 260, damping: 30 }} className={activeTab === 'games' || activeTab === 'cards' || activeTab === 'achievements' ? `absolute left-0 top-0 bottom-0 ${overlayFullscreen ? 'right-0' : 'w-[80vw]'} bg-slate-950/82 backdrop-blur-xl pointer-events-auto ${activeTab === 'achievements' ? "overflow-visible border-r-0 shadow-[28px_0_60px_-18px_rgba(2,8,23,0.95)] after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-28 after:translate-x-full after:bg-gradient-to-r after:from-slate-950/75 after:via-slate-950/30 after:to-transparent after:pointer-events-none" : 'overflow-hidden border-r border-white/15 shadow-[24px_0_80px_rgba(0,0,0,0.55)]'}` : `absolute left-0 bottom-0 ${overlayFullscreen ? 'right-0 h-screen' : 'w-[75vw] h-[40vh] min-h-[300px] max-h-[560px]'} overflow-hidden border-t border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[0_-24px_80px_rgba(0,0,0,0.55)] pointer-events-auto`}><div className={`h-full w-full flex flex-col overflow-hidden ${activeTab === 'achievements' ? 'p-0' : 'p-5 md:p-7'}`}>{activeTab !== 'cards' && activeTab !== 'achievements' && <div className="flex items-center justify-between gap-4 mb-4 shrink-0"><div><div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Streamer Profile</div><h2 className="text-2xl font-bold text-white">{activeTabLabel}</h2></div><button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white">{overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button></div>}<div className="flex-1 min-h-0 overflow-hidden">{renderOverlayContent()}</div></div></motion.section>
         </motion.div>
       </AnimatePresence>,

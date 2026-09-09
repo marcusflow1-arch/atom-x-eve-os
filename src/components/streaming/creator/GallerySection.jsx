@@ -11,7 +11,7 @@ import { useGalleryRequests } from '../gallery/useGallerySocial';
 import { chooseInitialClip, normalizeGallery } from '../gallery/galleryModel';
 import '../gallery/galleryConsole.css';
 
-export default function GallerySection({ isEditMode, galleryImages = [], onUpdateImages, onClose, user, channelId, anchorRef }) {
+export default function GallerySection({ isEditMode, galleryImages = [], onUpdateImages, onClose, user, channelId, anchorRef, sidebarVisible = false }) {
   const rootRef = useRef(null);
   const closeRef = useRef(null);
   const socialToggleRef = useRef(null);
@@ -209,7 +209,7 @@ export default function GallerySection({ isEditMode, galleryImages = [], onUpdat
     setUploading(false);
   };
 
-  return <motion.section ref={rootRef} id="stream-gallery-console" role="dialog" aria-modal={fullscreen || undefined} aria-label="Gallery media center" className={`gallery-console ${fullscreen ? 'is-fullscreen' : ''} ${drawerOpen ? 'social-open' : ''}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.24 }}>
+  return <motion.section ref={rootRef} id="stream-gallery-console" role="dialog" aria-modal={fullscreen || undefined} aria-label="Gallery media center" className={`gallery-console ${sidebarVisible ? 'sidebar-split' : ''} ${fullscreen ? 'is-fullscreen' : ''} ${drawerOpen ? 'social-open' : ''}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.24 }}>
     <motion.div className="gallery-top-fade bg-gradient-to-b from-slate-950/95 via-slate-950/70 to-transparent backdrop-blur-md" initial={{ y: -40 }} animate={{ y: 0 }} exit={{ y: -40 }} aria-hidden="true" />
     <header className="gallery-toolbar">
       <div className="gallery-brand"><Film size={19} /><div><span className="gallery-eyebrow">Aura / Media center</span><h2>Gallery<span> / {fullscreen ? 'Theater' : 'Moments'}</span></h2></div></div>
