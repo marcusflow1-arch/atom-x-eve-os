@@ -14,11 +14,7 @@
   backdrop-filter: blur(28px) saturate(175%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(175%) !important;
   border-color: rgba(120,210,255,.13) !important;
-  box-shadow:
-    0 30px 90px rgba(0,0,0,.58),
-    0 0 70px rgba(60,190,255,.09),
-    inset 0 1px 0 rgba(190,235,255,.075),
-    inset 0 -1px 0 rgba(0,0,0,.10) !important;
+  box-shadow: 0 30px 90px rgba(0,0,0,.58), 0 0 70px rgba(60,190,255,.09), inset 0 1px 0 rgba(190,235,255,.075), inset 0 -1px 0 rgba(0,0,0,.10) !important;
 }
 
 [class~="backdrop-blur-2xl"][class~="rounded-none"]::before {
@@ -27,9 +23,7 @@
   inset: -1px;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 42%, rgba(103,232,249,.10) 0%, transparent 48%),
-    linear-gradient(90deg, rgba(103,232,249,.12), transparent 14%, transparent 86%, rgba(99,102,241,.10));
+  background: radial-gradient(ellipse at 50% 42%, rgba(103,232,249,.10) 0%, transparent 48%), linear-gradient(90deg, rgba(103,232,249,.12), transparent 14%, transparent 86%, rgba(99,102,241,.10));
   filter: blur(18px);
   opacity: .9;
 }
@@ -45,27 +39,10 @@
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
 }
 
-[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child {
-  min-height: 42px;
-  padding-top: 7px !important;
-  padding-bottom: 7px !important;
-  background: transparent !important;
-  border-bottom-color: rgba(255,255,255,.08) !important;
-}
-
-[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > div:first-child > div:first-child {
-  display: none !important;
-}
-
-[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child h3 {
-  font-size: 13px !important;
-  letter-spacing: .01em;
-}
-
-[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > button {
-  margin-left: auto;
-  order: 10;
-}
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child { min-height: 42px; padding-top: 7px !important; padding-bottom: 7px !important; background: transparent !important; border-bottom-color: rgba(255,255,255,.08) !important; }
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > div:first-child > div:first-child { display: none !important; }
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child h3 { font-size: 13px !important; letter-spacing: .01em; }
+[class~="backdrop-blur-2xl"][class~="rounded-none"] > div:first-child > button { margin-left: auto; order: 10; }
 
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto {
   display: flex;
@@ -82,11 +59,9 @@
   scroll-snap-type: x proximity;
   padding: 8px 10px 18px;
 }
-
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto::-webkit-scrollbar { display: none; }
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start { flex: 0 0 auto !important; width: clamp(132px, 13vw, 188px); scroll-snap-align: start; }
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start:empty { display: none !important; }
-
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div {
   position: relative;
   min-height: 190px;
@@ -98,81 +73,98 @@
   transition: box-shadow .22s ease, filter .22s ease;
   will-change: transform;
 }
-
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start:hover > div { filter: brightness(1.08) saturate(1.12); }
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div::before { content: ""; position: absolute; inset: 2px; z-index: 4; pointer-events: none; border: 1px solid rgba(255,255,255,.10); border-radius: 11px; box-shadow: inset 0 0 16px rgba(255,255,255,.035); }
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div::after { content: ""; position: absolute; inset: -45%; z-index: 5; pointer-events: none; background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.16) 49%, rgba(255,255,255,.035) 52%, transparent 59%); transform: translateX(-45%) rotate(7deg); opacity: .28; transition: transform .45s ease, opacity .3s ease; }
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start:hover > div::after { transform: translateX(45%) rotate(7deg); opacity: .72; }
 [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div > * { position: relative; z-index: 6; }
 
-div[role="dialog"][aria-label*="game achievements and cards"] {
-  border: 0 !important;
-  background:
-    linear-gradient(135deg, rgba(7,20,36,.26), rgba(5,16,30,.14) 44%, rgba(2,10,22,.22) 100%),
-    rgba(4,14,28,.12) !important;
-  backdrop-filter: blur(34px) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(34px) saturate(170%) !important;
-  box-shadow:
-    0 28px 78px rgba(0,0,0,.34),
-    0 0 68px rgba(60,180,255,.045),
-    inset 0 18px 34px -30px rgba(180,235,255,.22),
-    inset 0 -18px 34px -30px rgba(120,190,255,.14) !important;
+/* Game Achievement Cards overlay inside the streaming player. */
+div[role="dialog"][aria-label*="game achievement cards"] {
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
   max-width: none !important;
+  border: 0 !important;
   border-radius: 0 !important;
   overflow: hidden !important;
   isolation: isolate;
+  background: linear-gradient(180deg, rgba(2,8,18,.82) 0%, rgba(3,10,22,.52) 48%, rgba(3,10,22,.14) 82%, transparent 100%) !important;
+  backdrop-filter: blur(18px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(145%) !important;
+  box-shadow: none !important;
+  mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
 }
 
-/* Soft edge treatment so the overlay reads as part of the stream rather than a separate box. */
-div[role="dialog"][aria-label*="game achievements and cards"]::before {
+/* Ambient HUD glow without creating a visible rectangular frame. */
+div[role="dialog"][aria-label*="game achievement cards"]::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(90deg, rgba(117,213,255,.00) 0%, rgba(117,213,255,.10) 8%, rgba(117,213,255,.03) 28%, rgba(117,213,255,.03) 72%, rgba(117,213,255,.10) 92%, rgba(117,213,255,.00) 100%),
-    linear-gradient(180deg, rgba(180,230,255,.10) 0%, rgba(180,230,255,.025) 10%, transparent 24%, transparent 76%, rgba(120,190,255,.025) 90%, rgba(120,190,255,.08) 100%);
-  opacity: .68;
-  filter: blur(.2px);
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 12%, rgba(103,232,249,.09), transparent 55%), linear-gradient(180deg, rgba(255,255,255,.025), transparent 35%);
 }
 
-div[role="dialog"][aria-label*="game achievements and cards"]::after {
+div[role="dialog"][aria-label*="game achievement cards"]::after {
   content: "";
   position: absolute;
-  inset: -10px 0;
-  z-index: -1;
+  left: 4%;
+  right: 4%;
+  bottom: -22px;
+  height: 46px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(45,165,225,.07) 12%, rgba(0,0,0,.16) 50%, rgba(45,165,225,.07) 88%, transparent 100%);
-  filter: blur(22px);
-  opacity: .75;
+  z-index: 0;
+  background: rgba(0,0,0,.38);
+  filter: blur(24px);
+  opacity: .58;
 }
 
-div[role="dialog"][aria-label*="game achievements and cards"] > * { position: relative; z-index: 1; }
+div[role="dialog"][aria-label*="game achievement cards"] > * { position: relative; z-index: 1; }
 
-div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child { position: absolute !important; inset: 0 0 auto 0 !important; height: 44px !important; min-height: 44px !important; padding: 0 18px 0 24px !important; z-index: 30; pointer-events: none; background: transparent !important; border-bottom: 0 !important; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child > div:first-child { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); max-width: min(38%, 440px); pointer-events: none; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child > div:first-child > div:first-child { display: none !important; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child h3 { margin: 0 !important; font-size: 13px !important; line-height: 1.2 !important; letter-spacing: .015em; font-weight: 700; color: rgba(255,255,255,.92) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child > button { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); margin: 0 !important; z-index: 31; pointer-events: auto; background: rgba(255,255,255,.035) !important; border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0,0,0,.20); }
+/* Filters stay centered in the same full-width HUD and the card rail fills the remaining space. */
+div[role="dialog"][aria-label*="game achievement cards"] > div:first-child {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  width: 100% !important;
+}
 
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) { position: relative; z-index: 10; min-height: 0; display: flex; flex-direction: column; overflow: hidden; width: 100% !important; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:nth-child(2) { justify-content: flex-end !important; gap: clamp(1rem, 2.2vw, 2.5rem) !important; min-height: 44px; padding: 10px 68px 8px clamp(230px, 30vw, 460px) !important; background: rgba(255,255,255,.008) !important; border-bottom: 0 !important; box-shadow: inset 0 -1px 0 rgba(255,255,255,.035); }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:nth-child(2) button { text-shadow: 0 0 14px rgba(165,243,252,.08); }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:first-child,
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:last-child { background: transparent !important; }
+div[role="dialog"][aria-label*="game achievement cards"] > div:nth-child(2) {
+  width: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+}
 
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:last-child { display: flex !important; flex: 1 1 auto !important; min-height: 0 !important; width: 100% !important; overflow-x: auto !important; overflow-y: hidden !important; align-items: center !important; visibility: visible !important; opacity: 1 !important; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:last-child > div { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; gap: 1.25rem !important; min-width: max-content !important; min-height: 100% !important; visibility: visible !important; opacity: 1 !important; }
-div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:last-child > div > button { display: block !important; flex: 0 0 auto !important; visibility: visible !important; opacity: 1 !important; }
+div[role="dialog"][aria-label*="game achievement cards"] > div:last-child {
+  width: 100% !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  background: transparent !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 
-div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center; overflow-x: auto !important; overflow-y: hidden !important; gap: 1.25rem; scrollbar-width: none; background: transparent !important; }
-div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto::-webkit-scrollbar { display: none; }
-div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto > div { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center; min-width: max-content; }
-div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto > div > button { flex: 0 0 auto !important; }
+div[role="dialog"][aria-label*="game achievement cards"] > div:last-child > div {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 1.25rem !important;
+  min-width: max-content !important;
+  height: 100% !important;
+}
+
+div[role="dialog"][aria-label*="game achievement cards"] > div:last-child > div > button {
+  display: block !important;
+  flex: 0 0 auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 
 .grid.grid-cols-12.gap-4[class~="h-[420px]"] { height: 630px !important; }
 @media (min-width: 768px) { .grid.grid-cols-12.gap-4[class~="h-[420px]"] { height: 720px !important; } }
@@ -182,6 +174,5 @@ div[role="dialog"][aria-label*="game achievements and cards"] .overflow-x-auto >
   [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto { gap: .75rem; padding-inline: 6px; }
   [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start { width: 136px; }
   [class~="backdrop-blur-2xl"][class~="rounded-none"] .overflow-x-auto .snap-start > div { min-height: 174px; border-radius: 11px; }
-  div[role="dialog"][aria-label*="game achievements and cards"] > div:first-child > div:first-child { max-width: 42%; left: 14px; }
-  div[role="dialog"][aria-label*="game achievements and cards"] > div:nth-child(2) > div:nth-child(2) { padding-left: 44% !important; padding-right: 54px !important; gap: 1rem !important; }
+  div[role="dialog"][aria-label*="game achievement cards"] { mask-image: linear-gradient(to right, transparent 0%, #000 2%, #000 98%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 2%, #000 98%, transparent 100%); }
 }
