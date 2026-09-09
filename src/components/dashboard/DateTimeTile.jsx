@@ -57,12 +57,12 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
             <div className="flex items-center gap-4 w-full">
               <div className="text-4xl font-black text-white tracking-tighter drop-shadow-md leading-none flex-shrink-0">{timeString}</div>
               <div className="flex-1 flex items-stretch gap-3 overflow-hidden border-l border-white/10 pl-4 h-10">
-                <button type="button" onClick={(e) => { e.stopPropagation(); setOverlayMode('reminders'); }} className="flex-1 min-w-0 flex flex-col justify-center text-left group cursor-pointer">
+                <button type="button" aria-label="Toggle reminders" onClick={(e) => { e.stopPropagation(); setOverlayMode(current => current === 'reminders' ? null : 'reminders'); }} className="flex-1 min-w-0 flex flex-col justify-center text-left group cursor-pointer">
                   <div className="flex items-center gap-1 mb-1"><Bell className="w-3 h-3 text-amber-400" /><span className="text-[10px] uppercase tracking-wider text-amber-400/80 font-bold truncate group-hover:text-amber-300 transition-colors">0 Reminders</span></div>
                   <div className="relative w-full h-5 overflow-hidden"><AnimatePresence mode="wait"><motion.div key={currentReminderIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="absolute inset-0 text-xs text-white/80 font-medium truncate group-hover:text-white transition-colors">{reminders[currentReminderIdx]}</motion.div></AnimatePresence></div>
                 </button>
                 <div className="w-px self-stretch bg-white/10 flex-shrink-0" />
-                <button type="button" onClick={(e) => { e.stopPropagation(); setOverlayMode('updates'); }} className="flex-1 min-w-0 flex flex-col justify-center text-left group cursor-pointer">
+                <button type="button" aria-label="Toggle system updates" onClick={(e) => { e.stopPropagation(); setOverlayMode(current => current === 'updates' ? null : 'updates'); }} className="flex-1 min-w-0 flex flex-col justify-center text-left group cursor-pointer">
                   <div className="flex items-center gap-1 mb-1"><Settings className="w-3 h-3 text-cyan-400" /><span className="text-[10px] uppercase tracking-wider text-cyan-400/80 font-bold truncate group-hover:text-cyan-300 transition-colors">System Updates</span></div>
                   <div className="relative w-full h-5 overflow-hidden"><AnimatePresence mode="wait"><motion.div key={currentUpdateIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="absolute inset-0 text-xs text-white/80 font-medium truncate group-hover:text-white transition-colors">{systemUpdates[currentUpdateIdx]}</motion.div></AnimatePresence></div>
                 </button>
