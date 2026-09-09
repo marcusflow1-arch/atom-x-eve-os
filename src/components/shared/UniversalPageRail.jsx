@@ -20,7 +20,7 @@ export default function UniversalPageRail({ children, pathname }) {
   return (
     <div className="flex h-full w-full overflow-hidden bg-black/20">
       {visible && (
-        <aside className="relative z-40 h-full w-[5%] min-w-[80px] flex-shrink-0 border-r border-white/20 bg-black/20 py-6 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm">
+        <aside className="relative z-30 mt-16 mb-[53px] h-[calc(100%-117px)] w-[5%] min-w-[80px] flex-shrink-0 self-start border-r border-white/20 bg-black/20 py-6 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm">
           <div className="mt-12 flex w-full flex-col items-center px-2">
             <span className="mb-1 text-center text-[10px] font-bold uppercase tracking-wider text-white/50">Recently<br />Played</span>
             <div className="mb-3 h-px w-8 bg-white/20" />
