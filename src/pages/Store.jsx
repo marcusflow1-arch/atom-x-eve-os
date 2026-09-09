@@ -221,6 +221,16 @@ export default function Store() {
     const [hoveredGame, setHoveredGame] = useState(null);
     const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
     const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
+
+    useEffect(() => {
+        if (!storeLibraryOpen) return;
+        const closeSearchOnEscape = (event) => {
+            if (event.key === 'Escape') setStoreLibraryOpen(false);
+        };
+        window.addEventListener('keydown', closeSearchOnEscape);
+        return () => window.removeEventListener('keydown', closeSearchOnEscape);
+    }, [storeLibraryOpen]);
+
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);

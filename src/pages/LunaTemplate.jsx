@@ -186,7 +186,6 @@ export default function LunaTemplate() {
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
-  const [librarySearchTerm, setLibrarySearchTerm] = useState('');
   const [selectedConsoleGame, setSelectedConsoleGame] = useState(null);
   const [openedGame, setOpenedGame] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
@@ -609,7 +608,7 @@ export default function LunaTemplate() {
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
 
-      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}
+      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} hideSearch />}
     >
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />

@@ -232,7 +232,7 @@ function LunaSearchBar({ isLibraryActive, onFocus, onOpen, value, onChange }) {
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange, games: propGames }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, hideSearch = false, searchTerm, onSearchChange, games: propGames }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
   // Sync forced open state
   useEffect(() => {
@@ -1188,15 +1188,18 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             <span>Environment Hubs</span>
           </button>
 
-          <div className="w-px h-5 bg-white/10 mx-2" />
-
-          <LunaSearchBar
-            isLibraryActive={activeTab === 'library'}
-            onFocus={() => { if (activeTab !== 'library') handleTabClick('library'); }}
-            onOpen={() => { if (activeTab !== 'library') handleTabClick('library'); }}
-            value={searchTerm || ''}
-            onChange={onSearchChange}
-          />
+          {!hideSearch && (
+            <>
+              <div className="w-px h-5 bg-white/10 mx-2" />
+              <LunaSearchBar
+                isLibraryActive={activeTab === 'library'}
+                onFocus={() => { if (activeTab !== 'library') handleTabClick('library'); }}
+                onOpen={() => { if (activeTab !== 'library') handleTabClick('library'); }}
+                value={searchTerm || ''}
+                onChange={onSearchChange}
+              />
+            </>
+          )}
         </div>
       </div>}
     </>
