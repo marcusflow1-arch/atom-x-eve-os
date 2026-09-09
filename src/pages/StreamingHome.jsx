@@ -164,7 +164,7 @@ export default function StreamingHome() {
     const style = RARITY_STYLES[meta.rarity];
     const hovered = hoveredAchievement === meta.id;
     return (
-      <div className="relative h-full aspect-[3/4] shrink-0" style={{ perspective: '1100px' }}>
+      <div className="relative w-[140px] aspect-[3/4] shrink-0" style={{ perspective: '1100px' }}>
         <motion.div
           animate={{ rotateX: hovered ? achievementTilt.x : 0, rotateY: hovered ? achievementTilt.y : 0, y: hovered ? -6 : 0, scale: hovered ? 1.035 : 1 }}
           transition={{ type: 'spring', stiffness: 250, damping: 23 }}
@@ -201,16 +201,16 @@ export default function StreamingHome() {
       transition={{ type: 'spring', stiffness: 280, damping: 30 }}
       role="dialog"
       aria-label={`${streamingGame.name} game achievement cards`}
-      className="absolute left-0 top-0 z-50 flex h-1/2 w-1/2 flex-col overflow-hidden border border-blue-300/25 bg-slate-950/70 shadow-[0_24px_80px_rgba(0,0,0,.55)] backdrop-blur-xl"
+      className="absolute left-0 top-0 z-50 flex h-1/2 w-1/4 flex-col overflow-hidden border border-blue-300/25 bg-slate-950/70 shadow-[0_24px_80px_rgba(0,0,0,.55)] backdrop-blur-xl"
     >
-      <div className="flex shrink-0 items-center gap-5 px-4 pt-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-1 px-8 pt-3">
         {ACHIEVEMENT_TYPES.map((type) => (
-          <button key={type} type="button" onClick={() => setAchievementType(type)} className={`relative pb-1.5 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.14em] whitespace-nowrap transition-colors ${achievementType === type ? 'text-white' : 'text-white/40 hover:text-white/75'}`}>
+          <button key={type} type="button" onClick={() => setAchievementType(type)} className={`relative shrink-0 pb-1.5 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.14em] whitespace-nowrap transition-colors ${achievementType === type ? 'text-white' : 'text-white/40 hover:text-white/75'}`}>
             {type}
             <span className={`absolute left-0 right-0 bottom-0 h-px bg-cyan-200 transition-opacity ${achievementType === type ? 'opacity-100 shadow-[0_0_10px_rgba(165,243,252,.7)]' : 'opacity-0'}`} />
           </button>
         ))}
-        <button type="button" onClick={() => setShowGameAchievements(false)} className="ml-auto h-7 w-7 shrink-0 flex items-center justify-center rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/55 hover:text-white" aria-label="Close achievement cards"><X className="w-3.5 h-3.5" /></button>
+        <button type="button" onClick={() => setShowGameAchievements(false)} className="absolute right-2 top-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/55 hover:text-white" aria-label="Close achievement cards"><X className="w-3.5 h-3.5" /></button>
       </div>
       <div className="flex shrink-0 justify-center py-2.5">
         <div className="h-px w-1/2 bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
