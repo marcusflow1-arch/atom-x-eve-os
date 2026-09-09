@@ -1,403 +1,99 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Play, X, Trophy, Clock, Users, Star, Download,
-  Heart, Settings, Radio, Zap, ChevronUp, ChevronRight,
+  Play, Radio, X, Clock3, Trophy, Gauge, Sparkles, ChevronRight,
+  Wrench, Bug, SlidersHorizontal, Image, Users, ShoppingBag, BookOpen,
+  Film, Activity, CalendarDays, Target, Gift, Server, ArrowRight
 } from 'lucide-react';
-import GameLandingDLC from './GameLandingDLC';
-import GameLandingAchievements from './GameLandingAchievements';
-import CommunityMomentsSection from '@/components/store/CommunityMomentsSection';
-import ReviewSection from '@/components/store/ReviewSection';
 
-const TABS = ['Overview', 'Achievements', 'Community Moments', 'News', 'Friends'];
-
-const MOCK_NEWS = [
-  { title: 'Season 4 — Void Ascendancy Launch', desc: 'A new era begins. New map, new heroes, and massive balance changes.', time: 'May 17', tag: 'New Season', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300' },
-  { title: 'Balance Patch v4.2.1', desc: 'Multiple hero adjustments and bug fixes across all game modes.', time: 'March 18', tag: 'Patch Notes', image: null },
-  { title: 'Double XP Weekend Active', desc: 'Earn 2x XP on all matches this weekend only. Don\'t miss out!', time: 'March 10', tag: 'Event', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300' },
-  { title: 'New Map: The Shattered Keep', desc: 'Explore the newly added Shattered Keep map with unique mechanics.', time: 'February 25', tag: 'Content', image: null },
-  { title: 'Hotfix 2/25', desc: 'Minor crash fixes and performance improvements.', time: 'February 23', tag: 'Hotfix', image: null },
+const FALLBACK_UPDATES = [
+  { id: 'season', title: 'Season 4 — Void Ascendancy', type: 'Season', date: 'Live now', summary: 'New playable content, seasonal rewards and progression updates.', features: ['New seasonal progression track', 'Fresh map rotation and rewards', 'New collectible unlocks'], balance: ['Role tuning across competitive modes', 'Adjusted progression pacing'], fixes: ['Improved matchmaking stability', 'Resolved several UI and performance issues'] },
+  { id: 'patch', title: 'Balance Patch v4.2.1', type: 'Patch', date: 'May 17', summary: 'Gameplay tuning, weapon adjustments and quality-of-life improvements.', features: ['Expanded loadout presets', 'Updated challenge tracking'], balance: ['Rebalanced high-pick-rate equipment', 'Adjusted ability cooldowns'], fixes: ['Fixed progression display mismatch', 'Reduced intermittent frame spikes'] },
+  { id: 'maintenance', title: 'Server Maintenance', type: 'Service', date: 'Tomorrow', summary: 'Scheduled backend maintenance and service optimization.', features: ['Infrastructure improvements'], balance: ['No balance changes'], fixes: ['Network stability improvements', 'Match reconnect reliability'] },
 ];
 
-const RARITY_COLOR = {
-  Common: 'text-white/50 bg-white/10',
-  Rare: 'text-blue-300 bg-blue-500/15',
-  Epic: 'text-purple-300 bg-purple-500/15',
-  Legendary: 'text-amber-300 bg-amber-500/15',
-};
+const FALLBACK_QUESTS = [
+  { title: 'Complete 3 competitive matches', type: 'Daily', progress: 67, reward: '850 XP' },
+  { title: 'Earn 25 eliminations', type: 'Weekly', progress: 44, reward: 'Rare Card Pack' },
+  { title: 'Reach the next account milestone', type: 'Milestone', progress: 78, reward: '2,500 XP + Badge' },
+  { title: 'Finish the seasonal story objective', type: 'Season', progress: 31, reward: 'Legendary Unlock' },
+];
 
-const TAG_COLOR = {
-  'New Season': 'text-purple-300 bg-purple-500/15',
-  'Patch Notes': 'text-blue-300 bg-blue-500/15',
-  'Event': 'text-amber-300 bg-amber-500/15',
-  'Content': 'text-green-300 bg-green-500/15',
-  'Hotfix': 'text-white/40 bg-white/10',
-};
+const HUB_TILES = [
+  { id: 'community', title: 'Community Hub & Guides', detail: 'Builds, strategies and player discoveries', icon: BookOpen },
+  { id: 'dlc', title: 'DLC & Add-Ons Store', detail: 'Expansions, passes and cosmetics', icon: ShoppingBag },
+  { id: 'media', title: 'Media Gallery & Clips', detail: 'Screenshots and saved highlights', icon: Film },
+  { id: 'activity', title: 'Activity Feed & Friends', detail: 'Friends playing and trophy activity', icon: Activity },
+];
+
+const edgeMask = { WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%)' };
+
+function GlassSection({ children, className = '' }) {
+  return <section className={`relative overflow-hidden bg-slate-950/35 backdrop-blur-md ${className}`} style={edgeMask}>
+    <div className="pointer-events-none absolute inset-x-[8%] top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+    {children}
+  </section>;
+}
 
 export default function GameLandingPage({ game, onClose }) {
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [wishlisted, setWishlisted] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollRef = useRef(null);
+  const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const title = game?.title || 'Selected Game';
+  const hero = game?.image || game?.cover_image || game?.thumb;
+  const hours = game?.playtime || game?.hours_played || '128h';
+  const achievementText = game?.achievements || `${game?.progress ?? 68}%`;
+  const rank = game?.rank || game?.level || 'Lv. 42';
+  const quests = useMemo(() => Array.isArray(game?.quests) && game.quests.length ? game.quests : FALLBACK_QUESTS, [game]);
+  const updates = useMemo(() => Array.isArray(game?.updates) && game.updates.length ? game.updates : FALLBACK_UPDATES, [game]);
 
-  const handleScroll = (e) => {
-    setShowScrollTop(e.target.scrollTop > 200);
-  };
+  return <motion.div key={game?.id || title} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative h-full min-h-0 overflow-y-auto bg-[#060b12] text-white">
+    <div className="relative min-h-[380px] overflow-hidden">
+      {hero && <img src={hero} alt="" className="absolute inset-0 h-full w-full object-cover scale-[1.02]" />}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#060b12] via-[#060b12]/55 to-black/15" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#060b12]/75 via-transparent to-[#060b12]/45" />
+      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#060b12] to-transparent" />
+      {onClose && <button onClick={onClose} className="absolute right-5 top-5 z-20 grid h-9 w-9 place-items-center bg-black/35 text-white/60 backdrop-blur-md transition hover:text-white" aria-label="Close game detail"><X className="h-4 w-4" /></button>}
 
-  const scrollToTop = () => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <motion.div
-      key={game.id}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      className="h-full flex flex-col overflow-hidden relative"
-      style={{ background: 'transparent' }}
-    >
-      {/* ── SCROLLABLE BODY ── */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overscroll-contain min-h-0"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        {/* HERO BANNER */}
-        <div className="relative flex-shrink-0" style={{ height: '200px' }}>
-          <img
-            src={game.image}
-            alt={game.title}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: 'brightness(0.7) saturate(1.1)' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e18] via-[#0a0e18]/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0e18]/60 via-transparent to-transparent" />
-
-          {/* Close */}
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 flex items-center justify-center transition-colors z-10 border border-white/10"
-            >
-              <X className="w-3.5 h-3.5 text-white/70" />
-            </button>
-          )}
-
-          {/* Status badge */}
-          <div className="absolute top-3 left-3">
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold text-white ${
-              game.status === 'Playing' || game.status === 'In Progress' ? 'bg-green-500/80' :
-              game.status === 'New' ? 'bg-emerald-500/80' : 'bg-blue-500/70'
-            }`}>
-              {game.status}
-            </span>
-          </div>
-
-          {/* Title */}
-          <div className="absolute bottom-4 left-5 right-5">
-            <h1 className="text-white text-xl font-black leading-tight drop-shadow-xl">{game.title}</h1>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-white/50 text-[10px]">{game.genre}</span>
-              <span className="w-px h-2.5 bg-white/20" />
-              <div className="flex items-center gap-1">
-                <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                <span className="text-amber-300 text-[10px] font-bold">{game.rating}</span>
-              </div>
-              <span className="w-px h-2.5 bg-white/20" />
-              <div className="flex items-center gap-1">
-                <Users className="w-2.5 h-2.5 text-blue-400" />
-                <span className="text-white/40 text-[10px]">{game.players} playing</span>
-              </div>
-            </div>
-          </div>
+      <div className="relative z-10 flex min-h-[380px] flex-col justify-end px-7 pb-8 md:px-10 lg:px-12">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-200/60">Game Detail Dashboard</div>
+        <h1 className="mt-2 max-w-4xl text-3xl font-black tracking-tight md:text-5xl">{title}</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 line-clamp-2">{game?.description || 'Continue your game, review live updates, track objectives and jump into the community without leaving this dashboard.'}</p>
+        <div className="mt-6 flex flex-wrap items-center gap-5">
+          <button className="group flex min-w-[170px] items-center justify-center gap-3 bg-cyan-300 px-7 py-3 text-sm font-black tracking-[0.14em] text-slate-950 shadow-[0_10px_45px_rgba(34,211,238,.17)] transition hover:scale-[1.02]"><Play className="h-4 w-4 fill-current" /> PLAY</button>
+          <button className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-white/70 transition hover:text-white"><Radio className="h-4 w-4 text-fuchsia-300" /> STREAM</button>
+          <div className="hidden h-9 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent md:block" />
+          {[{ label: 'Hours Played', value: hours, icon: Clock3 }, { label: 'Achievements', value: achievementText, icon: Trophy }, { label: 'Level / Rank', value: rank, icon: Gauge }].map(({ label, value, icon: Icon }) => <div key={label} className="flex min-w-[120px] items-center gap-3"><Icon className="h-4 w-4 text-cyan-200/65" /><div><div className="text-[9px] uppercase tracking-[0.18em] text-white/30">{label}</div><div className="mt-0.5 text-sm font-bold">{value}</div></div></div>)}
         </div>
-
-        {/* ACTION ROW */}
-        <div className="flex items-center gap-2 px-5 py-3 border-b border-white/[0.05]">
-          <button
-            className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all"
-            style={{
-              background: 'linear-gradient(135deg, rgba(34,211,238,0.3), rgba(99,102,241,0.2))',
-              border: '1px solid rgba(34,211,238,0.4)',
-              color: '#fff',
-              boxShadow: '0 2px 16px rgba(34,211,238,0.15)',
-            }}
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            Play
-          </button>
-
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white/55 hover:text-white transition-colors"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <Radio className="w-3 h-3 text-purple-400" />
-            Stream
-          </button>
-
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white/55 hover:text-white transition-colors"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <Download className="w-3 h-3" />
-            Update
-          </button>
-
-          <div className="flex-1" />
-
-          <button
-            onClick={() => setWishlisted(v => !v)}
-            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all border ${wishlisted ? 'bg-red-500/20 border-red-500/30 text-red-400' : 'bg-white/[0.05] border-white/[0.08] text-white/30 hover:text-white'}`}
-          >
-            <Heart className={`w-3.5 h-3.5 ${wishlisted ? 'fill-current' : ''}`} />
-          </button>
-          <button className="w-7 h-7 rounded-lg flex items-center justify-center transition-all border bg-white/[0.05] border-white/[0.08] text-white/30 hover:text-white">
-            <Settings className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* STATS STRIP */}
-        <div className="grid grid-cols-3 gap-0 border-b border-white/[0.05]">
-          {[
-            { label: 'PLAY TIME', value: game.playtime, sub: '', icon: Clock },
-            { label: 'LAST PLAYED', value: '2h ago', sub: '', icon: Zap },
-            { label: 'ACHIEVEMENTS', value: game.achievements, sub: '', icon: Trophy },
-          ].map(({ label, value, icon: Icon }, i) => (
-            <div key={i} className={`flex flex-col items-center py-3 gap-0.5 ${i < 2 ? 'border-r border-white/[0.05]' : ''}`}>
-              <span className="text-white/25 text-[8px] uppercase tracking-widest">{label}</span>
-              <span className="text-white text-sm font-bold">{value}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* COMPLETION BAR */}
-        <div className="px-5 py-3 border-b border-white/[0.05]">
-          <div className="flex justify-between text-[9px] text-white/25 mb-1.5">
-            <span>Completion</span>
-            <span className="text-white/40 font-bold">{game.progress}%</span>
-          </div>
-          <div className="h-1 rounded-full bg-white/[0.07] overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${game.progress}%` }}
-              transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-              className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, #22d3ee, #818cf8)' }}
-            />
-          </div>
-        </div>
-
-        {/* TABS */}
-        <div className="flex gap-0 border-b border-white/[0.05]">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-[11px] font-semibold transition-all relative ${
-                activeTab === tab ? 'text-white' : 'text-white/30 hover:text-white/60'
-              }`}
-            >
-              {tab}
-              {activeTab === tab && (
-                <motion.div
-                  layoutId="tab-underline"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                  style={{ background: 'linear-gradient(90deg, #22d3ee, #818cf8)' }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* TAB CONTENT */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {/* OVERVIEW */}
-            {activeTab === 'Overview' && (
-              <div>
-                {/* Description */}
-                <div className="px-5 py-4 border-b border-white/[0.04]">
-                  <p className="text-white/50 text-xs leading-relaxed">{game.description}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {(game.tags || []).map(tag => (
-                      <span key={tag} className="px-2 py-0.5 rounded text-[9px] font-medium text-white/40 border border-white/[0.07]"
-                        style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Season Pass */}
-                <div className="px-5 py-4 border-b border-white/[0.04]">
-                  <div className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.06))', border: '1px solid rgba(99,102,241,0.15)' }}>
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0">
-                      <Zap className="w-4 h-4 text-indigo-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-bold">Season Pass Active</p>
-                      <p className="text-white/35 text-[9px] mt-0.5">Earn bonus XP & exclusive cards this season</p>
-                    </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-white/20 flex-shrink-0" />
-                  </div>
-                </div>
-
-                {/* DLC & Add-ons */}
-                <div className="px-5 py-4 border-b border-white/[0.04]">
-                  <GameLandingDLC />
-                </div>
-
-                {/* Updates */}
-                <div className="px-5 py-4 border-b border-white/[0.04]">
-                  <p className="text-white/20 text-[9px] uppercase tracking-widest mb-3">Updates</p>
-                  <div className="space-y-2.5">
-                    {[
-                      { ver: 'Patch v4.2.1', date: 'May 17', text: 'Season 4 — Void Ascendancy launch. New map, heroes & major balance changes.', color: 'text-purple-300 bg-purple-500/15' },
-                      { ver: 'Hotfix v4.2.0', date: 'Mar 18', text: 'Multiple hero adjustments and bug fixes across all game modes.', color: 'text-blue-300 bg-blue-500/15' },
-                      { ver: 'Update v4.1.0', date: 'Feb 25', text: 'Added The Shattered Keep map with unique mechanics & performance fixes.', color: 'text-green-300 bg-green-500/15' },
-                    ].map(({ ver, date, text, color }, i) => (
-                      <div key={i} className="flex gap-3 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div className="w-1 rounded-full flex-shrink-0" style={{ background: 'linear-gradient(180deg, #22d3ee, #818cf8)' }} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-semibold ${color}`}>{ver}</span>
-                            <span className="text-white/25 text-[9px]">{date}</span>
-                          </div>
-                          <p className="text-white/45 text-[10px] leading-relaxed">{text}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="px-5 py-4">
-                  <p className="text-white/20 text-[9px] uppercase tracking-widest mb-3">Recent Activity</p>
-                  <div className="space-y-3">
-                    {[
-                      { icon: Trophy, color: 'text-amber-400', text: 'Unlocked "First Strike"', time: '2h ago' },
-                      { icon: Users, color: 'text-blue-400', text: 'Shadow_Striker started playing', time: '4h ago' },
-                      { icon: Zap, color: 'text-purple-400', text: 'Weekly Tournament started', time: '1d ago' },
-                    ].map(({ icon: Icon, color, text, time }, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <Icon className={`w-3 h-3 flex-shrink-0 ${color}`} />
-                        <p className="text-white/40 text-[10px] flex-1 truncate">{text}</p>
-                        <span className="text-white/15 text-[9px] flex-shrink-0">{time}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Community Feedback */}
-                <div className="px-5 pb-4">
-                  <ReviewSection />
-                </div>
-              </div>
-            )}
-
-            {/* ACHIEVEMENTS */}
-            {activeTab === 'Achievements' && (
-              <GameLandingAchievements summary={game.achievements} />
-            )}
-
-            {/* COMMUNITY MOMENTS */}
-            {activeTab === 'Community Moments' && (
-              <div className="px-5 pb-4">
-                <CommunityMomentsSection game={game} />
-              </div>
-            )}
-
-            {/* NEWS */}
-            {activeTab === 'News' && (
-              <div>
-                {MOCK_NEWS.map(({ title, desc, time, tag, image }, i) => (
-                  <div key={i} className="border-b border-white/[0.04] last:border-none">
-                    <p className="px-5 pt-4 pb-2 text-white/25 text-[9px] uppercase tracking-widest">{time}</p>
-                    <div className="px-5 pb-4 flex gap-3 cursor-pointer hover:bg-white/[0.02] transition-colors">
-                      {image && (
-                        <div className="w-24 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                          <img src={image} alt={title} className="w-full h-full object-cover opacity-80" />
-                        </div>
-                      )}
-                      {!image && (
-                        <div className="w-24 h-16 rounded-lg flex-shrink-0 flex items-center justify-center"
-                          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                          <Zap className="w-5 h-5 text-white/20" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-semibold mb-1 ${TAG_COLOR[tag] || 'text-white/40 bg-white/10'}`}>{tag}</span>
-                        <p className="text-white text-[11px] font-semibold leading-snug">{title}</p>
-                        <p className="text-white/35 text-[9px] mt-1 leading-relaxed line-clamp-2">{desc}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* FRIENDS */}
-            {activeTab === 'Friends' && (
-              <div className="px-5 py-4 space-y-2">
-                {[
-                  { name: 'Shadow_Striker', status: 'Playing now', avatar: 'S', online: true },
-                  { name: 'CyberVixen', status: 'In lobby', avatar: 'C', online: true },
-                  { name: 'NovaStar99', status: 'Online', avatar: 'N', online: true },
-                  { name: 'GhostBlade', status: 'Away', avatar: 'G', online: false },
-                ].map(({ name, status, avatar, online }) => (
-                  <div key={name} className="flex items-center gap-3 p-2.5 rounded-xl transition-colors hover:bg-white/[0.04]"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="relative flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
-                        {avatar}
-                      </div>
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a0e18] ${online ? 'bg-green-400' : 'bg-white/20'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-semibold">{name}</p>
-                      <p className={`text-[9px] ${online ? 'text-green-400' : 'text-white/30'}`}>{status}</p>
-                    </div>
-                    <button className="px-2.5 py-1 rounded-lg text-[9px] font-bold text-cyan-300 border border-cyan-400/25 hover:bg-cyan-400/10 transition-colors">
-                      Invite
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Bottom padding so content doesn't hide behind scroll-to-top */}
-        <div className="h-12" />
       </div>
+    </div>
 
-      {/* SCROLL TO TOP */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            onClick={scrollToTop}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-semibold text-white/60 hover:text-white transition-all"
-            style={{
-              background: 'rgba(20,25,35,0.85)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
-            }}
-          >
-            <ChevronUp className="w-3 h-3" />
-            Scroll to Top
-          </motion.button>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+    <div className="relative z-10 px-5 pb-12 md:px-8 lg:px-10">
+      <div className="grid gap-5 xl:grid-cols-[1fr_1.12fr_.9fr]">
+        <GlassSection className="min-h-[500px] p-5 md:p-6">
+          <div className="mb-5 flex items-end justify-between gap-3"><div><div className="text-[9px] uppercase tracking-[0.24em] text-white/30">Live intelligence</div><h2 className="mt-1 text-lg font-bold">Updates & Patch Notes</h2></div><Server className="h-4 w-4 text-cyan-300/50" /></div>
+          <div className="space-y-1">{updates.map((u, i) => <button key={u.id || i} onClick={() => setSelectedUpdate(u)} className="group w-full px-1 py-4 text-left transition hover:translate-x-1"><div className="flex items-center justify-between gap-4"><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/65">{u.type || 'Update'}</span><span className="text-[9px] text-white/25">{u.date || 'Recent'}</span></div><div className="mt-1 flex items-center gap-2"><h3 className="font-semibold text-white/85 group-hover:text-white">{u.title}</h3><ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-cyan-200" /></div><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-white/35">{u.summary || u.desc}</p><div className="mt-4 h-px bg-gradient-to-r from-white/10 via-white/[0.045] to-transparent" /></button>)}</div>
+        </GlassSection>
+
+        <GlassSection className="min-h-[500px] p-5 md:p-6">
+          <div className="mb-6"><div className="text-[9px] uppercase tracking-[0.24em] text-white/30">Active progression</div><h2 className="mt-1 text-lg font-bold">Quest Log & Objectives</h2></div>
+          <div className="space-y-5">{quests.map((q, i) => { const p = Number(q.progress ?? 0); return <div key={q.title || i} className="group"><div className="flex items-start gap-3"><div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center bg-cyan-400/[0.07]"><Target className="h-4 w-4 text-cyan-300/70" /></div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><span className="text-[9px] font-semibold uppercase tracking-wider text-cyan-300/55">{q.type || 'Objective'}</span><span className="text-[10px] font-bold text-white/50">{p}%</span></div><h3 className="mt-1 text-sm font-semibold text-white/80">{q.title}</h3><div className="mt-3 h-1 overflow-hidden bg-white/[0.06]"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, p)}%` }} transition={{ duration: .7, delay: i * .08 }} className="h-full bg-cyan-400/55" /></div><div className="mt-2 flex items-center gap-1.5 text-[10px] text-white/30"><Gift className="h-3 w-3" /> {q.reward || 'Progress reward'}</div></div></div></div>})}</div>
+          <div className="mt-7 flex items-center justify-between bg-cyan-500/[0.035] px-4 py-3"><div><div className="text-[9px] uppercase tracking-[.18em] text-cyan-200/45">Next reset</div><div className="text-xs font-semibold text-white/70">Daily challenges refresh in 6h 42m</div></div><CalendarDays className="h-4 w-4 text-cyan-200/45" /></div>
+        </GlassSection>
+
+        <GlassSection className="min-h-[500px] p-5 md:p-6">
+          <div className="mb-5"><div className="text-[9px] uppercase tracking-[0.24em] text-white/30">Game hub</div><h2 className="mt-1 text-lg font-bold">Explore {title}</h2></div>
+          <div className="grid gap-3">{HUB_TILES.map(({ id, title: tileTitle, detail, icon: Icon }) => <button key={id} className="group relative overflow-hidden bg-white/[0.025] p-4 text-left transition-all duration-200 hover:scale-[1.02] hover:ring-1 hover:ring-cyan-500/50"><div className="absolute inset-0 bg-gradient-to-r from-cyan-400/[0.035] to-transparent opacity-0 transition group-hover:opacity-100"/><div className="relative flex items-center gap-4"><div className="grid h-10 w-10 shrink-0 place-items-center bg-white/[0.04]"><Icon className="h-4 w-4 text-cyan-200/65" /></div><div className="min-w-0 flex-1"><h3 className="text-sm font-semibold text-white/80 group-hover:text-white">{tileTitle}</h3><p className="mt-1 text-[10px] text-white/30">{detail}</p></div><ArrowRight className="h-4 w-4 text-white/20 transition group-hover:translate-x-1 group-hover:text-cyan-200" /></div></button>)}</div>
+        </GlassSection>
+      </div>
+    </div>
+
+    <AnimatePresence>
+      {selectedUpdate && <motion.div className="fixed inset-0 z-[10020] flex justify-end bg-black/35 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedUpdate(null)}>
+        <motion.aside initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 32 }} onClick={e => e.stopPropagation()} className="h-full w-full max-w-2xl overflow-y-auto bg-black/80 p-6 backdrop-blur-xl md:p-8">
+          <div className="flex items-start justify-between gap-4"><div><div className="text-[9px] uppercase tracking-[.24em] text-cyan-200/50">Patch Inspector</div><h2 className="mt-2 text-2xl font-black">{selectedUpdate.title}</h2><p className="mt-2 text-sm leading-6 text-white/45">{selectedUpdate.summary || selectedUpdate.desc}</p></div><button onClick={() => setSelectedUpdate(null)} className="grid h-9 w-9 place-items-center text-white/40 hover:text-white"><X className="h-4 w-4" /></button></div>
+          <div className="mt-8 aspect-video bg-gradient-to-br from-slate-800/70 via-slate-950 to-black grid place-items-center"><div className="text-center text-white/25"><Image className="mx-auto h-7 w-7"/><div className="mt-2 text-[10px] uppercase tracking-[.2em]">Media Preview</div></div></div>
+          {[{ title: 'New Features', icon: Sparkles, items: selectedUpdate.features }, { title: 'Balance Changes', icon: SlidersHorizontal, items: selectedUpdate.balance }, { title: 'Bug Fixes', icon: Bug, items: selectedUpdate.fixes }].map(({ title: sTitle, icon: Icon, items }) => <div key={sTitle} className="mt-7"><div className="flex items-center gap-2 text-sm font-bold"><Icon className="h-4 w-4 text-cyan-300/65" />{sTitle}</div><div className="mt-3 space-y-2">{(items || ['Details available in the full release notes.']).map((item, i) => <div key={i} className="flex gap-3 text-xs leading-5 text-white/50"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-300/60" />{item}</div>)}</div></div>)}
+        </motion.aside>
+      </motion.div>}
+    </AnimatePresence>
+  </motion.div>;
 }
