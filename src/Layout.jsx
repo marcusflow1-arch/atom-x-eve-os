@@ -26,7 +26,6 @@ import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeConte
 import ViewModeToggle from './components/mobile/ViewModeToggle';
 import MobileLayoutShell from './components/mobile/MobileLayoutShell';
 import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsDrawer';
-import ThoughtStreamBubble from './components/dashboard/ThoughtStreamBubble';
 import { AIPresenceProvider } from './components/dashboard/AIPresenceContext';
 import MoodAuraLayer from './components/dashboard/MoodAuraLayer';
 
@@ -565,8 +564,6 @@ function LayoutContent({ children, currentPageName }) {
         {showSignUp && isAuthenticated && (
           <SignUpForm onComplete={completeSignUp} onCancel={() => setShowSignUp(false)} />
         )}
-        {/* AI Thought Stream — global, mobile */}
-        {isAuthenticated && user?.id && <ThoughtStreamBubble />}
         <CartDrawer />
       </div>
     );
@@ -1221,9 +1218,6 @@ function LayoutContent({ children, currentPageName }) {
       </AnimatePresence>
 
       <AuraWatchedStreamsDrawer isOpen={auraStreamsDrawerOpen} onClose={() => setAuraStreamsDrawerOpen(false)} />
-
-      {/* AI Thought Stream — global, shows on every desktop page */}
-      {isAuthenticated && user?.id && <ThoughtStreamBubble />}
 
       {/* Guided Tour for First-Time Users */}
       {showGuidedTour && (
