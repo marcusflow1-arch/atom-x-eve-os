@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Maximize2, Minimize2, Search, Mic, Gamepad2, Vote, X } from 'lucide-react';
@@ -40,6 +40,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
   const [fullscreen, setFullscreen] = useState(false);
   const [portalTarget, setPortalTarget] = useState(null);
   const [voiceListening, setVoiceListening] = useState(false);
+  const gamesRailRef = useRef(null);
   const { user } = useAuth();
   const vote = useStreamGameVote(user?.id);
 
@@ -103,6 +104,32 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
     recognition.start();
     return () => { try { recognition.stop(); } catch {} };
   }, [voiceListening]);
+
+  // Wheel over the games rail scrolls it left/right (up = right, down = left), like the Gallery.
+  // The rail mounts into the streaming box after the portal target resolves, so resolve it lazily.
+  useEffect(() => {
+    const onWheel = (event) => {
+      const rail = gamesRailRef.current;
+      if (!rail || !(event.target instanceof Node) || !rail.contains(event.target)) return;
+      event.preventDefault();
+      rail.scrollLeft += event.deltaX - event.deltaY;
+    };
+    window.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    return () => window.removeEventListener('wheel', onWheel, { capture: true });
+  }, []);
+
+  // A / D keys navigate the games rail horizontally, like the Gallery.
+  useEffect(() => {
+    const onKey = (event) => {
+      if (!['a', 'A', 'd', 'D'].includes(event.key) || event.metaKey || event.ctrlKey || event.altKey) return;
+      const tag = event.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target?.isContentEditable) return;
+      event.preventDefault();
+      gamesRailRef.current?.scrollBy({ left: event.key.toLowerCase() === 'd' ? 440 : -440, behavior: 'smooth' });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const handleAddGame = (gameTitle) => {
     if (!pinnedGames.includes(gameTitle)) onUpdateGames?.([...pinnedGames, gameTitle]);
@@ -169,7 +196,7 @@ export default function GamesSection({ isEditMode, pinnedGames = [], onUpdateGam
           <button type="button" onClick={() => setVoiceListening((value) => !value)} className={`ml-2 p-1 transition-colors ${voiceListening ? 'text-cyan-300' : 'text-white/35 hover:text-white'}`} aria-label="Voice search"><Mic className="w-3.5 h-3.5" /></button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden scrollbar-hide">
+      <div ref={gamesRailRef} className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden scrollbar-hide">
         <div className="h-full min-w-max flex items-stretch gap-3 pr-1">
           {filteredGames.map((game) => {
             const gameKey = game.title;
