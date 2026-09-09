@@ -124,18 +124,17 @@ export default function GameHubArea() {
         />
       </div>
 
-      {/* RIGHT — game landing page, isolated scroll */}
+      {/* RIGHT — full-bleed game dashboard, isolated scroll */}
       {selectedGame && (
         <div
-          className="flex-1 min-w-0 flex flex-col"
+          className="relative flex min-w-0 flex-1 flex-col overflow-hidden"
           onWheel={stopWheelPropagation}
           style={{
-            borderRadius: '14px',
-            background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            overflow: 'hidden',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 0,
+            boxShadow: 'none',
+            minHeight: 0,
           }}
         >
           <GameLandingPage game={selectedGame} onClose={() => setSelectedGame(null)} />
