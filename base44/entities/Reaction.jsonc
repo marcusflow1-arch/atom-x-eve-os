@@ -13,7 +13,8 @@
       "enum": [
         "memory",
         "contract",
-        "post"
+        "post",
+        "clip"
       ]
     },
     "type": {

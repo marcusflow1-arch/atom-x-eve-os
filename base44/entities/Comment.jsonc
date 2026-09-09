@@ -15,7 +15,9 @@
       "enum": [
         "post",
         "memory",
-        "contract"
+        "contract",
+        "clip",
+        "clip_request"
       ],
       "default": "post"
     },
@@ -31,6 +33,22 @@
       "type": "number",
       "default": 1,
       "description": "The total score of the comment (upvotes - downvotes)"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "Channel owner ID for Gallery comments and clip requests"
+    },
+    "clip_id": {
+      "type": "string",
+      "description": "Stable Gallery media ID"
+    },
+    "clip_title": {
+      "type": "string",
+      "description": "Title of the requested or discussed Gallery moment"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Public display name shown in the clip discussion"
     }
   },
   "required": [
