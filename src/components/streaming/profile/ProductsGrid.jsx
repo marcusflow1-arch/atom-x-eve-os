@@ -6,9 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, X, Tag, ShoppingBag, Calendar, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
+const TABS = [
+  { id: 'product', label: 'Products', icon: ShoppingBag },
+  { id: 'event', label: 'Events', icon: Calendar },
+];
+
 export default function ProductsGrid({ allowEditing = true }) {
   const [isEditingState, setIsEditingState] = useState(false);
   const isEditing = isEditingState && allowEditing;
+  const [activeTab, setActiveTab] = useState('product');
   const [products, setProducts] = useState([
     {
       id: 1,
@@ -66,26 +72,46 @@ export default function ProductsGrid({ allowEditing = true }) {
 
   return (
     <div className="w-full mt-12 mb-20">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            Available Products & Events
-            {isEditing && <span className="text-sm font-normal text-white/40">(Edit Mode)</span>}
-            </h3>
-            {allowEditing && (
-                <button 
-                    onClick={() => setIsEditingState(!isEditing)}
-                    className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
-                >
-                    <Settings className="w-4 h-4" />
-                </button>
+      <div className="mb-6">
+        <div className="relative flex items-center justify-center gap-8">
+            {TABS.map((tab) => {
+                const isActive = activeTab === tab.id && !isEditing;
+                return (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => { setActiveTab(tab.id); setIsEditingState(false); }}
+                        className={`relative flex items-center gap-2 pb-2 text-sm font-semibold uppercase tracking-[0.14em] transition-colors ${isActive ? 'text-white' : 'text-white/40 hover:text-white/75'}`}
+                    >
+                        <tab.icon className="w-4 h-4" />
+                        {tab.label}
+                        <span className={`absolute left-0 right-0 bottom-0 h-px bg-cyan-200 transition-opacity ${isActive ? 'opacity-100 shadow-[0_0_10px_rgba(165,243,252,.7)]' : 'opacity-0'}`} />
+                    </button>
+                );
+            })}
+            {isEditing && (
+                <span className="absolute right-0 -translate-y-1/2 top-1/2 text-xs font-normal text-white/40">(Edit Mode)</span>
             )}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {isEditing && (
+                    <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={addProduct}>
+                        <Plus className="w-4 h-4 mr-2" /> Add Item
+                    </Button>
+                )}
+                {allowEditing && (
+                    <button 
+                        onClick={() => setIsEditingState(!isEditing)}
+                        className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+                        aria-label="Toggle edit mode"
+                    >
+                        <Settings className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
         </div>
-        {isEditing && (
-            <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={addProduct}>
-                <Plus className="w-4 h-4 mr-2" /> Add Item
-            </Button>
-        )}
+        <div className="flex justify-center mt-1">
+            <div className="h-px w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+        </div>
       </div>
 
       {isEditing ? (
@@ -158,10 +184,10 @@ export default function ProductsGrid({ allowEditing = true }) {
             </div>
         </div>
       ) : (
-        // VIEW MODE: Horizontal Scroll
-        <div className="w-full overflow-x-auto pb-6 scrollbar-hide -mx-2 px-2">
+        // VIEW MODE: Horizontal Scroll (filtered by the active sub-page tab)
+        <div key={activeTab} className="w-full overflow-x-auto pb-6 scrollbar-hide -mx-2 px-2">
             <div className="flex gap-4 w-max">
-                {products.map((product) => (
+                {products.filter((product) => product.type === activeTab).map((product) => (
                     <motion.div 
                         key={product.id}
                         whileHover={{ y: -5 }}
@@ -190,6 +216,11 @@ export default function ProductsGrid({ allowEditing = true }) {
                     </motion.div>
                 ))}
             </div>
+            {products.filter((product) => product.type === activeTab).length === 0 && (
+                <div className="w-full py-12 text-center text-sm text-white/30 italic">
+                    {activeTab === 'event' ? 'No events planned yet.' : 'No products available yet.'}
+                </div>
+            )}
         </div>
       )}
     </div>
