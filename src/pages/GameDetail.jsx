@@ -38,7 +38,9 @@ export default function GameDetail() {
       topContent={null}
       bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}
     >
-      <GameHubTabs gameId={gameId} onClose={handleClose} onGameLoaded={handleGameLoaded} />
+      <div className="h-screen overflow-hidden">
+        <GameHubTabs gameId={gameId} onClose={handleClose} onGameLoaded={handleGameLoaded} />
+      </div>
     </GlassPageFrame>
   );
 }
