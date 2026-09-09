@@ -71,6 +71,39 @@ export default function GallerySection({ isEditMode, galleryImages = [], onUpdat
     };
   }, []);
 
+  // Lock the home page (and its scroll container) while the gallery console is open.
+  useEffect(() => {
+    const containers = [document.body, ...document.querySelectorAll('.page-container')];
+    const previous = containers.map((node) => node.style.overflow);
+    containers.forEach((node) => { node.style.overflow = 'hidden'; });
+    return () => { containers.forEach((node, index) => { node.style.overflow = previous[index]; }); };
+  }, []);
+
+  // Wheel over the timeline hub scrolls the clips horizontally (up = right, down = left);
+  // everywhere else the underlying page stays locked while the gallery is open.
+  useEffect(() => {
+    const onWheel = (event) => {
+      const root = rootRef.current;
+      if (!root) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target && root.contains(target)) {
+        if (target.closest('.gallery-hub')) {
+          event.preventDefault();
+          const rail = target.closest('.gallery-date-rail') || ribbonRef.current;
+          if (rail) rail.scrollLeft += event.deltaX - event.deltaY;
+          return;
+        }
+        // Vertical scroll panes inside the gallery keep their native wheel scrolling.
+        if (target.closest('.gallery-social-content, .gallery-comment-feed, .gallery-request-card')) return;
+        event.preventDefault();
+        return;
+      }
+      event.preventDefault();
+    };
+    window.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    return () => window.removeEventListener('wheel', onWheel, { capture: true });
+  }, []);
+
   const leaveFullscreen = () => {
     setFullscreen(false);
     if (document.fullscreenElement === rootRef.current) document.exitFullscreen?.().catch(() => {});
@@ -101,6 +134,13 @@ export default function GallerySection({ isEditMode, galleryImages = [], onUpdat
 
   useEffect(() => {
     const onKey = (event) => {
+      if (['a', 'A', 'd', 'D'].includes(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        const tag = event.target?.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !event.target?.isContentEditable) {
+          event.preventDefault();
+          ribbonRef.current?.scrollBy({ left: event.key.toLowerCase() === 'd' ? 440 : -440, behavior: reducedMotion ? 'auto' : 'smooth' });
+        }
+      }
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopImmediatePropagation();
