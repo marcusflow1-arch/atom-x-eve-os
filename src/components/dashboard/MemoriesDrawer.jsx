@@ -17,100 +17,46 @@ import {
 
 const FALLBACK_MEMORIES = [
   {
-    id: 'neon-perfect-counter',
-    title: 'Perfect Counter at Match Point',
-    game: 'Neon Legends',
-    dateLabel: 'September 27',
-    exactTime: '9:42:18 PM',
-    timestamp: '00:18:42',
-    isVideo: true,
-    legendary: true,
+    id: 'neon-perfect-counter', title: 'Perfect Counter at Match Point', game: 'Neon Legends', dateLabel: 'September 27', exactTime: '9:42:18 PM', timestamp: '00:18:42', isVideo: true, legendary: true,
     image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&fit=crop',
     notes: 'I waited for the feint, caught the recovery frame, and turned the whole round around in one counter.',
     trophy: 'Neon Clutch — Win a ranked match from critical health.',
-    reactions: [
-      { name: 'Maya', avatar: 'M', text: 'That read was ridiculous. You called the feint before it happened.', reaction: '🔥' },
-      { name: 'Dre', avatar: 'D', text: 'Save this one forever. Match point was ice cold.', reaction: '🏆' },
-    ],
+    reactions: [{ name: 'Maya', avatar: 'M', text: 'That read was ridiculous. You called the feint before it happened.', reaction: '🔥' }, { name: 'Dre', avatar: 'D', text: 'Save this one forever. Match point was ice cold.', reaction: '🏆' }],
   },
   {
-    id: 'cyberpunk-rooftop',
-    title: 'Night City Rooftop Run',
-    game: 'Cyberpunk 2088',
-    dateLabel: 'September 27',
-    exactTime: '7:16:05 PM',
-    timestamp: '01:07:31',
-    isVideo: false,
-    legendary: false,
+    id: 'cyberpunk-rooftop', title: 'Night City Rooftop Run', game: 'Cyberpunk 2088', dateLabel: 'September 27', exactTime: '7:16:05 PM', timestamp: '01:07:31', isVideo: false, legendary: false,
     image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1600&fit=crop',
     notes: 'The lighting hit at exactly the right moment. This is the skyline angle I wanted for the whole playthrough.',
     trophy: 'Urban Ghost — Reach the tower district without triggering an alert.',
     reactions: [{ name: 'Kai', avatar: 'K', text: 'This looks like key art.', reaction: '✨' }],
   },
   {
-    id: 'stellar-rings',
-    title: 'First Pass Through the Helios Rings',
-    game: 'Stellar Odyssey',
-    dateLabel: 'September 24',
-    exactTime: '11:03:44 PM',
-    timestamp: '02:41:09',
-    isVideo: false,
-    legendary: true,
+    id: 'stellar-rings', title: 'First Pass Through the Helios Rings', game: 'Stellar Odyssey', dateLabel: 'September 24', exactTime: '11:03:44 PM', timestamp: '02:41:09', isVideo: false, legendary: true,
     image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1600&fit=crop',
     notes: 'No HUD, no waypoint, just the ship drifting through the rings. One of those moments where I stopped playing and just watched.',
     trophy: 'Beyond the Map — Discover a hidden stellar landmark.',
-    reactions: [
-      { name: 'Nova', avatar: 'N', text: 'Wallpaper immediately.', reaction: '🌌' },
-      { name: 'Maya', avatar: 'M', text: 'The scale is unreal.', reaction: '💙' },
-    ],
+    reactions: [{ name: 'Nova', avatar: 'N', text: 'Wallpaper immediately.', reaction: '🌌' }, { name: 'Maya', avatar: 'M', text: 'The scale is unreal.', reaction: '💙' }],
   },
   {
-    id: 'shadow-boss',
-    title: 'The Last Hit',
-    game: 'Shadow Realm',
-    dateLabel: 'September 21',
-    exactTime: '1:28:52 AM',
-    timestamp: '00:09:56',
-    isVideo: true,
-    legendary: true,
+    id: 'shadow-boss', title: 'The Last Hit', game: 'Shadow Realm', dateLabel: 'September 21', exactTime: '1:28:52 AM', timestamp: '00:09:56', isVideo: true, legendary: true,
     image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1600&fit=crop',
     notes: 'One flask left, no revive, and the boss was still in phase three. The final dodge is the reason this clip exists.',
     trophy: 'No Light Left — Defeat a realm guardian without assistance.',
-    reactions: [
-      { name: 'Dre', avatar: 'D', text: 'I thought you were done at 2 HP.', reaction: '😱' },
-      { name: 'Kai', avatar: 'K', text: 'Legendary. No notes.', reaction: '👑' },
-    ],
+    reactions: [{ name: 'Dre', avatar: 'D', text: 'I thought you were done at 2 HP.', reaction: '😱' }, { name: 'Kai', avatar: 'K', text: 'Legendary. No notes.', reaction: '👑' }],
   },
   {
-    id: 'apex-squad',
-    title: 'Squad Wipe From the Drop',
-    game: 'Apex Surge',
-    dateLabel: 'September 15',
-    exactTime: '10:12:03 PM',
-    timestamp: '00:03:27',
-    isVideo: true,
-    legendary: false,
+    id: 'apex-squad', title: 'Squad Wipe From the Drop', game: 'Apex Surge', dateLabel: 'September 15', exactTime: '10:12:03 PM', timestamp: '00:03:27', isVideo: true, legendary: false,
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&fit=crop',
     notes: 'The opening route finally worked. Fast loot, high ground, then the cleanest first fight of the night.',
     trophy: 'Hot Drop — Eliminate an entire squad within five minutes.',
     reactions: [{ name: 'Nova', avatar: 'N', text: 'Run this route again next session.', reaction: '🎯' }],
   },
   {
-    id: 'mythforge-guild',
-    title: 'Guild Hall Before Reset',
-    game: 'MythForge Online',
-    dateLabel: 'September 8',
-    exactTime: '6:54:30 PM',
-    timestamp: '04:18:12',
-    isVideo: false,
-    legendary: false,
+    id: 'mythforge-guild', title: 'Guild Hall Before Reset', game: 'MythForge Online', dateLabel: 'September 8', exactTime: '6:54:30 PM', timestamp: '04:18:12', isVideo: false, legendary: false,
     image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&fit=crop',
     notes: 'Everyone made it online before the seasonal reset, so I grabbed one clean group shot before the banners changed.',
     trophy: 'Together at Dawn — Complete a seasonal chapter with a full guild party.',
-    reactions: [
-      { name: 'Maya', avatar: 'M', text: 'Best season yet.', reaction: '❤️' },
-      { name: 'Dre', avatar: 'D', text: 'Frame this one.', reaction: '📸' },
-    ],
+    reactions: [{ name: 'Maya', avatar: 'M', text: 'Best season yet.', reaction: '❤️' }, { name: 'Dre', avatar: 'D', text: 'Frame this one.', reaction: '📸' }],
   },
 ];
 
@@ -126,9 +72,7 @@ const normalizeMemory = (item, index) => {
   let dateLabel = item?.dateLabel;
   if (!dateLabel && rawDate) {
     const date = new Date(rawDate);
-    if (!Number.isNaN(date.getTime())) {
-      dateLabel = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-    }
+    if (!Number.isNaN(date.getTime())) dateLabel = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   }
 
   const isVideo = Boolean(item?.isVideo || item?.type === 'video' || item?.media_type === 'video');
@@ -156,14 +100,7 @@ const normalizeMemory = (item, index) => {
 function MemoryBackdrop({ memory }) {
   return (
     <AnimatePresence mode="wait">
-      <motion.div
-        key={memory?.id}
-        initial={{ opacity: 0, scale: 1.08 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute inset-0"
-      >
+      <motion.div key={memory?.id} initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="absolute inset-0">
         <img src={memory?.image} alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-black/55" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#030711]/95 via-[#030711]/72 to-[#030711]/28" />
@@ -174,7 +111,6 @@ function MemoryBackdrop({ memory }) {
 }
 
 export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose }) {
-  const rootRef = useRef(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeDate, setActiveDate] = useState(null);
   const [selectedId, setSelectedId] = useState(activeReference?.id || null);
@@ -212,7 +148,6 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.dataset.memoriesOverlay = 'open';
-
     return () => {
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
@@ -226,15 +161,12 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
       event.preventDefault();
       event.stopPropagation();
       if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
-
       if (playbackItem) {
         setPlaybackItem(null);
         return;
       }
-
       onClose?.();
     };
-
     window.addEventListener('keydown', handleEscape, true);
     return () => window.removeEventListener('keydown', handleEscape, true);
   }, [playbackItem, onClose]);
@@ -261,124 +193,64 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
   if (typeof document === 'undefined') return null;
 
   const overlay = (
-    <motion.div
-      ref={rootRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.24 }}
-      className="fixed inset-0 z-[10000] isolate h-[100dvh] w-[100vw] overflow-hidden bg-[#030711] text-white pointer-events-auto"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Memories gallery"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.24 }} className="fixed inset-0 z-[10000] isolate h-[100dvh] w-screen overflow-hidden bg-[#030711] text-white pointer-events-auto" role="dialog" aria-modal="true" aria-label="Memories gallery">
       <MemoryBackdrop memory={selectedMemory} />
       <div className="pointer-events-none absolute inset-0 backdrop-blur-[2px]" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col">
         <header className="flex h-[72px] shrink-0 items-center justify-between px-6 lg:px-10">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.08] backdrop-blur-xl">
-              <Camera className="h-4 w-4 text-cyan-200" />
-            </div>
-            <div>
-              <div className="text-[9px] font-semibold uppercase tracking-[0.32em] text-cyan-200/50">Atom XE Capture Archive</div>
-              <h1 className="text-xl font-black tracking-tight">Memories</h1>
-            </div>
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.08] backdrop-blur-xl"><Camera className="h-4 w-4 text-cyan-200" /></div>
+            <div><div className="text-[9px] font-semibold uppercase tracking-[0.32em] text-cyan-200/50">Atom XE Capture Archive</div><h1 className="text-xl font-black tracking-tight">Memories</h1></div>
           </div>
-
           <div className="flex items-center gap-2">
-            {onHomeClick && (
-              <button type="button" onClick={onHomeClick} className="hidden items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white/55 backdrop-blur-xl transition hover:bg-white/[0.12] hover:text-white md:flex">
-                <Home className="h-3.5 w-3.5" /> Home
-              </button>
-            )}
-            <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.07] text-white/65 backdrop-blur-xl transition hover:bg-white/[0.14] hover:text-white" aria-label="Close Memories">
-              <X className="h-4 w-4" />
-            </button>
+            {onHomeClick && <button type="button" onClick={onHomeClick} className="hidden items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white/55 backdrop-blur-xl transition hover:bg-white/[0.12] hover:text-white md:flex"><Home className="h-3.5 w-3.5" /> Home</button>}
+            <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.07] text-white/65 backdrop-blur-xl transition hover:bg-white/[0.14] hover:text-white" aria-label="Close Memories"><X className="h-4 w-4" /></button>
           </div>
         </header>
 
         <div className="shrink-0 px-6 lg:px-10">
           <div className="flex items-center gap-2 overflow-x-auto border-y border-white/[0.05] py-2" style={{ scrollbarWidth: 'none' }}>
-            <div className="mr-2 flex shrink-0 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-white/28">
-              <CalendarDays className="h-3.5 w-3.5" /> Timeline
-            </div>
+            <div className="mr-2 flex shrink-0 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-white/30"><CalendarDays className="h-3.5 w-3.5" /> Timeline</div>
             {dates.map((date) => {
               const active = date === resolvedDate;
-              return (
-                <button key={date} type="button" onClick={() => selectDate(date)} className={`relative shrink-0 px-4 py-2 text-xs font-semibold transition ${active ? 'text-white' : 'text-white/35 hover:text-white/75'}`}>
-                  {date}
-                  <span className={`absolute inset-x-3 -bottom-[9px] h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`} />
-                </button>
-              );
+              return <button key={date} type="button" onClick={() => selectDate(date)} className={`relative shrink-0 px-4 py-2 text-xs font-semibold transition ${active ? 'text-white' : 'text-white/35 hover:text-white/75'}`}>{date}<span className={`absolute inset-x-3 -bottom-[9px] h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`} /></button>;
             })}
           </div>
-
           <div className="flex gap-1 overflow-x-auto py-3" style={{ scrollbarWidth: 'none' }}>
-            {FILTERS.map(({ id, label, icon: Icon }) => (
-              <button key={id} type="button" onClick={() => selectFilter(id)} className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider transition ${activeFilter === id ? 'bg-cyan-300/12 text-cyan-100' : 'text-white/35 hover:bg-white/[0.05] hover:text-white/75'}`}>
-                <Icon className="h-3.5 w-3.5" /> {label}
-              </button>
-            ))}
+            {FILTERS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => selectFilter(id)} className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider transition ${activeFilter === id ? 'bg-cyan-300/10 text-cyan-100' : 'text-white/35 hover:bg-white/[0.05] hover:text-white/75'}`}><Icon className="h-3.5 w-3.5" /> {label}</button>)}
           </div>
         </div>
 
-        <main className="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-hidden lg:grid-cols-[minmax(0,1.65fr)_minmax(340px,.72fr)]">
-          <section className="relative min-h-0 overflow-hidden px-6 pb-5 lg:px-10">
-            <AnimatePresence mode="wait">
-              {selectedMemory && (
-                <motion.button
-                  key={selectedMemory.id}
-                  type="button"
-                  onClick={() => setPlaybackItem(selectedMemory)}
-                  initial={{ opacity: 0, scale: 1.12, filter: 'blur(6px)' }}
-                  animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
-                  className="group relative h-[calc(100%-126px)] min-h-[300px] w-full overflow-hidden bg-black/25 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-300/70"
-                >
-                  <img src={selectedMemory.image} alt={selectedMemory.title} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/10 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
-
-                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-6 md:p-8">
-                    <div>
-                      <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-200/70">
-                        {selectedMemory.isVideo ? <Film className="h-3.5 w-3.5" /> : <Camera className="h-3.5 w-3.5" />}
-                        {selectedMemory.legendary ? 'Legendary Moment' : 'Saved Memory'}
+        <main className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1.65fr)_minmax(340px,.72fr)]">
+          <section className="relative flex min-h-0 flex-col overflow-hidden px-6 pb-5 lg:px-10">
+            <div className="min-h-0 flex-1">
+              <AnimatePresence mode="wait">
+                {selectedMemory && (
+                  <motion.button key={selectedMemory.id} type="button" onClick={() => setPlaybackItem(selectedMemory)} initial={{ opacity: 0, scale: 1.12, filter: 'blur(6px)' }} animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }} className="group relative h-full min-h-[300px] w-full overflow-hidden bg-black/25 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-300/70">
+                    <img src={selectedMemory.image} alt={selectedMemory.title} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
+                    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-6 md:p-8">
+                      <div>
+                        <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-200/70">{selectedMemory.isVideo ? <Film className="h-3.5 w-3.5" /> : <Camera className="h-3.5 w-3.5" />}{selectedMemory.legendary ? 'Legendary Moment' : 'Saved Memory'}</div>
+                        <h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">{selectedMemory.title}</h2>
+                        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-white/50"><span>{selectedMemory.game}</span><span>{selectedMemory.dateLabel}</span><span>{selectedMemory.exactTime}</span></div>
                       </div>
-                      <h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">{selectedMemory.title}</h2>
-                      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-white/50">
-                        <span>{selectedMemory.game}</span>
-                        <span>{selectedMemory.dateLabel}</span>
-                        <span>{selectedMemory.exactTime}</span>
-                      </div>
+                      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white/10 backdrop-blur-xl transition group-hover:scale-110 group-hover:bg-white/20"><Play className="h-6 w-6 fill-current" /></div>
                     </div>
-                    <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white/10 backdrop-blur-xl transition group-hover:scale-110 group-hover:bg-white/18">
-                      <Play className="h-6 w-6 fill-current" />
-                    </div>
-                  </div>
-                </motion.button>
-              )}
-            </AnimatePresence>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
 
-            <div className="relative mt-3 h-[112px] overflow-hidden">
+            <div className="relative mt-3 h-[112px] shrink-0 overflow-hidden">
               <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 bg-gradient-to-r from-[#030711] to-transparent" />
               <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l from-[#030711] to-transparent" />
               <div className="flex h-full gap-3 overflow-x-auto px-1 py-1" style={{ scrollbarWidth: 'none' }}>
                 {filteredMemories.map((memory) => {
                   const active = memory.id === selectedMemory?.id;
-                  return (
-                    <motion.button key={memory.id} type="button" whileHover={{ scale: 1.02 }} onClick={() => setSelectedId(memory.id)} className={`relative h-full w-52 shrink-0 overflow-hidden text-left transition ${active ? 'ring-1 ring-cyan-300/70' : 'opacity-55 hover:opacity-100'}`}>
-                      <img src={memory.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/10 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <div className="truncate text-[10px] font-bold text-white/90">{memory.title}</div>
-                        <div className="mt-1 flex items-center gap-1.5 text-[8px] text-white/45">{memory.isVideo ? <Film className="h-2.5 w-2.5" /> : <Camera className="h-2.5 w-2.5" />}{memory.game}</div>
-                      </div>
-                    </motion.button>
-                  );
+                  return <motion.button key={memory.id} type="button" whileHover={{ scale: 1.02 }} onClick={() => setSelectedId(memory.id)} className={`relative h-full w-52 shrink-0 overflow-hidden text-left transition ${active ? 'ring-1 ring-cyan-300/70' : 'opacity-55 hover:opacity-100'}`}><img src={memory.image} alt="" className="absolute inset-0 h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-3"><div className="truncate text-[10px] font-bold text-white/90">{memory.title}</div><div className="mt-1 flex items-center gap-1.5 text-[8px] text-white/45">{memory.isVideo ? <Film className="h-2.5 w-2.5" /> : <Camera className="h-2.5 w-2.5" />}{memory.game}</div></div></motion.button>;
                 })}
               </div>
             </div>
@@ -387,49 +259,15 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
           <aside className="min-h-0 overflow-y-auto border-l border-white/[0.05] bg-slate-950/55 p-6 backdrop-blur-xl lg:p-7" style={{ scrollbarWidth: 'none' }}>
             {selectedMemory && (
               <motion.div key={selectedMemory.id} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/30">Moment Inspection</div>
-                  {selectedMemory.legendary && <span className="flex items-center gap-1.5 rounded-full bg-amber-300/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-200/80"><Trophy className="h-3 w-3" /> Legendary</span>}
-                </div>
-
+                <div className="flex items-center justify-between gap-3"><div className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/30">Moment Inspection</div>{selectedMemory.legendary && <span className="flex items-center gap-1.5 rounded-full bg-amber-300/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-200/80"><Trophy className="h-3 w-3" /> Legendary</span>}</div>
                 <h3 className="mt-4 text-2xl font-black tracking-tight">{selectedMemory.title}</h3>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-white/[0.035] p-3.5"><div className="text-[9px] uppercase tracking-wider text-white/25">Game</div><div className="mt-1 font-semibold text-white/80">{selectedMemory.game}</div></div>
-                  <div className="bg-white/[0.035] p-3.5"><div className="text-[9px] uppercase tracking-wider text-white/25">Timestamp</div><div className="mt-1 flex items-center gap-1.5 font-semibold text-white/80"><Clock3 className="h-3 w-3 text-cyan-200/60" /> {selectedMemory.timestamp}</div></div>
-                </div>
-
-                <div className="mt-6">
-                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">Player Notes</div>
-                  <p className="mt-2 text-xs leading-5 text-white/55">{selectedMemory.notes}</p>
-                </div>
-
-                <div className="mt-6 bg-cyan-400/[0.04] p-4">
-                  <div className="flex items-start gap-3">
-                    <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200/65" />
-                    <div><div className="text-[9px] uppercase tracking-[0.18em] text-cyan-200/45">Trophy Context</div><div className="mt-1 text-xs leading-5 text-white/65">{selectedMemory.trophy}</div></div>
-                  </div>
-                </div>
-
+                <div className="mt-5 grid grid-cols-2 gap-3 text-xs"><div className="bg-white/[0.035] p-3.5"><div className="text-[9px] uppercase tracking-wider text-white/25">Game</div><div className="mt-1 font-semibold text-white/80">{selectedMemory.game}</div></div><div className="bg-white/[0.035] p-3.5"><div className="text-[9px] uppercase tracking-wider text-white/25">Timestamp</div><div className="mt-1 flex items-center gap-1.5 font-semibold text-white/80"><Clock3 className="h-3 w-3 text-cyan-200/60" /> {selectedMemory.timestamp}</div></div></div>
+                <div className="mt-6"><div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">Player Notes</div><p className="mt-2 text-xs leading-5 text-white/55">{selectedMemory.notes}</p></div>
+                <div className="mt-6 bg-cyan-400/[0.04] p-4"><div className="flex items-start gap-3"><Trophy className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200/65" /><div><div className="text-[9px] uppercase tracking-[0.18em] text-cyan-200/45">Trophy Context</div><div className="mt-1 text-xs leading-5 text-white/65">{selectedMemory.trophy}</div></div></div></div>
                 <div className="mt-7 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/25"><Users className="h-3.5 w-3.5" /> Friend Reactions</div>
-                <div className="mt-3 space-y-2">
-                  {(selectedMemory.reactions || []).length ? selectedMemory.reactions.map((reaction, index) => (
-                    <div key={`${reaction.name}-${index}`} className="flex gap-3 bg-white/[0.025] p-3">
-                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.07] text-[10px] font-bold text-white/75">{reaction.avatar || reaction.name?.[0] || 'F'}</div>
-                      <div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-semibold text-white/75">{reaction.name}</span><span className="text-sm">{reaction.reaction || '♥'}</span></div><p className="mt-1 text-[10px] leading-4 text-white/42">{reaction.text}</p></div>
-                    </div>
-                  )) : (
-                    <div className="flex items-center gap-2 py-5 text-[10px] text-white/25"><MessageCircle className="h-3.5 w-3.5" /> No friend reactions yet.</div>
-                  )}
-                </div>
-
-                <button type="button" onClick={() => setPlaybackItem(selectedMemory)} className="mt-6 flex w-full items-center justify-center gap-2 bg-white/[0.08] px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white/80 transition hover:bg-white/[0.14] hover:text-white">
-                  <Play className="h-3.5 w-3.5 fill-current" /> Open Full Media
-                </button>
-
-                {onSelectReference && (
-                  <button type="button" onClick={() => onSelectReference(selectedMemory)} className="mt-2 w-full px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-cyan-200/65 transition hover:bg-cyan-300/[0.06] hover:text-cyan-100">Use Memory</button>
-                )}
+                <div className="mt-3 space-y-2">{(selectedMemory.reactions || []).length ? selectedMemory.reactions.map((reaction, index) => <div key={`${reaction.name}-${index}`} className="flex gap-3 bg-white/[0.025] p-3"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.07] text-[10px] font-bold text-white/75">{reaction.avatar || reaction.name?.[0] || 'F'}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-semibold text-white/75">{reaction.name}</span><span className="text-sm">{reaction.reaction || '♥'}</span></div><p className="mt-1 text-[10px] leading-4 text-white/40">{reaction.text}</p></div></div>) : <div className="flex items-center gap-2 py-5 text-[10px] text-white/25"><MessageCircle className="h-3.5 w-3.5" /> No friend reactions yet.</div>}</div>
+                <button type="button" onClick={() => setPlaybackItem(selectedMemory)} className="mt-6 flex w-full items-center justify-center gap-2 bg-white/[0.08] px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white/80 transition hover:bg-white/[0.14] hover:text-white"><Play className="h-3.5 w-3.5 fill-current" /> Open Full Media</button>
+                {onSelectReference && <button type="button" onClick={() => onSelectReference(selectedMemory)} className="mt-2 w-full px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-cyan-200/65 transition hover:bg-cyan-300/[0.06] hover:text-cyan-100">Use Memory</button>}
               </motion.div>
             )}
           </aside>
@@ -440,20 +278,10 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
         {playbackItem && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPlaybackItem(null)} className="fixed inset-0 z-[10020] grid place-items-center bg-black/95 p-4 backdrop-blur-2xl md:p-8">
             <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} onClick={(event) => event.stopPropagation()} className="relative flex h-full max-h-[94dvh] w-full max-w-[1700px] items-center justify-center overflow-hidden bg-black">
-              {playbackItem.isVideo && playbackItem.mediaUrl ? (
-                <video src={playbackItem.mediaUrl} poster={playbackItem.image} controls autoPlay playsInline className="max-h-full max-w-full" />
-              ) : (
-                <img src={playbackItem.image} alt={playbackItem.title} className="max-h-full max-w-full object-contain" />
-              )}
-
+              {playbackItem.isVideo && playbackItem.mediaUrl ? <video src={playbackItem.mediaUrl} poster={playbackItem.image} controls autoPlay playsInline className="max-h-full max-w-full" /> : <img src={playbackItem.image} alt={playbackItem.title} className="max-h-full max-w-full object-contain" />}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-16 md:bottom-8 md:left-8">
-                <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-200/55">{playbackItem.game} · {playbackItem.timestamp}</div>
-                <div className="mt-1 text-xl font-black md:text-3xl">{playbackItem.title}</div>
-              </div>
-              <button type="button" onClick={() => setPlaybackItem(null)} className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-black/45 text-white/75 backdrop-blur-xl transition hover:bg-white/12 hover:text-white" aria-label="Close media playback">
-                <X className="h-4 w-4" />
-              </button>
+              <div className="absolute bottom-6 left-6 right-16 md:bottom-8 md:left-8"><div className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-200/55">{playbackItem.game} · {playbackItem.timestamp}</div><div className="mt-1 text-xl font-black md:text-3xl">{playbackItem.title}</div></div>
+              <button type="button" onClick={() => setPlaybackItem(null)} className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-black/45 text-white/75 backdrop-blur-xl transition hover:bg-white/10 hover:text-white" aria-label="Close media playback"><X className="h-4 w-4" /></button>
             </motion.div>
           </motion.div>
         )}
