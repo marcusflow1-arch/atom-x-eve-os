@@ -4,7 +4,6 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import GameStreamPanel from './GameStreamPanel';
 import StudioProfileView from '@/components/studio/StudioProfileView';
 import DevGamesPanel from '@/components/studio/DevGamesPanel';
-import SidebarSplitBackdrop from './SidebarSplitBackdrop';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -136,8 +135,6 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
 
   return (
     <div className={`relative w-full h-full min-h-screen ${className}`}>
-      <SidebarSplitBackdrop visible={sidebarVisible} />
-
       {/* Top Glass Bar */}
       <div
         className="fixed top-0 left-0 right-0 z-[35]"
@@ -159,7 +156,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
       {showTriggerTab && <DevGamesPanel open={gamesOpen} game={gameData} />}
 
       {/* Page Content */}
-      <div className={`relative z-[1] transition-[width,margin] duration-300 ${sidebarVisible ? 'md:ml-[10vw] md:w-[90vw]' : 'w-full'}`}>
+      <div className="relative z-[1]">
         {children}
       </div>
 
@@ -172,9 +169,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="fixed right-0 z-[34] transition-[left] duration-300"
+            className="fixed left-0 right-0 z-[34]"
             style={{
-              left: sidebarVisible ? '10vw' : '0',
               top: '64px',
               bottom: '48px',
               background: 'rgba(22, 26, 32, 0.58)',
@@ -279,13 +275,13 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
         )}
 
         {bottomContent && (
-          <div className={`h-full w-full items-center px-3 py-2 ${sidebarVisible ? 'md:grid md:grid-cols-[10vw_90vw] flex gap-3' : 'flex gap-3'}`}>
-            {/* Sidebar toggle button — centered in the sidebar column when split */}
+          <div className="h-full w-full flex items-center px-3 py-2 gap-3">
+            {/* Sidebar toggle button — far left of bottom bar */}
             {onSidebarToggle && (
               <button
                 onClick={onSidebarToggle}
                 title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
-                className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all hover:bg-white/10 text-white/40 hover:text-white ${sidebarVisible ? 'md:justify-self-center' : ''}`}
+                className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all hover:bg-white/10 text-white/40 hover:text-white"
               >
                 {sidebarVisible
                   ? <PanelLeftClose className="w-4 h-4" />
@@ -293,7 +289,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
                 }
               </button>
             )}
-            <div className="min-w-0 flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center">
               {bottomContent}
             </div>
           </div>

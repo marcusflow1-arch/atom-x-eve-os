@@ -9,7 +9,6 @@
   position: fixed; inset: 0; z-index: 99999; color: #f1f5f9;
   pointer-events: none; isolation: isolate; font-family: inherit;
 }
-@media (min-width: 768px) { .gallery-console.sidebar-split { left: 10vw; } }
 .gallery-console *, .gallery-console *::before, .gallery-console *::after { box-sizing: border-box; }
 .gallery-console button, .gallery-console input { font: inherit; }
 .gallery-console button { cursor: pointer; }
