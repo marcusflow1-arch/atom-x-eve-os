@@ -144,7 +144,7 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
 
             <div className="hidden xl:flex items-stretch rounded-2xl overflow-hidden bg-slate-950/55 backdrop-blur-xl ring-1 ring-white/[0.06]">
               <Stat icon={Clock} label="Hours Played" value={playtime} tint="text-cyan-300" />
-              <Stat icon={Trophy} label="Achievements" value={`${achievementsPct}%`} tint="text-amber-300" />
+              <Stat icon={Trophy} label="Achievements" value={`${achievementPct}%`} tint="text-amber-300" />
               <Stat icon={Crown} label="Level" value={`Lv. ${level}`} tint="text-violet-300" />
               <Stat icon={Sparkles} label={genreLabel} value={genreLevel} tint="text-sky-300" />
             </div>
