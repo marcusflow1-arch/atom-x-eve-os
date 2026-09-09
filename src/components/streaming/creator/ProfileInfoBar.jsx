@@ -15,7 +15,7 @@ export default function ProfileInfoBar({
 }) {
   const displayName = activeProfile?.display_name || activeProfile?.full_name || 'My Channel';
   const tagline = activeProfile?.tagline || '';
-  const tabs = ['schedule', 'cards', 'gallery', 'games'];
+  const tabs = ['schedule', 'cards', 'gallery', 'games', 'achievements'];
 
   const handleAvatarUpload = async () => {
     const input = document.createElement('input');
