@@ -92,106 +92,49 @@ export default function GenreGameDetail({ game, genre, onClose }) {
   const questTypeFilters = ['all', 'Story', 'Combat', 'Exploration', 'Challenge', 'Daily', 'Mastery', 'Co-op', 'Hidden', 'completed', 'available'];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="alpine-game-detail h-full flex flex-col overflow-hidden">
       {/* ═══ HERO BANNER ═══ */}
-      <div className="relative flex-shrink-0 overflow-hidden">
-        <div className="absolute inset-0">
+      <div className="alpine-detail-hero flex-shrink-0">
+        <div className="alpine-detail-cover">
           {game.banner_image || game.cover_image ? (
-            <img src={game.banner_image || game.cover_image} alt="" className="w-full h-full object-cover opacity-30" />
+            <img src={game.banner_image || game.cover_image} alt={game.title} />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${genre.color} opacity-20`} />
+            <div className={`w-full h-full bg-gradient-to-br ${genre.color}`} />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#080c12]/60 via-[#080c12]/80 to-[#080c12]" />
-          <div className={`absolute inset-0 bg-gradient-to-r ${genre.color} opacity-[0.07]`} />
         </div>
-
-        <div className="relative p-6 pb-0">
-          <div className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="w-20 h-28 rounded-xl overflow-hidden flex-shrink-0 border border-white/10 shadow-2xl">
-                {game.cover_image ? (
-                  <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${genre.color}`} />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl font-black text-white tracking-tight truncate">{game.title}</h1>
-                <p className="text-white/40 text-sm mt-0.5 line-clamp-1">{game.description || `${genre.name} experience`}</p>
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                    <motion.div
-                      className={`h-full rounded-full bg-gradient-to-r ${genre.color}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(stats.completed / stats.totalQuests) * 100}%` }}
-                      transition={{ duration: 1, ease: 'easeOut' }}
-                    />
-                  </div>
-                  <span className="text-white/60 text-xs font-bold">{Math.round((stats.completed / stats.totalQuests) * 100)}%</span>
-                </div>
-              </div>
+        <div className="alpine-detail-summary">
+          <div className="alpine-progress-row">
+            <div className="alpine-progress-ring" style={{ '--progress': `${Math.round((stats.completed / stats.totalQuests) * 100)}%` }}>
+              <div><strong>{Math.round((stats.completed / stats.totalQuests) * 100)}%</strong><span>Progress</span></div>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all flex-shrink-0 ml-4"
-            >
-              <X className="w-4 h-4 text-white/50" />
-            </button>
+            <div className="alpine-earned"><span>Earned</span><strong>{stats.earnedXP.toLocaleString()} XP</strong></div>
+            <button onClick={onClose} className="alpine-close"><X /></button>
           </div>
-
-          {/* ═══ STAT CARDS ═══ */}
-          <div className="grid grid-cols-4 gap-3 pb-5">
-            {[
-              { icon: Zap, color: 'text-cyan-400', gradBg: 'from-cyan-500/10 to-cyan-900/5', label: 'XP Earned', value: stats.earnedXP.toLocaleString(), sub: `${stats.totalXP.toLocaleString()} total`, pct: Math.round((stats.earnedXP / stats.totalXP) * 100) },
-              { icon: Trophy, color: 'text-yellow-400', gradBg: 'from-yellow-500/10 to-yellow-900/5', label: 'Cards Unlocked', value: `${stats.earnedCards} / ${stats.totalCards}`, sub: 'achievement cards', pct: stats.totalCards > 0 ? Math.round((stats.earnedCards / stats.totalCards) * 100) : 0 },
-              { icon: Scroll, color: 'text-purple-400', gradBg: 'from-purple-500/10 to-purple-900/5', label: 'Quests Done', value: `${stats.completed} / ${stats.totalQuests}`, sub: 'completed', pct: Math.round((stats.completed / stats.totalQuests) * 100) },
-              { icon: Users, color: 'text-blue-400', gradBg: 'from-blue-500/10 to-blue-900/5', label: 'Community', value: `${(game.communityCompletions || 0).toLocaleString()}+`, sub: 'player completions', pct: null },
-            ].map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className={`relative p-4 rounded-2xl border border-white/6 overflow-hidden bg-gradient-to-br ${s.gradBg}`}
-                style={{ backdropFilter: 'blur(16px)' }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <s.icon className={`w-4 h-4 ${s.color}`} />
-                  <span className="text-white/35 text-[10px] font-bold uppercase tracking-widest">{s.label}</span>
-                </div>
-                <div className="text-white text-xl font-black leading-none">{s.value}</div>
-                <div className="text-white/20 text-[10px] mt-1">{s.sub}</div>
-                {s.pct !== null && (
-                  <div className="mt-2.5 h-1 rounded-full bg-white/5 overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full ${s.color.replace('text-', 'bg-')}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${s.pct}%` }}
-                      transition={{ duration: 0.8, delay: 0.2 + i * 0.1 }}
-                    />
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
+          <h1>{game.title}</h1>
+          <p>{game.description || `${genre.name} experience`}</p>
+          <button onClick={() => setActiveTab('quests')} className="alpine-primary-quest"><Target />Quests & Challenges</button>
         </div>
+      </div>
+
+      {/* ═══ STAT CARDS ═══ */}
+      <div className="alpine-stat-grid">
+        {[
+          { icon: Zap, label: 'XP Earned', value: stats.earnedXP.toLocaleString(), pct: Math.round((stats.earnedXP / stats.totalXP) * 100) },
+          { icon: Trophy, label: 'Cards Unlocked', value: `${stats.earnedCards} / ${stats.totalCards}`, pct: stats.totalCards > 0 ? Math.round((stats.earnedCards / stats.totalCards) * 100) : 0 },
+          { icon: Scroll, label: 'Quests Done', value: `${stats.completed} / ${stats.totalQuests}`, pct: Math.round((stats.completed / stats.totalQuests) * 100) },
+          { icon: Users, label: 'Community', value: `${(game.communityCompletions || 0).toLocaleString()}+`, pct: null },
+        ].map((stat) => (
+          <div key={stat.label} className="alpine-stat-card">
+            <span>{stat.label}</span><strong>{stat.value}</strong>
+            {stat.pct !== null && <div><i style={{ width: `${stat.pct}%` }} /></div>}
+          </div>
+        ))}
       </div>
 
       {/* ═══ TAB SWITCHER ═══ */}
       <div className="px-6 py-3 flex-shrink-0 border-t border-white/5" style={{ background: 'rgba(8,12,18,0.6)' }}>
         {/* Tab Buttons */}
         <div className="flex items-center gap-1 mb-3">
-          <button
-            onClick={() => setActiveTab('quests')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
-              activeTab === 'quests'
-                ? 'bg-white/10 border-white/15 text-white shadow-[0_0_12px_rgba(255,255,255,0.05)]'
-                : 'bg-transparent border-transparent text-white/40 hover:text-white/70 hover:bg-white/5'
-            }`}
-          >
-            <Target className="w-4 h-4" />
-            Quests & Challenges
-          </button>
           <button
             onClick={() => setActiveTab('guide')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${

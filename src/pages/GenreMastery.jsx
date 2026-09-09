@@ -17,6 +17,9 @@ import AchievementsContent from '@/components/genremastery/AchievementsContent';
 import GenreBottomNav from '@/components/genremastery/GenreBottomNav';
 import BlackMarketContent from '@/components/dashboard/BlackMarketContent';
 import TradingPostOverlayContent from '@/components/dashboard/TradingPostOverlayContent';
+import AlpineGenreSidebar from '@/components/genremastery/AlpineGenreSidebar';
+import AlpineGamesBrowser from '@/components/genremastery/AlpineGamesBrowser';
+import '@/styles/alpine-genre-mastery.css';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', xpType: 'Social XP', level: 42, maxLevel: 50, rank: 'Warlord', xp: 92, skillPoints: 5, paths: ['Synergy', 'Raid', 'Trade'], matchGenres: ['mmo', 'mmorpg'] },
@@ -139,6 +142,11 @@ export default function GenreMastery({ onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate, onClose]);
 
+  useEffect(() => {
+    document.body.classList.add('alpine-mist-active');
+    return () => document.body.classList.remove('alpine-mist-active');
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
@@ -174,267 +182,61 @@ export default function GenreMastery({ onClose }) {
     <GlassPageFrame
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
-      bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}
+      bottomContent={<div className="alpine-bottom-nav"><GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} /></div>}
     >
-      <div className="flex w-full h-full">
-        {/* Left rail — overlay extension: floats over the page instead of pushing it */}
-        {sidebarVisible && (
-          <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r border-white/10 z-50 flex flex-col items-center"
-            style={{ background: 'rgba(8, 12, 18, 0.58)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
+      <div className="alpine-cards-page">
+        <SidebarOverlays className="absolute top-[64px] left-6 right-6 bottom-[53px] z-[80]" />
+        <div className="alpine-workspace">
+          <AlpineGenreSidebar
+            genres={GENRES}
+            selectedGenre={selectedGenre}
+            onSelectGenre={setSelectedGenre}
+            gameCount={gameData.length}
+            marketView={marketView}
+            onMarketView={setMarketView}
           />
-        )}
-        
-        {/* Main Content Area */}
-        <div className="flex-1 h-screen text-white font-sans overflow-hidden relative flex flex-col"
-          style={{
-            backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-            backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#050505'
-          }}
-        >
-          {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60 z-0" />
-        <div className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} opacity-[0.06] z-0`} />
 
-        {/* ═══ SUB-NAV BAR (below global header) ═══ */}
-        <div className="relative z-10 flex-shrink-0 mt-16">
-          <div className="flex items-center px-6 py-2 gap-0"
-            style={{
-              background: 'rgba(8, 12, 18, 0.5)',
-              backdropFilter: 'blur(20px)',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            {/* Left: Genre Progression label */}
-            <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">
-              Genre Progression
-            </span>
-
-            {/* Fade divider left */}
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-            </div>
-
-            {/* Center: Scrollable genre tabs */}
-            <GenreScrollTabs
-              genres={GENRES}
-              selectedGenre={selectedGenre}
-              onSelect={setSelectedGenre}
-            />
-
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => setMarketView(marketView === 'blackmarket' ? 'cards' : 'blackmarket')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  marketView === 'blackmarket'
-                    ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Black Market</span>
-              </button>
-              <button
-                onClick={() => setMarketView(marketView === 'tradingpost' ? 'cards' : 'tradingpost')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  marketView === 'tradingpost'
-                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Trading Post</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        <SidebarOverlays className="absolute top-[104px] left-6 right-6 bottom-[80px] z-[80]" />
-        {/* ═══ MAIN CONTENT: Games List + Right Panel ═══ */}
-        <div className="flex-1 flex min-h-0 relative z-10">
-          {/* LEFT: Games List (always visible) */}
-          <div
-            className="h-full flex flex-col overflow-hidden flex-shrink-0"
-            style={{
-              width: '320px',
-              minWidth: '320px',
-              background: 'rgba(10, 14, 20, 0.65)',
-              backdropFilter: 'blur(30px)',
-              borderRight: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            {/* List Header */}
-            <div className="p-4 border-b border-white/6 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center`}>
-                  <Gamepad2 className="w-3.5 h-3.5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-white font-bold text-sm">{selectedGenre.name} Games</h2>
-                  <p className="text-white/35 text-[10px]">{gameData.length} game{gameData.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5">
-                <Search className="w-3.5 h-3.5 text-white/40" />
-                <input
-                  type="text"
-                  placeholder="Search games..."
-                  className="bg-transparent text-white text-xs placeholder-white/30 outline-none w-32"
-                />
-              </div>
-            </div>
-
-            {/* Games */}
-            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
-              {gamesLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
-                </div>
-              ) : gameData.length === 0 ? (
-                <div className="text-center py-12 text-white/25">
-                  <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">No games in this genre yet</p>
-                </div>
-              ) : (
-                gameData.map((game) => (
-                  <motion.button
-                    key={game.id}
-                    onClick={() => { setSelectedGame(game); if (rightPanel === 'skilltree') setRightPanel('games'); }}
-                    whileHover={{ x: 2 }}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
-                      selectedGame?.id === game.id && rightPanel === 'games'
-                        ? 'bg-white/10 border-white/15'
-                        : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/6'
-                    }`}
-                  >
-                    <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
-                      {game.cover_image ? (
-                        <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
-                          <Gamepad2 className="w-4 h-4 text-white/25" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-white/30 text-[10px] flex items-center gap-0.5"><Scroll className="w-2.5 h-2.5" />{game.questCount}</span>
-                        <span className="text-yellow-400/50 text-[10px] flex items-center gap-0.5"><Trophy className="w-2.5 h-2.5" />{game.achievementCards}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className="flex-1 h-0.5 rounded-full bg-white/5 overflow-hidden">
-                          <div className={`h-full rounded-full bg-gradient-to-r ${selectedGenre.color}`} style={{ width: `${game.completionRate}%` }} />
-                        </div>
-                        <span className="text-white/20 text-[9px]">{game.completionRate}%</span>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT: Game Detail OR Skill Tree */}
-          <div className="flex-1 h-full overflow-hidden"
-            style={{
-              background: 'rgba(8, 12, 18, 0.55)',
-              backdropFilter: 'blur(20px)',
-            }}
-          >
+          <main className="alpine-center">
             <AnimatePresence mode="wait">
               {marketView === 'blackmarket' ? (
-                <motion.div
-                  key="blackmarket"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
+                <motion.div key="blackmarket" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
                   <BlackMarketContent cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} selectedGame={selectedGame} />
                 </motion.div>
               ) : marketView === 'tradingpost' ? (
-                <motion.div
-                  key="tradingpost"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
+                <motion.div key="tradingpost" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
                   <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} selectedGame={selectedGame} />
                 </motion.div>
               ) : rightPanel === 'achievements' ? (
-                <motion.div
-                  key="achievements"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <AchievementsContent
-                    genre={selectedGenre}
-                    selectedGame={selectedGame}
-                    onSelectGame={(game) => { setSelectedGame(game); setRightPanel('achievements'); }}
-                    games={gameData}
-                  />
+                <motion.div key="achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                  <AchievementsContent genre={selectedGenre} selectedGame={selectedGame} onSelectGame={(game) => { setSelectedGame(game); setRightPanel('achievements'); }} games={gameData} />
                 </motion.div>
               ) : rightPanel === 'skilltree' ? (
-                <motion.div
-                  key="skilltree"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
+                <motion.div key="skilltree" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
                   <SkillTreeContent genre={selectedGenre} />
                 </motion.div>
               ) : selectedGame ? (
-                <motion.div
-                  key={`game-${selectedGame.id}`}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <GenreGameDetail
-                    game={selectedGame}
-                    genre={selectedGenre}
-                    onClose={() => setSelectedGame(null)}
-                  />
+                <motion.div key={`game-${selectedGame.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                  <GenreGameDetail game={selectedGame} genre={selectedGenre} onClose={() => setSelectedGame(null)} />
                 </motion.div>
               ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="h-full flex flex-col items-center justify-center text-center px-8"
-                >
-                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${selectedGenre.color} opacity-20 flex items-center justify-center mb-6`}>
-                    <Gamepad2 className="w-10 h-10 text-white/40" />
-                  </div>
-                  <h2 className="text-xl font-bold text-white/30 mb-2">Select a Game</h2>
-                  <p className="text-white/20 text-sm max-w-sm">
-                    Choose a game from the {selectedGenre.name} library to explore its quests, achievement cards, and community progress.
-                  </p>
+                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center text-center px-8">
+                  <div className="w-20 h-20 rounded-2xl bg-slate-300 flex items-center justify-center mb-6"><Gamepad2 className="w-10 h-10 text-slate-600" /></div>
+                  <h2 className="text-xl font-bold text-slate-700 mb-2">Select a Game</h2>
+                  <p className="text-slate-500 text-sm max-w-sm">Choose a game from the {selectedGenre.name} library to explore its quests, achievement cards, and community progress.</p>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </main>
+
+          <AlpineGamesBrowser
+            games={gameData}
+            loading={gamesLoading}
+            selectedGame={selectedGame}
+            rightPanel={rightPanel}
+            onSelectGame={(game) => { setSelectedGame(game); if (rightPanel === 'skilltree') setRightPanel('games'); }}
+          />
         </div>
       </div>
-    </div>
     </GlassPageFrame>
   );
 }

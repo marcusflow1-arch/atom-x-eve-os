@@ -1,0 +1,66 @@
+body.alpine-mist-active { background:#e9edf2; }
+body.alpine-mist-active .fixed.top-0.left-0.right-0.z-40 { background:rgba(241,244,247,.94)!important; border-bottom:1px solid #cdd3da!important; box-shadow:0 2px 18px rgba(35,45,58,.08)!important; }
+body.alpine-mist-active .fixed.top-0.left-0.right-0.z-40 span, body.alpine-mist-active .fixed.top-0.left-0.right-0.z-40 button { color:#17202b!important; }
+body.alpine-mist-active .fixed.bottom-0.left-0.right-0.z-\[35\] { background:rgba(235,239,244,.96)!important; border-top:1px solid #cbd2da!important; box-shadow:0 -2px 14px rgba(35,45,58,.08)!important; }
+body.alpine-mist-active .page-container > div:has(.alpine-cards-page) > aside { background:#dbe2e8!important; border-color:#c1cad3!important; box-shadow:3px 0 12px rgba(42,53,64,.08)!important; }
+body.alpine-mist-active .page-container > div:has(.alpine-cards-page) > aside button { color:#24313d!important; border-color:#aeb9c3!important; background:rgba(239,243,246,.42)!important; }
+.alpine-cards-page { height:100vh; color:#17202b; background:linear-gradient(135deg,#eef2f5 0%,#dfe5eb 52%,#d4dce4 100%); overflow:hidden; }
+.alpine-cards-page * { scrollbar-color:#9ba6b2 transparent; }
+.alpine-workspace { display:grid; grid-template-columns:180px minmax(0,1fr) 292px; gap:14px; height:calc(100vh - 117px); margin-top:64px; padding:10px 12px 12px; }
+.alpine-filter-panel,.alpine-games-browser { min-height:0; border:1px solid rgba(87,101,116,.14); background:rgba(210,218,226,.72); box-shadow:inset 0 1px rgba(255,255,255,.65); }
+.alpine-filter-panel { border-radius:12px; padding:12px 10px; display:flex; flex-direction:column; }
+.alpine-kicker,.alpine-games-browser h2 { margin:0 0 8px; color:#17202b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+.alpine-achievement-chip { height:34px; padding:0 9px; display:flex; align-items:center; gap:7px; border-radius:17px; color:#fff; background:#283543; font-size:11px; }
+.alpine-achievement-chip svg { width:14px; } .alpine-achievement-chip span { flex:1; } .alpine-achievement-chip strong { font-weight:500; color:#d7dde4; }
+.alpine-search { height:30px; margin-top:9px; padding:0 9px; display:flex; align-items:center; gap:6px; border:1px solid #b8c1ca; border-radius:15px; background:rgba(255,255,255,.18); }
+.alpine-search svg { width:13px; color:#65717e; } .alpine-search input { width:100%; border:0; outline:0; background:transparent; color:#1d2731; font-size:11px; }
+.alpine-genre-title { margin-top:14px; }
+.alpine-genres { display:flex; flex-direction:column; gap:1px; }
+.alpine-genres button,.alpine-market-links button { display:flex; align-items:center; gap:8px; width:100%; min-height:29px; padding:0 6px; border-radius:6px; color:#25303b; font-size:12px; text-align:left; }
+.alpine-genres button svg,.alpine-market-links button svg { width:14px; height:14px; } .alpine-genres button.active { background:rgba(255,255,255,.58); font-weight:700; }
+.alpine-market-links { margin-top:auto; padding-top:8px; border-top:1px solid #bcc5ce; } .alpine-market-links button.active { background:#fff; box-shadow:0 2px 7px rgba(45,56,68,.1); }
+.alpine-center { min-width:0; min-height:0; overflow:hidden; border-radius:12px; background:rgba(248,250,252,.5); }
+.alpine-games-browser { border-radius:12px; padding:13px 10px 8px; display:flex; flex-direction:column; }
+.alpine-games-browser h2 { font-size:12px; margin-bottom:7px; } .alpine-browser-rule { height:1px; background:#aeb8c2; margin-bottom:8px; }
+.alpine-game-list { overflow-y:auto; display:flex; flex-direction:column; gap:7px; padding-right:3px; }
+.alpine-game-list button { min-height:88px; display:flex; gap:9px; padding:8px; border:1px solid #b7c1ca; border-radius:10px; background:rgba(235,239,243,.48); color:#15202b; text-align:left; }
+.alpine-game-list button.active { border:1.5px solid #253342; background:rgba(250,252,253,.7); }
+.alpine-game-cover { width:70px; height:72px; flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:8px; background:#c9d1d9; }
+.alpine-game-cover img { width:100%; height:100%; object-fit:cover; } .alpine-game-cover>svg { width:22px; color:#77828d; }
+.alpine-game-copy { min-width:0; display:flex; flex-direction:column; justify-content:center; } .alpine-game-copy h3 { margin:0; font-size:14px; line-height:1.08; font-weight:800; } .alpine-game-copy p { margin:5px 0; font-size:10px; color:#495561; }
+.alpine-game-copy span { display:flex; align-items:center; gap:4px; font-size:9px; color:#6b7680; } .alpine-game-copy span svg { width:10px; height:10px; }
+.alpine-center .text-white,.alpine-center [class*="text-white/"] { color:#17202b!important; }
+.alpine-center [class*="border-white/"] { border-color:rgba(70,84,98,.16)!important; }
+.alpine-center [class*="bg-white/"] { background-color:rgba(255,255,255,.52)!important; }
+.alpine-center [class*="bg-\[#080c12\]"] { background:#edf1f4!important; }
+.alpine-center>div { background:transparent!important; }
+.alpine-center .rounded-2xl,.alpine-center .rounded-xl { box-shadow:0 3px 10px rgba(41,52,64,.09); }
+.alpine-game-detail { padding:10px; gap:8px; }
+.alpine-detail-hero { display:grid; grid-template-columns:210px minmax(0,1fr); gap:18px; min-height:210px; }
+.alpine-detail-cover { height:210px; align-self:start; overflow:hidden; border-radius:11px; background:#cbd3db; box-shadow:0 4px 14px rgba(41,52,64,.12); }
+.alpine-detail-cover img { width:100%; height:100%; object-fit:cover; }
+.alpine-detail-summary { position:relative; min-width:0; display:flex; flex-direction:column; justify-content:center; padding:6px 2px; }
+.alpine-progress-row { display:flex; align-items:center; gap:14px; }
+.alpine-progress-ring { width:88px; height:88px; padding:7px; flex:none; border-radius:50%; background:conic-gradient(#263442 var(--progress),#c7cfd7 0); }
+.alpine-progress-ring>div { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:50%; background:#e9edf1; }
+.alpine-progress-ring strong { font-size:22px; line-height:1; } .alpine-progress-ring span,.alpine-earned span { font-size:9px; text-transform:uppercase; }
+.alpine-earned { display:flex; flex-direction:column; gap:3px; } .alpine-earned strong { font-size:20px; }
+.alpine-close { position:absolute; top:0; right:0; width:30px; height:30px; padding:7px; border-radius:50%; background:#d6dde3; color:#34404c; }
+.alpine-detail-summary h1 { margin:8px 0 3px; font-size:18px; font-weight:800; } .alpine-detail-summary p { margin:0; font-size:11px; line-height:1.35; color:#36424e; }
+.alpine-primary-quest { width:100%; height:32px; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:7px; background:#2f819d; color:#fff; font-size:11px; font-weight:800; text-transform:uppercase; box-shadow:0 3px 8px rgba(47,129,157,.18); }
+.alpine-primary-quest svg { width:14px; height:14px; }
+.alpine-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.alpine-stat-card { min-width:0; padding:10px 12px; border:1px solid #d4dbe1; border-radius:9px; background:rgba(250,252,253,.88); box-shadow:0 3px 8px rgba(41,52,64,.11); }
+.alpine-stat-card>span { display:block; font-size:9px; font-weight:800; text-transform:uppercase; } .alpine-stat-card>strong { display:block; margin-top:3px; font-size:20px; line-height:1; }
+.alpine-stat-card>div { height:3px; margin-top:8px; border-radius:3px; overflow:hidden; background:#cbd3da; } .alpine-stat-card i { display:block; height:100%; background:#2c5268; }
+.alpine-game-detail>div:nth-of-type(3) { padding:5px 0!important; border:0!important; background:transparent!important; }
+.alpine-game-detail>div:nth-of-type(3)>div:first-child { margin-bottom:6px!important; }
+.alpine-game-detail>div:nth-of-type(3) button { color:#283540!important; border-color:#b9c3cc!important; background:rgba(238,242,245,.72)!important; box-shadow:none!important; }
+.alpine-game-detail>div:nth-of-type(4) { padding:0!important; }
+.alpine-game-detail>div:nth-of-type(4)>div { gap:7px!important; }
+.alpine-game-detail>div:nth-of-type(4)>div>div { background:rgba(248,250,252,.72)!important; border-color:#cbd3db!important; }
+.alpine-bottom-nav button { color:#28333f!important; text-shadow:none!important; filter:none!important; }
+.alpine-bottom-nav button>div { display:none!important; }
+.alpine-bottom-nav svg { color:#28333f!important; }
+@media(max-width:1050px){.alpine-workspace{grid-template-columns:165px minmax(0,1fr) 240px}.alpine-game-cover{width:58px}}
+@media(max-width:800px){.alpine-workspace{grid-template-columns:145px minmax(0,1fr)}.alpine-games-browser{display:none}.alpine-detail-hero{grid-template-columns:1fr}.alpine-detail-cover{height:180px}.alpine-stat-grid{grid-template-columns:repeat(2,1fr)}}
