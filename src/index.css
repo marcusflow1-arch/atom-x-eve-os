@@ -47,6 +47,11 @@
 @media (max-width:900px) { :root { --ax-sidebar-width:60px; --ax-sidebar-padding:8px; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; } }
 
+/* The shared Home-style rail replaces older page-specific 132px overlay backings. */
+.universal-page-rail-content [class*="w-[132px]"][class*="left-0"][class*="top-0"][class*="bottom-0"] {
+  display: none !important;
+}
+
 /* Game Viewer editor: keep exactly one launcher. The dark shell EDIT control is the sole visible entry point; the legacy dock launcher remains programmatically clickable but is never visible. */
 #atomxe-live-world-editor-root button:not(aside button) {
   display:none !important;

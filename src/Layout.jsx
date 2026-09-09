@@ -20,6 +20,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
 import ChangesConsole from './components/dev/ChangesConsole';
 import LibrarySidebar from './components/streaming/LibrarySidebar';
+import UniversalPageRail from './components/shared/UniversalPageRail';
 import GuidedTour from './components/onboarding/GuidedTour';
 import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeContext';
 import ViewModeToggle from './components/mobile/ViewModeToggle';
@@ -1140,7 +1141,7 @@ function LayoutContent({ children, currentPageName }) {
         <div className="page-container">
           <ErrorBoundary>
             <Suspense fallback={<RouteLoadingFallback />}>
-              {children}
+              <UniversalPageRail pathname={location.pathname}>{children}</UniversalPageRail>
             </Suspense>
           </ErrorBoundary>
         </div>

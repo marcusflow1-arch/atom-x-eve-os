@@ -232,9 +232,8 @@ export default function LibrarySidebar() {
 
   const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || isGameView || pathname.includes('/gamedetail'));
 
-  // Pages whose left rail is a 132px overlay extension — center the floating buttons within it
-  const hasOverlayRail = ['/store', '/genremastery', '/community', '/clan', '/aura'].some(s => pathname.includes(s));
-  const railLeftClass = hasOverlayRail ? 'left-[46px]' : 'left-6';
+  // Center every floating control inside the shared Home-style 5% rail.
+  const railLeftClass = 'left-[calc(max(5vw,80px)/2-20px)]';
   
   // On gamedetail page, use fixed positioning so the sidebar shows over the page
   // Overlay mode: the rail and drawer are always fixed to the viewport so page
@@ -376,123 +375,7 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {!isSidebarCollapsed && !pathname.includes('/lunatemplate') && (
-            <motion.div
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`${positionClass} ${railLeftClass} z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100 overflow-y-auto`}
-              style={{ bottom: 'calc(55% + 24px)', scrollbarWidth: 'none' }}
-            >
-              {/* Luna Dashboard rail backing — matches LunaLeftRail's glass/black finish + right border */}
-              <div
-                className="absolute inset-x-[-8px] inset-y-[-12px] rounded-2xl pointer-events-none -z-10"
-                style={{
-                  background: 'rgba(0,0,0,0.20)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  borderRight: '1px solid rgba(255,255,255,0.20)',
-                  boxShadow: '5px 0 15px rgba(0,0,0,0.35)',
-                }}
-              />
-              <button 
-                onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-              >
-                 {recentLabelParts[0]}<br/>{recentLabelParts[1]}
-                 </button>
-              <div className="w-8 h-px bg-white/20 -mt-1" />
-
-              {/* The 5 boxes */}
-              {sidebarMode === 'context' ? (
-                <>
-                  {isClan && (
-                    <>
-                      <button
-                        onClick={() => navigate('/Clan?game=global_chat')}
-                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
-                        title={`Atom X Eve Global Clan Chat`}
-                      >
-                        <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                        <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
-                      </button>
-                      
-                      {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 4).map((game) => (
-                        <button
-                          key={`clan_${game.id}`}
-                          onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Clan Chat`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
-
-                  {isForum && (
-                    <>
-                      {quickNavForumGames.slice(0, 5).map((game) => (
-                        <button
-                          key={`forum_${game.id}`}
-                          onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Forum`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
-
-                  {isFarm && (
-                    <>
-                      {quickNavFarmGames.slice(0, 5).map((game) => (
-                        <button
-                          key={`farm_${game.id}`}
-                          onClick={() => navigate(`/Farm?gameId=${game.id}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Farm`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
-
-                  {isGenreMastery && (
-                    <>
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                          <span className="text-white/30 text-lg font-bold">C</span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Luna Dashboard-style placeholder boxes for pages without recent data (Store, Aura, Library, etc.) */}
-                  {!isClan && !isForum && !isFarm && !isGenreMastery && (
-                    [1, 2, 3, 4, 5].map(i => (
-                      <div key={`recent-ph-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                        <span className="text-white/30 text-lg font-bold">?</span>
-                      </div>
-                    ))
-                  )}
-                </>
-              ) : (
-                <>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center"><span className="text-white/30 text-lg font-bold">?</span></div>
-                  ))}
-                </>
-              )}
-              <div className="w-14 h-px bg-white/25 mt-2 flex-shrink-0" />
-            </motion.div>
-          )}
+          {/* The shared page rail now owns the Recently Played surface on every route. */}
 
           {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
           {!isSidebarCollapsed && <motion.div
