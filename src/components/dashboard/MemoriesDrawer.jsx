@@ -1,63 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  CalendarDays,
-  Camera,
-  Clock3,
-  Film,
-  Home,
-  MessageCircle,
-  Play,
-  Sparkles,
-  Trophy,
-  Users,
-  X,
-} from 'lucide-react';
+import { CalendarDays, Camera, Clock3, Film, Home, MessageCircle, Play, Sparkles, Trophy, Users, X } from 'lucide-react';
 
 const FALLBACK_MEMORIES = [
-  {
-    id: 'neon-perfect-counter', title: 'Perfect Counter at Match Point', game: 'Neon Legends', dateLabel: 'September 27', exactTime: '9:42:18 PM', timestamp: '00:18:42', isVideo: true, legendary: true,
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&fit=crop',
-    notes: 'I waited for the feint, caught the recovery frame, and turned the whole round around in one counter.',
-    trophy: 'Neon Clutch — Win a ranked match from critical health.',
-    reactions: [{ name: 'Maya', avatar: 'M', text: 'That read was ridiculous. You called the feint before it happened.', reaction: '🔥' }, { name: 'Dre', avatar: 'D', text: 'Save this one forever. Match point was ice cold.', reaction: '🏆' }],
-  },
-  {
-    id: 'cyberpunk-rooftop', title: 'Night City Rooftop Run', game: 'Cyberpunk 2088', dateLabel: 'September 27', exactTime: '7:16:05 PM', timestamp: '01:07:31', isVideo: false, legendary: false,
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1600&fit=crop',
-    notes: 'The lighting hit at exactly the right moment. This is the skyline angle I wanted for the whole playthrough.',
-    trophy: 'Urban Ghost — Reach the tower district without triggering an alert.',
-    reactions: [{ name: 'Kai', avatar: 'K', text: 'This looks like key art.', reaction: '✨' }],
-  },
-  {
-    id: 'stellar-rings', title: 'First Pass Through the Helios Rings', game: 'Stellar Odyssey', dateLabel: 'September 24', exactTime: '11:03:44 PM', timestamp: '02:41:09', isVideo: false, legendary: true,
-    image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1600&fit=crop',
-    notes: 'No HUD, no waypoint, just the ship drifting through the rings. One of those moments where I stopped playing and just watched.',
-    trophy: 'Beyond the Map — Discover a hidden stellar landmark.',
-    reactions: [{ name: 'Nova', avatar: 'N', text: 'Wallpaper immediately.', reaction: '🌌' }, { name: 'Maya', avatar: 'M', text: 'The scale is unreal.', reaction: '💙' }],
-  },
-  {
-    id: 'shadow-boss', title: 'The Last Hit', game: 'Shadow Realm', dateLabel: 'September 21', exactTime: '1:28:52 AM', timestamp: '00:09:56', isVideo: true, legendary: true,
-    image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1600&fit=crop',
-    notes: 'One flask left, no revive, and the boss was still in phase three. The final dodge is the reason this clip exists.',
-    trophy: 'No Light Left — Defeat a realm guardian without assistance.',
-    reactions: [{ name: 'Dre', avatar: 'D', text: 'I thought you were done at 2 HP.', reaction: '😱' }, { name: 'Kai', avatar: 'K', text: 'Legendary. No notes.', reaction: '👑' }],
-  },
-  {
-    id: 'apex-squad', title: 'Squad Wipe From the Drop', game: 'Apex Surge', dateLabel: 'September 15', exactTime: '10:12:03 PM', timestamp: '00:03:27', isVideo: true, legendary: false,
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&fit=crop',
-    notes: 'The opening route finally worked. Fast loot, high ground, then the cleanest first fight of the night.',
-    trophy: 'Hot Drop — Eliminate an entire squad within five minutes.',
-    reactions: [{ name: 'Nova', avatar: 'N', text: 'Run this route again next session.', reaction: '🎯' }],
-  },
-  {
-    id: 'mythforge-guild', title: 'Guild Hall Before Reset', game: 'MythForge Online', dateLabel: 'September 8', exactTime: '6:54:30 PM', timestamp: '04:18:12', isVideo: false, legendary: false,
-    image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&fit=crop',
-    notes: 'Everyone made it online before the seasonal reset, so I grabbed one clean group shot before the banners changed.',
-    trophy: 'Together at Dawn — Complete a seasonal chapter with a full guild party.',
-    reactions: [{ name: 'Maya', avatar: 'M', text: 'Best season yet.', reaction: '❤️' }, { name: 'Dre', avatar: 'D', text: 'Frame this one.', reaction: '📸' }],
-  },
+  { id: 'neon-perfect-counter', title: 'Perfect Counter at Match Point', game: 'Neon Legends', dateLabel: 'September 27', exactTime: '9:42:18 PM', timestamp: '00:18:42', isVideo: true, legendary: true, image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&fit=crop', notes: 'I waited for the feint, caught the recovery frame, and turned the whole round around in one counter.', trophy: 'Neon Clutch — Win a ranked match from critical health.', reactions: [{ name: 'Maya', avatar: 'M', text: 'That read was ridiculous. You called the feint before it happened.', reaction: '🔥' }, { name: 'Dre', avatar: 'D', text: 'Save this one forever. Match point was ice cold.', reaction: '🏆' }] },
+  { id: 'cyberpunk-rooftop', title: 'Night City Rooftop Run', game: 'Cyberpunk 2088', dateLabel: 'September 27', exactTime: '7:16:05 PM', timestamp: '01:07:31', isVideo: false, legendary: false, image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1600&fit=crop', notes: 'The lighting hit at exactly the right moment. This is the skyline angle I wanted for the whole playthrough.', trophy: 'Urban Ghost — Reach the tower district without triggering an alert.', reactions: [{ name: 'Kai', avatar: 'K', text: 'This looks like key art.', reaction: '✨' }] },
+  { id: 'stellar-rings', title: 'First Pass Through the Helios Rings', game: 'Stellar Odyssey', dateLabel: 'September 24', exactTime: '11:03:44 PM', timestamp: '02:41:09', isVideo: false, legendary: true, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1600&fit=crop', notes: 'No HUD, no waypoint, just the ship drifting through the rings. One of those moments where I stopped playing and just watched.', trophy: 'Beyond the Map — Discover a hidden stellar landmark.', reactions: [{ name: 'Nova', avatar: 'N', text: 'Wallpaper immediately.', reaction: '🌌' }, { name: 'Maya', avatar: 'M', text: 'The scale is unreal.', reaction: '💙' }] },
+  { id: 'shadow-boss', title: 'The Last Hit', game: 'Shadow Realm', dateLabel: 'September 21', exactTime: '1:28:52 AM', timestamp: '00:09:56', isVideo: true, legendary: true, image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1600&fit=crop', notes: 'One flask left, no revive, and the boss was still in phase three. The final dodge is the reason this clip exists.', trophy: 'No Light Left — Defeat a realm guardian without assistance.', reactions: [{ name: 'Dre', avatar: 'D', text: 'I thought you were done at 2 HP.', reaction: '😱' }, { name: 'Kai', avatar: 'K', text: 'Legendary. No notes.', reaction: '👑' }] },
+  { id: 'apex-squad', title: 'Squad Wipe From the Drop', game: 'Apex Surge', dateLabel: 'September 15', exactTime: '10:12:03 PM', timestamp: '00:03:27', isVideo: true, legendary: false, image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&fit=crop', notes: 'The opening route finally worked. Fast loot, high ground, then the cleanest first fight of the night.', trophy: 'Hot Drop — Eliminate an entire squad within five minutes.', reactions: [{ name: 'Nova', avatar: 'N', text: 'Run this route again next session.', reaction: '🎯' }] },
+  { id: 'mythforge-guild', title: 'Guild Hall Before Reset', game: 'MythForge Online', dateLabel: 'September 8', exactTime: '6:54:30 PM', timestamp: '04:18:12', isVideo: false, legendary: false, image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&fit=crop', notes: 'Everyone made it online before the seasonal reset, so I grabbed one clean group shot before the banners changed.', trophy: 'Together at Dawn — Complete a seasonal chapter with a full guild party.', reactions: [{ name: 'Maya', avatar: 'M', text: 'Best season yet.', reaction: '❤️' }, { name: 'Dre', avatar: 'D', text: 'Frame this one.', reaction: '📸' }] },
 ];
 
 const FILTERS = [
@@ -74,11 +26,9 @@ const normalizeMemory = (item, index) => {
     const date = new Date(rawDate);
     if (!Number.isNaN(date.getTime())) dateLabel = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   }
-
   const isVideo = Boolean(item?.isVideo || item?.type === 'video' || item?.media_type === 'video');
   const mediaUrl = item?.videoUrl || item?.mediaUrl || item?.url || item?.file_url || null;
   const image = item?.thumbnail || item?.image || item?.cover || item?.cover_image || (!isVideo ? mediaUrl : null);
-
   return {
     ...item,
     id: item?.id || `memory-${index}`,
@@ -120,23 +70,14 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
     const source = Array.isArray(references) && references.length ? references : FALLBACK_MEMORIES;
     return source.map(normalizeMemory);
   }, [references]);
-
   const dates = useMemo(() => Array.from(new Set(memories.map((memory) => memory.dateLabel))), [memories]);
   const resolvedDate = activeDate && dates.includes(activeDate) ? activeDate : dates[0];
-
   const filteredMemories = useMemo(() => memories.filter((memory) => {
     const dateMatch = !resolvedDate || memory.dateLabel === resolvedDate;
-    const filterMatch = activeFilter === 'all'
-      || (activeFilter === 'video' && memory.isVideo)
-      || (activeFilter === 'screenshots' && !memory.isVideo)
-      || (activeFilter === 'legendary' && memory.legendary);
+    const filterMatch = activeFilter === 'all' || (activeFilter === 'video' && memory.isVideo) || (activeFilter === 'screenshots' && !memory.isVideo) || (activeFilter === 'legendary' && memory.legendary);
     return dateMatch && filterMatch;
   }), [memories, resolvedDate, activeFilter]);
-
-  const selectedMemory = filteredMemories.find((memory) => memory.id === selectedId)
-    || filteredMemories[0]
-    || memories.find((memory) => memory.id === selectedId)
-    || memories[0];
+  const selectedMemory = filteredMemories.find((memory) => memory.id === selectedId) || filteredMemories[0] || memories.find((memory) => memory.id === selectedId) || memories[0];
 
   useEffect(() => {
     if (!selectedId && memories[0]) setSelectedId(memories[0].id);
@@ -181,10 +122,7 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
     setActiveFilter(filterId);
     const next = memories.find((memory) => {
       const dateMatch = !resolvedDate || memory.dateLabel === resolvedDate;
-      const filterMatch = filterId === 'all'
-        || (filterId === 'video' && memory.isVideo)
-        || (filterId === 'screenshots' && !memory.isVideo)
-        || (filterId === 'legendary' && memory.legendary);
+      const filterMatch = filterId === 'all' || (filterId === 'video' && memory.isVideo) || (filterId === 'screenshots' && !memory.isVideo) || (filterId === 'legendary' && memory.legendary);
       return dateMatch && filterMatch;
     });
     if (next) setSelectedId(next.id);
@@ -232,11 +170,7 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/10 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
                     <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-6 md:p-8">
-                      <div>
-                        <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-200/70">{selectedMemory.isVideo ? <Film className="h-3.5 w-3.5" /> : <Camera className="h-3.5 w-3.5" />}{selectedMemory.legendary ? 'Legendary Moment' : 'Saved Memory'}</div>
-                        <h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">{selectedMemory.title}</h2>
-                        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-white/50"><span>{selectedMemory.game}</span><span>{selectedMemory.dateLabel}</span><span>{selectedMemory.exactTime}</span></div>
-                      </div>
+                      <div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-200/70">{selectedMemory.isVideo ? <Film className="h-3.5 w-3.5" /> : <Camera className="h-3.5 w-3.5" />}{selectedMemory.legendary ? 'Legendary Moment' : 'Saved Memory'}</div><h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">{selectedMemory.title}</h2><div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-white/50"><span>{selectedMemory.game}</span><span>{selectedMemory.dateLabel}</span><span>{selectedMemory.exactTime}</span></div></div>
                       <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white/10 backdrop-blur-xl transition group-hover:scale-110 group-hover:bg-white/20"><Play className="h-6 w-6 fill-current" /></div>
                     </div>
                   </motion.button>
