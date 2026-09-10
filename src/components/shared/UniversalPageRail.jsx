@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ClanChatRailButton from '@/components/clan/ClanChatRailButton';
 
 const STORAGE_KEY = 'atom_eve_left_rail_visible';
 
@@ -25,7 +26,8 @@ export default function UniversalPageRail({ children, pathname }) {
             <span className="mb-1 text-center text-[10px] font-bold uppercase tracking-wider text-white/50">Recently<br />Played</span>
             <div className="mb-3 h-px w-8 bg-white/20" />
             <div className="flex w-full flex-col items-center gap-2">
-              {[1, 2, 3, 4, 5].map((item) => <div key={item} className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5"><span className="text-lg font-bold text-white/30">?</span></div>)}
+              <ClanChatRailButton />
+              {[2, 3, 4, 5].map((item) => <div key={item} className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5"><span className="text-lg font-bold text-white/30">?</span></div>)}
             </div>
           </div>
         </aside>
