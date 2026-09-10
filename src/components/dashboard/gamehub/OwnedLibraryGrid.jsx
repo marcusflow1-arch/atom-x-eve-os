@@ -28,7 +28,7 @@ export default function OwnedLibraryGrid({ games, loading, error, retry, onSelec
       {['most', 'least'].includes(sort) && <p className="text-xs text-muted-foreground">Sorted by recorded playtime; games without playtime appear last.</p>}
     </header>
     <div data-testid="owned-library-scroll" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5" onWheel={e => e.stopPropagation()}>
-      {loading ? <p role="status">Loading your games…</p> : error ? <div role="alert">Unable to load your games. <button onClick={retry} className="underline">Retry</button></div> : !games.length ? <p className="text-muted-foreground">Your library is empty. Games you own will appear here.</p> : !filtered.length ? <p className="text-muted-foreground">No owned games match this genre.</p> : <div data-testid="owned-library-tiles" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 items-start">{filtered.map(game => <OwnedLibraryTile key={game.id} game={game} onSelect={onSelect} />)}</div>}
+      {loading ? <p role="status">Loading your games…</p> : error ? <div role="alert">Unable to load your games. <button onClick={retry} className="underline">Retry</button></div> : !games.length ? <p className="text-muted-foreground">Your library is empty. Games you own will appear here.</p> : !filtered.length ? <p className="text-muted-foreground">No owned games match this genre.</p> : <div data-testid="owned-library-tiles" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 items-stretch">{filtered.map(game => <OwnedLibraryTile key={game.id} game={game} onSelect={onSelect} />)}</div>}
     </div>
   </section>;
 }

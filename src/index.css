@@ -50,6 +50,11 @@
 .library-surface { --background: 222 47% 7%; --foreground: 210 40% 96%; --primary: 187 80% 78%; --primary-foreground: 222 47% 7%; --popover: 222 40% 12%; --popover-foreground: 210 40% 96%; --muted: 222 35% 15%; --muted-foreground: 215 20% 75%; --border: 215 25% 25%; color: hsl(var(--foreground)); }
 .dark .library-surface { --background: 222 47% 7%; --foreground: 210 40% 96%; --primary: 187 80% 78%; --primary-foreground: 222 47% 7%; --popover: 222 40% 12%; --popover-foreground: 210 40% 96%; --muted: 222 35% 15%; --muted-foreground: 215 20% 75%; --border: 215 25% 25%; }
 
+/* A hidden avatar canvas must never intercept the full library's pointer input. */
+body:has([data-testid="owned-library-view"]) [data-dashboard-avatar-overview] {
+  display: none;
+}
+
 /* The shared Home-style rail replaces older page-specific 132px overlay backings. */
 .universal-page-rail-content [class*="w-[132px]"][class*="left-0"][class*="top-0"][class*="bottom-0"] {
   display: none !important;

@@ -167,7 +167,7 @@ export default function DashboardAvatarOverview() {
   ];
 
   return (
-    <div className="fixed left-[390px] right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible">
+    <div data-dashboard-avatar-overview className="fixed left-[390px] right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible">
       <div className={`absolute left-1/2 top-[570px] z-40 flex items-center gap-[4px] h-[54px] w-fit -translate-x-[270px] transition-all duration-500 ${backgroundDimmed ? 'opacity-30 blur-[4px]' : 'opacity-100'}`}>
         {slotItems.map(item => <GlassSlot key={item.label} icon={item.icon} label={item.label} />)}
       </div>
