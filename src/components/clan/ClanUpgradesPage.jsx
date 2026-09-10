@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 
 export default function ClanUpgradesPage({ clan }) {
     return (
-        <div className="clan-upgrades">
+        <div className="flex h-full bg-[#0A0D14]">
             {/* Left Side - Environments */}
-            <div className="clan-upgrade-environments flex flex-col">
+            <div className="w-[300px] border-r border-white/5 flex flex-col">
                 <div className="p-6 pb-2">
                     <div className="text-[10px] font-bold text-white/40 tracking-widest uppercase mb-4">Stronghold Environments</div>
                 </div>
@@ -48,8 +48,8 @@ export default function ClanUpgradesPage({ clan }) {
             </div>
 
             {/* Middle Content - Upgrade Tree */}
-            <div className="clan-upgrade-main">
-                <div className="clan-upgrade-heading">
+            <div className="flex-1 flex flex-col border-r border-white/5">
+                <div className="px-10 py-6 border-b border-white/5 flex items-end justify-between bg-black/20">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
@@ -78,14 +78,14 @@ export default function ClanUpgradesPage({ clan }) {
                     </div>
                 </div>
 
-                <div className="clan-upgrade-content">
+                <div className="flex-1 p-10 overflow-y-auto">
                     <div className="text-[10px] font-bold text-white/40 tracking-widest uppercase mb-6 flex items-center gap-2">
                         <Settings className="w-3 h-3" /> Facility Upgrades
                     </div>
 
-                    <div className="clan-upgrade-columns">
+                    <div className="flex gap-10 h-full">
                         {/* Categories */}
-                        <div className="clan-upgrade-categories">
+                        <div className="w-[240px] space-y-2">
                             <button className="w-full text-left px-5 py-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-sm tracking-wider flex items-center gap-3">
                                 <Crown className="w-4 h-4" /> Command Center
                             </button>
@@ -139,7 +139,7 @@ export default function ClanUpgradesPage({ clan }) {
             </div>
 
             {/* Right Side - Preview & Active Modules */}
-            <div className="clan-upgrade-preview">
+            <div className="w-[380px] bg-black/40 flex flex-col">
                 <div className="p-6 flex items-center gap-2 text-xs font-bold text-green-400 uppercase tracking-widest">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Live Preview
                 </div>

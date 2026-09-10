@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Users, Plus, Gamepad2, Sword, Target, Trophy, Coffee, Mic } from 'lucide-react';
-import LiquidGlassCard from '@/components/clan/ClanQuietPanel';
+import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -192,7 +192,7 @@ export default function ClanSchedulePage({ clan }) {
             </div>
 
             {/* Events Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
                 <LiquidGlassCard className="p-6">
                     <EventSection title="Today" events={today} />
                     <EventSection title="Tomorrow" events={tomorrow} />

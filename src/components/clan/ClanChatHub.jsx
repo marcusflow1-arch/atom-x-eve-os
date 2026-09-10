@@ -33,11 +33,11 @@ export default function ClanChatHub({ clan, myRole }) {
   const activeChannel = textChannels.find((c) => c.id === selectedChannelId) || textChannels[0];
 
   return (
-    <div className="clan-chat-hub" data-testid="clan-chat-hub">
+    <div className="relative w-full h-full flex overflow-hidden rounded-2xl border border-white/10 bg-black/60 backdrop-blur-xl">
       {/* Channels rail */}
-      <div className="clan-channels">
-        <div className="clan-channel-heading">
-          <h1>Game Chats</h1>
+      <div className="w-52 flex-shrink-0 flex flex-col border-r border-white/10 bg-black/30">
+        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Channels</span>
           {isPrivileged && (
             <button
               onClick={() => setShowAddChannel((v) => !v)}
@@ -69,8 +69,9 @@ export default function ClanChatHub({ clan, myRole }) {
             <button
               key={ch.id}
               onClick={() => setSelectedChannelId(ch.id)}
-              className="clan-channel-button"
-              aria-pressed={activeChannel?.id === ch.id}
+              className={`w-full flex items-center gap-2 px-4 py-2 text-left text-xs transition-colors ${
+                activeChannel?.id === ch.id ? 'bg-cyan-500/15 text-cyan-300 border-r-2 border-cyan-400' : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
             >
               <Hash className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate font-medium">{ch.name}</span>
@@ -93,7 +94,7 @@ export default function ClanChatHub({ clan, myRole }) {
         <div className="p-3 border-t border-white/10">
           <button
             onClick={() => setWhisperOpen(true)}
-            className="clan-whisper-button"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/35 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-wider transition-colors"
           >
             <MessageCircle className="w-3.5 h-3.5" /> Whisper
           </button>

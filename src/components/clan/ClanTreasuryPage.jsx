@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { Coins, Gem, Star, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Clock, Users, Trophy, Target } from 'lucide-react';
-import LiquidGlassCard from '@/components/clan/ClanQuietPanel';
+import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import ProFilterSidebar from '@/components/clan/ProFilterSidebar';

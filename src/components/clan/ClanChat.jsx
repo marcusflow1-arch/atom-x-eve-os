@@ -119,14 +119,14 @@ export default function ClanChat({ clan, channel, myRole, isExpanded, onToggleEx
 
     return (
         <div 
-            className="clan-chat-thread flex flex-col h-full overflow-hidden"
+            className="flex flex-col h-full overflow-hidden"
             style={{
                 background: 'rgba(255, 255, 255, 0.02)',
             }}
         >
             {/* Header */}
             <div 
-                className="clan-chat-header h-16 flex items-center justify-between px-6 flex-shrink-0"
+                className="h-16 flex items-center justify-between px-6 flex-shrink-0"
                 style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}
             >
                 <div className="flex items-center gap-3">
@@ -164,7 +164,7 @@ export default function ClanChat({ clan, channel, myRole, isExpanded, onToggleEx
             </div>
 
             {/* Messages */}
-            <div className="clan-chat-messages flex-1 overflow-y-auto custom-scrollbar p-6 space-y-3" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-3" ref={scrollRef}>
                 {messages?.map((msg, i) => {
                     const isMe = msg.userId === user.id;
                     const showHeader = i === 0 || messages[i-1].author !== msg.author || (new Date(msg.created_date) - new Date(messages[i-1].created_date) > 300000);
@@ -243,7 +243,7 @@ export default function ClanChat({ clan, channel, myRole, isExpanded, onToggleEx
 
             {/* Input */}
             <div 
-                className="clan-chat-composer p-4 backdrop-blur-xl"
+                className="p-4 backdrop-blur-xl"
                 style={{ 
                     background: 'rgba(0, 0, 0, 0.2)',
                     borderTop: '1px solid rgba(255, 255, 255, 0.05)' 

@@ -20,7 +20,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
 import ChangesConsole from './components/dev/ChangesConsole';
 import LibrarySidebar from './components/streaming/LibrarySidebar';
-import GlobalClanChat from '@/components/clan/GlobalClanChat';
 import UniversalPageRail from './components/shared/UniversalPageRail';
 import GuidedTour from './components/onboarding/GuidedTour';
 import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeContext';
@@ -550,7 +549,6 @@ function LayoutContent({ children, currentPageName }) {
         </div>
         <MoodAuraLayer />
         <EnvStatus />
-      <GlobalClanChat />
         <Toaster position="top-right" />
         <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
@@ -582,7 +580,6 @@ function LayoutContent({ children, currentPageName }) {
       <MoodAuraLayer />
 
       <EnvStatus />
-      <GlobalClanChat />
       <Toaster position="top-right" />
       <PWAManifest />
       <ServiceWorker />
