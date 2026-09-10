@@ -86,6 +86,28 @@
         }
       },
       "description": "The tangible reward unlocked by the achievement."
+    },
+    "showcase": {
+      "type": "object",
+      "description": "Public skill/item media used by the channel Cards showcase",
+      "properties": {
+        "model_url": {
+          "type": "string",
+          "description": "HTTPS URL for the GLB, GLTF, or FBX skill/item model"
+        },
+        "animation_clip": {
+          "type": "string",
+          "description": "Optional animation name to play from the model"
+        },
+        "video_url": {
+          "type": "string",
+          "description": "HTTPS gameplay demonstration video URL"
+        }
+      }
+    },
+    "unlock_condition": {
+      "type": "string",
+      "description": "The condition the player must meet to unlock this achievement"
     }
   },
   "required": [

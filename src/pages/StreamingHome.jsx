@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import ChannelProfilePage from '@/components/streaming/hub/ChannelProfilePage';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Maximize2, Minimize2, Sparkles, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/AuthContext';
 import useCreatorEditMode from '@/components/streaming/hooks/useCreatorEditMode';
@@ -12,18 +12,19 @@ import ProfileInfoBar from '@/components/streaming/creator/ProfileInfoBar';
 import ScheduleSection from '@/components/streaming/creator/ScheduleSection';
 import GallerySection from '@/components/streaming/creator/GallerySection';
 import GamesSection from '@/components/streaming/creator/GamesSection';
-import AchievementsOverlay from '@/components/streaming/achievements/AchievementsOverlay';
 import SponsorEditor from '@/components/streaming/creator/SponsorEditor';
-import SponsorsSection from '@/components/streaming/profile/SponsorsSection';
 import ProductsGrid from '@/components/streaming/profile/ProductsGrid';
 import ViewerSeasonalPass from '@/components/streaming/ViewerSeasonalPass';
 import PlayerAchievementCollection from '@/components/streaming/collection/PlayerAchievementCollection';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
-import StreamChatBox from '@/components/streaming/StreamChatBox';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
+import useChannelHomeData from '@/components/streaming/channel/useChannelHomeData';
+import ChannelHomeContent from '@/components/streaming/channel/ChannelHomeContent';
+import ChannelCommunityChat from '@/components/streaming/channel/ChannelCommunityChat';
+import '@/components/streaming/channel/channelHome.css';
 
 const CARD_GAMES = [
   { id: 'elder-scrolls', name: 'The Elder Scrolls', genre: 'Fantasy', color: 'from-indigo-700/70 to-cyan-700/50', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/306130/header.jpg' },
@@ -60,16 +61,18 @@ function OwnChannelHome() {
   const [isLive, setIsLive] = useState(false);
   const galleryAnchorRef = useRef(null);
   const [activeTab, setActiveTab] = useState(null);
+  const [scheduleDate, setScheduleDate] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
-  const [overlayFullscreen, setOverlayFullscreen] = useState(false);
   const [achievementType, setAchievementType] = useState('All');
   const [showGameAchievements, setShowGameAchievements] = useState(false);
   const [hoveredAchievement, setHoveredAchievement] = useState(null);
   const [achievementTilt, setAchievementTilt] = useState({ x: 0, y: 0 });
 
   const { saving, isEditMode, activeProfile, activeLayout, activeSponsors, enterEditMode, cancelEdit, saveEdit, updateEditProfile, updateEditLayout, addEditSponsor, removeEditSponsor, updateEditSponsor } = useCreatorEditMode(user?.id);
+  const homeQuery = useChannelHomeData(user?.id, activeProfile?.id);
+  const liveRecord = homeQuery.data?.streams?.find((stream) => stream.is_live && !stream.ended_at) || homeQuery.data?.auraStreams?.[0];
   const scheduleData = activeLayout?.schedule_data || {};
   const galleryImages = activeLayout?.gallery_images || [];
   const pinnedGames = activeLayout?.pinned_games || [];
@@ -80,7 +83,6 @@ function OwnChannelHome() {
     const handleEscape = (event) => {
       if (event.key === 'Escape' && activeTab !== 'gallery') {
         setActiveTab(null);
-        setOverlayFullscreen(false);
         setShowGameAchievements(false);
         setHoveredAchievement(null);
       }
@@ -89,17 +91,19 @@ function OwnChannelHome() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [activeTab, showGameAchievements]);
 
-  useEffect(() => setOverlayFullscreen(false), [activeTab]);
 
-  const activeTabLabel = activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : '';
   const gameAchievementItems = CARD_LIBRARY[streamingGame.id] || [];
   const filteredAchievementItems = useMemo(() => gameAchievementItems.filter((name, index) => {
     const type = ['Abilities', 'Equipment', 'Companion'][index % 3];
     return achievementType === 'All' || achievementType === type;
   }), [gameAchievementItems, achievementType]);
 
-  const closeOverlay = () => { setActiveTab(null); setOverlayFullscreen(false); };
-  const openTab = (tab) => { setActiveTab(activeTab === tab ? null : tab); setOverlayFullscreen(false); };
+  const closeOverlay = () => { setActiveTab(null); };
+  const openTab = (tab, date) => {
+    if (tab && !['schedule', 'cards', 'gallery', 'games'].includes(tab)) return;
+    setScheduleDate(date || null); setActiveTab(activeTab === tab ? null : tab);
+    if (activeTab !== tab && ['schedule', 'games'].includes(tab)) requestAnimationFrame(() => document.querySelector('.channel-stage-grid')?.scrollIntoView({ block: 'start', behavior: 'auto' }));
+  };
   const handleAchievementPointerMove = (event, cardKey) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const px = (event.clientX - rect.left) / rect.width;
@@ -186,15 +190,14 @@ function OwnChannelHome() {
   );
 
   const renderOverlayContent = () => {
-    if (activeTab === 'schedule') return <ScheduleSection isEditMode={isEditMode} scheduleData={scheduleData} onUpdateSchedule={(data) => updateEditLayout('schedule_data', data)} onClose={closeOverlay} />;
+    if (activeTab === 'schedule') return <ScheduleSection isEditMode={isEditMode} scheduleData={scheduleData} scheduledStreams={homeQuery.data?.schedules} initialDate={scheduleDate} onUpdateSchedule={(data) => updateEditLayout('schedule_data', data)} onClose={closeOverlay} />;
     if (activeTab === 'games') return <GamesSection isEditMode={isEditMode} pinnedGames={pinnedGames} onUpdateGames={(games) => updateEditLayout('pinned_games', games)} onClose={closeOverlay} />;
-    if (activeTab === 'achievements') return <AchievementsOverlay onClose={closeOverlay} />;
     return null;
   };
 
   return <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
     <SideAccessMenu />
-    <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]"><div className="flex-1 relative h-full overflow-y-auto pl-6"><div className="w-full min-h-full pt-20 pb-24 px-4 md:px-8 relative"><div className="mx-auto max-w-none w-full flex flex-col gap-8 relative z-20"><div className="grid grid-cols-12 gap-4 h-[420px] md:h-[480px] lg:h-[520px]"><div className="col-span-12 lg:col-span-9 xl:col-span-10 flex flex-col min-h-0"><div className="h-14 shrink-0 flex items-center gap-3 px-1 md:px-2"><div className="w-12 h-12 shrink-0 overflow-hidden border border-white/15 bg-slate-900/70 shadow-lg"><img src={streamingGame.image} alt={`${streamingGame.name} game`} className="w-full h-full object-cover" /></div><div className="min-w-0 flex items-center gap-4"><div className="min-w-0"><div className="text-[9px] uppercase tracking-[0.25em] text-white/35">Now Streaming</div><div className="text-base md:text-lg font-bold text-white truncate">{streamingGame.name}</div></div><button type="button" onClick={() => setShowGameAchievements((value) => !value)} className="text-sm md:text-base font-semibold underline underline-offset-4 decoration-cyan-300/60 text-white hover:text-cyan-200 whitespace-nowrap">Game Achievements, Cards</button></div></div><div className="relative flex-1 min-h-0"><StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={isPlaying} onTogglePlay={() => setIsPlaying(!isPlaying)} volume={volume} onVolumeChange={setVolume} /><AnimatePresence>{showGameAchievements && renderGameAchievementOverlay()}</AnimatePresence></div></div><div className="col-span-12 lg:col-span-3 xl:col-span-2 order-first lg:order-none h-full"><StreamChatBox isLive={isLive} /></div></div><div ref={galleryAnchorRef}><ProfileInfoBar activeProfile={activeProfile || { display_name: user?.full_name || user?.username || 'My Channel' }} isEditMode={isEditMode} isLive={isLive} updateEditProfile={updateEditProfile} activeTab={activeTab} setActiveTab={openTab} onEnterEdit={enterEditMode} /></div><div className="w-full h-px bg-white/10 mb-8" /><section><div className="mb-4"><h3 className="text-xl font-bold text-white">Sponsors</h3><p className="text-xs text-white/40">Official channel sponsors and partnerships</p></div>{isEditMode ? <SponsorEditor isEditMode sponsors={activeSponsors} onAdd={addEditSponsor} onRemove={removeEditSponsor} onUpdate={updateEditSponsor} /> : activeSponsors.length ? <SponsorEditor isEditMode={false} sponsors={activeSponsors} onAdd={() => {}} onRemove={() => {}} onUpdate={() => {}} /> : <SponsorsSection />}</section><section className="mt-10"><ProductsGrid /></section><div className="mt-12 mb-20"><h3 className="text-xl font-bold text-white mb-6">Your Channel Season Pass</h3><ViewerSeasonalPass currentTier={12} maxTier={20} /></div></div></div></div><EditModeToolbar isEditMode={isEditMode} saving={saving} onSave={saveEdit} onCancel={cancelEdit} onEnterEdit={enterEditMode} /></div>
+    <div className="channel-home-page h-screen w-full flex relative overflow-hidden"><div className="channel-home-scroll flex-1 relative h-full overflow-y-auto"><div className="channel-home-inner w-full min-h-full pt-20 pb-24 px-4 md:px-8 relative"><div className="mx-auto max-w-none w-full flex flex-col gap-8 relative z-20"><div className="channel-stage-grid grid grid-cols-12 gap-4"><div className="channel-stage-player col-span-12 lg:col-span-9 xl:col-span-10 flex flex-col min-h-0"><div className="h-14 shrink-0 flex items-center gap-3 px-1 md:px-2"><div className="w-12 h-12 shrink-0 overflow-hidden border border-white/15 bg-slate-900/70 shadow-lg"><img src={streamingGame.image} alt={`${streamingGame.name} game`} className="w-full h-full object-cover" /></div><div className="min-w-0 flex items-center gap-4"><div className="min-w-0"><div className="text-[9px] uppercase tracking-[0.25em] text-white/35">Now Streaming</div><div className="text-base md:text-lg font-bold text-white truncate">{streamingGame.name}</div></div><button type="button" onClick={() => setShowGameAchievements((value) => !value)} className="text-sm md:text-base font-semibold underline underline-offset-4 decoration-cyan-300/60 text-white hover:text-cyan-200 whitespace-nowrap">Game Achievements, Cards</button></div></div><div className="relative flex-1 min-h-0"><StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={isPlaying} onTogglePlay={() => setIsPlaying(!isPlaying)} volume={volume} onVolumeChange={setVolume} /><AnimatePresence>{showGameAchievements && renderGameAchievementOverlay()}</AnimatePresence></div></div><div className="channel-stage-chat col-span-12 lg:col-span-3 xl:col-span-2 h-full"><ChannelCommunityChat key={liveRecord?.id || 'offline'} streamId={liveRecord?.id} isLive={Boolean(liveRecord)} user={user} /></div></div><div ref={galleryAnchorRef}><ProfileInfoBar activeProfile={activeProfile || { display_name: user?.full_name || user?.username || 'My Channel' }} isEditMode={isEditMode} isLive={isLive} updateEditProfile={updateEditProfile} activeTab={activeTab} setActiveTab={openTab} onEnterEdit={enterEditMode} /></div><ChannelHomeContent query={homeQuery} profile={activeProfile || { display_name: user?.full_name || 'My Channel' }} layout={activeLayout} sponsors={activeSponsors} user={user} stream={liveRecord} onNavigate={openTab} />{isEditMode && <section className="channel-sponsor-editor"><h3>Channel partners</h3><SponsorEditor isEditMode sponsors={activeSponsors} onAdd={addEditSponsor} onRemove={removeEditSponsor} onUpdate={updateEditSponsor} /></section>}<details className="channel-more-content"><summary>More from this channel <span>Products & Season Pass</span></summary><section className="channel-legacy-content"><ProductsGrid /><h3>Your Channel Season Pass</h3><ViewerSeasonalPass currentTier={12} maxTier={20} /></section></details></div></div></div><EditModeToolbar isEditMode={isEditMode} saving={saving} onSave={saveEdit} onCancel={cancelEdit} onEnterEdit={enterEditMode} /></div>
     {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
         {activeTab === 'gallery' && <GallerySection
@@ -211,13 +214,6 @@ function OwnChannelHome() {
       document.body
     )}
     {typeof document !== 'undefined' && createPortal(<AnimatePresence>{activeTab === 'cards' && <PlayerAchievementCollection user={user} onClose={closeOverlay} />}</AnimatePresence>, document.body)}
-    {activeTab && !['gallery', 'cards'].includes(activeTab) && typeof document !== 'undefined' && createPortal(
-      <AnimatePresence>
-        <motion.div key="streaming-home-overlay" className="fixed inset-0 z-[99999] pointer-events-none">
-          <motion.section role="dialog" aria-modal="true" aria-label={`${activeTabLabel} overlay`} initial={activeTab === 'games' || activeTab === 'cards' || activeTab === 'achievements' ? { x: '-100%' } : { y: '100%' }} animate={{ x: 0, y: 0 }} exit={activeTab === 'games' || activeTab === 'cards' || activeTab === 'achievements' ? { x: '-100%' } : { y: '100%' }} transition={{ type: 'spring', stiffness: 260, damping: 30 }} className={activeTab === 'games' || activeTab === 'cards' || activeTab === 'achievements' ? `absolute left-0 top-0 bottom-0 ${overlayFullscreen ? 'right-0' : 'w-[80vw]'} bg-slate-950/82 backdrop-blur-xl pointer-events-auto ${activeTab === 'achievements' ? "overflow-visible border-r-0 shadow-[28px_0_60px_-18px_rgba(2,8,23,0.95)] after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-28 after:translate-x-full after:bg-gradient-to-r after:from-slate-950/75 after:via-slate-950/30 after:to-transparent after:pointer-events-none" : 'overflow-hidden border-r border-white/15 shadow-[24px_0_80px_rgba(0,0,0,0.55)]'}` : `absolute left-0 bottom-0 ${overlayFullscreen ? 'right-0 h-screen' : 'w-[75vw] h-[40vh] min-h-[300px] max-h-[560px]'} overflow-hidden border-t border-white/15 bg-slate-950/82 backdrop-blur-xl shadow-[0_-24px_80px_rgba(0,0,0,0.55)] pointer-events-auto`}><div className={`h-full w-full flex flex-col overflow-hidden ${activeTab === 'achievements' ? 'p-0' : 'p-5 md:p-7'}`}>{activeTab !== 'cards' && activeTab !== 'achievements' && <div className="flex items-center justify-between gap-4 mb-4 shrink-0"><div><div className="text-[10px] uppercase tracking-[0.28em] text-cyan-300/60">Streamer Profile</div><h2 className="text-2xl font-bold text-white">{activeTabLabel}</h2></div><button type="button" onClick={() => setOverlayFullscreen((value) => !value)} className="w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white">{overlayFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button></div>}<div className="flex-1 min-h-0 overflow-hidden">{renderOverlayContent()}</div></div></motion.section>
-        </motion.div>
-      </AnimatePresence>,
-      document.body
-    )}
+    {renderOverlayContent()}
   </GlassPageFrame>;
 }

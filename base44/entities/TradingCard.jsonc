@@ -32,6 +32,24 @@
     },
     "series": {
       "type": "string"
+    },
+    "showcase": {
+      "type": "object",
+      "description": "Public skill/item media used by the channel Cards showcase",
+      "properties": {
+        "model_url": {
+          "type": "string",
+          "description": "HTTPS URL for the GLB, GLTF, or FBX skill/item model"
+        },
+        "animation_clip": {
+          "type": "string",
+          "description": "Optional animation name to play from the model"
+        },
+        "video_url": {
+          "type": "string",
+          "description": "HTTPS gameplay demonstration video URL"
+        }
+      }
     }
   },
   "required": [

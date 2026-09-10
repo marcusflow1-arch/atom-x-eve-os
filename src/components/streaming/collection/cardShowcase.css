@@ -1,0 +1,62 @@
+.player-collection-hud{background:linear-gradient(110deg,#040711f5,#040711e6 70%,#040711bd)}
+.player-collection-backdrop{background:linear-gradient(90deg,#ffffff03,transparent);backdrop-filter:blur(8px)}
+.player-collection-columns{grid-template-columns:clamp(165px,16vw,240px) 1px minmax(0,1fr);gap:clamp(15px,2vw,32px)}
+.player-collection-content{overflow-y:auto;overflow-x:hidden;padding-bottom:40px}
+.player-collection-grid-heading{margin-bottom:8px}
+.collection-reel-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:4px;color:#8da3b6;font-size:10px}
+.collection-reel-toolbar>div{display:flex;gap:5px}
+.collection-reel-toolbar button{height:28px;width:28px;display:grid;place-items:center;border:0;background:#ffffff06;color:#c0d7e2;border-radius:50%}
+.player-collection-reel{display:flex;gap:22px;overflow-x:auto;overflow-y:hidden;perspective:1000px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#304153 transparent;padding:14px 7px 24px;margin:0 -7px}
+.player-collection-reel>.player-collection-card{display:block;position:relative;flex:0 0 clamp(145px,13vw,208px);padding:0;scroll-snap-align:start;perspective:1000px;border:0;background:none;transition:none}
+.player-collection-reel>.player-collection-card:hover{transform:none}
+.collection-card-face{position:relative;display:block;overflow:hidden;border-radius:10px;background:linear-gradient(155deg,#ffffff06,#ffffff01);transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transform-style:preserve-3d;transition:transform .16s ease-out}
+.player-collection-reel .player-collection-card-art{display:grid;aspect-ratio:1.55;mask-image:none;overflow:hidden;background:radial-gradient(ellipse at 70% 15%,#31495f99,transparent 85%)}
+.player-collection-reel .collection-card-tier{top:10px;left:10px;background:#04071199;color:var(--tier-color);font-size:8px;padding:4px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.1em;position:absolute}
+.player-collection-reel .collection-card-vignette{position:absolute;inset:0;background:linear-gradient(0deg,#080d17,transparent 85%)}
+.player-collection-reel .player-collection-card-copy{display:block;padding:10px 12px 17px;margin-top:-7px;text-align:left}
+.player-collection-reel .player-collection-card-copy>small{font-size:8px;letter-spacing:.15em;color:#8ba5b8}
+.player-collection-reel .player-collection-card-copy>strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;font-weight:550;line-height:1.5;min-height:3em;margin:5px 0 7px}
+.player-collection-reel .player-collection-card-copy>span{display:block;font-size:9px;color:#9baec1}
+.player-collection-card[aria-pressed=true] .collection-card-face{background:linear-gradient(130deg,#75bcca14,#ffffff03)}
+.player-collection-card[aria-pressed=true]:after{content:'';position:absolute;bottom:-8px;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,var(--tier-color),transparent)}
+.collection-card-hologram,.collection-card-flare{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
+.collection-card-hologram{background:radial-gradient(ellipse at var(--light-x,50%) var(--light-y,35%),#b3efff55,transparent 55%),repeating-linear-gradient(115deg,#89b4fd06 0%,#fcbffe35 10%,#88e5fc24 16%,#e7dbaa30 22%,#ffffff02 27%);background-size:100% 100%,220% 220%;background-position:center,var(--light-x,50%) var(--light-y,35%);mix-blend-mode:screen}
+.collection-card-flare{background:linear-gradient(112deg,transparent 35%,#d5faff04 42%,#ffffff55 48%,#ffffff04 54%,transparent 65%);background-size:270% 100%}
+.player-collection-card:hover .collection-card-hologram,.player-collection-card:focus-visible .collection-card-hologram{opacity:.6}
+.player-collection-card:hover .collection-card-flare{opacity:.75;animation:collectionLightSweep 1.3s ease-out}
+.collection-horizontal-rule{height:1px;background:linear-gradient(90deg,transparent,#3a3f58,transparent);margin:12px 0 27px;flex-shrink:0}
+.collection-inspector-toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:23px}
+.collection-inspector-toolbar .player-collection-back{margin:0;padding:0;font-size:10px!important}
+.player-collection-detail-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,7fr);gap:clamp(20px,2.4vw,38px)}
+.player-collection-detail-copy h3{font-size:clamp(24px,2.3vw,37px);line-height:1.15;margin:12px 0 16px}
+.player-collection-badges{gap:8px;margin:15px 0 20px}
+.player-collection-badges span{padding:5px 8px;font-size:8px}
+.player-collection-detail-copy>p{font-size:12px;line-height:1.85;color:#a3b7c8}
+.collection-unlock-condition{margin-top:22px}
+.collection-unlock-condition h4{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:#8da8bd;font-weight:500;margin:0 0 8px}
+.collection-unlock-condition p{font-size:11px;line-height:1.8;color:#bdccd8;margin:0}
+.player-collection-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 15px;margin:24px 0}
+.player-collection-stats dt{font-size:9px;line-height:1.6}
+.player-collection-stats dd{font-size:12px;margin:0;overflow-wrap:anywhere}
+.collection-dual-display{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.collection-dual-display figure{margin:0;min-width:0}
+.collection-model-stage,.collection-gameplay-stage{position:relative;aspect-ratio:4/3;min-height:220px;background:radial-gradient(ellipse at 50% 80%,#3c69851a,transparent 80%),#ffffff03;backdrop-filter:blur(8px);border-radius:10px;overflow:hidden}
+.collection-model-stage canvas{width:100%;height:100%;display:block;touch-action:none}
+.collection-model-controls{position:absolute;bottom:10px;left:10px;right:10px;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;pointer-events:none}
+.collection-model-controls button{display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:50%;color:#c7dfea;background:#04071199;backdrop-filter:blur(8px);pointer-events:auto}
+.collection-model-controls button:hover{background:#83c6d529}
+.collection-gameplay-stage>.console-media{height:100%;width:100%;position:absolute;inset:0}
+.collection-gameplay-stage>img{display:block;width:100%;height:100%;object-fit:contain}
+.collection-dual-display figcaption{display:flex;align-items:center;gap:7px;font-size:9px;color:#9cb5c5;margin-top:12px;flex-wrap:wrap;line-height:1.7}
+.collection-dual-display figcaption>span{flex-basis:100%;padding-left:19px;color:#7894aa;font-size:8px}
+.collection-media-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;gap:14px;text-align:center;background:linear-gradient(125deg,#16233322,transparent);color:#8cb3c9}
+.collection-media-placeholder strong{font-size:12px;font-weight:500;color:#b6d0df}
+.collection-media-placeholder span{font-size:10px;line-height:1.9;max-width:32ch;color:#8ba4b8}
+.collection-select-hint{padding:35px 10px;text-align:center;color:#8aa4ba;display:grid;justify-items:center;gap:14px}
+.collection-select-hint h3{font-size:20px;font-weight:500;margin:0;color:#c3d6e3}
+.collection-select-hint p{font-size:12px;margin:0;line-height:1.8}
+@keyframes collectionLightSweep{from{background-position:130% 0}to{background-position:-30% 0}}
+@media(max-width:1100px){.collection-dual-display{grid-template-columns:1fr;gap:22px}.collection-model-stage,.collection-gameplay-stage{aspect-ratio:16/10}.player-collection-detail-layout{grid-template-columns:minmax(0,3fr) minmax(0,7fr);gap:20px}}
+@media(max-width:700px){.player-collection-columns{display:flex;flex-direction:column;gap:0;padding:0 16px 16px}.player-collection-games{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;flex-shrink:0}.player-collection-select{margin:0}.player-collection-games-label,.player-collection-divider{display:none}.player-collection-game-list{grid-column:1/-1;display:flex;flex-direction:row!important;overflow-x:auto!important;overflow-y:hidden!important;padding:6px 0 13px;gap:6px}.player-collection-game-list button{flex:0 0 140px;flex-direction:row;align-items:center;gap:8px;padding:7px 9px;min-height:50px}.player-collection-game-list img{width:28px;height:28px}.player-collection-game-list strong{font-size:10px}.player-collection-game-list small{font-size:8px}.player-collection-content{flex:1;min-height:0;padding:15px 4px 25px}.player-collection-grid-heading{flex-direction:row;align-items:center}.player-collection-grid-heading h3{font-size:21px}.player-collection-grid-heading p{font-size:10px}.player-collection-grid-heading select{max-width:112px;font-size:10px}.player-collection-detail-layout{grid-template-columns:1fr}.collection-dual-display{grid-template-columns:repeat(2,minmax(0,1fr))}.collection-model-stage,.collection-gameplay-stage{aspect-ratio:4/3;min-height:190px}.collection-inspector-toolbar{align-items:flex-start}.collection-inspector-toolbar .player-collection-kicker{font-size:8px}.player-collection-reel>.player-collection-card{flex-basis:152px}.collection-reel-toolbar>span{font-size:9px}.collection-media-placeholder{padding:15px}}
+@media(max-width:440px){.collection-dual-display{grid-template-columns:1fr}.collection-model-stage,.collection-gameplay-stage{aspect-ratio:16/10;min-height:210px}.player-collection-grid-heading .player-collection-kicker{font-size:8px}.player-collection-reel{gap:16px}}
+@media(prefers-reduced-motion:reduce){.collection-card-face{transform:none!important;transition:none}.collection-card-flare{display:none}.collection-card-hologram{opacity:0!important}}

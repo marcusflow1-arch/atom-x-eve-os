@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,7 @@ export default function ProfileInfoBar({
 }) {
   const displayName = activeProfile?.display_name || activeProfile?.full_name || 'My Channel';
   const tagline = activeProfile?.tagline || '';
-  const tabs = ['schedule', 'cards', 'gallery', 'games', 'achievements'];
+  const tabs = ['schedule', 'cards', 'gallery', 'games'];
 
   const handleAvatarUpload = async () => {
     const input = document.createElement('input');
@@ -27,7 +26,7 @@ export default function ProfileInfoBar({
       try {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         updateEditProfile('avatar_url', file_url);
-      } catch (err) {
+      } catch {
         const url = URL.createObjectURL(file);
         updateEditProfile('avatar_url', url);
       }
@@ -36,7 +35,7 @@ export default function ProfileInfoBar({
   };
 
   return (
-    <div className="w-full px-2 py-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 relative">
+    <div className="channel-profile-bar w-full px-2 py-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 relative">
       <div className="flex items-center gap-4 min-w-0">
         <div className="relative group shrink-0">
           <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/10 bg-black">
@@ -93,8 +92,8 @@ export default function ProfileInfoBar({
 
       <div className="flex items-center gap-4 self-end lg:self-auto shrink-0">
         <div className="text-right hidden sm:block">
-          <div className="text-xs text-white/40 uppercase font-bold">Total Views</div>
-          <div className="text-lg font-mono font-bold text-white">42.5K</div>
+          <div className="text-xs text-white/40 uppercase font-bold">Followers</div>
+          <div className="text-lg font-mono font-bold text-white">{Math.max(0, Number(activeProfile?.follower_count) || 0).toLocaleString()}</div>
         </div>
         {!isEditMode && onEnterEdit && (
           <button onClick={onEnterEdit} className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 hover:border-white/20 flex items-center justify-center transition-all hover:scale-110" title="Edit Profile">

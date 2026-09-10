@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Minimize2, Plus, Trash2, X } from 'lucide-react';
@@ -7,13 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format, addDays, startOfWeek, subDays, isToday } from 'date-fns';
+import { channelScheduleCalendar } from '../channel/channelHomeModel';
 
 const EMPTY_DAY = { time: '', title: '', game: '', isGiveaway: false };
 
 // Calendar console that blends into the streaming box itself, like the Games overlay:
 // a full-width glass panel portalled into the stream player container.
-export default function ScheduleSection({ isEditMode, scheduleData = {}, onUpdateSchedule, onClose }) {
-  const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
+export default function ScheduleSection({ isEditMode, scheduleData = {}, scheduledStreams = [], initialDate, onUpdateSchedule, onClose }) {
+  const [scheduleBaseDate, setScheduleBaseDate] = useState(() => initialDate ? new Date(initialDate) : new Date());
+  const calendarData = isEditMode ? scheduleData : channelScheduleCalendar(scheduleData, scheduledStreams);
   const [editingDay, setEditingDay] = useState(null);
   const [scheduleForm, setScheduleForm] = useState(EMPTY_DAY);
   const [fullscreen, setFullscreen] = useState(false);
@@ -37,7 +39,7 @@ export default function ScheduleSection({ isEditMode, scheduleData = {}, onUpdat
   const scheduleDays = Array.from({ length: 14 }).map((_, i) => addDays(startDate, i));
   const endDate = scheduleDays[13];
   const dateRangeString = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
-  const scheduledCount = scheduleDays.filter((date) => scheduleData[format(date, 'yyyy-MM-dd')]).length;
+  const scheduledCount = scheduleDays.filter((date) => calendarData[format(date, 'yyyy-MM-dd')]).length;
 
   const handleScheduleClick = (date) => {
     if (!isEditMode) return;
@@ -86,7 +88,7 @@ export default function ScheduleSection({ isEditMode, scheduleData = {}, onUpdat
       {scheduleDays.map((date, i) => {
         const isCurrentDay = isToday(date);
         const dateKey = format(date, 'yyyy-MM-dd');
-        const dayData = scheduleData[dateKey];
+        const dayData = calendarData[dateKey];
         return (
           <div
             key={i}

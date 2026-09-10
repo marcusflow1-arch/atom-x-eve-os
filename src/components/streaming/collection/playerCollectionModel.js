@@ -1,6 +1,16 @@
 const key = (value) => String(value || '').trim().toLowerCase();
 const finite = (value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) ? Number(value) : null;
 
+export function safeShowcaseUrl(value) {
+  try { const url = new URL(value); return url.protocol === 'https:' ? url.href : null; } catch { return null; }
+}
+
+export function cardTilt(clientX, clientY, rect) {
+  const x = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+  const y = Math.max(0, Math.min(1, (clientY - rect.top) / Math.max(1, rect.height)));
+  return { x: (0.5 - y) * 12, y: (x - 0.5) * 16, lightX: x * 100, lightY: y * 100 };
+}
+
 export function buildPlayerCollection({ user, ownedCards = [], userAchievements = [], achievements = [], tradingCards = [], games = [], libraryEntries = [] }) {
   const definitions = new Map(achievements.map((item) => [item.id, item]));
   const templates = new Map(tradingCards.map((item) => [item.id, item]));
@@ -32,6 +42,11 @@ export function buildPlayerCollection({ user, ownedCards = [], userAchievements 
       id: achievementId ? `achievement:${achievementId}` : `card:${owned.id}`,
       name: definition?.title || owned?.card_name || template?.name || reward?.name || 'Saved achievement',
       description: definition?.description || template?.description || reward?.description || 'No description has been saved for this achievement.',
+      unlockCondition: definition?.unlock_condition || definition?.description || '',
+      stats: Object.entries(definition?.reward?.stats || reward?.stats || {}).filter(([, value]) => typeof value === 'number' && Number.isFinite(value) || typeof value === 'string').slice(0, 8),
+      modelUrl: safeShowcaseUrl(definition?.showcase?.model_url || template?.showcase?.model_url || definition?.reward?.model_url),
+      animationClip: definition?.showcase?.animation_clip || template?.showcase?.animation_clip || '',
+      demoUrl: safeShowcaseUrl(definition?.showcase?.video_url || template?.showcase?.video_url),
       rarity: definition?.rarity || owned?.card_rarity || template?.rarity || reward?.rarity || 'Common',
       category: definition?.category || owned?.card_type || 'Achievement',
       image: owned?.card_image || template?.image_url || definition?.reward?.environment_thumbnail || game.image,
@@ -40,7 +55,7 @@ export function buildPlayerCollection({ user, ownedCards = [], userAchievements 
       current, total,
       percent: total > 0 && current !== null ? Math.min(100, Math.max(0, current / total * 100)) : status === 'unlocked' ? 100 : null,
       points: finite(record?.progress?.xp_awarded ?? definition?.points ?? reward?.xp),
-      proofUrl: record?.proof_media_url || null,
+      proofUrl: safeShowcaseUrl(record?.proof_media_url),
       acquisition: owned?.acquisition_method || null,
     };
     const existing = game.cards.findIndex((item) => item.id === card.id);
