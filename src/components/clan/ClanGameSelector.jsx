@@ -132,14 +132,14 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
                 <aside className="clan-owned-column">
                     <button type="button" className="clan-global-chat" onClick={() => onSelectGame(defaultChatGame)}><strong>ATOM X EVE</strong><small>Global Division Comms</small></button>
                     <h2>Your Games</h2>
-                    {ownedGames.length ? ownedGames.map(game => <ClanDirectoryTile compact key={game.id} game={game} onSelect={onSelectGame} />) : <p className="text-xs text-muted-foreground">No games owned yet.</p>}
+                    {ownedGames.length ? ownedGames.map(game => <ClanDirectoryTile compact key={`${game.id}:${game.title}`} game={game} onSelect={onSelectGame} />) : <p className="text-xs text-muted-foreground">No games owned yet.</p>}
                 </aside>
                 <div className="clan-directory-main">
                     <div className="clan-directory-toolbar">
                         <label className="clan-directory-search"><Search size={16} /><input aria-label="Search game chats" placeholder="Search directory..." value={search} onChange={e => setSearch(e.target.value)} /></label>
                         <div className="clan-directory-filters" aria-label="Game filters">{availableFilters.map(f => <button type="button" key={f.id} aria-pressed={filters.includes(f.id)} onClick={() => toggleFilter(f.id)}>{f.label}</button>)}</div>
                     </div>
-                    <div className="clan-directory-grid">{filteredDirectoryGames.map(game => <ClanDirectoryTile key={game.id} game={game} onSelect={onSelectGame} />)}</div>
+                    <div className="clan-directory-grid">{filteredDirectoryGames.map(game => <ClanDirectoryTile key={`${game.id}:${game.title}`} game={game} onSelect={onSelectGame} />)}</div>
                     {!filteredDirectoryGames.length && <p className="py-8 text-sm text-muted-foreground">No games match your search and filters.</p>}
                 </div>
             </div>
