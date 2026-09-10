@@ -67,7 +67,7 @@ import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSys
 import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
-import CrossScrollGameMenu from '../components/dashboard/CrossScrollGameMenu';
+import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
 import LibraryLandingPage from '../components/dashboard/gamehub/LibraryLandingPage';
@@ -502,6 +502,7 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const onKey = async (e) => {
+      if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
       const key = (e.key || '').toLowerCase();
       if (key === 'i') {
         if (clickedSlot) {
@@ -536,9 +537,9 @@ export default function LunaTemplate() {
       }
       if (key === 'escape') {
         if (showFriendsHub) { setShowFriendsHub(false); return; }
+        if (showLibraryLanding) { setShowLibraryLanding(false); return; }
         if (selectedFocusGame) { setSelectedFocusGame(null); setLongPressGame(null); return; }
         if (longPressGame) { setLongPressGame(null); return; }
-        if (showLibraryLanding) { setShowLibraryLanding(false); return; }
         if (showDevSpotlight) {setShowDevSpotlight(false);return;}
         if (hideUI) setHideUI(false);
         if (showAvatarProgression) setShowAvatarProgression(false);
@@ -674,31 +675,12 @@ export default function LunaTemplate() {
 
               {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
               <div className="pointer-events-auto flex-1 min-h-0 relative">
-                {/* Full Library button — opens the full library grid to the right */}
-                <button
-                  onClick={() => setShowLibraryLanding((v) => !v)}
-                  className="absolute top-1 right-3 z-40 group flex items-center gap-1 text-white/70 hover:text-cyan-300 text-[11px] font-semibold tracking-wide transition-colors"
-                  title="View full library"
-                >
-                  Full Library
-                  <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                </button>
-                <CrossScrollGameMenu
-                  games={[
-                  { id: 'cyberpunk', title: 'Cyberpunk 2088', genre: 'RPG / Action', thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200', status: 'Playing', progress: 72, playtime: '48.2h', achievements: '18/50', rating: 9.4, players: '2.1M', description: 'Navigate a dystopian megacity as a mercenary outlaw pursuing the key to immortality.', tags: ['Open World', 'Story Rich', 'Cyberpunk'] },
-                  { id: 'neon-legends', title: 'Neon Legends', genre: 'Action / Brawler', thumb: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=120', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200', status: 'In Progress', progress: 45, playtime: '12.8h', achievements: '6/30', rating: 8.7, players: '880K', description: 'Battle across neon-lit arenas in fast-paced combat.', tags: ['Fighting', 'Multiplayer'] },
-                  { id: 'stellar-odyssey', title: 'Stellar Odyssey', genre: 'Space Sim', thumb: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=120', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1200', status: 'Installed', progress: 10, playtime: '3.1h', achievements: '2/40', rating: 8.1, players: '320K', description: 'Chart unexplored galaxies and forge alliances.', tags: ['Space', 'Exploration'] },
-                  { id: 'shadow-realm', title: 'Shadow Realm', genre: 'Fantasy RPG', thumb: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=120', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1200', status: 'New', progress: 0, playtime: '0h', achievements: '0/45', rating: 9.1, players: '1.4M', description: 'A dark fantasy epic where ancient gods clash.', tags: ['Dark Fantasy', 'RPG'] },
-                  { id: 'apex-surge', title: 'Apex Surge', genre: 'Battle Royale', thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200', status: 'Installed', progress: 33, playtime: '20.5h', achievements: '9/25', rating: 8.5, players: '3.8M', description: 'Drop into high-stakes arenas where only the most skilled survive.', tags: ['Battle Royale', 'FPS'] },
-                  { id: 'mythforge', title: 'MythForge Online', genre: 'MMORPG', thumb: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1200', status: 'Playing', progress: 88, playtime: '210h', achievements: '44/50', rating: 9.6, players: '5.2M', description: 'A massive living world of mythic quests and guild wars.', tags: ['MMORPG', 'PvP', 'Guild'] },
-                ]}
+                <LibraryBrowser
                   selectedGame={selectedFocusGame}
-                  onSelectGame={(g) => {
-                    setLongPressGame(null);
-                    setShowLibraryLanding(false);
-                    setSelectedFocusGame(prev => (prev?.id === g.id ? null : g));
-                  }}
-                  onLongPressGame={(g) => { setLongPressGame(g); }}
+                  fullView={showLibraryLanding}
+                  onToggleFullView={(game) => { if (!selectedFocusGame) setSelectedFocusGame(game); setShowLibraryLanding(v => !v); }}
+                  onSelectGame={(game) => { setLongPressGame(null); setSelectedFocusGame(game); }}
+                  onLongPressGame={(game) => { setLongPressGame(game); setShowLibraryLanding(false); }}
                 />
               </div>
             </>
@@ -766,7 +748,7 @@ export default function LunaTemplate() {
             className="absolute z-30 pointer-events-auto overflow-hidden"
             style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
-            <LibraryLandingPage onClose={() => setShowLibraryLanding(false)} />
+            <LibraryLandingPage game={selectedFocusGame} onClose={() => setShowLibraryLanding(false)} />
           </motion.div>
         }
       </AnimatePresence>

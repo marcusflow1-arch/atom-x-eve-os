@@ -6,6 +6,8 @@ import {
   SlidersHorizontal, Wrench, Gamepad2, CheckCircle2, Circle,
 } from 'lucide-react';
 import { getGameData } from './gameProgressData';
+import GamePlayButton from '@/components/dashboard/gamehub/GamePlayButton';
+import LibraryLandingPage from '@/components/dashboard/gamehub/LibraryLandingPage';
 
 const glass = {
   background: 'linear-gradient(135deg, rgba(8,15,27,.76), rgba(8,15,27,.46))',
@@ -61,6 +63,7 @@ function HubTile({ icon: Icon, title, subtitle, onClick, accent = 'text-cyan-300
 
 export default function GamePageView({ game, friendData, onOpenFriend, onBackToSelf }) {
   const [selectedPatch, setSelectedPatch] = useState(null);
+  const [section, setSection] = useState(null);
   const gameData = getGameData(game?.id);
   const isFriendView = !!friendData;
 
@@ -112,12 +115,14 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
   const availableQuests = quests.available || [];
   const questRows = [...activeQuests, ...availableQuests].slice(0, 4);
 
+  if (section) return <LibraryLandingPage game={game} initialTab={section} onClose={() => setSection(null)} />;
+
   return (
     <motion.div
       key={isFriendView ? `friend-${friendData?.name}` : `game-${game?.id}`}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       transition={{ duration: .22 }}
-      className="relative h-full min-h-0 overflow-hidden bg-slate-950"
+      className="library-surface relative h-full min-h-0 overflow-hidden bg-slate-950"
     >
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_70%_10%,rgba(34,211,238,.07),transparent_34%),radial-gradient(circle_at_20%_50%,rgba(99,102,241,.06),transparent_36%)]" />
 
@@ -136,13 +141,13 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
 
             <div className="flex-1 min-w-0">
               <div className="text-[9px] tracking-[.22em] uppercase text-cyan-300/70 mb-1">{game?.genre || 'Game Library'}</div>
-              <h1 className="text-[28px] font-black tracking-tight text-white leading-none truncate">{game?.title}</h1>
+              <h1 className="text-[28px] font-black tracking-tight text-white leading-tight break-words">{game?.title}</h1>
               <div className="text-[10px] text-white/45 mt-1.5 truncate">
                 {isFriendView ? `${friendData?.name}'s save` : `${gameData?.storyAct || 'Current Save'} · ${gameData?.storyChapter || 'In Progress'}`}
               </div>
             </div>
 
-            <div className="hidden xl:flex items-stretch rounded-2xl overflow-hidden bg-slate-950/55 backdrop-blur-xl ring-1 ring-white/[0.06]">
+            <div className="hidden 2xl:flex items-stretch rounded-2xl overflow-hidden bg-slate-950/55 backdrop-blur-xl ring-1 ring-white/[0.06]">
               <Stat icon={Clock} label="Hours Played" value={playtime} tint="text-cyan-300" />
               <Stat icon={Trophy} label="Achievements" value={`${achievementPct}%`} tint="text-amber-300" />
               <Stat icon={Crown} label="Level" value={`Lv. ${level}`} tint="text-violet-300" />
@@ -150,9 +155,7 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button className="h-11 px-6 rounded-xl bg-white text-slate-950 font-black text-[12px] tracking-wide flex items-center gap-2 hover:scale-[1.02] transition-transform shadow-[0_8px_30px_rgba(255,255,255,.12)]">
-                <Play className="w-4 h-4 fill-current" /> PLAY
-              </button>
+              <GamePlayButton key={game.id} game={game} />
               <button className="h-11 px-4 rounded-xl bg-cyan-500/15 text-cyan-200 font-bold text-[11px] flex items-center gap-2 backdrop-blur-xl ring-1 ring-cyan-400/20 hover:scale-[1.02] hover:ring-cyan-400/50 transition-all">
                 <Radio className="w-4 h-4" /> STREAM
               </button>
@@ -161,7 +164,7 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
         </section>
 
         {/* Mobile stats */}
-        <div className="xl:hidden mx-5 -mt-1 mb-4 grid grid-cols-4 divide-x divide-white/[0.05] rounded-2xl overflow-hidden" style={glass}>
+        <div className="2xl:hidden mx-5 -mt-1 mb-4 grid grid-cols-4 divide-x divide-white/[0.05] rounded-2xl overflow-hidden" style={glass}>
           <Stat icon={Clock} label="Hours" value={playtime} />
           <Stat icon={Trophy} label="Awards" value={`${achievementPct}%`} tint="text-amber-300" />
           <Stat icon={Crown} label="Level" value={`Lv.${level}`} tint="text-violet-300" />
@@ -241,9 +244,9 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
               <span className="text-[10px] uppercase tracking-[.2em] font-black text-white/65">Game Hub</span>
             </div>
             <div className="grid grid-cols-2 gap-2.5">
-              <HubTile icon={BookOpen} title="Community Hub & Guides" subtitle="Top builds, walkthroughs and player strategies." />
-              <HubTile icon={Package} title="DLC & Add-Ons Store" subtitle="Expansions, cosmetic passes and extra content." accent="text-violet-300" />
-              <HubTile icon={Images} title="Media Gallery & Clips" subtitle="Screenshots, captures and highlight reels." accent="text-sky-300" />
+              <HubTile icon={BookOpen} title="Community Hub & Guides" subtitle="Top builds, walkthroughs and player strategies." onClick={() => setSection('Community')} />
+              <HubTile icon={Package} title="DLC & Add-Ons Store" subtitle="Expansions, cosmetic passes and extra content." accent="text-violet-300" onClick={() => setSection('DLC')} />
+              <HubTile icon={Images} title="Media Gallery & Clips" subtitle="Screenshots, captures and highlight reels." accent="text-sky-300" onClick={() => setSection('Media')} />
               <HubTile
                 icon={Users}
                 title="Activity Feed & Friends"
@@ -251,7 +254,7 @@ export default function GamePageView({ game, friendData, onOpenFriend, onBackToS
                 accent="text-emerald-300"
                 onClick={() => {
                   if (isFriendView && onBackToSelf) onBackToSelf();
-                  else if (!isFriendView && onOpenFriend && gameData?.friends?.[0]) onOpenFriend(gameData.friends[0]);
+                  else setSection('Friends');
                 }}
               />
             </div>

@@ -1749,8 +1749,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 )}
               </AnimatePresence>
 
-              {/* GAME PAGE VIEW — redesigned per-game view with Game Header */}
-              <AnimatePresence>
+              {/* Keep outgoing and incoming game panels from stacking below the viewport. */}
+              <AnimatePresence mode="wait">
                 {selectedFocusGame && !longPressGame && (
                   <motion.div
                     key={selectedFocusGame.id}

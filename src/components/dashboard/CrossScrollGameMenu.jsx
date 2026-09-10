@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { Play, MoreHorizontal } from 'lucide-react';
+import { Play, MoreHorizontal, Star } from 'lucide-react';
+import GamePlayButton from '@/components/dashboard/gamehub/GamePlayButton';
 
 // Simple flat games list:
 // - A white divider line sits at the top (under the parent "Full Library" button).
@@ -8,7 +9,7 @@ import { Play, MoreHorizontal } from 'lucide-react';
 // - Play = open the game page; Options (⋯) = open the blank focus UI.
 // - Long-press the thumbnail also opens the blank focus UI.
 // - 100%-complete games show a cyan checkmark and open the blank UI on Play.
-export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame, onLongPressGame }) {
+export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame, onLongPressGame, favorites = [], onToggleFavorite, browsing = false }) {
   const listRef = useRef(null);
   const lpTimer = useRef(null);
   const longPressedRef = useRef(false);
@@ -59,11 +60,11 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       {/* White divider line — sits under the "Full Library" button */}
       <div
         className="pointer-events-none absolute left-3 right-3 z-20"
-        style={{ top: 26, height: 1, background: 'rgba(255,255,255,0.55)', boxShadow: '0 0 6px rgba(255,255,255,0.3)' }}
+        style={{ top: browsing ? 0 : 26, height: 1, background: 'rgba(255,255,255,0.55)', boxShadow: '0 0 6px rgba(255,255,255,0.3)' }}
       />
 
       {/* All games — simple flat list below the line */}
-      <div ref={listRef} className="absolute inset-0 overflow-y-auto" style={{ scrollbarWidth: 'none', paddingTop: 40, paddingBottom: 8 }}>
+      <div ref={listRef} data-testid="library-game-list" tabIndex={0} aria-label="Scrollable game library" onWheel={e => e.stopPropagation()} className="absolute inset-0 overflow-y-auto overscroll-contain" style={{ scrollbarWidth: 'none', paddingTop: browsing ? 8 : 40, paddingBottom: 48 }}>
         <div className="flex flex-col gap-2 px-2">
           {allGames.map((g) => {
             const isSel = selectedGame?.id === g.id;
@@ -74,6 +75,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
             return (
               <div
                 key={g.id}
+                data-library-game={g.id}
                 onClick={() => handleRowClick(g)}
                 className="flex items-center gap-2.5 w-full rounded-xl cursor-pointer transition-all"
                 style={{
@@ -106,19 +108,13 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
 
                 {/* Title + genre (middle) */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-[11px] font-semibold leading-tight truncate" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.85)' }}>{g.title}</p>
+                  <button aria-label={`View ${g.title}`} onClick={e => { e.stopPropagation(); handleRowClick(g); }} className="text-white text-[11px] font-semibold leading-tight truncate max-w-full text-left" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.85)' }}>{g.title}</button>
                   <p className="text-white/45 text-[9px] truncate mt-0.5" style={{ textShadow: '0 1px 5px rgba(0,0,0,0.85)' }}>{g.genre}</p>
                 </div>
 
-                {/* Play + Options (far right) */}
-                <button
-                  onClick={(e) => playGame(g, e)}
-                  className="shrink-0 flex items-center justify-center rounded-lg transition-all"
-                  style={{ width: 28, height: 28, background: 'rgba(34,211,238,0.18)', border: '1px solid rgba(34,211,238,0.4)', color: '#67e8f9' }}
-                  title="Play"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                </button>
+                {/* Launch and favorite actions are separate from opening details. */}
+                {onToggleFavorite && <button aria-label={`${favorites.includes(g.id) ? 'Unfavorite' : 'Favorite'} ${g.title}`} aria-pressed={favorites.includes(g.id)} onClick={e => { e.stopPropagation(); onToggleFavorite(g); }} className="shrink-0 p-1"><Star className={`h-3.5 w-3.5 ${favorites.includes(g.id) ? 'fill-current text-primary' : ''}`} /></button>}
+                <GamePlayButton key={g.id} game={g} compact />
                 <button
                   onClick={(e) => openOptions(g, e)}
                   className="shrink-0 flex items-center justify-center rounded-lg transition-all hover:bg-white/10"
