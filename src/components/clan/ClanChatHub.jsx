@@ -37,7 +37,7 @@ export default function ClanChatHub({ clan, myRole }) {
       {/* Channels rail */}
       <div className="clan-channels">
         <div className="clan-channel-heading">
-          <h1>Clan Chat</h1>
+          <h1>Game Chats</h1>
           {isPrivileged && (
             <button
               onClick={() => setShowAddChannel((v) => !v)}

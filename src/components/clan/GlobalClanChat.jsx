@@ -21,8 +21,8 @@ export default function GlobalClanChat() {
   const close = () => { setOpen(false); requestAnimationFrame(() => trigger.current?.focus()); };
   return createPortal(<div className="clan-surface">
 
-    {open && <section id="global-clan-chat" data-testid="clan-chat-overlay" role="dialog" aria-modal="false" aria-labelledby="global-clan-chat-title" className="clan-chat-overlay" onKeyDown={event => { event.stopPropagation(); if (event.key === 'Escape') { event.preventDefault(); close(); } }}>
-      <header className="clan-chat-overlay-heading"><h2 id="global-clan-chat-title">Clan Chat</h2><button ref={closeButton} type="button" aria-label="Close Clan Chat" title="Close Clan Chat" className="clan-chat-overlay-close" onClick={close}><X size={19} /></button></header>
+    {open && <section id="global-clan-chat" data-testid="clan-chat-overlay" role="dialog" aria-modal="false" aria-labelledby="global-clan-chat-title" className="clan-chat-overlay moonlit-chat" onKeyDown={event => { event.stopPropagation(); if (event.key === 'Escape') { event.preventDefault(); close(); } }}>
+      <header className="clan-chat-overlay-heading"><div><span className="clan-chat-overlay-kicker">Main communications</span><h2 id="global-clan-chat-title">Game Chats</h2></div><button ref={closeButton} type="button" aria-label="Close Game Chats" title="Close Game Chats" className="clan-chat-overlay-close" onClick={close}><X size={19} /></button></header>
       <div className="clan-chat-overlay-body"><ClanChatOverlayBody key={user?.id || 'guest'} user={user} loading={loading} onClose={close} /></div>
     </section>}
   </div>, document.body);
