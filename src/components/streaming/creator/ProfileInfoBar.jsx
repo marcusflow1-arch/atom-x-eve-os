@@ -15,7 +15,7 @@ export default function ProfileInfoBar({
 }) {
   const displayName = activeProfile?.display_name || activeProfile?.full_name || 'My Channel';
   const tagline = activeProfile?.tagline || '';
-  const tabs = ['schedule', 'gallery', 'games', 'achievements'];
+  const tabs = ['schedule', 'cards', 'gallery', 'games', 'achievements'];
 
   const handleAvatarUpload = async () => {
     const input = document.createElement('input');
@@ -78,6 +78,8 @@ export default function ProfileInfoBar({
               <button
                 key={tab}
                 type="button"
+                aria-pressed={activeTab === tab}
+                aria-controls={tab === 'cards' && activeTab === tab ? 'player-achievement-collection' : undefined}
                 onClick={() => setActiveTab(activeTab === tab ? null : tab)}
                 className={`relative px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium capitalize transition-all ${activeTab === tab ? 'text-white' : 'text-white/50 hover:text-white'}`}
               >

@@ -73,6 +73,14 @@
       "type": "number",
       "default": 0,
       "description": "Total watch minutes across all viewers"
+    },
+    "playback_url": {
+      "type": "string",
+      "description": "Public viewer playback URL (HTTPS video, HLS manifest, YouTube or Twitch). Never store an ingest key here."
+    },
+    "preview_video_url": {
+      "type": "string",
+      "description": "Optional public muted preview video URL for the discovery hero."
     }
   },
   "required": [
