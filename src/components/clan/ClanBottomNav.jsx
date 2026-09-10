@@ -3,7 +3,6 @@ import { Home, Users, MessageSquare, TrendingUp, Zap, ClipboardList, Shield } fr
 
 export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, onToggleRoster, isStrongholdEnabled, isPrivileged }) {
   const tabs = [
-    { id: 'clan_chat', label: 'Clan Chat', icon: MessageSquare },
     { id: 'games_chat', label: 'Game Chats', icon: MessageSquare },
     { id: 'home', label: isStrongholdEnabled ? 'Stronghold' : 'Homepage', icon: Home },
     ...(isPrivileged ? [{ id: 'admin_overview', label: 'Admin Overview', icon: Shield }] : []),

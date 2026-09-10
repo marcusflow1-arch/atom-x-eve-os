@@ -1,0 +1,11 @@
+.clan-chat-rail-button{position:fixed;top:80px;left:calc(max(5vw,80px)/2 - 20px);z-index:85;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid hsl(var(--foreground)/.16);background:hsl(var(--background)/.75);color:hsl(var(--muted-foreground));backdrop-filter:blur(18px)}
+.clan-chat-rail-button:hover,.clan-chat-rail-button[aria-expanded=true]{color:hsl(var(--primary));border-color:hsl(var(--primary)/.5);background:hsl(var(--muted)/.92)}
+.clan-chat-overlay{position:fixed;inset:80px 20px 68px calc(max(5vw,80px) + 16px);z-index:180;display:flex;flex-direction:column;overflow:hidden;border:1px solid hsl(var(--foreground)/.14);border-radius:16px;background:hsl(var(--background)/.94);color:hsl(var(--foreground));backdrop-filter:blur(28px);box-shadow:0 16px 48px hsl(var(--background)/.6),inset 0 0 0 1px hsl(var(--foreground)/.04)}
+.clan-chat-overlay-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;padding:16px 20px;border-bottom:1px solid hsl(var(--border))}
+.clan-chat-overlay-heading h2{font-size:18px;font-weight:500;letter-spacing:-.02em}
+.clan-chat-overlay-close{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;color:hsl(var(--muted-foreground))}
+.clan-chat-overlay-close:hover{background:hsl(var(--foreground)/.08);color:hsl(var(--foreground))}
+.clan-chat-overlay-body{flex:1;min-height:0;padding:0 16px 16px}
+.clan-chat-overlay-clan{flex-shrink:0;padding:12px 4px;color:hsl(var(--muted-foreground));font-size:12px}
+.clan-chat-overlay-status{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;font-size:14px;color:hsl(var(--muted-foreground))}
+@media(max-width:600px){.clan-chat-overlay{inset:72px 8px 64px;border-radius:12px}.clan-chat-overlay-heading{padding:10px 12px}.clan-chat-overlay-body{padding:0 8px 8px}.clan-chat-overlay .clan-channels{width:108px}.clan-chat-overlay .clan-chat-header>div:last-child{flex-wrap:wrap;gap:8px}.clan-chat-overlay .clan-chat-header input{width:90px}.clan-chat-overlay .clan-chat-messages p{overflow-wrap:anywhere}}

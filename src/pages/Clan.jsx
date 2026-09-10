@@ -13,8 +13,7 @@ import GameWorkspace from '@/components/clan/GameWorkspace';
 import AssignmentList from '@/components/clan/assignments/AssignmentList';
 import AssignmentManager from '@/components/clan/assignments/AssignmentManager';
 import ClanOverview from '@/components/clan/ClanOverview';
-import ClanChat from '@/components/clan/ClanChat';
-import ClanChatHub from '@/components/clan/ClanChatHub';
+
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import ClanIntro from '@/components/clan/ClanIntro';
 import ClanStronghold from '@/components/clan/ClanStronghold';
@@ -429,17 +428,7 @@ export default function ClanPage() {
                             />
                         </motion.div>
                     )}
-                    {bottomTab === 'clan_chat' && (
-                        <motion.div
-                            key="clan_chat"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="clan-pane"
-                        >
-                            <ClanChatHub clan={clanForRender} myRole={currentUserRole} />
-                        </motion.div>
-                    )}
+
                     {bottomTab === 'admin_overview' && isPrivileged && (
                         <motion.div
                             key="admin_overview"
