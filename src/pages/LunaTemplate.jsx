@@ -70,7 +70,7 @@ import GameList from '../components/dashboard/gamehub/GameList';
 import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
-import LibraryLandingPage from '../components/dashboard/gamehub/LibraryLandingPage';
+import OwnedLibraryView from '@/components/dashboard/gamehub/OwnedLibraryView';
 import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
@@ -192,6 +192,7 @@ export default function LunaTemplate() {
   const [selectedFocusGame, setSelectedFocusGame] = useState(null);
   const [longPressGame, setLongPressGame] = useState(null);
   const [showLibraryLanding, setShowLibraryLanding] = useState(false);
+  const [librarySelection, setLibrarySelection] = useState(null);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
@@ -537,7 +538,11 @@ export default function LunaTemplate() {
       }
       if (key === 'escape') {
         if (showFriendsHub) { setShowFriendsHub(false); return; }
-        if (showLibraryLanding) { setShowLibraryLanding(false); return; }
+        if (showLibraryLanding) {
+          if (librarySelection) setLibrarySelection(null);
+          else setShowLibraryLanding(false);
+          return;
+        }
         if (selectedFocusGame) { setSelectedFocusGame(null); setLongPressGame(null); return; }
         if (longPressGame) { setLongPressGame(null); return; }
         if (showDevSpotlight) {setShowDevSpotlight(false);return;}
@@ -552,7 +557,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
+  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -678,8 +683,8 @@ export default function LunaTemplate() {
                 <LibraryBrowser
                   selectedGame={selectedFocusGame}
                   fullView={showLibraryLanding}
-                  onToggleFullView={(game) => { if (!selectedFocusGame) setSelectedFocusGame(game); setShowLibraryLanding(v => !v); }}
-                  onSelectGame={(game) => { setLongPressGame(null); setSelectedFocusGame(game); }}
+                  onToggleFullView={() => { setLibrarySelection(null); setShowLibraryLanding(v => !v); }}
+                  onSelectGame={(game) => { setLongPressGame(null); setSelectedFocusGame(game); if (showLibraryLanding) setLibrarySelection(game); }}
                   onLongPressGame={(game) => { setLongPressGame(game); setShowLibraryLanding(false); }}
                 />
               </div>
@@ -748,7 +753,7 @@ export default function LunaTemplate() {
             className="absolute z-30 pointer-events-auto overflow-hidden"
             style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
-            <LibraryLandingPage game={selectedFocusGame} onClose={() => setShowLibraryLanding(false)} />
+            <OwnedLibraryView selectedGame={librarySelection} onSelectGame={game => { setLibrarySelection(game); setSelectedFocusGame(game); }} onBack={() => setLibrarySelection(null)} onClose={() => setShowLibraryLanding(false)} />
           </motion.div>
         }
       </AnimatePresence>
