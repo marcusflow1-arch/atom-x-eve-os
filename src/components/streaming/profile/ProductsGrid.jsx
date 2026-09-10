@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X, Tag, ShoppingBag, Calendar, Settings } from 'lucide-react';
+import { Plus, ShoppingBag, Calendar, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const TABS = [
@@ -11,7 +11,7 @@ const TABS = [
   { id: 'event', label: 'Events', icon: Calendar },
 ];
 
-export default function ProductsGrid({ allowEditing = true }) {
+export default function ProductsGrid({ allowEditing = true, compact = false }) {
   const [isEditingState, setIsEditingState] = useState(false);
   const isEditing = isEditingState && allowEditing;
   const [activeTab, setActiveTab] = useState('product');
@@ -59,7 +59,7 @@ export default function ProductsGrid({ allowEditing = true }) {
   ]);
 
   const addProduct = () => {
-    setProducts([...products, { id: Date.now(), title: '', price: '', description: '', image: '', type: 'product' }]);
+    setProducts([...products, { id: Date.now(), title: '', price: '', description: '', image: '', type: activeTab }]);
   };
 
   const removeProduct = (id) => {
@@ -71,9 +71,10 @@ export default function ProductsGrid({ allowEditing = true }) {
   };
 
   return (
-    <div className="w-full mt-12 mb-20">
-      <div className="mb-6">
-        <div className="relative flex items-center justify-center gap-8">
+    <div className={`channel-products-module w-full mt-12 mb-20 ${compact ? 'is-compact' : ''}`}>
+      <div className="channel-shop-heading mb-6">
+        {compact && <span className="channel-commerce-label">FROM THIS CHANNEL</span>}
+        <div className="channel-shop-tabs relative flex items-center justify-center gap-8">
             {TABS.map((tab) => {
                 const isActive = activeTab === tab.id && !isEditing;
                 return (
@@ -81,6 +82,7 @@ export default function ProductsGrid({ allowEditing = true }) {
                         key={tab.id}
                         type="button"
                         onClick={() => { setActiveTab(tab.id); setIsEditingState(false); }}
+                        aria-pressed={isActive}
                         className={`relative flex items-center gap-2 pb-2 text-sm font-semibold uppercase tracking-[0.14em] transition-colors ${isActive ? 'text-white' : 'text-white/40 hover:text-white/75'}`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -92,7 +94,7 @@ export default function ProductsGrid({ allowEditing = true }) {
             {isEditing && (
                 <span className="absolute right-0 -translate-y-1/2 top-1/2 text-xs font-normal text-white/40">(Edit Mode)</span>
             )}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="channel-shop-controls absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 {isEditing && (
                     <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={addProduct}>
                         <Plus className="w-4 h-4 mr-2" /> Add Item
@@ -102,7 +104,7 @@ export default function ProductsGrid({ allowEditing = true }) {
                     <button 
                         onClick={() => setIsEditingState(!isEditing)}
                         className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
-                        aria-label="Toggle edit mode"
+                        aria-label="Toggle products and events editing"
                     >
                         <Settings className="w-4 h-4" />
                     </button>
@@ -116,12 +118,12 @@ export default function ProductsGrid({ allowEditing = true }) {
 
       {isEditing ? (
         // EDIT MODE: Grid of inputs
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="channel-shop-editor grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {products.map((product) => (
                 <div key={product.id} className="bg-white/5 border border-white/10 rounded-xl p-4 relative group">
                     <div className="aspect-video bg-black/40 rounded-lg mb-3 flex items-center justify-center border border-white/5 overflow-hidden relative">
                          {product.image ? (
-                             <img src={product.image} className="w-full h-full object-cover" />
+                             <img src={product.image} alt={product.title || 'Item preview'} className="w-full h-full object-cover" />
                          ) : (
                              <ShoppingBag className="w-8 h-8 text-white/20" />
                          )}
@@ -185,16 +187,17 @@ export default function ProductsGrid({ allowEditing = true }) {
         </div>
       ) : (
         // VIEW MODE: Horizontal Scroll (filtered by the active sub-page tab)
-        <div key={activeTab} className="w-full overflow-x-auto pb-6 scrollbar-hide -mx-2 px-2">
+        <div key={activeTab} className="channel-shop-scroll w-full overflow-x-auto pb-6 scrollbar-hide -mx-2 px-2">
             <div className="flex gap-4 w-max">
                 {products.filter((product) => product.type === activeTab).map((product) => (
                     <motion.div 
                         key={product.id}
-                        whileHover={{ y: -5 }}
-                        className="w-[240px] bg-[#0f1419] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all shadow-lg hover:shadow-cyan-500/5 group cursor-pointer"
+                        whileHover={{ y: compact ? -2 : -5 }}
+                        className="channel-shop-card w-[240px] bg-[#0f1419] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all shadow-lg hover:shadow-cyan-500/5 group cursor-pointer"
                     >
-                        <div className="aspect-[4/3] bg-slate-800 relative overflow-hidden">
-                            <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="channel-shop-art aspect-[4/3] bg-slate-800 relative overflow-hidden">
+                            {compact && <ShoppingBag aria-hidden="true" className="channel-shop-art-fallback" />}
+                            <img src={product.image} alt={product.title} loading="lazy" decoding="async" onError={compact ? (event) => { event.currentTarget.hidden = true; } : undefined} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             <div className="absolute top-2 right-2">
                                 <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-white">
                                     {product.price}
@@ -206,7 +209,7 @@ export default function ProductsGrid({ allowEditing = true }) {
                                 </Badge>
                             </div>
                         </div>
-                        <div className="p-4">
+                        <div className="channel-shop-copy p-4">
                             <h4 className="text-white font-bold mb-1 truncate">{product.title}</h4>
                             <p className="text-white/50 text-xs line-clamp-2 h-8 leading-relaxed mb-4">{product.description}</p>
                             <Button className="w-full h-8 text-xs font-bold bg-white text-black hover:bg-slate-200">

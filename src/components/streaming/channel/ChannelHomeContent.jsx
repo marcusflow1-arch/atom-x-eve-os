@@ -1,37 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight, Heart, Play, Radio, Trophy } from 'lucide-react';
-import { Artwork, moveRailFocus } from '../hub/DirectoryCards';
-import { formatCount } from '../hub/discoveryModel';
-import StreamMedia from '../hub/StreamMedia';
-import useAuraPreview from '../aura/landing/useAuraPreview';
-import AuraDailyReader from '../aura/landing/AuraDailyReader';
-import '../aura/landing/auraDaily.css';
-import ChannelCommunityChat from './ChannelCommunityChat';
-import { buildChannelOverview } from './channelHomeModel';
-import { safeShowcaseUrl } from '../collection/playerCollectionModel';
-import './channelHome.css';
+import SponsorEditor from '../creator/SponsorEditor';
+import SponsorsSection from '../profile/SponsorsSection';
+import ProductsGrid from '../profile/ProductsGrid';
+import ViewerSeasonalPass from '../ViewerSeasonalPass';
+import './channelCommerce.css';
 
-function RecentMoments({ moments, onRead, suspended }) {
-  const railRef = useRef(null);
-  const [previewId, setPreviewId] = useState(null);
-  const canPreview = useAuraPreview(railRef, suspended);
-  const scroll = (direction) => railRef.current?.scrollBy({ left: 420 * direction, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  return <><div className="channel-rail-controls"><button type="button" aria-label="Previous channel moments" onClick={() => scroll(-1)}><ChevronLeft size={16} /></button><button type="button" aria-label="Next channel moments" onClick={() => scroll(1)}><ChevronRight size={16} /></button></div><div ref={railRef} className="channel-moments-rail" onKeyDown={moveRailFocus} onScroll={() => setPreviewId(null)}>{moments.map((moment) => <button key={moment.id} type="button" onClick={() => { setPreviewId(null); onRead(moment); }} onMouseEnter={() => setPreviewId(moment.id)} onMouseLeave={() => setPreviewId(null)} onFocus={() => setPreviewId(moment.id)} onBlur={() => setPreviewId(null)} aria-label={`Open channel moment: ${moment.title}`}><div className="channel-moment-art"><Artwork key={moment.image} src={moment.image} />{canPreview && previewId === moment.id && moment.kind === 'video' && <StreamMedia url={moment.url} poster={moment.image} title={`${moment.title} preview`} preview />}<span><Play size={14} />{moment.category || 'Moment'}</span></div><small>{moment.game}</small><strong>{moment.title}</strong>{moment.contributor && <span className="channel-moment-credit">Clipped by {moment.contributor}</span>}</button>)}</div></>;
-}
-
-export default function ChannelHomeContent({ query, profile = {}, layout, sponsors, user, stream, onNavigate, onMediaChange }) {
-  const [story, setStory] = useState(null), [now, setNow] = useState(Date.now);
-  const overview = useMemo(() => buildChannelOverview(query.data, layout || query.data?.layouts?.[0], profile, now), [query.data, layout, profile, now]);
-  const partners = sponsors || query.data?.sponsors || [];
-  const highlight = overview.moments.find((moment) => ['CLUTCH', 'BOSS', 'COOL'].includes(moment.category)) || overview.moments[0];
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
-  useEffect(() => { onMediaChange?.(Boolean(story)); return () => onMediaChange?.(false); }, [story, onMediaChange]);
-  return <div className="channel-home-content">
-    {query.isError && <p className="channel-inline-notice" role="status">Channel content couldn’t refresh. <button type="button" onClick={() => query.refetch()}>Try again</button></p>}
-    <section className="channel-content-section" aria-labelledby="channel-highlights-heading"><div className="channel-section-heading"><div><span>01 / IN THE SPOTLIGHT</span><h2 id="channel-highlights-heading">Stream Highlights</h2><p>The moments that make this channel its own.</p></div></div><div className="channel-highlights-layout"><button type="button" className="channel-featured-moment" onClick={() => highlight ? setStory(highlight) : onNavigate('gallery')} aria-label={highlight ? `Watch highlight: ${highlight.title}` : 'Explore channel gallery'}>{highlight && <Artwork key={highlight.image} src={highlight.image} />}<span className="channel-highlight-fade" /><span className="channel-featured-copy"><small>{highlight?.game || 'THE CHANNEL ARCHIVE'}</small><strong>{highlight?.title || (query.isPending ? 'Finding the highlights…' : 'Good moments deserve a replay.')}</strong><span>{highlight?.description || 'Saved clips and standout moments from this channel will appear here.'}</span><em><Play size={13} fill="currentColor" />{highlight ? 'Watch the moment' : 'Explore Gallery'}</em></span></button><ChannelCommunityChat key={`compact:${stream?.id || 'offline'}`} streamId={stream?.id} isLive={Boolean(stream?.is_live)} user={user} compact /></div></section>
-    <section className="channel-content-section" aria-labelledby="channel-moments-heading"><div className="channel-section-heading"><div><span>02 / FROM THE CHANNEL</span><h2 id="channel-moments-heading">Recent Moments</h2><p>A quick replay of the latest clips and community captures.</p></div><button type="button" onClick={() => onNavigate('gallery')}>Open Gallery<ArrowRight size={14} /></button></div>{overview.moments.length ? <RecentMoments moments={overview.moments.slice(0, 8)} onRead={setStory} suspended={Boolean(story)} /> : <div className="channel-quiet-state"><Play size={22} /><p>{query.isPending ? 'Loading saved moments…' : 'The next clip is waiting to happen. Saved channel moments will appear here.'}</p></div>}</section>
-    <section className="channel-content-section" aria-labelledby="channel-schedule-heading"><div className="channel-section-heading"><div><span>03 / MAKE TIME FOR THE NEXT STREAM</span><h2 id="channel-schedule-heading">Channel Schedule Bar</h2></div><button type="button" onClick={() => onNavigate('schedule')}>Full schedule<ArrowRight size={14} /></button></div><div className="channel-schedule-bar">{overview.scheduled.length ? overview.scheduled.map((event) => <button type="button" key={event.id} onClick={() => onNavigate('schedule', event.startsAt)}><time dateTime={new Date(event.startsAt).toISOString()}><span>{new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(event.startsAt)}</span><strong>{new Intl.DateTimeFormat(undefined, { day: 'numeric' }).format(event.startsAt)}</strong></time><span><small>{event.timeLabel || new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(event.startsAt)}</small><strong>{event.title}</strong>{event.game && <small>{event.game}</small>}</span></button>) : <div className="channel-quiet-state"><CalendarDays size={22} /><p>The creator’s next scheduled broadcasts will appear here.</p></div>}</div></section>
-    <section className="channel-content-section" aria-labelledby="channel-supporters-heading"><div className="channel-section-heading"><div><span>04 / BUILT WITH THE COMMUNITY</span><h2 id="channel-supporters-heading">Supporters & Milestones</h2><p>Every shared moment and every new follower is part of the story.</p></div></div><div className="channel-support-grid"><div className="channel-supporters"><span className="channel-small-heading"><Heart size={14} />Community supporters</span>{overview.contributors.length > 0 && <div className="channel-contributors">{overview.contributors.map((name) => <span key={name}><i>{name.charAt(0).toUpperCase()}</i>{name}</span>)}</div>}{partners.length > 0 && <div className="channel-partners">{partners.map((partner) => { const href = safeShowcaseUrl(partner.affiliate_link || partner.link); return href ? <a key={partner.id || partner.name} href={href} target="_blank" rel="noopener noreferrer">{partner.logo_url && <Artwork key={partner.logo_url} src={partner.logo_url} />}<span>{partner.name}</span></a> : <span key={partner.id || partner.name}>{partner.name}</span>; })}</div>}{!overview.contributors.length && !partners.length && <p className="channel-support-copy">Community clip contributors and channel partners will be recognized here.</p>}<div className="channel-milestone"><div><span>Next follower milestone</span><strong>{formatCount(overview.followers)} <small>/ {formatCount(overview.target)}</small></strong></div><progress aria-label="Channel follower milestone" value={overview.followers} max={overview.target} /><p>{(overview.target - overview.followers).toLocaleString()} followers to the next milestone</p></div></div><div className="channel-activity"><span className="channel-small-heading"><Radio size={14} />Channel Activity</span>{overview.activity.length ? <ol>{overview.activity.map((item) => <li key={item.id}><span>{item.kind === 'card' ? <Trophy size={13} /> : item.kind === 'moment' ? <Play size={13} /> : <Radio size={13} />}</span><button type="button" onClick={() => onNavigate(item.kind === 'card' ? 'cards' : item.kind === 'moment' ? 'gallery' : 'schedule')}><strong>{item.title}</strong><time dateTime={new Date(item.date).toISOString()}>{new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(item.date)}</time></button></li>)}</ol> : <p className="channel-support-copy">Saved achievements, shared moments, and recent broadcasts will fill this space.</p>}</div></div></section>
-    {story && <AuraDailyReader key={story.id} story={story} onClose={() => setStory(null)} />}
+// The channel homepage keeps its original sponsor, shop/event and season-pass modules.
+export default function ChannelHomeContent({ sponsors = [], isEditMode = false, allowEditing = false, onAddSponsor, onRemoveSponsor, onUpdateSponsor }) {
+  return <div className="channel-commerce">
+    <section className="channel-commerce-section channel-sponsors-section" aria-label="Channel sponsors and information">
+      {isEditMode || sponsors.length > 0 ? <SponsorEditor isEditMode={isEditMode} sponsors={sponsors} onAdd={onAddSponsor} onRemove={onRemoveSponsor} onUpdate={onUpdateSponsor} compact /> : <SponsorsSection allowEditing={allowEditing} compact />}
+    </section>
+    <section className="channel-commerce-section" aria-label="Channel products and events">
+      <ProductsGrid allowEditing={allowEditing} compact />
+    </section>
+    <section className="channel-commerce-section" aria-label="Channel season pass">
+      <ViewerSeasonalPass currentTier={12} maxTier={20} compact />
+    </section>
   </div>;
 }

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Zap, Star, Crown, Gift, Lock, Check, Shield, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Trophy, Zap, Star, Gift, Lock, Check, Shield, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ShinyCard from '@/components/shared/ShinyCard';
@@ -82,7 +83,24 @@ const LimitedEditionCard = ({ card, onClick, className }) => {
 };
 
 // Reward Preview Modal
-const RewardModal = ({ level, onClose }) => {
+const RewardModal = ({ level, onClose, compact = false }) => {
+  const panelRef = useRef(null);
+  useEffect(() => {
+    if (!compact) return;
+    const previous = document.activeElement;
+    const handleKey = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); }
+      if (event.key === 'Tab') {
+        const controls = [...(panelRef.current?.querySelectorAll('button:not([disabled]), a[href]') || [])];
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    };
+    panelRef.current?.querySelector('button')?.focus();
+    window.addEventListener('keydown', handleKey);
+    return () => { window.removeEventListener('keydown', handleKey); previous?.focus?.({ preventScroll: true }); };
+  }, [compact, onClose]);
   if (!level) return null;
   const cardRarity = rarityColors[level.cardReward.rarity] || rarityColors.Common;
   const equipRarity = rarityColors[level.equipmentReward?.rarity] || rarityColors.Common;
@@ -92,10 +110,14 @@ const RewardModal = ({ level, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/40 backdrop-blur-md z-[500] flex items-center justify-center p-8"
+      className={`fixed inset-0 bg-black/40 backdrop-blur-md z-[500] flex items-center justify-center p-8 ${compact ? 'channel-pass-modal' : ''}`}
       onClick={onClose}
     >
       <motion.div
+        ref={panelRef}
+        role={compact ? 'dialog' : undefined}
+        aria-modal={compact ? true : undefined}
+        aria-label={compact ? `${level.cardReward.name} details` : undefined}
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
@@ -113,6 +135,7 @@ const RewardModal = ({ level, onClose }) => {
       >
         <button
             onClick={onClose}
+            aria-label="Close season pass reward"
             className="absolute -top-4 -right-4 md:-top-12 md:right-0 z-20 w-10 h-10 bg-white/5 hover:bg-white/20 border border-white/10 rounded-full flex items-center justify-center transition-colors"
           >
             <X className="w-6 h-6 text-white" />
@@ -278,7 +301,7 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
   );
 };
 
-export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20 }) {
+export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20, compact = false }) {
   const [viewingLevel, setViewingLevel] = useState(null);
   const scrollContainerRef = useRef(null);
 
@@ -316,10 +339,28 @@ export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20 }) {
       const scrollAmount = 300;
       current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
       });
     }
   };
+
+  if (compact) return <>
+    <div className="channel-pass">
+      <header className="channel-pass-heading">
+        <div><span className="channel-commerce-label">WATCH · ENGAGE · UNLOCK</span><h3>Your Channel Season Pass</h3><p>Unlock rewards by watching and engaging with the stream.</p></div>
+        <div className="channel-pass-controls"><span>Current tier <strong>{currentTier}<small> / {maxTier}</small></strong></span><button type="button" aria-label="Previous season pass rewards" onClick={() => scroll('left')}><ChevronLeft size={17} /></button><button type="button" aria-label="Next season pass rewards" onClick={() => scroll('right')}><ChevronRight size={17} /></button></div>
+      </header>
+      <progress aria-label="Channel season pass progress" value={currentTier} max={maxTier} />
+      <div ref={scrollContainerRef} className="channel-pass-reel" aria-label="Season pass rewards">
+        {levels.map((level) => <button type="button" key={level.level} aria-label={`Preview tier ${level.level}: ${level.cardReward.name}`} aria-current={level.level === currentTier ? 'step' : undefined} className={`channel-pass-reward ${level.isUnlocked ? 'is-unlocked' : 'is-locked'}`} onClick={() => setViewingLevel(level)}>
+          <span className="channel-pass-tier">Tier {String(level.level).padStart(2, '0')}{level.isUnlocked ? <Check size={11} /> : <Lock size={10} />}</span>
+          <span className="channel-pass-reward-art"><Gift size={26} />{level.cardReward.image && <img src={level.cardReward.image} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.hidden = true; }} />}</span>
+          <strong>{level.cardReward.name}</strong><small className={rarityColors[level.cardReward.rarity]?.text}>{level.cardReward.rarity}</small>
+        </button>)}
+      </div>
+    </div>
+    {typeof document !== 'undefined' && createPortal(<AnimatePresence>{viewingLevel && <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} compact />}</AnimatePresence>, document.body)}
+  </>;
 
   return (
     <React.Fragment>

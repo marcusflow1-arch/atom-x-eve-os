@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X, Image as ImageIcon, Video, Link as LinkIcon, Upload, Settings } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Plus, X, Video, Link as LinkIcon, Upload, Settings } from 'lucide-react';
 
-export default function SponsorsSection({ allowEditing = true }) {
+export default function SponsorsSection({ allowEditing = true, compact = false }) {
   const [isEditing, setIsEditing] = useState(false);
   const [sponsors, setSponsors] = useState([
     {
@@ -26,19 +24,19 @@ export default function SponsorsSection({ allowEditing = true }) {
 
   const [aboutMe, setAboutMe] = useState("Hey there! I'm a variety streamer who loves connecting with chat and exploring new games together. When I'm not streaming, you can find me making music or hiking in the mountains.");
 
-  const handleMediaUpload = (sponsorId) => {
+  const handleMediaUpload = (_sponsorId) => {
     // Mock upload
     alert("Media upload dialog would open here");
   };
 
-  const handleLogoUpload = (sponsorId) => {
+  const handleLogoUpload = (_sponsorId) => {
     // Mock upload
     alert("Logo upload dialog would open here");
   };
 
   return (
-    <div className="w-full mt-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className={`channel-partners-module w-full mt-8 ${compact ? 'is-compact' : ''}`}>
+      <div className="channel-partners-heading flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
             Partners & Sponsors
@@ -46,6 +44,7 @@ export default function SponsorsSection({ allowEditing = true }) {
             </h3>
             {allowEditing && (
             <button 
+                aria-label="Toggle sponsor information editing"
                 onClick={() => setIsEditing(!isEditing)}
                 className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
             >
@@ -69,7 +68,7 @@ export default function SponsorsSection({ allowEditing = true }) {
                         const container = document.getElementById('sponsors-container');
                         if (container) container.scrollBy({ left: -container.offsetWidth, behavior: 'smooth' });
                     }}
-                    className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 z-10"
+                    aria-label="Previous sponsor" className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 z-10"
                 >
                     <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -80,7 +79,7 @@ export default function SponsorsSection({ allowEditing = true }) {
                         const container = document.getElementById('sponsors-container');
                         if (container) container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
                     }}
-                    className="absolute -right-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 z-10"
+                    aria-label="Next sponsor" className="absolute -right-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 z-10"
                 >
                     <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -210,14 +209,14 @@ export default function SponsorsSection({ allowEditing = true }) {
                     </div>
                 ) : (
                     // VIEW MODE - 3 Column Layout
-                    <div className="w-full bg-[#0f1419]/50 border border-white/5 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden group">
+                    <div className="channel-partner-feature w-full bg-[#0f1419]/50 border border-white/5 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden group">
                         {/* Background Glow */}
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
                         
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
                             {/* Left Col: Sponsor Info (3 cols) */}
                             <div className="lg:col-span-3 flex flex-col items-center text-center lg:items-start lg:text-left space-y-4">
-                                <div className="w-24 h-24 bg-white rounded-2xl p-4 shadow-lg shadow-cyan-500/10 flex items-center justify-center mb-2">
+                                <div className="channel-partner-logo w-24 h-24 bg-white rounded-2xl p-4 shadow-lg shadow-cyan-500/10 flex items-center justify-center mb-2">
                                     <img src={sponsor.logo} alt={sponsor.name} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
@@ -236,7 +235,7 @@ export default function SponsorsSection({ allowEditing = true }) {
                             </div>
 
                             {/* Middle Col: About Me + Partnership Title (5 cols) */}
-                            <div className="lg:col-span-5 flex flex-col justify-center h-full relative px-4 lg:px-8 border-t lg:border-t-0 lg:border-l lg:border-r border-white/5 py-8 lg:py-0">
+                            <div className="channel-partner-about lg:col-span-5 flex flex-col justify-center h-full relative px-4 lg:px-8 border-t lg:border-t-0 lg:border-l lg:border-r border-white/5 py-8 lg:py-0">
                                 <div className="text-center">
                                     <span className="inline-block py-1 px-3 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/40 mb-4">
                                         Streamer Partnership
@@ -246,7 +245,7 @@ export default function SponsorsSection({ allowEditing = true }) {
                                         <p className="text-slate-300 leading-relaxed text-base italic">
                                             "{aboutMe}"
                                         </p>
-                                        <div className="mt-6 flex justify-center gap-2">
+                                        <div className="channel-partner-social mt-6 flex justify-center gap-2">
                                             {/* Social Icons Mock */}
                                             {[1,2,3].map(i => (
                                                 <div key={i} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center cursor-pointer transition-colors">
@@ -259,7 +258,7 @@ export default function SponsorsSection({ allowEditing = true }) {
                             </div>
 
                             {/* Right Col: Media (4 cols) */}
-                            <div className="lg:col-span-4 space-y-4">
+                            <div className="channel-partner-media lg:col-span-4 space-y-4">
                                 {/* Big Media */}
                                 <div className="aspect-video w-full rounded-xl overflow-hidden bg-black relative group/media cursor-pointer shadow-2xl">
                                     <img src={sponsor.media[0]?.url} className="w-full h-full object-cover opacity-80 group-hover/media:opacity-100 transition-opacity" />

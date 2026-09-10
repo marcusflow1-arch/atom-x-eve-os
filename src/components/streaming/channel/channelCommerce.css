@@ -1,0 +1,112 @@
+.channel-commerce { min-width: 0; color: #e2eaf4; }
+.channel-commerce-section { min-width: 0; padding: 28px 0 36px; margin-bottom: 28px; }
+.channel-commerce-section + .channel-commerce-section::before { content: ''; display: block; height: 1px; margin: -28px 0 38px; background: linear-gradient(90deg, transparent, #343e554f 35%, #343e554f 65%, transparent); }
+.channel-commerce-label { display: block; color: #8fa9ba; font-size: 9px; letter-spacing: .2em; font-weight: 500; margin-bottom: 13px; }
+.channel-commerce :is(button, a, input, textarea, select):focus-visible { outline: 1px solid #9fdfeb; outline-offset: 4px; }
+.channel-commerce .channel-products-module, .channel-commerce .channel-partners-module { margin: 0; }
+.channel-commerce .channel-partners-heading { margin-bottom: 26px; }
+.channel-commerce .channel-partners-heading h3, .channel-commerce .channel-sponsor-editor > h3, .channel-commerce .channel-sponsor-editor > div > h3 { font-size: 23px; font-weight: 550; letter-spacing: -.025em; }
+.channel-commerce .channel-partner-feature { padding: 24px 0; border: 0; border-radius: 0; box-shadow: none; background: linear-gradient(110deg, #ffffff02, transparent 55%); backdrop-filter: blur(8px); }
+.channel-commerce .channel-partner-feature > .absolute { opacity: .16; }
+.channel-commerce .channel-partner-feature > .grid { gap: clamp(24px, 3vw, 52px); }
+.channel-commerce .channel-partner-logo { width: 60px; height: 60px; padding: 10px; border-radius: 12px; box-shadow: none; background: #ffffff05; }
+.channel-commerce .channel-partner-feature h4 { font-size: 20px; font-weight: 550; }
+.channel-commerce .channel-partner-feature p { color: #9eafc2; font-size: 12px; line-height: 1.9; font-style: normal; }
+.channel-commerce .channel-partner-feature a { font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: .03em; color: #a5dbe6; }
+.channel-commerce .channel-partner-about { border: 0; padding: 5px 18px; }
+.channel-commerce .channel-partner-about > div { text-align: left; }
+.channel-commerce .channel-partner-about h3 { font-size: 17px; font-weight: 500; margin-bottom: 16px; }
+.channel-commerce .channel-partner-about > div > span { padding: 0; margin-bottom: 12px; background: transparent; border: 0; border-radius: 0; color: #798eaa; font-size: 8px; font-weight: 500; letter-spacing: .14em; }
+.channel-commerce .channel-partner-social { display: none; }
+.channel-commerce .channel-partner-media > div:first-child { border-radius: 7px; box-shadow: none; background: radial-gradient(ellipse at 60% 35%, #35536744, transparent), #ffffff03; }
+.channel-commerce .channel-partner-media > .grid { gap: 8px; }
+.channel-commerce .channel-partner-media > .grid > div { border-radius: 4px; max-height: 64px; }
+.channel-commerce .channel-partner-media > .grid > div:empty { display: none; }
+.channel-commerce .channel-sponsor-item { min-width: 220px; padding: 20px; background: linear-gradient(110deg, #ffffff04, transparent); border: 0; border-radius: 0; box-shadow: none; }
+.channel-commerce .channel-sponsor-item > div > div:first-child { font-weight: 500; }
+.channel-commerce .channel-sponsor-editor > .space-y-2 > div, .channel-commerce .channel-sponsor-editor > .space-y-3 { border-color: transparent; background: #ffffff03; border-radius: 7px; }
+.channel-commerce .channel-shop-tabs { justify-content: flex-start; gap: 28px; padding-right: 160px; }
+.channel-commerce .channel-shop-tabs > button { font-size: 22px; font-weight: 550; letter-spacing: -.025em; text-transform: none; padding-bottom: 12px; gap: 10px; }
+.channel-commerce .channel-shop-tabs > button > svg { width: 17px; height: 17px; color: #90b4c5; }
+.channel-commerce .channel-shop-tabs > button > span { box-shadow: none; background: linear-gradient(90deg, #9ed7e7, transparent); }
+.channel-commerce .channel-shop-heading > .flex { display: none; }
+.channel-commerce .channel-shop-controls { gap: 8px; }
+.channel-commerce .channel-shop-controls > button { box-shadow: none; border: 0; background: #ffffff05; color: #b7c9db; }
+.channel-commerce .channel-shop-scroll { margin: 0; padding: 7px 4px 18px; scrollbar-width: thin; scrollbar-color: #293d50 transparent; }
+.channel-commerce .channel-shop-scroll > div { gap: 26px; }
+.channel-commerce .channel-shop-card { width: clamp(220px, 23vw, 320px); border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.channel-commerce .channel-shop-card:hover { box-shadow: none; }
+.channel-commerce .channel-shop-art { aspect-ratio: 16 / 10; border-radius: 7px; background: radial-gradient(ellipse at 70% 20%, #2e516241, transparent 65%), #ffffff03; }
+.channel-commerce .channel-shop-art::after { content: ''; position: absolute; inset: 50% 0 0; background: linear-gradient(transparent, #040711d9); pointer-events: none; }
+.channel-commerce .channel-shop-art > img { position: relative; z-index: 1; transition: transform .3s; }
+.channel-commerce .channel-shop-art > img[hidden] { display: none; }
+.channel-commerce .channel-shop-art > .absolute { z-index: 2; }
+.channel-commerce .channel-shop-art .inline-flex { border: 0; background: #040711a6; color: #c3d6e3; font-weight: 450; font-size: 10px; border-radius: 20px; }
+.channel-commerce .channel-shop-art-fallback { position: absolute; width: 29px; height: 29px; left: calc(50% - 14px); top: calc(50% - 14px); color: #557184; }
+.channel-commerce .channel-shop-card:hover .channel-shop-art > img { transform: scale(1.025); }
+.channel-commerce .channel-shop-copy { padding: 16px 2px 4px; }
+.channel-commerce .channel-shop-copy h4 { color: #d9e5f0; font-size: 14px; font-weight: 550; margin-bottom: 7px; }
+.channel-commerce .channel-shop-copy p { color: #879bae; font-size: 11px; line-height: 1.8; height: 40px; margin-bottom: 16px; }
+.channel-commerce .channel-shop-copy button { width: auto; min-width: 110px; padding-inline: 15px; background: #91d0df0c; color: #b1dce8; border: 0; box-shadow: none; font-size: 10px; font-weight: 550; border-radius: 20px; }
+.channel-commerce .channel-shop-copy button:hover { background: #91d0df1c; color: #e0f6ff; }
+.channel-commerce .channel-shop-editor > div { border: 0; border-radius: 8px; background: #ffffff03; }
+.channel-commerce .channel-shop-editor input, .channel-commerce .channel-shop-editor textarea, .channel-commerce .channel-shop-editor select { border-color: #ffffff0a; color: #d1ddea; }
+.channel-pass { min-width: 0; background: transparent; }
+.channel-pass-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.channel-pass-heading h3 { margin: 0; color: #e1e9f3; font-size: 25px; line-height: 1.25; font-weight: 550; letter-spacing: -.025em; }
+.channel-pass-heading p { margin: 10px 0 0; font-size: 12px; line-height: 1.8; color: #849baf; }
+.channel-pass-controls { display: flex; align-items: center; gap: 8px; }
+.channel-pass-controls > span { display: flex; flex-direction: column; gap: 5px; margin-right: 16px; color: #869bae; font-size: 9px; white-space: nowrap; }
+.channel-pass-controls strong { font-size: 22px; color: #d3e0ec; font-weight: 400; }
+.channel-pass-controls strong small { font-size: 12px; color: #8094ab; }
+.channel-pass-controls button { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #ffffff04; color: #a9c7d6; }
+.channel-pass-controls button:hover { background: #ffffff0a; }
+.channel-pass > progress { display: block; width: 100%; height: 2px; appearance: none; border: 0; background: #ffffff06; }
+.channel-pass > progress::-webkit-progress-bar { background: #ffffff06; }
+.channel-pass > progress::-webkit-progress-value { background: linear-gradient(90deg, #314762, #a0d8e4); }
+.channel-pass > progress::-moz-progress-bar { background: linear-gradient(90deg, #314762, #a0d8e4); }
+.channel-pass-reel { display: flex; gap: 22px; overflow-x: auto; padding: 30px 4px 22px; margin-inline: -4px; scroll-snap-type: x proximity; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #293d50 transparent; }
+.channel-pass-reward { flex: 0 0 124px; min-width: 0; padding: 0; border: 0; background: transparent; text-align: left; scroll-snap-align: start; }
+.channel-pass-tier { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; color: #8da4b8; font-size: 9px; }
+.channel-pass-reward-art { display: grid; position: relative; place-items: center; overflow: hidden; aspect-ratio: 1; border-radius: 7px; background: radial-gradient(ellipse at 80% 20%, #3c526638, transparent), #ffffff03; color: #638a9f; transition: background .2s, transform .2s; }
+.channel-pass-reward-art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 12px; }
+.channel-pass-reward-art > img[hidden] { display: none; }
+.channel-pass-reward.is-locked .channel-pass-reward-art { filter: grayscale(.75); opacity: .6; }
+.channel-pass-reward[aria-current=step] .channel-pass-tier { color: #c1edf3; }
+.channel-pass-reward[aria-current=step] .channel-pass-reward-art { background: radial-gradient(ellipse at 50% 80%, #5599b232, transparent), #ffffff05; }
+.channel-pass-reward:hover .channel-pass-reward-art { transform: translateY(-2px); background-color: #ffffff08; }
+.channel-pass-reward > strong { display: block; margin-top: 13px; font-size: 11px; font-weight: 500; line-height: 1.6; color: #bbcedd; }
+.channel-pass-reward > small { display: block; margin-top: 5px; font-size: 8px; letter-spacing: .08em; }
+.channel-pass-modal { padding: 24px; overflow-y: auto; }
+.channel-pass-modal > [role=dialog] { max-height: calc(100dvh - 48px); overflow-y: auto; border: 0 !important; border-radius: 12px !important; padding: clamp(20px, 4vw, 48px) !important; background: linear-gradient(110deg, #080d18f5, #080d18e8) !important; box-shadow: none !important; }
+.channel-pass-modal > [role=dialog] > button:first-child { position: absolute; top: 12px; right: 12px; border: 0; background: #ffffff05; }
+.channel-pass-modal :focus-visible { outline: 1px solid #a9e1ef; outline-offset: 3px; }
+@media (max-width: 1023px) {
+  .channel-commerce .channel-partner-feature > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .channel-commerce .channel-partner-feature > .grid > div:first-child { align-items: flex-start; text-align: left; }
+  .channel-commerce .channel-partner-about { padding: 0; }
+  .channel-commerce .channel-partner-media { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; max-width: 600px; }
+  .channel-commerce .channel-partner-media > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; margin-top: 0; }
+}
+@media (max-width: 640px) {
+  .channel-commerce-section { padding-block: 18px 28px; margin-bottom: 20px; }
+  .channel-commerce-section + .channel-commerce-section::before { margin-top: -18px; }
+  .channel-commerce .channel-shop-tabs { gap: 20px; padding-right: 40px; flex-wrap: wrap; }
+  .channel-commerce .channel-shop-tabs > button { font-size: 20px; }
+  .channel-commerce .channel-shop-controls { position: static; transform: none; margin-left: auto; }
+  .channel-commerce .channel-shop-scroll > div { gap: 18px; }
+  .channel-commerce .channel-shop-card { width: 235px; }
+  .channel-commerce .channel-partner-feature > .grid { grid-template-columns: 1fr; }
+  .channel-commerce .channel-partner-media { grid-template-columns: 1fr; }
+  .channel-commerce .channel-partner-media > .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .channel-pass-heading { flex-wrap: wrap; gap: 18px; }
+  .channel-pass-heading h3 { font-size: 23px; }
+  .channel-pass-controls { width: 100%; }
+  .channel-pass-controls > span { margin-right: auto; flex-direction: row; align-items: center; gap: 12px; }
+  .channel-pass-reel { gap: 18px; }
+  .channel-pass-reward { flex-basis: 115px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .channel-commerce *, .channel-pass-modal * { scroll-behavior: auto !important; transition: none !important; }
+  .channel-commerce .channel-shop-card, .channel-commerce .channel-shop-card img, .channel-pass-reward:hover .channel-pass-reward-art { transform: none !important; }
+}

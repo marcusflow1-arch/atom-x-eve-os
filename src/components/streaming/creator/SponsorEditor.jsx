@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2, GripVertical, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 
-export default function SponsorEditor({ isEditMode, sponsors = [], onAdd, onRemove, onUpdate }) {
+export default function SponsorEditor({ isEditMode, sponsors = [], onAdd, onRemove, onUpdate, compact = false }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSponsor, setNewSponsor] = useState({ name: '', logo_url: '', affiliate_link: '', tier: 'bronze' });
 
@@ -44,11 +44,11 @@ export default function SponsorEditor({ isEditMode, sponsors = [], onAdd, onRemo
     // View mode: simple sponsor display
     if (sponsors.length === 0) return null;
     return (
-      <div className="w-full">
+      <div className={`channel-sponsor-editor w-full ${compact ? 'is-compact' : ''}`}>
         <h3 className="text-white font-bold text-lg mb-4">Sponsors & Partners</h3>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {sponsors.map((s, i) => (
-            <div key={i} className={`flex-shrink-0 px-6 py-4 rounded-xl border ${tierColors[s.tier] || tierColors.bronze} flex items-center gap-3 min-w-[200px]`}>
+            <div key={i} className={`channel-sponsor-item flex-shrink-0 px-6 py-4 rounded-xl border ${tierColors[s.tier] || tierColors.bronze} flex items-center gap-3 min-w-[200px]`}>
               {s.logo_url ? (
                 <img src={s.logo_url} alt={s.name} className="w-10 h-10 rounded-lg object-cover" />
               ) : (
@@ -61,7 +61,7 @@ export default function SponsorEditor({ isEditMode, sponsors = [], onAdd, onRemo
                 <div className="text-[10px] text-white/40 uppercase">{s.tier}</div>
               </div>
               {s.affiliate_link && (
-                <a href={s.affiliate_link} target="_blank" rel="noopener noreferrer" className="ml-auto text-white/30 hover:text-white transition-colors">
+                <a href={s.affiliate_link} aria-label={`Visit ${s.name}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-white/30 hover:text-white transition-colors">
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
@@ -74,7 +74,7 @@ export default function SponsorEditor({ isEditMode, sponsors = [], onAdd, onRemo
 
   // Edit mode
   return (
-    <div className="w-full">
+    <div className={`channel-sponsor-editor w-full ${compact ? 'is-compact' : ''}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-bold text-lg flex items-center gap-2">
           Sponsors & Partners
@@ -139,7 +139,7 @@ export default function SponsorEditor({ isEditMode, sponsors = [], onAdd, onRemo
               <option value="silver">Silver</option>
               <option value="bronze">Bronze</option>
             </select>
-            <button onClick={() => onRemove(i)} className="text-white/30 hover:text-red-400 transition-colors">
+            <button onClick={() => onRemove(i)} aria-label={`Remove ${s.name}`} className="text-white/30 hover:text-red-400 transition-colors">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
