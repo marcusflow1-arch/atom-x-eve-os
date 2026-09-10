@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 
 export const AURA_DAILY_KEY = ['aura-daily-edition'];
 const rowsOf = (value) => Array.isArray(value) ? value : value?.data || [];
-const SOURCES = ['PlatformUpdate', 'Post', 'AuraStreamSchedule', 'StreamVideo'];
+const SOURCES = ['PlatformUpdate', 'Post', 'AuraStreamSchedule', 'StreamVideo', 'StreamGameVoteBallot'];
 
 export async function readAuraDailyFeed(signal, now = Date.now()) {
   const requests = [
@@ -12,6 +12,8 @@ export async function readAuraDailyFeed(signal, now = Date.now()) {
     ['posts', () => base44.entities.Post.filter({ community: { $in: ['guide', 'tips', 'achievements', 'farming'] } }, '-created_date', 4, 0, ['id', 'title', 'content', 'community', 'game_title', 'image_url', 'challenge_target_user_id', 'created_date'])],
     ['schedules', () => base44.entities.AuraStreamSchedule.filter({ status: 'scheduled', scheduled_start: { $gte: new Date(now).toISOString(), $lte: new Date(now + 7 * 86400000).toISOString() } }, 'scheduled_start', 6, 0, ['id', 'user_id', 'game_id', 'title', 'scheduled_start', 'scheduled_end', 'status'])],
     ['videos', () => base44.entities.StreamVideo.filter({ visibility: 'public' }, '-created_date', 6, 0, ['id', 'title', 'description', 'thumbnail_url', 'video_url', 'game_category', 'duration', 'visibility', 'view_count', 'created_date'])],
+    ['moments', () => base44.entities.StreamVideo.filter({ visibility: 'public', duration: { $gte: 1, $lte: 180 } }, '-created_date', 12, 0, ['id', 'title', 'description', 'thumbnail_url', 'video_url', 'game_category', 'duration', 'visibility', 'view_count', 'created_date'])],
+    ['requests', () => base44.entities.StreamGameVoteBallot.filter({ created_date: { $gte: new Date(now - 7 * 86400000).toISOString(), $lte: new Date(now).toISOString() } }, '-created_date', 500, 0, ['id', 'game_key', 'game_name', 'created_date'])],
   ];
   const results = await Promise.allSettled(requests.map(([, read]) => read()));
   signal?.throwIfAborted();

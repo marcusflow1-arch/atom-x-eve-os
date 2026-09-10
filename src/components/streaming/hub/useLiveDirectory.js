@@ -5,7 +5,7 @@ import { buildDiscovery } from './discoveryModel';
 
 export const DIRECTORY_KEY = ['live-discovery-directory'];
 export const PUBLIC_FIELDS = {
-  Game: ['id', 'title', 'genre', 'cover_image', 'banner_image', 'created_date'],
+  Game: ['id', 'title', 'genre', 'cover_image', 'banner_image', 'created_date', 'release_date', 'original_year'],
   StreamerProfile: ['id', 'user_id', 'display_name', 'bio', 'tagline', 'avatar_url', 'cover_image_url', 'follower_count', 'personality_traits', 'created_date'],
   Stream: ['id', 'streamer_id', 'title', 'game_id', 'tags', 'mode', 'started_at', 'ended_at', 'is_live', 'viewer_count', 'preview_image_url', 'playback_url', 'preview_video_url', 'max_viewers', 'created_date'],
   AuraStream: ['id', 'streamer_id', 'title', 'game_id', 'category', 'tags', 'started_at', 'is_live', 'viewer_count', 'thumbnail_url', 'video_url', 'created_date'],

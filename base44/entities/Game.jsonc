@@ -14,6 +14,11 @@
       "type": "number",
       "description": "Original release year"
     },
+    "release_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Confirmed release date (YYYY-MM-DD), used for Aura's release discovery lane"
+    },
     "genre": {
       "type": "string",
       "enum": [

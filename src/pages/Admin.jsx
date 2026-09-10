@@ -420,6 +420,7 @@ export default function Admin() {
               screenshots: igdbGame.screenshots?.length > 0 ? igdbGame.screenshots : existingGame.screenshots,
               video_urls: igdbGame.video_urls?.length > 0 ? igdbGame.video_urls : existingGame.video_urls,
               trailer_url: igdbGame.trailer_url || existingGame.trailer_url,
+              ...(Number.isFinite(Date.parse(igdbGame.release_date)) ? { release_date: new Date(igdbGame.release_date).toISOString().slice(0, 10) } : {}),
               genre: igdbGame.genre || existingGame.genre,
               developer: igdbGame.developer || existingGame.developer
             });
@@ -433,6 +434,7 @@ export default function Admin() {
               screenshots: igdbGame.screenshots || [],
               video_urls: igdbGame.video_urls || [],
               trailer_url: igdbGame.trailer_url || '',
+              ...(Number.isFinite(Date.parse(igdbGame.release_date)) ? { release_date: new Date(igdbGame.release_date).toISOString().slice(0, 10) } : {}),
               genre: igdbGame.genre?.toLowerCase() || 'action',
               price: 59.99, // Default price since IGDB doesn't have prices
               status: 'available',

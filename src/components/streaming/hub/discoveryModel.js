@@ -31,7 +31,7 @@ export function buildDiscovery({ games = [], profiles = [], streams = [], auraSt
     const name = normalizeText(game.title);
     if (!name) continue;
     const existing = gamesByName.get(name);
-    const category = existing || { id: game.id, title: game.title, genre: game.genre || 'Other', image: game.cover_image || game.banner_image, addedAt: timestamp(game.created_date), viewers: 0, liveCount: 0 };
+    const category = existing || { id: game.id, title: game.title, genre: game.genre || 'Other', image: game.cover_image || game.banner_image, addedAt: timestamp(game.created_date), releaseDate: game.release_date || '', originalYear: Number(game.original_year) || 0, viewers: 0, liveCount: 0 };
     if (!existing) gamesByName.set(name, category);
     gameMap.set(game.id, category);
   }
@@ -60,6 +60,9 @@ export function buildDiscovery({ games = [], profiles = [], streams = [], auraSt
           prior.url ||= row.video_url || row.playback_url || '';
           prior.previewUrl ||= row.preview_video_url || row.video_url || row.playback_url || '';
           prior.tags = [...new Set([...prior.tags, ...(row.tags || [])])];
+          prior.broadcastTags = [...new Set([...prior.broadcastTags, ...(row.tags || [])].filter((tag) => typeof tag === 'string'))];
+          prior.category ||= row.category || '';
+          prior.mode ||= row.mode || '';
           if (prior.gameId.startsWith('category:') && !game.id.startsWith('category:')) {
             prior.gameId = game.id; prior.game = game.title; prior.gameAddedAt = game.addedAt;
           }
@@ -71,6 +74,7 @@ export function buildDiscovery({ games = [], profiles = [], streams = [], auraSt
         name: profile?.display_name || 'Live channel', bio: profile?.bio || '', tagline: profile?.tagline || '',
         avatar: profile?.avatar_url, followers: count(profile?.follower_count),
         title: row.title || 'Live stream', gameId: game.id, game: game.title,
+        mode: row.mode || '', category: row.category || '', broadcastTags: (row.tags || []).filter((tag) => typeof tag === 'string'),
         thumbnail: row.preview_image_url || row.thumbnail_url || game.image || profile?.cover_image_url,
         url: row.video_url || row.playback_url || '', previewUrl: row.preview_video_url || row.video_url || row.playback_url || '',
         viewers: count(row.viewer_count), maxViewers: count(row.max_viewers), isLive: true,

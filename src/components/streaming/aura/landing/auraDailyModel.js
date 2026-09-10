@@ -15,7 +15,7 @@ export function formatVideoDuration(seconds) {
   return minutes < 60 ? `${minutes}:${remainder}` : `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}:${remainder}`;
 }
 
-export function buildAuraDailyEdition(raw = {}, categories = [], now = Date.now()) {
+export function buildAuraDailyEdition(raw = {}, categories = [], now = Date.now(), videoLimit = 6) {
   const data = raw || {};
   const gameMap = new Map(categories.map((game) => [game.id, game]));
   const profileMap = new Map();
@@ -35,7 +35,7 @@ export function buildAuraDailyEdition(raw = {}, categories = [], now = Date.now(
   const videos = (data.videos || []).filter((video) => video.visibility === 'public' && video.title && hasMedia(video.video_url) && timestamp(video.created_date) <= now).map((video) => ({
     id: `video:${video.id}`, kind: 'video', title: video.title, description: video.description || '', image: video.thumbnail_url || categories.find((game) => normalizeText(game.title) === normalizeText(video.game_category))?.image,
     url: video.video_url, label: video.game_category || 'Community video', duration: formatVideoDuration(video.duration), views: Math.max(0, Number(video.view_count) || 0), publishedAt: timestamp(video.created_date), source: 'Public video library',
-  })).sort(recentFirst).slice(0, 6);
+  })).sort(recentFirst).slice(0, videoLimit);
   const newGames = categories.filter((game) => game.addedAt > 0 && game.addedAt <= now).slice().sort((a, b) => b.addedAt - a.addedAt || a.title.localeCompare(b.title)).slice(0, 4);
   return { updates, posts, schedules, videos, newGames, failures: data.failures || [] };
 }
