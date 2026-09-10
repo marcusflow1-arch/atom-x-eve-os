@@ -18,6 +18,8 @@ import ClanChatHub from '@/components/clan/ClanChatHub';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import ClanIntro from '@/components/clan/ClanIntro';
 import ClanStronghold from '@/components/clan/ClanStronghold';
+import ClanHomeHeader from '@/components/clan/ClanHomeHeader';
+import '@/components/clan/clanPresentation.css';
 import ClanBottomNav from '@/components/clan/ClanBottomNav';
 import ClanAdminOverview from '@/components/clan/ClanAdminOverview';
 import ClanRosterPage from '@/components/clan/ClanRosterPage';
@@ -381,6 +383,7 @@ export default function ClanPage() {
 
     return (
         <GlassPageFrame
+            className="clan-surface"
             sidebarVisible={sidebarVisible}
             onSidebarToggle={toggleSidebar}
             bottomContent={
@@ -393,7 +396,7 @@ export default function ClanPage() {
                 isPrivileged={isPrivileged}
             />
         }>
-        <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+        <div className="clan-canvas h-screen w-full flex relative overflow-hidden font-sans">
 
             {/* Left rail — overlay extension: floats over the page instead of pushing it */}
             {sidebarVisible && (
@@ -403,65 +406,10 @@ export default function ClanPage() {
             )}
 
             {/* 95% Main Clan Area */}
-            <div className="flex-1 relative h-full pt-20">
+            <div className="clan-page-content">
                 <SidebarOverlays className="absolute top-[16px] left-6 right-6 bottom-[100px] z-[80]" />
 
-                {bottomTab === 'home' && (
-                    <>
-                        {/* Clan Info & Stats - Top Left under header */}
-                        <div className="absolute top-20 left-8 z-30 pointer-events-auto">
-                            <div className="flex items-center gap-4 mb-3">
-                                <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-3 pr-6 shadow-lg">
-                                    <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
-                                        {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-7 h-7 text-white/50" />}
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <h2 className="text-lg font-black text-white tracking-wider uppercase leading-tight mb-1">{clanForRender?.name || 'Entering Division'}</h2>
-                                        <div className="flex items-center gap-3 text-xs font-medium text-white/60">
-                                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
-                                            <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}/50</span>
-                                            <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Central Stats - Top Middle */}
-                        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex flex-col items-center gap-3">
-                            <div className="flex gap-3">
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Treasury</span>
-                                    <span className="text-base font-black text-amber-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"><Zap className="w-4 h-4" /> 1.45M</span>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Power</span>
-                                    <span className="text-base font-black text-cyan-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"><Activity className="w-4 h-4" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Rank</span>
-                                    <span className="text-base font-black text-purple-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"><Shield className="w-4 h-4" /> Gold III</span>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Resources</span>
-                                    <span className="text-base font-black text-green-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">3,240</span>
-                                </div>
-                            </div>
-
-                        {/* Stronghold Toggle Box */}
-                        <button
-                            onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
-                                className={`px-6 py-2 rounded-xl border backdrop-blur-md shadow-lg transition-all flex items-center justify-center gap-2 w-[180px] ${
-                                    isStrongholdEnabled 
-                                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
-                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                                }`}
-                            >
-                                <span className="text-xs font-bold uppercase tracking-widest">Stronghold</span>
-                            </button>
-                        </div>
-                    </>
-                )}
 
                 <AnimatePresence mode="wait">
                     {bottomTab === 'home' && (
@@ -472,7 +420,8 @@ export default function ClanPage() {
                             exit={{ opacity: 0 }}
                             className="absolute inset-0"
                         >
-                            <ClanStronghold 
+                            <ClanStronghold
+                                header={<ClanHomeHeader clan={clanForRender} memberCount={members?.length} strongholdEnabled={isStrongholdEnabled} onToggleStronghold={() => setIsStrongholdEnabled(!isStrongholdEnabled)} />}
                                 clan={clanForRender} 
                                 activeVoiceRooms={activeVoiceRooms} 
                                 isRosterOpen={isRosterOpen} 
@@ -486,7 +435,7 @@ export default function ClanPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="absolute top-20 left-4 right-4 bottom-20 overflow-hidden"
+                            className="clan-pane"
                         >
                             <ClanChatHub clan={clanForRender} myRole={currentUserRole} />
                         </motion.div>
@@ -497,7 +446,7 @@ export default function ClanPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="absolute top-20 left-0 right-0 bottom-20 overflow-hidden"
+                            className="clan-pane"
                         >
                             <ClanAdminOverview clan={clanForRender} />
                         </motion.div>
@@ -508,7 +457,7 @@ export default function ClanPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="absolute top-20 left-0 right-0 bottom-20 overflow-hidden"
+                            className="clan-pane"
                         >
                             <ClanGameSelector 
                                clanId={clanForRender?.id} 
