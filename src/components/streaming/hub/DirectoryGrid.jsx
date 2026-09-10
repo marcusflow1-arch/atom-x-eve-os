@@ -3,7 +3,7 @@ import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual';
 import { GameCard, StreamCard } from './DirectoryCards';
 
 /** Only visible rows and the keyboard focus row are mounted, even with thousands of channels. */
-export default function DirectoryGrid({ items, kind = 'streams', scrollRef, onSelect }) {
+export default function DirectoryGrid({ items, kind = 'streams', scrollRef, onSelect, layoutKey = '' }) {
   const rootRef = useRef(null);
   const pendingFocus = useRef(false);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -29,7 +29,7 @@ export default function DirectoryGrid({ items, kind = 'streams', scrollRef, onSe
     if (rootRef.current?.parentElement) observer?.observe(rootRef.current.parentElement);
     window.addEventListener('resize', measure);
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
-  }, [scrollRef, kind]);
+  }, [scrollRef, kind, layoutKey]);
   useEffect(() => { virtual.measure(); }, [rowHeight, virtual]);
   useEffect(() => { setFocusIndex(0); }, [items]);
   useLayoutEffect(() => {
