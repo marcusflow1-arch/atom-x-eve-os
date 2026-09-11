@@ -14,6 +14,7 @@ import TitleSubTab from './progression/hub/TitleSubTab';
 import SpiritServicesSubTab from './progression/hub/SpiritServicesSubTab';
 import ElixirsSubTab from './progression/hub/ElixirsSubTab';
 import WarBandsSubTab from './progression/hub/WarBandsSubTab';
+import CombatDoctrineSubTab from './progression/hub/CombatDoctrineSubTab';
 
 // ─── Character Hub ────────────────────────────────────────────────────────
 // One modern player-owned menu for character progression and formerly-NPC
@@ -35,6 +36,7 @@ const MASTERY_SUB_TABS = [
 
 const SERVICE_SUB_TABS = [
   { id: 'spirit',  label: 'Services' },
+  { id: 'combat',  label: 'Combat' },
   { id: 'elixirs', label: 'Elixirs' },
   { id: 'wars',    label: 'War Bands' },
 ];
@@ -128,6 +130,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'aura'  && <AuraSubTab />}
           {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
           {mainTab === 'services' && serviceTab === 'spirit' && <SpiritServicesSubTab />}
+          {mainTab === 'services' && serviceTab === 'combat' && <CombatDoctrineSubTab />}
           {mainTab === 'services' && serviceTab === 'elixirs' && <ElixirsSubTab />}
           {mainTab === 'services' && serviceTab === 'wars' && <WarBandsSubTab />}
         </div>
