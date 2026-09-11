@@ -7,13 +7,25 @@ import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityC
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
-function GlassSlot({ icon: Icon, label }) {
+function GlassSlot({ icon: Icon, label, active, onClick }) {
   return (
-    <div aria-label={label} className="relative h-[54px] w-[54px] flex-shrink-0 rounded-xl border border-white/[0.16] bg-white/[0.055] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_8px_24px_rgba(0,0,0,0.18)]">
-      <div className="absolute inset-0 rounded-xl border border-cyan-300/[0.04]" />
-      {Icon && <Icon className="absolute left-1/2 top-[12px] -translate-x-1/2 w-4 h-4 text-white/55" />}
-      <span className="absolute bottom-[5px] left-0 right-0 text-center text-[6px] uppercase tracking-wider text-white/45">{label}</span>
-    </div>
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      data-dashboard-quick-control
+      onClick={onClick}
+      className={`relative h-[54px] w-[54px] flex-shrink-0 rounded-xl border backdrop-blur-2xl transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.10] ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : 'border-white/[0.16] bg-white/[0.055]'}`}
+      style={{
+        boxShadow: active
+          ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 24px rgba(34,211,238,0.18), 0 8px 24px rgba(0,0,0,0.20)'
+          : 'inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 24px rgba(0,0,0,0.18)'
+      }}
+    >
+      <div className={`pointer-events-none absolute inset-0 rounded-xl border ${active ? 'border-cyan-200/[0.12]' : 'border-cyan-300/[0.04]'}`} />
+      {Icon && <Icon className={`pointer-events-none absolute left-1/2 top-[12px] -translate-x-1/2 w-4 h-4 ${active ? 'text-cyan-100' : 'text-white/55'}`} />}
+      <span className={`pointer-events-none absolute bottom-[5px] left-0 right-0 text-center text-[6px] uppercase tracking-wider ${active ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
+    </button>
   );
 }
 
@@ -62,6 +74,7 @@ export default function DashboardAvatarOverview() {
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
   const [interactionDimmed, setInteractionDimmed] = useState(false);
+  const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
 
   useEffect(() => {
@@ -78,14 +91,19 @@ export default function DashboardAvatarOverview() {
     };
   }, []);
 
+  useEffect(() => {
+    if (surface !== 'dashboard') setActiveQuickPanel(null);
+  }, [surface]);
+
   // Any dashboard control outside the 3D viewer / attribute panel puts those
   // two background surfaces into the same subdued state used for game/library
-  // transitions. Clicking the same control again toggles the dim state back.
+  // transitions. The seven quick-dock controls are excluded because their own
+  // glass workspace supplies the blur without changing the surrounding layout.
   useEffect(() => {
     const handlePointerDown = event => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]')) return;
+      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]')) return;
 
       const interactive = target.closest('button, a, [role="button"], input, select, textarea');
       if (!interactive) return;
@@ -100,6 +118,7 @@ export default function DashboardAvatarOverview() {
 
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
+        setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
       }
@@ -149,16 +168,15 @@ export default function DashboardAvatarOverview() {
   }), [progression, user]);
 
   const levelProgress = Math.min(100, stats.currentXP / stats.nextXP * 100);
-  const gameActive = surface === 'game';
   const backgroundDimmed = interactionDimmed || surface !== 'dashboard';
   const slotItems = [
-    { icon: BarChart3, label: 'Stats' },
-    { icon: Users, label: 'Friends' },
-    { icon: Radio, label: 'Live' },
-    { icon: Trophy, label: 'Cards' },
-    { icon: Sparkles, label: 'AI Story' },
-    { icon: Shield, label: 'AI Battle' },
-    { icon: Crown, label: 'Season' }
+    { id: 'stats', icon: BarChart3, label: 'Stats' },
+    { id: 'friends', icon: Users, label: 'Friends' },
+    { id: 'live', icon: Radio, label: 'Live' },
+    { id: 'cards', icon: Trophy, label: 'Cards' },
+    { id: 'ai-story', icon: Sparkles, label: 'AI Story' },
+    { id: 'ai-battle', icon: Shield, label: 'AI Battle' },
+    { id: 'season', icon: Crown, label: 'Season' }
   ];
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
@@ -170,9 +188,40 @@ export default function DashboardAvatarOverview() {
 
   return (
     <div data-dashboard-avatar-overview className="fixed left-[390px] right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible">
-      <div className={`absolute left-1/2 top-[570px] z-40 flex items-center gap-[4px] h-[54px] w-fit -translate-x-[270px] transition-all duration-500 ${backgroundDimmed ? 'opacity-30 blur-[4px]' : 'opacity-100'}`}>
-        {slotItems.map(item => <GlassSlot key={item.label} icon={item.icon} label={item.label} />)}
-      </div>
+      {surface === 'dashboard' && activeQuickPanel && (
+        <div
+          aria-label={`${activeQuickPanel} workspace`}
+          className="absolute left-[8px] right-[8px] top-[8px] bottom-[74px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
+          style={{
+            background: 'linear-gradient(135deg, rgba(20,29,44,0.52) 0%, rgba(10,16,28,0.30) 48%, rgba(22,34,50,0.44) 100%)',
+            backdropFilter: 'blur(28px) saturate(145%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(145%)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 60px rgba(103,232,249,0.025), 0 30px 70px rgba(0,0,0,0.24)',
+            clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)'
+          }}
+        >
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_24%_12%,rgba(103,232,249,0.08),transparent_33%),radial-gradient(circle_at_82%_82%,rgba(129,140,248,0.055),transparent_34%)]" />
+          <div className="absolute inset-[1px] pointer-events-none border border-white/[0.025]" style={{ clipPath: 'polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)' }} />
+        </div>
+      )}
+
+      {surface === 'dashboard' && (
+        <div
+          className="absolute bottom-[10px] z-50 flex h-[54px] w-fit -translate-x-1/2 items-center gap-[4px] pointer-events-auto"
+          style={{ left: 'calc((100% - 338px) / 2)' }}
+        >
+          {slotItems.map(item => (
+            <GlassSlot
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              active={activeQuickPanel === item.id}
+              onClick={() => setActiveQuickPanel(current => current === item.id ? null : item.id)}
+            />
+          ))}
+        </div>
+      )}
 
       <div className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}>
         <DashboardAvatarScene />
