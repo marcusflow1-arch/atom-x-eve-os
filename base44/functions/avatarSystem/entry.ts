@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
 
+type AnyObj = Record<string, any>;
+
 export default async function(req) {
     try {
         const base44 = createClientFromRequest(req);
@@ -20,22 +22,32 @@ export default async function(req) {
                 try { validated = validateGenesis(requestBody); } catch(error) { return Response.json({success:false,error:error.message}, {status:400}); }
                 const {profile,companion} = validated;
                 const environment = requestBody.preview ? 'preview' : 'live';
-                // Completed identities are never overwritten by replaying first-time setup.
+
+                // A legacy Avatar row is not proof that onboarding was completed.
+                // Only skip first-time setup when BOTH the avatar and the live
+                // onboarding profile carry explicit completion markers.
+                let existingProfiles: AnyObj[] = [];
                 if (environment === 'live') {
                     const existing = await base44.entities.Avatar.filter({user_id:user.id}, 'created_date', 1);
-                    if (existing[0] && existing[0].setup_status !== 'pending') return Response.json({success:true,avatar:existing[0],alreadyInitialized:true});
+                    existingProfiles = await base44.entities.OnboardingProfile.filter({user_id:user.id,environment}, 'created_date', 1);
+                    if (existing[0]?.setup_status === 'complete' && existingProfiles[0]?.completed === true) {
+                        return Response.json({success:true,avatar:existing[0],profile:existingProfiles[0],alreadyInitialized:true});
+                    }
                 }
-                const rows = await base44.entities.OnboardingProfile.filter({user_id:user.id,environment}, 'created_date', 1);
+
+                const rows = environment === 'live'
+                    ? existingProfiles
+                    : await base44.entities.OnboardingProfile.filter({user_id:user.id,environment}, 'created_date', 1);
                 const values = {...profile,user_id:user.id,environment,companion,completed:environment === 'preview'};
                 let savedProfile = rows[0] ? await base44.entities.OnboardingProfile.update(rows[0].id,values) : await base44.entities.OnboardingProfile.create(values);
                 if (environment === 'preview') return Response.json({success:true,preview:true,profile:savedProfile,avatar:companion});
                 const initialized = await initializeAvatar(base44,user,{...companion,setup:true});
-                await base44.entities.Avatar.update(initialized.avatar.id,companion);
+                await base44.entities.Avatar.update(initialized.avatar.id,{...companion,setup_status:'pending'});
                 const traits = companion.personality === 'warm' ? {empathy_level:75,aggression_tendency:30} : companion.personality === 'curious' ? {risk_tolerance:65,behavioral_traits:{loyalty:50,curiosity:80,caution:35,humor:65,wisdom:50,impulsiveness:50}} : {risk_tolerance:35,aggression_tendency:35};
                 await base44.asServiceRole.entities.AIBehaviorState.update(initialized.behaviorState.id,traits);
                 await base44.auth.updateMe({username:profile.username,onboarding_complete:true,is_first_time:false});
                 savedProfile = await base44.entities.OnboardingProfile.update(savedProfile.id,{completed:true,avatar_id:initialized.avatar.id});
-                const avatar = await base44.entities.Avatar.update(initialized.avatar.id,{setup_status:'complete'});
+                const avatar = await base44.entities.Avatar.update(initialized.avatar.id,{setup_status:'complete',setup_version:companion.setup_version || 1});
                 return Response.json({success:true,avatar,profile:savedProfile});
             }
             case 'initializeAvatar': {
@@ -166,7 +178,6 @@ async function saveAvatarAppearance(base44, userId, appearance) {
     
     let avatar;
     if (avatars.length === 0) {
-        // Create new avatar
         avatar = await base44.entities.Avatar.create({
             user_id: userId,
             name: appearance.name || 'Player Avatar',
@@ -179,7 +190,6 @@ async function saveAvatarAppearance(base44, userId, appearance) {
             morph_targets: appearance.morphTargets || {}
         });
     } else {
-        // Update existing avatar
         avatar = await base44.entities.Avatar.update(avatars[0].id, {
             skin_tone: appearance.skinTone,
             hair_color: appearance.hairColor,
@@ -200,13 +210,11 @@ async function loadUserAvatar(base44, userId) {
 
     const avatar = avatars[0];
     
-    // Get equipped items
     const equippedItems = avatar.equipped_items || [];
     const equipment = [];
     
     for (const itemId of equippedItems) {
         try {
-            // Try to find in Equipment entity
             const equipmentItems = await base44.entities.Equipment.filter({ id: itemId });
             if (equipmentItems.length > 0) {
                 equipment.push(equipmentItems[0]);
@@ -231,7 +239,6 @@ async function equipItemToAvatar(base44, userId, itemId, slot) {
     const avatar = avatars[0];
     const currentEquipment = avatar.equipped_items || [];
     
-    // Check if item exists
     const items = await base44.entities.Equipment.filter({ id: itemId });
     if (items.length === 0) {
         throw new Error('Equipment item not found');
@@ -239,13 +246,7 @@ async function equipItemToAvatar(base44, userId, itemId, slot) {
 
     const item = items[0];
     
-    // Remove any existing item in this slot
-    const filteredEquipment = currentEquipment.filter(id => {
-        // This would need more sophisticated slot checking in a real implementation
-        return id !== itemId;
-    });
-    
-    // Add new item
+    const filteredEquipment = currentEquipment.filter(id => id !== itemId);
     filteredEquipment.push(itemId);
 
     const updatedAvatar = await base44.entities.Avatar.update(avatar.id, {
@@ -266,8 +267,6 @@ async function unequipItemFromAvatar(base44, userId, slot) {
     }
 
     const avatar = avatars[0];
-    // Implementation would depend on how slots are tracked
-    // This is a simplified version
     
     return {
         success: true,
@@ -301,8 +300,6 @@ async function getAvatarStats(base44, userId) {
     }
 
     const avatar = avatars[0];
-    
-    // Calculate total power from equipment
     const equippedItems = avatar.equipped_items || [];
     let totalPower = 0;
     
@@ -311,15 +308,13 @@ async function getAvatarStats(base44, userId) {
             const items = await base44.entities.Equipment.filter({ id: itemId });
             if (items.length > 0) {
                 const item = items[0];
-                // Calculate power from item stats
                 if (item.stats) {
                     totalPower += Object.values(item.stats).reduce((sum, stat) => 
-                        sum + (typeof stat === 'number' ? stat : 0), 0
-                    );
+                        sum + (typeof stat === 'number' ? stat : 0), 0);
                 }
             }
         } catch (e) {
-            console.warn(`Could not calculate power for item ${itemId}`);
+            console.warn(`Could not calculate power for equipment item ${itemId}`, e);
         }
     }
     
