@@ -184,7 +184,7 @@ export default async function(req) {
     const commit = async (patch: AnyObj, eventType: string, summary: string, metadata: AnyObj = {}) => {
       const before = publicProgression(progression);
       const next = { ...progression, ...patch, last_action: eventType, last_action_at: new Date().toISOString(), revision: Number(progression.revision || 0) + 1 };
-      next.power_score = calcPower(next);
+      next.power_score = publicProgression(next).power_score;
       progression = await base44.asServiceRole.entities.CardProgression.update(progression.id, next);
       await record(eventType, before, publicProgression(progression), summary, metadata);
       return progression;

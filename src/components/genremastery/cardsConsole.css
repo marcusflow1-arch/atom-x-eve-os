@@ -151,7 +151,7 @@ button.cc-card:hover .cc-card-shine { opacity: 1; }
 .cc-notice button { text-decoration: underline; margin-left: 6px; }
 .cc-load-more { display: flex; margin: 28px auto 0; }
 .cc-inspector { position: absolute; inset: 0; z-index: 25; }
-.cc-inspector > div { background: #070c15f2 !important; }
+.cc-inspector > div:not(.card-runtime) { background: #070c15f2 !important; }
 .cc-inspector [data-card-overlay] > div:first-child { border: none !important; background: linear-gradient(90deg,#c4cddd09,transparent) !important; }
 .cc-bottom-nav { display: flex; justify-content: center; align-items: center; gap: 18px; }
 .cc-bottom-nav button { display: flex; align-items: center; gap: 8px; position: relative; padding: 9px 18px; color: #8d9caf; font-size: 11px; text-transform: uppercase; letter-spacing: .7px; transition: color .2s; }

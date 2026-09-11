@@ -9,15 +9,17 @@ export default function useCardProgression(card) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const inFlight = useRef(false);
+  const requestVersion = useRef(0);
   const userCardId = card?.ownedCopies?.[0]?.id || card?.user_card_id || (card?.id?.startsWith('owned:') ? card.id.slice(6) : null);
   const eligible = Boolean(userCardId || (card?.isUnlocked && card?.achievement_id));
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     if (!eligible) { setLoading(false); return; }
     try {
       const response = await base44.functions.invoke('cardProgression', { action: 'getState', userCardId, achievementId: card?.achievement_id, payload: { gameId: card?.gameId, genre: card?.genre, cardImage: card?.image } });
       if (!response.data?.success) throw new Error(response.data?.error || 'Could not load this card.');
-      setState(response.data); setError('');
-    } catch (e) { setError(e.response?.data?.error || e.message); } finally { setLoading(false); }
+      if (version === requestVersion.current && !inFlight.current) { setState(response.data); setError(''); }
+    } catch (e) { if (version === requestVersion.current) setError(e.response?.data?.error || e.message); } finally { if (version === requestVersion.current) setLoading(false); }
   }, [eligible, userCardId, card?.achievement_id, card?.gameId, card?.genre, card?.image]);
   useEffect(() => { setState(null); setLoading(true); load(); }, [load]);
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function useCardProgression(card) {
   }, [state?.userCard?.id, load]);
   const act = async (action, payload = {}) => {
     if (inFlight.current || !state) return false;
-    inFlight.current = true; setBusy(true); setError('');
+    inFlight.current = true; requestVersion.current += 1; setBusy(true); setError('');
     try {
       const response = await base44.functions.invoke('cardProgression', { action, userCardId: state.userCard.id, payload });
       if (!response.data?.success) throw new Error(response.data?.error || 'The action could not be completed.');
