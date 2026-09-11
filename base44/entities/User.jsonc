@@ -51,6 +51,11 @@
     "avatar_url": {
       "type": "string"
     },
+    "avatar_gamer_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Platform currency balance used by the card market."
+    },
     "unlocked_achievements": {
       "type": "array",
       "items": {
