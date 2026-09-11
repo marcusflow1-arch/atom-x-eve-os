@@ -2,9 +2,11 @@ import { getSkillById, scaleStat } from './skillRegistry';
 import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValidator';
 import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
+import { getLoadout } from './loadoutStore';
 import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 import { primeCriticalFocus, consumeCriticalFocusForSingleHit } from './twelveSkyFocusState';
+import { armForcedCriticalHit } from '../combat/forcedCriticalBridge';
 import {
   onTripleSlashCast,
   onTripleSlashFinalHit,
@@ -21,9 +23,14 @@ function dispatchStrike(skill, hitIndex, level) {
   if (typeof window === 'undefined') return;
   const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
   const multiplier = applyMasteryToSkillMultiplier(baseMult);
+
+  // Consume Critical Focus only when an actual single-hit strike is emitted.
+  // The shared stats pipeline consumes the forced-crit token on the damage roll,
+  // so bosses and normal enemies use exactly the same calculation path.
   const forceCritical = skill.cast_type === CAST_TYPE.SINGLE_HIT
     ? consumeCriticalFocusForSingleHit()
     : false;
+  if (forceCritical) armForcedCriticalHit(1);
 
   window.dispatchEvent(new CustomEvent('playerSkillStrike', {
     detail: {
@@ -94,15 +101,14 @@ export function castSkill(skillId, ctx = {}) {
   }
 
   const level = ctx.level || 1;
+  const inferredSlot = Number.isInteger(ctx.slotIndex)
+    ? ctx.slotIndex
+    : getLoadout().activeSlots.indexOf(skillId);
 
-  // Classic combat preset: hotbar slot 2 is the charge/critical-focus action.
-  // The skill occupying it can still have its own visual/buff identity, but it
-  // does not throw an attack packet; it arms the next single-hit finisher.
-  if (ctx.slotIndex === 1) {
-    primeCriticalFocus(ctx.slotIndex);
-    if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) {
-      activateBuff(skillId, level, { maxHP: ctx.maxHP });
-    }
+  // Classic preset: hotbar position 2 is the charge/focus action.
+  if (inferredSlot === 1) {
+    primeCriticalFocus(inferredSlot);
+    if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) activateBuff(skillId, level, { maxHP: ctx.maxHP });
     reportSkillCast(getActiveWeaponId());
     toast(`${skill.icon || '⚡'} Critical Focus armed`);
     return { ok: true, charge: true };
