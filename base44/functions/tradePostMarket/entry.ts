@@ -20,7 +20,7 @@ async function state(base44: any, user: AnyObj) {
       seller: seller ? { id: seller.id, name: seller.username || seller.full_name || 'Player', avatar: seller.avatar_url || '' } : { id: listing.seller_id, name: 'Player', avatar: '' }
     };
   });
-  return { listings: enriched, ownedCards: ownedCards.filter((c: AnyObj) => !c.is_equipped && c.trade_status !== 'locked_in_trade'), balance: Number(user.avatar_gamer_points || 0) };
+  return { userId: user.id, listings: enriched, ownedCards: ownedCards.filter((c: AnyObj) => !c.is_equipped && c.trade_status !== 'locked_in_trade'), balance: Number(user.avatar_gamer_points || 0) };
 }
 
 Deno.serve(async (req) => {
