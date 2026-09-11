@@ -6,6 +6,8 @@ import { getSkillById, scaleStat } from './skillRegistry';
 import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValidator';
 import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
+import { getLoadout, startCooldown } from './loadoutStore';
+import { getPlayerHUD } from '../playerHUDStore';
 import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 import { primeBurstCharge, consumeBurstCharge } from '../twelvesky/burstChargeStore';
@@ -28,8 +30,7 @@ function dispatchStrike(skill, hitIndex, level) {
 
   // TwelveSky-style burst rule: a short charge window is consumed ONLY by a
   // single-hit attack. Multi-hit and AoE skills keep their farming/sustained
-  // role and do not waste the charge. The existing combat pipeline already
-  // consumes `multiplier`, so this becomes real damage without a second path.
+  // role and do not waste the charge.
   let burstCritical = false;
   if (skill.cast_type === CAST_TYPE.SINGLE_HIT && hitIndex === 0) {
     const charged = consumeBurstCharge();
@@ -115,10 +116,7 @@ export function castSkill(skill_id, ctx = {}) {
   if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) {
     activateBuff(skill_id, level, { maxHP: ctx.maxHP });
 
-    // Focus doubles as the modernized charge setup. It keeps its existing
-    // next-five-attacks buff, while also opening a 5-second one-shot burst
-    // window for the next SINGLE-HIT skill. This recreates the old charge →
-    // single-hit kill rhythm without forcing a separate NPC/trainer workflow.
+    // Focus doubles as the modernized charge setup.
     if (skill_id === 'focus') {
       primeBurstCharge({ durationMs: 5000, multiplier: 3 });
       toast('⚡ Focus charged — next single-hit skill bursts for critical damage');
@@ -155,3 +153,32 @@ export function castSkill(skill_id, ctx = {}) {
   toast(`${skill.icon} ${skill.skill_name}`);
   return { ok: true };
 }
+
+// GameWorld3D historically handled keys 1–8 inline. Keep that proven path
+// untouched and add 9 + 0 here for the classic ten-skill layout (0 = slot 10).
+// A global guard prevents duplicate listeners during hot reloads.
+function installExtendedTenSlotHotkeys() {
+  if (typeof window === 'undefined' || window.__atomTwelveSkyTenSlotHotkeys) return;
+  window.__atomTwelveSkyTenSlotHotkeys = true;
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    const target = e.target;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+
+    const slotIndex = e.key === '9' ? 8 : e.key === '0' ? 9 : -1;
+    if (slotIndex < 0) return;
+
+    const loadout = getLoadout();
+    const skillId = loadout.activeSlots[slotIndex];
+    if (!skillId || (loadout.cooldowns[slotIndex] || 0) > 0) return;
+
+    const hud = getPlayerHUD();
+    const result = castSkill(skillId, { level: hud.level || 1, maxHP: hud.maxHP || 1 });
+    if (result.ok) {
+      startCooldown(slotIndex);
+      e.preventDefault();
+    }
+  });
+}
+
+installExtendedTenSlotHotkeys();
