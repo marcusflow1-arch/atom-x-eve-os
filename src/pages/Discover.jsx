@@ -3,6 +3,7 @@ import AuraBottomNav from '@/components/streaming/AuraBottomNav';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import DiscoverHub from '@/components/streaming/discover/DiscoverHub';
+import '@/components/streaming/aura/auraSharedGlassTheme.css';
 
 export default function Discover() {
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();

@@ -22,6 +22,7 @@ import useChannelHomeData from '@/components/streaming/channel/useChannelHomeDat
 import ChannelHomeContent from '@/components/streaming/channel/ChannelHomeContent';
 import ChannelCommunityChat from '@/components/streaming/channel/ChannelCommunityChat';
 import '@/components/streaming/channel/channelHome.css';
+import '@/components/streaming/aura/auraSharedGlassTheme.css';
 
 const CARD_GAMES = [
   { id: 'elder-scrolls', name: 'The Elder Scrolls', genre: 'Fantasy', color: 'from-indigo-700/70 to-cyan-700/50', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/306130/header.jpg' },
