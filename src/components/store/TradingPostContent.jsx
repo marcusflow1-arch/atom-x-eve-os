@@ -1,237 +1,93 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Flame, TrendingUp, ShoppingBag, ArrowUpRight } from 'lucide-react';
-import { Game } from '@/entities/Game';
-import { aiGamesList, otherSampleGames, trendingGames, newReleases } from './mockData';
-import { generateGameCards } from './tradingpost/tradingPostMock';
-import TradingPostFilters from './tradingpost/TradingPostFilters';
-import TradingPostGameGrid from './tradingpost/TradingPostGameGrid';
-import TradingPostCardGrid from './tradingpost/TradingPostCardGrid';
-import TradingPostListingBoard from './tradingpost/TradingPostListingBoard';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeftRight, BadgeDollarSign, Boxes, ChevronRight, Coins, Gem, Loader2, Search, ShoppingBag, Sparkles, Store, Tag, Ticket, Users, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
-const FALLBACK_TRENDING = [...trendingGames, ...newReleases, ...aiGamesList, ...otherSampleGames];
+const rarityOrder = ['Common','Uncommon','Rare','Epic','Legendary','Mythic','Mythical','Unique','Limitless'];
+const rarityTone = {
+  Common:'text-slate-300', Uncommon:'text-emerald-300', Rare:'text-cyan-300', Epic:'text-violet-300', Legendary:'text-amber-300', Mythic:'text-rose-300', Mythical:'text-rose-300', Unique:'text-fuchsia-300', Limitless:'text-white'
+};
 
-function getGameImage(game) {
-  return game?.cover_image || game?.image || game?.coverImage || game?.thumbnail || '';
+function invoke(action, payload = {}) {
+  return base44.functions.invoke('tradePostMarket', { action, payload });
 }
 
-function getCardPreview(game) {
-  try {
-    return generateGameCards(game).slice(0, 3);
-  } catch {
-    return [];
-  }
+function BoothCard({ listing, mine, onBuy, onTrade, onCancel, busy }) {
+  const card = listing.card_snapshot || {};
+  return <article className="group relative overflow-hidden border border-white/[0.08] bg-[#080c14] min-h-[335px] flex flex-col">
+    <div className="relative h-44 overflow-hidden bg-[#0d1320]">
+      {card.image ? <img src={card.image} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(34,211,238,.14),transparent_35%),linear-gradient(150deg,#101827,#05070c)]"/>}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#080c14] via-transparent to-black/10"/>
+      <div className="absolute top-3 left-3 flex items-center gap-2"><span className="bg-black/55 backdrop-blur px-2 py-1 text-[8px] uppercase tracking-[.16em] text-white/65">Booth #{String(listing.id || '').slice(-4).toUpperCase()}</span>{mine && <span className="bg-cyan-300 text-slate-950 px-2 py-1 text-[8px] uppercase tracking-[.16em] font-black">Your Booth</span>}</div>
+      <div className="absolute bottom-3 left-3 right-3"><p className={`text-[9px] uppercase tracking-[.17em] font-bold ${rarityTone[card.rarity] || rarityTone.Common}`}>{card.rarity || 'Common'} · Lv {card.level || 1} · {card.stars || 1}★</p><h3 className="text-lg font-black text-white mt-1 truncate">{card.name || 'Achievement Card'}</h3></div>
+    </div>
+    <div className="p-4 flex-1 flex flex-col">
+      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><span className="text-[8px] uppercase tracking-[.18em] text-white/25">Exhibitor</span><p className="text-xs text-white/70 truncate mt-1">{listing.seller?.name || 'Player'}</p></div><div className="text-right"><span className="text-[8px] uppercase tracking-[.18em] text-white/25">Asking</span><strong className="block text-base text-cyan-200 mt-1">{Number(listing.asking_price || 0).toLocaleString()} AGP</strong></div></div>
+      <div className="grid grid-cols-3 gap-px bg-white/[0.06] mt-4"><div className="bg-[#080c14] p-2"><span className="block text-[7px] uppercase text-white/25">Stage</span><strong className="text-[11px] text-white">{card.stars || 1}</strong></div><div className="bg-[#080c14] p-2"><span className="block text-[7px] uppercase text-white/25">Ascend</span><strong className="text-[11px] text-white">{card.ascension || 0}</strong></div><div className="bg-[#080c14] p-2"><span className="block text-[7px] uppercase text-white/25">Power</span><strong className="text-[11px] text-white">{Number(listing.market_value_score || 0).toLocaleString()}</strong></div></div>
+      <div className="mt-auto pt-4 flex gap-2">{mine ? <button disabled={busy} onClick={() => onCancel(listing)} className="h-9 flex-1 border border-rose-300/20 bg-rose-300/[0.05] text-rose-200 text-[9px] uppercase tracking-wider disabled:opacity-30">Close Booth</button> : <><button disabled={busy} onClick={() => onTrade(listing)} className="h-9 px-3 border border-white/10 text-white/55 hover:text-white text-[9px] uppercase tracking-wider disabled:opacity-30"><ArrowLeftRight className="w-3 h-3 inline mr-1"/>Trade</button><button disabled={busy} onClick={() => onBuy(listing)} className="h-9 flex-1 bg-cyan-300 text-slate-950 text-[9px] font-black uppercase tracking-wider disabled:opacity-30"><ShoppingBag className="w-3 h-3 inline mr-1"/>Buy</button></>}</div>
+    </div>
+  </article>;
 }
 
-function TrendingBuyingShowcase({ games, onSelectGame }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const trending = useMemo(() => {
-    const source = games.length ? games : FALLBACK_TRENDING;
-    const seen = new Set();
-    return source.filter((game) => {
-      const key = game.id || game.title;
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, 30);
-  }, [games]);
-
-  useEffect(() => {
-    if (activeIndex >= trending.length) setActiveIndex(0);
-  }, [trending.length, activeIndex]);
-
-  if (!trending.length) return null;
-
-  const activeGame = trending[activeIndex];
-  const cards = getCardPreview(activeGame);
-
-  const move = (direction) => {
-    setActiveIndex((current) => direction > 0
-      ? (current + 1) % trending.length
-      : (current - 1 + trending.length) % trending.length
-    );
-  };
-
-  return (
-    <section className="relative shrink-0 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_45%_20%,rgba(34,211,238,0.08),transparent_42%)]" />
-      <div className="relative px-6 pt-5 pb-4">
-        <div className="flex items-end justify-between gap-4 mb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Flame className="w-4 h-4 text-orange-400" />
-              <h1 className="text-lg font-black uppercase tracking-[0.16em] text-white">Trending Now</h1>
-            </div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
-              What players are buying right now · Games &amp; collectible cards
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-white/40 mr-1">{activeIndex + 1} / {trending.length}</span>
-            <button onClick={() => move(-1)} aria-label="Previous trending game" className="w-8 h-8 flex items-center justify-center border border-white/10 bg-white/[0.03] text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button onClick={() => move(1)} aria-label="Next trending game" className="w-8 h-8 flex items-center justify-center border border-white/10 bg-white/[0.03] text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors">
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-4 min-h-[172px]">
-          <AnimatePresence mode="wait">
-            <motion.div key={activeGame.id || activeGame.title} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }} className="flex min-w-0 flex-1 gap-4">
-              <button onClick={() => onSelectGame(activeGame)} className="group relative w-[130px] shrink-0 overflow-hidden border border-white/10 bg-black/30 text-left">
-                {getGameImage(activeGame) ? (
-                  <img src={getGameImage(activeGame)} alt={activeGame.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                ) : <div className="absolute inset-0 bg-slate-800" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                <div className="absolute left-3 right-3 bottom-3">
-                  <span className="inline-flex items-center gap-1 text-[8px] uppercase tracking-widest font-bold text-orange-300">
-                    <TrendingUp className="w-3 h-3" /> Trending
-                  </span>
-                </div>
-              </button>
-
-              <div className="min-w-[210px] w-[27%] flex flex-col justify-center border-r border-white/10 pr-5">
-                <button onClick={() => onSelectGame(activeGame)} className="text-left group">
-                  <div className="text-[9px] uppercase tracking-[0.18em] text-cyan-400 font-bold mb-1">Hot Game</div>
-                  <h2 className="text-xl font-black text-white leading-tight group-hover:text-cyan-300 transition-colors">{activeGame.title}</h2>
-                  <p className="text-xs text-white/40 mt-2 line-clamp-2">{activeGame.description || `Players are actively collecting and trading ${activeGame.title} cards.`}</p>
-                </button>
-                <div className="flex items-center gap-3 mt-4 text-[9px] uppercase tracking-wider text-white/40">
-                  <span className="flex items-center gap-1"><ShoppingBag className="w-3 h-3" /> High demand</span>
-                  {activeGame.genre && <span>{activeGame.genre}</span>}
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] uppercase tracking-[0.18em] font-bold text-white/50">Cards people are buying</span>
-                    <span className="h-px w-10 bg-white/10" />
-                  </div>
-                  <button onClick={() => onSelectGame(activeGame)} className="text-[9px] uppercase tracking-widest text-cyan-400 hover:text-white flex items-center gap-1">
-                    View all <ArrowUpRight className="w-3 h-3" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-3 gap-3 h-[132px]">
-                  {cards.length > 0 ? cards.map((card) => (
-                    <button key={card.id} onClick={() => onSelectGame(activeGame)} className="relative overflow-hidden border border-white/10 bg-white/[0.025] text-left group">
-                      {card.image && <img src={card.image} alt={card.name} className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
-                      <div className="absolute inset-x-2 bottom-2">
-                        <div className="text-[9px] font-bold text-white truncate">{card.name}</div>
-                        <div className="flex justify-between gap-2 mt-1 text-[8px] font-mono">
-                          <span className="text-orange-300 uppercase">{card.rarity}</span>
-                          <span className="text-cyan-300">{Number(card.marketPrice || 0).toLocaleString()} AGP</span>
-                        </div>
-                      </div>
-                    </button>
-                  )) : (
-                    <div className="col-span-3 flex items-center justify-center border border-dashed border-white/10 text-[10px] uppercase tracking-widest text-white/30">
-                      Collectible demand data loading
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        <div className="flex gap-1.5 mt-4 overflow-x-auto custom-scrollbar pb-1">
-          {trending.map((game, index) => (
-            <button key={game.id || game.title} onClick={() => setActiveIndex(index)} className={`shrink-0 text-[8px] uppercase tracking-wider px-2.5 py-1 border transition-colors ${index === activeIndex ? 'border-cyan-400/50 text-cyan-300 bg-cyan-400/10' : 'border-white/10 text-white/35 hover:text-white/70 hover:bg-white/[0.04]'}`}>
-              {game.title}
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+function ListCardPanel({ state, onClose, onListed, busy }) {
+  const [cardId, setCardId] = useState('');
+  const [price, setPrice] = useState('');
+  return <motion.aside initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{duration:.25}} className="absolute z-40 inset-y-0 right-0 w-full max-w-md bg-[#070b12]/98 backdrop-blur-2xl border-l border-white/[0.10] shadow-[-30px_0_70px_rgba(0,0,0,.45)] p-6 overflow-y-auto">
+    <div className="flex items-start justify-between"><div><span className="text-[8px] uppercase tracking-[.24em] text-cyan-300/65">Exhibitor Setup</span><h2 className="text-2xl font-black text-white mt-2">Open a booth</h2><p className="text-xs text-white/40 mt-2">List one unequipped, unlocked card. The card is reserved while your booth is open.</p></div><button onClick={onClose} className="w-9 h-9 grid place-items-center text-white/35 hover:text-white"><X className="w-4 h-4"/></button></div>
+    <div className="mt-6 space-y-2">{state.ownedCards?.length ? state.ownedCards.map(card => <button key={card.id} onClick={() => setCardId(card.id)} className={`w-full flex items-center gap-3 p-3 border text-left ${cardId === card.id ? 'border-cyan-300/35 bg-cyan-300/[0.06]' : 'border-white/[0.07] bg-white/[0.018]'}`}><div className="w-10 h-12 bg-black overflow-hidden">{card.card_image && <img src={card.card_image} alt="" className="w-full h-full object-cover"/>}</div><div className="min-w-0 flex-1"><strong className="text-xs text-white block truncate">{card.card_name}</strong><span className={`text-[8px] uppercase tracking-wider ${rarityTone[card.card_rarity] || rarityTone.Common}`}>{card.card_rarity} · {card.game_name || 'Collection'}</span></div>{cardId === card.id && <ChevronRight className="w-4 h-4 text-cyan-200"/>}</button>) : <div className="p-5 border border-dashed border-white/10 text-xs text-white/30">No cards are currently available to list. Equipped cards and cards already locked in trades do not appear here.</div>}</div>
+    <label className="block mt-5"><span className="text-[8px] uppercase tracking-[.18em] text-white/30">Asking price</span><div className="mt-2 flex items-center border border-white/10 bg-black/20 px-3"><Coins className="w-4 h-4 text-amber-300"/><input type="number" min="1" value={price} onChange={e=>setPrice(e.target.value)} placeholder="AGP" className="h-11 flex-1 bg-transparent px-3 outline-none text-sm text-white"/></div></label>
+    <button disabled={busy || !cardId || !price} onClick={() => onListed(cardId, price)} className="mt-5 w-full h-12 bg-white text-slate-950 font-black text-xs uppercase tracking-[.16em] disabled:opacity-25">Open Booth</button>
+  </motion.aside>;
 }
 
 export default function TradingPostContent({ genreFilter, searchTerm }) {
-  const [allGames, setAllGames] = useState([]);
-  const [filters, setFilters] = useState({ category: 'all', rarity: [], priceRange: [0, 10000] });
-  const [selectedGame, setSelectedGame] = useState(null);
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [state, setState] = useState({ listings: [], ownedCards: [], balance: 0, userId: '' });
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [showList, setShowList] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
+  const [aisle, setAisle] = useState('All');
 
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const fetched = await Game.list();
-        setAllGames(fetched.length > 0 ? fetched : FALLBACK_TRENDING);
-      } catch {
-        setAllGames(FALLBACK_TRENDING);
-      }
-    };
-    fetchGames();
-  }, []);
+  const load = useCallback(async () => { try { const res = await invoke('getState'); setState(res?.data || res || state); } catch (e) { setMessage({type:'error',text:e?.message || 'Market unavailable'}); } finally { setLoading(false); } }, []);
+  useEffect(() => { load(); const unsub = base44.entities.CardTrade?.subscribe?.(() => load()); return () => unsub?.(); }, [load]);
 
-  const filteredGames = useMemo(() => {
-    const search = searchTerm || '';
-    return allGames.filter((g) => {
-      if (genreFilter && g.genre !== genreFilter) return false;
-      if (search && !g.title.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-  }, [allGames, genreFilter, searchTerm]);
+  const action = async (name, payload, success) => { setBusy(true); setMessage(null); try { const res = await invoke(name,payload); setState(res?.data || res); setMessage({type:'success',text:success}); } catch(e){ setMessage({type:'error',text:e?.message || 'Trade Post action failed'}); } finally { setBusy(false); } };
+  const listings = state.listings || [];
+  const games = useMemo(() => [...new Set(listings.map(x => x.card_snapshot?.origin_game).filter(Boolean))], [listings]);
+  const rarities = useMemo(() => [...new Set(listings.map(x => x.card_snapshot?.rarity).filter(Boolean))].sort((a,b)=>rarityOrder.indexOf(b)-rarityOrder.indexOf(a)), [listings]);
+  const query = `${searchTerm || ''} ${localSearch}`.trim().toLowerCase();
+  const filtered = useMemo(() => listings.filter(l => {
+    const c=l.card_snapshot||{}; const hay=`${c.name||''} ${c.origin_game||''} ${c.rarity||''} ${l.seller?.name||''}`.toLowerCase();
+    if(query && !hay.includes(query)) return false;
+    if(genreFilter && genreFilter !== 'All' && !hay.includes(String(genreFilter).toLowerCase())) return false;
+    if(aisle !== 'All' && c.origin_game !== aisle && c.rarity !== aisle) return false;
+    return true;
+  }), [listings, query, genreFilter, aisle]);
 
-  const trendingSource = useMemo(() => {
-    const source = allGames.length ? allGames : FALLBACK_TRENDING;
-    const seen = new Set();
-    return source.filter((game) => {
-      const key = game.id || game.title;
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, 30);
-  }, [allGames]);
-
-  const level = selectedCard ? 3 : selectedGame ? 2 : 1;
-  const goBack = () => {
-    if (selectedCard) setSelectedCard(null);
-    else if (selectedGame) setSelectedGame(null);
-  };
-
-  return (
-    <div className="relative z-10 w-full h-[calc(100vh-80px)] flex flex-col overflow-hidden">
-      {level === 1 && <TrendingBuyingShowcase games={trendingSource} onSelectGame={setSelectedGame} />}
-
-      {level > 1 && (
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-white/10 bg-white/[0.02] text-sm shrink-0">
-          <button onClick={goBack} className="flex items-center gap-1 text-white/60 hover:text-white transition-colors mr-2">
-            <ChevronLeft className="w-4 h-4" /> Back
-          </button>
-          <span className="text-white/40">All Games</span>
-          {selectedGame && <><ChevronRight className="w-3 h-3 text-white/30" /><span className={level === 2 ? 'text-cyan-300 font-medium' : 'text-white/40'}>{selectedGame.title}</span></>}
-          {selectedCard && <><ChevronRight className="w-3 h-3 text-white/30" /><span className="text-cyan-300 font-medium">{selectedCard.name}</span></>}
+  return <div className="relative z-10 w-full h-[calc(100vh-80px)] overflow-hidden bg-[#05080d] text-white">
+    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_12%_0%,rgba(34,211,238,.07),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(168,85,247,.06),transparent_30%)]"/>
+    <div className="relative h-full overflow-y-auto custom-scrollbar">
+      <section className="border-b border-white/[0.07] px-6 lg:px-8 py-6 bg-black/10">
+        <div className="max-w-[1600px] mx-auto grid xl:grid-cols-[1fr_auto] gap-6 items-end">
+          <div><div className="flex items-center gap-2 text-[9px] uppercase tracking-[.26em] text-cyan-300/70"><Ticket className="w-3.5 h-3.5"/>Convention Hall · Live Card Market</div><h1 className="text-4xl lg:text-5xl font-black tracking-tight mt-3">The Trade Post</h1><p className="text-sm text-white/40 mt-3 max-w-3xl">Walk the floor. Browse player booths, find cards you did not know you needed, buy instantly with AGP, or open a direct trade with the exhibitor.</p></div>
+          <div className="flex gap-2"><div className="border border-white/[0.08] bg-white/[0.02] px-4 py-3"><span className="text-[8px] uppercase tracking-widest text-white/25">Wallet</span><strong className="block text-lg text-amber-200">{Number(state.balance||0).toLocaleString()} AGP</strong></div><button onClick={()=>setShowList(true)} className="px-5 bg-cyan-300 text-slate-950 font-black text-xs uppercase tracking-[.13em]"><Store className="w-4 h-4 inline mr-2"/>Open Booth</button></div>
         </div>
-      )}
+      </section>
 
-      <div className="flex-1 min-h-0 flex gap-6 overflow-hidden px-6 py-4">
-        {level > 1 && <TradingPostFilters filters={filters} setFilters={setFilters} />}
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">
-            {level === 1 && (
-              <motion.div key="games" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="h-full">
-                <TradingPostGameGrid games={filteredGames} onSelectGame={setSelectedGame} />
-              </motion.div>
-            )}
-            {level === 2 && (
-              <motion.div key="cards" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} className="h-full">
-                <TradingPostCardGrid game={selectedGame} filters={filters} onSelectCard={setSelectedCard} />
-              </motion.div>
-            )}
-            {level === 3 && (
-              <motion.div key="board" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="h-full">
-                <TradingPostListingBoard card={selectedCard} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-8 py-5">
+        <AnimatePresence>{message && <motion.div initial={{opacity:0,y:-6}} animate={{opacity:1,y:0}} className={`mb-4 border px-4 py-3 text-xs ${message.type==='error'?'border-rose-300/15 bg-rose-300/[0.05] text-rose-200':'border-emerald-300/15 bg-emerald-300/[0.05] text-emerald-200'}`}>{message.text}</motion.div>}</AnimatePresence>
+        <div className="grid lg:grid-cols-[1fr_auto] gap-4 items-center border-b border-white/[0.07] pb-5">
+          <div className="flex gap-2 overflow-x-auto">{['All',...games.slice(0,8),...rarities.slice(0,3)].map(value=><button key={value} onClick={()=>setAisle(value)} className={`shrink-0 px-3 py-2 text-[9px] uppercase tracking-[.13em] border ${aisle===value?'border-cyan-300/30 bg-cyan-300/[0.07] text-cyan-200':'border-white/[0.07] text-white/35 hover:text-white/65'}`}>{value==='All'?'Main Hall':value}</button>)}</div>
+          <label className="flex items-center gap-2 border border-white/[0.08] bg-white/[0.02] px-3 min-w-[280px]"><Search className="w-4 h-4 text-white/25"/><input value={localSearch} onChange={e=>setLocalSearch(e.target.value)} placeholder="Search booths, cards, games, rarity..." className="h-10 flex-1 bg-transparent outline-none text-xs text-white placeholder:text-white/25"/></label>
         </div>
+
+        <section className="grid md:grid-cols-4 gap-px bg-white/[0.06] mt-5 border border-white/[0.06]">{[[Boxes,'Open booths',listings.length],[Users,'Exhibitors',new Set(listings.map(x=>x.seller_id)).size],[Gem,'Rare finds',listings.filter(x=>rarityOrder.indexOf(x.card_snapshot?.rarity)>=3).length],[BadgeDollarSign,'Cards you can sell',state.ownedCards?.length||0]].map(([labelIcon,label,value])=>{const Icon=labelIcon;return <div key={label} className="bg-[#080c14] p-4 flex items-center gap-3"><Icon className="w-4 h-4 text-cyan-200"/><div><span className="text-[8px] uppercase tracking-widest text-white/25">{label}</span><strong className="block text-lg">{value}</strong></div></div>})}</section>
+
+        <div className="flex items-center justify-between mt-7 mb-4"><div><span className="text-[8px] uppercase tracking-[.22em] text-white/25">Aisle Directory</span><h2 className="text-xl font-black mt-1">{aisle === 'All' ? 'Convention floor' : aisle}</h2></div><span className="text-[9px] text-white/25 uppercase tracking-wider">{filtered.length} booth{filtered.length===1?'':'s'} visible</span></div>
+        {loading ? <div className="h-72 grid place-items-center text-white/30 text-xs"><Loader2 className="w-5 h-5 animate-spin mb-2"/>Loading convention floor…</div> : filtered.length ? <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-24">{filtered.map(listing=><BoothCard key={listing.id} listing={listing} mine={listing.seller_id===state.userId} busy={busy} onBuy={l=>action('buyListing',{listingId:l.id},`Purchased ${l.card_snapshot?.name || 'card'}.`)} onTrade={l=>action('openTrade',{listingId:l.id},'Trade invitation opened with this exhibitor.')} onCancel={l=>action('cancelListing',{listingId:l.id},'Your booth is closed and the card is unlocked.')}/>)}</div> : <div className="min-h-72 border border-dashed border-white/[0.08] grid place-items-center text-center p-8"><div><Sparkles className="w-7 h-7 text-white/15 mx-auto"/><h3 className="text-sm font-bold text-white/60 mt-3">This aisle is quiet.</h3><p className="text-xs text-white/25 mt-2">Open a booth with one of your cards and become the first exhibitor here.</p></div></div>}
       </div>
     </div>
-  );
+    <AnimatePresence>{showList && <ListCardPanel state={state} busy={busy} onClose={()=>setShowList(false)} onListed={async(cardId,price)=>{await action('listCard',{userCardId:cardId,price:Number(price)},'Your booth is now live on the convention floor.');setShowList(false);}}/>}</AnimatePresence>
+  </div>;
 }
