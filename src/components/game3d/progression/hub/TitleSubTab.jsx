@@ -1,162 +1,198 @@
-import React, { useEffect, useState } from 'react';
-import { subscribeTitles, equipTitle, unequipTitle, setTitleLevel } from '../titleStore';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Check, Coins, RotateCcw, Sparkles } from 'lucide-react';
+import {
+  subscribeTitles,
+  selectTitleType,
+  upgradeTitle,
+  resetTitle,
+  unequipTitle,
+  equipTitle,
+  setTitleLevel,
+} from '../titleStore';
+import { subscribeContribution } from '../contributionStore';
 import { MAX_TITLE_LEVEL } from '../titleData';
 import MaxOutButton from './devMaxOut';
 
+const Glass = ({ children, className = '' }) => (
+  <div className={`rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl ${className}`}>{children}</div>
+);
+
 export default function TitleSubTab() {
-  const [titles, setTitles] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [cp, setCp] = useState(0);
+  const [notice, setNotice] = useState('');
 
-  useEffect(() => subscribeTitles((s) => {
-    setTitles(s);
-    if (!selectedId && s.equippedPathId) setSelectedId(s.equippedPathId);
-    else if (!selectedId) setSelectedId(Object.keys(s.paths)[0]);
-  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => subscribeTitles(setTitle), []);
+  useEffect(() => subscribeContribution((s) => setCp(s.cp)), []);
 
-  if (!titles || !selectedId) return null;
-  const path = titles.paths[selectedId];
-  const isEquipped = titles.equippedPathId === selectedId;
+  const current = title?.bonuses;
+  const next = title?.nextBonuses;
+  const canUpgrade = title && !title.isMaxLevel && cp >= title.nextCost;
+  const stageCells = useMemo(() => Array.from({ length: MAX_TITLE_LEVEL }, (_, i) => i + 1), []);
+
+  if (!title) return null;
+
+  const flash = (text) => {
+    setNotice(text);
+    window.setTimeout(() => setNotice(''), 1600);
+  };
+
+  const handleUpgrade = () => {
+    const result = upgradeTitle();
+    flash(result.ok ? `Title advanced to Rank ${result.stage}` : result.reason);
+  };
 
   return (
-    <div className="flex h-full">
-      {/* LEFT — path list */}
-      <div className="w-72 border-r border-white/5 px-4 pt-6 overflow-y-auto">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 px-2 mb-3">
-          Title Paths
-        </div>
-        {Object.values(titles.paths).map((p) => {
-          const active = p.id === selectedId;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setSelectedId(p.id)}
-              className="w-full text-left p-3 mb-2 rounded-md border transition-all"
-              style={{
-                background: active ? 'rgba(255,216,107,0.06)' : 'rgba(255,255,255,0.02)',
-                borderColor: active ? 'rgba(255,216,107,0.35)' : 'rgba(255,255,255,0.05)',
-              }}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="text-xl">{p.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">{p.name}</div>
-                  <div className="text-[10px] tracking-[0.2em] uppercase text-white/50 mt-0.5">
-                    Lv {p.level} · {p.rarity.rarity}
-                  </div>
-                </div>
-                {titles.equippedPathId === p.id && (
-                  <span className="text-[9px] tracking-[0.2em] text-amber-300 uppercase">Eq</span>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* RIGHT — detail */}
-      <div className="flex-1 min-w-0 px-10 pt-8 overflow-y-auto">
-        <div className="flex items-start gap-4">
-          <div
-            className="w-20 h-20 rounded-md flex items-center justify-center text-4xl"
-            style={{
-              background: `${path.rarity.glow}`,
-              border: `1px solid ${path.rarity.color}55`,
-            }}
-          >
-            {path.icon}
+    <div className="h-full overflow-y-auto px-8 py-6">
+      <div className="max-w-6xl mx-auto space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <div className="text-[10px] tracking-[0.34em] uppercase text-cyan-100/45">Contribution Title</div>
+            <div className="mt-1 text-2xl font-semibold text-white">{title.type.name} · Rank {title.stage}</div>
+            <p className="mt-1 text-xs text-white/45 max-w-2xl">
+              Choose a title path once, then spend CP to advance it. The original palace trip is removed; the rules stay intact.
+            </p>
           </div>
-          <div className="flex-1">
-            <div className="text-xl font-semibold text-white tracking-wide">{path.name}</div>
-            <div
-              className="text-[10px] tracking-[0.3em] uppercase mt-1"
-              style={{ color: path.rarity.color }}
-            >
-              {path.rarity.rarity} · Level {path.level} / {MAX_TITLE_LEVEL}
+          <Glass className="px-4 py-3 flex items-center gap-3 shrink-0">
+            <Coins className="w-4 h-4 text-amber-300" />
+            <div>
+              <div className="text-[9px] tracking-[0.25em] uppercase text-white/35">Contribution</div>
+              <div className="text-lg font-semibold tabular-nums text-white">{cp.toLocaleString()} CP</div>
             </div>
-            <div className="text-xs text-white/60 mt-3 max-w-lg">{path.description}</div>
+          </Glass>
+        </div>
+
+        <Glass className="p-3">
+          <div className="grid grid-cols-5 gap-2">
+            {title.types.map((type) => {
+              const active = type.id === title.typeId;
+              const locked = title.stage > 0 && !active;
+              return (
+                <button
+                  key={type.id}
+                  disabled={locked}
+                  onClick={() => {
+                    const result = selectTitleType(type.id);
+                    if (!result.ok) flash(result.reason);
+                  }}
+                  className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                    active
+                      ? 'border-cyan-200/35 bg-cyan-200/10'
+                      : 'border-white/5 bg-white/[0.025] hover:bg-white/5 disabled:opacity-25 disabled:hover:bg-white/[0.025]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-lg" style={{ color: type.color }}>{type.icon}</span>
+                    {active && <Check className="w-3.5 h-3.5 text-cyan-200" />}
+                  </div>
+                  <div className="mt-2 text-xs font-semibold text-white">{type.name}</div>
+                  <div className="mt-1 text-[10px] leading-relaxed text-white/35">{type.description}</div>
+                </button>
+              );
+            })}
           </div>
+        </Glass>
+
+        <Glass className="p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[10px] tracking-[0.25em] uppercase text-white/35">Ranks 1–12</div>
+              <div className="text-xs text-white/50 mt-1">Each completed rank also grants +1% Attribution ATK and +1% Attribution DEF.</div>
+            </div>
+            <div className="text-right text-[10px] text-white/35">Spent {title.totalCpSpent.toLocaleString()} CP</div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-1.5 mt-4">
+            {stageCells.map((stage) => {
+              const complete = stage <= title.stage;
+              const currentStage = stage === title.stage;
+              return (
+                <div
+                  key={stage}
+                  className={`h-11 rounded-lg border flex items-center justify-center text-xs font-semibold tabular-nums ${
+                    complete ? 'border-cyan-200/25 bg-cyan-200/10 text-cyan-50' : 'border-white/5 bg-white/[0.025] text-white/25'
+                  } ${currentStage ? 'ring-1 ring-cyan-200/50' : ''}`}
+                >
+                  {stage}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-5">
+            <StatPanel title="Current" bonuses={current} stage={title.stage} />
+            <StatPanel title={title.isMaxLevel ? 'Maximum Reached' : `Next · Rank ${title.stage + 1}`} bonuses={next || current} stage={title.isMaxLevel ? title.stage : title.stage + 1} muted={title.isMaxLevel} />
+          </div>
+
+          <div className="mt-5 flex items-center gap-2">
+            <button
+              onClick={handleUpgrade}
+              disabled={title.isMaxLevel}
+              className="px-4 py-2.5 rounded-xl border border-cyan-200/25 bg-cyan-200/10 text-cyan-50 text-xs font-semibold hover:bg-cyan-200/15 disabled:opacity-30 transition"
+            >
+              {title.isMaxLevel ? 'Rank 12 Complete' : `Advance · ${title.nextCost.toLocaleString()} CP`}
+            </button>
+            {!title.isMaxLevel && !canUpgrade && <span className="text-[10px] text-amber-200/55">Need {(title.nextCost - cp).toLocaleString()} more CP</span>}
+            <button
+              onClick={() => (title.enabled ? unequipTitle() : equipTitle())}
+              className="ml-auto px-3 py-2.5 rounded-xl border border-white/10 bg-white/[0.035] text-white/55 text-xs hover:text-white transition"
+            >
+              {title.enabled ? 'Disable Bonus' : 'Enable Bonus'}
+            </button>
+          </div>
+        </Glass>
+
+        <div className="flex items-center justify-between gap-3">
           <button
-            onClick={() => (isEquipped ? unequipTitle() : equipTitle(path.id))}
-            className="px-4 py-2 rounded-sm text-[11px] tracking-[0.3em] uppercase font-semibold"
-            style={{
-              background: isEquipped ? 'rgba(251,113,133,0.10)' : 'rgba(255,216,107,0.10)',
-              border: `1px solid ${isEquipped ? 'rgba(251,113,133,0.4)' : 'rgba(255,216,107,0.45)'}`,
-              color: isEquipped ? '#fb7185' : '#ffd86b',
-            }}
-          >
-            {isEquipped ? 'Unequip' : 'Equip Title'}
-          </button>
-        </div>
-
-        {/* Progress to next level */}
-        <div className="mt-8">
-          <div className="flex justify-between text-[10px] tracking-[0.25em] uppercase text-white/50 mb-2">
-            <span>{path.isMaxLevel ? 'Mastered' : `Progress to Lv ${path.level + 1}`}</span>
-            <span>{path.isMaxLevel ? '—' : `${path.killsIntoLevel.toLocaleString()} / ${path.killsForNextLevel.toLocaleString()}`}</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <div
-              className="h-full"
-              style={{
-                width: `${path.isMaxLevel ? 100 : Math.min(100, (path.killsIntoLevel / Math.max(1, path.killsForNextLevel)) * 100)}%`,
-                background: `linear-gradient(90deg, ${path.rarity.color}, #ffd86b)`,
-              }}
-            />
-          </div>
-          <div className="text-[10px] text-white/40 mt-1">
-            Total kills tracked: {path.totalKills.toLocaleString()}
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <MaxOutButton
-            accent={path.rarity.color}
-            label={`Max ${path.name}`}
             onClick={() => {
-              setTitleLevel(selectedId, MAX_TITLE_LEVEL);
-              if (!isEquipped) equipTitle(path.id);
+              const result = resetTitle(0.7);
+              flash(`Title reset · ${result.refund.toLocaleString()} CP returned`);
             }}
-            title="Editor only — max out this title path + equip it"
+            className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase text-white/35 hover:text-white/70 transition"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Reset title · 70% CP recovery
+          </button>
+          <MaxOutButton
+            accent="#67e8f9"
+            label="Max Title"
+            onClick={() => setTitleLevel(title.typeId, MAX_TITLE_LEVEL)}
+            title="Editor only — set selected title to Rank 12"
           />
         </div>
 
-        {/* Current vs next bonuses */}
-        <div className="grid grid-cols-2 gap-6 mt-8">
-          <BonusBlock title="Current Bonuses" bonuses={path.bonuses} accent={path.rarity.color} />
-          {!path.isMaxLevel && (
-            <BonusBlock title={`At Level ${path.level + 1}`} bonuses={path.nextLevelBonuses} accent="#6ec3ff" />
-          )}
-        </div>
+        {notice && (
+          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[120] px-4 py-2 rounded-full border border-white/10 bg-black/70 backdrop-blur-xl text-xs text-white shadow-2xl">
+            {notice}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function BonusBlock({ title, bonuses, accent }) {
+function StatPanel({ title, bonuses, stage, muted = false }) {
   if (!bonuses) return null;
   return (
-    <div>
-      <div className="text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: accent }}>
-        {title}
+    <div className={`rounded-xl border border-white/7 bg-white/[0.025] p-4 ${muted ? 'opacity-45' : ''}`}>
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] tracking-[0.24em] uppercase text-white/35">{title}</div>
+        <Sparkles className="w-3.5 h-3.5 text-cyan-200/50" />
       </div>
-      <div className="space-y-1.5 text-xs text-white/75">
-        <Row k="Max HP"       v={`+${(bonuses.hp || 0).toLocaleString()}`} />
-        <Row k="Damage"       v={`+${(bonuses.damage || 0).toLocaleString()}`} />
-        <Row k="Defense"      v={`+${(bonuses.defense || 0).toLocaleString()}`} />
-        <Row k="Crit Chance"  v={`+${(bonuses.critChance || 0).toFixed(1)}%`} />
-        <Row k="Crit Damage"  v={`+${Math.round((bonuses.critDamage || 0) * 100)}%`} />
-        <Row k="Crit Defense" v={`+${Math.round((bonuses.criticalDefense || 0) * 100)}%`} />
-      </div>
-      <div className="text-[9px] tracking-[0.25em] uppercase text-white/30 mt-3">
-        Flat final stats · not attribute-scaled
+      <div className="grid grid-cols-2 gap-x-5 gap-y-2 mt-3 text-xs">
+        <Row label="Strength" value={bonuses.strength} />
+        <Row label="Agility" value={bonuses.agility} />
+        <Row label="Vitality" value={bonuses.vitality} />
+        <Row label="Spirit" value={bonuses.spirit} />
+        <Row label="Attribute ATK" value={`${stage}%`} />
+        <Row label="Attribute DEF" value={`${stage}%`} />
       </div>
     </div>
   );
 }
 
-const Row = ({ k, v }) => (
-  <div className="flex justify-between border-b border-white/5 py-1.5">
-    <span>{k}</span>
-    <span className="text-white tabular-nums">{v}</span>
+const Row = ({ label, value }) => (
+  <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+    <span className="text-white/40">{label}</span>
+    <span className="text-white tabular-nums">+{value}</span>
   </div>
 );
