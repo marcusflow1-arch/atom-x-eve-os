@@ -190,18 +190,21 @@ function raycastBossAtNDC(ndcX, ndcY) {
 }
 
 function findBossUnderArrowAim(event) {
-  // First use the actual mouse position. This lets the player simply left-click
-  // the visible boss model and have the arrow connect without middle-clicking.
-  const rect = findCanvasRectForPointer(event);
-  if (rect && rect.width > 0 && rect.height > 0) {
-    const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    const pointedBoss = raycastBossAtNDC(ndcX, ndcY);
-    if (pointedBoss) return pointedBoss;
+  // First use the actual mouse position when this attack came from a pointer.
+  // Animation-driven attacks have no pointer event and should use the reticle.
+  const clientX = Number(event?.clientX);
+  const clientY = Number(event?.clientY);
+  if (Number.isFinite(clientX) && Number.isFinite(clientY)) {
+    const rect = findCanvasRectForPointer(event);
+    if (rect && rect.width > 0 && rect.height > 0) {
+      const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+      const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
+      const pointedBoss = raycastBossAtNDC(ndcX, ndcY);
+      if (pointedBoss) return pointedBoss;
+    }
   }
 
-  // Third-person aiming can use a centered reticle rather than the literal
-  // mouse cursor, so fall back to a center-screen ray before giving up.
+  // Third-person aiming and animation-triggered attacks use the center reticle.
   return raycastBossAtNDC(0, 0);
 }
 
