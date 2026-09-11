@@ -8,10 +8,17 @@ export function auraSampleStory(item) {
 export default function auraSampleContent(now) {
   const story = (id, title, description, index = 0, content = '') => ({ id: `aura-sample-${id}`, isSample: true, kind: 'article', title, description, image: images[index % images.length], label: 'Sample template', source: 'Aura layout preview', publishedAt: now, content: `${content || description}\n\n${sampleNote}` });
   const creators = [
-    ['MoonlitAtlas', 'One more trail. One more discovery.', 'Open-world adventures', 'Slow journeys, hidden paths, and a chat that feels like a campfire.'],
-    ['CozyCircuit', 'A quiet corner for a creative evening.', 'Cozy & creative', 'Building tiny worlds and big ideas—with room for everyone to join in.'],
-    ['EchoSummit', 'The climb is better together.', 'Co-op adventures', 'Fresh challenges, close calls, and a crew that celebrates every little win.'],
-  ].map(([name, title, game, tagline], index) => ({ id: `aura-sample-creator-${index}`, streamerId: `aura-sample-creator-${index}`, isSample: true, name, title, game, tagline, bio: tagline, thumbnail: images[index], avatar: images[index], viewers: [42, 68, 27][index], creatorAddedAt: now - 86400000, tags: [], previewUrl: '' }));
+    ['MoonlitAtlas', 'Walking the coast before sunset.', 'IRL', 'Slow journeys, hidden paths, and a chat that feels like a campfire.', 'irl'],
+    ['CozyCircuit', 'What does creativity mean now?', 'Just Chatting', 'Building tiny worlds and big ideas—with room for everyone to join in.', 'philosophy'],
+    ['EchoSummit', 'Live perspectives from the city.', 'World Events', 'Fresh conversations and the stories unfolding around us.', 'world'],
+    ['QuietHarbor', 'A thoughtful hour of reflection.', 'Faith', 'A calm place for scripture, spirituality, and shared reflection.', 'faith'],
+    ['OpenTable', 'Pull up a chair and join us.', 'Just Chatting', 'An open conversation shaped by everyone who arrives.', 'chat'],
+    ['TomorrowLab', 'The technology changing daily life.', 'Science & Technology', 'New ideas, practical inventions, and what may come next.', 'tech'],
+    ['TrailSignal', 'Morning from the mountain path.', 'IRL', 'A live walk through quiet places and unexpected views.', 'irl'],
+    ['CommonGround', 'How do communities stay connected?', 'Just Chatting', 'Different experiences meeting in one respectful conversation.', 'philosophy'],
+    ['WorldWindow', 'Stories behind today’s headlines.', 'World Events', 'Context, questions, and live perspectives from around the world.', 'world'],
+    ['FutureCurrent', 'Building a more human internet.', 'Science & Technology', 'Exploring how technology can better serve real communities.', 'tech'],
+  ].map(([name, title, game, tagline, topic], index) => ({ id: `aura-sample-creator-${index}`, streamerId: `aura-sample-creator-${index}`, isSample: true, isLive: true, name, title, game, category: game, tagline, bio: tagline, thumbnail: images[index % images.length], avatar: images[index % images.length], viewers: [42, 68, 27, 35, 51, 74, 29, 63, 46, 58][index], creatorAddedAt: now - 86400000, tags: [topic], broadcastTags: [topic], previewUrl: '' }));
   const updates = [
     story('story-1', 'The communities that turn a stream into a place to belong', 'Behind every great channel is a familiar hello. Meet the moments that make a community feel like home.', 0, '## It starts with a hello\n\nA first-time viewer drops into chat. Someone remembers their name. A shared discovery becomes a weekly ritual.\n\n## More than what is on screen\n\nImagine a creator spotlight here: their story, the community they are building, and the small traditions that bring people back.'),
     story('story-2', 'A fresh perspective on your daily watch', 'A sample editorial about finding a different pace, a new voice, or a game outside your usual rotation.', 1),

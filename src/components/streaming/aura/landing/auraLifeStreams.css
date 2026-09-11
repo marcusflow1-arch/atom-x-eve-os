@@ -1,0 +1,24 @@
+.aura-life-directory{display:grid;grid-template-columns:minmax(96px,1fr) 1px minmax(0,9fr);gap:22px;min-height:360px;padding:22px;border:1px solid rgba(225,231,238,.22);border-radius:16px;background:linear-gradient(145deg,rgba(56,61,68,.5),rgba(16,18,22,.7));backdrop-filter:blur(22px) saturate(145%);transition:min-height .35s ease}
+.aura-landing .aura-life-directory.is-expanded{min-height:78vh}
+.aura-landing .aura-life-directory.is-expanded .aura-life-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 18px}
+.aura-life-filters{display:flex;flex-direction:column;gap:7px;min-width:0}
+.aura-life-filters>span{padding:4px 7px 10px;color:#7896a8;font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.aura-life-filters button{padding:8px 7px;border-radius:7px;background:transparent;color:#829baa;font-size:9px;line-height:1.35;text-align:left;transition:background .2s,color .2s}
+.aura-life-filters button:hover{color:#d7edf2;background:rgba(255,255,255,.05)}
+.aura-life-filters button[aria-pressed=true]{color:#d8f2f4;background:rgba(128,205,211,.1)}
+.aura-life-divider{position:relative;align-self:stretch;width:1px;overflow:visible}
+.aura-life-divider:before,.aura-life-divider:after{content:'';position:absolute;left:0;width:1px;height:50%;background:linear-gradient(to top,rgba(135,213,218,.55),transparent);animation:auraLifeLine 4.8s ease-in-out infinite}
+.aura-life-divider:before{bottom:50%}
+.aura-life-divider:after{top:50%;transform:rotate(180deg);animation-delay:-2.4s}
+.aura-life-streams{min-width:0}
+.aura-life-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px;color:#7896a8;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+.aura-life-toolbar button{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid rgba(225,231,238,.18);border-radius:8px;background:rgba(255,255,255,.045);color:#c5dbe3;font-size:9px}
+.aura-life-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px 14px}
+.aura-life-grid .console-stream-card{min-width:0}
+.aura-life-grid .console-stream-art{aspect-ratio:16/9}
+.aura-life-empty{display:grid;place-items:center;min-height:260px;color:#7896a8;font-size:11px}
+@keyframes auraLifeLine{0%,100%{opacity:.12;transform:scaleY(.55)}50%{opacity:1;transform:scaleY(1)}}
+@media(max-width:1100px){.aura-life-directory{grid-template-columns:minmax(90px,1fr) 1px minmax(0,9fr);gap:14px;padding:16px}.aura-life-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.aura-life-directory{grid-template-columns:1fr;gap:14px}.aura-life-divider{display:none}.aura-life-filters{flex-direction:row;overflow-x:auto}.aura-life-filters>span{display:none}.aura-life-filters button{flex:0 0 auto;white-space:nowrap}.aura-life-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}.aura-life-directory.is-expanded{min-height:auto}}
+@media(max-width:440px){.aura-life-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.aura-life-divider:before,.aura-life-divider:after{animation:none;opacity:.65}}

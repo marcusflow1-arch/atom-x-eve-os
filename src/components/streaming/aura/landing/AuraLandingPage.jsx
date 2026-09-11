@@ -19,7 +19,7 @@ import AuraDailyReader from './AuraDailyReader';
 import AuraSpotlight from './AuraSpotlight';
 import AuraMoments from './AuraMoments';
 import AuraDailyPicks from './AuraDailyPicks';
-import AuraTopics from './AuraTopics';
+import AuraLifeStreams from './AuraLifeStreams';
 import AuraGameLanes from './AuraGameLanes';
 import auraSampleContent, { auraSampleStory, fillAuraSamples } from './auraSampleContent';
 import '../../hub/consoleHub.css';
@@ -131,8 +131,8 @@ export default function AuraLandingPage() {
           <AuraDailyPicks creators={picks} now={now} loading={directory.isPending} onWatch={onWatch} />
         </section>
         <section ref={topicsRef} className="aura-feature-section is-topics" data-aura-chapter="topics" tabIndex={-1} aria-labelledby="aura-topics-heading">
-          <SectionHeading number="03" label="The Real Life Chat / Hot Topics" title="Life beyond the game." description="Different perspectives. Shared questions. Find a conversation that stays with you." id="aura-topics-heading"><button type="button" className="console-text-button" onClick={() => browse({ topic: 'all' })}>All conversations<ArrowRight size={14} /></button></SectionHeading>
-          <AuraTopics streams={directory.channels} onBrowse={browse} />
+          <SectionHeading number="03" label="The Real Life Chat / Hot Topics" title="Life beyond the game." description="Different perspectives. Shared questions. Find a conversation that stays with you." id="aura-topics-heading" />
+          <AuraLifeStreams streams={directory.channels} samples={samples.creators} onWatch={onWatch} />
         </section>
         <section ref={gamesRef} className="aura-feature-section is-game-lanes" data-aura-chapter="games" tabIndex={-1} aria-labelledby="aura-games-heading">
           <SectionHeading number="04" label="Game Directory & Discovery Lanes" title="Find your next world." description="New adventures, community favorites, and the ones that deserve another look." id="aura-games-heading" />
