@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronsLeft } from 'lucide-react';
+import { ChevronsLeft, Eye, EyeOff, Rotate3D } from 'lucide-react';
 import { subscribeEquipment, getEquipmentState } from './equipmentStore';
 import EquipmentPreview3D from './EquipmentPreview3D';
 import AbilitiesTab from './AbilitiesTab';
@@ -9,36 +9,35 @@ import CompanionTab from './CompanionTab';
 import SkillsTab from './SkillsTab';
 
 const TABS = [
+  { id: 'gear', label: 'Gear' },
+  { id: 'skills', label: 'Skills' },
   { id: 'abilities', label: 'Abilities', hotkey: 'Q' },
-  { id: 'gear',      label: 'Gear',     hotkey: null },
-  { id: 'talents',   label: 'Talents',  hotkey: 'E' },
-  { id: 'skills',    label: 'Skills',   hotkey: null },
-  { id: 'companion', label: 'Companion', hotkey: null },
+  { id: 'talents', label: 'Talents', hotkey: 'E' },
+  { id: 'companion', label: 'Companion' },
 ];
 
-/**
- * Full-screen equipment menu (Where Winds Meet-inspired layout).
- * Toggled by pressing I inside the game. UI only — info text blank.
- */
+const APPEARANCE_GROUPS = [
+  { id: 'outfit', label: 'Outfit' },
+  { id: 'hair', label: 'Head' },
+  { id: 'weapon', label: 'Weapon' },
+  { id: 'body', label: 'Body' },
+];
+
 export default function EquipmentMenu({ open, onClose }) {
   const [tab, setTab] = useState('gear');
   const [state, setState] = useState(getEquipmentState());
+  const [appearance, setAppearance] = useState({ body: true, outfit: true, hair: true, weapon: true });
 
   useEffect(() => subscribeEquipment(setState), []);
+  useEffect(() => { if (open) setTab('gear'); }, [open]);
 
-  // Reset to Gear tab every time the menu is opened with the I key
   useEffect(() => {
-    if (open) setTab('gear');
-  }, [open]);
-
-  // Hotkeys: Q/E to switch tabs, Esc/I to close
-  useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const onKey = (e) => {
       const k = e.key.toLowerCase();
       if (k === 'escape' || k === 'i') { e.preventDefault(); onClose(); }
-      if (k === 'q') setTab((t) => (t === 'gear' ? 'abilities' : t === 'talents' ? 'gear' : 'abilities'));
-      if (k === 'e') setTab((t) => (t === 'gear' ? 'talents' : t === 'abilities' ? 'gear' : 'talents'));
+      if (k === 'q') setTab('abilities');
+      if (k === 'e') setTab('talents');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -48,62 +47,84 @@ export default function EquipmentMenu({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[80] text-white select-none"
+      className="fixed inset-0 z-[80] text-white select-none overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #1a1c22 0%, #25282f 40%, #2c2f37 70%, #1f2127 100%)',
+        background: 'radial-gradient(circle at 72% 42%, rgba(48,110,135,0.16), transparent 33%), linear-gradient(135deg, rgba(5,9,15,0.76), rgba(8,13,22,0.58))',
+        backdropFilter: 'blur(18px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(135%)',
       }}
     >
-      {/* Top tabs */}
-      <div className="absolute top-5 left-6 flex items-center gap-6 pointer-events-auto">
-        {TABS.map((t) => {
-          const active = tab === t.id;
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
+
+      {/* Minimal navigation rail */}
+      <div className="absolute top-5 left-1/2 -translate-x-1/2 z-30 pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-black/25 backdrop-blur-xl p-1.5 shadow-2xl">
+        {TABS.map((item) => {
+          const active = tab === item.id;
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className="relative flex items-center gap-2 group"
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`relative rounded-full px-4 py-2 text-[11px] tracking-[0.18em] uppercase transition-all ${
+                active ? 'bg-white/10 text-white' : 'text-white/45 hover:text-white/80 hover:bg-white/5'
+              }`}
             >
-              <span
-                className={`text-lg tracking-wider transition-all ${
-                  active ? 'text-amber-400 font-semibold' : 'text-white/55 hover:text-white/80'
-                }`}
-              >
-                {t.label}
-              </span>
-              {t.hotkey && (
-                <span className="text-[10px] tracking-widest text-white/40 border border-white/15 px-1 py-px rounded-sm">
-                  {t.hotkey}
-                </span>
-              )}
-              {active && (
-                <span className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-amber-400" />
-              )}
+              {item.label}
+              {item.hotkey && <span className="ml-2 text-[9px] text-white/25">{item.hotkey}</span>}
+              {active && <span className="absolute inset-x-4 -bottom-0.5 h-px bg-cyan-200/70" />}
             </button>
           );
         })}
       </div>
 
-      {/* Top-right close */}
       <button
         onClick={onClose}
-        className="absolute top-5 right-6 w-9 h-9 rounded-sm bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 flex items-center justify-center transition-all pointer-events-auto"
+        className="absolute top-5 right-5 z-40 w-10 h-10 rounded-full border border-white/10 bg-black/30 hover:bg-white/10 flex items-center justify-center transition-all pointer-events-auto backdrop-blur-xl"
+        title="Close"
       >
-        <ChevronsLeft className="w-5 h-5 text-white/80" />
+        <ChevronsLeft className="w-5 h-5 text-white/75" />
       </button>
 
-      {/* 3D Character Preview — fills the entire right side as a unified backdrop.
-          Inventory grid + detail panel overlay on top of this with no opaque backgrounds,
-          so it all reads as one continuous space. */}
-      <div className="absolute top-16 right-0 bottom-16 left-[340px] pointer-events-none">
-        <EquipmentPreview3D />
+      {/* Live character stage. The UI floats over it rather than hiding it. */}
+      <div className="absolute top-12 right-0 bottom-8 left-[34%] z-0">
+        <EquipmentPreview3D visibility={appearance} />
       </div>
 
-      {/* Tab body (each tab renders its own GearActionsBar for the bottom controls) */}
-      {tab === 'abilities' && <AbilitiesTab state={state} />}
-      {tab === 'gear' &&      <GearTab state={state} />}
-      {tab === 'talents' &&   <TalentsTab state={state} />}
-      {tab === 'skills' &&    <SkillsTab />}
-      {tab === 'companion' && <CompanionTab />}
+      <div className="absolute top-24 right-6 z-30 pointer-events-auto w-44 rounded-2xl border border-white/10 bg-black/25 backdrop-blur-xl p-3 shadow-2xl">
+        <div className="flex items-center gap-2 px-1 pb-2 text-[10px] tracking-[0.2em] uppercase text-white/40">
+          <Rotate3D className="w-3.5 h-3.5" /> Appearance
+        </div>
+        <div className="space-y-1">
+          {APPEARANCE_GROUPS.map((group) => {
+            const enabled = appearance[group.id] !== false;
+            return (
+              <button
+                key={group.id}
+                onClick={() => setAppearance((prev) => ({ ...prev, [group.id]: !enabled }))}
+                className="w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-xs text-white/70 hover:bg-white/5 transition"
+              >
+                <span>{group.label}</span>
+                {enabled ? <Eye className="w-3.5 h-3.5 text-cyan-200/80" /> : <EyeOff className="w-3.5 h-3.5 text-white/25" />}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2 px-1 text-[9px] text-white/30 leading-relaxed">Drag the model to rotate. Scroll to zoom.</div>
+      </div>
+
+      {/* Existing feature panels stay intact; they now sit over the glass stage. */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="pointer-events-auto h-full">
+          {tab === 'abilities' && <AbilitiesTab state={state} />}
+          {tab === 'gear' && <GearTab state={state} />}
+          {tab === 'talents' && <TalentsTab state={state} />}
+          {tab === 'skills' && <SkillsTab />}
+          {tab === 'companion' && <CompanionTab />}
+        </div>
+      </div>
+
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 text-[9px] tracking-[0.22em] uppercase text-white/25 pointer-events-none">
+        I / Esc close · drag model rotate · wheel zoom
+      </div>
     </div>
   );
 }
