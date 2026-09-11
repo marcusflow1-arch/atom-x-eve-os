@@ -15,6 +15,7 @@ import FreeToPlay from './FreeToPlay';
 import SpecialOffers from './SpecialOffers';
 import EditorsChoice from './EditorsChoice';
 import StorefrontRightRail from './StorefrontRightRail';
+import StoreMarketBridge from './StoreMarketBridge';
 
 const normalize = value => String(value || '').toLowerCase().replace(/[_-]/g, ' ');
 
@@ -110,7 +111,13 @@ export default function StorefrontLayout({ onNavigateToGame, games = [] }) {
               <StorefrontHero game={spotlightGame || visibleGames[0]} onPlay={handlePlay} onStore={handleOverlayStore} onAddToCart={handleOverlayCart} />
               <div className="hidden xl:block"><QuickAccessPanel onSelect={handleQuickAccess} activeId={activeQuickAccess} /></div>
             </div>
-            <BrowseByGenre onSelect={handleSelect} /><NewReleases onSelect={onNavigateToGame} games={hasReal ? pick(8) : undefined} /><CuratedCollections onSelect={handleSelect} /><TopSellers onSelect={onNavigateToGame} games={hasReal ? pick(6, 8) : undefined} /><ComingSoon onSelect={handleSelect} /><ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} games={hasReal ? visibleGames : undefined} /><SpecialOffers onSelect={onNavigateToGame} games={hasReal ? pick(6, 14) : undefined} /><FreeToPlay onSelect={onNavigateToGame} games={hasReal ? visibleGames.filter(g => g.price === 0 || g.price == null).slice(0, 6) : undefined} /><EditorsChoice onSelect={onNavigateToGame} games={hasReal ? pick(4, 20) : undefined} />
+            <BrowseByGenre onSelect={handleSelect} />
+            <NewReleases onSelect={onNavigateToGame} games={hasReal ? pick(8) : undefined} />
+            <TopSellers onSelect={onNavigateToGame} games={hasReal ? pick(6, 8) : undefined} />
+            <StoreMarketBridge />
+            <ExploreAllGames onSelect={onNavigateToGame} onHoverGame={setSpotlightGame} games={hasReal ? visibleGames : undefined} />
+            <ComingSoon onSelect={handleSelect} />
+            <SpecialOffers onSelect={onNavigateToGame} games={hasReal ? pick(6, 14) : undefined} />
           </div>
           <div className="w-[280px] flex-shrink-0 hidden 2xl:block"><StorefrontRightRail onSelect={handleSelect} /></div>
         </div>
