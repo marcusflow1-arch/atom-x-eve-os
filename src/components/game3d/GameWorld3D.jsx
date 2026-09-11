@@ -1946,7 +1946,7 @@ export default function GameWorld3D() {
           const isRangedClickAttack = rangedClickAttackPressed.current;
           rangedClickAttackPressed.current = false;
           if (playerAttackCooldown.current > 0) return;
-          dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
+          const attackConsumedByPriorityTarget = dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
           // 0.2 second delay between attacks.
           playerAttackCooldown.current = 0.2;
           // Attack montage is manually gated by the animation state machine.
@@ -1956,13 +1956,15 @@ export default function GameWorld3D() {
           playActionSound('player_attack');
           let closestEnemy = null;
           let closestEnemyDist = isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
-          enemies.forEach((enemy) => {
-            if (!enemy.alive || enemy.dying) return;
-            const dx = enemy.group.position.x - model.position.x;
-            const dz = enemy.group.position.z - model.position.z;
-            const d = Math.sqrt(dx * dx + dz * dz);
-            if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
-          });
+          if (!attackConsumedByPriorityTarget) {
+            enemies.forEach((enemy) => {
+              if (!enemy.alive || enemy.dying) return;
+              const dx = enemy.group.position.x - model.position.x;
+              const dz = enemy.group.position.z - model.position.z;
+              const d = Math.sqrt(dx * dx + dz * dz);
+              if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
+            });
+          }
           if (closestEnemy) {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
