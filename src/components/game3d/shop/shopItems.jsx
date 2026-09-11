@@ -3,17 +3,18 @@
 // shopEffectsBridge.js). Cosmetics are toggled visuals via shopCosmeticsLayer.
 
 export const SHOP_CATEGORIES = [
-  { id: 'consumables',  label: 'Consumables',      icon: '🧪', desc: 'Potions and elixirs — use to gain temporary combat buffs.' },
+  { id: 'consumables',  label: 'Consumables',      icon: '🧪', desc: 'Potions and elixirs — temporary healing plus permanent character growth.' },
   { id: 'materials',    label: 'Enhancement',      icon: '💠', desc: 'Materials for upgrading gear and weapons.' },
   { id: 'companion',    label: 'Companion Gear',   icon: '🐺', desc: 'Equipment and treats for your companion.' },
   { id: 'cosmetics',    label: 'Cosmetic Overlays',icon: '👑', desc: 'Wearable visuals over your armor — purely cosmetic.' },
 ];
 
 // effect.kind values are consumed by shopEffectsBridge.js:
-//   'heal'         — restore HP by `amount`
-//   'damage_buff'  — adds N stacks of focus damage buff (mult per stack)
-//   'crit_buff'    — adds N stacks of crit chance (1.0% per stack)
-//   'gold_grant'   — instantly adds gold (joke item, but works)
+//   'heal'              — restore HP by `amount`
+//   'damage_buff'       — adds N stacks of focus damage buff
+//   'crit_buff'         — adds N stacks of crit chance
+//   'permanent_elixir'  — consumes into TwelveSky-style permanent progression
+//   'gold_grant'        — instantly adds gold
 
 export const SHOP_ITEMS = [
   // ── Consumables ─────────────────────────────────────────────────
@@ -21,6 +22,16 @@ export const SHOP_ITEMS = [
   { id: 'pot_health_major', name: 'Major Healing Potion', category: 'consumables', price: 250,   icon: '⚗️',  rarity: 'rare',      desc: 'Restore 120 HP instantly.',                                 effect: { kind: 'heal', amount: 120 } },
   { id: 'pot_kill_streak',  name: 'Hunter\'s Elixir',     category: 'consumables', price: 600,   icon: '🩸',  rarity: 'epic',      desc: '+25% damage on your next 5 attacks (kill more, kill faster).', effect: { kind: 'damage_buff', stacks: 5, multPerStack: 1.25 } },
   { id: 'pot_crit_charm',   name: 'Crit Charm',           category: 'consumables', price: 900,   icon: '✨',  rarity: 'epic',      desc: '+15% critical strike chance for your next 10 attacks.',     effect: { kind: 'crit_buff', stacks: 10, critPctPerStack: 15 } },
+
+  // Permanent TwelveSky-inspired elixirs. Prices are Atom X Eve balance values;
+  // the stat effects/caps live in twelvesky/modernizationData.jsx.
+  { id: 'elixir_vit',  name: 'VIT Elixir',    category: 'consumables', price: 1200, icon: '❤️', rarity: 'rare', desc: 'Permanent +20 Max HP. Automatically routes into Expansion progression after the normal cap.', effect: { kind: 'permanent_elixir', elixirType: 'vit' } },
+  { id: 'elixir_spr',  name: 'Spirit Elixir', category: 'consumables', price: 1200, icon: '🔷', rarity: 'rare', desc: 'Permanent +25 Force.', effect: { kind: 'permanent_elixir', elixirType: 'spr' } },
+  { id: 'elixir_agi',  name: 'AGI Elixir',    category: 'consumables', price: 1350, icon: '💨', rarity: 'rare', desc: 'Permanent +2 HIT and +2 Dodge.', effect: { kind: 'permanent_elixir', elixirType: 'agi' } },
+  { id: 'elixir_str',  name: 'STR Elixir',    category: 'consumables', price: 1350, icon: '⚔️', rarity: 'rare', desc: 'Permanent +3 ATK.', effect: { kind: 'permanent_elixir', elixirType: 'str' } },
+  { id: 'elixir_aatk', name: 'A.ATK Elixir',  category: 'consumables', price: 1600, icon: '🔥', rarity: 'epic', desc: 'Permanent +10 Attribute ATK.', effect: { kind: 'permanent_elixir', elixirType: 'aatk' } },
+  { id: 'elixir_adef', name: 'A.DEF Elixir',  category: 'consumables', price: 1600, icon: '🛡️', rarity: 'epic', desc: 'Permanent +10 Attribute DEF.', effect: { kind: 'permanent_elixir', elixirType: 'adef' } },
+
   { id: 'pot_loot_charm',   name: 'Lucky Coin',           category: 'consumables', price: 1500,  icon: '🍀', rarity: 'legendary', desc: 'Instantly gain 500 gold (one-time use).',                   effect: { kind: 'gold_grant', amount: 500 } },
 
   // ── Enhancement Materials (added to lootInventory misc bucket) ──
