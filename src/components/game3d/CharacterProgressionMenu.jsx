@@ -11,14 +11,18 @@ import HaloSubTab from './progression/hub/HaloSubTab';
 import WingsSubTab from './progression/hub/WingsSubTab';
 import AuraSubTab from './progression/hub/AuraSubTab';
 import TitleSubTab from './progression/hub/TitleSubTab';
+import SpiritServicesSubTab from './progression/hub/SpiritServicesSubTab';
+import ElixirsSubTab from './progression/hub/ElixirsSubTab';
+import WarBandsSubTab from './progression/hub/WarBandsSubTab';
 
 // ─── Character Hub ────────────────────────────────────────────────────────
-// MMORPG-style progression overlay (replaces the legacy split-panel screen).
-// Top tabs: Attributes · Weapon Mastery (with Halo / Title sub-tabs)
-// Opened with the C key (legacy hotkey preserved by the caller).
+// One modern player-owned menu for character progression and formerly-NPC
+// services. Town NPCs can remain as world flavor/tutorials without forcing
+// players to interrupt combat loops for routine maintenance.
 const MAIN_TABS = [
   { id: 'attributes', label: 'Attributes' },
   { id: 'mastery',    label: 'Weapon Mastery' },
+  { id: 'services',   label: 'Spirit Services' },
 ];
 
 const MASTERY_SUB_TABS = [
@@ -29,10 +33,17 @@ const MASTERY_SUB_TABS = [
   { id: 'title', label: 'Title' },
 ];
 
+const SERVICE_SUB_TABS = [
+  { id: 'spirit',  label: 'Services' },
+  { id: 'elixirs', label: 'Elixirs' },
+  { id: 'wars',    label: 'War Bands' },
+];
+
 export default function CharacterProgressionMenu({ isOpen, onClose }) {
   const [hud, setHud] = useState(null);
   const [mainTab, setMainTab] = useState('attributes');
   const [subTab, setSubTab] = useState('tree');
+  const [serviceTab, setServiceTab] = useState('spirit');
   const [killCount, setKillCount] = useState(0);
   const [playerName, setPlayerName] = useState('');
 
@@ -54,10 +65,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
   return (
     <div
       className="fixed left-0 right-0 bottom-0 z-40 flex items-stretch"
-      style={{
-        top: '64px', // sit flush under the 64px (h-16) top header
-        background: 'rgba(4,8,14,0.35)', // lighter so game world shows through
-      }}
+      style={{ top: '64px', background: 'rgba(4,8,14,0.35)' }}
       onClick={onClose}
     >
       <div
@@ -69,7 +77,6 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top-left: player name + kill count */}
         <div className="absolute top-4 left-4 flex flex-col items-start gap-1.5 z-10">
           {playerName && (
             <div
@@ -100,7 +107,6 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Header — engraved MMO style */}
         <div className="pt-5">
           <div className="text-center text-[11px] tracking-[0.45em] uppercase text-amber-200/80 font-semibold">
             Character
@@ -109,9 +115,11 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && (
             <HubSubTabs tabs={MASTERY_SUB_TABS} activeId={subTab} onChange={setSubTab} />
           )}
+          {mainTab === 'services' && (
+            <HubSubTabs tabs={SERVICE_SUB_TABS} activeId={serviceTab} onChange={setServiceTab} />
+          )}
         </div>
 
-        {/* Body */}
         <div className="flex-1 min-h-0">
           {mainTab === 'attributes' && <AttributesTab hud={hud} />}
           {mainTab === 'mastery' && subTab === 'tree'  && <WeaponMasteryTab />}
@@ -119,9 +127,11 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'wings' && <WingsSubTab />}
           {mainTab === 'mastery' && subTab === 'aura'  && <AuraSubTab />}
           {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
+          {mainTab === 'services' && serviceTab === 'spirit' && <SpiritServicesSubTab />}
+          {mainTab === 'services' && serviceTab === 'elixirs' && <ElixirsSubTab />}
+          {mainTab === 'services' && serviceTab === 'wars' && <WarBandsSubTab />}
         </div>
 
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 transition-all"
@@ -129,7 +139,6 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Footer hint */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-white/40 tracking-[0.25em] uppercase">
           Press <span className="text-yellow-300 font-bold">C</span> or <span className="text-yellow-300 font-bold">Esc</span> to close
         </div>
