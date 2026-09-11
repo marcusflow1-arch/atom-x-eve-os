@@ -31,7 +31,7 @@ export default function GameEngineEditLauncher() {
           onClick={() => setOpen(true)}
           title="Edit the current Game Viewer world"
           data-editor-entry="live-world"
-          className="fixed left-1/2 top-[72px] z-[80] -translate-x-1/2 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 backdrop-blur-xl transition hover:bg-white/10 hover:text-white pointer-events-auto"
+          className="fixed left-[20px] top-[64px] z-[80] rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 backdrop-blur-xl transition hover:bg-white/10 hover:text-white pointer-events-auto"
         >
           <span className="inline-flex items-center gap-1.5"><Pencil className="h-3 w-3" /> Edit</span>
         </button>
