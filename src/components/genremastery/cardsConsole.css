@@ -14,7 +14,7 @@
   .cc-topbar .cc-genres button { padding: 8px 6px; gap: 4px; }
   .cc-topbar .cc-market-nav { gap: 2px; }
   .cc-topbar .cc-market-nav button { padding: 11px 9px; white-space: nowrap; }
-  .cc-workspace > .cc-library { padding-top: 83px; }
+  .cc-workspace > .cc-library { padding-top: 12px; }
 }
 @media(max-width:800px) {
   .cc-topbar { flex-wrap: wrap; }
