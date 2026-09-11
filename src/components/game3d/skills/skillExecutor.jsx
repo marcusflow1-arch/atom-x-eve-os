@@ -1,16 +1,6 @@
 // ─── Skill Executor ────────────────────────────────────────────────────
 // The single entry point for casting any skill. Validates weapon lock,
 // dispatches by cast_type, schedules multi-hit timings exactly per spec.
-//
-// Public API:
-//   castSkill(skill_id, ctx) → { ok, reason? }
-//     ctx: { level, maxHP, getPlayerLevel?, getDamageMult? }
-//
-// Side effects:
-//   • For SELF_CAST buffs → activates buff via buffEngine
-//   • For attack casts    → dispatches 'playerSkillStrike' window events,
-//                           one per hit, with proper delays.
-//   • Always dispatches a 'skillActivatedToast' for player feedback.
 
 import { getSkillById, scaleStat } from './skillRegistry';
 import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValidator';
@@ -18,6 +8,7 @@ import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
 import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
+import { primeBurstCharge, consumeBurstCharge } from '../twelvesky/burstChargeStore';
 import {
   onTripleSlashCast,
   onTripleSlashFinalHit,
@@ -33,22 +24,36 @@ function toast(text) {
 function dispatchStrike(skill, hitIndex, level) {
   if (typeof window === 'undefined') return;
   const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
-  // Weapon Mastery scales skill damage based on the equipped weapon's level.
-  const mult = applyMasteryToSkillMultiplier(baseMult);
+  let mult = applyMasteryToSkillMultiplier(baseMult);
+
+  // TwelveSky-style burst rule: a short charge window is consumed ONLY by a
+  // single-hit attack. Multi-hit and AoE skills keep their farming/sustained
+  // role and do not waste the charge. The existing combat pipeline already
+  // consumes `multiplier`, so this becomes real damage without a second path.
+  let burstCritical = false;
+  if (skill.cast_type === CAST_TYPE.SINGLE_HIT && hitIndex === 0) {
+    const charged = consumeBurstCharge();
+    if (charged) {
+      mult *= charged.multiplier;
+      burstCritical = true;
+      toast(`⚡ Charged critical — ${skill.skill_name}`);
+    }
+  }
+
   window.dispatchEvent(new CustomEvent('playerSkillStrike', {
     detail: {
-      skillId:   skill.skill_id,
+      skillId: skill.skill_id,
       multiplier: mult,
       hitIndex,
       hitsTotal: skill.hit_count,
-      castType:  skill.cast_type,
+      castType: skill.cast_type,
       weaponType: skill.weapon_type,
+      burstCritical,
     },
   }));
 }
 
 function scheduleSequential(skill, level) {
-  // Hit 1 at t=0, hit i at t = i*hit_delay
   const isTripleSlash = skill.skill_id === 'sword_triple_slash';
   if (isTripleSlash) onTripleSlashCast();
   for (let i = 0; i < skill.hit_count; i++) {
@@ -60,9 +65,6 @@ function scheduleSequential(skill, level) {
 }
 
 function scheduleGuardianBurst(skill, level) {
-  // Hits 1+2 near-simultaneous (separated by burst_delay), then hit 3 after
-  // hit_delay, then a final follow-up hit 4 after follow_up_delay.
-  // Total hits: 4 (configurable via skill.hit_count, defaults to 4).
   const burst = skill.burst_delay ?? 0.08;
   const followUp = skill.follow_up_delay ?? 0.4;
   setTimeout(() => dispatchStrike(skill, 0, level), 0);
@@ -77,7 +79,6 @@ function scheduleRangedDouble(skill, level) {
   const isDoubleShot = skill.skill_id === 'ranged_double_shot';
   setTimeout(() => { dispatchStrike(skill, 0, level); if (isDoubleShot) onDoubleShotHit(); }, 0);
   setTimeout(() => { dispatchStrike(skill, 1, level); if (isDoubleShot) onDoubleShotHit(); }, skill.hit_delay * 1000);
-  // Failsafe: ensure sfx is cleared shortly after the cast window ends.
   if (isDoubleShot) {
     setTimeout(() => onDoubleShotCastEnd(), (skill.hit_delay * 1000) + 800);
   }
@@ -94,21 +95,15 @@ function scheduleRangedBarrage(skill, level) {
   setTimeout(() => onDoubleShotCastEnd(), castDurationMs + 300);
 }
 
-/**
- * Cast a skill. Returns { ok, reason? }.
- *   reason values: 'unknown_skill' | 'passive_cannot_cast' | 'wrong_weapon' | 'no_weapon_equipped'
- */
 export function castSkill(skill_id, ctx = {}) {
   const skill = getSkillById(skill_id);
   if (!skill) return { ok: false, reason: 'unknown_skill' };
 
-  // PASSIVES can never be cast manually. Hard rule.
   if (skill.skill_type === SKILL_TYPE.PASSIVE) {
     toast('⛔ Passive skills activate automatically');
     return { ok: false, reason: 'passive_cannot_cast' };
   }
 
-  // Weapon-lock check.
   const w = canCastWithEquippedWeapon(skill_id);
   if (!w.ok) {
     toast(describeWeaponMismatch(w));
@@ -117,14 +112,22 @@ export function castSkill(skill_id, ctx = {}) {
 
   const level = ctx.level || 1;
 
-  // Buff branch.
   if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) {
     activateBuff(skill_id, level, { maxHP: ctx.maxHP });
-    toast(`${skill.icon} ${skill.skill_name} activated`);
+
+    // Focus doubles as the modernized charge setup. It keeps its existing
+    // next-five-attacks buff, while also opening a 5-second one-shot burst
+    // window for the next SINGLE-HIT skill. This recreates the old charge →
+    // single-hit kill rhythm without forcing a separate NPC/trainer workflow.
+    if (skill_id === 'focus') {
+      primeBurstCharge({ durationMs: 5000, multiplier: 3 });
+      toast('⚡ Focus charged — next single-hit skill bursts for critical damage');
+    } else {
+      toast(`${skill.icon} ${skill.skill_name} activated`);
+    }
     return { ok: true };
   }
 
-  // Attack branch — dispatch by cast_type.
   switch (skill.cast_type) {
     case CAST_TYPE.SINGLE_HIT:
       window.dispatchEvent(new CustomEvent('playerSkillCastStart', {
@@ -148,9 +151,7 @@ export function castSkill(skill_id, ctx = {}) {
       return { ok: false, reason: 'unsupported_cast_type' };
   }
 
-  // Report skill cast → mastery XP for the equipped weapon.
   reportSkillCast(getActiveWeaponId());
-
   toast(`${skill.icon} ${skill.skill_name}`);
   return { ok: true };
 }
