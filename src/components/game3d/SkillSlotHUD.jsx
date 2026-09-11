@@ -1,103 +1,106 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Coins } from 'lucide-react';
-import { subscribePlayerHUD } from './playerHUDStore';
+import { Coins, Zap } from 'lucide-react';
+import { subscribePlayerHUD, getPlayerHUD } from './playerHUDStore';
+import { subscribeShop } from './shop/shopStore';
+import { subscribeLoadout, getLoadout, startCooldown } from './skills/loadoutStore';
+import { getSkillById } from './skills/skillRegistry';
+import { castSkill } from './skills/skillExecutor';
+import { getTwelveSkySkillRole } from './twelvesky/modernizationData';
+import { subscribeBurstCharge } from './twelvesky/burstChargeStore';
 
 /**
- * SkillSlotHUD - Recreates the SMITE 2 bottom hotbar:
- * - Inventory slots (top row)
- * - Hero portrait + HP/Mana bars + 4 ability slots + Summon slot
- * - Empty bottom inventory slots on right
- * - Gold counter on the far left
+ * Compact modern combat HUD.
+ * - Live HP / Force / XP
+ * - Ten classic combat positions: keys 1–9 and 0 for slot 10
+ * - Real equipped skill names/icons/cooldowns
+ * - Single / Multi / AoE role marker from the TwelveSky-inspired doctrine
+ * - Burst-charge indicator for charge → single-hit finishing
  */
 export default function SkillSlotHUD({
-  characterName = 'Erika',
+  characterName = 'Player',
   mana = 296,
   maxMana = 296,
-  gold = 100000,
+  gold: goldProp,
   onAbility,
 }) {
   const [hud, setHud] = useState({ level: 1, xp: 0, xpForNext: 5, hp: 100, maxHP: 100, unspentPoints: 0, derived: { chi: 0 } });
+  const [loadout, setLoadout] = useState(() => getLoadout());
+  const [shop, setShop] = useState({ gold: goldProp ?? 0 });
+  const [charge, setCharge] = useState({ active: false, remainingMs: 0, multiplier: 1 });
+
   useEffect(() => subscribePlayerHUD(setHud), []);
-  const { level, xp, xpForNext, unspentPoints } = hud;
-  // Pull live HP/Mana from progression store so stat allocations visibly affect bars.
+  useEffect(() => subscribeLoadout(setLoadout), []);
+  useEffect(() => subscribeShop(setShop), []);
+  useEffect(() => subscribeBurstCharge(setCharge), []);
+
   const hp = hud.hp ?? 0;
   const maxHp = hud.maxHP ?? 1;
   const liveMana = hud.derived?.chi ?? mana;
-  const liveMaxMana = hud.derived?.chi ?? maxMana;
-  const abilities = [
-    { key: '1', label: 'BOOT', color: '#4a90e2' },
-    { key: '2', label: 'BUFF', color: '#7ed321' },
-    { key: '3', label: 'DAMAGE', color: '#d0021b' },
-    { key: '4', label: 'SUMMON', color: '#9013fe' },
-  ];
+  const liveMaxMana = Math.max(1, hud.derived?.chi ?? maxMana);
+  const gold = goldProp ?? shop.gold ?? 0;
+
+  const slots = useMemo(() => Array.from({ length: 10 }, (_, index) => {
+    const skillId = loadout.activeSlots?.[index] || null;
+    return {
+      index,
+      keyLabel: index === 9 ? '0' : String(index + 1),
+      skill: skillId ? getSkillById(skillId) : null,
+      cooldown: loadout.cooldowns?.[index] || 0,
+      role: getTwelveSkySkillRole(index + 1),
+    };
+  }), [loadout]);
+
+  const activate = (slot) => {
+    if (!slot.skill || slot.cooldown > 0) return;
+    if (onAbility) {
+      onAbility(slot.keyLabel);
+      return;
+    }
+    const live = getPlayerHUD();
+    const result = castSkill(slot.skill.skill_id, { level: live.level || 1, maxHP: live.maxHP || 1 });
+    if (result.ok) startCooldown(slot.index);
+  };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-30">
-      {/* Hint banner above HUD */}
-      <div className="flex justify-center mb-3">
+    <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none">
+      <div className="flex justify-center pb-3 px-4">
         <div
-          className="px-6 py-1.5 flex items-center gap-3"
+          className="pointer-events-auto flex items-end gap-3 rounded-2xl px-3 py-2.5"
           style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(20,30,40,0.85) 20%, rgba(20,30,40,0.85) 80%, transparent 100%)',
-            borderTop: '1px solid rgba(180, 140, 80, 0.4)',
-            borderBottom: '1px solid rgba(180, 140, 80, 0.4)',
+            background: 'linear-gradient(180deg, rgba(8,13,20,0.78) 0%, rgba(5,8,13,0.9) 100%)',
+            border: '1px solid rgba(255,255,255,0.09)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(14px)',
           }}
         >
-          <span className="px-2 py-0.5 rounded bg-black/60 border border-white/20 text-white text-[10px] font-bold">TAB</span>
-          <span className="text-white/90 text-xs font-bold tracking-wider uppercase">Open the Practice Menu</span>
-        </div>
-      </div>
+          <HeroPortrait name={characterName} level={hud.level} unspentPoints={hud.unspentPoints} />
 
-      <div className="flex items-end justify-between px-6 pb-3">
-        {/* LEFT: Gold counter + empty inventory slots */}
-        <div className="flex flex-col gap-2 pointer-events-auto">
-          <div className="flex gap-1">
-            {[...Array(6)].map((_, i) => (
-              <InventorySlot key={i} empty />
-            ))}
-          </div>
-          <div className="flex items-center gap-1.5 px-2">
-            <Coins className="w-3.5 h-3.5 text-yellow-400" />
-            <span className="text-yellow-300 text-sm font-bold tabular-nums">{gold.toLocaleString()}</span>
-          </div>
-        </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-[520px] flex flex-col gap-1">
+                <XPBar level={hud.level} xp={hud.xp} xpForNext={hud.xpForNext} />
+                <ResourceBar value={hp} max={maxHp} color="#4ade80" label="HP" />
+                <ResourceBar value={liveMana} max={liveMaxMana} color="#38bdf8" label="FORCE" />
+              </div>
 
-        {/* CENTER: Hero portrait + bars + abilities */}
-        <div className="flex items-end gap-2 pointer-events-auto">
-          {/* Hero portrait */}
-          <HeroPortrait name={characterName} level={level} unspentPoints={unspentPoints} />
-
-          {/* Bars + ability slots */}
-          <div className="flex flex-col gap-1.5">
-            {/* XP / HP / Mana bars */}
-            <div className="flex flex-col gap-1 w-[440px]">
-              <XPBar level={level} xp={xp} xpForNext={xpForNext} />
-              <ResourceBar value={hp} max={maxHp} color="#4caf50" />
-              <ResourceBar value={liveMana} max={liveMaxMana || 1} color="#3a9ee6" />
+              <div className="h-[50px] min-w-[106px] rounded-lg border border-white/10 bg-black/25 px-3 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5 text-amber-200">
+                  <Coins className="w-3.5 h-3.5" />
+                  <span className="text-sm font-semibold tabular-nums">{gold.toLocaleString()}</span>
+                </div>
+                <div className={`mt-1 flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] ${charge.active ? 'text-amber-200' : 'text-white/30'}`}>
+                  <Zap className="w-3 h-3" />
+                  {charge.active ? `${charge.multiplier}× Burst ${(charge.remainingMs / 1000).toFixed(1)}s` : 'Burst idle'}
+                </div>
+              </div>
             </div>
 
-            {/* Ability slot row */}
-            <div className="flex gap-1">
-              {abilities.map((ab) => (
-                <AbilitySlot key={ab.key} ability={ab} onClick={() => onAbility?.(ab.key)} />
+            <div className="flex gap-1.5">
+              {slots.map((slot) => (
+                <SkillSlot key={slot.index} slot={slot} onClick={() => activate(slot)} />
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* RIGHT: Empty inventory slots */}
-        <div className="flex flex-col gap-2 pointer-events-auto">
-          <div className="flex gap-1">
-            {[...Array(6)].map((_, i) => (
-              <InventorySlot key={i} empty />
-            ))}
-          </div>
-          {/* Keybind hints */}
-          <div className="flex justify-end gap-2.5 pr-1 text-[10px] text-white/60">
-            {['CTRL', 'TAB', 'V', 'ALT', 'ESC', 'B'].map((k) => (
-              <span key={k} className="font-bold">{k}</span>
-            ))}
           </div>
         </div>
       </div>
@@ -105,181 +108,93 @@ export default function SkillSlotHUD({
   );
 }
 
-function InventorySlot({ empty }) {
+function SkillSlot({ slot, onClick }) {
+  const skill = slot.skill;
+  const role = slot.role?.role || 'single';
+  const roleColor = role === 'aoe' ? '#c4b5fd' : role === 'multi' ? '#93c5fd' : '#fca5a5';
+  const cd = Math.max(0, slot.cooldown || 0);
+  const cooldownMax = Math.max(0.001, skill?.cooldown || 1);
+  const cdPct = Math.min(100, (cd / cooldownMax) * 100);
+
   return (
-    <div
-      className="w-9 h-9 rounded-sm"
-      style={{
-        background: empty ? 'rgba(40, 50, 60, 0.7)' : 'rgba(80, 60, 40, 0.8)',
-        border: '1px solid rgba(120, 90, 50, 0.5)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 2px rgba(0,0,0,0.4)',
-      }}
-    />
+    <button
+      onClick={onClick}
+      disabled={!skill || cd > 0}
+      className="relative w-[50px] h-[50px] rounded-lg overflow-hidden border border-white/10 bg-white/[0.035] transition-all hover:-translate-y-0.5 hover:border-white/25 disabled:hover:translate-y-0"
+      title={skill ? `${slot.keyLabel}: ${skill.skill_name} · ${slot.role?.label || ''}` : `Empty skill slot ${slot.index + 1}`}
+    >
+      {skill ? (
+        <>
+          <div className="absolute inset-0 flex items-center justify-center text-xl">{skill.icon || '✦'}</div>
+          <div className="absolute top-1 left-1 text-[7px] font-bold tracking-wider px-1 rounded bg-black/55" style={{ color: roleColor }}>
+            {slot.role?.label?.toUpperCase() || 'SKILL'}
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/65 flex items-center justify-center text-[9px] font-black text-white">
+            {slot.keyLabel}
+          </div>
+          {cd > 0 && (
+            <>
+              <div className="absolute inset-x-0 bottom-0 bg-black/70 pointer-events-none" style={{ height: `${cdPct}%` }} />
+              <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white tabular-nums">{cd.toFixed(cd < 10 ? 1 : 0)}</div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 flex items-center justify-center text-white/15 text-lg">+</div>
+          <div className="absolute top-1 left-1 text-[7px] font-bold tracking-wider" style={{ color: `${roleColor}88` }}>{slot.role?.label?.toUpperCase()}</div>
+          <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/45 flex items-center justify-center text-[9px] font-black text-white/45">{slot.keyLabel}</div>
+        </>
+      )}
+    </button>
   );
 }
 
 function HeroPortrait({ name, level = 1, unspentPoints = 0 }) {
   return (
-    <div
-      className="relative w-[72px] h-[72px] flex-shrink-0"
-      style={unspentPoints > 0 ? { boxShadow: '0 0 14px rgba(255, 210, 70, 0.7)', borderRadius: 4 } : undefined}
-    >
-      <div
-        className="w-full h-full rounded-sm overflow-hidden relative"
-        style={{
-          background: 'linear-gradient(135deg, #6b4226 0%, #3a2414 100%)',
-          border: '2px solid rgba(180, 140, 80, 0.7)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.4)',
-        }}
-      >
-        {/* Stylized character portrait — red-haired archer */}
-        <div className="absolute inset-0 flex items-end justify-center">
-          <svg viewBox="0 0 72 72" className="w-full h-full">
-            <defs>
-              <radialGradient id="bg-port" cx="50%" cy="40%">
-                <stop offset="0%" stopColor="#5a8fb5" />
-                <stop offset="100%" stopColor="#1a2438" />
-              </radialGradient>
-            </defs>
-            <rect width="72" height="72" fill="url(#bg-port)" />
-            {/* Hair */}
-            <ellipse cx="36" cy="28" rx="22" ry="20" fill="#a83817" />
-            {/* Face */}
-            <ellipse cx="36" cy="34" rx="14" ry="17" fill="#ffd9b8" />
-            {/* Hair front */}
-            <path d="M 18 28 Q 20 18 36 16 Q 52 18 54 28 Q 50 22 36 22 Q 22 22 18 28" fill="#8a2a10" />
-            {/* Eyes */}
-            <ellipse cx="30" cy="33" rx="1.5" ry="2" fill="#2a3a4a" />
-            <ellipse cx="42" cy="33" rx="1.5" ry="2" fill="#2a3a4a" />
-            {/* Mouth */}
-            <ellipse cx="36" cy="42" rx="2" ry="1" fill="#b85a4a" />
-            {/* Shoulder armor */}
-            <path d="M 12 60 L 18 50 L 30 48 L 42 48 L 54 50 L 60 60 L 60 72 L 12 72 Z" fill="#3a2814" />
-          </svg>
-        </div>
+    <div className="relative w-[66px] h-[66px] rounded-xl border border-white/10 bg-gradient-to-br from-slate-700/80 to-slate-950/90 flex items-center justify-center shrink-0">
+      <div className="text-center">
+        <div className="text-[9px] uppercase tracking-[0.16em] text-white/35 max-w-[54px] truncate">{name}</div>
+        <div className="text-2xl font-light text-white mt-0.5">{level}</div>
+        <div className="text-[8px] text-white/30 uppercase tracking-widest">Level</div>
       </div>
-      {/* Level badge */}
-      <div
-        className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-black"
-        style={{
-          background: 'radial-gradient(circle, #c0392b 0%, #6b1a14 100%)',
-          border: '1.5px solid rgba(255, 200, 100, 0.8)',
-        }}
-      >
-        {level}
-      </div>
-      {/* Unspent stat points indicator — press C to spend */}
       {unspentPoints > 0 && (
-        <div
-          className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-black animate-pulse"
-          style={{
-            background: 'linear-gradient(180deg, #fff7b0 0%, #ffd24a 50%, #c98a00 100%)',
-            border: '1.5px solid rgba(120, 80, 0, 0.8)',
-            color: '#3a2400',
-            boxShadow: '0 0 10px rgba(255, 210, 70, 0.8)',
-          }}
-          title="Press C to spend stat points"
-        >
-          +{unspentPoints}
-        </div>
+        <div className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-amber-300 text-slate-950 text-[9px] font-black flex items-center justify-center shadow-lg animate-pulse">+{unspentPoints}</div>
       )}
-      {/* Status dot */}
-      <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-red-500 border border-black/40" />
     </div>
   );
 }
 
-function ResourceBar({ value, max, color }) {
-  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+function ResourceBar({ value, max, color, label }) {
+  const safeMax = Math.max(1, Number(max) || 1);
+  const safeValue = Math.max(0, Math.min(safeMax, Number(value) || 0));
+  const pct = Math.max(0, Math.min(100, (safeValue / safeMax) * 100));
   return (
-    <div
-      className="relative w-full h-4 rounded-sm overflow-hidden"
-      style={{
-        background: 'rgba(0,0,0,0.6)',
-        border: '1px solid rgba(180, 140, 80, 0.4)',
-        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
-      }}
-    >
+    <div className="relative h-3 rounded-full overflow-hidden bg-black/55 border border-white/[0.07]">
       <motion.div
         className="absolute inset-y-0 left-0"
-        style={{
-          background: `linear-gradient(180deg, ${color} 0%, ${color}cc 100%)`,
-          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 0 8px ${color}80`,
-        }}
+        style={{ background: color, boxShadow: `0 0 8px ${color}55` }}
         animate={{ width: `${pct}%` }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.22 }}
       />
-      <div className="absolute inset-0 flex items-center justify-center text-white text-[11px] font-bold tabular-nums drop-shadow-md">
-        {value}/{max}
-      </div>
-      <div className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-white/70 font-bold">
-        +1.7s
+      <div className="absolute inset-0 flex items-center justify-between px-2 text-[8px] font-bold text-white/90 tabular-nums">
+        <span className="tracking-wider">{label}</span><span>{Math.round(safeValue)} / {Math.round(safeMax)}</span>
       </div>
     </div>
   );
 }
 
 function XPBar({ level, xp, xpForNext }) {
-  const pct = xpForNext > 0 ? Math.max(0, Math.min(100, (xp / xpForNext) * 100)) : 0;
+  const next = Math.max(1, Number(xpForNext) || 1);
+  const pct = Math.max(0, Math.min(100, ((Number(xp) || 0) / next) * 100));
   return (
-    <div
-      className="relative w-full h-3 rounded-sm overflow-hidden"
-      style={{
-        background: 'rgba(40, 28, 0, 0.7)',
-        border: '1px solid rgba(180, 140, 80, 0.5)',
-        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.6)',
-      }}
-    >
-      {/* Yellow-sapphire fill — faceted gem-like gradient */}
+    <div className="relative h-2 rounded-full overflow-hidden bg-black/55 border border-amber-300/10">
       <motion.div
-        className="absolute inset-y-0 left-0"
-        style={{
-          background: 'linear-gradient(180deg, #fff7b0 0%, #ffe14a 18%, #f5b800 50%, #c98a00 82%, #7a5200 100%)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 2px rgba(120,80,0,0.6), 0 0 10px rgba(255, 210, 70, 0.7)',
-        }}
+        className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-yellow-300"
         animate={{ width: `${pct}%` }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Faceted gemstone shimmer overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'repeating-linear-gradient(115deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 8px), linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 45%)',
-            mixBlendMode: 'screen',
-          }}
-        />
-      </motion.div>
-      <div className="absolute inset-0 flex items-center justify-between px-2 text-[10px] font-bold tabular-nums drop-shadow-md">
-        <span className="text-yellow-100" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>LVL {level}</span>
-        <span className="text-yellow-50" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{xp}/{xpForNext} XP</span>
-      </div>
+        transition={{ duration: 0.22 }}
+      />
+      <div className="absolute -top-3 right-0 text-[7px] text-white/25 tracking-wider">LV {level} · {xp}/{xpForNext}</div>
     </div>
-  );
-}
-
-function AbilitySlot({ ability, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="relative w-[60px] h-[60px] rounded-sm overflow-hidden group transition-transform hover:scale-105"
-      style={{
-        background: `linear-gradient(135deg, ${ability.color}aa 0%, ${ability.color}55 100%)`,
-        border: '2px solid rgba(180, 140, 80, 0.7)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)',
-      }}
-    >
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-white font-black text-[9px] tracking-wider uppercase drop-shadow-md">
-          {ability.label}
-        </span>
-      </div>
-      <div
-        className="absolute bottom-0 left-0 right-0 text-center text-white text-[10px] font-bold py-0.5"
-        style={{ background: 'rgba(0,0,0,0.7)' }}
-      >
-        {ability.key}
-      </div>
-    </button>
   );
 }
