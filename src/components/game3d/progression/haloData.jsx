@@ -1,138 +1,103 @@
-// ─── Halo Progression Data ─────────────────────────────────────────────────
-// Halo is a permanent, account-wide PvP enhancement system. Players earn
-// Halo XP from killing other players in PvP. XP converts to Halo Levels.
-// Halo Levels grant permanent stat bonuses and visual tier evolution.
+// TwelveSky2 Halo / CP Reinforcement rules for Mines.
+// Verified structural rules:
+//   • Bonus Level +0 .. +96.
+//   • Every successful bonus level grants +1 STR / AGI / VIT / SPI.
+//   • An attempt requires 100 Contribution Points + 1,000,000 Silver.
+//   • Outcomes can be success (+1), failure (no change), or de-level (-1).
+//   • The visible halo evolves through 12 bands: 1-8, 9-16 ... 89-96.
 //
-//   Bronze    → Silver  → Gold   → Mythic   → Divine   → Celestial
-//   Lvl 1-30  31-60     61-100   101-140    141-170    171-200
-//
-// Enhancement is an ATTEMPT/RNG system (like elixir enhancement):
-//   - Each attempt costs 10 PvP kills.
-//   - On success, Halo Level +1.
-//   - On failure, kills are consumed but level stays.
-//   - Success chance DROPS as you climb the level tiers.
-//
-// At MAX level (100) the player gains the full bonus block defined in
-// MAX_HALO_BONUSES. All lower levels scale linearly toward that cap.
+// The exact historical success/de-level probability table is not present in
+// the Fenrir seed data we currently import. The probability profile below is
+// therefore an explicit Mines tuning preset, isolated here so it can be
+// replaced without touching progression/store/UI code when a canonical table
+// is recovered.
 
-// Tier definitions — purely cosmetic / display data. The actual stat math
-// uses the player's halo LEVEL (0..MAX_HALO_LEVEL), not the tier.
-export const HALO_TIERS = [
-  { id: 'bronze',    label: 'Bronze Halo',    minLevel: 1,   color: '#cd7f32', glow: 'rgba(205, 127, 50, 0.45)', auraDesc: 'Soft white glow with a bronze undertone.' },
-  { id: 'silver',    label: 'Silver Halo',    minLevel: 31,  color: '#c0c0c0', glow: 'rgba(192, 192, 192, 0.50)', auraDesc: 'Polished silver shimmer with cool highlights.' },
-  { id: 'gold',      label: 'Gold Halo',      minLevel: 61,  color: '#f5b400', glow: 'rgba(245, 180, 0, 0.55)',   auraDesc: 'Radiant gold aura with warm light rays.' },
-  { id: 'mythic',    label: 'Mythic Halo',    minLevel: 101, color: '#a855f7', glow: 'rgba(168, 85, 247, 0.60)',  auraDesc: 'Pulsing violet energy with arcane particles.' },
-  { id: 'divine',    label: 'Divine Halo',    minLevel: 141, color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.65)',  auraDesc: 'Animated cosmic rings with celestial motes.' },
-  { id: 'celestial', label: 'Celestial Halo', minLevel: 171, color: '#f472b6', glow: 'rgba(244, 114, 182, 0.75)', auraDesc: 'Multi-layer energy halo with reality-bending shimmer.' },
-];
+export const MAX_HALO_LEVEL = 96;
+export const HALO_CP_COST = 100;
+export const HALO_SILVER_COST = 1_000_000;
 
-export const MAX_HALO_LEVEL = 200;
+export const HALO_TIERS = Object.freeze([
+  { id: 'halo_01', label: 'Halo I', minLevel: 1, maxLevel: 8, color: '#e2e8f0', glow: 'rgba(226,232,240,0.28)' },
+  { id: 'halo_02', label: 'Halo II', minLevel: 9, maxLevel: 16, color: '#bae6fd', glow: 'rgba(186,230,253,0.30)' },
+  { id: 'halo_03', label: 'Halo III', minLevel: 17, maxLevel: 24, color: '#67e8f9', glow: 'rgba(103,232,249,0.32)' },
+  { id: 'halo_04', label: 'Halo IV', minLevel: 25, maxLevel: 32, color: '#5eead4', glow: 'rgba(94,234,212,0.34)' },
+  { id: 'halo_05', label: 'Halo V', minLevel: 33, maxLevel: 40, color: '#86efac', glow: 'rgba(134,239,172,0.36)' },
+  { id: 'halo_06', label: 'Halo VI', minLevel: 41, maxLevel: 48, color: '#fde68a', glow: 'rgba(253,230,138,0.38)' },
+  { id: 'halo_07', label: 'Halo VII', minLevel: 49, maxLevel: 56, color: '#fbbf24', glow: 'rgba(251,191,36,0.40)' },
+  { id: 'halo_08', label: 'Halo VIII', minLevel: 57, maxLevel: 64, color: '#fdba74', glow: 'rgba(253,186,116,0.42)' },
+  { id: 'halo_09', label: 'Halo IX', minLevel: 65, maxLevel: 72, color: '#f9a8d4', glow: 'rgba(249,168,212,0.44)' },
+  { id: 'halo_10', label: 'Halo X', minLevel: 73, maxLevel: 80, color: '#d8b4fe', glow: 'rgba(216,180,254,0.46)' },
+  { id: 'halo_11', label: 'Halo XI', minLevel: 81, maxLevel: 88, color: '#c4b5fd', glow: 'rgba(196,181,253,0.50)' },
+  { id: 'halo_12', label: 'Halo XII', minLevel: 89, maxLevel: 96, color: '#ffffff', glow: 'rgba(255,255,255,0.58)' },
+]);
 
-// ── Enhancement Attempt Rules ──────────────────────────────────────────────
-// Cost (PvP kills) per enhancement attempt, regardless of success or failure.
-export const HALO_ATTEMPT_COST = 10;
+// Current Mines tuning preset only. Replace these rows when an authoritative
+// historical probability table is recovered.
+export const HALO_OUTCOME_BANDS = Object.freeze([
+  { from: 0,  to: 15, success: 0.62, delevelOnFailure: 0.00 },
+  { from: 16, to: 31, success: 0.50, delevelOnFailure: 0.05 },
+  { from: 32, to: 47, success: 0.40, delevelOnFailure: 0.10 },
+  { from: 48, to: 63, success: 0.31, delevelOnFailure: 0.16 },
+  { from: 64, to: 79, success: 0.23, delevelOnFailure: 0.22 },
+  { from: 80, to: 95, success: 0.16, delevelOnFailure: 0.30 },
+]);
 
-// Success chance bands keyed by CURRENT level (the level you're trying to leave).
-// e.g. at level 5 you're attempting 5→6 with a 50% chance.
-// Bands are evaluated top-to-bottom; first match wins.
-export const HALO_SUCCESS_BANDS = [
-  { from: 1,   to: 10,  chance: 0.50 },
-  { from: 11,  to: 35,  chance: 0.35 },
-  { from: 36,  to: 70,  chance: 0.20 },
-  { from: 71,  to: 120, chance: 0.15 },
-  { from: 121, to: 170, chance: 0.08 },
-  { from: 171, to: 190, chance: 0.05 },
-  { from: 191, to: 199, chance: 0.03 },
-];
-
-// Resolve the success chance for the player's current level (the level they
-// are attempting to advance FROM). Returns 0 if at max level.
-export function getSuccessChanceForLevel(currentLevel) {
-  if (currentLevel >= MAX_HALO_LEVEL) return 0;
-  // Level 0 attempts behave like level 1 (first band).
-  const lvl = Math.max(1, currentLevel);
-  for (const band of HALO_SUCCESS_BANDS) {
-    if (lvl >= band.from && lvl <= band.to) return band.chance;
-  }
-  // Fallback to the last (hardest) band if a gap appears.
-  return HALO_SUCCESS_BANDS[HALO_SUCCESS_BANDS.length - 1].chance;
+export function getHaloOutcomeBand(level) {
+  const current = Math.max(0, Math.min(MAX_HALO_LEVEL - 1, Math.floor(Number(level) || 0)));
+  return HALO_OUTCOME_BANDS.find((band) => current >= band.from && current <= band.to)
+    || HALO_OUTCOME_BANDS[HALO_OUTCOME_BANDS.length - 1];
 }
 
-// Per-level Halo bonuses. Each Halo level grants:
-//   +1 strength, +1 constitution, +1 dexterity, +1 intelligence, +1 focus
-//   +0.2% additive critical chance
-//   +0.3% critical defense (reduces incoming crit bonus damage)
-//   +0.1% critical damage (added to crit multiplier)
-//
-// IMPORTANT: Halo NEVER bypasses the attribute system. Each +1 stat is a
-// VIRTUAL ATTRIBUTE POINT — fed into computeDerivedStats() the same way
-// allocated points are — so e.g. +1 STR yields +3 physical damage via
-// STAT_RATES.strength, +0.5% hit chance, +0.3% damage variance, etc.
-//
-// At MAX_HALO_LEVEL (200) the totals are:
-//   200 STR / CON / DEX / INT / FOC, +40% crit, +60% crit defense, +20 crit dmg.
-export const PER_LEVEL_HALO_BONUSES = {
-  strength:         1,
-  constitution:     1,
-  dexterity:        1,
-  intelligence:     1,
-  focus:            1,
-  criticalChance:   0.2,   // +0.2% per Halo level (additive crit chance)
-  criticalDefense:  0.003, // +0.3% per Halo level (stored as 0..1 multiplier)
-  criticalDamage:   0.001, // +0.1% per Halo level (stored as 0..1 multiplier added to crit)
-};
-
-// Legacy export — kept for any UI that imports MAX_HALO_BONUSES. Reflects the
-// totals at MAX_HALO_LEVEL given the per-level values above.
-export const MAX_HALO_BONUSES = {
-  strength:        PER_LEVEL_HALO_BONUSES.strength        * MAX_HALO_LEVEL,
-  constitution:    PER_LEVEL_HALO_BONUSES.constitution    * MAX_HALO_LEVEL,
-  dexterity:       PER_LEVEL_HALO_BONUSES.dexterity       * MAX_HALO_LEVEL,
-  intelligence:    PER_LEVEL_HALO_BONUSES.intelligence    * MAX_HALO_LEVEL,
-  focus:           PER_LEVEL_HALO_BONUSES.focus           * MAX_HALO_LEVEL,
-  // Legacy aliases — some older UI reads these names.
-  vitality:        PER_LEVEL_HALO_BONUSES.constitution    * MAX_HALO_LEVEL,
-  spirit:          PER_LEVEL_HALO_BONUSES.focus           * MAX_HALO_LEVEL,
-  criticalChance:  PER_LEVEL_HALO_BONUSES.criticalChance  * MAX_HALO_LEVEL,
-  criticalDefense: PER_LEVEL_HALO_BONUSES.criticalDefense * MAX_HALO_LEVEL,
-  criticalDamage:  PER_LEVEL_HALO_BONUSES.criticalDamage  * MAX_HALO_LEVEL,
-};
-
-// Kills required to perform an enhancement attempt. Constant regardless of level.
-// (Difficulty scales via the success-chance bands, not the cost.)
-export function killsRequiredForAttempt() {
-  return HALO_ATTEMPT_COST;
+export function getSuccessChanceForLevel(level) {
+  if (level >= MAX_HALO_LEVEL) return 0;
+  return getHaloOutcomeBand(level).success;
 }
 
-// Resolve which tier a given level falls into.
+export function getDelevelChanceOnFailure(level) {
+  if (level <= 0) return 0;
+  return getHaloOutcomeBand(level).delevelOnFailure;
+}
+
 export function getTierForLevel(level) {
-  const lvl = Math.max(0, Math.min(MAX_HALO_LEVEL, level));
-  let tier = HALO_TIERS[0];
-  for (const t of HALO_TIERS) {
-    if (lvl >= t.minLevel) tier = t;
+  const current = Math.max(0, Math.min(MAX_HALO_LEVEL, Math.floor(Number(level) || 0)));
+  if (current <= 0) {
+    return { id: 'halo_00', label: 'No Halo', minLevel: 0, maxLevel: 0, color: '#94a3b8', glow: 'rgba(148,163,184,0.12)' };
   }
-  return tier;
+  return HALO_TIERS.find((tier) => current >= tier.minLevel && current <= tier.maxLevel)
+    || HALO_TIERS[HALO_TIERS.length - 1];
 }
 
-// Per-level multiplication — every Halo level grants the PER_LEVEL bonuses.
-// Returns ALL five attribute keys (strength / constitution / dexterity /
-// intelligence / focus) plus crit chance & crit defense. statsSystem's
-// computeDerivedStats consumes these as flat stat-point additions and runs
-// them through STAT_RATES, so they feed into both offense and defense the
-// same way Attribute points do.
+export const PER_LEVEL_HALO_BONUSES = Object.freeze({
+  strength: 1,
+  agility: 1,
+  vitality: 1,
+  spirit: 1,
+});
+
+export const MAX_HALO_BONUSES = Object.freeze({
+  strength: MAX_HALO_LEVEL,
+  agility: MAX_HALO_LEVEL,
+  vitality: MAX_HALO_LEVEL,
+  spirit: MAX_HALO_LEVEL,
+  dexterity: MAX_HALO_LEVEL,
+  constitution: MAX_HALO_LEVEL,
+  focus: MAX_HALO_LEVEL,
+});
+
 export function getHaloBonusesForLevel(level) {
-  const lvl = Math.max(0, Math.min(MAX_HALO_LEVEL, level));
+  const current = Math.max(0, Math.min(MAX_HALO_LEVEL, Math.floor(Number(level) || 0)));
   return {
-    strength:        PER_LEVEL_HALO_BONUSES.strength        * lvl,
-    constitution:    PER_LEVEL_HALO_BONUSES.constitution    * lvl,
-    dexterity:       PER_LEVEL_HALO_BONUSES.dexterity       * lvl,
-    intelligence:    PER_LEVEL_HALO_BONUSES.intelligence    * lvl,
-    focus:           PER_LEVEL_HALO_BONUSES.focus           * lvl,
-    // Legacy aliases — some older UI reads these. statsSystem also accepts them.
-    vitality:        PER_LEVEL_HALO_BONUSES.constitution    * lvl,
-    spirit:          PER_LEVEL_HALO_BONUSES.focus           * lvl,
-    criticalChance:  PER_LEVEL_HALO_BONUSES.criticalChance  * lvl,
-    criticalDefense: PER_LEVEL_HALO_BONUSES.criticalDefense * lvl,
-    criticalDamage:  PER_LEVEL_HALO_BONUSES.criticalDamage  * lvl,
+    strength: current,
+    agility: current,
+    dexterity: current,
+    vitality: current,
+    constitution: current,
+    spirit: current,
+    focus: current,
   };
+}
+
+// Compatibility helper for older UI imports.
+export function killsRequiredForAttempt() {
+  return 0;
 }
