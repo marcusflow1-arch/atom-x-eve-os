@@ -20,6 +20,7 @@ import NPCQuests from './pages/NPCQuests';
 import NPCNetwork from './pages/NPCNetwork';
 import LivingQuest from './pages/LivingQuest';
 import Plan from './pages/Plan';
+import AvatarGenesisGate from '@/components/onboarding/AvatarGenesisGate';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 // Admin tooling stays registered in the source for the Base44/editor workflow,
@@ -35,7 +36,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -54,23 +55,25 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper>} />
-      {livePages.map(([path, Page]) => (
-        <Route key={path} path={`/${path}`} element={<LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>} />
-      ))}
-      <Route path="/DepsArt" element={<LayoutWrapper currentPageName="DepsArt"><DepsArt /></LayoutWrapper>} />
-      <Route path="/game/:gameId" element={<LayoutWrapper currentPageName="GameHub"><GameHub /></LayoutWrapper>} />
-      <Route path="/studio" element={<LayoutWrapper currentPageName="Studio"><Studio /></LayoutWrapper>} />
-      <Route path="/dev-studio/:studioId" element={<LayoutWrapper currentPageName="DevStudio"><DevStudio /></LayoutWrapper>} />
-      <Route path="/NetworkTest" element={<NetworkTest />} />
-      <Route path="/ChainBreak" element={<ChainBreak />} />
-      <Route path="/NPCQuests" element={<NPCQuests />} />
-      <Route path="/NPCNetwork" element={<NPCNetwork />} />
-      <Route path="/LivingQuest" element={<LivingQuest />} />
-      <Route path="/Plan" element={<LayoutWrapper currentPageName="Plan"><Plan /></LayoutWrapper>} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <AvatarGenesisGate user={user}>
+      <Routes>
+        <Route path="/" element={<LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper>} />
+        {livePages.map(([path, Page]) => (
+          <Route key={path} path={`/${path}`} element={<LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>} />
+        ))}
+        <Route path="/DepsArt" element={<LayoutWrapper currentPageName="DepsArt"><DepsArt /></LayoutWrapper>} />
+        <Route path="/game/:gameId" element={<LayoutWrapper currentPageName="GameHub"><GameHub /></LayoutWrapper>} />
+        <Route path="/studio" element={<LayoutWrapper currentPageName="Studio"><Studio /></LayoutWrapper>} />
+        <Route path="/dev-studio/:studioId" element={<LayoutWrapper currentPageName="DevStudio"><DevStudio /></LayoutWrapper>} />
+        <Route path="/NetworkTest" element={<NetworkTest />} />
+        <Route path="/ChainBreak" element={<ChainBreak />} />
+        <Route path="/NPCQuests" element={<NPCQuests />} />
+        <Route path="/NPCNetwork" element={<NPCNetwork />} />
+        <Route path="/LivingQuest" element={<LivingQuest />} />
+        <Route path="/Plan" element={<LayoutWrapper currentPageName="Plan"><Plan /></LayoutWrapper>} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </AvatarGenesisGate>
   );
 };
 
