@@ -8,6 +8,8 @@ import ReactorBridge from '../admin/reactor/ReactorBridge';
 import { attachWeapon, attachEffect } from '../3d/WeaponAttachmentSystem';
 import { cleanMesh } from './transparentViewer/cleanMesh';
 import { useSkybox } from './transparentViewer/useSkybox';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { companionModel, applyCompanionAppearance } from '@/components/onboarding/genesisAssets';
 
 export default function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);
@@ -30,14 +32,16 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const companionRef = useRef(null);
   const companionMixerRef = useRef(null);
   const remotePlayersRef = useRef(new Map());
+  const savedCompanion = useCompanionIdentity();
+  const savedCharacter = savedCompanion?.gender === 'female' ? 'c1' : 'ybot';
   
   // --- DUAL CHARACTER SYSTEM ---
   const c1ModelRef = useRef(null);       // C1 (ErikaArcher) model object
   const c1MixerRef = useRef(null);       // C1 animation mixer
   const c1ActionsRef = useRef({});       // C1 animation actions map
   const c1ActiveActionRef = useRef(null);
-  const activeCharacterRef = useRef(localStorage.getItem('luna_active_character') || 'ybot'); // 'ybot' or 'c1'
-  const [activeCharLabel, setActiveCharLabel] = useState(localStorage.getItem('luna_active_character') || 'ybot'); // For UI display
+  const activeCharacterRef = useRef(savedCharacter); // 'ybot' or 'c1'
+  const [activeCharLabel, setActiveCharLabel] = useState(savedCharacter); // For UI display
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const switchingRef = useRef(false);     // Prevent double-switch
   
@@ -496,7 +500,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     // --- CHARACTER (Y-Bot) ---
     const loader = new FBXLoader();
-    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+    const yBotUrl = savedCompanion?.gender === 'male'
+      ? companionModel(savedCompanion)
+      : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
@@ -505,6 +511,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       model.visible = activeCharacterRef.current === 'ybot';
       
       model.traverse(cleanMesh);
+      applyCompanionAppearance(model, savedCompanion || {});
       
       modelRef.current = model;
       scene.add(model);
@@ -1521,7 +1528,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
     // --- C1 MODEL (ErikaArcher) ---
-    const c1Url = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+    const c1Url = savedCompanion?.gender === 'female'
+      ? companionModel(savedCompanion)
+      : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
     new FBXLoader().load(c1Url, async (c1fbx) => {
       const c1 = c1fbx;
       c1.scale.set(0.001, 0.001, 0.001);
@@ -1529,6 +1538,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       c1.visible = activeCharacterRef.current === 'c1';
 
       c1.traverse(cleanMesh);
+      applyCompanionAppearance(c1, savedCompanion || {});
 
       c1ModelRef.current = c1;
       scene.add(c1);
@@ -1864,7 +1874,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       }
       renderer.dispose();
     };
-  }, [adminAnimations, keybinds, spawnableAIModels]);
+  }, [adminAnimations, keybinds, spawnableAIModels, savedCompanion]);
 
   useEffect(() => {
     if (!isModelLoaded) return; 
