@@ -1,297 +1,356 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  subscribeWings,
-  equipWings,
-  unequipWings,
   attemptWingEnhancement,
-  attemptWingEnhancementBatch,
+  equipWings,
+  grantWingImproveCharges,
+  grantWingMaterial,
+  grantWingProtection,
   setWingLevel,
+  subscribeWings,
+  unequipWings,
 } from '../wingsStore';
-import { MAX_WING_LEVEL } from '../wingsData';
+import {
+  MAX_WING_LEVEL,
+  MAX_WING_PERCENT,
+  WING_MATERIALS,
+  WING_SAFE_PERCENT,
+  getWingRisk,
+} from '../wingsData';
 import MaxOutButton from './devMaxOut';
 
-const BATCH_PRESETS = [10, 15, 25, 35];
+const DEFAULT_MATERIAL_ID = 695;
 
 export default function WingsSubTab() {
   const [wings, setWings] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [materialId, setMaterialId] = useState(DEFAULT_MATERIAL_ID);
+  const [useProtection, setUseProtection] = useState(true);
+  const [useImprove, setUseImprove] = useState(true);
   const [lastResult, setLastResult] = useState(null);
-  const [customAttempts, setCustomAttempts] = useState('');
 
-  useEffect(() => subscribeWings((s) => {
-    setWings(s);
-    if (!selectedId && s.equippedPathId) setSelectedId(s.equippedPathId);
-    else if (!selectedId) setSelectedId(Object.keys(s.paths)[0]);
-  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => subscribeWings((snapshot) => {
+    setWings(snapshot);
+    setSelectedId((current) => current || snapshot.equippedPathId || Object.keys(snapshot.paths)[0]);
+  }), []);
 
-  if (!wings || !selectedId) return null;
-  const path = wings.paths[selectedId];
-  const isEquipped = wings.equippedPathId === selectedId;
+  const path = wings && selectedId ? wings.paths[selectedId] : null;
+  const selectedMaterial = wings?.materials?.find((material) => material.itemId === materialId)
+    || WING_MATERIALS.find((material) => material.itemId === materialId)
+    || WING_MATERIALS[0];
+  const improveActive = !!useImprove && (wings?.improveCharges || 0) > 0;
+  const protectionActive = !!useProtection && (wings?.wingProtectionCharges || 0) > 0;
+  const risk = useMemo(() => {
+    if (!path) return null;
+    return getWingRisk(path.stage, materialId, 0, improveActive);
+  }, [path, materialId, improveActive]);
 
-  const maxAttempts = wings.attemptCost > 0 ? Math.floor(wings.kills / wings.attemptCost) : 0;
-  const canAttempt = wings.kills >= wings.attemptCost && !path.isMaxLevel;
-  const chancePct = Math.round((path.successChance || 0) * 100);
+  if (!wings || !path || !risk) return null;
 
-  const handleAttempt = () => {
-    const r = attemptWingEnhancement(selectedId);
-    setLastResult(r);
-    if (r.ok) window.setTimeout(() => setLastResult(null), 2500);
+  const isEquipped = wings.equippedPathId === path.id;
+  const materialStock = selectedMaterial?.stock || 0;
+  const canAttempt = !path.destroyed
+    && !path.isMaxLevel
+    && wings.cp >= wings.attemptCost
+    && materialStock > 0;
+
+  const attempt = () => {
+    const result = attemptWingEnhancement(path.id, {
+      materialId,
+      useWingProtection: protectionActive,
+      useImproveCharge: improveActive,
+    });
+    setLastResult(result);
+    window.setTimeout(() => setLastResult(null), 3500);
   };
 
-  const handleBatch = (count) => {
-    if (!canAttempt || path.isMaxLevel) return;
-    const safe = Math.min(count, maxAttempts);
-    if (safe < 1) return;
-    const summary = attemptWingEnhancementBatch(selectedId, safe);
-    setLastResult({ ok: true, success: summary.successes > 0, batch: summary });
-    window.setTimeout(() => setLastResult(null), 3000);
+  const seedDevMaterials = () => {
+    [695, 696, 698, 2397].forEach((id) => grantWingMaterial(id, 25));
+    grantWingMaterial(8106, 10);
+    grantWingMaterial(826, 2);
+    grantWingProtection(10);
+    grantWingImproveCharges(10);
   };
-
-  const handleCustomBatch = () => {
-    const n = parseInt(customAttempts, 10);
-    if (!Number.isFinite(n) || n < 1) return;
-    handleBatch(n);
-    setCustomAttempts('');
-  };
-
-  const onCustomChange = (e) => {
-    const raw = e.target.value.replace(/[^0-9]/g, '');
-    if (raw === '') return setCustomAttempts('');
-    const n = parseInt(raw, 10);
-    setCustomAttempts(n > maxAttempts ? String(maxAttempts) : raw);
-  };
-
-  const mb = path.multiplierBonuses;
-  const fb = path.flatBonuses;
 
   return (
-    <div className="flex h-full">
-      {/* LEFT — wing path list */}
-      <div className="w-72 border-r border-white/5 px-4 pt-6 overflow-y-auto">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 px-2 mb-3">
-          Wing Types
-        </div>
-        {Object.values(wings.paths).map((p) => {
-          const active = p.id === selectedId;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setSelectedId(p.id)}
-              className="w-full text-left p-3 mb-2 rounded-md border transition-all"
-              style={{
-                background: active ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
-                borderColor: active ? `${p.color}66` : 'rgba(255,255,255,0.05)',
-              }}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="text-xl">{p.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">{p.name}</div>
-                  <div className="text-[10px] tracking-[0.2em] uppercase text-white/50 mt-0.5">
-                    Lv {p.level} · {p.primaryStat}
-                  </div>
-                </div>
-                {wings.equippedPathId === p.id && (
-                  <span className="text-[9px] tracking-[0.2em] uppercase" style={{ color: p.color }}>Eq</span>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* RIGHT — detail + enhancement */}
-      <div className="flex-1 min-w-0 px-10 pt-8 overflow-y-auto">
-        <div className="flex items-start gap-4">
-          <div
-            className="w-20 h-20 rounded-md flex items-center justify-center text-4xl"
-            style={{ background: `${path.color}22`, border: `1px solid ${path.color}66` }}
-          >
-            {path.icon}
-          </div>
-          <div className="flex-1">
-            <div className="text-xl font-semibold text-white tracking-wide">{path.name}</div>
-            <div className="text-[10px] tracking-[0.3em] uppercase mt-1" style={{ color: path.color }}>
-              {path.primaryStat} · Level {path.level} / {MAX_WING_LEVEL}
-            </div>
-            <div className="text-xs text-white/60 mt-3 max-w-lg">{path.description}</div>
-          </div>
-          <button
-            onClick={() => (isEquipped ? unequipWings() : equipWings(path.id))}
-            className="px-4 py-2 rounded-sm text-[11px] tracking-[0.3em] uppercase font-semibold"
-            style={{
-              background: isEquipped ? 'rgba(251,113,133,0.10)' : `${path.color}1a`,
-              border: `1px solid ${isEquipped ? 'rgba(251,113,133,0.4)' : `${path.color}80`}`,
-              color: isEquipped ? '#fb7185' : path.color,
-            }}
-          >
-            {isEquipped ? 'Unequip' : 'Equip Wings'}
-          </button>
-        </div>
-
-        {/* Enhancement controls — spend kills to level THIS wing separately */}
-        <div className="mt-8 grid grid-cols-2 gap-6 mb-6">
-          <Stat label="Banked Kills" value={wings.kills} />
-          <Stat label="Attempt Cost" value={wings.attemptCost} />
-          <Stat label="Success Chance" value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
-          <Stat label="Total Attempts" value={path.totalAttempts} />
-          <div className="col-span-2 flex items-end justify-end gap-2">
-            <MaxOutButton
-              accent={path.color}
-              label={`Max ${path.name}`}
-              onClick={() => {
-                setWingLevel(selectedId, MAX_WING_LEVEL);
-                if (!isEquipped) equipWings(path.id);
-              }}
-              title="Editor only — max out this wing type + equip it"
-            />
+    <div className="flex h-full text-white">
+      <aside className="w-72 shrink-0 border-r border-white/[0.06] px-4 py-6 overflow-y-auto bg-black/10 backdrop-blur-xl">
+        <div className="px-2 mb-4">
+          <div className="text-[10px] tracking-[0.32em] uppercase text-white/35">Wing Arsenal</div>
+          <div className="text-xs text-white/55 mt-2 leading-relaxed">
+            Reinforce each wing independently from 0–120%. Halo no longer affects Wing progression.
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={handleAttempt}
-            disabled={!canAttempt}
-            className="py-2 px-3 rounded-sm text-[10px] tracking-[0.2em] uppercase font-semibold transition-all"
-            style={{
-              width: '25%',
-              minWidth: 120,
-              background: canAttempt ? `${path.color}1a` : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${canAttempt ? `${path.color}80` : 'rgba(255,255,255,0.08)'}`,
-              color: canAttempt ? path.color : 'rgba(255,255,255,0.3)',
-              cursor: canAttempt ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {path.isMaxLevel
-              ? 'Wings Maxed'
-              : canAttempt
-                ? `Attempt — ${chancePct}%`
-                : `Need ${wings.attemptCost - wings.kills}`}
-          </button>
-
-          {BATCH_PRESETS.map((n) => {
-            const affordable = n <= maxAttempts && !path.isMaxLevel;
+        <div className="space-y-2">
+          {Object.values(wings.paths).map((wing) => {
+            const active = wing.id === path.id;
             return (
               <button
-                key={n}
-                onClick={() => handleBatch(n)}
-                disabled={!affordable}
-                className="py-2 px-3 rounded-sm text-[10px] tracking-[0.15em] uppercase font-semibold transition-all"
+                key={wing.id}
+                onClick={() => setSelectedId(wing.id)}
+                className="w-full text-left rounded-xl px-3 py-3 transition-all"
                 style={{
-                  background: affordable ? `${path.color}14` : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${affordable ? `${path.color}59` : 'rgba(255,255,255,0.08)'}`,
-                  color: affordable ? path.color : 'rgba(255,255,255,0.25)',
-                  cursor: affordable ? 'pointer' : 'not-allowed',
+                  background: active ? `${wing.color}12` : 'rgba(255,255,255,0.025)',
+                  border: `1px solid ${active ? `${wing.color}55` : 'rgba(255,255,255,0.06)'}`,
+                  boxShadow: active ? `0 0 24px ${wing.color}12 inset` : 'none',
                 }}
-                title={affordable ? `Run ${n} attempts` : `Need ${n * wings.attemptCost} kills`}
               >
-                {n}×
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">{wing.icon}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold truncate">{wing.name}</div>
+                    <div className="text-[10px] tracking-[0.18em] uppercase text-white/45 mt-1">
+                      {wing.destroyed ? 'Destroyed' : `+${wing.reinforcementPercent}% · Stage ${wing.stage}/40`}
+                    </div>
+                  </div>
+                  {wings.equippedPathId === wing.id && !wing.destroyed && (
+                    <span className="text-[9px] tracking-[0.18em] uppercase" style={{ color: wing.color }}>Equipped</span>
+                  )}
+                </div>
               </button>
             );
           })}
+        </div>
+      </aside>
 
-          <div className="flex items-center gap-1 ml-auto">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={customAttempts}
-              onChange={onCustomChange}
-              placeholder={`Max ${maxAttempts}`}
-              disabled={path.isMaxLevel || maxAttempts < 1}
-              className="py-2 px-2 rounded-sm text-[11px] tabular-nums text-white tracking-wider bg-white/[0.04] border border-white/10 focus:border-white/40 outline-none w-24"
-            />
-            <button
-              onClick={handleCustomBatch}
-              disabled={
-                path.isMaxLevel ||
-                !customAttempts ||
-                parseInt(customAttempts, 10) < 1 ||
-                parseInt(customAttempts, 10) > maxAttempts
-              }
-              className="py-2 px-3 rounded-sm text-[10px] tracking-[0.15em] uppercase font-semibold transition-all"
-              style={{
-                background: `${path.color}1a`,
-                border: `1px solid ${path.color}80`,
-                color: path.color,
-              }}
+      <main className="flex-1 min-w-0 overflow-y-auto px-8 py-7">
+        <section className="rounded-2xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-2xl p-5">
+          <div className="flex items-start gap-4">
+            <div
+              className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shrink-0"
+              style={{ background: `${path.color}12`, border: `1px solid ${path.color}55`, boxShadow: `0 0 36px ${path.color}18 inset` }}
             >
-              Run
-            </button>
-          </div>
-        </div>
+              {path.icon}
+            </div>
 
-        <div className="mt-2 text-[9px] tracking-[0.2em] uppercase text-white/40">
-          Max possible attempts: <span className="tabular-nums" style={{ color: path.color }}>{maxAttempts}</span>
-          {' · '}
-          {wings.attemptCost} kills per attempt · leveled separately per wing type
-        </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-xl font-semibold tracking-wide">{path.name}</h2>
+                <span className="text-[10px] tracking-[0.2em] uppercase px-2 py-1 rounded-full bg-white/[0.05] text-white/55">
+                  Reinforcement +{path.reinforcementPercent}%
+                </span>
+              </div>
+              <div className="text-xs text-white/55 mt-2 max-w-2xl leading-relaxed">{path.description}</div>
+              <div className="mt-3 text-[10px] tracking-[0.18em] uppercase text-white/35">
+                Equipment multiplier <span className="text-white/80">×{path.equipmentMultiplier.toFixed(2)}</span>
+                {' · '}Safe zone through <span className="text-white/80">+{WING_SAFE_PERCENT}%</span>
+              </div>
+            </div>
 
-        {lastResult?.ok && (
-          <div
-            className="mt-4 text-center py-2 rounded-sm text-xs tracking-[0.3em] uppercase"
-            style={{
-              background: lastResult.success ? 'rgba(163,230,53,0.10)' : 'rgba(251,113,133,0.10)',
-              color: lastResult.success ? '#a3e635' : '#fb7185',
-            }}
-          >
-            {lastResult.batch
-              ? `${lastResult.batch.attempts} attempts — ${lastResult.batch.successes} success · ${path.name} Lv ${lastResult.batch.finalLevel}`
-              : lastResult.success
-                ? `Success — ${path.name} Lv ${lastResult.level}`
-                : 'Failure — kills consumed'}
+            <div className="flex items-center gap-2">
+              <MaxOutButton
+                accent={path.color}
+                label="Max Wing"
+                onClick={() => {
+                  setWingLevel(path.id, MAX_WING_LEVEL);
+                  equipWings(path.id);
+                }}
+              />
+              <MaxOutButton
+                accent="#67e8f9"
+                label="Seed Mats"
+                onClick={seedDevMaterials}
+                title="Editor only — seed Wing reinforcement materials and protection charges"
+              />
+              <button
+                onClick={() => (isEquipped ? unequipWings() : equipWings(path.id))}
+                disabled={path.destroyed}
+                className="px-4 py-2 rounded-lg text-[10px] tracking-[0.2em] uppercase font-semibold disabled:opacity-30"
+                style={{
+                  background: isEquipped ? 'rgba(251,113,133,0.08)' : `${path.color}12`,
+                  border: `1px solid ${isEquipped ? 'rgba(251,113,133,0.35)' : `${path.color}55`}`,
+                  color: isEquipped ? '#fb7185' : path.color,
+                }}
+              >
+                {path.destroyed ? 'Destroyed' : isEquipped ? 'Unequip' : 'Equip'}
+              </button>
+            </div>
           </div>
+
+          <div className="grid grid-cols-4 gap-3 mt-6">
+            <Metric label="Contribution" value={wings.cp.toLocaleString()} sub={`${wings.attemptCost} CP / attempt`} />
+            <Metric label="Reinforcement" value={`+${path.reinforcementPercent}%`} sub={`Stage ${path.stage}/${MAX_WING_LEVEL}`} accent={path.color} />
+            <Metric label="Success" value={`${risk.successPercent}%`} sub={improveActive ? '+5% Improve charge active' : 'Current material roll'} accent={risk.successPercent >= 50 ? '#86efac' : '#fde68a'} />
+            <Metric label="Destruction" value={`${risk.destroyPercent}%`} sub={risk.safe ? 'No destruction on this roll' : protectionActive ? 'Wing Protection armed' : 'Protection recommended'} accent={risk.destroyPercent > 0 ? '#fb7185' : '#86efac'} />
+          </div>
+        </section>
+
+        {path.destroyed && (
+          <section className="mt-4 rounded-xl border border-rose-400/30 bg-rose-500/[0.07] px-5 py-4">
+            <div className="text-xs tracking-[0.2em] uppercase text-rose-300 font-semibold">Wing Destroyed</div>
+            <div className="text-xs text-white/55 mt-2">
+              This wing was lost on a failed reinforcement above the safe threshold. Reacquire the wing through loot or the market before reinforcing it again.
+            </div>
+          </section>
         )}
 
-        {/* Multiplier (halo-style) + Specialization (flat) */}
-        <div className="grid grid-cols-2 gap-6 mt-8">
-          <div>
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: path.color }}>
-              Halo-Style Multiplier
+        <section className="mt-4 rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-2xl p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[10px] tracking-[0.3em] uppercase text-white/40">Reinforcement Material</div>
+              <div className="text-xs text-white/55 mt-1">Choose the material that controls the stage jump and failure behavior.</div>
             </div>
-            <div className="space-y-1.5 text-xs text-white/75">
-              <Row k="Strength" v={`+${mb.strength}`} />
-              <Row k="Constitution" v={`+${mb.constitution}`} />
-              <Row k="Dexterity" v={`+${mb.dexterity}`} />
-              <Row k="Focus" v={`+${mb.focus}`} />
-              <Row k="Crit Chance" v={`+${mb.criticalChance.toFixed(1)}%`} />
-              <Row k="Crit Defense" v={`+${Math.round(mb.criticalDefense * 100)}%`} />
-            </div>
-            <div className="text-[9px] tracking-[0.25em] uppercase text-white/30 mt-3">
-              Virtual attribute points · stacks with Halo + Aura
+            <div className="text-[10px] tracking-[0.18em] uppercase text-white/35">
+              Target <span className="text-white/80">+{risk.targetPercent}%</span>
             </div>
           </div>
-          <div>
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: path.color }}>
-              Specialization (Flat)
-            </div>
-            <div className="space-y-1.5 text-xs text-white/75">
-              <Row k="Max HP" v={`+${(fb.hp || 0).toLocaleString()}`} />
-              <Row k="Damage" v={`+${(fb.damage || 0).toLocaleString()}`} />
-              <Row k="Defense" v={`+${(fb.defense || 0).toLocaleString()}`} />
-              <Row k="Crit Chance" v={`+${(fb.critChance || 0).toFixed(1)}%`} />
-              <Row k="Crit Damage" v={`+${Math.round((fb.critDamage || 0) * 100)}%`} />
-              <Row k="Crit Defense" v={`+${Math.round((fb.criticalDefense || 0) * 100)}%`} />
-            </div>
-            <div className="text-[9px] tracking-[0.25em] uppercase text-white/30 mt-3">
-              Flat final stats · applied on top of the multiplier
+
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            {wings.materials.map((material) => {
+              const active = material.itemId === materialId;
+              return (
+                <button
+                  key={material.itemId}
+                  onClick={() => setMaterialId(material.itemId)}
+                  className="rounded-xl p-3 text-left transition-all"
+                  style={{
+                    background: active ? `${path.color}12` : 'rgba(255,255,255,0.025)',
+                    border: `1px solid ${active ? `${path.color}55` : 'rgba(255,255,255,0.07)'}`,
+                  }}
+                >
+                  <div className="flex justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-semibold text-white">{material.label}</div>
+                      <div className="text-[10px] text-white/40 mt-1">Item {material.itemId} · {material.shortLabel}</div>
+                    </div>
+                    <div className="text-sm tabular-nums" style={{ color: active ? path.color : 'rgba(255,255,255,0.55)' }}>
+                      ×{material.stock}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <ToggleCard
+              label="Wing Protection"
+              detail={`${wings.wingProtectionCharges} charges · converts destruction into -3%`}
+              active={protectionActive}
+              disabled={wings.wingProtectionCharges <= 0 || risk.destroyPercent <= 0}
+              onClick={() => setUseProtection((value) => !value)}
+              accent="#fb7185"
+            />
+            <ToggleCard
+              label="Improve Charge"
+              detail={`${wings.improveCharges} charges · +5% success chance`}
+              active={improveActive}
+              disabled={wings.improveCharges <= 0 || selectedMaterial.guaranteed}
+              onClick={() => setUseImprove((value) => !value)}
+              accent="#67e8f9"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 mt-5">
+            <button
+              onClick={attempt}
+              disabled={!canAttempt}
+              className="min-w-52 px-5 py-3 rounded-xl text-[11px] tracking-[0.22em] uppercase font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ background: `${path.color}18`, border: `1px solid ${path.color}66`, color: path.color }}
+            >
+              {path.isMaxLevel
+                ? `Max +${MAX_WING_PERCENT}%`
+                : path.destroyed
+                  ? 'Wing Destroyed'
+                  : wings.cp < wings.attemptCost
+                    ? `Need ${wings.attemptCost - wings.cp} CP`
+                    : materialStock <= 0
+                      ? `Need Item ${selectedMaterial.itemId}`
+                      : `Reinforce → +${risk.targetPercent}%`}
+            </button>
+            <div className="text-[10px] leading-relaxed text-white/40">
+              Costs <span className="text-white/75">{wings.attemptCost} CP</span> and one selected material. Failure normally drops one stage.
+              Above +{WING_SAFE_PERCENT}%, the destruction roll is evaluated after a failed success roll.
             </div>
           </div>
-        </div>
-      </div>
+
+          {lastResult && (
+            <OutcomeBanner result={lastResult} path={path} />
+          )}
+        </section>
+
+        <section className="mt-4 grid grid-cols-3 gap-3 pb-8">
+          <Rule title="0–60%" value="Safe Reinforcement" detail="A failed roll drops one 3% stage, but does not destroy the wing." />
+          <Rule title="63–120%" value="High-Risk Reinforcement" detail="Failed rolls can trigger a separate destruction check. Wing Protection can absorb that destruction." />
+          <Rule title="Protected Material" value="No-Loss Failure" detail="Item 8106 attempts +3%. If it misses, reinforcement stays exactly where it was." />
+        </section>
+      </main>
     </div>
   );
 }
 
-const Stat = ({ label, value, accent }) => (
-  <div className="px-4 py-3 rounded-sm bg-white/[0.03] border border-white/5">
-    <div className="text-[10px] tracking-[0.25em] uppercase text-white/50">{label}</div>
-    <div className="text-2xl font-light mt-1 tabular-nums" style={{ color: accent || '#fff' }}>{value}</div>
-  </div>
-);
+function Metric({ label, value, sub, accent = '#fff' }) {
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-black/15 px-4 py-3">
+      <div className="text-[9px] tracking-[0.22em] uppercase text-white/35">{label}</div>
+      <div className="text-xl font-light tabular-nums mt-1" style={{ color: accent }}>{value}</div>
+      <div className="text-[9px] text-white/35 mt-1">{sub}</div>
+    </div>
+  );
+}
 
-const Row = ({ k, v }) => (
-  <div className="flex justify-between border-b border-white/5 py-1.5">
-    <span>{k}</span>
-    <span className="text-white tabular-nums">{v}</span>
-  </div>
-);
+function ToggleCard({ label, detail, active, disabled, onClick, accent }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-xl p-3 text-left disabled:opacity-30"
+      style={{
+        background: active ? `${accent}10` : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${active ? `${accent}55` : 'rgba(255,255,255,0.07)'}`,
+      }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold">{label}</div>
+          <div className="text-[10px] text-white/40 mt-1">{detail}</div>
+        </div>
+        <div className="text-[9px] tracking-[0.16em] uppercase" style={{ color: active ? accent : 'rgba(255,255,255,0.3)' }}>
+          {active ? 'Armed' : 'Off'}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function OutcomeBanner({ result, path }) {
+  if (!result.ok) {
+    return (
+      <div className="mt-4 rounded-xl border border-rose-400/25 bg-rose-500/[0.06] px-4 py-3 text-xs text-rose-200">
+        Reinforcement blocked: {String(result.reason || 'requirements not met').replaceAll('_', ' ')}.
+      </div>
+    );
+  }
+
+  const labels = {
+    success: `Success — ${path.name} is now +${result.percent}%`,
+    failed: `Failure — reinforcement fell to +${result.percent}%`,
+    protected_failure: `Protection consumed — destruction prevented, reinforcement fell to +${result.percent}%`,
+    destroyed: 'Wing destroyed — reacquire it before reinforcing again',
+    no_change: `Protected material failed — ${path.name} remained unchanged`,
+  };
+  const good = result.outcome === 'success' || result.outcome === 'no_change' || result.outcome === 'protected_failure';
+
+  return (
+    <div
+      className="mt-4 rounded-xl px-4 py-3 text-xs tracking-[0.12em] uppercase"
+      style={{
+        background: good ? 'rgba(134,239,172,0.07)' : 'rgba(251,113,133,0.07)',
+        border: `1px solid ${good ? 'rgba(134,239,172,0.25)' : 'rgba(251,113,133,0.25)'}`,
+        color: good ? '#bbf7d0' : '#fecdd3',
+      }}
+    >
+      {labels[result.outcome] || result.outcome}
+    </div>
+  );
+}
+
+function Rule({ title, value, detail }) {
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <div className="text-[9px] tracking-[0.22em] uppercase text-white/35">{title}</div>
+      <div className="text-sm font-semibold mt-1">{value}</div>
+      <div className="text-[10px] leading-relaxed text-white/40 mt-2">{detail}</div>
+    </div>
+  );
+}
