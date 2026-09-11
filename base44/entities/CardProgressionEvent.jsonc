@@ -1,0 +1,81 @@
+{
+  "name": "CardProgressionEvent",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_card_id": {
+      "type": "string"
+    },
+    "progression_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "created",
+        "trained",
+        "level_up",
+        "combine",
+        "ascend",
+        "enhance",
+        "enchant",
+        "over_enchant",
+        "skill_unlock",
+        "perk_activate",
+        "perk_deactivate"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "before": {
+      "type": "object",
+      "default": {}
+    },
+    "after": {
+      "type": "object",
+      "default": {}
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "user_id",
+    "user_card_id",
+    "progression_id",
+    "event_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
