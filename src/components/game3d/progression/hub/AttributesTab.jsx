@@ -1,144 +1,139 @@
-import React, { useState } from 'react';
-import { allocateStat, getPlayerHUD, setPlayerHUD } from '../../playerHUDStore';
-import { computeDerivedStats } from '../../statsSystem';
-import { getHaloBonuses } from '../haloStore';
-import { getEquippedTitleBonuses } from '../titleStore';
-import { STAT_SYNERGY } from '../weaponSynergyData';
-import AttributeRow from './AttributeRow';
-import { ATTRIBUTE_CONFIG, ATTRIBUTE_ORDER } from './attributeSpecializationConfig';
+import React from 'react';
+import { HeartPulse, Sparkles, Swords, Wind } from 'lucide-react';
+import { allocateStat } from '../../playerHUDStore';
 
-function refundStat(statKey) {
-  const hud = getPlayerHUD();
-  const current = hud.baseStats?.[statKey] ?? 0;
-  if (current <= 1) return false;
-  const newBase = { ...hud.baseStats, [statKey]: current - 1 };
-  const newDerived = computeDerivedStats(newBase, [], getHaloBonuses(), getEquippedTitleBonuses());
-  setPlayerHUD({
-    baseStats: newBase,
-    unspentPoints: hud.unspentPoints + 1,
-    derived: newDerived,
-    maxHP: newDerived.maxHP,
-    hp: Math.min(hud.hp, newDerived.maxHP),
-  });
-  return true;
-}
+const ATTRIBUTES = [
+  {
+    key: 'strength',
+    label: 'Strength',
+    abbr: 'STR',
+    icon: Swords,
+    tint: '#fb7185',
+    description: 'Weapon attack and attack success.',
+    effects: (d) => [`ATK ${Math.round(d.totalDamage || 0)}`, `Success ${Math.round(d.attackSuccess || 0)}`],
+  },
+  {
+    key: 'dexterity',
+    label: 'Agility',
+    abbr: 'AGI',
+    icon: Wind,
+    tint: '#67e8f9',
+    description: 'Defense, evasion and attack tempo.',
+    effects: (d) => [`DEF ${Math.round(d.defense || 0)}`, `Evade ${(d.evasionPct || 0).toFixed(1)}%`],
+  },
+  {
+    key: 'constitution',
+    label: 'Vitality',
+    abbr: 'VIT',
+    icon: HeartPulse,
+    tint: '#86efac',
+    description: 'Maximum life and survivability.',
+    effects: (d) => [`HP ${Math.round(d.maxHP || 0)}`, `Regen ${(d.hpRegen || 0).toFixed(1)}/s`],
+  },
+  {
+    key: 'focus',
+    label: 'Spirit',
+    abbr: 'SPI',
+    icon: Sparkles,
+    tint: '#c4b5fd',
+    description: 'Chi reserve and spiritual attack power.',
+    effects: (d) => [`CHI ${Math.round(d.chi || 0)}`, `Regen ${(d.manaRegen || 0).toFixed(1)}/s`],
+  },
+];
 
 export default function AttributesTab({ hud }) {
   const d = hud.derived || {};
-  const canSpend = hud.unspentPoints > 0;
-
-  // Specialization state: { [attrKey]: specId }
-  const [specs, setSpecs] = useState({});
-
-  const handleSpecChange = (attrKey, specId) => {
-    setSpecs(prev => ({ ...prev, [attrKey]: specId }));
-  };
+  const canSpend = (hud.unspentPoints || 0) > 0;
 
   return (
-    <div className="flex h-full">
-      {/* LEFT — points disc */}
-      <div className="w-64 flex flex-col items-center pt-10 px-5 border-r border-white/5 flex-shrink-0">
-        <div
-          className="relative w-44 h-44 rounded-full flex items-center justify-center"
-          style={{
-            background: 'radial-gradient(circle, rgba(255,216,107,0.10) 0%, transparent 70%)',
-            border: '1px solid rgba(255,216,107,0.25)',
-          }}
-        >
-          <div className="absolute inset-2 rounded-full border border-yellow-500/15" />
-          <div className="text-center">
-            <div className="text-5xl font-light text-amber-200 tabular-nums tracking-tight">
-              {hud.unspentPoints}
-            </div>
-            <div className="mt-2 text-[10px] tracking-[0.35em] uppercase text-white/60">
-              Points<br/>Available
-            </div>
+    <div className="h-full overflow-y-auto px-8 py-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-end justify-between gap-6 mb-5">
+          <div>
+            <div className="text-[10px] tracking-[0.34em] uppercase text-cyan-100/40">Character Foundation</div>
+            <div className="text-2xl font-semibold text-white mt-1">Four Attributes</div>
+            <p className="mt-1 text-xs text-white/40 max-w-2xl">
+              No secondary specialization tree here. Spend points, fight, and let equipment, titles, halo, elixirs and sets build on these four stats.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl px-5 py-3 text-right">
+            <div className="text-[9px] tracking-[0.25em] uppercase text-white/35">Available</div>
+            <div className="text-3xl font-light text-cyan-100 tabular-nums">{hud.unspentPoints || 0}</div>
           </div>
         </div>
 
-        <div className="mt-8 w-full space-y-2 text-[11px] text-white/65">
-          <div className="flex justify-between"><span>Level</span><span className="text-white">{hud.level}</span></div>
-          <div className="flex justify-between"><span>XP</span><span className="text-white">{hud.xp}/{hud.xpForNext}</span></div>
-          <div className="flex justify-between"><span>Max HP</span><span className="text-white">{d.maxHP || 0}</span></div>
-          <div className="flex justify-between"><span>Crit Chance</span><span className="text-white">{(d.critChance||0).toFixed(1)}%</span></div>
-          <div className="flex justify-between"><span>Crit Defense</span><span className="text-white">{Math.round((d.criticalDefense||0)*100)}%</span></div>
-        </div>
-
-        {/* Specialization legend */}
-        <div className="mt-6 w-full pt-4 border-t border-white/8">
-          <div className="text-[9px] tracking-[0.3em] uppercase text-white/30 mb-2">Active Specs</div>
-          <div className="space-y-1.5">
-            {ATTRIBUTE_ORDER.map(key => {
-              const cfg = ATTRIBUTE_CONFIG[key];
-              const spec = specs[key];
-              if (!spec) return null;
-              const specLabel = cfg.specializations.find(s => s.id === spec)?.label;
-              return (
-                <div key={key} className="flex items-center gap-2 text-[10px]">
-                  <span>{cfg.icon}</span>
-                  <span style={{ color: cfg.color }}>{cfg.abbr}</span>
-                  <span className="text-white/50 truncate">{specLabel}</span>
+        <div className="grid grid-cols-2 gap-3">
+          {ATTRIBUTES.map(({ key, label, abbr, icon: Icon, tint, description, effects }) => {
+            const value = hud.baseStats?.[key] ?? 0;
+            return (
+              <div
+                key={key}
+                className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl p-5 relative overflow-hidden"
+              >
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${tint}80, transparent)` }} />
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl border border-white/10 bg-white/[0.035] flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5" style={{ color: tint }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-base font-semibold text-white">{label}</span>
+                      <span className="text-[9px] tracking-[0.2em] text-white/30">{abbr}</span>
+                    </div>
+                    <div className="text-[11px] text-white/35 mt-1">{description}</div>
+                    <div className="flex gap-3 mt-3 text-[10px] text-white/50">
+                      {effects(d).map((effect) => <span key={effect}>{effect}</span>)}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-3xl font-light text-white tabular-nums">{value}</div>
+                    <button
+                      disabled={!canSpend}
+                      onClick={() => allocateStat(key)}
+                      className="mt-2 min-w-16 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/65 hover:bg-white/10 hover:text-white disabled:opacity-20 transition"
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <Summary label="Combat" rows={[
+            ['Attack', Math.round(d.totalDamage || 0)],
+            ['Hit', `${(d.hitChance || 0).toFixed(1)}%`],
+            ['Critical', `${(d.critChance || 0).toFixed(1)}%`],
+          ]} />
+          <Summary label="Defense" rows={[
+            ['Defense', Math.round(d.defense || 0)],
+            ['Evasion', `${(d.evasionPct || 0).toFixed(1)}%`],
+            ['Crit Defense', `${Math.round((d.criticalDefense || 0) * 100)}%`],
+          ]} />
+          <Summary label="Resources" rows={[
+            ['HP', Math.round(d.maxHP || 0)],
+            ['Chi', Math.round(d.chi || 0)],
+            ['Level', hud.level || 1],
+          ]} />
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* RIGHT — allocation rows */}
-      <div className="flex-1 min-w-0 px-6 pt-6 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        {ATTRIBUTE_ORDER.map((key) => {
-          const cfg = ATTRIBUTE_CONFIG[key];
-          return (
-            <AttributeRow
-              key={key}
-              label={cfg.label}
-              value={hud.baseStats?.[key] ?? 0}
-              synergy={STAT_SYNERGY[key] || []}
-              canSpend={canSpend}
-              onAlloc={() => allocateStat(key)}
-              onRefund={() => refundStat(key)}
-              attrConfig={cfg}
-              specialization={specs[key] || null}
-              onSpecChange={(specId) => handleSpecChange(key, specId)}
-            />
-          );
-        })}
-
-        {/* Offensive / Defensive summary */}
-        <div className="grid grid-cols-2 gap-6 mt-8 pt-5 border-t border-white/10">
-          <div>
-            <div className="text-[10px] tracking-[0.3em] uppercase text-amber-300/80 mb-3">Offensive</div>
-            <div className="space-y-1.5 text-xs text-white/75">
-              <div className="flex justify-between border-b border-white/10 pb-1.5 mb-0.5">
-                <span className="text-white/90 font-semibold">Total Damage</span>
-                <span className="text-amber-200 font-semibold tabular-nums">{(d.totalDamage || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between"><span>Physical Damage</span><span className="text-white tabular-nums">{(d.physicalDamage || 0).toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Elemental Damage</span><span className="text-white tabular-nums">{(d.elementalDamage || 0).toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Crit Chance</span><span className="text-white">{(d.critChance||0).toFixed(1)}%</span></div>
-              <div className="flex justify-between"><span>Crit Damage</span><span className="text-white">+{Math.round((d.criticalDamage||0)*100)}%</span></div>
-              <div className="flex justify-between"><span>Attack Speed</span><span className="text-white">+{(d.attackSpeedPct||0).toFixed(1)}%</span></div>
-              <div className="flex justify-between"><span>Skill Power</span><span className="text-white">+{(d.skillPowerPct||0).toFixed(1)}%</span></div>
-              <div className="flex justify-between"><span>DoT / Elemental</span><span className="text-white">+{(d.dotDamagePct||0).toFixed(1)}%</span></div>
-            </div>
+function Summary({ label, rows }) {
+  return (
+    <div className="rounded-xl border border-white/7 bg-white/[0.02] p-4">
+      <div className="text-[9px] tracking-[0.25em] uppercase text-white/30 mb-2">{label}</div>
+      <div className="space-y-1.5 text-xs">
+        {rows.map(([name, value]) => (
+          <div key={name} className="flex justify-between border-b border-white/5 pb-1.5">
+            <span className="text-white/40">{name}</span>
+            <span className="text-white tabular-nums">{value}</span>
           </div>
-          <div>
-            <div className="text-[10px] tracking-[0.3em] uppercase text-sky-300/80 mb-3">Defensive</div>
-            <div className="space-y-1.5 text-xs text-white/75">
-              <div className="flex justify-between border-b border-white/10 pb-1.5 mb-0.5">
-                <span className="text-white/90 font-semibold">Max HP</span>
-                <span className="text-sky-200 font-semibold tabular-nums">{(d.maxHP || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between"><span>Defense</span><span className="text-white tabular-nums">{Math.round(d.defense || 0).toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Crit Defense</span><span className="text-white">{Math.round((d.criticalDefense||0)*100)}%</span></div>
-              <div className="flex justify-between"><span>HP Regen</span><span className="text-white">{(d.hpRegen||0).toFixed(1)}/s</span></div>
-              <div className="flex justify-between"><span>Evasion</span><span className="text-white">{(d.evasionPct||0).toFixed(1)}%</span></div>
-              <div className="flex justify-between"><span>Mana Regen</span><span className="text-white">{(d.manaRegen||0).toFixed(1)}/s</span></div>
-              <div className="flex justify-between"><span>Cooldown Reduction</span><span className="text-white">{(d.cooldownReductionPct||0).toFixed(1)}%</span></div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
