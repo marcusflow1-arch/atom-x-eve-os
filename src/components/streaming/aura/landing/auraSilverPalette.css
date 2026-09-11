@@ -1,13 +1,13 @@
 /* Aura color theme only — intentionally contains no layout or spacing rules. */
 .aura-landing {
-  --aura-silver: #a7a9ad;
-  --aura-silver-light: #c9cbce;
-  --aura-peach: #f5d0c5;
-  --aura-peach-soft: #f8ddd4;
-  --aura-coral: #f0737a;
-  --aura-teal: #168b8d;
-  --aura-ink: #252628;
-  --aura-muted: #62666a;
+  --aura-silver: #303338;
+  --aura-silver-light: #464a50;
+  --aura-peach: #3b3f45;
+  --aura-peach-soft: #4a4f56;
+  --aura-coral: #89919a;
+  --aura-teal: #c5cbd2;
+  --aura-ink: #f7f7f5;
+  --aura-muted: #c1c5ca;
   background: var(--aura-silver);
   color: var(--aura-ink);
   scrollbar-color: var(--aura-teal) var(--aura-silver);
@@ -16,12 +16,12 @@
 .aura-landing .aura-landing-feed,
 .aura-landing .console-filter-bar,
 .aura-landing .aura-landing-search {
-  background: rgba(201, 203, 206, 0.94);
+  background: rgba(55, 58, 63, 0.96);
 }
 
 .aura-landing .aura-live-pulse {
-  background: linear-gradient(100deg, rgba(245, 208, 197, 0.78), rgba(201, 203, 206, 0.9));
-  border-color: rgba(240, 115, 122, 0.45);
+  background: linear-gradient(100deg, rgba(70, 74, 80, 0.96), rgba(48, 51, 56, 0.94));
+  border-color: rgba(197, 203, 210, 0.35);
 }
 
 .aura-landing .aura-feature-section,
@@ -30,8 +30,8 @@
 .aura-landing .aura-section-empty,
 .aura-landing .aura-hot-feature {
   background-color: var(--aura-peach);
-  border-color: rgba(240, 115, 122, 0.34);
-  box-shadow: 0 8px 24px rgba(58, 60, 63, 0.12);
+  border-color: rgba(197, 203, 210, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
 }
 
 .aura-landing .aura-topic-card,
@@ -40,7 +40,7 @@
 }
 
 .aura-landing .console-directory-notice {
-  background: rgba(245, 208, 197, 0.72);
+  background: rgba(67, 71, 77, 0.94);
   border-color: var(--aura-coral);
   color: var(--aura-ink);
 }
@@ -91,6 +91,6 @@
 
 body:has(.aura-landing) .fixed.top-0.left-0.right-0.z-40,
 body:has(.aura-landing) .fixed.bottom-0.left-0.right-0.z-\[35\] {
-  background: rgba(175, 178, 182, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.42) !important;
+  background: rgba(48, 51, 56, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
 }
