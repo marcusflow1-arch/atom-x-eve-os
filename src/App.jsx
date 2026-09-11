@@ -21,6 +21,7 @@ import NPCNetwork from './pages/NPCNetwork';
 import LivingQuest from './pages/LivingQuest';
 import Plan from './pages/Plan';
 import AvatarGenesisGate from '@/components/onboarding/AvatarGenesisGate';
+import AIReflectionBridge from '@/components/avatar/AIReflectionBridge';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 // Admin tooling stays registered in the source for the Base44/editor workflow,
@@ -83,6 +84,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <NavigationTracker />
+          <AIReflectionBridge />
           <AuthenticatedApp />
         </Router>
         <Toaster />
