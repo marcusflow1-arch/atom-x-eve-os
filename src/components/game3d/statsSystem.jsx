@@ -120,15 +120,17 @@ export function computeDerivedStats(baseStats, equipment = [], attributeBonuses 
     + (flat.damage || 0);
   const attributionAttackPct = bonus.attributionAttackPct || 0;
   const attributionDefensePct = bonus.attributionDefensePct || 0;
+  const attributionAttack = flat.attributionAttack || 0;
+  const attributionDefense = flat.attributionDefense || 0;
   const totalDamage = Math.max(1, Math.round(baseAttack * (1 + attributionAttackPct / 100)));
 
   const rawDefense = agility * STAT_RATES.agilityDefense + gear.flatDefense + (flat.defense || 0);
   const defense = Math.max(0, rawDefense * (1 + attributionDefensePct / 100));
   const maxHP = Math.max(1, Math.round(vitality * STAT_RATES.vitalityHP + gear.flatHP + (flat.hp || 0)));
-  const chi = Math.max(0, Math.round(spirit * STAT_RATES.spiritChi + gear.flatChi));
+  const chi = Math.max(0, Math.round(spirit * STAT_RATES.spiritChi + gear.flatChi + (flat.chi || 0)));
 
-  const attackSuccess = strength * STAT_RATES.strengthAttackSuccess + gear.hit;
-  const attackBlock = agility * STAT_RATES.agilityEvasion + vitality * STAT_RATES.vitalityEvasion + gear.block;
+  const attackSuccess = strength * STAT_RATES.strengthAttackSuccess + gear.hit + (flat.attackSuccess || 0);
+  const attackBlock = agility * STAT_RATES.agilityEvasion + vitality * STAT_RATES.vitalityEvasion + gear.block + (flat.attackBlock || 0);
   const hitChance = Math.max(5, Math.min(98, 75 + (attackSuccess - attackBlock) * 0.12));
   const evasionPct = Math.max(0, Math.min(70, attackBlock * 0.08));
   const critChance = Math.max(0, Math.min(75,
@@ -168,6 +170,8 @@ export function computeDerivedStats(baseStats, equipment = [], attributeBonuses 
     criticalDamage,
     attributionAttackPct,
     attributionDefensePct,
+    attributionAttack,
+    attributionDefense,
     effective: {
       strength: Math.round(strength),
       agility: Math.round(agility),
