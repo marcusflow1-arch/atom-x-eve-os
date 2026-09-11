@@ -1,6 +1,6 @@
-// Persistent player gold + purchased consumables/items.
-// The modern Spirit Service can buy and sell in the field while preserving the
-// same inventory/economy store used by the existing merchant UI.
+// Persistent Silver + purchased consumables/items.
+// Existing UI may still label this value "gold"; gameplay services treat it as
+// the shared Silver balance during the TwelveSky migration.
 
 const STORAGE_KEY = 'mmorpg_shop_store_v1';
 const STARTING_GOLD = 5000;
@@ -33,9 +33,18 @@ export function addGold(amount) {
   emit();
 }
 
+export function spendGold(amount) {
+  const value = Math.max(0, Math.floor(Number(amount) || 0));
+  if (!value) return { ok: true, spent: 0 };
+  if (state.gold < value) return { ok: false, reason: 'Not enough Silver' };
+  state = { ...state, gold: state.gold - value };
+  emit();
+  return { ok: true, spent: value };
+}
+
 export function purchaseItem(item) {
   if (!item) return { ok: false, reason: 'Unknown item' };
-  if (state.gold < item.price) return { ok: false, reason: 'Not enough gold' };
+  if (state.gold < item.price) return { ok: false, reason: 'Not enough Silver' };
   const inv = { ...state.inventory };
   inv[item.id] = (inv[item.id] || 0) + 1;
   state = { ...state, gold: state.gold - item.price, inventory: inv };
@@ -43,8 +52,6 @@ export function purchaseItem(item) {
   return { ok: true };
 }
 
-// Spirit resale: remove an owned item without returning to an NPC. The 50%
-// return keeps the original buy/sell friction while removing travel downtime.
 export function sellItem(item, quantity = 1) {
   if (!item) return { ok: false, reason: 'Unknown item' };
   const qty = Math.max(1, Math.floor(Number(quantity) || 1));
