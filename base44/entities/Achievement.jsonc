@@ -24,6 +24,7 @@
         "equipment",
         "companion",
         "environment",
+        "teacher",
         "hidden"
       ],
       "description": "The type of achievement, determining the reward category."
