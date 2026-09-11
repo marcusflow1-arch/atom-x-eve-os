@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       const existing = await base44.asServiceRole.entities.UserCard.filter({ user_id: user.id, card_name: rewardName }, '-created_date', 1);
       userCard = existing[0] || await base44.asServiceRole.entities.UserCard.create({
         user_id: user.id,
-        card_type: achievement.category === 'equipment' ? 'Equipment' : achievement.category === 'companion' ? 'Companion' : achievement.category === 'ability' ? 'Ability' : 'Achievement',
+        card_type: achievement.category === 'equipment' ? 'Equipment' : achievement.category === 'companion' ? 'Companion' : achievement.category === 'ability' ? 'Ability' : achievement.category === 'environment' ? 'Environment' : achievement.category === 'teacher' ? 'Teacher' : 'Achievement',
         card_name: rewardName,
         card_rarity: achievement.rarity === 'Mythical' ? 'Mythic' : (achievement.rarity || 'Common'),
         card_image: payload?.cardImage || '',
