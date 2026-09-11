@@ -12,14 +12,11 @@ import WingsSubTab from './progression/hub/WingsSubTab';
 import AuraSubTab from './progression/hub/AuraSubTab';
 import TitleSubTab from './progression/hub/TitleSubTab';
 import SpiritServicesSubTab from './progression/hub/SpiritServicesSubTab';
-import ElixirsSubTab from './progression/hub/ElixirsSubTab';
-import WarBandsSubTab from './progression/hub/WarBandsSubTab';
 import CombatDoctrineSubTab from './progression/hub/CombatDoctrineSubTab';
+import ElixirsSubTab from './progression/hub/ElixirsSubTab';
+import ContributionShopSubTab from './progression/hub/ContributionShopSubTab';
+import WarBandsSubTab from './progression/hub/WarBandsSubTab';
 
-// ─── Character Hub ────────────────────────────────────────────────────────
-// One modern player-owned menu for character progression and formerly-NPC
-// services. Town NPCs can remain as world flavor/tutorials without forcing
-// players to interrupt combat loops for routine maintenance.
 const MAIN_TABS = [
   { id: 'attributes', label: 'Attributes' },
   { id: 'mastery',    label: 'Weapon Mastery' },
@@ -38,6 +35,7 @@ const SERVICE_SUB_TABS = [
   { id: 'spirit',  label: 'Services' },
   { id: 'combat',  label: 'Combat' },
   { id: 'elixirs', label: 'Elixirs' },
+  { id: 'cp',      label: 'CP Shop' },
   { id: 'wars',    label: 'War Bands' },
 ];
 
@@ -132,6 +130,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'services' && serviceTab === 'spirit' && <SpiritServicesSubTab />}
           {mainTab === 'services' && serviceTab === 'combat' && <CombatDoctrineSubTab />}
           {mainTab === 'services' && serviceTab === 'elixirs' && <ElixirsSubTab />}
+          {mainTab === 'services' && serviceTab === 'cp' && <ContributionShopSubTab />}
           {mainTab === 'services' && serviceTab === 'wars' && <WarBandsSubTab />}
         </div>
 
