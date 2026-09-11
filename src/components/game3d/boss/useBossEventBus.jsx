@@ -1,7 +1,7 @@
 // useBossEventBus — translates world-boss AI events into world mutations.
 // All actions and effects are hard-bound to the originating live world boss.
-// Once that boss dies/dies/vanishes, pending callbacks stop, active VFX report
-// themselves dead so GameWorld3D disposes them, and no new boss event executes.
+// Once that boss dies/dies/vanishes, pending callbacks stop, active VFX are
+// disposed immediately, and no new boss event executes.
 
 import * as THREE from 'three';
 import { createWarningCircle, createMeteorImpact, createShadowChargeTrail, createConeTelegraph, createChaosOrb } from './bossAbilityVfx';
@@ -37,21 +37,22 @@ export function attachBossEventBus(ctx) {
 
   const bossCanAct = (bossId) => !!getLiveBoss(bossId);
 
-  // GameWorld3D already owns effect disposal. Wrapping every boss-created effect
-  // makes its lifetime depend on the boss, so existing tornado/aerial/telegraph
-  // visuals cannot outlive Ironmaw's death.
   const bindEffectToBoss = (effect, bossId) => {
     if (!effect) return null;
     return {
+      __bossId: bossId,
+      __cancelled: false,
       update(delta) {
-        if (!bossCanAct(bossId)) return;
+        if (this.__cancelled || !bossCanAct(bossId)) return;
         effect.update?.(delta);
       },
       alive() {
-        if (!bossCanAct(bossId)) return false;
+        if (this.__cancelled || !bossCanAct(bossId)) return false;
         return effect.alive ? effect.alive() : true;
       },
       dispose() {
+        if (this.__cancelled) return;
+        this.__cancelled = true;
         effect.dispose?.();
       },
     };
@@ -61,6 +62,24 @@ export function attachBossEventBus(ctx) {
     const bound = bindEffectToBoss(effect, bossId);
     if (bound) activeEffectsRef.current.push(bound);
     return bound;
+  };
+
+  const purgeBossEffects = (bossId) => {
+    const next = [];
+    activeEffectsRef.current.forEach((fx) => {
+      if (fx?.__bossId === bossId) {
+        try { fx.dispose?.(); } catch { /* non-fatal */ }
+      } else {
+        next.push(fx);
+      }
+    });
+    activeEffectsRef.current = next;
+  };
+
+  const haltHandler = (event) => {
+    const bossId = event?.detail?.bossId;
+    if (!bossId) return;
+    purgeBossEffects(bossId);
   };
 
   const handler = (e) => {
@@ -240,8 +259,8 @@ export function attachBossEventBus(ctx) {
     }
 
     if (type === 'spawn_minion') {
-      // Intentionally disabled for the current world-boss match. Ironmaw is the
-      // only hostile combatant the main player should be fighting right now.
+      // Disabled for the current world-boss match: Ironmaw is the only hostile
+      // combatant the main player should be fighting right now.
       return;
     }
 
@@ -275,5 +294,9 @@ export function attachBossEventBus(ctx) {
   }
 
   window.addEventListener('bossAction', handler);
-  return () => window.removeEventListener('bossAction', handler);
+  window.addEventListener('bossCombatHalt', haltHandler);
+  return () => {
+    window.removeEventListener('bossAction', handler);
+    window.removeEventListener('bossCombatHalt', haltHandler);
+  };
 }
