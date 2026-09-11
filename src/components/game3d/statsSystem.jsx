@@ -1,268 +1,230 @@
-// ─────────────────────────────────────────────
-// Stat System — single source of truth for player/enemy combat math.
+// TwelveSky-style combat stat model for Mines.
+// Canonical player attributes are the original four pillars:
+//   Strength  -> weapon attack + attack success
+//   Agility   -> defense + evasion
+//   Vitality  -> HP + evasion
+//   Spirit    -> chi + weapon attack
 //
-// New-World-inspired 5-attribute model:
-//
-//   STRENGTH     → +physical damage, +hit chance, heavy weapon scaling
-//   CONSTITUTION → +max HP, +HP regen, +defense, survivability
-//   DEXTERITY    → +crit chance, +attack speed, +evasion, ranged scaling
-//   INTELLIGENCE → +elemental damage, +DoT %, magic scaling
-//   FOCUS        → +mana pool, +mana regen, +cooldown reduction, +skill power
-//
-// LEGACY KEY MIGRATION:
-//   Older saves used { strength, hp, spirit, dexterity, elemental }.
-//   These map 1:1 onto the new model:
-//     hp        → constitution
-//     spirit    → focus
-//     elemental → intelligence
-//   `migrateBaseStats()` upgrades any legacy stat block on load.
-//
-// Equipment acts as a MULTIPLIER on invested stats so gear scales WITH
-// your character, not in isolation.
-// ─────────────────────────────────────────────
+// The engine still exposes legacy aliases (dexterity/constitution/focus) so
+// older Atom XE systems continue to work while the wider migration proceeds.
 
-// Per-point conversion rates for the 5 new attributes.
-export const STAT_RATES = {
-  strength:     3,    // physical dmg per point
-  constitution: 20,   // HP per point
-  dexterity:    2,    // defense per point (legacy carry — Dex feeds both crit and a touch of defense)
-  intelligence: 2,    // elemental dmg per point
-  focus:        20,   // mana per point
-};
+export const STAT_RATES = Object.freeze({
+  strengthAttack: 2.65,
+  strengthAttackSuccess: 1.71,
+  agilityDefense: 1.63,
+  agilityEvasion: 1.67,
+  vitalityHP: 20,
+  vitalityEvasion: 0.90,
+  spiritAttack: 1.43,
+  spiritChi: 15.31,
+});
 
-// Secondary derived-stat rates (per invested point)
-export const SECONDARY_RATES = {
-  hitPerStr:        0.5,   // % hit chance per strength
-  hitPerCon:        0.2,   // % hit chance per constitution
-  dmgRollPerStr:    0.3,   // % bonus damage variance per strength
-  hpRegenPerCon:    0.4,   // HP/sec per constitution
-  defPerCon:        1.0,   // flat defense per constitution
-  manaRegenPerFoc:  0.5,   // mana/sec per focus
-  skillPowerPerFoc: 2.0,   // % skill / spell power per focus
-  cooldownPerFoc:   0.15,  // % cooldown reduction per focus (capped)
-  critPerDex:       0.6,   // % crit chance per dexterity
-  atkSpdPerDex:     0.4,   // % attack speed per dexterity
-  evasionPerDex:    0.25,  // % evasion per dexterity
-  rangePerDex:      0.05,  // m attack range per dexterity
-  dotDmgPerInt:     3.0,   // % DoT / elemental % per intelligence
-  elemDefPerInt:    1.5,   // flat elemental defense per intelligence
-};
+export const SECONDARY_RATES = Object.freeze({
+  hpRegenPerVitality: 0.12,
+  chiRegenPerSpirit: 0.22,
+  critPerAgility: 0.08,
+  attackSpeedPerAgility: 0.10,
+  criticalDefensePerVitality: 0.0007,
+});
 
-// Default player starting stats (level 1) — using new keys.
-export const DEFAULT_PLAYER_STATS = {
-  strength:     3,
-  constitution: 5,
-  dexterity:    2,
-  intelligence: 0,
-  focus:        2,
-};
+export const DEFAULT_PLAYER_STATS = Object.freeze({
+  strength: 3,
+  dexterity: 2,      // Agility compatibility key
+  constitution: 5,   // Vitality compatibility key
+  focus: 2,          // Spirit compatibility key
+});
 
-// One-time migration of legacy { hp, spirit, elemental } keys → new keys.
-// Safe to call on every load; new-shape stats pass through untouched.
 export function migrateBaseStats(stats) {
   if (!stats || typeof stats !== 'object') return { ...DEFAULT_PLAYER_STATS };
-  const out = { ...DEFAULT_PLAYER_STATS };
-  // Carry forward known new keys
-  ['strength', 'constitution', 'dexterity', 'intelligence', 'focus'].forEach((k) => {
-    if (typeof stats[k] === 'number') out[k] = stats[k];
-  });
-  // Legacy → new
-  if (typeof stats.hp === 'number'        && typeof stats.constitution !== 'number') out.constitution = stats.hp;
-  if (typeof stats.spirit === 'number'    && typeof stats.focus        !== 'number') out.focus        = stats.spirit;
-  if (typeof stats.elemental === 'number' && typeof stats.intelligence !== 'number') out.intelligence = stats.elemental;
-  return out;
+  const strength = Number.isFinite(stats.strength) ? stats.strength : DEFAULT_PLAYER_STATS.strength;
+  const agility = Number.isFinite(stats.agility)
+    ? stats.agility
+    : Number.isFinite(stats.dexterity) ? stats.dexterity : DEFAULT_PLAYER_STATS.dexterity;
+  const vitality = Number.isFinite(stats.vitality)
+    ? stats.vitality
+    : Number.isFinite(stats.constitution) ? stats.constitution
+      : Number.isFinite(stats.hp) ? stats.hp : DEFAULT_PLAYER_STATS.constitution;
+  // Older Atom XE saves split magic between Focus/Spirit and Intelligence.
+  // Fold any old INT investment into Spirit once so players do not lose points.
+  const legacySpirit = Number.isFinite(stats.spirit)
+    ? stats.spirit
+    : Number.isFinite(stats.focus) ? stats.focus : DEFAULT_PLAYER_STATS.focus;
+  const oldInt = Number.isFinite(stats.intelligence) ? Math.max(0, stats.intelligence) : 0;
+  return {
+    strength: Math.max(0, strength),
+    dexterity: Math.max(0, agility),
+    constitution: Math.max(0, vitality),
+    focus: Math.max(0, legacySpirit + oldInt),
+  };
 }
 
-// Compute final combat-ready stats from base stats + equipment multipliers.
-// equipment      = array of { strength_mult, constitution_mult, dexterity_mult, intelligence_mult, focus_mult }
-//                  (legacy keys hp_mult / spirit_mult / elemental_mult are also accepted for backwards compat)
-// haloBonuses    = VIRTUAL ATTRIBUTE POINTS — pass through attribute formulas.
-//                  { strength, constitution|vitality, dexterity, intelligence|elemental, focus|spirit,
-//                    criticalDefense, criticalChance, criticalDamage }
-//                  Legacy keys (vitality/spirit) are auto-mapped.
-// titleBonuses   = FLAT FINAL STATS — added directly to derived totals AFTER all formulas.
-//                  Does NOT pass through the attribute system.
-//                  { hp, damage, defense, critChance, critDamage, criticalDefense }
-export function computeDerivedStats(baseStats, equipment = [], haloBonuses = null, titleBonuses = null) {
-  // Ensure base is in the new shape.
-  const base = migrateBaseStats(baseStats);
+function normalizeAttributeBonuses(input = {}) {
+  return {
+    strength: input.strength || 0,
+    agility: input.agility ?? input.dexterity ?? 0,
+    vitality: input.vitality ?? input.constitution ?? 0,
+    spirit: input.spirit ?? input.focus ?? 0,
+    critChance: input.criticalChance || input.critChance || 0,
+    criticalDefense: input.criticalDefense || 0,
+    criticalDamage: input.criticalDamage || input.critDamage || 0,
+    attributionAttackPct: input.attributionAttackPct || 0,
+    attributionDefensePct: input.attributionDefensePct || 0,
+  };
+}
 
-  // Aggregate equipment multipliers (accept both new and legacy keys).
-  const totals = {
-    strength_mult:     0,
-    constitution_mult: 0,
-    dexterity_mult:    0,
-    intelligence_mult: 0,
-    focus_mult:        0,
+function aggregateEquipment(equipment = []) {
+  const out = {
+    strengthMult: 0,
+    agilityMult: 0,
+    vitalityMult: 0,
+    spiritMult: 0,
+    flatAttack: 0,
+    flatDefense: 0,
+    flatHP: 0,
+    flatChi: 0,
+    hit: 0,
+    block: 0,
+    critical: 0,
   };
   equipment.forEach((eq) => {
     if (!eq) return;
-    totals.strength_mult     += eq.strength_mult     || 0;
-    totals.constitution_mult += eq.constitution_mult || eq.hp_mult        || 0;
-    totals.dexterity_mult    += eq.dexterity_mult    || 0;
-    totals.intelligence_mult += eq.intelligence_mult || eq.elemental_mult || 0;
-    totals.focus_mult        += eq.focus_mult        || eq.spirit_mult    || 0;
+    out.strengthMult += eq.strength_mult || 0;
+    out.agilityMult += eq.agility_mult || eq.dexterity_mult || 0;
+    out.vitalityMult += eq.vitality_mult || eq.constitution_mult || eq.hp_mult || 0;
+    out.spiritMult += eq.spirit_mult || eq.focus_mult || eq.intelligence_mult || 0;
+    out.flatAttack += eq.attackPower || eq.attack_power || eq.damage || 0;
+    out.flatDefense += eq.defensePower || eq.defense_power || eq.defense || 0;
+    out.flatHP += eq.hp || eq.maxHP || 0;
+    out.flatChi += eq.chi || eq.mana || 0;
+    out.hit += eq.attackSuccess || eq.attack_success || 0;
+    out.block += eq.attackBlock || eq.attack_block || 0;
+    out.critical += eq.critical || eq.critChance || 0;
   });
+  return out;
+}
 
-  // Halo bonuses act as VIRTUAL ATTRIBUTE POINTS — pass through formulas.
-  const halo = (() => {
-    const x = haloBonuses || {};
-    return {
-      strength:        x.strength     || 0,
-      constitution:    x.constitution || x.vitality  || 0,
-      dexterity:       x.dexterity    || 0,
-      intelligence:    x.intelligence || x.elemental || 0,
-      focus:           x.focus        || x.spirit    || 0,
-      criticalDefense: x.criticalDefense || 0,
-      criticalChance:  x.criticalChance  || 0,
-      criticalDamage:  x.criticalDamage  || 0,
-    };
-  })();
+export function computeDerivedStats(baseStats, equipment = [], attributeBonuses = null, flatBonuses = null) {
+  const base = migrateBaseStats(baseStats);
+  const bonus = normalizeAttributeBonuses(attributeBonuses || {});
+  const flat = flatBonuses || {};
+  const gear = aggregateEquipment(equipment);
 
-  // Title bonuses are FLAT FINAL STATS — applied AFTER all derivations.
-  // They never touch base attributes.
-  const title = (() => {
-    const x = titleBonuses || {};
-    return {
-      hp:              x.hp              || 0,
-      damage:          x.damage          || 0,
-      defense:         x.defense         || 0,
-      critChance:      x.critChance      || 0,
-      critDamage:      x.critDamage      || 0,
-      criticalDefense: x.criticalDefense || 0,
-    };
-  })();
+  const rawStrength = base.strength + bonus.strength;
+  const rawAgility = base.dexterity + bonus.agility;
+  const rawVitality = base.constitution + bonus.vitality;
+  const rawSpirit = base.focus + bonus.spirit;
 
-  // Halo stacks into base BEFORE equipment multipliers, so gear scales WITH it.
-  // Titles do NOT stack here — they apply later as flat final-stat additions.
-  const baseStr = base.strength     + halo.strength;
-  const baseCon = base.constitution + halo.constitution;
-  const baseDex = base.dexterity    + halo.dexterity;
-  const baseInt = base.intelligence + halo.intelligence;
-  const baseFoc = base.focus        + halo.focus;
+  const strength = rawStrength * (1 + gear.strengthMult);
+  const agility = rawAgility * (1 + gear.agilityMult);
+  const vitality = rawVitality * (1 + gear.vitalityMult);
+  const spirit = rawSpirit * (1 + gear.spiritMult);
 
-  // Apply equipment multiplier on top of the base+halo+title totals.
-  const effStr = baseStr + Math.floor(baseStr * totals.strength_mult);
-  const effCon = baseCon + Math.floor(baseCon * totals.constitution_mult);
-  const effDex = baseDex + Math.floor(baseDex * totals.dexterity_mult);
-  const effInt = baseInt + Math.floor(baseInt * totals.intelligence_mult);
-  const effFoc = baseFoc + Math.floor(baseFoc * totals.focus_mult);
+  const baseAttack = strength * STAT_RATES.strengthAttack
+    + spirit * STAT_RATES.spiritAttack
+    + gear.flatAttack
+    + (flat.damage || 0);
+  const attributionAttackPct = bonus.attributionAttackPct || 0;
+  const attributionDefensePct = bonus.attributionDefensePct || 0;
+  const totalDamage = Math.max(1, Math.round(baseAttack * (1 + attributionAttackPct / 100)));
 
-  // Primary derived combat stats — computed from base + halo only.
-  // Title FLAT FINAL stats are added at the END (no formula scaling).
-  const physDmg = effStr * STAT_RATES.strength;
-  const elemDmg = effInt * STAT_RATES.intelligence;
-  const maxHP   = effCon * STAT_RATES.constitution + title.hp;            // + flat title HP
-  const chi     = effFoc * STAT_RATES.focus;
-  // Defense from Dex (rate) + Con (flat) + flat title defense bonus.
-  const defense = effDex * STAT_RATES.dexterity
-                + effCon * SECONDARY_RATES.defPerCon
-                + title.defense;                                          // + flat title defense
+  const rawDefense = agility * STAT_RATES.agilityDefense + gear.flatDefense + (flat.defense || 0);
+  const defense = Math.max(0, rawDefense * (1 + attributionDefensePct / 100));
+  const maxHP = Math.max(1, Math.round(vitality * STAT_RATES.vitalityHP + gear.flatHP + (flat.hp || 0)));
+  const chi = Math.max(0, Math.round(spirit * STAT_RATES.spiritChi + gear.flatChi));
 
-  // Secondary derived stats.
-  const hitChance = Math.min(95,
-    50 + effStr * SECONDARY_RATES.hitPerStr + effCon * SECONDARY_RATES.hitPerCon);
-  // Base 10% crit chance + Dex scaling + Halo additive crit + flat title crit %.
-  const critChance = Math.min(75,
-    10 + effDex * SECONDARY_RATES.critPerDex + halo.criticalChance + title.critChance);
-  // Critical Defense — % reduction applied to incoming crit damage (0..1+, clamped at 1 in damage calc).
-  const criticalDefense = halo.criticalDefense + title.criticalDefense;
-  // Critical Damage — additive multiplier ON TOP of base CRIT_MULTIPLIER.
-  // e.g. 0.20 means crits deal (CRIT_MULTIPLIER + 0.20)× damage.
-  const criticalDamage  = halo.criticalDamage  + title.critDamage;
-  const attackRange     = 2.0 + effDex * SECONDARY_RATES.rangePerDex;
-  const attackSpeedPct  = effDex * SECONDARY_RATES.atkSpdPerDex;     // % attack-speed bonus
-  const evasionPct      = effDex * SECONDARY_RATES.evasionPerDex;    // % dodge
-  const hpRegen         = effCon * SECONDARY_RATES.hpRegenPerCon;
-  const manaRegen       = effFoc * SECONDARY_RATES.manaRegenPerFoc;
-  const skillPowerPct   = effFoc * SECONDARY_RATES.skillPowerPerFoc; // % bonus on all spells/skills
-  const cooldownReductionPct = Math.min(40, effFoc * SECONDARY_RATES.cooldownPerFoc); // capped 40%
-  const dotDamagePct    = effInt * SECONDARY_RATES.dotDmgPerInt;
-  const elementalDefense= effInt * SECONDARY_RATES.elemDefPerInt;
-  const damageRollBonus = effStr * SECONDARY_RATES.dmgRollPerStr;
+  const attackSuccess = strength * STAT_RATES.strengthAttackSuccess + gear.hit;
+  const attackBlock = agility * STAT_RATES.agilityEvasion + vitality * STAT_RATES.vitalityEvasion + gear.block;
+  const hitChance = Math.max(5, Math.min(98, 75 + (attackSuccess - attackBlock) * 0.12));
+  const evasionPct = Math.max(0, Math.min(70, attackBlock * 0.08));
+  const critChance = Math.max(0, Math.min(75,
+    5 + agility * SECONDARY_RATES.critPerAgility + gear.critical + bonus.critChance + (flat.critChance || 0)));
+  const criticalDefense = Math.max(0,
+    bonus.criticalDefense + (flat.criticalDefense || 0) + vitality * SECONDARY_RATES.criticalDefensePerVitality);
+  const criticalDamage = Math.max(0, bonus.criticalDamage + (flat.critDamage || 0));
 
-  // FLAT FINAL title damage is added on top of the derived total — it does
-  // NOT pass through strength/elemental scaling.
-  const finalTotalDamage = physDmg + elemDmg + title.damage;
+  const hpRegen = vitality * SECONDARY_RATES.hpRegenPerVitality;
+  const manaRegen = spirit * SECONDARY_RATES.chiRegenPerSpirit;
+  const attackSpeedPct = agility * SECONDARY_RATES.attackSpeedPerAgility;
 
   return {
-    // Primary
-    physicalDamage: physDmg,
-    elementalDamage: elemDmg,
-    totalDamage: finalTotalDamage,
-    damage: finalTotalDamage, // alias used by GameWorld3D
+    physicalDamage: totalDamage,
+    elementalDamage: 0,
+    totalDamage,
+    damage: totalDamage,
     maxHP,
     chi,
     defense,
-    // Secondary
+    attackSuccess,
+    attackBlock,
     hitChance,
     critChance,
-    attackRange,
+    attackRange: 2.0,
     attackSpeedPct,
     evasionPct,
     hpRegen,
     manaRegen,
-    skillPowerPct,
-    cooldownReductionPct,
-    spellDamagePct: skillPowerPct, // legacy alias: spirit→focus
-    dotDamagePct,
-    elementalDefense,
-    damageRollBonus,
+    skillPowerPct: spirit * 0.35,
+    cooldownReductionPct: 0,
+    spellDamagePct: spirit * 0.35,
+    dotDamagePct: 0,
+    elementalDefense: attributionDefensePct,
+    damageRollBonus: strength * 0.10,
     criticalDefense,
     criticalDamage,
-    // Echo effective invested values for UI live previews.
+    attributionAttackPct,
+    attributionDefensePct,
     effective: {
-      strength:     effStr,
-      constitution: effCon,
-      dexterity:    effDex,
-      intelligence: effInt,
-      focus:        effFoc,
+      strength: Math.round(strength),
+      agility: Math.round(agility),
+      vitality: Math.round(vitality),
+      spirit: Math.round(spirit),
+      // compatibility aliases
+      dexterity: Math.round(agility),
+      constitution: Math.round(vitality),
+      focus: Math.round(spirit),
+      intelligence: 0,
     },
   };
 }
 
-// Damage calc — dealt damage is reduced by defender's defense (min 1).
 export const CRIT_MULTIPLIER = 3;
 
+function mitigate(raw, defenderStats) {
+  const defense = defenderStats?.defense || 0;
+  return Math.max(1, Math.round(raw - defense));
+}
+
 export function calculateHit(attackerStats, defenderStats) {
-  let raw = attackerStats.totalDamage;
+  let raw = attackerStats.totalDamage || attackerStats.damage || 1;
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
   if (crit) {
     const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
-    raw = Math.round(raw * critMult);
+    const bonus = raw * (critMult - 1);
+    const critDefense = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
+    raw += bonus * (1 - critDefense);
   }
-  const reduced = Math.max(1, raw - (defenderStats?.defense || 0));
-  return reduced;
+  return mitigate(raw, defenderStats);
 }
 
-// Crit-aware variant — returns { damage, crit } so the UI can color crits.
-// Defender's `criticalDefense` reduces ONLY the EXTRA crit damage on top of a normal hit.
-// Attacker's `criticalDamage` adds to the crit multiplier (CRIT_MULTIPLIER + criticalDamage).
 export function calculateHitWithCrit(attackerStats, defenderStats) {
   const crit = Math.random() * 100 < (attackerStats.critChance || 0);
-  let raw = attackerStats.totalDamage;
+  let raw = attackerStats.totalDamage || attackerStats.damage || 1;
   if (crit) {
     const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
-    const critBonus = raw * (critMult - 1);
-    const defReduction = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
-    const mitigatedBonus = critBonus * (1 - defReduction);
-    raw = Math.round(raw + mitigatedBonus);
+    const bonus = raw * (critMult - 1);
+    const critDefense = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
+    raw += bonus * (1 - critDefense);
   }
-  const damage = Math.max(1, raw - (defenderStats?.defense || 0));
-  return { damage, crit };
+  return { damage: mitigate(raw, defenderStats), crit };
 }
 
-// Spell damage scaling — applies focus (all skills) and intelligence (DoT/elemental) bonuses.
-export function applySpellScaling(baseDamage, attackerDerived, { isDoT = false, isElemental = true } = {}) {
-  const focusPct = attackerDerived.skillPowerPct || attackerDerived.spellDamagePct || 0;
-  const dotPct   = (isDoT || isElemental) ? (attackerDerived.dotDamagePct || 0) : 0;
-  const totalPct = focusPct + dotPct;
-  return Math.round(baseDamage * (1 + totalPct / 100));
+export function applySpellScaling(baseDamage, attackerDerived) {
+  const spiritPct = attackerDerived?.skillPowerPct || attackerDerived?.spellDamagePct || 0;
+  return Math.max(1, Math.round(baseDamage * (1 + spiritPct / 100)));
 }
 
-// Enemy stat templates by tier — use new key names.
-export const ENEMY_STAT_TEMPLATES = {
-  normal:   { strength: 2, constitution: 2, dexterity: 1, intelligence: 0, focus: 1 },
-  elite:    { strength: 4, constitution: 4, dexterity: 2, intelligence: 1, focus: 2 },
-  champion: { strength: 6, constitution: 7, dexterity: 3, intelligence: 2, focus: 3 },
-};
+export const ENEMY_STAT_TEMPLATES = Object.freeze({
+  normal:   { strength: 2, dexterity: 1, constitution: 2, focus: 1 },
+  elite:    { strength: 4, dexterity: 2, constitution: 4, focus: 2 },
+  champion: { strength: 6, dexterity: 3, constitution: 7, focus: 3 },
+});
