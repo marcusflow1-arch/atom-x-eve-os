@@ -49,10 +49,16 @@ function calcPower(p: AnyObj) {
 }
 
 function publicProgression(p: AnyObj) {
-  return { ...p, power_score: calcPower(p) };
+  const stability = Number(p.over_enchant_stability ?? 100);
+  const condition = stability <= 0 ? 'Fractured' : stability < 50 ? 'Corrupted' : 'Stable';
+  const multiplier = 1 + (Math.max(1, p.level) - 1) * 0.055 + (Math.max(1, p.stage) - 1) * 0.12 + Number(p.ascension || 0) * 0.18 + Number(p.over_enchant_rank || 0) * 0.05;
+  const calibration = (p.unlocked_skill_nodes || []).includes('core_calibration') ? 1.03 : 1;
+  const conditionMultiplier = stability <= 0 ? 0 : stability < 50 ? 0.5 : 1;
+  const scaledStats = Object.fromEntries(Object.entries(p.base_stats || {}).map(([key, value]) => [key, Math.round((Number(value) + Number(p.enhanced_stats?.[key] || 0) + (p.enchantments || []).reduce((sum: number, e: AnyObj) => sum + Number(e.modifiers?.[key] || 0), 0)) * multiplier * calibration * conditionMultiplier)]));
+  return { ...p, power_score: Math.round(calcPower(p) * calibration * conditionMultiplier), scaled_stats: scaledStats, condition, perk_slots: Math.min(5, 1 + Math.floor(Number(p.level || 1) / 5) + Math.floor(Number(p.stage || 1) / 2)) };
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   const base44 = createClientFromRequest(req);
   try {
     const user = await base44.auth.me();
@@ -98,8 +104,12 @@ Deno.serve(async (req) => {
     }
 
     if (!userCard) return Response.json({ error: 'A valid owned card or unlocked achievement is required' }, { status: 400 });
+    if (achievement && (achievement.game !== userCard.game_name || (achievement.reward?.name || achievement.title) !== userCard.card_name)) {
+      achievement = null;
+    }
+    if (action !== 'getState' && (userCard.trade_status === 'locked_in_trade' || userCard.is_equipped)) throw new Error('Unequip this card and close any trade listing before modifying it.');
 
-    if (!achievement && body?.achievementId) achievement = await base44.asServiceRole.entities.Achievement.get(body.achievementId).catch(() => null);
+    // Only verified matching achievement data can seed this card's base stats.
 
     let rows = await base44.asServiceRole.entities.CardProgression.filter({ user_id: user.id, user_card_id: userCard.id }, '-created_date', 1);
     let progression: AnyObj = rows[0];
@@ -109,7 +119,7 @@ Deno.serve(async (req) => {
         user_id: user.id,
         user_card_id: userCard.id,
         trading_card_id: userCard.trading_card_id || '',
-        achievement_id: achievementId || '',
+        achievement_id: achievement?.id || '',
         card_name: userCard.card_name,
         game_id: userCard.game_id || payload?.gameId || '',
         game_name: userCard.game_name || achievement?.game || '',
@@ -180,8 +190,14 @@ Deno.serve(async (req) => {
       return progression;
     };
 
-    if (action === 'train') {
-      const sessions = Math.max(1, Math.min(10, Number(payload?.sessions || 1)));
+    if (action !== 'getState' && action !== 'stabilize' && Number(progression.over_enchant_stability ?? 100) <= 0) throw new Error('This card is fractured. Restore stability before upgrading it.');
+    if (action === 'stabilize') {
+      if (Number(progression.over_enchant_stability ?? 100) >= 100) throw new Error('Stability is already full.');
+      await spend({ resonance_fragment: 3 });
+      await commit({ over_enchant_stability: 100 }, 'over_enchant', 'Card stability restored');
+    } else if (action === 'train') {
+      const sessions = Number(payload?.sessions ?? 1);
+      if (!Number.isInteger(sessions) || sessions < 1 || sessions > 10) throw new Error('Choose 1–10 training sessions.');
       await spend({ skill_catalyst: sessions });
       const gain = sessions * (50 + Math.max(1, progression.stage) * 10);
       await commit({ xp: Number(progression.xp || 0) + gain }, 'trained', `Training added ${gain} card XP`, { sessions, gain });
@@ -202,6 +218,7 @@ Deno.serve(async (req) => {
     } else if (action === 'combine') {
       if (Number(progression.stage || 1) >= 5) throw new Error('This card is already at the maximum combination stage');
       const sacrificeIds = Array.isArray(payload?.sacrificeUserCardIds) ? payload.sacrificeUserCardIds.filter(Boolean) : [];
+      if (new Set(sacrificeIds).size !== sacrificeIds.length) throw new Error('Select distinct fusion cards.');
       const needed = Math.min(3, Number(progression.stage || 1) + 1);
       if (sacrificeIds.length < needed && !payload?.useWildcard) throw new Error(`Stage ${Number(progression.stage || 1) + 1} requires ${needed} compatible cards or a Wildcard`);
       const consumed: string[] = [];
@@ -217,11 +234,14 @@ Deno.serve(async (req) => {
           const compatible = sacrifice.card_name === userCard.card_name || (sacrifice.game_name === userCard.game_name && (rarityRank[sacrifice.card_rarity] || 0) >= Math.max(0, targetRarity - 1));
           if (!compatible) throw new Error(`${sacrifice.card_name} is not compatible with this stage fusion`);
           consumed.push(sacrifice.card_name);
+        }
+        // Validate the entire selection before consuming any inventory.
+        for (const id of sacrificeIds.slice(0, needed)) {
           await base44.asServiceRole.entities.UserCard.delete(id);
         }
       }
       const newStage = Number(progression.stage || 1) + 1;
-      await commit({ stage: newStage, stars: Math.min(5, Number(progression.stars || 1) + 1), skill_points: Number(progression.skill_points || 0) + 1 }, 'combine', `Card advanced to Stage ${newStage}`, { consumed, wildcard: Boolean(payload?.useWildcard) });
+      await commit({ stage: newStage, stars: Math.min(5, Number(progression.stars || 1) + 1), max_level: Number(progression.max_level || 10) + 5, skill_points: Number(progression.skill_points || 0) + 1 }, 'combine', `Card advanced to Stage ${newStage}; level cap increased by 5`, { consumed, wildcard: Boolean(payload?.useWildcard) });
     } else if (action === 'ascend') {
       if (Number(progression.level) < Number(progression.max_level)) throw new Error(`Reach level ${progression.max_level} before ascending`);
       const nextAscension = Number(progression.ascension || 0) + 1;
@@ -243,21 +263,24 @@ Deno.serve(async (req) => {
     } else if (action === 'overEnchant') {
       if (!(progression.enchantments || []).length) throw new Error('Apply a normal enchantment before over-enchanting');
       const nextRank = Number(progression.over_enchant_rank || 0) + 1;
-      if (nextRank > 5) throw new Error('Maximum over-enchant rank reached');
-      await spend({ adaptive_shard: nextRank });
-      const focusBonus = (progression.unlocked_skill_nodes || []).includes('enchanter_focus') ? 8 : 0;
-      const successChance = Math.max(35, Math.min(95, 82 - Number(progression.over_enchant_rank || 0) * 12 + Number(progression.stage || 1) * 2 + focusBonus));
-      const roll = Math.random() * 100;
-      const success = roll <= successChance;
-      const stability = Math.max(0, Number(progression.over_enchant_stability ?? 100) - (success ? 5 : 15));
+      if (nextRank > 10) throw new Error('Maximum enchant rank +10 reached');
+      const risk = Number(payload?.risk ?? 0);
+      if (!Number.isInteger(risk) || risk < 0 || risk > 3) throw new Error('Choose a risk level from 0 to 3.');
+      const protectedAttempt = payload?.useStabilizer === true;
+      await spend({ adaptive_shard: nextRank, ...(protectedAttempt && nextRank > 5 ? { resonance_fragment: 1 } : {}) });
+      const focusBonus = (progression.active_perks || []).includes('enchanter_focus') ? 8 : 0;
+      const successChance = nextRank <= 5 ? 100 : Math.max(15, Math.min(95, 85 - (nextRank - 6) * 12 + Number(progression.stage || 1) * 2 + focusBonus - risk * 10));
+      const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 * 100;
+      const success = roll < successChance;
+      const stability = nextRank <= 5 || success || protectedAttempt ? Number(progression.over_enchant_stability ?? 100) : Math.max(0, Number(progression.over_enchant_stability ?? 100) - 35 - risk * 10);
       if (success) {
-        const enchants = [...progression.enchantments];
-        enchants[enchants.length - 1] = { ...enchants[enchants.length - 1], overcharged: true };
+        const enchants = progression.enchantments.map((enchantment: AnyObj, i: number) => i === progression.enchantments.length - 1 ? { ...enchantment, overcharged: nextRank > 5 } : enchantment);
         const enhanced = { ...(progression.enhanced_stats || {}) };
-        for (const key of ['attack', 'defense', 'magic', 'vitality', 'speed']) enhanced[key] = Number(enhanced[key] || 0) + 2 * nextRank;
-        await commit({ over_enchant_rank: nextRank, over_enchant_stability: stability, enchantments: enchants, enhanced_stats: enhanced }, 'over_enchant', `Over-enchant Rank ${nextRank} succeeded`, { success: true, success_chance: successChance, roll: Math.round(roll * 100) / 100 });
+        const gain = nextRank <= 5 ? 2 : 2 * nextRank * (1 + risk * 0.5);
+        for (const key of ['attack', 'defense', 'magic', 'vitality', 'speed']) enhanced[key] = Number(enhanced[key] || 0) + gain;
+        await commit({ over_enchant_rank: nextRank, over_enchant_stability: stability, enchantments: enchants, enhanced_stats: enhanced }, 'over_enchant', `Enchantment +${nextRank} succeeded`, { success: true, success_chance: successChance, gain, protected: protectedAttempt });
       } else {
-        await commit({ over_enchant_stability: stability }, 'over_enchant', 'Over-enchant attempt failed; the card survived but lost stability', { success: false, success_chance: successChance, roll: Math.round(roll * 100) / 100 });
+        await commit({ over_enchant_stability: stability }, 'over_enchant', protectedAttempt ? 'Attempt failed; stabilizer protected the card' : stability <= 0 ? 'Attempt failed; card fractured' : stability < 50 ? 'Attempt failed; card corrupted' : 'Attempt failed; stability reduced', { success: false, success_chance: successChance, protected: protectedAttempt });
       }
     } else if (action === 'unlockSkill') {
       const nodeId = payload?.nodeId;
@@ -275,7 +298,8 @@ Deno.serve(async (req) => {
       if (!node || !(progression.unlocked_skill_nodes || []).includes(nodeId)) throw new Error('Unlock this perk before activating it');
       const active = [...(progression.active_perks || [])];
       const exists = active.includes(nodeId);
-      if (!exists && active.length >= 3) throw new Error('Only 3 perks can be active at once');
+      const perkSlots = Math.min(5, 1 + Math.floor(Number(progression.level || 1) / 5) + Math.floor(Number(progression.stage || 1) / 2));
+      if (!exists && active.length >= perkSlots) throw new Error(`All ${perkSlots} perk slots are occupied`);
       const next = exists ? active.filter((id) => id !== nodeId) : [...active, nodeId];
       await commit({ active_perks: next }, exists ? 'perk_deactivate' : 'perk_activate', `${node.name} ${exists ? 'deactivated' : 'activated'}`, { node_id: nodeId });
     } else if (action !== 'getState') {
@@ -296,10 +320,10 @@ Deno.serve(async (req) => {
       events,
       materials,
       enchantments,
-      compatibleCards: duplicates.filter((c: AnyObj) => c.id !== userCard.id && !c.is_equipped && c.trade_status !== 'locked_in_trade'),
+      compatibleCards: duplicates.filter((c: AnyObj) => c.id !== userCard.id && !c.is_equipped && c.trade_status !== 'locked_in_trade' && (c.card_name === userCard.card_name || (rarityRank[c.card_rarity] || 0) >= Math.max(0, (rarityRank[userCard.card_rarity] || 0) - 1))),
       skillTree: SKILL_TREE
     });
   } catch (error) {
     return Response.json({ error: error?.message || String(error) }, { status: 400 });
   }
-});
+}
