@@ -8,6 +8,8 @@ import HubSubTabs from './progression/hub/HubSubTabs';
 import AttributesTab from './progression/hub/AttributesTab';
 import WeaponMasteryTab from './progression/hub/WeaponMasteryTab';
 import HaloSubTab from './progression/hub/HaloSubTab';
+import PalaceSubTab from './progression/hub/PalaceSubTab';
+import ElixirSubTab from './progression/hub/ElixirSubTab';
 import WingsSubTab from './progression/hub/WingsSubTab';
 import AuraSubTab from './progression/hub/AuraSubTab';
 import TitleSubTab from './progression/hub/TitleSubTab';
@@ -22,9 +24,11 @@ const MAIN_TABS = [
 const MASTERY_SUB_TABS = [
   { id: 'tree', label: 'Mastery' },
   { id: 'halo', label: 'Halo' },
+  { id: 'palace', label: 'Palace' },
+  { id: 'title', label: 'Title' },
+  { id: 'elixirs', label: 'Elixirs' },
   { id: 'wings', label: 'Wings' },
   { id: 'aura', label: 'Aura' },
-  { id: 'title', label: 'Title' },
 ];
 
 export default function CharacterProgressionMenu({ isOpen, onClose }) {
@@ -90,9 +94,11 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'attributes' && <AttributesTab hud={hud} />}
           {mainTab === 'mastery' && subTab === 'tree' && <WeaponMasteryTab />}
           {mainTab === 'mastery' && subTab === 'halo' && <HaloSubTab />}
+          {mainTab === 'mastery' && subTab === 'palace' && <PalaceSubTab />}
+          {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
+          {mainTab === 'mastery' && subTab === 'elixirs' && <ElixirSubTab />}
           {mainTab === 'mastery' && subTab === 'wings' && <WingsSubTab />}
           {mainTab === 'mastery' && subTab === 'aura' && <AuraSubTab />}
-          {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
           {mainTab === 'services' && <SpiritServicesTab hud={hud} onNavigate={navigate} />}
         </div>
 
