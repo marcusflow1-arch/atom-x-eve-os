@@ -26,6 +26,7 @@ import '../../hub/consoleHub.css';
 import './auraLanding.css';
 import './auraDaily.css';
 import './auraFrontPage.css';
+import './auraSilverPalette.css';
 
 const DEFAULT_FILTERS = { search: '', gameId: '', tag: '', style: 'all', sort: 'trending', recent: false, topic: '' };
 const SORTS = [['trending', 'Trending'], ['watching', 'Most Watching'], ['started', 'Just Started'], ['games', 'New Games']];

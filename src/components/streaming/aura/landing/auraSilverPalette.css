@@ -1,0 +1,96 @@
+/* Aura color theme only — intentionally contains no layout or spacing rules. */
+.aura-landing {
+  --aura-silver: #a7a9ad;
+  --aura-silver-light: #c9cbce;
+  --aura-peach: #f5d0c5;
+  --aura-peach-soft: #f8ddd4;
+  --aura-coral: #f0737a;
+  --aura-teal: #168b8d;
+  --aura-ink: #252628;
+  --aura-muted: #62666a;
+  background: var(--aura-silver);
+  color: var(--aura-ink);
+  scrollbar-color: var(--aura-teal) var(--aura-silver);
+}
+
+.aura-landing .aura-landing-feed,
+.aura-landing .console-filter-bar,
+.aura-landing .aura-landing-search {
+  background: rgba(201, 203, 206, 0.94);
+}
+
+.aura-landing .aura-live-pulse {
+  background: linear-gradient(100deg, rgba(245, 208, 197, 0.78), rgba(201, 203, 206, 0.9));
+  border-color: rgba(240, 115, 122, 0.45);
+}
+
+.aura-landing .aura-feature-section,
+.aura-landing .aura-daily-pick,
+.aura-landing .aura-topic-card,
+.aura-landing .aura-section-empty,
+.aura-landing .aura-hot-feature {
+  background-color: var(--aura-peach);
+  border-color: rgba(240, 115, 122, 0.34);
+  box-shadow: 0 8px 24px rgba(58, 60, 63, 0.12);
+}
+
+.aura-landing .aura-topic-card,
+.aura-landing .aura-daily-pick {
+  background-image: linear-gradient(135deg, var(--aura-peach-soft), var(--aura-peach));
+}
+
+.aura-landing .console-directory-notice {
+  background: rgba(245, 208, 197, 0.72);
+  border-color: var(--aura-coral);
+  color: var(--aura-ink);
+}
+
+.aura-landing .aura-spotlight h1,
+.aura-landing .aura-spotlight .console-hero-creator strong,
+.aura-landing .aura-spotlight .console-hero-creator small {
+  color: #f7f7f5;
+}
+
+.aura-landing .aura-feature-heading h2,
+.aura-landing .aura-feature-heading p,
+.aura-landing .aura-daily-pick h3,
+.aura-landing .aura-daily-pick p,
+.aura-landing .aura-topic-card h3,
+.aura-landing .aura-topic-card p,
+.aura-landing .aura-game-poster,
+.aura-landing .aura-section-empty h3,
+.aura-landing .aura-section-empty p,
+.aura-landing .aura-pulse-label strong,
+.aura-landing .aura-live-pulse dt,
+.aura-landing .aura-live-pulse dd {
+  color: var(--aura-ink);
+}
+
+.aura-landing .console-eyebrow,
+.aura-landing .aura-feature-heading .console-eyebrow,
+.aura-landing .aura-topic-tag,
+.aura-landing .aura-pick-footer > small,
+.aura-landing .aura-section-footnote,
+.aura-landing .aura-game-poster > small,
+.aura-landing .aura-pulse-label small,
+.aura-landing .aura-landing-jumps button,
+.aura-landing .console-text-button {
+  color: var(--aura-teal);
+}
+
+.aura-landing .aura-game-lane-tabs > button[aria-selected='true'],
+.aura-landing .aura-landing-jumps button:hover,
+.aura-landing .console-text-button:hover {
+  color: #0b6668;
+}
+
+.aura-landing .aura-game-lane-tabs > button[aria-selected='true']::after,
+.aura-landing .aura-topic-card::before {
+  background-color: var(--aura-coral);
+}
+
+body:has(.aura-landing) .fixed.top-0.left-0.right-0.z-40,
+body:has(.aura-landing) .fixed.bottom-0.left-0.right-0.z-\[35\] {
+  background: rgba(175, 178, 182, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.42) !important;
+}
