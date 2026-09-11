@@ -19,11 +19,10 @@ function beginBossDeath(boss) {
   boss.speed = 0;
   boss.aiSpeed = 0;
 
-  // Combat ends the instant death begins, not after the death animation. This
-  // stops tornado, aerial fields, telegraphs, delayed hits, and other boss VFX
-  // before Ironmaw's body finishes falling/fading.
+  // Combat ends the instant death begins, not after the death animation.
   if (typeof window !== 'undefined') {
     try { window.__gw3dBossTornadoLiftBeam?.cancel?.(); } catch { /* non-fatal */ }
+    try { window.__gw3dBossTelegraphs?.clear?.(); } catch { /* non-fatal */ }
     window.dispatchEvent(new CustomEvent('bossCombatHalt', {
       detail: { bossId: boss.id, bossName: boss.name },
     }));
@@ -39,12 +38,7 @@ function beginBossDeath(boss) {
   }
 
   try {
-    updateBoss(boss.id, {
-      hp: 0,
-      alive: false,
-      dying: true,
-      defeated: false,
-    });
+    updateBoss(boss.id, { hp: 0, alive: false, dying: true, defeated: false });
   } catch { /* store sync is non-fatal */ }
 
   if (typeof window !== 'undefined') {
@@ -56,7 +50,6 @@ function beginBossDeath(boss) {
 
 function updateBossDeath(delta, boss) {
   if (!boss?.group) return;
-
   if (!boss.deathStarted) beginBossDeath(boss);
   boss.deathTimer = (boss.deathTimer || 0) + delta;
 
@@ -88,13 +81,7 @@ function updateBossDeath(delta, boss) {
     boss.mixer?.stopAllAction?.();
 
     try {
-      updateBoss(boss.id, {
-        hp: 0,
-        alive: false,
-        dying: false,
-        defeated: true,
-        visible: false,
-      });
+      updateBoss(boss.id, { hp: 0, alive: false, dying: false, defeated: true, visible: false });
     } catch { /* store sync is non-fatal */ }
 
     if (typeof window !== 'undefined' && !boss.removedEventSent) {
@@ -110,9 +97,7 @@ export function updateBossMovement(delta, bossEntities, model, mapReady, sampleG
   bossEntities.forEach((b) => {
     if (b.mixer) b.mixer.update(delta);
 
-    if (!b.defeated && !b.dying && (Number(b.hp) <= 0 || b.alive === false)) {
-      beginBossDeath(b);
-    }
+    if (!b.defeated && !b.dying && (Number(b.hp) <= 0 || b.alive === false)) beginBossDeath(b);
 
     if (b.dying) {
       updateBossDeath(delta, b);
