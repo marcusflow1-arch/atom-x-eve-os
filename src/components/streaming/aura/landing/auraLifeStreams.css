@@ -1,4 +1,4 @@
-.aura-life-directory{display:grid;grid-template-columns:minmax(96px,1fr) 1px minmax(0,9fr);gap:22px;min-height:360px;padding:22px;border:1px solid rgba(225,231,238,.22);border-radius:16px;background:linear-gradient(145deg,rgba(56,61,68,.5),rgba(16,18,22,.7));backdrop-filter:blur(22px) saturate(145%);transition:min-height .35s ease}
+.aura-life-directory{display:grid;grid-template-columns:minmax(96px,1fr) 1px minmax(0,9fr);gap:22px;min-height:360px;padding:22px;border:0;border-radius:0;background:transparent;backdrop-filter:none;transition:min-height .35s ease}
 .aura-landing .aura-life-directory.is-expanded{min-height:78vh}
 .aura-landing .aura-life-directory.is-expanded .aura-life-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 18px}
 .aura-life-filters{display:flex;flex-direction:column;gap:7px;min-width:0}
