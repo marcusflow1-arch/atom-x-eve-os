@@ -1,11 +1,11 @@
 /* Aura color theme only — intentionally contains no layout or spacing rules. */
 .aura-landing {
-  --aura-silver: #303338;
-  --aura-silver-light: #464a50;
-  --aura-peach: #3b3f45;
-  --aura-peach-soft: #4a4f56;
-  --aura-coral: #89919a;
-  --aura-teal: #c5cbd2;
+  --aura-silver: #45494f;
+  --aura-silver-light: #646970;
+  --aura-peach: #5b6067;
+  --aura-peach-soft: #656a71;
+  --aura-coral: #9ca3ab;
+  --aura-teal: #d1d6dc;
   --aura-ink: #f7f7f5;
   --aura-muted: #c1c5ca;
   background: var(--aura-silver);
@@ -16,31 +16,38 @@
 .aura-landing .aura-landing-feed,
 .aura-landing .console-filter-bar,
 .aura-landing .aura-landing-search {
-  background: rgba(55, 58, 63, 0.96);
+  background: rgba(69, 73, 79, 0.96);
 }
 
 .aura-landing .aura-live-pulse {
-  background: linear-gradient(100deg, rgba(70, 74, 80, 0.96), rgba(48, 51, 56, 0.94));
-  border-color: rgba(197, 203, 210, 0.35);
+  background: linear-gradient(100deg, rgba(91, 96, 103, 0.98), rgba(78, 83, 90, 0.96));
+  border-color: rgba(209, 214, 220, 0.44);
 }
 
-.aura-landing .aura-feature-section,
+.aura-landing .aura-feature-section {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .aura-landing .aura-daily-pick,
 .aura-landing .aura-topic-card,
 .aura-landing .aura-section-empty,
 .aura-landing .aura-hot-feature {
   background-color: var(--aura-peach);
-  border-color: rgba(197, 203, 210, 0.22);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  background-image: none;
+  border-color: rgba(209, 214, 220, 0.46);
+  box-shadow: 0 0 0 1px rgba(209, 214, 220, 0.38), 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-.aura-landing .aura-topic-card,
-.aura-landing .aura-daily-pick {
-  background-image: linear-gradient(135deg, var(--aura-peach-soft), var(--aura-peach));
+.aura-landing .aura-moment-art,
+.aura-landing .aura-game-poster-art {
+  background-color: var(--aura-silver-light);
+  box-shadow: 0 0 0 1px rgba(209, 214, 220, 0.52), 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
 .aura-landing .console-directory-notice {
-  background: rgba(67, 71, 77, 0.94);
+  background: rgba(91, 96, 103, 0.96);
   border-color: var(--aura-coral);
   color: var(--aura-ink);
 }
@@ -91,6 +98,6 @@
 
 body:has(.aura-landing) .fixed.top-0.left-0.right-0.z-40,
 body:has(.aura-landing) .fixed.bottom-0.left-0.right-0.z-\[35\] {
-  background: rgba(48, 51, 56, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(58, 62, 68, 0.97) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
 }
