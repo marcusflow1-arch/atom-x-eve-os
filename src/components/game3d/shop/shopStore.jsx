@@ -1,8 +1,6 @@
-// ─── Shop Store ────────────────────────────────────────────────────────
 // Persistent player gold + purchased consumables/items.
-// Gold is earned passively (titleStore kills += gold) and spent in StoreMenuOverlay.
-// Consumables go into the inventory; using one fires `useShopItem` which the
-// shopEffectsBridge consumes to apply real combat buffs.
+// The modern Spirit Service can buy and sell in the field while preserving the
+// same inventory/economy store used by the existing merchant UI.
 
 const STORAGE_KEY = 'mmorpg_shop_store_v1';
 const STARTING_GOLD = 5000;
@@ -14,8 +12,8 @@ const load = () => {
       const p = JSON.parse(raw);
       return {
         gold: typeof p.gold === 'number' ? p.gold : STARTING_GOLD,
-        inventory: p.inventory || {}, // { [itemId]: count }
-        equippedCosmetics: p.equippedCosmetics || {}, // { slot: itemId }
+        inventory: p.inventory || {},
+        equippedCosmetics: p.equippedCosmetics || {},
       };
     }
   } catch {}
@@ -36,6 +34,7 @@ export function addGold(amount) {
 }
 
 export function purchaseItem(item) {
+  if (!item) return { ok: false, reason: 'Unknown item' };
   if (state.gold < item.price) return { ok: false, reason: 'Not enough gold' };
   const inv = { ...state.inventory };
   inv[item.id] = (inv[item.id] || 0) + 1;
@@ -44,11 +43,27 @@ export function purchaseItem(item) {
   return { ok: true };
 }
 
-// Cosmetics are equipped, not consumed. Once owned, toggling on/off costs nothing.
+// Spirit resale: remove an owned item without returning to an NPC. The 50%
+// return keeps the original buy/sell friction while removing travel downtime.
+export function sellItem(item, quantity = 1) {
+  if (!item) return { ok: false, reason: 'Unknown item' };
+  const qty = Math.max(1, Math.floor(Number(quantity) || 1));
+  const have = state.inventory[item.id] || 0;
+  if (have < qty) return { ok: false, reason: 'Not enough items to sell' };
+  const inventory = { ...state.inventory, [item.id]: have - qty };
+  if (inventory[item.id] <= 0) delete inventory[item.id];
+  const unitValue = Math.max(1, Math.floor((item.price || 0) * 0.5));
+  const goldReceived = unitValue * qty;
+  state = { ...state, inventory, gold: state.gold + goldReceived };
+  emit();
+  return { ok: true, goldReceived };
+}
+
 export function equipCosmetic(slot, itemId) {
   state = { ...state, equippedCosmetics: { ...state.equippedCosmetics, [slot]: itemId } };
   emit();
 }
+
 export function unequipCosmetic(slot) {
   const next = { ...state.equippedCosmetics };
   delete next[slot];
@@ -56,7 +71,6 @@ export function unequipCosmetic(slot) {
   emit();
 }
 
-// Consume one of a stackable consumable from inventory + fire the use-event.
 export function consumeItem(item) {
   const have = state.inventory[item.id] || 0;
   if (have <= 0) return { ok: false, reason: 'None left' };
@@ -64,7 +78,6 @@ export function consumeItem(item) {
   if (inv[item.id] <= 0) delete inv[item.id];
   state = { ...state, inventory: inv };
   emit();
-  // Effects bridge listens for this and applies real buffs/heals.
   window.dispatchEvent(new CustomEvent('useShopItem', { detail: { item } }));
   return { ok: true };
 }
