@@ -210,12 +210,26 @@ export default function AvatarHome() {
 
           {/* Memory Board / Activity */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <h3 className="font-bold mb-3">Memory Board</h3>
-            <ul className="text-white/70 text-sm space-y-2">
-              <li>• Unlocked a rare badge yesterday</li>
-              <li>• Played Neon Racer with friends</li>
-              <li>• Exploring Galactic Empire campaign</li>
-            </ul>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="font-bold">Memory Board</h3>
+              <span className="text-[10px] uppercase tracking-wider text-cyan-300/60">{behavior?.current_mood || 'neutral'} AI</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-black/20 border border-white/5 p-2"><span className="text-[9px] text-white/30 block">Cards</span><strong className="text-white">{ownedCards.length}</strong></div>
+              <div className="bg-black/20 border border-white/5 p-2"><span className="text-[9px] text-white/30 block">Empathy</span><strong className="text-white">{Math.round(behavior?.empathy_level ?? 50)}</strong></div>
+              <div className="bg-black/20 border border-white/5 p-2"><span className="text-[9px] text-white/30 block">Risk</span><strong className="text-white">{Math.round(behavior?.risk_tolerance ?? 50)}</strong></div>
+            </div>
+            {homeActivity.length ? (
+              <ul className="text-white/65 text-xs space-y-2">
+                {homeActivity.slice(-4).reverse().map((entry, index) => (
+                  <li key={`${entry.timestamp || index}-${index}`} className="border-t border-white/5 pt-2 first:border-0 first:pt-0">
+                    • {entry.reward_name ? `Unlocked ${entry.reward_name}` : entry.choice_made || entry.type?.replaceAll('_', ' ') || 'Avatar memory updated'}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-white/35 text-xs">Your avatar is still blank. Gameplay decisions and achievement rewards will begin filling this board.</p>
+            )}
           </motion.div>
         </div>
 
