@@ -14,6 +14,11 @@ Deno.serve(async (req) => {
         const { action } = requestBody;
 
         switch (action) {
+            case 'initializeAvatar': {
+                const initialized = await initializeAvatar(base44, user, requestBody);
+                return Response.json(initialized);
+            }
+
             case 'saveAppearance': {
                 const { appearance } = requestBody;
                 const updatedAvatar = await saveAvatarAppearance(base44, user.id, appearance);
@@ -66,6 +71,69 @@ Deno.serve(async (req) => {
         }, { status: 500 });
     }
 });
+
+async function initializeAvatar(base44, user, requestBody) {
+    const gender = requestBody.gender === 'female' ? 'female' : 'male';
+    const defaultName = gender === 'female' ? 'Eve' : 'Atum';
+    const name = String(requestBody.name || defaultName).trim().slice(0, 40) || defaultName;
+
+    const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, '-created_date', 1);
+    let avatar = existing[0];
+    if (!avatar) {
+        avatar = await base44.asServiceRole.entities.Avatar.create({
+            user_id: user.id,
+            name,
+            gender,
+            level: 1,
+            experience: 0,
+            social_influence: 0,
+            reputation_badges: [],
+            model_url: 'base_humanoid.glb',
+            equipped_items: [],
+            unlocked_abilities: [],
+            active_companions: [],
+            morph_targets: {},
+            current_mode: 'Adaptive'
+        });
+    }
+
+    const homes = await base44.asServiceRole.entities.AvatarHomeState.filter({ avatarId: avatar.id }, '-created_date', 1);
+    const home = homes[0] || await base44.asServiceRole.entities.AvatarHomeState.create({
+        avatarId: avatar.id,
+        level: 1,
+        mood: 'calm',
+        catchphrase: 'I am learning who we are.',
+        achievements: [],
+        games: [],
+        vehicles: [],
+        activityLog: [],
+        preferences: { initialized_blank: true }
+    });
+
+    const states = await base44.asServiceRole.entities.AIBehaviorState.filter({ user_id: user.id, avatar_id: avatar.id }, '-created_date', 1);
+    const behaviorState = states[0] || await base44.asServiceRole.entities.AIBehaviorState.create({
+        user_id: user.id,
+        avatar_id: avatar.id,
+        current_mood: 'neutral',
+        mood_intensity: 50,
+        energy_level: 75,
+        moral_alignment: 0,
+        aggression_tendency: 50,
+        risk_tolerance: 50,
+        empathy_level: 50,
+        environmental_factors: { last_weather: 'clear', last_temperature: 'mild', time_of_day_preference: 'afternoon', seasonal_mood_modifier: 0 },
+        behavioral_traits: { loyalty: 50, curiosity: 50, caution: 50, humor: 50, wisdom: 50, impulsiveness: 50 },
+        mood_history: []
+    });
+
+    await base44.asServiceRole.entities.User.update(user.id, {
+        onboarding_complete: true,
+        avatar_id: avatar.id,
+        avatar_archetype: gender === 'female' ? 'eve' : 'atum'
+    });
+
+    return { success: true, avatar, home, behaviorState };
+}
 
 async function saveAvatarAppearance(base44, userId, appearance) {
     // Find or create user's avatar
