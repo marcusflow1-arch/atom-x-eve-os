@@ -1,418 +1,196 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { 
-  Gamepad2, Brain, Trophy, Users, Sparkles, Play, 
-  ChevronRight, Zap, Layers, Radio, ArrowRight,
-  BookOpen, Swords, Crown, Heart, Home, ShoppingBag, Library as LibraryIcon, MessageSquare, Target, Hammer
+import {
+  ArrowRight, Brain, Check, ChevronRight, Gamepad2, LogOut, Orbit, Shield,
+  Sparkles, Trophy, UserRound, Zap
 } from 'lucide-react';
-import VisualFeatureGuide from '@/components/onboarding/VisualFeatureGuide';
-import { Button } from '@/components/ui/button';
-import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
-import { useViewMode } from '@/components/mobile/ViewModeContext';
+import { createPageUrl } from '@/utils';
+import { useAuth } from '@/components/auth/AuthContext';
 
-// Core Loop Pillar Card
-const PillarCard = ({ icon: Icon, title, description, color, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.6 }}
-    className="relative group"
-  >
-    <div 
-      className="p-8 rounded-3xl border border-white/10 hover:border-white/20 transition-all duration-500 h-full"
-      style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(20px)',
-      }}
+const cores = [
+  {
+    id: 'female',
+    name: 'Female Avatar Base',
+    matrix: 'Neural Matrix A',
+    accent: 'cyan',
+    description: 'Blank adaptive core. Voice, appearance, tactics and personality evolve from your play history.',
+  },
+  {
+    id: 'male',
+    name: 'Male Avatar Base',
+    matrix: 'Neural Matrix B',
+    accent: 'fuchsia',
+    description: 'Blank adaptive core. Your cross-game behavior becomes the blueprint for the avatar that emerges.',
+  },
+  {
+    id: 'neutral',
+    name: 'Neutral AI Core',
+    matrix: 'Neural Matrix N',
+    accent: 'violet',
+    description: 'Identity-neutral starting shell designed to evolve entirely from observed gameplay behavior.',
+  },
+];
+
+function CorePedestal({ core, selected, onSelect }) {
+  const tone = core.accent === 'cyan'
+    ? 'from-cyan-300/30 via-cyan-400/5 to-transparent text-cyan-100'
+    : core.accent === 'fuchsia'
+      ? 'from-fuchsia-300/25 via-fuchsia-400/5 to-transparent text-fuchsia-100'
+      : 'from-violet-300/25 via-violet-400/5 to-transparent text-violet-100';
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onSelect}
+      whileHover={{ y: -6, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      className={`group relative min-h-[390px] overflow-hidden text-left transition-all duration-300 ${selected ? 'bg-white/[0.055]' : 'bg-white/[0.018] hover:bg-white/[0.03]'}`}
     >
-      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-        <Icon className="w-8 h-8 text-white" />
-      </div>
-      <h3 className="text-2xl font-bold text-white mb-3">{title}</h3>
-      <p className="text-white/60 leading-relaxed">{description}</p>
-    </div>
-  </motion.div>
-);
+      <div className={`pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b ${tone}`} />
+      <div className="pointer-events-none absolute inset-x-[10%] bottom-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-// Feature Strip
-const FeatureStrip = ({ text, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.5 }}
-    className="flex items-center gap-4 py-4 border-b border-white/5"
-  >
-    <div className="w-2 h-2 rounded-full bg-cyan-400" />
-    <p className="text-white/80 text-lg">{text}</p>
-  </motion.div>
-);
+      <div className="relative flex h-full flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[8px] font-bold uppercase tracking-[.26em] text-white/30">{core.matrix}</div>
+            <div className="mt-2 text-lg font-black text-white">{core.name}</div>
+          </div>
+          <div className={`grid h-8 w-8 place-items-center rounded-full ${selected ? 'bg-white text-black' : 'bg-white/[0.05] text-white/25'}`}>
+            {selected ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </div>
+        </div>
 
-const PathCard = ({ icon: Icon, title, description, color, selected, onClick }) => (
-  <motion.button
-    onClick={onClick}
-    whileHover={{ scale: 1.02, y: -4 }}
-    whileTap={{ scale: 0.98 }}
-    className={`relative p-6 rounded-2xl border text-left transition-all duration-300 ${
-      selected
-        ? 'border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.2)]'
-        : 'border-white/10 hover:border-white/20'
-    }`}
-    style={{
-      background: selected ? 'rgba(34, 211, 238, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-      backdropFilter: 'blur(20px)',
-    }}
-  >
-    {selected && (
-      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
-        <ChevronRight className="w-4 h-4 text-black" />
+        <div className="relative mx-auto mt-7 flex h-52 w-40 items-end justify-center">
+          <div className="absolute bottom-0 h-8 w-36 rounded-[50%] bg-white/[0.06] blur-sm" />
+          <div className={`absolute bottom-1 h-24 w-28 rounded-[50%] bg-gradient-to-t ${tone} blur-2xl opacity-70`} />
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ repeat: Infinity, duration: 4.2, ease: 'easeInOut' }}
+            className="relative h-44 w-28"
+          >
+            <div className="absolute left-1/2 top-0 h-16 w-16 -translate-x-1/2 rounded-full border border-white/15 bg-white/[0.035] backdrop-blur-xl" />
+            <div className="absolute left-1/2 top-14 h-28 w-24 -translate-x-1/2 rounded-[42%_42%_20%_20%] border border-white/10 bg-white/[0.025] backdrop-blur-xl" />
+            <div className="absolute left-1/2 top-24 h-px w-40 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          </motion.div>
+        </div>
+
+        <div className="mt-auto">
+          <p className="text-xs leading-5 text-white/40">{core.description}</p>
+          <div className={`mt-4 text-[9px] font-bold uppercase tracking-[.2em] ${selected ? 'text-cyan-200' : 'text-white/25'}`}>{selected ? 'Core Selected' : 'Select Core'}</div>
+        </div>
       </div>
-    )}
-    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4`}>
-      <Icon className="w-6 h-6 text-white" />
+    </motion.button>
+  );
+}
+
+function ObservationSignal({ icon: Icon, title, detail }) {
+  return (
+    <div className="flex items-start gap-3 bg-white/[0.018] p-3">
+      <div className="grid h-8 w-8 shrink-0 place-items-center bg-cyan-300/[0.06] text-cyan-200/70"><Icon className="h-3.5 w-3.5" /></div>
+      <div><div className="text-[10px] font-bold text-white/70">{title}</div><div className="mt-1 text-[9px] leading-4 text-white/30">{detail}</div></div>
     </div>
-    <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-    <p className="text-white/50 text-sm">{description}</p>
-  </motion.button>
-);
+  );
+}
 
 export default function OnboardingHome() {
   const navigate = useNavigate();
-  const [selectedPath, setSelectedPath] = useState(null);
-  const { isMobile } = useViewMode();
+  const { user, avatar, updateUserData, logout } = useAuth();
+  const [selectedCore, setSelectedCore] = useState(localStorage.getItem('atom_eve_ai_core') || null);
+  const [initializing, setInitializing] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleBegin = () => {
-    // Store selected path preference
-    if (selectedPath) {
-      localStorage.setItem('atom_eve_preferred_path', selectedPath);
-    }
-    // Mark onboarding as seen
+  const selected = useMemo(() => cores.find((core) => core.id === selectedCore), [selectedCore]);
+
+  const initialize = async () => {
+    if (!selectedCore || initializing) return;
+    setInitializing(true);
+    setError('');
+
+    const payload = {
+      ai_core_identity: selectedCore,
+      neural_observation_enabled: true,
+      onboarding_complete: true,
+      neural_observation_started_at: new Date().toISOString(),
+    };
+
+    localStorage.setItem('atom_eve_ai_core', selectedCore);
+    localStorage.setItem('atom_eve_neural_observation', 'enabled');
     localStorage.setItem('atom_eve_onboarding_complete', 'true');
-    // Navigate to avatar setup or dashboard
-    navigate(createPageUrl('LunaTemplate'));
+
+    try {
+      if (user) {
+        const result = await updateUserData(payload);
+        if (result && result.success === false) throw new Error(result.error || 'Profile could not be updated');
+      }
+      navigate(createPageUrl('LunaTemplate'));
+    } catch (err) {
+      console.error('AI core initialization failed:', err);
+      setError('The local AI core was initialized, but cloud profile sync failed. You can retry initialization.');
+    } finally {
+      setInitializing(false);
+    }
   };
 
-  const paths = [
-    { id: 'story', icon: BookOpen, title: 'AI Story Mode', description: 'Narrative-driven progression with your AI companion', color: 'from-blue-500 to-indigo-600' },
-    { id: 'battle', icon: Swords, title: 'AI Battle', description: 'Competitive PvP and challenging PvE encounters', color: 'from-red-500 to-rose-600' },
-    { id: 'collector', icon: Trophy, title: 'Collector', description: 'Cards, gear, achievements, and legacy systems', color: 'from-amber-500 to-orange-600' },
-    { id: 'social', icon: Users, title: 'Social', description: 'Clans, friends, events, and community', color: 'from-purple-500 to-pink-600' },
-  ];
-
   return (
-    <div className="min-h-screen w-full text-white overflow-y-auto overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-      {!isMobile && <SideAccessMenu />}
-      
-      {/* Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-cyan-500/10 via-transparent to-transparent blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-purple-500/10 via-transparent to-transparent blur-3xl" />
-      </div>
+    <div className="relative h-screen w-full overflow-hidden bg-[#05070B] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(0,240,255,.13),transparent_35%),radial-gradient(circle_at_82%_30%,rgba(255,0,85,.08),transparent_28%),linear-gradient(180deg,#090D14_0%,#05070B_62%,#020305_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.18]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px)', backgroundSize: '42px 42px' }} />
 
-      {/* SECTION 1: HERO */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 md:py-28">
-        {/* AI Avatar Silhouette */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.3, scale: 1 }}
-          transition={{ duration: 1.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-b from-cyan-500/5 to-transparent blur-3xl"
-        />
+      <header className="relative z-10 flex h-16 items-center justify-between px-5 md:px-8">
+        <div className="flex items-center gap-3">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-white text-black"><Orbit className="h-4 w-4" /></div>
+          <div><div className="text-[9px] font-black uppercase tracking-[.34em] text-white/75">Atom × Eve</div><div className="text-[8px] uppercase tracking-[.2em] text-white/20">Neural Initialization</div></div>
+        </div>
+        <div className="flex items-center gap-3 text-[9px] uppercase tracking-[.18em] text-white/35">
+          <span className="hidden sm:inline">User: {user?.username || user?.full_name || 'Player'}</span>
+          <button onClick={logout} className="flex items-center gap-2 px-3 py-2 transition hover:bg-white/[0.04] hover:text-white"><LogOut className="h-3.5 w-3.5" /> Logout</button>
+        </div>
+      </header>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center relative z-10 max-w-5xl mx-auto pt-8 md:pt-10"
-        >
-          {/* Logo */}
-          <motion.h1 
-            className="text-6xl md:text-8xl font-black tracking-tighter mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <span className="bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent">
-              Atom × Eve
-            </span>
-          </motion.h1>
+      <main className="relative z-10 mx-auto flex h-[calc(100vh-64px)] max-w-[1500px] flex-col overflow-y-auto px-5 pb-8 pt-5 md:px-8 lg:overflow-hidden">
+        <div className="shrink-0 text-center">
+          <div className="text-[9px] font-bold uppercase tracking-[.34em] text-cyan-200/55">First Boot · Identity Baseline</div>
+          <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">Select Your AI Core Identity</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-xs leading-5 text-white/40 md:text-sm">This is only the starting shell. Your AI Avatar begins intentionally blank and learns who it becomes by observing how you play.</p>
+        </div>
 
-          {/* Tagline */}
-          <motion.p 
-            className="text-xl md:text-2xl text-white/60 mb-4 font-light"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            An AI-powered gaming OS.
-          </motion.p>
+        <div className="mt-6 grid min-h-0 flex-1 gap-5 xl:grid-cols-[1fr_310px]">
+          <section className="grid gap-3 md:grid-cols-3">
+            {cores.map((core) => <CorePedestal key={core.id} core={core} selected={selectedCore === core.id} onSelect={() => setSelectedCore(core.id)} />)}
+          </section>
 
-          {/* Value Props */}
-          <motion.div 
-            className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-white/40 mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <span className="flex items-center gap-2">
-              <Play className="w-4 h-4 text-cyan-400" />
-              Play games.
-            </span>
-            <span className="hidden md:block">•</span>
-            <span className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-purple-400" />
-              Evolve your AI.
-            </span>
-            <span className="hidden md:block">•</span>
-            <span className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-400" />
-              Collect power across worlds.
-            </span>
-          </motion.div>
+          <aside className="flex min-h-0 flex-col bg-[#0F1115]/75 p-5 backdrop-blur-xl">
+            <div className="flex items-center gap-2"><Brain className="h-4 w-4 text-cyan-200/70" /><span className="text-[9px] font-bold uppercase tracking-[.22em] text-white/45">Neural Observation</span></div>
+            <h2 className="mt-3 text-xl font-black">Blank Canvas Protocol</h2>
+            <p className="mt-2 text-[10px] leading-5 text-white/35">Once initialized, the AI observes your cross-game behavior and updates its personality, dialogue, visual presentation, and tactical tendencies.</p>
 
-          {/* Primary CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col items-center gap-4"
-          >
-            <Button
-              onClick={() => document.getElementById('path-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-10 py-6 text-lg font-bold bg-white text-black hover:bg-white/90 rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all"
-            >
-              Begin Initialization
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            
-            <div className="flex items-center gap-6 mt-4 text-sm text-white/40">
-              <button className="hover:text-white transition-colors">Watch Overview</button>
-              <span>•</span>
-              <button className="hover:text-white transition-colors">Learn More</button>
+            <div className="mt-5 space-y-2">
+              <ObservationSignal icon={Gamepad2} title="Tactical Choices" detail="Learns aggression, patience, positioning, weapon and ability preferences." />
+              <ObservationSignal icon={Zap} title="Pacing & Reflex Pattern" detail="Tracks how quickly you act, explore, react and adapt under pressure." />
+              <ObservationSignal icon={Trophy} title="Achievement Utility" detail="Achievements feed real equipment, abilities, companions, environments and teachers into the avatar system." />
+              <ObservationSignal icon={Shield} title="Persistent Identity" detail="The same AI identity carries your learned style and unlocked utility across supported games." />
             </div>
-          </motion.div>
-        </motion.div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2"
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-2"
-          >
-            <div className="w-1 h-2 bg-white/40 rounded-full" />
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* SECTION 2: CORE LOOP */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">The Core Loop</h2>
-            <p className="text-white/50 text-lg">Three pillars that power your journey</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <PillarCard
-              icon={Gamepad2}
-              title="Play"
-              description="Games, stories, battles. Every session feeds your progression and shapes your AI companion."
-              color="from-cyan-500 to-blue-600"
-              delay={0.1}
-            />
-            <PillarCard
-              icon={Brain}
-              title="Evolve"
-              description="Your AI learns from every action. It adapts, remembers, and grows alongside you."
-              color="from-purple-500 to-pink-600"
-              delay={0.2}
-            />
-            <PillarCard
-              icon={Layers}
-              title="Collect"
-              description="Cards, gear, achievements, legacy items. Build a collection that transcends individual games."
-              color="from-amber-500 to-orange-600"
-              delay={0.3}
-            />
-          </div>
+            <div className="mt-auto pt-5">
+              <div className="bg-white/[0.02] p-3">
+                <div className="text-[8px] uppercase tracking-[.18em] text-white/25">Selected Core</div>
+                <div className="mt-1 text-sm font-bold text-white/75">{selected?.name || 'No core selected'}</div>
+                <div className="mt-0.5 text-[9px] text-cyan-200/45">{selected?.matrix || 'Select a pedestal to continue'}</div>
+              </div>
+              {error && <div className="mt-3 bg-rose-400/[0.05] p-3 text-[9px] leading-4 text-rose-200/70">{error}</div>}
+              <button
+                onClick={initialize}
+                disabled={!selectedCore || initializing}
+                className="mt-3 flex h-12 w-full items-center justify-center gap-2 bg-white text-[10px] font-black uppercase tracking-[.16em] text-black transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-white/20"
+              >
+                {initializing ? <><Sparkles className="h-4 w-4 animate-pulse" /> Initializing Neural Core…</> : <>Initialize Neural Observation <ArrowRight className="h-4 w-4" /></>}
+              </button>
+              <div className="mt-2 text-center text-[8px] uppercase tracking-[.16em] text-white/18">Avatar record: {avatar?.name || 'new adaptive core'}</div>
+            </div>
+          </aside>
         </div>
-      </section>
-
-      {/* SECTION 3: WHY DIFFERENT */}
-      <section className="relative py-32 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Not Another Launcher</h2>
-            <p className="text-white/50 text-lg">This is different from Steam, Xbox, Twitch, and Discord.</p>
-          </motion.div>
-
-          <div className="space-y-2">
-            <FeatureStrip text="AI Avatar persists across every game you play" delay={0.1} />
-            <FeatureStrip text="Achievements become usable assets in your collection" delay={0.2} />
-            <FeatureStrip text="Streaming and progression are connected" delay={0.3} />
-            <FeatureStrip text="Old games get new life through AI enhancement" delay={0.4} />
-            <FeatureStrip text="Your gaming legacy follows you everywhere" delay={0.5} />
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: PATH SELECTION */}
-      <section id="path-section" className="relative py-32 px-6">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">How Do You Want to Begin?</h2>
-            <p className="text-white/50 text-lg">Choose your preferred path (you can explore everything later)</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-12">
-            {paths.map((path) => (
-              <PathCard
-                key={path.id}
-                {...path}
-                selected={selectedPath === path.id}
-                onClick={() => setSelectedPath(path.id)}
-              />
-            ))}
-          </div>
-
-          {/* Final CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <Button
-              onClick={handleBegin}
-              disabled={!selectedPath}
-              className={`px-12 py-6 text-lg font-bold rounded-full transition-all ${
-                selectedPath 
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.4)]' 
-                  : 'bg-white/10 text-white/40 cursor-not-allowed'
-              }`}
-            >
-              Enter Atom × Eve
-              <Sparkles className="w-5 h-5 ml-2" />
-            </Button>
-            
-            {!selectedPath && (
-              <p className="text-white/30 text-sm mt-4">Select a path above to continue</p>
-            )}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      {/* SECTION 5: Visual Feature Tour */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-        <VisualFeatureGuide
-          onNavigate={(page) => navigate(createPageUrl(page))}
-          features={[
-            { 
-              icon: Home, 
-              title: 'Dashboard Command', 
-              summary: 'Your central hub for everything. Access friends, stats, and quick actions.', 
-              bullets: ['Real-time AI Stats', 'Quick Launch Games', 'Friends Activity'], 
-              page: 'LunaTemplate', 
-              color: 'from-cyan-500 to-blue-600',
-              image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: ShoppingBag, 
-              title: 'The Store', 
-              summary: 'A futuristic marketplace for games, items, and AI upgrades.', 
-              bullets: ['Exclusive Deals', 'Trading Post', 'Limited Editions'], 
-              page: 'Store', 
-              color: 'from-amber-500 to-orange-500',
-              image: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: LibraryIcon, 
-              title: 'Game Library', 
-              summary: 'Your entire collection in one immersive interface.', 
-              bullets: ['Cross-platform Sync', 'Achievement Tracking', 'Cloud Saves'], 
-              page: 'Library', 
-              color: 'from-purple-500 to-pink-500',
-              image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Swords, 
-              title: 'AI Battle Arena', 
-              summary: 'Train your AI and compete in simulated combat scenarios.', 
-              bullets: ['PvP Ranked Matches', 'AI Training Grounds', 'Loot Rewards'], 
-              page: 'AIBattle', 
-              color: 'from-rose-500 to-red-600',
-              image: 'https://images.unsplash.com/photo-1535378437327-b7149b379c2a?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: MessageSquare, 
-              title: 'Community Hub', 
-              summary: 'Connect with other players, share guides, and discuss strategies.', 
-              bullets: ['Global Chat', 'Strategy Forums', 'Event Calendars'], 
-              page: 'Community', 
-              color: 'from-indigo-500 to-blue-700',
-              image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Users, 
-              title: 'Clan Headquarters', 
-              summary: 'Manage your team, plan raids, and dominate the leaderboards.', 
-              bullets: ['Roster Management', 'Clan Vault', 'War Planning'], 
-              page: 'Clan', 
-              color: 'from-sky-500 to-cyan-600',
-              image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Hammer, 
-              title: 'The Blacksmith', 
-              summary: 'Forge new equipment and upgrade your existing gear.', 
-              bullets: ['Item Crafting', 'Rarity Upgrades', 'Socketing'], 
-              page: 'Blacksmith', 
-              color: 'from-slate-500 to-zinc-600',
-              image: 'https://images.unsplash.com/photo-1504221507732-5246c045949b?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Radio, 
-              title: 'Streaming Studio', 
-              summary: 'Broadcast your gameplay and manage your channel.', 
-              bullets: ['Go Live', 'VOD Management', 'Stream Analytics'], 
-              page: 'StreamingHome', 
-              color: 'from-fuchsia-500 to-purple-600',
-              image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80'
-            }
-          ]}
-        />
-      </section>
-
-      <footer className="relative py-12 px-6 border-t border-white/5">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-white/30 text-sm">© 2025 Atom × Eve. All rights reserved.</p>
-        </div>
-      </footer>
+      </main>
     </div>
   );
 }
