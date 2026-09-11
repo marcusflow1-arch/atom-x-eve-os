@@ -395,8 +395,15 @@ export function dispatchRogueAttack(playerDerivedRef, skillStrikeMult = 1.0) {
   if (boss) {
     bossDamagedThisPressId = boss.id;
     applyBossDamage(boss.id, dmg, 'arrow');
-    return;
+    return true;
+  }
+
+  const target = getAbilityState().target;
+  if (target?.kind === 'rogue') {
+    applyLockedRogueDamage(target.id, dmg, 'player_attack');
+    return true;
   }
 
   window.dispatchEvent(new CustomEvent('rogueAITakeDamage', { detail: { damage: dmg } }));
+  return false;
 }
