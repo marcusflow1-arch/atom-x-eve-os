@@ -1,112 +1,239 @@
-// ─── Wings Progression Data ────────────────────────────────────────────────
-// Angel Wings are a spiritual-wing system that combines TWO bonus layers:
+// TwelveSky-style Wing reinforcement rules for the Mines/game3d runtime.
 //
-//   1. HALO-STYLE MULTIPLIER (same as Halo): each Wing level grants the same
-//      per-level virtual-attribute-point bonuses as Halo (PER_LEVEL_HALO_BONUSES).
-//      This is the "multiplier" the player gets for leveling wings.
+// Wings are intentionally independent from Halo. Fenrir's server models wing
+// reinforcement as 0..40 internal enchant stages. Each stage represents 3%,
+// which gives the familiar 0..120% presentation used by the client.
 //
-//   2. PATH SPECIALIZATION (flat final stats): each Wing TYPE (path) adds
-//      specialized flat combat stats on top of the multiplier — e.g. Wings
-//      of Endurance specialize in HP/defense, Wings of Strength in damage.
+// Verified Fenrir behavior mirrored here:
+//   • max stage 40 => 120%
+//   • every attempt costs 50 Contribution Points
+//   • standard materials add +1 / +2 / +3 / +4 stages
+//   • a guaranteed material fills the wing to stage 40
+//   • success = max(5, 103 - targetStage*3 + floor(luck/100))
+//   • Improve charge adds +5 success chance
+//   • failures normally reduce reinforcement by one stage
+//   • above stage 20 (60%), a second roll can destroy the wing
+//   • Wing Protection converts destruction into a one-stage loss
+//   • the protected +1 material never loses/destroys the wing on failure
 //
-// Wings are like the Title system in that there are MULTIPLE wing types you
-// can level SEPARATELY (each has its own level), and you EQUIP one at a time.
-// They are like the Halo system in that leveling is an attempt/RNG spend of
-// kills with the same success bands and the same per-level multiplier.
+// The actual wing item's base combat stats belong to the equipment/item data
+// pipeline. This module only owns reinforcement. Compatibility helpers return
+// zero direct stat bonuses so the old Halo-clone bonuses cannot leak back in.
 
-import {
-  MAX_HALO_LEVEL,
-  HALO_ATTEMPT_COST,
-  getSuccessChanceForLevel,
-  getHaloBonusesForLevel,
-} from './haloData';
+export const MAX_WING_LEVEL = 40;
+export const MAX_WING_STAGE = MAX_WING_LEVEL;
+export const WING_PERCENT_PER_STAGE = 3;
+export const MAX_WING_PERCENT = MAX_WING_STAGE * WING_PERCENT_PER_STAGE;
+export const WING_SAFE_STAGE = 20;
+export const WING_SAFE_PERCENT = WING_SAFE_STAGE * WING_PERCENT_PER_STAGE;
+export const WING_CP_COST = 50;
+// Compatibility alias for older UI/store imports. It is CP, never kills.
+export const WING_ATTEMPT_COST = WING_CP_COST;
+export const WING_IMPROVE_CHANCE_BONUS = 5;
 
-export const MAX_WING_LEVEL = MAX_HALO_LEVEL;        // same cap as Halo
-export const WING_ATTEMPT_COST = HALO_ATTEMPT_COST;  // same cost as Halo
+export const WING_MATERIALS = Object.freeze([
+  {
+    itemId: 695,
+    id: 'wing_stone_1',
+    label: '+3%',
+    shortLabel: '+1 Stage',
+    stageValue: 1,
+    guaranteed: false,
+    protectedFailure: false,
+  },
+  {
+    itemId: 696,
+    id: 'wing_stone_2',
+    label: '+6%',
+    shortLabel: '+2 Stages',
+    stageValue: 2,
+    guaranteed: false,
+    protectedFailure: false,
+  },
+  {
+    itemId: 698,
+    id: 'wing_stone_3',
+    label: '+9%',
+    shortLabel: '+3 Stages',
+    stageValue: 3,
+    guaranteed: false,
+    protectedFailure: false,
+  },
+  {
+    itemId: 2397,
+    id: 'wing_stone_4',
+    label: '+12%',
+    shortLabel: '+4 Stages',
+    stageValue: 4,
+    guaranteed: false,
+    protectedFailure: false,
+  },
+  {
+    itemId: 826,
+    id: 'wing_guaranteed',
+    label: 'Guaranteed',
+    shortLabel: 'Fill to 120%',
+    stageValue: MAX_WING_STAGE,
+    guaranteed: true,
+    protectedFailure: false,
+  },
+  {
+    itemId: 8106,
+    id: 'wing_protected_material',
+    label: 'Protected +3%',
+    shortLabel: '+1 Stage · No Loss',
+    stageValue: 1,
+    guaranteed: false,
+    protectedFailure: true,
+  },
+]);
 
-// Reuse Halo's success bands — wings share the Halo enhancement curve.
-export const getWingSuccessChance = getSuccessChanceForLevel;
+export const WING_MATERIAL_BY_ITEM_ID = Object.freeze(
+  Object.fromEntries(WING_MATERIALS.map((material) => [material.itemId, material])),
+);
 
-// The halo-style multiplier for a given wing level (virtual attribute points).
-export function getWingMultiplierForLevel(level) {
-  return getHaloBonusesForLevel(level);
-}
-
-// ── Wing Path Definitions ─────────────────────────────────────────────────
-// Each path defines a flat-final-stat specialization envelope from Lv1 → Lv200.
-// These stack ON TOP of the halo-style multiplier for that path's level.
-// Flat final stats do NOT pass through attribute formulas (same rule as Titles).
-//
-//   hp              — flat max HP
-//   damage          — flat damage added to totalDamage
-//   defense         — flat defense
-//   critChance      — additive % crit chance (0..100 scale)
-//   critDamage      — additive crit damage multiplier (0..1 scale)
-//   criticalDefense — additive crit damage reduction (0..1 scale)
-export const WING_PATHS = [
+// Atom X Eve keeps multiple original wing appearances. They are cosmetic/item
+// identities; reinforcement mechanics are shared and no longer invent separate
+// Halo-style progression paths.
+export const WING_PATHS = Object.freeze([
   {
     id: 'endurance',
     name: 'Wings of Endurance',
     icon: '🛡️',
     color: '#22c55e',
-    primaryStat: 'hp',
-    description: 'Spiritual wings that fortify the body. Massive HP and defense specialization atop the halo multiplier.',
-    lv1:   { hp: 40,    damage: 0,    defense: 6,    critChance: 0,   critDamage: 0,     criticalDefense: 0.001 },
-    lv200: { hp: 16000, damage: 600,  defense: 2400, critChance: 2,   critDamage: 0.10,  criticalDefense: 0.40 },
+    primaryStat: 'equipment',
+    description: 'Defensive wing appearance. Combat values come from the equipped wing item; reinforcement scales that item.',
   },
   {
     id: 'strength',
     name: 'Wings of Strength',
     icon: '⚔️',
     color: '#ef4444',
-    primaryStat: 'damage',
-    description: 'Spiritual wings that channel raw power. Huge flat damage specialization atop the halo multiplier.',
-    lv1:   { hp: 20,   damage: 12,   defense: 2,    critChance: 0.2, critDamage: 0.005, criticalDefense: 0.001 },
-    lv200: { hp: 6000, damage: 6000, defense: 800,  critChance: 6,   critDamage: 0.30,  criticalDefense: 0.15 },
+    primaryStat: 'equipment',
+    description: 'Offensive wing appearance. Combat values come from the equipped wing item; reinforcement scales that item.',
   },
   {
     id: 'precision',
     name: 'Wings of Precision',
     icon: '🏹',
     color: '#38bdf8',
-    primaryStat: 'critChance',
-    description: 'Spiritual wings of lethal focus. Critical chance and damage specialization atop the halo multiplier.',
-    lv1:   { hp: 20,   damage: 6,    defense: 3,    critChance: 1,    critDamage: 0.02,  criticalDefense: 0.001 },
-    lv200: { hp: 5000, damage: 2500, defense: 1000, critChance: 30,  critDamage: 0.80,  criticalDefense: 0.20 },
+    primaryStat: 'equipment',
+    description: 'Precision wing appearance. Combat values come from the equipped wing item; reinforcement scales that item.',
   },
   {
     id: 'spirit',
     name: 'Wings of Spirit',
     icon: '✨',
     color: '#a855f7',
-    primaryStat: 'critDamage',
-    description: 'Spiritual wings of arcane devastation. Critical damage and resistance specialization atop the halo multiplier.',
-    lv1:   { hp: 25,   damage: 5,    defense: 3,    critChance: 0.3, critDamage: 0.03,  criticalDefense: 0.002 },
-    lv200: { hp: 5500, damage: 2200, defense: 1100, critChance: 10,  critDamage: 1.20,  criticalDefense: 0.35 },
+    primaryStat: 'equipment',
+    description: 'Spirit wing appearance. Combat values come from the equipped wing item; reinforcement scales that item.',
   },
-];
+]);
 
 export function getWingPathById(id) {
-  return WING_PATHS.find((p) => p.id === id) || null;
+  return WING_PATHS.find((path) => path.id === id) || null;
 }
 
-function lerpLevel(min, max, level) {
-  const lvl = Math.max(1, Math.min(MAX_WING_LEVEL, level));
-  const t = (lvl - 1) / (MAX_WING_LEVEL - 1);
-  return min + (max - min) * t;
+export function getWingMaterial(materialId = 695) {
+  if (typeof materialId === 'object' && materialId?.itemId) return getWingMaterial(materialId.itemId);
+  const numericId = Number(materialId);
+  return WING_MATERIAL_BY_ITEM_ID[numericId] || WING_MATERIALS[0];
 }
 
-// Compute the FLAT FINAL specialization bonuses for a wing path at a level.
-// Returns zeros at level 0 (un-leveled wing).
-export function getWingFlatBonusesForLevel(pathId, level) {
-  const path = getWingPathById(pathId);
-  const zero = { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
-  if (!path || level <= 0) return zero;
-  const keys = ['hp', 'damage', 'defense', 'critChance', 'critDamage', 'criticalDefense'];
-  const out = {};
-  keys.forEach((k) => {
-    const v = lerpLevel(path.lv1[k] || 0, path.lv200[k] || 0, level);
-    out[k] = (k === 'hp' || k === 'damage' || k === 'defense') ? Math.round(v) : v;
-  });
-  return out;
+export function clampWingStage(stage) {
+  return Math.max(0, Math.min(MAX_WING_STAGE, Math.floor(Number(stage) || 0)));
+}
+
+export function getWingPercent(stage) {
+  return clampWingStage(stage) * WING_PERCENT_PER_STAGE;
+}
+
+export function getWingEquipmentMultiplier(stage) {
+  return 1 + getWingPercent(stage) / 100;
+}
+
+export function getWingTargetStage(currentStage, materialId = 695) {
+  const current = clampWingStage(currentStage);
+  const material = getWingMaterial(materialId);
+  if (material.guaranteed) return MAX_WING_STAGE;
+  return Math.min(MAX_WING_STAGE, current + material.stageValue);
+}
+
+export function getWingSuccessPercent(currentStage, materialId = 695, luck = 0, improveCharge = false) {
+  const current = clampWingStage(currentStage);
+  if (current >= MAX_WING_STAGE) return 0;
+  const material = getWingMaterial(materialId);
+  if (material.guaranteed) return 100;
+  const target = getWingTargetStage(current, material.itemId);
+  const luckBonus = Math.floor(Math.max(0, Number(luck) || 0) / 100);
+  const improveBonus = improveCharge ? WING_IMPROVE_CHANCE_BONUS : 0;
+  return Math.max(5, Math.min(100, 103 - target * 3 + luckBonus + improveBonus));
+}
+
+export function getWingSuccessChance(currentStage, options = {}) {
+  const materialId = typeof options === 'number' ? options : options.materialId ?? 695;
+  const luck = typeof options === 'object' ? options.luck ?? 0 : 0;
+  const improveCharge = typeof options === 'object' ? !!options.improveCharge : false;
+  return getWingSuccessPercent(currentStage, materialId, luck, improveCharge) / 100;
+}
+
+export function getWingDestroyPercent(currentStage, materialId = 695, luck = 0) {
+  const current = clampWingStage(currentStage);
+  const material = getWingMaterial(materialId);
+  if (material.protectedFailure || material.guaranteed) return 0;
+  const target = getWingTargetStage(current, material.itemId);
+  if (target <= WING_SAFE_STAGE) return 0;
+
+  const luckBonus = Math.floor(Math.max(0, Number(luck) || 0) / 100);
+  let chance = -57 + target * 3 - luckBonus;
+  if (chance <= 5) chance -= 5;
+  return Math.max(0, Math.min(100, chance));
+}
+
+export function getWingRisk(currentStage, materialId = 695, luck = 0, improveCharge = false) {
+  const material = getWingMaterial(materialId);
+  const targetStage = getWingTargetStage(currentStage, material.itemId);
+  return {
+    currentStage: clampWingStage(currentStage),
+    currentPercent: getWingPercent(currentStage),
+    targetStage,
+    targetPercent: getWingPercent(targetStage),
+    successPercent: getWingSuccessPercent(currentStage, material.itemId, luck, improveCharge),
+    destroyPercent: getWingDestroyPercent(currentStage, material.itemId, luck),
+    safe: targetStage <= WING_SAFE_STAGE || material.protectedFailure || material.guaranteed,
+    material,
+  };
+}
+
+// Compatibility hook for playerHUDStore. Wing reinforcement must not inject
+// Halo attribute points. The equipment pipeline consumes reinforcementPct /
+// equipmentMultiplier when real wing items are wired into derived stats.
+export function getWingMultiplierForLevel(stage) {
+  return {
+    strength: 0,
+    agility: 0,
+    dexterity: 0,
+    vitality: 0,
+    constitution: 0,
+    spirit: 0,
+    focus: 0,
+    criticalChance: 0,
+    criticalDefense: 0,
+    reinforcementPct: getWingPercent(stage),
+    equipmentMultiplier: getWingEquipmentMultiplier(stage),
+  };
+}
+
+// Legacy flat-bonus hook retained until the Fenrir wing item rows are consumed
+// by the equipment system. Returning zero removes the previous invented Lv200
+// specialization curve without breaking current playerHUDStore imports.
+export function getWingFlatBonusesForLevel() {
+  return {
+    hp: 0,
+    damage: 0,
+    defense: 0,
+    critChance: 0,
+    critDamage: 0,
+    criticalDefense: 0,
+  };
 }
