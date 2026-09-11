@@ -18,23 +18,18 @@ const STATES = {
 };
 
 const LOOP_STATES = new Set([
-  STATES.IDLE,
-  STATES.RUN,
-  STATES.RUN_BACK,
-  STATES.AIM_WALK_RIGHT,
-  STATES.AIM_WALK_LEFT,
-  STATES.AIM_WALK_FORWARD,
-  STATES.AIM_WALK_BACKWARD,
+  STATES.IDLE, STATES.RUN, STATES.RUN_BACK,
+  STATES.AIM_WALK_RIGHT, STATES.AIM_WALK_LEFT, STATES.AIM_WALK_FORWARD, STATES.AIM_WALK_BACKWARD,
 ]);
 
 const ONE_SHOT_DURATION = {
-  [STATES.RUN_STOP]: 0.45,
+  [STATES.RUN_STOP]: 0.28,
   [STATES.DRAW_ARROW]: 0.32,
-  [STATES.DODGE_RIGHT]: 0.45,
-  [STATES.DODGE_LEFT]: 0.45,
-  [STATES.DODGE_FORWARD]: 0.45,
-  [STATES.DODGE_BACKWARD]: 0.45,
-  [STATES.DIVE_FORWARD]: 0.8,
+  [STATES.DODGE_RIGHT]: 0.38,
+  [STATES.DODGE_LEFT]: 0.38,
+  [STATES.DODGE_FORWARD]: 0.38,
+  [STATES.DODGE_BACKWARD]: 0.38,
+  [STATES.DIVE_FORWARD]: 0.68,
 };
 
 const DODGE_STATE_BY_DIRECTION = {
@@ -62,14 +57,11 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const playState = (state, options = {}) => {
     if (isDead || !hasAction(state)) return false;
     if (!options.force && currentState === state) return true;
-
     const nextAction = actions[state];
     const previousAction = currentState ? actions[currentState] : null;
-
     nextAction.enabled = true;
     nextAction.setEffectiveWeight(1);
     nextAction.setEffectiveTimeScale(options.timeScale || 1);
-
     if (LOOP_STATES.has(state)) {
       nextAction.setLoop(THREE.LoopRepeat, Infinity);
       nextAction.clampWhenFinished = false;
@@ -77,15 +69,23 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = state !== STATES.DRAW_ARROW;
     }
-
-    if (previousAction && previousAction !== nextAction) previousAction.fadeOut(options.fade ?? 0.12);
-    nextAction.reset().fadeIn(options.fade ?? 0.12).play();
+    if (previousAction && previousAction !== nextAction) previousAction.fadeOut(options.fade ?? 0.09);
+    nextAction.reset().fadeIn(options.fade ?? 0.09).play();
     currentState = state;
     return true;
   };
 
-  const movementStateFor = ({ moving, direction }) => {
+  const combatMovementState = (direction) => {
+    if (direction === 'backward' && hasAction(STATES.AIM_WALK_BACKWARD)) return STATES.AIM_WALK_BACKWARD;
+    if (direction === 'left' && hasAction(STATES.AIM_WALK_LEFT)) return STATES.AIM_WALK_LEFT;
+    if (direction === 'right' && hasAction(STATES.AIM_WALK_RIGHT)) return STATES.AIM_WALK_RIGHT;
+    if (hasAction(STATES.AIM_WALK_FORWARD)) return STATES.AIM_WALK_FORWARD;
+    return direction === 'backward' ? STATES.RUN_BACK : STATES.RUN;
+  };
+
+  const movementStateFor = ({ moving, direction, aiming }) => {
     if (!moving) return STATES.IDLE;
+    if (aiming) return combatMovementState(direction);
     if (direction === 'backward') return STATES.RUN_BACK;
     return STATES.RUN;
   };
@@ -100,18 +100,16 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
   const handleMovement = ({ moving = lastMovement.moving, running = lastMovement.running, direction = lastMovement.direction, aiming = isAiming } = {}) => {
     lastMovement = { moving: !!moving, running: !!running, direction, aiming: !!aiming };
     if (isDead || isBusy) return;
-
-    if (previousMoving && !moving && hasAction(STATES.RUN_STOP)) {
+    if (previousMoving && !moving && hasAction(STATES.RUN_STOP) && !aiming) {
       previousMoving = false;
       isBusy = true;
       busyResetAt = now() + ONE_SHOT_DURATION[STATES.RUN_STOP];
       if (oneShotRef) oneShotRef.current = true;
-      playState(STATES.RUN_STOP, { force: true, fade: 0.05 });
+      playState(STATES.RUN_STOP, { force: true, fade: 0.04, timeScale: 1.15 });
       return;
     }
-
     previousMoving = !!moving;
-    playState(movementStateFor(lastMovement));
+    playState(movementStateFor(lastMovement), { fade: 0.08 });
   };
 
   const bindClips = (clipsByKey = {}) => {
@@ -121,46 +119,37 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       action.setEffectiveWeight(1);
       actions[key] = action;
     });
-
     playState(STATES.IDLE, { force: true });
   };
 
   const startSpecialMove = (state, directionVector, speed, duration = ONE_SHOT_DURATION[state]) => {
     if (isDead || isBusy || !hasAction(state)) return false;
-
     const dir = directionVector?.clone?.() || new THREE.Vector3(0, 0, -1);
     if (dir.lengthSq() === 0) dir.set(0, 0, -1);
     dir.y = 0;
     dir.normalize();
-
     isBusy = true;
     busyResetAt = now() + duration;
     if (oneShotRef) oneShotRef.current = true;
     specialMoveVelocity = dir.multiplyScalar(speed);
     specialMoveTimer = duration;
-    return playState(state, { force: true, fade: 0.05 });
+    return playState(state, { force: true, fade: 0.04, timeScale: 1.08 });
   };
 
   const requestDodge = (directionVector, directionName = 'forward') => {
-    if (isDead) return false;
-    const dir = directionVector?.clone?.() || new THREE.Vector3(0, 0, -1);
-    if (dir.lengthSq() === 0) dir.set(0, 0, -1);
-    dir.y = 0;
-    dir.normalize();
-    specialMoveVelocity = dir.multiplyScalar(13);
-    specialMoveTimer = ONE_SHOT_DURATION[DODGE_STATE_BY_DIRECTION[directionName] || STATES.DODGE_FORWARD];
-    handleMovement(lastMovement);
-    return true;
+    const state = DODGE_STATE_BY_DIRECTION[directionName] || STATES.DODGE_FORWARD;
+    if (hasAction(state)) return startSpecialMove(state, directionVector, 14.5, ONE_SHOT_DURATION[state]);
+    return startSpecialMove(STATES.DIVE_FORWARD, directionVector, 13.5, 0.45);
   };
 
-  const requestRoll = (directionVector) => startSpecialMove(STATES.DIVE_FORWARD, directionVector, 14, ONE_SHOT_DURATION[STATES.DIVE_FORWARD]);
+  const requestRoll = (directionVector) => startSpecialMove(STATES.DIVE_FORWARD, directionVector, 15, ONE_SHOT_DURATION[STATES.DIVE_FORWARD]);
 
   const requestAttack = () => {
     if (isDead || isBusy) return false;
     isBusy = true;
     busyResetAt = now() + ONE_SHOT_DURATION[STATES.DRAW_ARROW];
     if (oneShotRef) oneShotRef.current = true;
-    return playState(STATES.DRAW_ARROW, { force: true, fade: 0.05 });
+    return playState(STATES.DRAW_ARROW, { force: true, fade: 0.04, timeScale: 1.08 });
   };
 
   const updateMotion = (model, delta, groundY = model.position.y) => {
@@ -170,7 +159,6 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
       specialMoveTimer -= delta;
       if (specialMoveTimer <= 0) specialMoveVelocity = null;
     }
-
     if (busyResetAt > 0 && now() >= busyResetAt) resetBusy();
     model.position.y = groundY;
   };
