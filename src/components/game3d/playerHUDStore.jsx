@@ -12,6 +12,7 @@ import {
   subscribeWings,
 } from './progression/wingsStore';
 import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
+import { getElixirBonuses, subscribeElixirs } from './progression/elixirStore';
 import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
 import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
@@ -19,11 +20,6 @@ import { characterScopedStorage, subscribeCharacterChange } from './characterSto
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
 
-// Pull current halo+aura+wings+title bonuses for every derived-stat recompute.
-// Halo + Aura + equipped-wing multiplier are all VIRTUAL ATTRIBUTE POINTS —
-// they pass through the same statsSystem formulas as allocated points
-// (e.g. +1 STR → +3 phys dmg). Equipped-wing specialization + title are FLAT
-// FINAL stats applied after the formulas.
 const sumAttr = (...objs) => {
   const out = {
     strength: 0, constitution: 0, dexterity: 0, intelligence: 0, focus: 0,
@@ -41,11 +37,40 @@ const sumFlat = (...objs) => {
 const getBonuses = () => ({
   halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses()),
   title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses()),
+  elixir: getElixirBonuses(),
 });
+
+// TwelveSky-style elixirs are direct permanent bonuses, not virtual attribute
+// points. Apply them after the normal Atom X Eve stat formulas so one VIT dose
+// is exactly +20 max HP, one Spirit dose is exactly +25 Force, etc.
+function applyElixirBonuses(derived, elixir = {}) {
+  const bonusDamage = (elixir.damage || 0) + (elixir.attributeAttack || 0);
+  const totalDamage = (derived.totalDamage || derived.damage || 0) + bonusDamage;
+  return {
+    ...derived,
+    maxHP: (derived.maxHP || 0) + (elixir.hp || 0),
+    chi: (derived.chi || 0) + (elixir.force || 0),
+    hitChance: Math.min(95, (derived.hitChance || 0) + (elixir.hit || 0)),
+    evasionPct: (derived.evasionPct || 0) + (elixir.dodge || 0),
+    totalDamage,
+    damage: totalDamage,
+    elementalDefense: (derived.elementalDefense || 0) + (elixir.attributeDefense || 0),
+    attributeAttack: elixir.attributeAttack || 0,
+    attributeDefense: elixir.attributeDefense || 0,
+    elixirBonuses: { ...elixir },
+  };
+}
+
+function derive(baseStats, bonuses = getBonuses()) {
+  return applyElixirBonuses(
+    computeDerivedStats(baseStats, [], bonuses.halo, bonuses.title),
+    bonuses.elixir,
+  );
+}
 
 const buildDefault = () => {
   const b = getBonuses();
-  const derived = computeDerivedStats(DEFAULT_PLAYER_STATS, [], b.halo, b.title);
+  const derived = derive(DEFAULT_PLAYER_STATS, b);
   return {
     level: 1,
     xp: 0,
@@ -63,10 +88,9 @@ const loadState = () => {
     const saved = storage.get();
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Migrate legacy stat keys (hp/spirit/elemental) → new NW keys.
       const base = migrateBaseStats(parsed.baseStats);
       const b = getBonuses();
-      const derived = computeDerivedStats(base, [], b.halo, b.title);
+      const derived = derive(base, b);
       return {
         level: parsed.level || 1,
         xp: parsed.xp || 0,
@@ -100,31 +124,17 @@ const emit = () => {
   listeners.forEach((fn) => fn(state));
 };
 
-// When the active character changes, reload that character's progression.
 subscribeCharacterChange(() => {
   state = loadState();
   listeners.forEach((fn) => fn(state));
 });
 
-// Used by GameWorld3D to seed/sync hud snapshots. Persists too.
 export function setPlayerHUD(next) {
   state = { ...state, ...next };
   emit();
 }
 
-// Called by GameWorld3D when player gains XP. Handles level-ups and awards points.
-//
-// Rested XP integration:
-//   The caller computes its result (newLevel/newXP/xpForNext/levelsGained) using
-//   only the BASE xp that was earned. This function then pulls a matching
-//   amount of bonus XP out of the rested pool (1:1 with the base gain, so the
-//   player effectively earns 2× while rested) and re-runs the level-up loop
-//   with that bonus on top. Any rested pool left over rolls naturally into
-//   future XP gains — there is nothing to carry across the level-up boundary
-//   beyond the pool itself, which the rested store already preserves.
 export function awardXP({ newLevel, newXP, xpForNext, levelsGained, bonusPoints = 0, xpGained = 0 }) {
-  // Pull rested bonus matching the BASE gain. The bonus is applied at the
-  // CURRENT level's xpForNext (the gain happened at that level).
   const restedBonus = xpGained > 0
     ? consumeRestedForGain(xpGained, state.xpForNext || xpForNext)
     : 0;
@@ -160,15 +170,12 @@ export function awardXP({ newLevel, newXP, xpForNext, levelsGained, bonusPoints 
   emit();
 }
 
-// Player allocates 1 point into a stat (called from progression menu).
-// Returns true on success.
 export function allocateStat(statKey) {
   if (state.unspentPoints <= 0) return false;
   if (!(statKey in state.baseStats)) return false;
   const newBase = { ...state.baseStats, [statKey]: state.baseStats[statKey] + 1 };
   const b = getBonuses();
-  const newDerived = computeDerivedStats(newBase, [], b.halo, b.title);
-  // Heal by the maxHP increase (so investing in vitality feels rewarding)
+  const newDerived = derive(newBase, b);
   const hpGain = newDerived.maxHP - state.maxHP;
   state = {
     ...state,
@@ -182,13 +189,9 @@ export function allocateStat(statKey) {
   return true;
 }
 
-// Real-time recompute: when Halo level changes (or equipped title changes),
-// re-run computeDerivedStats with the new virtual attribute points so the
-// HUD, damage formulas, and UI all reflect the new bonuses instantly.
-// Heals the player by any maxHP increase so leveling up Halo feels rewarding.
 function recomputeFromBonuses() {
   const b = getBonuses();
-  const newDerived = computeDerivedStats(state.baseStats, [], b.halo, b.title);
+  const newDerived = derive(state.baseStats, b);
   const hpGain = newDerived.maxHP - state.maxHP;
   state = {
     ...state,
@@ -202,15 +205,13 @@ subscribeHalo(recomputeFromBonuses);
 subscribeAura(recomputeFromBonuses);
 subscribeWings(recomputeFromBonuses);
 subscribeTitles(recomputeFromBonuses);
+subscribeElixirs(recomputeFromBonuses);
 
-// World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
   state = { ...state, hp: Math.max(0, Math.min(state.maxHP, hp)) };
   emit();
 }
 
-// Called once per frame from the game loop. Regenerates HP based on derived hpRegen.
-// Skipped if dead or at full HP. Internal accumulator avoids re-rendering every frame.
 let regenAccumulator = 0;
 export function tickRegen(delta) {
   if (!state.derived?.hpRegen) return;
