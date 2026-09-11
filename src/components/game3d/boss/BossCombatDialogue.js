@@ -1,17 +1,18 @@
-// BossCombatDialogue — lightweight, non-blocking battle banter for boss fights.
-//
-// This is NOT quest dialogue. Lines appear while combat continues: one at a
-// time, auto-hide after a few seconds, queue cleanly, and never pause the game
-// or freeze the player. The boss feels alive without interrupting gameplay.
-//
-// Capabilities:
-//   • queueLine(...)        — FIFO banter with optional once/cooldown guards
-//   • triggerThreshold(...) — HP-gated one-shot lines (75%, 40%, etc.)
-//   • update(delta)         — ticks the current line and pops the next when idle
-//   • reset()               — clears everything (call on encounter end, then
-//                             queue the outro line)
-//
-// Cooldowns prevent the same callout from spamming; `once` flags stop repeats.
+// BossCombatDialogue — lightweight, non-blocking battle banter for world-boss fights.
+// This channel is intentionally isolated from quest NPC identity. Any legacy
+// speaker name is normalized to the currently living world boss.
+
+function getLiveWorldBoss() {
+  if (typeof window === 'undefined' || !Array.isArray(window.__gw3dBosses)) return null;
+  return window.__gw3dBosses.find((boss) =>
+    boss?.group &&
+    boss.alive !== false &&
+    !boss.dying &&
+    !boss.defeated &&
+    Number(boss.hp) > 0 &&
+    boss.group.visible !== false
+  ) || null;
+}
 
 export function createBossCombatDialogue({ setActiveDialogue } = {}) {
   const state = {
@@ -30,53 +31,67 @@ export function createBossCombatDialogue({ setActiveDialogue } = {}) {
     setActiveDialogue?.(null);
   };
 
-  const show = (entry) => {
-    state.current = entry;
-    state.timer = entry.duration || 3;
-    setActiveDialogue?.({ name: entry.name, text: entry.text });
+  const clearAll = () => {
+    clear();
+    state.queue.length = 0;
   };
 
-  const queueLine = ({
-    id,
-    name,
-    text,
-    duration = 3,
-    cooldown = 0,
-    once = false,
-  }) => {
-    if (!name || !text) return false;
+  const normalizeEntry = (entry) => {
+    const boss = getLiveWorldBoss();
+    if (!boss) return null;
+    return {
+      ...entry,
+      name: boss.name || boss.title || 'World Boss',
+      bossId: boss.id,
+    };
+  };
+
+  const show = (entry) => {
+    const normalized = normalizeEntry(entry);
+    if (!normalized) {
+      clearAll();
+      return false;
+    }
+    state.current = normalized;
+    state.timer = normalized.duration || 3;
+    setActiveDialogue?.({
+      name: normalized.name,
+      text: normalized.text,
+      source: 'world_boss',
+      bossId: normalized.bossId,
+    });
+    return true;
+  };
+
+  const queueLine = ({ id, name, text, duration = 3, cooldown = 0, once = false }) => {
+    const boss = getLiveWorldBoss();
+    if (!boss || !text) return false;
     if (once && id && state.firedFlags.has(id)) return false;
     if (id && cooldown > 0) {
       const nextAllowedAt = state.cooldowns.get(id) || 0;
       if (now() < nextAllowedAt) return false;
       state.cooldowns.set(id, now() + cooldown);
     }
-    if (once && id) {
-      state.firedFlags.add(id);
-    }
+    if (once && id) state.firedFlags.add(id);
     state.queue.push({
       id: id || null,
-      name,
+      name: boss.name || boss.title || name || 'World Boss',
       text,
       duration,
+      bossId: boss.id,
     });
     return true;
   };
 
-  const triggerThreshold = ({
-    id,
-    hpRatio,
-    name,
-    text,
-    duration = 3,
-  }) => {
-    if (state.firedFlags.has(id)) return false;
-    if (hpRatio <= 0) return false;
+  const triggerThreshold = ({ id, hpRatio, name, text, duration = 3 }) => {
+    const boss = getLiveWorldBoss();
+    if (!boss || !text || state.firedFlags.has(id) || hpRatio <= 0) return false;
     state.queue.push({
       id,
-      name,
+      name: boss.name || boss.title || name || 'World Boss',
       text,
       duration,
+      bossId: boss.id,
       _threshold: true,
     });
     state.firedFlags.add(id);
@@ -84,11 +99,15 @@ export function createBossCombatDialogue({ setActiveDialogue } = {}) {
   };
 
   const update = (delta) => {
+    // A dead/vanished boss cannot keep talking. This also clears any legacy
+    // Kali/quest-giver lines that were queued before the fight was cleaned up.
+    if (!getLiveWorldBoss()) {
+      clearAll();
+      return;
+    }
     if (state.current) {
       state.timer -= delta;
-      if (state.timer <= 0) {
-        clear();
-      }
+      if (state.timer <= 0) clear();
     }
     if (!state.current && state.queue.length > 0) {
       const next = state.queue.shift();
@@ -97,26 +116,16 @@ export function createBossCombatDialogue({ setActiveDialogue } = {}) {
   };
 
   const reset = () => {
-    clear();
-    state.queue.length = 0;
+    clearAll();
     state.cooldowns.clear();
     state.firedFlags.clear();
   };
 
   const hasShown = (id) => state.firedFlags.has(id);
-
   const getState = () => ({
     current: state.current ? { ...state.current } : null,
     queued: state.queue.length,
   });
 
-  return {
-    queueLine,
-    triggerThreshold,
-    update,
-    clear,
-    reset,
-    hasShown,
-    getState,
-  };
+  return { queueLine, triggerThreshold, update, clear, reset, hasShown, getState };
 }
