@@ -35,6 +35,16 @@ export default function QuestRelaySubTab() {
     acceptQuest(quest.id);
     setTrackedQuest(quest.id);
     if (typeof window !== 'undefined') {
+      // GameWorld3D exposes the same spawner used by physical NPC acceptance.
+      // Calling it here keeps remote quest acceptance behavior-equivalent: the
+      // objective monsters actually appear in the world immediately.
+      if (typeof window.__gw3dSpawnQuestEnemies === 'function' && quest.spawnCount) {
+        window.__gw3dSpawnQuestEnemies({
+          count: quest.spawnCount,
+          tierName: quest.spawnTier || 'normal',
+          playerPos: window.__localPlayerPos || { x: 0, z: 0 },
+        });
+      }
       window.dispatchEvent(new CustomEvent('questAcceptedRemotely', { detail: { questId: quest.id } }));
     }
     toast.success(`Quest accepted: ${quest.title}`, { icon: '📜' });
