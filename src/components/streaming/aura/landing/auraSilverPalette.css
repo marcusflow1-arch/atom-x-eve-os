@@ -1,6 +1,6 @@
 /* Aura color theme only — intentionally contains no layout or spacing rules. */
 .aura-landing {
-  --aura-silver: #45494f;
+  --aura-silver: #101216;
   --aura-silver-light: #646970;
   --aura-peach: #5b6067;
   --aura-peach-soft: #656a71;
@@ -8,13 +8,13 @@
   --aura-teal: #d1d6dc;
   --aura-ink: #f7f7f5;
   --aura-muted: #c1c5ca;
-  background: var(--aura-silver);
+  background: linear-gradient(145deg, #191b20 0%, #101216 48%, #08090c 100%);
   color: var(--aura-ink);
   scrollbar-color: var(--aura-teal) var(--aura-silver);
 }
 
 .aura-landing .aura-landing-feed {
-  background: rgba(69, 73, 79, 0.9);
+  background: linear-gradient(155deg, rgba(25, 27, 32, 0.96), rgba(8, 9, 12, 0.98));
 }
 
 .aura-landing .console-filter-bar,
