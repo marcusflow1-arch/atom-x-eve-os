@@ -23,6 +23,7 @@ import Plan from './pages/Plan';
 import AvatarGenesisGate from '@/components/onboarding/AvatarGenesisGate';
 import AIReflectionBridge from '@/components/avatar/AIReflectionBridge';
 import SetupPreview from '@/pages/SetupPreview';
+import AuraLife from '@/pages/AuraLife';
 import GenesisLoadingScreen from '@/components/onboarding/GenesisLoadingScreen';
 import '@/components/onboarding/genesis.css';
 
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/studio" element={<LayoutWrapper currentPageName="Studio"><Studio /></LayoutWrapper>} />
         <Route path="/dev-studio/:studioId" element={<LayoutWrapper currentPageName="DevStudio"><DevStudio /></LayoutWrapper>} />
         <Route path="/SetupPreview" element={<SetupPreview />} />
+        <Route path="/AuraLife" element={<LayoutWrapper currentPageName="AuraLife"><AuraLife /></LayoutWrapper>} />
         <Route path="/NetworkTest" element={<NetworkTest />} />
         <Route path="/ChainBreak" element={<ChainBreak />} />
         <Route path="/NPCQuests" element={<NPCQuests />} />
