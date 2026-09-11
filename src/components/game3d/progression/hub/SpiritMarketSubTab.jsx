@@ -6,6 +6,7 @@ import {
   purchaseItem,
   sellPurchasedItem,
   getResaleValue,
+  consumeItem,
   addGold,
 } from '../../shop/shopStore';
 import {
@@ -49,6 +50,11 @@ export default function SpiritMarketSubTab() {
     toast.success(`${item.name} sent to your spirit inventory`, { icon: item.icon });
   };
 
+  const useOwned = (item) => {
+    const result = consumeItem(item);
+    if (!result.ok) return toast.error(result.reason);
+  };
+
   const sellField = (item) => {
     const removed = removeLootFromInventory(item.dropId);
     if (!removed) return toast.error('That loot item is no longer available.');
@@ -81,7 +87,7 @@ export default function SpiritMarketSubTab() {
           <div className="text-[10px] tracking-[0.35em] uppercase text-emerald-200/70">Remote Commerce</div>
           <h2 className="text-2xl text-white font-semibold mt-1">Spirit Market</h2>
           <p className="text-xs text-white/55 mt-2 leading-relaxed">
-            Buy potions and materials or hand unwanted loot to your bound spirit for resale. The town merchant remains optional world flavor; routine inventory maintenance happens wherever you are fighting.
+            Buy potions and materials or hand unwanted loot to your bound spirit for resale. Consumables can be used from the same screen, so routine inventory maintenance never requires a town trip.
           </p>
         </div>
         <div className="rounded-xl border border-amber-300/20 bg-amber-300/[0.05] px-5 py-3 min-w-[190px] text-right">
@@ -92,7 +98,7 @@ export default function SpiritMarketSubTab() {
 
       <div className="flex items-center justify-between mt-6 shrink-0">
         <div className="flex gap-2">
-          <Mode active={mode === 'buy'} onClick={() => setMode('buy')}>Buy</Mode>
+          <Mode active={mode === 'buy'} onClick={() => setMode('buy')}>Buy / Use</Mode>
           <Mode active={mode === 'sell'} onClick={() => setMode('sell')}>Sell</Mode>
         </div>
         {mode === 'sell' && (
@@ -121,24 +127,41 @@ export default function SpiritMarketSubTab() {
             ))}
           </div>
           <div className="flex-1 min-w-0 overflow-y-auto grid grid-cols-2 xl:grid-cols-3 gap-3 content-start pr-1 pb-5">
-            {buyItems.map((item) => (
-              <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="flex gap-3">
-                  <div className="w-11 h-11 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center text-2xl">{item.icon}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-white font-semibold truncate">{item.name}</div>
-                    <div className="text-[10px] text-white/45 mt-1 line-clamp-2">{item.desc}</div>
+            {buyItems.map((item) => {
+              const owned = shop.inventory[item.id] || 0;
+              const usable = owned > 0 && item.effect?.kind !== 'cosmetic';
+              return (
+                <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="flex gap-3">
+                    <div className="w-11 h-11 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center text-2xl">{item.icon}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm text-white font-semibold truncate">{item.name}</div>
+                        {owned > 0 && <span className="text-[9px] text-white/35 shrink-0">×{owned}</span>}
+                      </div>
+                      <div className="text-[10px] text-white/45 mt-1 line-clamp-2">{item.desc}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => buy(item)}
+                      disabled={shop.gold < item.price}
+                      className="flex-1 py-2 rounded-md border border-emerald-300/25 bg-emerald-300/[0.07] text-emerald-100 text-[9px] font-bold uppercase tracking-[0.16em] disabled:opacity-25"
+                    >
+                      Buy · {item.price.toLocaleString()}
+                    </button>
+                    {usable && (
+                      <button
+                        onClick={() => useOwned(item)}
+                        className="px-3 py-2 rounded-md border border-sky-300/25 bg-sky-300/[0.07] text-sky-100 text-[9px] font-bold uppercase tracking-[0.16em]"
+                      >
+                        Use
+                      </button>
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={() => buy(item)}
-                  disabled={shop.gold < item.price}
-                  className="w-full mt-3 py-2 rounded-md border border-emerald-300/25 bg-emerald-300/[0.07] text-emerald-100 text-[9px] font-bold uppercase tracking-[0.16em] disabled:opacity-25"
-                >
-                  Buy · {item.price.toLocaleString()} Gold
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : (
