@@ -16,6 +16,8 @@
         "Equipment",
         "Ability",
         "Companion",
+        "Environment",
+        "Teacher",
         "Achievement"
       ],
       "description": "Type of card"
