@@ -901,7 +901,7 @@ function LayoutContent({ children, currentPageName }) {
         ];
 
         return (
-          <div className="fixed top-0 left-0 right-0 z-40 flex flex-col" style={{
+          <div className="aura-family-header fixed top-0 left-0 right-0 z-40 flex flex-col" style={{
             background: 'rgba(8, 12, 18, 0.42)',
             backdropFilter: 'blur(30px) saturate(150%)',
             WebkitBackdropFilter: 'blur(30px) saturate(150%)',

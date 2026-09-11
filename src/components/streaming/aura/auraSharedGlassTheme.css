@@ -52,3 +52,102 @@ body .creator-discovery .discover-card-bio,
 body .channel-home-page .channel-section-heading p {
   color: var(--aura-family-muted);
 }
+
+/* Shared chrome on Streaming Home and Discover. */
+body:has(.channel-home-page) .aura-family-header,
+body:has(.creator-discovery) .aura-family-header,
+body:has(.channel-home-page) .glass-page-top-bar,
+body:has(.creator-discovery) .glass-page-top-bar,
+body:has(.channel-home-page) .glass-page-bottom-bar,
+body:has(.creator-discovery) .glass-page-bottom-bar {
+  background: linear-gradient(145deg, rgba(56, 61, 68, 0.72), rgba(16, 18, 22, 0.88)) !important;
+  border-color: var(--aura-family-edge) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 12px 34px rgba(8, 9, 12, 0.34) !important;
+}
+
+/* Channel homepage modules below the streaming stage. */
+body .channel-home-page .channel-commerce-section,
+body .channel-home-page .channel-partner-feature,
+body .channel-home-page .channel-sponsor-item,
+body .channel-home-page .channel-shop-card,
+body .channel-home-page .channel-pass,
+body .channel-home-page .channel-pass-reward-art,
+body .channel-home-page .channel-shop-art,
+body .channel-home-page .channel-shop-editor > div {
+  background-color: var(--aura-family-glass);
+  background-image: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.025) 48%, rgba(20,23,28,.16));
+  border: 1px solid var(--aura-family-edge);
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 36px rgba(8,9,12,.28);
+}
+body .channel-home-page .channel-commerce-section { padding: 28px; border-radius: 14px; }
+body .channel-home-page .channel-partner-feature { padding: 24px; border-radius: 12px; }
+body .channel-home-page .channel-shop-card { border-radius: 10px; overflow: hidden; }
+body .channel-home-page .channel-pass { padding: 24px; border-radius: 12px; }
+body .channel-home-page .channel-pass-reward-art { border-radius: 8px; }
+
+/* Channel tab overlays: schedule, cards, gallery, games, and reward details. */
+body:has(.channel-home-page) [data-schedule-overlay="true"],
+body:has(.channel-home-page) [data-games-overlay="true"],
+body:has(.channel-home-page) .player-collection-hud,
+body:has(.channel-home-page) .gallery-console,
+body:has(.channel-home-page) .channel-pass-modal > [role="dialog"] {
+  background: linear-gradient(145deg, rgba(56,61,68,.78), rgba(16,18,22,.94)) !important;
+  border: 1px solid var(--aura-family-edge) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 24px 60px rgba(8,9,12,.42) !important;
+}
+body:has(.channel-home-page) [aria-label$="game achievement cards"],
+body:has(.channel-home-page) [data-schedule-overlay] .grid-cols-7,
+body:has(.channel-home-page) [data-schedule-overlay] .grid-cols-7 > div,
+body:has(.channel-home-page) [data-games-overlay] div:has(> button[aria-label^="Show achievement cards for"]),
+body:has(.channel-home-page) .player-collection-header,
+body:has(.channel-home-page) .player-collection-search,
+body:has(.channel-home-page) .player-collection-select,
+body:has(.channel-home-page) .player-collection-content,
+body:has(.channel-home-page) .collection-reel-toolbar,
+body:has(.channel-home-page) .card-showcase,
+body:has(.channel-home-page) .gallery-player,
+body:has(.channel-home-page) .gallery-social,
+body:has(.channel-home-page) .gallery-playback-controls,
+body:has(.channel-home-page) .gallery-date-rail > button,
+body:has(.channel-home-page) .gallery-clip-card,
+body:has(.channel-home-page) .gallery-request-card {
+  background-color: var(--aura-family-glass) !important;
+  background-image: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.025) 48%, rgba(20,23,28,.16)) !important;
+  border: 1px solid rgba(225,231,238,.38) !important;
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 32px rgba(8,9,12,.3);
+}
+body:has(.channel-home-page) .player-collection-backdrop,
+body:has(.channel-home-page) .gallery-hub::before {
+  background: linear-gradient(145deg, rgba(42,46,52,.94), rgba(8,9,12,.97)) !important;
+}
+
+/* Discover filters, creator surfaces, and quick-look drawer. */
+body .creator-discovery .discover-filter-rail,
+body .creator-discovery .discover-mobile-refine,
+body .creator-discovery .discover-genre-options button,
+body .creator-discovery .discover-style-options button,
+body .creator-discovery .discover-results-toolbar,
+body:has(.creator-discovery) .discover-quick-drawer,
+body:has(.creator-discovery) .discover-quick-player,
+body:has(.creator-discovery) .discover-goals > article {
+  background-color: var(--aura-family-glass);
+  background-image: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.025) 48%, rgba(20,23,28,.16));
+  border: 1px solid rgba(225,231,238,.38);
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 32px rgba(8,9,12,.28);
+}
+body .creator-discovery .discover-filter-rail { padding: 20px; border-radius: 12px; }
+body .creator-discovery .discover-results-toolbar { padding: 14px; border-radius: 10px; }
+body .creator-discovery .discover-genre-options button,
+body .creator-discovery .discover-style-options button { box-shadow: none; }
+body:has(.creator-discovery) .discover-quick-drawer { background-color: rgba(34,38,44,.94); }
+body:has(.creator-discovery) .discover-goals > article { padding: 16px; margin-top: 10px; border-radius: 10px; }

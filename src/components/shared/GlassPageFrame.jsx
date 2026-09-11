@@ -137,7 +137,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
     <div className={`relative w-full h-full min-h-screen ${className}`}>
       {/* Top Glass Bar */}
       <div
-        className="fixed top-0 left-0 right-0 z-[35]"
+        className="glass-page-top-bar fixed top-0 left-0 right-0 z-[35]"
         style={{
           ...glassStyle,
           height: '64px',
@@ -212,7 +212,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
 
       {/* Bottom Glass Bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[35]"
+        className="glass-page-bottom-bar fixed bottom-0 left-0 right-0 z-[35]"
         style={{
           ...glassStyle,
           minHeight: '48px',
