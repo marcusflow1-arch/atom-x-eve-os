@@ -1,0 +1,4 @@
+[submodule "third_party/twelvesky2-fenrir-server"]
+	path = third_party/twelvesky2-fenrir-server
+	url = https://github.com/TwelveSky-Fenrir/Server.git
+	branch = main
