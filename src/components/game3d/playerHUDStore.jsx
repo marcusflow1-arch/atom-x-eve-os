@@ -4,6 +4,8 @@
 import { DEFAULT_PLAYER_STATS, computeDerivedStats, migrateBaseStats } from './statsSystem';
 import { getHaloBonuses, subscribeHalo } from './progression/haloStore';
 import { getAuraBonuses, subscribeAura } from './progression/auraStore';
+import { getPalaceBonusesForPlayer, subscribePalace } from './progression/palaceStore';
+import { getElixirFlatBonuses, subscribeElixirs } from './progression/elixirStore';
 import {
   getEquippedWingsMultiplierBonuses,
   getEquippedWingsFlatBonuses,
@@ -50,20 +52,35 @@ const sumAttr = (...objs) => {
 };
 
 const sumFlat = (...objs) => {
-  const out = { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
+  const out = {
+    hp: 0,
+    damage: 0,
+    defense: 0,
+    chi: 0,
+    attackSuccess: 0,
+    attackBlock: 0,
+    attributionAttack: 0,
+    attributionDefense: 0,
+    critChance: 0,
+    critDamage: 0,
+    criticalDefense: 0,
+  };
   objs.forEach((o) => { if (!o) return; Object.keys(out).forEach((k) => { out[k] += o[k] || 0; }); });
   return out;
 };
 
 const getBonuses = () => ({
-  // Titles are real attribute points in TwelveSky, not arbitrary flat damage.
   halo: sumAttr(
     getHaloBonuses(),
     getAuraBonuses(),
+    getPalaceBonusesForPlayer(),
     getEquippedWingsMultiplierBonuses(),
     getEquippedTitleBonuses(),
   ),
-  title: sumFlat(getEquippedWingsFlatBonuses()),
+  title: sumFlat(
+    getEquippedWingsFlatBonuses(),
+    getElixirFlatBonuses(),
+  ),
 });
 
 const buildDefault = () => {
@@ -203,6 +220,8 @@ function recomputeFromBonuses() {
 
 subscribeHalo(recomputeFromBonuses);
 subscribeAura(recomputeFromBonuses);
+subscribePalace(recomputeFromBonuses);
+subscribeElixirs(recomputeFromBonuses);
 subscribeWings(recomputeFromBonuses);
 subscribeTitles(recomputeFromBonuses);
 
