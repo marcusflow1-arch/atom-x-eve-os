@@ -21,6 +21,7 @@ import AuraMoments from './AuraMoments';
 import AuraDailyPicks from './AuraDailyPicks';
 import AuraTopics from './AuraTopics';
 import AuraGameLanes from './AuraGameLanes';
+import auraSampleContent, { auraSampleStory, fillAuraSamples } from './auraSampleContent';
 import '../../hub/consoleHub.css';
 import './auraLanding.css';
 import './auraDaily.css';
@@ -52,13 +53,20 @@ export default function AuraLandingPage() {
   const [story, setStory] = useState(null);
   const [previewingMoment, setPreviewingMoment] = useState(false);
   const [now, setNow] = useState(Date.now);
+  const [showSamples, setShowSamples] = useState(true);
+  const samples = useMemo(() => auraSampleContent(now), [now]);
+  const fill = (real, examples, count) => showSamples ? fillAuraSamples(real, examples, count) : real;
   const landing = useMemo(() => buildAuraLanding(directory.channels, directory.categories, now), [directory.channels, directory.categories, now]);
   const browsing = browseView || Boolean(filters.search.trim() || filters.gameId || filters.tag || filters.topic || filters.style !== 'all' || filters.recent);
   const activeChapter = useAuraChapters(scrollRef, chapters, browsing);
-  const edition = useMemo(() => buildAuraDailyEdition(daily.data, directory.categories, now), [daily.data, directory.categories, now]);
-  const moments = useMemo(() => buildAuraMoments(daily.data?.moments, directory.categories, now), [daily.data?.moments, directory.categories, now]);
-  const picks = useMemo(() => chooseDailyCreators(directory.channels, now, 3), [directory.channels, now]);
-  const lanes = useMemo(() => buildAuraGameLanes(directory.categories, daily.data?.requests, now), [directory.categories, daily.data?.requests, now]);
+  const realEdition = useMemo(() => buildAuraDailyEdition(daily.data, directory.categories, now), [daily.data, directory.categories, now]);
+  const edition = { ...realEdition, updates: fill(realEdition.updates, samples.updates, 4), posts: fill(realEdition.posts, samples.posts, 3), schedules: fill(realEdition.schedules, samples.schedules, 3), videos: fill(realEdition.videos, samples.videos, 3) };
+  const realMoments = useMemo(() => buildAuraMoments(daily.data?.moments, directory.categories, now), [daily.data?.moments, directory.categories, now]);
+  const moments = fill(realMoments, samples.moments, 4);
+  const realPicks = useMemo(() => chooseDailyCreators(directory.channels, now, 3), [directory.channels, now]);
+  const picks = fill(realPicks, samples.creators, 3);
+  const realLanes = useMemo(() => buildAuraGameLanes(directory.categories, daily.data?.requests, now), [directory.categories, daily.data?.requests, now]);
+  const lanes = Object.fromEntries(Object.entries(realLanes).map(([key, games]) => [key, fill(games, samples.games, 4)]));
   const rows = useMemo(() => selectAuraChannels(directory.channels, { ...filters, search }).filter((stream) =>
     matchesAuraTopic(stream, filters.topic) && (!filters.recent || (stream.startedAt > 0 && stream.startedAt <= now && now - stream.startedAt <= RECENT_STREAM_WINDOW))
   ), [directory.channels, filters, search, now]);
@@ -69,14 +77,14 @@ export default function AuraLandingPage() {
   const suspended = Boolean(watching || story) || browsing;
 
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
-  const onWatch = useCallback((stream) => { setStory(null); setWatching(stream); }, []);
+  const onWatch = useCallback((stream) => { if (stream.isSample) { setWatching(null); setStory(auraSampleStory(stream)); return; } setStory(null); setWatching(stream); }, []);
   const onRead = useCallback((item) => { setWatching(null); setStory(item); }, []);
   const browse = useCallback((next = {}) => {
     setFilters({ ...DEFAULT_FILTERS, ...next });
     setBrowseView(true);
     requestAnimationFrame(() => { resultsHeadingRef.current?.focus({ preventScroll: true }); resultsRef.current?.scrollIntoView({ block: 'start' }); });
   }, []);
-  const onGame = useCallback((game) => browse({ gameId: game.id }), [browse]);
+  const onGame = useCallback((game) => game.isSample ? onRead(auraSampleStory(game)) : browse({ gameId: game.id }), [browse, onRead]);
   const browseAll = useCallback(() => browse(), [browse]);
   const reset = () => {
     setFilters(DEFAULT_FILTERS); setBrowseView(false);
@@ -95,8 +103,9 @@ export default function AuraLandingPage() {
   const liveLabel = directory.isPending ? 'Connecting to live channels' : directory.isError ? 'Last available update' : directory.data?.incomplete ? 'Available live channels' : 'Live on Aura';
 
   return <main ref={scrollRef} className={`console-hub console-discovery-scroll aura-landing ${browsing ? 'is-browsing' : ''}`}>
-    <div ref={liveRef} className="aura-front-stage" tabIndex={-1} aria-label="Aura live showcase"><AuraSpotlight streams={landing.featured} onWatch={onWatch} suspended={suspended || previewingMoment} loading={directory.isPending} /></div>
+    <div ref={liveRef} className="aura-front-stage" tabIndex={-1} aria-label="Aura live showcase"><AuraSpotlight streams={landing.featured.length || !showSamples ? landing.featured : samples.creators} onWatch={onWatch} suspended={suspended || previewingMoment} loading={directory.isPending} /></div>
     <div className="console-discovery-feed aura-landing-feed">
+      <div className="console-directory-notice" role="status">{showSamples ? 'Layout preview: labeled sample templates fill available spaces. Real content and live counts are unchanged.' : 'Sample templates are hidden.'} <button type="button" onClick={() => setShowSamples((value) => !value)}>{showSamples ? 'Hide sample templates' : 'Show sample templates'}</button></div>
       <section className="aura-live-pulse" aria-label="Aura live activity">
         <div className="aura-pulse-label"><span className={directory.isError || directory.data?.incomplete ? 'is-delayed' : ''} /><strong>{liveLabel}</strong><small>{directory.isFetching && hasData ? 'Updating…' : hasData ? 'Updates automatically' : 'Finding broadcasts'}</small></div>
         <dl><div><dt><Users size={13} />Watching</dt><dd>{hasData ? formatCount(landing.pulse.viewers) : '—'}</dd></div><div><dt><Radio size={13} />Live channels</dt><dd>{hasData ? formatCount(landing.pulse.channels) : '—'}</dd></div><div><dt><Gamepad2 size={13} />Games & categories</dt><dd>{hasData ? formatCount(landing.pulse.games) : '—'}</dd></div></dl>
