@@ -23,6 +23,9 @@ export default function AvatarHome() {
   });
   const [achievements, setAchievements] = React.useState([]);
   const [games, setGames] = React.useState([]);
+  const [ownedCards, setOwnedCards] = React.useState([]);
+  const [behavior, setBehavior] = React.useState(null);
+  const [homeActivity, setHomeActivity] = React.useState([]);
 
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -65,11 +68,31 @@ export default function AvatarHome() {
 
         setDisplay(header);
 
-        // Content blocks
-        const ach = await base44.entities.Achievement.list('-created_date', 8);
-        const gms = await base44.entities.Game.list('-original_year', 8);
-        setAchievements(ach || []);
-        setGames(gms || []);
+        // Content blocks are tied to the actual player, not global sample content.
+        const [allAchievements, allGames, cards, avatars] = await Promise.all([
+          base44.entities.Achievement.list('-created_date', 500),
+          base44.entities.Game.list('-original_year', 500),
+          user?.id ? base44.entities.UserCard.filter({ user_id: user.id }, '-created_date', 100) : Promise.resolve([]),
+          user?.id ? base44.entities.Avatar.filter({ user_id: user.id }, '-created_date', 1) : Promise.resolve([])
+        ]);
+        const unlockedIds = new Set(user?.unlocked_achievements || []);
+        const ownedGameIds = new Set(user?.purchased_items || []);
+        const cardGames = new Set((cards || []).map(c => c.game_name).filter(Boolean));
+        setAchievements((allAchievements || []).filter(a => unlockedIds.has(a.id)).slice(0, 8));
+        setGames((allGames || []).filter(g => ownedGameIds.has(g.id) || cardGames.has(g.title)).slice(0, 8));
+        setOwnedCards(cards || []);
+
+        if (avatars?.[0]) {
+          const [behaviorRows, homeRows] = await Promise.all([
+            base44.entities.AIBehaviorState.filter({ user_id: user.id, avatar_id: avatars[0].id }, '-created_date', 1),
+            base44.entities.AvatarHomeState.filter({ avatarId: avatars[0].id }, '-created_date', 1)
+          ]);
+          setBehavior(behaviorRows?.[0] || null);
+          setHomeActivity(homeRows?.[0]?.activityLog || []);
+          if (homeRows?.[0]) {
+            setDisplay(prev => ({ ...prev, catchphrase: homeRows[0].catchphrase || prev.catchphrase, mood: homeRows[0].mood || prev.mood }));
+          }
+        }
       } catch (e) {
         console.error('Failed to load AvatarHome:', e);
       } finally {
