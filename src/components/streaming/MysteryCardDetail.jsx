@@ -1,851 +1,171 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { 
-  Hammer, Layers, Sparkles, TrendingUp, Zap, Shield, Crown, Star, ArrowUp, Info, 
-  Activity, Box, ArrowLeft, Merge, ArrowLeftRight, Check, Lock, ChevronRight, Package, Flame, X
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity, ArrowLeft, Check, ChevronRight, Crown, Flame, Gauge, Gem, Hammer,
+  History, Layers, Lock, Merge, Package, RefreshCcw, Shield, Sparkles, Star,
+  Target, TrendingUp, WandSparkles, Zap
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import ShinyCard from '@/components/shared/ShinyCard';
-import { MaterialCard } from '@/components/blacksmith/MaterialSystem';
-import { MarketValueDisplay, ValueBreakdown } from '@/components/blacksmith/MarketValuation';
-import TradingPanel from '@/components/blacksmith/TradingPanel';
-import EvolvedCardVisual, { calculateEvolutionTier, EvolutionBadge, EvolutionPreview } from '@/components/blacksmith/CardVisualEvolution';
-import { NFCInfoPanel } from '@/components/blacksmith/NFCCardSync';
+import { base44 } from '@/api/base44Client';
 
-// Mock Data
-const MOCK_CARD_STATS = {
-  attack: 115,
-  defense: 92,
-  magic: 100,
-  power: 337
-};
-
-// Upgrade System Tabs
-const UPGRADE_SYSTEMS = [
-  { id: 'level', name: 'Level Up', icon: TrendingUp, description: 'Increase card level for base stat boosts' },
-  { id: 'enhance', name: 'Enhance', icon: Sparkles, description: 'Amplify specific stats with materials' },
-  { id: 'combine', name: 'Combine', icon: Merge, description: 'Merge duplicates to increase star rating' },
-  { id: 'ascend', name: 'Ascend', icon: Crown, description: 'Break level caps and unlock new potential' },
-  { id: 'trade', name: 'Trade', icon: ArrowLeftRight, description: 'List on marketplace or trade with others' },
+const tabs = [
+  { id: 'record', label: 'Record', icon: History, hint: 'Live card identity, stats and history' },
+  { id: 'forge', label: 'Forge', icon: Hammer, hint: 'Level, stage, enhance, enchant and ascend' },
+  { id: 'skills', label: 'Skills', icon: Layers, hint: 'Skill tree and active perks' }
 ];
 
-// Mock materials for enhancement
-const MOCK_MATERIALS = [
-  { id: 'gold', material_type: 'gold', name: 'Gold', icon: '🪙', quantity: 25000, rarity: 'Currency' },
-  { id: 'precision_shard', material_type: 'precision_shard', quantity: 45, rarity: 'Rare' },
-  { id: 'combat_core', material_type: 'combat_core', quantity: 28, rarity: 'Epic' },
-  { id: 'ascension_core', material_type: 'ascension_core', quantity: 8, rarity: 'Epic' },
-  { id: 'skill_catalyst', material_type: 'skill_catalyst', quantity: 35, rarity: 'Rare' },
-  { id: 'fusion_currency', material_type: 'fusion_currency', quantity: 120, rarity: 'Uncommon' },
-  { id: 'wildcard', material_type: 'wildcard', quantity: 5, rarity: 'Legendary' },
-];
-
-// Mock duplicate cards for combination
-const generateDuplicates = (card) => {
-  return Array.from({ length: 4 }, (_, i) => ({
-    id: `dup-${i}`,
-    ...card,
-    level: Math.floor(Math.random() * 10) + 1,
-  }));
+const statLabels = { attack: 'Attack', defense: 'Defense', magic: 'Spirit', vitality: 'Vitality', speed: 'Dexterity' };
+const rarityTone = {
+  Common: 'text-slate-300 border-slate-400/20', Uncommon: 'text-emerald-300 border-emerald-400/25', Rare: 'text-cyan-300 border-cyan-400/25',
+  Epic: 'text-violet-300 border-violet-400/25', Legendary: 'text-amber-300 border-amber-400/25', Mythic: 'text-rose-300 border-rose-400/25',
+  Mythical: 'text-rose-300 border-rose-400/25', Unique: 'text-fuchsia-300 border-fuchsia-400/25', Limitless: 'text-white border-white/30'
 };
 
-// Overview / Card Record UI
-const CardRecordView = ({ card }) => (
-  <div className="flex gap-6 p-6">
-    {/* Left: Card Visual - Sticky positioning to stay in view while scrolling */}
-    <div className="w-[240px] flex-shrink-0 flex flex-col gap-4 sticky top-0 self-start">
-      <div className="relative group perspective-1000">
-         {!card?.image ? (
-           <ShinyCard className="w-full aspect-[2/3] rounded-xl border border-white/10 bg-white/5 flex items-center justify-center relative z-10">
-             <div className="text-white/30 text-5xl">?</div>
-           </ShinyCard>
-         ) : (
-           <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl rounded-xl overflow-hidden relative z-10">
-             {/* Card Art */}
-             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${card.image}')` }}>
-               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-             </div>
-             {/* Overlay Stats */}
-             <div className="absolute inset-0 p-4 flex flex-col justify-between">
-               <div className="flex justify-between items-start">
-                 <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white/90">Lv. {card?.level || 1}</Badge>
-                 <div className="flex gap-0.5 bg-black/40 p-1 rounded-full backdrop-blur-md">
-                   {Array.from({ length: 5 }).map((_, i) => (
-                     <Star key={i} className={`w-3 h-3 ${i < (card?.stars || 1) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                   ))}
-                 </div>
-               </div>
-               <div>
-                 <h2 className="text-white font-black text-xl leading-none mb-1 drop-shadow-lg font-heading">{card?.title || 'Unknown Card'}</h2>
-                 <div className="flex items-center gap-2 mb-2">
-                   <Badge className="bg-orange-500 text-white border-none text-[10px] py-0 h-4">{card?.rarity || 'Legendary'}</Badge>
-                   <span className="text-white/70 text-xs font-medium">{card?.series || 'Collection'}</span>
-                 </div>
-               </div>
-             </div>
-           </ShinyCard>
-         )}
-         {/* Background Glow */}
-         <div className="absolute inset-0 bg-orange-500/20 blur-3xl -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-      </div>
-
-      {/* Active Perks */}
-      <div className="space-y-2">
-         <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest text-center">Active Perks</h4>
-         <div className="grid grid-cols-3 gap-2">
-            {[1, 2, 3].map((i) => (
-               <div key={i} className="aspect-square rounded-lg bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors cursor-help group relative">
-                  <div className="w-6 h-6 rounded-full bg-black/40 flex items-center justify-center">
-                     <Sparkles className="w-3 h-3 text-white/60 group-hover:text-yellow-400 transition-colors" />
-                  </div>
-               </div>
-            ))}
-         </div>
-      </div>
-    </div>
-
-    {/* Right: Info */}
-    <div className="flex-1 space-y-6 pb-8">
-      <div className="space-y-2">
-        <h3 className="text-white text-2xl font-bold flex items-center gap-3">
-          <Info className="w-6 h-6 text-cyan-400" /> Card Record
-        </h3>
-        <p className="text-white/50 text-sm">Detailed information and history of this card.</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 space-y-4">
-          <div>
-            <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Description</h4>
-            <p className="text-white/80 text-sm italic">"{card?.description || 'A collectible trading card with unique attributes.'}"</p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-8 pt-2">
-            <div>
-              <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Series</h4>
-              <p className="text-white font-semibold">{card?.series || 'Unknown Series'}</p>
-            </div>
-            <div>
-              <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Rarity</h4>
-              <Badge className="bg-blue-600 hover:bg-blue-700 text-white border-none">{card?.rarity || 'Rare'}</Badge>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 space-y-4">
-            <h4 className="text-white/40 text-[10px] uppercase tracking-wider">Stats Overview</h4>
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs">Strength</span>
-                    <div className="flex items-center gap-2">
-                        <Progress value={85} className="w-24 h-2" />
-                        <span className="text-white font-bold text-xs">85</span>
-                    </div>
-                </div>
-                <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs">Magic</span>
-                    <div className="flex items-center gap-2">
-                        <Progress value={62} className="w-24 h-2" />
-                        <span className="text-white font-bold text-xs">62</span>
-                    </div>
-                </div>
-                <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs">Defense</span>
-                    <div className="flex items-center gap-2">
-                        <Progress value={90} className="w-24 h-2" />
-                        <span className="text-white font-bold text-xs">90</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
-
-      <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 space-y-3">
-        <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Technical Details</h4>
-        <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
-                <span className="text-white/50 text-xs block">Card ID</span>
-                <span className="text-white/80 font-mono text-xs">{card?.id || 'card-preview'}</span>
-            </div>
-            <div className="space-y-1">
-                <span className="text-white/50 text-xs block">Type</span>
-                <span className="text-white/80 text-xs">Trading Card</span>
-            </div>
-            <div className="space-y-1">
-                <span className="text-white/50 text-xs block">Mint Date</span>
-                <span className="text-white/80 text-xs">Jan 12, 2026</span>
-            </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// Blacksmith UI
-const BlacksmithView = ({ card }) => {
-  const [activeSystem, setActiveSystem] = useState('level');
-  const [cardLevel, setCardLevel] = useState(card?.level || 1);
-  const [cardStars, setCardStars] = useState(card?.stars || 1);
-  const [cardAscension, setCardAscension] = useState(card?.ascension || 0);
-  const [enhancedStats, setEnhancedStats] = useState({ attack: 0, defense: 0, magic: 0 });
-  const [isUpgrading, setIsUpgrading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [materials, setMaterials] = useState(MOCK_MATERIALS);
-  const [showTradePanel, setShowTradePanel] = useState(false);
-  const [selectedDuplicates, setSelectedDuplicates] = useState([]);
-  
-  const duplicates = useMemo(() => generateDuplicates(card), [card]);
-
-  // Card tilt effects
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
-  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
-  const rotateX = useTransform(mouseY, [-150, 150], [12, -12]);
-  const rotateY = useTransform(mouseX, [-150, 150], [-12, 12]);
-  const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
-  const shineBackground = useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`);
-
-  const handleCardMouseMove = ({ currentTarget, clientX, clientY }) => {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    x.set(clientX - left - width / 2);
-    y.set(clientY - top - height / 2);
-  };
-
-  const handleCardMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  const getRarityColor = (rarity) => {
-    switch (rarity) {
-      case 'Legendary': return 'from-orange-500 to-amber-600';
-      case 'Mythic': return 'from-red-500 to-rose-600';
-      case 'Epic': return 'from-purple-500 to-violet-600';
-      case 'Rare': return 'from-blue-500 to-cyan-600';
-      default: return 'from-slate-500 to-slate-600';
+function invoke(action, card, payload = {}) {
+  return base44.functions.invoke('cardProgression', {
+    action,
+    userCardId: card?.userCardId || card?.user_card_id || card?.ownedCardId || undefined,
+    achievementId: card?.achievementId || card?.achievement_id || card?.id,
+    payload: {
+      ...payload,
+      cardImage: card?.image || card?.card_image || '',
+      gameId: card?.gameId || card?.game_id || '',
+      genre: card?.genre || ''
     }
-  };
+  });
+}
 
-  // Derived stats
-  const baseStats = useMemo(() => ({
-    attack: 100 + (cardLevel * 15) + (cardAscension * 50) + enhancedStats.attack,
-    defense: 80 + (cardLevel * 12) + (cardAscension * 40) + enhancedStats.defense,
-    magic: 90 + (cardLevel * 10) + (cardAscension * 30) + enhancedStats.magic,
-    power: Math.floor((100 + (cardLevel * 15) + 80 + (cardLevel * 12) + 90 + (cardLevel * 10)) * (1 + cardAscension * 0.2) * (1 + cardStars * 0.1)),
-  }), [cardLevel, cardStars, cardAscension, enhancedStats]);
+function formatDate(value) {
+  if (!value) return 'Not recorded';
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Not recorded';
+}
 
-  const maxLevel = 10 + (cardAscension * 10);
-  const levelCost = cardLevel * 100;
-  const canLevelUp = cardLevel < maxLevel && materials.find(m => m.id === 'gold')?.quantity >= levelCost;
+function Meter({ value, max, label }) {
+  const safeMax = Math.max(1, Number(max) || 1);
+  const pct = Math.min(100, Math.max(0, ((Number(value) || 0) / safeMax) * 100));
+  return <div className="space-y-2"><div className="flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-white/35"><span>{label}</span><span className="font-mono text-white/65">{Number(value || 0).toLocaleString()} / {safeMax.toLocaleString()}</span></div><div className="h-1.5 bg-white/[0.06] overflow-hidden"><motion.div initial={false} animate={{ width: `${pct}%` }} className="h-full bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400" /></div></div>;
+}
 
-  const handleLevelUp = () => {
-    if (!canLevelUp) return;
-    setIsUpgrading(true);
-    setTimeout(() => {
-      setCardLevel(prev => prev + 1);
-      setMaterials(prev => prev.map(m => m.id === 'gold' ? { ...m, quantity: m.quantity - levelCost } : m));
-      setIsUpgrading(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 1500);
-    }, 800);
-  };
-
-  const handleEnhance = (stat) => {
-    const cost = 500;
-    if (materials.find(m => m.id === 'gold')?.quantity < cost) return;
-    setIsUpgrading(true);
-    setTimeout(() => {
-      setEnhancedStats(prev => ({ ...prev, [stat]: prev[stat] + 10 }));
-      setMaterials(prev => prev.map(m => m.id === 'gold' ? { ...m, quantity: m.quantity - cost } : m));
-      setIsUpgrading(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 1500);
-    }, 600);
-  };
-
-  const handleCombine = () => {
-    if (selectedDuplicates.length < 1) return;
-    setIsUpgrading(true);
-    setTimeout(() => {
-      setCardStars(prev => Math.min(prev + selectedDuplicates.length, 5));
-      setSelectedDuplicates([]);
-      setIsUpgrading(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 1500);
-    }, 1000);
-  };
-
-  const canAscend = cardLevel >= maxLevel && cardAscension < 5;
-  const ascensionCost = (cardAscension + 1) * 5000;
-
-  const handleAscend = () => {
-    if (!canAscend || materials.find(m => m.id === 'gold')?.quantity < ascensionCost) return;
-    setIsUpgrading(true);
-    setTimeout(() => {
-      setCardAscension(prev => prev + 1);
-      setMaterials(prev => prev.map(m => m.id === 'gold' ? { ...m, quantity: m.quantity - ascensionCost } : m));
-      setIsUpgrading(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 1500);
-    }, 1200);
-  };
-
-  return (
-    <div className="flex flex-col p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center border border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.2)]">
-               <Hammer className="w-6 h-6 text-orange-400" />
-            </div>
-            <div>
-               <h3 className="text-white font-bold text-2xl">Blacksmith</h3>
-               <p className="text-white/50 text-sm">Forge your card's true potential</p>
-            </div>
-         </div>
-         <div className="flex items-center gap-3">
-            {materials.slice(0, 2).map(mat => (
-              <Badge key={mat.id} variant="outline" className="h-8 px-3 bg-white/5 text-white/90 border-white/10 text-sm gap-2">
-                <span>{mat.icon}</span>
-                <span className="font-bold">{mat.quantity.toLocaleString()}</span>
-              </Badge>
-            ))}
-         </div>
+function CardHero({ card, progression, userCard }) {
+  const stars = Math.max(1, Math.min(5, Number(progression?.stars || 1)));
+  return <aside className="xl:sticky xl:top-0 self-start space-y-4">
+    <div className="relative aspect-[2/3] overflow-hidden border border-white/[0.10] bg-[#080d15] shadow-[0_30px_80px_rgba(0,0,0,.45)]">
+      {card?.image || userCard?.card_image ? <img src={card?.image || userCard?.card_image} alt="" className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(34,211,238,.18),transparent_38%),linear-gradient(160deg,#111827,#05070c)]" />}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#05070c] via-transparent to-black/20" />
+      <div className="absolute inset-x-0 top-0 p-4 flex items-start justify-between gap-3">
+        <span className="border border-white/15 bg-black/45 backdrop-blur px-2 py-1 text-[9px] uppercase tracking-[.18em] text-white/80">Lv {progression?.level || 1}</span>
+        <span className={`border bg-black/45 backdrop-blur px-2 py-1 text-[9px] uppercase tracking-[.15em] ${rarityTone[card?.rarity || userCard?.card_rarity] || rarityTone.Common}`}>{card?.rarity || userCard?.card_rarity || 'Common'}</span>
       </div>
-
-      <div className="flex-1 flex gap-6">
-          {/* LEFT: Card Visual */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col items-center justify-start pt-4">
-             <div
-               className="relative perspective-1000 w-full aspect-[2.5/3.5]"
-               onMouseMove={handleCardMouseMove}
-               onMouseLeave={handleCardMouseLeave}
-             >
-               {/* Success Burst Animation */}
-               <AnimatePresence>
-                 {showSuccess && (
-                   <motion.div
-                     initial={{ scale: 0.8, opacity: 0 }}
-                     animate={{ scale: 1.5, opacity: [0, 1, 0] }}
-                     exit={{ scale: 2, opacity: 0 }}
-                     className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-400/50 to-amber-500/50 z-30"
-                   />
-                 )}
-               </AnimatePresence>
-
-               {/* Upgrading Glow */}
-               {isUpgrading && (
-                 <motion.div
-                   className="absolute inset-0 rounded-2xl z-20"
-                   animate={{
-                     boxShadow: ['0 0 30px rgba(251, 146, 60, 0.3)', '0 0 60px rgba(251, 146, 60, 0.6)', '0 0 30px rgba(251, 146, 60, 0.3)']
-                   }}
-                   transition={{ duration: 0.4, repeat: Infinity }}
-                 />
-               )}
-
-               {!card?.image ? (
-                 <ShinyCard className="w-full h-full rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center">
-                   <div className="text-white/30 text-5xl">?</div>
-                 </ShinyCard>
-               ) : (
-                 <EvolvedCardVisual 
-                   card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension }}
-                   showTierBadge={true}
-                 >
-                   <motion.div
-                     className="w-full h-full relative overflow-hidden rounded-xl border border-white/10 bg-slate-900"
-                     style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-                   >
-                     <img src={card?.image} alt="" className="w-full h-full object-cover" />
-
-                     <motion.div
-                         className="absolute inset-0 pointer-events-none mix-blend-overlay"
-                         style={{ background: shineBackground }}
-                     />
-
-                     <div className="absolute top-4 left-3 right-3 flex items-center justify-between">
-                       <Badge className="bg-black/60 backdrop-blur-md border-white/20 text-white font-bold">Lv. {cardLevel}</Badge>
-                       <div className="flex gap-0.5">
-                         {Array.from({ length: 5 }).map((_, i) => (
-                           <Star key={i} className={`w-3 h-3 ${i < cardStars ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                         ))}
-                       </div>
-                     </div>
-
-                     {cardAscension > 0 && (
-                       <div className="absolute top-12 left-3">
-                         <Badge className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-md border-purple-400/50 text-white">
-                           <Crown className="w-3 h-3 mr-1" /> A{cardAscension}
-                         </Badge>
-                       </div>
-                     )}
-
-                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
-                       <h3 className="text-white font-bold text-lg truncate">{card?.title || 'Card Name'}</h3>
-                       <Badge className={`bg-gradient-to-r ${getRarityColor(card?.rarity)} border-0 text-white text-[10px] mt-1`}>
-                         {card?.rarity || "Common"}
-                       </Badge>
-                     </div>
-                   </motion.div>
-                 </EvolvedCardVisual>
-               )}
-             </div>
-
-             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 text-center">
-               <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total Power</p>
-               <div className="flex items-center justify-center gap-2">
-                 <Flame className="w-6 h-6 text-orange-400" />
-                 <span className="text-4xl font-black text-white">{baseStats.power.toLocaleString()}</span>
-               </div>
-               <div className="mt-2">
-                 <EvolutionBadge tier={calculateEvolutionTier({ level: cardLevel, stars: cardStars, ascension: cardAscension })} />
-               </div>
-             </motion.div>
-          </div>
-
-          {/* CENTER: Main Action Area */}
-          <div className="flex-1 flex flex-col min-w-0">
-             {/* System Tabs */}
-             <div className="flex gap-2 mb-4 bg-black/20 p-1 rounded-xl overflow-x-auto">
-               {UPGRADE_SYSTEMS.map(sys => (
-                 <button
-                   key={sys.id}
-                   onClick={() => setActiveSystem(sys.id)}
-                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all whitespace-nowrap ${
-                     activeSystem === sys.id
-                       ? 'bg-gradient-to-r from-orange-500/30 to-amber-500/30 border border-orange-500/50 text-orange-300 shadow-[0_0_10px_rgba(251,146,60,0.1)]'
-                       : 'bg-transparent text-white/40 hover:text-white hover:bg-white/5'
-                   }`}
-                 >
-                   <sys.icon className="w-4 h-4" />
-                   <span className="font-semibold text-sm">{sys.name}</span>
-                 </button>
-               ))}
-             </div>
-
-             {/* Content Area */}
-             <div className="flex-1 p-6 relative">
-                <AnimatePresence mode="wait">
-                  {/* LEVEL UP SYSTEM */}
-                  {activeSystem === 'level' && (
-                    <motion.div key="level" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col">
-                      <div className="flex justify-between items-end mb-6">
-                         <div>
-                             <h4 className="text-white font-bold text-xl">Level Up</h4>
-                             <p className="text-white/50 text-sm">Boost base stats.</p>
-                         </div>
-                         <div className="text-right">
-                             <span className="text-white/40 text-xs block">Current</span>
-                             <span className="text-white font-bold text-xl">{cardLevel} <span className="text-white/40 text-sm">/ {maxLevel}</span></span>
-                         </div>
-                      </div>
-                      
-                      <div className="h-4 bg-black/50 rounded-full overflow-hidden border border-white/5 mb-8">
-                        <motion.div className="h-full bg-gradient-to-r from-orange-500 to-amber-500" initial={{ width: 0 }} animate={{ width: `${(cardLevel / maxLevel) * 100}%` }} />
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 mb-2">
-                        {Object.entries(baseStats).filter(([k]) => k !== 'power').map(([stat, value]) => (
-                          <div key={stat} className="bg-black/40 p-4 rounded-xl border border-white/5">
-                            <span className="text-white/40 text-xs uppercase font-bold tracking-wider">{stat}</span>
-                            <div className="text-white font-black text-2xl mt-1">{value}</div>
-                            {canLevelUp && <div className="text-green-400 text-xs font-bold mt-1 flex items-center"><ArrowUp className="w-3 h-3 mr-1"/> +{stat === 'attack' ? 15 : 10}</div>}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-2">
-                        <Button
-                          onClick={handleLevelUp}
-                          disabled={!canLevelUp || isUpgrading}
-                          className={`w-full h-14 text-lg font-bold rounded-xl ${canLevelUp ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-white/10 text-white/30'}`}
-                        >
-                          {isUpgrading ? <Sparkles className="w-6 h-6 animate-spin" /> : cardLevel >= maxLevel ? 'Ascend to Continue' : `Level Up (${levelCost.toLocaleString()} 🪙)`}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* ENHANCE SYSTEM */}
-                  {activeSystem === 'enhance' && (
-                    <motion.div key="enhance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
-                      <h3 className="text-xl font-bold text-white mb-2">Enhancement</h3>
-                      <p className="text-white/50 text-sm mb-6">Amplify specific stats using materials.</p>
-                      <div className="space-y-4">
-                        {['attack', 'defense', 'magic'].map(stat => (
-                          <div key={stat} className="p-4 rounded-xl bg-black/30 border border-white/10 flex items-center justify-between">
-                            <div>
-                              <p className="text-white font-semibold capitalize">{stat}</p>
-                              <p className="text-white/50 text-sm">+{enhancedStats[stat]} Enhanced</p>
-                            </div>
-                            <Button onClick={() => handleEnhance(stat)} disabled={isUpgrading} className="bg-purple-600 hover:bg-purple-700">
-                              <Sparkles className="w-4 h-4 mr-2" /> +10 (500 🪙)
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* COMBINE SYSTEM */}
-                  {activeSystem === 'combine' && (
-                    <motion.div key="combine" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
-                      <h3 className="text-xl font-bold text-white mb-2">Combine Duplicates</h3>
-                      <p className="text-white/50 text-sm mb-6">Merge duplicates to increase star rating.</p>
-                      
-                      <div className="flex justify-center gap-2 mb-6">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`w-8 h-8 ${i < cardStars ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-3 mb-6">
-                        {duplicates.map((dup) => (
-                          <button
-                            key={dup.id}
-                            onClick={() => setSelectedDuplicates(prev => prev.includes(dup.id) ? prev.filter(id => id !== dup.id) : [...prev, dup.id])}
-                            className={`aspect-[2.5/3.5] rounded-lg border-2 overflow-hidden relative ${selectedDuplicates.includes(dup.id) ? 'border-yellow-400' : 'border-white/10'}`}
-                          >
-                            <img src={card?.image || "https://images.unsplash.com/photo-1627856014759-2a5713c54d65?q=80&w=1000&auto=format&fit=crop"} className="w-full h-full object-cover opacity-60" alt="" />
-                            {selectedDuplicates.includes(dup.id) && <div className="absolute inset-0 bg-yellow-500/20 flex items-center justify-center"><Check className="w-8 h-8 text-yellow-400" /></div>}
-                          </button>
-                        ))}
-                      </div>
-
-                      <Button onClick={handleCombine} disabled={selectedDuplicates.length < 1 || cardStars >= 5 || isUpgrading} className="w-full py-6 text-lg font-bold bg-yellow-600 hover:bg-yellow-700">
-                        <Merge className="w-5 h-5 mr-2" /> Combine Selected
-                      </Button>
-                    </motion.div>
-                  )}
-
-                  {/* ASCEND SYSTEM */}
-                  {activeSystem === 'ascend' && (
-                    <motion.div key="ascend" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
-                      <h3 className="text-xl font-bold text-white mb-2">Ascension</h3>
-                      <p className="text-white/50 text-sm mb-6">Break limits. Unlock new potential.</p>
-                      
-                      <div className="flex justify-center gap-4 mb-8">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <div key={i} className={`w-12 h-12 rounded-xl flex items-center justify-center ${i < cardAscension ? 'bg-purple-500' : 'bg-white/5 border border-white/10'}`}>
-                            {i < cardAscension ? <Crown className="w-6 h-6 text-white" /> : <Lock className="w-5 h-5 text-white/30" />}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 mb-6">
-                        <h4 className="text-purple-300 font-semibold mb-3">Next Ascension Benefits:</h4>
-                        <ul className="space-y-2 text-sm text-white/70">
-                          <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-purple-400" /> Level cap +10</li>
-                          <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-purple-400" /> All stats +20%</li>
-                        </ul>
-                      </div>
-
-                      <Button onClick={handleAscend} disabled={!canAscend || isUpgrading} className="w-full py-6 text-lg font-bold bg-purple-600 hover:bg-purple-700">
-                        <Crown className="w-5 h-5 mr-2" /> Ascend ({ascensionCost.toLocaleString()} 🪙)
-                      </Button>
-                    </motion.div>
-                  )}
-
-                  {/* TRADE SYSTEM */}
-                  {activeSystem === 'trade' && (
-                    <motion.div key="trade" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
-                      <h3 className="text-xl font-bold text-white mb-2">Trade Card</h3>
-                      <p className="text-white/50 text-sm mb-6">List on marketplace.</p>
-                      
-                      <div className="mb-6">
-                        <ValueBreakdown card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }} />
-                      </div>
-
-                      <Button onClick={() => setShowTradePanel(true)} className="w-full py-6 text-lg font-bold bg-cyan-600 hover:bg-cyan-700">
-                        <ArrowLeftRight className="w-5 h-5 mr-2" /> Open Trade Panel
-                      </Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-             </div>
-          </div>
-
-          {/* RIGHT: Stats & Materials (The requested "Right Hand Side") */}
-          <div className="w-[260px] flex-shrink-0 flex flex-col gap-4 pr-2 custom-scrollbar">
-             <MarketValueDisplay card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }} />
-
-             <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-               <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-                 <Zap className="w-5 h-5 text-yellow-400" /> Card Stats
-               </h4>
-               <div className="space-y-3">
-                 {Object.entries(baseStats).map(([stat, value]) => (
-                   <div key={stat} className="flex items-center justify-between">
-                     <span className="text-white/60 capitalize text-sm">{stat}</span>
-                     <span className="text-white font-bold">{value.toLocaleString()}</span>
-                   </div>
-                 ))}
-               </div>
-             </div>
-
-             <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-               <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-                 <Package className="w-5 h-5 text-cyan-400" /> Materials
-               </h4>
-               <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
-                 {materials.filter(m => m.material_type !== 'gold').map(mat => (
-                   <MaterialCard key={mat.id} material={mat.material_type} quantity={mat.quantity} size="small" />
-                 ))}
-               </div>
-             </div>
-
-             <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-               <h4 className="text-white font-bold mb-4">Requirements</h4>
-               <div className="space-y-3 text-sm">
-                 <div className="flex justify-between"><span className="text-white/60">Next Level</span><span className="text-yellow-400 font-bold">{levelCost.toLocaleString()} 🪙</span></div>
-                 <div className="flex justify-between"><span className="text-white/60">Ascension</span><span className="text-purple-400 font-bold">{ascensionCost.toLocaleString()} 🪙</span></div>
-               </div>
-             </div>
-
-             <EvolutionPreview card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension }} />
-             <NFCInfoPanel physicalCardData={null} onScan={() => console.log('NFC')} />
-          </div>
+      <div className="absolute inset-x-0 bottom-0 p-5">
+        <div className="flex gap-1 mb-3">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`w-3 h-3 ${i < stars ? 'fill-amber-300 text-amber-300' : 'text-white/20'}`} />)}</div>
+        <p className="text-[9px] uppercase tracking-[.22em] text-cyan-300/75">Stage {progression?.stage || 1} · Ascension {progression?.ascension || 0}</p>
+        <h2 className="text-2xl font-black text-white leading-none mt-2">{card?.title || userCard?.card_name || 'Achievement Card'}</h2>
+        <p className="text-[11px] text-white/45 mt-2 truncate">{card?.series || userCard?.game_name || 'Atom x Eve'}</p>
       </div>
-
-      {/* Trade Panel Overlay */}
-      <AnimatePresence>
-        {showTradePanel && (
-          <TradingPanel
-            card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }}
-            onClose={() => setShowTradePanel(false)}
-            onListCard={(listing) => {
-              console.log('Listing:', listing);
-              setShowTradePanel(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
-  );
-};
-
-// Skill Tree UI (Screenshot 4)
-const SkillTreeView = ({ card }) => (
-  <div className="h-full flex flex-col p-6">
-    <div className="flex items-center justify-between mb-6">
-       <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
-             <Layers className="w-6 h-6 text-purple-400" />
-          </div>
-          <div>
-             <h3 className="text-white font-bold text-2xl">Ability Matrix</h3>
-             <p className="text-white/50 text-sm">Unlock new abilities and passive bonuses.</p>
-          </div>
-       </div>
-       <div className="flex items-center gap-3">
-            <Badge variant="outline" className="h-8 px-4 bg-purple-500/10 text-purple-400 border-purple-500/20 gap-2 text-sm">
-                <Zap className="w-3 h-3" /> 2,450 SP Available
-            </Badge>
-       </div>
+    <div className="grid grid-cols-2 gap-px bg-white/[0.07] border border-white/[0.07]">
+      {[['Power', progression?.power_score || 0], ['Skill Points', progression?.skill_points || 0], ['Stability', `${progression?.over_enchant_stability ?? 100}%`], ['Over-Enchant', `+${progression?.over_enchant_rank || 0}`]].map(([label, value]) => <div key={label} className="bg-[#080d15]/95 p-3"><span className="block text-[8px] uppercase tracking-[.18em] text-white/30">{label}</span><strong className="block mt-1 text-sm text-white font-semibold">{value}</strong></div>)}
     </div>
+  </aside>;
+}
 
-    <div className="flex-1 grid grid-cols-3 gap-6 min-h-0 overflow-y-auto custom-scrollbar">
-       {/* Power Path */}
-       <div className="flex flex-col gap-4 relative h-full">
-          <div className="text-center p-3 rounded-t-xl bg-purple-500/10 border-t border-x border-purple-500/20">
-             <h4 className="text-purple-400 font-bold text-sm uppercase tracking-wider">Power Path</h4>
-             <p className="text-white/30 text-[10px]">Raw strength & combat</p>
-          </div>
-          
-          <div className="flex-1 rounded-b-xl rounded-t-sm bg-gradient-to-b from-purple-900/10 to-transparent border border-purple-500/20 p-6 relative overflow-hidden flex flex-col items-center gap-12">
-             <div className="absolute top-0 bottom-0 w-px bg-purple-500/10 z-0" />
-             
-             {/* Root Node */}
-             <div className="w-16 h-16 rounded-2xl bg-purple-600 shadow-[0_0_25px_rgba(168,85,247,0.6)] z-10 flex items-center justify-center border-2 border-white/20 relative group cursor-pointer hover:scale-110 transition-transform">
-                <Zap className="w-8 h-8 text-white" />
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/80 px-2 py-1 rounded text-[10px] text-white">
-                    Thunder Strike (Active)
-                </div>
-             </div>
+function RecordView({ card, state }) {
+  const p = state.progression;
+  const combinedStats = useMemo(() => Object.fromEntries(Object.keys(statLabels).map(key => [key, Number(p?.base_stats?.[key] || 0) + Number(p?.enhanced_stats?.[key] || 0)])), [p]);
+  return <div className="space-y-6">
+    <header><span className="text-[9px] uppercase tracking-[.24em] text-cyan-300/70">Authoritative Card State</span><h3 className="text-3xl font-black text-white mt-2">Record</h3><p className="text-sm text-white/45 mt-2 max-w-2xl">This is the card’s live record: ownership, progression, power, active perks, enchantments and every forge decision that changed it.</p></header>
+    <section className="grid md:grid-cols-5 gap-px bg-white/[0.07] border border-white/[0.07]">{Object.entries(combinedStats).map(([key, value]) => <div key={key} className="bg-[#090e17]/95 p-4"><span className="text-[8px] uppercase tracking-[.18em] text-white/30">{statLabels[key]}</span><strong className="block mt-2 text-xl text-white">{value}</strong><small className="text-[9px] text-emerald-300/70">+{Number(p?.enhanced_stats?.[key] || 0)} forged</small></div>)}</section>
+    <section className="grid xl:grid-cols-2 gap-4">
+      <div className="border border-white/[0.08] bg-white/[0.02] p-5"><div className="flex items-center gap-2 mb-4"><Gem className="w-4 h-4 text-violet-300"/><h4 className="text-sm font-bold text-white">Enchantments</h4><span className="ml-auto text-[9px] uppercase tracking-wider text-white/30">{p?.enchantments?.length || 0} active</span></div>{p?.enchantments?.length ? <div className="space-y-2">{p.enchantments.map((e, i) => <div key={`${e.id}-${i}`} className="flex items-center gap-3 border-t border-white/[0.06] pt-3 first:border-0 first:pt-0"><span className="w-8 h-8 grid place-items-center bg-violet-400/10 text-violet-200"><WandSparkles className="w-4 h-4"/></span><div className="min-w-0"><strong className="text-xs text-white block">{e.name}</strong><span className="text-[9px] uppercase tracking-wider text-white/35">{e.element || 'Arcane'}{e.overcharged ? ' · Overcharged' : ''}</span></div></div>)}</div> : <p className="text-xs text-white/35">No enchantments have been applied yet.</p>}</div>
+      <div className="border border-white/[0.08] bg-white/[0.02] p-5"><div className="flex items-center gap-2 mb-4"><Sparkles className="w-4 h-4 text-amber-300"/><h4 className="text-sm font-bold text-white">Active Perks</h4><span className="ml-auto text-[9px] uppercase tracking-wider text-white/30">{p?.active_perks?.length || 0} / 3</span></div>{p?.active_perks?.length ? <div className="flex flex-wrap gap-2">{p.active_perks.map(id => <span key={id} className="border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2 text-[10px] text-amber-200">{id.replaceAll('_', ' ')}</span>)}</div> : <p className="text-xs text-white/35">Unlock perk nodes in Skills, then activate up to three.</p>}</div>
+    </section>
+    <section className="border border-white/[0.08] bg-white/[0.015]"><div className="px-5 py-4 border-b border-white/[0.07] flex items-center gap-2"><Activity className="w-4 h-4 text-cyan-300"/><h4 className="text-sm font-bold text-white">Live progression history</h4><span className="ml-auto text-[9px] text-white/30 uppercase tracking-widest">Newest first</span></div><div className="divide-y divide-white/[0.06]">{state.events?.length ? state.events.map(event => <div key={event.id} className="grid md:grid-cols-[140px_1fr_auto] gap-3 px-5 py-4 items-center"><span className="text-[9px] uppercase tracking-widest text-cyan-300/65">{event.event_type?.replaceAll('_',' ')}</span><div><strong className="text-xs text-white/80">{event.summary || 'Card updated'}</strong><p className="text-[10px] text-white/30 mt-1">{formatDate(event.created_date || event.updated_date)}</p></div><ChevronRight className="w-4 h-4 text-white/15"/></div>) : <div className="p-6 text-sm text-white/35">No recorded progression events yet.</div>}</div></section>
+  </div>;
+}
 
-             {/* Branches */}
-             <div className="grid grid-cols-2 gap-x-12 gap-y-12 w-full z-10 px-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                   <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer relative">
-                      <div className="w-12 h-12 rounded-xl bg-black/60 border border-purple-500/30 flex items-center justify-center group-hover:border-purple-500 group-hover:bg-purple-500/20 transition-all shadow-lg hover:shadow-purple-500/20">
-                         <div className="w-5 h-5 rounded-full bg-purple-500/20" />
-                      </div>
-                      <Badge className="bg-black/50 text-purple-300 border-purple-500/20 text-[9px] font-mono">100 SP</Badge>
-                   </div>
-                ))}
-             </div>
-          </div>
-       </div>
+function ForgeAction({ icon: Icon, title, description, meta, children }) {
+  return <section className="border border-white/[0.08] bg-white/[0.018] p-5"><div className="flex items-start gap-3"><div className="w-9 h-9 grid place-items-center border border-white/[0.10] bg-white/[0.025] text-cyan-200"><Icon className="w-4 h-4"/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h4 className="text-sm font-bold text-white">{title}</h4>{meta && <span className="text-[8px] uppercase tracking-[.16em] text-white/30">{meta}</span>}</div><p className="text-xs text-white/40 mt-1 leading-relaxed">{description}</p></div></div><div className="mt-4">{children}</div></section>;
+}
 
-       {/* Neutral Path */}
-       <div className="flex flex-col gap-4 relative h-full">
-          <div className="text-center p-3 rounded-t-xl bg-yellow-500/10 border-t border-x border-yellow-500/20">
-             <h4 className="text-yellow-400 font-bold text-sm uppercase tracking-wider">Neutral Path</h4>
-             <p className="text-white/30 text-[10px]">Defense & Utility</p>
-          </div>
-          
-          <div className="flex-1 rounded-b-xl rounded-t-sm bg-gradient-to-b from-yellow-900/10 to-transparent border border-yellow-500/20 p-6 relative overflow-hidden flex flex-col items-center gap-12">
-             <div className="absolute top-0 bottom-0 w-px bg-yellow-500/10 z-0" />
-             
-             <div className="w-16 h-16 rounded-2xl bg-black/60 border-2 border-yellow-500/50 z-10 flex items-center justify-center relative group cursor-pointer hover:border-yellow-500 transition-colors">
-                <Shield className="w-8 h-8 text-yellow-500" />
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/80 px-2 py-1 rounded text-[10px] text-white">
-                    Iron Skin (Passive)
-                </div>
-             </div>
-
-             <div className="grid grid-cols-2 gap-x-12 gap-y-12 w-full z-10 px-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                   <div key={i} className="flex flex-col items-center gap-2 opacity-40">
-                      <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center">
-                         <div className="w-5 h-5 rounded-full bg-white/10" />
-                      </div>
-                      <Badge className="bg-black/50 text-white/30 border-white/10 text-[9px] font-mono">LOCKED</Badge>
-                   </div>
-                ))}
-             </div>
-          </div>
-       </div>
-
-       {/* AI Path */}
-       <div className="flex flex-col gap-4 relative h-full">
-          <div className="text-center p-3 rounded-t-xl bg-cyan-500/10 border-t border-x border-cyan-500/20">
-             <h4 className="text-cyan-400 font-bold text-sm uppercase tracking-wider">AI Path</h4>
-             <p className="text-white/30 text-[10px]">Adaptation & Tactics</p>
-          </div>
-          
-          <div className="flex-1 rounded-b-xl rounded-t-sm bg-gradient-to-b from-cyan-900/10 to-transparent border border-cyan-500/20 p-6 relative overflow-hidden flex flex-col items-center gap-12">
-             <div className="absolute top-0 bottom-0 w-px bg-cyan-500/10 z-0" />
-             
-             <div className="w-16 h-16 rounded-2xl bg-black/60 border-2 border-cyan-500/50 z-10 flex items-center justify-center relative group cursor-pointer hover:border-cyan-500 transition-colors">
-                <Activity className="w-8 h-8 text-cyan-500" />
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/80 px-2 py-1 rounded text-[10px] text-white">
-                    Neural Link (Passive)
-                </div>
-             </div>
-
-             <div className="grid grid-cols-2 gap-x-12 gap-y-12 w-full z-10 px-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                   <div key={i} className="flex flex-col items-center gap-2 opacity-40">
-                      <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center">
-                         <div className="w-5 h-5 rounded-full bg-white/10" />
-                      </div>
-                      <Badge className="bg-black/50 text-white/30 border-white/10 text-[9px] font-mono">LOCKED</Badge>
-                   </div>
-                ))}
-             </div>
-          </div>
-       </div>
+function ForgeView({ state, act, busy }) {
+  const p = state.progression;
+  const [enhanceStat, setEnhanceStat] = useState('attack');
+  const [selectedEnchant, setSelectedEnchant] = useState('');
+  const [selectedSacrifices, setSelectedSacrifices] = useState([]);
+  const canLevel = Number(p?.xp || 0) >= Number(p?.xp_to_next || 1) && Number(p?.level || 1) < Number(p?.max_level || 10);
+  const toggleSacrifice = id => setSelectedSacrifices(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  return <div className="space-y-6">
+    <header><span className="text-[9px] uppercase tracking-[.24em] text-orange-300/70">Blacksmith Runtime</span><h3 className="text-3xl font-black text-white mt-2">Forge</h3><p className="text-sm text-white/45 mt-2 max-w-3xl">No cosmetic buttons. Every operation below is validated on the backend against ownership, materials, level caps, compatible cards and progression prerequisites.</p></header>
+    <div className="grid xl:grid-cols-2 gap-4">
+      <ForgeAction icon={TrendingUp} title="Train & Level" description="Training consumes Skill Catalysts to build card XP. Leveling spends accumulated XP and grants skill points." meta={`Cap ${p?.max_level || 10}`}><Meter value={p?.xp || 0} max={p?.xp_to_next || 1} label="Card XP"/><div className="grid grid-cols-2 gap-2 mt-4"><button disabled={busy} onClick={() => act('train', { sessions: 1 })} className="h-10 border border-white/10 bg-white/[0.035] text-xs text-white/70 hover:text-white disabled:opacity-40">Train +1</button><button disabled={busy || !canLevel} onClick={() => act('levelUp')} className="h-10 bg-cyan-300 text-slate-950 text-xs font-black disabled:opacity-30">Level Up</button></div></ForgeAction>
+      <ForgeAction icon={Target} title="Stat Enhancement" description="Choose a stat. Costs scale as that stat is pushed higher. Resonant Edge improves each successful enhancement." meta="Precision Shards + Combat Cores"><div className="grid grid-cols-5 gap-1">{Object.keys(statLabels).map(key => <button key={key} onClick={() => setEnhanceStat(key)} className={`py-2 text-[9px] uppercase tracking-wider border ${enhanceStat === key ? 'border-cyan-300/40 bg-cyan-300/10 text-cyan-200' : 'border-white/[0.07] text-white/35'}`}>{statLabels[key]}</button>)}</div><button disabled={busy} onClick={() => act('enhance', { stat: enhanceStat })} className="mt-3 h-10 w-full bg-white/[0.06] border border-white/10 text-xs font-bold text-white hover:bg-white/[0.10] disabled:opacity-40">Enhance {statLabels[enhanceStat]}</button></ForgeAction>
+      <ForgeAction icon={Merge} title="Combine / Stage" description="Fuse duplicates or compatible same-game cards into this card. Higher stages increase power, stars, perk access and enchantment capacity." meta={`Current Stage ${p?.stage || 1}`}><div className="max-h-36 overflow-y-auto space-y-1 pr-1">{state.compatibleCards?.length ? state.compatibleCards.slice(0,12).map(c => <button key={c.id} onClick={() => toggleSacrifice(c.id)} className={`w-full flex items-center gap-3 p-2 border text-left ${selectedSacrifices.includes(c.id) ? 'border-orange-300/35 bg-orange-300/[0.07]' : 'border-white/[0.06] bg-white/[0.02]'}`}><div className="w-8 h-10 bg-black overflow-hidden">{c.card_image && <img src={c.card_image} alt="" className="w-full h-full object-cover"/>}</div><div className="min-w-0"><strong className="text-[10px] text-white block truncate">{c.card_name}</strong><span className="text-[8px] text-white/30 uppercase tracking-wider">{c.card_rarity} · {c.game_name}</span></div>{selectedSacrifices.includes(c.id) && <Check className="w-3 h-3 ml-auto text-orange-300"/>}</button>) : <p className="text-xs text-white/30">No compatible spare cards are currently available.</p>}</div><div className="grid grid-cols-2 gap-2 mt-3"><button disabled={busy || !selectedSacrifices.length} onClick={() => act('combine', { sacrificeUserCardIds: selectedSacrifices })} className="h-10 border border-orange-300/20 bg-orange-300/[0.07] text-orange-200 text-xs font-bold disabled:opacity-30">Fuse Selected</button><button disabled={busy} onClick={() => act('combine', { useWildcard: true })} className="h-10 border border-violet-300/20 bg-violet-300/[0.07] text-violet-200 text-xs font-bold disabled:opacity-30">Use Wildcard</button></div></ForgeAction>
+      <ForgeAction icon={Crown} title="Ascension" description="At the current level cap, consume Ascension Cores to break the cap by 10 levels and earn two skill points." meta={`Ascension ${p?.ascension || 0} / 5`}><div className="flex items-center gap-4"><div className="flex-1"><span className="text-[8px] uppercase tracking-wider text-white/30">Requirement</span><p className="text-xs text-white/70 mt-1">Reach level {p?.max_level || 10}</p></div><button disabled={busy || Number(p?.level || 1) < Number(p?.max_level || 10)} onClick={() => act('ascend')} className="h-10 px-5 bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-30">Ascend</button></div></ForgeAction>
+      <ForgeAction icon={WandSparkles} title="Enchant" description="Install permanent magical modifiers. Slot capacity grows as the card is staged and ascended." meta="Persistent"><div className="flex gap-2"><select value={selectedEnchant} onChange={e => setSelectedEnchant(e.target.value)} className="flex-1 h-10 bg-[#080d15] border border-white/10 px-3 text-xs text-white/75 outline-none"><option value="">Choose enchantment</option>{state.enchantments?.map(e => <option key={e.id} value={e.id}>{e.name} · {e.rarity || 'Common'}</option>)}</select><button disabled={busy || !selectedEnchant} onClick={() => act('enchant', { enchantmentId: selectedEnchant })} className="h-10 px-5 border border-violet-300/25 bg-violet-300/[0.08] text-violet-200 text-xs font-bold disabled:opacity-30">Apply</button></div></ForgeAction>
+      <ForgeAction icon={Flame} title="Over-Enchant" description="Push the latest enchantment beyond normal limits. Success falls as rank rises; failure costs materials and card stability instead of deleting the card." meta={`Stability ${p?.over_enchant_stability ?? 100}%`}><div className="flex items-center gap-4"><div className="flex-1"><span className="text-[8px] uppercase tracking-wider text-white/30">Current over-rank</span><p className="text-xl font-black text-white mt-1">+{p?.over_enchant_rank || 0}</p></div><button disabled={busy || !(p?.enchantments?.length)} onClick={() => act('overEnchant')} className="h-10 px-5 bg-gradient-to-r from-rose-400 to-orange-300 text-slate-950 text-xs font-black disabled:opacity-30">Attempt Over-Enchant</button></div></ForgeAction>
     </div>
-  </div>
-);
+    <section className="border border-white/[0.08] bg-white/[0.015] p-5"><div className="flex items-center gap-2 mb-4"><Package className="w-4 h-4 text-cyan-300"/><h4 className="text-sm font-bold text-white">Forge Inventory</h4></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.06]">{state.materials?.length ? state.materials.filter(m => Number(m.quantity) > 0).slice(0,12).map(m => <div key={m.id} className="bg-[#090e17] p-3"><span className="text-[8px] uppercase tracking-wider text-white/30">{m.material_type?.replaceAll('_',' ') || m.definition?.name || 'Material'}</span><strong className="block text-white mt-1">× {Number(m.quantity || 0).toLocaleString()}</strong></div>) : <div className="col-span-full bg-[#090e17] p-5 text-xs text-white/30">No forge materials are in this account yet. Achievement rewards and gameplay drops can populate these stacks.</div>}</div></section>
+  </div>;
+}
+
+function SkillsView({ state, act, busy }) {
+  const p = state.progression;
+  const nodesByLane = useMemo(() => state.skillTree?.reduce((acc, node) => { (acc[node.lane] ||= []).push(node); return acc; }, {}) || {}, [state.skillTree]);
+  const unlocked = new Set(p?.unlocked_skill_nodes || []);
+  const active = new Set(p?.active_perks || []);
+  const lanes = Object.entries(nodesByLane);
+  return <div className="space-y-6">
+    <header className="flex flex-wrap items-end gap-4"><div><span className="text-[9px] uppercase tracking-[.24em] text-violet-300/70">Card Mastery Network</span><h3 className="text-3xl font-black text-white mt-2">Skills & Perks</h3><p className="text-sm text-white/45 mt-2 max-w-3xl">The skill tree belongs to this exact card. Levels award points, stages open deeper branches, and perk nodes can be equipped to the card’s three active perk slots.</p></div><div className="ml-auto border border-violet-300/15 bg-violet-300/[0.05] px-4 py-3"><span className="text-[8px] uppercase tracking-widest text-white/30">Available SP</span><strong className="block text-2xl text-violet-200">{p?.skill_points || 0}</strong></div></header>
+    <div className="grid xl:grid-cols-3 gap-4">{lanes.map(([lane, nodes]) => <section key={lane} className="border border-white/[0.08] bg-white/[0.015] p-5"><div className="flex items-center gap-2 mb-5"><span className="w-2 h-2 rounded-full bg-violet-300"/><h4 className="text-xs uppercase tracking-[.18em] text-white/70">{lane} Path</h4></div><div className="space-y-3">{nodes.map((node, idx) => { const isUnlocked = unlocked.has(node.id); const prereqOK = !node.prerequisite || unlocked.has(node.prerequisite); const eligible = Number(p?.level || 1) >= node.minLevel && Number(p?.stage || 1) >= node.minStage && prereqOK; const isActive = active.has(node.id); return <div key={node.id} className={`relative border p-4 ${isUnlocked ? 'border-violet-300/25 bg-violet-300/[0.055]' : 'border-white/[0.06] bg-black/10'}`}>{idx > 0 && <span className="absolute left-6 -top-3 h-3 w-px bg-white/10"/>}<div className="flex items-start gap-3"><div className={`w-9 h-9 grid place-items-center border ${isUnlocked ? 'border-violet-300/30 text-violet-200' : 'border-white/10 text-white/25'}`}>{isUnlocked ? <Check className="w-4 h-4"/> : eligible ? <Zap className="w-4 h-4"/> : <Lock className="w-4 h-4"/>}</div><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><strong className="text-xs text-white">{node.name}</strong>{node.perk && <span className="text-[7px] uppercase tracking-wider border border-amber-300/20 text-amber-200 px-1.5 py-0.5">Perk</span>}</div><p className="text-[10px] text-white/35 mt-1 leading-relaxed">{node.effect}</p><div className="flex gap-3 mt-2 text-[8px] uppercase tracking-wider text-white/25"><span>Lv {node.minLevel}</span><span>Stage {node.minStage}</span><span>{node.cost} SP</span></div></div></div><div className="mt-3">{!isUnlocked ? <button disabled={busy || !eligible || Number(p?.skill_points || 0) < node.cost} onClick={() => act('unlockSkill', { nodeId: node.id })} className="w-full h-8 border border-violet-300/20 bg-violet-300/[0.06] text-[9px] uppercase tracking-widest text-violet-200 disabled:opacity-25">Unlock Node</button> : node.perk ? <button disabled={busy} onClick={() => act('togglePerk', { nodeId: node.id })} className={`w-full h-8 border text-[9px] uppercase tracking-widest ${isActive ? 'border-amber-300/30 bg-amber-300/[0.08] text-amber-200' : 'border-white/10 bg-white/[0.025] text-white/50'}`}>{isActive ? 'Deactivate Perk' : 'Activate Perk'}</button> : <div className="h-8 grid place-items-center text-[8px] uppercase tracking-widest text-emerald-300/60">Unlocked</div>}</div></div>})}</div></section>)}</div>
+    <section className="border border-white/[0.08] bg-white/[0.015] p-5"><div className="flex items-center gap-2"><Shield className="w-4 h-4 text-amber-300"/><h4 className="text-sm font-bold text-white">Active loadout</h4><span className="text-[9px] uppercase tracking-widest text-white/30 ml-auto">3 perk slots</span></div><div className="grid sm:grid-cols-3 gap-2 mt-4">{Array.from({length:3}).map((_,i) => { const id = p?.active_perks?.[i]; const node = state.skillTree?.find(n => n.id === id); return <div key={i} className="min-h-20 border border-white/[0.07] bg-black/10 p-3 flex items-center gap-3"><span className="text-[10px] font-mono text-white/20">0{i+1}</span>{node ? <div><strong className="text-xs text-amber-200 block">{node.name}</strong><span className="text-[9px] text-white/30">{node.effect}</span></div> : <span className="text-[10px] uppercase tracking-widest text-white/20">Empty perk slot</span>}</div>})}</div></section>
+  </div>;
+}
 
 export default function MysteryCardDetail({ card, onBack }) {
-  const [viewMode, setViewMode] = useState('overview'); // overview, blacksmith, skilltree
+  const [tab, setTab] = useState('record');
+  const [state, setState] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
 
-  return (
-    <div className="w-full flex flex-col gap-4">
-      {/* Top Header Bar */}
-      <div className="flex items-center justify-between shrink-0 bg-black/20 p-2 rounded-xl border border-white/5">
-         <div className="flex items-center gap-4 pl-2">
-             <Button variant="ghost" size="sm" onClick={onBack} className="text-white/50 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-full">
-                <ArrowLeft className="w-4 h-4" />
-             </Button>
-             
-             <div className="h-6 w-px bg-white/10" />
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await invoke('getState', card);
+      setState(response?.data || response);
+      setMessage(null);
+    } catch (error) {
+      setMessage({ type: 'error', text: error?.message || 'Card progression could not be loaded.' });
+    } finally { setLoading(false); }
+  }, [card]);
 
-             {/* Total Power Stat */}
-             <div className="flex items-center gap-2">
-                <span className="text-white/40 text-xs font-bold uppercase tracking-wider">Total Power</span>
-                <div className="text-2xl font-black text-white tracking-tight flex items-center">
-                   <Zap className="w-5 h-5 text-yellow-400 mr-1 fill-yellow-400" />
-                   {MOCK_CARD_STATS.power}
-                </div>
-                <Badge className="bg-blue-600 text-white border border-blue-400 shadow-sm text-[10px] h-5 ml-2">
-                   Rare
-                </Badge>
-             </div>
-         </div>
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const unsubscribe = base44.entities.CardProgression?.subscribe?.((event) => {
+      if (event?.data?.user_card_id && event.data.user_card_id === state?.userCard?.id) load();
+    });
+    return () => unsubscribe?.();
+  }, [load, state?.userCard?.id]);
 
-         {/* Navigation Tabs */}
-         <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/5">
-            <button
-               onClick={() => setViewMode('overview')}
-               className={`py-1.5 px-4 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${
-                  viewMode === 'overview' 
-                  ? 'bg-slate-700 text-white shadow-md' 
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
-               }`}
-            >
-               <Info className="w-3.5 h-3.5" /> Record
-            </button>
-            <button
-               onClick={() => setViewMode('blacksmith')}
-               className={`py-1.5 px-4 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${
-                  viewMode === 'blacksmith' 
-                  ? 'bg-orange-600 text-white shadow-md' 
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
-               }`}
-            >
-               <Hammer className="w-3.5 h-3.5" /> Forge
-            </button>
-            <button
-               onClick={() => setViewMode('skilltree')}
-               className={`py-1.5 px-4 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${
-                  viewMode === 'skilltree' 
-                  ? 'bg-purple-600 text-white shadow-md' 
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
-               }`}
-            >
-               <Layers className="w-3.5 h-3.5" /> Skills
-            </button>
-         </div>
-      </div>
+  const act = async (action, payload = {}) => {
+    setBusy(true); setMessage(null);
+    try {
+      const response = await invoke(action, { ...card, userCardId: state?.userCard?.id || card?.userCardId }, payload);
+      const next = response?.data || response;
+      setState(next);
+      const latest = next?.events?.[0]?.summary;
+      setMessage({ type: 'success', text: latest || 'Card updated.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error?.message || 'That card action failed.' });
+    } finally { setBusy(false); }
+  };
 
-      {/* Main Content Area (Full Width/Height) */}
-      <div className="flex-1 relative overflow-y-auto custom-scrollbar max-h-[calc(100vh-140px)]">
-          <AnimatePresence mode="wait">
-            {viewMode === 'overview' && (
-              <motion.div 
-                key="overview"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="min-h-full"
-              >
-                <CardRecordView card={card} />
-              </motion.div>
-            )}
-
-            {viewMode === 'blacksmith' && (
-              <motion.div 
-                key="blacksmith"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="h-1/2 overflow-y-auto"
-              >
-                <BlacksmithView card={card} />
-              </motion.div>
-            )}
-
-            {viewMode === 'skilltree' && (
-              <motion.div 
-                key="skilltree"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="h-1/2 overflow-y-auto"
-              >
-                <SkillTreeView card={card} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-      </div>
+  return <div className="h-full min-h-[620px] bg-[#05080e] text-slate-200 overflow-hidden border border-white/[0.07] relative">
+    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_0%,rgba(34,211,238,.08),transparent_30%),radial-gradient(circle_at_90%_15%,rgba(139,92,246,.07),transparent_28%)]" />
+    <div className="relative h-full flex flex-col">
+      <header className="shrink-0 border-b border-white/[0.07] bg-black/20 backdrop-blur-xl px-5 py-3 flex items-center gap-4"><button onClick={onBack} className="w-9 h-9 grid place-items-center border border-white/10 text-white/45 hover:text-white"><ArrowLeft className="w-4 h-4"/></button><div className="min-w-0"><p className="text-[8px] uppercase tracking-[.22em] text-white/30">Achievement Card Runtime</p><h1 className="text-sm font-bold text-white truncate">{card?.title || card?.card_name || 'Card Detail'}</h1></div><div className="ml-auto flex items-center gap-1">{tabs.map(({id,label,icon:Icon,hint}) => <button key={id} title={hint} onClick={() => setTab(id)} className={`h-9 px-3 flex items-center gap-2 border text-[9px] uppercase tracking-[.14em] transition-colors ${tab === id ? 'border-cyan-300/25 bg-cyan-300/[0.07] text-cyan-200' : 'border-transparent text-white/35 hover:text-white/70'}`}><Icon className="w-3.5 h-3.5"/>{label}</button>)}<button onClick={load} disabled={loading || busy} aria-label="Refresh live card state" className="w-9 h-9 grid place-items-center text-white/30 hover:text-white disabled:opacity-30"><RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`}/></button></div></header>
+      <AnimatePresence>{message && <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} className={`shrink-0 px-5 py-2 text-[10px] border-b ${message.type === 'error' ? 'border-rose-400/15 bg-rose-400/[0.05] text-rose-200' : 'border-emerald-400/15 bg-emerald-400/[0.05] text-emerald-200'}`}>{message.text}</motion.div>}</AnimatePresence>
+      {loading && !state ? <div className="flex-1 grid place-items-center"><div className="flex items-center gap-3 text-white/35 text-xs"><RefreshCcw className="w-4 h-4 animate-spin"/>Loading live card state…</div></div> : state ? <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar"><div className="grid xl:grid-cols-[230px_minmax(0,1fr)] gap-7 p-6 max-w-[1500px] mx-auto"><CardHero card={card} progression={state.progression} userCard={state.userCard}/><main className="min-w-0">{tab === 'record' ? <RecordView card={card} state={state}/> : tab === 'forge' ? <ForgeView state={state} act={act} busy={busy}/> : <SkillsView state={state} act={act} busy={busy}/>}</main></div></div> : <div className="flex-1 grid place-items-center text-sm text-white/35">This card does not have a live progression state yet.</div>}
     </div>
-  );
+  </div>;
 }
