@@ -102,9 +102,11 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
     }
     if (foundEnemy) {
       const isWorldBoss = !!foundEnemy.isBoss;
+      const targetKind = isWorldBoss ? 'boss' : (foundEnemy.color !== undefined ? 'rogue' : 'enemy');
       setTarget({
         id: foundEnemy.id,
         name: foundEnemy.name || foundEnemy.bossName || (foundEnemy.tier ? `${foundEnemy.tier.charAt(0).toUpperCase() + foundEnemy.tier.slice(1)} Enemy` : 'Enemy'),
+        kind: targetKind,
         hp: foundEnemy.hp,
         maxHp: foundEnemy.maxHp,
         level: foundEnemy.level,
@@ -115,7 +117,7 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
         id: foundEnemy.id,
         group: foundEnemy.group,
         name: foundEnemy.name || foundEnemy.bossName || 'Enemy',
-        kind: isWorldBoss ? 'boss' : (foundEnemy.color !== undefined ? 'rogue' : 'enemy'),
+        kind: targetKind,
         aliveRef: () => !!foundEnemy.alive && !foundEnemy.dying && foundEnemy.group?.visible !== false,
       };
     }
