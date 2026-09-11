@@ -1,0 +1,169 @@
+{
+  "name": "CardProgression",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this progression record"
+    },
+    "user_card_id": {
+      "type": "string",
+      "description": "Owned UserCard this progression belongs to"
+    },
+    "trading_card_id": {
+      "type": "string"
+    },
+    "achievement_id": {
+      "type": "string"
+    },
+    "card_name": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_name": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "xp_to_next": {
+      "type": "number",
+      "default": 120
+    },
+    "stage": {
+      "type": "number",
+      "default": 1,
+      "description": "Combination stage / duplicate fusion tier"
+    },
+    "stars": {
+      "type": "number",
+      "default": 1
+    },
+    "ascension": {
+      "type": "number",
+      "default": 0
+    },
+    "max_level": {
+      "type": "number",
+      "default": 10
+    },
+    "skill_points": {
+      "type": "number",
+      "default": 1
+    },
+    "unlocked_skill_nodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "active_perks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "enchantments": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "element": {
+            "type": "string"
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "modifiers": {
+            "type": "object"
+          },
+          "overcharged": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "over_enchant_rank": {
+      "type": "number",
+      "default": 0
+    },
+    "over_enchant_stability": {
+      "type": "number",
+      "default": 100
+    },
+    "enhanced_stats": {
+      "type": "object",
+      "default": {}
+    },
+    "base_stats": {
+      "type": "object",
+      "default": {}
+    },
+    "power_score": {
+      "type": "number",
+      "default": 0
+    },
+    "last_action": {
+      "type": "string"
+    },
+    "last_action_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "user_id",
+    "user_card_id",
+    "card_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
