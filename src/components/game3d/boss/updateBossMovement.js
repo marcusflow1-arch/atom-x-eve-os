@@ -15,7 +15,19 @@ function beginBossDeath(boss) {
   boss.deathTimer = 0;
   boss.state = 'death';
   boss.target = null;
+  boss.aiTarget = null;
   boss.speed = 0;
+  boss.aiSpeed = 0;
+
+  // Combat ends the instant death begins, not after the death animation. This
+  // stops tornado, aerial fields, telegraphs, delayed hits, and other boss VFX
+  // before Ironmaw's body finishes falling/fading.
+  if (typeof window !== 'undefined') {
+    try { window.__gw3dBossTornadoLiftBeam?.cancel?.(); } catch { /* non-fatal */ }
+    window.dispatchEvent(new CustomEvent('bossCombatHalt', {
+      detail: { bossId: boss.id, bossName: boss.name },
+    }));
+  }
 
   boss.walkAction?.fadeOut?.(0.12);
   boss.idleAction?.fadeOut?.(0.12);
@@ -51,14 +63,11 @@ function updateBossDeath(delta, boss) {
   const deathDuration = Math.max(0.8, Number(boss.deathDuration) || 2.4);
   const fadeDuration = 0.9;
 
-  // If the death animation failed to load, use a small physical collapse as a
-  // fallback. Normally the real mutant dying clip is playing here instead.
   if (!boss.deathAction && boss.deathTimer <= deathDuration) {
     const t = Math.min(1, boss.deathTimer / deathDuration);
     boss.group.rotation.z = THREE.MathUtils.lerp(0, -Math.PI * 0.46, t);
   }
 
-  // Let the death animation finish before the body starts disappearing.
   if (boss.deathTimer > deathDuration) {
     const fadeT = Math.min(1, (boss.deathTimer - deathDuration) / fadeDuration);
     const opacity = 1 - fadeT;
@@ -99,10 +108,8 @@ function updateBossDeath(delta, boss) {
 
 export function updateBossMovement(delta, bossEntities, model, mapReady, sampleGroundY) {
   bossEntities.forEach((b) => {
-    // The mixer must continue ticking while dying so the death clip can finish.
     if (b.mixer) b.mixer.update(delta);
 
-    // Any combat path that drives HP to zero gets the same defeat lifecycle.
     if (!b.defeated && !b.dying && (Number(b.hp) <= 0 || b.alive === false)) {
       beginBossDeath(b);
     }
@@ -121,7 +128,6 @@ export function updateBossMovement(delta, bossEntities, model, mapReady, sampleG
     let moving = false;
 
     if (dist > 14) {
-      // Chase the player
       moving = true;
       b.target = null;
       const nx = dx / dist, nz = dz / dist;
@@ -129,7 +135,6 @@ export function updateBossMovement(delta, bossEntities, model, mapReady, sampleG
       b.group.position.z += nz * spd * delta;
       b.group.rotation.y = Math.atan2(nx, nz);
     } else if (dist > 10) {
-      // Wander toward a random nearby point
       if (!b.target) {
         const a = Math.random() * Math.PI * 2;
         b.target = { x: b.group.position.x + Math.cos(a) * 4, z: b.group.position.z + Math.sin(a) * 4 };
@@ -147,18 +152,15 @@ export function updateBossMovement(delta, bossEntities, model, mapReady, sampleG
         b.target = null;
       }
     } else {
-      // Close — face the player
       b.target = null;
       b.group.rotation.y = Math.atan2(dx, dz);
     }
 
-    // Glue boss feet to the terrain
     if (mapReady) {
       const gy = sampleGroundY(b.group.position.x, b.group.position.z);
       if (gy !== null) b.group.position.y = gy;
     }
 
-    // Walk/idle animation swap
     if (b.walkAction && b.idleAction) {
       if (moving && !b.walkAction.isRunning()) {
         b.idleAction.fadeOut(0.2);
@@ -171,11 +173,8 @@ export function updateBossMovement(delta, bossEntities, model, mapReady, sampleG
   });
 }
 
-// projectBossHead — projects a point above the boss's head to screen space and
-// returns the UI payload for the floating BossHeadHPTank, or null when off-screen.
 export function projectBossHead(boss, camera, w, h) {
   if (!boss || !boss.alive || boss.dying || boss.defeated || !boss.group?.visible) return null;
-  // Boss model is ~12 units tall; place the bar above its head.
   const v = new THREE.Vector3(boss.group.position.x, boss.group.position.y + 14, boss.group.position.z);
   v.project(camera);
   if (!(v.z > -1 && v.z < 1 && Math.abs(v.x) < 1.3 && Math.abs(v.y) < 1.3)) return null;
