@@ -1,27 +1,16 @@
 // ─── Shop Effects Bridge ──────────────────────────────────────────────
-// Listens for `useShopItem` events and applies the real gameplay effect:
-//   - heal           → setHP via playerHUDStore
-//   - damage_buff    → grants Focus stacks (consumed by combat hits)
-//   - crit_buff      → grants Crit stacks (consumed by combat hits)
-//   - gold_grant     → addGold
-//   - add_material   → drop into lootInventory misc bucket
-//   - companion_stat → applies to companion progression (permanent)
-//   - companion_heal → fully heal companion (via custom event)
-//
-// Combat code reads the buff stacks via consumeShopDamageBuff() / consumeShopCritBuff()
-// — these are imported and called from GameWorld3D's existing damage pipeline.
+// Listens for `useShopItem` events and applies the real gameplay effect.
 
 import React, { useEffect } from 'react';
 import { setHP, getPlayerHUD } from '../playerHUDStore';
 import { addGold } from './shopStore';
 import { addLootToInventory } from '../lootStore';
+import { grantElixir, consumeElixir } from '../progression/elixirStore';
 import toast from 'react-hot-toast';
 
-// In-memory transient buff stacks granted by shop consumables.
 let _damageBuff = { stacks: 0, mult: 1.0 };
 let _critBuff   = { stacks: 0, pct: 0 };
 
-// Called by combat code on every basic-attack hit.
 export function consumeShopDamageBuff() {
   if (_damageBuff.stacks <= 0) return 1.0;
   const m = _damageBuff.mult;
@@ -59,6 +48,20 @@ export default function ShopEffectsBridge() {
         case 'crit_buff': {
           _critBuff = { stacks: eff.stacks, pct: eff.critPctPerStack };
           toast.success(`${item.name}: +${eff.critPctPerStack}% crit × ${eff.stacks} hits`, { icon: '✨' });
+          break;
+        }
+        case 'permanent_elixir': {
+          const type = eff.elixirType;
+          if (!grantElixir(type, 1)) {
+            toast.error('Unable to store this elixir.');
+            break;
+          }
+          const result = consumeElixir(type, 1);
+          if (result.ok) {
+            toast.success(`${item.name}: permanent bonus applied (${result.total}/400)`, { icon: item.icon || '🧬' });
+          } else {
+            toast.error(result.reason || 'Elixir is already maxed.');
+          }
           break;
         }
         case 'gold_grant': {
