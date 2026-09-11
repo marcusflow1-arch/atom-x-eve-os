@@ -4,17 +4,19 @@
 //
 // State shape:
 //   {
-//     activeSlots:  Array<skill_id|null>   length 8   (keys 1-8)
+//     activeSlots:  Array<skill_id|null>   length 10  (keys 1-9, 0 = slot 10)
 //     passivePanel: Array<skill_id|null>   length 6
-//     cooldowns:    Array<number>          length 8 (active slots only)
+//     cooldowns:    Array<number>          length 10 (active slots only)
 //   }
 
 import { canEquipToSlot } from './slotValidator';
 import { SLOT_KIND } from './skillTypes';
 import { getSkillById } from './skillRegistry';
 
-const ACTIVE_SLOTS = 8;
+export const ACTIVE_SLOTS = 10;
 const PASSIVE_SLOTS = 6;
+// Keep the same storage key so existing 8-slot saves migrate naturally: the
+// old entries are copied into slots 1-8 and slots 9-10 initialize empty.
 const LS_KEY = 'game_loadout_v4';
 
 const listeners = new Set();
@@ -26,7 +28,7 @@ function loadFromStorage() {
     const parsed = JSON.parse(raw);
     if (!parsed?.activeSlots || !parsed?.passivePanel) return null;
     return {
-      activeSlots:  normalize(parsed.activeSlots, ACTIVE_SLOTS),
+      activeSlots: normalize(parsed.activeSlots, ACTIVE_SLOTS),
       passivePanel: normalize(parsed.passivePanel, PASSIVE_SLOTS),
     };
   } catch { return null; }
@@ -43,17 +45,17 @@ function normalize(arr, len) {
   return out;
 }
 
-function saveToStorage(state) {
+function saveToStorage(current) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      activeSlots:  state.activeSlots,
-      passivePanel: state.passivePanel,
+      activeSlots: current.activeSlots,
+      passivePanel: current.passivePanel,
     }));
   } catch {}
 }
 
 const initial = loadFromStorage() || {
-  activeSlots:  new Array(ACTIVE_SLOTS).fill(null),
+  activeSlots: new Array(ACTIVE_SLOTS).fill(null),
   passivePanel: new Array(PASSIVE_SLOTS).fill(null),
 };
 
@@ -71,10 +73,7 @@ export function subscribeLoadout(fn) {
   return () => listeners.delete(fn);
 }
 
-/**
- * Place a skill in an active slot (0..7).
- * Validates against PASSIVE rule. Returns { ok, reason? }.
- */
+/** Place a skill in an active slot (0..9). */
 export function equipActive(slotIndex, skill_id) {
   if (slotIndex < 0 || slotIndex >= ACTIVE_SLOTS) return { ok: false, reason: 'bad_slot' };
   if (skill_id) {
@@ -93,7 +92,6 @@ export function unequipActive(slotIndex) {
   return equipActive(slotIndex, null);
 }
 
-/** Place a passive in the passive panel (0..PASSIVE_SLOTS-1). */
 export function equipPassive(slotIndex, skill_id) {
   if (slotIndex < 0 || slotIndex >= PASSIVE_SLOTS) return { ok: false, reason: 'bad_slot' };
   if (skill_id) {
@@ -112,13 +110,11 @@ export function unequipPassive(slotIndex) {
   return equipPassive(slotIndex, null);
 }
 
-/** Resolve active slot index → full skill object (or null). */
 export function getActiveSkillAt(slotIndex) {
   const id = state.activeSlots[slotIndex];
   return id ? getSkillById(id) : null;
 }
 
-/** Start cooldown on a slot after a successful cast. */
 export function startCooldown(slotIndex) {
   const skill = getActiveSkillAt(slotIndex);
   if (!skill) return;
@@ -128,7 +124,6 @@ export function startCooldown(slotIndex) {
   emit();
 }
 
-/** Tick cooldowns down. Call every frame with delta seconds. */
 export function tickCooldowns(delta) {
   let changed = false;
   const next = state.cooldowns.map((cd) => {
