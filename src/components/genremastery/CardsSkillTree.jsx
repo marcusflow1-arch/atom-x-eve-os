@@ -1,0 +1,9 @@
+import { TrendingUp, Clock, Trophy, Users } from 'lucide-react';
+import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
+import MasteryCardsRow from './skilltree/MasteryCardsRow';
+import ProgressionTrack from './skilltree/ProgressionTrack';
+
+export default function CardsSkillTree({ genre }) {
+  if (!genre) return null;
+  return <section className="cc-skill" aria-label="Genre skill tree"><header className="cc-view-heading"><div><p className="cc-eyebrow">Genre mastery · Season 0</p><h1>{genre.name} Skill Tree</h1><p>Shape your play style. Follow a path. Unlock your potential.</p><div className="cc-skill-level"><span>{genre.rank}</span><span>Level {genre.level} / {genre.maxLevel}</span><span>{genre.skillPoints} skill points</span></div><div className="cc-skill-progress" role="progressbar" aria-label={genre.xpType} aria-valuemin={0} aria-valuemax={100} aria-valuenow={genre.xp}><div style={{ width: `${genre.xp}%` }} /></div></div><div className="cc-total"><strong>{genre.xp}<small> / 100</small></strong><span>{genre.xpType}</span></div></header><div className="cc-scroll"><div className="cc-skill-tree"><SkillTreeSystem genre={genre} /></div><div className="cc-section-heading"><div><p className="cc-eyebrow">Rewards along the way</p><h2>Mastery cards</h2></div></div><div className="cc-mastery-row"><MasteryCardsRow genre={genre} /></div><div className="cc-progression"><ProgressionTrack genre={genre} /></div><div className="cc-skill-stats">{[{ icon: TrendingUp, label: 'Genre rank', value: genre.rank }, { icon: Clock, label: 'Time played', value: '127h' }, { icon: Trophy, label: 'Unlocks', value: '12/20' }, { icon: Users, label: 'Skill points', value: genre.skillPoints }].map(({ icon: Icon, label, value }) => <div key={label}><span><Icon size={13} />{label}</span><strong>{value}</strong></div>)}</div></div></section>;
+}

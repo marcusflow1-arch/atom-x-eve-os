@@ -1,213 +1,43 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Gamepad2 } from 'lucide-react';
-import AchievementCardGrid from './achievements/AchievementCardGrid';
-import { Badge } from '@/components/ui/badge';
-import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/components/auth/AuthContext';
-import ShinyCard from '@/components/shared/ShinyCard';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Search, Trophy } from 'lucide-react';
 import CardEnhancementOverlay from '@/components/profile/CardEnhancementOverlay';
-import SkillTreeOverlay from '@/components/achievements/SkillTreeOverlay';
-import BlacksmithOverlay from '@/components/achievements/BlacksmithOverlay';
-import AchievementDetailOverlay from '@/components/achievements/AchievementDetailOverlay';
-import { allMockGames } from '@/components/store/mockData';
+import CollectibleCard from './CollectibleCard';
 
-export default function AchievementsContent({ genre, selectedGame, onSelectGame, games }) {
-  const { user, isAuthenticated, updateUserData } = useAuth();
-  const [localAchievements, setLocalAchievements] = useState({});
-  const [userCards, setUserCards] = useState([]);
+export default function AchievementsContent({ genre, selectedGame, cards = [], isLoading, isError, onRetry }) {
+  const [search, setSearch] = useState('');
+  const [ownership, setOwnership] = useState('all');
+  const [rarity, setRarity] = useState('all');
   const [selectedCard, setSelectedCard] = useState(null);
-  const [selectedAchievement, setSelectedAchievement] = useState(null);
-  const [trackedAchievements, setTrackedAchievements] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch achievements
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      setIsLoading(true);
-      try {
-        const achievementsResponse = await base44.entities.Achievement.list();
-        const achievements = achievementsResponse.data || achievementsResponse;
-        const byGame = {};
-        achievements.forEach(ach => {
-          if (!byGame[ach.game]) byGame[ach.game] = [];
-          byGame[ach.game].push(ach);
-        });
-        setLocalAchievements(byGame);
-        setTrackedAchievements(user?.tracked_achievements || []);
-      } catch (e) {
-        console.error('Failed to fetch achievements:', e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAchievements();
-  }, [user]);
-
-  // Fetch user cards when game changes
-  useEffect(() => {
-    const fetchUserCards = async () => {
-      if (!user || !selectedGame) return;
-      try {
-        const cards = await base44.entities.UserCard.filter({ user_id: user.id, game_name: selectedGame.title });
-        setUserCards(cards);
-      } catch (e) { console.error('Failed to fetch user cards:', e); }
-    };
-    fetchUserCards();
-  }, [user, selectedGame]);
-
-  // Trading cards for selected game
-  const tradingCards = useMemo(() => {
-    if (!selectedGame || !localAchievements[selectedGame.title]) return [];
-    const gameAchs = localAchievements[selectedGame.title] || [];
-    const cards = [];
-    gameAchs.forEach(ach => {
-      if (ach.reward) {
-        const userCard = userCards.find(c => c.card_name === ach.reward.name);
-        const isUnlocked = user?.unlocked_achievements?.includes(ach.id);
-        cards.push({
-          id: ach.id,
-          title: ach.reward.name || ach.title,
-          series: selectedGame.title,
-          rarity: ach.rarity,
-          image: selectedGame.cover_image || selectedGame.cover,
-          description: ach.reward.description || ach.description,
-          stats: ach.reward.stats || {},
-          group: (() => {
-            const t = (ach.reward.type || '').toLowerCase();
-            if (t.includes('companion') || t.includes('pet') || t.includes('mount')) return 'companion';
-            if (t.includes('equip') || t.includes('material') || t.includes('gear') || t.includes('weapon') || t.includes('armor')) return 'equipment';
-            if (t.includes('abilit') || t.includes('skill')) return 'skill';
-            return 'achievement';
-          })(),
-          isPurchased: userCard?.acquisition_method === 'purchased',
-          isUnlocked,
-        });
-      }
-    });
-    return cards;
-  }, [selectedGame, localAchievements, userCards, user]);
-
-  // Fallback cards
-  const generateCardsForGame = useCallback((game) => {
-    if (!game) return [];
-    return Array.from({ length: 12 }, (_, i) => ({
-      id: `card-${game.id}-${i}`,
-      title: `${game.title} Card ${i + 1}`,
-      series: game.title,
-      rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
-      image: game.cover_image || game.cover,
-      description: `A collectible trading card from ${game.title}.`,
-      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) },
-      group: ['achievement', 'skill', 'equipment', 'companion'][i % 4],
-    }));
-  }, []);
-
-  const displayCards = useMemo(() => {
-    if (!selectedGame) return [];
-    return tradingCards.length > 0 ? tradingCards : generateCardsForGame(selectedGame);
-  }, [selectedGame, tradingCards, generateCardsForGame]);
-
-  const handleTrackAchievement = useCallback(async (achievement) => {
-    if (!isAuthenticated || !user) return;
-    const isTracked = trackedAchievements.includes(achievement.id);
-    const newTracked = isTracked ? trackedAchievements.filter(id => id !== achievement.id) : [...trackedAchievements, achievement.id];
-    setTrackedAchievements(newTracked);
-    await updateUserData({ tracked_achievements: newTracked });
-  }, [isAuthenticated, user, updateUserData, trackedAchievements]);
-
+  const [visibleCount, setVisibleCount] = useState(48);
+  const opener = useRef(null);
+  const inspector = useRef(null);
+  const filtered = useMemo(() => cards.filter((card) => `${card.title} ${card.series} ${card.group}`.toLowerCase().includes(search.toLowerCase()) && (rarity === 'all' || card.rarity === rarity) && (ownership === 'all' || (ownership === 'owned' ? card.isOwned : !card.isOwned))), [cards, search, rarity, ownership]);
+  const close = () => { setSelectedCard(null); requestAnimationFrame(() => opener.current?.focus()); };
+  useEffect(() => { setSelectedCard(null); setVisibleCount(48); }, [selectedGame?.id, genre.id]);
+  useEffect(() => { setVisibleCount(48); }, [search, rarity, ownership]);
   useEffect(() => {
     if (!selectedCard) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        setSelectedCard(null);
+    const element = inspector.current;
+    const buttons = () => [...element.querySelectorAll('button, a[href], input, select, [tabindex="0"]')].filter((item) => !item.disabled);
+    buttons()[0]?.focus();
+    const keydown = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); }
+      if (event.key === 'Tab') {
+        const items = buttons(); const first = items[0]; const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keydown', keydown, true);
+    return () => window.removeEventListener('keydown', keydown, true);
   }, [selectedCard]);
-
-  if (!selectedGame) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center text-center px-8">
-        <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${genre.color} opacity-20 flex items-center justify-center mb-6`}>
-          <Trophy className="w-10 h-10 text-white/40" />
-        </div>
-        <h2 className="text-xl font-bold text-white/30 mb-2">Select a Game</h2>
-        <p className="text-white/20 text-sm max-w-sm">
-          Choose a game from the {genre.name} library to view its achievement cards.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative h-full flex flex-col overflow-hidden">
-      {!selectedCard && (
-        <>
-          {/* Game Header */}
-          <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
-            <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-              {selectedGame.cover_image ? (
-                <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                  <Gamepad2 className="w-5 h-5 text-white/25" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
-              <div className="flex items-center gap-2 mt-0.5">
-                <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre || genre.name}</Badge>
-                <span className="text-white/30 text-xs">{displayCards.length} cards</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Grouped vertical layout */}
-          <div className="relative flex-1 overflow-hidden">
-            <div className="flex-1 h-full overflow-y-auto p-5 w-full">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
-          </div>
-        ) : displayCards.length > 0 ? (
-          <AchievementCardGrid cards={displayCards} onSelect={setSelectedCard} />
-        ) : (
-          <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-            <Trophy className="w-12 h-12 mb-3 opacity-20" />
-            <p className="text-sm font-medium">No achievements yet</p>
-            <p className="text-xs text-white/20 mt-1">Play to earn records, forge items and skills</p>
-          </div>
-        )}
-            </div>
-          </div>
-        </>
-      )}
-
-      <AnimatePresence>
-        {selectedCard && (
-          <CardEnhancementOverlay card={selectedCard} onClose={() => setSelectedCard(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Overlays */}
-
-      <AnimatePresence>
-        {selectedAchievement && (
-          <AchievementDetailOverlay
-            achievement={selectedAchievement}
-            onClose={() => setSelectedAchievement(null)}
-            onTrack={handleTrackAchievement}
-            isTracked={trackedAchievements.includes(selectedAchievement.id)}
-          />
-        )}
-      </AnimatePresence>
+  return <section className="cc-view cc-collection" aria-label="Achievement collection">
+    <header className="cc-view-heading"><div><p className="cc-eyebrow">Your achievement collection</p><h1>{selectedGame?.title || `${genre.name} collection`}</h1><p>Records of your progress. Rewards worth keeping.</p></div><div className="cc-total"><strong>{cards.filter((card) => card.isOwned).length}<small> / {cards.length}</small></strong><span>Collected</span></div></header>
+    <div className="cc-toolbar"><label className="cc-search"><Search size={15} /><input aria-label="Search achievement cards" placeholder="Find a card, skill, or item" value={search} onChange={(event) => setSearch(event.target.value)} /></label><div className="cc-segments" aria-label="Collection filters">{[['all', 'All cards'], ['owned', 'Collected'], ['locked', 'To unlock']].map(([id, label]) => <button key={id} aria-pressed={ownership === id} onClick={() => setOwnership(id)}>{label}</button>)}</div><label className="cc-select"><span className="sr-only">Card rarity</span><select aria-label="Card rarity" value={rarity} onChange={(event) => setRarity(event.target.value)}><option value="all">All rarities</option>{['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Unique'].map((tier) => <option key={tier}>{tier}</option>)}</select></label></div>
+    <div className="cc-scroll">
+      {isError && <div className="cc-notice" role="alert">Some cards could not be loaded. <button onClick={onRetry}>Try again</button></div>}
+      {isLoading ? <div className="cc-empty" role="status">Loading your collection…</div> : filtered.length ? <><div className="cc-card-grid">{filtered.slice(0, visibleCount).map((card) => <CollectibleCard key={card.id} card={card} onSelect={(item) => { opener.current = document.activeElement; setSelectedCard(item); }} />)}</div>{filtered.length > visibleCount && <button className="cc-button cc-load-more" onClick={() => setVisibleCount((count) => count + 48)}>Show more cards</button>}</> : <div className="cc-empty"><Trophy /><h2>{cards.length ? 'No cards match these filters' : 'Your next achievement starts here'}</h2><p>{cards.length ? 'Try another name or rarity.' : 'Achievement cards for this game will appear here as they are added.'}</p>{cards.length > 0 && <button className="cc-button" onClick={() => { setSearch(''); setRarity('all'); setOwnership('all'); }}>Clear filters</button>}</div>}
     </div>
-  );
+    {selectedCard && <div ref={inspector} className="cc-inspector" role="dialog" aria-modal="true" aria-label={`${selectedCard.title} card details`}><CardEnhancementOverlay card={selectedCard} onClose={close} /></div>}
+  </section>;
 }

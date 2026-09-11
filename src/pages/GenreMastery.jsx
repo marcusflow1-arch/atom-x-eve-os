@@ -1,22 +1,22 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
-  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft, DollarSign, Search, Mic, ArrowLeftRight
-} from 'lucide-react';
-import { createPageUrl } from '@/utils';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { useEffect, useMemo, useState } from 'react';
+import { Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor, Search, Layers, Store, ArrowLeftRight, Gamepad2, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
-import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
+import SkillTreeContent from '@/components/genremastery/CardsSkillTree';
 import AchievementsContent from '@/components/genremastery/AchievementsContent';
 import GenreBottomNav from '@/components/genremastery/GenreBottomNav';
-import BlackMarketContent from '@/components/dashboard/BlackMarketContent';
-import TradingPostOverlayContent from '@/components/dashboard/TradingPostOverlayContent';
+import CardsHome from '@/components/genremastery/CardsHome';
+import CardsExchange from '@/components/genremastery/CardsExchange';
+import { CardArtwork } from '@/components/genremastery/CollectibleCard';
+import useCardsCatalog from '@/components/genremastery/useCardsCatalog';
+import { gameMatchesGenre, readCardPages } from '@/components/genremastery/cardsCatalog';
+import '@/components/genremastery/cardsConsole.css';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', xpType: 'Social XP', level: 42, maxLevel: 50, rank: 'Warlord', xp: 92, skillPoints: 5, paths: ['Synergy', 'Raid', 'Trade'], matchGenres: ['mmo', 'mmorpg'] },
@@ -29,412 +29,56 @@ const GENRES = [
   { id: 'simulation', name: 'Simulation', short: 'SIM', icon: Monitor, color: 'from-blue-400 to-indigo-400', accent: 'text-blue-400', xpType: 'Logic XP', level: 20, maxLevel: 50, rank: 'Architect', xp: 55, skillPoints: 2, paths: ['Management', 'Efficiency', 'Design'], matchGenres: ['simulation', 'strategy'] },
 ];
 
-function GenreScrollTabs({ genres, selectedGenre, onSelect }) {
-  const scrollRef = useRef(null);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const handleWheel = (e) => {
-      e.preventDefault();
-      el.scrollLeft += e.deltaY > 0 ? 80 : -80;
-    };
-
-    const handleKeyDown = (e) => {
-      if (!el.matches(':hover')) return;
-      if (e.key === 'd' || e.key === 'D') { el.scrollLeft += 80; }
-      if (e.key === 'a' || e.key === 'A') { el.scrollLeft -= 80; }
-    };
-
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  return (
-    <div className="flex-1 min-w-0 relative">
-      {/* Left fade mask */}
-      <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
-      {/* Right fade mask */}
-      <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
-
-      <div
-        ref={scrollRef}
-        className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2"
-        style={{ scrollBehavior: 'smooth' }}
-      >
-        {genres.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => onSelect(g)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
-              selectedGenre?.id === g.id
-                ? 'bg-white/12 border-white/20 text-white'
-                : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
-            }`}
-          >
-            {g.icon && React.createElement(g.icon, { className: 'w-3.5 h-3.5' })}
-            <span>{g.name}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [rightPanel, setRightPanel] = useState(() => {
-    const m = new URLSearchParams(window.location.search).get('mode');
-    return m === 'achievements' || m === 'skilltree' ? m : 'games';
-  }); // 'games', 'skilltree', or 'achievements'
-  const [marketView, setMarketView] = useState('cards'); // 'cards' | 'blackmarket' | 'tradingpost'
-  const [cardSearchQuery, setCardSearchQuery] = useState('');
-  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const [gameSearch, setGameSearch] = useState('');
+  const [mobileGames, setMobileGames] = useState(false);
+  const [rightPanel, setRightPanel] = useState('games');
+  const [marketView, setMarketView] = useState('cards');
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
-  const dropdownRef = useRef(null);
-
-  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
-    queryKey: ['games-for-genre-mastery'],
-    queryFn: () => base44.entities.Game.list(),
-  });
-
-  const genreGames = useMemo(() => {
-    if (!allGames || !selectedGenre) return [];
-    return allGames.filter(game => {
-      const gameGenre = (game.genre || '').toLowerCase();
-      return selectedGenre.matchGenres?.some(mg => gameGenre.includes(mg));
-    });
-  }, [allGames, selectedGenre]);
-
-  const gameData = useMemo(() => {
-    return genreGames.map(game => ({
-      ...game,
-      questCount: Math.floor(Math.random() * 30) + 10,
-      achievementCards: Math.floor(Math.random() * 20) + 5,
-      totalXP: Math.floor(Math.random() * 5000) + 1000,
-      completionRate: Math.floor(Math.random() * 60) + 10,
-      communityCompletions: Math.floor(Math.random() * 500) + 50,
-    }));
-  }, [genreGames]);
-
+  const gamesQuery = useQuery({ queryKey: ['games-for-genre-mastery'], queryFn: () => readCardPages((limit, skip) => base44.entities.Game.list('-created_date', limit, skip)), staleTime: 60000 });
+  const allGames = gamesQuery.data || [];
+  const catalog = useCardsCatalog(allGames);
+  const genreGames = useMemo(() => allGames.filter((game) => gameMatchesGenre(game, selectedGenre)), [allGames, selectedGenre]);
+  const visibleGames = useMemo(() => genreGames.filter((game) => String(game.title || '').toLowerCase().includes(gameSearch.toLowerCase())), [genreGames, gameSearch]);
+  const genreCards = useMemo(() => { const ids = new Set(genreGames.map((game) => game.id)); return catalog.cards.filter((card) => ids.has(card.gameId)); }, [catalog.cards, genreGames]);
+  const cards = useMemo(() => selectedGame ? genreCards.filter((card) => card.gameId === selectedGame.id) : genreCards, [genreCards, selectedGame]);
+  const selectView = (view) => {
+    if (view === 'blackmarket' || view === 'tradingpost') setMarketView(view);
+    else { setMarketView('cards'); setRightPanel(view); }
+    setMobileGames(false);
+  };
+  const selectGame = (game) => { setSelectedGame(game); setMobileGames(false); if (rightPanel === 'skilltree') setRightPanel('games'); };
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        const cardOverlayOpen = document.querySelector('[data-card-overlay="true"]');
-        if (cardOverlayOpen) return;
-
-        if (onClose) onClose();
-        else navigate(createPageUrl('LunaTemplate'));
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, onClose]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setGenreDropdownOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  // Sync panel with ?mode= from the navigation drawer
-  useEffect(() => {
-    const m = new URLSearchParams(location.search).get('mode');
-    if (m === 'achievements' || m === 'skilltree') setRightPanel(m);
+    const mode = new URLSearchParams(location.search).get('mode');
+    setMarketView(mode === 'blackmarket' || mode === 'tradingpost' ? mode : 'cards');
+    setRightPanel(mode === 'achievements' || mode === 'skilltree' ? mode : 'games');
   }, [location.search]);
-
-  // Reset selected game when switching to skill tree
   useEffect(() => {
-    if (rightPanel === 'skilltree') setSelectedGame(null);
-  }, [rightPanel]);
-
-  // Reset selected game when genre changes
-  useEffect(() => {
-    setSelectedGame(null);
-  }, [selectedGenre]);
-
-  useEffect(() => {
-    if (marketView !== 'cards') {
-      setSelectedGame(null);
-    }
-  }, [marketView]);
-
-  return (
-    <GlassPageFrame
-      sidebarVisible={sidebarVisible}
-      onSidebarToggle={toggleSidebar}
-      bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}
-    >
-      <div className="flex w-full h-full">
-        {/* Left rail — overlay extension: floats over the page instead of pushing it */}
-        {sidebarVisible && (
-          <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r border-white/10 z-50 flex flex-col items-center"
-            style={{ background: 'rgba(8, 12, 18, 0.58)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
-          />
-        )}
-        
-        {/* Main Content Area */}
-        <div className="flex-1 h-screen text-white font-sans overflow-hidden relative flex flex-col"
-          style={{
-            backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-            backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#050505'
-          }}
-        >
-          {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60 z-0" />
-        <div className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} opacity-[0.06] z-0`} />
-
-        {/* ═══ SUB-NAV BAR (below global header) ═══ */}
-        <div className="relative z-10 flex-shrink-0 mt-16">
-          <div className="flex items-center px-6 py-2 gap-0"
-            style={{
-              background: 'rgba(8, 12, 18, 0.5)',
-              backdropFilter: 'blur(20px)',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            {/* Left: Genre Progression label */}
-            <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">
-              Genre Progression
-            </span>
-
-            {/* Fade divider left */}
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-            </div>
-
-            {/* Center: Scrollable genre tabs */}
-            <GenreScrollTabs
-              genres={GENRES}
-              selectedGenre={selectedGenre}
-              onSelect={setSelectedGenre}
-            />
-
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => setMarketView(marketView === 'blackmarket' ? 'cards' : 'blackmarket')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  marketView === 'blackmarket'
-                    ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Black Market</span>
-              </button>
-              <button
-                onClick={() => setMarketView(marketView === 'tradingpost' ? 'cards' : 'tradingpost')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  marketView === 'tradingpost'
-                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Trading Post</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        <SidebarOverlays className="absolute top-[104px] left-6 right-6 bottom-[80px] z-[80]" />
-        {/* ═══ MAIN CONTENT: Games List + Right Panel ═══ */}
-        <div className="flex-1 flex min-h-0 relative z-10">
-          {/* LEFT: Games List (always visible) */}
-          <div
-            className="h-full flex flex-col overflow-hidden flex-shrink-0"
-            style={{
-              width: '320px',
-              minWidth: '320px',
-              background: 'rgba(10, 14, 20, 0.65)',
-              backdropFilter: 'blur(30px)',
-              borderRight: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            {/* List Header */}
-            <div className="p-4 border-b border-white/6 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center`}>
-                  <Gamepad2 className="w-3.5 h-3.5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-white font-bold text-sm">{selectedGenre.name} Games</h2>
-                  <p className="text-white/35 text-[10px]">{gameData.length} game{gameData.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5">
-                <Search className="w-3.5 h-3.5 text-white/40" />
-                <input
-                  type="text"
-                  placeholder="Search games..."
-                  className="bg-transparent text-white text-xs placeholder-white/30 outline-none w-32"
-                />
-              </div>
-            </div>
-
-            {/* Games */}
-            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
-              {gamesLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
-                </div>
-              ) : gameData.length === 0 ? (
-                <div className="text-center py-12 text-white/25">
-                  <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">No games in this genre yet</p>
-                </div>
-              ) : (
-                gameData.map((game) => (
-                  <motion.button
-                    key={game.id}
-                    onClick={() => { setSelectedGame(game); if (rightPanel === 'skilltree') setRightPanel('games'); }}
-                    whileHover={{ x: 2 }}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
-                      selectedGame?.id === game.id && rightPanel === 'games'
-                        ? 'bg-white/10 border-white/15'
-                        : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/6'
-                    }`}
-                  >
-                    <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
-                      {game.cover_image ? (
-                        <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
-                          <Gamepad2 className="w-4 h-4 text-white/25" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-white/30 text-[10px] flex items-center gap-0.5"><Scroll className="w-2.5 h-2.5" />{game.questCount}</span>
-                        <span className="text-yellow-400/50 text-[10px] flex items-center gap-0.5"><Trophy className="w-2.5 h-2.5" />{game.achievementCards}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className="flex-1 h-0.5 rounded-full bg-white/5 overflow-hidden">
-                          <div className={`h-full rounded-full bg-gradient-to-r ${selectedGenre.color}`} style={{ width: `${game.completionRate}%` }} />
-                        </div>
-                        <span className="text-white/20 text-[9px]">{game.completionRate}%</span>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT: Game Detail OR Skill Tree */}
-          <div className="flex-1 h-full overflow-hidden"
-            style={{
-              background: 'rgba(8, 12, 18, 0.55)',
-              backdropFilter: 'blur(20px)',
-            }}
-          >
-            <AnimatePresence mode="wait">
-              {marketView === 'blackmarket' ? (
-                <motion.div
-                  key="blackmarket"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <BlackMarketContent cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} selectedGame={selectedGame} />
-                </motion.div>
-              ) : marketView === 'tradingpost' ? (
-                <motion.div
-                  key="tradingpost"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} selectedGame={selectedGame} />
-                </motion.div>
-              ) : rightPanel === 'achievements' ? (
-                <motion.div
-                  key="achievements"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <AchievementsContent
-                    genre={selectedGenre}
-                    selectedGame={selectedGame}
-                    onSelectGame={(game) => { setSelectedGame(game); setRightPanel('achievements'); }}
-                    games={gameData}
-                  />
-                </motion.div>
-              ) : rightPanel === 'skilltree' ? (
-                <motion.div
-                  key="skilltree"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <SkillTreeContent genre={selectedGenre} />
-                </motion.div>
-              ) : selectedGame ? (
-                <motion.div
-                  key={`game-${selectedGame.id}`}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <GenreGameDetail
-                    game={selectedGame}
-                    genre={selectedGenre}
-                    onClose={() => setSelectedGame(null)}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="h-full flex flex-col items-center justify-center text-center px-8"
-                >
-                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${selectedGenre.color} opacity-20 flex items-center justify-center mb-6`}>
-                    <Gamepad2 className="w-10 h-10 text-white/40" />
-                  </div>
-                  <h2 className="text-xl font-bold text-white/30 mb-2">Select a Game</h2>
-                  <p className="text-white/20 text-sm max-w-sm">
-                    Choose a game from the {selectedGenre.name} library to explore its quests, achievement cards, and community progress.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+    const escape = (event) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || document.querySelector('[data-card-overlay="true"], .cc-exchange-dialog')) return;
+      if (mobileGames) { setMobileGames(false); return; }
+      if (marketView !== 'cards') { setMarketView('cards'); return; }
+      if (onClose) onClose(); else navigate(createPageUrl('LunaTemplate'));
+    };
+    window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, [onClose, navigate, marketView, mobileGames]);
+  return <GlassPageFrame className="cards-console-frame" sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<GenreBottomNav activeTab={rightPanel} marketView={marketView} onTabSelect={selectView} />}>
+    <main className="cards-console" data-market={marketView}>
+      <header className="cc-topbar"><button className="cc-brand" onClick={() => { selectView('games'); setSelectedGame(null); }} aria-label="Cards home"><Layers size={23} strokeWidth={1.3} /><span>Cards<small>Collection & exchange</small></span></button><nav className="cc-market-nav" aria-label="Card exchanges"><button aria-pressed={marketView === 'blackmarket'} onClick={() => selectView(marketView === 'blackmarket' ? rightPanel : 'blackmarket')}><Store size={16} />Black Market</button><button aria-pressed={marketView === 'tradingpost'} onClick={() => selectView(marketView === 'tradingpost' ? rightPanel : 'tradingpost')}><ArrowLeftRight size={16} />Trading Post</button></nav></header>
+      <div className="cc-genre-bar"><span className="cc-eyebrow">Browse genres</span><nav className="cc-genres" aria-label="Game genres">{GENRES.map((genre) => <button key={genre.id} aria-pressed={genre.id === selectedGenre.id} onClick={() => { setSelectedGenre(genre); setSelectedGame(null); setGameSearch(''); }}><genre.icon size={14} /><span>{genre.name}</span></button>)}</nav></div>
+      <button className="cc-mobile-games cc-button" aria-expanded={mobileGames} aria-controls="cc-game-library" onClick={() => setMobileGames(!mobileGames)}><Gamepad2 size={16} />{selectedGame?.title || `${selectedGenre.name} game library`} <span>{mobileGames ? 'Close' : 'Change'}</span></button>
+      <div className="cc-workspace">
+        <aside id="cc-game-library" className="cc-library" data-mobile-open={mobileGames} aria-label="Game library"><div className="cc-library-heading"><span className="cc-eyebrow">Game library</span><span>{genreGames.length}</span></div><label className="cc-search"><Search size={14} /><input aria-label="Search games" placeholder="Search games" value={gameSearch} onChange={(event) => setGameSearch(event.target.value)} />{gameSearch && <button onClick={() => setGameSearch('')} aria-label="Clear game search"><X size={13} /></button>}</label><div className="cc-game-list"><button className="cc-all-games" aria-pressed={!selectedGame} onClick={() => selectGame(null)}><Layers size={16} /><span>All {selectedGenre.name} games</span></button>{gamesQuery.isLoading ? <p role="status" className="cc-library-note">Loading games…</p> : visibleGames.map((game) => <button key={game.id} className="cc-game-link" aria-pressed={selectedGame?.id === game.id} onClick={() => selectGame(game)}><CardArtwork src={game.cover_image || game.cover} /><span><strong>{game.title}</strong><small>{genreCards.filter((card) => card.gameId === game.id).length} cards</small></span></button>)}{!gamesQuery.isLoading && !visibleGames.length && <p className="cc-library-note">{gameSearch ? 'No games match your search.' : 'No games in this genre yet.'}</p>}{gamesQuery.isError && <button className="cc-button" onClick={() => gamesQuery.refetch()}>Retry games</button>}</div><div className="cc-library-footer"><selectedGenre.icon size={19} /><div><strong>{selectedGenre.name} mastery</strong><span>{selectedGenre.rank} · Level {selectedGenre.level}</span></div></div></aside>
+        <div className="cc-content">
+          {marketView !== 'cards' ? <CardsExchange key={`${marketView}:${selectedGenre.id}:${selectedGame?.id || 'all'}`} mode={marketView} selectedGame={selectedGame} games={genreGames} cards={cards} user={catalog.user} /> : rightPanel === 'achievements' ? <AchievementsContent genre={selectedGenre} selectedGame={selectedGame} cards={cards} isLoading={catalog.isLoading} isError={catalog.isError} onRetry={catalog.retry} /> : rightPanel === 'skilltree' ? <SkillTreeContent key={selectedGenre.id} genre={selectedGenre} /> : selectedGame ? <div className="cc-game-detail"><GenreGameDetail game={selectedGame} genre={selectedGenre} onClose={() => setSelectedGame(null)} /></div> : <CardsHome genre={selectedGenre} games={genreGames} cards={genreCards} onGameSelect={selectGame} onViewSelect={selectView} isLoading={gamesQuery.isLoading} isError={gamesQuery.isError} onRetry={() => gamesQuery.refetch()} />}
         </div>
       </div>
-    </div>
-    </GlassPageFrame>
-  );
+      <SidebarOverlays className="absolute top-0 left-0 right-0 bottom-0 z-[80]" />
+    </main>
+  </GlassPageFrame>;
 }
