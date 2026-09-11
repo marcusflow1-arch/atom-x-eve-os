@@ -1,7 +1,7 @@
 // BossEncounterController — single source of truth for the live world-boss fight.
-// It deliberately refuses to run a boss encounter against quest NPCs, legacy
-// arena bosses, or placeholder/fallback entities. The active combatant is the
-// real world boss stored in window.__gw3dBosses.
+// It owns encounter state, music, and quest-NPC suppression only. Boss dialogue
+// is routed through BossCombatDialogue so quest/NPC dialogue and boss banter do
+// not compete for the same responsibility.
 
 function getLiveWorldBoss() {
   if (typeof window === 'undefined' || !Array.isArray(window.__gw3dBosses)) return null;
@@ -16,7 +16,6 @@ function getLiveWorldBoss() {
 }
 
 export function createBossEncounterController({
-  setActiveDialogue,
   setQuestNPCSuppressed,
   startBossMusic,
   stopBossMusic,
@@ -29,8 +28,6 @@ export function createBossEncounterController({
     startedAt: 0,
     npcSuppressed: false,
     music: 'none',
-    pendingDialogue: null,
-    dialogueTimer: 0,
     pendingStart: null,
   };
 
@@ -41,20 +38,15 @@ export function createBossEncounterController({
     setQuestNPCSuppressed?.(!!value);
   };
 
-  const clearDialogue = () => {
-    state.pendingDialogue = null;
-    state.dialogueTimer = 0;
-    setActiveDialogue?.(null);
-  };
-
-  const showDialogue = (text, duration = 3.5) => {
+  const routeBossLine = ({ text, duration = 3.5 } = {}) => {
+    if (!text || typeof window === 'undefined') return false;
     const boss = getLiveWorldBoss();
-    if (!boss || !text) return false;
-    const name = boss.name || boss.title || 'World Boss';
-    state.pendingDialogue = { name, text, duration, bossId: boss.id };
-    state.dialogueTimer = duration;
-    setActiveDialogue?.({ name, text, source: 'world_boss', bossId: boss.id });
-    return true;
+    if (!boss) return false;
+    return !!window.__gw3dBossDialogue?.queueLine?.({
+      name: boss.name || boss.title || 'World Boss',
+      text,
+      duration,
+    });
   };
 
   const activate = (request = {}) => {
@@ -75,7 +67,7 @@ export function createBossEncounterController({
     }
 
     if (request.introLine?.text) {
-      showDialogue(request.introLine.text, request.introLine.duration || 4);
+      routeBossLine({ text: request.introLine.text, duration: request.introLine.duration || 4 });
     }
     return true;
   };
@@ -111,35 +103,27 @@ export function createBossEncounterController({
     state.music = 'none';
 
     if (!suppressOutro && bossWasAlive && outroLine?.text) {
-      showDialogue(outroLine.text, outroLine.duration || 4);
-    } else {
-      clearDialogue();
+      routeBossLine({ text: outroLine.text, duration: outroLine.duration || 4 });
     }
   };
 
+  // Compatibility hook for existing scripted boss patterns. It forwards to the
+  // dedicated boss-dialogue system rather than owning dialogue itself.
   const queueLine = ({ text, duration = 3 } = {}) => {
     if (!state.active || !getLiveWorldBoss() || !text) return false;
-    return showDialogue(text, duration);
+    return routeBossLine({ text, duration });
   };
 
-  const update = (delta) => {
-    if (!state.active && state.pendingStart) {
-      activate(state.pendingStart);
-    }
+  const update = () => {
+    if (!state.active && state.pendingStart) activate(state.pendingStart);
 
     if (state.active) {
       const boss = getLiveWorldBoss();
       if (!boss || boss.id !== state.bossId) {
-        // Death/vanish is a hard encounter boundary. Ending here prevents all
-        // GameWorld auto-pattern timers from continuing during the death clip.
+        // Death/vanish is a hard encounter boundary. This prevents GameWorld's
+        // auto-pattern loop from continuing during the death animation.
         end({ suppressOutro: true });
-        return;
       }
-    }
-
-    if (state.dialogueTimer > 0) {
-      state.dialogueTimer -= delta;
-      if (state.dialogueTimer <= 0) clearDialogue();
     }
   };
 
@@ -153,7 +137,6 @@ export function createBossEncounterController({
     bossName: state.bossName,
     npcSuppressed: state.npcSuppressed,
     music: state.music,
-    hasDialogue: !!state.pendingDialogue,
     waitingForBoss: !!state.pendingStart,
   });
 
