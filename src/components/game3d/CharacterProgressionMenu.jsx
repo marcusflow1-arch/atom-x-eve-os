@@ -15,6 +15,7 @@ import SpiritServicesSubTab from './progression/hub/SpiritServicesSubTab';
 import CombatDoctrineSubTab from './progression/hub/CombatDoctrineSubTab';
 import ElixirsSubTab from './progression/hub/ElixirsSubTab';
 import ContributionShopSubTab from './progression/hub/ContributionShopSubTab';
+import QuestRelaySubTab from './progression/hub/QuestRelaySubTab';
 import WarBandsSubTab from './progression/hub/WarBandsSubTab';
 
 const MAIN_TABS = [
@@ -34,6 +35,7 @@ const MASTERY_SUB_TABS = [
 const SERVICE_SUB_TABS = [
   { id: 'spirit',  label: 'Services' },
   { id: 'combat',  label: 'Combat' },
+  { id: 'quests',  label: 'Quests' },
   { id: 'elixirs', label: 'Elixirs' },
   { id: 'cp',      label: 'CP Shop' },
   { id: 'wars',    label: 'War Bands' },
@@ -129,6 +131,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
           {mainTab === 'services' && serviceTab === 'spirit' && <SpiritServicesSubTab />}
           {mainTab === 'services' && serviceTab === 'combat' && <CombatDoctrineSubTab />}
+          {mainTab === 'services' && serviceTab === 'quests' && <QuestRelaySubTab />}
           {mainTab === 'services' && serviceTab === 'elixirs' && <ElixirsSubTab />}
           {mainTab === 'services' && serviceTab === 'cp' && <ContributionShopSubTab />}
           {mainTab === 'services' && serviceTab === 'wars' && <WarBandsSubTab />}
