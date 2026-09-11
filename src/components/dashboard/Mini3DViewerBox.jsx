@@ -5,6 +5,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import AvatarStatCard from './AvatarStatCard';
 import { Mic, MicOff, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { companionModel, applyCompanionAppearance } from '@/components/onboarding/genesisAssets';
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
@@ -18,7 +20,8 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   const animIdRef = useRef(null);
   const isUiVisibleRef = useRef(isUiVisible);
   const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0));
-  const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
+  const savedCompanion = useCompanionIdentity();
+  const [activeChar, setActiveChar] = useState(savedCompanion?.gender === 'female' ? 'c1' : 'ybot');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [activeInvite, setActiveInvite] = useState(null);
   const [webglFailed, setWebglFailed] = useState(false);
@@ -98,8 +101,10 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
     scene.add(rim);
 
     const loader = new FBXLoader();
-    const modelUrl = activeChar === 'ybot' ? YBOT_URL : C1_URL;
+    const modelUrl = savedCompanion ? companionModel(savedCompanion) : activeChar === 'ybot' ? YBOT_URL : C1_URL;
+    let disposed = false;
     loader.load(modelUrl, (fbx) => {
+      if (disposed) return;
       const box = new THREE.Box3().setFromObject(fbx);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
@@ -115,11 +120,12 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
           mats.forEach(mat => { mat.side = THREE.DoubleSide; mat.envMapIntensity = 1.2; mat.needsUpdate = true; });
         }
       });
+      applyCompanionAppearance(fbx, savedCompanion || {});
       scene.add(fbx);
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
       loader.load(IDLE_URL, idle => {
-        if (idle.animations?.length) mixer.clipAction(idle.animations[0]).play();
+        if (!disposed && idle.animations?.length) mixer.clipAction(idle.animations[0]).play();
       });
     });
 
@@ -151,6 +157,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
     const observer = new ResizeObserver(resize);
     observer.observe(containerRef.current);
     return () => {
+      disposed = true;
       cancelAnimationFrame(animIdRef.current);
       window.removeEventListener('resize', resize);
       observer.disconnect();
@@ -158,7 +165,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
       renderer.domElement?.remove();
       mixerRef.current = null;
     };
-  }, [activeChar]);
+  }, [activeChar, savedCompanion]);
 
   return (
     <div

@@ -1,7 +1,7 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { validateGenesis } from '../../shared/validateGenesis.ts';
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-
-Deno.serve(async (req) => {
+export default async function(req) {
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
@@ -14,6 +14,30 @@ Deno.serve(async (req) => {
         const { action } = requestBody;
 
         switch (action) {
+            case 'completeSetup': {
+                if (requestBody.preview && user.role !== 'admin') return Response.json({error:'Admin access required'}, {status:403});
+                let validated;
+                try { validated = validateGenesis(requestBody); } catch(error) { return Response.json({success:false,error:error.message}, {status:400}); }
+                const {profile,companion} = validated;
+                const environment = requestBody.preview ? 'preview' : 'live';
+                // Completed identities are never overwritten by replaying first-time setup.
+                if (environment === 'live') {
+                    const existing = await base44.entities.Avatar.filter({user_id:user.id}, 'created_date', 1);
+                    if (existing[0] && existing[0].setup_status !== 'pending') return Response.json({success:true,avatar:existing[0],alreadyInitialized:true});
+                }
+                const rows = await base44.entities.OnboardingProfile.filter({user_id:user.id,environment}, 'created_date', 1);
+                const values = {...profile,user_id:user.id,environment,companion,completed:environment === 'preview'};
+                let savedProfile = rows[0] ? await base44.entities.OnboardingProfile.update(rows[0].id,values) : await base44.entities.OnboardingProfile.create(values);
+                if (environment === 'preview') return Response.json({success:true,preview:true,profile:savedProfile,avatar:companion});
+                const initialized = await initializeAvatar(base44,user,{...companion,setup:true});
+                await base44.entities.Avatar.update(initialized.avatar.id,companion);
+                const traits = companion.personality === 'warm' ? {empathy_level:75,aggression_tendency:30} : companion.personality === 'curious' ? {risk_tolerance:65,behavioral_traits:{loyalty:50,curiosity:80,caution:35,humor:65,wisdom:50,impulsiveness:50}} : {risk_tolerance:35,aggression_tendency:35};
+                await base44.asServiceRole.entities.AIBehaviorState.update(initialized.behaviorState.id,traits);
+                await base44.auth.updateMe({username:profile.username,onboarding_complete:true,is_first_time:false});
+                savedProfile = await base44.entities.OnboardingProfile.update(savedProfile.id,{completed:true,avatar_id:initialized.avatar.id});
+                const avatar = await base44.entities.Avatar.update(initialized.avatar.id,{setup_status:'complete'});
+                return Response.json({success:true,avatar,profile:savedProfile});
+            }
             case 'initializeAvatar': {
                 const initialized = await initializeAvatar(base44, user, requestBody);
                 return Response.json(initialized);
@@ -70,14 +94,14 @@ Deno.serve(async (req) => {
             success: false 
         }, { status: 500 });
     }
-});
+}
 
 async function initializeAvatar(base44, user, requestBody) {
     const gender = requestBody.gender === 'female' ? 'female' : 'male';
     const defaultName = gender === 'female' ? 'Eve' : 'Atum';
     const name = String(requestBody.name || defaultName).trim().slice(0, 40) || defaultName;
 
-    const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, '-created_date', 1);
+    const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, 'created_date', 1);
     let avatar = existing[0];
     if (!avatar) {
         avatar = await base44.asServiceRole.entities.Avatar.create({
@@ -88,7 +112,8 @@ async function initializeAvatar(base44, user, requestBody) {
             experience: 0,
             social_influence: 0,
             reputation_badges: [],
-            model_url: 'base_humanoid.glb',
+            model_url: requestBody.setup ? requestBody.model_url : 'base_humanoid.glb',
+            ...(requestBody.setup ? {setup_status:'pending'} : {}),
             equipped_items: [],
             unlocked_abilities: [],
             active_companions: [],

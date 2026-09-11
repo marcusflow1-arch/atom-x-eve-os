@@ -28,6 +28,7 @@ import MobileLayoutShell from './components/mobile/MobileLayoutShell';
 import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsDrawer';
 import { AIPresenceProvider } from './components/dashboard/AIPresenceContext';
 import MoodAuraLayer from './components/dashboard/MoodAuraLayer';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
@@ -1094,6 +1095,7 @@ function LayoutContent({ children, currentPageName }) {
             {/* Settings + View Mode Toggle - right side (hidden on Store, which has its own StorefrontTopBar cluster) */}
             {!showStoreHeader && (
               <div className="ml-auto flex shrink-0 items-center gap-2">
+                {import.meta.env.DEV && user?.role === 'admin' && <button type="button" title="Preview first-time setup" aria-label="Preview first-time setup" onClick={() => navigate('/SetupPreview')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"><Sparkles className="w-3.5 h-3.5" /></button>}
                 <button
                   onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
                   className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
@@ -1238,8 +1240,9 @@ function LayoutContent({ children, currentPageName }) {
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
+  const savedCompanion = useCompanionIdentity();
   const [showIntro, setShowIntro] = useState(() => {
-    return !sessionStorage.getItem('atom_eve_intro_seen_session');
+    return !savedCompanion && !sessionStorage.getItem('atom_eve_intro_seen_session');
   });
 
   const handleIntroComplete = () => {

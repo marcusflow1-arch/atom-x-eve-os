@@ -1,0 +1,7 @@
+import React from 'react';
+import { ShieldCheck } from 'lucide-react';
+import { COMPANION_MODELS, PERSONALITIES } from '@/components/onboarding/genesisAssets';
+export default function GenesisReview({profile,config,preview}) {
+  const details = [['Display name',profile.display_name],['Username',profile.username],['Companion',config.name],['Form',COMPANION_MODELS[config.gender].name],['Personality',PERSONALITIES.find(p=>p.id===config.personality)?.name],['Voice',config.voice.uri || 'System default'],['Payment','At first purchase'],['ID collection','Not requested']];
+  return <section className="genesis-fields"><p className="genesis-kicker">05 / READY TO BEGIN</p><h1>Your journey.<br />Your companion.</h1><p className="genesis-description">Review your choices before you enter Atom × Eve.</p><dl className="genesis-summary">{details.map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}</dl><p className="genesis-note"><ShieldCheck size={18}/>{preview?'Developer preview saves a separate draft only. Your live avatar, personal profile, and progress are not changed.':'Setup is saved to your account. Signing out or using another device will not ask you to create your companion again.'}</p></section>;
+}

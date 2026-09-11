@@ -3,6 +3,7 @@ import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, Bar
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
@@ -55,6 +56,7 @@ function GenreRows({ genres }) {
 
 export default function DashboardAvatarOverview() {
   const { user } = useAuth();
+  const companion = useCompanionIdentity();
   const [progression, setProgression] = useState(null);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
@@ -185,7 +187,7 @@ export default function DashboardAvatarOverview() {
             <div className="relative px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-7">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
-                <div><div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div><div className="text-white font-bold text-base">AI Avatar</div></div>
+                <div><div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div><div className="text-white font-bold text-base">{companion?.name || 'AI Avatar'}</div></div>
               </div>
               <button onClick={() => setAttributeMenuOpen(v => !v)} className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-16 bg-transparent flex items-center justify-center text-white/50 z-30">
                 <ChevronRight className={`w-4 h-4 ${attributeMenuOpen ? 'rotate-180' : ''}`} />

@@ -1,6 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { companionModel, applyCompanionAppearance, COMPANION_MOTIONS } from '@/components/onboarding/genesisAssets';
 import { useAuth } from '../auth/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react'; // Added for loading state
@@ -20,9 +23,10 @@ export default function AvatarPanel({
   const frameIdRef = useRef(null);
   
   const [isLoading, setIsLoading] = useState(true);
-  const { user, avatar } = useAuth();
-  
-  const displayName = user?.username || user?.full_name || 'Player';
+  const { user, avatar: legacyAvatar } = useAuth();
+  const identity = useCompanionIdentity();
+  const avatar = identity || legacyAvatar;
+  const displayName = avatar?.name || user?.username || user?.full_name || 'Player';
   const level = avatar?.level || 1;
   const experience = avatar?.experience || 0;
   const maxExp = level * 100;
@@ -87,8 +91,9 @@ export default function AvatarPanel({
     if (!sceneRef.current) return;
 
     setIsLoading(true);
-    const loader = new GLTFLoader();
-    const avatarUrl = avatar?.model_url || `${glbBaseUrl}base_humanoid.glb`;
+    const avatarUrl = companionModel(avatar);
+    const loader = /\.fbx(?:\?|$)/i.test(avatarUrl) ? new FBXLoader() : new GLTFLoader();
+    let disposed = false;
 
     // Helper: Clean up previous model resources to prevent memory leaks
     if (modelRef.current) {
@@ -106,22 +111,28 @@ export default function AvatarPanel({
     loader.load(
       avatarUrl,
       (gltf) => {
-        const model = gltf.scene;
-        model.position.set(0, -1, 0); // Center model
+        const model = gltf.scene || gltf;
+        if (disposed) return;
+        const originalBox = new THREE.Box3().setFromObject(model);
+        model.scale.setScalar(1.8 / (originalBox.getSize(new THREE.Vector3()).y || 1));
+        const box = new THREE.Box3().setFromObject(model), center = box.getCenter(new THREE.Vector3());
+        model.position.set(-center.x, -box.min.y, -center.z);
+        applyCompanionAppearance(model, avatar || {});
+        cameraRef.current.position.set(0, 1, 3.4); cameraRef.current.lookAt(0,.9,0);
         sceneRef.current.add(model);
         modelRef.current = model;
 
         // Setup Mixer
-        if (gltf.animations.length) {
-          mixerRef.current = new THREE.AnimationMixer(model);
-          const clip = gltf.animations.find(a => a.name.toLowerCase().includes('idle')) || gltf.animations[0];
-          if(clip) mixerRef.current.clipAction(clip).play();
-        }
+        mixerRef.current = new THREE.AnimationMixer(model);
+        const clip = gltf.animations?.find(a => a.name.toLowerCase().includes('idle')) || gltf.animations?.[0];
+        if (clip) mixerRef.current.clipAction(clip).play();
+        else new FBXLoader().load(COMPANION_MOTIONS[0].url, motion => { if(!disposed && motion.animations?.[0]) mixerRef.current?.clipAction(motion.animations[0]).play(); });
 
         setIsLoading(false);
       },
       undefined,
       (err) => {
+        if (disposed) return;
         console.warn("Using fallback avatar due to:", err);
         const fallback = createFallbackAvatar(); // Defined below
         sceneRef.current.add(fallback);
@@ -129,7 +140,8 @@ export default function AvatarPanel({
         setIsLoading(false);
       }
     );
-  }, [avatar?.model_url, glbBaseUrl]);
+    return () => { disposed = true; };
+  }, [avatar, glbBaseUrl]);
 
   // 3. ANIMATION LOOP & INTERACTION
   useEffect(() => {

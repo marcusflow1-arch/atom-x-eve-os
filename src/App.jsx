@@ -22,6 +22,9 @@ import LivingQuest from './pages/LivingQuest';
 import Plan from './pages/Plan';
 import AvatarGenesisGate from '@/components/onboarding/AvatarGenesisGate';
 import AIReflectionBridge from '@/components/avatar/AIReflectionBridge';
+import SetupPreview from '@/pages/SetupPreview';
+import GenesisLoadingScreen from '@/components/onboarding/GenesisLoadingScreen';
+import '@/components/onboarding/genesis.css';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 // Admin tooling stays registered in the source for the Base44/editor workflow,
@@ -41,9 +44,7 @@ const AuthenticatedApp = () => {
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
+      <GenesisLoadingScreen label="Connecting to your world" />
     );
   }
 
@@ -66,6 +67,7 @@ const AuthenticatedApp = () => {
         <Route path="/game/:gameId" element={<LayoutWrapper currentPageName="GameHub"><GameHub /></LayoutWrapper>} />
         <Route path="/studio" element={<LayoutWrapper currentPageName="Studio"><Studio /></LayoutWrapper>} />
         <Route path="/dev-studio/:studioId" element={<LayoutWrapper currentPageName="DevStudio"><DevStudio /></LayoutWrapper>} />
+        <Route path="/SetupPreview" element={<SetupPreview />} />
         <Route path="/NetworkTest" element={<NetworkTest />} />
         <Route path="/ChainBreak" element={<ChainBreak />} />
         <Route path="/NPCQuests" element={<NPCQuests />} />

@@ -1,0 +1,16 @@
+import React, { useEffect, useState } from 'react';
+import { Volume2 } from 'lucide-react';
+import { PERSONALITIES } from '@/components/onboarding/genesisAssets';
+export default function GenesisVoiceFields({ config, setConfig }) {
+  const [voices, setVoices] = useState([]), [speaking, setSpeaking] = useState(false), [error, setError] = useState('');
+  useEffect(() => { if (!window.speechSynthesis) return; const load = () => setVoices(window.speechSynthesis.getVoices()); load(); window.speechSynthesis.addEventListener('voiceschanged', load); return () => { window.speechSynthesis.removeEventListener('voiceschanged', load); window.speechSynthesis.cancel(); }; }, []);
+  const updateVoice = patch => setConfig(c => ({ ...c, voice: { ...c.voice, ...patch } }));
+  const speak = () => { setError(''); window.speechSynthesis.cancel(); const text = new SpeechSynthesisUtterance(`Hello. I'm ${config.name || 'your companion'}. ${config.personality === 'warm' ? 'We will take this journey together.' : config.personality === 'curious' ? 'What shall we discover today?' : 'Let us take our next step thoughtfully.'}`); text.voice = voices.find(v => v.voiceURI === config.voice.uri) || null; text.rate = config.voice.rate; text.pitch = config.voice.pitch; text.onend = () => setSpeaking(false); text.onerror = () => { setSpeaking(false); setError('Voice playback is unavailable on this device. You can still save your preference.'); }; setSpeaking(true); window.speechSynthesis.speak(text); };
+  return <section className="genesis-fields"><p className="genesis-kicker">04 / PERSONALITY & VOICE</p><h1>A presence.<br />Not just a model.</h1><p className="genesis-description">Choose a starting temperament and listen to a greeting.</p>
+    <div className="genesis-choice-list">{PERSONALITIES.map(p => <button type="button" key={p.id} aria-pressed={config.personality === p.id} onClick={() => setConfig(c => ({...c, personality:p.id}))}><strong>{p.name}</strong><small>{p.description}</small></button>)}</div>
+    <label>Voice on this device<select value={config.voice.uri} onChange={e => updateVoice({uri:e.target.value})}><option value="">System default</option>{voices.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}</option>)}</select></label>
+    <div className="genesis-field-pair"><label>Pitch<input aria-label="Voice pitch" type="range" min="0.6" max="1.4" step="0.05" value={config.voice.pitch} onChange={e => updateVoice({pitch:Number(e.target.value)})} /></label><label>Speaking pace<input aria-label="Speaking pace" type="range" min="0.7" max="1.3" step="0.05" value={config.voice.rate} onChange={e => updateVoice({rate:Number(e.target.value)})} /></label></div>
+    <button type="button" className="genesis-secondary" disabled={!window.speechSynthesis} onClick={speaking ? () => { window.speechSynthesis.cancel(); setSpeaking(false); } : speak}><Volume2 size={16} />{speaking ? 'Stop preview' : 'Listen to greeting'}</button>
+    <small>Device voices vary; a missing voice uses the system default. This preference is saved with your AI.</small>{error && <p role="alert">{error}</p>}
+  </section>;
+}

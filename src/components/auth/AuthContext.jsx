@@ -271,7 +271,8 @@ export const AuthProvider = ({ children }) => {
                 if (!user?.id) {
                     throw new Error("User ID not available to create avatar.");
                 }
-                await base44.entities.Avatar.create({
+                const existing = await base44.entities.Avatar.filter({user_id:user.id}, 'created_date', 1);
+                if (!existing.length) await base44.entities.Avatar.create({
                     user_id: user.id,
                     name: signUpData.username,
                     gender: signUpData.gender,
