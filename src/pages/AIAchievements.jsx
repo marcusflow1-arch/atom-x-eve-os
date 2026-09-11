@@ -409,10 +409,15 @@ function AIAchievementsView({ onClosePage }) {
         
         cards.push({
           id: achievement.id,
+          achievementId: achievement.id,
+          userCardId: userCard?.id,
+          gameId: selectedGame.id,
+          genre: selectedGame.genre,
+          cardType: userCard?.card_type || achievement.category,
           title: achievement.reward.name || achievement.title,
           series: selectedGame.title,
-          rarity: achievement.rarity,
-          image: selectedGame.cover_image || selectedGame.cover,
+          rarity: userCard?.card_rarity || achievement.rarity,
+          image: userCard?.card_image || selectedGame.cover_image || selectedGame.cover,
           description: achievement.reward.description || achievement.description,
           stats: achievement.reward.stats || {},
           isPurchased: userCard?.acquisition_method === 'purchased',
