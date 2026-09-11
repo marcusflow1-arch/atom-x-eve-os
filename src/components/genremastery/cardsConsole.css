@@ -5,7 +5,21 @@
 .cards-console button, .cc-bottom-nav button, .cc-exchange-dialog button { -webkit-tap-highlight-color: transparent; }
 .cards-console button:focus-visible, .cc-bottom-nav button:focus-visible, .cc-exchange-dialog button:focus-visible { outline: 2px solid #9bcfdf; outline-offset: 4px; }
 .cards-console button:disabled, .cc-exchange-dialog button:disabled { opacity: .5; cursor: default; }
-.cc-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 19px 30px 17px; flex-shrink: 0; }
+.cc-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 19px 30px 17px; flex-shrink: 0; position: relative; }
+.cc-topbar > .cc-brand, .cc-topbar > .cc-market-nav { flex-shrink: 0; }
+.cc-topbar > .cc-genres { flex: 1; }
+@media(min-width:801px) {
+  .cc-topbar .cc-brand small { max-width: 110px; letter-spacing: 1px; }
+  .cc-topbar .cc-genres { gap: 2px; }
+  .cc-topbar .cc-genres button { padding: 8px 6px; gap: 4px; }
+  .cc-topbar .cc-market-nav { gap: 2px; }
+  .cc-topbar .cc-market-nav button { padding: 11px 9px; white-space: nowrap; }
+  .cc-workspace > .cc-library { padding-top: 83px; }
+}
+@media(max-width:800px) {
+  .cc-topbar { flex-wrap: wrap; }
+  .cc-topbar > .cc-genres { order: 3; flex-basis: 100%; }
+}
 .cc-brand { display: flex; align-items: center; gap: 12px; text-align: left; color: #d9c7a2; }
 .cc-brand > span { font-size: 21px; color: #eff2f7; font-weight: 600; letter-spacing: -.5px; line-height: 1.2; }
 .cc-brand small { display: block; margin-top: 4px; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #8390a4; font-weight: 400; }
@@ -14,7 +28,7 @@
 .cc-market-nav button:hover { color: #fff; background: #ffffff06; }
 .cc-market-nav button[aria-pressed=true] { color: var(--cc-accent); background: linear-gradient(120deg, #ffffff0c, transparent); }
 .cc-genre-bar { display: flex; gap: 25px; align-items: center; flex-shrink: 0; padding: 0 30px 16px; position: relative; }
-.cc-genre-bar::after, .cc-home-destinations::before, .cc-home-destinations::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #66748f3d, transparent); pointer-events: none; }
+.cc-topbar::after, .cc-home-destinations::before, .cc-home-destinations::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #66748f3d, transparent); pointer-events: none; }
 .cc-eyebrow { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #8c9bae; line-height: 1.6; }
 .cc-genre-bar > .cc-eyebrow { flex: 0 0 158px; }
 .cc-genres { display: flex; gap: 6px; overflow-x: auto; min-width: 0; padding: 4px; }
