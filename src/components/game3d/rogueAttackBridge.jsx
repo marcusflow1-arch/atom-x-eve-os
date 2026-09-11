@@ -14,7 +14,12 @@ import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { getAbilityState, updateTargetHP } from './abilityStore';
 import { updateBoss } from './bossStore';
 
+const BRIDGE_VERSION = 'world-boss-arrow-v4';
 const bossShotRaycaster = new THREE.Raycaster();
+const bossAimBox = new THREE.Box3();
+const bossAimCenter = new THREE.Vector3();
+const cameraDirection = new THREE.Vector3();
+const toBossDirection = new THREE.Vector3();
 
 function calculateOutgoingDamage(playerDerivedRef, skillStrikeMult = 1.0) {
   const liveDerived = getPlayerHUD().derived || playerDerivedRef?.current || {};
@@ -22,12 +27,8 @@ function calculateOutgoingDamage(playerDerivedRef, skillStrikeMult = 1.0) {
     ...liveDerived,
     critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct(),
   };
-  return Math.max(
-    1,
-    Math.round(
-      calculateHit(boosted, { defense: 0 }) * getWeaponDamageMult() * skillStrikeMult,
-    ),
-  );
+  const raw = calculateHit(boosted, { defense: 0 }) * getWeaponDamageMult() * skillStrikeMult;
+  return Number.isFinite(raw) ? Math.max(1, Math.round(raw)) : 1;
 }
 
 function getLiveBosses() {
@@ -50,10 +51,13 @@ function applyBossDamage(targetId, amount, source = 'player') {
   const boss = findLiveBoss(targetId);
   if (!boss) return 0;
 
-  const damage = Math.max(1, Math.round(amount));
-  boss.hp = Math.max(0, (Number(boss.hp) || 0) - damage);
+  const rounded = Math.round(Number(amount));
+  const damage = Number.isFinite(rounded) ? Math.max(1, rounded) : 1;
+  const previousHp = Number.isFinite(Number(boss.hp)) ? Number(boss.hp) : Number(boss.maxHp) || 1;
+  boss.hp = Math.max(0, previousHp - damage);
   boss.alive = boss.hp > 0;
   boss.hitCooldown = 0.25;
+  boss.lastDamage = damage;
   boss.lastDamageSource = source;
   boss.lastDamageAt = performance.now();
 
@@ -61,21 +65,19 @@ function applyBossDamage(targetId, amount, source = 'player') {
   // has a very large segmented HP pool.
   if (Array.isArray(boss.tintMaterials)) {
     boss.tintMaterials.forEach((material) => {
-      if (!material) return;
-      if (material.emissive) {
-        material.userData = material.userData || {};
-        if (!material.userData.__bossBaseEmissive) {
-          material.userData.__bossBaseEmissive = material.emissive.clone();
-        }
-        material.emissive.setHex(0xffffff);
+      if (!material?.emissive) return;
+      material.userData = material.userData || {};
+      if (!material.userData.__bossBaseEmissive) {
+        material.userData.__bossBaseEmissive = material.emissive.clone();
       }
+      material.emissive.setHex(0xffffff);
     });
     setTimeout(() => {
       boss.tintMaterials?.forEach((material) => {
         const base = material?.userData?.__bossBaseEmissive;
         if (material?.emissive && base) material.emissive.copy(base);
       });
-    }, 90);
+    }, 110);
   }
 
   // Keep every existing HUD/target subscriber on the same source of truth.
@@ -83,6 +85,9 @@ function applyBossDamage(targetId, amount, source = 'player') {
     hp: boss.hp,
     alive: boss.alive,
     dying: boss.dying,
+    lastDamage: damage,
+    lastDamageAt: boss.lastDamageAt,
+    lastDamageSource: source,
   });
   updateTargetHP(boss.id, boss.hp);
 
@@ -110,7 +115,8 @@ function applyLockedRogueDamage(targetId, amount, source = 'charged_bow') {
   const rogue = findLiveRogue(targetId);
   if (!rogue) return 0;
 
-  const damage = Math.max(1, Math.round(amount));
+  const rounded = Math.round(Number(amount));
+  const damage = Number.isFinite(rounded) ? Math.max(1, rounded) : 1;
   rogue.hp = Math.max(0, (Number(rogue.hp) || 0) - damage);
   rogue.lastDamageSource = source;
   rogue.lastDamageAt = performance.now();
@@ -158,20 +164,28 @@ function findCanvasRectForPointer(event) {
   }
 
   if (typeof document === 'undefined') return null;
-  const x = Number(event?.clientX) || 0;
-  const y = Number(event?.clientY) || 0;
+  const clientX = Number(event?.clientX);
+  const clientY = Number(event?.clientY);
+  const hasPointer = Number.isFinite(clientX) && Number.isFinite(clientY);
   const canvases = Array.from(document.querySelectorAll('canvas'));
-  for (const canvas of canvases) {
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) continue;
-    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) return rect;
+
+  if (hasPointer) {
+    for (const canvas of canvases) {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) return rect;
+    }
   }
-  return canvases[0]?.getBoundingClientRect?.() || null;
+
+  return canvases.find((canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  })?.getBoundingClientRect?.() || null;
 }
 
 function raycastBossAtNDC(ndcX, ndcY) {
   const camera = typeof window !== 'undefined' ? window.__gw3dCamera : null;
-  if (!camera) return null;
+  if (!camera || !Number.isFinite(ndcX) || !Number.isFinite(ndcY)) return null;
 
   camera.updateMatrixWorld?.();
   bossShotRaycaster.setFromCamera({ x: ndcX, y: ndcY }, camera);
@@ -189,14 +203,50 @@ function raycastBossAtNDC(ndcX, ndcY) {
   return best;
 }
 
+function findBossInCameraAimCone() {
+  const camera = typeof window !== 'undefined' ? window.__gw3dCamera : null;
+  if (!camera) return null;
+
+  camera.updateMatrixWorld?.();
+  camera.getWorldDirection(cameraDirection).normalize();
+
+  let best = null;
+  let bestDot = 0.84; // roughly a 33 degree aim-assist cone
+  let bestDistance = Infinity;
+
+  for (const boss of getLiveBosses()) {
+    boss.group.updateMatrixWorld?.(true);
+    try {
+      bossAimBox.setFromObject(boss.group);
+      bossAimBox.getCenter(bossAimCenter);
+    } catch {
+      bossAimCenter.copy(boss.group.position);
+    }
+
+    toBossDirection.copy(bossAimCenter).sub(camera.position);
+    const distance = toBossDirection.length();
+    if (!Number.isFinite(distance) || distance <= 0 || distance > 90) continue;
+    toBossDirection.normalize();
+    const dot = cameraDirection.dot(toBossDirection);
+    if (dot > bestDot || (Math.abs(dot - bestDot) < 0.01 && distance < bestDistance)) {
+      best = boss;
+      bestDot = dot;
+      bestDistance = distance;
+    }
+  }
+
+  return best;
+}
+
 function findBossUnderArrowAim(event) {
   // First use the actual mouse position when this attack came from a pointer.
-  // Animation-driven attacks have no pointer event and should use the reticle.
+  // Every read is null-safe because some animation/controller attacks do not
+  // supply a DOM pointer event at all.
   const clientX = Number(event?.clientX);
   const clientY = Number(event?.clientY);
   if (Number.isFinite(clientX) && Number.isFinite(clientY)) {
     const rect = findCanvasRectForPointer(event);
-    if (rect && rect.width > 0 && rect.height > 0) {
+    if (rect?.width > 0 && rect?.height > 0) {
       const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
       const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
       const pointedBoss = raycastBossAtNDC(ndcX, ndcY);
@@ -204,8 +254,11 @@ function findBossUnderArrowAim(event) {
     }
   }
 
-  // Third-person aiming and animation-triggered attacks use the center reticle.
-  return raycastBossAtNDC(0, 0);
+  // Third-person aiming uses a centered reticle. If the exact center ray misses
+  // the huge boss mesh because of camera offset, use a narrow forward aim cone.
+  const centerBoss = raycastBossAtNDC(0, 0);
+  if (centerBoss) return centerBoss;
+  return findBossInCameraAimCone();
 }
 
 function resolveArrowBoss(event) {
@@ -217,10 +270,6 @@ function resolveArrowBoss(event) {
   return findBossUnderArrowAim(event);
 }
 
-// Ranged attacks are charged from the real mouse-down → mouse-up duration.
-// A normal click now applies base damage immediately through dispatchRogueAttack.
-// Holding the shot only adds the bonus portion on release, so the boss is never
-// double-hit for the same base arrow damage.
 let rangedChargeStartedAt = 0;
 let rangedChargeActive = false;
 let lastRangedBaseDamage = 0;
@@ -237,28 +286,28 @@ function isRangedWeapon() {
 }
 
 function installBossAndBowBridge() {
-  if (typeof window === 'undefined' || window.__atomXeBossCombatBridgeInstalled) return;
-  window.__atomXeBossCombatBridgeInstalled = true;
+  if (typeof window === 'undefined') return;
+  if (window.__atomXeBossCombatBridgeVersion === BRIDGE_VERSION) return;
 
-  // Track every left-click because GameWorld3D's player controller uses left
-  // click as the bow/fire input even when the weapon-path store has not yet
-  // switched to "ranged". That was one reason the world boss could appear
-  // immune while the arrow animation still played.
-  window.addEventListener('mousedown', (event) => {
-    if (event.button !== 0) return;
+  // Base44 preview uses hot-module replacement. Remove listeners from the last
+  // version when possible so stale handlers cannot keep running old hit logic.
+  try { window.__atomXeBossCombatBridgeCleanup?.(); } catch { /* non-fatal */ }
+
+  const onMouseDown = (event) => {
+    if (event?.button !== 0) return;
     lastPointerEvent = {
-      clientX: event.clientX,
-      clientY: event.clientY,
-      target: event.target,
+      clientX: Number.isFinite(Number(event?.clientX)) ? Number(event.clientX) : null,
+      clientY: Number.isFinite(Number(event?.clientY)) ? Number(event.clientY) : null,
+      target: event?.target || null,
     };
     rangedChargeStartedAt = performance.now();
     rangedChargeActive = true;
     lastRangedBaseDamage = 0;
     bossDamagedThisPressId = null;
-  }, true);
+  };
 
-  window.addEventListener('mouseup', (event) => {
-    if (event.button !== 0 || !rangedChargeActive) return;
+  const onMouseUp = (event) => {
+    if (event?.button !== 0 || !rangedChargeActive) return;
     const heldSeconds = Math.max(0, (performance.now() - rangedChargeStartedAt) / 1000);
     rangedChargeActive = false;
 
@@ -267,9 +316,8 @@ function installBossAndBowBridge() {
     const overcharge = Math.max(0, heldSeconds - 1.3) * 0.25;
     const chargeMultiplier = 1 + fullCharge + overcharge;
 
-    // If dispatchRogueAttack already applied the base arrow hit, only add the
-    // charge bonus here. This makes a tap visibly damage the boss immediately
-    // and a held shot still scale upward without double-counting base damage.
+    // dispatchRogueAttack applies the base hit immediately. On release only the
+    // charge bonus is added, which avoids double-counting a normal arrow.
     if (bossDamagedThisPressId) {
       const bonusDamage = Math.max(0, baseDamage * (chargeMultiplier - 1));
       if (bonusDamage >= 1) applyBossDamage(bossDamagedThisPressId, bonusDamage, 'charged_bow_bonus');
@@ -277,10 +325,7 @@ function installBossAndBowBridge() {
       return;
     }
 
-    // Fallback for any controller path that reaches mouse-up before the normal
-    // attack dispatcher. Locked boss, mouse-on-boss, and center-reticle aiming
-    // all resolve to the same live world-boss HP object.
-    const boss = resolveArrowBoss(event);
+    const boss = resolveArrowBoss(event || lastPointerEvent);
     if (boss) {
       applyBossDamage(boss.id, baseDamage * chargeMultiplier, 'charged_bow');
       return;
@@ -290,36 +335,45 @@ function installBossAndBowBridge() {
     if (target?.kind === 'rogue') {
       applyLockedRogueDamage(target.id, baseDamage * chargeMultiplier, 'charged_bow');
     }
-  }, true);
+  };
 
-  // GameWorld3D dispatches this event for every normal player attack. Keep the
-  // legacy rogue path intact and preserve melee boss support, but ranged world
-  // boss damage is handled directly by dispatchRogueAttack below.
-  window.addEventListener('rogueAITakeDamage', (event) => {
+  const onRogueDamage = (event) => {
     const target = getAbilityState().target;
     if (!target) return;
 
     if (isRangedWeapon()) {
       if (target.kind !== 'boss' && target.kind !== 'rogue') return;
       if (rangedChargeActive) {
-        lastRangedBaseDamage = Math.max(1, Number(event.detail?.damage) || 1);
-        event.stopImmediatePropagation();
+        lastRangedBaseDamage = Math.max(1, Number(event?.detail?.damage) || 1);
+        event?.stopImmediatePropagation?.();
       }
       return;
     }
 
     if (target.kind === 'boss') {
-      applyBossDamage(target.id, Number(event.detail?.damage) || 1, 'player_attack');
+      applyBossDamage(target.id, Number(event?.detail?.damage) || 1, 'player_attack');
     }
-  });
+  };
 
+  window.addEventListener('mousedown', onMouseDown, true);
+  window.addEventListener('mouseup', onMouseUp, true);
+  window.addEventListener('rogueAITakeDamage', onRogueDamage);
+
+  window.__atomXeBossCombatBridgeCleanup = () => {
+    window.removeEventListener('mousedown', onMouseDown, true);
+    window.removeEventListener('mouseup', onMouseUp, true);
+    window.removeEventListener('rogueAITakeDamage', onRogueDamage);
+  };
+  window.__atomXeBossCombatBridgeInstalled = true;
+  window.__atomXeBossCombatBridgeVersion = BRIDGE_VERSION;
   window.__atomXeBossCombat = {
     isInstalled: () => true,
+    version: BRIDGE_VERSION,
     getBosses: () => getLiveBosses(),
     getRogueBosses: () => (Array.isArray(window.__gw3dRogues) ? window.__gw3dRogues : []),
     damageBoss: (bossId, amount = 1) => applyBossDamage(bossId, amount, 'diagnostic'),
     damageRogueBoss: (bossId, amount = 1) => applyLockedRogueDamage(bossId, amount, 'diagnostic'),
-    bossUnderAim: () => raycastBossAtNDC(0, 0),
+    bossUnderAim: () => raycastBossAtNDC(0, 0) || findBossInCameraAimCone(),
   };
 }
 
@@ -328,9 +382,9 @@ installBossAndBowBridge();
 /**
  * Called by the real GameWorld3D left-click attack loop.
  *
- * If the shot is aimed at a live world boss (mouse-over, center reticle, or an
- * explicit lock), apply damage to that boss immediately. Otherwise preserve the
- * existing rogue-AI event path and the normal enemy combat loop.
+ * If the shot is aimed at a live world boss (mouse-over, center reticle,
+ * camera aim cone, or explicit lock), apply damage to that boss immediately.
+ * Otherwise preserve the existing rogue-AI event path and normal enemy combat.
  */
 export function dispatchRogueAttack(playerDerivedRef, skillStrikeMult = 1.0) {
   const dmg = calculateOutgoingDamage(playerDerivedRef, skillStrikeMult);
