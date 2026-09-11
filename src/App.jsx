@@ -41,7 +41,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { user, isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -53,8 +53,15 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
     if (authError.type === 'auth_required') {
       navigateToLogin();
-      return null;
+      return <GenesisLoadingScreen label="Opening account sign in" />;
     }
+  }
+
+  // Atom × Eve is account-first. Never let an anonymous/guest session enter the
+  // application shell, because first-time avatar setup must be tied to a user id.
+  if (!isAuthenticated || !user?.id) {
+    navigateToLogin();
+    return <GenesisLoadingScreen label="Opening account sign in" />;
   }
 
   return (
