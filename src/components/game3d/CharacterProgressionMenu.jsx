@@ -13,9 +13,11 @@ import AuraSubTab from './progression/hub/AuraSubTab';
 import TitleSubTab from './progression/hub/TitleSubTab';
 import SpiritServicesSubTab from './progression/hub/SpiritServicesSubTab';
 import CombatDoctrineSubTab from './progression/hub/CombatDoctrineSubTab';
+import SpiritForgeSubTab from './progression/hub/SpiritForgeSubTab';
+import SpiritMarketSubTab from './progression/hub/SpiritMarketSubTab';
+import QuestRelaySubTab from './progression/hub/QuestRelaySubTab';
 import ElixirsSubTab from './progression/hub/ElixirsSubTab';
 import ContributionShopSubTab from './progression/hub/ContributionShopSubTab';
-import QuestRelaySubTab from './progression/hub/QuestRelaySubTab';
 import WarBandsSubTab from './progression/hub/WarBandsSubTab';
 
 const MAIN_TABS = [
@@ -35,6 +37,8 @@ const MASTERY_SUB_TABS = [
 const SERVICE_SUB_TABS = [
   { id: 'spirit',  label: 'Services' },
   { id: 'combat',  label: 'Combat' },
+  { id: 'forge',   label: 'Forge' },
+  { id: 'market',  label: 'Market' },
   { id: 'quests',  label: 'Quests' },
   { id: 'elixirs', label: 'Elixirs' },
   { id: 'cp',      label: 'CP Shop' },
@@ -131,6 +135,8 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
           {mainTab === 'services' && serviceTab === 'spirit' && <SpiritServicesSubTab />}
           {mainTab === 'services' && serviceTab === 'combat' && <CombatDoctrineSubTab />}
+          {mainTab === 'services' && serviceTab === 'forge' && <SpiritForgeSubTab />}
+          {mainTab === 'services' && serviceTab === 'market' && <SpiritMarketSubTab />}
           {mainTab === 'services' && serviceTab === 'quests' && <QuestRelaySubTab />}
           {mainTab === 'services' && serviceTab === 'elixirs' && <ElixirsSubTab />}
           {mainTab === 'services' && serviceTab === 'cp' && <ContributionShopSubTab />}
