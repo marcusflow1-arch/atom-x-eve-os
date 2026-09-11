@@ -1,12 +1,9 @@
+import { consumeForcedCriticalHit } from './combat/forcedCriticalBridge';
+
 // TwelveSky-style combat stat model for Mines.
-// Canonical player attributes are the original four pillars:
-//   Strength  -> weapon attack + attack success
-//   Agility   -> defense + evasion
-//   Vitality  -> HP + evasion
-//   Spirit    -> chi + weapon attack
-//
-// The engine still exposes legacy aliases (dexterity/constitution/focus) so
-// older Atom XE systems continue to work while the wider migration proceeds.
+// Canonical player attributes are Strength, Agility, Vitality and Spirit.
+// Legacy aliases remain exposed so older Atom XE systems keep working during
+// the migration.
 
 export const STAT_RATES = Object.freeze({
   strengthAttack: 2.65,
@@ -29,9 +26,9 @@ export const SECONDARY_RATES = Object.freeze({
 
 export const DEFAULT_PLAYER_STATS = Object.freeze({
   strength: 3,
-  dexterity: 2,      // Agility compatibility key
-  constitution: 5,   // Vitality compatibility key
-  focus: 2,          // Spirit compatibility key
+  dexterity: 2,
+  constitution: 5,
+  focus: 2,
 });
 
 export function migrateBaseStats(stats) {
@@ -44,8 +41,6 @@ export function migrateBaseStats(stats) {
     ? stats.vitality
     : Number.isFinite(stats.constitution) ? stats.constitution
       : Number.isFinite(stats.hp) ? stats.hp : DEFAULT_PLAYER_STATS.constitution;
-  // Older Atom XE saves split magic between Focus/Spirit and Intelligence.
-  // Fold any old INT investment into Spirit once so players do not lose points.
   const legacySpirit = Number.isFinite(stats.spirit)
     ? stats.spirit
     : Number.isFinite(stats.focus) ? stats.focus : DEFAULT_PLAYER_STATS.focus;
@@ -178,7 +173,6 @@ export function computeDerivedStats(baseStats, equipment = [], attributeBonuses 
       agility: Math.round(agility),
       vitality: Math.round(vitality),
       spirit: Math.round(spirit),
-      // compatibility aliases
       dexterity: Math.round(agility),
       constitution: Math.round(vitality),
       focus: Math.round(spirit),
@@ -194,9 +188,14 @@ function mitigate(raw, defenderStats) {
   return Math.max(1, Math.round(raw - defense));
 }
 
+function rollCrit(attackerStats) {
+  if (consumeForcedCriticalHit()) return true;
+  return Math.random() * 100 < (attackerStats.critChance || 0);
+}
+
 export function calculateHit(attackerStats, defenderStats) {
   let raw = attackerStats.totalDamage || attackerStats.damage || 1;
-  const crit = Math.random() * 100 < (attackerStats.critChance || 0);
+  const crit = rollCrit(attackerStats);
   if (crit) {
     const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
     const bonus = raw * (critMult - 1);
@@ -207,7 +206,7 @@ export function calculateHit(attackerStats, defenderStats) {
 }
 
 export function calculateHitWithCrit(attackerStats, defenderStats) {
-  const crit = Math.random() * 100 < (attackerStats.critChance || 0);
+  const crit = rollCrit(attackerStats);
   let raw = attackerStats.totalDamage || attackerStats.damage || 1;
   if (crit) {
     const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
