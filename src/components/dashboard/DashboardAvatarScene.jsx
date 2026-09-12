@@ -5,6 +5,8 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import FriendsListContent from '@/components/dashboard/FriendsListContent';
+import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
+import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 
@@ -161,6 +163,7 @@ export default function DashboardAvatarScene() {
 
   return (
     <>
+      <EnvironmentHubStageLayer />
       {avatarStage}
       {friendsWorkspace && createPortal(
         <div className="relative z-10 h-full w-full p-4 md:p-5">
@@ -168,6 +171,7 @@ export default function DashboardAvatarScene() {
         </div>,
         friendsWorkspace
       )}
+      <EnvironmentHubWorkspace />
     </>
   );
 }
