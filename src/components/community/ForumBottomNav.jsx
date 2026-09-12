@@ -7,6 +7,11 @@ import './forumHub.css';
 export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onTabSelect }) {
   const navigate = useNavigate();
 
+  const handleHome = () => {
+    onTabSelect?.('home');
+    window.dispatchEvent(new CustomEvent('forumGoHome'));
+  };
+
   return <nav
     className="forum-console-nav relative h-full w-full"
     aria-label="Forum navigation"
@@ -33,7 +38,7 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
 
     <div className="forum-console-center relative z-10">
       <button type="button" onClick={() => onTabSelect?.('recent')} className={activeTab === 'recent' ? 'is-active' : ''}><Clock3 size={16} /><span>Recent</span></button>
-      <button type="button" onClick={() => onTabSelect?.('home')} className={activeTab === 'home' ? 'is-active' : ''}><Home size={16} /><span>Home</span></button>
+      <button type="button" onClick={handleHome} className={activeTab === 'home' ? 'is-active' : ''}><Home size={16} /><span>Home</span></button>
       <button type="button" onClick={() => onTabSelect?.('heated')} className={activeTab === 'heated' ? 'is-active' : ''}><Flame size={16} /><span>Popular</span></button>
     </div>
   </nav>;
