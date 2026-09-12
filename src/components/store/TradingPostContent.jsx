@@ -775,7 +775,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                     <span className="text-[8px] font-black uppercase tracking-[.2em] text-[#d7dde5]/45">Card Catalog · All Registered Cards</span>
                     <h2 className="mt-1 truncate text-xl font-black text-white">{selectedGame.title}</h2>
                     <p className="mt-1 text-[9px] uppercase tracking-wider text-white/25">{String(selectedGame.genre || 'other').replaceAll('_', ' ')} · {selectedGame.original_year || 'Year unavailable'}</p>
-                    {gameCards.some((card) => card.isTemporary) && <p className="mt-2 text-[8px] font-black uppercase tracking-[.16em] text-emerald-200/70">Temp market validation cards installed · open one to test the real Buy / Trade routes</p>
+                    {gameCards.some((card) => card.isTemporary) && <p className="mt-2 text-[8px] font-black uppercase tracking-[.16em] text-emerald-200/70">Temp market validation cards installed · open one to test the real Buy / Trade routes</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="rounded-xl bg-white/[0.035] px-4 py-2"><span className="block text-[7px] uppercase tracking-wider text-white/25">Cards</span><strong className="text-xs text-white/70">{(gameStats.get(normalize(selectedGame.title))?.cards.size || 0)}</strong></div>
