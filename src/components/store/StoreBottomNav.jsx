@@ -1,25 +1,41 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function StoreBottomNav({ activeTab, onTabChange }) {
+  const navigate = useNavigate();
   const isDevCardActive = activeTab === 'devcards';
   const isStoreActive = activeTab === 'store';
   const isTradingActive = activeTab === 'trading';
 
+  const changeTab = (tabId) => {
+    const storeUrl = createPageUrl('Store');
+
+    if (tabId === 'store') {
+      // Returning to Store must also clear a lingering ?mode=trading/devcards URL.
+      // Without this, a later search-param refresh can put the user back into the
+      // Trading Post even though they explicitly selected Store.
+      navigate(storeUrl);
+    } else if (tabId === 'trading') {
+      navigate(`${storeUrl}?mode=trading`);
+    } else if (tabId === 'devcards') {
+      navigate(`${storeUrl}?mode=devcards`);
+    }
+
+    onTabChange?.(tabId);
+  };
+
   return (
-    <div className="flex items-center w-full relative">
+    <div className="relative flex w-full items-center">
+      <div className="flex flex-1 items-center gap-5" />
 
-      {/* ── LEFT: spacer keeps the Store tab centered ── */}
-      <div className="flex items-center gap-5 flex-1" />
-
-      {/* ── CENTER: Divider | Store | Divider ── */}
-      <div className="flex items-center flex-shrink-0">
-        {/* Left divider */}
-        <div className="w-px h-5 bg-white/20 mx-4" />
+      <div className="flex flex-shrink-0 items-center">
+        <div className="mx-4 h-5 w-px bg-white/20" />
 
         <motion.button
-          onClick={() => onTabChange('store')}
+          type="button"
+          onClick={() => changeTab('store')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
           className={`relative px-5 py-1.5 text-sm font-black uppercase tracking-wider transition-all ${
@@ -30,23 +46,21 @@ export default function StoreBottomNav({ activeTab, onTabChange }) {
           {isStoreActive && (
             <motion.div
               layoutId="store-tab-underline"
-              className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 rounded-full"
+              className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-blue-500"
               initial={false}
               transition={{ type: 'spring', stiffness: 500, damping: 35 }}
             />
           )}
         </motion.button>
 
-        {/* Right divider */}
-        <div className="w-px h-5 bg-white/20 mx-4" />
+        <div className="mx-4 h-5 w-px bg-white/20" />
       </div>
 
-      {/* ── RIGHT: Trading Post + Dev Cards (close to center divider) + Search (far right) ── */}
-      <div className="flex items-center flex-1">
-        {/* Trading Post & Dev Cards — immediately after the center divider */}
+      <div className="flex flex-1 items-center">
         <div className="flex items-center gap-4">
           <motion.button
-            onClick={() => onTabChange('trading')}
+            type="button"
+            onClick={() => changeTab('trading')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
             className={`relative text-[11px] font-bold uppercase tracking-wider transition-all ${
@@ -55,12 +69,18 @@ export default function StoreBottomNav({ activeTab, onTabChange }) {
           >
             Trading Post
             {isTradingActive && (
-              <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-blue-500 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
+              <motion.div
+                layoutId="store-tab-underline"
+                className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-blue-500"
+                initial={false}
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
             )}
           </motion.button>
 
           <motion.button
-            onClick={() => onTabChange('devcards')}
+            type="button"
+            onClick={() => changeTab('devcards')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
             className={`relative text-[11px] font-black uppercase tracking-wider transition-all ${
@@ -69,12 +89,16 @@ export default function StoreBottomNav({ activeTab, onTabChange }) {
           >
             Dev Cards
             {isDevCardActive && (
-              <motion.div layoutId="store-tab-underline" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-amber-400 rounded-full" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
+              <motion.div
+                layoutId="store-tab-underline"
+                className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-amber-400"
+                initial={false}
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
             )}
           </motion.button>
         </div>
 
-        {/* Spacer pushes remaining space to the right */}
         <div className="flex-1" />
       </div>
     </div>
