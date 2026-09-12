@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, MessageSquare, Gamepad2, Circle, MoreHorizontal, Shield, Star, Heart, Trophy, Globe, UserPlus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { User, MessageSquare, Gamepad2, MoreHorizontal, Shield, Trophy, Globe, UserPlus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
-
 
 export default function FriendsListContent() {
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -51,15 +50,11 @@ export default function FriendsListContent() {
     setTimeout(() => {
       setInvitingUserId(null);
       setInvitedUsers(prev => ({ ...prev, [userObj.id]: 'accepted' }));
-      
-      // Simulate them inviting YOU back for demo purposes
       setTimeout(() => {
-         window.dispatchEvent(new CustomEvent('incomingInvite', {
-            detail: { fromUser: userObj }
-         }));
+        window.dispatchEvent(new CustomEvent('incomingInvite', {
+          detail: { fromUser: userObj }
+        }));
       }, 1000);
-      
-      // Send invite - they join our local world instance
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
         detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id }
       }));
@@ -78,7 +73,6 @@ export default function FriendsListContent() {
   const displayList = activeTab === 'friends' ? friends : globalUsers;
 
   const handleJoin = (userObj) => {
-    // Switch environment to match the host
     if (userObj.envUrl) {
       window.dispatchEvent(new CustomEvent('changeEnvironment', {
         detail: { envUrl: userObj.envUrl }
@@ -93,15 +87,17 @@ export default function FriendsListContent() {
       targetHostId = targetChannel.replace('world_instance_', '');
     }
 
-    // Connect to their specific multiplayer world instance channel
     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
       detail: { channelId: targetChannel, hostId: targetHostId }
     }));
   };
 
+  const openMessages = (friend) => {
+    window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { friend } }));
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-slate-900/50 rounded-xl border border-white/10">
-      {/* Left List */}
       <div className="w-1/3 border-r border-white/10 flex flex-col bg-black/20">
         <div className="p-4 border-b border-white/10">
           <div className="flex bg-white/5 rounded-lg p-1 mb-2">
@@ -166,7 +162,6 @@ export default function FriendsListContent() {
         </div>
       </div>
 
-      {/* Right Profile Overview */}
       <div className="flex-1 bg-gradient-to-br from-slate-900/50 to-slate-800/50 relative overflow-hidden flex flex-col">
         {selectedFriend ? (
           <motion.div 
@@ -176,7 +171,6 @@ export default function FriendsListContent() {
             transition={{ duration: 0.3 }}
             className="flex-1 flex flex-col h-full"
           >
-            {/* Header / Banner */}
             <div className="h-32 bg-gradient-to-r from-blue-600/20 to-purple-600/20 relative">
               <div className="absolute inset-0 bg-black/20" />
               <div className="absolute bottom-4 right-4 flex gap-2">
@@ -186,9 +180,7 @@ export default function FriendsListContent() {
               </div>
             </div>
 
-            {/* Profile Info */}
             <div className="px-6 relative flex-1 overflow-y-auto">
-              {/* Avatar overlap */}
               <div className="-mt-12 mb-4 flex justify-between items-end">
                 <div className="relative">
                   <Avatar className="w-24 h-24 border-4 border-slate-900 shadow-xl">
@@ -219,7 +211,11 @@ export default function FriendsListContent() {
                     </>
                   ) : (
                     <>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => openMessages(selectedFriend)}
+                        className="bg-blue-600 hover:bg-blue-500 text-white gap-2"
+                      >
                         <MessageSquare className="w-4 h-4" /> Message
                       </Button>
                       <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10 gap-2">
@@ -240,7 +236,6 @@ export default function FriendsListContent() {
                 <p className="text-white/50 text-sm mt-1">{selectedFriend.bio || 'No bio available'}</p>
               </div>
 
-              {/* Status / Activity */}
               <div className="space-y-6">
                 {selectedFriend.current_game && (
                   <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
@@ -257,7 +252,6 @@ export default function FriendsListContent() {
                   </div>
                 )}
 
-                {/* Stats Grid */}
                 <div>
                   <h4 className="text-xs font-bold text-white/40 uppercase mb-3">Overview</h4>
                   <div className="grid grid-cols-2 gap-3">
@@ -278,7 +272,6 @@ export default function FriendsListContent() {
                   </div>
                 </div>
 
-                {/* Badges/Tags */}
                 <div>
                   <h4 className="text-xs font-bold text-white/40 uppercase mb-3">Badges</h4>
                   <div className="flex flex-wrap gap-2">
