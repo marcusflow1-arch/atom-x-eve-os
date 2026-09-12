@@ -6,6 +6,7 @@ body .creator-discovery {
   --aura-family-edge: rgba(225, 231, 238, 0.46);
   --aura-family-ink: #f7f7f5;
   --aura-family-muted: #c1c5ca;
+  --aura-stage-media-height: clamp(461px, calc(76.8vh - 67px), 797px);
   color: var(--aura-family-ink);
   background: linear-gradient(145deg, #191b20 0%, var(--aura-family-canvas) 48%, #08090c 100%);
 }
@@ -15,8 +16,42 @@ body .creator-discovery .discover-search-row {
   background: linear-gradient(155deg, rgba(25, 27, 32, 0.96), rgba(8, 9, 12, 0.98));
 }
 
+/* Home stage: the player viewport and Stream Chat now share the same visible
+   height. The media/chat surfaces are 20% taller than the previous player
+   viewport, and the chat is offset below the 56px Now Streaming header so its
+   top and bottom edges line up with the actual stream window. */
+body .channel-home-page .channel-stage-player {
+  height: calc(var(--aura-stage-media-height) + 56px);
+}
+body .channel-home-page .channel-stage-player > .relative.flex-1,
+body .channel-home-page .channel-stage-player [data-stream-player-box] {
+  min-height: 0;
+}
+body .channel-home-page .channel-stage-chat {
+  height: var(--aura-stage-media-height);
+}
+@media (min-width: 1024px) {
+  body .channel-home-page .channel-stage-chat { margin-top: 56px; }
+}
+
+/* Black-window liquid glass for the two stage surfaces with a soft shadow-gray
+   outer layer. Keep the player itself borderless so video art can bleed cleanly. */
 body .channel-home-page .channel-stage-player [data-stream-player-box],
-body .channel-home-page .channel-community-chat,
+body .channel-home-page .channel-community-chat {
+  background-color: rgba(5, 7, 10, 0.62);
+  background-image:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.018) 42%, rgba(0, 0, 0, 0.34)),
+    radial-gradient(circle at 16% 0%, rgba(174, 184, 196, 0.09), transparent 42%);
+  border: 1px solid rgba(151, 160, 171, 0.23);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.025),
+    0 22px 54px rgba(55, 60, 68, 0.27),
+    0 0 0 1px rgba(74, 79, 87, 0.1);
+}
+
 body .channel-home-page .channel-profile-bar,
 body .channel-home-page .channel-featured-moment,
 body .channel-home-page .channel-moment-art,
@@ -42,9 +77,11 @@ body .channel-home-page .channel-community-chat > form,
 body .creator-discovery .discover-tag-list > span,
 body .creator-discovery .discover-applied button,
 body .creator-discovery .discover-pagination button {
-  background: linear-gradient(145deg, rgba(108, 114, 123, 0.32), rgba(44, 48, 54, 0.3));
-  border: 1px solid rgba(225, 231, 238, 0.28);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 20px rgba(12, 14, 18, 0.2);
+  background: linear-gradient(145deg, rgba(12, 14, 18, 0.74), rgba(49, 53, 60, 0.34));
+  border: 1px solid rgba(167, 175, 185, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 20px rgba(12, 14, 18, 0.24);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
 }
 
 body .creator-discovery .discover-intro p,
@@ -70,9 +107,9 @@ body:has(.creator-discovery) .glass-page-bottom-bar {
 /* Channel homepage modules below the streaming stage. */
 body .channel-home-page .channel-commerce-section,
 body .channel-home-page .channel-partner-feature,
-  body .channel-home-page .channel-partner-logo,
-  body .channel-home-page .channel-partner-media > div,
-  body .channel-home-page .channel-sponsor-item,
+body .channel-home-page .channel-partner-logo,
+body .channel-home-page .channel-partner-media > div,
+body .channel-home-page .channel-sponsor-item,
 body .channel-home-page .channel-shop-card,
 body .channel-home-page .channel-pass,
 body .channel-home-page .channel-pass-reward-art,
@@ -91,11 +128,10 @@ body .channel-home-page .channel-shop-card { border-radius: 10px; overflow: hidd
 body .channel-home-page .channel-pass { padding: 24px 0; border-radius: 0; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
 body .channel-home-page .channel-pass-reward-art { border-radius: 8px; }
 
-/* Channel tab overlays: schedule, cards, gallery, games, and reward details. */
+/* Keep Schedule and reward-detail dialogs on the shared glass family. Cards and
+   Gallery intentionally use their own original palettes; applying the family
+   surface to their root nodes made Gallery opaque and recolored Cards. */
 body:has(.channel-home-page) [data-schedule-overlay="true"],
-body:has(.channel-home-page) [data-games-overlay="true"],
-body:has(.channel-home-page) .player-collection-hud,
-body:has(.channel-home-page) .gallery-console,
 body:has(.channel-home-page) .channel-pass-modal > [role="dialog"] {
   background: linear-gradient(145deg, rgba(56,61,68,.78), rgba(16,18,22,.94)) !important;
   border: 1px solid var(--aura-family-edge) !important;
@@ -103,22 +139,8 @@ body:has(.channel-home-page) .channel-pass-modal > [role="dialog"] {
   -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 24px 60px rgba(8,9,12,.42) !important;
 }
-body:has(.channel-home-page) [aria-label$="game achievement cards"],
 body:has(.channel-home-page) [data-schedule-overlay] .grid-cols-7,
-body:has(.channel-home-page) [data-schedule-overlay] .grid-cols-7 > div,
-body:has(.channel-home-page) [data-games-overlay] div:has(> button[aria-label^="Show achievement cards for"]),
-body:has(.channel-home-page) .player-collection-header,
-body:has(.channel-home-page) .player-collection-search,
-body:has(.channel-home-page) .player-collection-select,
-body:has(.channel-home-page) .player-collection-content,
-body:has(.channel-home-page) .collection-reel-toolbar,
-body:has(.channel-home-page) .card-showcase,
-body:has(.channel-home-page) .gallery-player,
-body:has(.channel-home-page) .gallery-social,
-body:has(.channel-home-page) .gallery-playback-controls,
-body:has(.channel-home-page) .gallery-date-rail > button,
-body:has(.channel-home-page) .gallery-clip-card,
-body:has(.channel-home-page) .gallery-request-card {
+body:has(.channel-home-page) [data-schedule-overlay] .grid-cols-7 > div {
   background-color: var(--aura-family-glass) !important;
   background-image: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.025) 48%, rgba(20,23,28,.16)) !important;
   border: 1px solid rgba(225,231,238,.38) !important;
@@ -126,9 +148,41 @@ body:has(.channel-home-page) .gallery-request-card {
   -webkit-backdrop-filter: blur(20px) saturate(145%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 32px rgba(8,9,12,.3);
 }
-body:has(.channel-home-page) .player-collection-backdrop,
-body:has(.channel-home-page) .gallery-hub::before {
-  background: linear-gradient(145deg, rgba(42,46,52,.94), rgba(8,9,12,.97)) !important;
+
+/* Games should dissolve into the stream instead of reading as a separate box.
+   Preserve the two directional overlays but remove the hard shell introduced by
+   the family-theme pass. */
+body:has(.channel-home-page) [data-games-overlay="true"] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  backdrop-filter: blur(24px) saturate(138%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(138%) !important;
+}
+body:has(.channel-home-page) [data-games-overlay="true"].top-0 {
+  background: linear-gradient(180deg, rgba(8,10,14,.84), rgba(12,15,20,.55) 58%, rgba(10,12,16,.08)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 24px 48px rgba(7,9,12,.16) !important;
+}
+body:has(.channel-home-page) [data-games-overlay="true"].bottom-0 {
+  background: linear-gradient(0deg, rgba(8,10,14,.86), rgba(12,15,20,.56) 58%, rgba(10,12,16,.08)) !important;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,.045), 0 -22px 48px rgba(7,9,12,.14) !important;
+}
+body:has(.channel-home-page) [data-games-overlay="true"] div:has(> button[aria-label^="Show achievement cards for"]) {
+  background: linear-gradient(145deg, rgba(12,15,20,.38), rgba(34,39,46,.16)) !important;
+  border-color: rgba(255,255,255,.075) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+}
+
+/* Gallery must remain a transparent media layer over Home. Its own
+   galleryConsole.css owns the upper/lower fades, leaving the homepage and the
+   top Aura header visible through the middle just like the original behavior. */
+body:has(.channel-home-page) .gallery-console {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Discover filters, creator surfaces, and quick-look drawer. */
