@@ -416,7 +416,7 @@ export default function EnvironmentHubWorkspace() {
 
   const homeStatus = useMemo(() => {
     if (currentHome?.bundledLand) return `${currentHome.name} includes its own land`;
-    return `${currentHome?.name || 'Open Land'} · ${currentLand.name}`;
+    return [currentHome?.name || 'Current home', currentLand?.name].filter(Boolean).join(' · ');
   }, [currentHome, currentLand]);
 
   if (typeof document === 'undefined') return null;
@@ -579,7 +579,7 @@ export default function EnvironmentHubWorkspace() {
                   ) : (
                     <div className="mt-3 space-y-3">
                       <div className="flex items-center gap-3"><Home className="h-4 w-4 text-white/38" /><div><div className="text-xs font-semibold text-white/75">{homeStatus}</div><div className="mt-0.5 text-[9px] text-white/30">House & land</div></div></div>
-                      <div className="flex items-center gap-3"><Mountain className="h-4 w-4 text-white/38" /><div><div className="text-xs font-semibold text-white/75">{currentSky.name}</div><div className="mt-0.5 text-[9px] text-white/30">{currentSky.realtime ? 'Live local day/night cycle' : 'Manual sky'} · {currentWeather.name}</div></div></div>
+                      <div className="flex items-center gap-3"><Mountain className="h-4 w-4 text-white/38" /><div><div className="text-xs font-semibold text-white/75">{currentSky?.name || 'Current sky'}</div><div className="mt-0.5 text-[9px] text-white/30">{currentSky ? (currentSky.realtime ? 'Live local day/night cycle' : 'Manual sky') : 'Existing environment sky'} · {currentWeather?.name || 'Clear'}</div></div></div>
                     </div>
                   )}
                 </div>
