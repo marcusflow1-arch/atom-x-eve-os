@@ -1,18 +1,10 @@
 import React from 'react';
 import { Play, Users, Library, Trophy, Tv } from 'lucide-react';
 
-// Shared bottom section used by every sidebar variant (LibrarySidebar covers
-// dashboard / client / forum / cards). Holds the Launch action plus the four
-// panel toggles: Friends, Library, Rewards, Entertainment.
-//
-// Layout rules:
-//  - narrow (collapsed to the rail): single vertical column — flex-col,
-//    items-center, w-full, min-w-0, NO fixed pixel widths on the buttons — so
-//    nothing can ever be wider than the rail.
-//  - expanded: 2x2 grid with labels, sized with max-w-full so the grid can never
-//    exceed the sidebar width.
-//
-// The parent wrapper applies `overflow-hidden` as a safety net.
+// Shared bottom section used by every sidebar variant. In the narrow rail this
+// area is reserved for the four persistent utility icons only. The Play/Launch
+// action now lives in the rail's 50/50 midpoint control stack so Recent Games
+// above and Friends/Library/Rewards/Entertainment below never move.
 
 const PANELS = [
   { key: 'friends', label: 'Friends', Icon: Users, active: 'border-green-400/50 bg-green-500/20 text-green-400', idle: 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10' },
@@ -55,7 +47,6 @@ export default function SidebarBottomSection({
   if (narrow) {
     return (
       <div className="flex flex-col items-center gap-2 w-full min-w-0">
-        {launch}
         {PANELS.map((p) => (
           <div key={p.key} className="w-full min-w-0">{panelBtn(p)}</div>
         ))}
