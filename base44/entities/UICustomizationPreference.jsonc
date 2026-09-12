@@ -1,0 +1,30 @@
+{
+  "name": "UICustomizationPreference",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this customization profile"
+    },
+    "page_scope": {
+      "type": "string",
+      "description": "Master page and optional contextual sub-view scope"
+    },
+    "preset_id": {
+      "type": "string",
+      "default": "graphite"
+    },
+    "element_settings": {
+      "type": "object",
+      "default": {}
+    },
+    "updated_at_client": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_id",
+    "page_scope"
+  ]
+}
