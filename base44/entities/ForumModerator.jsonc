@@ -1,0 +1,13 @@
+{
+  "name": "ForumModerator",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "role": { "type": "string", "enum": ["moderator", "senior_moderator"], "default": "moderator" },
+    "permissions": { "type": "array", "items": { "type": "string" }, "default": ["moderate_posts", "moderate_comments", "mute_users", "review_reports"] },
+    "active": { "type": "boolean", "default": true },
+    "appointed_by": { "type": "string" }
+  },
+  "required": ["user_id", "role", "active"]
+}
