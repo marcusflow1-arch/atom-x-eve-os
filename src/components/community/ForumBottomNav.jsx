@@ -36,7 +36,7 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
   return <nav
     className="forum-console-nav relative h-full w-full"
     aria-label="Forum navigation"
-    style={{ '--forum-accent': '#9de8f2', '--forum-accent-rgb': '157,232,242', pointerEvents: 'auto' }}
+    style={{ pointerEvents: 'auto' }}
   >
     <div className="absolute inset-y-0 left-0 z-30 flex items-center gap-1 pointer-events-auto">
       <button
