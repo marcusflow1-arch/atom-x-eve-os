@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Clock3, Flame, Home, ListFilter, Wheat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -12,6 +12,12 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
     if (onBrowseForums) onBrowseForums();
     else navigate(createPageUrl('Community'));
   };
+
+  useEffect(() => {
+    const openDirectory = () => handleForums();
+    window.addEventListener('openForumDirectory', openDirectory);
+    return () => window.removeEventListener('openForumDirectory', openDirectory);
+  }, [onBrowseForums, navigate]);
 
   const handleFarmHub = () => {
     if (inFarmHub) onTabSelect?.('farm_hub');
