@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageSquare, X } from 'lucide-react';
 import ClanChatHub from '@/components/clan/ClanChatHub';
@@ -13,10 +14,10 @@ export default function ClanChatOverlay({ open, onClose, clan, myRole }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
-  return <AnimatePresence>
+  const overlay = <AnimatePresence>
     {open && (
       <motion.div
-        className="fixed inset-0 z-[120] flex items-center justify-center p-5 md:p-10"
+        className="fixed left-0 right-0 top-16 bottom-12 z-[220] flex items-center justify-center p-5 md:p-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -36,7 +37,7 @@ export default function ClanChatOverlay({ open, onClose, clan, myRole }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: .99 }}
           transition={{ duration: .2, ease: 'easeOut' }}
-          className="relative z-10 flex h-[min(720px,calc(100vh-120px))] w-[min(1120px,calc(100vw-64px))] flex-col overflow-hidden rounded-[24px] border border-white/[0.08] bg-[#080c12]/95 shadow-[0_34px_110px_rgba(0,0,0,.72)] backdrop-blur-3xl"
+          className="relative z-10 flex h-[min(720px,calc(100vh-160px))] w-[min(1120px,calc(100vw-64px))] flex-col overflow-hidden rounded-[24px] border border-white/[0.08] bg-[#080c12]/95 shadow-[0_34px_110px_rgba(0,0,0,.72)] backdrop-blur-3xl"
         >
           <header className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-black/20 px-5">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.05] text-cyan-200/80">
@@ -67,4 +68,7 @@ export default function ClanChatOverlay({ open, onClose, clan, myRole }) {
       </motion.div>
     )}
   </AnimatePresence>;
+
+  if (typeof document === 'undefined') return overlay;
+  return createPortal(overlay, document.body);
 }
