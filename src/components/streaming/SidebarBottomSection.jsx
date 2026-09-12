@@ -47,6 +47,19 @@ export default function SidebarBottomSection({
   if (narrow) {
     return (
       <div className="flex flex-col items-center gap-2 w-full min-w-0">
+        {/* Invisible action bridge: the midpoint Play control reuses the exact
+            launch handler that used to live here, while this bottom area stays
+            visually limited to the four utility icons. */}
+        <button
+          type="button"
+          onClick={onLaunch}
+          className="hidden text-cyan-300"
+          data-sidebar-launch-proxy="true"
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          Play
+        </button>
         {PANELS.map((p) => (
           <div key={p.key} className="w-full min-w-0">{panelBtn(p)}</div>
         ))}
