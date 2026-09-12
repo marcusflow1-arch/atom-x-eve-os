@@ -6,8 +6,23 @@ import './forumHub.css';
 
 export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onTabSelect }) {
   const navigate = useNavigate();
+  const inFarmHub = activeTab === 'farm_hub';
+
+  const handleForums = () => {
+    if (onBrowseForums) onBrowseForums();
+    else navigate(createPageUrl('Community'));
+  };
+
+  const handleFarmHub = () => {
+    if (inFarmHub) onTabSelect?.('farm_hub');
+    else navigate(createPageUrl('Farm'));
+  };
 
   const handleHome = () => {
+    if (inFarmHub) {
+      onTabSelect?.('farm_hub');
+      return;
+    }
     onTabSelect?.('home');
     window.dispatchEvent(new CustomEvent('forumGoHome'));
   };
@@ -20,7 +35,7 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
     <div className="absolute inset-y-0 left-0 z-30 flex items-center gap-1 pointer-events-auto">
       <button
         type="button"
-        onClick={onBrowseForums}
+        onClick={handleForums}
         className="forum-browser-link relative z-30 flex min-h-[40px] items-center gap-2 px-4 pointer-events-auto"
       >
         <ListFilter size={16} className="pointer-events-none" />
@@ -28,8 +43,8 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
       </button>
       <button
         type="button"
-        onClick={() => navigate(createPageUrl('Farm'))}
-        className="relative z-30 flex min-h-[40px] items-center gap-2 px-4 text-white/65 transition-colors hover:text-white pointer-events-auto"
+        onClick={handleFarmHub}
+        className={`relative z-30 flex min-h-[40px] items-center gap-2 px-4 transition-colors pointer-events-auto ${inFarmHub ? 'text-yellow-300' : 'text-white/65 hover:text-white'}`}
       >
         <Wheat size={16} className="pointer-events-none" />
         <span className="pointer-events-none">Farm Hub</span>
@@ -37,9 +52,9 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
     </div>
 
     <div className="forum-console-center relative z-10">
-      <button type="button" onClick={() => onTabSelect?.('recent')} className={activeTab === 'recent' ? 'is-active' : ''}><Clock3 size={16} /><span>Recent</span></button>
-      <button type="button" onClick={handleHome} className={activeTab === 'home' ? 'is-active' : ''}><Home size={16} /><span>Home</span></button>
-      <button type="button" onClick={() => onTabSelect?.('heated')} className={activeTab === 'heated' ? 'is-active' : ''}><Flame size={16} /><span>Popular</span></button>
+      {!inFarmHub && <button type="button" onClick={() => onTabSelect?.('recent')} className={activeTab === 'recent' ? 'is-active' : ''}><Clock3 size={16} /><span>Recent</span></button>}
+      <button type="button" onClick={handleHome} className={!inFarmHub && activeTab === 'home' ? 'is-active' : ''}><Home size={16} /><span>Home</span></button>
+      {!inFarmHub && <button type="button" onClick={() => onTabSelect?.('heated')} className={activeTab === 'heated' ? 'is-active' : ''}><Flame size={16} /><span>Popular</span></button>}
     </div>
   </nav>;
 }
