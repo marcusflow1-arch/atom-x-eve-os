@@ -79,7 +79,8 @@ function useLegacyEnvironmentAction() {
     const restore = () => {
       const record = hiddenRef.current;
       if (record?.element?.isConnected) {
-        record.element.style.display = record.display;
+        record.element.style.visibility = record.visibility;
+        record.element.style.pointerEvents = record.pointerEvents;
       }
       hiddenRef.current = null;
     };
@@ -93,8 +94,17 @@ function useLegacyEnvironmentAction() {
         actionRef.current = action;
         if (hiddenRef.current?.element === action) return;
         restore();
-        hiddenRef.current = { element: action, display: action.style.display };
-        action.style.display = 'none';
+        hiddenRef.current = {
+          element: action,
+          visibility: action.style.visibility,
+          pointerEvents: action.style.pointerEvents,
+        };
+
+        // The old Launch button is visually relocated, not removed from layout.
+        // Keeping its box in-flow prevents Friends/Library/Inventory/Entertainment
+        // below it from sliding upward into different positions.
+        action.style.visibility = 'hidden';
+        action.style.pointerEvents = 'none';
       });
     };
 
