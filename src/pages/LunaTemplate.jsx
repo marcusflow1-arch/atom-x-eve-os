@@ -86,6 +86,7 @@ import RealTimeMoonSky from '../components/dashboard/RealTimeMoonSky';
 import AvatarFocusHub from '../components/dashboard/avatarFocus/AvatarFocusHub';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
+import LunaMessageCenter from '../components/dashboard/LunaMessageCenter';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -171,6 +172,8 @@ export default function LunaTemplate() {
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [showMessages, setShowMessages] = useState(false);
+  const [messageFriend, setMessageFriend] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -260,6 +263,17 @@ export default function LunaTemplate() {
     const handleSkillTree = () => setShowSkillTreeBlankUI((prev) => !prev);
     window.addEventListener('toggleSkillTree', handleSkillTree);
     return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
+  }, []);
+
+  // Luna owns Messages directly. Friend presence slots, the Friends network,
+  // and profile Message actions all route into this same center-page surface.
+  useEffect(() => {
+    const openMessages = (event) => {
+      setMessageFriend(event?.detail?.friend || null);
+      setShowMessages(true);
+    };
+    window.addEventListener('openLunaMessages', openMessages);
+    return () => window.removeEventListener('openLunaMessages', openMessages);
   }, []);
 
   // Hardcoded assets for System Reboot
@@ -537,6 +551,7 @@ export default function LunaTemplate() {
         }
       }
       if (key === 'escape') {
+        if (showMessages) { setShowMessages(false); setMessageFriend(null); return; }
         if (showFriendsHub) { setShowFriendsHub(false); return; }
         if (showLibraryLanding) {
           if (librarySelection) setLibrarySelection(null);
@@ -557,7 +572,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
+  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub, showMessages]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -1184,13 +1199,17 @@ export default function LunaTemplate() {
                 <span className={`text-sm font-sans relative z-10 ${stageMode === 'stats' ? 'text-cyan-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
               </ConsoleTile>
 
-              {/* Friends (Replaces Skill Tree) */}
+              {/* Friends / Messages */}
               <ConsoleTile
-                          onClick={() => setStageMode((m) => m === 'friends' ? 'default' : 'friends')}
-                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'friends' ? 'border-green-400/50 bg-green-900/20' : ''}`}>
+                          onClick={() => {
+                            setMessageFriend(null);
+                            setShowMessages(true);
+                            setStageMode('default');
+                          }}
+                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${showMessages ? 'border-green-400/50 bg-green-900/20' : ''}`}>
                           
-                <Users className={`w-10 h-10 relative z-10 ${stageMode === 'friends' ? 'text-green-400' : ''}`} style={stageMode === 'friends' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className={`text-sm font-sans relative z-10 ${stageMode === 'friends' ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
+                <Users className={`w-10 h-10 relative z-10 ${showMessages ? 'text-green-400' : ''}`} style={showMessages ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className={`text-sm font-sans relative z-10 ${showMessages ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
               </ConsoleTile>
 
 
@@ -1819,6 +1838,20 @@ export default function LunaTemplate() {
           </motion.div>
                 }
       </AnimatePresence>
+
+      {/* Luna Messages — center-page, borderless blurred social surface */}
+      <LunaMessageCenter
+        open={showMessages}
+        initialFriend={messageFriend}
+        onClose={() => {
+          setShowMessages(false);
+          setMessageFriend(null);
+        }}
+        onRequestOpen={(friend) => {
+          setMessageFriend(friend || null);
+          setShowMessages(true);
+        }}
+      />
 
       {/* Side Access Menu - hidden when sidebar is hidden */}
       {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
