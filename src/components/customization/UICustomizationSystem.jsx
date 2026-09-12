@@ -11,7 +11,6 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Eye,
-  Layers,
   MessageSquare,
   Palette,
   Play,
@@ -86,8 +85,8 @@ const PRESETS = [
 
 const css = `
 .atom-ui-customization-root { --atom-ui-accent:#9de8f2; --atom-ui-accent-rgb:157,232,242; isolation:isolate; }
-.atom-ui-edit-mode .atom-ui-editable { outline:1px solid rgba(var(--atom-ui-accent-rgb),.56) !important; outline-offset:2px; cursor:crosshair !important; }
-.atom-ui-edit-mode .atom-ui-editable:hover { outline-width:2px !important; box-shadow:0 0 0 1px rgba(var(--atom-ui-accent-rgb),.12), 0 0 28px rgba(var(--atom-ui-accent-rgb),.16) !important; }
+.atom-ui-edit-mode .atom-ui-editable { outline:1px solid rgba(var(--atom-ui-accent-rgb),.58) !important; outline-offset:2px; cursor:crosshair !important; }
+.atom-ui-edit-mode .atom-ui-editable:hover { outline-width:2px !important; box-shadow:0 0 0 1px rgba(var(--atom-ui-accent-rgb),.12),0 0 28px rgba(var(--atom-ui-accent-rgb),.17) !important; }
 .atom-ui-edit-selected { outline:2px solid rgb(var(--atom-ui-accent-rgb)) !important; outline-offset:3px !important; }
 @keyframes atomDragonDrift { 0%{transform:translate3d(-2%,0,0) scale(1.04);opacity:.62} 50%{transform:translate3d(2%,-1.5%,0) scale(1.08);opacity:.9} 100%{transform:translate3d(-2%,0,0) scale(1.04);opacity:.62} }
 @keyframes atomParticleRise { 0%{transform:translate3d(0,18px,0) scale(.7);opacity:0} 20%{opacity:.42} 100%{transform:translate3d(18px,-90px,0) scale(1.15);opacity:0} }
@@ -98,23 +97,32 @@ function masterPage(pathname = '') {
   if (path.includes('/lunatemplate') || path === '/home') return 'luna';
   if (path.includes('/clan')) return 'clan';
   if (path.includes('/community') || path.includes('/forum')) return 'forum';
-  if (path.includes('/genremastery') || path.includes('/achievements')) return 'cards';
+  if (path.includes('/genremastery') || path.includes('/achievements') || path.includes('/cards')) return 'cards';
   if (path.includes('/aura') || path.includes('/streaminghome') || path.includes('/discover')) return 'aura';
-  return 'platform';
+  if (path.includes('/store') || path.includes('/gamedetail')) return 'store';
+  const segment = path.split('/').filter(Boolean)[0];
+  return segment || 'platform';
 }
 
-function viewName(location) {
+function viewName(location, page) {
+  const path = location.pathname.toLowerCase();
   const params = new URLSearchParams(location.search);
-  return params.get('subview') || params.get('mode') || params.get('tab') || 'main';
+  const explicit = params.get('subview') || params.get('mode') || params.get('tab') || params.get('view');
+  if (explicit) return explicit;
+  if (page === 'aura') {
+    if (path.includes('/discover')) return 'discover';
+    if (path.includes('/streaminghome')) return 'home';
+    return 'aura';
+  }
+  if (page === 'store') return path.includes('/gamedetail') ? 'game-detail' : 'store';
+  return 'main';
 }
 
 function safeRead(key) {
   try {
     const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return null;
-    return parsed;
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === 'object' ? parsed : null;
   } catch {
     return null;
   }
@@ -176,7 +184,7 @@ function applyElementStyle(element, setting) {
     element.style.backdropFilter = 'none';
     element.style.webkitBackdropFilter = 'none';
   } else if (setting.surface === 'holo') {
-    element.style.background = `linear-gradient(135deg, rgba(${rgb},.10), rgba(255,255,255,.025) 45%, rgba(${rgb},.04))`;
+    element.style.background = `linear-gradient(135deg,rgba(${rgb},.10),rgba(255,255,255,.025) 45%,rgba(${rgb},.04))`;
     element.style.backdropFilter = 'blur(24px) saturate(170%)';
     element.style.webkitBackdropFilter = 'blur(24px) saturate(170%)';
   }
@@ -189,20 +197,14 @@ function applyElementStyle(element, setting) {
     element.style.boxShadow = '0 12px 34px rgba(0,0,0,.20)';
   } else if (setting.border === 'glow') {
     element.style.border = `1px solid rgba(${rgb},.58)`;
-    element.style.boxShadow = `0 0 0 1px rgba(${rgb},.10), 0 0 28px rgba(${rgb},.22), 0 16px 42px rgba(0,0,0,.24)`;
+    element.style.boxShadow = `0 0 0 1px rgba(${rgb},.10),0 0 28px rgba(${rgb},.22),0 16px 42px rgba(0,0,0,.24)`;
   }
 }
 
 function ThemeAmbient({ preset }) {
   return (
     <div data-ui-editor-ignore="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-      <div
-        className="absolute -inset-[6%]"
-        style={{
-          backgroundImage: preset.ambient,
-          animation: preset.motion ? 'atomDragonDrift 11s ease-in-out infinite' : undefined,
-        }}
-      />
+      <div className="absolute -inset-[6%]" style={{ backgroundImage: preset.ambient, animation: preset.motion ? 'atomDragonDrift 11s ease-in-out infinite' : undefined }} />
       {preset.motion && Array.from({ length: 10 }).map((_, index) => (
         <span
           key={index}
@@ -221,7 +223,7 @@ function ThemeAmbient({ preset }) {
 export function UICustomizationProvider({ children, pathname }) {
   const location = useLocation();
   const page = masterPage(pathname || location.pathname);
-  const scope = `${page}:${viewName(location)}`;
+  const scope = `${page}:${viewName(location, page)}`;
   const storageKey = `${STORAGE_PREFIX}${scope}`;
   const local = useMemo(() => safeRead(storageKey), [storageKey]);
   const [config, setConfig] = useState(() => local || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 });
@@ -230,7 +232,6 @@ export function UICustomizationProvider({ children, pathname }) {
   const [syncReady, setSyncReady] = useState(false);
   const rootRef = useRef(null);
   const saveTimerRef = useRef(null);
-
   const preset = PRESETS.find((item) => item.id === config.presetId) || PRESETS[0];
 
   useEffect(() => {
@@ -246,11 +247,7 @@ export function UICustomizationProvider({ children, pathname }) {
         const response = await base44.functions.invoke('uiCustomization', { action: 'getState', payload: { pageScope: scope } });
         const remote = response?.data?.state || response?.state;
         if (!cancelled && remote && Number(remote.updatedAt || 0) > Number(nextLocal.updatedAt || 0)) {
-          setConfig({
-            presetId: remote.presetId || 'graphite',
-            elementSettings: remote.elementSettings || {},
-            updatedAt: Number(remote.updatedAt || 0),
-          });
+          setConfig({ presetId: remote.presetId || 'graphite', elementSettings: remote.elementSettings || {}, updatedAt: Number(remote.updatedAt || 0) });
         }
       } catch (error) {
         console.warn('UI customization profile sync unavailable', error);
@@ -269,12 +266,7 @@ export function UICustomizationProvider({ children, pathname }) {
     saveTimerRef.current = setTimeout(() => {
       base44.functions.invoke('uiCustomization', {
         action: 'saveState',
-        payload: {
-          pageScope: scope,
-          presetId: config.presetId,
-          elementSettings: config.elementSettings,
-          updatedAt: config.updatedAt,
-        },
+        payload: { pageScope: scope, presetId: config.presetId, elementSettings: config.elementSettings, updatedAt: config.updatedAt },
       }).catch((error) => console.warn('UI customization save unavailable', error));
     }, 700);
     return () => clearTimeout(saveTimerRef.current);
@@ -286,6 +278,7 @@ export function UICustomizationProvider({ children, pathname }) {
       accent: root.style.getPropertyValue('--atom-ui-accent'),
       rgb: root.style.getPropertyValue('--atom-ui-accent-rgb'),
       glass: root.style.getPropertyValue('--glass-bg'),
+      glassStrong: root.style.getPropertyValue('--glass-bg-strong'),
       border: root.style.getPropertyValue('--glass-border'),
       forum: root.style.getPropertyValue('--forum-accent'),
       forumRgb: root.style.getPropertyValue('--forum-accent-rgb'),
@@ -301,6 +294,7 @@ export function UICustomizationProvider({ children, pathname }) {
       root.style.setProperty('--atom-ui-accent', previous.accent);
       root.style.setProperty('--atom-ui-accent-rgb', previous.rgb);
       root.style.setProperty('--glass-bg', previous.glass);
+      root.style.setProperty('--glass-bg-strong', previous.glassStrong);
       root.style.setProperty('--glass-border', previous.border);
       root.style.setProperty('--forum-accent', previous.forum);
       root.style.setProperty('--forum-accent-rgb', previous.forumRgb);
@@ -314,7 +308,7 @@ export function UICustomizationProvider({ children, pathname }) {
     root.querySelectorAll('.atom-ui-edit-selected').forEach((element) => element.classList.remove('atom-ui-edit-selected'));
 
     const candidates = Array.from(root.querySelectorAll(
-      '[data-ui-customizable], section, article, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-\[24px\], .rounded-\[30px\]'
+      '[data-ui-customizable],section,article,.rounded-xl,.rounded-2xl,.rounded-3xl,.rounded-\\[24px\\],.rounded-\\[30px\\]'
     )).filter((element) => {
       if (element.closest('[data-ui-editor-ignore="true"]')) return false;
       const rect = element.getBoundingClientRect();
@@ -332,17 +326,19 @@ export function UICustomizationProvider({ children, pathname }) {
   }, [config.elementSettings, editMode, selected?.key]);
 
   useEffect(() => {
-    let raf = requestAnimationFrame(scan);
+    let frame = requestAnimationFrame(scan);
     const root = rootRef.current;
-    if (!root) return () => cancelAnimationFrame(raf);
+    if (!root) return () => cancelAnimationFrame(frame);
     const observer = new MutationObserver(() => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(scan);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(scan);
     });
     observer.observe(root, { childList: true, subtree: true });
+    window.addEventListener('resize', scan);
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(frame);
       observer.disconnect();
+      window.removeEventListener('resize', scan);
     };
   }, [scan]);
 
@@ -357,8 +353,7 @@ export function UICustomizationProvider({ children, pathname }) {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
-      const key = target.dataset.uiEditableRuntime;
-      setSelected({ key, label: targetLabel(target) });
+      setSelected({ key: target.dataset.uiEditableRuntime, label: targetLabel(target) });
     };
     root.addEventListener('click', onClick, true);
     return () => root.removeEventListener('click', onClick, true);
@@ -374,10 +369,7 @@ export function UICustomizationProvider({ children, pathname }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [editMode, selected]);
 
-  const applyPreset = useCallback((presetId) => {
-    setConfig((current) => ({ ...current, presetId, updatedAt: Date.now() }));
-  }, []);
-
+  const applyPreset = useCallback((presetId) => setConfig((current) => ({ ...current, presetId, updatedAt: Date.now() })), []);
   const updateElement = useCallback((patch) => {
     if (!selected?.key) return;
     setConfig((current) => ({
@@ -385,15 +377,10 @@ export function UICustomizationProvider({ children, pathname }) {
       updatedAt: Date.now(),
       elementSettings: {
         ...(current.elementSettings || {}),
-        [selected.key]: {
-          ...DEFAULT_ELEMENT,
-          ...(current.elementSettings?.[selected.key] || {}),
-          ...patch,
-        },
+        [selected.key]: { ...DEFAULT_ELEMENT, ...(current.elementSettings?.[selected.key] || {}), ...patch },
       },
     }));
   }, [selected?.key]);
-
   const resetElement = useCallback(() => {
     if (!selected?.key) return;
     setConfig((current) => {
@@ -438,7 +425,6 @@ export function UICustomizationProvider({ children, pathname }) {
 function ElementEditor() {
   const { selected, setSelected, config, updateElement, resetElement, preset } = useUICustomization();
   const setting = { ...DEFAULT_ELEMENT, ...(config.elementSettings?.[selected.key] || {}) };
-
   const panel = (
     <div data-ui-editor-ignore="true" className="fixed inset-0 z-[300] pointer-events-none">
       <div className="pointer-events-auto absolute right-5 top-1/2 w-[min(360px,calc(100vw-32px))] -translate-y-1/2 overflow-hidden rounded-[28px] bg-[#11161d]/94 p-5 text-white shadow-[0_28px_90px_rgba(0,0,0,.58),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-3xl">
@@ -446,19 +432,15 @@ function ElementEditor() {
           <div><span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">Layout Edit</span><h3 className="mt-1 text-lg font-black">{selected.label}</h3></div>
           <button type="button" onClick={() => setSelected(null)} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.05] text-white/45 hover:text-white"><X className="h-4 w-4" /></button>
         </div>
-
         <EditorChoice label="Surface" value={setting.surface} options={['inherit', 'glass', 'matte', 'clear', 'holo']} onChange={(surface) => updateElement({ surface })} />
         <EditorChoice label="Border" value={setting.border} options={['inherit', 'none', 'soft', 'glow']} onChange={(border) => updateElement({ border })} />
-
         <div className="mt-5 grid grid-cols-[1fr_auto] items-center gap-4">
           <div><span className="text-[9px] font-black uppercase tracking-[.16em] text-white/35">Accent</span><p className="mt-1 text-[10px] text-white/25">Tint for this module</p></div>
           <input type="color" value={setting.accent || preset.accent} onChange={(event) => updateElement({ accent: event.target.value })} className="h-9 w-12 cursor-pointer rounded-lg border-0 bg-transparent" />
         </div>
-
         <EditorRange label="Corner radius" value={setting.radius} min={0} max={48} step={1} suffix="px" onChange={(radius) => updateElement({ radius })} />
         <EditorRange label="Scale" value={setting.scale} min={.75} max={1.25} step={.01} onChange={(scale) => updateElement({ scale })} />
         <EditorRange label="Opacity" value={setting.opacity} min={.35} max={1} step={.01} onChange={(opacity) => updateElement({ opacity })} />
-
         <button type="button" onClick={resetElement} className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-white/[0.055] text-[9px] font-black uppercase tracking-[.14em] text-white/55 hover:bg-white/[0.08] hover:text-white"><RotateCcw className="h-3.5 w-3.5" />Reset module</button>
       </div>
     </div>
@@ -492,41 +474,57 @@ export function useUICustomization() {
   return context;
 }
 
-function RailButton({ icon: Icon, label, active, onClick, compact = false }) {
+function RailButton({ icon: Icon, label, active, onClick, play = false, compact = false }) {
   return (
     <button
       type="button"
       data-ui-editor-ignore="true"
       onClick={onClick}
       title={label}
-      className={`group relative grid ${compact ? 'h-10 w-10' : 'h-12 w-12'} place-items-center rounded-2xl transition-all duration-200 ${active ? 'bg-white text-slate-950 shadow-[0_0_28px_rgba(var(--atom-ui-accent-rgb),.22)]' : 'bg-white/[0.045] text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_12px_28px_rgba(0,0,0,.18)] hover:bg-white/[0.08] hover:text-white'}`}
+      aria-label={label}
+      className={`group relative grid ${compact ? 'h-9 w-9 rounded-xl' : 'h-11 w-11 rounded-[15px]'} place-items-center transition-all duration-200 ${
+        play
+          ? 'bg-gradient-to-br from-cyan-300/95 via-cyan-400/90 to-emerald-400/90 text-[#061116] shadow-[0_0_24px_rgba(34,211,238,.22),inset_0_1px_0_rgba(255,255,255,.48)] hover:scale-[1.04]'
+          : active
+            ? 'bg-white/[0.14] text-white shadow-[0_0_24px_rgba(var(--atom-ui-accent-rgb),.20),inset_0_1px_0_rgba(255,255,255,.12)]'
+            : 'border border-white/[0.10] bg-white/[0.035] text-white/45 shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_10px_24px_rgba(0,0,0,.16)] hover:border-white/[0.18] hover:bg-white/[0.075] hover:text-white'
+      }`}
     >
-      <Icon className={compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} />
+      <Icon className={compact ? 'h-3.5 w-3.5' : 'h-[17px] w-[17px]'} />
       <span className="pointer-events-none absolute left-[calc(100%+9px)] z-[340] hidden whitespace-nowrap rounded-lg bg-[#11161d]/95 px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[.12em] text-white/65 shadow-xl backdrop-blur-xl group-hover:block">{label}</span>
     </button>
   );
 }
 
-export function UICustomizationRail({ className = '' }) {
-  const navigate = useNavigate();
-  const { page, preset, presets, applyPreset, editMode, setEditMode } = useUICustomization();
-  const [drawerOpen, setDrawerOpen] = useState(false);
+function useLegacyPrimaryAction(page) {
   const legacyPlayRef = useRef(null);
+  const hiddenRef = useRef([]);
 
   useEffect(() => {
-    if (page !== 'luna') return undefined;
     let disposed = false;
-    let originalDisplay = '';
+    const hide = (element) => {
+      if (!element || hiddenRef.current.some((entry) => entry.element === element)) return;
+      hiddenRef.current.push({ element, display: element.style.display });
+      element.style.display = 'none';
+    };
     const locate = () => {
       if (disposed) return;
-      const button = Array.from(document.querySelectorAll('button')).find((candidate) => {
-        if (candidate.closest('[data-atom-customization-rail="true"]')) return false;
-        return candidate.textContent?.trim() === 'Play' && candidate.className?.includes('bg-cyan-500');
-      });
-      if (!button || legacyPlayRef.current === button) return;
-      legacyPlayRef.current = button;
-      originalDisplay = button.style.display;
-      button.style.display = 'none';
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const play = buttons.find((candidate) => {
+        if (candidate.closest('[data-atom-customization-midpoint="true"]')) return false;
+        return candidate.textContent?.trim() === 'Play' && (candidate.className?.includes('cyan') || candidate.className?.includes('green'));
+      }) || buttons.find((candidate) => !candidate.closest('[data-atom-customization-midpoint="true"]') && candidate.textContent?.trim() === 'Play');
+      if (play) {
+        legacyPlayRef.current = play;
+        hide(play);
+      }
+
+      if (page === 'luna') {
+        buttons.forEach((candidate) => {
+          const text = candidate.textContent?.trim();
+          if (text === 'Top Widget' || text === 'Bottom Widget') hide(candidate);
+        });
+      }
     };
     locate();
     const observer = new MutationObserver(locate);
@@ -534,51 +532,65 @@ export function UICustomizationRail({ className = '' }) {
     return () => {
       disposed = true;
       observer.disconnect();
-      if (legacyPlayRef.current) legacyPlayRef.current.style.display = originalDisplay;
+      hiddenRef.current.forEach(({ element, display }) => {
+        if (element?.isConnected) element.style.display = display;
+      });
+      hiddenRef.current = [];
+      legacyPlayRef.current = null;
     };
   }, [page]);
 
+  return legacyPlayRef;
+}
+
+export function UICustomizationControls({ className = '' }) {
+  const navigate = useNavigate();
+  const { page, scope, preset, presets, applyPreset, editMode, setEditMode } = useUICustomization();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const legacyPlayRef = useLegacyPrimaryAction(page);
+
   const play = () => {
-    const legacy = legacyPlayRef.current || Array.from(document.querySelectorAll('button')).find((candidate) => {
-      if (candidate.closest('[data-atom-customization-rail="true"]')) return false;
-      return candidate.textContent?.trim() === 'Play';
-    });
-    if (legacy) {
-      legacy.click();
+    if (legacyPlayRef.current) {
+      legacyPlayRef.current.click();
       return;
     }
-    window.dispatchEvent(new CustomEvent('atomPlayRequested', { detail: { source: page } }));
-    navigate(createPageUrl('Library'));
+    window.dispatchEvent(new CustomEvent('atomPlayRequested', { detail: { source: page, scope } }));
+    navigate(createPageUrl('GameView'));
   };
-
   const quickForum = () => window.dispatchEvent(new CustomEvent('openForumDirectory'));
   const roster = () => window.dispatchEvent(new Event('toggleClanRoster'));
   const quickChat = () => window.dispatchEvent(new Event('openClanChatOverlay'));
   const watched = () => window.dispatchEvent(new Event('openAuraStreamsDrawer'));
 
-  const middle = page === 'clan'
-    ? [
-        { label: 'Play', icon: Play, action: play },
-        { label: 'Roster', icon: Users, action: roster },
-        { label: 'Quick Chat', icon: MessageSquare, action: quickChat },
-      ]
-    : page === 'forum'
-      ? [
-          { label: 'Quick Forum', icon: MessageSquare, action: quickForum },
-          { label: 'Play', icon: Play, action: play },
-        ]
-      : page === 'aura'
-        ? [
-            { label: 'Play', icon: Play, action: play },
-            { label: 'Recently Streamed', icon: Eye, action: watched },
-          ]
-        : [{ label: 'Play', icon: Play, action: play }];
+  const action = (key) => {
+    if (key === 'play') return { label: 'Play', icon: Play, action: play, play: true };
+    if (key === 'roster') return { label: 'Roster', icon: Users, action: roster };
+    if (key === 'chat') return { label: 'Quick Chat', icon: MessageSquare, action: quickChat };
+    if (key === 'forum') return { label: 'Quick Forum', icon: MessageSquare, action: quickForum };
+    return { label: 'Recently Streamed', icon: Eye, action: watched };
+  };
 
+  const sequence = page === 'clan'
+    ? ['play', 'roster', 'chat']
+    : page === 'forum'
+      ? ['forum', 'play']
+      : page === 'aura'
+        ? ['play', 'watched']
+        : ['play'];
+
+  const showEdit = page !== 'clan';
   const drawer = drawerOpen ? (
     <div data-ui-editor-ignore="true" className="fixed inset-0 z-[290] pointer-events-none">
       <button type="button" aria-label="Close UI presets" onClick={() => setDrawerOpen(false)} className="pointer-events-auto absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
-      <aside className="pointer-events-auto absolute left-[92px] top-1/2 w-[min(340px,calc(100vw-112px))] -translate-y-1/2 rounded-[30px] bg-[#11161d]/94 p-5 text-white shadow-[0_30px_90px_rgba(0,0,0,.58),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-3xl">
-        <div className="flex items-start justify-between gap-4"><div><span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">UI Prefabs</span><h2 className="mt-1 text-xl font-black">Visual loadout</h2><p className="mt-1 text-[10px] leading-4 text-white/30">Themes update the active view immediately and sync to your player profile.</p></div><button type="button" onClick={() => setDrawerOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.05] text-white/40 hover:text-white"><X className="h-4 w-4" /></button></div>
+      <aside className="pointer-events-auto absolute left-[92px] top-1/2 w-[min(350px,calc(100vw-112px))] -translate-y-1/2 rounded-[30px] bg-[#11161d]/95 p-5 text-white shadow-[0_30px_90px_rgba(0,0,0,.58),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-3xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">UI Prefabs · {scope.replace(':', ' / ')}</span>
+            <h2 className="mt-1 text-xl font-black">Visual loadout</h2>
+            <p className="mt-1 text-[10px] leading-4 text-white/30">Choose a preset for this page or sub-page. Changes apply immediately and sync to your player profile.</p>
+          </div>
+          <button type="button" onClick={() => setDrawerOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] text-white/40 hover:text-white"><X className="h-4 w-4" /></button>
+        </div>
         <div className="mt-5 space-y-2">
           {presets.map((item) => (
             <button key={item.id} type="button" onClick={() => applyPreset(item.id)} className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition ${preset.id === item.id ? 'bg-white/[0.10]' : 'bg-white/[0.035] hover:bg-white/[0.065]'}`}>
@@ -588,26 +600,27 @@ export function UICustomizationRail({ className = '' }) {
             </button>
           ))}
         </div>
-        {page === 'clan' && <button type="button" onClick={() => { setEditMode(!editMode); setDrawerOpen(false); }} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-white/[0.055] text-[9px] font-black uppercase tracking-[.14em] text-white/55 hover:text-white"><SlidersHorizontal className="h-3.5 w-3.5" />{editMode ? 'Exit layout edit' : 'Edit clan layout'}</button>}
       </aside>
     </div>
   ) : null;
 
   return (
     <>
-      <div data-atom-customization-rail="true" data-ui-editor-ignore="true" className={`flex h-full w-full flex-col items-center ${className}`}>
-        <div className="mt-3"><RailButton icon={Palette} label="UI Prefabs" active={drawerOpen} onClick={() => setDrawerOpen((value) => !value)} /></div>
-        <div className="my-4 h-px w-8 bg-white/[0.10]" />
-        <div className="flex flex-col items-center gap-2.5">
-          {middle.map((item, index) => <RailButton key={item.label} icon={item.icon} label={item.label} onClick={item.action} compact={middle.length > 2 && index > 0} />)}
-        </div>
-        <div className="mt-auto mb-3">
-          {page === 'clan'
-            ? <div className="flex items-center gap-1 text-[7px] font-black uppercase tracking-[.16em] text-white/20"><Layers className="h-3 w-3" />Clan</div>
-            : <RailButton icon={SlidersHorizontal} label={editMode ? 'Exit Layout Edit' : 'Layout Edit'} active={editMode} onClick={() => setEditMode((value) => !value)} />}
-        </div>
+      <div data-atom-customization-midpoint="true" data-ui-editor-ignore="true" className={`flex flex-col items-center gap-2 ${className}`}>
+        <RailButton icon={Palette} label="UI Prefabs" active={drawerOpen} onClick={() => setDrawerOpen((value) => !value)} />
+        {sequence.map((key, index) => {
+          const item = action(key);
+          return <RailButton key={`${key}-${index}`} icon={item.icon} label={item.label} onClick={item.action} play={item.play} compact={page === 'clan' && key === 'chat'} />;
+        })}
+        {showEdit && <RailButton icon={SlidersHorizontal} label={editMode ? 'Exit Layout Edit' : 'Layout Edit'} active={editMode} onClick={() => setEditMode((value) => !value)} />}
       </div>
       {typeof document !== 'undefined' && drawer ? createPortal(drawer, document.body) : drawer}
     </>
   );
+}
+
+// Backward-compatible export. It is intentionally only the midpoint control stack,
+// never the full sidebar/rail container.
+export function UICustomizationRail(props) {
+  return <UICustomizationControls {...props} />;
 }
