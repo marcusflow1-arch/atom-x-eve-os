@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Trophy } from 'lucide-react';
 import LunaMessageCenter from './LunaMessageCenter';
+import LunaPresenceMessageBridge from './LunaPresenceMessageBridge';
 
 function collectChildText(node) {
   if (typeof node === 'string' || typeof node === 'number') return String(node);
@@ -103,18 +104,21 @@ export const ConsoleTile = ({ children, onClick, className = "", accentColor = n
       </motion.div>
 
       {isFriendsTile && typeof document !== 'undefined' && createPortal(
-        <LunaMessageCenter
-          open={messagesOpen}
-          initialFriend={messageFriend}
-          onClose={() => {
-            setMessagesOpen(false);
-            setMessageFriend(null);
-          }}
-          onRequestOpen={(friend) => {
-            setMessageFriend(friend || null);
-            setMessagesOpen(true);
-          }}
-        />,
+        <>
+          <LunaPresenceMessageBridge />
+          <LunaMessageCenter
+            open={messagesOpen}
+            initialFriend={messageFriend}
+            onClose={() => {
+              setMessagesOpen(false);
+              setMessageFriend(null);
+            }}
+            onRequestOpen={(friend) => {
+              setMessageFriend(friend || null);
+              setMessagesOpen(true);
+            }}
+          />
+        </>,
         document.body,
       )}
     </>
