@@ -673,43 +673,67 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
               </div>
             ) : !selectedGame ? (
               <div className="pt-4">
-                <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_repeat(3,minmax(150px,210px))]">
-                  <label className="flex min-w-0 items-center gap-2 rounded-2xl bg-black/[0.12] px-3">
-                    <Search className="h-4 w-4 shrink-0 text-white/25" />
-                    <input
-                      value={gameSearch}
-                      onChange={(event) => setGameSearch(event.target.value)}
-                      placeholder="Search console games, genre, tags, year..."
-                      className="h-11 min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-white/22"
-                    />
-                  </label>
+                <div className="grid gap-6 lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[210px_minmax(0,1fr)]">
+                  <aside className="min-w-0 border-r border-white/[0.055] pr-4 lg:min-h-[560px]">
+                    <div className="mb-3 flex items-center gap-2 px-2 text-[8px] font-black uppercase tracking-[.2em] text-[#d7dde5]/45">
+                      <SlidersHorizontal className="h-3.5 w-3.5" /> Genres
+                    </div>
+                    <div className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
+                      {genres.map((genre) => {
+                        const active = gameGenre === genre;
+                        return (
+                          <button
+                            key={genre}
+                            type="button"
+                            onClick={() => setGameGenre(genre)}
+                            className={`flex shrink-0 items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-[9px] font-bold uppercase tracking-[.1em] transition lg:w-full ${active ? 'bg-[#d7dde5]/[0.09] text-white' : 'text-white/38 hover:bg-white/[0.035] hover:text-white/75'}`}
+                          >
+                            <span className="truncate">{genre === 'All' ? 'All Genres' : String(genre).replaceAll('_', ' ')}</span>
+                            <span className="text-[8px] font-medium text-white/25">{genreCounts.get(genre) || 0}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setGameGenre('All'); setGameAvailability('all'); setGameSearch(''); setGameSort('title'); }}
+                      className="mt-4 hidden w-full border-t border-white/[0.05] px-2.5 pt-3 text-left text-[8px] font-bold uppercase tracking-[.14em] text-white/25 transition hover:text-white/60 lg:block"
+                    >
+                      Reset filters
+                    </button>
+                  </aside>
 
-                  <label className="relative flex items-center rounded-2xl bg-black/[0.12] px-3">
-                    <SlidersHorizontal className="mr-2 h-3.5 w-3.5 text-white/25" />
-                    <select value={gameGenre} onChange={(event) => setGameGenre(event.target.value)} className="h-11 w-full appearance-none bg-transparent text-[9px] font-bold uppercase tracking-wider text-white/60 outline-none">
-                      {genres.map((genre) => <option key={genre} value={genre} className="bg-[#20242a]">{genre === 'All' ? 'All Genres' : String(genre).replaceAll('_', ' ')}</option>)}
-                    </select>
-                  </label>
+                  <div className="min-w-0">
+                    <div className="grid gap-2 md:grid-cols-[minmax(240px,1fr)_180px_180px]">
+                      <label className="flex min-w-0 items-center gap-2 rounded-xl border border-white/[0.045] bg-[#d7dde5]/[0.025] px-3">
+                        <Search className="h-4 w-4 shrink-0 text-white/25" />
+                        <input
+                          value={gameSearch}
+                          onChange={(event) => setGameSearch(event.target.value)}
+                          placeholder="Search console games, tags, or year..."
+                          className="h-11 min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-white/22"
+                        />
+                      </label>
 
-                  <label className="flex items-center rounded-2xl bg-black/[0.12] px-3">
-                    <Tag className="mr-2 h-3.5 w-3.5 text-white/25" />
-                    <select value={gameAvailability} onChange={(event) => setGameAvailability(event.target.value)} className="h-11 w-full appearance-none bg-transparent text-[9px] font-bold uppercase tracking-wider text-white/60 outline-none">
-                      <option value="all" className="bg-[#20242a]">All Games</option>
-                      <option value="cards" className="bg-[#20242a]">Has Cards</option>
-                      <option value="sellers" className="bg-[#20242a]">Live Sellers</option>
-                    </select>
-                  </label>
+                      <label className="flex items-center rounded-xl border border-white/[0.045] bg-[#d7dde5]/[0.025] px-3">
+                        <Tag className="mr-2 h-3.5 w-3.5 text-white/25" />
+                        <select value={gameAvailability} onChange={(event) => setGameAvailability(event.target.value)} className="h-11 w-full appearance-none bg-transparent text-[9px] font-bold uppercase tracking-wider text-white/60 outline-none">
+                          <option value="all" className="bg-[#0b0d10]">All Games</option>
+                          <option value="cards" className="bg-[#0b0d10]">Has Cards</option>
+                          <option value="sellers" className="bg-[#0b0d10]">Live Sellers</option>
+                        </select>
+                      </label>
 
-                  <label className="flex items-center rounded-2xl bg-black/[0.12] px-3">
-                    <CalendarDays className="mr-2 h-3.5 w-3.5 text-white/25" />
-                    <select value={gameSort} onChange={(event) => setGameSort(event.target.value)} className="h-11 w-full appearance-none bg-transparent text-[9px] font-bold uppercase tracking-wider text-white/60 outline-none">
-                      <option value="title" className="bg-[#20242a]">A–Z</option>
-                      <option value="newest" className="bg-[#20242a]">Newest</option>
-                      <option value="cards" className="bg-[#20242a]">Most Cards</option>
-                      <option value="sellers" className="bg-[#20242a]">Most Sellers</option>
-                    </select>
-                  </label>
-                </div>
+                      <label className="flex items-center rounded-xl border border-white/[0.045] bg-[#d7dde5]/[0.025] px-3">
+                        <CalendarDays className="mr-2 h-3.5 w-3.5 text-white/25" />
+                        <select value={gameSort} onChange={(event) => setGameSort(event.target.value)} className="h-11 w-full appearance-none bg-transparent text-[9px] font-bold uppercase tracking-wider text-white/60 outline-none">
+                          <option value="title" className="bg-[#0b0d10]">A–Z</option>
+                          <option value="newest" className="bg-[#0b0d10]">Newest</option>
+                          <option value="cards" className="bg-[#0b0d10]">Most Cards</option>
+                          <option value="sellers" className="bg-[#0b0d10]">Most Sellers</option>
+                        </select>
+                      </label>
+                    </div>
 
                 <div className="mt-5 flex items-end justify-between gap-4">
                   <div>
