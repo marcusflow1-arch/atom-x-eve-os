@@ -2,36 +2,14 @@
   "name": "PartyMember",
   "type": "object",
   "properties": {
-    "party_id": {
-      "type": "string",
-      "description": "ID of the party"
-    },
-    "user_id": {
-      "type": "string",
-      "description": "User ID of member"
-    },
-    "user_name": {
-      "type": "string",
-      "description": "Display name"
-    },
-    "user_avatar": {
-      "type": "string",
-      "description": "Avatar URL"
-    },
-    "is_ready": {
-      "type": "boolean",
-      "default": false,
-      "description": "Ready status"
-    },
-    "joined_date": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When member joined"
-    }
+    "party_id": { "type": "string", "description": "ID of the party" },
+    "user_id": { "type": "string", "description": "User ID of member" },
+    "user_name": { "type": "string", "description": "Display name" },
+    "user_avatar": { "type": "string", "description": "Avatar URL" },
+    "role": { "type": "string", "enum": ["leader", "member"], "default": "member" },
+    "is_ready": { "type": "boolean", "default": false, "description": "Ready status" },
+    "voice_enabled": { "type": "boolean", "default": true, "description": "Last known party voice preference" },
+    "joined_date": { "type": "string", "format": "date-time", "description": "When member joined" }
   },
-  "required": [
-    "party_id",
-    "user_id",
-    "user_name"
-  ]
+  "required": ["party_id", "user_id", "user_name"]
 }
