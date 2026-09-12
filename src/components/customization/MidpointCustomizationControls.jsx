@@ -41,6 +41,11 @@ function isSidebarLaunchCandidate(candidate) {
 }
 
 function findLegacyEnvironmentAction() {
+  // SidebarBottomSection intentionally keeps this invisible, in-flow bridge so
+  // the relocated midpoint button can reuse the exact original launch handler.
+  const launchProxy = document.querySelector('button[data-sidebar-launch-proxy="true"]');
+  if (launchProxy) return launchProxy;
+
   const environmentSelectors = [
     'button[title="Environment Launch"]',
     'button[aria-label="Environment Launch"]',
