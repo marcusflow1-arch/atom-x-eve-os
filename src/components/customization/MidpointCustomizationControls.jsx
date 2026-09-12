@@ -29,26 +29,44 @@ function RailButton({ icon: Icon, label, active = false, play = false, onClick }
   );
 }
 
+function isSidebarLaunchCandidate(candidate) {
+  if (!candidate || candidate.closest('[data-atom-midpoint-controls="true"]')) return false;
+  const rect = candidate.getBoundingClientRect();
+  if (!rect.width || !rect.height) return false;
+  return rect.left < 190
+    && rect.right < 235
+    && rect.width <= 76
+    && rect.height <= 76
+    && rect.top > 180;
+}
+
 function findLegacyEnvironmentAction() {
-  const selectors = [
+  const environmentSelectors = [
     'button[title="Environment Launch"]',
     'button[aria-label="Environment Launch"]',
     'button[title="Launch Environment"]',
     'button[aria-label="Launch Environment"]',
-    'button[title="Play"]',
-    'button[aria-label="Play"]',
   ];
 
-  for (const selector of selectors) {
-    const candidates = Array.from(document.querySelectorAll(selector));
-    const match = candidates.find((candidate) => !candidate.closest('[data-atom-midpoint-controls="true"]'));
+  for (const selector of environmentSelectors) {
+    const match = Array.from(document.querySelectorAll(selector))
+      .find((candidate) => !candidate.closest('[data-atom-midpoint-controls="true"]'));
     if (match) return match;
   }
 
-  return Array.from(document.querySelectorAll('button')).find((candidate) => {
-    if (candidate.closest('[data-atom-midpoint-controls="true"]')) return false;
-    return candidate.textContent?.trim().toLowerCase() === 'play';
-  }) || null;
+  const genericSelectors = [
+    'button[title="Play"]',
+    'button[aria-label="Play"]',
+  ];
+  for (const selector of genericSelectors) {
+    const match = Array.from(document.querySelectorAll(selector)).find(isSidebarLaunchCandidate);
+    if (match) return match;
+  }
+
+  return Array.from(document.querySelectorAll('button')).find((candidate) => (
+    isSidebarLaunchCandidate(candidate)
+    && candidate.textContent?.trim().toLowerCase() === 'play'
+  )) || null;
 }
 
 function useLegacyEnvironmentAction() {
