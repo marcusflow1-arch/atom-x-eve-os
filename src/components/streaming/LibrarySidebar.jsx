@@ -384,72 +384,8 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`${positionClass} ${railLeftClass} top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
           >
-            {/* Glass backing panel behind the rail icons (Aura + Luna) so icons sit on a glass finish */}
-            {(isAura || pathname.includes('/lunatemplate')) && (
-              <div
-                className="absolute inset-x-[-10px] inset-y-[-14px] rounded-2xl pointer-events-none -z-10"
-                style={{
-                  background: 'rgba(10, 14, 20, 0.42)',
-                  backdropFilter: 'blur(22px) saturate(160%)',
-                  WebkitBackdropFilter: 'blur(22px) saturate(160%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)',
-                }}
-              />
-            )}
-            {/* Top Slot Placeholder (Luna only) */}
-            {pathname.includes('/lunatemplate') && (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-px bg-white/20" />
-                <div className="relative group">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20 bg-white/10 text-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl hover:bg-white/15 transition-all duration-300 relative z-20"
-                    title="Top Widget Placeholder"
-                  >
-                    <span className="text-lg font-bold text-white/70">?</span>
-                  </div>
-                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
-                    <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('toggleSlot1Content', { detail: 'questBook' }))}
-                      className="w-10 h-10 rounded-xl border border-cyan-400/25 bg-white/10 text-white/80 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-cyan-500/15 transition-all duration-300"
-                      title="Toggle Quest Book"
-                    >
-                      <Book className="w-4 h-4 text-cyan-200" />
-                    </button>
-                    {[1, 2, 3].map((item) => (
-                      <div
-                        key={`top-placeholder-${item}`}
-                        className="w-10 h-10 rounded-xl border border-white/20 bg-white/10 text-white/70 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)]"
-                      >
-                        <span className="text-lg font-bold">?</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Quick menu buttons for Clan/Forum/Farm */}
-            {isClan && !isSidebarCollapsed && (
-              <button
-                onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
-                className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
-                title="Clan Quick Menu"
-              >
-                <UsersIcon className="w-4 h-4" />
-              </button>
-            )}
-
-            {isForum && !isSidebarCollapsed && (
-              <button
-                onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
-                className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
-                title="Forum Quick Menu"
-              >
-                <MessageSquare className="w-4 h-4" />
-              </button>
-            )}
-
+            {/* Farm keeps its existing center shortcut; Clan and Forum quick
+                menus are rendered in the separate page-owned lane below. */}
             {isFarm && !isSidebarCollapsed && (
               <button
                 onClick={() => setQuickGamesDrawer({ open: true, type: 'farm' })}
@@ -458,11 +394,6 @@ export default function LibrarySidebar() {
               >
                 <Wheat className="w-4 h-4" />
               </button>
-            )}
-
-            {/* Aura — purple Watch Stream button opens a glass pullout to its right */}
-            {isAura && (
-              <AuraStreamersPullout railLeftClass={railLeftClass} />
             )}
 
             {(isGameDetail || pathname.includes('/game/')) && (
@@ -490,51 +421,42 @@ export default function LibrarySidebar() {
 
             {/* Launch + bottom panel toggles now live in the shared SidebarBottomSection at the bottom of the rail */}
 
-            {/* Roster Button for Clan */}
-            {isClan && !isSidebarCollapsed && (
-              <button
-                onClick={() => window.dispatchEvent(new Event('toggleClanRoster'))}
-                className="w-12 h-12 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all bg-black/50 hover:bg-white/10 text-white/60 border-white/10 hover:border-yellow-400/50 hover:shadow-[0_0_10px_rgba(250,204,21,0.2)] -ml-1 mt-1 group"
-                title="Roster"
-              >
-                <UsersIcon className="w-4 h-4 group-hover:text-yellow-400 transition-colors" />
-                <span className="text-[7px] font-bold uppercase tracking-wider mt-0.5 group-hover:text-yellow-400 transition-colors">Roster</span>
-              </button>
-            )}
-
-            {/* Bottom Slot Placeholder (Luna only) */}
-            {pathname.includes('/lunatemplate') && (
-              <div className="flex flex-col items-center gap-3">
-                <div className="relative group">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20 bg-white/10 text-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl hover:bg-white/15 transition-all duration-300 relative z-20"
-                    title="Bottom Widget Placeholder"
-                  >
-                    <span className="text-lg font-bold text-white/70">?</span>
-                  </div>
-                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
-                    <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('toggleSlot2Content', { detail: 'cardCollection' }))}
-                      className="w-10 h-10 rounded-xl border border-cyan-400/25 bg-white/10 text-white/80 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-cyan-500/15 transition-all duration-300"
-                      title="Toggle Cards Unlocked"
-                    >
-                      <Layers className="w-4 h-4 text-cyan-200" />
-                    </button>
-                    {[1, 2, 3].map((item) => (
-                      <div
-                        key={`bottom-placeholder-${item}`}
-                        className="w-10 h-10 rounded-xl border border-white/20 bg-white/10 text-white/70 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)]"
-                      >
-                        <span className="text-lg font-bold">?</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="w-8 h-px bg-white/20" />
-              </div>
-            )}
-
           </motion.div>}
+
+          {/* Page-owned shortcut lane. This intentionally sits in the original
+              lower Launch slot, separate from the midpoint customization stack.
+              No shared glass frame is rendered around these buttons. */}
+          {!isSidebarCollapsed && (isClan || isForum || isAura) && (
+            <motion.div
+              initial={{ x: -12, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className={`${positionClass} ${railLeftClass} z-[72] flex w-10 items-center justify-center`}
+              style={{ bottom: '264px' }}
+            >
+              {isClan && (
+                <button
+                  onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
+                  title="Clan Quick Menu"
+                >
+                  <UsersIcon className="w-4 h-4" />
+                </button>
+              )}
+
+              {isForum && (
+                <button
+                  onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
+                  title="Forum Quick Menu"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+              )}
+
+              {isAura && <AuraStreamersPullout railLeftClass={railLeftClass} />}
+            </motion.div>
+          )}
 
           {/* Shared bottom section: Launch + Friends/Library/Rewards/Entertainment.
                Narrow rail → single vertical column (flex-col, items-center, w-full, min-w-0,
