@@ -42,6 +42,7 @@ import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
 import GamePageView from '@/components/dashboard/gamehub/GamePageView';
 import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
+import FriendMessengerPanel from '@/components/friends/FriendMessengerPanel';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1211,6 +1212,7 @@ export function LibraryBannerSection({
   const [invitedUsers, setInvitedUsers] = useState({});
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
+  const [messageTarget, setMessageTarget] = useState(null);
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
@@ -1223,6 +1225,16 @@ export function LibraryBannerSection({
     queryFn: () => base44.entities.Friend.filter({ user_id: user.id }),
     enabled: !!user?.id,
     refetchInterval: 5000,
+  });
+
+  const { data: incomingDashboardInvites = [], refetch: refetchDashboardInvites } = useQuery({
+    queryKey: ['luna_presence_dashboard_invites', user?.id],
+    queryFn: async () => {
+      const rows = await base44.entities.LunarDashboardRequest.filter({ target_user_id: user.id, request_type: 'invite', status: 'pending' });
+      return (rows || []).sort((a, b) => new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime());
+    },
+    enabled: !!user?.id,
+    refetchInterval: 3000,
   });
 
   const friendIds = useMemo(() => new Set((dashboardFriends || []).map((friend) => String(friend.friend_id))), [dashboardFriends]);
@@ -1334,18 +1346,27 @@ export function LibraryBannerSection({
 
   const handleMessage = (u) => {
     onActiveFriendChange(null);
-    window.dispatchEvent(new CustomEvent('openLunaMessages', {
-      detail: {
-        friend: {
-          id: u.id,
-          friend_id: u.id,
-          friend_name: u.name,
-          friend_avatar: u.avatar,
-          status: u.status || 'online',
-          current_game: u.current_game || null,
-        },
-      },
-    }));
+    setMessageTarget({
+      id: u.id,
+      friend_id: u.id,
+      friend_name: u.name,
+      friend_avatar: u.avatar,
+      status: u.status || 'online',
+      current_game: u.current_game || null,
+    });
+  };
+
+  const acceptDashboardInvite = async (request) => {
+    if (!request?.id) return;
+    await base44.entities.LunarDashboardRequest.update(request.id, { status: 'accepted' });
+    await refetchDashboardInvites();
+    handleJoin({ id: request.host_user_id, name: request.requester_name || 'Friend', status: 'online' });
+  };
+
+  const declineDashboardInvite = async (request) => {
+    if (!request?.id) return;
+    await base44.entities.LunarDashboardRequest.update(request.id, { status: 'declined' });
+    await refetchDashboardInvites();
   };
 
   const handleHomeClick = () => {
