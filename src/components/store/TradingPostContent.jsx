@@ -755,6 +755,8 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                     <div><Gamepad2 className="mx-auto h-7 w-7 text-white/15" /><h3 className="mt-3 text-sm font-bold text-white/60">No games match these filters.</h3><p className="mt-2 text-xs text-white/25">Try another title, genre, or availability filter.</p></div>
                   </div>
                 )}
+                  </div>
+                </div>
               </div>
             ) : !selectedCard ? (
               <div className="pt-4">
