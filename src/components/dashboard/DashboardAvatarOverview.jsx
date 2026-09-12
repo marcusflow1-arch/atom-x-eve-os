@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, Radio, Crown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
+import LunaDashboardMessages from './LunaDashboardMessages';
 import { useAuth } from '../auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 
@@ -75,6 +76,7 @@ export default function DashboardAvatarOverview() {
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
   const [interactionDimmed, setInteractionDimmed] = useState(false);
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
+  const [messageFriend, setMessageFriend] = useState(null);
   const lastInteractiveRef = useRef(null);
 
   useEffect(() => {
@@ -89,6 +91,15 @@ export default function DashboardAvatarOverview() {
       window.removeEventListener('dashboardGameLaunched', g);
       window.removeEventListener('dashboardGameClosed', c);
     };
+  }, []);
+
+  useEffect(() => {
+    const openMessages = (event) => {
+      setMessageFriend(event?.detail?.friend || null);
+      setActiveQuickPanel('friends');
+    };
+    window.addEventListener('openLunaMessages', openMessages);
+    return () => window.removeEventListener('openLunaMessages', openMessages);
   }, []);
 
   useEffect(() => {
@@ -186,6 +197,8 @@ export default function DashboardAvatarOverview() {
     { id: 'blank-5', label: 'View 5', icon: Sparkles }
   ];
 
+  const messagesActive = surface === 'dashboard' && activeQuickPanel === 'friends';
+
   return (
     <div data-dashboard-avatar-overview className="fixed left-[390px] right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible">
       {surface === 'dashboard' && activeQuickPanel && (
@@ -193,18 +206,42 @@ export default function DashboardAvatarOverview() {
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[74px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
           style={{
-            background: 'linear-gradient(135deg, rgba(20,29,44,0.52) 0%, rgba(10,16,28,0.30) 48%, rgba(22,34,50,0.44) 100%)',
+            background: messagesActive
+              ? 'rgba(6,11,19,0.34)'
+              : 'linear-gradient(135deg, rgba(20,29,44,0.52) 0%, rgba(10,16,28,0.30) 48%, rgba(22,34,50,0.44) 100%)',
             backdropFilter: 'blur(28px) saturate(145%)',
             WebkitBackdropFilter: 'blur(28px) saturate(145%)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 60px rgba(103,232,249,0.025), 0 30px 70px rgba(0,0,0,0.24)',
-            clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)'
+            border: messagesActive ? 'none' : '1px solid rgba(255,255,255,0.12)',
+            boxShadow: messagesActive ? 'none' : 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 60px rgba(103,232,249,0.025), 0 30px 70px rgba(0,0,0,0.24)',
+            clipPath: messagesActive ? 'none' : 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)'
           }}
         >
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_24%_12%,rgba(103,232,249,0.08),transparent_33%),radial-gradient(circle_at_82%_82%,rgba(129,140,248,0.055),transparent_34%)]" />
-          <div className="absolute inset-[1px] pointer-events-none border border-white/[0.025]" style={{ clipPath: 'polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)' }} />
+          {!messagesActive && (
+            <>
+              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_24%_12%,rgba(103,232,249,0.08),transparent_33%),radial-gradient(circle_at_82%_82%,rgba(129,140,248,0.055),transparent_34%)]" />
+              <div className="absolute inset-[1px] pointer-events-none border border-white/[0.025]" style={{ clipPath: 'polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)' }} />
+            </>
+          )}
         </div>
       )}
+
+      {/* Keep Luna Messages mounted so incoming calls/messages can activate the Friends workspace. */}
+      <div
+        className={`absolute left-[8px] right-[8px] top-[8px] bottom-[74px] z-[36] transition-opacity duration-200 ${messagesActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      >
+        <LunaDashboardMessages
+          active={messagesActive}
+          initialFriend={messageFriend}
+          onActivate={(friend) => {
+            setMessageFriend(friend || null);
+            setActiveQuickPanel('friends');
+          }}
+          onClose={() => {
+            setActiveQuickPanel(null);
+            setMessageFriend(null);
+          }}
+        />
+      </div>
 
       {surface === 'dashboard' && (
         <div
@@ -217,7 +254,10 @@ export default function DashboardAvatarOverview() {
               icon={item.icon}
               label={item.label}
               active={activeQuickPanel === item.id}
-              onClick={() => setActiveQuickPanel(current => current === item.id ? null : item.id)}
+              onClick={() => {
+                if (item.id === 'friends' && activeQuickPanel !== 'friends') setMessageFriend(null);
+                setActiveQuickPanel(current => current === item.id ? null : item.id);
+              }}
             />
           ))}
         </div>
