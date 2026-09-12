@@ -1,136 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import FarmHub from '@/components/farm/FarmHub';
 import FarmGameView from '@/components/farm/FarmGameView';
+import FarmBottomNav from '@/components/farm/FarmBottomNav';
+import FarmGameBrowserOverlay from '@/components/farm/FarmGameBrowserOverlay';
+import '@/components/farm/farmHub.css';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
-import { getFarmGameById } from '@/components/farm/farmData';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import ForumBottomNav from '@/components/community/ForumBottomNav';
-import { ChevronLeft } from 'lucide-react';
-import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 
 export default function FarmPage() {
-    const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [view, setView] = useState('hub'); // 'hub' | 'game'
-    const [selectedGame, setSelectedGame] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [view, setView] = useState('hub');
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [games, setGames] = useState([]);
+  const [browserOpen, setBrowserOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
 
-    // Save visited game to Recent Farm Games
-    useEffect(() => {
-        if (selectedGame) {
-            try {
-                const stored = JSON.parse(localStorage.getItem('recent_farm_games') || '[]');
-                const filtered = stored.filter(g => g.name !== selectedGame.title);
-                const toSave = [{
-                    id: selectedGame.id,
-                    name: selectedGame.title,
-                    image: selectedGame.cover_image || selectedGame.banner_image || selectedGame.image || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80"
-                }, ...filtered].slice(0, 5);
-                
-                localStorage.setItem('recent_farm_games', JSON.stringify(toSave));
-                window.dispatchEvent(new Event('recentFarmGamesUpdated'));
-            } catch (e) {
-                console.error("Failed to save recent farm game", e);
-            }
-        }
-    }, [selectedGame]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        let rows;
+        try { rows = await base44.entities.Game.list('-original_year', 1000); }
+        catch (_) { rows = await base44.entities.Game.list('-original_year', 250); }
+        if (!cancelled) setGames(rows || []);
+      } catch (error) {
+        console.error('Failed to load Farm Hub games', error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-    // Handle Deep Linking & Navigation Entry
-    useEffect(() => {
-        const gameId = searchParams.get('gameId');
-        if (gameId) {
-            const game = getFarmGameById(gameId);
-            if (game) {
-                setSelectedGame(game);
-                setView('game');
-            }
-        } else {
-            // Reset if no param (e.g. back navigation)
-            if (view !== 'hub') {
-                 // Keep current state if user is navigating within app, 
-                 // but if they hit back to /Farm, maybe show Hub.
-                 // For now, let's rely on manual state for in-app nav, 
-                 // and params for initial load.
-            }
-        }
-    }, [searchParams]);
+  useEffect(() => {
+    const gameId = searchParams.get('gameId');
+    if (!gameId) {
+      setView('hub');
+      return;
+    }
+    if (!games.length) return;
+    const game = games.find((item) => String(item.id) === String(gameId));
+    if (game) {
+      setSelectedGame(game);
+      setView('game');
+    } else {
+      setSearchParams({}, { replace: true });
+      setSelectedGame(null);
+      setView('hub');
+    }
+  }, [games, searchParams, setSearchParams]);
 
-    const handleSelectGame = (game) => {
-        setSearchParams({ gameId: game.id });
-        setSelectedGame(game);
-        setView('game');
-    };
+  useEffect(() => {
+    if (!selectedGame) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem('recent_farm_games') || '[]');
+      const next = [{
+        id: selectedGame.id,
+        name: selectedGame.title,
+        image: selectedGame.cover_image || selectedGame.banner_image || selectedGame.image || '',
+      }, ...stored.filter((item) => item.id !== selectedGame.id && item.name !== selectedGame.title)].slice(0, 8);
+      localStorage.setItem('recent_farm_games', JSON.stringify(next));
+      window.dispatchEvent(new Event('recentFarmGamesUpdated'));
+    } catch (error) {
+      console.warn('Could not save recent Farm Hub game', error);
+    }
+  }, [selectedGame]);
 
-    const handleBackToHub = () => {
-        setSearchParams({});
-        setView('hub');
-        setTimeout(() => setSelectedGame(null), 300);
-    };
+  const handleSelectGame = (game) => {
+    if (!game?.id) return;
+    setSelectedGame(game);
+    setBrowserOpen(false);
+    setSearchParams({ gameId: game.id });
+    setView('game');
+  };
 
-    const handleTabSelect = (tabId) => {
-        if (tabId === 'hub') {
-            navigate(createPageUrl('Community'));
-        } else if (tabId === 'farm_hub') {
-            handleBackToHub();
-        }
-    };
+  const handleBackToHub = () => {
+    setSearchParams({});
+    setSelectedGame(null);
+    setView('hub');
+  };
 
-    return (
-        <PageErrorBoundary pageName="Farm">
-            <GlassPageFrame bottomContent={<ForumBottomNav activeTab="farm_hub" onTabSelect={handleTabSelect} />}>
-            <div 
-                className="min-h-screen text-white overflow-hidden relative"
-                style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
-            >
-                {/* Ambient Background Elements */}
-                <div className="absolute inset-0 pointer-events-none z-0">
-                    <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-                    <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-300/5 rounded-full blur-[120px]" />
-                </div>
+  const handleBottomTab = (tab) => {
+    if (view === 'game') handleBackToHub();
+    setActiveSection(tab);
+  };
 
-                <div className="relative z-10 h-screen pt-16 flex">
-                    <div className="w-[5%] min-w-[80px] border-r border-white/20 h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm">
-                        <button
-                            className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center text-white/50 backdrop-blur-md z-50 shadow-lg cursor-default"
-                            aria-label="Farm sidebar bar"
-                        >
-                            <ChevronLeft className="w-4 h-4 -ml-1" />
-                        </button>
-                    </div>
-                    <div className="flex-1 flex flex-col min-w-0">
-                    <AnimatePresence mode="wait">
-                        {view === 'hub' ? (
-                            <motion.div 
-                                key="hub"
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
-                                transition={{ duration: 0.3 }}
-                                className="flex-1 overflow-y-auto custom-scrollbar"
-                            >
-                                <div className="max-w-[1600px] mx-auto w-full">
-                                    <FarmHub onSelectGame={handleSelectGame} />
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <motion.div 
-                                key="game"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex-1 h-full overflow-hidden"
-                            >
-                                <FarmGameView game={selectedGame} onBack={handleBackToHub} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                    </div>
-                </div>
-            </div>
-            </GlassPageFrame>
-        </PageErrorBoundary>
-    );
+  return <PageErrorBoundary pageName="Farm">
+    <GlassPageFrame bottomContent={<FarmBottomNav activeTab={activeSection} onBrowseGames={() => setBrowserOpen(true)} onTabSelect={handleBottomTab} />}>
+      <div className="farm-hub relative h-screen w-full overflow-hidden bg-[#020617] text-white">
+        <AnimatePresence mode="wait">
+          {view === 'hub' ? <motion.div key="hub" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .2 }}>
+            <FarmHub games={games} onSelectGame={handleSelectGame} activeSection={activeSection} />
+          </motion.div> : selectedGame ? <motion.div key={`game-${selectedGame.id}`} className="absolute inset-[64px_0_53px] overflow-hidden bg-[#020617]" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: .22 }}>
+            <FarmGameView game={selectedGame} onBack={handleBackToHub} />
+          </motion.div> : null}
+        </AnimatePresence>
+
+        <FarmGameBrowserOverlay open={browserOpen} games={games} onClose={() => setBrowserOpen(false)} onSelectGame={handleSelectGame} />
+      </div>
+    </GlassPageFrame>
+  </PageErrorBoundary>;
 }
