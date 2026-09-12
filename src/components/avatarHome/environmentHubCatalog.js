@@ -143,6 +143,7 @@ export const DEFAULT_ENVIRONMENT_CONFIG = {
 
 export function normalizeEnvironmentConfig(input = {}) {
   const source = input || {};
+  const isLegacy = Number(source.version || 0) < ENVIRONMENT_HUB_VERSION;
   const migratedMode = source.mode === 'wallpaper' ? 'wallpaper' : 'home';
   const next = {
     ...DEFAULT_ENVIRONMENT_CONFIG,
@@ -151,15 +152,22 @@ export function normalizeEnvironmentConfig(input = {}) {
     mode: migratedMode,
   };
 
-  // Old World Composer configs used skyboxId. Preserve a deliberate old moon
-  // selection, otherwise migrate users to the new real-time day/night sky.
-  if (!source.skyId) {
-    next.skyId = source.skyboxId === 'sky-moon' ? 'sky-moon' : 'sky-live';
+  // Version 1 had a much larger composer with independent environment,
+  // background, garden and music layers. Collapse those settings cleanly into
+  // the new Home defaults instead of leaving invisible legacy selections.
+  if (isLegacy) {
+    next.homeId = 'home-open-land';
+    next.homeAsset = null;
+    next.landId = 'land-grass';
+    next.skyId = 'sky-live';
+    next.weatherId = source.weatherId || 'weather-clear';
   }
-  if (!source.landId) next.landId = 'land-grass';
-  if (!source.homeId) next.homeId = 'home-open-land';
-  if (!source.wallpaperId) next.wallpaperId = 'wall-nebula';
-  if (!source.weatherId) next.weatherId = 'weather-clear';
+
+  if (!next.skyId) next.skyId = 'sky-live';
+  if (!next.landId) next.landId = 'land-grass';
+  if (!next.homeId) next.homeId = 'home-open-land';
+  if (!next.wallpaperId) next.wallpaperId = 'wall-nebula';
+  if (!next.weatherId) next.weatherId = 'weather-clear';
 
   return next;
 }
