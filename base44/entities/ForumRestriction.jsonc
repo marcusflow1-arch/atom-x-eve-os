@@ -1,0 +1,13 @@
+{
+  "name": "ForumRestriction",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "type": { "type": "string", "enum": ["mute", "suspend", "ban"] },
+    "reason": { "type": "string" },
+    "active": { "type": "boolean", "default": true },
+    "expires_at": { "type": "string" },
+    "created_by_moderator_id": { "type": "string" }
+  },
+  "required": ["user_id", "type", "active"]
+}
