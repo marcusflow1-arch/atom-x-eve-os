@@ -26,12 +26,16 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
     </div>;
   }
 
-  return <nav className="forum-console-nav" aria-label="Forum navigation">
+  return <nav
+    className="forum-console-nav"
+    aria-label="Forum navigation"
+    style={{ '--forum-accent': '#9de8f2', '--forum-accent-rgb': '157,232,242' }}
+  >
     <button type="button" onClick={onBrowseForums} className="forum-browser-link"><ListFilter size={16} /><span>Forums</span></button>
     <div className="forum-console-center">
       <button type="button" onClick={() => onTabSelect?.('recent')} className={activeTab === 'recent' ? 'is-active' : ''}><Clock3 size={16} /><span>Recent</span></button>
       <button type="button" onClick={() => onTabSelect?.('home')} className={activeTab === 'home' ? 'is-active' : ''}><Home size={16} /><span>Home</span></button>
-      <button type="button" onClick={() => onTabSelect?.('heated')} className={activeTab === 'heated' ? 'is-active' : ''}><Flame size={16} /><span>Heated</span></button>
+      <button type="button" onClick={() => onTabSelect?.('heated')} className={activeTab === 'heated' ? 'is-active' : ''}><Flame size={16} /><span>Popular</span></button>
     </div>
   </nav>;
 }
