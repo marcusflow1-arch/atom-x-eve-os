@@ -13,6 +13,8 @@ export default function DashboardAvatarScene() {
   const localAvatar = useCompanionIdentity();
   const [socialHost, setSocialHost] = useState(null);
   const [hostAvatar, setHostAvatar] = useState(null);
+  const [remoteGuest, setRemoteGuest] = useState(null);
+  const [remoteGuestAvatar, setRemoteGuestAvatar] = useState(null);
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
 
   useEffect(() => {
@@ -53,6 +55,44 @@ export default function DashboardAvatarScene() {
     };
   }, [user?.id]);
 
+  // Owners of a dashboard receive the joined visitor through the existing real
+  // multiplayer PlayerState stream. Mirror the newest visitor into this active
+  // dashboard renderer so the host sees the same side-by-side social stage.
+  useEffect(() => {
+    const handlePlayers = (event) => {
+      const players = (event.detail?.players || [])
+        .filter((player) => player?.player_id && String(player.player_id) !== String(user?.id))
+        .sort((a, b) => Number(b.last_update || 0) - Number(a.last_update || 0));
+      setRemoteGuest(players[0] || null);
+    };
+    window.addEventListener('multiplayerPlayersUpdate', handlePlayers);
+    return () => window.removeEventListener('multiplayerPlayersUpdate', handlePlayers);
+  }, [user?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const guestId = remoteGuest?.player_id;
+    if (!guestId) {
+      setRemoteGuestAvatar(null);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const rows = await base44.entities.Avatar.filter({ user_id: guestId });
+        if (cancelled) return;
+        const record = rows?.[0];
+        setRemoteGuestAvatar(record ? {
+          ...record,
+          gender: record.gender || 'male',
+          name: record.name || remoteGuest.display_name || 'Visitor',
+        } : { ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' });
+      } catch (error) {
+        if (!cancelled) setRemoteGuestAvatar({ ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [remoteGuest?.player_id, remoteGuest?.display_name]);
+
   // The Friends quick-control workspace is owned by DashboardAvatarOverview.
   // Portal the live Friends/Global Online browser into that existing glass
   // surface so clicking the Friends quick control opens the real social UI.
@@ -68,33 +108,48 @@ export default function DashboardAvatarScene() {
     return () => observer.disconnect();
   }, []);
 
-  const avatarStage = !socialHost ? (
-    <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact />
-  ) : (
+  const joinedElsewhere = Boolean(socialHost);
+  const hostingVisitor = !joinedElsewhere && Boolean(remoteGuest);
+
+  const pairedStage = (leftConfig, leftName, rightConfig, rightName, rightIsLocal = false) => (
     <div
       className="absolute inset-y-0 left-0 flex items-stretch justify-center overflow-visible"
       style={{ right: '338px' }}
-      aria-label={`Shared dashboard with ${socialHost.name}`}
+      aria-label={`Shared dashboard with ${rightIsLocal ? leftName : rightName}`}
     >
-      {/* DashboardAvatarOverview already starts to the right of the Library at
-          x=390. This lane additionally reserves the final 338px for AI
-          Attributes. The two narrow model pedestals sit directly together in
-          the remaining open lane so their centerlines are approximately one
-          rendered body-width apart, never under either UI surface. */}
+      {/* DashboardAvatarOverview starts to the right of the Library at x=390.
+          This lane additionally reserves the final 338px for AI Attributes.
+          The two 150–190px pedestals touch edge-to-edge, which keeps avatar
+          centerlines roughly one rendered body-width apart in the open lane. */}
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        <GenesisModelPreview config={hostAvatar || { ...FALLBACK_AVATAR, name: socialHost.name }} compact />
-        <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-md">
-          {socialHost.name}
-        </div>
+        <GenesisModelPreview config={leftConfig} compact />
+        <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-md">{leftName}</div>
       </div>
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact />
-        <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 rounded-full border border-cyan-200/15 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-cyan-100/80 backdrop-blur-md">
-          You
-        </div>
+        <GenesisModelPreview config={rightConfig} compact />
+        <div className={`pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md ${rightIsLocal ? 'border-cyan-200/15 text-cyan-100/80' : 'border-white/10 text-white/70'}`}>{rightName}</div>
       </div>
     </div>
   );
+
+  let avatarStage = <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact />;
+  if (joinedElsewhere) {
+    avatarStage = pairedStage(
+      hostAvatar || { ...FALLBACK_AVATAR, name: socialHost.name },
+      socialHost.name,
+      localAvatar || FALLBACK_AVATAR,
+      'You',
+      true
+    );
+  } else if (hostingVisitor) {
+    avatarStage = pairedStage(
+      localAvatar || FALLBACK_AVATAR,
+      'You',
+      remoteGuestAvatar || { ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' },
+      remoteGuest.display_name || 'Visitor',
+      false
+    );
+  }
 
   return (
     <>
