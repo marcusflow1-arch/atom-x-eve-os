@@ -1,8 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardAvatarFeaturePortal from './DashboardAvatarFeaturePortal';
 import { UICustomizationControls } from '@/components/customization/UICustomizationSystem';
 
 export default function LunaLeftRail() {
+  useEffect(() => {
+    const hidden = [];
+    let frame = 0;
+
+    const hideLegacyWidget = (title) => {
+      const placeholder = document.querySelector(`[title="${title}"]`);
+      if (!placeholder) return;
+      const group = placeholder.closest('.group') || placeholder.parentElement;
+      if (!group || hidden.some((entry) => entry.element === group)) return;
+      hidden.push({ element: group, display: group.style.display });
+      group.style.display = 'none';
+    };
+
+    const sync = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        hideLegacyWidget('Top Widget Placeholder');
+        hideLegacyWidget('Bottom Widget Placeholder');
+      });
+    };
+
+    const observer = new MutationObserver(sync);
+    observer.observe(document.body, { childList: true, subtree: true });
+    sync();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      hidden.forEach(({ element, display }) => {
+        if (element?.isConnected) element.style.display = display;
+      });
+    };
+  }, []);
+
   return (
     <>
       <aside
@@ -22,7 +56,7 @@ export default function LunaLeftRail() {
           </div>
         </div>
 
-        {/* Replace only the old Top Widget / Bottom Widget midpoint region. */}
+        {/* Only the unused 50/50 midpoint is replaced. */}
         <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
           <UICustomizationControls />
         </div>
