@@ -1,0 +1,15 @@
+{
+  "name": "ForumReport",
+  "type": "object",
+  "properties": {
+    "target_type": { "type": "string", "enum": ["post", "comment", "user"] },
+    "target_id": { "type": "string" },
+    "reporter_user_id": { "type": "string" },
+    "reason": { "type": "string", "enum": ["spam", "harassment", "hate", "spoilers", "misinformation", "off_topic", "other"] },
+    "details": { "type": "string" },
+    "status": { "type": "string", "enum": ["open", "reviewing", "resolved", "dismissed"], "default": "open" },
+    "assigned_moderator_id": { "type": "string" },
+    "resolution": { "type": "string" }
+  },
+  "required": ["target_type", "target_id", "reporter_user_id", "reason"]
+}
