@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 concurrency:
   group: game3d-build-${{ github.ref }}
   cancel-in-progress: true
@@ -19,6 +22,88 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Luna Messages directly to LunaTemplate
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/modernized-twelvesky-systems'
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/pages/LunaTemplate.jsx')
+          text = path.read_text()
+          original = text
+
+          def ensure_replace(old, new, marker):
+              global text
+              if marker in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f'Unable to apply Luna patch: {marker}')
+              text = text.replace(old, new, 1)
+
+          ensure_replace(
+              "import WhatsNewSection from '../components/dashboard/WhatsNewSection';\nimport { useSidebarVisible } from '../hooks/useSidebarVisible';",
+              "import WhatsNewSection from '../components/dashboard/WhatsNewSection';\nimport LunaMessageCenter from '../components/dashboard/LunaMessageCenter';\nimport { useSidebarVisible } from '../hooks/useSidebarVisible';",
+              "import LunaMessageCenter from '../components/dashboard/LunaMessageCenter';",
+          )
+
+          ensure_replace(
+              "  const [selectedFriend, setSelectedFriend] = useState(null);\n  const [showCalendar, setShowCalendar] = useState(false);",
+              "  const [selectedFriend, setSelectedFriend] = useState(null);\n  const [showMessages, setShowMessages] = useState(false);\n  const [messageFriend, setMessageFriend] = useState(null);\n  const [showCalendar, setShowCalendar] = useState(false);",
+              "const [showMessages, setShowMessages] = useState(false);",
+          )
+
+          ensure_replace(
+              "  useEffect(() => {\n    const handleSkillTree = () => setShowSkillTreeBlankUI((prev) => !prev);\n    window.addEventListener('toggleSkillTree', handleSkillTree);\n    return () => window.removeEventListener('toggleSkillTree', handleSkillTree);\n  }, []);\n\n  // Hardcoded assets for System Reboot",
+              "  useEffect(() => {\n    const handleSkillTree = () => setShowSkillTreeBlankUI((prev) => !prev);\n    window.addEventListener('toggleSkillTree', handleSkillTree);\n    return () => window.removeEventListener('toggleSkillTree', handleSkillTree);\n  }, []);\n\n  // Luna owns Messages directly. Friend presence slots, the Friends network,\n  // and profile Message actions all route into this same center-page surface.\n  useEffect(() => {\n    const openMessages = (event) => {\n      setMessageFriend(event?.detail?.friend || null);\n      setShowMessages(true);\n    };\n    window.addEventListener('openLunaMessages', openMessages);\n    return () => window.removeEventListener('openLunaMessages', openMessages);\n  }, []);\n\n  // Hardcoded assets for System Reboot",
+              "window.addEventListener('openLunaMessages', openMessages);",
+          )
+
+          if "if (showMessages) { setShowMessages(false); setMessageFriend(null); return; }" not in text:
+              old = "      if (key === 'escape') {\n        if (showFriendsHub) { setShowFriendsHub(false); return; }"
+              new = "      if (key === 'escape') {\n        if (showMessages) { setShowMessages(false); setMessageFriend(null); return; }\n        if (showFriendsHub) { setShowFriendsHub(false); return; }"
+              if old not in text:
+                  raise SystemExit('Unable to patch Luna Escape behavior')
+              text = text.replace(old, new, 1)
+
+          old_deps = "  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);"
+          new_deps = "  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub, showMessages]);"
+          if old_deps in text:
+              text = text.replace(old_deps, new_deps, 1)
+
+          if "setShowMessages(true);\n                            setStageMode('default');" not in text:
+              old = "              {/* Friends (Replaces Skill Tree) */}\n              <ConsoleTile\n                          onClick={() => setStageMode((m) => m === 'friends' ? 'default' : 'friends')}\n                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'friends' ? 'border-green-400/50 bg-green-900/20' : ''}`}>"
+              new = "              {/* Friends / Messages */}\n              <ConsoleTile\n                          onClick={() => {\n                            setMessageFriend(null);\n                            setShowMessages(true);\n                            setStageMode('default');\n                          }}\n                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${showMessages ? 'border-green-400/50 bg-green-900/20' : ''}`}>"
+              if old not in text:
+                  raise SystemExit('Unable to wire Friends tile to Luna Messages')
+              text = text.replace(old, new, 1)
+
+          old_visual = "                <Users className={`w-10 h-10 relative z-10 ${stageMode === 'friends' ? 'text-green-400' : ''}`} style={stageMode === 'friends' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />\n                <span className={`text-sm font-sans relative z-10 ${stageMode === 'friends' ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>"
+          new_visual = "                <Users className={`w-10 h-10 relative z-10 ${showMessages ? 'text-green-400' : ''}`} style={showMessages ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />\n                <span className={`text-sm font-sans relative z-10 ${showMessages ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>"
+          if old_visual in text:
+              text = text.replace(old_visual, new_visual, 1)
+
+          if "{/* Luna Messages — center-page, borderless blurred social surface */}" not in text:
+              old = "      {/* Side Access Menu - hidden when sidebar is hidden */}"
+              new = "      {/* Luna Messages — center-page, borderless blurred social surface */}\n      <LunaMessageCenter\n        open={showMessages}\n        initialFriend={messageFriend}\n        onClose={() => {\n          setShowMessages(false);\n          setMessageFriend(null);\n        }}\n        onRequestOpen={(friend) => {\n          setMessageFriend(friend || null);\n          setShowMessages(true);\n        }}\n      />\n\n      {/* Side Access Menu - hidden when sidebar is hidden */}"
+              if old not in text:
+                  raise SystemExit('Unable to mount LunaMessageCenter on LunaTemplate')
+              text = text.replace(old, new, 1)
+
+          if text != original:
+              path.write_text(text)
+          PY
+
+          if ! git diff --quiet -- src/pages/LunaTemplate.jsx; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/pages/LunaTemplate.jsx
+            git commit -m "Apply Messages directly to Luna dashboard page"
+            git push origin HEAD:feature/modernized-twelvesky-systems
+          fi
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
