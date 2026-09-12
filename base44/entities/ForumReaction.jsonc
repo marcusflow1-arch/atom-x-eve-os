@@ -1,0 +1,11 @@
+{
+  "name": "ForumReaction",
+  "type": "object",
+  "properties": {
+    "target_type": { "type": "string", "enum": ["post", "comment"] },
+    "target_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "emoji": { "type": "string" }
+  },
+  "required": ["target_type", "target_id", "user_id", "emoji"]
+}
