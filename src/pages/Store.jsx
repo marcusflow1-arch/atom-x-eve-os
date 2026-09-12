@@ -768,7 +768,7 @@ export default function Store() {
                                         <DevCardsContent onNavigateToGame={handleNavigateToGame} />
                                     </motion.div>
                                 ) : (
-                                    <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
+                                    <motion.div key="trading" data-testid="store-trading-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full min-h-0 overflow-hidden pb-[48px]">
                                         <TradingPostContent genreFilter={storeFilters.genre} searchTerm={tradingSearch} />
                                     </motion.div>
                                 )}

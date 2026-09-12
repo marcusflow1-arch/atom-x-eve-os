@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
+import PagePrefabDrawer from '@/components/customization/PagePrefabDrawer';
+import usePagePrefabSurfaces from '@/components/customization/usePagePrefabSurfaces';
+import '@/components/customization/pagePrefab.css';
 
 const UIContext = createContext(null);
 const STORAGE_PREFIX = 'atom_x_eve_ui_customization_v2:';
@@ -112,7 +115,7 @@ function masterPage(pathname = '') {
 function viewName(location, page) {
   const path = location.pathname.toLowerCase();
   const params = new URLSearchParams(location.search);
-  const explicit = params.get('subview') || params.get('mode') || params.get('tab') || params.get('view');
+  const explicit = params.get('subview') || params.get('mode') || params.get('panel') || params.get('tab') || params.get('view');
   if (explicit) return explicit;
   if (page === 'aura') {
     if (path.includes('/discover')) return 'discover';
@@ -231,16 +234,17 @@ export function UICustomizationProvider({ children, pathname }) {
   const scope = `${page}:${viewName(location, page)}`;
   const storageKey = `${STORAGE_PREFIX}${scope}`;
   const local = useMemo(() => safeRead(storageKey), [storageKey]);
-  const [config, setConfig] = useState(() => local || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 });
+  const [config, setConfig] = useState(() => ({ ...(local || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 }), scope }));
   const [editMode, setEditMode] = useState(false);
   const [selected, setSelected] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const rootRef = useRef(null);
   const saveTimerRef = useRef(null);
   const preset = PRESETS.find((item) => item.id === config.presetId) || PRESETS[0];
+  usePagePrefabSurfaces(rootRef, Boolean(config.updatedAt) && config.scope === scope, scope, config.elementSettings);
 
   useEffect(() => {
-    const nextLocal = safeRead(storageKey) || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 };
+    const nextLocal = { ...(safeRead(storageKey) || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 }), scope };
     setConfig(nextLocal);
     setEditMode(false);
     setSelected(null);
@@ -252,7 +256,7 @@ export function UICustomizationProvider({ children, pathname }) {
         const response = await base44.functions.invoke('uiCustomization', { action: 'getState', payload: { pageScope: scope } });
         const remote = response?.data?.state || response?.state;
         if (!cancelled && remote && Number(remote.updatedAt || 0) > Number(nextLocal.updatedAt || 0)) {
-          setConfig({ presetId: remote.presetId || 'graphite', elementSettings: remote.elementSettings || {}, updatedAt: Number(remote.updatedAt || 0) });
+          setConfig({ presetId: remote.presetId || 'graphite', elementSettings: remote.elementSettings || {}, updatedAt: Number(remote.updatedAt || 0), scope });
         }
       } catch (error) {
         console.warn('UI customization profile sync unavailable', error);
@@ -265,6 +269,7 @@ export function UICustomizationProvider({ children, pathname }) {
   }, [scope, storageKey]);
 
   useEffect(() => {
+    if (config.scope !== scope) return;
     try { localStorage.setItem(storageKey, JSON.stringify(config)); } catch {}
     if (!syncReady || !config.updatedAt) return undefined;
     clearTimeout(saveTimerRef.current);
@@ -277,38 +282,7 @@ export function UICustomizationProvider({ children, pathname }) {
     return () => clearTimeout(saveTimerRef.current);
   }, [config, scope, storageKey, syncReady]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const previous = {
-      accent: root.style.getPropertyValue('--atom-ui-accent'),
-      rgb: root.style.getPropertyValue('--atom-ui-accent-rgb'),
-      glass: root.style.getPropertyValue('--glass-bg'),
-      glassStrong: root.style.getPropertyValue('--glass-bg-strong'),
-      border: root.style.getPropertyValue('--glass-border'),
-      forum: root.style.getPropertyValue('--forum-accent'),
-      forumRgb: root.style.getPropertyValue('--forum-accent-rgb'),
-    };
-    root.style.setProperty('--atom-ui-accent', preset.accent);
-    root.style.setProperty('--atom-ui-accent-rgb', preset.accentRgb);
-    root.style.setProperty('--atom-ui-page-bg', preset.pageBackground || '#090c11');
-    root.style.setProperty('--atom-ui-ambient', preset.ambient || 'none');
-    root.style.setProperty('--glass-bg', preset.surface);
-    root.style.setProperty('--glass-bg-strong', preset.surfaceStrong);
-    root.style.setProperty('--glass-border', preset.border);
-    root.style.setProperty('--forum-accent', preset.accent);
-    root.style.setProperty('--forum-accent-rgb', preset.accentRgb);
-    return () => {
-      root.style.setProperty('--atom-ui-accent', previous.accent);
-      root.style.setProperty('--atom-ui-accent-rgb', previous.rgb);
-      root.style.removeProperty('--atom-ui-page-bg');
-      root.style.removeProperty('--atom-ui-ambient');
-      root.style.setProperty('--glass-bg', previous.glass);
-      root.style.setProperty('--glass-bg-strong', previous.glassStrong);
-      root.style.setProperty('--glass-border', previous.border);
-      root.style.setProperty('--forum-accent', previous.forum);
-      root.style.setProperty('--forum-accent-rgb', previous.forumRgb);
-    };
-  }, [preset]);
+  // Preset variables stay within this page; global navigation keeps its own theme.
 
   const scan = useCallback(() => {
     const root = rootRef.current;
@@ -422,7 +396,7 @@ export function UICustomizationProvider({ children, pathname }) {
         ref={rootRef}
         className={`atom-ui-customization-root relative h-full w-full overflow-hidden ${editMode ? 'atom-ui-edit-mode' : ''}`}
         data-ui-page-theme={preset.id}
-        style={{ '--atom-ui-accent': preset.accent, '--atom-ui-accent-rgb': preset.accentRgb, '--atom-ui-page-bg': preset.pageBackground || '#090c11', '--atom-ui-ambient': preset.ambient }}
+        style={{ '--atom-ui-accent': preset.accent, '--atom-ui-accent-rgb': preset.accentRgb, '--atom-ui-page-bg': preset.pageBackground || '#090c11', '--atom-ui-ambient': preset.ambient, '--glass-bg': preset.surface, '--glass-bg-strong': preset.surfaceStrong, '--glass-border': preset.border, '--forum-accent': preset.accent, '--forum-accent-rgb': preset.accentRgb }}
       >
         <ThemeAmbient preset={preset} />
         <div className="relative z-[1] h-full w-full">{children}</div>
@@ -589,30 +563,7 @@ export function UICustomizationControls({ className = '' }) {
         : ['play'];
 
   const showEdit = page !== 'clan';
-  const drawer = drawerOpen ? (
-    <div data-ui-editor-ignore="true" className="fixed inset-0 z-[290] pointer-events-none">
-      <button type="button" aria-label="Close UI presets" onClick={() => setDrawerOpen(false)} className="pointer-events-auto absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
-      <aside className="pointer-events-auto absolute left-[92px] top-1/2 w-[min(350px,calc(100vw-112px))] -translate-y-1/2 rounded-[30px] bg-[#11161d]/95 p-5 text-white shadow-[0_30px_90px_rgba(0,0,0,.58),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-3xl">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">UI Prefabs · {scope.replace(':', ' / ')}</span>
-            <h2 className="mt-1 text-xl font-black">Visual loadout</h2>
-            <p className="mt-1 text-[10px] leading-4 text-white/30">Choose a prefab theme for the entire page you are currently viewing. The page background, ambient treatment, glass surfaces, borders and accent system update together and sync to your profile.</p>
-          </div>
-          <button type="button" onClick={() => setDrawerOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] text-white/40 hover:text-white"><X className="h-4 w-4" /></button>
-        </div>
-        <div className="mt-5 space-y-2">
-          {presets.map((item) => (
-            <button key={item.id} type="button" onClick={() => applyPreset(item.id)} className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition ${preset.id === item.id ? 'bg-white/[0.10]' : 'bg-white/[0.035] hover:bg-white/[0.065]'}`}>
-              <span className="h-10 w-10 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,.18)]" style={{ background: item.ambient, border: `1px solid ${item.border}` }} />
-              <span className="min-w-0 flex-1"><strong className="block text-xs text-white/85">{item.name}</strong><small className="mt-1 block text-[9px] text-white/30">{item.hint}</small></span>
-              {preset.id === item.id && <Sparkles className="h-4 w-4" style={{ color: item.accent }} />}
-            </button>
-          ))}
-        </div>
-      </aside>
-    </div>
-  ) : null;
+  const drawer = drawerOpen ? <PagePrefabDrawer scope={scope} preset={preset} presets={presets} onSelect={applyPreset} onClose={() => setDrawerOpen(false)} /> : null;
 
   return (
     <>

@@ -61,6 +61,7 @@ export default function UniversalPageRail({ children, pathname }) {
         <div className="flex h-full w-full overflow-hidden bg-black/20">
           {visible && (
             <aside
+              data-ui-rail="true"
               data-ui-editor-ignore="true"
               className="relative z-30 mt-16 mb-[53px] h-[calc(100%-117px)] w-[5%] min-w-[80px] flex-shrink-0 self-start overflow-visible border-r border-white/20 bg-black/20 px-2 py-4 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"
             >

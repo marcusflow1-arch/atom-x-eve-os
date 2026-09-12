@@ -109,6 +109,7 @@ export default function LunaLeftRail() {
   return (
     <>
       <aside
+        data-ui-rail="true"
         data-ui-editor-ignore="true"
         className="relative z-40 h-full w-[5%] min-w-[80px] flex-shrink-0 overflow-visible border-r border-white/20 bg-black/20 px-2 py-6 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"
       >

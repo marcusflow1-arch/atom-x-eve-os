@@ -1,0 +1,11 @@
+.page-prefab-overlay { position:fixed; left:0; right:0; z-index:290; color:hsl(var(--prefab-foreground)); }
+.page-prefab-backdrop { position:absolute; inset:0; width:100%; background:hsl(var(--prefab-shadow) / .48); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px); }
+.page-prefab-drawer { position:absolute; right:0; top:0; bottom:0; width:min(390px,100vw); overflow-y:auto; padding:24px; background:linear-gradient(135deg,hsl(var(--prefab-panel)) 0%,hsl(var(--prefab-deep)) 48%,hsl(var(--prefab-panel)) 100%); box-shadow:-20px 0 65px hsl(var(--prefab-shadow) / .6); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); }
+.page-prefab-muted { color:hsl(var(--prefab-muted)); }
+.page-prefab-option { color:inherit; background:hsl(var(--prefab-foreground) / .05); }
+.page-prefab-option:hover { background:hsl(var(--prefab-foreground) / .10); }
+.page-prefab-option[aria-pressed="true"] { background:hsl(var(--prefab-foreground) / .14); box-shadow:inset 0 0 0 1px hsl(var(--prefab-foreground) / .24); }
+.atom-ui-customization-root [data-prefab-surface="page"] { background-color:var(--atom-ui-page-bg) !important; background-image:var(--atom-ui-ambient) !important; }
+.atom-ui-customization-root [data-prefab-surface="panel"] { background-color:var(--glass-bg) !important; background-image:none !important; border-color:var(--glass-border) !important; }
+/* Navigation owns its neutral surface; it does not inherit page presets. */
+.atom-ui-customization-root [data-ui-rail] { background:hsl(var(--prefab-panel)) !important; --atom-ui-accent:#9de8f2; --atom-ui-accent-rgb:157,232,242; --glass-bg:rgba(255,255,255,.06); --glass-bg-strong:rgba(255,255,255,.10); --glass-border:rgba(255,255,255,.10); }

@@ -3,6 +3,7 @@ import { Palette, Play, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useUICustomization } from '@/components/customization/UICustomizationSystem';
+import PagePrefabDrawer from '@/components/customization/PagePrefabDrawer';
 
 function RailButton({ icon: Icon, label, active = false, play = false, onClick }) {
   return (
@@ -135,21 +136,7 @@ export default function MidpointCustomizationControls({ className = '' }) {
   const { scope, preset, presets, applyPreset, editMode, setEditMode } = useUICustomization();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    if (!drawerOpen) return undefined;
-    const onPointerDown = (event) => {
-      if (!rootRef.current?.contains(event.target)) setDrawerOpen(false);
-    };
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') setDrawerOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [drawerOpen]);
+  useEffect(() => { setDrawerOpen(false); }, [scope]);
 
   const launchEnvironment = () => {
     if (legacyActionRef.current?.isConnected) {
@@ -187,51 +174,7 @@ export default function MidpointCustomizationControls({ className = '' }) {
         onClick={() => setEditMode((value) => !value)}
       />
 
-      {drawerOpen && (
-        <aside
-          data-ui-editor-ignore="true"
-          className="absolute left-[calc(100%+14px)] top-0 z-[290] w-[min(350px,calc(100vw-118px))] rounded-r-[28px] rounded-l-[12px] border border-l-0 border-white/[0.08] bg-[#11161d]/96 p-5 text-white shadow-[24px_24px_80px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-3xl"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">UI Prefabs · {scope.replace(':', ' / ')}</span>
-              <h2 className="mt-1 text-xl font-black">Page UI Theme</h2>
-              <p className="mt-1 text-[10px] leading-4 text-white/35">Choose a default UI prefab for the entire page you are on. Background, ambient finish, glass surfaces, borders and accents change together.</p>
-            </div>
-            <button
-              type="button"
-              data-ui-editor-ignore="true"
-              onClick={() => setDrawerOpen(false)}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] text-white/40 hover:text-white"
-              aria-label="Close UI prefabs"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="mt-5 space-y-2">
-            {presets.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                data-ui-editor-ignore="true"
-                onClick={() => applyPreset(item.id)}
-                className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition ${preset.id === item.id ? 'bg-white/[0.10]' : 'bg-white/[0.035] hover:bg-white/[0.065]'}`}
-              >
-                <span
-                  className="h-10 w-10 shrink-0 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,.18)]"
-                  style={{ background: item.ambient, border: `1px solid ${item.border}` }}
-                />
-                <span className="min-w-0 flex-1">
-                  <strong className="block text-xs text-white/85">{item.name}</strong>
-                  <small className="mt-1 block text-[9px] text-white/30">{item.hint}</small>
-                </span>
-                {preset.id === item.id && <Sparkles className="h-4 w-4" style={{ color: item.accent }} />}
-              </button>
-            ))}
-          </div>
-        </aside>
-      )}
+      {drawerOpen && <PagePrefabDrawer scope={scope} preset={preset} presets={presets} onSelect={applyPreset} onClose={() => setDrawerOpen(false)} />}
     </div>
   );
 }

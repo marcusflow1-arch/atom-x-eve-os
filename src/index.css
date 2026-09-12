@@ -51,6 +51,7 @@
 .dark .library-surface { --background: 222 47% 7%; --foreground: 210 40% 96%; --primary: 187 80% 78%; --primary-foreground: 222 47% 7%; --popover: 222 40% 12%; --popover-foreground: 210 40% 96%; --muted: 222 35% 15%; --muted-foreground: 215 20% 75%; --border: 215 25% 25%; }
 
 :root, .dark {
+  --prefab-panel: 220 18% 9%; --prefab-deep: 220 20% 4%; --prefab-foreground: 210 25% 96%; --prefab-muted: 215 16% 72%; --prefab-shadow: 0 0% 0%;
   --genesis-background: 220 32% 5%; --genesis-panel: 219 28% 8%; --genesis-foreground: 210 28% 92%;
   --genesis-muted: 214 16% 66%; --genesis-accent: 39 32% 75%; --genesis-border: 217 18% 22%;
 }
