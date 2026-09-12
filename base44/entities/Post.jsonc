@@ -2,98 +2,39 @@
   "name": "Post",
   "type": "object",
   "properties": {
-    "title": {
-      "type": "string",
-      "description": "The title of the discussion post"
-    },
-    "content": {
-      "type": "string",
-      "description": "The main body content of the post"
-    },
+    "title": { "type": "string", "description": "The title of the discussion post" },
+    "content": { "type": "string", "description": "The main body content of the post" },
     "community": {
       "type": "string",
-      "enum": [
-        "general",
-        "feedback",
-        "gameplay",
-        "bugs",
-        "reviews",
-        "discussions",
-        "guide",
-        "tips",
-        "question",
-        "achievements",
-        "farming",
-        "recruitment",
-        "events",
-        "content"
-      ],
-      "default": "general",
-      "description": "The sub-category or tag of the post."
+      "enum": ["general", "feedback", "gameplay", "bugs", "reviews", "discussions", "guide", "tips", "question", "achievements", "farming", "recruitment", "events", "content"],
+      "default": "general"
     },
     "type": {
       "type": "string",
-      "enum": [
-        "game_review",
-        "game_discussion",
-        "general_discussion",
-        "achievement_discussion",
-        "achievement_share",
-        "challenge",
-        "bug",
-        "tip",
-        "help",
-        "discussion"
-      ],
-      "default": "general_discussion",
-      "description": "The main section the post belongs to."
+      "enum": ["game_review", "game_discussion", "general_discussion", "achievement_discussion", "achievement_share", "achievement_guide", "farming_guide", "full_guide", "challenge", "bug", "tip", "help", "discussion", "guide"],
+      "default": "general_discussion"
     },
-    "game_title": {
-      "type": "string",
-      "description": "The title of the game being reviewed or discussed. Required for 'game_review' and 'game_discussion'."
-    },
-    "genre": {
-      "type": "string",
-      "description": "The genre of the game (e.g. RPG, FPS) to help with filtering."
-    },
-    "rating": {
-      "type": "number",
-      "description": "A star rating from 1 to 5. Required for 'game_review'."
-    },
-    "score": {
-      "type": "number",
-      "default": 1,
-      "description": "The total score of the post (upvotes - downvotes)"
-    },
-    "image_url": {
-      "type": "string",
-      "description": "An optional image URL for the post"
-    },
-    "achievement_id": {
-      "type": "string",
-      "description": "ID of the achievement being shared or challenged"
-    },
-    "achievement_data": {
-      "type": "object",
-      "description": "Snapshot of achievement data at time of posting"
-    },
-    "challenge_target_user_id": {
-      "type": "string",
-      "description": "ID of the user being challenged"
-    },
-    "is_ai_generated": {
-      "type": "boolean",
-      "default": false
-    },
-    "is_farm_hub": {
-      "type": "boolean",
-      "default": false,
-      "description": "True if the post was created in the Farm Hub"
-    }
+    "user_id": { "type": "string", "description": "Stable owner user id for authorization" },
+    "author_name": { "type": "string", "description": "Display name snapshot" },
+    "game_title": { "type": "string" },
+    "genre": { "type": "string" },
+    "rating": { "type": "number" },
+    "score": { "type": "number", "default": 1, "description": "Legacy score retained for compatibility" },
+    "image_url": { "type": "string" },
+    "achievement_id": { "type": "string" },
+    "achievement_data": { "type": "object" },
+    "challenge_target_user_id": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "guide_kind": { "type": "string", "enum": ["none", "quick_tip", "achievement", "farming", "walkthrough", "build", "collectibles", "boss", "full_game"], "default": "none" },
+    "difficulty": { "type": "string", "enum": ["any", "beginner", "intermediate", "advanced", "expert"], "default": "any" },
+    "status": { "type": "string", "enum": ["published", "removed", "archived"], "default": "published" },
+    "is_locked": { "type": "boolean", "default": false },
+    "is_pinned": { "type": "boolean", "default": false },
+    "view_count": { "type": "number", "default": 0 },
+    "edited_at": { "type": "string" },
+    "moderation_note": { "type": "string" },
+    "is_ai_generated": { "type": "boolean", "default": false },
+    "is_farm_hub": { "type": "boolean", "default": false }
   },
-  "required": [
-    "title",
-    "content",
-    "type"
-  ]
+  "required": ["title", "content", "type"]
 }
