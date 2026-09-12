@@ -575,15 +575,16 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
   const backToCards = () => setSelectedCard(null);
 
   return (
-    <div className="relative z-10 h-full w-full overflow-hidden bg-[#171a1f] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(148,163,184,.13),transparent_31%),radial-gradient(circle_at_84%_12%,rgba(56,189,248,.07),transparent_30%),linear-gradient(180deg,#20242a_0%,#171a1f_48%,#14171b_100%)]" />
+    <div className="relative z-10 h-full w-full overflow-hidden bg-[#050608] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-4%,rgba(226,232,240,.10),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(148,163,184,.055),transparent_26%),linear-gradient(135deg,#0b0d10_0%,#050608_42%,#020304_62%,#0a0c0f_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(135deg,rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(45deg,rgba(255,255,255,.012)_1px,transparent_1px)] [background-size:56px_56px]" />
 
       <div className="relative h-full overflow-y-auto custom-scrollbar">
-        <main className="mx-auto max-w-[1680px] px-5 pb-24 pt-5 md:px-8 lg:px-10">
-          <section className={`rounded-[30px] p-5 md:p-6 ${softPanel}`}>
+        <main className="w-full px-4 pb-24 pt-4 md:px-6 lg:px-8">
+          <section className="border-b border-white/[0.055] pb-5 pt-1">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
-                <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.24em] text-cyan-200/60">
+                <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.24em] text-[#d7dde5]/55">
                   <Gamepad2 className="h-3.5 w-3.5" /> Console Game Trading Post
                 </div>
                 <h1 className="mt-2 text-2xl font-black tracking-tight text-white md:text-3xl">Find the game. Find the card. Choose the seller.</h1>
@@ -593,7 +594,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <div className="rounded-2xl bg-black/[0.13] px-4 py-3">
+                <div className="rounded-xl border border-white/[0.045] bg-[#d7dde5]/[0.025] px-4 py-3">
                   <span className="block text-[7px] font-black uppercase tracking-[.16em] text-white/25">Wallet</span>
                   <strong className="mt-0.5 block text-sm text-white">{formatAGP(state.balance)}</strong>
                 </div>
@@ -614,7 +615,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                 [Users, 'Live Sellers', marketMetrics.sellers.toLocaleString()],
                 [Gem, 'Market Floor', marketMetrics.floor ? formatAGP(marketMetrics.floor) : '—'],
               ].map(([Icon, label, value]) => (
-                <div key={label} className="rounded-2xl bg-black/[0.10] px-4 py-3">
+                <div key={label} className="border-l border-white/[0.06] bg-[#d7dde5]/[0.012] px-4 py-3 first:border-l-0">
                   <div className="flex items-center gap-2 text-white/25"><Icon className="h-3.5 w-3.5" /><span className="text-[7px] font-black uppercase tracking-[.15em]">{label}</span></div>
                   <strong className="mt-1 block text-sm text-white/80">{value}</strong>
                 </div>
@@ -635,7 +636,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
             )}
           </AnimatePresence>
 
-          <section className={`mt-3 min-h-[520px] rounded-[30px] p-4 md:p-5 ${softPanel}`}>
+          <section className="mt-2 min-h-[520px] py-2">
             <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.055] pb-4">
               <button
                 type="button"
