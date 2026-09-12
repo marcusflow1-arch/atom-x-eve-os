@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
       if (!channel || (gameId && channel.game_id !== gameId)) throw Object.assign(new Error('Forum channel not found'), { status: 404 });
       const shared = channel.access_scope === 'all_clans';
       if (!shared && channel.clan_id && channel.clan_id !== clanId) throw Object.assign(new Error('Forum channel is not available to this clan'), { status: 403 });
-      const leaderChannel = String(channel.name || '').toLowerCase().includes('leader') || String(channel.visibility_scope || '').toLowerCase() === 'leaders';
+      const channelName = String(channel.name || channel.channel_name || '').toLowerCase();
+      const leaderChannel = channelName.includes('leader') || String(channel.visibility_scope || '').toLowerCase() === 'leaders';
       if (leaderChannel && !privileged) throw Object.assign(new Error('Leader forum is restricted'), { status: 403 });
       return { channel, leaderChannel };
     };
@@ -37,7 +38,8 @@ Deno.serve(async (req) => {
     if (action === 'create_topic') {
       const { channelId, title, visibilityScope = 'clan' } = data;
       await validateChannel(channelId);
-      if (visibilityScope === 'leaders' && !privileged) return json({ success: false, error: 'Leader topics require officer permission' }, 403);
+      const normalizedVisibility = visibilityScope === 'shared' ? 'both' : visibilityScope;
+      if (normalizedVisibility === 'leaders' && !privileged) return json({ success: false, error: 'Leader topics require officer permission' }, 403);
       const cleanTitle = String(title || '').trim();
       if (!cleanTitle) return json({ success: false, error: 'Topic title is required' }, 400);
       const topic = await base44.asServiceRole.entities.ClanFormTopic.create({
@@ -47,7 +49,7 @@ Deno.serve(async (req) => {
         title: cleanTitle,
         created_by_user_id: user.id,
         status: 'open',
-        visibility_scope: visibilityScope,
+        visibility_scope: normalizedVisibility,
       });
       return json({ success: true, topic });
     }
@@ -70,7 +72,6 @@ Deno.serve(async (req) => {
         username: user.full_name || user.username || user.email?.split('@')?.[0] || 'Player',
         content: clean,
       });
-      await base44.asServiceRole.entities.ClanFormTopic.update(topicId, { updated_at: new Date().toISOString() });
       return json({ success: true, message });
     }
 
