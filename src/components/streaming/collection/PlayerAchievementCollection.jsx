@@ -8,6 +8,7 @@ import CardShowcase from './CardShowcase';
 import { moveRailFocus } from '../hub/DirectoryCards';
 import './playerCollection.css';
 import './cardShowcase.css';
+import '../aura/auraOverlayShade.css';
 
 export default function PlayerAchievementCollection({ user, onClose, publicView = false }) {
   const query = usePlayerCollection(user, { publicView });

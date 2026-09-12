@@ -1,0 +1,99 @@
+/* Aura Home subpage shade treatment.
+   Match Cards and Gallery to the Games overlay: borderless shadow-black glass,
+   directional fades, soft blur, and surfaces that dissolve into the page. */
+
+/* Cards — keep the existing layout and cyan accents, but replace the visible
+   panel shell with the same shadow-black shade language used by Games. */
+body:has(.channel-home-page) .player-collection-hud {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body:has(.channel-home-page) .player-collection-backdrop {
+  background:
+    linear-gradient(90deg, rgba(8,10,14,.88) 0%, rgba(12,15,20,.66) 42%, rgba(12,15,20,.40) 72%, rgba(10,12,16,.08) 100%) !important;
+  backdrop-filter: blur(24px) saturate(138%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(138%) !important;
+  mask-image: linear-gradient(to right, #000 0%, #000 76%, transparent 100%) !important;
+  box-shadow: inset 1px 0 0 rgba(255,255,255,.05), 24px 0 48px rgba(7,9,12,.16) !important;
+}
+
+body:has(.channel-home-page) .player-collection-header,
+body:has(.channel-home-page) .player-collection-games,
+body:has(.channel-home-page) .player-collection-content,
+body:has(.channel-home-page) .collection-reel-toolbar,
+body:has(.channel-home-page) .card-showcase {
+  background: transparent !important;
+  border-color: rgba(255,255,255,.06) !important;
+  box-shadow: none !important;
+}
+
+body:has(.channel-home-page) .player-collection-search,
+body:has(.channel-home-page) .player-collection-select select,
+body:has(.channel-home-page) .player-collection-grid-heading select,
+body:has(.channel-home-page) .player-collection-game-list button[aria-pressed="true"],
+body:has(.channel-home-page) .player-collection-badges span,
+body:has(.channel-home-page) .player-collection-header button {
+  background: linear-gradient(145deg, rgba(12,15,20,.42), rgba(34,39,46,.16)) !important;
+  border-color: rgba(255,255,255,.075) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045) !important;
+  backdrop-filter: blur(12px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+}
+
+/* Gallery — preserve the partially visible Home/header behavior, while giving
+   its upper and lower layers the same directional shade used by Games. */
+body:has(.channel-home-page) .gallery-console {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body:has(.channel-home-page) .gallery-top-fade {
+  background: linear-gradient(180deg, rgba(8,10,14,.86), rgba(12,15,20,.56) 58%, rgba(10,12,16,.08)) !important;
+  backdrop-filter: blur(24px) saturate(138%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(138%) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 24px 48px rgba(7,9,12,.15) !important;
+}
+
+body:has(.channel-home-page) .gallery-hub {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body:has(.channel-home-page) .gallery-hub::before {
+  background: linear-gradient(0deg, rgba(8,10,14,.88), rgba(12,15,20,.58) 58%, rgba(10,12,16,.08)) !important;
+  backdrop-filter: blur(24px) saturate(138%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(138%) !important;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,.045), 0 -22px 48px rgba(7,9,12,.14) !important;
+}
+
+body:has(.channel-home-page) .gallery-player,
+body:has(.channel-home-page) .gallery-social,
+body:has(.channel-home-page) .gallery-playback-controls,
+body:has(.channel-home-page) .gallery-comment-form,
+body:has(.channel-home-page) .gallery-date-rail > button,
+body:has(.channel-home-page) .gallery-clip-card,
+body:has(.channel-home-page) .gallery-request-card,
+body:has(.channel-home-page) .gallery-reactions button {
+  background-color: rgba(8,10,14,.34) !important;
+  background-image: linear-gradient(145deg, rgba(12,15,20,.40), rgba(34,39,46,.14)) !important;
+  border-color: rgba(255,255,255,.07) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(14px) saturate(122%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(122%) !important;
+}
+
+body:has(.channel-home-page) .gallery-clip-card.is-selected,
+body:has(.channel-home-page) .gallery-date-rail > button.is-active,
+body:has(.channel-home-page) .gallery-reactions .is-active {
+  background-color: rgba(12,15,20,.50) !important;
+  border-color: rgba(165,243,252,.16) !important;
+}
