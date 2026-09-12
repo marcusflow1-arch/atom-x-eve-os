@@ -40,6 +40,15 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, on
     if (!open) { setQuery(''); setGenre('all'); setPage(1); }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
   const visible = filtered.slice(0, page * PAGE_SIZE);
 
   return <AnimatePresence>
@@ -50,6 +59,18 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, on
       exit={{ opacity: 0, y: 12 }}
       transition={{ duration: .22, ease: 'easeOut' }}
       aria-label="Browse forums"
+      style={{
+        position: 'fixed',
+        top: '64px',
+        bottom: '48px',
+        left: 0,
+        right: 0,
+        zIndex: 60,
+        background: 'rgba(8, 12, 18, 0.96)',
+        backdropFilter: 'blur(30px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(135%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.055), 0 20px 70px rgba(0,0,0,0.55)',
+      }}
     >
       <header className="forum-browser-header">
         <div className="forum-browser-title">
