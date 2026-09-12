@@ -2,70 +2,42 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Box, Check, ChevronRight, CloudRain, Gamepad2, Globe2, Home, Image, Layers3,
-  Lock, Music2, Search, Sparkles, Trees, Users, Volume2, Wallpaper, X, Zap,
+  Check, CloudRain, Home, Image, Lock, Moon, Mountain, Sparkles, Sun, Video, X,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
-import FriendsListContent from '@/components/dashboard/FriendsListContent';
 import {
-  BACKGROUND_PRESETS,
-  COMPANION_PRESETS,
   DEFAULT_ENVIRONMENT_CONFIG,
-  ENVIRONMENT_PRESETS,
   ENVIRONMENT_TABS,
-  GARDEN_PRESETS,
-  GENRES,
   HOME_PRESETS,
-  MUSIC_PRESETS,
-  SKYBOX_PRESETS,
+  HOME_SECTIONS,
+  LAND_PRESETS,
+  SKY_PRESETS,
   WALLPAPER_PRESETS,
   WEATHER_PRESETS,
+  assetSnapshot,
   configStorageKey,
-  findPresetById,
   normalizeEnvironmentConfig,
 } from './environmentHubCatalog';
 
-const TAB_ICONS = {
-  environment: Globe2,
-  skybox: Sparkles,
-  background: Image,
-  wallpaper: Wallpaper,
-  home: Home,
-  garden: Trees,
-  music: Music2,
-  weather: CloudRain,
-  friends: Users,
-};
-
 const FALLBACK_IMAGES = [
-  'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=85',
-  'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1200&q=85',
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85',
-  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=85',
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=85',
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=85',
+  'https://images.unsplash.com/photo-1520637836862-4d197d17c46a?w=1200&q=85',
+  'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&q=85',
 ];
 
-const isEnvironmentButton = (target) => {
+const HOME_NAME_PATTERN = /container|house|home|castle|cabin|loft|apartment|villa|residence/i;
+
+function isEnvironmentButton(target) {
   const button = target instanceof Element ? target.closest('button') : null;
   if (!button) return false;
   const text = (button.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-  return text === 'environment hubs' || text.includes('environment hubs');
-};
-
-const inferGenre = (value = '') => {
-  const source = String(value).toLowerCase();
-  if (source.includes('anime')) return 'Anime';
-  if (source.includes('cyber') || source.includes('neon')) return 'Cyberpunk';
-  if (source.includes('space') || source.includes('sci') || source.includes('orbit')) return 'Sci-Fi';
-  if (source.includes('fantasy') || source.includes('castle') || source.includes('medieval')) return 'Fantasy';
-  if (source.includes('horror') || source.includes('dark')) return 'Horror';
-  if (source.includes('cozy') || source.includes('garden')) return 'Cozy';
-  if (source.includes('modern') || source.includes('house') || source.includes('container')) return 'Modern';
-  return 'Adventure';
-};
+  return text.includes('environment hubs');
+}
 
 function readSavedConfig(userId) {
-  if (typeof window === 'undefined') return DEFAULT_ENVIRONMENT_CONFIG;
+  if (typeof window === 'undefined') return normalizeEnvironmentConfig(DEFAULT_ENVIRONMENT_CONFIG);
   try {
     const raw = localStorage.getItem(configStorageKey(userId));
     return normalizeEnvironmentConfig(raw ? JSON.parse(raw) : DEFAULT_ENVIRONMENT_CONFIG);
@@ -74,157 +46,167 @@ function readSavedConfig(userId) {
   }
 }
 
-function WorldPreview({ config, environments, homes }) {
-  const catalogs = { environments, homes };
-  const environment = findPresetById(config.environmentId, catalogs) || environments[0] || null;
-  const skybox = findPresetById(config.skyboxId, catalogs);
-  const background = findPresetById(config.backgroundId, catalogs);
-  const wallpaper = findPresetById(config.wallpaperId, catalogs);
-  const home = findPresetById(config.homeId, catalogs);
-  const garden = findPresetById(config.gardenId, catalogs);
-  const weather = findPresetById(config.weatherId, catalogs);
+function normalizeLabel(value = '') {
+  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
 
-  const base = config.mode === 'wallpaper'
-    ? wallpaper
-    : config.mode === 'background'
-      ? background
-      : (environment || skybox);
+function localSkyState(date = new Date()) {
+  const hour = date.getHours() + date.getMinutes() / 60;
+  if (hour < 5 || hour >= 21) return { label: 'Night', top: '#07101f', middle: '#10203c', bottom: '#24344f', icon: Moon };
+  if (hour < 8) return { label: 'Dawn', top: '#334a73', middle: '#c57e78', bottom: '#f0b98f', icon: Sun };
+  if (hour < 17) return { label: 'Day', top: '#5f9fd2', middle: '#8fc3e6', bottom: '#d8ecf7', icon: Sun };
+  if (hour < 20) return { label: 'Sunset', top: '#43527e', middle: '#c16f70', bottom: '#f0a56f', icon: Sun };
+  return { label: 'Dusk', top: '#1c2948', middle: '#5b4b68', bottom: '#b06f75', icon: Moon };
+}
+
+function Preview({ config, wallpapers, homes }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const wallpaper = wallpapers.find((item) => item.id === config.wallpaperId) || config.wallpaperAsset || WALLPAPER_PRESETS[0];
+  const home = homes.find((item) => item.id === config.homeId) || config.homeAsset || HOME_PRESETS[0];
+  const land = LAND_PRESETS.find((item) => item.id === config.landId) || LAND_PRESETS[0];
+  const sky = SKY_PRESETS.find((item) => item.id === config.skyId) || SKY_PRESETS[0];
+  const liveSky = localSkyState(now);
+
+  if (config.mode === 'wallpaper') {
+    return (
+      <div className="relative h-full min-h-[240px] overflow-hidden rounded-[26px] bg-[#080d14] shadow-[0_24px_70px_rgba(0,0,0,.20)]">
+        {wallpaper?.videoUrl ? (
+          <video src={wallpaper.videoUrl} poster={wallpaper.image || undefined} autoPlay loop muted playsInline className="absolute inset-0 h-full w-full object-cover opacity-90" />
+        ) : wallpaper?.image ? (
+          <motion.img
+            key={wallpaper.id}
+            src={wallpaper.image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            initial={{ scale: 1.01 }}
+            animate={wallpaper.mediaType === 'animated' ? { scale: [1.01, 1.08, 1.01], x: [0, -8, 0] } : { scale: 1.01 }}
+            transition={wallpaper.mediaType === 'animated' ? { duration: 14, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#06101b]/82 via-transparent to-white/[0.04]" />
+        <div className="absolute bottom-5 left-5">
+          <div className="text-[9px] font-bold uppercase tracking-[.18em] text-white/45">Wallpaper</div>
+          <div className="mt-1 text-lg font-semibold text-white">{wallpaper?.name || 'Wallpaper'}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative h-full min-h-[180px] overflow-hidden rounded-[22px] bg-[#050a12]">
-      {base?.image && (
+    <div className="relative h-full min-h-[240px] overflow-hidden rounded-[26px] bg-[#101722] shadow-[0_24px_70px_rgba(0,0,0,.20)]">
+      {sky?.realtime ? (
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${liveSky.top}, ${liveSky.middle} 55%, ${liveSky.bottom})` }}>
+          {(liveSky.label === 'Night' || liveSky.label === 'Dusk') && (
+            <div className="absolute inset-0 opacity-55" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,.9) 0 1px, transparent 1.5px)', backgroundSize: '42px 42px' }} />
+          )}
+          <div className={`absolute right-[16%] top-[13%] h-12 w-12 rounded-full ${liveSky.label === 'Night' || liveSky.label === 'Dusk' ? 'bg-slate-100/80 shadow-[0_0_50px_rgba(220,235,255,.42)]' : 'bg-amber-100/90 shadow-[0_0_65px_rgba(255,220,150,.38)]'}`} />
+        </div>
+      ) : sky?.image ? (
+        <img src={sky.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-85" />
+      ) : null}
+
+      {land?.image && (
+        <div className="absolute inset-x-0 bottom-0 h-[54%] overflow-hidden">
+          <img src={land.image} alt="" className="h-full w-full object-cover object-center opacity-75" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#07101a]/70 via-transparent to-transparent" />
+        </div>
+      )}
+
+      {home?.image && home.id !== 'home-open-land' && (
         <motion.img
-          key={`${config.mode}-${base.id}`}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 0.78, scale: config.mode === 'wallpaper' && base.animated ? [1.02, 1.08, 1.02] : 1.03 }}
-          transition={config.mode === 'wallpaper' && base.animated ? { duration: 14, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.45 }}
-          src={base.image}
+          key={home.id}
+          initial={{ opacity: 0, y: 18, scale: 0.93 }}
+          animate={{ opacity: 0.82, y: 0, scale: 0.82 }}
+          src={home.image}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute bottom-[-7%] left-[10%] h-[68%] w-[80%] object-contain object-bottom drop-shadow-[0_25px_32px_rgba(0,0,0,.38)]"
         />
       )}
-      {config.mode === 'environment' && skybox?.image && (
-        <img src={skybox.image} alt="" className="absolute inset-x-0 top-0 h-[58%] w-full object-cover opacity-55 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-      )}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,transparent_0%,rgba(2,6,13,.08)_42%,rgba(2,6,13,.82)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#03070d]/95 via-[#03070d]/30 to-transparent" />
 
-      {config.mode === 'environment' && home?.image && (
-        <motion.div
-          key={home.id}
-          initial={{ opacity: 0, y: 20, scale: 0.94 }}
-          animate={{ opacity: 0.76, y: 0, scale: home.stageScale || 0.82 }}
-          className="absolute bottom-[-8%] left-[10%] right-[10%] h-[70%] origin-bottom"
-          style={{ perspective: 900 }}
-        >
-          <img
-            src={home.image}
-            alt=""
-            className="h-full w-full object-contain object-bottom"
-            style={{ filter: 'saturate(.78) contrast(1.03)', maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)' }}
-          />
-        </motion.div>
-      )}
+      {config.weatherId === 'weather-rain' && <div className="absolute inset-0 opacity-24" style={{ backgroundImage: 'repeating-linear-gradient(112deg, transparent 0 17px, rgba(220,240,255,.6) 18px, transparent 19px 30px)' }} />}
+      {config.weatherId === 'weather-snow' && <div className="absolute inset-0 opacity-55" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,.95) 0 1px, transparent 1.7px)', backgroundSize: '25px 25px' }} />}
+      {config.weatherId === 'weather-fog' && <div className="absolute inset-0 bg-slate-100/16 backdrop-blur-[3px]" />}
+      {config.weatherId === 'weather-storm' && <div className="absolute inset-0 bg-slate-950/38" />}
 
-      {config.mode === 'environment' && garden?.id && garden.id !== 'garden-off' && garden.image && (
-        <img src={garden.image} alt="" className="absolute -bottom-[24%] left-0 h-[58%] w-full object-cover opacity-42 [mask-image:linear-gradient(to_top,black,transparent)]" />
-      )}
-
-      {config.mode === 'environment' && config.weatherId === 'weather-rain' && (
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'repeating-linear-gradient(112deg, transparent 0 16px, rgba(180,225,255,.52) 17px, transparent 18px 28px)', backgroundSize: '150% 150%' }} />
-      )}
-      {config.mode === 'environment' && config.weatherId === 'weather-fog' && <div className="absolute inset-0 bg-slate-200/15 backdrop-blur-[2px]" />}
-      {config.mode === 'environment' && config.weatherId === 'weather-storm' && <div className="absolute inset-0 bg-slate-950/35" />}
-      {config.mode === 'environment' && config.weatherId === 'weather-snow' && (
-        <div className="absolute inset-0 opacity-55" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,.9) 0 1px, transparent 1.6px)', backgroundSize: '24px 24px' }} />
-      )}
-
-      <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-xl">
-        <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,.8)]" />
-        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/70">Live Composition Preview</span>
-      </div>
-      <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,transparent_15%,rgba(5,10,18,.15)_58%,rgba(5,10,18,.62)_100%)]" />
+      <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4">
         <div>
-          <div className="text-lg font-semibold text-white">{base?.name || 'Blank Environment'}</div>
-          <div className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-white/45">
-            {config.mode === 'environment' ? `${home?.name || 'No Home'} · ${weather?.name || 'No Weather'}` : config.mode}
-          </div>
+          <div className="text-[9px] font-bold uppercase tracking-[.18em] text-white/45">Home</div>
+          <div className="mt-1 text-lg font-semibold text-white">{home?.name || 'Open Land'}</div>
+          <div className="mt-1 text-[10px] text-white/42">{land?.name} · {sky?.realtime ? `${liveSky.label} · Live` : sky?.name}</div>
         </div>
-        {home?.id === 'home-container' && config.mode === 'environment' && (
-          <span className="rounded-full bg-cyan-300/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-cyan-100/80">Wide Framing · 72%</span>
-        )}
+        {sky?.realtime && <span className="rounded-full bg-white/[0.10] px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.16em] text-white/65 backdrop-blur-xl">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
       </div>
     </div>
   );
 }
 
-function CatalogCard({ item, selected, disabled, onSelect }) {
+function AssetCard({ item, selected, onSelect }) {
+  const locked = item.unlocked === false;
+  const typeLabel = item.videoUrl ? 'Video' : item.mediaType === 'animated' ? 'Animated' : item.kind === 'home' ? '3D Home' : item.kind;
+
   return (
     <button
       type="button"
-      disabled={disabled || item.unlocked === false}
+      disabled={locked}
       onClick={() => onSelect(item)}
-      className={`group relative min-h-[138px] overflow-hidden rounded-[18px] text-left transition-all duration-300 ${disabled ? 'cursor-not-allowed opacity-30 grayscale' : 'hover:-translate-y-1'} ${selected ? 'ring-1 ring-cyan-200/55' : ''}`}
-      style={{ background: 'rgba(255,255,255,.045)', boxShadow: selected ? '0 0 30px rgba(34,211,238,.10)' : 'none' }}
+      className={`group relative min-h-[150px] overflow-hidden rounded-[22px] text-left transition duration-300 ${locked ? 'cursor-not-allowed opacity-48' : 'hover:-translate-y-0.5'} ${selected ? 'ring-1 ring-cyan-100/55' : ''}`}
+      style={{
+        background: 'linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.035))',
+        boxShadow: selected ? '0 16px 40px rgba(100,220,255,.09), inset 0 1px 0 rgba(255,255,255,.15)' : 'inset 0 1px 0 rgba(255,255,255,.09)',
+      }}
     >
-      {item.image ? (
-        <img src={item.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105" />
-      ) : (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(103,232,249,.12),transparent_38%),linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.015))]" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#02050a] via-[#02050a]/55 to-transparent" />
+      {item.image && <img src={item.image} alt="" className={`absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.035] ${locked ? 'grayscale opacity-30' : 'opacity-62'}`} />}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#07101a]/95 via-[#07101a]/34 to-white/[0.025]" />
       <div className="absolute left-3 right-3 top-3 flex items-start justify-between gap-2">
-        <span className="rounded-full bg-black/35 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-white/55 backdrop-blur-md">{item.genre || 'All'}</span>
-        {selected ? <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-200 text-slate-950"><Check className="h-3.5 w-3.5" /></span> : item.unlocked === false ? <Lock className="h-3.5 w-3.5 text-white/45" /> : null}
+        <span className="rounded-full bg-black/25 px-2 py-1 text-[7px] font-bold uppercase tracking-[.16em] text-white/58 backdrop-blur-lg">{typeLabel}</span>
+        {selected ? <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-100/90 text-slate-950"><Check className="h-3.5 w-3.5" /></span> : locked ? <span className="grid h-6 w-6 place-items-center rounded-full bg-black/30 text-white/55 backdrop-blur-lg"><Lock className="h-3 w-3" /></span> : null}
       </div>
       <div className="absolute bottom-3 left-3 right-3">
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-semibold text-white">{item.name}</span>
-          {item.animated && <span className="rounded bg-fuchsia-400/15 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-fuchsia-200">Animated</span>}
-          {item.priority && <span className="rounded bg-cyan-300/15 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-cyan-100">Featured</span>}
-        </div>
-        <p className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/43">{item.description}</p>
+        <div className="truncate text-sm font-semibold text-white/92">{item.name}</div>
+        <div className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/45">{locked ? (item.unlockLabel || 'Unlock through an achievement.') : item.description}</div>
       </div>
     </button>
   );
 }
 
-function EmptyDisabledState({ mode, tab }) {
+function GlassChoice({ selected, icon: Icon, title, description, onClick }) {
   return (
-    <div className="grid min-h-[260px] place-items-center rounded-[22px] bg-white/[0.025] p-8 text-center">
-      <div>
-        <Lock className="mx-auto h-6 w-6 text-white/20" />
-        <div className="mt-3 text-sm font-semibold text-white/65">{tab} is unavailable in {mode} mode</div>
-        <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-white/35">Switch back to 3D Environment mode to layer land, skybox, home, garden, companion and weather together.</p>
-      </div>
-    </div>
-  );
-}
-
-function StackRow({ label, value, disabled }) {
-  return (
-    <div className={`flex items-center justify-between gap-3 py-2 ${disabled ? 'opacity-30' : ''}`}>
-      <span className="text-[9px] uppercase tracking-[0.15em] text-white/35">{label}</span>
-      <span className="max-w-[160px] truncate text-[10px] font-medium text-white/70">{value || 'Off'}</span>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex min-h-[94px] items-center gap-4 rounded-[22px] px-4 text-left transition ${selected ? 'bg-white/[0.105] shadow-[inset_0_1px_0_rgba(255,255,255,.16),0_16px_38px_rgba(0,0,0,.10)]' : 'bg-white/[0.045] hover:bg-white/[0.07]'}`}
+    >
+      <span className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl ${selected ? 'bg-cyan-100/12 text-cyan-100' : 'bg-white/[0.055] text-white/42'}`}><Icon className="h-4.5 w-4.5" /></span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-white/88">{title}</span>
+        <span className="mt-1 block text-[9px] leading-relaxed text-white/38">{description}</span>
+      </span>
+      {selected && <Check className="ml-auto h-4 w-4 flex-shrink-0 text-cyan-100/80" />}
+    </button>
   );
 }
 
 export default function EnvironmentHubWorkspace() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState('environment');
-  const [genre, setGenre] = useState('All');
-  const [query, setQuery] = useState('');
-  const [unlockedOnly, setUnlockedOnly] = useState(false);
+  const [page, setPage] = useState('home');
+  const [homeSection, setHomeSection] = useState('house');
   const [config, setConfig] = useState(() => readSavedConfig(user?.id));
-  const [environments, setEnvironments] = useState(ENVIRONMENT_PRESETS);
   const [homes, setHomes] = useState(HOME_PRESETS);
+  const [wallpapers, setWallpapers] = useState(WALLPAPER_PRESETS);
   const [loadingAssets, setLoadingAssets] = useState(false);
-  const [savedAt, setSavedAt] = useState(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setConfig(readSavedConfig(user?.id));
+    const next = readSavedConfig(user?.id);
+    setConfig(next);
+    setPage(next.mode === 'wallpaper' ? 'wallpaper' : 'home');
   }, [user?.id]);
 
   useEffect(() => {
@@ -241,6 +223,7 @@ export default function EnvironmentHubWorkspace() {
     const handleSurface = (event) => {
       if (event.detail?.mode && event.detail.mode !== 'dashboard') setOpen(false);
     };
+
     document.addEventListener('click', handleClick, true);
     window.addEventListener('openEnvironmentHub', handleOpen);
     window.addEventListener('closeEnvironmentHub', handleClose);
@@ -256,84 +239,123 @@ export default function EnvironmentHubWorkspace() {
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      event.stopPropagation();
-      setOpen(false);
+      if (event.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKey, true);
-    document.body.dataset.environmentHubOpen = 'true';
-    return () => {
-      window.removeEventListener('keydown', onKey, true);
-      delete document.body.dataset.environmentHubOpen;
-    };
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [open]);
 
   useEffect(() => {
     if (!open || !user?.id) return undefined;
     let cancelled = false;
+
     (async () => {
       setLoadingAssets(true);
       try {
-        const [layouts, models3d, modelsFbx] = await Promise.all([
-          base44.entities.SceneLayout.list().catch(() => []),
+        const [models3d, modelsFbx, layouts, userAchievements, achievements] = await Promise.all([
           base44.entities.Model3D.list().catch(() => []),
           base44.entities.ModelFBX.list().catch(() => []),
+          base44.entities.SceneLayout.list().catch(() => []),
+          base44.entities.UserAchievement.filter({ user_id: user.id }).catch(() => []),
+          base44.entities.Achievement.list().catch(() => []),
         ]);
         if (cancelled) return;
 
-        const liveEnvironments = (layouts || []).map((layout, index) => ({
-          id: layout.id,
-          name: layout.name || `Environment ${index + 1}`,
-          genre: layout.genre || inferGenre(`${layout.name || ''} ${layout.description || ''}`),
-          kind: 'environment',
-          image: layout.thumbnail_url || layout.thumbnail || layout.preview_url || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
-          description: layout.description || 'Unlocked 3D SceneLayout environment.',
-          unlocked: layout.is_locked !== true,
-          modelUrl: layout.environment_url,
-          layoutData: layout,
-          source: 'SceneLayout',
-        }));
-        setEnvironments(liveEnvironments.length ? [...liveEnvironments, ...ENVIRONMENT_PRESETS.filter((preset) => !liveEnvironments.some((live) => live.id === preset.id))] : ENVIRONMENT_PRESETS);
+        const unlockedAchievementIds = new Set((userAchievements || []).filter((row) => row.status === 'unlocked').map((row) => String(row.achievement_id)));
+        const environmentAchievements = (achievements || []).filter((achievement) => achievement.category === 'environment');
 
-        const rawHomes = [...(models3d || []), ...(modelsFbx || [])].filter((model) => /container|house|home|castle|cabin|loft|apartment|villa/i.test(model.name || ''));
-        const dynamicHomes = rawHomes.map((model, index) => {
-          const isContainer = /container/i.test(model.name || '');
-          return {
+        const findAchievementForAsset = (asset) => environmentAchievements.find((achievement) => {
+          const reward = achievement.reward || {};
+          const showcase = achievement.showcase || {};
+          const assetName = normalizeLabel(asset.name);
+          const rewardName = normalizeLabel(reward.name);
+          return String(reward.environment_id || '') === String(asset.sourceEntityId || asset.id)
+            || (showcase.model_url && asset.modelUrl && showcase.model_url === asset.modelUrl)
+            || (rewardName && assetName && rewardName === assetName);
+        });
+
+        const rawHomeAssets = [
+          ...(models3d || []).map((model) => ({
+            sourceEntityId: model.id,
             id: `model-home-${model.id}`,
-            modelEntityId: model.id,
-            name: model.name || `Home ${index + 1}`,
-            genre: inferGenre(model.name),
-            kind: 'home',
-            image: model.thumbnail_url || model.thumbnail || model.preview_url || (isContainer ? HOME_PRESETS[0].image : FALLBACK_IMAGES[(index + 1) % FALLBACK_IMAGES.length]),
-            description: isContainer ? 'Repository shipping-container home asset with wide dashboard framing.' : 'Unlocked repository home model.',
-            unlocked: true,
-            modelUrl: model.file_url,
-            stageScale: isContainer ? 0.72 : 0.82,
-            cameraDistance: isContainer ? 1.35 : 1.1,
-            framing: isContainer ? 'wide' : 'standard',
-            priority: isContainer,
+            name: model.name || '3D Home',
+            description: model.description || '3D home model.',
+            image: model.thumbnail_url || '',
+            modelUrl: model.file_url || '',
             source: 'Model3D',
+            bundledLand: false,
+          })),
+          ...(modelsFbx || []).map((model) => ({
+            sourceEntityId: model.id,
+            id: `fbx-home-${model.id}`,
+            name: model.name || '3D Home',
+            description: model.description || '3D home model.',
+            image: model.thumbnail_url || '',
+            modelUrl: model.file_url || '',
+            source: 'ModelFBX',
+            bundledLand: false,
+          })),
+          ...(layouts || []).map((layout) => ({
+            sourceEntityId: layout.id,
+            id: `layout-home-${layout.id}`,
+            name: layout.name || '3D Home Environment',
+            description: layout.description || '3D home scene with its own environment.',
+            image: layout.thumbnail_url || layout.thumbnail || layout.preview_url || '',
+            modelUrl: layout.environment_url || '',
+            layoutData: layout,
+            source: 'SceneLayout',
+            bundledLand: true,
+          })),
+        ].filter((asset) => asset.modelUrl && HOME_NAME_PATTERN.test(`${asset.name} ${asset.description}`));
+
+        const dynamicHomes = rawHomeAssets.map((asset, index) => {
+          const achievement = findAchievementForAsset(asset);
+          const unlocked = Boolean(achievement && unlockedAchievementIds.has(String(achievement.id)));
+          return {
+            ...asset,
+            kind: 'home',
+            image: asset.image || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
+            unlocked,
+            unlockLabel: achievement ? `Achievement: ${achievement.title}` : 'Unlock from an Environment achievement.',
+            achievementId: achievement?.id || null,
           };
         });
-        const hasContainer = dynamicHomes.some((home) => /container/i.test(home.name));
-        const defaults = hasContainer ? HOME_PRESETS.filter((home) => home.id !== 'home-container') : HOME_PRESETS;
-        setHomes([...dynamicHomes.sort((a, b) => Number(b.priority) - Number(a.priority)), ...defaults]);
+        setHomes([...HOME_PRESETS, ...dynamicHomes]);
+
+        const achievementWallpapers = environmentAchievements
+          .filter((achievement) => {
+            const reward = achievement.reward || {};
+            const showcase = achievement.showcase || {};
+            const text = `${reward.type || ''} ${reward.name || ''} ${achievement.title || ''}`;
+            return Boolean(showcase.video_url || /wallpaper|background|video/i.test(text));
+          })
+          .map((achievement, index) => ({
+            id: `achievement-wall-${achievement.id}`,
+            name: achievement.reward?.name || achievement.title || 'Achievement Wallpaper',
+            description: achievement.reward?.description || achievement.description || 'Achievement-unlocked dashboard wallpaper.',
+            kind: 'wallpaper',
+            image: achievement.reward?.environment_thumbnail || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
+            videoUrl: achievement.showcase?.video_url || '',
+            mediaType: achievement.showcase?.video_url ? 'video' : 'image',
+            unlocked: unlockedAchievementIds.has(String(achievement.id)),
+            unlockLabel: `Achievement: ${achievement.title}`,
+          }));
+        setWallpapers([...WALLPAPER_PRESETS, ...achievementWallpapers]);
       } finally {
         if (!cancelled) setLoadingAssets(false);
       }
     })();
+
     return () => { cancelled = true; };
   }, [open, user?.id]);
 
-  const catalogs = useMemo(() => ({ environments, homes }), [environments, homes]);
-
   const emitConfig = (next) => {
-    window.dispatchEvent(new CustomEvent('environmentHubConfigChanged', { detail: next }));
     window.__atomXeEnvironmentHubConfig = next;
+    window.dispatchEvent(new CustomEvent('environmentHubConfigChanged', { detail: next }));
   };
 
   const updateConfig = (recipe) => {
+    setSaved(false);
     setConfig((current) => {
       const next = normalizeEnvironmentConfig(typeof recipe === 'function' ? recipe(current) : { ...current, ...recipe });
       emitConfig(next);
@@ -341,112 +363,61 @@ export default function EnvironmentHubWorkspace() {
     });
   };
 
-  const selectItem = (kind, item) => {
+  const chooseWallpaper = (item) => {
     if (item.unlocked === false) return;
-    if (kind === 'environment') updateConfig((current) => ({ ...current, mode: 'environment', environmentId: item.id, backgroundId: null, wallpaperId: null }));
-    if (kind === 'skybox') updateConfig((current) => ({ ...current, mode: 'environment', skyboxId: item.id, backgroundId: null, wallpaperId: null }));
-    if (kind === 'background') updateConfig((current) => ({ ...current, mode: 'background', backgroundId: item.id, wallpaperId: null }));
-    if (kind === 'wallpaper') updateConfig((current) => ({ ...current, mode: 'wallpaper', wallpaperId: item.id, backgroundId: null }));
-    if (kind === 'home') updateConfig((current) => ({ ...current, mode: 'environment', homeId: item.id, backgroundId: null, wallpaperId: null }));
-    if (kind === 'garden') updateConfig((current) => ({ ...current, mode: 'environment', gardenId: item.id, backgroundId: null, wallpaperId: null }));
-    if (kind === 'companion') updateConfig((current) => ({ ...current, mode: 'environment', companionId: item.id, backgroundId: null, wallpaperId: null }));
-    if (kind === 'music') updateConfig((current) => ({ ...current, musicId: item.id }));
-    if (kind === 'weather') updateConfig((current) => ({ ...current, mode: 'environment', weatherId: item.id, backgroundId: null, wallpaperId: null }));
+    setPage('wallpaper');
+    updateConfig((current) => ({ ...current, mode: 'wallpaper', wallpaperId: item.id, wallpaperAsset: assetSnapshot(item) }));
   };
 
-  const saveConfig = async () => {
-    const next = normalizeEnvironmentConfig(config);
-    try { localStorage.setItem(configStorageKey(user?.id), JSON.stringify(next)); } catch { /* local persistence non-fatal */ }
+  const chooseHome = (item) => {
+    if (item.unlocked === false) return;
+    setPage('home');
+    updateConfig((current) => ({ ...current, mode: 'home', homeId: item.id, homeAsset: assetSnapshot(item) }));
+  };
+
+  const apply = async () => {
+    const next = normalizeEnvironmentConfig({ ...config, mode: page === 'wallpaper' ? 'wallpaper' : 'home' });
+    try { localStorage.setItem(configStorageKey(user?.id), JSON.stringify(next)); } catch { /* local persistence is best effort */ }
+    setConfig(next);
     emitConfig(next);
 
-    const activeEnvironment = findPresetById(next.environmentId, catalogs);
-    if (next.mode === 'environment' && activeEnvironment?.modelUrl) {
-      window.dispatchEvent(new CustomEvent('changeEnvironment', {
-        detail: {
-          envUrl: activeEnvironment.modelUrl,
-          layoutData: activeEnvironment.layoutData,
-          envId: activeEnvironment.id,
-        },
-      }));
-      if (user?.id && activeEnvironment.layoutData) {
-        try {
-          const rows = await base44.entities.AvatarHomeState.filter({ avatarId: user.id });
-          if (rows?.length) await base44.entities.AvatarHomeState.update(rows[0].id, { currentEnvironmentId: activeEnvironment.id });
-          else await base44.entities.AvatarHomeState.create({ avatarId: user.id, currentEnvironmentId: activeEnvironment.id });
-        } catch (error) {
-          console.warn('Environment Hub could not persist AvatarHomeState.', error);
+    if (next.mode === 'home') {
+      const selectedHome = homes.find((item) => item.id === next.homeId) || next.homeAsset;
+      if (selectedHome?.modelUrl) {
+        window.dispatchEvent(new CustomEvent('changeEnvironment', {
+          detail: {
+            envUrl: selectedHome.modelUrl,
+            layoutData: selectedHome.layoutData,
+            envId: selectedHome.sourceEntityId || selectedHome.id,
+          },
+        }));
+
+        if (user?.id) {
+          try {
+            const rows = await base44.entities.AvatarHomeState.filter({ avatarId: user.id });
+            const value = selectedHome.sourceEntityId || selectedHome.id;
+            if (rows?.length) await base44.entities.AvatarHomeState.update(rows[0].id, { currentEnvironmentId: value });
+            else await base44.entities.AvatarHomeState.create({ avatarId: user.id, currentEnvironmentId: value });
+          } catch (error) {
+            console.warn('Environment Hub could not save AvatarHomeState.', error);
+          }
         }
       }
     }
 
-    window.dispatchEvent(new CustomEvent('environmentHomeModelChanged', {
-      detail: {
-        home: findPresetById(next.homeId, catalogs),
-        garden: findPresetById(next.gardenId, catalogs),
-        companionId: next.companionId,
-      },
-    }));
-    window.dispatchEvent(new CustomEvent('environmentSkyboxChanged', {
-      detail: { skybox: findPresetById(next.skyboxId, catalogs), weatherId: next.weatherId, syncToWeather: next.syncSkyboxToWeather },
-    }));
-    window.dispatchEvent(new CustomEvent('environmentMusicChanged', {
-      detail: { music: findPresetById(next.musicId, catalogs) },
-    }));
-    setSavedAt(Date.now());
+    setSaved(true);
   };
 
-  const resetConfig = () => {
-    const next = normalizeEnvironmentConfig(DEFAULT_ENVIRONMENT_CONFIG);
-    setConfig(next);
-    emitConfig(next);
-  };
+  const currentWallpaper = wallpapers.find((item) => item.id === config.wallpaperId) || config.wallpaperAsset;
+  const currentHome = homes.find((item) => item.id === config.homeId) || config.homeAsset || HOME_PRESETS[0];
+  const currentLand = LAND_PRESETS.find((item) => item.id === config.landId) || LAND_PRESETS[0];
+  const currentSky = SKY_PRESETS.find((item) => item.id === config.skyId) || SKY_PRESETS[0];
+  const currentWeather = WEATHER_PRESETS.find((item) => item.id === config.weatherId) || WEATHER_PRESETS[0];
 
-  const tabMeta = ENVIRONMENT_TABS.find((entry) => entry.id === tab) || ENVIRONMENT_TABS[0];
-  const environmentOnly = ['skybox', 'home', 'garden', 'weather'].includes(tab);
-  const tabDisabled = environmentOnly && config.mode !== 'environment';
-
-  const collectionForTab = useMemo(() => {
-    if (tab === 'environment') return environments;
-    if (tab === 'skybox') return SKYBOX_PRESETS;
-    if (tab === 'background') return BACKGROUND_PRESETS;
-    if (tab === 'wallpaper') return WALLPAPER_PRESETS;
-    if (tab === 'home') return homes;
-    if (tab === 'music') return MUSIC_PRESETS;
-    if (tab === 'weather') return WEATHER_PRESETS;
-    return [];
-  }, [tab, environments, homes]);
-
-  const selectedIdForTab = {
-    environment: config.environmentId,
-    skybox: config.skyboxId,
-    background: config.backgroundId,
-    wallpaper: config.wallpaperId,
-    home: config.homeId,
-    music: config.musicId,
-    weather: config.weatherId,
-  }[tab];
-
-  const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return collectionForTab.filter((item) => {
-      if (genre !== 'All' && item.genre !== genre && item.genre !== 'All') return false;
-      if (unlockedOnly && item.unlocked === false) return false;
-      if (normalizedQuery && !`${item.name} ${item.description} ${item.genre}`.toLowerCase().includes(normalizedQuery)) return false;
-      return true;
-    });
-  }, [collectionForTab, genre, query, unlockedOnly]);
-
-  const stack = {
-    environment: findPresetById(config.environmentId, catalogs),
-    skybox: findPresetById(config.skyboxId, catalogs),
-    background: findPresetById(config.backgroundId, catalogs),
-    wallpaper: findPresetById(config.wallpaperId, catalogs),
-    home: findPresetById(config.homeId, catalogs),
-    garden: findPresetById(config.gardenId, catalogs),
-    companion: findPresetById(config.companionId, catalogs),
-    music: findPresetById(config.musicId, catalogs),
-    weather: findPresetById(config.weatherId, catalogs),
-  };
+  const homeStatus = useMemo(() => {
+    if (currentHome?.bundledLand) return `${currentHome.name} includes its own land`;
+    return `${currentHome?.name || 'Open Land'} · ${currentLand.name}`;
+  }, [currentHome, currentLand]);
 
   if (typeof document === 'undefined') return null;
 
@@ -457,179 +428,173 @@ export default function EnvironmentHubWorkspace() {
           initial={{ opacity: 0, y: 10, scale: 0.995 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 8, scale: 0.995 }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className="fixed bottom-[54px] left-[390px] right-[8px] top-[170px] z-[9800] isolate overflow-hidden text-white"
-          aria-label="3D Environment Hub"
           role="dialog"
           aria-modal="true"
+          aria-label="Environment Hub"
           style={{
-            background: 'linear-gradient(145deg, rgba(12,18,29,.87), rgba(5,9,17,.76) 52%, rgba(13,20,32,.82))',
-            backdropFilter: 'blur(34px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(34px) saturate(150%)',
-            clipPath: 'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.11), 0 30px 90px rgba(0,0,0,.42)',
+            background: 'linear-gradient(145deg, rgba(210,224,238,.16), rgba(28,38,52,.83) 38%, rgba(10,16,25,.88) 100%)',
+            backdropFilter: 'blur(34px) saturate(138%)',
+            WebkitBackdropFilter: 'blur(34px) saturate(138%)',
+            border: '1px solid rgba(255,255,255,.13)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.16), 0 26px 80px rgba(0,0,0,.30)',
+            clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)',
           }}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_5%,rgba(34,211,238,.09),transparent_27%),radial-gradient(circle_at_88%_92%,rgba(139,92,246,.08),transparent_28%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_2%,rgba(225,245,255,.13),transparent_31%),radial-gradient(circle_at_88%_92%,rgba(91,151,190,.07),transparent_30%)]" />
 
           <div className="relative flex h-full min-h-0 flex-col">
             <header className="flex h-[70px] flex-shrink-0 items-center gap-5 px-6">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-200/[0.07] text-cyan-100"><Globe2 className="h-4 w-4" /></div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2"><h2 className="truncate text-lg font-semibold tracking-tight">3D Environment Hub</h2><span className="rounded-full bg-white/[0.055] px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.16em] text-white/35">World Composer</span></div>
-                  <p className="text-[10px] text-white/38">Compose your Luna home from independent world layers.</p>
-                </div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold uppercase tracking-[.22em] text-cyan-100/45">Luna Home</div>
+                <h2 className="mt-1 text-lg font-semibold tracking-tight text-white/92">Environment Hub</h2>
+              </div>
+
+              <div className="ml-6 flex rounded-full bg-white/[0.045] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+                {ENVIRONMENT_TABS.map((entry) => {
+                  const Icon = entry.id === 'wallpaper' ? Image : Home;
+                  const active = page === entry.id;
+                  return (
+                    <button
+                      key={entry.id}
+                      onClick={() => {
+                        setPage(entry.id);
+                        updateConfig((current) => ({ ...current, mode: entry.id === 'wallpaper' ? 'wallpaper' : 'home' }));
+                      }}
+                      className={`flex items-center gap-2 rounded-full px-4 py-2 text-[9px] font-bold uppercase tracking-[.15em] transition ${active ? 'bg-white/[0.10] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.12)]' : 'text-white/35 hover:text-white/60'}`}
+                    >
+                      <Icon className="h-3.5 w-3.5" /> {entry.label}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="ml-auto flex items-center gap-2">
-                <div className="hidden items-center gap-1 rounded-full bg-white/[0.035] p-1 lg:flex">
-                  {['environment', 'background', 'wallpaper'].map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => {
-                        if (mode === 'environment') updateConfig((current) => ({ ...current, mode: 'environment', backgroundId: null, wallpaperId: null }));
-                        if (mode === 'background') updateConfig((current) => ({ ...current, mode: 'background', backgroundId: current.backgroundId || BACKGROUND_PRESETS[0].id }));
-                        if (mode === 'wallpaper') updateConfig((current) => ({ ...current, mode: 'wallpaper', wallpaperId: current.wallpaperId || WALLPAPER_PRESETS[0].id }));
-                      }}
-                      className={`rounded-full px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.13em] transition ${config.mode === mode ? 'bg-cyan-200/12 text-cyan-100' : 'text-white/35 hover:text-white/65'}`}
-                    >{mode === 'environment' ? 'World Stack' : mode}</button>
-                  ))}
-                </div>
-                <button onClick={resetConfig} className="rounded-full px-3 py-2 text-[9px] font-bold uppercase tracking-[0.13em] text-white/35 transition hover:bg-white/[0.05] hover:text-white/65">Reset</button>
-                <button onClick={saveConfig} className="rounded-full bg-cyan-200/10 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-cyan-100 transition hover:bg-cyan-200/16">
-                  {savedAt && Date.now() - savedAt < 3000 ? 'Saved' : 'Apply to Dashboard'}
+                <button onClick={apply} className="rounded-full bg-white/[0.095] px-4 py-2 text-[9px] font-bold uppercase tracking-[.15em] text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,.12)] transition hover:bg-white/[0.14] hover:text-white">
+                  {saved ? 'Applied' : 'Apply'}
                 </button>
-                <button onClick={() => setOpen(false)} aria-label="Close Environment Hub" className="grid h-9 w-9 place-items-center rounded-full text-white/45 transition hover:bg-white/[0.07] hover:text-white"><X className="h-4 w-4" /></button>
+                <button onClick={() => setOpen(false)} aria-label="Close Environment Hub" className="grid h-9 w-9 place-items-center rounded-full text-white/40 transition hover:bg-white/[0.07] hover:text-white"><X className="h-4 w-4" /></button>
               </div>
             </header>
 
-            <div className="flex min-h-0 flex-1">
-              <nav className="w-[190px] flex-shrink-0 overflow-y-auto px-3 pb-5 pt-2">
-                <div className="mb-3 px-3 text-[8px] font-bold uppercase tracking-[0.2em] text-white/23">Environment Layers</div>
-                <div className="space-y-1">
-                  {ENVIRONMENT_TABS.map((entry) => {
-                    const Icon = TAB_ICONS[entry.id] || Layers3;
-                    const disabledByMode = ['skybox', 'home', 'garden', 'weather'].includes(entry.id) && config.mode !== 'environment';
-                    return (
-                      <button
-                        key={entry.id}
-                        onClick={() => setTab(entry.id)}
-                        className={`group flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition ${tab === entry.id ? 'bg-white/[0.075] text-white' : 'text-white/38 hover:bg-white/[0.035] hover:text-white/68'} ${disabledByMode ? 'opacity-35' : ''}`}
-                      >
-                        <Icon className={`h-3.5 w-3.5 ${tab === entry.id ? 'text-cyan-200' : ''}`} />
-                        <span className="min-w-0 flex-1 truncate text-[10px] font-semibold">{entry.label}</span>
-                        {disabledByMode ? <Lock className="h-2.5 w-2.5" /> : <ChevronRight className={`h-3 w-3 transition ${tab === entry.id ? 'translate-x-0 text-cyan-200' : '-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-70'}`} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </nav>
-
-              <main className="min-w-0 flex-1 overflow-hidden px-2 pb-5">
-                <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_300px] gap-4">
-                  <section className="flex min-h-0 flex-col overflow-hidden rounded-[24px] bg-white/[0.025]">
-                    <div className="flex flex-shrink-0 items-end justify-between gap-4 px-5 pb-3 pt-4">
+            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_340px] gap-4 px-5 pb-5">
+              <section className="flex min-h-0 flex-col overflow-hidden rounded-[26px] bg-white/[0.035] shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+                {page === 'wallpaper' ? (
+                  <>
+                    <div className="flex flex-shrink-0 items-end justify-between gap-4 px-5 pb-4 pt-5">
                       <div>
-                        <div className="text-[8px] font-bold uppercase tracking-[0.19em] text-cyan-200/55">{config.mode === 'environment' ? 'Layered World Mode' : `${config.mode} Mode`}</div>
-                        <h3 className="mt-1 text-base font-semibold text-white/90">{tabMeta.label}</h3>
-                        <p className="mt-0.5 text-[10px] text-white/35">{tabMeta.description}</p>
+                        <h3 className="text-base font-semibold text-white/90">Wallpaper</h3>
+                        <p className="mt-1 text-[10px] text-white/38">One full-scene backdrop. Static, animated and achievement video wallpapers can all live here.</p>
                       </div>
-                      {tab !== 'friends' && tab !== 'garden' && (
-                        <div className="flex items-center gap-2">
-                          <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
-                            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter assets" className="h-9 w-[170px] rounded-full bg-white/[0.045] pl-9 pr-3 text-[10px] text-white outline-none placeholder:text-white/20 focus:bg-white/[0.065]" />
-                          </div>
-                          <button onClick={() => setUnlockedOnly((value) => !value)} className={`h-9 rounded-full px-3 text-[9px] font-bold uppercase tracking-[0.12em] ${unlockedOnly ? 'bg-cyan-200/10 text-cyan-100' : 'bg-white/[0.04] text-white/35'}`}>Unlocked</button>
-                        </div>
-                      )}
+                      {loadingAssets && <span className="text-[9px] text-white/28">Syncing achievements…</span>}
                     </div>
-
-                    {tab !== 'friends' && tab !== 'garden' && (
-                      <div className="flex flex-shrink-0 gap-1 overflow-x-auto px-5 pb-3 [scrollbar-width:none]">
-                        {GENRES.map((entry) => (
-                          <button key={entry} onClick={() => setGenre(entry)} className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.12em] transition ${genre === entry ? 'bg-white/[0.09] text-white/85' : 'text-white/28 hover:bg-white/[0.035] hover:text-white/55'}`}>{entry}</button>
+                    <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 [scrollbar-width:thin]">
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {wallpapers.map((item) => <AssetCard key={item.id} item={item} selected={currentWallpaper?.id === item.id} onSelect={chooseWallpaper} />)}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-shrink-0 items-center justify-between gap-4 px-5 pb-3 pt-5">
+                      <div>
+                        <h3 className="text-base font-semibold text-white/90">Home</h3>
+                        <p className="mt-1 text-[10px] text-white/38">A simple three-part setup: house, land, then sky and weather.</p>
+                      </div>
+                      <div className="flex rounded-full bg-white/[0.04] p-1">
+                        {HOME_SECTIONS.map((entry) => (
+                          <button key={entry.id} onClick={() => setHomeSection(entry.id)} className={`rounded-full px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.13em] transition ${homeSection === entry.id ? 'bg-white/[0.09] text-white/82' : 'text-white/30 hover:text-white/55'}`}>{entry.label}</button>
                         ))}
                       </div>
-                    )}
+                    </div>
 
                     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 [scrollbar-width:thin]">
-                      {tab === 'friends' ? (
-                        <div className="h-full min-h-[360px] overflow-hidden rounded-[18px]"><FriendsListContent /></div>
-                      ) : tabDisabled ? (
-                        <EmptyDisabledState mode={config.mode} tab={tabMeta.label} />
-                      ) : tab === 'garden' ? (
-                        <div className="grid gap-5 lg:grid-cols-2">
-                          <div>
-                            <div className="mb-2 text-[8px] font-bold uppercase tracking-[0.18em] text-white/30">Garden Layer</div>
-                            <div className="grid gap-2 sm:grid-cols-2">{GARDEN_PRESETS.map((item) => <CatalogCard key={item.id} item={item} selected={config.gardenId === item.id} onSelect={(value) => selectItem('garden', value)} />)}</div>
+                      {homeSection === 'house' && (
+                        <div>
+                          <div className="mb-3 rounded-[18px] bg-white/[0.035] px-4 py-3 text-[9px] leading-relaxed text-white/42">
+                            3D homes are reward assets. The starter Open Land is always available; other houses unlock when their linked Environment achievement is completed.
                           </div>
-                          <div>
-                            <div className="mb-2 text-[8px] font-bold uppercase tracking-[0.18em] text-white/30">Companion Presence</div>
-                            <div className="grid gap-2">{COMPANION_PRESETS.map((item) => <CatalogCard key={item.id} item={item} selected={config.companionId === item.id} onSelect={(value) => selectItem('companion', value)} />)}</div>
+                          {loadingAssets && <div className="mb-3 text-[9px] text-white/28">Checking your unlocked home rewards…</div>}
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {homes.map((item) => <AssetCard key={item.id} item={item} selected={currentHome?.id === item.id} onSelect={chooseHome} />)}
                           </div>
                         </div>
-                      ) : (
-                        <>
-                          {tab === 'weather' && (
-                            <button
-                              onClick={() => updateConfig((current) => ({ ...current, syncSkyboxToWeather: !current.syncSkyboxToWeather }))}
-                              className={`mb-3 flex w-full items-center justify-between rounded-[16px] px-4 py-3 text-left ${config.syncSkyboxToWeather ? 'bg-cyan-200/[0.075]' : 'bg-white/[0.035]'}`}
-                            >
-                              <div><div className="text-[10px] font-semibold text-white/75">Sync skybox to weather</div><div className="mt-0.5 text-[9px] text-white/30">Weather can automatically choose a matching atmosphere while keeping your land and home active.</div></div>
-                              <div className={`relative h-5 w-9 rounded-full ${config.syncSkyboxToWeather ? 'bg-cyan-300/45' : 'bg-white/10'}`}><div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${config.syncSkyboxToWeather ? 'left-[18px]' : 'left-0.5'}`} /></div>
-                            </button>
+                      )}
+
+                      {homeSection === 'land' && (
+                        <div>
+                          {currentHome?.bundledLand && (
+                            <div className="mb-3 rounded-[18px] bg-white/[0.055] px-4 py-3 text-[9px] text-white/48">This home is a complete SceneLayout and already includes its own land. Your land choice remains saved for other houses.</div>
                           )}
-                          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                            {loadingAssets && ['environment', 'home'].includes(tab) && <div className="col-span-full py-3 text-[10px] text-white/30">Syncing your unlocked repository assets…</div>}
-                            {filtered.map((item) => <CatalogCard key={item.id} item={item} selected={selectedIdForTab === item.id} onSelect={(value) => selectItem(tab, value)} />)}
-                            {!filtered.length && <div className="col-span-full grid min-h-[180px] place-items-center text-[11px] text-white/30">No assets match these filters.</div>}
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {LAND_PRESETS.map((item) => <AssetCard key={item.id} item={item} selected={config.landId === item.id} onSelect={(value) => updateConfig((current) => ({ ...current, mode: 'home', landId: value.id }))} />)}
                           </div>
-                        </>
+                        </div>
+                      )}
+
+                      {homeSection === 'sky' && (
+                        <div className="space-y-5">
+                          <div>
+                            <div className="mb-2 flex items-center gap-2 text-[8px] font-bold uppercase tracking-[.18em] text-white/30"><Sun className="h-3 w-3" /> Sky</div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {SKY_PRESETS.map((item) => (
+                                <GlassChoice
+                                  key={item.id}
+                                  selected={config.skyId === item.id}
+                                  icon={item.realtime ? Sparkles : item.id === 'sky-moon' ? Moon : Sun}
+                                  title={item.name}
+                                  description={item.description}
+                                  onClick={() => updateConfig((current) => ({ ...current, mode: 'home', skyId: item.id }))}
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="mb-2 flex items-center gap-2 text-[8px] font-bold uppercase tracking-[.18em] text-white/30"><CloudRain className="h-3 w-3" /> Weather</div>
+                            <div className="flex flex-wrap gap-2">
+                              {WEATHER_PRESETS.map((item) => (
+                                <button key={item.id} onClick={() => updateConfig((current) => ({ ...current, mode: 'home', weatherId: item.id }))} className={`rounded-full px-4 py-2 text-[9px] font-semibold transition ${config.weatherId === item.id ? 'bg-white/[0.11] text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,.12)]' : 'bg-white/[0.04] text-white/35 hover:bg-white/[0.07] hover:text-white/58'}`}>{item.name}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </section>
+                  </>
+                )}
+              </section>
 
-                  <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
-                    <div className="h-[218px] flex-shrink-0"><WorldPreview config={config} environments={environments} homes={homes} /></div>
+              <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto [scrollbar-width:thin]">
+                <div className="h-[300px] flex-shrink-0"><Preview config={{ ...config, mode: page === 'wallpaper' ? 'wallpaper' : 'home' }} wallpapers={wallpapers} homes={homes} /></div>
 
-                    <div className="rounded-[22px] bg-white/[0.028] px-4 py-3.5">
-                      <div className="flex items-center justify-between"><span className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/45">Current World Stack</span><span className={`rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider ${config.mode === 'environment' ? 'bg-emerald-300/10 text-emerald-200/70' : 'bg-fuchsia-300/10 text-fuchsia-200/70'}`}>{config.mode}</span></div>
-                      <div className="mt-2 divide-y divide-white/[0.045]">
-                        <StackRow label="Land" value={stack.environment?.name} disabled={config.mode !== 'environment'} />
-                        <StackRow label="Skybox" value={stack.skybox?.name} disabled={config.mode !== 'environment'} />
-                        <StackRow label="Background" value={stack.background?.name} disabled={config.mode !== 'background'} />
-                        <StackRow label="Wallpaper" value={stack.wallpaper?.name} disabled={config.mode !== 'wallpaper'} />
-                        <StackRow label="Home" value={stack.home?.name} disabled={config.mode !== 'environment'} />
-                        <StackRow label="Garden" value={stack.garden?.name} disabled={config.mode !== 'environment'} />
-                        <StackRow label="Companion" value={stack.companion?.name} disabled={config.mode !== 'environment'} />
-                        <StackRow label="Weather" value={stack.weather?.name} disabled={config.mode !== 'environment'} />
-                        <StackRow label="Music" value={stack.music?.name} />
-                      </div>
+                <div className="rounded-[24px] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+                  <div className="text-[8px] font-bold uppercase tracking-[.19em] text-white/28">Current Setup</div>
+                  {page === 'wallpaper' ? (
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.055] text-white/45">{currentWallpaper?.videoUrl ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}</span>
+                      <div><div className="text-xs font-semibold text-white/76">{currentWallpaper?.name || 'Wallpaper'}</div><div className="mt-0.5 text-[9px] text-white/30">Full-scene mode</div></div>
                     </div>
-
-                    <div className="rounded-[22px] bg-white/[0.028] p-4">
-                      <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-cyan-200/60" /><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">Visit Permissions</span></div>
-                      <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-black/15 p-1">
-                        {['private', 'friends', 'invite'].map((value) => (
-                          <button key={value} onClick={() => updateConfig((current) => ({ ...current, visibility: value }))} className={`rounded-lg py-2 text-[8px] font-bold uppercase tracking-wider ${config.visibility === value ? 'bg-white/[0.08] text-white/80' : 'text-white/28'}`}>{value}</button>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-[9px] leading-relaxed text-white/28">Friends + Visits uses the existing Luna dashboard invitation and multiplayer channel system, so invited friends enter the environment rather than a separate fake preview.</p>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      <div className="flex items-center gap-3"><Home className="h-4 w-4 text-white/38" /><div><div className="text-xs font-semibold text-white/75">{homeStatus}</div><div className="mt-0.5 text-[9px] text-white/30">House & land</div></div></div>
+                      <div className="flex items-center gap-3"><Mountain className="h-4 w-4 text-white/38" /><div><div className="text-xs font-semibold text-white/75">{currentSky.name}</div><div className="mt-0.5 text-[9px] text-white/30">{currentSky.realtime ? 'Live local day/night cycle' : 'Manual sky'} · {currentWeather.name}</div></div></div>
                     </div>
-
-                    {config.mode === 'wallpaper' && (
-                      <div className="rounded-[18px] bg-fuchsia-400/[0.055] p-3 text-[9px] leading-relaxed text-fuchsia-100/60"><Zap className="mb-1.5 h-3.5 w-3.5" />3D Wallpaper is exclusive. Land, skybox, home, garden, companion and weather are disabled until World Stack mode is restored.</div>
-                    )}
-                  </aside>
+                  )}
                 </div>
-              </main>
+
+                <div className="rounded-[24px] bg-white/[0.03] px-4 py-3 text-[9px] leading-relaxed text-white/34">
+                  {page === 'wallpaper'
+                    ? 'Wallpaper is intentionally separate from Home, so a video or animated backdrop never has to fight with house, land or sky layers.'
+                    : 'Real-Time Sky uses your device clock and changes automatically through dawn, day, sunset and night. No location permission is required.'}
+                </div>
+              </aside>
             </div>
           </div>
         </motion.section>
       )}
     </AnimatePresence>,
-    document.body,
+    document.body
   );
 }
