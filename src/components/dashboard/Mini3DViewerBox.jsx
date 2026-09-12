@@ -187,7 +187,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
               <span className="text-[11px] text-white font-bold truncate">Join {activeInvite.fromUser?.friend_name} dashboard?</span>
               <div className="flex items-center gap-2">
                 <button onClick={(e) => { e.stopPropagation(); setActiveInvite(null); window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } })); }} className="text-red-500 hover:text-red-400" title="Decline"><X className="w-4 h-4" /></button>
-                <button onClick={(e) => { e.stopPropagation(); setActiveInvite(null); if (activeInvite.fromUser?.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } })); window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } })); }} className="text-green-500 hover:text-green-400" title="Accept"><Check className="w-4 h-4" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setActiveInvite(null); if (activeInvite.fromUser?.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } })); window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id, hostName: activeInvite.fromUser.friend_name || activeInvite.fromUser.name || 'Friend', socialJoin: true } })); }} className="text-green-500 hover:text-green-400" title="Accept"><Check className="w-4 h-4" /></button>
               </div>
             </div>
           )}
@@ -220,7 +220,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-6 right-6 z-[9999] flex items-center gap-3 drop-shadow-xl">
               <span className="text-sm text-white font-bold">Join {activeInvite.fromUser?.friend_name} dashboard?</span>
               <button onClick={() => { setActiveInvite(null); window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } })); }} className="text-red-500"><X className="w-6 h-6" /></button>
-              <button onClick={() => { setActiveInvite(null); if (activeInvite.fromUser?.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } })); window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } })); }} className="text-green-500"><Check className="w-6 h-6" /></button>
+              <button onClick={() => { setActiveInvite(null); if (activeInvite.fromUser?.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } })); window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id, hostName: activeInvite.fromUser.friend_name || activeInvite.fromUser.name || 'Friend', socialJoin: true } })); }} className="text-green-500"><Check className="w-6 h-6" /></button>
             </motion.div>
           )}
         </AnimatePresence>,
