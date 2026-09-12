@@ -1,13 +1,42 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Trophy } from 'lucide-react';
+import LunaMessageCenter from './LunaMessageCenter';
+
+function collectChildText(node) {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(collectChildText).join(' ');
+  if (React.isValidElement(node)) return collectChildText(node.props?.children);
+  return '';
+}
 
 export const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false, isLegendary = false }) => {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
+  const [messageFriend, setMessageFriend] = useState(null);
+
+  // LunaTemplate currently identifies its quick-access boxes by their rendered
+  // labels rather than an explicit id. Detect only the Friends tile here so we
+  // can add messaging without rewriting the large dashboard page component.
+  const isFriendsTile = useMemo(() => {
+    const label = collectChildText(children).replace(/\s+/g, ' ').trim().toLowerCase();
+    return label === 'friends' || label.endsWith(' friends') || label.startsWith('friends ');
+  }, [children]);
+
+  useEffect(() => {
+    if (!isFriendsTile) return undefined;
+    const openMessages = (event) => {
+      setMessageFriend(event?.detail?.friend || null);
+      setMessagesOpen(true);
+    };
+    window.addEventListener('openLunaMessages', openMessages);
+    return () => window.removeEventListener('openLunaMessages', openMessages);
+  }, [isFriendsTile]);
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -16,53 +45,79 @@ export const ConsoleTile = ({ children, onClick, className = "", accentColor = n
     setMousePos({ x, y });
   };
 
+  const handleClick = (event) => {
+    onClick?.(event);
+    if (isFriendsTile) {
+      setMessageFriend(null);
+      setMessagesOpen(true);
+    }
+  };
+
   return (
-    <motion.div
-      onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
-      onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
-      tabIndex={0}
-      animate={{
-        scale: isHovered || isFocused ? 1.02 : 1,
-        y: isHovered || isFocused ? -2 : 0,
-      }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`relative overflow-hidden group outline-none ${className}`}
-      style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        border: `1px solid ${isHovered || isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
-        borderRadius: '24px',
-        boxShadow: isHovered || isFocused
-          ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
-          : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
-      }}
-    >
-      <div
-        className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
-        style={{
-          background: isHovered || isFocused
-            ? 'rgba(255, 255, 255, 0.10)'
-            : 'transparent',
-          transition: 'background 0.3s ease'
+    <>
+      <motion.div
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        tabIndex={0}
+        animate={{
+          scale: isHovered || isFocused ? 1.02 : 1,
+          y: isHovered || isFocused ? -2 : 0,
         }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className={`relative overflow-hidden group outline-none ${className}`}
         style={{
-          opacity: isHovered ? 0.6 : 0,
-          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${isHovered || isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
+          borderRadius: '24px',
+          boxShadow: isHovered || isFocused
+            ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
+            : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
         }}
-      />
-      {isFocused && (
-        <div className="absolute inset-0 rounded-[24px] border-2 pointer-events-none z-30" style={{ borderColor: '#A8C0FF' }} />
+      >
+        <div
+          className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
+          style={{
+            background: isHovered || isFocused
+              ? 'rgba(255, 255, 255, 0.10)'
+              : 'transparent',
+            transition: 'background 0.3s ease'
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
+          style={{
+            opacity: isHovered ? 0.6 : 0,
+            background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+          }}
+        />
+        {isFocused && (
+          <div className="absolute inset-0 rounded-[24px] border-2 pointer-events-none z-30" style={{ borderColor: '#A8C0FF' }} />
+        )}
+        {children}
+      </motion.div>
+
+      {isFriendsTile && typeof document !== 'undefined' && createPortal(
+        <LunaMessageCenter
+          open={messagesOpen}
+          initialFriend={messageFriend}
+          onClose={() => {
+            setMessagesOpen(false);
+            setMessageFriend(null);
+          }}
+          onRequestOpen={(friend) => {
+            setMessageFriend(friend || null);
+            setMessagesOpen(true);
+          }}
+        />,
+        document.body,
       )}
-      {children}
-    </motion.div>
+    </>
   );
 };
 
