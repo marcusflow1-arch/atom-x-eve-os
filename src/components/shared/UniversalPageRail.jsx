@@ -6,6 +6,13 @@ const STORAGE_KEY = 'atom_eve_left_rail_visible';
 export default function UniversalPageRail({ children, pathname }) {
   const lowerPath = pathname.toLowerCase();
   const isLunaHome = lowerPath.includes('/lunatemplate');
+  const midpointOffset = lowerPath.includes('/clan')
+    ? -30
+    : (lowerPath.includes('/community') || lowerPath.includes('/forum'))
+      ? 26
+      : (lowerPath.includes('/aura') || lowerPath.includes('/streaminghome') || lowerPath.includes('/discover'))
+        ? -26
+        : 0;
   const [visible, setVisible] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) !== 'false'; }
     catch { return true; }
@@ -76,8 +83,14 @@ export default function UniversalPageRail({ children, pathname }) {
                 </div>
               </div>
 
-              {/* Only the unused 50/50 midpoint is replaced with page actions/customization. */}
-              <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+              {/* Only the unused 50/50 midpoint is replaced. Page-specific
+                  offsets keep the control that replaces the old Play slot
+                  exactly on the midpoint: Roster (Clan), Quick Forum (Forum),
+                  Recently Streamed (Aura), and Play everywhere else. */}
+              <div
+                className="absolute left-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
+                style={{ top: `calc(50% + ${midpointOffset}px)` }}
+              >
                 <UICustomizationControls />
               </div>
             </aside>
