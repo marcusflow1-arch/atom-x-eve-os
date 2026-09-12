@@ -69,8 +69,8 @@ export default function ClanChatHub({ clan, myRole }) {
   };
 
   return (
-    <div className="relative flex h-full w-full overflow-hidden rounded-2xl border border-white/[0.07] bg-[#1d232b]/72 backdrop-blur-2xl">
-      <aside className="flex w-56 flex-shrink-0 flex-col border-r border-white/[0.07] bg-black/10">
+    <div className="relative flex h-full w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0b1017]/94 backdrop-blur-2xl">
+      <aside className="flex w-56 flex-shrink-0 flex-col border-r border-white/[0.07] bg-black/20">
         <div className="border-b border-white/[0.07] px-4 py-4">
           <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/35">Atom X Eve Global Comms</div>
           <div className="mt-1 truncate text-sm font-semibold text-white/85">{clan?.name}</div>
@@ -98,7 +98,7 @@ export default function ClanChatHub({ clan, myRole }) {
       </aside>
 
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.07] px-5">
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-black/10 px-5">
           <Hash className="h-4 w-4 text-cyan-200/55" />
           <div><div className="text-sm font-semibold text-white/88">{activeChannel?.name}</div><div className="text-[9px] text-white/30">{activeChannel?.description}</div></div>
           <div className="ml-auto text-[9px] text-white/25">{messages.length} messages</div>
@@ -122,13 +122,13 @@ export default function ClanChatHub({ clan, myRole }) {
           ) : <div className="grid h-full place-items-center text-center"><div><Hash className="mx-auto h-7 w-7 text-white/15" /><p className="mt-3 text-xs text-white/35">No messages here yet.</p><p className="mt-1 text-[10px] text-white/20">Start the conversation for this channel.</p></div></div>}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex shrink-0 items-center gap-2 border-t border-white/[0.07] p-3">
+        <form onSubmit={handleSubmit} className="flex shrink-0 items-center gap-2 border-t border-white/[0.07] bg-black/10 p-3">
           <input
             value={message}
             onChange={(event) => setMessage(event.target.value)}
             placeholder={`Message ${activeChannel?.name || 'clan'}`}
             maxLength={4000}
-            className="h-10 min-w-0 flex-1 rounded-xl border border-white/[0.055] bg-black/10 px-3 text-xs text-white outline-none placeholder:text-white/25 focus:border-cyan-200/20"
+            className="h-10 min-w-0 flex-1 rounded-xl border border-white/[0.055] bg-black/20 px-3 text-xs text-white outline-none placeholder:text-white/25 focus:border-cyan-200/20"
           />
           <button type="submit" disabled={!message.trim() || send.isPending} className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-200/[0.09] text-cyan-100/70 transition hover:bg-cyan-200/[0.15] disabled:opacity-30">
             <Send className="h-4 w-4" />
