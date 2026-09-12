@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { UICustomizationProvider } from '@/components/customization/UICustomizationSystem';
 import MidpointCustomizationControls from '@/components/customization/MidpointCustomizationControls';
 import UIMediaCustomization from '@/components/customization/UIMediaCustomization';
-import PageSpecificRailAction from '@/components/shared/PageSpecificRailAction';
 
 const STORAGE_KEY = 'atom_eve_left_rail_visible';
 
@@ -83,16 +82,6 @@ export default function UniversalPageRail({ children, pathname }) {
               <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[120] flex -translate-y-1/2 justify-center">
                 <div className="pointer-events-auto">
                   <MidpointCustomizationControls />
-                </div>
-              </div>
-
-              {/* Page-owned quick action gets its own empty lower lane. There is
-                  no glass frame around it and it never joins the midpoint stack.
-                  Aura's Recently Streamed button now occupies the old lower Play
-                  territory after Environment Launch moved to the midpoint. */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[115] flex justify-center">
-                <div className="pointer-events-auto">
-                  <PageSpecificRailAction pathname={pathname} />
                 </div>
               </div>
             </aside>
