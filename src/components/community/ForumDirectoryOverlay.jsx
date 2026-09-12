@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Gamepad2, Search, SlidersHorizontal, X } from 'lucide-react';
 
@@ -57,7 +58,7 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, on
 
   const visible = filtered.slice(0, page * PAGE_SIZE);
 
-  return <AnimatePresence>
+  const overlay = <AnimatePresence>
     {open && <motion.section
       className="forum-browser"
       initial={{ opacity: 0, y: 12 }}
@@ -71,7 +72,7 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, on
         bottom: '48px',
         left: 0,
         right: 0,
-        zIndex: 60,
+        zIndex: 210,
         background: 'rgba(8, 12, 18, 0.96)',
         backdropFilter: 'blur(30px) saturate(135%)',
         WebkitBackdropFilter: 'blur(30px) saturate(135%)',
@@ -135,4 +136,7 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, on
       </div>
     </motion.section>}
   </AnimatePresence>;
+
+  if (typeof document === 'undefined') return overlay;
+  return createPortal(overlay, document.body);
 }
