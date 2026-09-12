@@ -380,9 +380,12 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
   const cardCatalog = useMemo(() => {
     const map = new Map();
 
+    const linkedAchievementIds = new Set();
     masterCards.forEach((card) => {
-      const achievement = achievementById.get(String(card.achievement_id || ''));
+      const achievementId = String(card.achievement_id || '');
+      const achievement = achievementById.get(achievementId);
       if (!achievement?.game) return;
+      if (achievementId) linkedAchievementIds.add(achievementId);
       const key = cardKey(achievement.game, card.name);
       map.set(key, {
         id: card.id || key,
@@ -394,6 +397,44 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
         type: achievement.category || 'Achievement',
         achievement: achievement.title || '',
         game: achievement.game,
+      });
+    });
+
+    // Every achievement is a card in Atom X Eve. If a master TradingCard row
+    // has not been authored yet, keep that achievement discoverable as a card
+    // instead of hiding it from the game catalog.
+    achievements.forEach((achievement) => {
+      if (!achievement?.game || !achievement?.title || linkedAchievementIds.has(String(achievement.id))) return;
+      const name = achievement.reward?.name || achievement.title;
+      const key = cardKey(achievement.game, name);
+      if (map.has(key)) return;
+      map.set(key, {
+        id: `achievement-${achievement.id || key}`,
+        name,
+        description: achievement.reward?.description || achievement.description || '',
+        image: achievement.reward?.environment_thumbnail || achievement.icon || '',
+        rarity: achievement.rarity || 'Common',
+        series: '',
+        type: achievement.category || 'Achievement',
+        achievement: achievement.title,
+        game: achievement.game,
+      });
+    });
+
+    (state.ownedCards || []).forEach((card) => {
+      if (!card?.game_name || !card?.card_name) return;
+      const key = cardKey(card.game_name, card.card_name);
+      if (map.has(key)) return;
+      map.set(key, {
+        id: card.trading_card_id || card.id || key,
+        name: card.card_name,
+        description: '',
+        image: card.card_image || '',
+        rarity: card.card_rarity || 'Common',
+        series: '',
+        type: card.card_type || 'Achievement',
+        achievement: '',
+        game: card.game_name,
       });
     });
 
@@ -416,7 +457,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
     });
 
     return [...map.values()];
-  }, [masterCards, achievementById, listings]);
+  }, [masterCards, achievementById, achievements, state.ownedCards, listings]);
 
   const listingsByCard = useMemo(() => {
     const map = new Map();
@@ -449,6 +490,11 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
   }, [cardCatalog, listings]);
 
   const genres = useMemo(() => ['All', ...new Set(catalogGames.map((game) => game.genre).filter(Boolean))], [catalogGames]);
+  const genreCounts = useMemo(() => {
+    const counts = new Map([['All', catalogGames.length]]);
+    catalogGames.forEach((game) => counts.set(game.genre || 'other', (counts.get(game.genre || 'other') || 0) + 1));
+    return counts;
+  }, [catalogGames]);
   const rarities = useMemo(() => ['All', ...new Set(cardCatalog.map((card) => card.rarity).filter(Boolean))]
     .sort((a, b) => {
       if (a === 'All') return -1;
