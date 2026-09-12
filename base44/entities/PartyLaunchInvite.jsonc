@@ -1,0 +1,17 @@
+{
+  "name": "PartyLaunchInvite",
+  "type": "object",
+  "properties": {
+    "party_id": { "type": "string" },
+    "sender_id": { "type": "string" },
+    "sender_name": { "type": "string" },
+    "recipient_id": { "type": "string" },
+    "game_id": { "type": "string" },
+    "game_title": { "type": "string" },
+    "game_cover": { "type": "string" },
+    "launch_url": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "accepted", "declined", "expired", "cancelled"], "default": "pending" },
+    "expires_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["party_id", "sender_id", "recipient_id", "game_title", "status"]
+}

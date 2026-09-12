@@ -2,72 +2,27 @@
   "name": "Party",
   "type": "object",
   "properties": {
-    "clanId": {
-      "type": "string",
-      "description": "ID of the clan"
-    },
-    "gameId": {
-      "type": "string",
-      "description": "ID of the game context"
-    },
-    "leaderId": {
-      "type": "string",
-      "description": "ID of the party leader"
-    },
-    "goal": {
-      "type": "string",
-      "description": "Objective or farming target"
-    },
-    "description": {
-      "type": "string",
-      "description": "Additional details about the party's plan"
-    },
-    "maxSize": {
-      "type": "number",
-      "default": 4,
-      "description": "Maximum number of members"
-    },
-    "members": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": [],
-      "description": "List of user IDs currently in the party"
-    },
-    "assignmentId": {
-      "type": "string",
-      "description": "Linked clan assignment ID (optional)"
-    },
-    "voiceRoomId": {
-      "type": "string",
-      "description": "Linked voice room ID (optional)"
-    },
+    "clanId": { "type": "string", "description": "Optional clan context" },
+    "gameId": { "type": "string", "description": "Optional active game context" },
+    "leaderId": { "type": "string", "description": "ID of the party leader" },
+    "partyName": { "type": "string", "default": "Party", "description": "Display name for the party" },
+    "goal": { "type": "string", "default": "Play together", "description": "Objective or farming target" },
+    "description": { "type": "string", "description": "Additional party details" },
+    "maxSize": { "type": "number", "default": 4, "description": "Maximum number of members" },
+    "members": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Cached list of user IDs currently in the party" },
+    "assignmentId": { "type": "string", "description": "Linked clan assignment ID" },
+    "voiceRoomId": { "type": "string", "description": "Stable WebRTC voice/data room for this party" },
+    "activeGameId": { "type": "string", "description": "Game most recently launched by a party member" },
+    "activeGameTitle": { "type": "string", "description": "Title most recently launched by a party member" },
+    "activeGameCover": { "type": "string", "description": "Cover art for the active game" },
     "status": {
       "type": "string",
-      "enum": [
-        "forming",
-        "full",
-        "active",
-        "completed"
-      ],
+      "enum": ["forming", "full", "active", "completed", "disbanded"],
       "default": "forming",
       "description": "Current status of the party"
     },
-    "micRequired": {
-      "type": "boolean",
-      "default": false
-    },
-    "lastActive": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Timestamp of last activity/update"
-    }
+    "micRequired": { "type": "boolean", "default": false },
+    "lastActive": { "type": "string", "format": "date-time", "description": "Timestamp of last activity" }
   },
-  "required": [
-    "clanId",
-    "gameId",
-    "leaderId",
-    "goal"
-  ]
+  "required": ["leaderId"]
 }

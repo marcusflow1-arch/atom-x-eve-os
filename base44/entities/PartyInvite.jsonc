@@ -1,0 +1,14 @@
+{
+  "name": "PartyInvite",
+  "type": "object",
+  "properties": {
+    "party_id": { "type": "string" },
+    "inviter_id": { "type": "string" },
+    "inviter_name": { "type": "string" },
+    "invitee_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "accepted", "declined", "cancelled", "expired"], "default": "pending" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "message": { "type": "string" }
+  },
+  "required": ["party_id", "inviter_id", "invitee_id", "status"]
+}
