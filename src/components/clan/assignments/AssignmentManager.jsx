@@ -1,238 +1,88 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { 
-    Users, Plus, Search, Calendar as CalendarIcon,
-    AlertTriangle, Check
-} from 'lucide-react';
+import { CalendarDays, Check, Plus, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
-export default function AssignmentManager({ clanId, members }) {
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [newAssignment, setNewAssignment] = useState({
-        type: 'objective',
-        gameId: '', // We'll map this to targetId for Game Workspace visibility
-        targetName: '', // The title of the assignment
-        priority: 'recommended',
-        assigneeId: 'all', 
-        dueDate: undefined,
-        notes: ''
-    });
+const invoke = async (action, data) => {
+    const result = await base44.functions.invoke('clanOperations', { action, data });
+    const payload = result?.data || result;
+    if (payload?.success === false) throw new Error(payload.error || 'Clan assignment request failed');
+    return payload;
+};
 
-    // Fetch Games for Selection
-    const { data: games } = useQuery({
-        queryKey: ['availableGames'],
-        queryFn: async () => await base44.entities.Game.list()
+export default function AssignmentManager({ clanId, members = [] }) {
+    const queryClient = useQueryClient();
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [newAssignment, setNewAssignment] = useState({ type: 'objective', gameId: 'general', targetName: '', priority: 'recommended', assigneeId: 'all', dueDate: '', notes: '' });
+
+    const { data: games = [] } = useQuery({ queryKey: ['availableGames'], queryFn: () => base44.entities.Game.list('-original_year', 500) });
+    const { data: assignments = [], isLoading } = useQuery({
+        queryKey: ['clanAssignmentsAdmin', clanId],
+        queryFn: () => base44.entities.ClanAssignment.filter({ clanId }, '-created_date', 300),
+        enabled: !!clanId,
     });
 
     const createMutation = useMutation({
-        mutationFn: async (data) => {
-            // We map gameId to targetId so it appears in that Game's workspace
-            const payload = {
-                ...data,
-                targetId: data.gameId || 'general', // Use gameId as targetId
-                clanId,
-                status: 'pending'
-            };
-            // In a real app: await base44.entities.ClanAssignment.create(payload);
-            console.log('Created assignment:', payload);
-            
-            // For demo purposes, we can simulate adding it to local state if needed, 
-            // but the mock list below is static.
-        },
+        mutationFn: (assignment) => invoke('create_assignment', { clanId, assignment }),
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['clanAssignmentsAdmin', clanId] });
+            queryClient.invalidateQueries({ queryKey: ['gameObjectives'] });
             setIsCreateOpen(false);
-            setNewAssignment({ 
-                type: 'objective', gameId: '', targetName: '', 
-                priority: 'recommended', assigneeId: 'all', notes: '' 
-            });
-        }
+            setNewAssignment({ type: 'objective', gameId: 'general', targetName: '', priority: 'recommended', assigneeId: 'all', dueDate: '', notes: '' });
+        },
     });
 
+    const statusMutation = useMutation({
+        mutationFn: ({ id, status }) => invoke('set_assignment_status', { clanId, assignmentId: id, status }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clanAssignmentsAdmin', clanId] }),
+    });
+
+    const memberLabel = (id) => {
+        if (!id || id === 'all') return 'All Members';
+        const member = members.find((row) => String(row.user_id || row.userId) === String(id));
+        return member?.user?.full_name || member?.display_name || member?.username || String(id).slice(0, 10);
+    };
+
     return (
-        <div className="w-full h-full">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-white">Assignment Control</h3>
+        <div className="h-full overflow-y-auto p-5 md:p-7">
+            <div className="mb-5 flex items-center justify-between">
+                <div><div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">Member operations</div><h3 className="mt-1 text-lg font-semibold text-white/90">Assignments & Tasks</h3><p className="mt-1 text-xs text-white/38">Issue game-specific objectives, farming duties, meetings and achievement tasks.</p></div>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-amber-600 hover:bg-amber-700 text-white gap-2">
-                            <Plus className="w-4 h-4" /> New Directive
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#12141a] border-white/10 text-white sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Issue New Directive</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            {/* Game Selection (Context) */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/50 uppercase">Relevant Game</label>
-                                <Select 
-                                    value={newAssignment.gameId} 
-                                    onValueChange={(val) => setNewAssignment({...newAssignment, gameId: val})}
-                                >
-                                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                        <SelectValue placeholder="Select a Game..." />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                        <SelectItem value="general">General (No Game)</SelectItem>
-                                        {games?.map(g => (
-                                            <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                    <DialogTrigger asChild><Button className="gap-2 bg-white/[0.08] text-white hover:bg-white/[0.12]"><Plus className="h-4 w-4" />New Task</Button></DialogTrigger>
+                    <DialogContent className="border-white/10 bg-[#20262e] text-white sm:max-w-lg">
+                        <DialogHeader><DialogTitle>Assign clan task</DialogTitle></DialogHeader>
+                        <div className="grid gap-4 py-2">
+                            <Input placeholder="Task title" value={newAssignment.targetName} onChange={(e) => setNewAssignment({ ...newAssignment, targetName: e.target.value })} className="border-white/10 bg-black/10" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <Select value={newAssignment.type} onValueChange={(value) => setNewAssignment({ ...newAssignment, type: value })}><SelectTrigger className="border-white/10 bg-black/10"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="objective">Objective</SelectItem><SelectItem value="game">Game Session</SelectItem><SelectItem value="farming">Farming</SelectItem><SelectItem value="achievement">Achievement</SelectItem><SelectItem value="meeting">Meeting</SelectItem></SelectContent></Select>
+                                <Select value={newAssignment.priority} onValueChange={(value) => setNewAssignment({ ...newAssignment, priority: value })}><SelectTrigger className="border-white/10 bg-black/10"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="optional">Optional</SelectItem><SelectItem value="recommended">Recommended</SelectItem><SelectItem value="priority">Priority</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select>
                             </div>
-
-                            {/* Type & Priority */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-white/50 uppercase">Type</label>
-                                    <Select 
-                                        value={newAssignment.type} 
-                                        onValueChange={(val) => setNewAssignment({...newAssignment, type: val})}
-                                    >
-                                        <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                            <SelectItem value="objective">Objective</SelectItem>
-                                            <SelectItem value="achievement">Achievement</SelectItem>
-                                            <SelectItem value="game">Game Session</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-white/50 uppercase">Priority</label>
-                                    <Select 
-                                        value={newAssignment.priority} 
-                                        onValueChange={(val) => setNewAssignment({...newAssignment, priority: val})}
-                                    >
-                                        <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                            <SelectItem value="optional">Optional</SelectItem>
-                                            <SelectItem value="recommended">Recommended</SelectItem>
-                                            <SelectItem value="priority">Priority</SelectItem>
-                                            <SelectItem value="critical">Critical</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Objective Title */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/50 uppercase">
-                                    {newAssignment.type === 'achievement' ? 'Achievement Name' : 'Objective Title'}
-                                </label>
-                                <Input 
-                                    placeholder={newAssignment.type === 'achievement' ? "e.g. 'Unbroken' Title" : "e.g. Complete Weekly Raid"}
-                                    value={newAssignment.targetName}
-                                    onChange={(e) => setNewAssignment({...newAssignment, targetName: e.target.value})}
-                                    className="bg-white/5 border-white/10 text-white"
-                                />
-                            </div>
-
-                            {/* Assignee */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/50 uppercase">Assign To</label>
-                                <Select 
-                                    value={newAssignment.assigneeId} 
-                                    onValueChange={(val) => setNewAssignment({...newAssignment, assigneeId: val})}
-                                >
-                                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                        <SelectValue placeholder="Select Member" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                        <SelectItem value="all">All Members</SelectItem>
-                                        {members?.map(m => (
-                                            <SelectItem key={m.userId} value={m.userId}>
-                                                {m.user?.full_name || m.userId}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Due Date */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/50 uppercase">Due Date</label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={`w-full justify-start text-left font-normal bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white ${!newAssignment.dueDate && "text-muted-foreground"}`}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {newAssignment.dueDate ? format(newAssignment.dueDate, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 text-white" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={newAssignment.dueDate}
-                                            onSelect={(date) => setNewAssignment({...newAssignment, dueDate: date})}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-
-                            {/* Notes */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/50 uppercase">Notes / Instructions</label>
-                                <Input 
-                                    placeholder="Add details..."
-                                    value={newAssignment.notes}
-                                    onChange={(e) => setNewAssignment({...newAssignment, notes: e.target.value})}
-                                    className="bg-white/5 border-white/10 text-white"
-                                />
-                            </div>
+                            <Select value={newAssignment.gameId} onValueChange={(value) => setNewAssignment({ ...newAssignment, gameId: value })}><SelectTrigger className="border-white/10 bg-black/10"><SelectValue placeholder="Game" /></SelectTrigger><SelectContent><SelectItem value="general">General / All games</SelectItem>{games.map((game) => <SelectItem key={game.id} value={game.id}>{game.title}</SelectItem>)}</SelectContent></Select>
+                            <Select value={newAssignment.assigneeId} onValueChange={(value) => setNewAssignment({ ...newAssignment, assigneeId: value })}><SelectTrigger className="border-white/10 bg-black/10"><SelectValue placeholder="Assign to" /></SelectTrigger><SelectContent><SelectItem value="all">All Members</SelectItem>{members.map((member) => { const id = member.user_id || member.userId; return id ? <SelectItem key={id} value={id}>{memberLabel(id)}</SelectItem> : null; })}</SelectContent></Select>
+                            <Input type="datetime-local" value={newAssignment.dueDate} onChange={(e) => setNewAssignment({ ...newAssignment, dueDate: e.target.value })} className="border-white/10 bg-black/10" />
+                            <Input placeholder="Instructions / strategy notes" value={newAssignment.notes} onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })} className="border-white/10 bg-black/10" />
                         </div>
-                        <DialogFooter>
-                            <Button onClick={() => createMutation.mutate(newAssignment)} className="bg-amber-600 hover:bg-amber-700">
-                                Issue Directive
-                            </Button>
-                        </DialogFooter>
+                        <DialogFooter><Button onClick={() => createMutation.mutate(newAssignment)} disabled={!newAssignment.targetName.trim() || createMutation.isPending}>Issue Task</Button></DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {/* Assignments Table (Mock) */}
-            <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden">
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 bg-white/5 text-xs font-bold text-white/50 uppercase tracking-wider">
-                    <div className="col-span-4">Directive</div>
-                    <div className="col-span-2">Type</div>
-                    <div className="col-span-2">Priority</div>
-                    <div className="col-span-2">Assigned To</div>
-                    <div className="col-span-2 text-right">Status</div>
-                </div>
-                <div className="divide-y divide-white/5">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="grid grid-cols-12 gap-4 p-4 items-center text-sm text-white/80 hover:bg-white/5 transition-colors">
-                            <div className="col-span-4 font-medium">Operation: Iron Harvest</div>
-                            <div className="col-span-2 text-white/50">Objective</div>
-                            <div className="col-span-2">
-                                <Badge variant="outline" className="text-orange-400 border-orange-500/30">Priority</Badge>
-                            </div>
-                            <div className="col-span-2 flex -space-x-2">
-                                <div className="w-6 h-6 rounded-full bg-slate-700 border border-black flex items-center justify-center text-[10px]">A</div>
-                                <div className="w-6 h-6 rounded-full bg-slate-700 border border-black flex items-center justify-center text-[10px]">B</div>
-                                <div className="w-6 h-6 rounded-full bg-slate-700 border border-black flex items-center justify-center text-[10px]">+3</div>
-                            </div>
-                            <div className="col-span-2 text-right">
-                                <span className="text-green-400">2/5 Accepted</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025]">
+                <div className="grid grid-cols-12 gap-3 border-b border-white/[0.06] px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30"><div className="col-span-4">Directive</div><div className="col-span-2">Type</div><div className="col-span-2">Assigned</div><div className="col-span-2">Due</div><div className="col-span-2 text-right">Status</div></div>
+                {isLoading ? <div className="p-8 text-center text-xs text-white/30">Loading tasks…</div> : assignments.length ? assignments.map((item) => (
+                    <div key={item.id} className="grid grid-cols-12 items-center gap-3 border-b border-white/[0.045] px-4 py-3 text-xs last:border-0 hover:bg-white/[0.025]">
+                        <div className="col-span-4 min-w-0"><div className="flex items-center gap-2"><Target className="h-3.5 w-3.5 text-cyan-200/55" /><strong className="truncate font-medium text-white/82">{item.targetName || item.title}</strong></div>{item.notes && <p className="mt-1 truncate pl-5 text-[10px] text-white/30">{item.notes}</p>}</div>
+                        <div className="col-span-2"><Badge variant="outline" className="border-white/10 text-[9px] text-white/45">{item.type || 'objective'}</Badge></div>
+                        <div className="col-span-2 truncate text-white/42">{memberLabel(item.assigneeId)}</div>
+                        <div className="col-span-2 flex items-center gap-1 text-white/35"><CalendarDays className="h-3 w-3" />{item.dueDate ? new Date(item.dueDate).toLocaleDateString() : 'Open'}</div>
+                        <div className="col-span-2 flex justify-end gap-2">{item.status === 'completed' ? <span className="flex items-center gap-1 text-emerald-300/70"><Check className="h-3 w-3" />Completed</span> : <button type="button" onClick={() => statusMutation.mutate({ id: item.id, status: 'completed' })} className="rounded-lg bg-white/[0.055] px-2 py-1 text-[9px] text-white/55 hover:bg-white/[0.09]">Complete</button>}</div>
+                    </div>
+                )) : <div className="p-10 text-center text-xs text-white/28">No clan tasks have been issued yet.</div>}
             </div>
         </div>
     );
