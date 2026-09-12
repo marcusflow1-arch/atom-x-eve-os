@@ -41,6 +41,12 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, on
   }, [open]);
 
   useEffect(() => {
+    const handleForumHome = () => onSelectGame?.(null);
+    window.addEventListener('forumGoHome', handleForumHome);
+    return () => window.removeEventListener('forumGoHome', handleForumHome);
+  }, [onSelectGame]);
+
+  useEffect(() => {
     if (!open) return undefined;
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onClose?.();
