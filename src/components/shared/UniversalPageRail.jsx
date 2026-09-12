@@ -1,23 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { UICustomizationControls, UICustomizationProvider } from '@/components/customization/UICustomizationSystem';
+import React, { useEffect, useState } from 'react';
+import { UICustomizationProvider } from '@/components/customization/UICustomizationSystem';
+import MidpointCustomizationControls from '@/components/customization/MidpointCustomizationControls';
 import UIMediaCustomization from '@/components/customization/UIMediaCustomization';
 
 const STORAGE_KEY = 'atom_eve_left_rail_visible';
 
-function overlaps(a, b, pad = 6) {
-  return !(
-    a.right + pad <= b.left
-    || a.left >= b.right + pad
-    || a.bottom + pad <= b.top
-    || a.top >= b.bottom + pad
-  );
-}
-
 export default function UniversalPageRail({ children, pathname }) {
   const lowerPath = pathname.toLowerCase();
   const isLunaHome = lowerPath.includes('/lunatemplate');
-  const midpointRef = useRef(null);
-  const collisionHiddenRef = useRef([]);
+  const isClan = lowerPath.includes('/clan');
   const [visible, setVisible] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) !== 'false'; }
     catch { return true; }
@@ -29,30 +20,28 @@ export default function UniversalPageRail({ children, pathname }) {
     return () => window.removeEventListener('sidebarCollapseChange', handleCollapse);
   }, []);
 
+  // Clan keeps its Clan Quick Menu in the page-owned empty rail space, but the
+  // separate legacy Roster shortcut is intentionally removed. No other native
+  // page action is hidden or moved by the shared rail.
   useEffect(() => {
-    if (isLunaHome) return undefined;
-    const hidden = [];
+    if (!isClan) return undefined;
     let frame = 0;
+    let record = null;
 
-    const hide = (element) => {
-      if (!element || element.closest('[data-atom-customization-midpoint="true"]')) return;
-      if (hidden.some((entry) => entry.element === element)) return;
-      hidden.push({ element, display: element.style.display });
-      element.style.display = 'none';
+    const restore = () => {
+      if (record?.element?.isConnected) record.element.style.display = record.display;
+      record = null;
     };
 
     const sync = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        if (lowerPath.includes('/clan')) {
-          hide(document.querySelector('button[title="Roster"]'));
-        }
-        if (lowerPath.includes('/community') || lowerPath.includes('/forum')) {
-          hide(document.querySelector('button[title="Forum Quick Menu"]'));
-        }
-        if (lowerPath.includes('/aura') || lowerPath.includes('/streaminghome') || lowerPath.includes('/discover')) {
-          hide(document.querySelector('button[title="Recently Streamed"]'));
-        }
+        const roster = Array.from(document.querySelectorAll('button[title="Roster"],button[aria-label="Roster"]'))
+          .find((button) => !button.closest('[data-atom-midpoint-controls="true"]'));
+        if (!roster || record?.element === roster) return;
+        restore();
+        record = { element: roster, display: roster.style.display };
+        roster.style.display = 'none';
       });
     };
 
@@ -63,64 +52,9 @@ export default function UniversalPageRail({ children, pathname }) {
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
-      hidden.forEach(({ element, display }) => {
-        if (element?.isConnected) element.style.display = display;
-      });
-    };
-  }, [isLunaHome, lowerPath]);
-
-  // Defensive collision pass: older page-specific rails can still render icon-only
-  // controls in the same physical slot. Anything that actually intersects the
-  // shared action stack is temporarily hidden rather than allowed to overlap it.
-  useEffect(() => {
-    if (isLunaHome || !visible) return undefined;
-    let frame = 0;
-
-    const restore = () => {
-      collisionHiddenRef.current.forEach(({ element, visibility, pointerEvents }) => {
-        if (element?.isConnected) {
-          element.style.visibility = visibility;
-          element.style.pointerEvents = pointerEvents;
-        }
-      });
-      collisionHiddenRef.current = [];
-    };
-
-    const sync = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        restore();
-        const stack = midpointRef.current?.querySelector('[data-atom-customization-midpoint="true"]');
-        if (!stack) return;
-        const stackRect = stack.getBoundingClientRect();
-        const candidates = Array.from(document.querySelectorAll('button,[role="button"]'));
-        candidates.forEach((element) => {
-          if (!element.isConnected || element.closest('[data-atom-customization-midpoint="true"]') || element.closest('[data-ui-editor-ignore="true"]')) return;
-          const rect = element.getBoundingClientRect();
-          if (!rect.width || !rect.height || !overlaps(rect, stackRect, 8)) return;
-          collisionHiddenRef.current.push({
-            element,
-            visibility: element.style.visibility,
-            pointerEvents: element.style.pointerEvents,
-          });
-          element.style.visibility = 'hidden';
-          element.style.pointerEvents = 'none';
-        });
-      });
-    };
-
-    const observer = new MutationObserver(sync);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-    window.addEventListener('resize', sync);
-    sync();
-
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener('resize', sync);
       restore();
     };
-  }, [isLunaHome, visible, lowerPath]);
+  }, [isClan]);
 
   return (
     <UICustomizationProvider pathname={pathname}>
@@ -129,12 +63,13 @@ export default function UniversalPageRail({ children, pathname }) {
           {visible && (
             <aside
               data-ui-editor-ignore="true"
-              className="relative z-30 mt-16 mb-[53px] flex h-[calc(100%-117px)] w-[5%] min-w-[80px] flex-shrink-0 self-start flex-col overflow-hidden border-r border-white/20 bg-black/20 px-2 py-4 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+              className="relative z-30 mt-16 mb-[53px] h-[calc(100%-117px)] w-[5%] min-w-[80px] flex-shrink-0 self-start overflow-visible border-r border-white/20 bg-black/20 px-2 py-4 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"
             >
-              <div className="flex min-h-0 flex-1 flex-col items-center overflow-hidden pt-2">
+              {/* Preserve the existing Recently Played block at the top. */}
+              <div className="flex min-h-0 flex-col items-center pt-2">
                 <span className="mb-1 shrink-0 text-center text-[9px] font-bold uppercase leading-3 tracking-wider text-white/50">Recently<br />Played</span>
                 <div className="mb-2 h-px w-8 shrink-0 bg-white/20" />
-                <div className="flex min-h-0 w-full flex-col items-center gap-1.5 overflow-hidden">
+                <div className="flex w-full flex-col items-center gap-1.5">
                   {[1, 2, 3, 4, 5].map((item) => (
                     <div key={item} className="grid aspect-square w-[clamp(30px,4.5vh,40px)] shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5">
                       <span className="text-base font-bold text-white/30">?</span>
@@ -143,14 +78,19 @@ export default function UniversalPageRail({ children, pathname }) {
                 </div>
               </div>
 
-              <div ref={midpointRef} className="relative z-20 flex shrink-0 items-center justify-center py-2">
-                <UICustomizationControls className="gap-1.5" />
+              {/* Only this middle lane belongs to the customization system.
+                  Page-owned quick menus above/below are deliberately untouched. */}
+              <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[120] flex -translate-y-1/2 justify-center">
+                <div className="pointer-events-auto">
+                  <MidpointCustomizationControls />
+                </div>
               </div>
-
-              <div className="h-2 shrink-0" aria-hidden="true" />
             </aside>
           )}
-          <div className="universal-page-rail-content relative h-full min-w-0 flex-1 overflow-hidden bg-black/10">{children}</div>
+
+          <div className="universal-page-rail-content relative h-full min-w-0 flex-1 overflow-hidden bg-black/10">
+            {children}
+          </div>
           <UIMediaCustomization />
         </div>
       )}
