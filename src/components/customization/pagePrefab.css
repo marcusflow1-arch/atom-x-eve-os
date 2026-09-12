@@ -6,6 +6,9 @@
 .page-prefab-option:hover { background:hsl(var(--prefab-foreground) / .10); }
 .page-prefab-option[aria-pressed="true"] { background:hsl(var(--prefab-foreground) / .14); box-shadow:inset 0 0 0 1px hsl(var(--prefab-foreground) / .24); }
 .atom-ui-customization-root [data-prefab-surface="page"] { background-color:var(--atom-ui-page-bg) !important; background-image:var(--atom-ui-ambient) !important; }
-.atom-ui-customization-root [data-prefab-surface="panel"] { background-color:var(--glass-bg) !important; background-image:none !important; border-color:var(--glass-border) !important; }
+.atom-ui-customization-root [data-prefab-surface="panel"] { background-color:transparent !important; background-image:var(--atom-ui-panel-bg,var(--glass-bg)) !important; background-size:cover !important; background-position:center !important; border-color:var(--glass-border) !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 18px 50px rgba(0,0,0,.16); }
+.atom-ui-customization-root[data-ui-page-theme="sapphire_green"] [data-prefab-surface="panel"] { backdrop-filter:blur(22px) saturate(145%); -webkit-backdrop-filter:blur(22px) saturate(145%); }
+.atom-ui-customization-root[data-ui-page-theme="dragon_motion"] [data-prefab-surface="panel"] { backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%); }
+.atom-ui-customization-root[data-ui-page-theme="violet_flux"] [data-prefab-surface="panel"] { backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%); }
 /* Navigation owns its neutral surface; it does not inherit page presets. */
 .atom-ui-customization-root [data-ui-rail] { background:hsl(var(--prefab-panel)) !important; --atom-ui-accent:#9de8f2; --atom-ui-accent-rgb:157,232,242; --glass-bg:rgba(255,255,255,.06); --glass-bg-strong:rgba(255,255,255,.10); --glass-border:rgba(255,255,255,.10); }
