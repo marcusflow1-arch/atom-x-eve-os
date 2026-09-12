@@ -1,165 +1,261 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CircleHelp, Clock3, Eye, Gamepad2, MessageSquare, Plus, Route, Sparkles, Sprout, Trophy } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Crown, Flame, Gamepad2, Globe, Loader2, Mic, Search, Sparkles, Star, Swords, TrendingUp, X, Zap } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/components/auth/AuthContext';
-import { showError, showSuccess } from '@/components/error/ErrorToast';
-import PostCard from '@/components/community/PostCard';
-import CommentSection from '@/components/community/CommentSection';
-import CreatePostModal from './CreatePostModal';
-import './farmHub.css';
+import FarmHubGameCard from './FarmHubGameCard';
+import FarmHubFeaturedHero from './FarmHubFeaturedHero';
 
-const unwrap = (result) => result?.data ?? result ?? {};
-const timeAgo = (value) => {
-  const delta = Math.max(0, Date.now() - new Date(value || Date.now()).getTime());
-  const minutes = Math.floor(delta / 60000);
-  if (minutes < 1) return 'now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return days < 30 ? `${days}d ago` : new Date(value).toLocaleDateString();
-};
-const isAchievementPost = (post) => post.community === 'achievements' || post.type === 'achievement_guide' || post.guide_kind === 'achievement';
-const isHelpPost = (post) => post.type === 'help' || post.type === 'question' || post.community === 'question';
+const GENRE_PILLS = [
+  { id: 'all', label: 'All Games', icon: Globe },
+  { id: 'mmorpg', label: 'MMORPG', icon: Crown },
+  { id: 'rpg', label: 'RPG', icon: Swords },
+  { id: 'shooting', label: 'Shooter', icon: Zap },
+  { id: 'fighting', label: 'Fighting', icon: Flame },
+  { id: 'action', label: 'Action', icon: TrendingUp },
+  { id: 'adventure', label: 'Adventure', icon: Star },
+  { id: 'survival', label: 'Survival', icon: Gamepad2 },
+];
 
-function HelpCard({ item, onOpen }) {
-  return <button type="button" className="farm-help-card" onClick={() => onOpen(item.post)}>
-    <div className="farm-help-top"><span>{item.post.game_title || 'All games'}</span><CircleHelp size={13} /></div>
-    <h3>{item.post.title}</h3><p>{item.post.content}</p>
-    <div className="farm-help-foot"><span><MessageSquare size={12} />{item.commentCount}</span><span><Clock3 size={12} />{timeAgo(item.lastActivity)}</span>{item.commentCount === 0 && <span className="unanswered">Needs an answer</span>}</div>
-  </button>;
-}
+const normalizeGenre = (value) => String(value || 'other').trim().toLowerCase();
+const imageFor = (game) => game.cover_image || game.banner_image || game.image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=900&q=80';
+const bannerFor = (game) => game.banner_image || game.cover_image || game.banner || game.image || imageFor(game);
 
-function MethodRow({ item, onOpen }) {
-  return <button type="button" className="farm-method-row" onClick={() => onOpen(item.post)}>
-    <div className="min-w-0"><h3>{item.post.title}</h3><p>{item.post.game_title || 'Platform-wide'} · {item.post.type === 'tip' ? 'Quick tip' : item.post.type === 'achievement_guide' ? 'Achievement farm' : 'Farming method'} · {item.post.author_name || item.post.created_by?.split('@')?.[0] || 'Player'}</p></div>
-    <div className="farm-method-meta"><span><MessageSquare size={12} /><strong>{item.commentCount}</strong></span><span><Sparkles size={12} />{item.reactionCount}</span><span><Eye size={12} />{Number(item.post.view_count || 0)}</span><span><Clock3 size={12} />{timeAgo(item.lastActivity)}</span></div>
-  </button>;
-}
+export default function FarmHub({ games = [], onSelectGame }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeGenre, setActiveGenre] = useState('all');
+  const [isListening, setIsListening] = useState(false);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [farmPosts, setFarmPosts] = useState([]);
+  const [farmRoutes, setFarmRoutes] = useState([]);
+  const recognitionRef = useRef(null);
 
-function AchievementCard({ item, onOpen }) {
-  return <button type="button" className="farm-achievement-card" onClick={() => onOpen(item.post)}>
-    <div className="farm-card-top"><span>{item.post.game_title || 'Achievement farming'}</span><Trophy size={13} /></div>
-    <h3>{item.post.title}</h3><p>{item.post.content}</p>
-    <div className="farm-card-foot"><span><MessageSquare size={12} />{item.commentCount} replies</span><span><Sparkles size={12} />{item.reactionCount}</span><span><Clock3 size={12} />{timeAgo(item.lastActivity)}</span></div>
-  </button>;
-}
-
-function RouteCard({ route, game, onOpen }) {
-  return <button type="button" className="farm-route-card" onClick={() => game && onOpen?.(game)}>
-    <div className="farm-card-top"><span>{route.route_type || route.type || 'Route'} · {route.difficulty || 'medium'}</span><Route size={13} /></div>
-    <h3>{route.title}</h3><p>{route.description || route.tactics || 'Community farming route.'}</p>
-    <div className="farm-card-foot"><span><Gamepad2 size={12} />{game?.title || 'Game route'}</span>{route.yields && <span><Sprout size={12} />{route.yields}</span>}</div>
-  </button>;
-}
-
-export default function FarmHub({ games = [], onSelectGame, activeSection = 'home' }) {
-  const { user, isAuthenticated } = useAuth();
-  const [posts, setPosts] = useState([]);
-  const [comments, setComments] = useState([]);
-  const [reactions, setReactions] = useState([]);
-  const [routes, setRoutes] = useState([]);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [composerOpen, setComposerOpen] = useState(false);
-  const [composerType, setComposerType] = useState('discussion');
-
-  const invokeForum = useCallback(async (action, data = {}) => {
-    const result = unwrap(await base44.functions.invoke('forumSystem', { action, data }));
-    if (result?.success === false) throw new Error(result.error || 'Community request failed.');
-    return result;
-  }, []);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [postRows, commentRows, reactionRows, routeRows] = await Promise.all([
-        base44.entities.Post.filter({ is_farm_hub: true }, '-created_date', 180),
-        base44.entities.Comment.filter({ target_type: 'post' }, '-created_date', 1800).catch(() => []),
-        base44.entities.ForumReaction.list('-created_date', 1800).catch(() => []),
-        base44.entities.FarmRoute.list('-created_date', 160).catch(() => []),
-      ]);
-      setPosts((postRows || []).filter((post) => post.status !== 'removed'));
-      setComments(commentRows || []);
-      setReactions(reactionRows || []);
-      setRoutes(routeRows || []);
-    } catch (error) { showError(error, 'Load Farm Hub'); }
-    finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    if (selectedPost || activeSection === 'home') {
-      if (activeSection === 'home') document.querySelector('.farm-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [posts, routes] = await Promise.all([
+          base44.entities.Post.filter({ is_farm_hub: true }, '-created_date', 500).catch(() => []),
+          base44.entities.FarmRoute.list('-created_date', 500).catch(() => []),
+        ]);
+        if (!cancelled) {
+          setFarmPosts((posts || []).filter((post) => post.status !== 'removed'));
+          setFarmRoutes(routes || []);
+        }
+      } finally {
+        if (!cancelled) setActivityLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.onresult = (event) => {
+      setSearchQuery(event.results[0][0].transcript);
+      setIsListening(false);
+    };
+    recognitionRef.current.onerror = () => setIsListening(false);
+    recognitionRef.current.onend = () => setIsListening(false);
+    return () => recognitionRef.current?.stop?.();
+  }, []);
+
+  const toggleVoice = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) recognitionRef.current.stop();
+    else {
+      recognitionRef.current.start();
+      setIsListening(true);
     }
-    requestAnimationFrame(() => document.getElementById(activeSection === 'help' ? 'farm-help' : 'farm-achievements')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  }, [activeSection, selectedPost]);
-
-  const gameById = useMemo(() => new Map(games.map((game) => [String(game.id), game])), [games]);
-  const enriched = useMemo(() => posts.map((post) => {
-    const postComments = comments.filter((comment) => comment.target_type === 'post' && comment.target_id === post.id);
-    const postReactions = reactions.filter((reaction) => reaction.target_type === 'post' && reaction.target_id === post.id);
-    const latestComment = postComments.reduce((latest, comment) => Math.max(latest, new Date(comment.created_date || 0).getTime()), 0);
-    const created = new Date(post.created_date || 0).getTime();
-    const lastActivity = Math.max(created, latestComment);
-    const commentCount = postComments.length;
-    const reactionCount = postReactions.length;
-    const recencyHours = Math.max(1, (Date.now() - lastActivity) / 3600000);
-    const heat = commentCount * 9 + reactionCount * 6 + Math.log2(Number(post.view_count || 0) + 1) * 6 + Math.max(0, 48 - recencyHours) * .6 + (post.is_pinned ? 20 : 0);
-    return { post, comments: postComments, reactions: postReactions, commentCount, reactionCount, lastActivity, heat };
-  }), [posts, comments, reactions]);
-
-  const helpRequests = useMemo(() => enriched.filter((item) => isHelpPost(item.post)).sort((a, b) => {
-    if ((a.commentCount === 0) !== (b.commentCount === 0)) return a.commentCount === 0 ? -1 : 1;
-    return b.lastActivity - a.lastActivity;
-  }).slice(0, 6), [enriched]);
-  const hotMethods = useMemo(() => enriched.filter((item) => !isHelpPost(item.post) && !isAchievementPost(item.post)).sort((a, b) => b.heat - a.heat).slice(0, 14), [enriched]);
-  const achievementFarms = useMemo(() => enriched.filter((item) => isAchievementPost(item.post)).sort((a, b) => b.heat - a.heat).slice(0, 12), [enriched]);
-  const recent = useMemo(() => [...enriched].sort((a, b) => b.lastActivity - a.lastActivity).slice(0, 16), [enriched]);
-
-  const selectedComments = useMemo(() => selectedPost ? comments.filter((comment) => comment.target_type === 'post' && comment.target_id === selectedPost.id) : [], [comments, selectedPost]);
-  const selectedReactions = useMemo(() => selectedPost ? reactions.filter((reaction) => reaction.target_type === 'post' && reaction.target_id === selectedPost.id) : [], [reactions, selectedPost]);
-
-  const requireAuth = () => {
-    if (isAuthenticated && user?.id) return true;
-    showError('Please sign in to participate in Farm Hub.');
-    return false;
   };
-  const openComposer = (type) => { if (!requireAuth()) return; setComposerType(type); setComposerOpen(true); };
-  const selectPost = async (post) => { setSelectedPost(post); try { await invokeForum('view_post', { post_id: post.id }); } catch (_) {} };
-  const addComment = async ({ content, parent_comment_id }) => { if (!selectedPost || !requireAuth()) return; try { await invokeForum('add_comment', { post_id: selectedPost.id, content, parent_comment_id }); await load(); } catch (error) { showError(error, 'Add Comment'); } };
-  const deleteComment = async (comment) => { if (!requireAuth() || !window.confirm('Delete this comment?')) return; try { await invokeForum('delete_comment', { comment_id: comment.id }); await load(); } catch (error) { showError(error, 'Delete Comment'); } };
-  const deletePost = async (post) => { if (!requireAuth() || !window.confirm(`Delete “${post.title}”?`)) return; try { await invokeForum('delete_post', { post_id: post.id }); setSelectedPost(null); await load(); showSuccess('Post deleted.'); } catch (error) { showError(error, 'Delete Post'); } };
-  const react = async (targetType, targetId, emoji) => { if (!requireAuth()) return; try { await invokeForum('toggle_reaction', { target_type: targetType, target_id: targetId, emoji }); await load(); } catch (error) { showError(error, 'Reaction'); } };
-  const report = async (targetType, targetId) => { if (!requireAuth()) return; try { await invokeForum('report', { target_type: targetType, target_id: targetId, reason: 'other', details: 'Submitted from Farm Hub.' }); showSuccess('Report sent to moderators.'); } catch (error) { showError(error, 'Report'); } };
 
-  return <div className="farm-hub relative h-full min-h-0">
-    <div className="farm-shell">
-      <header className="farm-header">
-        <div className="farm-header-copy"><div className="farm-eyebrow">Community farming intelligence</div><h1>Farm Hub <span>/ Help, routes & achievements</span></h1></div>
-        <div className="farm-header-actions"><button type="button" className="farm-glass-button" onClick={() => openComposer('help')}><CircleHelp size={14} />Request Help</button><button type="button" className="farm-glass-button primary" onClick={() => openComposer('farming_guide')}><Plus size={15} />Share Method</button></div>
-      </header>
+  const activityByTitle = useMemo(() => {
+    const map = new Map();
+    for (const post of farmPosts) {
+      const key = String(post.game_title || '').trim().toLowerCase();
+      if (!key) continue;
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+    return map;
+  }, [farmPosts]);
 
-      {selectedPost ? <main className="farm-content farm-detail">
-        <button type="button" className="farm-detail-back" onClick={() => setSelectedPost(null)}><ArrowLeft size={14} />Back to Farm Hub</button>
-        <PostCard post={selectedPost} isDetailView currentUser={user} reactions={selectedReactions} commentCount={selectedComments.length} onReact={(post, emoji) => react('post', post.id, emoji)} onDelete={deletePost} onReport={report} />
-        <div className="mt-4"><CommentSection post={selectedPost} comments={selectedComments} reactions={reactions} currentUser={user} onAddComment={addComment} onDelete={deleteComment} onReact={react} onReport={report} /></div>
-      </main> : <main className="farm-content">
-        {loading ? <div className="farm-empty"><Sprout size={28} /><h3>Loading farming knowledge</h3><p>Gathering routes, help requests, achievement methods, and recent activity.</p></div> : <>
-          <section className="farm-section" id="farm-help"><div className="farm-section-head"><div><div className="farm-section-kicker"><CircleHelp size={12} />Players looking for answers</div><h2>Help requests</h2><p>Unanswered requests are pushed forward so players can get unstuck quickly.</p></div><span className="farm-section-count">{helpRequests.length} active</span></div>{helpRequests.length ? <div className="farm-help-grid">{helpRequests.slice(0, 3).map((item) => <HelpCard key={item.post.id} item={item} onOpen={selectPost} />)}</div> : <div className="farm-empty"><CircleHelp size={25} /><h3>No open help requests</h3><p>When players ask for farming help, their requests will surface here.</p></div>}</section>
+  const routesByGame = useMemo(() => {
+    const map = new Map();
+    for (const route of farmRoutes) {
+      const key = String(route.game_id || route.gameId || '');
+      if (!key) continue;
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+    return map;
+  }, [farmRoutes]);
 
-          <section className="farm-section" id="farm-methods"><div className="farm-section-head"><div><div className="farm-section-kicker"><Sparkles size={12} />Community tested</div><h2>Hot farming methods</h2><p>Useful methods ranked from real replies, reactions, views, and recent activity.</p></div><span className="farm-section-count">{hotMethods.length} shown</span></div>{hotMethods.length ? <div className="farm-method-list">{hotMethods.map((item) => <MethodRow key={item.post.id} item={item} onOpen={selectPost} />)}</div> : <div className="farm-empty"><Sprout size={25} /><h3>No methods shared yet</h3><p>Share an XP loop, resource route, boss farm, currency method, or efficient reset.</p></div>}</section>
+  const displayGames = useMemo(() => games.map((game) => {
+    const postCount = activityByTitle.get(String(game.title || '').trim().toLowerCase()) || 0;
+    const routeCount = routesByGame.get(String(game.id)) || 0;
+    return {
+      ...game,
+      image: imageFor(game),
+      banner: bannerFor(game),
+      genre: normalizeGenre(game.genre),
+      postCount,
+      routeCount,
+      activityCount: postCount + routeCount,
+    };
+  }), [games, activityByTitle, routesByGame]);
 
-          <section className="farm-section" id="farm-achievements"><div className="farm-section-head"><div><div className="farm-section-kicker"><Trophy size={12} />Achievement hunting</div><h2>Achievement farming</h2><p>Routes, prerequisites, missables, card unlock conditions, and repeatable progress methods.</p></div><span className="farm-section-count">{achievementFarms.length} active</span></div>{achievementFarms.length ? <div className="farm-achievement-rail">{achievementFarms.map((item) => <AchievementCard key={item.post.id} item={item} onOpen={selectPost} />)}</div> : <div className="farm-empty"><Trophy size={25} /><h3>No achievement farms yet</h3><p>Achievement-focused methods will appear here as players publish them.</p></div>}</section>
+  const filteredGames = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return displayGames.filter((game) => {
+      const searchable = [game.title, game.genre, game.description, ...(Array.isArray(game.tags) ? game.tags : [])].join(' ').toLowerCase();
+      const matchSearch = !query || searchable.includes(query);
+      const matchGenre = activeGenre === 'all' || game.genre === activeGenre;
+      return matchSearch && matchGenre;
+    });
+  }, [displayGames, searchQuery, activeGenre]);
 
-          {!!routes.length && <section className="farm-section" id="farm-routes"><div className="farm-section-head"><div><div className="farm-section-kicker"><Route size={12} />Structured routes</div><h2>Farm routes</h2><p>Step-by-step community routes with difficulty, purpose, tactics, and estimated yield.</p></div><span className="farm-section-count">{routes.length} routes</span></div><div className="farm-route-rail">{routes.slice(0, 14).map((route) => <RouteCard key={route.id} route={route} game={gameById.get(String(route.game_id || route.gameId || ''))} onOpen={onSelectGame} />)}</div></section>}
+  const rankedGames = useMemo(() => [...displayGames].sort((a, b) => {
+    if (b.activityCount !== a.activityCount) return b.activityCount - a.activityCount;
+    return String(a.title || '').localeCompare(String(b.title || ''));
+  }), [displayGames]);
 
-          <section className="farm-section" id="farm-recent"><div className="farm-section-head"><div><div className="farm-section-kicker"><Clock3 size={12} />Latest movement</div><h2>Recently active</h2><p>Fresh replies and newly shared farming knowledge across every game.</p></div><span className="farm-section-count">{recent.length} shown</span></div>{recent.length ? <div className="farm-method-list">{recent.map((item) => <MethodRow key={item.post.id} item={item} onOpen={selectPost} />)}</div> : <div className="farm-empty"><Clock3 size={25} /><h3>No recent activity</h3><p>New farming discussions will appear here.</p></div>}</section>
-        </>}
-      </main>}
+  const featuredGames = rankedGames.slice(0, 3);
+  const trendingGames = rankedGames.slice(0, 6);
+  const totalActivity = farmPosts.length + farmRoutes.length;
+  const isLoading = !games.length && activityLoading;
+
+  return (
+    <div className="flex min-h-full flex-col pb-20">
+      <div className="relative px-6 pb-8 pt-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="flex items-baseline gap-4">
+              <h1 className="text-4xl font-extrabold tracking-tight text-white">Farm Hub</h1>
+              <span className="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/45 sm:inline">Community farming</span>
+            </div>
+            <p className="mt-1 text-base text-white/40">Find the game. Find the route. Get the grind done.</p>
+          </div>
+
+          <div className="flex items-center gap-5 text-sm text-white/45">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-cyan-300/60" />
+              <span className="font-semibold text-cyan-200/80">{totalActivity}</span> farming entries
+            </div>
+            <div className="flex items-center gap-2">
+              <Gamepad2 className="h-4 w-4" />
+              <span className="font-semibold text-white/70">{games.length}</span> games
+            </div>
+          </div>
+        </div>
+
+        {!isLoading && featuredGames.length > 0 && <FarmHubFeaturedHero games={featuredGames} onSelect={onSelectGame} />}
+      </div>
+
+      <div
+        className="sticky top-0 z-30 px-6 py-4 lg:px-8"
+        style={{
+          background: 'rgba(15, 20, 25, 0.76)',
+          backdropFilter: 'blur(22px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(150%)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+        }}
+      >
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-3 xl:flex-row xl:items-center">
+          <div className="relative w-full xl:max-w-md">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+            <Input
+              className="h-10 w-full rounded-xl border-white/[0.08] bg-white/[0.06] pl-10 pr-10 text-sm text-white placeholder:text-white/25 transition-all focus:border-cyan-500/40 focus:bg-white/[0.08]"
+              placeholder={isListening ? 'Listening...' : 'Search games, genres...'}
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery('')} className="absolute right-10 top-1/2 -translate-y-1/2 text-white/30 transition-colors hover:text-white/70">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {recognitionRef.current && (
+              <button type="button" onClick={toggleVoice} className={`absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-all ${isListening ? 'bg-red-500/20 text-red-400' : 'text-white/30 hover:text-white/60'}`}>
+                {isListening ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-1 items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {GENRE_PILLS.map((pill) => {
+              const Icon = pill.icon;
+              const isActive = activeGenre === pill.id;
+              return (
+                <button
+                  type="button"
+                  key={pill.id}
+                  onClick={() => setActiveGenre(pill.id)}
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${isActive ? 'border-white/[0.15] bg-white/[0.12] text-white shadow-[0_0_14px_rgba(100,180,255,0.06)]' : 'border-transparent text-white/40 hover:bg-white/[0.04] hover:text-white/70'}`}
+                >
+                  <Icon className="h-3.5 w-3.5" />{pill.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {!isLoading && trendingGames.length > 0 && activeGenre === 'all' && !searchQuery && (
+        <div className="px-6 pt-6 lg:px-8">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex items-center gap-2"><Flame className="h-4 w-4 text-orange-400" /><h2 className="text-sm font-bold uppercase tracking-wider text-white/60">Trending Farms</h2></div>
+            <div className="h-px flex-1 bg-white/[0.06]" />
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {trendingGames.map((game) => (
+              <button
+                type="button"
+                key={game.id}
+                onClick={() => onSelectGame(game)}
+                className="group flex flex-shrink-0 items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.035] px-4 py-3 text-left backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-300/15 hover:bg-white/[0.055] hover:shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+              >
+                <img src={game.image} alt={game.title} className="h-10 w-10 rounded-lg object-cover" />
+                <div>
+                  <p className="max-w-[150px] truncate text-sm font-semibold text-white transition-colors group-hover:text-cyan-300">{game.title}</p>
+                  <p className="mt-0.5 text-[11px] text-white/35">{game.activityCount} farming entries</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="px-6 pt-6 lg:px-8">
+        <div className="mb-5 flex items-center gap-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-white/60">
+            {activeGenre === 'all' ? 'All Games' : GENRE_PILLS.find((pill) => pill.id === activeGenre)?.label || activeGenre}
+            {searchQuery && ` — “${searchQuery}”`}
+          </h2>
+          <Badge variant="outline" className="border-white/10 text-[10px] text-white/30">{filteredGames.length}</Badge>
+          <div className="h-px flex-1 bg-white/[0.06]" />
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-32">
+            <div className="flex flex-col items-center gap-4"><Loader2 className="h-8 w-8 animate-spin text-white/20" /><p className="text-sm text-white/30">Loading games...</p></div>
+          </div>
+        ) : filteredGames.length ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {filteredGames.map((game, index) => <FarmHubGameCard key={game.id} game={game} index={index} onClick={() => onSelectGame(game)} />)}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-28 text-white/30">
+            <Gamepad2 className="mb-4 h-14 w-14 opacity-30" />
+            <p className="mb-1 text-lg font-semibold">No games found</p>
+            <p className="mb-4 text-sm opacity-50">Try another search or genre.</p>
+            <button type="button" onClick={() => { setSearchQuery(''); setActiveGenre('all'); }} className="text-sm font-medium text-cyan-400 transition-colors hover:text-cyan-300">Clear filters</button>
+          </div>
+        )}
+      </div>
     </div>
-
-    <CreatePostModal open={composerOpen} onClose={() => setComposerOpen(false)} defaultType={composerType} onCreated={() => load()} />
-  </div>;
+  );
 }
