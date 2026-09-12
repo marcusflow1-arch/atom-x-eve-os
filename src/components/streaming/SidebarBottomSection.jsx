@@ -1,10 +1,10 @@
 import React from 'react';
 import { Play, Users, Library, Trophy, Tv } from 'lucide-react';
 
-// Shared bottom section used by every sidebar variant. In the narrow rail this
-// area is reserved for the four persistent utility icons only. The Play/Launch
-// action now lives in the rail's 50/50 midpoint control stack so Recent Games
-// above and Friends/Library/Rewards/Entertainment below never move.
+// Shared bottom section used by every sidebar variant. In the narrow rail the
+// visible Launch button is relocated to the midpoint, but its original 40px
+// slot is deliberately preserved so Friends/Library/Rewards/Entertainment keep
+// their exact established vertical positions.
 
 const PANELS = [
   { key: 'friends', label: 'Friends', Icon: Users, active: 'border-green-400/50 bg-green-500/20 text-green-400', idle: 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10' },
@@ -47,13 +47,12 @@ export default function SidebarBottomSection({
   if (narrow) {
     return (
       <div className="flex flex-col items-center gap-2 w-full min-w-0">
-        {/* Invisible action bridge: the midpoint Play control reuses the exact
-            launch handler that used to live here, while this bottom area stays
-            visually limited to the four utility icons. */}
+        {/* Invisible but in-flow action bridge. Programmatic clicks from the
+            midpoint Play button still use the original launch handler. */}
         <button
           type="button"
           onClick={onLaunch}
-          className="hidden text-cyan-300"
+          className="invisible h-10 w-full shrink-0 text-cyan-300"
           data-sidebar-launch-proxy="true"
           aria-hidden="true"
           tabIndex={-1}
