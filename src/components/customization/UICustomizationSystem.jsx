@@ -46,6 +46,7 @@ const PRESETS = [
     surfaceStrong: 'rgba(28,33,40,.76)',
     border: 'rgba(255,255,255,.09)',
     ambient: 'radial-gradient(circle at 18% 10%, rgba(148,163,184,.12), transparent 32%), linear-gradient(145deg, rgba(34,39,46,.32), rgba(10,13,18,.12))',
+    pageBackground: '#090c11',
   },
   {
     id: 'sapphire_green',
@@ -57,6 +58,7 @@ const PRESETS = [
     surfaceStrong: 'rgba(13,42,41,.74)',
     border: 'rgba(94,234,212,.16)',
     ambient: 'radial-gradient(circle at 20% 4%, rgba(16,185,129,.15), transparent 34%), radial-gradient(circle at 82% 32%, rgba(14,165,233,.10), transparent 30%)',
+    pageBackground: '#071211',
   },
   {
     id: 'dragon_motion',
@@ -68,6 +70,7 @@ const PRESETS = [
     surfaceStrong: 'rgba(49,25,29,.74)',
     border: 'rgba(251,113,133,.16)',
     ambient: 'radial-gradient(circle at 18% 15%, rgba(244,63,94,.18), transparent 32%), radial-gradient(circle at 76% 74%, rgba(249,115,22,.12), transparent 30%), linear-gradient(115deg, rgba(45,13,20,.20), rgba(8,10,14,.08))',
+    pageBackground: '#12090d',
     motion: true,
   },
   {
@@ -80,11 +83,13 @@ const PRESETS = [
     surfaceStrong: 'rgba(38,30,59,.74)',
     border: 'rgba(196,181,253,.15)',
     ambient: 'radial-gradient(circle at 72% 8%, rgba(139,92,246,.16), transparent 34%), radial-gradient(circle at 16% 70%, rgba(59,130,246,.09), transparent 28%)',
+    pageBackground: '#0c0914',
   },
 ];
 
 const css = `
-.atom-ui-customization-root { --atom-ui-accent:#9de8f2; --atom-ui-accent-rgb:157,232,242; isolation:isolate; }
+.atom-ui-customization-root { --atom-ui-accent:#9de8f2; --atom-ui-accent-rgb:157,232,242; --atom-ui-page-bg:#090c11; --atom-ui-ambient:none; isolation:isolate; background:var(--atom-ui-page-bg); color:#fff; }
+.atom-ui-customization-root::before { content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background-image:var(--atom-ui-ambient); opacity:.72; }
 .atom-ui-edit-mode .atom-ui-editable { outline:1px solid rgba(var(--atom-ui-accent-rgb),.58) !important; outline-offset:2px; cursor:crosshair !important; }
 .atom-ui-edit-mode .atom-ui-editable:hover { outline-width:2px !important; box-shadow:0 0 0 1px rgba(var(--atom-ui-accent-rgb),.12),0 0 28px rgba(var(--atom-ui-accent-rgb),.17) !important; }
 .atom-ui-edit-selected { outline:2px solid rgb(var(--atom-ui-accent-rgb)) !important; outline-offset:3px !important; }
@@ -285,6 +290,8 @@ export function UICustomizationProvider({ children, pathname }) {
     };
     root.style.setProperty('--atom-ui-accent', preset.accent);
     root.style.setProperty('--atom-ui-accent-rgb', preset.accentRgb);
+    root.style.setProperty('--atom-ui-page-bg', preset.pageBackground || '#090c11');
+    root.style.setProperty('--atom-ui-ambient', preset.ambient || 'none');
     root.style.setProperty('--glass-bg', preset.surface);
     root.style.setProperty('--glass-bg-strong', preset.surfaceStrong);
     root.style.setProperty('--glass-border', preset.border);
@@ -293,6 +300,8 @@ export function UICustomizationProvider({ children, pathname }) {
     return () => {
       root.style.setProperty('--atom-ui-accent', previous.accent);
       root.style.setProperty('--atom-ui-accent-rgb', previous.rgb);
+      root.style.removeProperty('--atom-ui-page-bg');
+      root.style.removeProperty('--atom-ui-ambient');
       root.style.setProperty('--glass-bg', previous.glass);
       root.style.setProperty('--glass-bg-strong', previous.glassStrong);
       root.style.setProperty('--glass-border', previous.border);
@@ -412,7 +421,8 @@ export function UICustomizationProvider({ children, pathname }) {
       <div
         ref={rootRef}
         className={`atom-ui-customization-root relative h-full w-full overflow-hidden ${editMode ? 'atom-ui-edit-mode' : ''}`}
-        style={{ '--atom-ui-accent': preset.accent, '--atom-ui-accent-rgb': preset.accentRgb }}
+        data-ui-page-theme={preset.id}
+        style={{ '--atom-ui-accent': preset.accent, '--atom-ui-accent-rgb': preset.accentRgb, '--atom-ui-page-bg': preset.pageBackground || '#090c11', '--atom-ui-ambient': preset.ambient }}
       >
         <ThemeAmbient preset={preset} />
         <div className="relative z-[1] h-full w-full">{children}</div>
@@ -587,7 +597,7 @@ export function UICustomizationControls({ className = '' }) {
           <div>
             <span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">UI Prefabs · {scope.replace(':', ' / ')}</span>
             <h2 className="mt-1 text-xl font-black">Visual loadout</h2>
-            <p className="mt-1 text-[10px] leading-4 text-white/30">Choose a preset for this page or sub-page. Changes apply immediately and sync to your player profile.</p>
+            <p className="mt-1 text-[10px] leading-4 text-white/30">Choose a prefab theme for the entire page you are currently viewing. The page background, ambient treatment, glass surfaces, borders and accent system update together and sync to your profile.</p>
           </div>
           <button type="button" onClick={() => setDrawerOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] text-white/40 hover:text-white"><X className="h-4 w-4" /></button>
         </div>
