@@ -1,182 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, FileText, ChevronDown, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CircleHelp, FileText, Lightbulb, Route, Trophy, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { TOPICS } from './FarmTopicSelector';
-import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-const POST_TYPES = [
-  { id: 'discussion', label: 'General Discussion' },
-  { id: 'help', label: 'Request for Help' },
-  { id: 'tip', label: 'Helpful Tip / Guide' },
-  { id: 'question', label: 'Question' },
-  { id: 'bug', label: 'Bug Report' },
+const TYPES = [
+  { id: 'help', label: 'Request Help', community: 'question', icon: CircleHelp },
+  { id: 'farming_guide', label: 'Farming Method', community: 'farming', icon: Route },
+  { id: 'achievement_guide', label: 'Achievement Farm', community: 'achievements', icon: Trophy },
+  { id: 'tip', label: 'Quick Tip', community: 'tips', icon: Lightbulb },
+  { id: 'discussion', label: 'Discussion', community: 'discussions', icon: FileText },
 ];
 
-export default function CreatePostModal({ open, onClose, topic, gameTitle, gameId, onCreated }) {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+const unwrap = (result) => result?.data ?? result ?? {};
+
+export default function CreatePostModal({ open, onClose, topic, gameTitle, defaultType = 'discussion', onCreated }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState(topic || 'achievements');
-  const [postType, setPostType] = useState('discussion');
+  const [type, setType] = useState(defaultType);
+  const [tags, setTags] = useState('');
+  const [difficulty, setDifficulty] = useState('any');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (topic) setSelectedTopic(topic);
-  }, [topic]);
+    if (!open) return;
+    const topicType = topic === 'achievements' ? 'achievement_guide' : topic === 'farming' ? 'farming_guide' : topic === 'help' || topic === 'question' ? 'help' : defaultType;
+    setType(TYPES.some((item) => item.id === topicType) ? topicType : 'discussion');
+  }, [open, topic, defaultType]);
 
-  const createPostMutation = useMutation({
-    mutationFn: (newPost) => base44.entities.Post.create(newPost),
-    onSuccess: (createdPost) => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      toast.success('Posted successfully!');
-      setTitle(''); setContent('');
-      onCreated?.(createdPost);
-      onClose();
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to create post');
+  const selected = TYPES.find((item) => item.id === type) || TYPES[4];
+  const canSubmit = useMemo(() => title.trim().length >= 3 && content.trim().length >= 2 && !saving, [title, content, saving]);
+
+  const submit = async () => {
+    if (!canSubmit) return;
+    setSaving(true);
+    try {
+      const result = unwrap(await base44.functions.invoke('farmSystem', {
+        action: 'create_post',
+        data: {
+          title: title.trim(),
+          content: content.trim(),
+          type,
+          community: selected.community,
+          game_title: gameTitle || '',
+          tags: tags.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean),
+          difficulty,
+        },
+      }));
+      if (result?.success === false) throw new Error(result.error || 'Could not publish post.');
+      toast.success(type === 'help' ? 'Help request posted.' : 'Farm Hub post published.');
+      setTitle(''); setContent(''); setTags(''); setDifficulty('any');
+      onCreated?.(result.post);
+      onClose?.();
+    } catch (error) {
+      toast.error(error?.message || 'Failed to publish post.');
+    } finally {
+      setSaving(false);
     }
-  });
-
-  const handleSubmit = () => {
-    if (!title.trim()) { toast.error('Title is required'); return; }
-    if (!content.trim()) { toast.error('Content is required'); return; }
-    
-    // Admin check for Events
-    if (selectedTopic === 'events' && user?.role !== 'admin') {
-      toast.error('Only Admins can post Events.');
-      return;
-    }
-
-    createPostMutation.mutate({
-      title: title.trim(),
-      content: content.trim(),
-      community: selectedTopic,
-      type: postType === 'discussion' ? 'discussion' : postType,
-      game_title: gameTitle || '',
-      is_farm_hub: true,
-      score: 1,
-    });
   };
 
   if (!open) return null;
 
-  const currentTopicLabel = TOPICS.find(t => t.id === selectedTopic)?.label || 'General';
+  return <AnimatePresence>
+    <motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4 backdrop-blur-md" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.(); }}>
+      <motion.div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/[0.08] bg-[#06111b]/95 shadow-2xl backdrop-blur-2xl" initial={{ opacity: 0, y: 16, scale: .99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12 }}>
+        <header className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+          <div><p className="text-[9px] font-semibold uppercase tracking-[.2em] text-emerald-200/45">Farm community</p><h2 className="mt-1 text-lg font-semibold text-white">{type === 'help' ? 'Request help' : 'Share farming knowledge'}</h2></div>
+          <button type="button" onClick={onClose} className="rounded-full p-2 text-white/35 hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
+        </header>
 
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative w-full max-w-lg bg-[#0f1419] border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-10">
-          
-          {/* Header */}
-          <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#161b22]">
-            <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-cyan-400" /> 
-                New Post
-              </h3>
-              <p className="text-xs text-white/40 mt-0.5">Share with the community</p>
-            </div>
-            <button onClick={onClose} className="text-white/40 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
-              <X className="w-5 h-5" />
-            </button>
+        <div className="space-y-4 p-5">
+          {gameTitle && <div className="text-xs text-white/35">Posting in <span className="text-emerald-100/70">{gameTitle}</span></div>}
+          <div className="flex flex-wrap gap-2">{TYPES.map(({ id, label, icon: Icon }) => <button type="button" key={id} onClick={() => setType(id)} className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[11px] transition ${type === id ? 'bg-emerald-300/12 text-emerald-100' : 'bg-white/[0.035] text-white/40 hover:bg-white/[0.06] hover:text-white/70'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}</div>
+          <Input value={title} maxLength={180} onChange={(event) => setTitle(event.target.value)} placeholder={type === 'help' ? 'What are you stuck on?' : 'Give players a clear title…'} className="h-11 border-white/[0.08] bg-white/[0.035] text-white placeholder:text-white/22" />
+          <Textarea value={content} maxLength={40000} onChange={(event) => setContent(event.target.value)} placeholder={type === 'help' ? 'Explain what you are trying to farm, where you are stuck, your build/level, and what you already tried…' : 'Share the route, requirements, timing, yield, boss notes, achievement conditions, or efficiency tips…'} className="min-h-[220px] resize-y border-white/[0.08] bg-white/[0.025] text-sm leading-6 text-white/75 placeholder:text-white/20" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-[10px] uppercase tracking-wider text-white/35">Tags<Input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="xp, boss, material, missable" className="mt-1 h-9 border-white/[0.08] bg-white/[0.035] text-xs text-white" /></label>
+            <label className="text-[10px] uppercase tracking-wider text-white/35">Difficulty<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)} className="mt-1 h-9 w-full rounded-md border border-white/[0.08] bg-[#08131e] px-3 text-xs text-white/70"><option value="any">Any</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option><option value="expert">Expert</option></select></label>
           </div>
+        </div>
 
-          <div className="p-6 space-y-5">
-            
-            {/* Topic & Type Selection Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider pl-1">Topic / Subpage</label>
-                <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white h-9 text-xs">
-                    <SelectValue placeholder="Select Topic" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TOPICS.map(t => (
-                      <SelectItem key={t.id} value={t.id} className="text-xs">
-                        <div className="flex items-center gap-2">
-                          <t.icon className={`w-3 h-3 ${t.color}`} />
-                          <span>{t.label}</span>
-                          {t.id === 'events' && <Lock className="w-3 h-3 ml-auto text-white/20" />}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider pl-1">Post Type</label>
-                <Select value={postType} onValueChange={setPostType}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white h-9 text-xs">
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POST_TYPES.map(type => (
-                      <SelectItem key={type.id} value={type.id} className="text-xs">
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Title Input */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider pl-1">Title</label>
-              <Input 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-                placeholder={selectedTopic === 'help' ? "What do you need help with?" : "Give your post a clear title..."}
-                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 transition-colors" 
-              />
-            </div>
-
-            {/* Content Input */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider pl-1">Content</label>
-              <Textarea 
-                value={content} 
-                onChange={(e) => setContent(e.target.value)} 
-                placeholder="Share your thoughts, details, or questions..." 
-                rows={6} 
-                className="bg-white/5 border-white/10 text-white resize-none focus:border-cyan-500/50 transition-colors" 
-              />
-            </div>
-
-            {/* Admin Warning for Events */}
-            {selectedTopic === 'events' && user?.role !== 'admin' && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex gap-2 items-start">
-                <Lock className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-                <p className="text-xs text-red-200/80 leading-relaxed">
-                  Posting to <strong>Events</strong> is restricted to Administrators and Developers. Please select another topic or contact an admin.
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 bg-[#161b22] border-t border-white/10 flex justify-end gap-3">
-            <Button variant="ghost" onClick={onClose} className="text-white/60 hover:text-white hover:bg-white/5">Cancel</Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={!title.trim() || !content.trim() || (selectedTopic === 'events' && user?.role !== 'admin')} 
-              className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
-            >
-              Create Post
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
+        <footer className="flex items-center justify-end gap-2 border-t border-white/[0.06] px-5 py-4"><button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-xs text-white/40 hover:bg-white/[0.04] hover:text-white">Cancel</button><button type="button" disabled={!canSubmit} onClick={submit} className="rounded-full bg-emerald-300/14 px-5 py-2 text-xs font-semibold text-emerald-100 disabled:opacity-30">{saving ? 'Publishing…' : type === 'help' ? 'Post Request' : 'Publish'}</button></footer>
+      </motion.div>
+    </motion.div>
+  </AnimatePresence>;
 }
