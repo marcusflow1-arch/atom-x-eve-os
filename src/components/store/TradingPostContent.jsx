@@ -47,7 +47,6 @@ const rarityBorder = {
   Limitless: 'border-white/25',
 };
 
-const softPanel = 'bg-white/[0.018] shadow-[0_18px_55px_rgba(0,0,0,.18),inset_0_1px_0_rgba(255,255,255,.025)]';
 const moonSurface = 'bg-[#d7dde5]/[0.035] hover:bg-[#d7dde5]/[0.055]';
 
 function invoke(action, payload = {}) {
