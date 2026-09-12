@@ -1107,15 +1107,23 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
 }
 
 // Friend Reference - clickable friends that show join/invite options
-function FriendReference({ friend, isActive, onClick, onMessage, onJoin, onInvite, onPartyInvite }) {
+function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite }) {
+  const openMenu = (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    onClick(friend);
+  };
+
   return (
     <div className="relative">
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => onClick(friend)}
+        onContextMenu={openMenu}
+        title="Right-click for social actions"
         className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
-          isActive ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
+          isActive ? 'border-white/45 shadow-[0_0_18px_rgba(226,232,240,0.16)]' : 'border-white/10 hover:border-white/30'
         }`}
       >
         <img 
@@ -1123,35 +1131,45 @@ function FriendReference({ friend, isActive, onClick, onMessage, onJoin, onInvit
           alt={friend.name}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
         <div className="absolute bottom-1 left-1 right-1">
           <p className="text-white text-[7px] font-bold truncate text-center">{friend.name}</p>
         </div>
         <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-          friend.status === 'online' ? 'bg-green-500' : 'bg-slate-500'
+          friend.status === 'online' ? 'bg-green-500' : friend.status === 'away' ? 'bg-yellow-400' : 'bg-slate-500'
         }`} />
+        {isFriend && <div className="absolute top-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[6px] font-black uppercase tracking-wider text-white/65">Friend</div>}
       </motion.div>
       
-      {/* Options dropdown when active */}
       <AnimatePresence>
         {isActive && (
           <motion.div
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 5 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-32 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-1.5 shadow-xl z-50 flex flex-col gap-1"
+            initial={{ opacity: 0, y: -5, scale: .96 }}
+            animate={{ opacity: 1, y: 5, scale: 1 }}
+            exit={{ opacity: 0, y: -5, scale: .96 }}
+            onContextMenu={(event) => event.preventDefault()}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-[#090c11]/98 backdrop-blur-2xl border border-white/10 rounded-xl p-1.5 shadow-2xl z-[120] flex flex-col gap-1"
           >
-            <button onClick={(e) => { e.stopPropagation(); onMessage(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-cyan-400/10 rounded text-[9px] text-cyan-200 transition-colors">
-              Message
+            <div className="px-2 py-1.5 border-b border-white/[0.06] mb-1">
+              <p className="truncate text-[9px] font-bold text-white/85">{friend.name}</p>
+              <p className="text-[7px] uppercase tracking-[.14em] text-white/30">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
+            </div>
+            {!isFriend && (
+              <button disabled={requestState === 'sending' || requestState === 'sent'} onClick={(e) => { e.stopPropagation(); onAddFriend(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+                {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : 'Add Friend'}
+              </button>
+            )}
+            <button onClick={(e) => { e.stopPropagation(); onMessage(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
+              Chat / Message
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onJoin(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); onJoin(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white transition-colors">
               Join Dashboard
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
-              Invite to Dashboard
+            <button disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} onClick={(e) => { e.stopPropagation(); onInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+              {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : 'Invite to Dashboard'}
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onPartyInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
-              Invite to Party
+            <button disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} onClick={(e) => { e.stopPropagation(); onPartyInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+              {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : 'Invite to Party'}
             </button>
           </motion.div>
         )}
