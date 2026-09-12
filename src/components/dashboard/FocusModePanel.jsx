@@ -1107,7 +1107,7 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
 }
 
 // Friend Reference - clickable friends that show join/invite options
-function FriendReference({ friend, isActive, onClick, onJoin, onInvite, onPartyInvite }) {
+function FriendReference({ friend, isActive, onClick, onMessage, onJoin, onInvite, onPartyInvite }) {
   return (
     <div className="relative">
       <motion.div
@@ -1141,6 +1141,9 @@ function FriendReference({ friend, isActive, onClick, onJoin, onInvite, onPartyI
             exit={{ opacity: 0, y: -5 }}
             className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-32 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-1.5 shadow-xl z-50 flex flex-col gap-1"
           >
+            <button onClick={(e) => { e.stopPropagation(); onMessage(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-cyan-400/10 rounded text-[9px] text-cyan-200 transition-colors">
+              Message
+            </button>
             <button onClick={(e) => { e.stopPropagation(); onJoin(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
               Join Dashboard
             </button>
@@ -1240,6 +1243,22 @@ export function LibraryBannerSection({
 
   const handlePartyInvite = (u) => onActiveFriendChange(null);
 
+  const handleMessage = (u) => {
+    onActiveFriendChange(null);
+    window.dispatchEvent(new CustomEvent('openLunaMessages', {
+      detail: {
+        friend: {
+          id: u.id,
+          friend_id: u.id,
+          friend_name: u.name,
+          friend_avatar: u.avatar,
+          status: u.status || 'online',
+          current_game: u.current_game || null,
+        },
+      },
+    }));
+  };
+
   const handleHomeClick = () => {
     onActiveFriendChange(null);
     if (onSelectEnv) onSelectEnv({ id: 'default_room', modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' });
@@ -1285,6 +1304,7 @@ export function LibraryBannerSection({
                   <FriendReference 
                     friend={friend} 
                     onClick={handleFriendClick}
+                    onMessage={handleMessage}
                     onJoin={handleJoin}
                     onInvite={handleInvite}
                     onPartyInvite={handlePartyInvite}
