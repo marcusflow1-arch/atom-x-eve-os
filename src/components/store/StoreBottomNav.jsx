@@ -1,21 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function StoreBottomNav({ activeTab, onTabChange }) {
   const navigate = useNavigate();
-  const isDevCardActive = activeTab === 'devcards';
-  const isStoreActive = activeTab === 'store';
-  const isTradingActive = activeTab === 'trading';
+  const location = useLocation();
+  const mode = new URLSearchParams(location.search).get('mode');
+  const effectiveTab = mode === 'trading' ? 'trading' : mode === 'devcards' ? 'devcards' : activeTab;
+  const isDevCardActive = effectiveTab === 'devcards';
+  const isStoreActive = effectiveTab === 'store';
+  const isTradingActive = effectiveTab === 'trading';
 
   const changeTab = (tabId) => {
     const storeUrl = createPageUrl('Store');
 
     if (tabId === 'store') {
-      // Returning to Store must also clear a lingering ?mode=trading/devcards URL.
-      // Without this, a later search-param refresh can put the user back into the
-      // Trading Post even though they explicitly selected Store.
+      // Returning to Store also clears a lingering market/dev-card mode from the URL.
       navigate(storeUrl);
     } else if (tabId === 'trading') {
       navigate(`${storeUrl}?mode=trading`);
