@@ -1,42 +1,37 @@
 import React from 'react';
-import { Wheat, Grid } from 'lucide-react';
+import { Clock3, Flame, Grid, Home, ListFilter, Wheat } from 'lucide-react';
+import './forumHub.css';
 
-export default function ForumBottomNav({ activeTab, onTabSelect }) {
-  return (
-    <div className="flex items-center justify-center w-full h-full">
+export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onTabSelect }) {
+  if (activeTab === 'farm_hub') {
+    return <div className="flex h-full w-full items-center justify-center">
       <div className="flex items-center">
         <button
-          onClick={() => onTabSelect('hub')}
-          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-            activeTab === 'hub'
-              ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]'
-              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-          }`}
+          type="button"
+          onClick={() => onTabSelect?.('hub')}
+          className="relative mx-1 flex items-center gap-2 px-6 py-2 text-sm font-medium uppercase tracking-wide text-white/60 transition-all duration-300 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
         >
-          {activeTab === 'hub' && (
-            <div className="absolute inset-0 bg-emerald-400/20 blur-md rounded-full -z-10 pointer-events-none" />
-          )}
-          <Grid className="w-4 h-4" />
-          <span>Forum Hub</span>
+          <Grid className="h-4 w-4" /><span>Forum Hub</span>
         </button>
-
-        <div className="w-px h-5 bg-white/10 mx-2" />
-
+        <div className="mx-2 h-5 w-px bg-white/10" />
         <button
-          onClick={() => onTabSelect('farm_hub')}
-          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-            activeTab === 'farm_hub'
-              ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]'
-              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-          }`}
+          type="button"
+          onClick={() => onTabSelect?.('farm_hub')}
+          className="relative mx-1 flex items-center gap-2 px-6 py-2 text-sm font-medium uppercase tracking-wide text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]"
         >
-          {activeTab === 'farm_hub' && (
-            <div className="absolute inset-0 bg-yellow-400/20 blur-md rounded-full -z-10 pointer-events-none" />
-          )}
-          <Wheat className="w-4 h-4" />
-          <span>Farm Hub</span>
+          <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-yellow-400/20 blur-md" />
+          <Wheat className="h-4 w-4" /><span>Farm Hub</span>
         </button>
       </div>
+    </div>;
+  }
+
+  return <nav className="forum-console-nav" aria-label="Forum navigation">
+    <button type="button" onClick={onBrowseForums} className="forum-browser-link"><ListFilter size={16} /><span>Forums</span></button>
+    <div className="forum-console-center">
+      <button type="button" onClick={() => onTabSelect?.('recent')} className={activeTab === 'recent' ? 'is-active' : ''}><Clock3 size={16} /><span>Recent</span></button>
+      <button type="button" onClick={() => onTabSelect?.('home')} className={activeTab === 'home' ? 'is-active' : ''}><Home size={16} /><span>Home</span></button>
+      <button type="button" onClick={() => onTabSelect?.('heated')} className={activeTab === 'heated' ? 'is-active' : ''}><Flame size={16} /><span>Heated</span></button>
     </div>
-  );
+  </nav>;
 }
