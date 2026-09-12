@@ -4,7 +4,8 @@ import { UICustomizationControls, UICustomizationProvider } from '@/components/c
 const STORAGE_KEY = 'atom_eve_left_rail_visible';
 
 export default function UniversalPageRail({ children, pathname }) {
-  const isLunaHome = pathname.toLowerCase().includes('/lunatemplate');
+  const lowerPath = pathname.toLowerCase();
+  const isLunaHome = lowerPath.includes('/lunatemplate');
   const [visible, setVisible] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) !== 'false'; }
     catch { return true; }
@@ -15,6 +16,43 @@ export default function UniversalPageRail({ children, pathname }) {
     window.addEventListener('sidebarCollapseChange', handleCollapse);
     return () => window.removeEventListener('sidebarCollapseChange', handleCollapse);
   }, []);
+
+  useEffect(() => {
+    if (isLunaHome) return undefined;
+    const hidden = [];
+    let frame = 0;
+
+    const hide = (element) => {
+      if (!element || element.closest('[data-atom-customization-midpoint="true"]')) return;
+      if (hidden.some((entry) => entry.element === element)) return;
+      hidden.push({ element, display: element.style.display });
+      element.style.display = 'none';
+    };
+
+    const sync = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (lowerPath.includes('/clan')) {
+          hide(document.querySelector('button[title="Roster"]'));
+        }
+        if (lowerPath.includes('/community') || lowerPath.includes('/forum')) {
+          hide(document.querySelector('button[title="Forum Quick Menu"]'));
+        }
+      });
+    };
+
+    const observer = new MutationObserver(sync);
+    observer.observe(document.body, { childList: true, subtree: true });
+    sync();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      hidden.forEach(({ element, display }) => {
+        if (element?.isConnected) element.style.display = display;
+      });
+    };
+  }, [isLunaHome, lowerPath]);
 
   return (
     <UICustomizationProvider pathname={pathname}>
