@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
 import FarmHub from '@/components/farm/FarmHub';
 import FarmGameView from '@/components/farm/FarmGameView';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
@@ -97,12 +96,6 @@ export default function FarmPage() {
           </div>
 
           <div className="relative z-10 flex h-screen pt-16">
-            <div className="relative z-40 h-full w-[5%] min-w-[80px] flex-shrink-0 border-r border-white/[0.16] bg-black/20 shadow-[5px_0_18px_rgba(0,0,0,0.42)] backdrop-blur-sm">
-              <div className="absolute -right-3 top-1/2 z-50 flex h-12 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/50 shadow-lg backdrop-blur-md" aria-hidden="true">
-                <ChevronLeft className="h-4 w-4 -ml-1" />
-              </div>
-            </div>
-
             <div className="flex min-w-0 flex-1 flex-col">
               <AnimatePresence mode="wait">
                 {view === 'hub' ? (
