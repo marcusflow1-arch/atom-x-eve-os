@@ -1,306 +1,80 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { base44 } from "@/api/base44Client";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, ImagePlus, Link2, BarChart3, Gamepad2, Tag, ChevronRight, Plus } from "lucide-react";
+import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { BookOpen, Gamepad2, ImagePlus, Tag, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
-const GENRE_OPTIONS = [
-  "Action","RPG","Shooter","Sci-Fi","Strategy","Adventure","Sports","Racing","Simulation","Horror"
+const TYPES = [
+  ['discussion', 'Discussion'],
+  ['tip', 'Quick tip'],
+  ['guide', 'Guide'],
+  ['achievement_guide', 'Achievement hunt'],
+  ['farming_guide', 'Farming route'],
+  ['full_guide', 'Full game guide'],
 ];
+const GUIDE_KINDS = ['none', 'quick_tip', 'achievement', 'farming', 'walkthrough', 'build', 'collectibles', 'boss', 'full_game'];
 
-export default function PostComposer({
-  isOpen = true,
-  onCancel,
-  onSubmit,
-  initialType = "general_discussion",
-  initialGameTitle = "",
-  initialGameGenre = "",
-}) {
-  const [title, setTitle] = useState("");
-  const [textBody, setTextBody] = useState("");
-  const [games, setGames] = useState([]);
-  const [selectedGameTitle, setSelectedGameTitle] = useState(initialGameTitle || "");
-  const [selectedGenre, setSelectedGenre] = useState(initialGameGenre || "");
-
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [linkUrl, setLinkUrl] = useState("");
-  const [pollQuestion, setPollQuestion] = useState("");
-  const [pollOptions, setPollOptions] = useState(["", ""]);
-
-  const [showLink, setShowLink] = useState(false);
-  const [showPoll, setShowPoll] = useState(false);
+export default function PostComposer({ isOpen, onCancel, onSubmit, games = [], initialGame = null }) {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [type, setType] = useState('discussion');
+  const [gameTitle, setGameTitle] = useState(initialGame?.title || '');
+  const [tags, setTags] = useState('');
+  const [guideKind, setGuideKind] = useState('none');
+  const [difficulty, setDifficulty] = useState('any');
+  const [imageFile, setImageFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => { if (isOpen) setGameTitle(initialGame?.title || ''); }, [isOpen, initialGame?.title]);
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const list = await base44.entities.Game.list("-original_year", 100);
-      if (mounted) setGames(list || []);
-    })();
-    return () => { mounted = false; };
-  }, []);
+    if (!['guide', 'achievement_guide', 'farming_guide', 'full_guide'].includes(type)) setGuideKind(type === 'tip' ? 'quick_tip' : 'none');
+    else if (guideKind === 'none') setGuideKind(type === 'achievement_guide' ? 'achievement' : type === 'farming_guide' ? 'farming' : type === 'full_guide' ? 'full_game' : 'walkthrough');
+  }, [type]);
 
-  useEffect(() => {
-    if (!selectedGenre && selectedGameTitle) {
-      const g = games.find(g => g.title === selectedGameTitle);
-      if (g?.genre) setSelectedGenre(g.genre);
-    }
-  }, [selectedGameTitle, selectedGenre, games]);
+  const selectedGame = games.find((game) => game.title === gameTitle);
+  const canPost = useMemo(() => title.trim().length >= 3 && content.trim().length >= 2, [title, content]);
 
-  useEffect(() => {
-    const urls = imageFiles.map(f => URL.createObjectURL(f));
-    setImagePreviews(urls);
-    return () => urls.forEach(url => URL.revokeObjectURL(url));
-  }, [imageFiles]);
-
-  const handleImagePick = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length) setImageFiles(prev => [...prev, ...files]);
-  };
-
-  const canPost = useMemo(() => {
-    if (!title.trim()) return false;
-    return textBody.trim().length > 0 || imageFiles.length > 0 || linkUrl.trim().length > 0;
-  }, [title, textBody, imageFiles, linkUrl]);
-
-  const buildContentAndSubmit = async () => {
+  const submit = async () => {
+    if (!canPost || submitting) return;
     setSubmitting(true);
-    let contentParts = [];
-    let image_url = undefined;
-
-    if (textBody.trim()) contentParts.push(textBody.trim());
-
-    if (imageFiles.length) {
-      const uploaded = await Promise.all(
-        imageFiles.map(async (file) => {
-          const res = await base44.integrations.Core.UploadFile({ file });
-          return res?.file_url;
-        })
-      );
-      const urls = uploaded.filter(Boolean);
-      if (urls.length) {
-        image_url = urls[0];
-        contentParts.push(urls.map(u => `![](${u})`).join("\n"));
+    try {
+      let image_url = '';
+      if (imageFile) {
+        const uploaded = await base44.integrations.Core.UploadFile({ file: imageFile });
+        image_url = uploaded?.file_url || '';
       }
-    }
-
-    if (linkUrl.trim()) contentParts.push(`Link: ${linkUrl.trim()}`);
-
-    const opts = pollOptions.filter(o => o.trim());
-    if (pollQuestion.trim() && opts.length >= 2) {
-      contentParts.push(`[POLL]\nQuestion: ${pollQuestion.trim()}\n${opts.map(o => `- [ ] ${o.trim()}`).join("\n")}`);
-    }
-
-    await onSubmit?.({
-      title: title.trim(),
-      content: contentParts.join("\n\n"),
-      type: initialType || "general_discussion",
-      game_title: selectedGameTitle || undefined,
-      genre: selectedGenre || undefined,
-      image_url,
-    });
-    setSubmitting(false);
+      const community = type === 'achievement_guide' ? 'achievements' : type === 'farming_guide' ? 'farming' : ['guide', 'full_guide'].includes(type) ? 'guide' : type === 'tip' ? 'tips' : 'discussions';
+      await onSubmit?.({
+        title: title.trim(), content: content.trim(), type,
+        community, game_title: gameTitle, genre: selectedGame?.genre || '', image_url,
+        tags: tags.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean),
+        guide_kind: guideKind, difficulty,
+      });
+      setTitle(''); setContent(''); setTags(''); setType('discussion'); setGuideKind('none'); setDifficulty('any'); setImageFile(null);
+    } finally { setSubmitting(false); }
   };
 
   if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        key="composer-overlay"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed z-[70]"
-        style={{ top: '64px', bottom: '48px', left: '80px', right: 0 }}
-      >
-        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onCancel} />
-
-        <motion.div
-          initial={{ x: 40, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 20, opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-          className="absolute inset-0 flex flex-col overflow-hidden"
-          style={{ background: 'rgba(8, 12, 20, 0.97)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}
-          onClick={e => e.stopPropagation()}
-        >
-          {/* ── Top Bar ── */}
-          <div className="flex items-center justify-between px-8 shrink-0 h-[52px]" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">New Post</span>
-            <button onClick={onCancel} className="w-7 h-7 rounded flex items-center justify-center text-white/30 hover:text-white hover:bg-white/8 transition-all">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* ── Body ── */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-8 py-6 flex flex-col gap-4">
-
-            {/* Title */}
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Post title…"
-              className="bg-transparent border-0 border-b border-white/10 rounded-none text-white text-base font-medium px-0 h-10 focus:border-white/25 focus:bg-transparent placeholder:text-white/25"
-            />
-
-            {/* Game + Genre tags — compact row */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/8 rounded px-2 h-7">
-                <Gamepad2 className="w-3 h-3 text-white/30" />
-                <Select value={selectedGameTitle} onValueChange={setSelectedGameTitle}>
-                  <SelectTrigger className="bg-transparent border-0 text-white/50 text-xs h-full p-0 w-auto min-w-[80px] focus:ring-0">
-                    <SelectValue placeholder="Game" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 z-[80] bg-slate-900 border border-white/10">
-                    {games.map(g => <SelectItem key={g.id} value={g.title}>{g.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/8 rounded px-2 h-7">
-                <Tag className="w-3 h-3 text-white/30" />
-                <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                  <SelectTrigger className="bg-transparent border-0 text-white/50 text-xs h-full p-0 w-auto min-w-[60px] focus:ring-0">
-                    <SelectValue placeholder="Genre" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[80] bg-slate-900 border border-white/10">
-                    {GENRE_OPTIONS.map(gn => <SelectItem key={gn} value={gn}>{gn}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Main textarea */}
-            <Textarea
-              value={textBody}
-              onChange={(e) => setTextBody(e.target.value)}
-              placeholder="What's on your mind?"
-              className="flex-1 min-h-[180px] bg-transparent border border-white/8 rounded text-white/90 text-sm resize-none focus:border-white/20 placeholder:text-white/20"
-            />
-
-            {/* Image previews */}
-            {imagePreviews.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {imagePreviews.map((src, i) => (
-                  <div key={i} className="relative group w-20 h-20">
-                    <img src={src} alt="preview" className="w-full h-full object-cover rounded border border-white/10" />
-                    <button
-                      onClick={() => setImageFiles(prev => prev.filter((_, idx) => idx !== i))}
-                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Link input (shown when toggled) */}
-            {showLink && (
-              <div className="flex items-center gap-2">
-                <Link2 className="w-3.5 h-3.5 text-white/30 shrink-0" />
-                <Input
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://…"
-                  className="flex-1 bg-white/5 border-white/10 text-white text-sm h-8 rounded"
-                />
-                <button onClick={() => { setShowLink(false); setLinkUrl(''); }} className="text-white/30 hover:text-white/60">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            {/* Poll inputs (shown when toggled) */}
-            {showPoll && (
-              <div className="space-y-2 border border-white/8 rounded p-3 bg-white/3">
-                <p className="text-white/30 text-[10px] uppercase tracking-wider mb-2">Poll</p>
-                <Input
-                  value={pollQuestion}
-                  onChange={(e) => setPollQuestion(e.target.value)}
-                  placeholder="Poll question…"
-                  className="bg-white/5 border-white/10 text-white text-sm h-8 rounded"
-                />
-                {pollOptions.map((opt, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <span className="text-white/20 text-xs w-4">{idx + 1}.</span>
-                    <Input
-                      value={opt}
-                      onChange={(e) => setPollOptions(prev => prev.map((o, i) => i === idx ? e.target.value : o))}
-                      placeholder={`Option ${idx + 1}`}
-                      className="flex-1 bg-white/5 border-white/10 text-white text-sm h-8 rounded"
-                    />
-                    {pollOptions.length > 2 && (
-                      <button onClick={() => setPollOptions(prev => prev.filter((_, i) => i !== idx))} className="text-white/20 hover:text-white/50">
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button onClick={() => setPollOptions(prev => [...prev, ""])} className="flex items-center gap-1 text-[11px] text-cyan-500/60 hover:text-cyan-400 mt-1">
-                  <Plus className="w-3 h-3" /> Add option
-                </button>
-              </div>
-            )}
-
-            {/* ── Inline action strip ── */}
-            <div className="flex items-center gap-1 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              {/* Image */}
-              <label
-                htmlFor="img-picker"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded cursor-pointer text-white/35 hover:text-white/70 hover:bg-white/6 transition-all text-xs"
-                title="Add image"
-              >
-                <input id="img-picker" type="file" accept="image/*" multiple onChange={handleImagePick} className="hidden" />
-                <ImagePlus className="w-3.5 h-3.5" />
-                <span>Image</span>
-              </label>
-
-              {/* Link */}
-              <button
-                onClick={() => setShowLink(v => !v)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-all text-xs ${showLink ? 'text-cyan-400 bg-cyan-500/10' : 'text-white/35 hover:text-white/70 hover:bg-white/6'}`}
-                title="Add link"
-              >
-                <Link2 className="w-3.5 h-3.5" />
-                <span>Link</span>
-              </button>
-
-              {/* Poll */}
-              <button
-                onClick={() => setShowPoll(v => !v)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-all text-xs ${showPoll ? 'text-cyan-400 bg-cyan-500/10' : 'text-white/35 hover:text-white/70 hover:bg-white/6'}`}
-                title="Add poll"
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>Poll</span>
-              </button>
-            </div>
-          </div>
-
-          {/* ── Footer ── */}
-          <div className="flex items-center justify-end gap-2 px-8 shrink-0 h-[52px]" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-            <button onClick={onCancel} className="px-4 h-8 text-xs text-white/40 hover:text-white hover:bg-white/8 rounded transition-all">
-              Cancel
-            </button>
-            <button
-              disabled={!canPost || submitting}
-              onClick={buildContentAndSubmit}
-              className={`flex items-center gap-1.5 px-5 h-8 text-xs font-semibold rounded transition-all ${
-                canPost && !submitting
-                  ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30'
-                  : 'bg-white/5 border border-white/8 text-white/20 cursor-not-allowed'
-              }`}
-            >
-              {submitting ? 'Posting…' : 'Post'}
-              {!submitting && <ChevronRight className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <AnimatePresence><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4 backdrop-blur-md" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel?.(); }}>
+    <motion.div initial={{ opacity: 0, y: 18, scale: .99 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080d14]/95 shadow-2xl">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4"><div><p className="text-[10px] uppercase tracking-[0.22em] text-cyan-200/45">Community intelligence</p><h2 className="mt-1 text-lg font-semibold text-white">Create a post or game guide</h2></div><button type="button" onClick={onCancel} className="rounded-lg p-2 text-white/35 hover:bg-white/[0.05] hover:text-white"><X className="h-4 w-4" /></button></div>
+      <div className="flex-1 space-y-4 overflow-y-auto p-6">
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="space-y-1.5 text-xs text-white/40">Format<select value={type} onChange={(e) => setType(e.target.value)} className="h-10 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-sm text-white outline-none">{TYPES.map(([value, label]) => <option key={value} value={value} className="bg-slate-950">{label}</option>)}</select></label>
+          <label className="space-y-1.5 text-xs text-white/40">Game<select value={gameTitle} onChange={(e) => setGameTitle(e.target.value)} className="h-10 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-sm text-white outline-none"><option value="" className="bg-slate-950">Platform-wide</option>{games.map((game) => <option key={game.id} value={game.title} className="bg-slate-950">{game.title}</option>)}</select></label>
+        </div>
+        <Input value={title} maxLength={180} onChange={(e) => setTitle(e.target.value)} placeholder="Give players a clear title…" className="h-11 border-white/[0.08] bg-white/[0.035] text-white placeholder:text-white/22" />
+        <Textarea value={content} maxLength={40000} onChange={(e) => setContent(e.target.value)} placeholder={type === 'full_guide' ? 'Write the complete route: requirements, preparation, steps, bosses, collectibles, missables, achievements, farming notes…' : 'Share the strategy, discovery, question, or route…'} className="min-h-[260px] resize-y border-white/[0.08] bg-white/[0.025] text-sm leading-6 text-white/75 placeholder:text-white/20" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="space-y-1.5 text-xs text-white/40"><span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />Guide focus</span><select value={guideKind} onChange={(e) => setGuideKind(e.target.value)} className="h-9 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 text-xs text-white">{GUIDE_KINDS.map((kind) => <option className="bg-slate-950" key={kind}>{kind.replaceAll('_', ' ')}</option>)}</select></label>
+          <label className="space-y-1.5 text-xs text-white/40">Difficulty<select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="h-9 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 text-xs text-white">{['any','beginner','intermediate','advanced','expert'].map((value) => <option className="bg-slate-950" key={value}>{value}</option>)}</select></label>
+          <label className="space-y-1.5 text-xs text-white/40"><span className="flex items-center gap-1"><Tag className="h-3 w-3" />Tags</span><Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="boss, missable, xp" className="h-9 border-white/[0.08] bg-white/[0.04] text-xs text-white" /></label>
+        </div>
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white/[0.09] px-3 py-3 text-xs text-white/35 hover:border-cyan-200/20 hover:text-white/60"><ImagePlus className="h-4 w-4" /><input type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />{imageFile ? imageFile.name : 'Optional screenshot / route image'}</label>
+        <div className="rounded-lg border border-cyan-200/[0.07] bg-cyan-200/[0.025] px-4 py-3 text-xs leading-5 text-white/35"><Gamepad2 className="mr-2 inline h-3.5 w-3.5 text-cyan-200/50" />Full guides are meant to read like a modern strategy guide: preparation, route, missables, boss notes, farming efficiency and achievement-card hints can all live in one post.</div>
+      </div>
+      <div className="flex items-center justify-end gap-2 border-t border-white/[0.06] px-6 py-4"><button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm text-white/40 hover:bg-white/[0.04] hover:text-white">Cancel</button><button type="button" disabled={!canPost || submitting} onClick={submit} className="rounded-lg border border-cyan-200/15 bg-cyan-300/10 px-5 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-30">{submitting ? 'Publishing…' : 'Publish'}</button></div>
+    </motion.div>
+  </motion.div></AnimatePresence>;
 }
