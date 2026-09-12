@@ -40,6 +40,20 @@ const DEFAULT_ELEMENT = {
 
 const PRESETS = [
   {
+    id: 'default',
+    name: 'Default',
+    hint: 'Restore the page exactly to its original Atom X Eve styling',
+    accent: '#9de8f2',
+    accentRgb: '157,232,242',
+    surface: 'transparent',
+    surfaceStrong: 'transparent',
+    border: 'rgba(255,255,255,.09)',
+    ambient: 'none',
+    pageBackground: 'transparent',
+    preview: 'linear-gradient(135deg,#111820 0%,#152331 42%,#0b1118 100%)',
+    isDefault: true,
+  },
+  {
     id: 'graphite',
     name: 'Graphite',
     hint: 'Quiet console glass',
@@ -50,43 +64,51 @@ const PRESETS = [
     border: 'rgba(255,255,255,.09)',
     ambient: 'radial-gradient(circle at 18% 10%, rgba(148,163,184,.12), transparent 32%), linear-gradient(145deg, rgba(34,39,46,.32), rgba(10,13,18,.12))',
     pageBackground: '#090c11',
+    panelBackground: 'radial-gradient(38px 30px at 47% 32%,rgba(255,255,255,.09),transparent 72%),radial-gradient(42px 34px at 51% 68%,rgba(148,163,184,.10),transparent 72%),linear-gradient(116deg,rgba(23,30,39,.82) 0 44%,rgba(226,232,240,.10) 46%,rgba(255,255,255,.28) 48%,rgba(111,129,151,.13) 50%,rgba(13,18,24,.84) 54% 100%)',
+    preview: 'linear-gradient(116deg,#1c2732 0 46%,#cbd5e1 48%,#546477 50%,#0b1017 54% 100%)',
   },
   {
     id: 'sapphire_green',
     name: 'Sapphire Green',
-    hint: 'Emerald-sapphire HUD',
+    hint: 'Sapphire-green background with a blue prism split and glass-white seam',
     accent: '#5eead4',
     accentRgb: '94,234,212',
     surface: 'rgba(12,31,32,.54)',
     surfaceStrong: 'rgba(13,42,41,.74)',
     border: 'rgba(94,234,212,.16)',
     ambient: 'radial-gradient(circle at 20% 4%, rgba(16,185,129,.15), transparent 34%), radial-gradient(circle at 82% 32%, rgba(14,165,233,.10), transparent 30%)',
-    pageBackground: '#071211',
+    pageBackground: '#041612',
+    panelBackground: 'radial-gradient(44px 32px at 48% 22%,rgba(125,211,252,.28),transparent 70%),radial-gradient(54px 36px at 51% 52%,rgba(255,255,255,.20),transparent 74%),radial-gradient(48px 34px at 49% 82%,rgba(56,189,248,.18),transparent 72%),linear-gradient(112deg,rgba(8,93,180,.72) 0 43%,rgba(56,189,248,.18) 45%,rgba(255,255,255,.80) 47.5%,rgba(125,211,252,.42) 49%,rgba(16,185,129,.24) 52%,rgba(5,49,38,.74) 58% 100%)',
+    preview: 'linear-gradient(112deg,#0869c7 0 43%,#62c4f1 46%,#ffffff 48%,#79d5ff 50%,#0d7c61 54%,#063b2f 100%)',
   },
   {
     id: 'dragon_motion',
     name: 'Dragon Motion',
-    hint: 'Animated ember backdrop',
+    hint: 'Obsidian-red field with an ember-orange rift and molten glass center',
     accent: '#fb7185',
     accentRgb: '251,113,133',
     surface: 'rgba(36,20,24,.54)',
     surfaceStrong: 'rgba(49,25,29,.74)',
     border: 'rgba(251,113,133,.16)',
     ambient: 'radial-gradient(circle at 18% 15%, rgba(244,63,94,.18), transparent 32%), radial-gradient(circle at 76% 74%, rgba(249,115,22,.12), transparent 30%), linear-gradient(115deg, rgba(45,13,20,.20), rgba(8,10,14,.08))',
-    pageBackground: '#12090d',
+    pageBackground: '#12070b',
+    panelBackground: 'radial-gradient(52px 38px at 50% 30%,rgba(251,146,60,.23),transparent 72%),radial-gradient(62px 42px at 47% 70%,rgba(244,63,94,.19),transparent 74%),linear-gradient(122deg,rgba(72,13,27,.80) 0 42%,rgba(244,63,94,.22) 45%,rgba(255,237,213,.68) 47.5%,rgba(251,146,60,.48) 49%,rgba(123,38,18,.34) 52%,rgba(24,9,13,.82) 59% 100%)',
+    preview: 'linear-gradient(122deg,#591126 0 43%,#ef476f 46%,#fff1df 48%,#fb923c 50%,#40120d 56% 100%)',
     motion: true,
   },
   {
     id: 'violet_flux',
     name: 'Violet Flux',
-    hint: 'Cool holographic violet',
+    hint: 'Violet-blue aurora glass with a pearlescent angled divide',
     accent: '#c4b5fd',
     accentRgb: '196,181,253',
     surface: 'rgba(28,23,44,.52)',
     surfaceStrong: 'rgba(38,30,59,.74)',
     border: 'rgba(196,181,253,.15)',
     ambient: 'radial-gradient(circle at 72% 8%, rgba(139,92,246,.16), transparent 34%), radial-gradient(circle at 16% 70%, rgba(59,130,246,.09), transparent 28%)',
-    pageBackground: '#0c0914',
+    pageBackground: '#0b0815',
+    panelBackground: 'radial-gradient(45px 30px at 46% 24%,rgba(191,219,254,.18),transparent 72%),radial-gradient(58px 38px at 52% 62%,rgba(255,255,255,.16),transparent 74%),linear-gradient(108deg,rgba(67,56,202,.50) 0 41%,rgba(59,130,246,.20) 44%,rgba(255,255,255,.62) 47%,rgba(196,181,253,.40) 49%,rgba(126,34,206,.26) 53%,rgba(22,14,41,.80) 60% 100%)',
+    preview: 'linear-gradient(108deg,#4338ca 0 42%,#3b82f6 45%,#f8fafc 48%,#c4b5fd 50%,#7e22ce 55%,#160e29 100%)',
   },
 ];
 
@@ -210,6 +232,7 @@ function applyElementStyle(element, setting) {
 }
 
 function ThemeAmbient({ preset }) {
+  if (preset.isDefault) return null;
   return (
     <div data-ui-editor-ignore="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
       <div className="absolute -inset-[6%]" style={{ backgroundImage: preset.ambient, animation: preset.motion ? 'atomDragonDrift 11s ease-in-out infinite' : undefined }} />
@@ -234,17 +257,17 @@ export function UICustomizationProvider({ children, pathname }) {
   const scope = `${page}:${viewName(location, page)}`;
   const storageKey = `${STORAGE_PREFIX}${scope}`;
   const local = useMemo(() => safeRead(storageKey), [storageKey]);
-  const [config, setConfig] = useState(() => ({ ...(local || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 }), scope }));
+  const [config, setConfig] = useState(() => ({ ...(local || { presetId: 'default', elementSettings: {}, updatedAt: 0 }), scope }));
   const [editMode, setEditMode] = useState(false);
   const [selected, setSelected] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const rootRef = useRef(null);
   const saveTimerRef = useRef(null);
   const preset = PRESETS.find((item) => item.id === config.presetId) || PRESETS[0];
-  usePagePrefabSurfaces(rootRef, Boolean(config.updatedAt) && config.scope === scope, scope, config.elementSettings);
+  usePagePrefabSurfaces(rootRef, Boolean(config.updatedAt) && config.scope === scope && !preset.isDefault, scope, config.elementSettings);
 
   useEffect(() => {
-    const nextLocal = { ...(safeRead(storageKey) || { presetId: 'graphite', elementSettings: {}, updatedAt: 0 }), scope };
+    const nextLocal = { ...(safeRead(storageKey) || { presetId: 'default', elementSettings: {}, updatedAt: 0 }), scope };
     setConfig(nextLocal);
     setEditMode(false);
     setSelected(null);
@@ -256,7 +279,7 @@ export function UICustomizationProvider({ children, pathname }) {
         const response = await base44.functions.invoke('uiCustomization', { action: 'getState', payload: { pageScope: scope } });
         const remote = response?.data?.state || response?.state;
         if (!cancelled && remote && Number(remote.updatedAt || 0) > Number(nextLocal.updatedAt || 0)) {
-          setConfig({ presetId: remote.presetId || 'graphite', elementSettings: remote.elementSettings || {}, updatedAt: Number(remote.updatedAt || 0), scope });
+          setConfig({ presetId: remote.presetId || 'default', elementSettings: remote.elementSettings || {}, updatedAt: Number(remote.updatedAt || 0), scope });
         }
       } catch (error) {
         console.warn('UI customization profile sync unavailable', error);
@@ -396,7 +419,20 @@ export function UICustomizationProvider({ children, pathname }) {
         ref={rootRef}
         className={`atom-ui-customization-root relative h-full w-full overflow-hidden ${editMode ? 'atom-ui-edit-mode' : ''}`}
         data-ui-page-theme={preset.id}
-        style={{ '--atom-ui-accent': preset.accent, '--atom-ui-accent-rgb': preset.accentRgb, '--atom-ui-page-bg': preset.pageBackground || '#090c11', '--atom-ui-ambient': preset.ambient, '--glass-bg': preset.surface, '--glass-bg-strong': preset.surfaceStrong, '--glass-border': preset.border, '--forum-accent': preset.accent, '--forum-accent-rgb': preset.accentRgb }}
+        style={{
+          '--atom-ui-accent': preset.accent,
+          '--atom-ui-accent-rgb': preset.accentRgb,
+          '--atom-ui-page-bg': preset.isDefault ? 'transparent' : (preset.pageBackground || '#090c11'),
+          '--atom-ui-ambient': preset.isDefault ? 'none' : preset.ambient,
+          ...(preset.isDefault ? {} : {
+            '--glass-bg': preset.surface,
+            '--glass-bg-strong': preset.surfaceStrong,
+            '--glass-border': preset.border,
+            '--atom-ui-panel-bg': preset.panelBackground || preset.surface,
+            '--forum-accent': preset.accent,
+            '--forum-accent-rgb': preset.accentRgb,
+          }),
+        }}
       >
         <ThemeAmbient preset={preset} />
         <div className="relative z-[1] h-full w-full">{children}</div>
