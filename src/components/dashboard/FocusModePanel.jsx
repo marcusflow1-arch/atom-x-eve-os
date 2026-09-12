@@ -1391,8 +1391,13 @@ export function LibraryBannerSection({
               {(onlineFriends || []).filter(Boolean).map((friend) => (
                 <div key={friend.id} className="flex-shrink-0">
                   <FriendReference 
-                    friend={friend} 
+                    friend={friend}
+                    isFriend={friendIds.has(String(friend.id))}
+                    requestState={friendRequestUsers[friend.id]}
+                    dashboardInviteState={invitedUsers[friend.id]}
+                    partyInviteState={partyInviteUsers[friend.id]}
                     onClick={handleFriendClick}
+                    onAddFriend={handleAddFriend}
                     onMessage={handleMessage}
                     onJoin={handleJoin}
                     onInvite={handleInvite}
