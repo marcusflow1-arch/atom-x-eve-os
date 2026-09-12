@@ -1209,6 +1209,8 @@ export function LibraryBannerSection({
   const [memoriesExpanded, setMemoriesExpanded] = useState(false);
   const { user } = useAuth();
   const [invitedUsers, setInvitedUsers] = useState({});
+  const [partyInviteUsers, setPartyInviteUsers] = useState({});
+  const [friendRequestUsers, setFriendRequestUsers] = useState({});
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
@@ -1216,50 +1218,119 @@ export function LibraryBannerSection({
     refetchInterval: 5000,
   });
 
+  const { data: dashboardFriends = [] } = useQuery({
+    queryKey: ['luna_presence_friends', user?.id],
+    queryFn: () => base44.entities.Friend.filter({ user_id: user.id }),
+    enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
+
+  const friendIds = useMemo(() => new Set((dashboardFriends || []).map((friend) => String(friend.friend_id))), [dashboardFriends]);
+
   useEffect(() => {
     if (!dbUsers) return;
-    const now = new Date();
+    const now = Date.now();
     const isOnline = (p) => {
       if (p.player_id === user?.id) return false;
-      if (p.last_update) return (now.getTime() - p.last_update) < 120000;
+      if (p.last_update) return (now - Number(p.last_update)) < 120000;
       return true;
     };
     const usersList = [];
     const seenIds = new Set();
     (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && isOnline(p)).forEach(p => {
       if (!p || !p.player_id) return;
-      if (!seenIds.has(p.player_id)) {
-        seenIds.add(p.player_id);
+      const id = String(p.player_id);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
         usersList.push({
-          id: p.player_id,
+          id,
           name: p.display_name || 'Unknown',
-          avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.player_id}`,
+          avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`,
           status: p.status || 'online',
-          envUrl: p.env_url
+          envUrl: p.env_url,
+          channelId: p.channel_id,
+          lastUpdate: Number(p.last_update || 0),
         });
       }
     });
+    usersList.sort((a, b) => {
+      const friendDelta = Number(friendIds.has(b.id)) - Number(friendIds.has(a.id));
+      if (friendDelta) return friendDelta;
+      return b.lastUpdate - a.lastUpdate;
+    });
     setOnlineFriends(usersList.filter(f => f && f.id).slice(0, 5));
-  }, [dbUsers, user]);
+  }, [dbUsers, user?.id, friendIds]);
 
-  const handleFriendClick = (friend) => onActiveFriendChange(activeFriend?.id === friend.id ? null : friend);
+  const handleFriendClick = (friend) => onActiveFriendChange(friend);
+
+  const handleAddFriend = async (u) => {
+    if (!user?.id || !u?.id || friendIds.has(String(u.id))) return;
+    setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
+    try {
+      const existing = await base44.entities.FriendRequest.filter({ sender_id: user.id, receiver_id: u.id, status: 'pending' });
+      if (!(existing || []).length) {
+        await base44.entities.FriendRequest.create({
+          sender_id: user.id,
+          sender_name: user.full_name || user.username || user.email?.split('@')?.[0] || 'Player',
+          sender_avatar: user.avatar_url || '',
+          receiver_id: u.id,
+          status: 'pending',
+        });
+      }
+      setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+    } catch (error) {
+      console.error('[Luna Presence] friend request failed', error);
+      setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+    }
+  };
 
   const handleJoin = (u) => {
     onActiveFriendChange(null);
-    if (onSelectEnv) onSelectEnv({ id: `joined_${u.id}`, modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' });
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name } }));
+    if (u.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: u.envUrl } }));
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name, socialJoin: true }
+    }));
   };
 
-  const handleInvite = (u) => {
-    setInvitedUsers(prev => ({ ...prev, [u.id]: 'inviting' }));
-    setTimeout(() => {
-      setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' } }));
+  const handleInvite = async (u) => {
+    if (!user?.id || !u?.id) return;
+    setInvitedUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
+    try {
+      const existing = await base44.entities.LunarDashboardRequest.filter({
+        request_type: 'invite', requester_id: user.id, target_user_id: u.id, host_user_id: user.id, status: 'pending'
+      });
+      if (!(existing || []).length) {
+        await base44.entities.LunarDashboardRequest.create({
+          request_type: 'invite',
+          requester_id: user.id,
+          requester_name: user.full_name || user.username || user.email?.split('@')?.[0] || 'Player',
+          target_user_id: u.id,
+          host_user_id: user.id,
+          status: 'pending',
+        });
+      }
+      setInvitedUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
       onActiveFriendChange(null);
-    }, 2000);
+    } catch (error) {
+      console.error('[Luna Presence] dashboard invite failed', error);
+      setInvitedUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+    }
   };
 
-  const handlePartyInvite = (u) => onActiveFriendChange(null);
+  const handlePartyInvite = async (u) => {
+    if (!u?.id) return;
+    setPartyInviteUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
+    try {
+      const response = await base44.functions.invoke('partySystem', { action: 'invite_member', data: { inviteeId: u.id } });
+      if (response?.data?.error || response?.error) throw new Error(response?.data?.error || response?.error);
+      setPartyInviteUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+      window.dispatchEvent(new Event('openLunaParty'));
+      onActiveFriendChange(null);
+    } catch (error) {
+      console.error('[Luna Presence] party invite failed', error);
+      setPartyInviteUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+    }
+  };
 
   const handleMessage = (u) => {
     onActiveFriendChange(null);
