@@ -195,8 +195,8 @@ export default function MidpointCustomizationControls({ className = '' }) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <span className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">UI Prefabs · {scope.replace(':', ' / ')}</span>
-              <h2 className="mt-1 text-xl font-black">Visual loadout</h2>
-              <p className="mt-1 text-[10px] leading-4 text-white/35">Choose a ready-made UI theme. It applies immediately to the current page and its editable boxes.</p>
+              <h2 className="mt-1 text-xl font-black">Page UI Theme</h2>
+              <p className="mt-1 text-[10px] leading-4 text-white/35">Choose a default UI prefab for the entire page you are on. Background, ambient finish, glass surfaces, borders and accents change together.</p>
             </div>
             <button
               type="button"
