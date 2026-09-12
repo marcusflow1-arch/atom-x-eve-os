@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Zap, Trophy, Star, Gamepad2, TrendingUp, Network } from 'lucide-react';
 import DashboardAvatarOverview from './DashboardAvatarOverview';
+import LunaPresenceMessageBridge from './LunaPresenceMessageBridge';
 
 function StatLine({ icon, label, value, color = 'text-white/70' }) {
   return (
@@ -111,7 +112,10 @@ export default function AvatarStatCard() {
       </div>
 
       {typeof document !== 'undefined' && createPortal(
-        <DashboardAvatarOverview hostName={user?.full_name || user?.username || 'My'} />,
+        <>
+          <LunaPresenceMessageBridge />
+          <DashboardAvatarOverview hostName={user?.full_name || user?.username || 'My'} />
+        </>,
         document.body
       )}
     </>
