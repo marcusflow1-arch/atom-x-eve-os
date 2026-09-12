@@ -32,6 +32,14 @@ export default function DashboardAvatarScene() {
       const thisRequest = ++requestId;
       setSocialHost({ id: hostId, name: detail.hostName || 'Friend' });
       setHostAvatar(null);
+
+      // Joining from the Friends workspace should immediately return the user
+      // to the dashboard stage so neither avatar is hidden behind that overlay.
+      requestAnimationFrame(() => {
+        const friendsControl = document.querySelector('[data-dashboard-quick-control][aria-label="Friends"]');
+        if (friendsControl?.getAttribute('aria-pressed') === 'true') friendsControl.click();
+      });
+
       try {
         const rows = await base44.entities.Avatar.filter({ user_id: hostId });
         if (thisRequest !== requestId) return;
