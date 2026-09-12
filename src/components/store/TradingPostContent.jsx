@@ -213,7 +213,7 @@ function CardTile({ card, listings, onClick }) {
         <span className={`absolute left-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.13em] backdrop-blur-md ${rarityTone[card.rarity] || rarityTone.Common}`}>
           {card.rarity || 'Common'}
         </span>
-        {card.isTemporary && <span className="absolute right-3 top-3 rounded-full border border-white/15 bg-white/90 px-2 py-1 text-[7px] font-black uppercase tracking-[.14em] text-black shadow-lg">Temp Test</span>
+        {card.isTemporary && <span className="absolute right-3 top-3 rounded-full border border-white/15 bg-white/90 px-2 py-1 text-[7px] font-black uppercase tracking-[.14em] text-black shadow-lg">Temp Test</span>}
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
