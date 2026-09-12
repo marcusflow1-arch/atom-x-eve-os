@@ -47,7 +47,8 @@ const rarityBorder = {
   Limitless: 'border-white/25',
 };
 
-const softPanel = 'bg-white/[0.028] shadow-[0_22px_70px_rgba(0,0,0,.22),inset_0_1px_0_rgba(255,255,255,.035)]';
+const softPanel = 'bg-white/[0.018] shadow-[0_18px_55px_rgba(0,0,0,.18),inset_0_1px_0_rgba(255,255,255,.025)]';
+const moonSurface = 'bg-[#d7dde5]/[0.035] hover:bg-[#d7dde5]/[0.055]';
 
 function invoke(action, payload = {}) {
   return base44.functions.invoke('tradePostMarket', { action, payload });
@@ -160,15 +161,15 @@ function GameTile({ game, stats, onClick }) {
       type="button"
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className="group overflow-hidden rounded-[22px] border border-white/[0.08] bg-white/[0.025] text-left transition hover:border-cyan-300/25 hover:bg-white/[0.045]"
+      className={`group overflow-hidden rounded-[18px] border border-white/[0.055] text-left transition hover:border-white/[0.13] ${moonSurface}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-[#20242a]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#0d0f12]">
         {cover ? (
           <img src={cover} alt={game.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(56,189,248,.16),transparent_34%),linear-gradient(145deg,#2b313a,#15181d)]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#171a1f] via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-black/15 to-transparent" />
         <div className="absolute left-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.14em] text-white/70 backdrop-blur-md">
           {String(game.genre || 'other').replaceAll('_', ' ')}
         </div>
@@ -177,7 +178,7 @@ function GameTile({ game, stats, onClick }) {
             <h3 className="truncate text-sm font-black text-white">{game.title}</h3>
             <p className="mt-1 text-[9px] text-white/40">{game.original_year || 'Release year unavailable'}</p>
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-white/35 transition group-hover:translate-x-0.5 group-hover:text-cyan-200" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-white/30 transition group-hover:translate-x-0.5 group-hover:text-white/70" />
         </div>
       </div>
       <div className="grid grid-cols-2 divide-x divide-white/[0.06] px-1 py-3">
@@ -201,15 +202,15 @@ function CardTile({ card, listings, onClick }) {
       type="button"
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className={`group overflow-hidden rounded-[22px] border bg-white/[0.025] text-left transition hover:bg-white/[0.05] ${rarityBorder[card.rarity] || rarityBorder.Common}`}
+      className={`group overflow-hidden rounded-[18px] border text-left transition ${moonSurface} ${rarityBorder[card.rarity] || rarityBorder.Common}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-[#20242a]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#0d0f12]">
         {card.image ? (
           <img src={card.image} alt={card.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(125,211,252,.14),transparent_36%),linear-gradient(145deg,#30353d,#171a1f)]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#171a1f] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-transparent to-transparent" />
         <span className={`absolute left-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.13em] backdrop-blur-md ${rarityTone[card.rarity] || rarityTone.Common}`}>
           {card.rarity || 'Common'}
         </span>
@@ -220,7 +221,7 @@ function CardTile({ card, listings, onClick }) {
             <h3 className="truncate text-sm font-black text-white">{card.name}</h3>
             <p className="mt-1 truncate text-[9px] uppercase tracking-wider text-white/28">{card.type || card.series || 'Achievement Card'}</p>
           </div>
-          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-white/25 group-hover:text-cyan-200" />
+          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-white/25 group-hover:text-white/70" />
         </div>
         <div className="mt-4 grid grid-cols-2 rounded-xl bg-black/[0.11] p-1">
           <div className="px-2 py-2">
@@ -242,7 +243,7 @@ function SellerRow({ listing, mine, busy, onBuy, onTrade, onCancel }) {
   const seller = listing.seller || {};
   const avatar = seller.avatar_url || seller.avatar;
   return (
-    <div className="grid gap-4 rounded-[20px] bg-white/[0.027] p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+    <div className="grid gap-4 rounded-[16px] border border-white/[0.045] bg-[#d7dde5]/[0.025] p-4 transition hover:bg-[#d7dde5]/[0.04] md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
       <div className="flex min-w-0 items-center gap-3">
         <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-white/[0.055] text-xs font-black text-white/65">
           {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : String(seller.name || 'P').charAt(0).toUpperCase()}
@@ -734,9 +735,9 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
               <div className="pt-4">
                 <div className="grid gap-5 xl:grid-cols-[310px_minmax(0,1fr)]">
                   <aside className="overflow-hidden rounded-[24px] bg-black/[0.11]">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-[#20242a]">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[#0d0f12]">
                       {selectedCard.image ? <img src={selectedCard.image} alt={selectedCard.name} className="h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(125,211,252,.14),transparent_36%),linear-gradient(145deg,#30353d,#171a1f)]" />}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#171a1f] via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-transparent to-transparent" />
                     </div>
                     <div className="p-5">
                       <button type="button" onClick={backToCards} className="mb-4 flex items-center gap-2 text-[8px] font-black uppercase tracking-[.13em] text-white/35 hover:text-white"><ArrowLeft className="h-3 w-3" /> Back to cards</button>
