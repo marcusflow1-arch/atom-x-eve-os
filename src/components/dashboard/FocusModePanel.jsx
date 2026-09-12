@@ -1466,6 +1466,31 @@ export function LibraryBannerSection({
         </div>
       </div>
 
+      <AnimatePresence>
+        {incomingDashboardInvites[0] && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed right-8 top-20 z-[9997] w-[330px] rounded-2xl border border-white/[0.09] bg-[#090c11]/95 p-4 shadow-2xl backdrop-blur-2xl"
+          >
+            <div className="text-[8px] font-black uppercase tracking-[.2em] text-white/35">Dashboard Invitation</div>
+            <p className="mt-2 text-sm font-semibold text-white">{incomingDashboardInvites[0].requester_name || 'A friend'} invited you to their dashboard.</p>
+            <p className="mt-1 text-[10px] leading-4 text-white/35">Accepting joins the same dashboard multiplayer channel, voice room, lobby presence and shared session.</p>
+            <div className="mt-3 flex gap-2">
+              <button type="button" onClick={() => declineDashboardInvite(incomingDashboardInvites[0])} className="h-9 flex-1 rounded-xl bg-white/[0.045] text-[9px] font-bold uppercase tracking-wider text-white/55 hover:bg-white/[0.08] hover:text-white">Decline</button>
+              <button type="button" onClick={() => acceptDashboardInvite(incomingDashboardInvites[0])} className="h-9 flex-1 rounded-xl bg-white text-[9px] font-black uppercase tracking-wider text-black hover:bg-slate-100">Join Dashboard</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {messageTarget && (
+          <FriendMessengerPanel friend={messageTarget} currentUserId={user?.id} onClose={() => setMessageTarget(null)} />
+        )}
+      </AnimatePresence>
+
       {/* Memories Drawer */}
       <AnimatePresence>
         {showMemoriesDrawer && (
