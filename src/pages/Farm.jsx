@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import FarmHub from '@/components/farm/FarmHub';
 import FarmGameView from '@/components/farm/FarmGameView';
+import ForumDirectoryOverlay from '@/components/community/ForumDirectoryOverlay';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
@@ -15,6 +16,7 @@ export default function FarmPage() {
   const [view, setView] = useState('hub');
   const [selectedGame, setSelectedGame] = useState(null);
   const [games, setGames] = useState([]);
+  const [forumDirectoryOpen, setForumDirectoryOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +80,11 @@ export default function FarmPage() {
     setTimeout(() => setSelectedGame(null), 220);
   };
 
+  const handleSelectForum = (game) => {
+    setForumDirectoryOpen(false);
+    navigate(createPageUrl('Community'), { state: { selectedGame: game || null } });
+  };
+
   const handleTabSelect = (tabId) => {
     if (tabId === 'hub') navigate(createPageUrl('Community'));
     if (tabId === 'farm_hub') handleBackToHub();
@@ -85,7 +92,15 @@ export default function FarmPage() {
 
   return (
     <PageErrorBoundary pageName="Farm">
-      <GlassPageFrame bottomContent={<ForumBottomNav activeTab="farm_hub" onTabSelect={handleTabSelect} />}>
+      <GlassPageFrame
+        bottomContent={
+          <ForumBottomNav
+            activeTab="farm_hub"
+            onBrowseForums={() => setForumDirectoryOpen(true)}
+            onTabSelect={handleTabSelect}
+          />
+        }
+      >
         <div
           className="relative min-h-screen overflow-hidden text-white"
           style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -126,6 +141,14 @@ export default function FarmPage() {
               </AnimatePresence>
             </div>
           </div>
+
+          <ForumDirectoryOverlay
+            open={forumDirectoryOpen}
+            games={games}
+            activeGame={null}
+            onClose={() => setForumDirectoryOpen(false)}
+            onSelectGame={handleSelectForum}
+          />
         </div>
       </GlassPageFrame>
     </PageErrorBoundary>
