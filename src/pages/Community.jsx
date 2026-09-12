@@ -1,809 +1,280 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
-import PostComposer from '../components/community/PostComposer';
-import PostCard from '../components/community/PostCard';
-import CommentSection from '../components/community/CommentSection';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import {
-  Plus, ArrowLeft, Search, Mic, MessageSquare,
-  Gamepad2, Star, Trophy, Target, Users,
-  Grid, ChevronRight, Hash, Crosshair,
-  Shield, Sparkles, Car, Skull, Monitor,
-  Video, Image, Palette, Newspaper, Book, Wheat, BookOpen, ChevronLeft } from
-'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../components/auth/AuthContext';
-import { base44 } from '@/api/base44Client';
-import { showError, showSuccess } from '@/components/error/ErrorToast';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, BookOpen, CheckCircle2, Flag, Gamepad2, Lightbulb, MessageSquare, Pin, Plus, Search, Shield, Trophy, UserRoundCog, Wheat } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import PostComposer from '@/components/community/PostComposer';
+import PostCard from '@/components/community/PostCard';
+import CommentSection from '@/components/community/CommentSection';
+import ForumBottomNav from '@/components/community/ForumBottomNav';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
-import HotTopicsSidebar from '../components/community/HotTopicsSidebar';
-import GameBanner from '../components/community/GameBanner';
-import { getWallpaperFor } from '../components/community/gameWallpapers';
-import GlassPageFrame from '../components/shared/GlassPageFrame';
-import ForumBottomNav from '../components/community/ForumBottomNav';
-import { useSidebarVisible } from '../hooks/useSidebarVisible';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
+import { useSidebarVisible } from '@/hooks/useSidebarVisible';
+import { useAuth } from '@/components/auth/AuthContext';
+import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 
-// Mock Genres configuration matching Store/Marketplace
-const GENRE_CONFIG = [
-{ label: 'Action', icon: Crosshair },
-{ label: 'RPG', icon: Shield },
-{ label: 'Shooter', icon: Crosshair },
-{ label: 'Sci-Fi', icon: Sparkles },
-{ label: 'Strategy', icon: Trophy },
-{ label: 'Adventure', icon: Gamepad2 },
-{ label: 'Sports', icon: Trophy },
-{ label: 'Racing', icon: Car },
-{ label: 'Simulation', icon: Monitor },
-{ label: 'Horror', icon: Skull }];
-
-
-const TOPIC_TYPES = [
-{ id: 'all', label: 'All', icon: Grid },
-{ id: 'discussion', label: 'Discussion', icon: MessageSquare },
-{ id: 'video', label: 'Video', icon: Video },
-{ id: 'screenshot', label: 'Screenshots', icon: Image },
-{ id: 'artwork', label: 'Artwork', icon: Palette },
-{ id: 'news', label: 'News', icon: Newspaper },
-{ id: 'guide', label: 'Guides', icon: Book },
-{ id: 'review', label: 'Review', icon: Star }];
-
+const SECTIONS = [
+  { id: 'all', label: 'All', icon: Gamepad2 },
+  { id: 'guide', label: 'Guides', icon: BookOpen },
+  { id: 'achievement', label: 'Achievement Hunts', icon: Trophy },
+  { id: 'farming', label: 'Farming', icon: Wheat },
+  { id: 'tips', label: 'Tips', icon: Lightbulb },
+  { id: 'discussion', label: 'Discussion', icon: MessageSquare },
+];
+const unwrap = (result) => result?.data ?? result ?? {};
 
 export default function CommunityPage() {
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
+  const [games, setGames] = useState([]);
+  const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null);
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, _setShowCreateForm] = useState(false);
+  const [reactions, setReactions] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [activeSection, setActiveSection] = useState('all'); // Filter for topics
+  const [section, setSection] = useState('all');
+  const [search, setSearch] = useState('');
+  const [gameSearch, setGameSearch] = useState('');
+  const [sort, setSort] = useState('newest');
+  const [loading, setLoading] = useState(true);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [session, setSession] = useState({ isModerator: false, isAdmin: false, restriction: null });
+  const [reports, setReports] = useState([]);
+  const [moderationOpen, setModerationOpen] = useState(false);
+  const [moderatorUserId, setModeratorUserId] = useState('');
 
-  // Initialize activeGame from navigation state if available
-  const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null);
-  const [lastActiveGame, setLastActiveGame] = useState(null);
-  const [sortBy, setSortBy] = useState('newest');
-  const [hotFilter, setHotFilter] = useState('none');
-  const [rightPosts, setRightPosts] = useState([]);
-  const [loadingRight, setLoadingRight] = useState(false);
-  const [sidebarVisible, toggleSidebar] = useSidebarVisible();
-
-  // Sync activeGame when location state changes (e.g. from Clan navigation)
-  useEffect(() => {
-    if (location.state?.selectedGame) {
-      setActiveGame(location.state.selectedGame);
-    }
-    if (location.state?.section) {
-      setActiveSection(location.state.section);
-    }
-  }, [location.state]);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('All Games'); // 'All Games' | 'All Cards' | specific genre
-  const [allGames, setAllGames] = useState([]); // All game entities
-  const [filteredGames, setFilteredGames] = useState([]); // Games after genre and search filter
-
-  const { isAuthenticated } = useAuth();
-  const genreScrollRef = useRef(null);
-  const hoverIntervalRef = useRef(null);
-  const hoverDirRef = useRef(1);
-
-  // Horizontal scroll support for genres + gentle hover auto-scroll
-  useEffect(() => {
-    const el = genreScrollRef.current;
-    if (!el) return;
-
-    const onWheel = (e) => {
-      if (e.deltaY === 0) return;
-      if (el.scrollWidth > el.clientWidth) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY;
-      }
-    };
-    el.addEventListener('wheel', onWheel, { passive: false });
-
-    const onEnter = () => {
-      if (hoverIntervalRef.current) return;
-      hoverIntervalRef.current = setInterval(() => {
-        if (!el) return;
-        el.scrollLeft += 1.5 * hoverDirRef.current;
-        if (el.scrollLeft <= 0) hoverDirRef.current = 1;else
-        if (el.scrollLeft + el.clientWidth >= el.scrollWidth) hoverDirRef.current = -1;
-      }, 16);
-    };
-    const onLeave = () => {
-      if (hoverIntervalRef.current) {
-        clearInterval(hoverIntervalRef.current);
-        hoverIntervalRef.current = null;
-      }
-    };
-    el.addEventListener('mouseenter', onEnter);
-    el.addEventListener('mouseleave', onLeave);
-
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('mouseenter', onEnter);
-      el.removeEventListener('mouseleave', onLeave);
-      if (hoverIntervalRef.current) {
-        clearInterval(hoverIntervalRef.current);
-        hoverIntervalRef.current = null;
-      }
-    };
+  const invoke = useCallback(async (action, data = {}) => {
+    const result = unwrap(await base44.functions.invoke('forumSystem', { action, data }));
+    if (result?.success === false) throw new Error(result.error || 'Forum request failed');
+    return result;
   }, []);
 
-  // Fetch all games
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const gamesResponse = await base44.entities.Game.list('-original_year', 50);
-        setAllGames(gamesResponse);
-        setFilteredGames(gamesResponse);
-      } catch (e) {
-        console.error("Failed to fetch games", e);
-      }
-    };
-    fetchGames();
-  }, []);
-
-  const processedLocationKey = useRef(null);
-
-  // Support deep links via URL params (?game=Title&section=general_discussion)
-  useEffect(() => {
-    if (processedLocationKey.current === location.key && allGames.length > 0) {
+  const loadSession = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) {
+      setSession({ isModerator: false, isAdmin: false, restriction: null });
       return;
     }
+    try { setSession(await invoke('session')); }
+    catch (error) { console.warn('Forum session unavailable', error); }
+  }, [invoke, isAuthenticated, user?.id]);
 
-    const params = new URLSearchParams(location.search);
-    const gameTitle = params.get('game');
-    const sectionParam = params.get('section');
-
-    if (gameTitle && allGames.length > 0) {
-      // Allow switching games if URL param changes
-      let match = allGames.find((g) => String(g.title).toLowerCase() === gameTitle.toLowerCase());
-
-      if (!match) {
-        // Mock game fallback so the user can still visit the forum
-        match = {
-          id: 'mock_' + gameTitle.replace(/\s+/g, '_').toLowerCase(),
-          title: gameTitle,
-          genre: 'General',
-          cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'
-        };
-      }
-
-      setActiveGame(match);
-      setSelectedPost(null);
-      if (sectionParam) setActiveSection(sectionParam);
-      processedLocationKey.current = location.key;
-
-    } else if (!gameTitle && allGames.length > 0) {
-      setActiveGame(null);
-      setSelectedPost(null);
-      processedLocationKey.current = location.key;
-    }
-  }, [location.search, location.key, allGames]);
-
-  // Save visited game to Recent Forum Games
   useEffect(() => {
-    if (activeGame) {
+    let cancelled = false;
+    (async () => {
       try {
-        const stored = JSON.parse(localStorage.getItem('recent_forum_games') || '[]');
-        // Remove if exists to avoid duplicates
-        const filtered = stored.filter((g) => g.name !== activeGame.title);
-        // Add to front
-        const toSave = [{
-          id: activeGame.id,
-          name: activeGame.title,
-          image: activeGame.cover_image || activeGame.banner_image || activeGame.image
-        }, ...filtered].slice(0, 5);
+        const list = await base44.entities.Game.list('-original_year', 100);
+        if (!cancelled) setGames(list || []);
+      } catch (error) { console.error('Failed to load forum games', error); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-        localStorage.setItem('recent_forum_games', JSON.stringify(toSave));
-        // Dispatch event so LibrarySidebar can update immediately
-        window.dispatchEvent(new Event('recentForumGamesUpdated'));
-      } catch (e) {
-        console.error("Failed to save recent forum game", e);
-      }
-    }
+  useEffect(() => { loadSession(); }, [loadSession]);
+
+  useEffect(() => {
+    const gameTitle = new URLSearchParams(location.search).get('game');
+    if (!gameTitle || !games.length) return;
+    const match = games.find((game) => String(game.title).toLowerCase() === gameTitle.toLowerCase());
+    if (match) setActiveGame(match);
+  }, [games, location.search]);
+
+  useEffect(() => {
+    if (!activeGame) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem('recent_forum_games') || '[]');
+      const next = [{ id: activeGame.id, name: activeGame.title, image: activeGame.cover_image || activeGame.banner_image || activeGame.image || '' }, ...stored.filter((item) => item.name !== activeGame.title)].slice(0, 6);
+      localStorage.setItem('recent_forum_games', JSON.stringify(next));
+      window.dispatchEvent(new Event('recentForumGamesUpdated'));
+    } catch (error) { console.warn('Could not save recent forum game', error); }
   }, [activeGame]);
 
-  // Apply filters to games
-  useEffect(() => {
-    let currentGames = allGames;
-
-    if (selectedGenre !== 'All Games') {
-      currentGames = currentGames.filter((game) => game.genre === selectedGenre);
-    }
-
-    if (searchQuery && !activeGame) {
-      const lowerQ = searchQuery.toLowerCase();
-      currentGames = currentGames.filter((game) =>
-      game.title.toLowerCase().includes(lowerQ)
-      );
-    }
-    setFilteredGames(currentGames);
-  }, [allGames, selectedGenre, searchQuery, activeGame]);
-
-  const fetchPosts = useCallback(async () => {
+  const loadFeed = useCallback(async () => {
     setLoading(true);
     try {
-      let filter = { is_farm_hub: { $ne: true } };
-      let sort = '-created_date';
+      const filter = { is_farm_hub: { $ne: true } };
+      if (activeGame?.title) filter.game_title = activeGame.title;
+      const [postRows, reactionRows, commentRows] = await Promise.all([
+        base44.entities.Post.filter(filter, '-created_date', 120),
+        base44.entities.ForumReaction.list('-created_date', 1200).catch(() => []),
+        base44.entities.Comment.filter({ target_type: 'post' }, '-created_date', 1200).catch(() => []),
+      ]);
+      setPosts((postRows || []).filter((post) => post.status !== 'removed'));
+      setReactions(reactionRows || []);
+      setComments(commentRows || []);
+    } catch (error) { showError(error, 'Load Forum'); }
+    finally { setLoading(false); }
+  }, [activeGame?.title]);
 
-      if (sortBy === 'popular') sort = '-score';
+  useEffect(() => { loadFeed(); }, [loadFeed]);
 
-      if (activeGame) {
-        filter.game_title = activeGame.title;
+  const loadReports = useCallback(async () => {
+    if (!session.isModerator) { setReports([]); return; }
+    try { setReports(await base44.entities.ForumReport.filter({ status: 'open' }, '-created_date', 100)); }
+    catch (error) { console.warn('Could not load forum reports', error); }
+  }, [session.isModerator]);
 
-        // Map new topics to backend filters best effort
-        if (activeSection !== 'all') {
-          if (activeSection === 'discussion') filter.type = 'game_discussion';else
-          if (activeSection === 'review') filter.type = 'game_review';else
-          if (activeSection === 'guide') filter.community = 'guide';else
-          if (activeSection === 'news') filter.community = 'general'; // fallback
-          // Video, Screenshot, Artwork handled by client-side filter or generic
-        }
+  useEffect(() => { if (moderationOpen) loadReports(); }, [moderationOpen, loadReports]);
+
+  const reactionCount = useCallback((postId) => reactions.filter((r) => r.target_type === 'post' && r.target_id === postId).length, [reactions]);
+  const commentCount = useCallback((postId) => comments.filter((c) => c.target_id === postId && c.target_type === 'post').length, [comments]);
+
+  const visiblePosts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const rows = posts.filter((post) => {
+      if (section === 'guide' && !(post.community === 'guide' || ['guide', 'full_guide'].includes(post.type))) return false;
+      if (section === 'achievement' && !(post.community === 'achievements' || String(post.type).includes('achievement'))) return false;
+      if (section === 'farming' && !(post.community === 'farming' || post.type === 'farming_guide')) return false;
+      if (section === 'tips' && !(post.community === 'tips' || post.type === 'tip')) return false;
+      if (section === 'discussion' && !['discussion', 'game_discussion', 'general_discussion'].includes(post.type)) return false;
+      if (!query) return true;
+      return [post.title, post.content, post.game_title, ...(post.tags || [])].some((value) => String(value || '').toLowerCase().includes(query));
+    });
+    return [...rows].sort((a, b) => {
+      if (Boolean(a.is_pinned) !== Boolean(b.is_pinned)) return a.is_pinned ? -1 : 1;
+      if (sort === 'popular') {
+        const aHeat = reactionCount(a.id) * 8 + commentCount(a.id) * 4 + Number(a.view_count || 0);
+        const bHeat = reactionCount(b.id) * 8 + commentCount(b.id) * 4 + Number(b.view_count || 0);
+        return bHeat - aHeat;
       }
+      return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+    });
+  }, [posts, search, section, sort, reactionCount, commentCount]);
 
-      // Only fetch if we are inside a game or we want a global feed (optional)
-      if (activeGame) {
-        const fetchedPosts = await base44.entities.Post.filter(filter, sort, 50);
-        let filtered = fetchedPosts;
+  const filteredGames = useMemo(() => games.filter((game) => !gameSearch || game.title?.toLowerCase().includes(gameSearch.toLowerCase())).slice(0, 40), [games, gameSearch]);
+  const guideDesk = useMemo(() => visiblePosts.filter((post) => post.is_pinned || post.community === 'guide' || ['full_guide', 'achievement_guide', 'farming_guide'].includes(post.type)).slice(0, 6), [visiblePosts]);
+  const selectedComments = useMemo(() => selectedPost ? comments.filter((comment) => comment.target_id === selectedPost.id && comment.target_type === 'post') : [], [comments, selectedPost]);
+  const selectedPostReactions = useMemo(() => selectedPost ? reactions.filter((reaction) => reaction.target_type === 'post' && reaction.target_id === selectedPost.id) : [], [reactions, selectedPost]);
 
-        // Client-side filtering for media types
-        if (activeSection === 'video' || activeSection === 'screenshot' || activeSection === 'artwork') {
-          filtered = filtered.filter((p) => p.image_url);
-        }
+  const requireAuth = () => {
+    if (isAuthenticated && user?.id) return true;
+    showError('Please sign in to participate in the forum.');
+    return false;
+  };
 
-        if (searchQuery) {
-          const lowerQ = searchQuery.toLowerCase();
-          filtered = filtered.filter((p) =>
-          p.title?.toLowerCase().includes(lowerQ) ||
-          p.content?.toLowerCase().includes(lowerQ)
-          );
-        }
-        setPosts(filtered);
-      }
-    } catch (e) {
-      console.error("Failed to fetch posts", e);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeSection, activeGame, sortBy, searchQuery]);
+  const createPost = async (data) => {
+    if (!requireAuth()) return;
+    try { await invoke('create_post', data); setComposerOpen(false); await loadFeed(); showSuccess('Published to the Forum Hub.'); }
+    catch (error) { showError(error, 'Publish Post'); }
+  };
 
-  const fetchRightPosts = useCallback(async () => {
-    if (!activeGame) return;
-    setLoadingRight(true);
+  const selectPost = async (post) => {
+    setSelectedPost(post);
+    try { await invoke('view_post', { post_id: post.id }); } catch (_) {}
+  };
+
+  const deletePost = async (post) => {
+    if (!requireAuth() || !window.confirm(`Delete “${post.title}”? This cannot be undone.`)) return;
+    try { await invoke('delete_post', { post_id: post.id }); if (selectedPost?.id === post.id) setSelectedPost(null); await loadFeed(); showSuccess('Post deleted.'); }
+    catch (error) { showError(error, 'Delete Post'); }
+  };
+
+  const addComment = async ({ content, parent_comment_id }) => {
+    if (!requireAuth() || !selectedPost) return;
+    try { await invoke('add_comment', { post_id: selectedPost.id, content, parent_comment_id }); await loadFeed(); }
+    catch (error) { showError(error, 'Add Comment'); }
+  };
+
+  const deleteComment = async (comment) => {
+    if (!requireAuth() || !window.confirm('Delete this comment?')) return;
+    try { await invoke('delete_comment', { comment_id: comment.id }); await loadFeed(); }
+    catch (error) { showError(error, 'Delete Comment'); }
+  };
+
+  const react = async (targetType, targetId, emoji) => {
+    if (!requireAuth()) return;
     try {
-      let filter = { game_title: activeGame.title, is_farm_hub: { $ne: true } };
-      let sort = '-created_date';
+      await invoke('toggle_reaction', { target_type: targetType, target_id: targetId, emoji });
+      setReactions(await base44.entities.ForumReaction.list('-created_date', 1200) || []);
+    } catch (error) { showError(error, 'Reaction'); }
+  };
 
-      if (hotFilter === 'hot' || hotFilter === 'trending') sort = '-score';
-      if (hotFilter === 'to_know') filter.community = 'guide';
-      if (hotFilter === 'tips') filter.community = 'tips';
+  const report = async (targetType, targetId) => {
+    if (!requireAuth()) return;
+    try { await invoke('report', { target_type: targetType, target_id: targetId, reason: 'other', details: 'Submitted from Forum Hub.' }); showSuccess('Report sent to moderators.'); }
+    catch (error) { showError(error, 'Report'); }
+  };
 
-      const fetchedPosts = await base44.entities.Post.filter(filter, sort, 10);
-      setRightPosts(fetchedPosts);
-    } catch (e) {
-      console.error("Failed to fetch right posts", e);
-    } finally {
-      setLoadingRight(false);
-    }
-  }, [activeGame, hotFilter]);
-
-  useEffect(() => {
-    if (hotFilter !== 'none') {
-      fetchRightPosts();
-    }
-  }, [fetchRightPosts, hotFilter]);
-
-  const fetchComments = useCallback(async (postId) => {
-    if (!postId) return;
-    const fetchedComments = await base44.entities.Comment.filter({ target_id: postId, target_type: 'post' }, '-created_date', 100);
-    setComments(fetchedComments);
-  }, []);
-
-  useEffect(() => {
-    if (activeGame) {
-      if (!selectedPost) {
-        fetchPosts();
-      } else {
-        fetchComments(selectedPost.id);
-      }
-    }
-  }, [selectedPost, fetchPosts, fetchComments, activeGame]);
-
-  const handleCreatePost = async (postData) => {
-    if (!isAuthenticated) return;
-
+  const moderatePost = async (post, operation) => {
     try {
-
-      // Simplified moderation check
-    } catch (e) {
-      // Ignore for now
-    }
-    try {
-      await base44.entities.Post.create(postData);
-      _setShowCreateForm(false);
-      fetchPosts();
-      showSuccess('Post created successfully!');
-    } catch (error) {
-      showError(error, 'Create Post');
-    }
+      await invoke('moderate_post', { post_id: post.id, operation });
+      await loadFeed();
+      if (selectedPost?.id === post.id) setSelectedPost((current) => ({ ...current, is_pinned: operation === 'pin' ? true : operation === 'unpin' ? false : current.is_pinned, is_locked: operation === 'lock' ? true : operation === 'unlock' ? false : current.is_locked }));
+    } catch (error) { showError(error, 'Moderate Post'); }
   };
 
-  const handleVote = async (post, voteType) => {
-    if (!isAuthenticated) {
-      showError('Please sign in to vote');
-      return;
-    }
-    try {
-      const currentScore = Number(post.score || 0);
-      const newScore = currentScore + (voteType === 'up' ? 1 : -1);
-      await base44.entities.Post.update(post.id, { score: newScore });
-      setPosts((prevPosts) => prevPosts.map((p) => p.id === post.id ? { ...p, score: newScore } : p));
-      setRightPosts((prevPosts) => prevPosts.map((p) => p.id === post.id ? { ...p, score: newScore } : p));
-      if (selectedPost?.id === post.id) {
-        setSelectedPost((prev) => ({ ...prev, score: newScore }));
-      }
-    } catch (error) {
-      showError(error, 'Vote');
-    }
+  const muteSelectedAuthor = async () => {
+    if (!selectedPost?.user_id) { showError('This legacy post has no stable author ID to restrict.'); return; }
+    try { await invoke('restrict_user', { user_id: selectedPost.user_id, type: 'mute', duration_hours: 24, reason: 'Moderator action from Forum Hub' }); showSuccess(`${selectedPost.author_name || 'User'} muted for 24 hours.`); }
+    catch (error) { showError(error, 'Mute User'); }
   };
 
-  const handleCommentVote = async (comment, voteType) => {
-    if (!isAuthenticated) {
-      showError('Please sign in to vote');
-      return;
-    }
-    try {
-      const currentScore = Number(comment.score || 0);
-      const newScore = currentScore + (voteType === 'up' ? 1 : -1);
-      await base44.entities.Comment.update(comment.id, { score: newScore });
-      setComments((prevComments) => prevComments.map((c) => c.id === comment.id ? { ...c, score: newScore } : c));
-    } catch (error) {
-      showError(error, 'Comment Vote');
-    }
+  const resolveReport = async (reportId, status = 'resolved') => {
+    try { await invoke('resolve_report', { report_id: reportId, status, resolution: status === 'dismissed' ? 'Dismissed in moderation queue.' : 'Reviewed and resolved.' }); await loadReports(); }
+    catch (error) { showError(error, 'Resolve Report'); }
   };
 
-  const handleSelectGame = (game) => {
-    setActiveGame(game);
-    setLastActiveGame(game);
-    setSelectedPost(null);
-    setActiveSection('all');
-    setSearchQuery('');
+  const appointModerator = async () => {
+    if (!moderatorUserId.trim()) return;
+    try { await invoke('assign_moderator', { user_id: moderatorUserId.trim(), role: 'moderator' }); setModeratorUserId(''); showSuccess('Moderator appointed.'); }
+    catch (error) { showError(error, 'Appoint Moderator'); }
   };
 
-  const handleTabSelect = (tabId) => {
-    if (tabId === 'hub') {
-      setActiveGame(null);
-      setSelectedPost(null);
-      setSelectedGenre('All Games');
-      setActiveSection('all');
-    } else if (tabId === 'farm_hub') {
-      // Navigate to the Farm page
-      navigate(createPageUrl('Farm'));
-    }
+  const handleBottomTab = (tabId) => {
+    if (tabId === 'hub') { setActiveGame(null); setSelectedPost(null); setSection('all'); }
+    if (tabId === 'farm_hub') navigate(createPageUrl('Farm'));
   };
 
-  const setShowCreateForm = (value) => {
-    if (value && !isAuthenticated) {
-      showError("Please sign in to create posts.");
-      return;
-    }
-    _setShowCreateForm(value);
-  };
-
-  return (
-    <PageErrorBoundary pageName="Community">
-        <GlassPageFrame
-            sidebarVisible={sidebarVisible}
-            onSidebarToggle={toggleSidebar}
-            bottomContent={<ForumBottomNav activeTab="hub" onTabSelect={handleTabSelect} />}
-        >
-        <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-            {/* Left rail — overlay extension: floats over the page instead of pushing it */}
-            {sidebarVisible && (
-              <div className="absolute left-0 top-0 bottom-0 w-[132px] border-r border-white/20 z-40 flex flex-col items-center"
-                style={{ background: 'rgba(8, 12, 18, 0.58)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
-              />
-            )}
-
-            {/* 95% Main Area */}
-            <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">
-            {/* Ambient Background */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-300/5 rounded-full blur-[120px]" />
+  return <PageErrorBoundary pageName="Community">
+    <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<ForumBottomNav activeTab="hub" onTabSelect={handleBottomTab} />}>
+      <div className="relative h-screen w-full overflow-hidden bg-[#060a10] text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_38%_0%,rgba(56,189,248,0.07),transparent_30%),linear-gradient(180deg,#080d14_0%,#060a10_100%)]" />
+        <div className="relative flex h-full flex-col pb-12 pt-16">
+          <header className="flex h-[78px] shrink-0 items-center gap-4 border-b border-white/[0.06] px-5 lg:px-8">
+            <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-cyan-200/45">Player knowledge network</p><h1 className="truncate text-xl font-semibold text-white">Forum Hub <span className="font-normal text-white/30">/ {activeGame?.title || 'All Games'}</span></h1></div>
+            <div className="ml-auto flex items-center gap-2">
+              {session.restriction && <span className="hidden rounded-full border border-amber-300/15 bg-amber-300/[0.06] px-3 py-1.5 text-xs text-amber-100/70 md:block">{session.restriction.type} active</span>}
+              {session.isModerator && <button type="button" onClick={() => setModerationOpen((value) => !value)} className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 text-xs text-white/55 hover:text-white"><Shield className="h-3.5 w-3.5" />Moderation</button>}
+              <button type="button" onClick={() => requireAuth() && setComposerOpen(true)} className="flex h-9 items-center gap-2 rounded-lg border border-cyan-200/15 bg-cyan-300/10 px-3 text-xs font-semibold text-cyan-100"><Plus className="h-4 w-4" />Create</button>
             </div>
+          </header>
 
-            <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-8rem)] flex flex-col gap-6">
-                
-                {/* Header Section (Title) - Now at the top */}
-                {!activeGame &&
-              <div className="flex items-center gap-4 px-2 mt-12 mb-4">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <MessageSquare className="w-4 h-4" />
-                        </div>
-                        <h1 className="text-xl font-bold tracking-wide text-white">GAMES DISCUSSION</h1>
-                    </div>
-              }
+          <div className="flex min-h-0 flex-1">
+            <aside className="hidden w-[230px] shrink-0 border-r border-white/[0.055] bg-black/10 p-4 lg:flex lg:flex-col">
+              <div className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" /><input value={gameSearch} onChange={(e) => setGameSearch(e.target.value)} placeholder="Find a game" className="h-9 w-full rounded-lg border border-white/[0.07] bg-white/[0.025] pl-9 pr-3 text-xs text-white outline-none placeholder:text-white/22" /></div>
+              <button type="button" onClick={() => { setActiveGame(null); setSelectedPost(null); }} className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs ${!activeGame ? 'bg-cyan-300/10 text-cyan-100' : 'text-white/45 hover:bg-white/[0.04] hover:text-white'}`}><Gamepad2 className="h-4 w-4" />All Games</button>
+              <div className="mt-2 flex-1 space-y-1 overflow-y-auto pr-1">{filteredGames.map((game) => <button type="button" key={game.id} onClick={() => { setActiveGame(game); setSelectedPost(null); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs ${activeGame?.id === game.id ? 'bg-white/[0.07] text-white' : 'text-white/42 hover:bg-white/[0.035] hover:text-white/75'}`}><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-200/35" /><span className="truncate">{game.title}</span></button>)}</div>
+              <div className="mt-3 border-t border-white/[0.06] pt-3 text-[10px] leading-5 text-white/25">Browse by game, then narrow to full guides, achievement hunts, farming routes, tips or discussion.</div>
+            </aside>
 
-                {/* Genre Filter Bar + Search - Moved Below Header */}
-                {!activeGame &&
-              <div className="px-2">
-                        <div className="flex items-center gap-4">
-                            <motion.button
-                    onClick={() => setSelectedGenre('All Games')}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${selectedGenre === 'All Games' ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}>
-                    
-                                <Gamepad2 className="w-4 h-4" />
-                                <span className="text-sm uppercase tracking-wide">All Games</span>
-                            </motion.button>
-
-                            <div className="h-6 w-px bg-white/20" />
-
-                            <div
-                    ref={genreScrollRef}
-                    className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide">
-                    
-                                {GENRE_CONFIG.map((genre) => {
-                      const Icon = genre.icon;
-                      const isActive = selectedGenre === genre.label;
-                      return (
-                        <motion.button
-                          key={genre.label}
-                          onClick={() => setSelectedGenre(genre.label)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${isActive ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}>
-                          
-                                            <Icon className="w-4 h-4" />
-                                            <span className="text-sm uppercase tracking-wide">{genre.label}</span>
-                                        </motion.button>);
-
-                    })}
-                            </div>
-                        </div>
-
-                        {/* Search Bar under All Games */}
-                        <div className="relative mt-3 max-w-md">
-                            <input
-                    type="text"
-                    placeholder="Search games..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-9 pr-8" />
-                  
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                            <Mic className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 hover:text-white/60 cursor-pointer" />
-                        </div>
-                    </div>
-              }
-
-                {/* Main Content Area */}
-                <div className="flex-1 min-h-0 grid grid-cols-12 gap-6 overflow-hidden">
-                    
-                    {/* HUB VIEW: Game Grid */}
-                    {!activeGame &&
-                <div className="col-span-12 overflow-y-auto pr-2 custom-scrollbar">
-                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
-                                    {loading && allGames.length === 0 ?
-                    [1, 2, 3, 4, 5, 6, 7, 8].map((i) =>
-                    <div key={i} className="aspect-video bg-white/5 rounded-2xl animate-pulse" />
-                    ) :
-                    filteredGames.length > 0 ?
-                    filteredGames.map((game) =>
-                    <LiquidGlassCard
-                      key={game.id}
-                      className="group relative aspect-video rounded-2xl overflow-hidden cursor-pointer"
-                      hover={true}
-                      onClick={() => handleSelectGame(game)}>
-                      
-                                                <img
-                        src={game.cover_image || game.banner_image || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=600&fit=crop"}
-                        alt={game.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                      
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
-                                                <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-2">
-                                                    <Badge className="w-fit bg-cyan-500/20 text-cyan-300 border-cyan-500/30 backdrop-blur-md">
-                                                        {game.genre}
-                                                    </Badge>
-                                                    <h3 className="text-white text-xl font-bold truncate group-hover:text-cyan-400 transition-colors">
-                                                        {game.title}
-                                                    </h3>
-                                                    <div className="flex items-center gap-4 text-white/40 text-xs mt-1">
-                                                        <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> Forum</span>
-                                                        <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Community</span>
-                                                    </div>
-                                                </div>
-                                            </LiquidGlassCard>
-                    ) :
-
-                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                                            <Search className="w-12 h-12 text-white/20 mb-4" />
-                                            <h3 className="text-xl font-bold text-white/60">No Games Found</h3>
-                                            <p className="text-white/40 text-sm mt-2">Try selecting a different genre.</p>
-                                        </div>
-                    }
-                                </div>
-                        </div>
-                }
-
-                    {/* FORUM VIEW: Feed + Sidebar */}
-                    {activeGame &&
-                <>
-                            {/* Left Rail: Hot Topics (2/12) */}
-                            <div className="hidden lg:flex col-span-2 flex-col gap-4 pr-4 border-r border-white/5 pt-[7.75rem]">
-                                <HotTopicsSidebar
-                      selected={hotFilter}
-                      onSelect={(id) => {
-                        setHotFilter(id);
-                        // Removed logic that reset activeSection or selectedPost
-                        // Now hotFilter purely drives the Right Sidebar
-                      }} />
-                    
-                            </div>
-                            {/* Center: Feed (7/12) */}
-                            <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden pt-[7.75rem]">
-                                
-                                {/* Horizontal Topic Filter Bar - Above the Banner */}
-                                <div className="mb-4 w-full overflow-x-auto scrollbar-hide">
-                                    <div className="flex items-center justify-between min-w-max gap-2 px-1">
-                                        {TOPIC_TYPES.map((topic) => {
-                          const Icon = topic.icon;
-                          const isActive = activeSection === topic.id;
-                          return (
-                            <button
-                              key={topic.id}
-                              onClick={() => {
-                                setActiveSection(topic.id);
-                                setSelectedPost(null);
-                              }}
-                              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${
-                              isActive ?
-                              'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]' :
-                              'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:text-white'}`
-                              }>
-                              
-                                                    <Icon className="w-4 h-4" />
-                                                    <span className="font-medium text-xs uppercase tracking-wide">{topic.label}</span>
-                                                </button>);
-
-                        })}
-                                    </div>
-                                </div>
-
-                                {/* Controls Toolbar: Back, Search, New Post, Sort */}
-                                <div className="mb-6">
-                                <GameBanner imageUrl={getWallpaperFor(activeGame?.title) || activeGame?.banner_image || activeGame?.cover_image}>
-                                    <div className="flex items-center gap-4">
-                                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              navigate(location.pathname); // Clear URL params
-                              setActiveGame(null);
-                              setSelectedPost(null);
-                              setSelectedGenre('All Games');
-                              setActiveSection('all');
-                            }}
-                            className="text-white/60 hover:text-white shrink-0 -ml-2">
-                            
-                                            <ArrowLeft className="w-5 h-5" />
-                                        </Button>
-                                        
-                                        <h2 className="text-sm font-bold text-white tracking-wide uppercase whitespace-nowrap">
-                                            {activeSection === 'all' ? 'All Posts' : TOPIC_TYPES.find((t) => t.id === activeSection)?.label}
-                                        </h2>
-
-                                        
-
-
-
-
-
-
-
-                          
-
-                                        <div className="relative w-full max-w-md">
-                                            <input
-                              type="text"
-                              placeholder="Search this forum..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-9" />
-                            
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                                        </div>
-
-                                        <div className="flex-1" />
-
-                                        <div className="flex items-center gap-3">
-                                            <Button
-                              onClick={() => setShowCreateForm(true)}
-                              size="sm"
-                              className="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 rounded px-4 h-8 text-xs whitespace-nowrap font-semibold">
-                              
-                                                <Plus className="w-3 h-3 mr-1" /> New Post
-                                            </Button>
-                                            <Select value={sortBy} onValueChange={setSortBy}>
-                                                <SelectTrigger className="w-28 bg-white/5 border-white/10 text-white text-xs h-8 rounded-full">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="newest">Newest</SelectItem>
-                                                    <SelectItem value="popular">Popular</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                </GameBanner>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 pb-20">
-                                    <AnimatePresence mode="wait">
-                                        {selectedPost ?
-                        <motion.div
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="bg-[#0f1419]/80 backdrop-blur-xl rounded-2xl border border-white/10 p-6 min-h-full">
-                          
-                                                <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedPost(null)}
-                            className="mb-6 hover:bg-white/10 -ml-2 text-white/60">
-                            
-                                                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
-                                                </Button>
-                                                
-                                                <PostCard post={selectedPost} onVote={handleVote} onSelect={() => {}} isDetailView={true} />
-                                                
-                                                <div className="mt-8 border-t border-white/10 pt-6">
-                                                    <h3 className="text-white font-bold mb-6 flex items-center gap-2">
-                                                        <MessageSquare className="w-4 h-4 text-cyan-400" />
-                                                        Comments ({comments.length})
-                                                    </h3>
-                                                    <CommentSection
-                              postId={selectedPost.id}
-                              comments={comments}
-                              onAddComment={async (data) => {
-                                await base44.entities.Comment.create(data);
-                                fetchComments(selectedPost.id);
-                              }}
-                              onVote={handleCommentVote} />
-                            
-                                                </div>
-                                            </motion.div> :
-
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="space-y-4">
-                          
-                                                {/* (Old header removed) */}
-
-                                                {loading ?
-                          [1, 2, 3, 4].map((i) =>
-                          <div key={i} className="h-40 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
-                          ) :
-                          posts.length > 0 ?
-                          posts.map((post) =>
-                          <div key={post.id}>
-                                                            <PostCard post={post} onVote={handleVote} onSelect={() => setSelectedPost(post)} />
-                                                        </div>
-                          ) :
-
-                          <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 rounded-3xl border border-white/5 border-dashed">
-                                                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                                                            <MessageSquare className="w-8 h-8 text-white/20" />
-                                                        </div>
-                                                        <h3 className="text-xl font-bold text-white/60">No discussions yet</h3>
-                                                        <p className="text-white/40 text-sm mt-2 max-w-xs mx-auto">Be the first to post about {activeGame.title}!</p>
-                                                        <Button
-                              onClick={() => setShowCreateForm(true)}
-                              className="mt-6 bg-cyan-600 hover:bg-cyan-500 rounded-full px-8">
-                              
-                                                            Create Post
-                                                        </Button>
-                                                    </div>
-                          }
-                                            </motion.div>
-                        }
-                                    </AnimatePresence>
-                                </div>
-                            </div>
-
-                            {/* Right Column: Community Posts / Hot Topics Results (3/12) */}
-                            <div className="hidden lg:flex col-span-3 flex-col gap-6 pl-4 border-l border-white/5 pt-[7.75rem]">
-                                <h2 className="text-sm font-bold text-white/40 tracking-wide uppercase px-2">
-                                    {hotFilter !== 'none' ? `${hotFilter.replace('_', ' ')}` : 'Community Activity'}
-                                </h2>
-                                
-                                <div className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-12rem)] custom-scrollbar pr-2">
-                                    {loadingRight ?
-                      [1, 2, 3].map((i) =>
-                      <div key={i} className="h-20 bg-white/5 rounded-lg animate-pulse" />
-                      ) :
-                      rightPosts.length > 0 ?
-                      rightPosts.map((post) =>
-                      <div
-                        key={post.id}
-                        onClick={() => setSelectedPost(post)}
-                        className="bg-white/5 hover:bg-white/10 p-3 rounded-lg cursor-pointer transition-colors border border-white/5 hover:border-white/10 group">
-                        
-                                                <h4 className="text-sm font-bold text-white mb-1 line-clamp-2 group-hover:text-cyan-400 transition-colors">
-                                                    {post.title}
-                                                </h4>
-                                                <div className="flex items-center gap-3 text-[10px] text-white/40">
-                                                    <span className="flex items-center gap-1">
-                                                        <Users className="w-3 h-3" />
-                                                        {post.created_by?.split('@')[0] || 'User'}
-                                                    </span>
-                                                    {post.score > 0 &&
-                          <span className="flex items-center gap-1 text-green-400">
-                                                            <Trophy className="w-3 h-3" />
-                                                            {post.score}
-                                                        </span>
-                          }
-                                                </div>
-                                            </div>
-                      ) :
-
-                      <div className="text-center py-10 text-white/20 text-xs">
-                                            Select a topic from the left sidebar to view posts here.
-                                        </div>
-                      }
-                                </div>
-
-                                {/* Activity / Stats - Minimal (Moved to bottom) */}
-                                <div className="mt-auto px-2">
-                                    <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                                        <Target className="w-4 h-4 text-purple-400" />
-                                        Forum Activity
-                                    </h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-white/5 rounded-lg p-3 text-center">
-                                            <div className="text-2xl font-bold text-white">{posts.length}</div>
-                                            <div className="text-[10px] uppercase tracking-wider text-white/40">Posts</div>
-                                        </div>
-                                        <div className="bg-white/5 rounded-lg p-3 text-center">
-                                            <div className="text-2xl font-bold text-white">{comments.length}</div>
-                                            <div className="text-[10px] uppercase tracking-wider text-white/40">Replies</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                }
+            <main className="min-w-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 lg:px-8">
+              {selectedPost ? <div className="mx-auto max-w-4xl space-y-4">
+                <div className="flex items-center gap-2"><button type="button" onClick={() => setSelectedPost(null)} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-white/40 hover:bg-white/[0.04] hover:text-white"><ArrowLeft className="h-4 w-4" />Back to forum</button>{session.isModerator && <button onClick={muteSelectedAuthor} className="ml-auto rounded-lg border border-amber-300/10 px-3 py-1.5 text-xs text-amber-100/55 hover:bg-amber-300/[0.05]">Mute author 24h</button>}</div>
+                <PostCard post={selectedPost} isDetailView currentUser={user} isModerator={session.isModerator} reactions={selectedPostReactions} commentCount={selectedComments.length} onReact={(post, emoji) => react('post', post.id, emoji)} onDelete={deletePost} onReport={report} onModerate={moderatePost} />
+                <CommentSection post={selectedPost} comments={selectedComments} reactions={reactions} currentUser={user} isModerator={session.isModerator} onAddComment={addComment} onDelete={deleteComment} onReact={react} onReport={report} />
+              </div> : <div className="mx-auto max-w-5xl">
+                <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
+                  <div className="flex flex-wrap gap-1.5">{SECTIONS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setSection(id)} className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium ${section === id ? 'bg-cyan-300/10 text-cyan-100' : 'text-white/38 hover:bg-white/[0.04] hover:text-white/70'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}</div>
+                  <div className="flex gap-2 xl:ml-auto"><div className="relative min-w-[220px] flex-1 xl:flex-none"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search guides, cards, bosses, routes…" className="h-8 w-full rounded-lg border border-white/[0.07] bg-white/[0.025] pl-9 pr-3 text-xs text-white outline-none placeholder:text-white/22" /></div><select value={sort} onChange={(e) => setSort(e.target.value)} className="h-8 rounded-lg border border-white/[0.07] bg-[#0a1018] px-2 text-xs text-white/55"><option value="newest">Newest</option><option value="popular">Useful / Popular</option></select></div>
                 </div>
-            </div>
+                {activeGame && <div className="mb-4 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.022] px-4 py-3"><div><p className="text-[9px] uppercase tracking-[0.2em] text-white/28">Game intelligence channel</p><p className="mt-1 text-sm font-semibold text-white/80">{activeGame.title} <span className="font-normal text-white/30">· {activeGame.genre || 'Game'}</span></p></div><button type="button" onClick={() => setActiveGame(null)} className="text-xs text-white/30 hover:text-white">Clear game</button></div>}
+                <div className="space-y-3">{loading ? <div className="py-20 text-center text-sm text-white/25">Loading player knowledge…</div> : visiblePosts.length ? visiblePosts.map((post) => <PostCard key={post.id} post={post} currentUser={user} isModerator={session.isModerator} reactions={reactions.filter((r) => r.target_type === 'post' && r.target_id === post.id)} commentCount={commentCount(post.id)} onSelect={selectPost} onReact={(item, emoji) => react('post', item.id, emoji)} onDelete={deletePost} onReport={report} onModerate={moderatePost} />) : <div className="rounded-xl border border-dashed border-white/[0.07] py-20 text-center"><BookOpen className="mx-auto h-8 w-8 text-cyan-200/25" /><h3 className="mt-3 text-sm font-semibold text-white/60">No knowledge entry here yet</h3><p className="mt-1 text-xs text-white/28">Start the guide, farming route, achievement hunt or discussion.</p></div>}</div>
+              </div>}
+            </main>
 
-            <AnimatePresence>
-                {showCreateForm &&
-              <PostComposer
-                isOpen={showCreateForm}
-                onSubmit={handleCreatePost}
-                onCancel={() => _setShowCreateForm(false)}
-                initialType={activeGame ? 'game_discussion' : 'general_discussion'}
-                initialGameTitle={activeGame ? activeGame.title : ''}
-                initialGameGenre={activeGame ? activeGame.genre : ''} />
-
-              }
-            </AnimatePresence>
-            </div>
+            {!selectedPost && <aside className="hidden w-[280px] shrink-0 border-l border-white/[0.055] bg-black/10 p-4 xl:block">
+              <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-cyan-200/55" /><h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Guide Desk</h2></div><p className="mt-2 text-xs leading-5 text-white/28">The strongest walkthroughs, achievement hints and farming routes for this channel.</p>
+              <div className="mt-4 space-y-2">{guideDesk.map((post) => <button key={post.id} type="button" onClick={() => selectPost(post)} className="w-full rounded-lg border border-white/[0.055] bg-white/[0.022] p-3 text-left hover:bg-white/[0.04]"><div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-cyan-200/45">{post.is_pinned && <Pin className="h-3 w-3" />}{post.guide_kind?.replaceAll('_', ' ') || post.community}</div><div className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-white/70">{post.title}</div><div className="mt-2 text-[10px] text-white/25">{post.game_title || 'Platform'} · {commentCount(post.id)} replies</div></button>)}{!guideDesk.length && <div className="rounded-lg border border-white/[0.05] p-4 text-xs leading-5 text-white/25">Pinned guides will appear here as the community builds its knowledge base.</div>}</div>
+              <div className="mt-5 rounded-lg border border-cyan-200/[0.07] bg-cyan-200/[0.025] p-3 text-[11px] leading-5 text-white/30"><Trophy className="mr-1 inline h-3.5 w-3.5 text-cyan-200/45" />Achievement hunters can tag missables, boss routes, collectibles, XP methods and card unlock conditions.</div>
+            </aside>}
+          </div>
         </div>
-        </GlassPageFrame>
-        </PageErrorBoundary>);
 
+        {moderationOpen && session.isModerator && <div className="absolute right-4 top-[150px] z-50 max-h-[calc(100vh-220px)] w-[360px] overflow-y-auto rounded-xl border border-white/[0.08] bg-[#080d14]/95 p-4 shadow-2xl backdrop-blur-xl"><div className="flex items-center justify-between"><div><p className="text-[9px] uppercase tracking-[0.2em] text-cyan-200/45">Operations</p><h3 className="text-sm font-semibold text-white/75">Moderation queue</h3></div><button onClick={() => setModerationOpen(false)} className="text-xs text-white/30">Close</button></div>{session.isAdmin && <div className="mt-4 rounded-lg border border-white/[0.06] bg-white/[0.025] p-3"><div className="flex items-center gap-2 text-xs text-white/50"><UserRoundCog className="h-3.5 w-3.5" />Appoint moderator</div><div className="mt-2 flex gap-2"><input value={moderatorUserId} onChange={(e) => setModeratorUserId(e.target.value)} placeholder="User ID" className="h-8 min-w-0 flex-1 rounded border border-white/[0.07] bg-black/20 px-2 text-xs text-white outline-none" /><button onClick={appointModerator} className="rounded bg-cyan-300/10 px-3 text-xs text-cyan-100">Add</button></div></div>}<div className="mt-4 space-y-2">{reports.map((item) => <div key={item.id} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3"><div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-amber-100/50"><Flag className="h-3 w-3" />{item.target_type} · {item.reason}</div><p className="mt-1 break-all text-xs text-white/35">{item.target_id}</p><div className="mt-3 flex gap-2"><button onClick={() => resolveReport(item.id)} className="flex items-center gap-1 rounded bg-cyan-300/10 px-2 py-1 text-[10px] text-cyan-100"><CheckCircle2 className="h-3 w-3" />Resolve</button><button onClick={() => resolveReport(item.id, 'dismissed')} className="rounded px-2 py-1 text-[10px] text-white/30 hover:bg-white/[0.04]">Dismiss</button></div></div>)}{!reports.length && <p className="py-5 text-center text-xs text-white/25">No open reports.</p>}</div></div>}
+
+        <PostComposer isOpen={composerOpen} onCancel={() => setComposerOpen(false)} onSubmit={createPost} games={games} initialGame={activeGame} />
+      </div>
+    </GlassPageFrame>
+  </PageErrorBoundary>;
 }

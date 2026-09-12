@@ -30,6 +30,7 @@ import Engine from './pages/Engine';
 import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
 import Farm from './pages/Farm';
+import Forum from './pages/Forum';
 import Friends from './pages/Friends';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
@@ -92,6 +93,7 @@ export const PAGES = {
     "EnvGuide": EnvGuide,
     "Events": Events,
     "Farm": Farm,
+    "Forum": Forum,
     "Friends": Friends,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
