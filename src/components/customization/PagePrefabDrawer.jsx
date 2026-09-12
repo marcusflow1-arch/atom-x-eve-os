@@ -27,10 +27,12 @@ export default function PagePrefabDrawer({ scope, preset, presets, onSelect, onC
           <div><p className="page-prefab-muted text-xs uppercase tracking-widest">UI Prefabs · {scope.replace(':', ' / ')}</p><h2 className="mt-2 text-xl font-bold">Page UI Theme</h2></div>
           <button type="button" aria-label="Close UI prefabs" onClick={onClose} className="page-prefab-option rounded-full p-2"><X className="h-4 w-4" /></button>
         </div>
-        <p className="page-prefab-muted mt-4 text-sm leading-6">Apply a preset to this page’s background and content panels. Your navigation bars stay unchanged; Layout Edit keeps individual adjustments.</p>
+        <p className="page-prefab-muted mt-4 text-sm leading-6">Default restores the page’s original design. The other prefabs are full visual compositions: background, mixed-color panels, glass seams, borders and accents can all differ instead of forcing one color everywhere.</p>
         <div className="mt-6 space-y-3">
           {presets.map(item => <button key={item.id} type="button" aria-pressed={preset.id === item.id} onClick={() => onSelect(item.id)} className="page-prefab-option flex w-full items-center gap-3 rounded-xl p-4 text-left">
-            <span className="h-10 w-10 shrink-0 rounded-lg" style={{ backgroundColor: item.pageBackground, backgroundImage: item.ambient, border: `1px solid ${item.border}` }} />
+            <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg" style={{ backgroundColor: item.isDefault ? '#111820' : item.pageBackground, backgroundImage: item.preview || item.ambient, border: `1px solid ${item.border}` }}>
+              {!item.isDefault && <span className="absolute inset-y-0 left-[46%] w-[2px] rotate-[8deg] bg-white/50 shadow-[0_0_8px_rgba(125,211,252,.65)]" />}
+            </span>
             <span className="flex-1"><strong className="block text-sm">{item.name}</strong><small className="page-prefab-muted mt-1 block text-xs">{item.hint}</small></span>
             {preset.id === item.id && <Sparkles className="h-4 w-4" />}
           </button>)}
