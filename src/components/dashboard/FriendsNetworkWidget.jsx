@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User } from 'lucide-react';
+import { MessageSquare, User } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -32,6 +32,10 @@ export default function FriendsNetworkWidget({ styleOverride = {} }) {
     return unsubscribe;
   }, [user?.id]);
 
+  const openMessages = (friend) => {
+    window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { friend } }));
+  };
+
   return (
     <div 
       className="w-full h-full rounded-2xl p-6 flex flex-col gap-4 overflow-hidden relative group hover:border-white/20 transition-colors pointer-events-auto"
@@ -45,9 +49,12 @@ export default function FriendsNetworkWidget({ styleOverride = {} }) {
       
       <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
         {friendsList.map(friend => (
-          <div 
-            key={friend.id} 
-            className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
+          <button
+            type="button"
+            key={friend.id}
+            onClick={() => openMessages(friend)}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(34,211,238,0.16)] transition cursor-pointer text-left"
+            title={`Message ${friend.friend_name || 'friend'}`}
           >
             <div className="relative">
               <img src={friend.friend_avatar} alt={friend.friend_name} className="w-12 h-12 rounded-lg object-cover" />
@@ -63,7 +70,8 @@ export default function FriendsNetworkWidget({ styleOverride = {} }) {
                 {friend.current_game ? <span className="text-blue-300">{friend.current_game}</span> : <span className="capitalize">{friend.status}</span>}
               </p>
             </div>
-          </div>
+            <MessageSquare className="w-4 h-4 text-white/25 group-hover:text-cyan-300" />
+          </button>
         ))}
         {friendsList.length === 0 && (
           <div className="text-sm text-white/40 p-4 rounded-xl border border-white/10 bg-white/5">
