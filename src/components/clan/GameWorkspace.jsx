@@ -33,7 +33,7 @@ const invoke = async (action, data) => {
 };
 
 export default function GameWorkspace({ game, clan, onBack, initialZone }) {
-  const { updatePresenceContext } = useAuth();
+  const { user, updatePresenceContext } = useAuth();
   const queryClient = useQueryClient();
   const [activeZone, setActiveZone] = useState(initialZone || 'chat');
   const [showInvite, setShowInvite] = useState(false);
@@ -106,7 +106,7 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
         {visitedZones.farming && <div className="h-full" style={{ display: activeZone === 'farming' ? 'block' : 'none' }}><FarmingZone game={game} clan={clan} /></div>}
         {visitedZones.exploration && <div className="h-full" style={{ display: activeZone === 'exploration' ? 'block' : 'none' }}><ExplorationOperations game={game} clan={clan} /></div>}
         {visitedZones.strategy && <div className="h-full" style={{ display: activeZone === 'strategy' ? 'block' : 'none' }}><StrategyZone game={game} clan={clan} /></div>}
-        {visitedZones.forms && <div className="h-full" style={{ display: activeZone === 'forms' ? 'block' : 'none' }}><ClanForumsZone game={game} clan={clan} user={null} /></div>}
+        {visitedZones.forms && <div className="h-full" style={{ display: activeZone === 'forms' ? 'block' : 'none' }}><ClanForumsZone game={game} clan={clan} user={user} /></div>}
         {visitedZones.voice && <div className="h-full" style={{ display: activeZone === 'voice' ? 'flex' : 'none' }}><div className="min-w-0 flex-1"><VoiceRoomManager clanId={clan?.id} gameId={game?.id} /></div><div className="w-72 shrink-0 border-l border-white/[0.055]"><ZoneChatPanel clanId={clan?.id} gameId={game?.id} zoneId="voice" title="Voice Notes" /></div></div>}
         {visitedZones.party && <div className="h-full" style={{ display: activeZone === 'party' ? 'block' : 'none' }}><PartyOperations clanId={clan?.id} gameId={game?.id} /></div>}
       </div>
