@@ -86,7 +86,7 @@ function ListCardPanel({ state, onClose, onListed, busy }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 28 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-y-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-[30px] bg-[#202328]/95 p-6 shadow-[-26px_0_90px_rgba(0,0,0,.38)] backdrop-blur-2xl"
+      className="absolute inset-y-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-[24px] border border-white/[0.07] bg-[#080a0d]/97 p-6 shadow-[-26px_0_90px_rgba(0,0,0,.5)] backdrop-blur-2xl"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -575,8 +575,8 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
   const backToCards = () => setSelectedCard(null);
 
   return (
-    <div className="relative z-10 h-full w-full overflow-hidden bg-[#050608] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-4%,rgba(226,232,240,.10),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(148,163,184,.055),transparent_26%),linear-gradient(135deg,#0b0d10_0%,#050608_42%,#020304_62%,#0a0c0f_100%)]" />
+    <div className="relative z-10 h-full w-full overflow-hidden text-white" style={{ backgroundColor: 'var(--atom-ui-page-bg, #050608)' }}>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-4%,rgba(226,232,240,.10),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(148,163,184,.055),transparent_26%),linear-gradient(135deg,rgba(11,13,16,.92)_0%,rgba(5,6,8,.88)_42%,rgba(2,3,4,.84)_62%,rgba(10,12,15,.90)_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(135deg,rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(45deg,rgba(255,255,255,.012)_1px,transparent_1px)] [background-size:56px_56px]" />
 
       <div className="relative h-full overflow-y-auto custom-scrollbar">
@@ -760,13 +760,13 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
               </div>
             ) : !selectedCard ? (
               <div className="pt-4">
-                <div className="flex flex-col gap-4 rounded-[24px] bg-black/[0.10] p-4 md:flex-row md:items-center">
+                <div className="flex flex-col gap-4 border-b border-white/[0.055] bg-[#d7dde5]/[0.012] px-1 pb-4 md:flex-row md:items-center">
                   <button type="button" onClick={backToGames} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.05] text-white/45 hover:text-white"><ArrowLeft className="h-4 w-4" /></button>
                   <div className="h-16 w-12 shrink-0 overflow-hidden rounded-xl bg-white/[0.05]">
                     {selectedGame.cover_image && <img src={selectedGame.cover_image} alt="" className="h-full w-full object-cover" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[8px] font-black uppercase tracking-[.2em] text-cyan-200/55">Card Catalog</span>
+                    <span className="text-[8px] font-black uppercase tracking-[.2em] text-[#d7dde5]/45">Card Catalog · All Registered Cards</span>
                     <h2 className="mt-1 truncate text-xl font-black text-white">{selectedGame.title}</h2>
                     <p className="mt-1 text-[9px] uppercase tracking-wider text-white/25">{String(selectedGame.genre || 'other').replaceAll('_', ' ')} · {selectedGame.original_year || 'Year unavailable'}</p>
                   </div>
@@ -777,14 +777,14 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                 </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-[1fr_220px]">
-                  <label className="flex min-w-0 items-center gap-2 rounded-2xl bg-black/[0.12] px-3">
+                  <label className="flex min-w-0 items-center gap-2 rounded-xl border border-white/[0.045] bg-[#d7dde5]/[0.025] px-3">
                     <Search className="h-4 w-4 shrink-0 text-white/25" />
                     <input value={cardSearch} onChange={(event) => setCardSearch(event.target.value)} placeholder={`Search cards in ${selectedGame.title}...`} className="h-11 min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-white/22" />
                   </label>
-                  <label className="flex items-center rounded-2xl bg-black/[0.12] px-3">
+                  <label className="flex items-center rounded-xl border border-white/[0.045] bg-[#d7dde5]/[0.025] px-3">
                     <Gem className="mr-2 h-3.5 w-3.5 text-white/25" />
                     <select value={cardRarity} onChange={(event) => setCardRarity(event.target.value)} className="h-11 w-full appearance-none bg-transparent text-[9px] font-bold uppercase tracking-wider text-white/60 outline-none">
-                      {rarities.map((rarity) => <option key={rarity} value={rarity} className="bg-[#20242a]">{rarity === 'All' ? 'All Rarities' : rarity}</option>)}
+                      {rarities.map((rarity) => <option key={rarity} value={rarity} className="bg-[#0b0d10]">{rarity === 'All' ? 'All Rarities' : rarity}</option>)}
                     </select>
                   </label>
                 </div>
@@ -807,7 +807,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
             ) : (
               <div className="pt-4">
                 <div className="grid gap-5 xl:grid-cols-[310px_minmax(0,1fr)]">
-                  <aside className="overflow-hidden rounded-[24px] bg-black/[0.11]">
+                  <aside className="overflow-hidden rounded-[18px] border border-white/[0.055] bg-[#d7dde5]/[0.025]">
                     <div className="relative aspect-[4/3] overflow-hidden bg-[#0d0f12]">
                       {selectedCard.image ? <img src={selectedCard.image} alt={selectedCard.name} className="h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(125,211,252,.14),transparent_36%),linear-gradient(145deg,#30353d,#171a1f)]" />}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-transparent to-transparent" />
@@ -860,10 +860,10 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
             )}
           </section>
 
-          <section className="mt-3 grid gap-3 lg:grid-cols-3">
-            <div className={`rounded-[22px] p-4 ${softPanel}`}><Gamepad2 className="h-4 w-4 text-cyan-200/60" /><h3 className="mt-3 text-xs font-black text-white/80">Game-first discovery</h3><p className="mt-1 text-[10px] leading-4 text-white/30">The complete available game catalog stays searchable even when a game has no current seller.</p></div>
-            <div className={`rounded-[22px] p-4 ${softPanel}`}><ShieldCheck className="h-4 w-4 text-emerald-200/60" /><h3 className="mt-3 text-xs font-black text-white/80">Real seller listings</h3><p className="mt-1 text-[10px] leading-4 text-white/30">Seller rows come from active Trading Post listings, not generated marketplace placeholders.</p></div>
-            <div className={`rounded-[22px] p-4 ${softPanel}`}><Sparkles className="h-4 w-4 text-violet-200/60" /><h3 className="mt-3 text-xs font-black text-white/80">Cards stay discoverable</h3><p className="mt-1 text-[10px] leading-4 text-white/30">Achievement-card metadata stays visible so players can find the exact card before waiting for a seller.</p></div>
+          <section className="mt-5 grid border-t border-white/[0.05] lg:grid-cols-3">
+            <div className="border-b border-white/[0.045] px-4 py-5 lg:border-b-0 lg:border-r"><Gamepad2 className="h-4 w-4 text-[#d7dde5]/55" /><h3 className="mt-3 text-xs font-black text-white/80">Game-first discovery</h3><p className="mt-1 text-[10px] leading-4 text-white/30">The complete available game catalog stays searchable even when a game has no current seller.</p></div>
+            <div className="border-b border-white/[0.045] px-4 py-5 lg:border-b-0 lg:border-r"><ShieldCheck className="h-4 w-4 text-[#d7dde5]/55" /><h3 className="mt-3 text-xs font-black text-white/80">Real seller listings</h3><p className="mt-1 text-[10px] leading-4 text-white/30">Seller rows come from active Trading Post listings, not generated marketplace placeholders.</p></div>
+            <div className="px-4 py-5"><Sparkles className="h-4 w-4 text-[#d7dde5]/55" /><h3 className="mt-3 text-xs font-black text-white/80">Cards stay discoverable</h3><p className="mt-1 text-[10px] leading-4 text-white/30">Achievement-card metadata stays visible so players can find the exact card before waiting for a seller.</p></div>
           </section>
         </main>
       </div>
