@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { UICustomizationProvider } from '@/components/customization/UICustomizationSystem';
 import MidpointCustomizationControls from '@/components/customization/MidpointCustomizationControls';
 import UIMediaCustomization from '@/components/customization/UIMediaCustomization';
+import PageSpecificRailAction from '@/components/shared/PageSpecificRailAction';
 
 const STORAGE_KEY = 'atom_eve_left_rail_visible';
 
@@ -20,9 +21,8 @@ export default function UniversalPageRail({ children, pathname }) {
     return () => window.removeEventListener('sidebarCollapseChange', handleCollapse);
   }, []);
 
-  // Clan keeps its Clan Quick Menu in the page-owned empty rail space, but the
-  // separate legacy Roster shortcut is intentionally removed. No other native
-  // page action is hidden or moved by the shared rail.
+  // The user explicitly removed the separate Clan Roster rail shortcut. Hide
+  // only that exact legacy button; never collision-hide unrelated controls.
   useEffect(() => {
     if (!isClan) return undefined;
     let frame = 0;
@@ -65,7 +65,7 @@ export default function UniversalPageRail({ children, pathname }) {
               data-ui-editor-ignore="true"
               className="relative z-30 mt-16 mb-[53px] h-[calc(100%-117px)] w-[5%] min-w-[80px] flex-shrink-0 self-start overflow-visible border-r border-white/20 bg-black/20 px-2 py-4 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"
             >
-              {/* Preserve the existing Recently Played block at the top. */}
+              {/* Existing Recently Played area stays in its original top lane. */}
               <div className="flex min-h-0 flex-col items-center pt-2">
                 <span className="mb-1 shrink-0 text-center text-[9px] font-bold uppercase leading-3 tracking-wider text-white/50">Recently<br />Played</span>
                 <div className="mb-2 h-px w-8 shrink-0 bg-white/20" />
@@ -78,11 +78,21 @@ export default function UniversalPageRail({ children, pathname }) {
                 </div>
               </div>
 
-              {/* Only this middle lane belongs to the customization system.
-                  Page-owned quick menus above/below are deliberately untouched. */}
+              {/* The ONLY controls in the middle replacement lane are:
+                  Prefab -> Environment Launch -> Layout Edit. */}
               <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[120] flex -translate-y-1/2 justify-center">
                 <div className="pointer-events-auto">
                   <MidpointCustomizationControls />
+                </div>
+              </div>
+
+              {/* Page-owned quick action gets its own empty lower lane. There is
+                  no glass frame around it and it never joins the midpoint stack.
+                  Aura's Recently Streamed button now occupies the old lower Play
+                  territory after Environment Launch moved to the midpoint. */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[115] flex justify-center">
+                <div className="pointer-events-auto">
+                  <PageSpecificRailAction pathname={pathname} />
                 </div>
               </div>
             </aside>
