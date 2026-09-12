@@ -213,6 +213,7 @@ function CardTile({ card, listings, onClick }) {
         <span className={`absolute left-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.13em] backdrop-blur-md ${rarityTone[card.rarity] || rarityTone.Common}`}>
           {card.rarity || 'Common'}
         </span>
+        {card.isTemporary && <span className="absolute right-3 top-3 rounded-full border border-white/15 bg-white/90 px-2 py-1 text-[7px] font-black uppercase tracking-[.14em] text-black shadow-lg">Temp Test</span>
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -359,7 +360,9 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
     setMessage(null);
     try {
       const response = await invoke(name, payload);
-      setState(response?.data || response);
+      const next = response?.data || response;
+      if (Array.isArray(next?.listings) && Array.isArray(next?.ownedCards)) setState(next);
+      else await load();
       setMessage({ type: 'success', text: success });
     } catch (error) {
       setMessage({ type: 'error', text: error?.message || 'Trading Post action failed' });
@@ -396,6 +399,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
         type: achievement.category || 'Achievement',
         achievement: achievement.title || '',
         game: achievement.game,
+        isTemporary: String(card.series || '').toLowerCase().includes('temp') || String(achievement.title || '').startsWith('TEMP MARKET TEST'),
       });
     });
 
@@ -417,6 +421,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
         type: achievement.category || 'Achievement',
         achievement: achievement.title,
         game: achievement.game,
+        isTemporary: String(achievement.title || '').startsWith('TEMP MARKET TEST'),
       });
     });
 
@@ -434,6 +439,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
         type: card.card_type || 'Achievement',
         achievement: '',
         game: card.game_name,
+        isTemporary: ['Ghostwire Edge', 'Prism Overclock', 'Moonlight Aegis'].includes(card.card_name),
       });
     });
 
@@ -452,6 +458,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
         type: current?.type || 'Achievement',
         achievement: current?.achievement || snapshot.origin_achievement || '',
         game: snapshot.origin_game,
+        isTemporary: current?.isTemporary || String(snapshot.origin_achievement || '').startsWith('TEMP MARKET TEST'),
       });
     });
 
@@ -768,6 +775,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                     <span className="text-[8px] font-black uppercase tracking-[.2em] text-[#d7dde5]/45">Card Catalog · All Registered Cards</span>
                     <h2 className="mt-1 truncate text-xl font-black text-white">{selectedGame.title}</h2>
                     <p className="mt-1 text-[9px] uppercase tracking-wider text-white/25">{String(selectedGame.genre || 'other').replaceAll('_', ' ')} · {selectedGame.original_year || 'Year unavailable'}</p>
+                    {gameCards.some((card) => card.isTemporary) && <p className="mt-2 text-[8px] font-black uppercase tracking-[.16em] text-emerald-200/70">Temp market validation cards installed · open one to test the real Buy / Trade routes</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="rounded-xl bg-white/[0.035] px-4 py-2"><span className="block text-[7px] uppercase tracking-wider text-white/25">Cards</span><strong className="text-xs text-white/70">{(gameStats.get(normalize(selectedGame.title))?.cards.size || 0)}</strong></div>
@@ -827,7 +835,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                   <div className="min-w-0">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-white/25">Live Market</span>
+                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-white/25">{selectedCard.isTemporary ? 'Temp Test · Real Market Route' : 'Live Market'}</span>
                         <h3 className="mt-1 text-xl font-black tracking-tight text-white">Choose a seller</h3>
                         <p className="mt-1 text-xs text-white/30">Sellers are ordered by asking price so the lowest live offer is easiest to compare first.</p>
                       </div>
