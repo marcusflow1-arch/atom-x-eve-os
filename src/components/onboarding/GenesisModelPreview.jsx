@@ -30,6 +30,9 @@ function buildMotionSet(rows, gender) {
   const asMotion = (row, fallback, options = {}) => row
     ? { name: options.name || row.name, url: row.file_url, loop: options.loop ?? row.is_loopable !== false }
     : { ...fallback, ...options };
+  const friendlyRows = candidates
+    .filter((row) => /wave|waving|hello|greet|happy|cheer|emotion|clap|salute/i.test(row.name || ''))
+    .sort((a, b) => Number(normalized(b.folder) === preferredFolder) - Number(normalized(a.folder) === preferredFolder));
 
   const fallbackIdle = COMPANION_MOTIONS[0];
   const fallbackLook = COMPANION_MOTIONS[1] || fallbackIdle;
@@ -43,8 +46,8 @@ function buildMotionSet(rows, gender) {
       asMotion(pick('unarmed idle 01'), fallbackIdle, { name: 'Relaxed Idle', loop: true }),
     ],
     interactions: [
-      asMotion(pick('standing idle 02 looking'), fallbackLook, { name: 'Friendly Look', loop: false }),
-      asMotion(pick('standing idle 03 examine'), fallbackLook, { name: 'Curious Examine', loop: false }),
+      asMotion(friendlyRows[0] || pick('standing idle 02 looking'), fallbackLook, { name: friendlyRows[0]?.name || 'Friendly Look', loop: false }),
+      asMotion(friendlyRows[1] || pick('standing idle 03 examine'), fallbackLook, { name: friendlyRows[1]?.name || 'Curious Examine', loop: false }),
     ],
     walk: {
       forward: asMotion(pick('standing walk forward'), fallbackWalk, { name: 'Walk Forward', loop: true }),
