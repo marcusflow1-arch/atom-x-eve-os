@@ -1,378 +1,147 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Radio, Info, Clock, AlertCircle, ShoppingCart, Award, ThumbsUp, ThumbsDown, MessageSquare, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Award, CheckCircle2, Gamepad2, Lock, Play, Sparkles, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 
-const glassStyle = {
-  background: 'rgba(15, 20, 26, 0.65)',
-  backdropFilter: 'blur(40px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-  boxShadow: '0 4px 30px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(165, 243, 252, 0.08)',
-  border: '1px solid rgba(165, 243, 252, 0.15)',
-};
+const titleOf = (game) => game?.title || game?.name || 'Game';
+const imageOf = (game) => game?.banner_image || game?.banner || game?.cover_image || game?.cover || '';
 
-export default function LibraryGameDetailModal({ game, onClose }) {
-  const [activeTab, setActiveTab] = useState('content');
-  const [selectedUpdateId, setSelectedUpdateId] = useState('patch-2-1');
-  const [expandedExpansionId, setExpandedExpansionId] = useState('neural-expansion-pack');
+export default function LibraryGameDetailModal({ game, onClose, initialTab = 'details' }) {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState(initialTab === 'achievements' ? 'achievements' : 'details');
+  const [achievements, setAchievements] = useState([]);
+  const [userAchievements, setUserAchievements] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const updates = useMemo(() => ([
-    {
-      id: 'patch-2-1',
-      type: 'patch',
-      title: 'Patch 2.1 - Cyber Dawn',
-      summary: 'New roam city district, 5 new weapons, and improved ray tracing performance. Fixed minor bugs in the inventory system.',
-      time: '3 days ago',
-      likes: 78,
-      dislikes: 22,
-      details: [
-        'Added a new explorable district with dynamic encounters.',
-        'Introduced 5 new weapons and balancing updates for existing loadouts.',
-        'Improved ray tracing performance and reduced inventory-related bugs.'
-      ],
-      opinions: [
-        { name: 'RoguePixel', stance: 'recommended', liked: true, text: 'This update finally made the city feel alive. The new district is worth jumping back in for.' },
-        { name: 'NovaTrace', stance: 'mixed', liked: true, text: 'I like the performance gains, but some of the weapon tuning still needs another pass.' },
-        { name: 'ByteHunter', stance: 'not_recommended', liked: false, text: 'The visuals are better, but I hit a couple of UI hiccups after the patch.' }
-      ]
-    },
-    {
-      id: 'event-void-walker',
-      type: 'event',
-      title: "Event: Void Walker's Return",
-      summary: 'Limited time event! Farm double XP and exclusive void skins for your character.',
-      time: '2 days ago • Ends soon',
-      likes: 66,
-      dislikes: 34,
-      details: [
-        'Double XP is active in all event playlists.',
-        'Exclusive void-themed cosmetics can be unlocked during the event window.',
-        'Event missions rotate daily with bonus reward caches.'
-      ],
-      opinions: [
-        { name: 'AshenFox', stance: 'recommended', liked: true, text: 'The rewards are solid and the double XP makes the grind feel much better.' },
-        { name: 'LunaGrid', stance: 'mixed', liked: true, text: 'Good event overall, but the daily rotations feel a little repetitive.' },
-        { name: 'DriftCore', stance: 'not_recommended', liked: false, text: 'I wanted more exclusive missions instead of a mostly XP-focused event.' }
-      ]
-    }
-  ]), []);
-
-  const expansions = useMemo(() => ([
-    {
-      id: 'neural-expansion-pack',
-      title: 'Neural Expansion Pack',
-      subtitle: 'Advanced AI storylines & weapons',
-      price: '$ 14.99',
-      includes: ['4 new branching missions', '2 advanced companion AI story arcs', '6 prototype weapons with upgrade trees'],
-      details: 'Adds a full late-game narrative track focused on rogue neural agents, hidden labs, and adaptive enemy encounters.'
-    },
-    {
-      id: 'void-walker-arsenal',
-      title: 'Void Walker Arsenal',
-      subtitle: '10 legendary weapons & skins',
-      price: '$ 14.99',
-      includes: ['10 void-tuned weapon variants', 'Exclusive weapon skins and finishing effects', 'Bonus crafting materials cache'],
-      details: 'Built for players who want stronger visual flair and a faster loadout refresh with premium legendary gear.'
-    },
-    {
-      id: 'season-pass-year-one',
-      title: 'Season Pass: Year One',
-      subtitle: 'All seasonal content & rewards',
-      price: '$ 29.99',
-      includes: ['Access to all year one seasonal drops', 'Premium reward track cosmetics', 'XP boosts and event bonus bundles'],
-      details: 'Unlocks the full seasonal roadmap with premium drops, rotating challenges, and bonus progression rewards.'
-    }
-  ]), []);
-
-  const selectedUpdate = updates.find((update) => update.id === selectedUpdateId) || updates[0];
-  const totalVotes = selectedUpdate.likes + selectedUpdate.dislikes;
-  const likeRatio = Math.round((selectedUpdate.likes / totalVotes) * 100);
-  const dislikeRatio = 100 - likeRatio;
+  useEffect(() => setActiveTab(initialTab === 'achievements' ? 'achievements' : 'details'), [initialTab, game?.id]);
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.();
+    if (!game) return undefined;
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [ach, owned] = await Promise.all([
+          base44.entities.Achievement.filter({ game: titleOf(game) }, 'title', 500).catch(() => []),
+          user?.id ? base44.entities.UserAchievement.filter({ user_id: user.id }, '-created_date', 1000).catch(() => []) : Promise.resolve([]),
+        ]);
+        if (!cancelled) {
+          setAchievements(ach || []);
+          setUserAchievements(owned || []);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
+    load();
+    return () => { cancelled = true; };
+  }, [game, user?.id]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+  useEffect(() => {
+    const key = (event) => { if (event.key === 'Escape') onClose?.(); };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
   }, [onClose]);
+
+  const unlocked = useMemo(() => new Set(userAchievements.filter((row) => row.status === 'unlocked').map((row) => String(row.achievement_id))), [userAchievements]);
+  const unlockedCount = achievements.filter((row) => unlocked.has(String(row.id))).length;
+  const progress = achievements.length ? Math.round((unlockedCount / achievements.length) * 100) : 0;
 
   if (!game) return null;
 
+  const title = titleOf(game);
+  const hero = imageOf(game);
+  const description = game.description || game.summary || 'Your library record for this game. Launch it, review its information, or track the achievements connected to your Atom X Eve card collection.';
+  const tags = Array.isArray(game.tags) ? game.tags : [game.genre].filter(Boolean);
+
+  const launch = async () => {
+    try {
+      const response = await base44.functions.invoke('playItem', { type: 'game', title, id: game.id || null });
+      const data = response?.data || response || {};
+      const url = data.launch_url || data.url;
+      if (url) window.location.assign(url);
+    } catch (error) {
+      console.warn('Game launch failed.', error);
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed left-[320px] right-0 z-[69] shadow-2xl flex flex-col overflow-hidden"
-      style={{
-        ...glassStyle,
-        top: '64px',
-        bottom: '52px',
-      }}
+    <motion.section
+      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+      className="fixed bottom-[52px] left-[320px] right-0 top-[64px] z-[69] flex min-h-0 flex-col overflow-hidden text-white"
+      style={{ background: 'rgba(5,9,15,.74)', backdropFilter: 'blur(34px) saturate(135%)', WebkitBackdropFilter: 'blur(34px) saturate(135%)' }}
+      aria-label={`${title} library details`}
     >
-      {/* Header with Game Title */}
-      <div className="flex items-center justify-between p-6 border-b border-white/10">
-        <div>
-          <h2 className="text-2xl font-bold text-white">{game.title || game.name}</h2>
-          <p className="text-sm text-white/50 mt-1">Ready to play</p>
+      <header className="relative flex h-[168px] flex-shrink-0 items-end overflow-hidden border-b border-white/[0.065] px-6 pb-5">
+        {hero && <img src={hero} alt="" className="absolute inset-0 h-full w-full object-cover opacity-28" />}
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,9,15,.96),rgba(5,9,15,.60)_55%,rgba(5,9,15,.82)),linear-gradient(0deg,rgba(5,9,15,.95),transparent_65%)]" />
+        <div className="relative z-10 min-w-0 flex-1">
+          <p className="text-[8px] font-bold uppercase tracking-[.24em] text-cyan-100/38">Library</p>
+          <h1 className="mt-2 truncate text-2xl font-semibold tracking-tight text-white/95">{title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[.13em] text-white/34">
+            {game.genre && <span>{game.genre}</span>}
+            {game.original_year && <><span className="text-white/12">•</span><span>{game.original_year}</span></>}
+            <span className="text-white/12">•</span><span>{achievements.length ? `${unlockedCount}/${achievements.length} achievements` : 'Achievement record'}</span>
+          </div>
         </div>
-      </div>
+        <button onClick={launch} className="relative z-10 mr-3 flex h-9 items-center gap-2 bg-white/[0.09] px-4 text-[9px] font-bold uppercase tracking-[.15em] text-white/80 ring-1 ring-white/[0.10] transition hover:bg-white/[0.14]"><Play className="h-3.5 w-3.5 fill-current" /> Play</button>
+        <button onClick={onClose} className="relative z-10 grid h-9 w-9 place-items-center text-white/35 transition hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
+      </header>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 px-6 py-4 border-b border-white/10">
-        <button className="flex items-center gap-2 px-6 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black font-bold transition-colors">
-          <Play className="w-4 h-4 fill-current" /> Play
-        </button>
-        <button className="flex items-center gap-2 px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 font-medium transition-colors">
-          <Radio className="w-4 h-4" /> Stream
-        </button>
-        <button className="flex items-center gap-2 px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 font-medium transition-colors">
-          <Info className="w-4 h-4" /> Info
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-8 px-6 py-4 border-b border-white/10 text-sm font-medium">
-        {['content', 'community', 'achievements'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-2 border-b-2 transition-colors capitalize ${
-              activeTab === tab
-                ? 'text-white border-cyan-400'
-                : 'text-white/50 border-transparent hover:text-white/70'
-            }`}
-          >
-            {tab}
+      <nav className="flex h-[48px] flex-shrink-0 items-center gap-6 border-b border-white/[0.055] px-6">
+        {[
+          { id: 'details', label: 'Details', icon: Gamepad2 },
+          { id: 'achievements', label: 'Achievements', icon: Award },
+        ].map(({ id, label, icon: Icon }) => (
+          <button key={id} onClick={() => setActiveTab(id)} className={`relative flex h-full items-center gap-2 text-[9px] font-bold uppercase tracking-[.16em] transition ${activeTab === id ? 'text-white/85' : 'text-white/28 hover:text-white/50'}`}>
+            <Icon className="h-3.5 w-3.5" />{label}
+            {activeTab === id && <span className="absolute inset-x-0 bottom-0 h-px bg-cyan-100/55" />}
           </button>
         ))}
-      </div>
+      </nav>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === 'content' && (
-          <div className="p-6">
-            <div className="grid grid-cols-1 xl:grid-cols-[7fr_3fr] gap-6 items-start">
-              <section className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-cyan-400" />
-                  <h3 className="text-lg font-bold text-white">Updates & Patch Notes</h3>
-                </div>
-
-                <div className="space-y-3">
-                  {updates.map((update) => {
-                    const isSelected = selectedUpdate.id === update.id;
-                    const UpdateIcon = update.type === 'event' ? AlertCircle : Clock;
-                    return (
-                      <button
-                        key={update.id}
-                        onClick={() => setSelectedUpdateId(update.id)}
-                        className={`w-full text-left p-4 rounded-xl border transition-colors ${
-                          isSelected
-                            ? 'bg-cyan-500/10 border-cyan-400/40'
-                            : 'bg-white/5 border-white/10 hover:border-white/20'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <UpdateIcon className={`w-4 h-4 flex-shrink-0 ${update.type === 'event' ? 'text-yellow-500' : 'text-cyan-400'}`} />
-                            <h4 className="font-bold text-white truncate">{update.title}</h4>
-                          </div>
-                          <span className="text-[11px] text-white/35 whitespace-nowrap">{update.time}</span>
-                        </div>
-                        <p className="text-sm text-white/60 leading-relaxed">{update.summary}</p>
-                        <div className="mt-3 flex items-center gap-3">
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300">
-                            <ThumbsUp className="w-3.5 h-3.5" />
-                            <span>{update.likes}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-400/20 text-xs text-red-300">
-                            <ThumbsDown className="w-3.5 h-3.5" />
-                            <span>{update.dislikes}</span>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-5">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/70 mb-2">Selected Update</p>
-                      <h4 className="text-xl font-bold text-white">{selectedUpdate.title}</h4>
-                      <p className="text-sm text-white/45 mt-1">{selectedUpdate.time}</p>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                      <ThumbsUp className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-bold text-white">{likeRatio}%</span>
-                      <span className="text-xs text-white/40">positive</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h5 className="text-sm font-semibold text-white">Patch details</h5>
-                    <div className="space-y-2">
-                      {selectedUpdate.details.map((detail) => (
-                        <div key={detail} className="flex gap-3 text-sm text-white/65 leading-relaxed">
-                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
-                          <p>{detail}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <section>
-                  <div className="flex items-center gap-3 mb-6">
-                    <ShoppingCart className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-lg font-bold text-white">Expansion Content</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {expansions.map((expansion) => {
-                      const isExpanded = expandedExpansionId === expansion.id;
-                      return (
-                        <div key={expansion.id} className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-                          <button
-                            onClick={() => setExpandedExpansionId(isExpanded ? '' : expansion.id)}
-                            className="w-full p-4 text-left hover:bg-white/[0.03] transition-colors"
-                          >
-                            <div className="flex items-center justify-between gap-4 flex-wrap">
-                              <div>
-                                <h4 className="font-bold text-white mb-1">{expansion.title}</h4>
-                                <p className="text-sm text-white/50">{expansion.subtitle}</p>
-                              </div>
-                              <div className="flex items-center gap-3 ml-auto">
-                                <span className="text-white font-bold">{expansion.price}</span>
-                                <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
-                                  Buy
-                                </button>
-                                <div className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                                  <ChevronDown className="w-4 h-4 text-white/70" />
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-
-                          {isExpanded && (
-                            <div className="px-4 pb-4 pt-1 border-t border-white/10 bg-white/[0.02]">
-                              <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-4">
-                                <div className="rounded-xl bg-black/20 border border-white/10 p-4">
-                                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/70 mb-3">Content details</p>
-                                  <p className="text-sm text-white/65 leading-relaxed">{expansion.details}</p>
-                                </div>
-                                <div className="rounded-xl bg-black/20 border border-white/10 p-4">
-                                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/70 mb-3">Includes</p>
-                                  <div className="space-y-2">
-                                    {expansion.includes.map((item) => (
-                                      <div key={item} className="flex gap-3 text-sm text-white/65 leading-relaxed">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 flex-shrink-0" />
-                                        <p>{item}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                <section>
-                  <div className="flex items-center gap-3 mb-6">
-                    <Award className="w-5 h-5 text-amber-400" />
-                    <h3 className="text-lg font-bold text-white">Quests & Experience</h3>
-                  </div>
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                    <p className="text-white/60 text-sm">Complete quests and missions to earn XP, rewards, and unlock exclusive items.</p>
-                    <button className="mt-4 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
-                      View Quest Log
-                    </button>
-                  </div>
-                </section>
-              </section>
-
-              <aside className="space-y-4 xl:sticky xl:top-0">
-                <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-cyan-300" />
-                    <h3 className="text-base font-bold text-white">Player Opinions</h3>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-400/20">
-                      <div className="flex items-center gap-2 mb-1">
-                        <ThumbsUp className="w-4 h-4 text-emerald-400" />
-                        <span className="text-xs text-white/60">Like</span>
-                      </div>
-                      <p className="text-lg font-bold text-white">{likeRatio}%</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-400/20">
-                      <div className="flex items-center gap-2 mb-1">
-                        <ThumbsDown className="w-4 h-4 text-red-400" />
-                        <span className="text-xs text-white/60">Dislike</span>
-                      </div>
-                      <p className="text-lg font-bold text-white">{dislikeRatio}%</p>
-                    </div>
-                  </div>
-
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-emerald-400" style={{ width: `${likeRatio}%` }} />
-                  </div>
-                  <p className="text-xs text-white/45">Snapshot of how players feel about {selectedUpdate.title}.</p>
-                </div>
-
-                <div className="space-y-3">
-                  {selectedUpdate.opinions.map((opinion) => (
-                    <div key={opinion.name} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <div className="flex items-center justify-between gap-3 mb-2">
-                        <p className="text-sm font-semibold text-white">{opinion.name}</p>
-                        <span className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border ${
-                          opinion.stance === 'recommended'
-                            ? 'text-emerald-300 border-emerald-400/30 bg-emerald-500/10'
-                            : opinion.stance === 'not_recommended'
-                              ? 'text-red-300 border-red-400/30 bg-red-500/10'
-                              : 'text-yellow-300 border-yellow-400/30 bg-yellow-500/10'
-                        }`}>
-                          {opinion.stance === 'recommended' ? 'Recommended' : opinion.stance === 'not_recommended' ? 'Not Recommended' : 'Mixed'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2 text-xs text-white/45">
-                        {opinion.liked ? <ThumbsUp className="w-3.5 h-3.5 text-emerald-400" /> : <ThumbsDown className="w-3.5 h-3.5 text-red-400" />}
-                        <span>{opinion.liked ? 'Liked this update' : 'Disliked this update'}</span>
-                      </div>
-                      <p className="text-sm text-white/65 leading-relaxed">{opinion.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </aside>
-            </div>
+      <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
+        {activeTab === 'details' ? (
+          <div className="mx-auto grid w-full max-w-[1180px] gap-8 px-7 py-7 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <main>
+              <p className="max-w-3xl text-sm leading-7 text-white/52">{description}</p>
+              {tags.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{tags.map((tag) => <span key={tag} className="bg-white/[0.035] px-2.5 py-1 text-[8px] uppercase tracking-[.13em] text-white/35 ring-1 ring-white/[0.06]">{tag}</span>)}</div>}
+              <div className="mt-8 grid gap-px bg-white/[0.055] sm:grid-cols-3">
+                {[
+                  ['Status', game.status || 'Ready to play'],
+                  ['Release', game.release_date || game.original_year || 'Library'],
+                  ['Price', game.price != null ? `$${Number(game.price).toFixed(2)}` : 'Owned'],
+                ].map(([label, value]) => <div key={label} className="bg-[#080d14]/80 px-4 py-4"><p className="text-[7px] font-bold uppercase tracking-[.18em] text-white/22">{label}</p><p className="mt-1.5 text-xs text-white/70">{value}</p></div>)}
+              </div>
+              {game.system_requirements && <section className="mt-8 border-t border-white/[0.055] pt-5"><h3 className="text-[9px] font-bold uppercase tracking-[.18em] text-white/38">System Requirements</h3><pre className="mt-3 whitespace-pre-wrap font-sans text-[11px] leading-6 text-white/38">{typeof game.system_requirements === 'string' ? game.system_requirements : JSON.stringify(game.system_requirements, null, 2)}</pre></section>}
+            </main>
+            <aside>
+              <div className="bg-white/[0.025] p-4 ring-1 ring-white/[0.055]">
+                <div className="flex items-center justify-between"><span className="text-[8px] font-bold uppercase tracking-[.18em] text-white/28">Achievement Progress</span><span className="text-xs font-semibold text-cyan-100/65">{progress}%</span></div>
+                <div className="mt-3 h-1 overflow-hidden bg-white/[0.055]"><div className="h-full bg-cyan-100/55" style={{ width: `${progress}%` }} /></div>
+                <p className="mt-3 text-[10px] leading-5 text-white/28">Unlocked achievements feed the same card ownership system used by Inventory, friend trading, and the Trading Post.</p>
+              </div>
+            </aside>
           </div>
-        )}
-
-        {activeTab === 'community' && (
-          <div className="p-6">
-            <div className="text-center text-white/60">
-              <p>Community discussions and reviews coming soon</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'achievements' && (
-          <div className="p-6">
-            <div className="text-center text-white/60">
-              <p>Achievement tracking and progress coming soon</p>
-            </div>
+        ) : (
+          <div className="mx-auto w-full max-w-[1180px] px-7 py-7">
+            <div className="mb-5 flex items-end justify-between gap-4"><div><p className="text-[8px] font-bold uppercase tracking-[.2em] text-white/25">Achievement Record</p><h2 className="mt-1 text-lg font-semibold text-white/82">{unlockedCount} unlocked · {achievements.length} total</h2></div><span className="text-[9px] text-white/25">{loading ? 'Syncing…' : `${progress}% complete`}</span></div>
+            {achievements.length ? (
+              <div className="grid gap-px bg-white/[0.05] sm:grid-cols-2 xl:grid-cols-3">
+                {achievements.map((achievement) => {
+                  const isUnlocked = unlocked.has(String(achievement.id));
+                  return <article key={achievement.id} className="relative min-h-[150px] bg-[#080d14]/88 p-4 transition hover:bg-white/[0.035]">
+                    <div className="flex items-start gap-3"><div className={`grid h-9 w-9 flex-shrink-0 place-items-center ${isUnlocked ? 'bg-cyan-100/[0.07] text-cyan-100/70' : 'bg-white/[0.025] text-white/18'}`}>{isUnlocked ? <CheckCircle2 className="h-4 w-4" /> : <Lock className="h-3.5 w-3.5" />}</div><div className="min-w-0"><h3 className="truncate text-xs font-semibold text-white/78">{achievement.title}</h3><p className="mt-1 text-[8px] uppercase tracking-[.14em] text-white/24">{achievement.rarity || 'Common'} · {achievement.category || 'Achievement'}</p></div></div>
+                    <p className="mt-4 line-clamp-3 text-[10px] leading-5 text-white/35">{achievement.description}</p>
+                    <div className="mt-4 flex items-center justify-between text-[8px] uppercase tracking-[.12em]"><span className={isUnlocked ? 'text-cyan-100/55' : 'text-white/20'}>{isUnlocked ? 'Unlocked' : 'Locked'}</span><span className="flex items-center gap-1 text-white/20"><Sparkles className="h-3 w-3" />{achievement.points || 0} pts</span></div>
+                  </article>;
+                })}
+              </div>
+            ) : <div className="grid min-h-[260px] place-items-center border border-white/[0.05] bg-white/[0.015] text-center"><div><Award className="mx-auto h-7 w-7 text-white/10" /><p className="mt-3 text-sm text-white/38">No achievements registered for this game yet.</p></div></div>}
           </div>
         )}
       </div>
-    </motion.div>
+    </motion.section>
   );
 }
