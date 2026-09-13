@@ -37,8 +37,15 @@ async function getSessionForPair(base44: any, a: string, b: string) {
 
 async function requireFriend(base44: any, userId: string, partnerId: string) {
   const mine = await base44.asServiceRole.entities.Friend.filter({ user_id: userId, friend_id: partnerId }, '-created_date', 1);
-  const theirs = mine?.length ? mine : await base44.asServiceRole.entities.Friend.filter({ user_id: partnerId, friend_id: userId }, '-created_date', 1);
-  if (!theirs?.length) throw new Error('Card trading is available between friends only');
+  if (mine?.length) return;
+  const mirrored = await base44.asServiceRole.entities.Friend.filter({ user_id: partnerId, friend_id: userId }, '-created_date', 1);
+  if (mirrored?.length) return;
+  const social = await base44.asServiceRole.entities.SocialFriendship.filter({}, '-created_date', 500).catch(() => []);
+  const linked = (social || []).some((row: AnyObj) =>
+    (row.user_a_id === userId && row.user_b_id === partnerId) ||
+    (row.user_a_id === partnerId && row.user_b_id === userId)
+  );
+  if (!linked) throw new Error('Card trading is available between friends only');
 }
 
 async function getTradeableCards(base44: any, userId: string, sessionId?: string) {
