@@ -25,10 +25,11 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClos
     const load = async () => {
       try {
         if (mode === 'reminders' && user?.id) {
-          const rows = await base44.entities.UserEvent.filter({ user_id: user.id }, 'start_time', 300);
+          const now = new Date();
+          const response = await base44.functions.invoke('calendarAgent', { action: 'getState', payload: { range_start: now.toISOString(), range_end: new Date(now.getTime() + 180 * 86400000).toISOString() } });
           if (cancelled) return;
-          const now = Date.now();
-          setReminders((rows || []).filter((event) => event.status !== 'cancelled' && new Date(event.start_time).getTime() >= now && ((event.reminders || []).length > 0 || event.event_type === 'reminder')).sort((a,b) => new Date(a.start_time)-new Date(b.start_time)));
+          const data = response?.data || response || {};
+          setReminders((Array.isArray(data.occurrences) ? data.occurrences : []).filter((event) => event.status !== 'cancelled' && ((event.reminders || []).length > 0 || event.event_type === 'reminder')).sort((a,b) => new Date(a.occurrence_start || a.start_time)-new Date(b.occurrence_start || b.start_time)));
         } else if (mode === 'updates') {
           const rows = await base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 100).catch(() => []);
           if (!cancelled) setUpdates(Array.isArray(rows) ? rows.map(normalizeUpdate) : []);
@@ -42,9 +43,10 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClos
     return () => { cancelled = true; window.removeEventListener('atom:calendar-data-changed', refresh); unsubscribe?.(); };
   }, [mode, user?.id]);
 
-  const items = useMemo(() => mode === 'reminders' ? reminders.map((event) => ({
-    ...event, date: new Date(event.start_time).toLocaleDateString(), detail: event.description || `${(event.event_type || 'event').replaceAll('_',' ')} · ${new Date(event.start_time).toLocaleString()}`,
-  })) : (updates.length ? updates : fallbackUpdates), [mode, reminders, updates]);
+  const items = useMemo(() => mode === 'reminders' ? reminders.map((event) => {
+    const start = event.occurrence_start || event.start_time;
+    return { ...event, id: event.occurrence_key || event.id, date: new Date(start).toLocaleDateString(), start_time: start, detail: event.description || `${(event.event_type || 'event').replaceAll('_',' ')} · ${new Date(start).toLocaleString()}` };
+  }) : (updates.length ? updates : fallbackUpdates), [mode, reminders, updates]);
 
   useEffect(() => { if (!items.some((item) => String(item.id) === String(selectedId))) setSelectedId(items[0]?.id || null); }, [items, selectedId]);
   useEffect(() => { const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); onClose?.(); } }; window.addEventListener('keydown', key, true); return () => window.removeEventListener('keydown', key, true); }, [onClose]);
