@@ -1,294 +1,144 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeftRight, X, Check } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeftRight, Check, Package, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { tradeStore, closeTrade } from './socialStores';
 import { base44 } from '@/api/base44Client';
-import { INVENTORY } from '../equipment/inventoryData';
 
-// Flatten the INVENTORY object into a list
-const flattenInventory = () => {
-  const out = [];
-  Object.entries(INVENTORY).forEach(([cat, items]) => {
-    items.forEach((it) => out.push({ ...it, _category: cat }));
-  });
-  return out;
-};
+const dataOf = (response) => response?.data || response || {};
+const nameOf = (card) => card?.card_name || card?.name || 'Card';
+const rarityOf = (card) => card?.card_rarity || card?.rarity || 'Common';
 
-/**
- * TradePanel — real-time two-player trade window.
- * Uses TradeSession entity to sync both players' offers.
- * Left = your offer (editable). Right = partner's offer (read-only).
- */
+function MiniCard({ card, selected, onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative aspect-[3/4] overflow-hidden p-2 text-left transition ${selected ? 'bg-cyan-100/[0.09] ring-1 ring-cyan-100/25' : 'bg-white/[0.035] ring-1 ring-white/[0.07] hover:bg-white/[0.065]'} disabled:opacity-40`}
+    >
+      {card.card_image && <img src={card.card_image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#080c13] via-[#080c13]/75 to-transparent" />
+      <div className="relative z-10 flex h-full flex-col justify-end">
+        <span className="mb-auto text-[7px] uppercase tracking-[.14em] text-white/28">{rarityOf(card)}</span>
+        <p className="line-clamp-2 text-[9px] font-semibold text-white/82">{nameOf(card)}</p>
+        <p className="mt-1 truncate text-[7px] text-white/25">{card.game_name || ''}</p>
+        {selected && <span className="mt-1 flex items-center gap-1 text-[7px] text-cyan-100/65"><Check className="h-2.5 w-2.5" /> Offered</span>}
+      </div>
+    </button>
+  );
+}
+
 export default function TradePanel() {
   const [trade, setTrade] = useState(tradeStore.get());
-  const [inv] = useState(flattenInventory);
-  const [session, setSession] = useState(null); // TradeSession DB row
-  const [myUserId, setMyUserId] = useState(null);
+  const [me, setMe] = useState(null);
+  const [state, setState] = useState({ session: null, ownedCards: [] });
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [search, setSearch] = useState('');
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => tradeStore.subscribe(setTrade), []);
+  useEffect(() => { base44.auth.me().then(setMe).catch(() => null); }, []);
 
-  // Get current user id once
-  useEffect(() => {
-    base44.auth.me().then((u) => { if (u?.id) setMyUserId(u.id); }).catch(() => {});
-  }, []);
-
-  // When trade opens, create or fetch the shared TradeSession
-  useEffect(() => {
-    if (!trade.open || !trade.partner || !myUserId) return;
-
-    let cancelled = false;
-
-    const initSession = async () => {
-      try {
-        // Look for an existing active session between us and partner
-        const existing = await base44.entities.TradeSession.filter({
-          status: 'accepted',
-        });
-        const mine = (existing || []).find(
-          (s) =>
-            (s.initiator_id === myUserId && s.recipient_id === trade.partner.id) ||
-            (s.initiator_id === trade.partner.id && s.recipient_id === myUserId)
-        );
-
-        if (mine) {
-          if (!cancelled) setSession(mine);
-        } else {
-          const created = await base44.entities.TradeSession.create({
-            initiator_id: myUserId,
-            recipient_id: trade.partner.id,
-            initiator_offer_card_ids: [],
-            recipient_offer_card_ids: [],
-            initiator_confirmed: false,
-            recipient_confirmed: false,
-            status: 'accepted',
-          });
-          if (!cancelled) setSession(created);
-        }
-      } catch (e) {
-        console.warn('[Trade] session init failed', e);
-      }
-    };
-
-    initSession();
-
-    return () => { cancelled = true; };
-  }, [trade.open, trade.partner?.id, myUserId]);
-
-  // Subscribe to TradeSession changes so both sides update in real-time
-  useEffect(() => {
-    if (!session?.id) return;
-
-    const unsub = base44.entities.TradeSession.subscribe((event) => {
-      if (event.data?.id === session.id) {
-        setSession(event.data);
-        // Check if both confirmed → finalize
-        if (event.data.initiator_confirmed && event.data.recipient_confirmed) {
-          toast.success(`Trade complete!`);
-          base44.entities.TradeSession.update(session.id, { status: 'completed' }).catch(() => {});
-          setTimeout(() => { setSession(null); closeTrade(); }, 900);
-        }
-      }
-    });
-
-    return () => unsub && unsub();
-  }, [session?.id]);
-
-  // Cleanup session on close
-  const handleClose = useCallback(async () => {
-    if (session?.id) {
-      await base44.entities.TradeSession.update(session.id, { status: 'cancelled' }).catch(() => {});
-      setSession(null);
+  const partnerId = trade.partner?.id;
+  const invoke = useCallback(async (action, payload = {}) => {
+    if (!partnerId) throw new Error('Trade partner unavailable');
+    const response = await base44.functions.invoke('friendCardTrade', { action, payload: { partnerId, ...payload } });
+    const data = dataOf(response);
+    if (data.error) throw new Error(data.error);
+    setState(data);
+    const session = data.session;
+    if (session && me?.id) {
+      setSelectedIds(session.initiator_id === me.id ? (session.initiator_offer_card_ids || []) : (session.recipient_offer_card_ids || []));
     }
+    return data;
+  }, [partnerId, me?.id]);
+
+  const refresh = useCallback(async () => {
+    if (!trade.open || !partnerId || !me?.id) return;
+    try { await invoke('getState'); } catch (error) { toast.error(error?.message || 'Trade unavailable'); }
+  }, [trade.open, partnerId, me?.id, invoke]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    if (!trade.open || !partnerId) return undefined;
+    const unsub = base44.entities.TradeSession.subscribe((event) => {
+      const row = event?.data;
+      if (row && [row.initiator_id, row.recipient_id].includes(me?.id) && [row.initiator_id, row.recipient_id].includes(partnerId)) refresh();
+    });
+    return unsub;
+  }, [trade.open, partnerId, me?.id, refresh]);
+
+  const session = state.session;
+  const isInitiator = session?.initiator_id === me?.id;
+  const myOffer = session ? (isInitiator ? session.initiator_offer_snapshot : session.recipient_offer_snapshot) || [] : [];
+  const theirOffer = session ? (isInitiator ? session.recipient_offer_snapshot : session.initiator_offer_snapshot) || [] : [];
+  const myConfirmed = session ? Boolean(isInitiator ? session.initiator_confirmed : session.recipient_confirmed) : false;
+  const theirConfirmed = session ? Boolean(isInitiator ? session.recipient_confirmed : session.initiator_confirmed) : false;
+  const active = session?.status === 'accepted';
+  const cards = useMemo(() => (state.ownedCards || []).filter((card) => !search || `${card.card_name} ${card.game_name} ${card.card_rarity}`.toLowerCase().includes(search.toLowerCase())), [state.ownedCards, search]);
+
+  const run = async (action, payload) => {
+    setBusy(true);
+    try {
+      const data = await invoke(action, payload);
+      if (data.session?.status === 'completed') {
+        toast.success('Trade complete — card ownership updated');
+        setTimeout(closeTrade, 900);
+      }
+    } catch (error) { toast.error(error?.message || 'Trade action failed'); }
+    finally { setBusy(false); }
+  };
+
+  const toggleCard = async (card) => {
+    if (!active || myConfirmed || busy) return;
+    const next = selectedIds.includes(card.id) ? selectedIds.filter((id) => id !== card.id) : [...selectedIds, card.id].slice(0, 8);
+    setSelectedIds(next);
+    await run('syncOffer', { cardIds: next });
+  };
+
+  const handleClose = async () => {
+    if (session && ['pending', 'accepted'].includes(session.status)) await run('cancel');
     closeTrade();
-  }, [session?.id]);
+  };
 
   if (!trade.open || !trade.partner) return null;
 
-  const isInitiator = session?.initiator_id === myUserId;
-  const myOffer = isInitiator ? (session?.initiator_offer_card_ids || []) : (session?.recipient_offer_card_ids || []);
-  const theirOffer = isInitiator ? (session?.recipient_offer_card_ids || []) : (session?.initiator_offer_card_ids || []);
-  const myConfirmed = isInitiator ? !!session?.initiator_confirmed : !!session?.recipient_confirmed;
-  const theirConfirmed = isInitiator ? !!session?.recipient_confirmed : !!session?.initiator_confirmed;
-
-  const offeredItems = myOffer.map((id) => inv.find((it) => it.id === id)).filter(Boolean);
-  const theirOfferedItems = theirOffer.map((id) => inv.find((it) => it.id === id)).filter(Boolean);
-  const availableItems = inv.filter((it) => !myOffer.includes(it.id) && !it.locked);
-
-  const toggleItem = async (itemId) => {
-    if (!session?.id || myConfirmed) return;
-    const current = isInitiator ? (session.initiator_offer_card_ids || []) : (session.recipient_offer_card_ids || []);
-    const newOffer = current.includes(itemId)
-      ? current.filter((id) => id !== itemId)
-      : [...current, itemId];
-    const patch = isInitiator
-      ? { initiator_offer_card_ids: newOffer, initiator_confirmed: false, recipient_confirmed: false }
-      : { recipient_offer_card_ids: newOffer, initiator_confirmed: false, recipient_confirmed: false };
-    try {
-      const updated = await base44.entities.TradeSession.update(session.id, patch);
-      setSession(updated);
-    } catch (e) { console.warn('[Trade] offer update failed', e); }
-  };
-
-  const handleConfirm = async () => {
-    if (!session?.id) return;
-    const newVal = !myConfirmed;
-    const patch = isInitiator
-      ? { initiator_confirmed: newVal }
-      : { recipient_confirmed: newVal };
-    try {
-      const updated = await base44.entities.TradeSession.update(session.id, patch);
-      setSession(updated);
-    } catch (e) { console.warn('[Trade] confirm failed', e); }
-  };
-
-  const bothConfirmed = myConfirmed && theirConfirmed;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
-        onClick={handleClose}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.2 }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-5xl rounded-2xl overflow-hidden flex flex-col"
-          style={{
-            background: 'rgba(12, 16, 24, 0.96)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            border: '1px solid rgba(251, 191, 36, 0.4)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(251, 191, 36, 0.15)',
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-amber-500/10">
-            <div className="flex items-center gap-2">
-              <ArrowLeftRight className="w-4 h-4 text-amber-300" />
-              <div className="text-sm font-bold text-white tracking-wider">
-                TRADING WITH <span className="text-amber-300">{trade.partner.name.toUpperCase()}</span>
-              </div>
-            </div>
-            <button onClick={handleClose} className="text-white/50 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-6 backdrop-blur-md" onClick={handleClose}>
+        <motion.div initial={{ opacity: 0, scale: .97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .97 }} onClick={(e) => e.stopPropagation()} className="flex max-h-[82vh] w-full max-w-5xl flex-col overflow-hidden bg-[#090d14]/95 ring-1 ring-white/[0.09]">
+          <header className="flex h-14 items-center gap-3 border-b border-white/[0.07] px-5">
+            <ArrowLeftRight className="h-4 w-4 text-cyan-100/60" />
+            <div><p className="text-[8px] uppercase tracking-[.18em] text-white/25">Live Card Trade</p><p className="text-xs font-semibold text-white/80">{trade.partner.name}</p></div>
+            <span className="ml-auto text-[8px] uppercase tracking-[.14em] text-white/22">Same inventory as Trading Post</span>
+            <button onClick={handleClose} className="grid h-8 w-8 place-items-center text-white/35 hover:bg-white/[0.05] hover:text-white"><X className="h-4 w-4" /></button>
+          </header>
 
-          {/* Offer columns */}
-          <div className="grid grid-cols-2 gap-4 p-5" style={{ minHeight: 220 }}>
-            {/* My offer */}
-            <div className="flex flex-col rounded-xl border border-emerald-500/30 bg-emerald-500/5 overflow-hidden">
-              <div className="px-4 py-2 border-b border-emerald-500/20 flex items-center justify-between">
-                <div className="text-xs font-bold text-emerald-300 tracking-wider">YOUR OFFER</div>
-                {myConfirmed && (
-                  <div className="flex items-center gap-1 text-[10px] text-emerald-300 font-bold">
-                    <Check className="w-3 h-3" /> READY
-                  </div>
-                )}
+          <div className="grid min-h-0 flex-1 grid-cols-[1.1fr_.9fr]">
+            <section className="flex min-h-0 flex-col border-r border-white/[0.06] p-4">
+              <label className="relative mb-3"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/22" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search your cards" className="h-9 w-full bg-white/[0.035] pl-9 pr-3 text-[10px] text-white/70 outline-none ring-1 ring-white/[0.06]" /></label>
+              <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
+                {active ? <div className="grid grid-cols-6 gap-2">{cards.map((card) => <MiniCard key={card.id} card={card} selected={selectedIds.includes(card.id)} disabled={myConfirmed} onClick={() => toggleCard(card)} />)}</div> : <div className="grid h-full min-h-[250px] place-items-center text-center text-[10px] text-white/28">Waiting for an accepted friend trade session.</div>}
               </div>
-              <div className="p-3 grid grid-cols-4 gap-2 content-start min-h-[100px]">
-                {offeredItems.length === 0 ? (
-                  <div className="col-span-4 text-center text-white/30 text-xs py-6">
-                    Click items below to add
-                  </div>
-                ) : offeredItems.map((it) => (
-                  <button
-                    key={it.id}
-                    onClick={() => toggleItem(it.id)}
-                    disabled={myConfirmed}
-                    className="aspect-square rounded-lg bg-black/40 border border-emerald-400/30 hover:border-red-400/50 hover:bg-red-500/10 transition-all p-2 flex flex-col items-center justify-center text-center group disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={`${it.name} — click to remove`}
-                  >
-                    <div className="text-lg mb-0.5">⚔️</div>
-                    <div className="text-[8px] text-white/80 leading-tight truncate w-full">{it.name}</div>
-                    <div className="text-[7px] text-red-300/60 group-hover:text-red-300 mt-0.5">remove</div>
-                  </button>
+            </section>
+
+            <aside className="flex min-h-0 flex-col p-4">
+              <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+                {[{ title: 'Your Offer', cards: myOffer, confirmed: myConfirmed, mine: true }, { title: `${trade.partner.name}'s Offer`, cards: theirOffer, confirmed: theirConfirmed, mine: false }].map((column) => (
+                  <section key={column.title} className="min-h-0 overflow-y-auto bg-white/[0.018] p-3 ring-1 ring-white/[0.05] [scrollbar-width:thin]">
+                    <div className="mb-3 flex items-center justify-between"><span className="text-[8px] font-bold uppercase tracking-[.15em] text-white/35">{column.title}</span><span className={`text-[8px] ${column.confirmed ? 'text-emerald-200/70' : 'text-white/20'}`}>{column.confirmed ? 'Confirmed' : 'Open'}</span></div>
+                    <div className="space-y-1.5">{column.cards.length ? column.cards.map((card) => <button key={card.id} onClick={column.mine ? () => toggleCard(card) : undefined} className="flex w-full items-center gap-2 bg-white/[0.025] px-2 py-2 text-left ring-1 ring-white/[0.045]"><Package className="h-3.5 w-3.5 text-white/25" /><span className="min-w-0 flex-1 truncate text-[9px] text-white/65">{nameOf(card)}</span><span className="text-[7px] text-white/22">{rarityOf(card)}</span></button>) : <div className="py-8 text-center text-[9px] text-white/18">No cards offered</div>}</div>
+                  </section>
                 ))}
               </div>
-            </div>
 
-            {/* Their offer */}
-            <div className="flex flex-col rounded-xl border border-blue-500/30 bg-blue-500/5 overflow-hidden">
-              <div className="px-4 py-2 border-b border-blue-500/20 flex items-center justify-between">
-                <div className="text-xs font-bold text-blue-300 tracking-wider">
-                  {trade.partner.name.toUpperCase()}'S OFFER
-                </div>
-                {theirConfirmed && (
-                  <div className="flex items-center gap-1 text-[10px] text-blue-300 font-bold">
-                    <Check className="w-3 h-3" /> READY
-                  </div>
-                )}
-              </div>
-              <div className="p-3 grid grid-cols-4 gap-2 content-start min-h-[100px]">
-                {theirOfferedItems.length === 0 ? (
-                  <div className="col-span-4 text-center text-white/30 text-xs py-6 italic">
-                    Waiting for their offer...
-                  </div>
-                ) : theirOfferedItems.map((it) => (
-                  <div
-                    key={it.id}
-                    className="aspect-square rounded-lg bg-black/40 border border-blue-400/30 p-2 flex flex-col items-center justify-center text-center"
-                    title={it.name}
-                  >
-                    <div className="text-lg mb-0.5">⚔️</div>
-                    <div className="text-[8px] text-white/80 leading-tight truncate w-full">{it.name}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Inventory picker */}
-          <div className="border-t border-white/10 px-5 py-3 bg-black/30">
-            <div className="text-[10px] font-bold text-white/50 tracking-[0.2em] uppercase mb-2">
-              Your Inventory — click to add/remove from offer
-            </div>
-            <div className="grid grid-cols-10 gap-1.5 max-h-28 overflow-y-auto">
-              {availableItems.length === 0 ? (
-                <div className="col-span-10 text-center text-white/30 text-xs py-3">No tradeable items</div>
-              ) : availableItems.map((it) => (
-                <button
-                  key={it.id}
-                  onClick={() => toggleItem(it.id)}
-                  disabled={myConfirmed}
-                  className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/50 hover:bg-amber-500/10 transition-all p-1.5 flex flex-col items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed"
-                  title={it.name}
-                >
-                  <div className="text-sm">⚔️</div>
-                  <div className="text-[7px] text-white/70 leading-tight truncate w-full text-center">{it.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-3 border-t border-white/10 bg-black/40">
-            <button
-              onClick={handleClose}
-              className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-bold tracking-wider uppercase transition-all"
-            >
-              Cancel
-            </button>
-            <div className="text-[10px] text-white/40">
-              {bothConfirmed ? '🎉 Finalizing trade...' :
-                myConfirmed ? `Waiting for ${trade.partner.name} to confirm...` :
-                'Add items then confirm when ready'}
-            </div>
-            <button
-              onClick={handleConfirm}
-              disabled={offeredItems.length === 0 && !myConfirmed}
-              className={`px-5 py-2 rounded-lg text-xs font-bold tracking-wider uppercase transition-all ${
-                myConfirmed
-                  ? 'bg-emerald-500/30 border border-emerald-400/60 text-emerald-200 hover:bg-emerald-500/20'
-                  : 'bg-amber-500/30 border border-amber-400/60 text-amber-200 hover:bg-amber-500/40 disabled:opacity-40 disabled:cursor-not-allowed'
-              }`}
-            >
-              {myConfirmed ? '✓ Confirmed — undo?' : 'Confirm Trade'}
-            </button>
+              <footer className="mt-3 flex items-center gap-2 border-t border-white/[0.055] pt-3">
+                <button disabled={busy} onClick={handleClose} className="h-9 flex-1 bg-white/[0.035] text-[9px] font-bold uppercase tracking-[.12em] text-white/40 ring-1 ring-white/[0.06]">Cancel</button>
+                {active && !myConfirmed && <button disabled={busy || !myOffer.length} onClick={() => run('confirm')} className="h-9 flex-[1.5] bg-cyan-100/[0.09] text-[9px] font-bold uppercase tracking-[.12em] text-cyan-50/75 ring-1 ring-cyan-100/20 disabled:opacity-30">Confirm Trade</button>}
+                {active && myConfirmed && <button disabled={busy} onClick={() => run('unconfirm')} className="h-9 flex-[1.5] bg-emerald-100/[0.07] text-[9px] font-bold uppercase tracking-[.12em] text-emerald-50/65 ring-1 ring-emerald-100/15">{theirConfirmed ? 'Finalizing…' : 'Confirmed · Undo'}</button>}
+              </footer>
+            </aside>
           </div>
         </motion.div>
       </motion.div>
