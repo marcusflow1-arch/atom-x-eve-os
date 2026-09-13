@@ -1,0 +1,288 @@
+{
+  "source": "User-supplied Hi3D stylized male warrior",
+  "sourceTriangles": 5000000,
+  "triangles": 99826,
+  "simplificationError": 0.0002589368086773902,
+  "separatedContactTriangles": 158,
+  "rigJoints": 23,
+  "rigVersion": 1,
+  "units": "meters",
+  "forward": "+Z",
+  "note": "Procedural hand-authored clips. No facial rig, cloth simulation, or motion capture.",
+  "vertices": 55586,
+  "bytes": 9170360,
+  "clips": [
+    {
+      "name": "Idle",
+      "duration": 4,
+      "loop": true
+    },
+    {
+      "name": "AFK",
+      "duration": 8,
+      "loop": true
+    },
+    {
+      "name": "Wave",
+      "duration": 3.2,
+      "loop": false,
+      "next": "Idle"
+    },
+    {
+      "name": "Walk",
+      "duration": 1.2,
+      "loop": true
+    },
+    {
+      "name": "Arm_Raise",
+      "duration": 1.4,
+      "loop": false
+    },
+    {
+      "name": "Sit_Down",
+      "duration": 2.6,
+      "loop": false,
+      "next": "Sit_Idle"
+    },
+    {
+      "name": "Sit_Idle",
+      "duration": 4,
+      "loop": true
+    },
+    {
+      "name": "Lean_Back",
+      "duration": 2.2,
+      "loop": false,
+      "next": "Lean_Back_Idle"
+    },
+    {
+      "name": "Lean_Back_Idle",
+      "duration": 4,
+      "loop": true
+    },
+    {
+      "name": "Sit_Forward",
+      "duration": 2.2,
+      "loop": false,
+      "next": "Sit_Idle"
+    },
+    {
+      "name": "Stand_Up",
+      "duration": 2.6,
+      "loop": false,
+      "next": "Idle"
+    }
+  ],
+  "skeleton": [
+    [
+      "Hips",
+      null,
+      [
+        0,
+        0.915,
+        -0.015
+      ]
+    ],
+    [
+      "Spine",
+      "Hips",
+      [
+        0,
+        1.075,
+        -0.018
+      ]
+    ],
+    [
+      "Chest",
+      "Spine",
+      [
+        0,
+        1.305,
+        -0.021
+      ]
+    ],
+    [
+      "Neck",
+      "Chest",
+      [
+        0,
+        1.54,
+        -0.017
+      ]
+    ],
+    [
+      "Head",
+      "Neck",
+      [
+        0,
+        1.625,
+        -0.01
+      ]
+    ],
+    [
+      "LeftShoulder",
+      "Chest",
+      [
+        0.113,
+        1.457,
+        -0.02
+      ]
+    ],
+    [
+      "LeftUpperArm",
+      "LeftShoulder",
+      [
+        0.205,
+        1.46,
+        -0.022
+      ]
+    ],
+    [
+      "LeftForeArm",
+      "LeftUpperArm",
+      [
+        0.271,
+        1.182,
+        -0.006
+      ]
+    ],
+    [
+      "LeftHand",
+      "LeftForeArm",
+      [
+        0.303,
+        0.968,
+        0.012
+      ]
+    ],
+    [
+      "LeftHandEnd",
+      "LeftHand",
+      [
+        0.304,
+        0.865,
+        0.02
+      ]
+    ],
+    [
+      "LeftThigh",
+      "Hips",
+      [
+        0.086,
+        0.906,
+        -0.015
+      ]
+    ],
+    [
+      "LeftShin",
+      "LeftThigh",
+      [
+        0.15,
+        0.573,
+        0.01
+      ]
+    ],
+    [
+      "LeftFoot",
+      "LeftShin",
+      [
+        0.207,
+        0.126,
+        -0.013
+      ]
+    ],
+    [
+      "LeftToe",
+      "LeftFoot",
+      [
+        0.225,
+        0.046,
+        0.108
+      ]
+    ],
+    [
+      "RightShoulder",
+      "Chest",
+      [
+        -0.113,
+        1.457,
+        -0.02
+      ]
+    ],
+    [
+      "RightUpperArm",
+      "RightShoulder",
+      [
+        -0.205,
+        1.46,
+        -0.022
+      ]
+    ],
+    [
+      "RightForeArm",
+      "RightUpperArm",
+      [
+        -0.271,
+        1.182,
+        -0.006
+      ]
+    ],
+    [
+      "RightHand",
+      "RightForeArm",
+      [
+        -0.303,
+        0.968,
+        0.012
+      ]
+    ],
+    [
+      "RightHandEnd",
+      "RightHand",
+      [
+        -0.304,
+        0.865,
+        0.02
+      ]
+    ],
+    [
+      "RightThigh",
+      "Hips",
+      [
+        -0.086,
+        0.906,
+        -0.015
+      ]
+    ],
+    [
+      "RightShin",
+      "RightThigh",
+      [
+        -0.15,
+        0.573,
+        0.01
+      ]
+    ],
+    [
+      "RightFoot",
+      "RightShin",
+      [
+        -0.207,
+        0.126,
+        -0.013
+      ]
+    ],
+    [
+      "RightToe",
+      "RightFoot",
+      [
+        -0.225,
+        0.046,
+        0.108
+      ]
+    ]
+  ],
+  "textureMaxDimension": 4096,
+  "masterTextureMaxDimension": 8192,
+  "sha256": "7ea89358881e43caeea30634b63217ff2ada9c61e27f413ae7616057340e7c99"
+}

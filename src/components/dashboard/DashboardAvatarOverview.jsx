@@ -118,7 +118,7 @@ export default function DashboardAvatarOverview() {
     const handlePointerDown = event => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]')) return;
+      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-player-animation-controls]')) return;
 
       const interactive = target.closest('button, a, [role="button"], input, select, textarea');
       if (!interactive) return;
