@@ -10,10 +10,11 @@ Every mind starts neutral. Genesis appearance/personality selections do not pre-
 
 1. **AvatarMindSeed** — compressed long-term identity, values, preferences, aspirations, playstyle, confidence and development stage.
 2. **AvatarExperience** — chronological private experience ledger. This is the durable history of what the avatar observed.
-3. **AIBehaviorState** — fast-changing state such as mood, energy, risk, empathy, aggression and behavioral traits.
-4. **AvatarReflectionPrompt** — questions the avatar asks when evidence is important but ambiguous.
-5. **AvatarMindAgentState** — specialist agents with a single job each: Observer, Mirror, Historian, Reflection, Coach and Storyteller.
-6. **AvatarObservationSettings** — player controls for event learning, screen observation, frame retention and reflection frequency.
+3. **AvatarMemoryAnchor** — high-significance moments preserved as durable milestones (firsts, turning points, values, relationships, failures, victories, aspirations and preferences).
+4. **AIBehaviorState** — fast-changing state such as mood, energy, risk, empathy, aggression and behavioral traits.
+5. **AvatarReflectionPrompt** — questions the avatar asks when evidence is important but ambiguous.
+6. **AvatarMindAgentState** — specialist agents with a single job each: Observer, Mirror, Historian, Reflection, Coach and Storyteller.
+7. **AvatarObservationSettings** — player controls for event learning, screen observation, frame retention and reflection frequency.
 
 ## Specialist agent contract
 
