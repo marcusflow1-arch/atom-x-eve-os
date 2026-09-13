@@ -110,10 +110,16 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const key = (event) => { if (event.key === 'Escape') onClose?.(); };
+    const key = (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopImmediatePropagation?.();
+      if (showCreator) setShowCreator(false);
+      else onClose?.();
+    };
     window.addEventListener('keydown', key, true);
     return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', key, true); };
-  }, [onClose]);
+  }, [onClose, showCreator]);
 
   const byDate = useMemo(() => {
     const map = new Map();
