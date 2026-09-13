@@ -62,17 +62,14 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
   useEffect(() => { loadInventory(); }, [loadInventory]);
   useEffect(() => {
     if (!isOpen || !user?.id) return undefined;
-    const unsubscribe = base44.entities.UserCard.subscribe((event) => {
-      const row = event?.data;
-      if (!row || row.user_id === user.id || ownedCards.some((card) => card.id === row.id)) loadInventory();
-    });
+    const unsubscribe = base44.entities.UserCard.subscribe(() => loadInventory());
     const refresh = () => loadInventory();
     window.addEventListener('atomCardInventoryChanged', refresh);
     return () => {
       unsubscribe?.();
       window.removeEventListener('atomCardInventoryChanged', refresh);
     };
-  }, [isOpen, user?.id, loadInventory, ownedCards]);
+  }, [isOpen, user?.id, loadInventory]);
 
   const inventoryGames = useMemo(() => {
     const byTitle = new Map((libraryGames || []).map((game) => [String(game.title || game.name || '').toLowerCase(), game]));
