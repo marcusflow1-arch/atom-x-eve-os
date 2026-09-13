@@ -277,6 +277,25 @@ async function updateMindFromExperience(base44: any, userId: string, mind: AnyOb
     privacy_scope: 'private',
   });
 
+  const legacyDecisionType = String(experienceInput.decision_type || experience.event_type || '');
+  if (['moral_choice','combat_action','dialogue_choice','resource_decision','alliance_action','exploration_choice'].includes(legacyDecisionType)) {
+    await base44.asServiceRole.entities.AIDecisionLog.create({
+      user_id: userId,
+      avatar_id: mind.avatar.id,
+      game_id: experience.game_id || '',
+      decision_type: legacyDecisionType,
+      decision_context: experience.context || '',
+      choice_made: experience.action || '',
+      moral_weight: signals.moral_impact || 0,
+      aggression_impact: signals.aggression_impact || 0,
+      empathy_impact: signals.empathy_impact || 0,
+      risk_impact: signals.risk_impact || 0,
+      trait_impacts: signals.trait_impacts || {},
+      was_consistent: true,
+      ai_reaction: `I noticed that choice. I am keeping it as part of our history, but I will wait for more evidence before deciding what it says about us.`
+    }).catch(() => null);
+  }
+
   const newCount = Number(mind.seed.observation_count || 0) + 1;
   const confidence = Math.min(100, Math.round(Math.log2(newCount + 1) * 13 + Number(mind.seed.answered_question_count || 0) * 2));
   const seed = await base44.asServiceRole.entities.AvatarMindSeed.update(mind.seed.id, {
