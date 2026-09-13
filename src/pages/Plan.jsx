@@ -1,122 +1,53 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock3, Home, Plus, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { createPageUrl } from '@/utils';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Home } from 'lucide-react';
-import {
-  startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays,
-  isSameMonth, isSameDay, format,
-} from 'date-fns';
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function addDays(value, n) { const d = new Date(value); d.setDate(d.getDate()+n); return d; }
+function startOfDay(value) { const d = new Date(value); d.setHours(0,0,0,0); return d; }
+function endOfDay(value) { const d = new Date(value); d.setHours(23,59,59,999); return d; }
+function key(value) { const d = new Date(value); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function grid(cursor) { const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1); const start = addDays(first, -first.getDay()); return Array.from({length:42},(_,i)=>addDays(start,i)); }
 
 export default function Plan() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const today = new Date();
-  const [cursor, setCursor] = useState(startOfMonth(today));
+  const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState(today);
+  const [occurrences, setOccurrences] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const days = useMemo(() => grid(cursor), [cursor]);
 
-  const start = startOfWeek(startOfMonth(cursor));
-  const end = endOfWeek(endOfMonth(cursor));
-  const days = [];
-  let d = start;
-  while (d <= end) { days.push(d); d = addDays(d, 1); }
+  const load = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const response = await base44.functions.invoke('calendarAgent', { action: 'getState', payload: { range_start: startOfDay(days[0]).toISOString(), range_end: endOfDay(days[41]).toISOString() } });
+      const data = response?.data || response || {};
+      setOccurrences(Array.isArray(data.occurrences) ? data.occurrences : []);
+      setTasks(Array.isArray(data.tasks) ? data.tasks : []);
+    } finally { setLoading(false); }
+  }, [user?.id, days[0]?.getTime(), days[41]?.getTime()]);
 
-  const monthLabel = format(cursor, 'MMMM yyyy');
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const refresh = () => load(); window.addEventListener('atom:calendar-data-changed', refresh); return () => window.removeEventListener('atom:calendar-data-changed', refresh); }, [load]);
 
-  return (
-    <div className="min-h-screen w-full p-6 text-white">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <CalendarIcon className="w-7 h-7 text-cyan-300" />
-            <h1 className="text-2xl font-bold tracking-wide">Plan</h1>
-          </div>
-          <button
-            onClick={() => navigate(createPageUrl('LunaTemplate'))}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-sm font-medium transition-all"
-          >
-            <Home className="w-4 h-4" /> Luna Dashboard
-          </button>
-        </div>
+  const byDate = useMemo(() => { const map = new Map(); occurrences.forEach((event) => { const k = key(event.occurrence_start || event.start_time); if (!map.has(k)) map.set(k, []); map.get(k).push(event); }); return map; }, [occurrences]);
+  const selectedEvents = byDate.get(key(selected)) || [];
+  const selectedTasks = tasks.filter((task) => task.due_date && key(task.due_date) === key(selected) && task.status !== 'cancelled');
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          {/* Calendar */}
-          <div
-            className="rounded-3xl p-5"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', backdropFilter: 'blur(20px)' }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{monthLabel}</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCursor(startOfMonth(addDays(startOfMonth(cursor), -1)))}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => { setCursor(startOfMonth(today)); setSelected(today); }}
-                  className="px-3 h-8 rounded-full bg-white/10 hover:bg-white/20 text-xs font-medium"
-                >
-                  Today
-                </button>
-                <button
-                  onClick={() => setCursor(startOfMonth(addDays(endOfMonth(cursor), 1)))}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {WEEKDAYS.map((w) => (
-                <div key={w} className="text-center text-[11px] font-semibold uppercase tracking-wider text-white/40">{w}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {days.map((day) => {
-                const inMonth = isSameMonth(day, cursor);
-                const isToday = isSameDay(day, today);
-                const isSelected = isSameDay(day, selected);
-                return (
-                  <button
-                    key={day.toISOString()}
-                    onClick={() => setSelected(day)}
-                    className={`aspect-square rounded-xl text-sm transition-all ${
-                      isSelected
-                        ? 'bg-cyan-500/30 border border-cyan-400/50 text-white'
-                        : isToday
-                        ? 'bg-white/10 border border-white/20 text-white'
-                        : inMonth
-                        ? 'text-white/80 hover:bg-white/10'
-                        : 'text-white/25'
-                    }`}
-                  >
-                    {format(day, 'd')}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Selected day panel */}
-          <div
-            className="rounded-3xl p-5"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', backdropFilter: 'blur(20px)' }}
-          >
-            <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Selected</p>
-            <h3 className="text-xl font-semibold mb-4">{format(selected, 'EEEE, MMM d')}</h3>
-            <div className="space-y-3">
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-sm text-white/70">No events scheduled for this day.</p>
-              </div>
-              <p className="text-xs text-white/40">
-                Your planner is ready. Add reminders and goals from the Luna Dashboard calendar to see them here.
-              </p>
-            </div>
-          </div>
-        </div>
+  return <div className="min-h-screen w-full bg-[#05080d] p-6 text-white">
+    <div className="mx-auto max-w-6xl pt-16">
+      <header className="mb-6 flex items-center justify-between"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full bg-cyan-200/[0.07] text-cyan-100/65"><CalendarIcon className="h-4 w-4" /></div><div><div className="text-[8px] font-bold uppercase tracking-[0.22em] text-cyan-200/40">Atom XE Schedule</div><h1 className="text-xl font-semibold">Plan</h1></div></div><div className="flex gap-2"><button onClick={() => window.dispatchEvent(new Event('openAtomCalendar'))} className="flex h-9 items-center gap-2 bg-cyan-100 px-3 text-[9px] font-black uppercase tracking-wider text-slate-950"><Sparkles className="h-3.5 w-3.5" /> Open Calendar</button><button onClick={() => navigate(createPageUrl('LunaTemplate'))} className="grid h-9 w-9 place-items-center bg-white/[0.045] text-white/45 hover:text-white"><Home className="h-4 w-4" /></button></div></header>
+      <div className="grid gap-px bg-white/[0.05] lg:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="bg-[#070b11] p-5"><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold text-white/80">{cursor.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</h2><div className="flex items-center gap-1"><button onClick={() => setCursor(new Date(cursor.getFullYear(),cursor.getMonth()-1,1))} className="grid h-8 w-8 place-items-center text-white/30 hover:bg-white/[0.05] hover:text-white"><ChevronLeft className="h-4 w-4" /></button><button onClick={() => { setCursor(new Date(today.getFullYear(),today.getMonth(),1)); setSelected(today); }} className="h-8 px-3 text-[8px] font-bold uppercase tracking-wider text-white/35 hover:bg-white/[0.05] hover:text-white">Today</button><button onClick={() => setCursor(new Date(cursor.getFullYear(),cursor.getMonth()+1,1))} className="grid h-8 w-8 place-items-center text-white/30 hover:bg-white/[0.05] hover:text-white"><ChevronRight className="h-4 w-4" /></button></div></div><div className="grid grid-cols-7 border-b border-white/[0.05] pb-2">{WEEKDAYS.map((name)=><div key={name} className="px-2 text-[8px] font-bold uppercase tracking-[0.16em] text-white/20">{name}</div>)}</div><div className="grid grid-cols-7 grid-rows-6 border-l border-t border-white/[0.04]">{days.map((day)=>{const list=byDate.get(key(day))||[];const inMonth=day.getMonth()===cursor.getMonth();const active=key(day)===key(selected);const isToday=key(day)===key(today);return <button key={key(day)} onClick={()=>setSelected(day)} className={`relative min-h-[96px] border-b border-r border-white/[0.04] p-2 text-left hover:bg-white/[0.025] ${!inMonth?'opacity-35':''} ${active?'bg-cyan-200/[0.03]':''}`}><span className={`grid h-6 w-6 place-items-center rounded-full text-[10px] ${isToday?'bg-cyan-100 font-bold text-slate-950':'text-white/45'}`}>{day.getDate()}</span><div className="mt-1 space-y-1">{list.slice(0,2).map((event)=><div key={event.occurrence_key||event.id} className="truncate bg-white/[0.025] px-1.5 py-1 text-[8px] text-white/45">{event.title}</div>)}{list.length>2&&<div className="text-[8px] text-white/18">+{list.length-2}</div>}</div></button>})}</div>{loading&&<div className="mt-3 text-[8px] uppercase tracking-wider text-white/18">Syncing…</div>}</section>
+        <aside className="bg-[#060a10] p-5"><div className="text-[8px] font-bold uppercase tracking-[0.18em] text-white/22">Selected</div><h3 className="mt-1 text-xl font-semibold text-white/80">{selected.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</h3><div className="mt-5 space-y-1">{selectedEvents.length?selectedEvents.map((event)=><div key={event.occurrence_key||event.id} className="bg-white/[0.025] p-3"><div className="text-[11px] font-medium text-white/65">{event.title}</div><div className="mt-1 flex items-center gap-1 text-[8px] text-white/22"><Clock3 className="h-2.5 w-2.5" />{new Date(event.occurrence_start||event.start_time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div>):<div className="py-6 text-[10px] text-white/20">No scheduled events.</div>}</div>{selectedTasks.length>0&&<div className="mt-5 border-t border-white/[0.05] pt-4"><div className="mb-2 text-[8px] font-bold uppercase tracking-wider text-white/20">Tasks</div>{selectedTasks.map((task)=><div key={task.id} className="mb-1 bg-white/[0.02] px-3 py-2 text-[10px] text-white/40">{task.title}</div>)}</div>}<button onClick={() => window.dispatchEvent(new Event('openAtomCalendar'))} className="mt-6 flex h-9 w-full items-center justify-center gap-2 bg-white/[0.05] text-[8px] font-bold uppercase tracking-wider text-white/45 hover:bg-white/[0.08] hover:text-white"><Plus className="h-3 w-3" /> Edit this day</button></aside>
       </div>
     </div>
-  );
+  </div>;
 }
