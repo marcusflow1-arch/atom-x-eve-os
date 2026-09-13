@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { X, Search, Mic, MicOff, Package, Gamepad2, Zap, Shield, User, Trees, Trophy, ChevronRight, ArrowLeftRight, DollarSign, Star, Trash2, Lock, LayoutGrid, List, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { libraryGames } from '../../dashboard/gamehub/mockLibraryData';
@@ -23,31 +25,8 @@ const RARITY_COLORS = {
   Common: 'text-slate-400 bg-slate-500/10 border-slate-500/30',
 };
 
-function generateInventoryForGame(game) {
-  const title = game.title || game.name || 'Unknown';
-  const categories = ['achievement', 'ability', 'equipment', 'companion', 'environment'];
-  const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic'];
-  const items = [];
-  const count = 6 + Math.floor(Math.random() * 10);
-  for (let i = 0; i < count; i++) {
-    const cat = categories[Math.floor(Math.random() * categories.length)];
-    const rarity = rarities[Math.floor(Math.random() * rarities.length)];
-    const seed = (game.id || '').charCodeAt(0) + i;
-    const owned = seed % 10 > 2;
-    items.push({
-      id: `${game.id}_item_${i}`,
-      name: `${title.split(' ')[0]} ${CATEGORY_CONFIG[cat].label} ${i + 1}`,
-      category: cat,
-      rarity,
-      game: title,
-      gameId: game.id,
-      owned,
-      unlockedAt: owned ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : null,
-      image: game.cover || game.cover_image,
-    });
-  }
-  return items;
-}
+const normalizeGameKey = (value = '') => String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'unknown-game';
+const normalizeCategory = (value = 'Achievement') => String(value).toLowerCase();
 
 export default function InventoryFullPanel({ isOpen, onClose, initialGameName, fullScreen = false, leftOffset }) {
   const [selectedGame, setSelectedGame] = useState(null);
