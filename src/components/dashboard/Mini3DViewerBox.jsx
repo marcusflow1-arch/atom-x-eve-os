@@ -131,7 +131,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
 
     const fbxLoader = new FBXLoader();
     const gltfLoader = new GLTFLoader();
-    const modelUrl = savedCompanion ? companionModel(savedCompanion) : activeChar === 'ybot' ? YBOT_URL : C1_URL;
+    const modelUrl = PREVIEW_AVATAR_URL;
     let disposed = false;
     let model = null;
     let currentAction = null;
