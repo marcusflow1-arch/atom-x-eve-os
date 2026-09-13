@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { finalizeTradeSession } from '@/functions/finalizeTradeSession';
 import {
   X, ArrowLeftRight, DollarSign, Package, CheckCircle2, Clock,
@@ -167,7 +168,15 @@ function TradeSlot({ card, onDrop, onDragOver, onDragLeave, isOver, onDoubleClic
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function FriendTradePanel({ friend, onClose, currentUser }) {
+export default function FriendTradePanel({ friend, onClose, currentUser: providedUser }) {
+  const { user: signedInUser } = useAuth();
+  const currentUser = providedUser ?? signedInUser;
+  const participantIssue = !currentUser?.id
+    ? 'Your account is still loading. Please wait before trading.'
+    : !friend?.friend_id
+      ? 'This profile is not linked to a player account. Select a connected friend to trade.'
+      : '';
+  const [submitError, setSubmitError] = useState('');
   const SLOT_COUNT = 8;
   const [mySlots, setMySlots] = useState(Array(SLOT_COUNT).fill(null));
   const [dragOverSlot, setDragOverSlot] = useState(null);
@@ -330,14 +339,25 @@ export default function FriendTradePanel({ friend, onClose, currentUser }) {
   };
 
   const handleStartTrade = async () => {
+    if (isSubmitting || tradeSession) return;
+    if (!currentUser?.id || !friend?.friend_id) {
+      setSubmitError(participantIssue);
+      return;
+    }
     setIsSubmitting(true);
-    const session = await base44.entities.TradeSession.create({
-      initiator_id: currentUser.id,
-      recipient_id: friend.friend_id,
-      status: 'pending',
-    });
-    setTradeSession(session);
-    setIsSubmitting(false);
+    setSubmitError('');
+    try {
+      const session = await base44.entities.TradeSession.create({
+        initiator_id: currentUser.id,
+        recipient_id: friend.friend_id,
+        status: 'pending',
+      });
+      setTradeSession(session);
+    } catch (error) {
+      setSubmitError(error?.message || 'Could not send the trade request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleConfirmTrade = async () => {
@@ -664,6 +684,9 @@ export default function FriendTradePanel({ friend, onClose, currentUser }) {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {(participantIssue || submitError) && (
+                  <p role="alert" className="mb-2 text-xs text-[hsl(var(--prefab-foreground))]">{participantIssue || submitError}</p>
+                )}
                 <div className="flex items-center gap-2">
                   <button onClick={handleReset}
                     className="px-2 py-1.5 rounded-lg text-[7px] font-bold text-white/40 hover:text-white transition-colors flex-1"
@@ -671,7 +694,7 @@ export default function FriendTradePanel({ friend, onClose, currentUser }) {
                     Cancel
                   </button>
                   <button onClick={tradeSession ? handleConfirmTrade : handleStartTrade}
-                    disabled={isSubmitting || (!tradeSession && !friend?.status) || (tradeSession && (!hasOffer || tradeStatus === 'waiting_other' || myConfirmed))}
+                    disabled={!!participantIssue || isSubmitting || (!tradeSession && !friend?.status) || (tradeSession && (!hasOffer || tradeStatus === 'waiting_other' || myConfirmed))}
                     className="flex-1 py-1.5 rounded-lg text-[7px] font-bold transition-all"
                     style={
                       tradeStatus === 'waiting_other'
@@ -682,7 +705,7 @@ export default function FriendTradePanel({ friend, onClose, currentUser }) {
                             ? { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)', color: '#67e8f9' }
                             : { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)', color: '#67e8f9' }
                     }>
-                    {!tradeSession && 'Send Trade Request'}
+                    {!tradeSession && (isSubmitting ? 'Sending…' : 'Send Trade Request')}
                     {tradeSession && !myConfirmed && 'Confirm Trade'}
                     {tradeSession && myConfirmed && tradeStatus !== 'completed' && 'Confirmed'}
                     {tradeStatus === 'waiting_other' && 'Waiting'}
