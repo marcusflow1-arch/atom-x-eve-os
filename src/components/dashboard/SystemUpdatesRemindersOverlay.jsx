@@ -1,180 +1,59 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, CalendarDays, CheckCircle, ChevronDown, ChevronRight, Clock, Info, Settings, X, AlertCircle } from 'lucide-react';
+import { AlertCircle, Bell, CalendarDays, CheckCircle, ChevronRight, Clock3, Info, Settings, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
-
-const fallbackReminders = [
-  { id: 'r1', date: 'Today', title: 'Raid at 8:00 PM tonight', detail: 'Scheduled gaming reminder. Check your active game schedule for the event time and party status.' },
-  { id: 'r2', date: 'Today', title: 'Collect daily rewards', detail: 'Daily rewards are available. Open the relevant game hub to claim available rewards before the daily reset.' },
-  { id: 'r3', date: 'Upcoming', title: 'Check out new game release', detail: 'A new release is available to explore in the Atom X Eve storefront.' },
-  { id: 'r4', date: 'Tomorrow', title: 'Clan meeting tomorrow', detail: 'Your clan meeting is scheduled for tomorrow. Review the clan hub for the latest details.' },
-];
+import { useAuth } from '@/components/auth/AuthContext';
 
 const fallbackUpdates = [
-  { id: 'u1', date: 'Today', title: 'Luna Dashboard improvements', detail: 'Dashboard interaction, overlay layering, and navigation improvements are now available.' },
-  { id: 'u2', date: 'Recent', title: 'Storefront updates', detail: 'The storefront received visual, carousel, and game-detail presentation improvements.' },
-  { id: 'u3', date: 'Recent', title: 'AI Avatar system update', detail: 'AI Avatar statistics, genre progression, and dashboard presentation have been updated.' },
-  { id: 'u4', date: 'Upcoming', title: 'Platform improvements', detail: 'Additional performance and interface improvements are scheduled for the next platform update.' },
+  { id: 'u1', date: 'Recent', title: 'Luna Dashboard improvements', detail: 'Dashboard interaction, overlay layering, and navigation improvements are available.' },
+  { id: 'u2', date: 'Recent', title: 'AI Avatar systems', detail: 'Avatar intelligence, progression, memory, and scheduling systems continue to expand.' },
 ];
 
-function FadedDivider({ vertical = false }) {
-  return <div className={vertical ? 'w-px h-full shrink-0 bg-gradient-to-b from-transparent via-white/35 to-transparent' : 'h-px w-full bg-gradient-to-r from-transparent via-white/35 to-transparent'} />;
-}
-
-function formatReminderDate(value) {
-  if (!value) return 'Upcoming';
-  if (typeof value === 'string' && /^(Today|Tomorrow|Upcoming|Recent)$/i.test(value.trim())) return value;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return String(value);
-  return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function normalizeReminder(item, index, source = 'reminder') {
-  const dateValue = item.date || item.scheduled_date || item.reminder_date || item.event_date || item.start_date || item.due_date || item.created_date;
-  return {
-    ...item,
-    id: item.id || `${source}-${index}`,
-    date: formatReminderDate(dateValue),
-    title: item.title || item.name || item.subject || item.event_name || 'Reminder',
-    detail: item.detail || item.description || item.notes || item.content || item.message || 'No additional details available.',
-  };
+function normalizeUpdate(item, index) {
+  return { ...item, id: item.id || `update-${index}`, date: item.created_date ? new Date(item.created_date).toLocaleDateString() : (item.date || 'Recent'), detail: item.full_content || item.detail || item.description || item.release_notes || 'No additional details available.' };
 }
 
 export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClose }) {
+  const { user } = useAuth();
+  const [reminders, setReminders] = useState([]);
+  const [updates, setUpdates] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [expanded, setExpanded] = useState({});
-  const { data: updates = [] } = useQuery({
-    queryKey: ['platform-updates-reminder-overlay'],
-    queryFn: async () => {
-      try {
-        const result = await base44.entities.PlatformUpdate.filter({ published: true });
-        return Array.isArray(result) ? result : [];
-      } catch (error) {
-        console.warn('System updates unavailable; using local dashboard updates.', error);
-        return [];
-      }
-    }, staleTime: 60000, retry: 1,
-  });
-
-  const { data: savedReminders = [] } = useQuery({
-    queryKey: ['luna-dashboard-reminders-overlay'],
-    queryFn: async () => {
-      try {
-        const reminderEntity = base44.entities.Reminder;
-        if (reminderEntity?.filter) {
-          const result = await reminderEntity.filter({});
-          if (Array.isArray(result) && result.length) return result.map((item, i) => normalizeReminder(item, i, 'reminder'));
-        }
-      } catch (error) {
-        console.warn('Reminder records unavailable; checking calendar events.', error);
-      }
-
-      try {
-        const calendarEntity = base44.entities.CalendarEvent;
-        if (calendarEntity?.filter) {
-          const result = await calendarEntity.filter({});
-          if (Array.isArray(result) && result.length) return result.map((item, i) => normalizeReminder(item, i, 'calendar'));
-        }
-      } catch (error) {
-        console.warn('Calendar event records unavailable; using local dashboard reminders.', error);
-      }
-
-      return [];
-    }, staleTime: 60000, retry: 1,
-  });
-
-  const items = useMemo(() => {
-    if (mode === 'reminders') return savedReminders.length ? savedReminders : fallbackReminders;
-    const remoteItems = updates.map((u, i) => ({
-      ...u, id: u.id || `update-${i}`,
-      date: u.created_date ? new Date(u.created_date).toLocaleDateString() : (u.date || 'Recent'),
-      detail: u.full_content || u.detail || u.description || u.release_notes || 'No additional details available.',
-    }));
-    return remoteItems.length ? remoteItems : fallbackUpdates;
-  }, [mode, updates, savedReminders]);
-
-  const itemIds = useMemo(() => items.map(item => String(item.id)), [items]);
-  useEffect(() => {
-    setSelectedId(current => {
-      if (current && itemIds.includes(String(current))) return current;
-      return items[0]?.id ?? null;
-    });
-    setExpanded({});
-  }, [mode, itemIds.join('|')]);
-
-  const selected = useMemo(
-    () => items.find(item => String(item.id) === String(selectedId)) || null,
-    [items, selectedId]
-  );
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        if (mode === 'reminders' && user?.id) {
+          const rows = await base44.entities.UserEvent.filter({ user_id: user.id }, 'start_time', 300);
+          if (cancelled) return;
+          const now = Date.now();
+          setReminders((rows || []).filter((event) => event.status !== 'cancelled' && new Date(event.start_time).getTime() >= now && ((event.reminders || []).length > 0 || event.event_type === 'reminder')).sort((a,b) => new Date(a.start_time)-new Date(b.start_time)));
+        } else if (mode === 'updates') {
+          const rows = await base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 100).catch(() => []);
+          if (!cancelled) setUpdates(Array.isArray(rows) ? rows.map(normalizeUpdate) : []);
+        }
+      } catch (error) { console.warn('[Dashboard Overlay] load failed', error); }
+    };
+    load();
+    const refresh = () => load();
+    window.addEventListener('atom:calendar-data-changed', refresh);
+    const unsubscribe = mode === 'reminders' ? base44.entities.UserEvent?.subscribe?.(refresh) : undefined;
+    return () => { cancelled = true; window.removeEventListener('atom:calendar-data-changed', refresh); unsubscribe?.(); };
+  }, [mode, user?.id]);
 
-  const grouped = useMemo(() => items.reduce((acc, item) => {
-    const key = item.date || 'Recent'; (acc[key] ||= []).push(item); return acc;
-  }, {}), [items]);
+  const items = useMemo(() => mode === 'reminders' ? reminders.map((event) => ({
+    ...event, date: new Date(event.start_time).toLocaleDateString(), detail: event.description || `${(event.event_type || 'event').replaceAll('_',' ')} · ${new Date(event.start_time).toLocaleString()}`,
+  })) : (updates.length ? updates : fallbackUpdates), [mode, reminders, updates]);
 
-  return <AnimatePresence>
-    <motion.div
-      initial={{ x: '100%', opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: '100%', opacity: 0 }}
-      transition={{ type: 'tween', duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed z-[100] left-[420px] right-0 top-[164px] bottom-[48px] overflow-hidden pointer-events-auto"
-      style={{
-        background: 'rgba(5,9,15,.97)',
-        backdropFilter: 'blur(40px) saturate(125%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(125%)',
-        boxShadow: '-32px 0 90px rgba(0,0,0,.55)',
-        isolation: 'isolate',
-      }}
-      role="dialog" aria-modal="true"
-      aria-label={mode === 'reminders' ? 'Luna Dashboard Reminders' : 'Luna Dashboard System Updates'}
-    >
-      <div className="h-full flex flex-col">
-        <header className="h-[68px] shrink-0 flex items-center justify-between px-7">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center text-cyan-300/80">{mode === 'reminders' ? <Bell className="w-4 h-4"/> : <Settings className="w-4 h-4"/>}</div>
-            <div><div className="text-white/85 text-sm font-semibold tracking-wider uppercase">{mode === 'reminders' ? 'Reminders' : 'System Updates'}</div><div className="text-white/25 text-[9px] uppercase tracking-[.18em]">Luna Dashboard</div></div>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-white/35 hover:text-white/80 transition-colors" aria-label="Close"><X className="w-4 h-4"/></button>
-        </header>
-        <FadedDivider />
-        <div className="flex-1 min-h-0 flex">
-          <section className="w-[42%] min-w-[300px] overflow-y-auto px-7 py-5" style={{ scrollbarWidth: 'none' }}>
-            {Object.entries(grouped).map(([date, group]) => {
-              const isExpanded = expanded[date] !== false;
-              return <div key={date} className="mb-5">
-                <button onClick={() => setExpanded(v => ({ ...v, [date]: !isExpanded }))} className="w-full flex items-center justify-between py-2 text-left text-white/40 hover:text-white/70 transition-colors">
-                  <span className="flex items-center gap-2 text-[9px] uppercase tracking-[.18em]"><CalendarDays className="w-3 h-3"/>{date}</span><ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}/>
-                </button>
-                <AnimatePresence initial={false}>{isExpanded && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-1 space-y-0.5 overflow-hidden">
-                  {group.map(item => <motion.button layout key={item.id} onClick={() => setSelectedId(item.id)} className={`w-full text-left py-3 px-1 flex gap-3 transition-colors ${String(selectedId) === String(item.id) ? 'text-white bg-white/[0.035]' : 'text-white/50 hover:text-white/80 hover:bg-white/[0.018]'}`}>
-                    <span className="pt-0.5 text-cyan-300/60">{mode === 'reminders' ? <Bell className="w-3.5 h-3.5"/> : item.update_type === 'required' ? <AlertCircle className="w-3.5 h-3.5 text-red-300/70"/> : <Info className="w-3.5 h-3.5"/>}</span>
-                    <span className="min-w-0 flex-1"><span className="block text-[11px] font-medium truncate">{item.title}</span><span className="block text-[9px] text-white/25 truncate mt-1">{item.description || item.detail}</span></span><ChevronRight className="w-3 h-3 mt-1 text-white/15"/>
-                  </motion.button>)}
-                </motion.div>}</AnimatePresence>
-              </div>;
-            })}
-            {!items.length && <div className="py-20 text-center text-white/25 text-xs">No available {mode === 'reminders' ? 'reminders' : 'updates'}</div>}
-          </section>
-          <FadedDivider vertical />
-          <section className="flex-1 min-w-0 overflow-y-auto px-9 py-7" style={{ scrollbarWidth: 'none' }}>
-            <AnimatePresence mode="wait">{selected ? <motion.div key={selected.id} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="max-w-3xl">
-              <div className="flex items-center gap-2 text-white/25 text-[9px] uppercase tracking-[.18em] mb-5"><Clock className="w-3 h-3"/>{selected.date || 'Recent'}</div>
-              <h2 className="text-white text-2xl font-semibold tracking-tight mb-4">{selected.title}</h2>
-              <p className="text-white/50 text-sm leading-7 whitespace-pre-wrap">{selected.detail || selected.description || 'No additional details available.'}</p>
-              {selected.version && <div className="mt-6 text-[10px] font-mono text-white/25">Version {selected.version}</div>}
-              {selected.link && <a href={selected.link} target="_blank" rel="noreferrer" className="inline-flex mt-6 text-[10px] uppercase tracking-wider text-cyan-300/75 hover:text-cyan-200">Open details</a>}
-              <div className="mt-8 pt-5 border-t border-white/[.07] flex items-center gap-2 text-white/25 text-[9px] uppercase tracking-wider"><CheckCircle className="w-3 h-3 text-cyan-300/50"/> Selected {mode === 'reminders' ? 'reminder' : 'update'}</div>
-            </motion.div> : <div className="h-full flex items-center justify-center text-white/20 text-xs">Select an item</div>}</AnimatePresence>
-          </section>
-        </div>
-      </div>
-    </motion.div>
-  </AnimatePresence>;
+  useEffect(() => { if (!items.some((item) => String(item.id) === String(selectedId))) setSelectedId(items[0]?.id || null); }, [items, selectedId]);
+  useEffect(() => { const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); onClose?.(); } }; window.addEventListener('keydown', key, true); return () => window.removeEventListener('keydown', key, true); }, [onClose]);
+
+  const selected = items.find((item) => String(item.id) === String(selectedId)) || null;
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(<AnimatePresence><motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[29000] bg-black/65 backdrop-blur-2xl pointer-events-auto" onClick={onClose}><motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{duration:.3,ease:[.22,1,.36,1]}} onClick={(e) => e.stopPropagation()} className="absolute bottom-0 right-0 top-0 flex w-full max-w-[780px] flex-col border-l border-white/[0.06] bg-[#060a10]/98 shadow-[-30px_0_90px_rgba(0,0,0,.6)]">
+    <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.06] px-6"><div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-cyan-100/60">{mode === 'reminders' ? <Bell className="h-4 w-4" /> : <Settings className="h-4 w-4" />}</div><div><div className="text-[8px] font-bold uppercase tracking-[0.22em] text-white/25">Luna Dashboard</div><h2 className="text-sm font-semibold text-white/82">{mode === 'reminders' ? 'Reminders' : 'System Updates'}</h2></div></div><button onClick={onClose} className="grid h-9 w-9 place-items-center text-white/30 hover:bg-white/[0.05] hover:text-white"><X className="h-4 w-4" /></button></header>
+    <div className="flex min-h-0 flex-1"><section className="w-[43%] min-w-[280px] overflow-y-auto border-r border-white/[0.05] p-4" style={{scrollbarWidth:'none'}}>{items.length ? items.map((item) => <button key={item.id} type="button" onClick={() => setSelectedId(item.id)} className={`mb-1 flex w-full items-start gap-3 px-3 py-3 text-left transition ${String(item.id)===String(selectedId) ? 'bg-white/[0.055] text-white' : 'text-white/48 hover:bg-white/[0.025] hover:text-white/75'}`}><span className="mt-0.5">{mode === 'reminders' ? <Bell className="h-3.5 w-3.5 text-amber-200/55" /> : item.update_type === 'required' ? <AlertCircle className="h-3.5 w-3.5 text-rose-200/55" /> : <Info className="h-3.5 w-3.5 text-cyan-200/45" />}</span><span className="min-w-0 flex-1"><span className="block truncate text-[10px] font-semibold">{item.title}</span><span className="mt-1 block truncate text-[8px] text-white/22">{item.date}{mode === 'reminders' ? ` · ${new Date(item.start_time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}` : ''}</span></span><ChevronRight className="mt-1 h-3 w-3 text-white/15" /></button>) : <div className="py-20 text-center text-[10px] text-white/20">No {mode === 'reminders' ? 'reminders scheduled' : 'updates available'}.</div>}</section><section className="min-w-0 flex-1 overflow-y-auto p-7" style={{scrollbarWidth:'none'}}>{selected ? <motion.div key={selected.id} initial={{opacity:0,x:10}} animate={{opacity:1,x:0}}><div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-[0.18em] text-white/22"><Clock3 className="h-3 w-3" /> {selected.date}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-white/88">{selected.title}</h3>{mode === 'reminders' && <div className="mt-3 flex flex-wrap gap-2">{(selected.reminders || []).map((reminder,index) => <span key={index} className="bg-amber-200/[0.05] px-2.5 py-1.5 text-[8px] text-amber-100/50"><Bell className="mr-1 inline h-2.5 w-2.5" />{reminder.time_before === 0 ? 'At start' : `${reminder.time_before} min before`}</span>)}</div>}<p className="mt-5 whitespace-pre-wrap text-xs leading-6 text-white/45">{selected.detail || selected.description}</p>{mode === 'reminders' && <button type="button" onClick={() => { onClose?.(); window.dispatchEvent(new Event('openAtomCalendar')); }} className="mt-6 inline-flex h-9 items-center gap-2 bg-cyan-100 px-3 text-[8px] font-black uppercase tracking-wider text-slate-950 hover:bg-white"><CalendarDays className="h-3 w-3" /> Open Calendar</button>}<div className="mt-8 flex items-center gap-2 border-t border-white/[0.06] pt-4 text-[8px] uppercase tracking-wider text-white/20"><CheckCircle className="h-3 w-3 text-cyan-100/40" /> Connected to {mode === 'reminders' ? 'UserEvent calendar reminders' : 'platform updates'}</div></motion.div> : <div className="grid h-full place-items-center text-[10px] text-white/18">Select an item</div>}</section></div>
+  </motion.div></motion.div></AnimatePresence>, document.body);
 }
