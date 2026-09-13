@@ -44,9 +44,68 @@
       "type": "string",
       "default": "#ffdbac"
     },
+    "eye_color": {
+      "type": "string",
+      "default": "#5ca9c9"
+    },
     "hair_color": {
       "type": "string",
       "default": "#111111"
+    },
+    "eyelash_style": {
+      "type": "string",
+      "enum": [
+        "soft",
+        "natural",
+        "bold"
+      ],
+      "default": "natural"
+    },
+    "style_preset": {
+      "type": "string",
+      "enum": [
+        "heroic_fantasy",
+        "graphic_ink",
+        "grounded_rpg"
+      ],
+      "default": "heroic_fantasy"
+    },
+    "hood_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "weapon_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "body_proportions": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "default": 1
+        },
+        "depth": {
+          "type": "number",
+          "default": 1
+        }
+      },
+      "default": {
+        "width": 1,
+        "depth": 1
+      }
+    },
+    "face_scan_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "tripo_model_id": {
+      "type": "string",
+      "default": ""
+    },
+    "appearance_version": {
+      "type": "number",
+      "default": 2
     },
     "equipped_items": {
       "type": "array",
