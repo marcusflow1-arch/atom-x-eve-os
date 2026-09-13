@@ -126,6 +126,10 @@
       "items": {
         "type": "object",
         "properties": {
+          "occurrence_start": {
+            "type": "string",
+            "format": "date-time"
+          },
           "time_before": {
             "type": "number"
           },
