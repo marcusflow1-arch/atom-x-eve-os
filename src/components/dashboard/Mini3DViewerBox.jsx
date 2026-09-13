@@ -179,7 +179,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
           onClick={!isUiVisible ? (event) => {
             event.stopPropagation();
             if (onModelFocus) onModelFocus();
-            else window.dispatchEvent(new CustomEvent('openLunaAvatarModelFocus'));
+            else window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
           } : undefined}
           role={!isUiVisible ? 'button' : undefined}
           tabIndex={!isUiVisible ? 0 : undefined}
@@ -189,7 +189,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
             event.preventDefault();
             event.stopPropagation();
             if (onModelFocus) onModelFocus();
-            else window.dispatchEvent(new CustomEvent('openLunaAvatarModelFocus'));
+            else window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
           } : undefined}
         >
           <div ref={containerRef} className="w-full h-full relative z-0">
