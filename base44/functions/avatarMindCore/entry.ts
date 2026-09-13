@@ -323,7 +323,33 @@ async function updateMindFromExperience(base44: any, userId: string, mind: AnyOb
 
   await touchAgent(base44, userId, mind.avatar.id, 'observer', experience.context || experience.action || experience.event_type, Math.min(100, 35 + Number(experience.significance || 0) / 2), { last_experience_id: experience.id });
   await touchAgent(base44, userId, mind.avatar.id, 'mirror', `Updated seed from ${experience.event_type}`, confidence, { observation_count: newCount });
-  if (experience.is_key_memory) await touchAgent(base44, userId, mind.avatar.id, 'historian', experience.title || experience.context || 'Key experience recorded', Number(experience.significance || 80), { last_key_memory_id: experience.id });
+  if (experience.is_key_memory) {
+    await touchAgent(base44, userId, mind.avatar.id, 'historian', experience.title || experience.context || 'Key experience recorded', Number(experience.significance || 80), { last_key_memory_id: experience.id });
+    const existingAnchor = await base44.asServiceRole.entities.AvatarMemoryAnchor.filter({ user_id: userId, avatar_id: mind.avatar.id, experience_id: experience.id }, '-created_date', 1).catch(() => []);
+    if (!existingAnchor?.[0]) {
+      const searchable = `${experience.event_type || ''} ${experience.title || ''} ${experience.action || ''} ${experience.outcome || ''}`.toLowerCase();
+      const anchorType = newCount === 1 ? 'first'
+        : /aspirat|goal|dream/.test(searchable) ? 'aspiration'
+        : /prefer|favorite|enjoy/.test(searchable) ? 'preference'
+        : /friend|ally|trust|relationship|social/.test(searchable) ? 'relationship'
+        : /failure|death|mistake|defeat/.test(searchable) ? 'failure'
+        : /victory|boss|win|complete|achievement/.test(searchable) ? 'victory'
+        : /moral|choice|mercy|betray|value/.test(searchable) ? 'value'
+        : 'turning_point';
+      await base44.asServiceRole.entities.AvatarMemoryAnchor.create({
+        user_id: userId,
+        avatar_id: mind.avatar.id,
+        experience_id: experience.id,
+        anchor_type: anchorType,
+        title: String(experience.title || experience.event_type || 'Important memory').slice(0, 180),
+        summary: String(experience.action || experience.context || experience.outcome || 'A significant experience was preserved.').slice(0, 1400),
+        why_it_matters: `Preserved because its significance was ${Math.round(Number(experience.significance || 0))}/100.`,
+        strength: clamp(experience.significance || 80),
+        times_recalled: 0,
+        first_seen_at: experience.observed_at || now(),
+      });
+    }
+  }
   if (coach?.tip) await touchAgent(base44, userId, mind.avatar.id, 'coach', coach.tip, Number(coach.confidence || 60), { last_tip: coach.tip, last_experience_id: experience.id });
 
   const reflection = await maybeQuestion(base44, userId, mind, experience, suggestedQuestion);
@@ -366,12 +392,13 @@ Deno.serve(async (req) => {
     const mind = await ensureMind(base44, user.id, payload.avatar_id);
 
     if (action === 'getMind' || action === 'initializeMind') {
-      const [agents, pending, recent] = await Promise.all([
+      const [agents, pending, recent, anchors] = await Promise.all([
         base44.asServiceRole.entities.AvatarMindAgentState.filter({ user_id: user.id, avatar_id: mind.avatar.id }, 'agent_key', 30),
         base44.asServiceRole.entities.AvatarReflectionPrompt.filter({ user_id: user.id, avatar_id: mind.avatar.id, status: 'pending' }, '-created_date', 1),
         base44.asServiceRole.entities.AvatarExperience.filter({ user_id: user.id, avatar_id: mind.avatar.id }, '-observed_at', 12),
+        base44.asServiceRole.entities.AvatarMemoryAnchor.filter({ user_id: user.id, avatar_id: mind.avatar.id }, '-strength', 20).catch(() => []),
       ]);
-      return Response.json({ success: true, ...mind, agents, pending_reflection: pending?.[0] || null, recent_experiences: recent || [] });
+      return Response.json({ success: true, ...mind, agents, pending_reflection: pending?.[0] || null, recent_experiences: recent || [], memory_anchors: anchors || [] });
     }
 
     if (action === 'observeEvent') {
