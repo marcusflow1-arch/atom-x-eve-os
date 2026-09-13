@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Send, X, Sparkles } from 'lucide-react';
+import { Brain, Send, X, Sparkles, Eye, Square } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { trackAvatarExperience, trackPlayerDecision } from '@/lib/atomTelemetry';
+import { getAvatarScreenObserverState, stopAvatarScreenObserver, subscribeAvatarScreenObserver } from '@/lib/avatarScreenObserver';
 
 const INTERNAL_EVENTS = {
   gamePlayerAction: (d = {}) => ({ event_type: 'social_action', title: 'Player interaction', action: d.action || 'interacted', context: d.playerName ? `Interaction with ${d.playerName}` : 'Player interaction', significance: 35, telemetry: d }),
@@ -17,6 +18,17 @@ const INTERNAL_EVENTS = {
   questRewardUnlock: (d = {}) => ({ event_type: 'achievement', title: 'Quest reward unlocked', action: d.name || d.reward_name || 'Unlocked a quest reward', significance: 50, emotional_valence: 30, telemetry: d }),
   weaponMasteryEvent: (d = {}) => ({ event_type: 'progression', title: 'Weapon mastery changed', action: d.action || d.type || 'Weapon mastery progressed', significance: 26, telemetry: d }),
 };
+
+function ScreenObserverBadge({ observer }) {
+  if (!observer?.active) return null;
+  return (
+    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="fixed right-5 top-[74px] z-[100003] flex items-center gap-2 border border-cyan-100/[0.1] bg-[#071018]/90 px-3 py-2 text-[9px] text-white/55 shadow-xl backdrop-blur-2xl">
+      <Eye className={`h-3.5 w-3.5 ${observer.analyzing ? 'animate-pulse text-cyan-200/80' : 'text-cyan-200/50'}`} />
+      <span>{observer.analyzing ? 'AI reading sampled frame' : 'AI observing shared screen'}</span>
+      <button type="button" onClick={() => stopAvatarScreenObserver()} className="ml-1 inline-flex items-center gap-1 border-l border-white/[0.07] pl-2 text-rose-200/55 hover:text-rose-100"><Square className="h-2.5 w-2.5 fill-current" /> Stop</button>
+    </motion.div>
+  );
+}
 
 function ReflectionPrompt({ prompt, onDone }) {
   const [answer, setAnswer] = useState('');
@@ -65,6 +77,7 @@ function ReflectionPrompt({ prompt, onDone }) {
 export default function AIReflectionBridge() {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState(null);
+  const [observer, setObserver] = useState(() => getAvatarScreenObserverState());
   const throttle = useRef(new Map());
 
   const refreshPrompt = useCallback(async () => {
@@ -75,6 +88,8 @@ export default function AIReflectionBridge() {
       setPrompt(data?.pending_reflection || null);
     } catch {}
   }, [user?.id]);
+
+  useEffect(() => subscribeAvatarScreenObserver(setObserver), []);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -119,5 +134,5 @@ export default function AIReflectionBridge() {
     };
   }, []);
 
-  return <AnimatePresence>{prompt && <ReflectionPrompt prompt={prompt} onDone={() => { setPrompt(null); window.setTimeout(refreshPrompt, 1200); }} />}</AnimatePresence>;
+  return <><ScreenObserverBadge observer={observer} /><AnimatePresence>{prompt && <ReflectionPrompt prompt={prompt} onDone={() => { setPrompt(null); window.setTimeout(refreshPrompt, 1200); }} />}</AnimatePresence></>;
 }
