@@ -37,7 +37,7 @@ async function ensureReward(base44: any, user: AnyObj, achievement: AnyObj) {
     game_name: achievement.game
   }, '-created_date', 1);
 
-  const userCard = existingCards[0] || await base44.asServiceRole.entities.UserCard.create({
+  let userCard = existingCards[0] || await base44.asServiceRole.entities.UserCard.create({
     user_id: user.id,
     trading_card_id: masterCard?.id || '',
     card_type: cardType(category),
@@ -52,6 +52,16 @@ async function ensureReward(base44: any, user: AnyObj, achievement: AnyObj) {
     is_equipped: false,
     trade_status: 'available'
   });
+
+  // Backfill canonical links on older achievement cards so Inventory, friend
+  // trading and Trading Post all resolve the same game/master-card identity.
+  if (existingCards[0] && ((!userCard.trading_card_id && masterCard?.id) || (!userCard.game_id && gameRecord?.id))) {
+    userCard = await base44.asServiceRole.entities.UserCard.update(userCard.id, {
+      trading_card_id: userCard.trading_card_id || masterCard?.id || '',
+      game_id: userCard.game_id || gameRecord?.id || '',
+      genre: userCard.genre || reward.genre || gameRecord?.genre || '',
+    });
+  }
 
   const rewardRecord = {
     achievement_id: achievement.id,
