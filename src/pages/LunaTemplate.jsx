@@ -1804,6 +1804,35 @@ export default function LunaTemplate() {
                 }
       </AnimatePresence>
 
+      {/* Full avatar inspection. Clicking the small 3D model removes every Luna UI layer; Escape restores the dashboard. */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showAvatarModelFocus && (
+            <motion.div
+              key="luna-avatar-model-focus"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28 }}
+              className="fixed inset-0 overflow-hidden bg-[#05080e]"
+              style={{ zIndex: 2147483000 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Full avatar view"
+            >
+              <div className="pointer-events-none absolute inset-0">
+                <RealTimeMoonSky />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(125,211,252,.08),transparent_34%),linear-gradient(180deg,rgba(3,7,13,.18),rgba(3,7,13,.48))]" />
+              </div>
+              <div className="absolute inset-0">
+                <Mini3DViewerBox isUiVisible hostName={currentHostName} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
       {/* Full-screen Avatar Progression — intentionally covers every Luna UI layer. Escape is the only close control. */}
       <AnimatePresence>
         {showSkillTreeBlankUI &&
