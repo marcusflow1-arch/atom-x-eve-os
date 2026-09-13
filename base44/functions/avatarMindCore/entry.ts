@@ -215,10 +215,20 @@ async function maybeQuestion(base44: any, userId: string, mind: AnyObj, experien
       category = 'emotion';
       question = 'When that went wrong, what did you actually feel first: frustration, excitement, determination, or something else?';
       reason = 'The observer saw a setback, but only you can explain what it meant to you.';
-    } else if (count < 6) {
-      category = 'preference';
-      question = 'I am still very new. What is one thing you genuinely enjoy doing, in games or outside them?';
-      reason = 'The blank seed needs a first preference that comes directly from you.';
+    } else if (count < 18) {
+      const answered = Number(mind.seed.answered_question_count || 0);
+      const seedQuestions = [
+        { category: 'preference', question: 'I am still very new. What is one thing you genuinely enjoy doing, in games or outside them?', reason: 'The blank seed needs a first preference that comes directly from you.' },
+        { category: 'preference', question: 'What food or meal do you look forward to most?', reason: 'This is something gameplay cannot reliably tell me, so I would rather ask you.' },
+        { category: 'aspiration', question: 'What is something you hope to become, build, or accomplish in your life?', reason: 'A reflection of you should understand where you want to go, not only what you have already done.' },
+        { category: 'emotion', question: 'How have you actually been feeling today?', reason: 'Games can show behavior, but they cannot tell me how the day felt from your side.' },
+        { category: 'identity', question: 'When something is difficult, do you usually keep pushing, change your approach, or walk away and come back later?', reason: 'I have seen how you react in games; I want to know whether that pattern feels true to you.' },
+        { category: 'relationship', question: 'What makes you trust someone?', reason: 'Trust is too personal to infer from a few cooperative or competitive game moments.' },
+      ];
+      const chosen = seedQuestions[answered % seedQuestions.length];
+      category = chosen.category;
+      question = chosen.question;
+      reason = chosen.reason;
     } else {
       category = 'identity';
       question = 'I noticed a pattern in how you played. Do you usually prefer figuring things out yourself, or getting help early?';
