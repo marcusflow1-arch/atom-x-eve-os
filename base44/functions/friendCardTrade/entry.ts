@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 type AnyObj = Record<string, any>;
 
-const ACTIVE = ['pending', 'accepted'];
+const ACTIVE = ['accepted', 'pending'];
 
 function cardSnapshot(card: AnyObj, progression?: AnyObj | null) {
   return {
@@ -206,6 +206,11 @@ Deno.serve(async (req) => {
     } else if (action === 'unconfirm') {
       if (!session || session.status !== 'accepted') throw new Error('Trade is not active');
       session = await base44.asServiceRole.entities.TradeSession.update(session.id, session.initiator_id === user.id ? { initiator_confirmed: false } : { recipient_confirmed: false });
+    } else if (action === 'decline') {
+      if (!session || session.status !== 'pending' || session.recipient_id !== user.id) throw new Error('No pending trade request to decline');
+      session = await base44.asServiceRole.entities.TradeSession.update(session.id, { status: 'declined', initiator_confirmed: false, recipient_confirmed: false });
+      const requests = await base44.asServiceRole.entities.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
+      for (const r of requests || []) await base44.asServiceRole.entities.SocialRequest.update(r.id, { status: 'declined' }).catch(() => null);
     } else if (action === 'cancel') {
       if (session && ACTIVE.includes(session.status)) {
         await unlockSessionCards(base44, session);
