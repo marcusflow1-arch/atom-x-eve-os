@@ -565,8 +565,9 @@ export default function LibrarySidebar() {
                         <div className="relative flex-shrink-0">
                           <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full object-cover" />
                           <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#08120a] ${
-                            friend.status === 'online' ? 'bg-green-500' :
-                            friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                            friend.status === 'online' ? 'bg-emerald-400' :
+                            friend.status === 'away' ? 'bg-amber-300' :
+                            friend.status === 'busy' ? 'bg-rose-400' : 'bg-slate-500'
                           }`} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -600,64 +601,49 @@ export default function LibrarySidebar() {
                       </AnimatePresence>
                     </div>
                   ))}
-                  {(expandedPanel === 'library' || expandedPanel === 'fullLibrary') && libraryGames.map((game, i) => (
-                    <div key={game.id || i} className="relative">
+                  {(expandedPanel === 'library' || expandedPanel === 'fullLibrary') && libraryGames.map((game, i) => {
+                    const rowId = game.id || i;
+                    const opened = openDropdown === rowId;
+                    return (
+                    <div key={rowId} className="relative px-2">
                       <button
-                        onClick={() => setOpenDropdown(openDropdown === (game.id || i) ? null : (game.id || i))}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                        onClick={() => setOpenDropdown(opened ? null : rowId)}
+                        className={`w-full flex items-center gap-3 px-2.5 py-2.5 text-left transition-all ${opened ? 'bg-white/[0.055]' : 'hover:bg-white/[0.035]'}`}
+                        style={{ borderLeft: opened ? '1px solid rgba(186,230,253,.36)' : '1px solid transparent' }}
                       >
-                        <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-black/40">
-                          <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="w-full h-full object-cover" />
+                        <div className="h-10 w-8 flex-shrink-0 overflow-hidden bg-black/30 ring-1 ring-white/[0.06]">
+                          <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="h-full w-full object-cover opacity-85" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{game.title || game.name}</p>
-                          <p className="text-white/40 text-[10px]">Ready to play</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-white/85">{game.title || game.name}</p>
+                          <p className="mt-0.5 truncate text-[8px] uppercase tracking-[.11em] text-white/25">{game.genre || 'Library Game'}</p>
                         </div>
-                        <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === (game.id || i) ? 'rotate-90' : ''}`} />
+                        <ChevronRight className={`h-3 w-3 flex-shrink-0 text-white/24 transition-transform ${opened ? 'rotate-90' : ''}`} />
                       </button>
                       <AnimatePresence>
-                        {openDropdown === (game.id || i) && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden bg-white/5 border-t border-b border-white/5"
-                          >
+                        {opened && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} className="overflow-hidden border-b border-white/[0.045] bg-white/[0.018]">
                             {[
-                              { label: 'Play', icon: Play, color: 'text-cyan-400', action: null },
-                              {
-                                label: 'Details',
-                                icon: Search,
-                                color: 'text-blue-400',
-                                action: () => {
-                                  setShowAchievementsUniverse(false);
-                                  setDetailGame(current => current?.id === game.id ? null : game);
-                                  setOpenDropdown(null);
-                                }
-                              },
-                              {
-                                label: 'Achievements',
-                                icon: Trophy,
-                                color: 'text-yellow-400',
-                                action: () => {
-                                  setDetailGame(null);
-                                  setShowAchievementsUniverse(current => !current);
-                                  setOpenDropdown(null);
-                                }
-                              },
-                              { label: 'Remove', icon: Trash2, color: 'text-red-400', action: null },
-                            ].map(action => (
-                              <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
-                                <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
-                                <span className="text-white/70 text-xs">{action.label}</span>
+                              { label: 'Play', icon: Play, action: async () => {
+                                try {
+                                  const response = await base44.functions.invoke('playItem', { type: 'game', title: game.title || game.name, id: game.id || null });
+                                  const data = response?.data || response || {};
+                                  if (data.launch_url) window.location.assign(data.launch_url);
+                                } catch (error) { console.warn('Library launch failed.', error); }
+                              } },
+                              { label: 'Details', icon: Search, action: () => { setShowAchievementsUniverse(false); setDetailGame({ ...game, __initialTab: 'details' }); setOpenDropdown(null); } },
+                              { label: 'Achievements', icon: Trophy, action: () => { setShowAchievementsUniverse(false); setDetailGame({ ...game, __initialTab: 'achievements' }); setOpenDropdown(null); } },
+                            ].map((action) => (
+                              <button key={action.label} onClick={action.action} className="group flex w-full items-center gap-3 px-5 py-2 text-left transition hover:bg-white/[0.035]">
+                                <action.icon className="h-3.5 w-3.5 text-white/28 transition group-hover:text-cyan-100/65" />
+                                <span className="text-[10px] font-medium text-white/48 transition group-hover:text-white/75">{action.label}</span>
                               </button>
                             ))}
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
-                  ))}
+                  )})}
                   {expandedPanel === 'rewards' && (() => {
                     const rewardItems = [
                       { name: 'Neural Shock', category: 'ability', rarity: 'Legendary', game: 'Cyberpunk 2088', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-500/10', time: '2h ago' },
@@ -1689,7 +1675,7 @@ export default function LibrarySidebar() {
 
       {/* Library Game Detail Modal */}
       {detailGame && (
-        <LibraryGameDetailModal game={detailGame} onClose={() => setDetailGame(null)} />
+        <LibraryGameDetailModal game={detailGame} initialTab={detailGame.__initialTab} onClose={() => setDetailGame(null)} />
       )}
 
       {/* Entertainment Fullscreen Overlay */}
