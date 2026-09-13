@@ -43,8 +43,17 @@ export default async function(req) {
                 if (environment === 'preview') return Response.json({success:true,preview:true,profile:savedProfile,avatar:companion});
                 const initialized = await initializeAvatar(base44,user,{...companion,setup:true});
                 await base44.entities.Avatar.update(initialized.avatar.id,{...companion,setup_status:'pending'});
-                const traits = companion.personality === 'warm' ? {empathy_level:75,aggression_tendency:30} : companion.personality === 'curious' ? {risk_tolerance:65,behavioral_traits:{loyalty:50,curiosity:80,caution:35,humor:65,wisdom:50,impulsiveness:50}} : {risk_tolerance:35,aggression_tendency:35};
-                await base44.asServiceRole.entities.AIBehaviorState.update(initialized.behaviorState.id,traits);
+                // Appearance/personality choices in Genesis do not pre-write the AI's mind.
+                // Every avatar begins from the same neutral seed and earns its identity from
+                // gameplay, conversations, reflection answers and opt-in observation.
+                await base44.asServiceRole.entities.AIBehaviorState.update(initialized.behaviorState.id,{
+                    moral_alignment:0,
+                    aggression_tendency:50,
+                    risk_tolerance:50,
+                    empathy_level:50,
+                    behavioral_traits:{loyalty:50,curiosity:50,caution:50,humor:50,wisdom:50,impulsiveness:50},
+                    current_mood:'neutral'
+                });
                 await base44.auth.updateMe({username:profile.username,onboarding_complete:true,is_first_time:false});
                 savedProfile = await base44.entities.OnboardingProfile.update(savedProfile.id,{completed:true,avatar_id:initialized.avatar.id});
                 const avatar = await base44.entities.Avatar.update(initialized.avatar.id,{setup_status:'complete',setup_version:companion.setup_version || 1});
