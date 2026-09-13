@@ -147,7 +147,7 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
   useEffect(() => {
-    if (!compact || !ready || controlArmed || !interactive) {
+    if (!compact || !ready || controlArmed) {
       clearTimeout(idleTimer.current);
       return undefined;
     }
@@ -160,7 +160,7 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
     };
     schedule();
     return () => clearTimeout(idleTimer.current);
-  }, [compact, ready, controlArmed, interactive, playIdle]);
+  }, [compact, ready, controlArmed, playIdle]);
 
   const movementForKeys = useCallback(() => {
     const keys = keyState.current;
