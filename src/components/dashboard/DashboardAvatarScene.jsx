@@ -10,7 +10,7 @@ import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStag
 
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 
-export default function DashboardAvatarScene() {
+export default function DashboardAvatarScene({ focusMode = false }) {
   const { user } = useAuth();
   const localAvatar = useCompanionIdentity();
   const [socialHost, setSocialHost] = useState(null);
@@ -121,7 +121,7 @@ export default function DashboardAvatarScene() {
   const joinedElsewhere = Boolean(socialHost);
   const hostingVisitor = !joinedElsewhere && Boolean(remoteGuest);
 
-  const pairedStage = (leftConfig, leftName, rightConfig, rightName, rightIsLocal = false) => (
+  const pairedStage = (leftConfig, leftName, rightConfig, rightName, rightIsLocal = false, leftIsLocal = false) => (
     <div
       className="absolute inset-y-0 left-0 flex items-stretch justify-center overflow-visible"
       style={{ right: '338px' }}
@@ -132,24 +132,25 @@ export default function DashboardAvatarScene() {
           The two 150–190px pedestals touch edge-to-edge, which keeps avatar
           centerlines roughly one rendered body-width apart in the open lane. */}
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        <GenesisModelPreview config={leftConfig} compact />
+        <GenesisModelPreview config={leftConfig} compact interactive={focusMode && leftIsLocal} />
         <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-md">{leftName}</div>
       </div>
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        <GenesisModelPreview config={rightConfig} compact />
+        <GenesisModelPreview config={rightConfig} compact interactive={focusMode && rightIsLocal} />
         <div className={`pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md ${rightIsLocal ? 'border-cyan-200/15 text-cyan-100/80' : 'border-white/10 text-white/70'}`}>{rightName}</div>
       </div>
     </div>
   );
 
-  let avatarStage = <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact />;
+  let avatarStage = <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact interactive={focusMode} />;
   if (joinedElsewhere) {
     avatarStage = pairedStage(
       hostAvatar || { ...FALLBACK_AVATAR, name: socialHost.name },
       socialHost.name,
       localAvatar || FALLBACK_AVATAR,
       'You',
-      true
+      true,
+      false
     );
   } else if (hostingVisitor) {
     avatarStage = pairedStage(
@@ -157,7 +158,8 @@ export default function DashboardAvatarScene() {
       'You',
       remoteGuestAvatar || { ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' },
       remoteGuest.display_name || 'Visitor',
-      false
+      false,
+      true
     );
   }
 
