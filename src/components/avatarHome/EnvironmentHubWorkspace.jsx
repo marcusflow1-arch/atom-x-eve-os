@@ -223,16 +223,21 @@ export default function EnvironmentHubWorkspace() {
     const handleSurface = (event) => {
       if (event.detail?.mode && event.detail.mode !== 'dashboard') setOpen(false);
     };
+    const handleAvatarFocus = (event) => {
+      if (event.detail?.active) setOpen(false);
+    };
 
     document.addEventListener('click', handleClick, true);
     window.addEventListener('openEnvironmentHub', handleOpen);
     window.addEventListener('closeEnvironmentHub', handleClose);
     window.addEventListener('lunaDashboardOverlayState', handleSurface);
+    window.addEventListener('lunaAvatarFocusChanged', handleAvatarFocus);
     return () => {
       document.removeEventListener('click', handleClick, true);
       window.removeEventListener('openEnvironmentHub', handleOpen);
       window.removeEventListener('closeEnvironmentHub', handleClose);
       window.removeEventListener('lunaDashboardOverlayState', handleSurface);
+      window.removeEventListener('lunaAvatarFocusChanged', handleAvatarFocus);
     };
   }, []);
 
