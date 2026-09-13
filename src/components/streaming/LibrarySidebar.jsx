@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2, ArrowLeftRight, Code, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +58,8 @@ export default function LibrarySidebar() {
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [entertainmentFullscreen, setEntertainmentFullscreen] = useState(false);
   const [livestreamOpen, setLivestreamOpen] = useState(false);
+  const [friendsList, setFriendsList] = useState([]);
+  const { user } = useAuth();
 
   const navigate = useNavigate();
 
@@ -155,21 +159,35 @@ export default function LibrarySidebar() {
     return () => window.removeEventListener('openLibrarySidebar', handler);
   }, []);
 
-  // Mock Friends List
-  const friendsList = [
-    { id: 1, name: 'Shadow_Striker', status: 'online', game: 'Cyberpunk 2088', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' },
-    { id: 2, name: 'CyberVixen', status: 'online', game: 'Final Fantasy XIV', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
-    { id: 3, name: 'GhostReaper', status: 'idle', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150' },
-    { id: 4, name: 'IronFist', status: 'offline', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150' },
-    { id: 5, name: 'NovaStar', status: 'online', game: 'League of Legends', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150' },
-    { id: 6, name: 'VoidKnight', status: 'online', game: 'Elden Ring', avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=150' },
-    { id: 7, name: 'NeonPulse', status: 'idle', game: 'Valorant', avatar: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=150' },
-    { id: 8, name: 'ArcLight', status: 'online', game: 'Apex Legends', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150' },
-    { id: 9, name: 'DarkOracle', status: 'offline', avatar: 'https://images.unsplash.com/photo-1628157588553-5eckhart?w=150' },
-    { id: 10, name: 'StarForge', status: 'online', game: 'Starfield', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150' },
-    { id: 11, name: 'BlazeCaster', status: 'online', game: 'Diablo IV', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
-    { id: 12, name: 'SilverWolf', status: 'idle', game: 'World of Warcraft', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' },
-  ];
+  useEffect(() => {
+    if (!user?.id) {
+      setFriendsList([]);
+      return undefined;
+    }
+    let cancelled = false;
+    const loadFriends = async () => {
+      try {
+        const rows = await base44.entities.Friend.filter({ user_id: user.id }, '-favorite', 250);
+        if (cancelled) return;
+        setFriendsList((rows || []).map((row) => ({
+          id: row.friend_id,
+          friend_id: row.friend_id,
+          name: row.friend_name || 'Friend',
+          avatar: row.friend_avatar || '',
+          status: row.status || 'offline',
+          game: row.current_game || '',
+          favorite: Boolean(row.favorite),
+          source: row,
+        })).sort((a, b) => Number(b.favorite) - Number(a.favorite) || Number(b.status === 'online') - Number(a.status === 'online') || a.name.localeCompare(b.name)));
+      } catch (error) {
+        console.warn('Could not load Friends sidebar data.', error);
+        if (!cancelled) setFriendsList([]);
+      }
+    };
+    loadFriends();
+    const timer = window.setInterval(loadFriends, 12000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [user?.id]);
 
   // Mock Data — Twitch-style recently watched streamers (name + game they're playing)
   const recentChannels = [
