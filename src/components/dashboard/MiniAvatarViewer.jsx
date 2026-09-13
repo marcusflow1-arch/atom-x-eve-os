@@ -4,7 +4,6 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
-const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
 export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
@@ -18,8 +17,6 @@ export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
     scene.background = null;
     sceneRef.current = scene;
 
-    const activeChar = localStorage.getItem('luna_active_character') || 'ybot';
-    const modelUrl = activeChar === 'ybot' ? YBOT_URL : C1_URL;
 
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     camera.position.set(0, 1.85, -1.4);
@@ -54,7 +51,7 @@ export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
     const loader = new FBXLoader();
 
     loader.load(
-      modelUrl,
+      YBOT_URL,
       (fbx) => {
         const box = new THREE.Box3().setFromObject(fbx);
         const sizeVector = box.getSize(new THREE.Vector3());

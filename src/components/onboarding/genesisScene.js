@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
+import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 
 export function createGenesisScene(container, url, onReady, onStatus) {
   const scene = new THREE.Scene();
@@ -50,6 +51,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
+  let embeddedController = null, preserveAppearance = false;
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
   const fbx = new FBXLoader(), gltf = new GLTFLoader(), clock = new THREE.Clock();
 
@@ -98,6 +100,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
   }
 
   async function play(motion) {
+    if (embeddedController) { embeddedController.command(motion?.command || 'idle'); return; }
     if (!motion?.url) return;
     const version = ++animationVersion;
     onStatus('animation-loading');
@@ -136,6 +139,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
       const asset = /\.fbx(?:\?|$)/i.test(url) ? await fbx.loadAsync(url) : await gltf.loadAsync(url);
       model = asset.scene || asset;
       if (disposed) { disposeModel(model); return; }
+      model.traverse((node) => { preserveAppearance ||= node.userData?.avatarRig === 'luna-hi3d-v1'; });
       let box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
       model.scale.setScalar(1.8 / (size.y || 1));
@@ -153,6 +157,8 @@ export function createGenesisScene(container, url, onReady, onStatus) {
         if (!node.isMesh) return;
         node.castShadow = true;
         node.receiveShadow = true;
+        // Poses extend beyond the bind-pose bounds (wave, sitting, lean back).
+        if (preserveAppearance && node.isSkinnedMesh) node.frustumCulled = false;
         const signature = `${node.name || ''} ${(Array.isArray(node.material) ? node.material : [node.material]).map((item) => item?.name || '').join(' ')}`.toLowerCase();
         hood ||= /hood|cowl/.test(signature);
         weapon ||= /bow|quiver|arrow|sword|weapon/.test(signature);
@@ -166,12 +172,14 @@ export function createGenesisScene(container, url, onReady, onStatus) {
         if (node.morphTargetDictionary) Object.keys(node.morphTargetDictionary).forEach((name) => morphs.push({ key: `${node.name}:${name}`, label: name }));
       });
 
-      model.visible = false;
+      model.visible = preserveAppearance;
       scene.add(model);
       mixer = new THREE.AnimationMixer(model);
       applyStyle(appearance);
-      applyCompanionAppearance(model, appearance);
-      onReady({ materials, morphs, hood, weapon, eyes, eyelashes, hair });
+      if (preserveAppearance) {
+        embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
+      } else applyCompanionAppearance(model, appearance);
+      onReady({ materials, morphs, hood, weapon, eyes, eyelashes, hair, embeddedClips: preserveAppearance ? (asset.animations || []).map(clip => clip.name) : [] });
     } catch (error) {
       console.error('Avatar model failed:', error);
       if (!disposed) onStatus('error');
@@ -180,6 +188,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
 
   const move = (x = 0, z = 0, distance = .05) => {
     if (!model || !basePosition) return;
+    if (paused || (embeddedController && !embeddedController.canMove())) return;
     model.position.x = THREE.MathUtils.clamp(model.position.x + (x * distance), basePosition.x - 1.65, basePosition.x + 1.65);
     model.position.z = THREE.MathUtils.clamp(model.position.z + (z * distance), basePosition.z - 1.05, basePosition.z + 1.05);
     if (x || z) model.rotation.y = Math.atan2(x, z);
@@ -189,8 +198,11 @@ export function createGenesisScene(container, url, onReady, onStatus) {
   const togglePaused = () => setPaused(!paused);
 
   return {
-    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model) applyCompanionAppearance(model, appearance); },
+    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model && !preserveAppearance) applyCompanionAppearance(model, appearance); },
     play,
+    command: (value) => { setPaused(false); embeddedController?.command(value); },
+    setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
+    animationState: () => embeddedController?.snapshot(),
     move,
     resetPosition,
     setPaused,
@@ -202,6 +214,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();
+      embeddedController?.dispose();
       mixer?.stopAllAction();
       disposeModel(model);
       shadowPlane.geometry.dispose();

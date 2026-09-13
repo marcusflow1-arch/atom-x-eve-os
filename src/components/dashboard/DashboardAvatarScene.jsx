@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
+import Hi3DPlayerPreview from '@/components/dashboard/Hi3DPlayerPreview';
 import FriendsListContent from '@/components/dashboard/FriendsListContent';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
@@ -132,17 +133,17 @@ export default function DashboardAvatarScene({ focusMode = false }) {
           The two 150–190px pedestals touch edge-to-edge, which keeps avatar
           centerlines roughly one rendered body-width apart in the open lane. */}
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        <GenesisModelPreview config={leftConfig} compact interactive={focusMode && leftIsLocal} />
+        {leftIsLocal ? <Hi3DPlayerPreview config={leftConfig} interactive={focusMode} /> : <GenesisModelPreview config={leftConfig} compact />}
         {!focusMode && <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-md">{leftName}</div>}
       </div>
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        <GenesisModelPreview config={rightConfig} compact interactive={focusMode && rightIsLocal} />
+        {rightIsLocal ? <Hi3DPlayerPreview config={rightConfig} interactive={focusMode} /> : <GenesisModelPreview config={rightConfig} compact />}
         {!focusMode && <div className={`pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md ${rightIsLocal ? 'border-cyan-200/15 text-cyan-100/80' : 'border-white/10 text-white/70'}`}>{rightName}</div>}
       </div>
     </div>
   );
 
-  let avatarStage = <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact interactive={focusMode} />;
+  let avatarStage = <Hi3DPlayerPreview config={localAvatar || FALLBACK_AVATAR} interactive={focusMode} />;
   if (joinedElsewhere) {
     avatarStage = pairedStage(
       hostAvatar || { ...FALLBACK_AVATAR, name: socialHost.name },
