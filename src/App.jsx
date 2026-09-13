@@ -25,6 +25,7 @@ import AIReflectionBridge from '@/components/avatar/AIReflectionBridge';
 import SetupPreview from '@/pages/SetupPreview';
 import AuraLife from '@/pages/AuraLife';
 import GenesisLoadingScreen from '@/components/onboarding/GenesisLoadingScreen';
+import CalendarReminderBridge from '@/components/calendar/CalendarReminderBridge';
 import '@/components/onboarding/genesis.css';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -96,6 +97,7 @@ function App() {
         <Router>
           <NavigationTracker />
           <AIReflectionBridge />
+          <CalendarReminderBridge />
           <AuthenticatedApp />
         </Router>
         <Toaster />
