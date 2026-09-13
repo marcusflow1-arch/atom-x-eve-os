@@ -188,7 +188,7 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
   if (typeof document === 'undefined') return null;
 
   const overlay = (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .2 }} className="fixed inset-0 z-[30000] isolate h-[100dvh] w-screen overflow-hidden bg-[#04070c] text-white pointer-events-auto" role="dialog" aria-modal="true" aria-label="Luna Calendar">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .2 }} className="fixed inset-0 z-[200000] isolate h-[100dvh] w-screen overflow-hidden bg-[#04070c] text-white pointer-events-auto" role="dialog" aria-modal="true" aria-label="Luna Calendar">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(34,211,238,.07),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(99,102,241,.06),transparent_36%)]" />
       <div className="relative z-10 flex h-full min-h-0 flex-col">
         <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/[0.055] px-5 lg:px-8">
