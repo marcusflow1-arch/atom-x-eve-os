@@ -6,9 +6,15 @@ import { Zap } from 'lucide-react';
 const BASE_XP = 100;
 const XP_EXPONENT = 1.35;
 const GENRE_TO_GLOBAL_RATIO = 0.3;
+const GAMEPLAY_TO_KNOWLEDGE_RATIO = 0.12;
+const KNOWLEDGE_LEVEL_CAP = 300;
 
 function xpToNextLevel(level) {
   return Math.round(BASE_XP * Math.pow(Math.max(1, level || 1), XP_EXPONENT));
+}
+
+function xpToNextKnowledgeLevel(level) {
+  return Math.round(140 * Math.pow(Math.max(1, level || 1), 1.18));
 }
 
 /**
@@ -80,19 +86,41 @@ export default function CombatXPHandler() {
           leveledUp = true;
         }
 
+        // Gameplay also teaches the AI avatar. Knowledge progression is
+        // intentionally separate from physical/avatar level and caps at 300.
+        // Skill points are claimed from the Knowledge reward timeline rather
+        // than granted here, so the progression track remains the source of truth.
+        let knowledgeLevel = Math.max(1, Number(record.knowledge_level || 1));
+        let knowledgeXp = Number(record.knowledge_xp || 0) + (xp * GAMEPLAY_TO_KNOWLEDGE_RATIO);
+        let knowledgeLeveledUp = false;
+        safety = 0;
+        let knowledgeThreshold = xpToNextKnowledgeLevel(knowledgeLevel);
+        while (knowledgeLevel < KNOWLEDGE_LEVEL_CAP && knowledgeXp >= knowledgeThreshold && safety < 100) {
+          knowledgeXp -= knowledgeThreshold;
+          knowledgeLevel += 1;
+          knowledgeThreshold = xpToNextKnowledgeLevel(knowledgeLevel);
+          safety++;
+          knowledgeLeveledUp = true;
+        }
+
         await base44.entities.AvatarProgression.update(record.id, {
           genres,
           global_xp: globalXp,
           global_level: globalLevel,
           available_stat_points: statPoints,
+          knowledge_xp: knowledgeXp,
+          knowledge_level: knowledgeLevel,
         });
 
-        console.log(`[CombatXP] +${xp} XP → ${genreName} (Lv${g.level}), Global Lv${globalLevel}`);
+        console.log(`[CombatXP] +${xp} XP → ${genreName} (Lv${g.level}), Global Lv${globalLevel}, Knowledge Lv${knowledgeLevel}`);
         
         window.dispatchEvent(new CustomEvent('syncPlayerStats'));
         
         if (leveledUp) {
           window.dispatchEvent(new CustomEvent('avatarLevelUp'));
+        }
+        if (knowledgeLeveledUp) {
+          window.dispatchEvent(new CustomEvent('avatarKnowledgeLevelUp', { detail: { level: knowledgeLevel } }));
         }
       } catch (err) {
         console.error('[CombatXP] Failed to save XP:', err);
