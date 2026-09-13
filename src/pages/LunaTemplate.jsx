@@ -39,7 +39,6 @@ import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
 import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
-import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
@@ -172,7 +171,7 @@ export default function LunaTemplate() {
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const openCalendar = () => window.dispatchEvent(new Event('openAtomCalendar'));
   const [selectedUpdate, setSelectedUpdate] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [userEvents, setUserEvents] = useState([]);
@@ -258,7 +257,7 @@ export default function LunaTemplate() {
     if (avatarFocusMode) {
       setShowFriendsHub(false);
       setShowDevSpotlight(false);
-      setShowCalendar(false);
+      window.dispatchEvent(new Event('closeAtomCalendar'));
       setShowNotifications(false);
       setShowForumOverlay(false);
       setActiveSubTab(null);
@@ -789,7 +788,7 @@ export default function LunaTemplate() {
 
             <div className="h-full overflow-visible">
               <FocusModePanel
-                      onOpenCalendar={() => setShowCalendar(true)}
+                      onOpenCalendar={openCalendar}
                       onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
                       onToggleStats={() => setStageMode((m) => m === 'stats' ? 'default' : 'stats')}
                       currentEnvId={currentEnvId}
@@ -1366,7 +1365,7 @@ export default function LunaTemplate() {
                 <div className="flex-1 flex flex-col gap-6">
                   {/* Clock & Date */}
                   <div
-                          onClick={() => setShowCalendar(true)}
+                          onClick={openCalendar}
                           className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:bg-white/[0.05] transition-colors">
 
                     <div className="text-7xl font-bold text-white mb-2 font-mono">
@@ -1388,7 +1387,7 @@ export default function LunaTemplate() {
                       {userEvents.slice(0, 3).map((event, i) =>
                             <div
                               key={i}
-                              onClick={() => setShowCalendar(true)}
+                              onClick={openCalendar}
                               className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-purple-400/50 transition-colors cursor-pointer">
 
                           <div className="flex items-center gap-3">
@@ -1824,13 +1823,6 @@ export default function LunaTemplate() {
               // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
               <SideAccessMenu />
               }
-
-      {/* Calendar Overlay */}
-      <AnimatePresence>
-        {showCalendar &&
-                <IntelligentCalendarOverlay onClose={() => setShowCalendar(false)} currentUserId={user?.id} />
-                }
-      </AnimatePresence>
 
       {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
       <AnimatePresence>
