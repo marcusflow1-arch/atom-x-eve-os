@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import MiniAchievementCard from '@/components/dashboard/MiniAchievementCard';
 import AvatarHomeContainer from '@/components/avatarHome/AvatarHomeContainer';
+import AvatarMindPanel from '@/components/avatar/AvatarMindPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trophy, Gamepad2, House, Quote, ChevronLeft } from 'lucide-react';
@@ -127,6 +128,8 @@ export default function AvatarHome() {
         </div>
 
         <AvatarHomeContainer mode={isSelf ? 'self' : 'friend'} avatarUserId={targetUserId || user?.id} entryContext="friends" />
+
+        {isSelf && <AvatarMindPanel />}
 
         {/* Header / Avatar Presence */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center mb-10">
