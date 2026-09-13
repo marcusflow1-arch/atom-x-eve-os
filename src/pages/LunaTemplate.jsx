@@ -435,6 +435,7 @@ export default function LunaTemplate() {
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
+    if (panel === 'calendar') window.dispatchEvent(new Event('openAtomCalendar'));
 
     if (panel === 'blacksmith' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
@@ -446,19 +447,31 @@ export default function LunaTemplate() {
   }, [location.search]);
 
   useEffect(() => {
-    if (!user?.id) return;
-    // Delay non-critical data fetch by 2s to avoid rate-limiting on page load
-    const timer = setTimeout(async () => {
+    if (!user?.id) return undefined;
+    let cancelled = false;
+    const loadDashboardSchedule = async () => {
       try {
-        const events = await base44.entities.UserEvent.filter({ user_id: user.id });
-        setUserEvents(events);
-        const updates = await base44.entities.PlatformUpdate.filter({ published: true });
-        setPlatformUpdates(updates);
+        const [events, updates] = await Promise.all([
+          base44.entities.UserEvent.filter({ user_id: user.id }, 'start_time', 250),
+          base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 100),
+        ]);
+        if (cancelled) return;
+        setUserEvents((events || []).filter((event) => event.status !== 'cancelled').sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
+        setPlatformUpdates(updates || []);
       } catch (error) {
-        showError(error, 'Load Events');
+        if (!cancelled) showError(error, 'Load Events');
       }
-    }, 2000);
-    return () => clearTimeout(timer);
+    };
+    const timer = setTimeout(loadDashboardSchedule, 800);
+    const refresh = () => loadDashboardSchedule();
+    window.addEventListener('atom:calendar-data-changed', refresh);
+    const unsubscribe = base44.entities.UserEvent?.subscribe?.(refresh);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      window.removeEventListener('atom:calendar-data-changed', refresh);
+      unsubscribe?.();
+    };
   }, [user?.id]);
 
   useEffect(() => {
