@@ -27,6 +27,7 @@ export default function AvatarHome() {
   const [ownedCards, setOwnedCards] = React.useState([]);
   const [behavior, setBehavior] = React.useState(null);
   const [homeActivity, setHomeActivity] = React.useState([]);
+  const [mindExperiences, setMindExperiences] = React.useState([]);
 
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -70,11 +71,12 @@ export default function AvatarHome() {
         setDisplay(header);
 
         // Content blocks are tied to the actual player, not global sample content.
-        const [allAchievements, allGames, cards, avatars] = await Promise.all([
+        const [allAchievements, allGames, cards, avatars, experiences] = await Promise.all([
           base44.entities.Achievement.list('-created_date', 500),
           base44.entities.Game.list('-original_year', 500),
           user?.id ? base44.entities.UserCard.filter({ user_id: user.id }, '-created_date', 100) : Promise.resolve([]),
-          user?.id ? base44.entities.Avatar.filter({ user_id: user.id }, '-created_date', 1) : Promise.resolve([])
+          user?.id ? base44.entities.Avatar.filter({ user_id: user.id }, '-created_date', 1) : Promise.resolve([]),
+          isSelf && user?.id ? base44.entities.AvatarExperience.filter({ user_id: user.id }, '-observed_at', 20).catch(() => []) : Promise.resolve([])
         ]);
         const unlockedIds = new Set(user?.unlocked_achievements || []);
         const ownedGameIds = new Set(user?.purchased_items || []);
@@ -82,6 +84,7 @@ export default function AvatarHome() {
         setAchievements((allAchievements || []).filter(a => unlockedIds.has(a.id)).slice(0, 8));
         setGames((allGames || []).filter(g => ownedGameIds.has(g.id) || cardGames.has(g.title)).slice(0, 8));
         setOwnedCards(cards || []);
+        setMindExperiences(experiences || []);
 
         if (avatars?.[0]) {
           const [behaviorRows, homeRows] = await Promise.all([
@@ -222,16 +225,17 @@ export default function AvatarHome() {
               <div className="bg-black/20 border border-white/5 p-2"><span className="text-[9px] text-white/30 block">Empathy</span><strong className="text-white">{Math.round(behavior?.empathy_level ?? 50)}</strong></div>
               <div className="bg-black/20 border border-white/5 p-2"><span className="text-[9px] text-white/30 block">Risk</span><strong className="text-white">{Math.round(behavior?.risk_tolerance ?? 50)}</strong></div>
             </div>
-            {homeActivity.length ? (
+            {mindExperiences.length || homeActivity.length ? (
               <ul className="text-white/65 text-xs space-y-2">
-                {homeActivity.slice(-4).reverse().map((entry, index) => (
-                  <li key={`${entry.timestamp || index}-${index}`} className="border-t border-white/5 pt-2 first:border-0 first:pt-0">
-                    • {entry.reward_name ? `Unlocked ${entry.reward_name}` : entry.choice_made || entry.type?.replaceAll('_', ' ') || 'Avatar memory updated'}
+                {(mindExperiences.length ? mindExperiences.slice(0, 4) : homeActivity.slice(-4).reverse()).map((entry, index) => (
+                  <li key={`${entry.id || entry.timestamp || index}-${index}`} className="border-t border-white/5 pt-2 first:border-0 first:pt-0">
+                    • {entry.action || entry.outcome || entry.reward_name ? (entry.action || entry.outcome || `Unlocked ${entry.reward_name}`) : entry.choice_made || entry.type?.replaceAll('_', ' ') || 'Avatar memory updated'}
+                    {entry.game_name && <span className="ml-1 text-white/25">· {entry.game_name}</span>}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-white/35 text-xs">Your avatar is still blank. Gameplay decisions and achievement rewards will begin filling this board.</p>
+              <p className="text-white/35 text-xs">Your avatar is still blank. Gameplay decisions, reflection answers, achievements and observed moments will begin filling this history.</p>
             )}
           </motion.div>
         </div>
