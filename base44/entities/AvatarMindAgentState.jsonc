@@ -1,0 +1,90 @@
+{
+  "name": "AvatarMindAgentState",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "avatar_id": {
+      "type": "string"
+    },
+    "agent_key": {
+      "type": "string",
+      "enum": [
+        "observer",
+        "mirror",
+        "historian",
+        "reflection",
+        "coach",
+        "storyteller"
+      ]
+    },
+    "persona": {
+      "type": "string",
+      "description": "Stable operating persona for this specialist agent"
+    },
+    "job": {
+      "type": "string",
+      "description": "Single responsibility assigned to this specialist agent"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "run_count": {
+      "type": "number",
+      "default": 0
+    },
+    "confidence": {
+      "type": "number",
+      "default": 0
+    },
+    "last_output": {
+      "type": "string"
+    },
+    "last_run_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "user_id",
+    "avatar_id",
+    "agent_key",
+    "persona",
+    "job"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

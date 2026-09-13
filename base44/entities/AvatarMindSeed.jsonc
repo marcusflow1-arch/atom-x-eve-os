@@ -1,0 +1,128 @@
+{
+  "name": "AvatarMindSeed",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this AI mind seed"
+    },
+    "avatar_id": {
+      "type": "string",
+      "description": "Avatar vessel linked to this mind"
+    },
+    "seed_version": {
+      "type": "number",
+      "default": 1
+    },
+    "development_stage": {
+      "type": "string",
+      "enum": [
+        "blank",
+        "awakening",
+        "forming",
+        "growing",
+        "self_directed"
+      ],
+      "default": "blank"
+    },
+    "identity_summary": {
+      "type": "string",
+      "default": "",
+      "description": "Compressed long-term summary of who this AI is becoming"
+    },
+    "values": {
+      "type": "object",
+      "default": {},
+      "description": "Learned value tendencies inferred from repeated choices"
+    },
+    "preferences": {
+      "type": "object",
+      "default": {},
+      "description": "Learned likes, dislikes, habits and favorites"
+    },
+    "aspirations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "playstyle": {
+      "type": "object",
+      "default": {},
+      "description": "Cross-game play style profile"
+    },
+    "social_style": {
+      "type": "object",
+      "default": {},
+      "description": "Learned communication and social tendencies"
+    },
+    "emotional_patterns": {
+      "type": "object",
+      "default": {},
+      "description": "Long-term emotional pattern summary"
+    },
+    "confidence": {
+      "type": "number",
+      "default": 0,
+      "description": "Confidence that enough evidence exists to characterize the seed (0-100)"
+    },
+    "observation_count": {
+      "type": "number",
+      "default": 0
+    },
+    "reflection_count": {
+      "type": "number",
+      "default": 0
+    },
+    "answered_question_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_observation_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_reflection_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_from_blank_seed": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_id",
+    "avatar_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

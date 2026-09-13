@@ -1,0 +1,129 @@
+{
+  "name": "AvatarExperience",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this experience"
+    },
+    "avatar_id": {
+      "type": "string",
+      "description": "Avatar mind that observed the experience"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "game_event",
+        "screen_observation",
+        "conversation",
+        "reflection_answer",
+        "system",
+        "achievement",
+        "social"
+      ],
+      "default": "game_event"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_name": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Normalized experience category such as combat, dialogue_choice, exploration, failure, victory, social, preference"
+    },
+    "title": {
+      "type": "string"
+    },
+    "context": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "description": "What the player did"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "telemetry": {
+      "type": "object",
+      "default": {},
+      "description": "Structured non-sensitive gameplay telemetry"
+    },
+    "signals": {
+      "type": "object",
+      "default": {},
+      "description": "Inferred personality/playstyle signals and confidence"
+    },
+    "significance": {
+      "type": "number",
+      "default": 10,
+      "description": "0-100 importance used for memory/reflection scheduling"
+    },
+    "emotional_valence": {
+      "type": "number",
+      "default": 0,
+      "description": "-100 negative to +100 positive"
+    },
+    "is_key_memory": {
+      "type": "boolean",
+      "default": false
+    },
+    "frame_url": {
+      "type": "string",
+      "description": "Optional uploaded frame used for vision analysis"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "processed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "privacy_scope": {
+      "type": "string",
+      "enum": [
+        "private",
+        "shareable"
+      ],
+      "default": "private"
+    }
+  },
+  "required": [
+    "user_id",
+    "avatar_id",
+    "source",
+    "event_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

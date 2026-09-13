@@ -1,0 +1,105 @@
+{
+  "name": "AvatarReflectionPrompt",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "avatar_id": {
+      "type": "string"
+    },
+    "experience_id": {
+      "type": "string",
+      "description": "Experience that triggered this reflection"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "why_choice",
+        "emotion",
+        "preference",
+        "aspiration",
+        "identity",
+        "playstyle",
+        "relationship",
+        "memory"
+      ],
+      "default": "identity"
+    },
+    "question": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Why the avatar chose to ask this question"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "answered",
+        "skipped",
+        "expired"
+      ],
+      "default": "pending"
+    },
+    "answer": {
+      "type": "string"
+    },
+    "answer_analysis": {
+      "type": "object",
+      "default": {},
+      "description": "Structured signals learned from the answer"
+    },
+    "asked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "answered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "priority": {
+      "type": "number",
+      "default": 50
+    },
+    "cooldown_key": {
+      "type": "string",
+      "description": "Prevents repetitive questions"
+    }
+  },
+  "required": [
+    "user_id",
+    "avatar_id",
+    "question"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
