@@ -106,7 +106,7 @@ function StudioPillar({ side }) {
   );
 }
 
-export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle, chromeHidden = false }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
 
@@ -142,7 +142,10 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
           ...glassStyle,
           height: '64px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
-          pointerEvents: topContent ? 'auto' : 'none',
+          pointerEvents: chromeHidden ? 'none' : (topContent ? 'auto' : 'none'),
+          opacity: chromeHidden ? 0 : 1,
+          transform: chromeHidden ? 'translateY(-100%)' : 'translateY(0)',
+          transition: 'opacity 220ms ease, transform 260ms ease',
         }}
       >
         {topContent && (
@@ -217,7 +220,10 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
           ...glassStyle,
           minHeight: '48px',
           borderTop: '1px solid rgba(255,255,255,0.08)',
-          pointerEvents: bottomContent || showTriggerTab ? 'auto' : 'none',
+          pointerEvents: chromeHidden ? 'none' : (bottomContent || showTriggerTab ? 'auto' : 'none'),
+          opacity: chromeHidden ? 0 : 1,
+          transform: chromeHidden ? 'translateY(100%)' : 'translateY(0)',
+          transition: 'opacity 220ms ease, transform 260ms ease',
         }}
       >
         {/* Trigger Tab */}
