@@ -17,6 +17,7 @@ export default function AvatarMindPanel() {
   const [watchError, setWatchError] = useState('');
   const [coachTip, setCoachTip] = useState('');
   const [frameBusy, setFrameBusy] = useState(false);
+  const frameBusyRef = useRef(false);
   const streamRef = useRef(null);
   const videoRef = useRef(null);
   const timerRef = useRef(null);
@@ -71,7 +72,8 @@ export default function AvatarMindPanel() {
 
   const captureFrame = useCallback(async () => {
     const video = videoRef.current;
-    if (!video || video.readyState < 2 || frameBusy) return;
+    if (!video || video.readyState < 2 || frameBusyRef.current) return;
+    frameBusyRef.current = true;
     setFrameBusy(true);
     try {
       const maxWidth = 768;
@@ -106,9 +108,10 @@ export default function AvatarMindPanel() {
       console.warn('Screen observation frame failed:', error);
       setWatchError(error?.message || 'A sampled frame could not be analyzed.');
     } finally {
+      frameBusyRef.current = false;
       setFrameBusy(false);
     }
-  }, [frameBusy, loadMind]);
+  }, [loadMind]);
 
   const stopWatching = useCallback(async (fromBrowser = false) => {
     if (stoppingRef.current) return;
