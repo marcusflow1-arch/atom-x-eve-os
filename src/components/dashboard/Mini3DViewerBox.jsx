@@ -14,6 +14,7 @@ const ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/
 const MP_ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
 const YBOT_URL = ROOT + '608211a0f_YBot1.fbx';
 const C1_URL = ROOT + '3f915913a_ErikaArcher.fbx';
+const PREVIEW_AVATAR_URL = '/models/artemis.gltf';
 const DASHBOARD_MOTIONS = [
   { name: 'Idle', url: ROOT + '9922e6dd0_Idle.fbx', loop: true },
   { name: 'Look Around', url: MP_ROOT + '3d7dec95f_standingidle02looking.fbx', loop: true },
