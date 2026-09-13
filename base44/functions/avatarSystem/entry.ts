@@ -172,6 +172,34 @@ async function initializeAvatar(base44, user, requestBody) {
         mood_history: []
     });
 
+    const seedRows = await base44.asServiceRole.entities.AvatarMindSeed.filter({ user_id: user.id, avatar_id: avatar.id }, '-created_date', 1);
+    const mindSeed = seedRows[0] || await base44.asServiceRole.entities.AvatarMindSeed.create({
+        user_id:user.id, avatar_id:avatar.id, seed_version:1, development_stage:'blank', identity_summary:'',
+        values:{}, preferences:{}, aspirations:[], playstyle:{}, social_style:{}, emotional_patterns:{},
+        confidence:0, observation_count:0, reflection_count:0, answered_question_count:0, created_from_blank_seed:true
+    });
+
+    const settingRows = await base44.asServiceRole.entities.AvatarObservationSettings.filter({ user_id:user.id, avatar_id:avatar.id }, '-created_date', 1);
+    if (!settingRows[0]) await base44.asServiceRole.entities.AvatarObservationSettings.create({
+        user_id:user.id, avatar_id:avatar.id, game_event_learning:true, screen_observation_enabled:false,
+        screen_sample_seconds:15, store_frames:false, coach_feedback_enabled:true,
+        reflection_questions_enabled:true, reflection_frequency:'normal', last_updated_at:new Date().toISOString()
+    });
+
+    const mindAgents = [
+      ['observer','Quiet, precise and nonjudgmental.','Observe gameplay and describe what the player actually did without inventing motives.'],
+      ['mirror','Evidence-driven and slow to label.','Turn repeated choices into personality, values and playstyle signals while preserving uncertainty.'],
+      ['historian','Faithful archivist.','Preserve significant experiences in chronological order so the avatar has a durable personal history.'],
+      ['reflection','Curious, warm and concise.','Ask one useful question at a time when the avatar has a real reason to understand the player better.'],
+      ['coach','Supportive performance analyst.','Notice gameplay mistakes, strengths and improvement opportunities without changing the player identity model.'],
+      ['storyteller','Grounded autobiographer.','Compress many memories into a short evolving identity narrative without rewriting what actually happened.']
+    ];
+    const existingAgents = await base44.asServiceRole.entities.AvatarMindAgentState.filter({ user_id:user.id, avatar_id:avatar.id }, 'agent_key', 30);
+    const haveAgents = new Set((existingAgents || []).map((row:any) => row.agent_key));
+    for (const [agent_key,persona,job] of mindAgents) if (!haveAgents.has(agent_key)) {
+      await base44.asServiceRole.entities.AvatarMindAgentState.create({user_id:user.id,avatar_id:avatar.id,agent_key,persona,job,enabled:true,run_count:0,confidence:0,state:{}});
+    }
+
     await base44.asServiceRole.entities.User.update(user.id, {
         onboarding_complete: true,
         avatar_id: avatar.id,
