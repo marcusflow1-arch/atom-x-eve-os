@@ -153,7 +153,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
   };
 
   const filteredGames = useMemo(() => {
-    let games = libraryGames;
+    let games = inventoryGames;
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       games = games.filter(g => {
@@ -169,7 +169,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
       const bFav = favoriteGames.includes(b.id) ? 1 : 0;
       return bFav - aFav;
     });
-  }, [searchTerm, allInventory, favoriteGames]);
+  }, [searchTerm, allInventory, favoriteGames, inventoryGames]);
 
   const gameItems = useMemo(() => {
     if (!selectedGame) return [];
@@ -182,11 +182,11 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
   // Auto-select game when opened via a reward click
   useEffect(() => {
     if (isOpen && initialGameName) {
-      const match = libraryGames.find(g => (g.title || g.name || '').toLowerCase() === initialGameName.toLowerCase());
+      const match = inventoryGames.find(g => (g.title || g.name || '').toLowerCase() === initialGameName.toLowerCase());
       if (match) setSelectedGame(match);
     }
     if (!isOpen) { setSelectedGame(null); setMarketItem(null); setSearchTerm(''); }
-  }, [isOpen, initialGameName]);
+  }, [isOpen, initialGameName, inventoryGames]);
 
   // Clear market item when switching games
   useEffect(() => {
@@ -228,7 +228,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
               <Package className="w-5 h-5 text-amber-400 flex-shrink-0" />
               <div className="min-w-0">
                 <h2 className="text-lg font-bold text-white leading-tight">Full Inventory</h2>
-                <p className="text-[10px] text-white/40">{totalItems} items · {libraryGames.length} games</p>
+                <p className="text-[10px] text-white/40">{inventoryLoading ? 'Syncing cards…' : `${totalItems} cards · ${inventoryGames.length} games`}</p>
               </div>
               {/* Inline search */}
               <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 ml-4 max-w-xs flex-1 focus-within:border-white/20 transition-all">
@@ -276,7 +276,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
                   <Gamepad2 className="w-4 h-4 text-amber-400" />
                   <span className="text-sm font-bold text-white">{selectedGame.title || selectedGame.name}</span>
                   <span className="text-[10px] text-white/30">
-                    {gameItems.length} items · {gameItems.filter(i => i.owned).length} owned
+                    {gameItems.length} cards · {gameItems.filter(i => i.tradeStatus === 'available' && !i.isEquipped).length} tradeable
                   </span>
                 </div>
               )}
@@ -399,7 +399,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
                   const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
                   const Icon = cfg.icon;
                   const isActive = marketItem?.id === item.id;
-                  const isLocked = !item.owned;
+                  const isLocked = item.tradeStatus === 'locked_in_trade' || item.isEquipped;
                   return (
                     <InventoryShinyCard
                       key={item.id}
@@ -421,7 +421,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
                           {item.rarity}
                         </Badge>
                         {!isLocked && (
-                          <span className="mt-0.5 text-[8px] text-emerald-400/80 font-bold">×1</span>
+                          <span className="mt-0.5 text-[8px] text-emerald-400/80 font-bold">{item.isEquipped ? 'Equipped' : item.tradeStatus === 'locked_in_trade' ? 'Reserved' : 'Available'}</span>
                         )}
                       </div>
                       <div className="absolute top-1 right-1 z-20">
@@ -449,6 +449,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
             onClose={() => setMarketItem(null)}
             onBack={() => setMarketItem(null)}
             leftOffset={leftOffset !== undefined ? leftOffset : (fullScreen ? 0 : '383px')}
+            onInventoryChanged={loadInventory}
           />
         )}
       </AnimatePresence>
