@@ -29,23 +29,101 @@ const normalizeGameKey = (value = '') => String(value).toLowerCase().replace(/[^
 const normalizeCategory = (value = 'Achievement') => String(value).toLowerCase();
 
 export default function InventoryFullPanel({ isOpen, onClose, initialGameName, fullScreen = false, leftOffset }) {
+  const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
   const [marketItem, setMarketItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [ownedCards, setOwnedCards] = useState([]);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [favoriteGames, setFavoriteGames] = useState(() => {
     try { return JSON.parse(localStorage.getItem('inventory_favorites') || '[]'); } catch { return []; }
   });
   const recognitionRef = useRef(null);
 
+  const loadInventory = useCallback(async () => {
+    if (!isOpen || !user?.id) {
+      setOwnedCards([]);
+      return;
+    }
+    setInventoryLoading(true);
+    try {
+      const rows = await base44.entities.UserCard.filter({ user_id: user.id }, '-created_date', 1000);
+      setOwnedCards(rows || []);
+    } catch (error) {
+      console.warn('Could not load live card inventory.', error);
+      setOwnedCards([]);
+    } finally {
+      setInventoryLoading(false);
+    }
+  }, [isOpen, user?.id]);
+
+  useEffect(() => { loadInventory(); }, [loadInventory]);
+  useEffect(() => {
+    if (!isOpen || !user?.id) return undefined;
+    const unsubscribe = base44.entities.UserCard.subscribe((event) => {
+      const row = event?.data;
+      if (!row || row.user_id === user.id || ownedCards.some((card) => card.id === row.id)) loadInventory();
+    });
+    const refresh = () => loadInventory();
+    window.addEventListener('atomCardInventoryChanged', refresh);
+    return () => {
+      unsubscribe?.();
+      window.removeEventListener('atomCardInventoryChanged', refresh);
+    };
+  }, [isOpen, user?.id, loadInventory, ownedCards]);
+
+  const inventoryGames = useMemo(() => {
+    const byTitle = new Map((libraryGames || []).map((game) => [String(game.title || game.name || '').toLowerCase(), game]));
+    const grouped = new Map();
+    ownedCards.forEach((card) => {
+      const title = card.game_name || 'Unknown Game';
+      const known = byTitle.get(String(title).toLowerCase());
+      const id = card.game_id || known?.id || `inventory-${normalizeGameKey(title)}`;
+      if (!grouped.has(id)) grouped.set(id, {
+        ...(known || {}),
+        id,
+        title,
+        name: title,
+        cover: known?.cover || known?.cover_image || card.card_image || '',
+        cover_image: known?.cover_image || known?.cover || card.card_image || '',
+      });
+    });
+    return Array.from(grouped.values()).sort((a, b) => String(a.title || a.name).localeCompare(String(b.title || b.name)));
+  }, [ownedCards]);
+
   const allInventory = useMemo(() => {
     const map = {};
-    libraryGames.forEach(g => { map[g.id] = generateInventoryForGame(g); });
+    inventoryGames.forEach((game) => { map[game.id] = []; });
+    const titleToGame = new Map(inventoryGames.map((game) => [String(game.title || game.name || '').toLowerCase(), game]));
+    ownedCards.forEach((card) => {
+      const game = inventoryGames.find((entry) => entry.id === card.game_id) || titleToGame.get(String(card.game_name || 'Unknown Game').toLowerCase());
+      const gameId = game?.id || card.game_id || `inventory-${normalizeGameKey(card.game_name)}`;
+      if (!map[gameId]) map[gameId] = [];
+      map[gameId].push({
+        id: card.id,
+        userCardId: card.id,
+        tradingCardId: card.trading_card_id || '',
+        name: card.card_name || 'Card',
+        category: normalizeCategory(card.card_type),
+        rarity: card.card_rarity || 'Common',
+        game: card.game_name || game?.title || 'Unknown Game',
+        gameId,
+        sourceGameId: card.game_id || '',
+        owned: true,
+        unlockedAt: card.unlocked_date || card.created_date || null,
+        image: card.card_image || game?.cover || game?.cover_image || '',
+        tradeStatus: card.trade_status || 'available',
+        isEquipped: Boolean(card.is_equipped),
+        acquisitionMethod: card.acquisition_method || 'unlocked',
+        source: card,
+      });
+    });
     return map;
-  }, []);
+  }, [ownedCards, inventoryGames]);
 
-  const totalItems = useMemo(() => Object.values(allInventory).reduce((sum, items) => sum + items.length, 0), [allInventory]);
+  const totalItems = ownedCards.length;
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
