@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Send, X, Sparkles, Eye, Square } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/components/auth/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 import { trackAvatarExperience, trackPlayerDecision } from '@/lib/atomTelemetry';
 import { getAvatarScreenObserverState, stopAvatarScreenObserver, subscribeAvatarScreenObserver } from '@/lib/avatarScreenObserver';
 
