@@ -15,37 +15,70 @@ export function trackAtomEvent(event, properties = {}) {
     .catch(() => {});
 }
 
-export async function trackPlayerDecision(decision = {}) {
-  if (!decision?.decision_type || !decision?.choice_made) return null;
+async function avatarIdForCurrentUser(explicitId) {
+  if (explicitId) return explicitId;
+  const me = await base44.auth.me();
+  const avatars = await base44.entities.Avatar.filter({ user_id: me.id }, '-created_date', 1);
+  return avatars?.[0]?.id || null;
+}
+
+export async function trackAvatarExperience(experience = {}) {
   try {
-    let avatarId = decision.avatar_id;
-    if (!avatarId) {
-      const me = await base44.auth.me();
-      const avatars = await base44.entities.Avatar.filter({ user_id: me.id }, '-created_date', 1);
-      avatarId = avatars?.[0]?.id;
-    }
+    const avatarId = await avatarIdForCurrentUser(experience.avatar_id);
     if (!avatarId) return null;
-    const response = await base44.functions.invoke('aiBehaviorCore', {
-      action: 'logDecision',
+    const response = await base44.functions.invoke('avatarMindCore', {
+      action: 'observeEvent',
       payload: {
+        ...experience,
         avatar_id: avatarId,
-        game_id: decision.game_id || '',
-        decision_type: decision.decision_type,
-        decision_context: decision.decision_context || '',
-        choice_made: decision.choice_made,
-        moral_weight: Number(decision.moral_weight || 0),
-        aggression_impact: Number(decision.aggression_impact || 0),
-        empathy_impact: Number(decision.empathy_impact || 0),
-        risk_impact: Number(decision.risk_impact || 0),
-        trait_impacts: decision.trait_impacts || {}
-      }
+        observed_at: experience.observed_at || new Date().toISOString(),
+      },
     });
-    trackAtomEvent('ai_player_decision_processed', { game_id: decision.game_id, decision_type: decision.decision_type });
-    return response?.data || response;
+    const data = response?.data || response;
+    if (data?.success) {
+      trackAtomEvent('avatar_mind_experience_processed', {
+        event_type: experience.event_type,
+        source: experience.source || 'game_event',
+        game_id: experience.game_id,
+      });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('atom:mind-updated', { detail: data }));
+      }
+    }
+    return data;
   } catch (error) {
-    console.warn('AI reflection decision was not processed:', error);
+    console.warn('Avatar mind experience was not processed:', error);
     return null;
   }
+}
+
+export async function trackPlayerDecision(decision = {}) {
+  if (!decision?.decision_type || !decision?.choice_made) return null;
+  const signals = {
+    trait_impacts: decision.trait_impacts || {},
+    moral_impact: Number(decision.moral_weight || 0),
+    aggression_impact: Number(decision.aggression_impact || 0),
+    empathy_impact: Number(decision.empathy_impact || 0),
+    risk_impact: Number(decision.risk_impact || 0),
+  };
+  const result = await trackAvatarExperience({
+    avatar_id: decision.avatar_id,
+    source: 'game_event',
+    game_id: decision.game_id || '',
+    game_name: decision.game_name || '',
+    event_type: decision.decision_type,
+    decision_type: decision.decision_type,
+    decision_context: decision.decision_context || '',
+    context: decision.decision_context || '',
+    choice_made: decision.choice_made,
+    action: decision.choice_made,
+    outcome: decision.outcome || '',
+    significance: Number(decision.significance ?? (decision.decision_type === 'moral_choice' ? 80 : 55)),
+    emotional_valence: Number(decision.emotional_valence || 0),
+    signals,
+  });
+  trackAtomEvent('ai_player_decision_processed', { game_id: decision.game_id, decision_type: decision.decision_type });
+  return result;
 }
 
 export const AtomEvents = Object.freeze({
