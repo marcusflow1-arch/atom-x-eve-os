@@ -275,7 +275,12 @@ export default function FriendsPage() {
 
   const handleAcceptTradeInvite = async () => {
     if (!incomingTrade) return;
-    await base44.entities.TradeSession.update(incomingTrade.id, { status: 'accepted' });
+    const response = await base44.functions.invoke('friendCardTrade', {
+      action: 'accept',
+      payload: { partnerId: incomingTrade.initiator_id },
+    });
+    const data = response?.data || response || {};
+    if (data.error) throw new Error(data.error);
     const matchedFriend = friends.find((entry) => entry.friend_id === incomingTrade.initiator_id);
     if (matchedFriend) {
       setSelectedFriendId(matchedFriend.id);
@@ -286,7 +291,12 @@ export default function FriendsPage() {
 
   const handleDeclineTradeInvite = async () => {
     if (!incomingTrade) return;
-    await base44.entities.TradeSession.update(incomingTrade.id, { status: 'declined' });
+    const response = await base44.functions.invoke('friendCardTrade', {
+      action: 'decline',
+      payload: { partnerId: incomingTrade.initiator_id },
+    });
+    const data = response?.data || response || {};
+    if (data.error) throw new Error(data.error);
     setIncomingTrade(null);
   };
 
