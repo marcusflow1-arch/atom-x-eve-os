@@ -74,6 +74,7 @@ export default function DashboardAvatarOverview() {
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
   const [interactionDimmed, setInteractionDimmed] = useState(false);
+  const [avatarFocusMode, setAvatarFocusMode] = useState(false);
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
 
@@ -94,6 +95,20 @@ export default function DashboardAvatarOverview() {
   useEffect(() => {
     if (surface !== 'dashboard') setActiveQuickPanel(null);
   }, [surface]);
+
+  useEffect(() => {
+    const onFocus = (event) => {
+      const active = Boolean(event.detail?.active);
+      setAvatarFocusMode(active);
+      if (active) {
+        setActiveQuickPanel(null);
+        setAttributeMenuOpen(false);
+        setInteractionDimmed(false);
+      }
+    };
+    window.addEventListener('lunaAvatarFocusChanged', onFocus);
+    return () => window.removeEventListener('lunaAvatarFocusChanged', onFocus);
+  }, []);
 
   // Any dashboard control outside the 3D viewer / attribute panel puts those
   // two background surfaces into the same subdued state used for game/library
@@ -168,7 +183,7 @@ export default function DashboardAvatarOverview() {
   }), [progression, user]);
 
   const levelProgress = Math.min(100, stats.currentXP / stats.nextXP * 100);
-  const backgroundDimmed = interactionDimmed || surface !== 'dashboard';
+  const backgroundDimmed = !avatarFocusMode && (interactionDimmed || surface !== 'dashboard');
   const slotItems = [
     { id: 'stats', icon: BarChart3, label: 'Stats' },
     { id: 'friends', icon: Users, label: 'Friends' },
@@ -188,7 +203,7 @@ export default function DashboardAvatarOverview() {
 
   return (
     <div data-dashboard-avatar-overview className="fixed left-[390px] right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible">
-      {surface === 'dashboard' && activeQuickPanel && (
+      {!avatarFocusMode && surface === 'dashboard' && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[74px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
@@ -206,7 +221,7 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
-      {surface === 'dashboard' && (
+      {!avatarFocusMode && surface === 'dashboard' && (
         <div
           className="absolute bottom-[10px] z-50 flex h-[54px] w-fit -translate-x-1/2 items-center gap-[4px] pointer-events-auto"
           style={{ left: 'calc((100% - 338px) / 2)' }}
@@ -224,10 +239,10 @@ export default function DashboardAvatarOverview() {
       )}
 
       <div className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}>
-        <DashboardAvatarScene />
+        <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
-      <aside
+      {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
       >
@@ -281,7 +296,7 @@ export default function DashboardAvatarOverview() {
             </div>
           </div>
         </div>
-      </aside>
+      </aside>}
     </div>
   );
 }
