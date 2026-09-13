@@ -84,6 +84,7 @@ import LunaLeftRail from '../components/dashboard/LunaLeftRail';
 import HomeSectionSwitcher from '../components/dashboard/HomeSectionSwitcher';
 import RealTimeMoonSky from '../components/dashboard/RealTimeMoonSky';
 import AvatarFocusHub from '../components/dashboard/avatarFocus/AvatarFocusHub';
+import AvatarProgressionOverlay from '../components/dashboard/AvatarProgressionOverlay';
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
@@ -257,7 +258,7 @@ export default function LunaTemplate() {
   }, []);
 
   useEffect(() => {
-    const handleSkillTree = () => setShowSkillTreeBlankUI((prev) => !prev);
+    const handleSkillTree = () => setShowSkillTreeBlankUI(true);
     window.addEventListener('toggleSkillTree', handleSkillTree);
     return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
   }, []);
@@ -537,6 +538,7 @@ export default function LunaTemplate() {
         }
       }
       if (key === 'escape') {
+        if (showSkillTreeBlankUI) { setShowSkillTreeBlankUI(false); return; }
         if (showFriendsHub) { setShowFriendsHub(false); return; }
         if (showLibraryLanding) {
           if (librarySelection) setLibrarySelection(null);
@@ -557,7 +559,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
+  }, [showForumOverlay, showAvatarProgression, showSkillTreeBlankUI, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -1793,31 +1795,14 @@ export default function LunaTemplate() {
                 }
       </AnimatePresence>
 
-      {/* Skill Tree Blank UI */}
+      {/* Full-screen Avatar Progression — intentionally covers every Luna UI layer. Escape is the only close control. */}
       <AnimatePresence>
         {showSkillTreeBlankUI &&
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed left-0 right-0 z-50 bg-[#080808]"
-                  style={{
-                    top: '64px', // Below top header
-                    bottom: '48px' // Above bottom header
-                  }}>
-                  
-            <div className="absolute top-4 left-4">
-              <h2 className="text-white text-2xl font-bold tracking-wider uppercase">Skill Tree</h2>
-            </div>
-            
-            <button
-                    onClick={() => setShowSkillTreeBlankUI(false)}
-                    className="absolute top-4 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
-                    
-              <X className="w-5 h-5" />
-            </button>
-          </motion.div>
-                }
+          <AvatarProgressionOverlay
+            initialTab="skill"
+            onClose={() => setShowSkillTreeBlankUI(false)}
+          />
+        }
       </AnimatePresence>
 
       {/* Side Access Menu - hidden when sidebar is hidden */}
