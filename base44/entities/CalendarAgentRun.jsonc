@@ -1,0 +1,105 @@
+{
+  "name": "CalendarAgentRun",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "day",
+        "week",
+        "month",
+        "custom"
+      ],
+      "default": "day"
+    },
+    "range_start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "range_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timezone_offset_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "preview",
+        "applied",
+        "failed"
+      ],
+      "default": "preview"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "created_event_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "created_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "created_note_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "plan_snapshot": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "user_id",
+    "prompt",
+    "scope"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
