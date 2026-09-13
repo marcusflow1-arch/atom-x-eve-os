@@ -61,6 +61,17 @@ function buildMotionSet(rows, gender) {
       left: asMotion(pick('standing run left'), fallbackWalk, { name: 'Run Left', loop: true }),
       right: asMotion(pick('standing run right'), fallbackWalk, { name: 'Run Right', loop: true }),
     },
+    showcase: [
+      asMotion(pick('standing equip bow'), fallbackLook, { name: 'Equip Bow', loop: false }),
+      asMotion(pick('standing draw arrow'), fallbackLook, { name: 'Draw Arrow', loop: false }),
+      asMotion(pick('standing aim overdraw'), fallbackLook, { name: 'Aim Bow', loop: true }),
+      asMotion(pick('standing aim recoil'), fallbackLook, { name: 'Release Arrow', loop: false }),
+      asMotion(pick('standing disarm bow'), fallbackLook, { name: 'Stow Bow', loop: false }),
+      asMotion(pick('standing dodge forward'), fallbackLook, { name: 'Dodge', loop: false }),
+      asMotion(pick('standing block'), fallbackLook, { name: 'Block', loop: false }),
+      asMotion(pick('standing melee kick'), fallbackLook, { name: 'Kick', loop: false }),
+      asMotion(pick('jumping', 'standing dive forward'), COMPANION_MOTIONS[4] || fallbackLook, { name: 'Jump', loop: false }),
+    ],
   };
 }
 
@@ -85,6 +96,7 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
   const [ready, setReady] = useState(false);
   const [controlArmed, setControlArmed] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [previewMotions, setPreviewMotions] = useState(COMPANION_MOTIONS);
 
   callback.current = onCapabilities;
   controlArmedRef.current = controlArmed;
@@ -110,6 +122,8 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
     loadAdminAnimations().then((rows) => {
       if (cancelled) return;
       motionSetRef.current = buildMotionSet(rows, config?.gender);
+      const set = motionSetRef.current;
+      setPreviewMotions([...(set.idles || []).slice(0, 3), ...(set.showcase || [])].filter((item, index, items) => item?.url && items.findIndex((candidate) => candidate.name === item.name) === index));
       if (ready && compact && !controlArmedRef.current) playIdle();
     });
     return () => { cancelled = true; };
@@ -304,7 +318,7 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
         <div ref={mount} className="h-full w-full" />
         {(!ready || (compact && status === 'animation-loading')) && <span className="genesis-canvas-status" role="status">{status === 'error' ? '3D preview unavailable on this device' : 'Loading your companion…'}</span>}
       </div>
-      {!compact && <div className="genesis-stage-bottom"><div className="genesis-motion-buttons"><button type="button" aria-label="Rotate left" disabled={!ready} onClick={() => scene.current.rotate(-Math.PI / 4)}><RotateCcw size={14} /></button>{COMPANION_MOTIONS.map((item) => <button type="button" key={item.name} disabled={!ready || status === 'animation-loading'} aria-pressed={motion === item.name} onClick={() => scene.current.play(item)}>{item.name}</button>)}<button type="button" aria-label="Rotate right" disabled={!ready} onClick={() => scene.current.rotate(Math.PI / 4)}><RotateCw size={14} /></button></div><p>{status === 'animation-error' ? 'This animation could not load. Try another.' : status === 'animation-loading' ? 'Loading movement…' : 'Drag to rotate · Scroll to zoom'}</p></div>}
+      {!compact && <div className="genesis-stage-bottom"><div className="genesis-motion-buttons"><button type="button" aria-label="Rotate left" disabled={!ready} onClick={() => scene.current.rotate(-Math.PI / 4)}><RotateCcw size={14} /></button>{previewMotions.map((item) => <button type="button" key={`${item.name}-${item.url}`} disabled={!ready || status === 'animation-loading'} aria-pressed={motion === item.name} onClick={() => scene.current.play(item)}>{item.name}</button>)}<button type="button" aria-label="Rotate right" disabled={!ready} onClick={() => scene.current.rotate(Math.PI / 4)}><RotateCw size={14} /></button></div><p>{status === 'animation-error' ? 'This animation could not load. Try another.' : status === 'animation-loading' ? 'Loading movement…' : 'Drag to rotate · Scroll to zoom'}</p></div>}
     </div>
   );
 }
