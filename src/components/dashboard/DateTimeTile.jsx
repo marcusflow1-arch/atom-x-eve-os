@@ -17,14 +17,15 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
   const load = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const [events, platformUpdates] = await Promise.all([
-        base44.entities.UserEvent.filter({ user_id: user.id }, 'start_time', 250),
+      const now = new Date();
+      const [scheduleResponse, platformUpdates] = await Promise.all([
+        base44.functions.invoke('calendarAgent', { action: 'getState', payload: { range_start: now.toISOString(), range_end: new Date(now.getTime() + 90 * 86400000).toISOString() } }),
         base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 12).catch(() => []),
       ]);
-      const now = Date.now();
-      const liveReminders = (events || [])
-        .filter((event) => event.status !== 'cancelled' && new Date(event.start_time).getTime() >= now && ((event.reminders || []).length > 0 || event.event_type === 'reminder'))
-        .sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+      const schedule = scheduleResponse?.data || scheduleResponse || {};
+      const liveReminders = (Array.isArray(schedule.occurrences) ? schedule.occurrences : [])
+        .filter((event) => event.status !== 'cancelled' && ((event.reminders || []).length > 0 || event.event_type === 'reminder'))
+        .sort((a,b) => new Date(a.occurrence_start || a.start_time) - new Date(b.occurrence_start || b.start_time));
       setReminders(liveReminders);
       setUpdates(Array.isArray(platformUpdates) ? platformUpdates : []);
     } catch (error) {
@@ -51,7 +52,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
   const dateString = time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const reminder = reminders[currentReminderIdx] || null;
   const update = updates[currentUpdateIdx] || null;
-  const reminderLabel = reminder ? reminder.title : 'No reminders scheduled';
+  const reminderLabel = reminder ? `${reminder.title}${reminder.occurrence_start ? ` · ${new Date(reminder.occurrence_start).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : ''}` : 'No reminders scheduled';
   const updateLabel = update ? (update.title || update.version || 'Platform update') : 'System current';
 
   return (
