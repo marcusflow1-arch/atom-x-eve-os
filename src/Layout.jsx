@@ -323,6 +323,17 @@ function LayoutContent({ children, currentPageName }) {
     return () => window.removeEventListener('openAuraStreamsDrawer', handler);
   }, []);
 
+  useEffect(() => {
+    const openCalendar = () => setCalendarOpen(true);
+    const closeCalendar = () => setCalendarOpen(false);
+    window.addEventListener('openAtomCalendar', openCalendar);
+    window.addEventListener('closeAtomCalendar', closeCalendar);
+    return () => {
+      window.removeEventListener('openAtomCalendar', openCalendar);
+      window.removeEventListener('closeAtomCalendar', closeCalendar);
+    };
+  }, []);
+
   // Show guided tour on first login
   useEffect(() => {
     if (isAuthenticated && user?.id) {
