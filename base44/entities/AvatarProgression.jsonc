@@ -113,6 +113,41 @@
           "xp": 0
         }
       ]
+    },
+    "knowledge_level": {
+      "type": "number",
+      "default": 1,
+      "description": "AI avatar knowledge progression level from 1 to 300"
+    },
+    "knowledge_xp": {
+      "type": "number",
+      "default": 0,
+      "description": "XP toward the next AI knowledge level"
+    },
+    "available_skill_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Unspent AI skill-tree points"
+    },
+    "skill_allocations": {
+      "type": "object",
+      "description": "Persisted ranks for AI skill-tree categories and nodes"
+    },
+    "claimed_stat_rewards": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": [],
+      "description": "Avatar level reward milestones already claimed"
+    },
+    "claimed_knowledge_rewards": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": [],
+      "description": "Knowledge level reward milestones already claimed"
     }
   },
   "required": [
