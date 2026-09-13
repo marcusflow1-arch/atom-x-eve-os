@@ -12,7 +12,7 @@ const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
-export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
+export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModelFocus }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const mixerRef = useRef(null);
@@ -171,12 +171,26 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
     <div
       className={`pointer-events-auto flex items-start gap-3 relative ${isUiVisible ? 'h-full' : 'px-3 pt-3'}`}
       style={isUiVisible ? { width: '100%', height: '100%' } : {}}
-      // Intentionally no click handler here: clicking the avatar/viewer must never hide or replace dashboard UI.
     >
       <div className={`relative z-20 flex w-full gap-3 ${isUiVisible ? 'h-full' : ''}`}>
         <div
-          className="overflow-hidden flex-shrink-0 relative rounded-xl"
+          className={`overflow-hidden flex-shrink-0 relative rounded-xl ${!isUiVisible ? 'cursor-pointer' : ''}`}
           style={{ background: 'transparent', border: 'none', boxShadow: 'none', width: isUiVisible ? '100%' : '150px', height: isUiVisible ? '100%' : '240px' }}
+          onClick={!isUiVisible ? (event) => {
+            event.stopPropagation();
+            if (onModelFocus) onModelFocus();
+            else window.dispatchEvent(new CustomEvent('openLunaAvatarModelFocus'));
+          } : undefined}
+          role={!isUiVisible ? 'button' : undefined}
+          tabIndex={!isUiVisible ? 0 : undefined}
+          aria-label={!isUiVisible ? 'Open full avatar view' : undefined}
+          onKeyDown={!isUiVisible ? (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (onModelFocus) onModelFocus();
+            else window.dispatchEvent(new CustomEvent('openLunaAvatarModelFocus'));
+          } : undefined}
         >
           <div ref={containerRef} className="w-full h-full relative z-0">
             {webglFailed && <div className="absolute inset-0 flex items-center justify-center text-center p-4 text-white/50 text-xs">3D preview unavailable</div>}
