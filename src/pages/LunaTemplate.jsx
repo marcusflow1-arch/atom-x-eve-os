@@ -456,7 +456,8 @@ export default function LunaTemplate() {
           base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 100),
         ]);
         if (cancelled) return;
-        setUserEvents((events || []).filter((event) => event.status !== 'cancelled').sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
+        const now = Date.now();
+        setUserEvents((events || []).filter((event) => event.status !== 'cancelled' && new Date(event.start_time).getTime() >= now).sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
         setPlatformUpdates(updates || []);
       } catch (error) {
         if (!cancelled) showError(error, 'Load Events');
