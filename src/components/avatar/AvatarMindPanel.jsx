@@ -86,8 +86,8 @@ export default function AvatarMindPanel() {
             <div className="min-w-[110px] text-right"><span className="text-[8px] uppercase tracking-[.16em] text-white/22">Identity confidence</span><strong className="mt-1 block text-2xl font-light text-cyan-100/80">{Math.round(seed.confidence || 0)}%</strong></div>
           </div>
 
-          <div className="mt-5 grid gap-px bg-white/[0.045] sm:grid-cols-3">
-            {[['Observations', seed.observation_count || 0], ['Questions answered', seed.answered_question_count || 0], ['Key stage', stage]].map(([label, value]) => (
+          <div className="mt-5 grid gap-px bg-white/[0.045] sm:grid-cols-4">
+            {[['Observations', seed.observation_count || 0], ['Memory anchors', mind?.memory_anchors?.length || 0], ['Questions answered', seed.answered_question_count || 0], ['Key stage', stage]].map(([label, value]) => (
               <div key={label} className="bg-[#081019]/78 px-4 py-3"><span className="text-[8px] uppercase tracking-[.14em] text-white/22">{label}</span><strong className="mt-1 block text-sm text-white/72">{value}</strong></div>
             ))}
           </div>
