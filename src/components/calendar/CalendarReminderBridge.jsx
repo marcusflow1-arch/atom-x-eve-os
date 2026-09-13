@@ -52,7 +52,7 @@ export default function CalendarReminderBridge() {
   if (!items.length || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed right-5 top-20 z-[45000] flex w-[360px] max-w-[calc(100vw-2rem)] flex-col gap-2 pointer-events-none">
+    <div className="fixed right-5 top-20 z-[180000] flex w-[360px] max-w-[calc(100vw-2rem)] flex-col gap-2 pointer-events-none">
       {items.map((item) => (
         <div key={item.id} className="pointer-events-auto overflow-hidden border border-white/[0.08] bg-[#071018]/95 shadow-2xl backdrop-blur-3xl">
           <div className="flex items-start gap-3 p-4">
