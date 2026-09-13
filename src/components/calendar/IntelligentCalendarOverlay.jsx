@@ -1,316 +1,268 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, 
-  Clock, Gamepad2, Users, Trash2, CheckCircle2, StickyNote, 
-  Bot, Sparkles, LayoutList, AlignLeft
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Bell, Bot, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock3,
+  LayoutList, ListChecks, Loader2, Plus, Sparkles, StickyNote, Trash2, X,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DayPlanningView from './DayPlanningView';
 import AIEventCreator from './AIEventCreator';
 
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const EVENT_ACCENTS = {
+  gaming_session: 'bg-cyan-300/70', raid: 'bg-rose-300/70', tournament: 'bg-amber-300/70', meeting: 'bg-violet-300/70',
+  reminder: 'bg-yellow-200/75', clan: 'bg-emerald-300/70', story: 'bg-fuchsia-300/70', task: 'bg-blue-300/70', personal: 'bg-white/55', life: 'bg-white/55',
+};
+
+function dateKey(value) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function startOfDay(value) { const d = new Date(value); d.setHours(0,0,0,0); return d; }
+function endOfDay(value) { const d = new Date(value); d.setHours(23,59,59,999); return d; }
+function addDays(value, count) { const d = new Date(value); d.setDate(d.getDate()+count); return d; }
+function monthGrid(cursor) {
+  const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const start = addDays(first, -first.getDay());
+  return Array.from({ length: 42 }, (_, index) => addDays(start, index));
+}
+function weekDays(cursor) {
+  const start = startOfDay(addDays(cursor, -cursor.getDay()));
+  return Array.from({ length: 7 }, (_, index) => addDays(start, index));
+}
+function rangeFor(view, cursor, selected) {
+  if (view === 'month') {
+    const days = monthGrid(cursor); return { start: startOfDay(days[0]), end: endOfDay(days[41]) };
+  }
+  if (view === 'week') {
+    const days = weekDays(selected || cursor); return { start: startOfDay(days[0]), end: endOfDay(days[6]) };
+  }
+  return { start: startOfDay(selected || cursor), end: endOfDay(selected || cursor) };
+}
+function eventStart(event) { return new Date(event.occurrence_start || event.start_time); }
+function eventEnd(event) { return new Date(event.occurrence_end || event.end_time || event.occurrence_start || event.start_time); }
+function formatTime(value) { return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+function eventAccent(type) { return EVENT_ACCENTS[type] || EVENT_ACCENTS.personal; }
+
+function EventPill({ event, compact = false, onClick }) {
+  const start = eventStart(event);
+  return (
+    <button type="button" onClick={(e) => { e.stopPropagation(); onClick?.(event); }} className={`flex w-full items-center gap-2 overflow-hidden text-left transition hover:bg-white/[0.05] ${compact ? 'px-1.5 py-1' : 'px-2 py-1.5'}`}>
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${eventAccent(event.event_type)}`} />
+      <span className="min-w-0 flex-1 truncate text-[9px] font-medium text-white/65">{event.title}</span>
+      {!event.all_day && <span className="shrink-0 text-[8px] text-white/22">{formatTime(start)}</span>}
+      {(event.reminders || []).length > 0 && <Bell className="h-2.5 w-2.5 shrink-0 text-amber-200/35" />}
+    </button>
+  );
+}
+
 export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('month'); // 'month' | 'day' | 'week'
-  const [activeTab, setActiveTab] = useState('events'); // 'events' | 'tasks' | 'notes'
-  
+  const [cursor, setCursor] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState('month');
+  const [activeRail, setActiveRail] = useState('events');
   const [events, setEvents] = useState([]);
+  const [occurrences, setOccurrences] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [notes, setNotes] = useState([]);
-  
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showCreator, setShowCreator] = useState(false);
-  const [creatorMode, setCreatorMode] = useState('manual'); // 'manual' | 'ai'
+  const [creatorMode, setCreatorMode] = useState('manual');
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [quickTask, setQuickTask] = useState('');
+  const [quickNote, setQuickNote] = useState('');
+  const [savingQuick, setSavingQuick] = useState(false);
+
+  const visibleRange = useMemo(() => rangeFor(viewMode, cursor, selectedDate), [viewMode, cursor, selectedDate]);
+
+  const loadData = useCallback(async () => {
+    if (!currentUserId) return;
+    setLoading(true); setError('');
+    try {
+      const response = await base44.functions.invoke('calendarAgent', {
+        action: 'getState',
+        payload: { range_start: visibleRange.start.toISOString(), range_end: visibleRange.end.toISOString() },
+      });
+      const data = response?.data || response || {};
+      if (data.error) throw new Error(data.error);
+      setEvents(Array.isArray(data.events) ? data.events : []);
+      setOccurrences(Array.isArray(data.occurrences) ? data.occurrences : []);
+      setTasks(Array.isArray(data.tasks) ? data.tasks : []);
+      setNotes(Array.isArray(data.notes) ? data.notes : []);
+    } catch (e) {
+      console.error('[Calendar] load failed', e);
+      setError(e?.message || 'Calendar data could not be loaded.');
+    } finally { setLoading(false); }
+  }, [currentUserId, visibleRange.start.getTime(), visibleRange.end.getTime()]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
-    loadData();
-  }, [currentDate, currentUserId]);
+    const refresh = () => loadData();
+    window.addEventListener('atom:calendar-data-changed', refresh);
+    const unsubs = ['UserEvent','UserTask','UserNote'].map((entity) => base44.entities[entity]?.subscribe?.(refresh)).filter(Boolean);
+    return () => { window.removeEventListener('atom:calendar-data-changed', refresh); unsubs.forEach((fn) => fn?.()); };
+  }, [loadData]);
 
-  const loadData = async () => {
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const key = (event) => { if (event.key === 'Escape') onClose?.(); };
+    window.addEventListener('keydown', key, true);
+    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', key, true); };
+  }, [onClose]);
+
+  const byDate = useMemo(() => {
+    const map = new Map();
+    occurrences.forEach((event) => {
+      const key = dateKey(event.occurrence_start || event.start_time);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(event);
+    });
+    for (const list of map.values()) list.sort((a,b) => eventStart(a)-eventStart(b));
+    return map;
+  }, [occurrences]);
+
+  const upcoming = useMemo(() => occurrences.filter((event) => eventStart(event) >= new Date()).sort((a,b) => eventStart(a)-eventStart(b)).slice(0, 10), [occurrences]);
+  const reminderCount = useMemo(() => events.filter((event) => event.status !== 'cancelled' && ((event.reminders || []).length || event.event_type === 'reminder') && new Date(event.start_time) >= new Date()).length, [events]);
+
+  const goPrevious = () => {
+    if (viewMode === 'month') setCursor((d) => new Date(d.getFullYear(), d.getMonth()-1, 1));
+    else if (viewMode === 'week') { const next = addDays(selectedDate, -7); setSelectedDate(next); setCursor(next); }
+    else { const next = addDays(selectedDate, -1); setSelectedDate(next); setCursor(next); }
+  };
+  const goNext = () => {
+    if (viewMode === 'month') setCursor((d) => new Date(d.getFullYear(), d.getMonth()+1, 1));
+    else if (viewMode === 'week') { const next = addDays(selectedDate, 7); setSelectedDate(next); setCursor(next); }
+    else { const next = addDays(selectedDate, 1); setSelectedDate(next); setCursor(next); }
+  };
+  const goToday = () => { const now = new Date(); setCursor(now); setSelectedDate(now); };
+  const openDate = (date) => { setSelectedDate(date); setCursor(date); setViewMode('day'); };
+  const openCreator = (mode) => { setCreatorMode(mode); setShowCreator(true); };
+
+  const deleteEvent = async (event) => {
+    const id = event.parent_event_id || event.id;
+    if (!id) return;
     try {
-      // Load events for the month (plus padding for weeks)
-      // In a real app we'd filter by date range, here filtering all for simplicity or assume limit
-      const userEvents = await base44.entities.UserEvent.filter({ user_id: currentUserId });
-      setEvents(userEvents);
-
-      const userTasks = await base44.entities.UserTask.filter({ user_id: currentUserId });
-      setTasks(userTasks);
-
-      const userNotes = await base44.entities.UserNote.filter({ user_id: currentUserId });
-      setNotes(userNotes);
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-    }
+      await base44.functions.invoke('calendarAgent', { action: 'deleteEvent', payload: { id } });
+      setSelectedEvent(null); window.dispatchEvent(new Event('atom:calendar-data-changed'));
+    } catch (e) { setError(e?.message || 'Event could not be removed.'); }
   };
 
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-    setViewMode('day');
+  const toggleTask = async (task) => {
+    try {
+      await base44.functions.invoke('calendarAgent', { action: 'toggleTask', payload: { id: task.id } });
+      window.dispatchEvent(new Event('atom:calendar-data-changed'));
+    } catch (e) { setError(e?.message || 'Task could not be updated.'); }
   };
 
-  const getDaysInMonth = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
-    return days;
+  const addQuickTask = async () => {
+    if (!quickTask.trim()) return;
+    setSavingQuick(true);
+    try {
+      await base44.functions.invoke('calendarAgent', { action: 'createTask', payload: { title: quickTask.trim(), due_date: endOfDay(selectedDate).toISOString(), priority: 'medium' } });
+      setQuickTask(''); window.dispatchEvent(new Event('atom:calendar-data-changed'));
+    } finally { setSavingQuick(false); }
   };
 
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const addQuickNote = async () => {
+    if (!quickNote.trim()) return;
+    setSavingQuick(true);
+    try {
+      await base44.functions.invoke('calendarAgent', { action: 'createNote', payload: { content: quickNote.trim(), tags: ['calendar'] } });
+      setQuickNote(''); window.dispatchEvent(new Event('atom:calendar-data-changed'));
+    } finally { setSavingQuick(false); }
+  };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center px-4 sm:px-8"
-    >
-      {/* Backdrop with blur */}
-      <div 
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-xl" 
-        onClick={onClose}
-      />
+  const gridDays = useMemo(() => monthGrid(cursor), [cursor]);
+  const sevenDays = useMemo(() => weekDays(selectedDate), [selectedDate]);
+  const heading = viewMode === 'month'
+    ? cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    : viewMode === 'week'
+      ? `${sevenDays[0].toLocaleDateString(undefined,{month:'short',day:'numeric'})} – ${sevenDays[6].toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}`
+      : selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-      {/* Main Container - Liquid Glass Style */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="relative w-full max-w-7xl bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex"
-        style={{
-          height: 'calc(100vh - 160px)',
-          boxShadow: '0 0 80px -20px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05)'
-        }}
-      >
-        {/* Left Rail */}
-        <div className="w-20 flex-shrink-0 border-r border-white/5 flex flex-col items-center py-8 gap-6 bg-white/5">
-          <button 
-            onClick={() => setActiveTab('events')}
-            className={`p-3 rounded-xl transition-all ${activeTab === 'events' ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            title="Events"
-          >
-            <CalendarIcon className="w-6 h-6" />
-          </button>
-          <button 
-            onClick={() => setActiveTab('tasks')}
-            className={`p-3 rounded-xl transition-all ${activeTab === 'tasks' ? 'bg-emerald-500/20 text-emerald-400' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            title="Tasks"
-          >
-            <CheckCircle2 className="w-6 h-6" />
-          </button>
-          <button 
-            onClick={() => setActiveTab('notes')}
-            className={`p-3 rounded-xl transition-all ${activeTab === 'notes' ? 'bg-amber-500/20 text-amber-400' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            title="Notes"
-          >
-            <StickyNote className="w-6 h-6" />
-          </button>
-          
-          <div className="flex-1" />
-          
-          <button 
-            onClick={() => setViewMode(viewMode === 'day' ? 'month' : 'day')}
-            className="p-3 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all"
-            title="Toggle Day/Month View"
-          >
-            {viewMode === 'day' ? <LayoutList className="w-6 h-6" /> : <AlignLeft className="w-6 h-6" />}
-          </button>
-        </div>
+  if (typeof document === 'undefined') return null;
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="h-20 flex items-center justify-between px-8 border-b border-white/5">
-            <div className="flex items-center gap-4">
-              <h2 className="text-3xl font-light text-white tracking-wide">
-                {viewMode === 'day' ? 'Day Planner' : 'Calendar'}
-              </h2>
-              <div className="h-6 w-px bg-white/10" />
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
-                  className="p-1 rounded-full hover:bg-white/5 text-white/60 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="text-lg text-white/80 font-medium min-w-[140px] text-center">
-                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                </span>
-                <button 
-                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-                  className="p-1 rounded-full hover:bg-white/5 text-white/60 transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => { setShowCreator(true); setCreatorMode('manual'); }}
-                className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-all flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Create
-              </button>
-              <button 
-                onClick={() => { setShowCreator(true); setCreatorMode('ai'); }}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 text-cyan-300 text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-              >
-                <Sparkles className="w-4 h-4" />
-                AI Assist
-              </button>
-              <button onClick={onClose} className="p-2 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-colors">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+  const overlay = (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .2 }} className="fixed inset-0 z-[30000] isolate h-[100dvh] w-screen overflow-hidden bg-[#04070c] text-white pointer-events-auto" role="dialog" aria-modal="true" aria-label="Luna Calendar">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(34,211,238,.07),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(99,102,241,.06),transparent_36%)]" />
+      <div className="relative z-10 flex h-full min-h-0 flex-col">
+        <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/[0.055] px-5 lg:px-8">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.05] text-cyan-100/65"><CalendarDays className="h-4 w-4" /></div>
+            <div className="min-w-0"><div className="text-[8px] font-black uppercase tracking-[0.28em] text-cyan-200/40">Luna Schedule</div><h1 className="truncate text-xl font-semibold tracking-tight text-white/92">{heading}</h1></div>
+            <div className="hidden h-7 w-px bg-white/[0.07] md:block" />
+            <div className="hidden items-center gap-1 md:flex"><button type="button" onClick={goPrevious} className="grid h-8 w-8 place-items-center text-white/30 hover:bg-white/[0.05] hover:text-white"><ChevronLeft className="h-4 w-4" /></button><button type="button" onClick={goToday} className="h-8 px-3 text-[9px] font-bold uppercase tracking-[0.15em] text-white/38 hover:bg-white/[0.05] hover:text-white">Today</button><button type="button" onClick={goNext} className="grid h-8 w-8 place-items-center text-white/30 hover:bg-white/[0.05] hover:text-white"><ChevronRight className="h-4 w-4" /></button></div>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="hidden bg-white/[0.025] p-1 sm:flex">{['month','week','day'].map((mode) => <button key={mode} type="button" onClick={() => setViewMode(mode)} className={`px-3 py-2 text-[8px] font-bold uppercase tracking-[0.16em] transition ${viewMode === mode ? 'bg-white/[0.08] text-cyan-100' : 'text-white/25 hover:text-white/60'}`}>{mode}</button>)}</div>
+            <button type="button" onClick={() => openCreator('manual')} className="hidden h-9 items-center gap-2 bg-white/[0.055] px-3 text-[9px] font-bold uppercase tracking-wider text-white/58 transition hover:bg-white/[0.1] hover:text-white sm:flex"><Plus className="h-3.5 w-3.5" /> Create</button>
+            <button type="button" onClick={() => openCreator('ai')} className="flex h-9 items-center gap-2 bg-cyan-200 px-3 text-[9px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-white"><Sparkles className="h-3.5 w-3.5" /> AI Agent</button>
+            <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center text-white/30 hover:bg-white/[0.05] hover:text-white" aria-label="Close calendar"><X className="h-4 w-4" /></button>
+          </div>
+        </header>
 
-          {/* Canvas */}
-          <div className="flex-1 overflow-hidden relative">
-            {viewMode === 'month' ? (
-              <div className="absolute inset-0 p-8 flex flex-col">
-                <div className="grid grid-cols-7 mb-4">
-                  {dayNames.map(day => (
-                    <div key={day} className="text-center text-white/30 text-sm font-medium uppercase tracking-widest">{day}</div>
-                  ))}
-                </div>
-                <div className="flex-1 grid grid-cols-7 grid-rows-5 gap-4">
-                  {getDaysInMonth().map((date, i) => {
-                    const isToday = date && new Date().toDateString() === date.toDateString();
-                    const isSelected = date && selectedDate && date.toDateString() === selectedDate.toDateString();
-                    const dayEvents = date ? events.filter(e => new Date(e.start_time).toDateString() === date.toDateString()) : [];
+        <div className="flex min-h-0 flex-1">
+          <aside className="hidden w-[68px] shrink-0 flex-col items-center border-r border-white/[0.05] py-4 sm:flex">
+            {[['events',CalendarDays],['tasks',ListChecks],['notes',StickyNote]].map(([id,Icon]) => <button key={id} type="button" title={id} onClick={() => setActiveRail(id)} className={`mb-2 grid h-11 w-11 place-items-center transition ${activeRail === id ? 'bg-cyan-200/[0.08] text-cyan-100/75' : 'text-white/22 hover:bg-white/[0.04] hover:text-white/60'}`}><Icon className="h-4 w-4" /></button>)}
+            <div className="flex-1" />
+            <div className="mb-2 grid h-9 w-9 place-items-center rounded-full bg-white/[0.035] text-[9px] font-bold text-amber-100/60" title={`${reminderCount} active reminders`}><Bell className="h-3.5 w-3.5" /></div>
+          </aside>
 
-                    return (
-                      <div 
-                        key={i}
-                        onClick={() => date && handleDateClick(date)}
-                        className={`relative rounded-2xl border transition-all duration-200 group ${
-                          !date ? 'border-transparent' : 
-                          isSelected ? 'bg-white/10 border-white/20' : 
-                          isToday ? 'bg-cyan-500/10 border-cyan-500/30' : 
-                          'bg-white/[0.02] border-white/5 hover:bg-white/[0.05] hover:border-white/10'
-                        }`}
-                      >
-                        {date && (
-                          <div className="absolute inset-0 p-3 flex flex-col">
-                            <span className={`text-sm font-medium ${isToday ? 'text-cyan-400' : 'text-white/60'}`}>
-                              {date.getDate()}
-                            </span>
-                            
-                            <div className="mt-2 flex-1 flex flex-col gap-1 overflow-hidden">
-                              {dayEvents.slice(0, 3).map(ev => (
-                                <div key={ev.id} className="w-full text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/80 truncate border border-white/5 flex items-center gap-1">
-                                  <div className={`w-1.5 h-1.5 rounded-full ${
-                                    ev.event_type === 'gaming_session' ? 'bg-cyan-400' :
-                                    ev.event_type === 'meeting' ? 'bg-purple-400' :
-                                    'bg-slate-400'
-                                  }`} />
-                                  {ev.title}
-                                </div>
-                              ))}
-                              {dayEvents.length > 3 && (
-                                <span className="text-[10px] text-white/30 pl-1">+{dayEvents.length - 3} more</span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
+          <main className="relative min-w-0 flex-1 overflow-hidden">
+            {loading && <div className="absolute inset-0 z-20 grid place-items-center bg-[#05080d]/65 backdrop-blur-sm"><div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/30"><Loader2 className="h-4 w-4 animate-spin text-cyan-200/55" /> Syncing schedule</div></div>}
+            {error && <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2 border border-rose-200/10 bg-rose-200/[0.05] px-3 py-2 text-[9px] text-rose-100/65">{error}</div>}
+
+            {viewMode === 'month' && (
+              <div className="flex h-full min-h-0 flex-col p-3 md:p-5">
+                <div className="grid shrink-0 grid-cols-7 border-b border-white/[0.05] pb-2">{DAY_NAMES.map((name) => <div key={name} className="px-2 text-[8px] font-bold uppercase tracking-[0.16em] text-white/22">{name}</div>)}</div>
+                <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-6 border-l border-t border-white/[0.04]">
+                  {gridDays.map((date) => {
+                    const key = dateKey(date); const list = byDate.get(key) || []; const today = key === dateKey(new Date()); const inMonth = date.getMonth() === cursor.getMonth(); const selected = key === dateKey(selectedDate);
+                    return <button key={key} type="button" onClick={() => openDate(date)} className={`group relative min-h-0 overflow-hidden border-b border-r border-white/[0.04] p-1.5 text-left transition hover:bg-white/[0.025] ${!inMonth ? 'bg-black/10 opacity-45' : ''} ${selected ? 'bg-cyan-200/[0.035]' : ''}`}><div className="mb-1 flex items-center justify-between"><span className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-semibold ${today ? 'bg-cyan-100 text-slate-950' : 'text-white/45'}`}>{date.getDate()}</span>{list.length > 3 && <span className="text-[8px] text-white/20">+{list.length-3}</span>}</div><div className="space-y-px">{list.slice(0,3).map((event) => <EventPill key={event.occurrence_key || `${event.id}-${event.occurrence_start}`} event={event} compact onClick={(item) => { setSelectedEvent(item); setActiveRail('events'); }} />)}</div></button>;
                   })}
                 </div>
               </div>
-            ) : (
-              <DayPlanningView 
-                date={selectedDate} 
-                events={events.filter(e => new Date(e.start_time).toDateString() === selectedDate.toDateString())}
-                tasks={tasks}
-                onAddEvent={() => { setShowCreator(true); setCreatorMode('manual'); }}
-                onAiAssist={() => { setShowCreator(true); setCreatorMode('ai'); }}
-              />
             )}
-          </div>
+
+            {viewMode === 'week' && (
+              <div className="flex h-full min-h-0 flex-col p-3 md:p-5">
+                <div className="grid min-h-0 flex-1 grid-cols-7 border-l border-t border-white/[0.04]">{sevenDays.map((date) => { const list = byDate.get(dateKey(date)) || []; const today = dateKey(date) === dateKey(new Date()); return <section key={dateKey(date)} className="min-w-0 overflow-y-auto border-b border-r border-white/[0.04]" style={{scrollbarWidth:'none'}}><button type="button" onClick={() => openDate(date)} className="sticky top-0 z-10 flex w-full flex-col items-center border-b border-white/[0.04] bg-[#05080d]/95 py-3 backdrop-blur-xl"><span className="text-[8px] font-bold uppercase tracking-[0.16em] text-white/25">{DAY_NAMES[date.getDay()]}</span><span className={`mt-1 grid h-8 w-8 place-items-center rounded-full text-sm ${today ? 'bg-cyan-100 font-bold text-slate-950' : 'text-white/70'}`}>{date.getDate()}</span></button><div className="space-y-1 p-2">{list.length ? list.map((event) => <div key={event.occurrence_key || event.id} className="border border-white/[0.05] bg-white/[0.018]"><EventPill event={event} onClick={(item) => { setSelectedEvent(item); setActiveRail('events'); }} /><div className="px-2 pb-2 text-[8px] leading-3 text-white/22">{event.description || (event.event_type || 'event').replaceAll('_',' ')}</div></div>) : <button type="button" onClick={() => { setSelectedDate(date); openCreator('manual'); }} className="mt-4 w-full py-6 text-[9px] text-white/15 hover:bg-white/[0.02] hover:text-white/40">+ Add</button>}</div></section>; })}</div>
+              </div>
+            )}
+
+            {viewMode === 'day' && <DayPlanningView date={selectedDate} events={byDate.get(dateKey(selectedDate)) || []} tasks={tasks.filter((task) => task.due_date && dateKey(task.due_date) === dateKey(selectedDate) && task.status !== 'cancelled')} onAddEvent={() => openCreator('manual')} onAiAssist={() => openCreator('ai')} onEventClick={(item) => { setSelectedEvent(item); setActiveRail('events'); }} />}
+          </main>
+
+          <aside className="hidden w-[330px] shrink-0 flex-col border-l border-white/[0.05] bg-[#060a10]/78 lg:flex">
+            <div className="border-b border-white/[0.05] p-4">
+              <button type="button" onClick={() => openCreator('ai')} className="group w-full bg-[linear-gradient(135deg,rgba(34,211,238,.06),rgba(99,102,241,.035))] p-4 text-left transition hover:bg-white/[0.045]"><div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.2em] text-cyan-200/45"><Bot className="h-3.5 w-3.5" /> AI Schedule Agent</div><div className="mt-2 text-sm font-semibold text-white/75">Describe the day, week, or month.</div><p className="mt-1 text-[10px] leading-4 text-white/28">It checks your schedule, creates events and tasks, and connects reminders automatically.</p><div className="mt-3 text-[9px] font-bold uppercase tracking-wider text-cyan-100/55 group-hover:text-cyan-100">Plan with AI →</div></button>
+            </div>
+
+            <div className="flex items-center gap-1 border-b border-white/[0.05] p-2">{[['events','Schedule'],['tasks','Tasks'],['notes','Notes']].map(([id,label]) => <button key={id} type="button" onClick={() => setActiveRail(id)} className={`flex-1 px-2 py-2 text-[8px] font-bold uppercase tracking-[0.14em] transition ${activeRail === id ? 'bg-white/[0.06] text-white/72' : 'text-white/22 hover:text-white/50'}`}>{label}</button>)}</div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+              {activeRail === 'events' && <>
+                {selectedEvent ? <div className="mb-5 border-b border-white/[0.06] pb-5"><button type="button" onClick={() => setSelectedEvent(null)} className="mb-3 text-[8px] font-bold uppercase tracking-wider text-white/25 hover:text-white/60">← Upcoming</button><div className="flex items-start gap-3"><span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${eventAccent(selectedEvent.event_type)}`} /><div className="min-w-0 flex-1"><h3 className="text-base font-semibold text-white/85">{selectedEvent.title}</h3><div className="mt-1 text-[9px] text-white/30">{eventStart(selectedEvent).toLocaleString()} – {formatTime(eventEnd(selectedEvent))}</div>{selectedEvent.description && <p className="mt-3 text-[10px] leading-5 text-white/42">{selectedEvent.description}</p>}<div className="mt-3 flex flex-wrap gap-1.5">{(selectedEvent.reminders || []).map((r,i) => <span key={i} className="bg-amber-200/[0.05] px-2 py-1 text-[8px] text-amber-100/50"><Bell className="mr-1 inline h-2.5 w-2.5" />{r.time_before === 0 ? 'At start' : `${r.time_before}m before`}</span>)}</div><button type="button" onClick={() => deleteEvent(selectedEvent)} className="mt-4 inline-flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-rose-200/35 hover:text-rose-100"><Trash2 className="h-3 w-3" /> Remove event</button></div></div></div> : null}
+                <div className="mb-3 flex items-center justify-between"><div className="text-[8px] font-bold uppercase tracking-[0.18em] text-white/24">Upcoming</div><div className="text-[8px] text-amber-100/35">{reminderCount} reminders</div></div>
+                <div className="space-y-1">{upcoming.length ? upcoming.map((event) => <button key={event.occurrence_key || event.id} type="button" onClick={() => setSelectedEvent(event)} className="w-full px-2 py-3 text-left transition hover:bg-white/[0.03]"><div className="flex items-start gap-2.5"><span className={`mt-1 h-1.5 w-1.5 rounded-full ${eventAccent(event.event_type)}`} /><div className="min-w-0 flex-1"><div className="truncate text-[11px] font-medium text-white/65">{event.title}</div><div className="mt-1 text-[8px] text-white/22">{eventStart(event).toLocaleDateString()} · {formatTime(eventStart(event))}{event.game ? ` · ${event.game}` : ''}</div></div>{(event.reminders||[]).length > 0 && <Bell className="h-3 w-3 text-amber-100/30" />}</div></button>) : <div className="py-10 text-center text-[10px] text-white/18">Nothing scheduled in this view.</div>}</div>
+              </>}
+
+              {activeRail === 'tasks' && <><div className="mb-4 flex gap-1.5"><input value={quickTask} onChange={(e) => setQuickTask(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addQuickTask(); }} placeholder="Add a task…" className="h-9 min-w-0 flex-1 bg-white/[0.035] px-2.5 text-[10px] text-white/65 outline-none placeholder:text-white/18" /><button type="button" disabled={!quickTask.trim() || savingQuick} onClick={addQuickTask} className="grid h-9 w-9 place-items-center bg-white/[0.055] text-white/45 hover:text-white disabled:opacity-25"><Plus className="h-3.5 w-3.5" /></button></div><div className="space-y-1">{tasks.filter((task) => task.status !== 'cancelled').map((task) => <button key={task.id} type="button" onClick={() => toggleTask(task)} className="flex w-full items-start gap-2.5 px-2 py-2.5 text-left hover:bg-white/[0.03]"><span className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center border ${task.status === 'completed' ? 'border-emerald-200/25 bg-emerald-200/[0.08] text-emerald-100/60' : 'border-white/12 text-transparent'}`}>{task.status === 'completed' && <Check className="h-2.5 w-2.5" />}</span><span className="min-w-0 flex-1"><span className={`block text-[10px] ${task.status === 'completed' ? 'text-white/25 line-through' : 'text-white/62'}`}>{task.title}</span><span className="mt-1 block text-[8px] text-white/18">{task.due_date ? `Due ${new Date(task.due_date).toLocaleString()}` : task.priority || 'medium'}</span></span></button>)}</div></>}
+
+              {activeRail === 'notes' && <><div className="mb-4"><textarea value={quickNote} onChange={(e) => setQuickNote(e.target.value)} placeholder="Write a calendar note…" className="h-20 w-full resize-none bg-white/[0.035] p-2.5 text-[10px] leading-4 text-white/62 outline-none placeholder:text-white/18" /><button type="button" disabled={!quickNote.trim() || savingQuick} onClick={addQuickNote} className="mt-1.5 h-8 w-full bg-white/[0.055] text-[8px] font-bold uppercase tracking-wider text-white/42 hover:bg-white/[0.08] hover:text-white disabled:opacity-25">Save note</button></div><div className="space-y-2">{notes.map((note) => <div key={note.id} className="bg-white/[0.025] p-3"><p className="text-[10px] leading-5 text-white/48 whitespace-pre-wrap">{note.content}</p>{note.tags?.length > 0 && <div className="mt-2 text-[8px] text-white/18">{note.tags.map((tag) => `#${tag}`).join(' ')}</div>}</div>)}</div></>}
+            </div>
+          </aside>
         </div>
+      </div>
 
-        {/* Right Context Panel (Task/Notes or AI Sidebar) */}
-        <div className="w-80 border-l border-white/5 bg-black/20 p-6 flex flex-col gap-6">
-          {activeTab === 'events' && (
-            <>
-              <div>
-                <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-cyan-400" />
-                  Upcoming
-                </h3>
-                <div className="space-y-3">
-                  {events
-                    .filter(e => new Date(e.start_time) >= new Date())
-                    .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
-                    .slice(0, 5)
-                    .map(ev => (
-                      <div key={ev.id} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-white text-sm font-medium">{ev.title}</span>
-                          <span className="text-[10px] text-white/40">{new Date(ev.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-white/40">
-                          <span className="capitalize">{ev.event_type.replace('_', ' ')}</span>
-                          {ev.game && <span>• {ev.game}</span>}
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'tasks' && (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-white font-medium flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  Tasks
-                </h3>
-                <button className="p-1 hover:bg-white/10 rounded"><Plus className="w-4 h-4 text-white/60" /></button>
-              </div>
-              <div className="space-y-2 flex-1 overflow-y-auto">
-                {tasks.map(task => (
-                  <div key={task.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                    <div className={`mt-1 w-4 h-4 rounded border ${task.status === 'completed' ? 'bg-emerald-500/20 border-emerald-500' : 'border-white/20'}`} />
-                    <div className="flex-1">
-                      <p className="text-sm text-white/80">{task.title}</p>
-                      {task.priority === 'high' && <span className="text-[10px] text-red-400">High Priority</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* AI Creator Modal / Overlay */}
-        <AnimatePresence>
-          {showCreator && (
-            <AIEventCreator 
-              mode={creatorMode} 
-              selectedDate={selectedDate}
-              onClose={() => setShowCreator(false)}
-              onSuccess={() => {
-                setShowCreator(false);
-                loadData();
-              }}
-              currentUserId={currentUserId}
-            />
-          )}
-        </AnimatePresence>
-      </motion.div>
+      <AnimatePresence>{showCreator && <AIEventCreator mode={creatorMode} selectedDate={selectedDate} planningScope={viewMode} rangeStart={visibleRange.start.toISOString()} rangeEnd={visibleRange.end.toISOString()} onClose={() => setShowCreator(false)} onSuccess={() => { setShowCreator(false); loadData(); }} />}</AnimatePresence>
     </motion.div>
   );
+
+  return createPortal(overlay, document.body);
 }
