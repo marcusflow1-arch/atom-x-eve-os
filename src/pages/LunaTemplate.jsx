@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowLeft, Settings,
@@ -183,7 +182,6 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
-  const [showAvatarModelFocus, setShowAvatarModelFocus] = useState(false);
   const [slot1Content, setSlot1Content] = useState('questBook');
   const [slot2Content, setSlot2Content] = useState('cardCollection');
   const [currentHostName, setCurrentHostName] = useState(null);
@@ -265,11 +263,6 @@ export default function LunaTemplate() {
     return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
   }, []);
 
-  useEffect(() => {
-    const openAvatarModelFocus = () => setShowAvatarModelFocus(true);
-    window.addEventListener('openLunaAvatarModelFocus', openAvatarModelFocus);
-    return () => window.removeEventListener('openLunaAvatarModelFocus', openAvatarModelFocus);
-  }, []);
 
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState(null);
@@ -546,7 +539,7 @@ export default function LunaTemplate() {
         }
       }
       if (key === 'escape') {
-        if (showAvatarModelFocus) { setShowAvatarModelFocus(false); return; }
+        if (avatarFocusMode) { setAvatarFocusMode(false); return; }
         if (showSkillTreeBlankUI) { setShowSkillTreeBlankUI(false); return; }
         if (showFriendsHub) { setShowFriendsHub(false); return; }
         if (showLibraryLanding) {
@@ -568,7 +561,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, showSkillTreeBlankUI, showAvatarModelFocus, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
+  }, [showForumOverlay, showAvatarProgression, showSkillTreeBlankUI, avatarFocusMode, navigate, showLibraryLanding, librarySelection, showDevSpotlight, hideUI, selectedFocusGame, longPressGame, showFriendsHub]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -624,7 +617,7 @@ export default function LunaTemplate() {
     <GlassPageFrame
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
-
+      chromeHidden={avatarFocusMode}
       bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} hideSearch />}
     >
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
@@ -632,7 +625,7 @@ export default function LunaTemplate() {
     <MultiplayerSystem envUrl={roomModelUrl} />
     <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#070a11' }}>
       {/* 5% Left Area for Global Icons */}
-      {sidebarVisible && (
+      {sidebarVisible && !avatarFocusMode && (
         <LunaLeftRail
           isEnvironmentActive={isEnvironmentActive}
           onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
@@ -643,10 +636,10 @@ export default function LunaTemplate() {
       <div className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
         {/* Dark moonlight aesthetic background */}
         <RealTimeMoonSky />
-        <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
+        {!avatarFocusMode && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
 
         {/* Home Section Switcher — left arrow + bottom arrow, only on default dashboard view */}
-         {!showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && !clickedSlot &&
+         {!avatarFocusMode && !showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && !clickedSlot &&
            <HomeSectionSwitcher currentSection={homeSection} onSectionChange={setHomeSection} />
          }
 
@@ -683,7 +676,7 @@ export default function LunaTemplate() {
             <>
               {/* Avatar + Stats — taken out of the box, placed directly on the page */}
               <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
-                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} onModelFocus={() => setShowAvatarModelFocus(true)} />
+                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} onModelFocus={() => setAvatarFocusMode(true)} />
               </div>
 
               {/* Gap between the now-separated sections */}
@@ -1844,7 +1837,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Side Access Menu - hidden when sidebar is hidden */}
-      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
+      {!avatarFocusMode && !clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
               // SideAccessMenu stays visible even when hideUI is true, per user request:
               // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
               // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
