@@ -250,7 +250,7 @@ async function applyPlan(base44: any, userId: string, runId: string) {
 
 async function dueReminders(base44: any, userId: string, payload: AnyObj = {}) {
   const nowDate = new Date(payload.now || new Date().toISOString());
-  const windowStart = new Date(nowDate.getTime() - 2 * 60 * 1000);
+  const windowStart = new Date(nowDate.getTime() - 15 * 60 * 1000);
   const windowEnd = new Date(nowDate.getTime() + 36 * 60 * 60 * 1000);
   const events = await base44.asServiceRole.entities.UserEvent.filter({ user_id: userId }, 'start_time', 1000);
   const due: AnyObj[] = [];
@@ -269,7 +269,7 @@ async function dueReminders(base44: any, userId: string, payload: AnyObj = {}) {
         const dueAt = occurrenceMs - reminder.time_before * 60000;
         const keyMatch = delivered.some((entry: AnyObj) => entry.occurrence_start === occurrence.occurrence_start && Number(entry.time_before) === Number(reminder.time_before) && entry.type === reminder.type);
         if (keyMatch) continue;
-        if (dueAt <= nowDate.getTime() && dueAt >= nowDate.getTime() - 2 * 60 * 1000) {
+        if (dueAt <= nowDate.getTime() && dueAt >= nowDate.getTime() - 15 * 60 * 1000) {
           due.push({ id: `${event.id}:${occurrence.occurrence_start}:${reminder.time_before}:${reminder.type}`, event_id: event.id, title: event.title, description: event.description || '', event_type: event.event_type, game: event.game || '', start_time: occurrence.occurrence_start, reminder_type: reminder.type, time_before: reminder.time_before });
           delivered.push({ occurrence_start: occurrence.occurrence_start, time_before: reminder.time_before, type: reminder.type, sent_at: nowDate.toISOString() });
           changed = true;
