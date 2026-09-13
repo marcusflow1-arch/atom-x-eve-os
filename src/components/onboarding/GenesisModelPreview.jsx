@@ -24,8 +24,12 @@ function buildMotionSet(rows, gender) {
   const candidates = (rows || []).filter((row) => row?.file_url);
   const pick = (...names) => {
     const wanted = names.map(normalized);
-    return candidates.find((row) => normalized(row.folder) === preferredFolder && wanted.includes(normalized(row.name)))
-      || candidates.find((row) => wanted.includes(normalized(row.name)));
+    const matches = (row) => {
+      const haystack = normalized(`${row.name || ''} ${row.tags || ''}`);
+      return wanted.some((needle) => haystack.includes(needle));
+    };
+    return candidates.find((row) => normalized(row.folder) === preferredFolder && matches(row))
+      || candidates.find(matches);
   };
   const asMotion = (row, fallback, options = {}) => row
     ? { name: options.name || row.name, url: row.file_url, loop: options.loop ?? row.is_loopable !== false }
@@ -62,14 +66,14 @@ function buildMotionSet(rows, gender) {
       right: asMotion(pick('standing run right'), fallbackWalk, { name: 'Run Right', loop: true }),
     },
     showcase: [
-      asMotion(pick('standing equip bow'), fallbackLook, { name: 'Equip Bow', loop: false }),
-      asMotion(pick('standing draw arrow'), fallbackLook, { name: 'Draw Arrow', loop: false }),
-      asMotion(pick('standing aim overdraw'), fallbackLook, { name: 'Aim Bow', loop: true }),
-      asMotion(pick('standing aim recoil'), fallbackLook, { name: 'Release Arrow', loop: false }),
-      asMotion(pick('standing disarm bow'), fallbackLook, { name: 'Stow Bow', loop: false }),
-      asMotion(pick('standing dodge forward'), fallbackLook, { name: 'Dodge', loop: false }),
-      asMotion(pick('standing block'), fallbackLook, { name: 'Block', loop: false }),
-      asMotion(pick('standing melee kick'), fallbackLook, { name: 'Kick', loop: false }),
+      asMotion(pick('equip weapon bow', 'equip bow'), fallbackLook, { name: 'Equip Bow', loop: false }),
+      asMotion(pick('standing draw arrow', 'draw arrow'), fallbackLook, { name: 'Draw Arrow', loop: false }),
+      asMotion(pick('aim standing overdraw', 'aim overdraw'), fallbackLook, { name: 'Aim Bow', loop: true }),
+      asMotion(pick('aim standing recoil', 'aim recoil'), fallbackLook, { name: 'Release Arrow', loop: false }),
+      asMotion(pick('disarm weapon bow', 'stow bow'), fallbackLook, { name: 'Stow Bow', loop: false }),
+      asMotion(pick('dodge standing forward', 'dodge forward'), fallbackLook, { name: 'Dodge', loop: false }),
+      asMotion(pick('block standing', 'standing block'), fallbackLook, { name: 'Block', loop: false }),
+      asMotion(pick('melee kick standing', 'melee kick'), fallbackLook, { name: 'Kick', loop: false }),
       asMotion(pick('jumping', 'standing dive forward'), COMPANION_MOTIONS[4] || fallbackLook, { name: 'Jump', loop: false }),
     ],
   };
