@@ -209,33 +209,42 @@ async function initializeAvatar(base44, user, requestBody) {
     return { success: true, avatar, home, behaviorState, mindSeed };
 }
 
-async function saveAvatarAppearance(base44, userId, appearance) {
-    // Find or create user's avatar
-    let avatars = await base44.entities.Avatar.filter({ user_id: userId });
-    
-    let avatar;
+async function saveAvatarAppearance(base44, userId, appearance = {}) {
+    const avatars = await base44.entities.Avatar.filter({ user_id: userId });
+    const normalized: AnyObj = {
+        model_url: appearance.model_url || undefined,
+        skin_tone: appearance.skin_tone || appearance.skinTone || '#b97855',
+        eye_color: appearance.eye_color || appearance.eyeColor || '#5ca9c9',
+        hair_color: appearance.hair_color || appearance.hairColor || '#2a1d18',
+        eyelash_style: ['soft','natural','bold'].includes(appearance.eyelash_style) ? appearance.eyelash_style : 'natural',
+        style_preset: ['heroic_fantasy','graphic_ink','grounded_rpg'].includes(appearance.style_preset) ? appearance.style_preset : 'heroic_fantasy',
+        hood_enabled: appearance.hood_enabled !== false,
+        weapon_visible: appearance.weapon_visible !== false,
+        height_scale: Math.min(1.18, Math.max(.84, Number(appearance.height_scale || 1))),
+        body_proportions: {
+            width: Math.min(1.12, Math.max(.88, Number(appearance.body_proportions?.width || 1))),
+            depth: Math.min(1.1, Math.max(.9, Number(appearance.body_proportions?.depth || 1))),
+        },
+        material_colors: appearance.material_colors || {},
+        morph_targets: appearance.morph_targets || appearance.morphTargets || {},
+        face_scan_generated: Boolean(appearance.face_scan_generated),
+        tripo_model_id: String(appearance.tripo_model_id || '').slice(0, 120),
+        appearance_version: 2,
+    };
+    Object.keys(normalized).forEach((key) => normalized[key] === undefined && delete normalized[key]);
+
     if (avatars.length === 0) {
-        avatar = await base44.entities.Avatar.create({
+        return base44.entities.Avatar.create({
             user_id: userId,
             name: appearance.name || 'Player Avatar',
-            gender: appearance.gender || 'male',
+            gender: appearance.gender === 'female' ? 'female' : 'male',
             level: 1,
             experience: 0,
-            model_url: appearance.model_url || 'base_humanoid.glb',
-            skin_tone: appearance.skinTone || '#ffdbac',
-            hair_color: appearance.hairColor || '#111111',
-            morph_targets: appearance.morphTargets || {}
-        });
-    } else {
-        avatar = await base44.entities.Avatar.update(avatars[0].id, {
-            skin_tone: appearance.skinTone,
-            hair_color: appearance.hairColor,
-            model_url: appearance.model_url,
-            morph_targets: appearance.morphTargets || {}
+            model_url: normalized.model_url || 'base_humanoid.glb',
+            ...normalized,
         });
     }
-
-    return avatar;
+    return base44.entities.Avatar.update(avatars[0].id, normalized);
 }
 
 async function loadUserAvatar(base44, userId) {
