@@ -24,6 +24,13 @@ async function ensureReward(base44: any, user: AnyObj, achievement: AnyObj) {
   const category = achievement.category || 'standard';
   const now = new Date().toISOString();
 
+  const [masterCards, games] = await Promise.all([
+    base44.asServiceRole.entities.TradingCard.filter({ achievement_id: achievement.id }, '-created_date', 1).catch(() => []),
+    achievement.game ? base44.asServiceRole.entities.Game.filter({ title: achievement.game }, '-created_date', 1).catch(() => []) : Promise.resolve([]),
+  ]);
+  const masterCard = masterCards?.[0] || null;
+  const gameRecord = games?.[0] || null;
+
   const existingCards = await base44.asServiceRole.entities.UserCard.filter({
     user_id: user.id,
     card_name: rewardName,
@@ -32,12 +39,14 @@ async function ensureReward(base44: any, user: AnyObj, achievement: AnyObj) {
 
   const userCard = existingCards[0] || await base44.asServiceRole.entities.UserCard.create({
     user_id: user.id,
+    trading_card_id: masterCard?.id || '',
     card_type: cardType(category),
     card_name: rewardName,
     card_rarity: achievement.rarity === 'Mythical' ? 'Mythic' : (achievement.rarity || 'Common'),
     card_image: reward.image || reward.environment_thumbnail || '',
     game_name: achievement.game,
-    genre: reward.genre || '',
+    game_id: gameRecord?.id || '',
+    genre: reward.genre || gameRecord?.genre || '',
     acquisition_method: 'unlocked',
     unlocked_date: now,
     is_equipped: false,
