@@ -206,7 +206,7 @@ async function initializeAvatar(base44, user, requestBody) {
         avatar_archetype: gender === 'female' ? 'eve' : 'atum'
     });
 
-    return { success: true, avatar, home, behaviorState };
+    return { success: true, avatar, home, behaviorState, mindSeed };
 }
 
 async function saveAvatarAppearance(base44, userId, appearance) {
