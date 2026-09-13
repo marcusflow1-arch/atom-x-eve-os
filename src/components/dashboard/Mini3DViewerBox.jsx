@@ -208,8 +208,15 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       applyCompanionAppearance(model, savedCompanion || {});
       scene.add(model);
       mixerRef.current = new THREE.AnimationMixer(model);
-      playMotion(DASHBOARD_MOTIONS[0]);
-      scheduleIdle();
+      const embeddedClip = asset.animations?.[0] || model.animations?.[0];
+      if (embeddedClip) {
+        currentAction = mixerRef.current.clipAction(embeddedClip);
+        currentAction.setLoop(THREE.LoopRepeat, Infinity);
+        currentAction.play();
+      } else {
+        playMotion(DASHBOARD_MOTIONS[0]);
+        scheduleIdle();
+      }
     }).catch((error) => {
       console.error('Luna avatar load failed:', error);
       setWebglFailed(true);
