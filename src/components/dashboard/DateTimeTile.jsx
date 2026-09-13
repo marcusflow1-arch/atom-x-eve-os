@@ -1,73 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Bell, Settings } from 'lucide-react';
+import { Bell, Calendar as CalendarIcon, Settings } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import SystemUpdatesRemindersOverlay from './SystemUpdatesRemindersOverlay';
 
 export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
+  const { user } = useAuth();
   const [time, setTime] = useState(new Date());
+  const [reminders, setReminders] = useState([]);
+  const [updates, setUpdates] = useState([]);
   const [currentReminderIdx, setCurrentReminderIdx] = useState(0);
   const [currentUpdateIdx, setCurrentUpdateIdx] = useState(0);
   const [overlayMode, setOverlayMode] = useState(null);
 
-  const reminders = [
-    "Raid at 8:00 PM tonight",
-    "Collect daily rewards",
-    "Check out new game release",
-    "Clan meeting tomorrow"
-  ];
+  const load = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [events, platformUpdates] = await Promise.all([
+        base44.entities.UserEvent.filter({ user_id: user.id }, 'start_time', 250),
+        base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 12).catch(() => []),
+      ]);
+      const now = Date.now();
+      const liveReminders = (events || [])
+        .filter((event) => event.status !== 'cancelled' && new Date(event.start_time).getTime() >= now && ((event.reminders || []).length > 0 || event.event_type === 'reminder'))
+        .sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+      setReminders(liveReminders);
+      setUpdates(Array.isArray(platformUpdates) ? platformUpdates : []);
+    } catch (error) {
+      console.warn('[DateTimeTile] calendar preview failed', error);
+    }
+  }, [user?.id]);
 
-  const systemUpdates = [
-    "New patch arriving Aug 5",
-    "Seasonal event starts soon",
-    "Marketplace expansion incoming",
-    "Performance improvements live"
-  ];
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const refresh = () => load();
+    window.addEventListener('atom:calendar-data-changed', refresh);
+    const unsubscribe = base44.entities.UserEvent?.subscribe?.(refresh);
+    return () => { window.removeEventListener('atom:calendar-data-changed', refresh); unsubscribe?.(); };
+  }, [load]);
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    const reminderTimer = setInterval(() => setCurrentReminderIdx((prev) => (prev + 1) % reminders.length), 5000);
-    const updateTimer = setInterval(() => setCurrentUpdateIdx((prev) => (prev + 1) % systemUpdates.length), 5000);
-    return () => { clearInterval(timer); clearInterval(reminderTimer); clearInterval(updateTimer); };
-  }, [reminders.length, systemUpdates.length]);
-
-  useEffect(() => {
-    const closeOnEscape = (e) => { if (e.key === 'Escape') setOverlayMode(null); };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, []);
+    const timer = window.setInterval(() => setTime(new Date()), 1000);
+    const reminderTimer = window.setInterval(() => setCurrentReminderIdx((prev) => reminders.length ? (prev + 1) % reminders.length : 0), 5000);
+    const updateTimer = window.setInterval(() => setCurrentUpdateIdx((prev) => updates.length ? (prev + 1) % updates.length : 0), 5000);
+    return () => { window.clearInterval(timer); window.clearInterval(reminderTimer); window.clearInterval(updateTimer); };
+  }, [reminders.length, updates.length]);
 
   const timeString = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const reminder = reminders[currentReminderIdx] || null;
+  const update = updates[currentUpdateIdx] || null;
+  const reminderLabel = reminder ? reminder.title : 'No reminders scheduled';
+  const updateLabel = update ? (update.title || update.version || 'Platform update') : 'System current';
 
   return (
     <>
-      <div className="w-full h-full rounded-2xl relative overflow-hidden border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
-        <div className="relative h-full flex items-center px-4 gap-4">
-          <button onClick={(e) => { e.stopPropagation(); onCalendarClick(); }} className="w-12 h-12 flex-shrink-0 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all shadow-lg group pointer-events-auto cursor-pointer" title="Calendar">
-            <CalendarIcon className="w-5 h-5 text-white/80 group-hover:text-white" />
-          </button>
-          <div className="flex-1 min-w-0 flex flex-col justify-center h-full py-2">
-            <div className="flex items-center justify-between w-full mb-1">
-              <div className="text-xs font-bold text-cyan-300 uppercase tracking-widest truncate mr-2">{dateString}</div>
-              <button onClick={(e) => { e.stopPropagation(); onClick?.(); }} className="flex items-center justify-center w-7 h-7 text-cyan-300 hover:text-cyan-100 transition-colors group rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 z-20 flex-shrink-0 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)] pointer-events-auto" title="Dashboard settings">
-                <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
-              </button>
-            </div>
-            <div className="flex items-center gap-4 w-full">
-              <div className="text-4xl font-black text-white tracking-tighter drop-shadow-md leading-none flex-shrink-0">{timeString}</div>
-              <div className="flex-1 flex items-stretch gap-3 overflow-hidden border-l border-white/10 pl-4 h-10">
-                <button type="button" aria-label="Toggle reminders" onClick={(e) => { e.stopPropagation(); setOverlayMode(current => current === 'reminders' ? null : 'reminders'); }} className="flex-1 min-w-0 flex flex-col justify-center text-left group cursor-pointer">
-                  <div className="flex items-center gap-1 mb-1"><Bell className="w-3 h-3 text-amber-400" /><span className="text-[10px] uppercase tracking-wider text-amber-400/80 font-bold truncate group-hover:text-amber-300 transition-colors">0 Reminders</span></div>
-                  <div className="relative w-full h-5 overflow-hidden"><AnimatePresence mode="wait"><motion.div key={currentReminderIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="absolute inset-0 text-xs text-white/80 font-medium truncate group-hover:text-white transition-colors">{reminders[currentReminderIdx]}</motion.div></AnimatePresence></div>
-                </button>
-                <div className="w-px self-stretch bg-white/10 flex-shrink-0" />
-                <button type="button" aria-label="Toggle system updates" onClick={(e) => { e.stopPropagation(); setOverlayMode(current => current === 'updates' ? null : 'updates'); }} className="flex-1 min-w-0 flex flex-col justify-center text-left group cursor-pointer">
-                  <div className="flex items-center gap-1 mb-1"><Settings className="w-3 h-3 text-cyan-400" /><span className="text-[10px] uppercase tracking-wider text-cyan-400/80 font-bold truncate group-hover:text-cyan-300 transition-colors">System Updates</span></div>
-                  <div className="relative w-full h-5 overflow-hidden"><AnimatePresence mode="wait"><motion.div key={currentUpdateIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="absolute inset-0 text-xs text-white/80 font-medium truncate group-hover:text-white transition-colors">{systemUpdates[currentUpdateIdx]}</motion.div></AnimatePresence></div>
-                </button>
-              </div>
-            </div>
+      <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.035] shadow-[0_8px_32px_rgba(0,0,0,.2)] backdrop-blur-2xl">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.035] to-transparent" />
+        <div className="relative flex h-full items-center gap-4 px-4">
+          <button onClick={(e) => { e.stopPropagation(); onCalendarClick(); }} className="group grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/[0.08] bg-white/[0.035] transition hover:bg-cyan-200/[0.08]" title="Open calendar"><CalendarIcon className="h-5 w-5 text-white/70 transition group-hover:text-cyan-100" /></button>
+          <div className="flex h-full min-w-0 flex-1 flex-col justify-center py-2">
+            <div className="mb-1 flex w-full items-center justify-between"><div className="mr-2 truncate text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200/65">{dateString}</div><button onClick={(e) => { e.stopPropagation(); onClick?.(); }} className="grid h-7 w-7 shrink-0 place-items-center border border-cyan-200/15 bg-cyan-200/[0.05] text-cyan-100/55 transition hover:bg-cyan-200/[0.1] hover:text-cyan-100" title="Dashboard updates"><Settings className="h-3.5 w-3.5" /></button></div>
+            <div className="flex w-full items-center gap-4"><div className="shrink-0 text-4xl font-black leading-none tracking-tighter text-white">{timeString}</div><div className="flex h-10 min-w-0 flex-1 items-stretch gap-3 overflow-hidden border-l border-white/[0.07] pl-4">
+              <button type="button" onClick={(e) => { e.stopPropagation(); setOverlayMode((value) => value === 'reminders' ? null : 'reminders'); }} className="group flex min-w-0 flex-1 flex-col justify-center text-left"><div className="mb-1 flex items-center gap-1"><Bell className="h-3 w-3 text-amber-300/75" /><span className="truncate text-[9px] font-bold uppercase tracking-wider text-amber-200/55">{reminders.length} Reminder{reminders.length === 1 ? '' : 's'}</span></div><div className="relative h-5 w-full overflow-hidden"><AnimatePresence mode="wait"><motion.div key={reminder?.id || 'none'} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="absolute inset-0 truncate text-[11px] font-medium text-white/68 group-hover:text-white">{reminderLabel}</motion.div></AnimatePresence></div></button>
+              <div className="w-px shrink-0 self-stretch bg-white/[0.07]" />
+              <button type="button" onClick={(e) => { e.stopPropagation(); setOverlayMode((value) => value === 'updates' ? null : 'updates'); }} className="group flex min-w-0 flex-1 flex-col justify-center text-left"><div className="mb-1 flex items-center gap-1"><Settings className="h-3 w-3 text-cyan-200/60" /><span className="truncate text-[9px] font-bold uppercase tracking-wider text-cyan-200/50">System Updates</span></div><div className="relative h-5 w-full overflow-hidden"><AnimatePresence mode="wait"><motion.div key={update?.id || 'none'} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="absolute inset-0 truncate text-[11px] font-medium text-white/62 group-hover:text-white">{updateLabel}</motion.div></AnimatePresence></div></button>
+            </div></div>
           </div>
         </div>
       </div>
