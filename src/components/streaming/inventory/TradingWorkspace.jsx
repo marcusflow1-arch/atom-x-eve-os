@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, DollarSign, ArrowLeftRight, Gavel, ShoppingCart, TrendingUp,
-  Star, Gamepad2, Trophy, Zap, Shield, User, Trees, Package,
-  ChevronRight, ChevronLeft, Clock, Sparkles, Eye, CheckCircle2, ArrowLeft
+  X, DollarSign, ArrowLeftRight, ShoppingCart,
+  Gamepad2, Trophy, Zap, Shield, User, Trees,
+  ChevronRight, Sparkles, CheckCircle2, ArrowLeft
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 import TradingWorkspaceSell from './TradingWorkspaceSell';
-import TradingWorkspaceAuction from './TradingWorkspaceAuction';
 import TradingWorkspaceTrade from './TradingWorkspaceTrade';
 import TradingWorkspaceBuy from './TradingWorkspaceBuy';
 
@@ -29,11 +28,7 @@ const RARITY_COLORS = {
   Common: 'text-slate-400 bg-slate-500/10 border-slate-500/30',
 };
 
-const PRICE_MAP = {
-  Mythic: 95000, Legendary: 75000, Epic: 45000, Rare: 25000, Uncommon: 12000, Common: 5000
-};
-
-export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 383 }) {
+export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 383, onInventoryChanged }) {
   const [activeMode, setActiveMode] = useState(null);
 
   if (!item) return null;
@@ -42,25 +37,21 @@ export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 3
   const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
   const Icon = cfg.icon;
   const rarity = RARITY_COLORS[item.rarity] || RARITY_COLORS.Common;
-  const marketPrice = PRICE_MAP[item.rarity] || 10000;
+  const marketPrice = Number(item.source?.purchase_price || 0);
 
   const modes = owned
     ? [
-        { id: 'sell', label: 'Sell', icon: DollarSign, color: 'green', desc: 'Fixed price or auction it off' },
-        { id: 'auction', label: 'Auctions', icon: Gavel, color: 'purple', desc: 'Browse active auctions' },
-        { id: 'trade', label: 'Trade', icon: ArrowLeftRight, color: 'blue', desc: 'Item-for-item exchange' },
-        { id: 'buy', label: 'Buy More', icon: ShoppingCart, color: 'cyan', desc: 'Stack for upgrades' },
+        { id: 'sell', label: 'Sell', icon: DollarSign, color: 'green', desc: 'List this exact card in Trading Post' },
+        { id: 'trade', label: 'Trade', icon: ArrowLeftRight, color: 'blue', desc: 'Exchange with a friend' },
+        { id: 'buy', label: 'Buy More', icon: ShoppingCart, color: 'cyan', desc: 'Browse live copies in Trading Post' },
       ]
     : [
-        { id: 'buy', label: 'Buy', icon: ShoppingCart, color: 'cyan', desc: 'Purchase this card' },
-        { id: 'auction', label: 'Auctions', icon: Gavel, color: 'purple', desc: 'Browse & bid on auctions' },
-        { id: 'trade', label: 'Trade', icon: ArrowLeftRight, color: 'blue', desc: 'Offer a trade' },
+        { id: 'buy', label: 'Buy', icon: ShoppingCart, color: 'cyan', desc: 'Browse live Trading Post listings' },
       ];
 
   const colorMap = {
     green: { active: 'bg-green-500/20 border-green-400/40 text-green-300 shadow-lg shadow-green-500/10' },
     blue: { active: 'bg-blue-500/20 border-blue-400/40 text-blue-300 shadow-lg shadow-blue-500/10' },
-    purple: { active: 'bg-purple-500/20 border-purple-400/40 text-purple-300 shadow-lg shadow-purple-500/10' },
     cyan: { active: 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300 shadow-lg shadow-cyan-500/10' },
   };
 
@@ -176,11 +167,7 @@ export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 3
       <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           {activeMode === 'sell' && owned && (
-            <TradingWorkspaceSell key="sell" item={item} owned={owned} marketPrice={marketPrice} />
-          )}
-
-          {activeMode === 'auction' && (
-            <TradingWorkspaceAuction key="auction" item={item} owned={owned} marketPrice={marketPrice} />
+            <TradingWorkspaceSell key="sell" item={item} owned={owned} marketPrice={marketPrice} onListed={onInventoryChanged} />
           )}
 
           {activeMode === 'trade' && (
@@ -188,7 +175,7 @@ export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 3
           )}
 
           {activeMode === 'buy' && (
-            <TradingWorkspaceBuy key="buy" item={item} owned={owned} marketPrice={marketPrice} />
+            <TradingWorkspaceBuy key="buy" item={item} owned={owned} marketPrice={marketPrice} onPurchased={onInventoryChanged} />
           )}
 
           {!activeMode && (
@@ -207,29 +194,8 @@ export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 3
         </AnimatePresence>
       </div>
 
-      {/* ═══ FOOTER: Market Ticker ═══ */}
-      <div className="flex-shrink-0 border-t border-white/5 px-6 py-3 bg-black/20">
-        <div className="flex items-center justify-between text-[10px]">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 text-white/30">
-              <Eye className="w-3 h-3" />
-              <span>{Math.floor(Math.random() * 50 + 10)} watching</span>
-            </div>
-            <div className="flex items-center gap-1 text-white/30">
-              <Clock className="w-3 h-3" />
-              <span>Last sold: {Math.floor(Math.random() * 24 + 1)}h ago</span>
-            </div>
-            <div className="flex items-center gap-1 text-white/30">
-              <Gamepad2 className="w-3 h-3" />
-              <span>{Math.floor(Math.random() * 200 + 50)} listed globally</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-white/30">
-            <TrendingUp className="w-3 h-3 text-emerald-400" />
-            <span className="text-emerald-400 font-bold">+{(Math.random() * 15 + 1).toFixed(1)}%</span>
-            <span>24h</span>
-          </div>
-        </div>
+      <div className="flex-shrink-0 border-t border-white/[0.05] bg-black/15 px-6 py-2.5 text-[9px] text-white/24">
+        Inventory, friend trades, purchases and Trading Post sales all use the same owned card record.
       </div>
     </motion.div>
   );
