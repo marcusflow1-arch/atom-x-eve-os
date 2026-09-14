@@ -99,6 +99,23 @@
       "type": "boolean",
       "default": false
     },
+    "face_model_url": {
+      "type": "string",
+      "default": "",
+      "description": "Generated personal face/head model layered onto the selected base body."
+    },
+    "base_body_gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female"
+      ],
+      "default": "male"
+    },
+    "base_body_model_url": {
+      "type": "string",
+      "default": "/models/luna-hi3d/warrior.glb"
+    },
     "tripo_model_id": {
       "type": "string",
       "default": ""
