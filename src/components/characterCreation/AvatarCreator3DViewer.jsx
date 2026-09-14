@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { motion } from 'framer-motion';
+import { companionModel } from '@/components/onboarding/genesisAssets';
 
 // Mock 3D component using existing YBotPlayerViewer or a simple placeholder
 // since we don't want to break if the advanced model isn't available
@@ -33,7 +34,7 @@ export default function AvatarCreator3DViewer({ avatarConfig }) {
         }>
           <div className="w-full h-full transform scale-125 translate-y-[10%]">
             <AdvancedModel3DViewer 
-              modelUrl={avatarConfig.preset === 'eve' ? '/models/eve.glb' : '/models/ybot.fbx'} 
+              modelUrl={companionModel(avatarConfig)} 
               autoRotate={true}
               autoRotateSpeed={0.5}
             />
