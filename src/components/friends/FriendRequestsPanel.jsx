@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { UserPlus, Check, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 export default function FriendRequestsPanel({ currentUserId }) {
   const [requests, setRequests] = useState([]);
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [friendName, setFriendName] = useState('');
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     loadRequests();
@@ -25,22 +27,42 @@ export default function FriendRequestsPanel({ currentUserId }) {
   };
 
   const sendFriendRequest = async () => {
-    if (!friendName.trim()) return;
+    const query = friendName.trim();
+    if (!query || sending) return;
 
+    setSending(true);
     try {
-      const user = await base44.auth.me();
-      await base44.entities.FriendRequest.create({
-        sender_id: currentUserId,
-        sender_name: user.full_name || user.email,
-        sender_avatar: user.avatar_url || 'https://i.pravatar.cc/150',
-        receiver_id: friendName, // In real app, would search by username
-        message: 'Would like to add you as a friend'
+      const users = await base44.entities.User.list();
+      const normalized = query.toLowerCase();
+      const target = (users || []).find((candidate) => {
+        if (String(candidate.id || '') === query) return true;
+        return [candidate.email, candidate.username, candidate.full_name]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase() === normalized);
       });
+
+      if (!target?.id) throw new Error('No user was found with that username or email.');
+      if (String(target.id) === String(currentUserId)) throw new Error('You cannot add yourself as a friend.');
+
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'send_friend_request',
+        data: { target_user_id: target.id },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+
       setFriendName('');
       setShowAddFriend(false);
-      alert('Friend request sent!');
+      if (body.accepted || body.already_friends) {
+        window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friendship', friendId: String(target.id) } }));
+        showSuccess(`${target.username || target.full_name || 'Player'} is now in your Friends list.`);
+      } else {
+        showSuccess(`Friend request sent to ${target.username || target.full_name || 'player'}.`);
+      }
     } catch (error) {
-      console.error('Failed to send request:', error);
+      showError(error, 'Friend Request');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -54,8 +76,9 @@ export default function FriendRequestsPanel({ currentUserId }) {
       if (body?.error) throw new Error(body.error);
       await loadRequests();
       window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: true, requestId: request.id } }));
+      showSuccess(`${request.sender_name || 'Player'} was added to your Friends list.`);
     } catch (error) {
-      console.error('Failed to accept request:', error);
+      showError(error, 'Accept Friend Request');
     }
   };
 
@@ -70,8 +93,23 @@ export default function FriendRequestsPanel({ currentUserId }) {
       await loadRequests();
       window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: false, requestId: request.id } }));
     } catch (error) {
-      console.error('Failed to decline request:', error);
+      showError(error, 'Decline Friend Request');
     }
+  };
+
+  const pointerAction = (action) => ({
+    onPointerDown: (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    },
+    onClick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) action();
+    },
+  });
   };
 
   return (
@@ -101,10 +139,11 @@ export default function FriendRequestsPanel({ currentUserId }) {
               className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded text-white placeholder-white/40 text-sm focus:outline-none focus:border-blue-500"
             />
             <button
-              onClick={sendFriendRequest}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm transition-colors"
+              {...pointerAction(sendFriendRequest)}
+              disabled={sending}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm transition-colors disabled:opacity-50"
             >
-              Send
+              {sending ? 'Sending…' : 'Send'}
             </button>
           </div>
         </motion.div>
@@ -123,13 +162,13 @@ export default function FriendRequestsPanel({ currentUserId }) {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => acceptRequest(req)}
+                  {...pointerAction(() => acceptRequest(req))}
                   className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors"
                 >
                   <Check className="w-4 h-4 text-white" />
                 </button>
                 <button
-                  onClick={() => declineRequest(req)}
+                  {...pointerAction(() => declineRequest(req))}
                   className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
                 >
                   <X className="w-4 h-4 text-white" />
