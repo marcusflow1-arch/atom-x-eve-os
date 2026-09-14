@@ -4,6 +4,7 @@ import { X, UserPlus, Check, Clock, Shield, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { glassCard } from './SectionShell';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 // Drill-down player profile — shown when clicking a player anywhere in the focus hub.
 // Add Friend is wired to the real FriendRequest backend (feeds FriendRequestsPanel / Friend list).
@@ -29,16 +30,31 @@ export default function PlayerProfilePanel({ player, onClose }) {
   }, [user?.id, player?.id]);
 
   const sendFriendRequest = async () => {
+    if (!user?.id || !player?.id || relation === 'sending') return;
     setRelation('sending');
-    await base44.entities.FriendRequest.create({
-      sender_id: user.id,
-      sender_name: user.username || user.full_name || 'Player',
-      sender_avatar: user.avatar_url || '',
-      receiver_id: player.id,
-      status: 'pending',
-      message: 'Sent from the Atom X Eve Focus Hub',
-    });
-    setRelation('pending');
+    try {
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'send_friend_request',
+        data: {
+          target_user_id: player.id,
+          message: 'Sent from the Atom X Eve Focus Hub',
+        },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+
+      if (body.accepted || body.already_friends) {
+        setRelation('friends');
+        window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friendship', friendId: String(player.id) } }));
+        showSuccess(`${player.name || 'Player'} is now in your Friends list.`);
+      } else {
+        setRelation('pending');
+        showSuccess(`Friend request sent to ${player.name || 'player'}.`);
+      }
+    } catch (error) {
+      setRelation('none');
+      showError(error, 'Friend Request');
+    }
   };
 
   if (!player) return null;
@@ -101,7 +117,20 @@ export default function PlayerProfilePanel({ player, onClose }) {
         <div className="flex justify-center py-3"><Loader2 className="w-5 h-5 text-white/40 animate-spin" /></div>
       )}
       {relation === 'none' && (
-        <button onClick={sendFriendRequest} className="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider text-white bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-400/40 transition-all flex items-center justify-center gap-2">
+        <button
+          onPointerDown={(event) => {
+            if (event.button !== undefined && event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            sendFriendRequest();
+          }}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.detail === 0) sendFriendRequest();
+          }}
+          className="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider text-white bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-400/40 transition-all flex items-center justify-center gap-2"
+        >
           <UserPlus className="w-4 h-4" /> Add Friend
         </button>
       )}
