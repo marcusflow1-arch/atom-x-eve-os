@@ -83,34 +83,72 @@ Deno.serve(async (req) => {
 
     if (action === 'respond_friend_request') {
       const requestId = String(data.request_id || '').trim();
-      const decision = data.decision === 'accept' ? 'accepted' : 'declined';
+      const accepting = data.decision === 'accept';
+      const decision = accepting ? 'accepted' : 'declined';
       const request = await svc.FriendRequest.get(requestId).catch(() => null);
       if (!request || String(request.receiver_id) !== String(user.id)) return json({ error: 'Friend request not found' }, 404);
-      if (request.status !== 'pending') return json({ success: true, request });
 
-      const updated = await svc.FriendRequest.update(request.id, { status: decision });
-      if (decision === 'accepted') {
-        const sender = await svc.User.get(request.sender_id).catch(() => null);
-        const mine = await svc.Friend.filter({ user_id: user.id, friend_id: request.sender_id }, '-created_date', 1);
+      const ensureFriendship = async () => {
+        const senderId = String(request.sender_id || '').trim();
+        const receiverId = String(user.id || '').trim();
+        if (!senderId || !receiverId) throw new Error('Friend request is missing a user ID');
+
+        // Luna uses Friend rows while the game-world social stack uses
+        // SocialFriendship. Keep both stores in sync so accepting a request is
+        // visible everywhere in Atom x Eve.
+        const mine = await svc.Friend.filter({ user_id: receiverId, friend_id: senderId }, '-created_date', 1);
         if (!mine?.length) {
           await svc.Friend.create({
-            user_id: user.id,
-            friend_id: request.sender_id,
-            friend_name: request.sender_name || nameOf(sender),
-            friend_avatar: request.sender_avatar || avatarOf(sender),
+            user_id: receiverId,
+            friend_id: senderId,
+            friend_name: request.sender_name || 'Player',
+            friend_avatar: request.sender_avatar || '',
             status: 'online',
           });
         }
-        const theirs = await svc.Friend.filter({ user_id: request.sender_id, friend_id: user.id }, '-created_date', 1);
+
+        const theirs = await svc.Friend.filter({ user_id: senderId, friend_id: receiverId }, '-created_date', 1);
         if (!theirs?.length) {
           await svc.Friend.create({
-            user_id: request.sender_id,
-            friend_id: user.id,
+            user_id: senderId,
+            friend_id: receiverId,
             friend_name: nameOf(user),
             friend_avatar: avatarOf(user),
             status: 'online',
           });
         }
+
+        const [forward, reverse] = await Promise.all([
+          svc.SocialFriendship.filter({ user_a_id: senderId, user_b_id: receiverId }, '-created_date', 1).catch(() => []),
+          svc.SocialFriendship.filter({ user_a_id: receiverId, user_b_id: senderId }, '-created_date', 1).catch(() => []),
+        ]);
+        if (!(forward?.length || reverse?.length)) {
+          await svc.SocialFriendship.create({
+            user_a_id: senderId,
+            user_a_name: request.sender_name || 'Player',
+            user_b_id: receiverId,
+            user_b_name: nameOf(user),
+          });
+        }
+      };
+
+      // If an older build already marked the request accepted before failing to
+      // create the Friend rows, accepting it again repairs the relationship.
+      if (request.status === 'accepted' && accepting) {
+        await ensureFriendship();
+        return json({ success: true, request, accepted: true, repaired: true });
+      }
+      if (request.status !== 'pending') return json({ success: true, request, accepted: request.status === 'accepted' });
+
+      if (accepting) {
+        // Persist the friendship first. Only mark the request accepted after all
+        // friendship stores succeed, so a transient failure leaves a retryable
+        // pending request instead of a disappearing request with no friend.
+        await ensureFriendship();
+      }
+
+      const updated = await svc.FriendRequest.update(request.id, { status: decision });
+      if (accepting) {
         await createNotification({
           recipient_id: request.sender_id,
           type: 'friend_accepted',
@@ -123,7 +161,7 @@ Deno.serve(async (req) => {
 
       const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id, status: 'unread' });
       for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
-      return json({ success: true, request: updated, accepted: decision === 'accepted' });
+      return json({ success: true, request: updated, accepted: accepting });
     }
 
     if (action === 'send_dashboard_invite') {
@@ -169,17 +207,27 @@ Deno.serve(async (req) => {
     if (action === 'get_dashboard_join') {
       const targetId = String(data.target_user_id || '').trim();
       if (!targetId) return json({ error: 'Target user is required' }, 400);
-      const rows = await svc.PlayerState.filter({ player_id: targetId }, '-last_update', 20);
-      const live = (rows || []).sort((a: any, b: any) => Number(b.last_update || 0) - Number(a.last_update || 0))[0] || null;
-      return json({ success: true, target_user_id: targetId, player_state: live ? {
-        player_id: live.player_id,
-        display_name: live.display_name,
-        status: live.status,
-        channel_id: live.channel_id,
-        env_url: live.env_url,
-        model_url: live.model_url,
-        last_update: live.last_update,
-      } : null });
+      const expectedChannel = `dashboard_${targetId}`;
+      const rows = await svc.PlayerState.filter({ player_id: targetId }, '-last_update', 50);
+      const sorted = (rows || []).sort((a: any, b: any) => Number(b.last_update || 0) - Number(a.last_update || 0));
+      const dashboardState = sorted.find((row: any) => String(row.channel_id || '') === expectedChannel) || null;
+      const live = dashboardState || sorted[0] || null;
+      return json({
+        success: true,
+        target_user_id: targetId,
+        channel_id: expectedChannel,
+        online: !!live,
+        player_state: live ? {
+          player_id: live.player_id,
+          display_name: live.display_name,
+          status: live.status,
+          // Join Dashboard must never follow a player into a game/world channel.
+          channel_id: expectedChannel,
+          env_url: dashboardState?.env_url || '',
+          model_url: live.model_url,
+          last_update: live.last_update,
+        } : null,
+      });
     }
 
     if (action === 'send_message') {
