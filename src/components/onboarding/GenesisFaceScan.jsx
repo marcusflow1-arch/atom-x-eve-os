@@ -101,13 +101,14 @@ export default function GenesisFaceScan({ config, setConfig }) {
     if (!modelUrl) return false;
     setConfig((current) => ({
       ...current,
-      model_url: modelUrl,
+      model_url: COMPANION_MODELS[current.gender || 'male']?.url || COMPANION_MODELS.male.url,
+      face_model_url: modelUrl,
       face_scan_generated: true,
       tripo_model_id: modelId,
       base_body_gender: current.gender || 'male',
       base_body_model_url: COMPANION_MODELS[current.gender || 'male']?.url || COMPANION_MODELS.male.url,
     }));
-    setStatus('Face scan applied to your 3D character preview');
+    setStatus('Face scan applied while keeping your selected body');
     setBusy(false);
     return true;
   };
@@ -168,6 +169,7 @@ export default function GenesisFaceScan({ config, setConfig }) {
       ...current,
       model_url: COMPANION_MODELS[current.gender || 'male']?.url || COMPANION_MODELS.male.url,
       face_scan_generated: false,
+      face_model_url: '',
       tripo_model_id: '',
       base_body_gender: current.gender || 'male',
       base_body_model_url: COMPANION_MODELS[current.gender || 'male']?.url || COMPANION_MODELS.male.url,
