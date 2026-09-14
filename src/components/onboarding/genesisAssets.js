@@ -1,9 +1,15 @@
 const root = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
 
+// One canonical player-avatar body for every Atom × Eve viewer. A user's
+// generated/selfie avatar may override this through model_url, but every
+// uncustomized surface falls back to this same Artemis body.
+export const GLOBAL_AVATAR_MODEL_URL = '/models/artemis.gltf';
+export const GLOBAL_AVATAR_NAME = 'Artemis';
+
 export const COMPANION_MODELS = {
-  female: { name: 'Erika Archer', url: root + '3f915913a_ErikaArcher.fbx' },
-  male: { name: 'White Y-Bot', url: root + '608211a0f_YBot1.fbx' },
+  female: { name: `${GLOBAL_AVATAR_NAME} Base`, url: GLOBAL_AVATAR_MODEL_URL },
+  male: { name: `${GLOBAL_AVATAR_NAME} Base`, url: GLOBAL_AVATAR_MODEL_URL },
 };
 
 export const COMPANION_MOTIONS = [
@@ -85,7 +91,11 @@ export function getAvatarStylePreset(id) {
 }
 
 export function companionModel(avatar) {
-  return /^https:\/\//.test(avatar?.model_url || '') ? avatar.model_url : COMPANION_MODELS[avatar?.gender || 'male'].url;
+  const requested = String(avatar?.model_url || '').trim();
+  // Generated avatars are normally absolute Base44 URLs, while bundled
+  // project avatars use root-relative paths such as /models/artemis.gltf.
+  if (/^(https?:\/\/|\/)/i.test(requested)) return requested;
+  return GLOBAL_AVATAR_MODEL_URL;
 }
 
 function rememberMaterialBase(material) {
