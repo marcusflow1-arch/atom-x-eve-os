@@ -1,11 +1,10 @@
 import {applyCompanionAppearance} from '@/components/onboarding/genesisAssets';
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { motion } from 'framer-motion';
-import { Play, Pause, RotateCcw, Grid3x3, Sun, Box, Plus } from 'lucide-react';
+import { Play, Pause, RotateCcw, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function EngineViewport({ onSceneReady }) {

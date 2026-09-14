@@ -2,7 +2,7 @@ import {loadAvatarModel} from '@/components/onboarding/avatarAssetRuntime';
 import {playerAppearance} from '@/components/onboarding/playerAppearance';
 import {retargetAvatarClip} from '@/components/onboarding/retargetAvatarClip';
 import {isHi3DAvatar} from '@/components/onboarding/modelAppearance';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -13,7 +13,7 @@ import { attachWeapon, attachEffect } from '../3d/WeaponAttachmentSystem';
 import { cleanMesh } from './transparentViewer/cleanMesh';
 import { useSkybox } from './transparentViewer/useSkybox';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
-import { companionModel, applyCompanionAppearance } from '@/components/onboarding/genesisAssets';
+import { applyCompanionAppearance } from '@/components/onboarding/genesisAssets';
 
 export default function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);

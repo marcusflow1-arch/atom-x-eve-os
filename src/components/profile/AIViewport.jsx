@@ -1,6 +1,4 @@
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import React from 'react';
-import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { Bot } from 'lucide-react';
 
 export default function AIViewport({ name, status = 'online' }) {

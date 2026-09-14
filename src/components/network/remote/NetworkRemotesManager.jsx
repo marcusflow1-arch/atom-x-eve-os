@@ -7,7 +7,6 @@ import {retargetAvatarClip} from '@/components/onboarding/retargetAvatarClip';
 // to match, and forwards each entity's latest state. The local player's own id
 // is filtered out automatically.
 
-import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { realtimeNetwork } from '@/components/network/realtimeNetworkManager';
 import { createNetworkRemotePlayerEntity } from './NetworkRemotePlayerEntity';

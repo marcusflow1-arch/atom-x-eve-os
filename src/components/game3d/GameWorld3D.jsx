@@ -1,27 +1,23 @@
 import {useGameAvatar} from './useGameAvatar';
 import {loadAvatarModel,applyPlayerAppearance} from '@/components/onboarding/avatarAssetRuntime';
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import BossHeadHPTank from './hud/BossHeadHPTank';
-import PlayerXPHUD from './PlayerXPHUD';
 import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
 import FloatingDamageNumbers from './FloatingDamageNumbers';
-import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
-import { DEFAULT_PLAYER_STATS, ENEMY_STAT_TEMPLATES, computeDerivedStats, calculateHit, calculateHitWithCrit, applySpellScaling } from './statsSystem';
+import { setPlayerHUD, awardXP, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
+import { DEFAULT_PLAYER_STATS, ENEMY_STAT_TEMPLATES, computeDerivedStats, calculateHit } from './statsSystem';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
 import { acceptQuest, completeQuest, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
-import { LOWPOLY_MAP_URL, createLowPolyLoadingManager } from './lowPolyMapAssets';
-import { BOSSES, BOSS_SCALE_MULT, BOSS_HP_MULT, BOSS_XP_MULT } from './bossData';
 import { setBosses, updateBoss } from './bossStore';
-import { createBossBrain } from './boss/BossBrain';
 import { attachBossEventBus } from './boss/useBossEventBus';
 import { createBossEncounterController } from './boss/BossEncounterController';
 import { createBossTornadoLiftBeam } from './boss/BossTornadoLiftBeam';
@@ -41,13 +37,10 @@ import PlayerNameTag from './PlayerNameTag';
 import { base44 } from '@/api/base44Client';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
-import { getAbilityState, tickCooldowns as tickLegacyAbilityCooldowns, startCooldown as startLegacyAbilityCooldown, setTarget, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
+import { getAbilityState, tickCooldowns as tickLegacyAbilityCooldowns, startCooldown as startLegacyAbilityCooldown, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
 import { getLoadout, startCooldown as startSkillCooldown, tickCooldowns as tickSkillCooldowns } from './skills/loadoutStore';
 import { castSkill } from './skills/skillExecutor';
 import { getPlayerHUD as getHUDForSkill } from './playerHUDStore';
-import { createLightningStrike } from './LightningStrikeEffect';
-import { createShadowTeleport } from './ShadowTeleportEffect';
-import { createFrostTornado } from './FrostTornadoEffect';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
 import { tickFusion } from './fusionStore';
@@ -67,24 +60,19 @@ import { handleMiddleClick } from './middleClickHandler';
 import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
-import { useCallback } from 'react';
-import { fireSlash } from './SlashEffect'; import { getRunMultiplier } from './runSkillStore';
-import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, getAttackSpeedMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
+import { getRunMultiplier } from './runSkillStore';
+import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
-import { applyMasteryToHit, getMasteryAttackSpeedMult, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
+import { applyMasteryToHit, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
-import {
-  XP_TABLE, xpForLevel,
-  ENEMY_TIERS, pickTier,
+import { xpForLevel, pickTier,
   ARCHER_URL, ANIMATION_URLS,
   DEATH_FADE_DELAY, WALK_SPEED, RUN_SPEED, ROT_SMOOTH, BLEND,
-  NPC_SPAWNS,
   ENEMY_SPEED, ENEMY_WALK_TIME, ENEMY_IDLE_TIME, ENEMY_WANDER_RADIUS,
-  NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, RANGED_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP,
-  PLAYER_ATTACK_COOLDOWN, PLAYER_INVUL_AFTER_HIT,
+  NPC_INTERACT_RANGE, ENEMY_ATTACK_RANGE, RANGED_ATTACK_RANGE, ENEMY_ATTACK_COOLDOWN, ENEMY_ATTACK_WINDUP, PLAYER_INVUL_AFTER_HIT,
 } from './gameWorldConfig';
 import { attachContextGuard } from './webglContextGuard';
 import { buildGrassEnvironment } from './buildGrassEnvironment';

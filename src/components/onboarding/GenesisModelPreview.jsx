@@ -1,5 +1,5 @@
 import Hi3DPlayerPreview from '@/components/dashboard/Hi3DPlayerPreview';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RotateCcw, RotateCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { COMPANION_MODELS, COMPANION_MOTIONS, companionModel } from '@/components/onboarding/genesisAssets';

@@ -1,13 +1,13 @@
 import {useCompanionIdentity} from '@/components/onboarding/CompanionIdentityContext';
 import {playerAppearance} from '@/components/onboarding/playerAppearance';
 import {companionModel} from '@/components/onboarding/genesisAssets';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Box, Mountain, Sparkles, Swords, UserRound, Film, Camera, MousePointer2, Plus, Minus, Save, Play, Pause, Layers3 } from 'lucide-react';
+import { Box, Mountain, Sparkles, Swords, UserRound, Film, Camera, Plus, Play, Pause, Layers3 } from 'lucide-react';
 
 const TOOLS = [
   ['terrain', 'Terrain', Mountain],

@@ -1,5 +1,5 @@
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Loader2, Play } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
 import { useQuery } from '@tanstack/react-query';

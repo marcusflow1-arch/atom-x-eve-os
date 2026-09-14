@@ -1,16 +1,11 @@
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import AvatarStatCard from './AvatarStatCard';
 import { Mic, MicOff, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
-import { companionModel, applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
-import { attachGeneratedFaceToBody } from '@/components/onboarding/faceComposite';
 
 const ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const MP_ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';

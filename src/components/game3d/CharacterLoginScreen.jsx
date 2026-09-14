@@ -1,7 +1,5 @@
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import React, { useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MessageSquare, Settings, Power, Loader2 } from 'lucide-react';
 import {

@@ -1,4 +1,3 @@
-import React from 'react';
 import {FACE_CONTROLS,FIT_DEFAULTS} from './avatarAppearanceData';
 import { Eye, Palette, PersonStanding, Sparkles } from 'lucide-react';
 import { AVATAR_STYLE_PRESETS, DEFAULT_AVATAR_APPEARANCE } from '@/components/onboarding/genesisAssets';

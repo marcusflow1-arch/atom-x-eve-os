@@ -1,4 +1,3 @@
-import React from 'react';
 import { UserRound } from 'lucide-react';
 
 import { COMPANION_MODELS } from '@/components/onboarding/genesisAssets';

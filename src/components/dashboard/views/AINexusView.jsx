@@ -1,13 +1,11 @@
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Home, BookOpen, Zap, Sword, Shield, Bot, Maximize2, Minimize2, X, 
-  Gamepad2, Flame, Cpu, Users, Swords, Heart, Clock, Filter
+  Home, BookOpen, Zap, Sword, Bot, Maximize2, Minimize2, X, 
+  Gamepad2, Flame, Cpu, Swords, Heart, Clock
 } from 'lucide-react';
-import { createPageUrl } from '@/utils';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import MoveHubTab from '../MoveHubGames';
 import LoadoutPanel from '../LoadoutPanel';
@@ -15,8 +13,6 @@ import Storyline from '../../../pages/Storyline';
 import PinGamesContent from '../PinGamesContent';
 import FusionCore from '../FusionCore';
 import ConsoleHub from '../ConsoleHub';
-import ThreeScene from '../../shared/ThreeScene';
-import { ThemeBackground } from '../../shared/ThemeSystem';
 
 // --- Components ---
 
