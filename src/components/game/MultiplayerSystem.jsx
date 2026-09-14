@@ -1,3 +1,4 @@
+import { useDashboardRoom } from '@/components/social/useDashboardRoom';
 import React, { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -10,7 +11,7 @@ export default function MultiplayerSystem({ envUrl }) {
   const { user } = useAuth();
   const [currentChannel, setCurrentChannel] = useState(null);
   const [participantIds, setParticipantIds] = useState([]);
-  const [micEnabled, setMicEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(false);
   const localStateRef = useRef({ x: 0, y: -0.5, z: 0, yaw: 0, anim: 'idle' });
   const channelRef = useRef(null);
   const explicitlyJoinedRef = useRef(false); // true if joinMultiplayerChannel fired
@@ -21,7 +22,8 @@ export default function MultiplayerSystem({ envUrl }) {
     envUrlRef.current = envUrl;
   }, [envUrl]);
 
-  useWebRTCVoice(currentChannel, user, !micEnabled, false, participantIds);
+  const dashboardParticipants = useDashboardRoom(currentChannel, user, envUrl);
+  useWebRTCVoice(currentChannel, user, !micEnabled, false, currentChannel?.startsWith("dashboard_") ? dashboardParticipants : participantIds);
 
   useEffect(() => {
     const handleMicToggle = (e) => {
@@ -49,10 +51,13 @@ export default function MultiplayerSystem({ envUrl }) {
       // Default to user's own dashboard channel ONLY if no explicit join has occurred.
       // GameWorldServerManager dispatches joinMultiplayerChannel BEFORE this effect
       // runs on the GameView page → that path wins and we skip this default.
-      const defaultChannel = `dashboard_${user.id}`;
+      const pending = window.__lunaPendingDashboardJoin;
+      const defaultChannel = pending?.channelId || `dashboard_${user.id}`;
+      window.__lunaPendingDashboardJoin = null;
       setCurrentChannel(defaultChannel);
       channelRef.current = defaultChannel;
       
+      if (defaultChannel.startsWith("dashboard_")) return;
       // Register world instance in GameChannel
       base44.entities.GameChannel.filter({ name: defaultChannel }).then(res => {
         if (res.length > 0) {
@@ -74,6 +79,7 @@ export default function MultiplayerSystem({ envUrl }) {
         channelRef.current = targetChannel;
         console.log(`[Multiplayer] Joined channel: ${targetChannel}`);
 
+        if (targetChannel.startsWith("dashboard_")) { window.__lunaPendingDashboardJoin = null; return; }
         // Shared world server: don't try to sync environment to a synthetic host
         // and don't run host-grace logic (the world channel has no real "host").
         const isSharedWorld = hostId === targetChannel;
@@ -211,10 +217,10 @@ export default function MultiplayerSystem({ envUrl }) {
       window.removeEventListener('multiplayerLocalUpdate', handleLocalUpdate);
       window.removeEventListener('multiplayerLocalAction', handleLocalAction);
     };
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.id || !currentChannel) return;
+    if (!user?.id || !currentChannel || currentChannel.startsWith("dashboard_")) return;
     
     let isSubscribed = true;
     let otherPlayersMap = new Map();
