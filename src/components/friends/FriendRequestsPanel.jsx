@@ -110,7 +110,6 @@ export default function FriendRequestsPanel({ currentUserId }) {
       if (event.detail === 0) action();
     },
   });
-  };
 
   return (
     <div className="space-y-4">
