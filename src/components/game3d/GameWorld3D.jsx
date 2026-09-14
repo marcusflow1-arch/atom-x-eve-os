@@ -100,6 +100,7 @@ export default function GameWorld3D() {
   const avatarConfig=useGameAvatar();
   const appearanceRef=useRef(avatarConfig);appearanceRef.current=avatarConfig;
   const containerRef = useRef(null);
+  const modelRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [envSystem, setEnvSystem] = useState(null);
   const [tornadoSystemState, setTornadoSystemState] = useState(null);
@@ -590,11 +591,9 @@ export default function GameWorld3D() {
 
     // Boss event bus — applies bossAction events (AOE / cone / orb / dash / summon)
     // dispatched by BossBrain. Decouples boss AI from world mutation (multiplayer seam).
-    // modelRef is a plain object the bus reads lazily; we assign .current when the
-    // player FBX finishes loading (see archer load below). This avoids any
-    // temporal-dead-zone trap with `let model` declared further down.
+    // The shared model ref also lets appearance updates reach the loaded player.
+    // Assign .current when the player finishes loading below.
     let _spawnBossMinion = () => {};
-    const modelRef = { current: null };
     const applyLocalBossDamage = (amount) => {
       if (playerInvulTimer.current > 0 || rollDodge() || rollGuard() || rollRangedEvade() || rollDodgeBuff()) return;
       let dmg = amount;
@@ -2256,6 +2255,7 @@ export default function GameWorld3D() {
 
     return () => {
       avatarLoadDisposed=true;
+      modelRef.current = null;
       // Mark guard disposed FIRST so any in-flight animate() bails before
       // touching the renderer — prevents the null.trim shadow-map crash.
       rendererGuard.markDisposed();
