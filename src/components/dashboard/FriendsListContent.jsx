@@ -31,7 +31,7 @@ export default function FriendsListContent() {
     queryFn: async () => {
       const res = await base44.entities.PlayerState.list();
       const latestByPlayer = new Map();
-      (res || []).filter(isLivePlayer).forEach((p) => {
+      (res || []).filter(p=>isLivePlayer(p)).forEach((p) => {
         if (!p?.player_id || p.player_id === user?.id) return;
         const previous = latestByPlayer.get(p.player_id);
         if (!previous || Number(p.last_update || 0) > Number(previous.last_update || 0)) latestByPlayer.set(p.player_id, p);

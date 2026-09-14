@@ -28,8 +28,9 @@ Deno.serve(async (req) => {
     const svc = base44.asServiceRole.entities;
 
     const createNotification = async (input: any) => {
-      try {
-        return await svc.SocialNotification.create({
+      const existing = await svc.SocialNotification.filter({recipient_id:input.recipient_id,type:input.type,related_entity_id:input.related_entity_id || ''},'-created_date',1);
+      if (existing.length) return existing[0];
+      return await svc.SocialNotification.create({
           recipient_id: input.recipient_id,
           actor_id: user.id,
           actor_name: input.actor_name || nameOf(user),
@@ -42,15 +43,11 @@ Deno.serve(async (req) => {
           status: 'unread',
           action_kind: input.action_kind || 'none',
         });
-      } catch (error) {
-        console.warn('[socialActions] notification create failed', error);
-        return null;
-      }
     };
 
     // Friend relationships are consumed by two parts of Atom x Eve: Luna's
     // Friend rows and the shared game-world SocialFriendship row. Keep both in
-    // sync from one service-role transaction so every UI sees the same result.
+    // sync through service-role writes so every UI sees the same result.
     const ensureFriendshipBetween = async (input: {
       senderId: string;
       senderName?: string;
@@ -74,7 +71,7 @@ Deno.serve(async (req) => {
           friend_id: senderId,
           friend_name: input.senderName || 'Player',
           friend_avatar: input.senderAvatar || '',
-          status: 'online',
+          status: 'offline',
         });
       }
       if (!senderRows?.length) {
@@ -83,7 +80,7 @@ Deno.serve(async (req) => {
           friend_id: receiverId,
           friend_name: input.receiverName || 'Player',
           friend_avatar: input.receiverAvatar || '',
-          status: 'online',
+          status: 'offline',
         });
       }
 
@@ -110,7 +107,10 @@ Deno.serve(async (req) => {
       if (existingFriend?.length) return json({ success: true, already_friends: true });
 
       const pending = await svc.FriendRequest.filter({ sender_id: user.id, receiver_id: targetId, status: 'pending' }, '-created_date', 1);
-      if (pending?.length) return json({ success: true, request: pending[0], already_pending: true });
+      if (pending?.length) {
+        await createNotification({recipient_id:targetId,type:'friend_request',title:'Friend request',body:`${nameOf(user)} sent you a friend request.`,related_entity_id:pending[0].id,action_kind:'friend_request'});
+        return json({success:true,request:pending[0],already_pending:true});
+      }
 
       const reverse = await svc.FriendRequest.filter({ sender_id: targetId, receiver_id: user.id, status: 'pending' }, '-created_date', 1);
       if (reverse?.length) {
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
           receiverAvatar: avatarOf(user),
         });
         const updated = await svc.FriendRequest.update(incoming.id, { status: 'accepted' });
-        const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: incoming.id, status: 'unread' });
+        const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: incoming.id });
         for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
         await createNotification({
           recipient_id: targetId,
@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id, status: 'unread' });
+      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id });
       for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
       return json({ success: true, request: updated, accepted: accepting });
     }
@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
         host_user_id: user.id,
         status: 'pending',
       });
-      if (!duplicate?.length) {
+      {
         await createNotification({
           recipient_id: targetId,
           type: 'dashboard_invite',
@@ -241,8 +241,9 @@ Deno.serve(async (req) => {
       const decision = data.decision === 'accept' ? 'accepted' : 'declined';
       const request = await svc.LunarDashboardRequest.get(requestId).catch(() => null);
       if (!request || String(request.target_user_id) !== String(user.id)) return json({ error: 'Dashboard invitation not found' }, 404);
-      if (request.status === 'pending') await svc.LunarDashboardRequest.update(request.id, { status: decision });
-      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id, status: 'unread' });
+      if (request.status !== 'pending') return json({success:true,accepted:request.status === 'accepted',host_user_id:request.host_user_id,host_name:request.requester_name});
+      await svc.LunarDashboardRequest.update(request.id, { status: decision });
+      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id });
       for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
       return json({ success: true, accepted: decision === 'accepted', host_user_id: request.host_user_id, host_name: request.requester_name });
     }
@@ -259,7 +260,7 @@ Deno.serve(async (req) => {
         success: true,
         target_user_id: targetId,
         channel_id: expectedChannel,
-        online: !!live,
+        online: !!live && live.status !== 'offline' && Number(live.last_update) > Date.now() - 20000,
         player_state: live ? {
           player_id: live.player_id,
           display_name: live.display_name,
@@ -374,12 +375,26 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'get_pending_actions') {
-      const [friendRequests, dashboardInvites, notifications] = await Promise.all([
-        svc.FriendRequest.filter({ receiver_id: user.id, status: 'pending' }, '-created_date', 50),
-        svc.LunarDashboardRequest.filter({ target_user_id: user.id, request_type: 'invite', status: 'pending' }, '-created_date', 50),
-        svc.SocialNotification.filter({ recipient_id: user.id, status: 'unread' }, '-created_date', 100),
+      const [friendRequests, dashboardInvites, notifications, partyInvites] = await Promise.all([
+        svc.FriendRequest.filter({receiver_id:user.id,status:'pending'},'-created_date',100),
+        svc.LunarDashboardRequest.filter({target_user_id:user.id,request_type:'invite',status:'pending'},'-created_date',100),
+        svc.SocialNotification.filter({recipient_id:user.id},'-created_date',100),
+        svc.PartyInvite.filter({invitee_id:user.id,status:'pending'},'-created_date',100),
       ]);
-      return json({ success: true, friend_requests: friendRequests || [], dashboard_invites: dashboardInvites || [], notifications: notifications || [] });
+      const parties = partyInvites.filter((p:any)=>!p.expires_at || Date.parse(p.expires_at)>Date.now());
+      // Pending records remain actionable even if an older build failed to write its notification.
+      const pending = [
+        ...friendRequests.map((r:any)=>({type:'friend_request',action_kind:'friend_request',related_entity_id:r.id,actor_id:r.sender_id,actor_name:r.sender_name,actor_avatar:r.sender_avatar,title:'Friend request',body:`${r.sender_name} sent you a friend request.`,created_date:r.created_date})),
+        ...dashboardInvites.map((r:any)=>({type:'dashboard_invite',action_kind:'dashboard_invite',related_entity_id:r.id,actor_id:r.requester_id,actor_name:r.requester_name,title:'Dashboard invitation',body:`${r.requester_name} invited you to their dashboard.`,created_date:r.created_date})),
+        ...parties.map((r:any)=>({type:'party_invite',action_kind:'party_invite',related_entity_id:r.id,actor_id:r.inviter_id,actor_name:r.inviter_name,title:'Party invitation',body:`${r.inviter_name} invited you to a party.`,created_date:r.created_date})),
+      ];
+      const keys=new Set(pending.map(p=>p.type+':'+p.related_entity_id));
+      const actionable = pending.map(p=>{
+        const notice=notifications.find((n:any)=>n.type===p.type&&n.related_entity_id===p.related_entity_id);
+        return {...p,id:notice?.id || 'pending:'+p.related_entity_id,status:notice?.status==='read'?'read':'unread',actionable:true};
+      });
+      const history = notifications.filter((n:any)=>!keys.has(n.type+':'+n.related_entity_id)).map((n:any)=>({...n,actionable:false}));
+      return json({success:true,friend_requests:friendRequests,dashboard_invites:dashboardInvites,party_invites:parties,notifications:[...actionable,...history].sort((a,b)=>Date.parse(b.created_date||0)-Date.parse(a.created_date||0))});
     }
 
     if (action === 'mark_notification_read') {
