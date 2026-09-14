@@ -3,14 +3,15 @@
   "sourceTriangles": 5000000,
   "triangles": 99826,
   "simplificationError": 0.0002589368086773902,
-  "separatedContactTriangles": 158,
+  "separatedContactTriangles": 0,
   "rigJoints": 23,
-  "rigVersion": 1,
+  "rigVersion": 2,
   "units": "meters",
   "forward": "+Z",
   "note": "Procedural hand-authored clips. No facial rig, cloth simulation, or motion capture.",
+  "textureMaxDimension": 4096,
   "vertices": 55586,
-  "bytes": 9170360,
+  "bytes": 9170356,
   "clips": [
     {
       "name": "Idle",
@@ -281,8 +282,5 @@
         0.108
       ]
     ]
-  ],
-  "textureMaxDimension": 4096,
-  "masterTextureMaxDimension": 8192,
-  "sha256": "7ea89358881e43caeea30634b63217ff2ada9c61e27f413ae7616057340e7c99"
+  ]
 }

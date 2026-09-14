@@ -4,8 +4,8 @@
   "vertices": 55586,
   "joints": 23,
   "clips": 11,
-  "maxWeightError": 4.190951585769653e-8,
-  "maxBindError": 9.521007172862446e-8,
+  "maxWeightError": 4.0512531995773315e-8,
+  "maxBindError": 9.505255474486974e-8,
   "transitionChecks": "wave return, recline chain, stand before walking, queued interruption, arm slider",
   "poseChecks": [
     {
@@ -78,19 +78,19 @@
       "clip": "Wave",
       "time": 0.8,
       "minY": 0,
-      "maxY": 1.8415
+      "maxY": 1.7996
     },
     {
       "clip": "Wave",
       "time": 1.6,
       "minY": 0,
-      "maxY": 1.8445
+      "maxY": 1.7996
     },
     {
       "clip": "Wave",
       "time": 2.4,
       "minY": 0,
-      "maxY": 1.8424
+      "maxY": 1.7996
     },
     {
       "clip": "Wave",
@@ -101,32 +101,32 @@
     {
       "clip": "Walk",
       "time": 0,
-      "minY": 0.0001,
-      "maxY": 1.7833
+      "minY": 0.065,
+      "maxY": 1.7775
     },
     {
       "clip": "Walk",
       "time": 0.3,
-      "minY": 0,
-      "maxY": 1.7673
+      "minY": 0.065,
+      "maxY": 1.7655
     },
     {
       "clip": "Walk",
       "time": 0.6,
-      "minY": 0,
-      "maxY": 1.7833
+      "minY": 0.065,
+      "maxY": 1.7775
     },
     {
       "clip": "Walk",
       "time": 0.9,
-      "minY": 0,
-      "maxY": 1.7673
+      "minY": 0.065,
+      "maxY": 1.7655
     },
     {
       "clip": "Walk",
       "time": 1.2,
-      "minY": 0.0001,
-      "maxY": 1.7833
+      "minY": 0.065,
+      "maxY": 1.7775
     },
     {
       "clip": "Arm_Raise",
@@ -156,7 +156,7 @@
       "clip": "Arm_Raise",
       "time": 1.4,
       "minY": 0,
-      "maxY": 1.8433
+      "maxY": 1.7996
     },
     {
       "clip": "Sit_Down",
@@ -167,7 +167,7 @@
     {
       "clip": "Sit_Down",
       "time": 0.65,
-      "minY": -0.0001,
+      "minY": 0,
       "maxY": 1.6919
     },
     {
@@ -329,7 +329,7 @@
     {
       "clip": "Stand_Up",
       "time": 1.95,
-      "minY": -0.0001,
+      "minY": 0,
       "maxY": 1.6919
     },
     {

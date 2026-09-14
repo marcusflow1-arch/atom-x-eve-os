@@ -5,6 +5,8 @@ import { execFileSync } from 'node:child_process';
 import { Vector3 as V, Quaternion as Q, Euler, Matrix4 } from 'three';
 import { readGLB, builder } from './glb.mjs';
 import { surfaceMask } from './parts.mjs';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import {AnimationMixer,LoopOnce} from 'three';
 
 const [input, output] = process.argv.slice(2);
 if (!input || !output) throw new Error('Usage: node rig-and-animate.mjs optimized.glb animated.glb');
@@ -67,8 +69,13 @@ function solveLimb(pose, firstName, middleName, endName, target, pole, endRotati
   const height = Math.sqrt(Math.max(0, l1 * l1 - along * along));
   const mid = start.clone().addScaledVector(direction, along).addScaledVector(bend, height);
   const endpoint = start.clone().addScaledVector(direction, distance);
-  const firstWorld = new Q().setFromUnitVectors(localRest[middle.i].clone().normalize(), mid.clone().sub(start).normalize());
-  const middleWorld = new Q().setFromUnitVectors(localRest[end.i].clone().normalize(), endpoint.clone().sub(mid).normalize());
+  // A shared bend plane keeps upper arm and forearm twist continuous.
+  const restA=localRest[middle.i].clone().normalize(),restB=localRest[end.i].clone().normalize();
+  const posedA=mid.clone().sub(start).normalize(),posedB=endpoint.clone().sub(mid).normalize();
+  const restNormal=new V().crossVectors(restA,restB).normalize(),posedNormal=new V().crossVectors(posedA,posedB).normalize();
+  const frame=(d,n)=>new Q().setFromRotationMatrix(new Matrix4().makeBasis(new V().crossVectors(d,n).normalize(),d,n));
+  const firstWorld=frame(posedA,posedNormal).multiply(frame(restA,restNormal).invert());
+  const middleWorld=frame(posedB,posedNormal).multiply(frame(restB,restNormal).invert());
   pose.rotations[first.i] = w.rot[first.parent].clone().invert().multiply(firstWorld);
   pose.rotations[middle.i] = firstWorld.clone().invert().multiply(middleWorld);
   pose.rotations[end.i] = middleWorld.clone().invert().multiply(endRotation);
@@ -86,24 +93,27 @@ function idle(t = 0, afk = false) {
   for (const [side, s] of [['Left', 1], ['Right', -1]]) setRotation(pose, `${side}UpperArm`, euler(.009 * breath, 0, s * .006 * breath));
   return pose;
 }
-function walking(t) {
-  const phase = t / 1.2 * Math.PI * 2, pose = newPose();
-  pose.root.y -= .016 + .008 * (1 - Math.cos(2 * phase));
-  setRotation(pose, 'Hips', euler(0, .025 * Math.sin(phase)));
-  setRotation(pose, 'Chest', euler(.022, -.035 * Math.sin(phase)));
-  const targets = {};
-  for (const [side, s] of [['Left', 1], ['Right', -1]]) {
-    const ph = phase + (s < 0 ? Math.PI : 0), swing = Math.sin(ph);
-    targets[side] = new V(s * .205, .126 + .055 * Math.max(0, Math.cos(ph)), -.013 + .15 * swing);
-    setRotation(pose, `${side}UpperArm`, euler(.24 * swing, 0, s * -.02));
-    setRotation(pose, `${side}ForeArm`, euler(-.08 - .07 * Math.max(0, -swing)));
-  }
-  legs(pose, targets); return pose;
+const walkBytes=fs.readFileSync(new URL('./walk-source.fbx',import.meta.url));
+const walkSource=new FBXLoader().parse(walkBytes.buffer.slice(walkBytes.byteOffset,walkBytes.byteOffset+walkBytes.byteLength),'');
+walkSource.updateMatrixWorld(true);
+const sourceBone=name=>{let result;walkSource.traverse(n=>{if(n.isBone&&n.name.replace(/^mixamorig:?/i,'')===name)result=n;});return result;};
+const sourceHips=sourceBone('Hips'),sourceRest=sourceHips.getWorldPosition(new V()),sourceScale=.915/sourceRest.y;
+const sourceFeet=Object.fromEntries(['Left','Right'].map(side=>[side,sourceBone(side+'Foot')]));
+const walkMixer=new AnimationMixer(walkSource),walkClip=walkSource.animations[0];
+walkMixer.clipAction(walkClip).setLoop(LoopOnce,1).play();
+const walkSamples=[];
+for(let i=0;i<=60;i++){walkMixer.setTime(walkClip.duration*i/60);walkSource.updateMatrixWorld(true);const hip=sourceHips.getWorldPosition(new V());walkSamples.push(Object.fromEntries(Object.entries(sourceFeet).map(([side,bone])=>[side,bone.getWorldPosition(new V()).sub(hip).multiplyScalar(sourceScale).toArray()])));}
+const limits={};for(const side of ['Left','Right'])limits[side]={y:Math.min(...walkSamples.map(p=>p[side][1])),z:(Math.max(...walkSamples.map(p=>p[side][2]))+Math.min(...walkSamples.map(p=>p[side][2])))/2};
+function walking(t){
+ const cycle=(t/1.2)%1,phase=cycle*Math.PI*2,index=cycle*60,i=Math.floor(index),a=index-i,pose=newPose();pose.root.y-=.022+.006*(1-Math.cos(2*phase));
+ setRotation(pose,'Hips',euler(0,.022*Math.sin(phase)));setRotation(pose,'Chest',euler(.015,-.025*Math.sin(phase)));
+ const targets={};for(const [side,sign] of [['Left',1],['Right',-1]]){const sample=new V(...walkSamples[i][side]).lerp(new V(...walkSamples[Math.min(i+1,60)][side]),a),swing=Math.sin(phase+(sign<0?Math.PI:0));targets[side]=new V(sign*.205,.126+Math.min(.065,Math.max(0,sample.y-limits[side].y)),-.013+(sample.z-limits[side].z)*.75);setRotation(pose,side+'UpperArm',euler(.16*swing,0,sign*-.008));setRotation(pose,side+'ForeArm',euler(-.025-.035*Math.max(0,-swing)));}
+ legs(pose,targets);return pose;
 }
 function armPose(t, waving = false) {
-  const pose = idle(0), amount = waving ? smooth(t / .65) * smooth((3.2 - t) / .65) : smooth(t / 1.4);
+  const pose = idle(0), amount = waving ? smooth(t / .85) * smooth((3.2 - t) / .85) : smooth(t / 1.4);
   const oscillation = waving ? Math.sin(Math.max(0, t - .65) * Math.PI * 3.5) * smooth((t - .65) / .25) * smooth((2.65 - t) / .3) : 0;
-  const target = byName.RightHand.rest.clone().lerp(new V(-.43 + oscillation * .035, 1.655, .125), amount);
+  const target = byName.RightHand.rest.clone().lerp(new V(-.43 + oscillation * .014, 1.60, .18), amount);
   solveLimb(pose, 'RightUpperArm', 'RightForeArm', 'RightHand', target, new V(-1, -.15, 0), identity().slerp(euler(-Math.PI * .91, .08, .10 * oscillation), amount));
   setRotation(pose, 'Head', euler(0, -.03 * amount, -.02 * amount));
   return pose;
@@ -151,7 +161,7 @@ function segmentWeight(y, centers, names) {
 for (let v = 0; v < p.length / 3; v++) {
   const x = p[v * 3], y = p[v * 3 + 1], z = p[v * 3 + 2], ax = Math.abs(x), side = x >= 0 ? 'Left' : 'Right';
   const armBoundary = y > 1.31 ? mix(.172, .194, smooth((y - 1.31) / .14)) : y > 1 ? mix(.172, .218, smooth((1.31 - y) / .31)) : mix(.218, .248, smooth((1 - y) / .13));
-  const armAmount = smoothRange(ax, armBoundary, .009) * (1 - smoothRange(y, 1.491, .022)) * smoothRange(y, .710, .014);
+  const armAmount = smoothRange(ax, armBoundary, mix(.009,.024,smooth((y-1.29)/.09))) * (1 - smoothRange(y, 1.491, .022)) * smoothRange(y, .710, .014);
   let body;
   if (y > 1.49) body = segmentWeight(y, [1.615, 1.555, 1.465], ['Head', 'Neck', 'Chest']);
   else if (y > 1.005) body = segmentWeight(y, [1.36, 1.14, 1.005], ['Chest', 'Spine', 'Hips']);
@@ -259,7 +269,7 @@ for (const [name, duration, sample, loop, next] of clips) {
   j.animations.push(animation);
 }
 j.asset.generator = 'Hi3D source; Luna anatomical skinning and authored skeletal animation';
-j.asset.extras = { ...j.asset.extras, triangles: separatedIndices.length / 3, separatedContactTriangles, rigJoints: bones.length, rigVersion: 1, units: 'meters', forward: '+Z', note: 'Procedural hand-authored clips. No facial rig, cloth simulation, or motion capture.' };
+j.asset.extras = { ...j.asset.extras, triangles: separatedIndices.length / 3, separatedContactTriangles, rigJoints: bones.length, rigVersion: 2, units: 'meters', forward: '+Z', note: 'Procedural hand-authored clips. No facial rig, cloth simulation, or motion capture.' };
 b.write(output);
 fs.writeFileSync(output.replace(/\.glb$/, '.json'), JSON.stringify({ source: 'User-supplied Hi3D stylized male warrior', ...j.asset.extras, vertices: p.length / 3, bytes: fs.statSync(output).size, clips: clips.map(([name, duration, , loop, next]) => ({ name, duration, loop, next })), skeleton: definitions }, null, 2));
 console.log(JSON.stringify({ output, bytes: fs.statSync(output).size, joints: bones.length, clips: clips.map(x => x[0]) }));
