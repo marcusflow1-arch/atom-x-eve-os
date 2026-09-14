@@ -51,7 +51,7 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
 
   return <div className="genesis-surface genesis-shell" data-testid="genesis-wizard">
     <header><span className="genesis-brand"><Moon size={24}/>ATOM × EVE</span>{preview ? <span className="genesis-preview-badge">Developer preview<Link to="/LunaTemplate">Exit preview</Link></span> : <span className="genesis-preview-badge">First-time setup</span>}</header>
-    <ol className="genesis-steps">{['Body','Identity','Appearance','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
+    <ol className="genesis-steps">{['Body + Face','Identity','Appearance','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
     <div className="genesis-workspace">
       <GenesisModelPreview config={config} onCapabilities={setCapabilities}/>
       <form className="genesis-editor" onSubmit={submit}><fieldset disabled={busy}><AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:reduced?0:.18}}>
