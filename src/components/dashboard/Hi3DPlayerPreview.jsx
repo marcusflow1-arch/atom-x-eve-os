@@ -20,7 +20,7 @@ export default function Hi3DPlayerPreview({ config, interactive = false }) {
       scene.current = createGenesisScene(mount.current, HI3D_MODEL_URL, () => setReady(true), (value, name) => {
         setStatus(value); if (name) setClip(name);
       });
-      scene.current.appearance({ style_preset: config?.style_preset || 'heroic_fantasy' });
+      scene.current.appearance({ ...(config || {}), style_preset: config?.style_preset || 'heroic_fantasy' });
     } catch { setStatus('error'); }
     const afkTimer = window.setInterval(() => {
       const animation = scene.current?.animationState();
@@ -29,7 +29,7 @@ export default function Hi3DPlayerPreview({ config, interactive = false }) {
     return () => { clearInterval(afkTimer); scene.current?.dispose(); scene.current = null; };
   }, [retry]);
 
-  useEffect(() => { scene.current?.appearance({ style_preset: config?.style_preset || 'heroic_fantasy' }); }, [config?.style_preset]);
+  useEffect(() => { scene.current?.appearance({ ...(config || {}), style_preset: config?.style_preset || 'heroic_fantasy' }); }, [config]);
 
   useEffect(() => {
     const held = keys.current;
