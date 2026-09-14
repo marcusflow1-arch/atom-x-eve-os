@@ -1356,7 +1356,7 @@ export function LibraryBannerSection({
 
   const handleMessage = (u) => {
     onActiveFriendChange(null);
-    window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target: {
+    const target = {
       id: u.id,
       friend_id: u.id,
       friend_name: u.name,
@@ -1364,7 +1364,10 @@ export function LibraryBannerSection({
       status: u.status || 'online',
       current_game: u.current_game || null,
       is_friend: friendIds.has(String(u.id)),
-    } } }));
+    };
+    window.__lunaPendingMessageTarget = target;
+    window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target } }));
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target } })), 120);
   };
 
   const acceptDashboardInvite = async (request) => {
