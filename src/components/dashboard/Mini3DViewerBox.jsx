@@ -256,7 +256,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       renderer.domElement?.remove();
       mixerRef.current = null;
     };
-  }, []);
+  }, [savedCompanion]);
 
   return (
     <div className={`pointer-events-auto flex items-start gap-3 relative ${isUiVisible ? 'h-full' : 'px-3 pt-3'}`} style={isUiVisible ? { width: '100%', height: '100%' } : {}}>
