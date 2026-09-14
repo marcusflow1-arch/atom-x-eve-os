@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, Loader2, RefreshCcw, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { COMPANION_MODELS } from '@/components/onboarding/genesisAssets';
 
 const POLL_MS = 4500;
 const MAX_POLLS = 90;
@@ -103,8 +104,13 @@ export default function GenesisFaceScan({ config, setConfig }) {
   };
 
   const restoreBase = () => {
-    setConfig((current) => ({ ...current, model_url: '', face_scan_generated: false, tripo_model_id: '' }));
-    setStatus('Using the standard companion model');
+    setConfig((current) => ({
+      ...current,
+      model_url: COMPANION_MODELS[current.gender || 'male']?.url || COMPANION_MODELS.male.url,
+      face_scan_generated: false,
+      tripo_model_id: '',
+    }));
+    setStatus(`Using the standard ${config.gender || 'male'} character model`);
   };
 
   return (
