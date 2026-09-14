@@ -1,3 +1,4 @@
+import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -30,26 +31,7 @@ const LiveAI3DAvatar = ({ user }) => {
       <div className="absolute inset-4 rounded-full border border-purple-500/20 animate-spin-slow pointer-events-none" style={{ animationDirection: 'reverse', animationDuration: '15s' }} />
       
       <div className="w-full h-full relative z-10 mix-blend-screen opacity-90 hover:opacity-100 transition-opacity duration-500">
-        {customModelUrl ? (
-            <ThreeScene modelUrl={customModelUrl} scale={1.5} />
-        ) : (
-            <div className="w-full h-full relative z-10">
-                <iframe 
-                    title="Sinestrea WAVE (AOV)" 
-                    frameBorder="0" 
-                    allowFullScreen 
-                    mozallowfullscreen="true" 
-                    webkitallowfullscreen="true" 
-                    allow="autoplay; fullscreen; xr-spatial-tracking" 
-                    xr-spatial-tracking="true" 
-                    execution-while-out-of-viewport="true" 
-                    execution-while-not-rendered="true" 
-                    web-share="true" 
-                    src="https://sketchfab.com/models/a6493956f268493c8e40db5bbbca140f/embed?autostart=1&ui_controls=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_hint=0"
-                    className="w-full h-full"
-                />
-            </div>
-        )}
+        <PlayerAvatarPreview/>
       </div>
 
       {/* Floating Status Nodes */}

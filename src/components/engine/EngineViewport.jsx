@@ -1,3 +1,4 @@
+import {applyCompanionAppearance} from '@/components/onboarding/genesisAssets';
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -178,14 +179,14 @@ export default function EngineViewport({ onSceneReady }) {
               obj = gltf.scene;
               if (gltf.animations?.length > 0) {
                 const mixer = new THREE.AnimationMixer(obj);
-                gltf.animations.forEach(clip => mixer.clipAction(clip).play());
+                mixer.clipAction(gltf.animations.find(c=>c.name==='Idle')||gltf.animations[0]).play();
                 mixersRef.current.push(mixer);
               }
             } else if (lower.endsWith('.fbx')) {
               obj = await new FBXLoader().loadAsync(url);
               if (obj.animations?.length > 0) {
                 const mixer = new THREE.AnimationMixer(obj);
-                obj.animations.forEach(clip => mixer.clipAction(clip).play());
+                mixer.clipAction(obj.animations.find(c=>c.name==='Idle')||obj.animations[0]).play();
                 mixersRef.current.push(mixer);
               }
             }
@@ -215,7 +216,8 @@ export default function EngineViewport({ onSceneReady }) {
               obj.traverse(child => {
                 if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
               });
-              scene.add(obj);
+              if(options.appearance)applyCompanionAppearance(obj,options.appearance);
+            scene.add(obj);
               setObjectCount(c => c + 1);
             }
           } catch(e) { console.error("Failed to load model", e); }

@@ -1,3 +1,4 @@
+import {applyCompanionAppearance} from '@/components/onboarding/genesisAssets';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
@@ -28,7 +29,7 @@ function disposeModel(model) {
   textures.forEach((texture) => { texture.dispose(); texture.image?.close?.(); });
 }
 
-export function createSkillPreview(canvas, { url, animationClip, onReady, onError }) {
+export function createSkillPreview(canvas, { url, appearance={}, animationClip, onReady, onError }) {
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0x000000, 0); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -64,13 +65,13 @@ export function createSkillPreview(canvas, { url, animationClip, onReady, onErro
       if (!response.ok) throw new Error('Model unavailable');
       const buffer = await response.arrayBuffer();
       if (disposed) return;
-      const basePath = new URL('.', url).href;
-      const isFbx = /\.fbx$/i.test(new URL(url).pathname);
+      const basePath = new URL('.',new URL(url,window.location.href)).href;
+      const isFbx = /\.fbx$/i.test(new URL(url,window.location.href).pathname);
       const asset = isFbx ? new FBXLoader().parse(buffer, basePath) : await new GLTFLoader().parseAsync(buffer, basePath);
       const loaded = isFbx ? asset : asset.scene;
       if (disposed) { disposeModel(loaded); return; }
       if (!fitSkillModel(loaded)) { disposeModel(loaded); throw new Error('Empty model'); }
-      model = loaded; scene.add(model);
+      model = loaded;applyCompanionAppearance(model,appearance);scene.add(model);
       const animations = asset.animations || [];
       const clip = animations.find((item) => item.name === animationClip) || animations[0];
       if (clip) { mixer = new THREE.AnimationMixer(model); action = mixer.clipAction(clip); action.setLoop(THREE.LoopRepeat, Infinity); action.play(); }
@@ -78,6 +79,7 @@ export function createSkillPreview(canvas, { url, animationClip, onReady, onErro
     } catch (error) { if (!disposed && error.name !== 'AbortError') onError(); }
   })();
   return {
+    appearance(value){appearance=value;if(model){applyCompanionAppearance(model,value);render();}},
     setActive(value) { active = value; controls.enabled = value; schedule(); },
     setPlaying(value) { playing = value; schedule(); },
     rotate(direction) { camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), direction * Math.PI / 8); controls.update(); render(); },

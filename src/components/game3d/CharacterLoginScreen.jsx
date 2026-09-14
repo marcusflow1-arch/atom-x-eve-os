@@ -1,3 +1,4 @@
+import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -20,7 +21,7 @@ const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
  */
 export default function CharacterLoginScreen({ onPlay }) {
   const containerRef = useRef(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedCharIdx, setSelectedCharIdx] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [roster, setRoster] = useState(() => getCharacterState().roster);
@@ -44,131 +45,10 @@ export default function CharacterLoginScreen({ onPlay }) {
   });
 
   // Activate the selected character's saved level/xp into the HUD, then play.
-  const handlePlay = () => {
-    const chosen = characters[selectedCharIdx];
-    if (chosen) activateAndSyncToHUD(chosen.id);
-    onPlay?.();
-  };
+  const [starting,setStarting]=useState(false),[startError,setStartError]=useState('');
+  const handlePlay=async()=>{if(starting)return;setStarting(true);setStartError('');try{const chosen=characters[selectedCharIdx];if(chosen)await activateAndSyncToHUD(chosen.id);onPlay?.();}catch(e){setStartError(e.message);}finally{setStarting(false);}};
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const container = containerRef.current;
 
-    const scene = new THREE.Scene();
-    // WebGL context creation can fail when the browser hits its context limit
-    // (too many active canvases) or on low-end hardware. Fail soft: skip the
-    // 3D preview and let the rest of the login UI render normally.
-    let renderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        powerPreference: 'low-power',
-        failIfMajorPerformanceCaveat: false,
-      });
-    } catch (e) {
-      console.warn('CharacterLoginScreen: WebGL unavailable, skipping 3D preview.', e);
-      setLoading(false);
-      return;
-    }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
-    container.appendChild(renderer.domElement);
-
-    const camera = new THREE.PerspectiveCamera(32, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.4, -6.5);
-    camera.lookAt(0, 1.1, 0);
-
-    // Lighting — cinematic 3-point
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const key = new THREE.DirectionalLight(0xfff4e0, 2.4);
-    key.position.set(2, 4, -2);
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0xa5c8ff, 1.0);
-    fill.position.set(-3, 2, -1);
-    scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xffeebb, 2.0);
-    rim.position.set(0, 2, 3);
-    scene.add(rim);
-
-    let mixer;
-    const clock = new THREE.Clock();
-    const loader = new FBXLoader();
-
-    loader.load(ARCHER_URL, (fbx) => {
-      const box = new THREE.Box3().setFromObject(fbx);
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 2.6 / maxDim;
-      fbx.scale.setScalar(scale);
-
-      const center = box.getCenter(new THREE.Vector3());
-      fbx.position.sub(center.multiplyScalar(scale));
-      fbx.position.y += (size.y * scale) / 2;
-
-      // Face the camera
-      fbx.rotation.y = Math.PI;
-
-      fbx.traverse((node) => {
-        if (node.isMesh && node.material) {
-          const mats = Array.isArray(node.material) ? node.material : [node.material];
-          mats.forEach(mat => {
-            mat.side = THREE.DoubleSide;
-            mat.envMapIntensity = 1.2;
-            mat.needsUpdate = true;
-          });
-        }
-      });
-
-      scene.add(fbx);
-      mixer = new THREE.AnimationMixer(fbx);
-
-      loader.load(IDLE_URL, (idleFbx) => {
-        if (idleFbx.animations?.length > 0) {
-          mixer.clipAction(idleFbx.animations[0]).play();
-        }
-        setLoading(false);
-      }, undefined, () => setLoading(false));
-    }, undefined, (err) => {
-      console.error('Archer load error:', err);
-      setLoading(false);
-    });
-
-    let frameId;
-    const animate = () => {
-      frameId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
-
-    // Press ENTER to play
-    const onKey = (e) => {
-      if (e.key === 'Enter') handlePlay();
-    };
-    window.addEventListener('keydown', onKey);
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('keydown', onKey);
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
-      renderer.dispose();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <div className="fixed inset-0 overflow-hidden">
@@ -211,7 +91,7 @@ export default function CharacterLoginScreen({ onPlay }) {
       `}</style>
 
       {/* 3D character viewport */}
-      <div ref={containerRef} className="absolute inset-0" />
+      <div className="absolute inset-0" ><PlayerAvatarPreview config={characters[selectedCharIdx]?.isDevTest?undefined:characters[selectedCharIdx]} controls="compact"/></div>
 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -322,7 +202,7 @@ export default function CharacterLoginScreen({ onPlay }) {
       >
         <motion.button
           onClick={handlePlay}
-          disabled={characters.length === 0}
+          disabled={starting||characters.length===0}
           whileHover={{ scale: characters.length === 0 ? 1 : 1.02 }}
           whileTap={{ scale: characters.length === 0 ? 1 : 0.98 }}
           className={`w-full py-4 rounded text-white font-bold text-xl tracking-[0.3em] uppercase relative overflow-hidden group ${characters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -338,10 +218,11 @@ export default function CharacterLoginScreen({ onPlay }) {
               background: 'linear-gradient(180deg, rgba(100, 220, 255, 0.3) 0%, rgba(40, 120, 180, 0.5) 100%)',
             }}
           />
-          <span className="relative z-10 drop-shadow-lg">PLAY</span>
+          <span className="relative z-10 drop-shadow-lg">{starting?'LOADING…':'PLAY'}</span>
         </motion.button>
       </motion.div>
 
+      {startError&&<p role="alert" className="absolute bottom-28 right-8 text-red-300">{startError}</p>}
       {showCreate && (
         <CharacterCreationModal
           onClose={() => setShowCreate(false)}

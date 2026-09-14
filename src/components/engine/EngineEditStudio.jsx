@@ -1,3 +1,6 @@
+import {useCompanionIdentity} from '@/components/onboarding/CompanionIdentityContext';
+import {playerAppearance} from '@/components/onboarding/playerAppearance';
+import {companionModel} from '@/components/onboarding/genesisAssets';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
@@ -35,6 +38,7 @@ export default function EngineEditStudio({ sceneApi, onClose }) {
   const [brushSize, setBrushSize] = useState(2.5);
   const [brushStrength, setBrushStrength] = useState(0.45);
   const [terrainMode, setTerrainMode] = useState('raise');
+  const avatarAppearance=playerAppearance(useCompanionIdentity());
   const [modelUrls, setModelUrls] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
   const [damageEntries, setDamageEntries] = useState([{ type: 'physical', amount: 50, multiplier: 1, defense: 0 }]);
@@ -111,7 +115,7 @@ export default function EngineEditStudio({ sceneApi, onClose }) {
 
   const addModel = async (url) => {
     if (!sceneApi?.addModel) return;
-    await sceneApi.addModel(url, { position: { x: 0, y: 0, z: 0 } });
+    await sceneApi.addModel(url, { position: { x: 0, y: 0, z: 0 }, appearance: url===companionModel(avatarAppearance)?avatarAppearance:undefined });
     setModelUrls((v) => [...v, url]);
   };
 
@@ -141,8 +145,8 @@ export default function EngineEditStudio({ sceneApi, onClose }) {
         <aside className="pointer-events-auto absolute inset-y-16 left-2 w-[15%] min-w-[190px] rounded-2xl border border-white/10 bg-slate-950/92 p-3 backdrop-blur-xl">
           <div className="mb-3 text-[10px] uppercase tracking-[0.25em] text-slate-500">Asset Browser</div>
           <div className="space-y-2 overflow-y-auto">
-            {['Artemis / public/models/artemis.gltf', 'Starter Cube / primitive:cube', 'Terrain / terrain-generator', 'Sphere / primitive:sphere'].map((label, i) => (
-              <button key={label} onClick={() => label.includes('Artemis') ? addModel('/models/artemis.gltf') : sceneApi?.addPrimitive?.(label.includes('Sphere') ? 'sphere' : 'cube')} className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-2 text-left hover:bg-white/[0.08]">
+            {['Your character / saved appearance', 'Starter Cube / primitive:cube', 'Terrain / terrain-generator', 'Sphere / primitive:sphere'].map((label, i) => (
+              <button key={label} onClick={() => label.includes('Your character') ? addModel(companionModel(avatarAppearance)) : sceneApi?.addPrimitive?.(label.includes('Sphere') ? 'sphere' : 'cube')} className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-2 text-left hover:bg-white/[0.08]">
                 <div className="text-xs text-white/85">{label.split(' / ')[0]}</div>
                 <div className="text-[10px] text-white/35">{label.split(' / ')[1]}</div>
               </button>

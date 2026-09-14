@@ -1,3 +1,4 @@
+import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Loader2, Play } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
@@ -11,10 +12,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const BUILT_IN_ARTEMIS = {
   id: 'builtin-artemis',
-  name: 'Artemis',
-  displayName: 'Artemis',
-  description: 'Stylized low-poly moon huntress with ceremonial armor, crown, and bow.',
-  file_url: 'https://raw.githubusercontent.com/marcusflow1-arch/atom-x-eve-os/main/public/models/artemis.gltf',
+  name: 'Your character',
+  displayName: 'Your character',
+  description: 'Your saved player character, appearance and animations.',
+  file_url: '/models/luna-hi3d/warrior.glb',
   file_type: 'gltf',
   category: 'code-model',
   tags: ['code-model', 'atom-xe-created', 'ai-generated', 'artemis', 'moon-huntress'],
@@ -261,7 +262,7 @@ export default function CodeModels() {
                   <div className="text-lg font-bold">{selectedModel.displayName || selectedModel.name}</div>
                   <div className="text-xs text-slate-500">{selectedModel.description || 'Interactive 3D code model preview'}</div>
                 </div>
-                <div className="min-h-0 flex-1"><CodeModelViewer model={selectedModel} selectedAnimation={selectedAnimation} onAnimationsDetected={setAnimations} /></div>
+                <div className="min-h-0 flex-1">{selectedModel.file_url?.includes('/models/luna-hi3d/') ? <PlayerAvatarPreview interactive/> : <CodeModelViewer model={selectedModel} selectedAnimation={selectedAnimation} onAnimationsDetected={setAnimations} />}</div>
               </div>
             ) : (
               <div className="flex h-full min-h-[680px] items-center justify-center text-sm text-slate-500">Select a model from the left.</div>

@@ -1,3 +1,4 @@
+import {playerAppearance} from '@/components/onboarding/playerAppearance';
 import { useEffect, useRef, useState } from 'react';
 import { Box, ChevronLeft, ChevronRight, Minus, Pause, Play, Plus, RotateCcw } from 'lucide-react';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
@@ -5,7 +6,7 @@ import { companionModel } from '@/components/onboarding/genesisAssets';
 
 export default function SkillModelViewer({ card }) {
   const canvasRef = useRef(null), rootRef = useRef(null), runtime = useRef(null);
-  const companion = useCompanionIdentity();
+  const companion = playerAppearance(useCompanionIdentity());
   const previewUrl = companionModel(companion);
   const [status, setStatus] = useState('loading');
   const [animated, setAnimated] = useState(false);
@@ -29,11 +30,12 @@ export default function SkillModelViewer({ card }) {
     setStatus('loading');
     import('./skillModelRuntime').then(({ createSkillPreview }) => {
       if (cancelled || !canvasRef.current) return;
-      runtime.current = createSkillPreview(canvasRef.current, { url: previewUrl, animationClip: card.animationClip, onReady: ({ animated: hasAnimation }) => { if (!cancelled) { setAnimated(hasAnimation); setStatus('ready'); } }, onError: () => { if (!cancelled) setStatus('error'); } });
+      runtime.current = createSkillPreview(canvasRef.current, { url: previewUrl, appearance: companion, animationClip: card.animationClip, onReady: ({ animated: hasAnimation }) => { if (!cancelled) { setAnimated(hasAnimation); setStatus('ready'); } }, onError: () => { if (!cancelled) setStatus('error'); } });
       runtime.current.setActive(activeRef.current); runtime.current.setPlaying(playingRef.current);
     }).catch(() => { if (!cancelled) setStatus('error'); });
     return () => { cancelled = true; runtime.current?.dispose(); runtime.current = null; };
   }, [previewUrl, card.animationClip]);
+  useEffect(()=>{runtime.current?.appearance(companion);},[JSON.stringify(companion)]);
   useEffect(() => { runtime.current?.setActive(active); }, [active]);
   useEffect(() => { runtime.current?.setPlaying(playing); }, [playing]);
   const onKey = (event) => {
