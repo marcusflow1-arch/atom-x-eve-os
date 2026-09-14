@@ -203,7 +203,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
       if (preserveAppearance) {
         embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
       } else applyCompanionAppearance(model, appearance);
-      onReady({ materials, morphs, hood, weapon, eyes, eyelashes, hair, faceComposite: Boolean(find => find), embeddedClips: preserveAppearance ? (asset.animations || []).map(clip => clip.name) : [] });
+      onReady({ materials, morphs, hood, weapon, eyes, eyelashes, hair, embeddedClips: preserveAppearance ? (asset.animations || []).map(clip => clip.name) : [] });
       syncFaceComposite(appearance);
     } catch (error) {
       console.error('Avatar model failed:', error);
