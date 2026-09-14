@@ -9,6 +9,7 @@ import { Mic, MicOff, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { companionModel, applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
+import { attachGeneratedFaceToBody } from '@/components/onboarding/faceComposite';
 
 const ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const MP_ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
@@ -130,6 +131,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
     let currentAction = null;
     let motionIndex = 0;
     let motionVersion = 0;
+    let faceComposite = null;
 
     const disposeAsset = (object) => object?.traverse?.((node) => {
       if (!node.isMesh) return;
@@ -200,6 +202,14 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       });
       applyCompanionAppearance(model, savedCompanion || {});
       scene.add(model);
+      if (savedCompanion?.face_scan_generated && savedCompanion?.face_model_url) {
+        attachGeneratedFaceToBody({ baseModel: model, faceUrl: savedCompanion.face_model_url, gltfLoader, fbxLoader })
+          .then((composite) => {
+            if (disposed) composite.dispose?.();
+            else faceComposite = composite;
+          })
+          .catch((error) => console.warn('Luna mini viewer could not apply generated face:', error));
+      }
       mixerRef.current = new THREE.AnimationMixer(model);
       const embeddedClip = asset.animations?.[0] || model.animations?.[0];
       if (embeddedClip) {
@@ -251,6 +261,8 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       window.removeEventListener('resize', resize);
       observer.disconnect();
       mixerRef.current?.stopAllAction();
+      faceComposite?.dispose?.();
+      faceComposite = null;
       disposeAsset(model);
       renderer.dispose();
       renderer.domElement?.remove();
