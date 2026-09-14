@@ -58,12 +58,18 @@ export default function FriendsListContent() {
     refetchInterval: 5000
   });
 
-  const { data: friends = [] } = useQuery({
+  const { data: friends = [], refetch: refetchFriends } = useQuery({
     queryKey: ['friends', user?.id],
     queryFn: async () => base44.entities.Friend.filter({ user_id: user.id }),
     enabled: !!user?.id,
     refetchInterval: 5000
   });
+
+  React.useEffect(() => {
+    const refresh = () => refetchFriends();
+    window.addEventListener('lunaSocialChanged', refresh);
+    return () => window.removeEventListener('lunaSocialChanged', refresh);
+  }, [refetchFriends]);
 
   const {
     data: incomingDashboardInvites = [],
@@ -162,46 +168,37 @@ export default function FriendsListContent() {
 
   const handleJoin = async (userObj) => {
     const immediateId = playerIdFor(userObj);
-    if (!immediateId || !user?.id || immediateId === String(user.id)) return;
+    if (!immediateId || !user?.id || immediateId === String(user.id) || joiningUserId === immediateId) return;
 
     setJoiningUserId(immediateId);
+    const targetChannel = `dashboard_${immediateId}`;
+    const immediateSpawn = buildSafeCompanionSpawn(null);
+
+    // Switch channels immediately so the button can never be blocked by a
+    // PlayerState lookup. Live metadata is enrichment, not a prerequisite.
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: {
+        channelId: targetChannel,
+        hostId: immediateId,
+        hostName: userObj.friend_name || userObj.display_name || 'Friend',
+        socialJoin: true,
+        companionSpawn: immediateSpawn,
+      }
+    }));
+    window.dispatchEvent(new CustomEvent('dashboardJoinSpawn', {
+      detail: { hostId: immediateId, position: immediateSpawn }
+    }));
+    showSuccess(`Joining ${userObj.friend_name || userObj.display_name || 'friend'}'s dashboard.`);
+
     try {
       const { targetPlayerId, liveState } = await resolveLivePlayer(userObj);
-      if (!targetPlayerId) throw new Error('This player does not have a dashboard ID yet.');
-
-      // "Join Dashboard" must always target the friend's personal Luna home.
-      // The previous implementation followed whatever live channel the friend was
-      // currently in, which could send visitors into a game/world/other dashboard.
-      const targetChannel = `dashboard_${targetPlayerId}`;
+      if (!targetPlayerId) return;
       const dashboardState = liveState?.channel_id === targetChannel ? liveState : null;
       const knownDashboardState = userObj?.channel_id === targetChannel ? userObj : null;
       const envUrl = dashboardState?.env_url || knownDashboardState?.envUrl || '';
-
-      // Only pre-apply an environment when it is known to belong to the target
-      // dashboard. MultiplayerSystem remains responsible for resolving the host's
-      // saved AvatarHomeState when they are offline or currently somewhere else.
-      if (envUrl) {
-        window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl } }));
-      }
-
-      const spawn = buildSafeCompanionSpawn(dashboardState);
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: {
-          channelId: targetChannel,
-          hostId: targetPlayerId,
-          hostName: userObj.friend_name || userObj.display_name || liveState?.display_name || 'Friend',
-          socialJoin: true,
-          companionSpawn: spawn,
-        }
-      }));
-
-      window.dispatchEvent(new CustomEvent('dashboardJoinSpawn', {
-        detail: { hostId: targetPlayerId, position: spawn }
-      }));
-
-      showSuccess(`Joining ${userObj.friend_name || userObj.display_name || 'friend'}'s dashboard.`);
+      if (envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl } }));
     } catch (error) {
-      showError(error, 'Join Dashboard');
+      console.warn('Dashboard joined; live metadata lookup failed.', error);
     } finally {
       setJoiningUserId(null);
     }
