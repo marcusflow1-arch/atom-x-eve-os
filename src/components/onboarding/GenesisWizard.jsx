@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, Moon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import GenesisFaceScan from './GenesisFaceScan';
 import GenesisProfileFields from '@/components/onboarding/GenesisProfileFields';
 import GenesisCompanionFields from '@/components/onboarding/GenesisCompanionFields';
 import GenesisAppearanceFields from '@/components/onboarding/GenesisAppearanceFields';
@@ -35,7 +36,7 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
     event.preventDefault();
     if (busy) return;
     setError('');
-    if (step < 4) { setStep((value) => value + 1); return; }
+    if (step < 5) { setStep((value) => value + 1); return; }
     setBusy(true);
     try {
       const response = await base44.functions.invoke('avatarSystem', { action: 'completeSetup', profile, companion: config, preview });
@@ -51,18 +52,19 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
 
   return <div className="genesis-surface genesis-shell" data-testid="genesis-wizard">
     <header><span className="genesis-brand"><Moon size={24}/>ATOM × EVE</span>{preview ? <span className="genesis-preview-badge">Developer preview<Link to="/LunaTemplate">Exit preview</Link></span> : <span className="genesis-preview-badge">First-time setup</span>}</header>
-    <ol className="genesis-steps">{['Body + Face','Identity','Appearance','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
+    <ol className="genesis-steps">{['Body','Face','Appearance','Identity','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
     <div className="genesis-workspace">
       <GenesisModelPreview config={config} onCapabilities={setCapabilities}/>
       <form className="genesis-editor" onSubmit={submit}><fieldset disabled={busy}><AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:reduced?0:.18}}>
         {step === 0 && <GenesisCompanionFields config={config} setConfig={setConfig}/>} 
-        {step === 1 && <GenesisProfileFields profile={profile} setProfile={setProfile} email={user?.email} config={config} setConfig={setConfig}/>}
+        {step === 3 && <GenesisProfileFields profile={profile} setProfile={setProfile} email={user?.email} config={config} setConfig={setConfig}/>}
+        {step === 1 && <GenesisFaceScan config={config} setConfig={setConfig}/>}
         {step === 2 && <GenesisAppearanceFields config={config} setConfig={setConfig} capabilities={capabilities}/>}
-        {step === 3 && <GenesisVoiceFields config={config} setConfig={setConfig}/>}
-        {step === 4 && <GenesisReview profile={profile} config={config} preview={preview}/>}
+        {step === 4 && <GenesisVoiceFields config={config} setConfig={setConfig}/>}
+        {step === 5 && <GenesisReview profile={profile} config={config} preview={preview}/>}
       </motion.div></AnimatePresence></fieldset>
       {error && <p className="genesis-error" role="alert">{error}</p>}
-      <footer className="genesis-actions">{step > 0 ? <button className="genesis-secondary" type="button" disabled={busy} onClick={() => setStep((value) => value - 1)}><ArrowLeft size={15}/>Back</button> : <span>Setup once. Keep it with you.</span>}<button className="genesis-primary" type="submit" disabled={busy}>{step === 4 ? (preview ? 'Save preview' : 'Begin my journey') : 'Continue'}<ArrowRight size={15}/></button></footer>
+      <footer className="genesis-actions">{step > 0 ? <button className="genesis-secondary" type="button" disabled={busy} onClick={() => setStep((value) => value - 1)}><ArrowLeft size={15}/>Back</button> : <span>Setup once. Keep it with you.</span>}<button className="genesis-primary" type="submit" disabled={busy}>{step === 5 ? (preview ? 'Save preview' : 'Begin my journey') : 'Continue'}<ArrowRight size={15}/></button></footer>
       </form>
     </div>
     <AnimatePresence>{busy && <GenesisLoadingScreen label={preview ? 'Saving your preview' : 'Preparing your world'}/>}</AnimatePresence>

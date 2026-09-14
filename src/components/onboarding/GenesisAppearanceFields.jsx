@@ -1,4 +1,5 @@
 import React from 'react';
+import {FACE_CONTROLS,FIT_DEFAULTS} from './avatarAppearanceData';
 import { Eye, Palette, PersonStanding, Sparkles } from 'lucide-react';
 import { AVATAR_STYLE_PRESETS, DEFAULT_AVATAR_APPEARANCE } from '@/components/onboarding/genesisAssets';
 
@@ -14,7 +15,7 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
   return <section className="genesis-fields genesis-appearance-fields">
     <p className="genesis-kicker">03 / APPEARANCE</p>
     <h1>Build your<br />signature look.</h1>
-    <p className="genesis-description">Fine-tune the 3D character you selected. Your face scan now lives with your personal information on the previous step, while this screen focuses on style, proportions, complexion and model-specific details.</p>
+    <p className="genesis-description">Refine your fitted face, choose a style and customize the body. These settings follow your character throughout the app.</p>
 
     <div className="genesis-subsection">
       <div className="genesis-subsection-title"><Sparkles size={15}/><span>Art direction</span></div>
@@ -36,19 +37,30 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
     <div className="genesis-subsection">
       <div className="genesis-subsection-title"><Palette size={15}/><span>Complexion & color</span></div>
       <div className="genesis-color-row">
-        <label><span>Skin complexion</span><input type="color" aria-label="Skin complexion" value={config.skin_tone || DEFAULT_AVATAR_APPEARANCE.skin_tone} onChange={e => update({ skin_tone: e.target.value })} /></label>
-        <div className="genesis-color-presets" aria-label="Skin complexion presets">{SKIN_PRESETS.map(color => <button key={color} type="button" aria-label={`Skin tone ${color}`} style={{background:color}} onClick={() => update({ skin_tone: color })} />)}</div>
+        <label><span>Skin complexion</span><input type="color" aria-label="Skin complexion" value={config.skin_tone || DEFAULT_AVATAR_APPEARANCE.skin_tone} onChange={e => update({ skin_tint_enabled: true, skin_tone: e.target.value })} /></label>
+        <div className="genesis-color-presets" aria-label="Skin complexion presets">{SKIN_PRESETS.map(color => <button key={color} type="button" aria-label={`Skin tone ${color}`} style={{background:color}} onClick={() => update({ skin_tint_enabled: true, skin_tone: color })} />)}</div>
       </div>
-      <div className="genesis-color-row">
+      {capabilities.eyes && <div className="genesis-color-row">
         <label><span>Eye color</span><input type="color" aria-label="Eye color" value={config.eye_color || DEFAULT_AVATAR_APPEARANCE.eye_color} onChange={e => update({ eye_color: e.target.value })} /></label>
         <div className="genesis-color-presets" aria-label="Eye color presets">{EYE_PRESETS.map(color => <button key={color} type="button" aria-label={`Eye color ${color}`} style={{background:color}} onClick={() => update({ eye_color: color })} />)}</div>
       </div>
-      <div className="genesis-field-pair">
-        <label>Hair color<input type="color" aria-label="Hair color" value={config.hair_color || DEFAULT_AVATAR_APPEARANCE.hair_color} onChange={e => update({ hair_color: e.target.value })} /></label>
+      }<div className="genesis-field-pair">
+        <label>Hair color<input type="color" aria-label="Hair color" value={config.hair_color || DEFAULT_AVATAR_APPEARANCE.hair_color} onChange={e => update({ hair_tint_enabled: true, hair_color: e.target.value })} /></label>
         <label>Eyelashes<select aria-label="Eyelash style" value={config.eyelash_style || 'natural'} onChange={e => update({ eyelash_style: e.target.value })}><option value="soft">Soft</option><option value="natural">Natural</option><option value="bold">Bold</option></select></label>
       </div>
     </div>
 
+    {capabilities.faceFit && <div className="genesis-subsection"><h3>Face proportions</h3>{FACE_CONTROLS.map(([key,label])=><label key={key}>{label}<input type="range" aria-label={label} min="-1" max="1" step=".02" value={config.face_shape?.[key]||0} onChange={e=>setConfig(c=>({...c,face_shape:{...c.face_shape,[key]:Number(e.target.value)}}))}/></label>)}</div>}
+    {capabilities.hi3d && <div className="genesis-subsection">
+      <label>Complexion<select value={config.complexion||'natural'} onChange={e=>update({complexion:e.target.value})}><option value="natural">Natural</option><option value="freckles">Freckles</option><option value="rosy">Rosy cheeks</option></select></label>
+      <label>Mustache<select value={config.facial_hair||'none'} onChange={e=>update({facial_hair:e.target.value})}><option value="none">None</option><option value="fine">Fine</option><option value="trimmed">Trimmed</option></select></label>
+      <label>Mustache color<input type="color" value={config.facial_hair_color||'#30241e'} onChange={e=>update({facial_hair_color:e.target.value})}/></label>
+      <label>Tattoo<select value={config.tattoo_style||'none'} onChange={e=>update({tattoo_style:e.target.value})}><option value="none">None</option><option value="bands">Forearm bands</option><option value="botanical">Botanical line</option></select></label>
+      <label>Tattoo arm<select value={config.tattoo_placement||'left'} onChange={e=>update({tattoo_placement:e.target.value})}><option value="left">Left</option><option value="right">Right</option></select></label>
+      <label>Tattoo color<input type="color" value={config.tattoo_color||'#263b42'} onChange={e=>update({tattoo_color:e.target.value})}/></label>
+      <label>Hair length<input type="range" min=".35" max="1.35" step=".01" value={config.hair_length||1} onChange={e=>update({hair_length:Number(e.target.value)})}/></label>
+      <label>Hair volume<input type="range" min=".8" max="1.2" step=".01" value={config.hair_volume||1} onChange={e=>update({hair_volume:Number(e.target.value)})}/></label>
+    </div>}
     {(capabilities.hood || capabilities.weapon) && <div className="genesis-subsection">
       <div className="genesis-subsection-title"><Eye size={15}/><span>Wearables</span></div>
       <div className="genesis-toggle-grid">
@@ -62,7 +74,7 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
     {morphs.length > 0 && <div className="genesis-subsection"><div className="genesis-subsection-title"><PersonStanding size={15}/><span>Face & shape controls</span></div>{morphs.map(m => <label key={m.key}>{m.label}<input aria-label={m.label} type="range" min="0" max="1" step="0.05" value={config.morph_targets?.[m.key] || 0} onChange={e => setConfig(c => ({ ...c, morph_targets: { ...(c.morph_targets || {}), [m.key]: Number(e.target.value) } }))} /></label>)}</div>}
 
     <button type="button" className="genesis-link" onClick={() => setConfig(c => ({
-      ...c,
+      ...c, ...FIT_DEFAULTS,
       style_preset: DEFAULT_AVATAR_APPEARANCE.style_preset,
       skin_tone: DEFAULT_AVATAR_APPEARANCE.skin_tone,
       eye_color: DEFAULT_AVATAR_APPEARANCE.eye_color,
