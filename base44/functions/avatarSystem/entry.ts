@@ -243,9 +243,12 @@ async function saveAvatarAppearance(base44, userId, appearance = {}) {
         },
         material_colors: appearance.material_colors || {},
         morph_targets: appearance.morph_targets || appearance.morphTargets || {},
-        face_scan_generated: Boolean(appearance.face_scan_generated),
+        face_scan_generated: Boolean(appearance.face_scan_generated && appearance.face_model_url),
+        face_model_url: String(appearance.face_model_url || '').slice(0, 1000),
+        base_body_gender: appearance.gender === 'female' ? 'female' : 'male',
+        base_body_model_url: normalizeAvatarModel(appearance.base_body_model_url || appearance.model_url || GLOBAL_AVATAR_MODEL),
         tripo_model_id: String(appearance.tripo_model_id || '').slice(0, 120),
-        appearance_version: 2,
+        appearance_version: 3,
     };
     Object.keys(normalized).forEach((key) => normalized[key] === undefined && delete normalized[key]);
 
