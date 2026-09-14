@@ -1,3 +1,4 @@
+import {saveAppearance} from '@/components/onboarding/saveAppearance';
 // ─── Character Roster Store ────────────────────────────────────────────
 // Persistent multi-character roster. Each character has:
 //   { id, name, appearance: { head, body, shoulders }, createdAt }
@@ -14,7 +15,7 @@ import {
   subscribeCharacterChange,
   userScopedKey,
 } from './characterStorage';
-import { GLOBAL_AVATAR_MODEL_URL } from '@/components/onboarding/genesisAssets';
+import { GLOBAL_AVATAR_MODEL_URL, DEFAULT_AVATAR_APPEARANCE } from '@/components/onboarding/genesisAssets';
 
 // Roster + active-character keys are scoped to the signed-in user, so one
 // account's roster is never visible to another account on the same browser.
@@ -102,6 +103,7 @@ export function getActiveCharacter() {
 export function createCharacter({ name, appearance, avatarConfig = {} }) {
   const id = `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const character = {
+    ...Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','model_url'].filter(k=>avatarConfig[k]!==undefined).map(k=>[k,avatarConfig[k]])), appearance_version:3,
     id,
     name: (name || 'New Character').trim().slice(0, 24),
     appearance: {
@@ -142,6 +144,8 @@ export function setActiveCharacter(id) {
 // Called by the login screen when "PLAY" is pressed for a chosen character.
 // Just switches the active character — every progression store will
 // automatically reload from that character's namespaced slot.
-export function activateAndSyncToHUD(id) {
+export async function activateAndSyncToHUD(id) {
+  const character=state.roster.find(c=>c.id===id);if(character&&!character.isDevTest)await saveAppearance(character);
   setActiveCharacter(id);
 }
+window.addEventListener('avatarAppearanceSaved',event=>{const avatar=event.detail?.avatar;if(!avatar)return;const patch=Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','model_url'].filter(k=>avatar[k]!==undefined).map(k=>[k,avatar[k]]));state={...state,roster:state.roster.map(c=>c.id===state.activeId&&!c.isDevTest?{...c,...patch}:c)};emit();});
