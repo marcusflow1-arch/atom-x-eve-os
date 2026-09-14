@@ -1683,20 +1683,29 @@ function OnlineUsersDropdown({ onSelectEnv }) {
   }, [open]);
 
   const handleAddFriend = async (e, u) => {
+    e.preventDefault();
     e.stopPropagation();
-    if (!user) return;
+    if (!user?.id || !u?.id) return;
     setFriendStatus(prev => ({ ...prev, [u.id]: 'sending' }));
     try {
-      await base44.entities.FriendRequest.create({
-        sender_id: user.id,
-        sender_name: user.full_name || user.username || user.email?.split('@')[0] || 'A player',
-        sender_avatar: user.avatar_url || '',
-        receiver_id: u.id,
-        status: 'pending',
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'send_friend_request',
+        data: { target_user_id: u.id },
       });
-      setFriendStatus(prev => ({ ...prev, [u.id]: 'sent' }));
-    } catch {
-      setFriendStatus(prev => ({ ...prev, [u.id]: undefined }));
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+
+      if (body.accepted || body.already_friends) {
+        setFriendStatus(prev => ({ ...prev, [u.id]: 'friends' }));
+        window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friendship', friendId: String(u.id) } }));
+        showSuccess(`${u.name || 'Player'} is now in your Friends list.`);
+      } else {
+        setFriendStatus(prev => ({ ...prev, [u.id]: 'sent' }));
+        showSuccess(`Friend request sent to ${u.name || 'player'}.`);
+      }
+    } catch (error) {
+      setFriendStatus(prev => ({ ...prev, [u.id]: 'error' }));
+      showError(error, 'Friend Request');
     }
   };
 
@@ -1782,18 +1791,27 @@ function OnlineUsersDropdown({ onSelectEnv }) {
                     <span className="text-[9px] text-white/40 truncate">Online now</span>
                   </div>
                   <button
-                    onClick={(e) => handleAddFriend(e, u)}
-                    disabled={friendStatus[u.id] === 'sending' || friendStatus[u.id] === 'sent'}
+                    onPointerDown={(e) => {
+                      if (e.button !== undefined && e.button !== 0) return;
+                      handleAddFriend(e, u);
+                    }}
+                    onClick={(e) => {
+                      if (e.detail === 0) handleAddFriend(e, u);
+                      else { e.preventDefault(); e.stopPropagation(); }
+                    }}
+                    disabled={friendStatus[u.id] === 'sending' || friendStatus[u.id] === 'sent' || friendStatus[u.id] === 'friends'}
                     className="text-[9px] font-bold px-2 py-1 rounded border transition-colors flex-shrink-0 cursor-pointer flex items-center gap-1 disabled:opacity-60"
                     style={{
-                      borderColor: friendStatus[u.id] === 'sent' ? 'rgba(34,197,94,0.5)' : 'rgba(59,130,246,0.4)',
-                      background: friendStatus[u.id] === 'sent' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)',
-                      color: friendStatus[u.id] === 'sent' ? '#4ade80' : '#60a5fa',
+                      borderColor: ['sent', 'friends'].includes(friendStatus[u.id]) ? 'rgba(34,197,94,0.5)' : friendStatus[u.id] === 'error' ? 'rgba(244,63,94,0.5)' : 'rgba(59,130,246,0.4)',
+                      background: ['sent', 'friends'].includes(friendStatus[u.id]) ? 'rgba(34,197,94,0.15)' : friendStatus[u.id] === 'error' ? 'rgba(244,63,94,0.12)' : 'rgba(59,130,246,0.15)',
+                      color: ['sent', 'friends'].includes(friendStatus[u.id]) ? '#4ade80' : friendStatus[u.id] === 'error' ? '#fda4af' : '#60a5fa',
                     }}
                     title="Send friend request"
                   >
                     {friendStatus[u.id] === 'sending' ? '...' :
                      friendStatus[u.id] === 'sent' ? <><Check className="w-3 h-3" /> Sent</> :
+                     friendStatus[u.id] === 'friends' ? <><Check className="w-3 h-3" /> Friends</> :
+                     friendStatus[u.id] === 'error' ? <><UserPlus className="w-3 h-3" /> Retry</> :
                      <><UserPlus className="w-3 h-3" /> Add</>}
                   </button>
                 </div>
