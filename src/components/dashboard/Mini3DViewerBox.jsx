@@ -111,6 +111,20 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
     }
   };
 
+  const promptAction = (accept) => ({
+    onPointerDown: (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      respond(accept);
+    },
+    onClick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) respond(accept);
+    },
+  });
+
   const prompt = pendingAction ? (() => {
     if (pendingAction.kind === 'friend') return {
       icon: UserPlus,
@@ -152,7 +166,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
                 <prompt.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200/75" />
                 <div className="min-w-0 flex-1"><p className="text-[7px] font-black uppercase tracking-[.16em] text-cyan-100/45">{prompt.eyebrow}</p><p className="mt-0.5 text-[9px] font-semibold leading-3 text-white/90">{prompt.text}</p></div>
               </div>
-              <div className="mt-2 flex gap-1.5"><button disabled={busy} onClick={() => respond(false)} className="flex h-7 flex-1 items-center justify-center gap-1 rounded-lg bg-white/[0.06] text-[8px] font-bold text-white/55 hover:bg-white/[0.1] disabled:opacity-40"><X className="h-3 w-3" />Decline</button><button disabled={busy} onClick={() => respond(true)} className="flex h-7 flex-1 items-center justify-center gap-1 rounded-lg bg-cyan-300 text-[8px] font-black text-slate-950 hover:bg-cyan-200 disabled:opacity-40"><Check className="h-3 w-3" />{busy ? 'Working…' : prompt.accept}</button></div>
+              <div className="mt-2 flex gap-1.5"><button disabled={busy} {...promptAction(false)} className="flex h-7 flex-1 items-center justify-center gap-1 rounded-lg bg-white/[0.06] text-[8px] font-bold text-white/55 hover:bg-white/[0.1] disabled:opacity-40"><X className="h-3 w-3" />Decline</button><button disabled={busy} {...promptAction(true)} className="flex h-7 flex-1 items-center justify-center gap-1 rounded-lg bg-cyan-300 text-[8px] font-black text-slate-950 hover:bg-cyan-200 disabled:opacity-40"><Check className="h-3 w-3" />{busy ? 'Working…' : prompt.accept}</button></div>
               {actionError && <p className="mt-1 text-[7px] text-rose-300">{actionError}</p>}
             </div>
           )}
