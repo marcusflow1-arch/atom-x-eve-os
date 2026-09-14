@@ -41,6 +41,12 @@
     "status": {
       "type": "string",
       "default": "online"
+    },
+    "appearance": {
+      "type": "object"
+    },
+    "dashboard_joined_at": {
+      "type": "number"
     }
   },
   "required": [
