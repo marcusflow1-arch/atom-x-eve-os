@@ -14,6 +14,7 @@ import {
   subscribeCharacterChange,
   userScopedKey,
 } from './characterStorage';
+import { GLOBAL_AVATAR_MODEL_URL } from '@/components/onboarding/genesisAssets';
 
 // Roster + active-character keys are scoped to the signed-in user, so one
 // account's roster is never visible to another account on the same browser.
@@ -41,6 +42,9 @@ const DEV_TEST_CHARACTER = {
   name: 'Dev Test',
   isDevTest: true,
   appearance: { head: 'default', body: 'default', shoulders: 'default' },
+  model_url: GLOBAL_AVATAR_MODEL_URL,
+  face_scan_generated: false,
+  tripo_model_id: '',
   createdAt: '1970-01-01T00:00:00.000Z',
 };
 
@@ -95,7 +99,7 @@ export function getActiveCharacter() {
 // Create a new character. Stored progression starts EMPTY for this id —
 // the namespaced storage layer returns nothing for new ids, so every store
 // initializes to its defaults (level 1, 0 XP, 0 halo, no titles, etc.).
-export function createCharacter({ name, appearance }) {
+export function createCharacter({ name, appearance, avatarConfig = {} }) {
   const id = `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const character = {
     id,
@@ -105,6 +109,15 @@ export function createCharacter({ name, appearance }) {
       body:      appearance?.body      || 'default',
       shoulders: appearance?.shoulders || 'default',
     },
+    model_url: avatarConfig.model_url || GLOBAL_AVATAR_MODEL_URL,
+    face_scan_generated: Boolean(avatarConfig.face_scan_generated),
+    tripo_model_id: avatarConfig.tripo_model_id || '',
+    style_preset: avatarConfig.style_preset || 'heroic_fantasy',
+    skin_tone: avatarConfig.skin_tone || '#b97855',
+    eye_color: avatarConfig.eye_color || '#5ca9c9',
+    hair_color: avatarConfig.hair_color || '#2a1d18',
+    height_scale: avatarConfig.height_scale || 1,
+    body_proportions: avatarConfig.body_proportions || { width: 1, depth: 1 },
     createdAt: new Date().toISOString(),
   };
   state = {
