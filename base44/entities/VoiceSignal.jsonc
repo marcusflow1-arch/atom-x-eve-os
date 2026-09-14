@@ -12,7 +12,14 @@
       "type": "string"
     },
     "type": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "offer",
+        "answer",
+        "ice",
+        "decline",
+        "hangup"
+      ]
     },
     "payload": {
       "type": "object"
@@ -24,5 +31,40 @@
     "target_id",
     "type",
     "payload"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.sender_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.target_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.target_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.target_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
 }
