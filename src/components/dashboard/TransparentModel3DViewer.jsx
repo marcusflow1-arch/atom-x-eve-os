@@ -1591,6 +1591,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       const EFFECT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb';
 
       const setupC1Attachments = async () => {
+        if(isHi3DAvatar(c1))return;
         await new Promise(r => setTimeout(r, 100));
         
         try {
