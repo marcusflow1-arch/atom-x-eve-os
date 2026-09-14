@@ -125,6 +125,9 @@ async function startAvatarPipeline(base44: any, user: any, body: any) {
       style_preset: String(body.stylePreset || 'heroic_fantasy'),
       source_photo_used: true,
       source_photo_public_profile: false,
+      face_only_intent: body.faceOnlyIntent === true,
+      base_body_gender: body.gender === 'female' ? 'female' : 'male',
+      base_body_model_url: String(body.baseBodyModelUrl || '').slice(0, 1000),
       rig_spec: 'mixamo',
     },
   });
