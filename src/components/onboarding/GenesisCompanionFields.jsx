@@ -14,6 +14,7 @@ export default function GenesisCompanionFields({ config, setConfig }) {
       base_body_model_url: model.url,
       face_scan_generated: false,
       face_model_url: '',
+      face_capture_preview_url: '',
       tripo_model_id: '',
       material_colors: {},
       morph_targets: {},
