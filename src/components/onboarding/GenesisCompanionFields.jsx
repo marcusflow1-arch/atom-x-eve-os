@@ -1,5 +1,6 @@
 import React from 'react';
 import { UserRound } from 'lucide-react';
+import GenesisFaceScan from '@/components/onboarding/GenesisFaceScan';
 import { COMPANION_MODELS } from '@/components/onboarding/genesisAssets';
 
 export default function GenesisCompanionFields({ config, setConfig }) {
@@ -9,6 +10,8 @@ export default function GenesisCompanionFields({ config, setConfig }) {
       ...current,
       gender,
       model_url: model.url,
+      base_body_gender: gender,
+      base_body_model_url: model.url,
       face_scan_generated: false,
       tripo_model_id: '',
       material_colors: {},
@@ -17,9 +20,9 @@ export default function GenesisCompanionFields({ config, setConfig }) {
   };
 
   return <section className="genesis-fields genesis-gender-step">
-    <p className="genesis-kicker">01 / CHARACTER BODY</p>
-    <h1>Choose male<br />or female.</h1>
-    <p className="genesis-description">This is the first choice in character creation. The male option uses the same white-shirt Luna AI avatar shown in the center of your dashboard. You can personalize the face on the next screen.</p>
+    <p className="genesis-kicker">01 / CHARACTER BODY + FACE</p>
+    <h1>Choose your body.<br />Then scan your face.</h1>
+    <p className="genesis-description">Start by choosing Male or Female. The male option uses the white-shirt Luna AI character from the dashboard. On this same screen, your PC camera can capture your face and apply your likeness to the 3D character preview.</p>
 
     <div className="genesis-choices genesis-gender-choices">
       {Object.entries(COMPANION_MODELS).map(([gender, model]) => (
@@ -27,11 +30,13 @@ export default function GenesisCompanionFields({ config, setConfig }) {
           <span className="genesis-gender-icon"><UserRound size={21} /></span>
           <strong>{gender === 'male' ? 'Male' : 'Female'}</strong>
           <small>{model.name}</small>
-          {gender === 'male' && <em>Dashboard Luna model</em>}
+          {gender === 'male' && <em>White-shirt Luna dashboard body</em>}
         </button>
       ))}
     </div>
 
-    <p className="genesis-note">Your body choice sets the starting 3D model only. Face generation and appearance controls can still personalize the character afterward.</p>
+    <GenesisFaceScan config={config} setConfig={setConfig} />
+
+    <p className="genesis-note">Changing Male/Female restores that body's default face. After you capture a new face, the live 3D preview updates to the generated personal likeness.</p>
   </section>;
 }
