@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RotateCcw, RotateCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { COMPANION_MOTIONS, companionModel } from '@/components/onboarding/genesisAssets';
+import { COMPANION_MOTIONS, companionModel, GLOBAL_AVATAR_NAME } from '@/components/onboarding/genesisAssets';
 import { createGenesisScene } from '@/components/onboarding/genesisScene';
 
 let animationCatalogPromise = null;
@@ -317,7 +317,7 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
       tabIndex={compact && interactive ? 0 : undefined}
       aria-label={compact && interactive ? 'AI avatar. Click to enable movement; double-click to interact.' : undefined}
     >
-      {!compact && <div className="genesis-stage-top"><span className="genesis-kicker">YOUR COMPANION / LIVE 3D</span><p>{config.name || 'A new beginning'} · {config.gender === 'female' ? 'Erika Archer' : 'White Y-Bot'}</p></div>}
+      {!compact && <div className="genesis-stage-top"><span className="genesis-kicker">YOUR COMPANION / LIVE 3D</span><p>{config.name || 'A new beginning'} · {config.face_scan_generated ? 'Personal likeness' : `${GLOBAL_AVATAR_NAME} body`}</p></div>}
       <div className={compact ? 'relative h-full w-full' : 'genesis-canvas'}>
         <div ref={mount} className="h-full w-full" />
         {(!ready || (compact && status === 'animation-loading')) && <span className="genesis-canvas-status" role="status">{status === 'error' ? '3D preview unavailable on this device' : 'Loading your companion…'}</span>}
