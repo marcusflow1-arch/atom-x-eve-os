@@ -1,3 +1,4 @@
+import { joinDashboard, isLivePlayer } from '@/components/social/dashboardSession';
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { User, MessageSquare, Gamepad2, MoreHorizontal, Shield, Trophy, Globe, UserPlus } from 'lucide-react';
@@ -30,7 +31,7 @@ export default function FriendsListContent() {
     queryFn: async () => {
       const res = await base44.entities.PlayerState.list();
       const latestByPlayer = new Map();
-      (res || []).forEach((p) => {
+      (res || []).filter(isLivePlayer).forEach((p) => {
         if (!p?.player_id || p.player_id === user?.id) return;
         const previous = latestByPlayer.get(p.player_id);
         if (!previous || Number(p.last_update || 0) > Number(previous.last_update || 0)) latestByPlayer.set(p.player_id, p);
@@ -151,74 +152,15 @@ export default function FriendsListContent() {
     }
   };
 
-  const displayList = activeTab === 'friends' ? friends : globalUsers;
+  const displayList = activeTab === 'friends' ? friends.map(friend => ({...friend,status:globalUsers.find(p=>p.friend_id===friend.friend_id)?.status || 'offline'})) : globalUsers;
 
-  const resolveLivePlayer = async (userObj) => {
-    const targetPlayerId = playerIdFor(userObj);
-    let liveState = null;
-    try {
-      const states = await base44.entities.PlayerState.filter({ player_id: targetPlayerId });
-      liveState = (states || []).slice().sort((a, b) => Number(b.last_update || 0) - Number(a.last_update || 0))[0] || null;
-    } catch (error) {
-      console.warn('Could not resolve live friend state; using saved dashboard state.', error);
-    }
-    return { targetPlayerId, liveState };
-  };
-
-  const buildSafeCompanionSpawn = (hostState) => {
-    const hostX = clamp(hostState?.x, -0.42, 0.42);
-    const hostZ = clamp(hostState?.z, SAFE_STAGE.minZ, SAFE_STAGE.maxZ);
-    const right = hostX + BODY_WIDTH;
-    const left = hostX - BODY_WIDTH;
-    const x = right <= SAFE_STAGE.maxX ? right : left >= SAFE_STAGE.minX ? left : clamp(right, SAFE_STAGE.minX, SAFE_STAGE.maxX);
-    return {
-      x,
-      y: Number.isFinite(Number(hostState?.y)) ? Number(hostState.y) : -0.5,
-      z: hostZ,
-      yaw: Number.isFinite(Number(hostState?.yaw)) ? Number(hostState.yaw) : 0,
-      anim: 'idle',
-      hostPosition: { x: hostX, y: Number(hostState?.y ?? -0.5), z: hostZ },
-      bodyWidth: BODY_WIDTH,
-      safeStage: SAFE_STAGE,
-    };
-  };
-
-  const handleJoin = async (userObj) => {
-    const immediateId = playerIdFor(userObj);
-    if (!immediateId || !user?.id || immediateId === String(user.id) || joiningUserId === immediateId) return;
-
-    setJoiningUserId(immediateId);
-    const targetChannel = `dashboard_${immediateId}`;
-    const immediateSpawn = buildSafeCompanionSpawn(null);
-
-    // Switch channels immediately so the button can never be blocked by a
-    // PlayerState lookup. Live metadata is enrichment, not a prerequisite.
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: {
-        channelId: targetChannel,
-        hostId: immediateId,
-        hostName: userObj.friend_name || userObj.display_name || 'Friend',
-        socialJoin: true,
-        companionSpawn: immediateSpawn,
-      }
-    }));
-    window.dispatchEvent(new CustomEvent('dashboardJoinSpawn', {
-      detail: { hostId: immediateId, position: immediateSpawn }
-    }));
-    showSuccess(`Joining ${userObj.friend_name || userObj.display_name || 'friend'}'s dashboard.`);
-
-    try {
-      const { targetPlayerId, liveState } = await resolveLivePlayer(userObj);
-      if (!targetPlayerId) return;
-      const dashboardState = liveState?.channel_id === targetChannel ? liveState : null;
-      const knownDashboardState = userObj?.channel_id === targetChannel ? userObj : null;
-      const envUrl = dashboardState?.env_url || knownDashboardState?.envUrl || '';
-      if (envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl } }));
-    } catch (error) {
-      console.warn('Dashboard joined; live metadata lookup failed.', error);
-    } finally {
-      setJoiningUserId(null);
-    }
+  const handleJoin = async (person) => {
+    const id = playerIdFor(person);
+    if (!id || joiningUserId) return;
+    setJoiningUserId(id);
+    try { await joinDashboard(person); showSuccess('Connected to dashboard.'); }
+    catch (error) { showError(error, 'Join Dashboard'); }
+    finally { setJoiningUserId(null); }
   };
 
   const acceptDashboardInvite = async (request) => {

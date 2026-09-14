@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { base44 } from '@/api/base44Client';
+import { useDashboardSession } from '@/components/social/dashboardSession';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
-import Hi3DPlayerPreview from '@/components/dashboard/Hi3DPlayerPreview';
 import FriendsListContent from '@/components/dashboard/FriendsListContent';
 import MessengerHub from '@/components/friends/MessengerHub';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
@@ -15,96 +14,9 @@ const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 export default function DashboardAvatarScene({ focusMode = false }) {
   const { user } = useAuth();
   const localAvatar = useCompanionIdentity();
-  const [socialHost, setSocialHost] = useState(null);
-  const [hostAvatar, setHostAvatar] = useState(null);
-  const [remoteGuest, setRemoteGuest] = useState(null);
-  const [remoteGuestAvatar, setRemoteGuestAvatar] = useState(null);
+  const session = useDashboardSession();
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
   const [messagesWorkspace, setMessagesWorkspace] = useState(null);
-
-  useEffect(() => {
-    let requestId = 0;
-    const handleJoin = async (event) => {
-      const detail = event.detail || {};
-      const hostId = detail.hostId;
-      const isOwnDashboard = !hostId || String(hostId) === String(user?.id);
-      if (!detail.socialJoin || isOwnDashboard) {
-        setSocialHost(null);
-        setHostAvatar(null);
-        return;
-      }
-
-      const thisRequest = ++requestId;
-      setSocialHost({ id: hostId, name: detail.hostName || 'Friend' });
-      setHostAvatar(null);
-
-      // Joining from the Friends workspace should immediately return the user
-      // to the dashboard stage so neither avatar is hidden behind that overlay.
-      requestAnimationFrame(() => {
-        const friendsControl = document.querySelector('[data-dashboard-quick-control][aria-label="Friends"]');
-        if (friendsControl?.getAttribute('aria-pressed') === 'true') friendsControl.click();
-      });
-
-      try {
-        const rows = await base44.entities.Avatar.filter({ user_id: hostId });
-        if (thisRequest !== requestId) return;
-        const record = rows?.[0];
-        setHostAvatar(record ? {
-          ...record,
-          gender: record.gender || 'male',
-          name: record.name || detail.hostName || 'Friend',
-        } : { ...FALLBACK_AVATAR, name: detail.hostName || 'Friend' });
-      } catch (error) {
-        if (thisRequest !== requestId) return;
-        console.warn('Could not load dashboard host avatar; using fallback model.', error);
-        setHostAvatar({ ...FALLBACK_AVATAR, name: detail.hostName || 'Friend' });
-      }
-    };
-
-    window.addEventListener('joinMultiplayerChannel', handleJoin);
-    return () => {
-      requestId += 1;
-      window.removeEventListener('joinMultiplayerChannel', handleJoin);
-    };
-  }, [user?.id]);
-
-  // Owners of a dashboard receive the joined visitor through the existing real
-  // multiplayer PlayerState stream. Mirror the newest visitor into this active
-  // dashboard renderer so the host sees the same side-by-side social stage.
-  useEffect(() => {
-    const handlePlayers = (event) => {
-      const players = (event.detail?.players || [])
-        .filter((player) => player?.player_id && String(player.player_id) !== String(user?.id))
-        .sort((a, b) => Number(b.last_update || 0) - Number(a.last_update || 0));
-      setRemoteGuest(players[0] || null);
-    };
-    window.addEventListener('multiplayerPlayersUpdate', handlePlayers);
-    return () => window.removeEventListener('multiplayerPlayersUpdate', handlePlayers);
-  }, [user?.id]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const guestId = remoteGuest?.player_id;
-    if (!guestId) {
-      setRemoteGuestAvatar(null);
-      return undefined;
-    }
-    (async () => {
-      try {
-        const rows = await base44.entities.Avatar.filter({ user_id: guestId });
-        if (cancelled) return;
-        const record = rows?.[0];
-        setRemoteGuestAvatar(record ? {
-          ...record,
-          gender: record.gender || 'male',
-          name: record.name || remoteGuest.display_name || 'Visitor',
-        } : { ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' });
-      } catch (error) {
-        if (!cancelled) setRemoteGuestAvatar({ ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' });
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [remoteGuest?.player_id, remoteGuest?.display_name]);
 
   // The Friends quick-control workspace is owned by DashboardAvatarOverview.
   // Portal the live Friends/Global Online browser into that existing glass
@@ -123,55 +35,27 @@ export default function DashboardAvatarScene({ focusMode = false }) {
     return () => observer.disconnect();
   }, []);
 
-  const joinedElsewhere = Boolean(socialHost);
-  const hostingVisitor = !joinedElsewhere && Boolean(remoteGuest);
-
-  const pairedStage = (leftConfig, leftName, rightConfig, rightName, rightIsLocal = false, leftIsLocal = false) => (
-    <div
-      className="absolute inset-y-0 left-0 flex items-stretch justify-center overflow-visible"
-      style={{ right: '338px' }}
-      aria-label={`Shared dashboard with ${rightIsLocal ? leftName : rightName}`}
-    >
-      {/* DashboardAvatarOverview starts to the right of the Library at x=390.
-          This lane additionally reserves the final 338px for AI Attributes.
-          The two 150–190px pedestals touch edge-to-edge, which keeps avatar
-          centerlines roughly one rendered body-width apart in the open lane. */}
-      <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        {leftIsLocal ? <Hi3DPlayerPreview config={leftConfig} interactive={focusMode} controls="none" /> : <GenesisModelPreview config={leftConfig} compact />}
-        {!focusMode && <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-md">{leftName}</div>}
-      </div>
-      <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        {rightIsLocal ? <Hi3DPlayerPreview config={rightConfig} interactive={focusMode} controls="none" /> : <GenesisModelPreview config={rightConfig} compact />}
-        {!focusMode && <div className={`pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md ${rightIsLocal ? 'border-cyan-200/15 text-cyan-100/80' : 'border-white/10 text-white/70'}`}>{rightName}</div>}
-      </div>
+  const visitors = session.players.filter(p => p.player_id !== session.host_id);
+  const host = session.players.find(p => p.player_id === session.host_id);
+  // Host stays on the right on every client. Guests occupy adjacent body lanes to the left.
+  const roster = host ? [...visitors.slice().reverse(), host] : [];
+  const avatarStage = roster.length > 1 ? (
+    <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{right:'min(410px, 36vw)'}} aria-label="Shared dashboard">
+      {roster.map(player => <div key={player.player_id} data-dashboard-player={player.player_id} className="relative h-full min-w-0 flex-1" style={{maxWidth:190}}>
+        <GenesisModelPreview config={player.player_id === user?.id ? localAvatar : player.appearance || FALLBACK_AVATAR} compact controls="none" idleOnly />
+        <div className="pointer-events-none absolute bottom-[12%] inset-x-0 text-center text-[10px] text-white/80 truncate">{player.player_id === user?.id ? 'You' : player.display_name}</div>
+      </div>)}
     </div>
-  );
-
-  let avatarStage = <Hi3DPlayerPreview config={localAvatar || FALLBACK_AVATAR} interactive={focusMode} controls="none" />;
-  if (joinedElsewhere) {
-    avatarStage = pairedStage(
-      hostAvatar || { ...FALLBACK_AVATAR, name: socialHost.name },
-      socialHost.name,
-      localAvatar || FALLBACK_AVATAR,
-      'You',
-      true,
-      false
-    );
-  } else if (hostingVisitor) {
-    avatarStage = pairedStage(
-      localAvatar || FALLBACK_AVATAR,
-      'You',
-      remoteGuestAvatar || { ...FALLBACK_AVATAR, name: remoteGuest.display_name || 'Visitor' },
-      remoteGuest.display_name || 'Visitor',
-      false,
-      true
-    );
-  }
+  ) : <GenesisModelPreview config={localAvatar || FALLBACK_AVATAR} compact controls="none" idleOnly />;
 
   return (
     <>
       <EnvironmentHubStageLayer />
       {avatarStage}
+      {(session.status === 'connecting' || session.error) && <div role="status" className="absolute left-4 top-4 z-40 max-w-xs rounded-xl bg-slate-950/85 p-3 text-xs text-white/80">
+        {session.error || 'Connecting to dashboard…'}
+        {session.host_id !== user?.id && <button type="button" className="mt-2 block text-cyan-200" onClick={() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel',{detail:{channelId:`dashboard_${user.id}`,hostId:user.id,hostName:'My'}}))}>Return to my dashboard</button>}
+      </div>}
       {friendsWorkspace && createPortal(
         <div className="relative z-10 h-full w-full p-4 md:p-5">
           <FriendsListContent />

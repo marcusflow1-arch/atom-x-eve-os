@@ -1,3 +1,4 @@
+import { joinDashboard, isLivePlayer } from '@/components/social/dashboardSession';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -1280,12 +1281,11 @@ export function LibraryBannerSection({
     const now = Date.now();
     const isOnline = (p) => {
       if (p.player_id === user?.id) return false;
-      if (p.last_update) return (now - Number(p.last_update)) < 120000;
-      return true;
+      return isLivePlayer(p, now);
     };
     const usersList = [];
     const seenIds = new Set();
-    (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && isOnline(p)).forEach(p => {
+    (Array.isArray(dbUsers) ? [...dbUsers] : []).sort((a,b)=>Number(b.last_update)-Number(a.last_update)).filter(p => p && isOnline(p)).forEach(p => {
       if (!p || !p.player_id) return;
       const id = String(p.player_id);
       if (!seenIds.has(id)) {
@@ -1338,48 +1338,13 @@ export function LibraryBannerSection({
 
   const handleJoin = async (u) => {
     if (!u?.id || joiningUsers[u.id]) return;
-    const targetId = String(u.id);
-    const targetChannel = `dashboard_${targetId}`;
-    setJoiningUsers((prev) => ({ ...prev, [targetId]: true }));
-
-    // Join immediately from the click. The previous flow waited on a backend
-    // lookup before dispatching the multiplayer event, so a failed/stale lookup
-    // made the highlighted button appear to do nothing.
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: {
-        channelId: targetChannel,
-        hostId: targetId,
-        hostName: u.name || 'Friend',
-        socialJoin: true,
-      }
-    }));
-    window.dispatchEvent(new CustomEvent('lunaDashboardJoinRequested', {
-      detail: { channelId: targetChannel, hostId: targetId, hostName: u.name || 'Friend' }
-    }));
-    showSuccess(`Joining ${u.name || 'player'}'s dashboard.`);
-    onActiveFriendChange(null);
-
+    setJoiningUsers(prev => ({...prev,[u.id]:true}));
     try {
-      // Resolve optional live metadata after joining; this can improve the
-      // environment/name without ever blocking the actual dashboard switch.
-      const response = await base44.functions.invoke('socialActions', { action: 'get_dashboard_join', data: { target_user_id: targetId } });
-      const body = response?.data ?? response ?? {};
-      if (body?.error) throw new Error(body.error);
-      const state = body.player_state || {};
-      const envUrl = state.env_url || u.envUrl;
-      if (envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl } }));
-      if (state.display_name && state.display_name !== u.name) {
-        window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-          detail: { channelId: targetChannel, hostId: targetId, hostName: state.display_name, socialJoin: true }
-        }));
-      }
-    } catch (error) {
-      // The direct dashboard join above is authoritative. Metadata lookup
-      // failures should not undo or block the join.
-      console.warn('[Luna Presence] dashboard metadata lookup failed after join', error);
-    } finally {
-      setJoiningUsers((prev) => ({ ...prev, [targetId]: false }));
-    }
+      await joinDashboard(u);
+      showSuccess(`Connected to ${u.name || 'player'}'s dashboard.`);
+      onActiveFriendChange(null);
+    } catch (error) { showError(error, 'Join Dashboard'); }
+    finally { setJoiningUsers(prev => ({...prev,[u.id]:false})); }
   };
 
   const handleInvite = async (u) => {
