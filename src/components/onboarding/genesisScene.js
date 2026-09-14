@@ -5,9 +5,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
-import { attachGeneratedFaceToBody, attachInstantFaceCaptureToBody } from '@/components/onboarding/faceComposite';
 
-export function createGenesisScene(container, url, onReady, onStatus) {
+
+export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(34, 1, .01, 100);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -21,7 +21,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;
-  controls.minDistance = 2;
+  controls.minDistance = options.portrait ? .6 : 2;
   controls.maxDistance = 6;
   controls.maxPolarAngle = Math.PI * .68;
   controls.enableDamping = true;
@@ -53,7 +53,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let embeddedController = null, preserveAppearance = false;
-  let faceComposite = null, faceCompositeKey = '', faceCompositeVersion = 0;
+
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
   const fbx = new FBXLoader(), gltf = new GLTFLoader(), clock = new THREE.Clock();
 
@@ -87,10 +87,16 @@ export function createGenesisScene(container, url, onReady, onStatus) {
     });
   };
 
+  let visible = true;
+  const visibility = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(entries => { visible = entries[0]?.isIntersecting !== false; });
+  visibility?.observe(container);
   const animate = () => {
     if (disposed) return;
     frame = requestAnimationFrame(animate);
-    mixer?.update(Math.min(clock.getDelta(), .05));
+    const dt = Math.min(clock.getDelta(), .05);
+    if (!visible || document.hidden) return;
+    mixer?.update(dt);
+    if (options.portrait && model) { const head = model.getObjectByName('Head'); if (head) { const p = head.getWorldPosition(new THREE.Vector3()); const shift = p.y - controls.target.y; controls.target.y = p.y; camera.position.y += shift; } }
     controls.update();
     outline.render(scene, camera);
   };
@@ -99,32 +105,6 @@ export function createGenesisScene(container, url, onReady, onStatus) {
   async function loadAnimationAsset(motion) {
     if (/\.(glb|gltf)(?:\?|$)/i.test(motion.url)) return gltf.loadAsync(motion.url);
     return fbx.loadAsync(motion.url);
-  }
-
-  async function syncFaceComposite(value = appearance) {
-    if (!model || disposed) return;
-    const generatedUrl = value?.face_scan_generated ? String(value?.face_model_url || '') : '';
-    const previewUrl = !generatedUrl ? String(value?.face_capture_preview_url || '') : '';
-    const nextKey = generatedUrl ? `generated:${generatedUrl}` : previewUrl ? `preview:${previewUrl.length}:${previewUrl.slice(-96)}` : '';
-    if (nextKey === faceCompositeKey) return;
-    const version = ++faceCompositeVersion;
-    faceComposite?.dispose?.();
-    faceComposite = null;
-    faceCompositeKey = '';
-    if (!nextKey) return;
-    try {
-      onStatus(generatedUrl ? 'face-loading' : 'face-preview-loading');
-      const next = generatedUrl
-        ? await attachGeneratedFaceToBody({ baseModel: model, faceUrl: generatedUrl, gltfLoader: gltf, fbxLoader: fbx })
-        : await attachInstantFaceCaptureToBody({ baseModel: model, imageUrl: previewUrl });
-      if (disposed || version !== faceCompositeVersion) { next.dispose?.(); return; }
-      faceComposite = next;
-      faceCompositeKey = nextKey;
-      onStatus('ready', generatedUrl ? 'Face applied' : 'Camera likeness preview');
-    } catch (error) {
-      console.warn('Face likeness could not be composited onto the selected body:', error);
-      if (!disposed && version === faceCompositeVersion) onStatus('face-error');
-    }
   }
 
   async function play(motion) {
@@ -175,8 +155,8 @@ export function createGenesisScene(container, url, onReady, onStatus) {
       const center = box.getCenter(new THREE.Vector3());
       model.position.set(-center.x, -box.min.y, -center.z);
       basePosition = model.position.clone();
-      camera.position.set(0, 1.08, 3.75);
-      controls.target.set(0, .96, 0);
+      camera.position.set(0, options.portrait ? 1.64 : 1.08, options.portrait ? 1.15 : 3.75);
+      controls.target.set(0, options.portrait ? 1.62 : .96, 0);
       controls.update();
 
       const materials = [], morphs = [];
@@ -208,8 +188,8 @@ export function createGenesisScene(container, url, onReady, onStatus) {
       if (preserveAppearance) {
         embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
       }
-      onReady({ materials, morphs, hood, weapon, eyes, eyelashes, hair, embeddedClips: preserveAppearance ? (asset.animations || []).map(clip => clip.name) : [] });
-      syncFaceComposite(appearance);
+      onReady({ hi3d: preserveAppearance, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: preserveAppearance ? (asset.animations || []).map(clip => clip.name) : [] });
+      
     } catch (error) {
       console.error('Avatar model failed:', error);
       if (!disposed) onStatus('error');
@@ -228,7 +208,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
   const togglePaused = () => setPaused(!paused);
 
   return {
-    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model) applyCompanionAppearance(model, appearance); syncFaceComposite(appearance); },
+    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model) applyCompanionAppearance(model, appearance);  },
     play,
     command: (value) => { setPaused(false); embeddedController?.command(value); },
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
@@ -243,12 +223,13 @@ export function createGenesisScene(container, url, onReady, onStatus) {
       disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      visibility?.disconnect();
       controls.dispose();
       embeddedController?.dispose();
       mixer?.stopAllAction();
-      faceCompositeVersion += 1;
-      faceComposite?.dispose?.();
-      faceComposite = null;
+
+
+
       disposeModel(model);
       shadowPlane.geometry.dispose();
       shadowMaterial.dispose();
