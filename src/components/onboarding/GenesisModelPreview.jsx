@@ -80,7 +80,7 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
@@ -169,7 +169,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
   useEffect(() => {
-    if (!compact || !ready || controlArmed) {
+    if (idleOnly || !compact || !ready || controlArmed) {
       clearTimeout(idleTimer.current);
       return undefined;
     }
@@ -182,7 +182,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
     };
     schedule();
     return () => clearTimeout(idleTimer.current);
-  }, [compact, ready, controlArmed, playIdle]);
+  }, [compact, ready, controlArmed, playIdle, idleOnly]);
 
   const movementForKeys = useCallback(() => {
     const keys = keyState.current;
@@ -312,8 +312,8 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       data-animation={status === 'ready' ? motion : status}
       data-avatar-controls={interactive ? (controlArmed ? 'armed' : 'available') : 'off'}
       data-avatar-paused={paused ? 'true' : 'false'}
-      onClick={compact ? handleClick : undefined}
-      onDoubleClick={compact ? handleDoubleClick : undefined}
+      onClick={compact && !idleOnly ? handleClick : undefined}
+      onDoubleClick={compact && !idleOnly ? handleDoubleClick : undefined}
       role={compact && interactive ? 'button' : undefined}
       tabIndex={compact && interactive ? 0 : undefined}
       aria-label={compact && interactive ? 'AI avatar. Click to enable movement; double-click to interact.' : undefined}

@@ -3,7 +3,7 @@ import {avatarAnimationStore} from '@/components/onboarding/avatarAnimationStore
 import { createGenesisScene } from '@/components/onboarding/genesisScene';
 import { HI3D_COMMANDS, HI3D_MODEL_URL } from '@/components/onboarding/embeddedAvatarController';
 
-export default function Hi3DPlayerPreview({ config, interactive = false, portrait = false, controls = "compact", onCapabilities }) {
+export default function Hi3DPlayerPreview({ config, interactive = false, portrait = false, controls = "none", idleOnly = controls == "none", onCapabilities }) {
   const mount = useRef(null), stage = useRef(null), scene = useRef(null);
   const keys = useRef(new Set()), lastInput = useRef(Date.now());
   const [status, setStatus] = useState('loading'), [clip, setClip] = useState('Idle');
@@ -22,14 +22,14 @@ export default function Hi3DPlayerPreview({ config, interactive = false, portrai
     } catch { setStatus('error'); }
     return ()=>{scene.current?.dispose();scene.current=null;};
   },[retry,portrait]);
-  useEffect(()=>{if(ready)scene.current?.command(shared.command);},[ready,shared.revision]);
-  useEffect(()=>{if(ready&&(shared.armLift||scene.current?.animationState()?.armLift))scene.current?.setArmLift(shared.armLift);},[ready,shared.armLift]);
-  useEffect(()=>{scene.current?.setPaused(shared.paused||shared.hidden);},[ready,shared.paused,shared.hidden,shared.revision,shared.armLift]);
+  useEffect(()=>{if(ready)scene.current?.command(idleOnly ? "idle" : shared.command);},[ready,shared.revision,idleOnly]);
+  useEffect(()=>{if(!idleOnly&&ready&&(shared.armLift||scene.current?.animationState()?.armLift))scene.current?.setArmLift(shared.armLift);},[ready,shared.armLift,idleOnly]);
+  useEffect(()=>{scene.current?.setPaused((!idleOnly&&shared.paused)||shared.hidden);},[ready,shared.paused,shared.hidden,shared.revision,shared.armLift,idleOnly]);
   useEffect(() => { scene.current?.appearance({ ...(config || {}), style_preset: config?.style_preset || 'heroic_fantasy' }); }, [config]);
 
   useEffect(() => {
     const held = keys.current;
-    if (!interactive || !armed || !ready) { held.clear(); return undefined; }
+    if (idleOnly || !interactive || !armed || !ready) { held.clear(); return undefined; }
     const typing = target => target instanceof Element && Boolean(target.closest('input,textarea,select,[contenteditable="true"]'));
     const sync = () => command(held.size ? 'walk' : 'idle');
     const down = event => {
@@ -53,22 +53,22 @@ export default function Hi3DPlayerPreview({ config, interactive = false, portrai
       cancelAnimationFrame(frame); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', blur);
       blur();
     };
-  }, [interactive, armed, ready, command]);
+  }, [interactive, armed, ready, command, idleOnly]);
 
   useEffect(() => { if (!interactive) setArmed(false); }, [interactive]);
-  const focusPlayer = () => { if (interactive && ready) { setArmed(true); stage.current?.focus(); } };
+  const focusPlayer = () => { if (!idleOnly && interactive && ready) { setArmed(true); stage.current?.focus(); } };
   const animationState = scene.current?.animationState();
   const armEnabled = ready && animationState?.posture === 'standing' && !animationState?.transitioning;
 
   return <div ref={stage} className="relative h-full w-full outline-none" tabIndex={interactive ? 0 : undefined}
     data-model-url={HI3D_MODEL_URL} data-model-ready={ready} data-animation={clip} data-avatar-controls={armed ? 'armed' : 'available'}
-    aria-label="Hi3D player character" onClick={focusPlayer} onDoubleClick={() => { if (interactive && ready) { focusPlayer(); command('wave'); } }}
+    aria-label="Hi3D player character" onClick={focusPlayer} onDoubleClick={() => { if (!idleOnly && interactive && ready) { focusPlayer(); command('wave'); } }}
     onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); focusPlayer(); } }}>
     <div ref={mount} className="h-full w-full" />
     {status === 'error' ? <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-xs text-white/80" role="alert">
       <p>The character could not load.</p><button type="button" className="rounded border border-white/20 px-3 py-2" onClick={() => setRetry(value => value + 1)}>Retry</button>
     </div> : !ready && <p className="pointer-events-none absolute inset-x-0 top-1/2 text-center text-xs text-white/70" role="status">Loading your Hi3D character…</p>}
-    {controls !== "none" && <div data-player-animation-controls className="pointer-events-auto absolute bottom-3 left-1/2 z-30 max-h-[42%] w-[min(92%,560px)] -translate-x-1/2 overflow-y-auto rounded-xl border border-cyan-200/15 bg-slate-950/85 p-3 text-white backdrop-blur-md"
+    {!idleOnly && controls !== "none" && <div data-player-animation-controls className="pointer-events-auto absolute bottom-3 left-1/2 z-30 max-h-[42%] w-[min(92%,560px)] -translate-x-1/2 overflow-y-auto rounded-xl border border-cyan-200/15 bg-slate-950/85 p-3 text-white backdrop-blur-md"
       onClick={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
       <div className="flex flex-wrap justify-center gap-1.5" aria-label="Character animations">
         {(interactive?HI3D_COMMANDS:HI3D_COMMANDS.filter(item=>item.command==='wave')).map(item => <button key={item.command} type="button" disabled={!ready} aria-pressed={animationState?.command === item.command}

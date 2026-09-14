@@ -1,6 +1,5 @@
 const sequence=[['idle',6000],['afk',8000],['wave',3700],['idle',3000],['walk',4800],['sit',8000],['lean',7000],['stand',5500]];
-const reduced=typeof window!=='undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-let state={command:'idle',armLift:0,revision:0,paused:false,cycling:!reduced,hidden:false};
+let state={command:'idle',armLift:0,revision:0,paused:false,cycling:false,hidden:false};
 let timer=null,index=0;
 const listeners=new Set();
 const emit=patch=>{state={...state,...patch};listeners.forEach(fn=>fn());};
