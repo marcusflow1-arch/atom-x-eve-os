@@ -1,7 +1,5 @@
-
 import { BufferAttribute, Color, Matrix4, Vector3, Vector4 } from 'three';
-import surface from './avatarSurface.glsl?raw';
-import surfaceMap from './avatarSurfaceMap.glsl?raw';
+import { surface, surfaceMap } from '@/components/onboarding/avatarSurfaceShaders';
 import { deformFace, normalizeFaceShape } from './avatarAppearanceData';
 export function isHi3DAvatar(model) { let found=false;model?.traverse(n=>{found ||= n.userData?.avatarRig==='luna-hi3d-v1';});return found; }
 const smooth=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};

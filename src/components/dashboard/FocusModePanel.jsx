@@ -1449,12 +1449,31 @@ export function LibraryBannerSection({
 
   const respondFriendRequest = async (request, accept) => {
     if (!request?.id) return;
-    const response = await base44.functions.invoke('socialActions', { action: 'respond_friend_request', data: { request_id: request.id, decision: accept ? 'accept' : 'decline' } });
-    const body = response?.data ?? response ?? {};
-    if (body?.error) throw new Error(body.error);
-    await Promise.all([refetchFriendRequests(), refetchDashboardFriends()]);
-    window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: accept, requestId: request.id } }));
+    try {
+      const response = await base44.functions.invoke('socialActions', { action: 'respond_friend_request', data: { request_id: request.id, decision: accept ? 'accept' : 'decline' } });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      await Promise.all([refetchFriendRequests(), refetchDashboardFriends()]);
+      window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: accept, requestId: request.id } }));
+      showSuccess(accept ? `${request.sender_name || 'Player'} was added to your Friends list.` : 'Friend request declined.');
+    } catch (error) {
+      showError(error, accept ? 'Accept Friend Request' : 'Decline Friend Request');
+    }
   };
+
+  const socialPromptAction = (action) => ({
+    onPointerDown: (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    },
+    onClick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) action();
+    },
+  });
 
   const handleHomeClick = () => {
     onActiveFriendChange(null);
@@ -1566,8 +1585,8 @@ export function LibraryBannerSection({
             <p className="mt-2 text-sm font-semibold text-white">{pendingSocialAction.kind === 'friend' ? `${pendingSocialAction.item.sender_name || 'A player'} sent you a friend request.` : `${pendingSocialAction.item.requester_name || 'A friend'} invited you to their dashboard.`}</p>
             <p className="mt-1 text-[10px] leading-4 text-white/35">{pendingSocialAction.kind === 'friend' ? 'Accept to add each other to your Friends lists and enable party/social shortcuts.' : 'Accept to join the same Luna dashboard session.'}</p>
             <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, false) : declineDashboardInvite(pendingSocialAction.item)} className="h-9 flex-1 rounded-xl bg-white/[0.045] text-[9px] font-bold uppercase tracking-wider text-white/55 hover:bg-white/[0.08] hover:text-white">Decline</button>
-              <button type="button" onClick={() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, true) : acceptDashboardInvite(pendingSocialAction.item)} className="h-9 flex-1 rounded-xl bg-cyan-200 text-[9px] font-black uppercase tracking-wider text-slate-950 hover:bg-cyan-100">{pendingSocialAction.kind === 'friend' ? 'Accept Friend' : 'Join Dashboard'}</button>
+              <button type="button" {...socialPromptAction(() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, false) : declineDashboardInvite(pendingSocialAction.item))} className="h-9 flex-1 rounded-xl bg-white/[0.045] text-[9px] font-bold uppercase tracking-wider text-white/55 hover:bg-white/[0.08] hover:text-white">Decline</button>
+              <button type="button" {...socialPromptAction(() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, true) : acceptDashboardInvite(pendingSocialAction.item))} className="h-9 flex-1 rounded-xl bg-cyan-200 text-[9px] font-black uppercase tracking-wider text-slate-950 hover:bg-cyan-100">{pendingSocialAction.kind === 'friend' ? 'Accept Friend' : 'Join Dashboard'}</button>
             </div>
           </motion.div>
         )}
