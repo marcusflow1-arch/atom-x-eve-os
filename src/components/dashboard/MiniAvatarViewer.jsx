@@ -1,121 +1,128 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { companionModel, applyCompanionAppearance, COMPANION_MOTIONS } from '@/components/onboarding/genesisAssets';
 
-
-const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
-const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
+async function loadAsset(url) {
+  if (/\.(glb|gltf)(?:\?|$)/i.test(url)) {
+    const gltf = await new GLTFLoader().loadAsync(url);
+    return { object: gltf.scene, animations: gltf.animations || [] };
+  }
+  const fbx = await new FBXLoader().loadAsync(url);
+  return { object: fbx, animations: fbx.animations || [] };
+}
 
 export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
   const containerRef = useRef(null);
-  const sceneRef = useRef(null);
+  const savedCompanion = useCompanionIdentity();
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
+    if (!containerRef.current) return undefined;
+    const container = containerRef.current;
     const scene = new THREE.Scene();
-    scene.background = null;
-    sceneRef.current = scene;
-
-
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     camera.position.set(0, 1.85, -1.4);
     camera.lookAt(0, 1.7, 0);
 
-    const w = fill ? (containerRef.current.clientWidth || 220) : size;
-    const h = fill ? (containerRef.current.clientHeight || 256) : size;
+    const w = fill ? (container.clientWidth || 220) : size;
+    const h = fill ? (container.clientHeight || 256) : size;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.setClearColor(0x000000, 0);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setClearColor(0x000000, 0);
-    containerRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    scene.add(new THREE.HemisphereLight(0xe6f4ff, 0x101827, 1.3));
+    const key = new THREE.DirectionalLight(0xffffff, 2.2);
+    key.position.set(2, 3, 2);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0x8fdcff, 1.4);
+    rim.position.set(0, 2, -3);
+    scene.add(rim);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
-    keyLight.position.set(2, 3, 2);
-    scene.add(keyLight);
-
-    const fillLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    fillLight.position.set(-2, 2, -1);
-    scene.add(fillLight);
-
-    const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    rimLight.position.set(0, 1.5, -3);
-    scene.add(rimLight);
-
+    let disposed = false;
+    let frameId = null;
     let mixer = null;
+    let model = null;
     const clock = new THREE.Clock();
 
-    const loader = new FBXLoader();
-
-    loader.load(
-      YBOT_URL,
-      (fbx) => {
-        const box = new THREE.Box3().setFromObject(fbx);
+    const start = async () => {
+      try {
+        const url = companionModel(savedCompanion);
+        const asset = await loadAsset(url);
+        if (disposed) return;
+        model = asset.object;
+        const box = new THREE.Box3().setFromObject(model);
         const sizeVector = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(sizeVector.x, sizeVector.y, sizeVector.z);
-        const scale = 2 / maxDim;
-        fbx.scale.setScalar(scale);
-
-        const center = box.getCenter(new THREE.Vector3());
-        fbx.position.sub(center.multiplyScalar(scale));
-        fbx.position.y += (sizeVector.y * scale) / 2;
-        fbx.rotation.y = Math.PI;
-
-        fbx.traverse((node) => {
-          if (node.isMesh && node.material) {
-            const mats = Array.isArray(node.material) ? node.material : [node.material];
-            mats.forEach((mat) => {
-              mat.side = THREE.DoubleSide;
-              mat.envMapIntensity = 1.2;
-              mat.needsUpdate = true;
-            });
-          }
+        const maxDim = Math.max(sizeVector.x, sizeVector.y, sizeVector.z) || 1;
+        model.scale.setScalar(2 / maxDim);
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        const center = scaledBox.getCenter(new THREE.Vector3());
+        model.position.set(-center.x, -scaledBox.min.y, -center.z);
+        model.rotation.y = Math.PI;
+        model.traverse((node) => {
+          if (!node.isMesh) return;
+          (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean).forEach((mat) => {
+            mat.side = THREE.DoubleSide;
+            if (typeof mat.envMapIntensity === 'number') mat.envMapIntensity = 1.2;
+            mat.needsUpdate = true;
+          });
         });
+        applyCompanionAppearance(model, savedCompanion || {});
+        scene.add(model);
+        mixer = new THREE.AnimationMixer(model);
+        const embedded = asset.animations?.[0];
+        if (embedded) mixer.clipAction(embedded).play();
+        else {
+          try {
+            const idle = await loadAsset(COMPANION_MOTIONS[0].url);
+            if (!disposed && idle.animations?.[0]) mixer.clipAction(idle.animations[0]).play();
+          } catch {}
+        }
+      } catch (err) {
+        console.error('Error loading mini avatar:', err);
+      }
+    };
+    start();
 
-        scene.add(fbx);
-        mixer = new THREE.AnimationMixer(fbx);
-
-        loader.load(
-          IDLE_URL,
-          (idleFbx) => {
-            if (idleFbx.animations && idleFbx.animations.length > 0) {
-              const clip = idleFbx.animations[0];
-              mixer.clipAction(clip).play();
-            }
-          },
-          undefined,
-          (err) => console.error('Error loading idle animation:', err)
-        );
-      },
-      undefined,
-      (err) => console.error('Error loading mini avatar:', err)
-    );
-
-    // Animation loop
     const animate = () => {
-      requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
+      frameId = requestAnimationFrame(animate);
+      mixer?.update(Math.min(clock.getDelta(), 0.05));
       renderer.render(scene, camera);
     };
     animate();
 
-    return () => {
-      renderer.dispose();
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
+    const resize = () => {
+      if (!fill || !containerRef.current) return;
+      const nextW = containerRef.current.clientWidth || 220;
+      const nextH = containerRef.current.clientHeight || 256;
+      renderer.setSize(nextW, nextH);
+      camera.aspect = nextW / nextH;
+      camera.updateProjectionMatrix();
     };
-  }, [size]);
+    window.addEventListener('resize', resize);
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', resize);
+      mixer?.stopAllAction();
+      renderer.dispose();
+      renderer.domElement?.remove();
+    };
+  }, [size, fill, savedCompanion]);
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="overflow-hidden"
-      style={fill ? { width: '100%', height: '100%', ...style } : { width: size, height: size, background: 'rgba(20, 20, 30, 0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', ...style }} 
+      style={fill ? { width: '100%', height: '100%', ...style } : { width: size, height: size, background: 'rgba(20, 20, 30, 0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', ...style }}
     />
   );
 }
