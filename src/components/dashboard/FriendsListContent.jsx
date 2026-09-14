@@ -22,6 +22,7 @@ export default function FriendsListContent() {
   const [invitedUsers, setInvitedUsers] = useState({});
   const [messageTarget, setMessageTarget] = useState(null);
   const [joiningUserId, setJoiningUserId] = useState(null);
+  const [addingUserId, setAddingUserId] = useState(null);
   const { user } = useAuth();
 
   const { data: globalUsers = [] } = useQuery({
@@ -95,31 +96,47 @@ export default function FriendsListContent() {
 
     setInvitingUserId(targetId);
     try {
-      const existing = await base44.entities.LunarDashboardRequest.filter({
-        request_type: 'invite',
-        requester_id: user.id,
-        target_user_id: targetId,
-        host_user_id: user.id,
-        status: 'pending',
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'send_dashboard_invite',
+        data: { target_user_id: targetId },
       });
-
-      if (!(existing || []).length) {
-        await base44.entities.LunarDashboardRequest.create({
-          request_type: 'invite',
-          requester_id: user.id,
-          requester_name: user.full_name || user.username || user.email?.split('@')?.[0] || 'Friend',
-          target_user_id: targetId,
-          host_user_id: user.id,
-          status: 'pending',
-        });
-      }
-
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
       setInvitedUsers((prev) => ({ ...prev, [targetId]: 'sent' }));
       showSuccess(`Dashboard invite sent to ${userObj.friend_name || userObj.display_name || 'player'}.`);
     } catch (error) {
+      setInvitedUsers((prev) => ({ ...prev, [targetId]: 'error' }));
       showError(error, 'Dashboard Invite');
     } finally {
       setInvitingUserId(null);
+    }
+  };
+
+  const handleAddFriend = async (userObj) => {
+    const targetId = playerIdFor(userObj);
+    if (!targetId || !user?.id || targetId === String(user.id) || addingUserId === targetId) return;
+
+    setAddingUserId(targetId);
+    try {
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'send_friend_request',
+        data: { target_user_id: targetId },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+
+      if (body.accepted || body.already_friends) {
+        await refetchFriends();
+        window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friendship', friendId: targetId } }));
+        showSuccess(`${userObj.friend_name || userObj.display_name || 'Player'} is now in your Friends list.`);
+        setActiveTab('friends');
+      } else {
+        showSuccess(`Friend request sent to ${userObj.friend_name || userObj.display_name || 'player'}.`);
+      }
+    } catch (error) {
+      showError(error, 'Friend Request');
+    } finally {
+      setAddingUserId(null);
     }
   };
 
@@ -206,12 +223,17 @@ export default function FriendsListContent() {
 
   const acceptDashboardInvite = async (request) => {
     try {
-      await base44.entities.LunarDashboardRequest.update(request.id, { status: 'accepted' });
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'respond_dashboard_invite',
+        data: { request_id: request.id, decision: 'accept' },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
       await refetchDashboardInvites();
       await handleJoin({
-        friend_id: request.host_user_id,
-        player_id: request.host_user_id,
-        friend_name: request.requester_name || 'Friend',
+        friend_id: body.host_user_id || request.host_user_id,
+        player_id: body.host_user_id || request.host_user_id,
+        friend_name: body.host_name || request.requester_name || 'Friend',
       });
     } catch (error) {
       showError(error, 'Accept Dashboard Invite');
@@ -220,7 +242,12 @@ export default function FriendsListContent() {
 
   const declineDashboardInvite = async (request) => {
     try {
-      await base44.entities.LunarDashboardRequest.update(request.id, { status: 'declined' });
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'respond_dashboard_invite',
+        data: { request_id: request.id, decision: 'decline' },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
       await refetchDashboardInvites();
     } catch (error) {
       showError(error, 'Decline Dashboard Invite');
@@ -239,6 +266,20 @@ export default function FriendsListContent() {
 
   const pendingInvite = incomingDashboardInvites[0];
   const selectedId = playerIdFor(selectedFriend);
+  const selectedIsFriend = !!selectedId && friends.some((friend) => playerIdFor(friend) === selectedId);
+  const pointerAction = (action) => ({
+    onPointerDown: (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    },
+    onClick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) action();
+    },
+  });
 
   return (
     <>
@@ -296,9 +337,37 @@ export default function FriendsListContent() {
                 <div className="-mt-12 mb-4 flex justify-between items-end">
                   <div className="relative"><Avatar className="w-24 h-24 border-4 border-slate-900 shadow-xl"><AvatarImage src={selectedFriend.friend_avatar || selectedFriend.avatar_url} /><AvatarFallback className="text-2xl">{selectedFriend.friend_name?.[0] || selectedFriend.display_name?.[0]}</AvatarFallback></Avatar><div className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-slate-900 ${getStatusColor(selectedFriend.status)}`} /></div>
                   <div className="flex flex-wrap justify-end gap-2 mb-1">
-                    <Button size="sm" variant="outline" onClick={() => handleInviteToDashboard(selectedFriend)} disabled={invitingUserId === selectedId || invitedUsers[selectedId] === 'sent'} className="border-white/20 text-white hover:bg-white/10 px-2 disabled:opacity-50" title="Invite to my dashboard"><UserPlus className="w-4 h-4" />{invitingUserId === selectedId ? '…' : invitedUsers[selectedId] === 'sent' ? 'Sent' : 'Invite'}</Button>
+                    {!selectedIsFriend && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        {...pointerAction(() => handleAddFriend(selectedFriend))}
+                        disabled={addingUserId === selectedId}
+                        className="border-cyan-400/25 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20 px-2 disabled:opacity-50"
+                        title="Add as friend"
+                      >
+                        <UserPlus className="w-4 h-4" />{addingUserId === selectedId ? 'Adding…' : 'Add Friend'}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      {...pointerAction(() => handleInviteToDashboard(selectedFriend))}
+                      disabled={invitingUserId === selectedId || invitedUsers[selectedId] === 'sent'}
+                      className="border-white/20 text-white hover:bg-white/10 px-2 disabled:opacity-50"
+                      title="Invite to my dashboard"
+                    >
+                      <UserPlus className="w-4 h-4" />{invitingUserId === selectedId ? '…' : invitedUsers[selectedId] === 'sent' ? 'Sent' : invitedUsers[selectedId] === 'error' ? 'Retry Invite' : 'Invite'}
+                    </Button>
                     <Button size="sm" onClick={() => openMessages(selectedFriend)} className="bg-blue-600 hover:bg-blue-500 text-white gap-2"><MessageSquare className="w-4 h-4" /> Message</Button>
-                    <Button size="sm" onClick={() => handleJoin(selectedFriend)} disabled={joiningUserId === selectedId} className="bg-purple-600 hover:bg-purple-500 text-white gap-2 disabled:opacity-50"><UserPlus className="w-4 h-4" /> {joiningUserId === selectedId ? 'Joining…' : 'Join Dashboard'}</Button>
+                    <Button
+                      size="sm"
+                      {...pointerAction(() => handleJoin(selectedFriend))}
+                      disabled={joiningUserId === selectedId}
+                      className="bg-purple-600 hover:bg-purple-500 text-white gap-2 disabled:opacity-50"
+                    >
+                      <UserPlus className="w-4 h-4" /> {joiningUserId === selectedId ? 'Joining…' : 'Join Dashboard'}
+                    </Button>
                   </div>
                 </div>
 
