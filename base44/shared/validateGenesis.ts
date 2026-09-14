@@ -1,5 +1,5 @@
 const APP_FILE_PREFIX = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/';
-const GLOBAL_AVATAR_MODEL = '/models/artemis.gltf';
+const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
 const STYLE_PRESETS = new Set(['heroic_fantasy', 'graphic_ink', 'grounded_rpg']);
 const LASH_STYLES = new Set(['soft', 'natural', 'bold']);
 
