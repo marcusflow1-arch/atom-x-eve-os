@@ -76,21 +76,14 @@ export default function FriendsHubOverlay({ onClose }) {
     try {
       const request = friendRequests.find(r => r.id === requestId);
       if (!request) return;
-
-      // Update request status
-      await base44.entities.FriendRequest.update(requestId, { status: 'accepted' });
-
-      // Create friend relationship
-      await base44.entities.Friend.create({
-        user_id: user.id,
-        friend_id: request.sender_id,
-        friend_name: request.sender_name,
-        friend_avatar: request.sender_avatar,
-        status: 'offline'
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'respond_friend_request',
+        data: { request_id: requestId, decision: 'accept' },
       });
-
-      // Reload data
-      loadData();
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      await loadData();
+      window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: true, requestId } }));
     } catch (error) {
       console.error('Failed to accept friend request:', error);
     }
@@ -98,8 +91,14 @@ export default function FriendsHubOverlay({ onClose }) {
 
   const handleDeclineRequest = async (requestId) => {
     try {
-      await base44.entities.FriendRequest.update(requestId, { status: 'declined' });
-      loadData();
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'respond_friend_request',
+        data: { request_id: requestId, decision: 'decline' },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      await loadData();
+      window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: false, requestId } }));
     } catch (error) {
       console.error('Failed to decline friend request:', error);
     }
