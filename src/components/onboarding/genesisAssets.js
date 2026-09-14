@@ -294,7 +294,7 @@ export function applyCompanionAppearance(model, rawAppearance = {}) {
       material.side = THREE.DoubleSide;
 
       if (material.color && /^#[0-9a-f]{6}$/i.test(appearance.material_colors?.[materialKey] || '')) material.color.set(appearance.material_colors[materialKey]);
-      material.needsUpdate = true;
+      if (!embeddedRig) material.needsUpdate = true;
     });
 
     if (node.morphTargetDictionary) {
