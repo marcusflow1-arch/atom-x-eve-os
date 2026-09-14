@@ -43,11 +43,12 @@ export default function GenesisFaceScan({ config, setConfig }) {
         audio: false,
       });
       streamRef.current = stream;
+      setCameraOn(true);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-      setCameraOn(true);
       setStatus('Camera ready · center your face and look at the lens');
     } catch (err) {
       setCameraOn(false);
