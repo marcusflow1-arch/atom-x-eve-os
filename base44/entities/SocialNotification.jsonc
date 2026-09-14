@@ -1,0 +1,81 @@
+{
+  "name": "SocialNotification",
+  "type": "object",
+  "properties": {
+    "recipient_id": {
+      "type": "string"
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "actor_name": {
+      "type": "string"
+    },
+    "actor_avatar": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "friend_request",
+        "friend_accepted",
+        "dashboard_invite",
+        "dashboard_response",
+        "party_invite",
+        "message",
+        "call"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "related_entity_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unread",
+        "read",
+        "actioned"
+      ],
+      "default": "unread"
+    },
+    "action_kind": {
+      "type": "string",
+      "enum": [
+        "none",
+        "friend_request",
+        "dashboard_invite",
+        "open_message",
+        "call"
+      ]
+    }
+  },
+  "required": [
+    "recipient_id",
+    "actor_id",
+    "type",
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "data.actor_id": "{{user.id}}"
+    },
+    "read": {
+      "data.recipient_id": "{{user.id}}"
+    },
+    "update": {
+      "data.recipient_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.recipient_id": "{{user.id}}"
+    }
+  }
+}
