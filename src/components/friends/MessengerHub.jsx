@@ -92,7 +92,7 @@ export default function MessengerHub() {
 
   useEffect(() => {
     const openTarget = (event) => {
-      const target = event.detail?.target || event.detail || {};
+      const target = event?.detail?.target || event?.detail || window.__lunaPendingMessageTarget || {};
       const id = target.friend_id || target.player_id || target.id || target.partner_id;
       if (!id) return;
       setManualTargets((previous) => ({
@@ -109,7 +109,9 @@ export default function MessengerHub() {
         },
       }));
       setSelectedId(String(id));
+      if (window.__lunaPendingMessageTarget && String(id) === String(window.__lunaPendingMessageTarget.friend_id || window.__lunaPendingMessageTarget.id)) window.__lunaPendingMessageTarget = null;
     };
+    openTarget(null);
     window.addEventListener('openLunaMessages', openTarget);
     return () => window.removeEventListener('openLunaMessages', openTarget);
   }, [user?.id]);
