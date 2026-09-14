@@ -1156,7 +1156,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
             </div>
             {!isFriend && (
               <button disabled={requestState === 'sending' || requestState === 'sent'} onClick={(e) => { e.stopPropagation(); onAddFriend(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-                {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : 'Add Friend'}
+                {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'error' ? 'Request Failed · Retry' : 'Add Friend'}
               </button>
             )}
             <button onClick={(e) => { e.stopPropagation(); onMessage(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
@@ -1166,10 +1166,10 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
               Join Dashboard
             </button>
             <button disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} onClick={(e) => { e.stopPropagation(); onInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-              {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : 'Invite to Dashboard'}
+              {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
             </button>
             <button disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} onClick={(e) => { e.stopPropagation(); onPartyInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-              {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : 'Invite to Party'}
+              {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
             </button>
           </motion.div>
         )}
