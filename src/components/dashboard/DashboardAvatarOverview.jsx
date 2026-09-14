@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, Radio, Crown } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { useQuery } from '@tanstack/react-query';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
-function GlassSlot({ icon: Icon, label, active, onClick }) {
+function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClick }) {
   return (
     <button
       type="button"
@@ -15,7 +16,7 @@ function GlassSlot({ icon: Icon, label, active, onClick }) {
       aria-pressed={active}
       data-dashboard-quick-control
       onClick={onClick}
-      className={`relative h-[54px] w-[54px] flex-shrink-0 rounded-xl border backdrop-blur-2xl transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.10] ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : 'border-white/[0.16] bg-white/[0.055]'}`}
+      className={`relative h-[54px] w-[54px] flex-shrink-0 rounded-xl border backdrop-blur-2xl transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.10] ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : alert ? 'border-cyan-200/45 bg-cyan-300/[0.09] animate-pulse' : 'border-white/[0.16] bg-white/[0.055]'}`}
       style={{
         boxShadow: active
           ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 24px rgba(34,211,238,0.18), 0 8px 24px rgba(0,0,0,0.20)'
@@ -23,8 +24,9 @@ function GlassSlot({ icon: Icon, label, active, onClick }) {
       }}
     >
       <div className={`pointer-events-none absolute inset-0 rounded-xl border ${active ? 'border-cyan-200/[0.12]' : 'border-cyan-300/[0.04]'}`} />
-      {Icon && <Icon className={`pointer-events-none absolute left-1/2 top-[12px] -translate-x-1/2 w-4 h-4 ${active ? 'text-cyan-100' : 'text-white/55'}`} />}
-      <span className={`pointer-events-none absolute bottom-[5px] left-0 right-0 text-center text-[6px] uppercase tracking-wider ${active ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
+      {Icon && <Icon className={`pointer-events-none absolute left-1/2 top-[12px] -translate-x-1/2 w-4 h-4 ${active || alert ? 'text-cyan-100' : 'text-white/55'}`} />}
+      {badge > 0 && <span className="pointer-events-none absolute -right-1 -top-1 grid min-h-[16px] min-w-[16px] place-items-center rounded-full bg-cyan-300 px-1 text-[7px] font-black text-slate-950 shadow-[0_0_14px_rgba(103,232,249,.35)]">{badge > 99 ? '99+' : badge}</span>}
+      <span className={`pointer-events-none absolute bottom-[5px] left-0 right-0 text-center text-[6px] uppercase tracking-wider ${active || alert ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
     </button>
   );
 }
@@ -182,12 +184,34 @@ export default function DashboardAvatarOverview() {
     luck: Number(progression?.luck || 10)
   }), [progression, user]);
 
+  const { data: socialInbox = {} } = useQuery({
+    queryKey: ['luna-social-inbox-summary', user?.id],
+    queryFn: async () => {
+      const response = await base44.functions.invoke('socialActions', { action: 'get_inbox', data: {} });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      return body;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 2500,
+    staleTime: 1200,
+  });
+
+  useEffect(() => {
+    const openMessages = () => {
+      setActiveQuickPanel('messages');
+      setInteractionDimmed(false);
+    };
+    window.addEventListener('openLunaMessages', openMessages);
+    return () => window.removeEventListener('openLunaMessages', openMessages);
+  }, []);
+
   const levelProgress = Math.min(100, stats.currentXP / stats.nextXP * 100);
   const backgroundDimmed = !avatarFocusMode && (interactionDimmed || surface !== 'dashboard');
   const slotItems = [
     { id: 'stats', icon: BarChart3, label: 'Stats' },
-    { id: 'friends', icon: Users, label: 'Friends' },
-    { id: 'live', icon: Radio, label: 'Live' },
+    { id: 'friends', icon: Users, label: 'Friends', alert: Number(socialInbox.friend_unread || 0) > 0, badge: Number(socialInbox.friend_unread || 0) },
+    { id: 'messages', icon: MessageSquare, label: 'Message', alert: Number(socialInbox.unread_total || 0) > 0, badge: Number(socialInbox.unread_total || 0) },
     { id: 'cards', icon: Trophy, label: 'Cards' },
     { id: 'ai-story', icon: Sparkles, label: 'AI Story' },
     { id: 'ai-battle', icon: Shield, label: 'AI Battle' },
@@ -232,6 +256,8 @@ export default function DashboardAvatarOverview() {
               icon={item.icon}
               label={item.label}
               active={activeQuickPanel === item.id}
+              alert={item.alert}
+              badge={item.badge}
               onClick={() => setActiveQuickPanel(current => current === item.id ? null : item.id)}
             />
           ))}
