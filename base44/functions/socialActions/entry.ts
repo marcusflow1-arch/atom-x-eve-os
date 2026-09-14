@@ -48,6 +48,59 @@ Deno.serve(async (req) => {
       }
     };
 
+    // Friend relationships are consumed by two parts of Atom x Eve: Luna's
+    // Friend rows and the shared game-world SocialFriendship row. Keep both in
+    // sync from one service-role transaction so every UI sees the same result.
+    const ensureFriendshipBetween = async (input: {
+      senderId: string;
+      senderName?: string;
+      senderAvatar?: string;
+      receiverId: string;
+      receiverName?: string;
+      receiverAvatar?: string;
+    }) => {
+      const senderId = String(input.senderId || '').trim();
+      const receiverId = String(input.receiverId || '').trim();
+      if (!senderId || !receiverId) throw new Error('Friendship is missing a user ID');
+
+      const [receiverRows, senderRows] = await Promise.all([
+        svc.Friend.filter({ user_id: receiverId, friend_id: senderId }, '-created_date', 1),
+        svc.Friend.filter({ user_id: senderId, friend_id: receiverId }, '-created_date', 1),
+      ]);
+
+      if (!receiverRows?.length) {
+        await svc.Friend.create({
+          user_id: receiverId,
+          friend_id: senderId,
+          friend_name: input.senderName || 'Player',
+          friend_avatar: input.senderAvatar || '',
+          status: 'online',
+        });
+      }
+      if (!senderRows?.length) {
+        await svc.Friend.create({
+          user_id: senderId,
+          friend_id: receiverId,
+          friend_name: input.receiverName || 'Player',
+          friend_avatar: input.receiverAvatar || '',
+          status: 'online',
+        });
+      }
+
+      const [forward, reverse] = await Promise.all([
+        svc.SocialFriendship.filter({ user_a_id: senderId, user_b_id: receiverId }, '-created_date', 1).catch(() => []),
+        svc.SocialFriendship.filter({ user_a_id: receiverId, user_b_id: senderId }, '-created_date', 1).catch(() => []),
+      ]);
+      if (!(forward?.length || reverse?.length)) {
+        await svc.SocialFriendship.create({
+          user_a_id: senderId,
+          user_a_name: input.senderName || 'Player',
+          user_b_id: receiverId,
+          user_b_name: input.receiverName || 'Player',
+        });
+      }
+    };
+
     if (action === 'send_friend_request') {
       const targetId = String(data.target_user_id || '').trim();
       if (!targetId) return json({ error: 'Target user is required' }, 400);
@@ -60,7 +113,32 @@ Deno.serve(async (req) => {
       if (pending?.length) return json({ success: true, request: pending[0], already_pending: true });
 
       const reverse = await svc.FriendRequest.filter({ sender_id: targetId, receiver_id: user.id, status: 'pending' }, '-created_date', 1);
-      if (reverse?.length) return json({ success: true, incoming_request: reverse[0], already_pending: true });
+      if (reverse?.length) {
+        // Clicking Add Friend when that player has already requested you means
+        // both users have expressed the same intent. Complete the friendship
+        // immediately instead of returning a misleading "sent" state.
+        const incoming = reverse[0];
+        await ensureFriendshipBetween({
+          senderId: targetId,
+          senderName: incoming.sender_name || 'Player',
+          senderAvatar: incoming.sender_avatar || '',
+          receiverId: String(user.id),
+          receiverName: nameOf(user),
+          receiverAvatar: avatarOf(user),
+        });
+        const updated = await svc.FriendRequest.update(incoming.id, { status: 'accepted' });
+        const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: incoming.id, status: 'unread' });
+        for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
+        await createNotification({
+          recipient_id: targetId,
+          type: 'friend_accepted',
+          title: 'Friend request accepted',
+          body: `${nameOf(user)} accepted your friend request.`,
+          related_entity_id: incoming.id,
+          action_kind: 'none',
+        });
+        return json({ success: true, request: updated, accepted: true, mutual: true });
+      }
 
       const request = await svc.FriendRequest.create({
         sender_id: user.id,
@@ -88,49 +166,14 @@ Deno.serve(async (req) => {
       const request = await svc.FriendRequest.get(requestId).catch(() => null);
       if (!request || String(request.receiver_id) !== String(user.id)) return json({ error: 'Friend request not found' }, 404);
 
-      const ensureFriendship = async () => {
-        const senderId = String(request.sender_id || '').trim();
-        const receiverId = String(user.id || '').trim();
-        if (!senderId || !receiverId) throw new Error('Friend request is missing a user ID');
-
-        // Luna uses Friend rows while the game-world social stack uses
-        // SocialFriendship. Keep both stores in sync so accepting a request is
-        // visible everywhere in Atom x Eve.
-        const mine = await svc.Friend.filter({ user_id: receiverId, friend_id: senderId }, '-created_date', 1);
-        if (!mine?.length) {
-          await svc.Friend.create({
-            user_id: receiverId,
-            friend_id: senderId,
-            friend_name: request.sender_name || 'Player',
-            friend_avatar: request.sender_avatar || '',
-            status: 'online',
-          });
-        }
-
-        const theirs = await svc.Friend.filter({ user_id: senderId, friend_id: receiverId }, '-created_date', 1);
-        if (!theirs?.length) {
-          await svc.Friend.create({
-            user_id: senderId,
-            friend_id: receiverId,
-            friend_name: nameOf(user),
-            friend_avatar: avatarOf(user),
-            status: 'online',
-          });
-        }
-
-        const [forward, reverse] = await Promise.all([
-          svc.SocialFriendship.filter({ user_a_id: senderId, user_b_id: receiverId }, '-created_date', 1).catch(() => []),
-          svc.SocialFriendship.filter({ user_a_id: receiverId, user_b_id: senderId }, '-created_date', 1).catch(() => []),
-        ]);
-        if (!(forward?.length || reverse?.length)) {
-          await svc.SocialFriendship.create({
-            user_a_id: senderId,
-            user_a_name: request.sender_name || 'Player',
-            user_b_id: receiverId,
-            user_b_name: nameOf(user),
-          });
-        }
-      };
+      const ensureFriendship = async () => ensureFriendshipBetween({
+        senderId: String(request.sender_id || ''),
+        senderName: request.sender_name || 'Player',
+        senderAvatar: request.sender_avatar || '',
+        receiverId: String(user.id || ''),
+        receiverName: nameOf(user),
+        receiverAvatar: avatarOf(user),
+      });
 
       // If an older build already marked the request accepted before failing to
       // create the Friend rows, accepting it again repairs the relationship.
