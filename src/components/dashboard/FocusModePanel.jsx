@@ -19,6 +19,7 @@ import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 import StatsPopupOverlay from '@/components/dashboard/StatsPopupOverlay';
 import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
@@ -1114,6 +1115,24 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
     onClick(friend);
   };
 
+  // Fire the social action on pointer-down instead of waiting for click. This
+  // prevents transformed/stacked dashboard layers from swallowing the click
+  // after the button has already highlighted. Keyboard activation still uses
+  // the synthetic click path (detail === 0).
+  const actionHandlers = (action) => ({
+    onPointerDown: (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      action(friend);
+    },
+    onClick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) action(friend);
+    },
+  });
+
   return (
     <div className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`}>
       <motion.div
@@ -1155,20 +1174,20 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
               <p className="text-[7px] uppercase tracking-[.14em] text-white/30">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
             </div>
             {!isFriend && (
-              <button type="button" disabled={requestState === 'sending' || requestState === 'sent'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddFriend(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-                {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'error' ? 'Request Failed · Retry' : 'Add Friend'}
+              <button type="button" disabled={requestState === 'sending' || requestState === 'sent' || requestState === 'friend'} {...actionHandlers(onAddFriend)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+                {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'friend' ? 'Friends' : requestState === 'error' ? 'Request Failed · Retry' : 'Add Friend'}
               </button>
             )}
-            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMessage(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
+            <button type="button" {...actionHandlers(onMessage)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
               Chat / Message
             </button>
-            <button type="button" disabled={joining} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onJoin(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white transition-colors disabled:opacity-50">
+            <button type="button" disabled={joining} {...actionHandlers(onJoin)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white transition-colors disabled:opacity-50">
               {joining ? 'Joining Dashboard…' : 'Join Dashboard'}
             </button>
-            <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+            <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} {...actionHandlers(onInvite)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
               {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
             </button>
-            <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPartyInvite(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+            <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} {...actionHandlers(onPartyInvite)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
               {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
             </button>
           </motion.div>
@@ -1299,11 +1318,21 @@ export function LibraryBannerSection({
       const response = await base44.functions.invoke('socialActions', { action: 'send_friend_request', data: { target_user_id: u.id } });
       const body = response?.data ?? response ?? {};
       if (body?.error) throw new Error(body.error);
-      setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+
+      if (body.accepted || body.already_friends) {
+        setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'friend' }));
+        await refetchDashboardFriends();
+        window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friendship', friendId: String(u.id) } }));
+        showSuccess(`${u.name || 'Player'} is now in your Friends list.`);
+      } else {
+        setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+        showSuccess(`Friend request sent to ${u.name || 'player'}.`);
+      }
       onActiveFriendChange(null);
     } catch (error) {
       console.error('[Luna Presence] friend request failed', error);
       setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+      showError(error, 'Friend Request');
     }
   };
 
@@ -1324,6 +1353,10 @@ export function LibraryBannerSection({
         socialJoin: true,
       }
     }));
+    window.dispatchEvent(new CustomEvent('lunaDashboardJoinRequested', {
+      detail: { channelId: targetChannel, hostId: targetId, hostName: u.name || 'Friend' }
+    }));
+    showSuccess(`Joining ${u.name || 'player'}'s dashboard.`);
     onActiveFriendChange(null);
 
     try {
@@ -1357,10 +1390,12 @@ export function LibraryBannerSection({
       const body = response?.data ?? response ?? {};
       if (body?.error) throw new Error(body.error);
       setInvitedUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+      showSuccess(`Dashboard invite sent to ${u.name || 'player'}.`);
       onActiveFriendChange(null);
     } catch (error) {
       console.error('[Luna Presence] dashboard invite failed', error);
       setInvitedUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+      showError(error, 'Dashboard Invite');
     }
   };
 
@@ -1372,10 +1407,12 @@ export function LibraryBannerSection({
       if (response?.data?.error || response?.error) throw new Error(response?.data?.error || response?.error);
       setPartyInviteUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
       window.dispatchEvent(new Event('openLunaParty'));
+      showSuccess(`Party invite sent to ${u.name || 'player'}.`);
       onActiveFriendChange(null);
     } catch (error) {
       console.error('[Luna Presence] party invite failed', error);
       setPartyInviteUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+      showError(error, 'Party Invite');
     }
   };
 
