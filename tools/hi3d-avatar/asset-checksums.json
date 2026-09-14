@@ -1,0 +1,6 @@
+{
+  "public/models/face-landmarker/face_landmarker.task": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+  "public/models/face-landmarker/selfie_multiclass.tflite": "c6748b1253a99067ef71f7e26ca71096cd449baefa8f101900ea23016507e0e0",
+  "public/models/luna-hi3d/warrior.glb": "a223e842a9beabb329c6d478063b8d63016a26ca1cc6c366c3652aa792abd3af",
+  "tools/hi3d-avatar/walk-source.fbx": "6e93e3497ea34acdb95ebb76a10e8e7edecdbef0edcdaad3f12bdc5fd42b97bc"
+}
