@@ -1,3 +1,7 @@
+import {loadAvatarModel} from '@/components/onboarding/avatarAssetRuntime';
+import {playerAppearance} from '@/components/onboarding/playerAppearance';
+import {retargetAvatarClip} from '@/components/onboarding/retargetAvatarClip';
+import {isHi3DAvatar} from '@/components/onboarding/modelAppearance';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as THREE from 'three';
@@ -32,7 +36,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const companionRef = useRef(null);
   const companionMixerRef = useRef(null);
   const remotePlayersRef = useRef(new Map());
-  const savedCompanion = useCompanionIdentity();
+  const savedCompanion = playerAppearance(useCompanionIdentity());
   const savedCharacter = savedCompanion?.gender === 'female' ? 'c1' : 'ybot';
   
   // --- DUAL CHARACTER SYSTEM ---
@@ -170,10 +174,10 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     const buildSceneModels = () => {
       const models = [];
       if (modelRef.current) {
-        models.push({ id: 'ybot', name: 'Y-Bot', type: 'ybot', file_url: 'ybot' });
+        models.push({ id: 'ybot', name: 'Your character', type: 'ybot', file_url: 'ybot' });
       }
       if (c1ModelRef.current) {
-        models.push({ id: 'c1', name: 'C1 (Erika)', type: 'c1', file_url: 'c1' });
+        models.push({ id: 'c1', name: 'Your character / alternate', type: 'c1', file_url: 'c1' });
       }
       // Add spawned AI
       spawnedAIModelsRef.current.forEach((inst) => {
@@ -500,13 +504,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     // --- CHARACTER (Y-Bot) ---
     const loader = new FBXLoader();
-    const yBotUrl = savedCompanion?.gender === 'male'
-      ? companionModel(savedCompanion)
-      : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
-    
-    loader.load(yBotUrl, async (fbx) => {
-      const model = fbx;
-      model.scale.set(0.001, 0.001, 0.001); 
+    loadAvatarModel(savedCompanion,.18).then(async fbx=>{
+      const model=fbx;
       model.position.set(0, -0.5, 0);
       model.visible = activeCharacterRef.current === 'ybot';
       
@@ -538,7 +537,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
               if (!animAsset || !animAsset.animations || animAsset.animations.length === 0) continue;
               
-              const clip = animAsset.animations[0];
+              const clip=isHi3DAvatar(model)&&animAsset.traverse?retargetAvatarClip(animAsset,model,animAsset.animations[0]):animAsset.animations[0];
               const action = mixer.clipAction(clip);
               const name = (anim.name || '').toLowerCase().trim();
 
@@ -573,6 +572,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
           }
       };
       await loadAnimations();
+      if(model.animations?.length){mixer.stopAllAction();for(const [key,name] of [['idle','Idle'],['running','Walk']]){const clip=model.animations.find(c=>c.name===name);if(clip)actionsRef.current[key]=mixer.clipAction(clip);}actionsRef.current.idle?.play();activeActionRef.current=actionsRef.current.idle;}
+
       setIsModelLoaded(true);
 
       const fadeToAction = (name, duration = 0.2) => {
@@ -1525,15 +1526,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       initRenderActive = false;
       animate();
 
-    }, undefined, (err) => console.error('Error loading Y-Bot:', err));
+    }).catch(err=>console.error('Player load failed:',err));
 
     // --- C1 MODEL (ErikaArcher) ---
-    const c1Url = savedCompanion?.gender === 'female'
-      ? companionModel(savedCompanion)
-      : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
-    new FBXLoader().load(c1Url, async (c1fbx) => {
-      const c1 = c1fbx;
-      c1.scale.set(0.001, 0.001, 0.001);
+    loadAvatarModel(savedCompanion,.18).then(async c1fbx=>{
+      const c1=c1fbx;
       c1.position.set(0, -0.5, 0);
       c1.visible = activeCharacterRef.current === 'c1';
 
@@ -1545,7 +1542,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
       const c1Mixer = new THREE.AnimationMixer(c1);
       c1MixerRef.current = c1Mixer;
-      c1Mixer.timeScale = 1.2;
+      c1Mixer.timeScale=1;
+      for(const [key,name] of [['idle','Idle'],['running','Walk']]){const clip=c1.animations?.find(c=>c.name===name);if(clip)c1ActionsRef.current[key]=c1Mixer.clipAction(clip);}c1ActionsRef.current.idle?.play();
+
 
       if (adminAnimations && adminAnimations.length > 0) {
         const fbxLoader = new FBXLoader();
@@ -1562,7 +1561,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
             }
 
             if (!animAsset || !animAsset.animations || animAsset.animations.length === 0) continue;
-            const clip = animAsset.animations[0];
+            const clip=isHi3DAvatar(c1)&&animAsset.traverse?retargetAvatarClip(animAsset,c1,animAsset.animations[0]):animAsset.animations[0];
             const action = c1Mixer.clipAction(clip);
             const name = (anim.name || '').toLowerCase().trim();
 
@@ -1595,7 +1594,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         await new Promise(r => setTimeout(r, 100));
         
         try {
-          const wc = await attachWeapon(c1, SWORD_URL, {
+          const wc=isHi3DAvatar(c1)?null:await attachWeapon(c1, SWORD_URL, {
             backBone: 'Spine2',
             handBone: 'RightHand',
             scale: 50,
@@ -1679,7 +1678,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (effectControllerRef.current) effectControllerRef.current.dispose();
       };
 
-    }, undefined, (err) => console.error('Error loading C1:', err));
+    }).catch(err=>console.error('Alternate player load failed:',err));
 
     // --- CHARACTER SWITCH HANDLER ( \ key) ---
     const onSwitchCharacter = (e) => {
@@ -1874,7 +1873,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       }
       renderer.dispose();
     };
-  }, [adminAnimations, keybinds, spawnableAIModels, savedCompanion]);
+  }, [adminAnimations, keybinds, spawnableAIModels, JSON.stringify(savedCompanion)]);
 
   useEffect(() => {
     if (!isModelLoaded) return; 

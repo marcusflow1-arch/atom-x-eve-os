@@ -1,3 +1,9 @@
+import {useMemo} from 'react';
+import {useCompanionIdentity} from '@/components/onboarding/CompanionIdentityContext';
+import {playerAppearance} from '@/components/onboarding/playerAppearance';
+import {companionModel,applyCompanionAppearance} from '@/components/onboarding/genesisAssets';
+import {retargetAvatarClip} from '@/components/onboarding/retargetAvatarClip';
+import {isHi3DAvatar} from '@/components/onboarding/modelAppearance';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Move, MessageSquare, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -101,8 +107,9 @@ export default function AttachmentEditor() {
   });
 
   // Merge default characters with DB models for the dropdown
-  const availableCharacters = [
-    { id: 'c1', name: 'C1 (Erika)', url: CHARACTER_URLS.c1, type: 'fbx' },
+  const appearance=playerAppearance(useCompanionIdentity());
+  const availableCharacters = useMemo(()=>[
+    {id:'c1',name:'Your character',url:companionModel(appearance),type:/\.fbx$/i.test(companionModel(appearance))?'fbx':'glb'},
     { id: 'ybot', name: 'Y-Bot', url: CHARACTER_URLS.ybot, type: 'fbx' },
     ...models3d.map(m => ({
       id: m.id,
@@ -110,7 +117,7 @@ export default function AttachmentEditor() {
       url: m.file_url,
       type: (m.file_url || '').toLowerCase().endsWith('.glb') ? 'glb' : 'fbx'
     }))
-  ];
+  ],[models3d,JSON.stringify(appearance)]);
 
   // ── Three.js Scene Setup ──
   const initDoneRef = useRef(false);
@@ -227,7 +234,7 @@ export default function AttachmentEditor() {
     const onLoad = async (object) => {
       if (!sceneRef.current) return;
       
-      const model = object.scene || object;
+      const model = object.scene || object;model.animations=object.animations||[];
       
       // Auto-scale if needed (Mixamo FBX usually needs 0.01, GLB usually 1)
       if (charData.type === 'fbx') {
@@ -242,6 +249,7 @@ export default function AttachmentEditor() {
 
       model.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
       
+      if(charData.id==='c1')applyCompanionAppearance(model,appearance);
       const bones = [];
       model.traverse(child => { if (child.isBone) bones.push(child.name); });
       setBoneList(bones);
@@ -251,12 +259,13 @@ export default function AttachmentEditor() {
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
 
-      const idleAnim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === 'idle');
+      const nativeIdle=model.animations.find(c=>c.name==='Idle');if(nativeIdle){currentActionRef.current=mixer.clipAction(nativeIdle);currentActionRef.current.play();setAnimDuration(nativeIdle.duration);setCurrentAnimName('Idle');setIsPlaying(true);}
+      const idleAnim = !nativeIdle && adminAnimations.find(a => (a.name || '').toLowerCase().trim() === 'idle');
       if (idleAnim) {
         try {
           const animFbx = await new FBXLoader().loadAsync(idleAnim.file_url);
           if (animFbx.animations.length > 0) {
-            const clip = animFbx.animations[0];
+            const clip=isHi3DAvatar(characterRef.current)?retargetAvatarClip(animFbx,characterRef.current,animFbx.animations[0]):animFbx.animations[0];
             const action = mixer.clipAction(clip);
             action.play();
             currentActionRef.current = action;
@@ -309,7 +318,7 @@ export default function AttachmentEditor() {
 
     const animFbx = await new FBXLoader().loadAsync(anim.file_url);
     if (animFbx.animations.length > 0) {
-      const clip = animFbx.animations[0];
+      const clip=isHi3DAvatar(characterRef.current)?retargetAvatarClip(animFbx,characterRef.current,animFbx.animations[0]):animFbx.animations[0];
       const action = mixer.clipAction(clip);
       action.play();
       currentActionRef.current = action;
@@ -342,7 +351,7 @@ export default function AttachmentEditor() {
 
     const animFbx = await new FBXLoader().loadAsync(anim.file_url);
     if (animFbx.animations.length > 0) {
-      const clip = animFbx.animations[0];
+      const clip=isHi3DAvatar(characterRef.current)?retargetAvatarClip(animFbx,characterRef.current,animFbx.animations[0]):animFbx.animations[0];
       const action = mixer.clipAction(clip);
       action.reset();
       action.setLoop(THREE.LoopOnce, 1);
