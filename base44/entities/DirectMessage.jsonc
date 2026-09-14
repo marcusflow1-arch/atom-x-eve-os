@@ -12,21 +12,94 @@
     },
     "content": {
       "type": "string",
-      "description": "Message content"
+      "description": "Text body; may be empty when a media attachment is present"
     },
     "is_read": {
       "type": "boolean",
       "default": false,
-      "description": "Whether message has been read"
+      "description": "Whether the recipient has read the message"
+    },
+    "read_at": {
+      "type": "string",
+      "description": "ISO timestamp when the recipient read the message"
     },
     "conversation_id": {
       "type": "string",
-      "description": "ID linking messages in same conversation"
+      "description": "Stable sorted pair ID linking a direct-message thread"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image",
+        "screenshot",
+        "video",
+        "file",
+        "call"
+      ],
+      "default": "text"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "Uploaded attachment URL"
+    },
+    "media_name": {
+      "type": "string",
+      "description": "Original attachment filename"
+    },
+    "media_mime": {
+      "type": "string",
+      "description": "Attachment MIME type"
+    },
+    "call_mode": {
+      "type": "string",
+      "enum": [
+        "voice",
+        "video"
+      ]
+    },
+    "call_status": {
+      "type": "string",
+      "enum": [
+        "started",
+        "missed",
+        "declined",
+        "ended"
+      ]
     }
   },
   "required": [
     "sender_id",
     "receiver_id",
-    "content"
-  ]
+    "content",
+    "conversation_id"
+  ],
+  "rls": {
+    "create": {
+      "data.sender_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.receiver_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.receiver_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "data.sender_id": "{{user.id}}"
+    }
+  }
 }
