@@ -1,9 +1,37 @@
 import React from 'react';
+import { UserRound } from 'lucide-react';
 import { COMPANION_MODELS } from '@/components/onboarding/genesisAssets';
-export default function GenesisCompanionFields({config,setConfig}) {
-  return <section className="genesis-fields"><p className="genesis-kicker">02 / YOUR AI</p><h1>Meet your<br />other half.</h1><p className="genesis-description">One shared Artemis body across Atom × Eve. Choose your identity, then personalize the face and appearance in the next step.</p>
-    <div className="genesis-choices">{Object.entries(COMPANION_MODELS).map(([gender,model]) => <button type="button" key={gender} aria-pressed={config.gender===gender} onClick={()=>setConfig(c=>({...c,gender,model_url:model.url,material_colors:{},morph_targets:{}}))}><strong>{gender === 'female' ? 'Female' : 'Male'}</strong><small>{model.name}</small></button>)}</div>
-    <label>Companion name<input required maxLength={40} value={config.name} placeholder="Give your AI a name" onChange={e=>setConfig(c=>({...c,name:e.target.value}))} /></label>
-    <p className="genesis-note">Your AI is saved to your account—not just this device. Returning users keep their companion and earned progress.</p>
+
+export default function GenesisCompanionFields({ config, setConfig }) {
+  const chooseGender = (gender) => {
+    const model = COMPANION_MODELS[gender];
+    setConfig((current) => ({
+      ...current,
+      gender,
+      model_url: model.url,
+      face_scan_generated: false,
+      tripo_model_id: '',
+      material_colors: {},
+      morph_targets: {},
+    }));
+  };
+
+  return <section className="genesis-fields genesis-gender-step">
+    <p className="genesis-kicker">01 / CHARACTER BODY</p>
+    <h1>Choose male<br />or female.</h1>
+    <p className="genesis-description">This is the first choice in character creation. The male option uses the same white-shirt Luna AI avatar shown in the center of your dashboard. You can personalize the face on the next screen.</p>
+
+    <div className="genesis-choices genesis-gender-choices">
+      {Object.entries(COMPANION_MODELS).map(([gender, model]) => (
+        <button type="button" key={gender} aria-pressed={config.gender === gender} onClick={() => chooseGender(gender)}>
+          <span className="genesis-gender-icon"><UserRound size={21} /></span>
+          <strong>{gender === 'male' ? 'Male' : 'Female'}</strong>
+          <small>{model.name}</small>
+          {gender === 'male' && <em>Dashboard Luna model</em>}
+        </button>
+      ))}
+    </div>
+
+    <p className="genesis-note">Your body choice sets the starting 3D model only. Face generation and appearance controls can still personalize the character afterward.</p>
   </section>;
 }
