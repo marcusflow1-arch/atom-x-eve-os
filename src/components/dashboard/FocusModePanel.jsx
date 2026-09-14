@@ -42,7 +42,6 @@ import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
 import GamePageView from '@/components/dashboard/gamehub/GamePageView';
 import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
-import FriendMessengerPanel from '@/components/friends/FriendMessengerPanel';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1212,7 +1211,6 @@ export function LibraryBannerSection({
   const [invitedUsers, setInvitedUsers] = useState({});
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
-  const [messageTarget, setMessageTarget] = useState(null);
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
@@ -1236,6 +1234,24 @@ export function LibraryBannerSection({
     enabled: !!user?.id,
     refetchInterval: 3000,
   });
+
+  const { data: incomingFriendRequests = [], refetch: refetchFriendRequests } = useQuery({
+    queryKey: ['luna_presence_friend_requests', user?.id],
+    queryFn: async () => {
+      const rows = await base44.entities.FriendRequest.filter({ receiver_id: user.id, status: 'pending' });
+      return (rows || []).sort((a, b) => new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime());
+    },
+    enabled: !!user?.id,
+    refetchInterval: 3000,
+  });
+
+  const pendingSocialAction = useMemo(() => {
+    const candidates = [
+      ...(incomingFriendRequests || []).map((item) => ({ kind: 'friend', item, created: item.created_date })),
+      ...(incomingDashboardInvites || []).map((item) => ({ kind: 'dashboard', item, created: item.created_date })),
+    ];
+    return candidates.sort((a, b) => new Date(b.created || 0).getTime() - new Date(a.created || 0).getTime())[0] || null;
+  }, [incomingFriendRequests, incomingDashboardInvites]);
 
   const friendIds = useMemo(() => new Set((dashboardFriends || []).map((friend) => String(friend.friend_id))), [dashboardFriends]);
 
@@ -1279,48 +1295,42 @@ export function LibraryBannerSection({
     if (!user?.id || !u?.id || friendIds.has(String(u.id))) return;
     setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
     try {
-      const existing = await base44.entities.FriendRequest.filter({ sender_id: user.id, receiver_id: u.id, status: 'pending' });
-      if (!(existing || []).length) {
-        await base44.entities.FriendRequest.create({
-          sender_id: user.id,
-          sender_name: user.full_name || user.username || user.email?.split('@')?.[0] || 'Player',
-          sender_avatar: user.avatar_url || '',
-          receiver_id: u.id,
-          status: 'pending',
-        });
-      }
+      const response = await base44.functions.invoke('socialActions', { action: 'send_friend_request', data: { target_user_id: u.id } });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
       setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+      onActiveFriendChange(null);
     } catch (error) {
       console.error('[Luna Presence] friend request failed', error);
       setFriendRequestUsers((prev) => ({ ...prev, [u.id]: 'error' }));
     }
   };
 
-  const handleJoin = (u) => {
+  const handleJoin = async (u) => {
+    if (!u?.id) return;
     onActiveFriendChange(null);
-    if (u.envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: u.envUrl } }));
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name, socialJoin: true }
-    }));
+    try {
+      const response = await base44.functions.invoke('socialActions', { action: 'get_dashboard_join', data: { target_user_id: u.id } });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      const state = body.player_state || {};
+      const envUrl = state.env_url || u.envUrl;
+      if (envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl } }));
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: state.channel_id || `dashboard_${u.id}`, hostId: u.id, hostName: state.display_name || u.name, socialJoin: true }
+      }));
+    } catch (error) {
+      console.error('[Luna Presence] join dashboard failed', error);
+    }
   };
 
   const handleInvite = async (u) => {
     if (!user?.id || !u?.id) return;
     setInvitedUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
     try {
-      const existing = await base44.entities.LunarDashboardRequest.filter({
-        request_type: 'invite', requester_id: user.id, target_user_id: u.id, host_user_id: user.id, status: 'pending'
-      });
-      if (!(existing || []).length) {
-        await base44.entities.LunarDashboardRequest.create({
-          request_type: 'invite',
-          requester_id: user.id,
-          requester_name: user.full_name || user.username || user.email?.split('@')?.[0] || 'Player',
-          target_user_id: u.id,
-          host_user_id: user.id,
-          status: 'pending',
-        });
-      }
+      const response = await base44.functions.invoke('socialActions', { action: 'send_dashboard_invite', data: { target_user_id: u.id } });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
       setInvitedUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
       onActiveFriendChange(null);
     } catch (error) {
@@ -1346,27 +1356,39 @@ export function LibraryBannerSection({
 
   const handleMessage = (u) => {
     onActiveFriendChange(null);
-    setMessageTarget({
+    window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target: {
       id: u.id,
       friend_id: u.id,
       friend_name: u.name,
       friend_avatar: u.avatar,
       status: u.status || 'online',
       current_game: u.current_game || null,
-    });
+      is_friend: friendIds.has(String(u.id)),
+    } } }));
   };
 
   const acceptDashboardInvite = async (request) => {
     if (!request?.id) return;
-    await base44.entities.LunarDashboardRequest.update(request.id, { status: 'accepted' });
+    const response = await base44.functions.invoke('socialActions', { action: 'respond_dashboard_invite', data: { request_id: request.id, decision: 'accept' } });
+    const body = response?.data ?? response ?? {};
+    if (body?.error) throw new Error(body.error);
     await refetchDashboardInvites();
-    handleJoin({ id: request.host_user_id, name: request.requester_name || 'Friend', status: 'online' });
+    handleJoin({ id: body.host_user_id || request.host_user_id, name: body.host_name || request.requester_name || 'Friend', status: 'online' });
   };
 
   const declineDashboardInvite = async (request) => {
     if (!request?.id) return;
-    await base44.entities.LunarDashboardRequest.update(request.id, { status: 'declined' });
+    await base44.functions.invoke('socialActions', { action: 'respond_dashboard_invite', data: { request_id: request.id, decision: 'decline' } });
     await refetchDashboardInvites();
+  };
+
+  const respondFriendRequest = async (request, accept) => {
+    if (!request?.id) return;
+    const response = await base44.functions.invoke('socialActions', { action: 'respond_friend_request', data: { request_id: request.id, decision: accept ? 'accept' : 'decline' } });
+    const body = response?.data ?? response ?? {};
+    if (body?.error) throw new Error(body.error);
+    await refetchFriendRequests();
+    window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: accept } }));
   };
 
   const handleHomeClick = () => {
@@ -1467,27 +1489,21 @@ export function LibraryBannerSection({
       </div>
 
       <AnimatePresence>
-        {incomingDashboardInvites[0] && (
+        {pendingSocialAction && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="fixed right-8 top-20 z-[9997] w-[330px] rounded-2xl border border-white/[0.09] bg-[#090c11]/95 p-4 shadow-2xl backdrop-blur-2xl"
+            className="fixed right-8 top-20 z-[9997] w-[330px] rounded-2xl border border-cyan-100/[0.12] bg-[linear-gradient(145deg,rgba(8,18,31,.92),rgba(5,9,17,.9))] p-4 shadow-[0_25px_70px_rgba(0,0,0,.45)] backdrop-blur-2xl"
           >
-            <div className="text-[8px] font-black uppercase tracking-[.2em] text-white/35">Dashboard Invitation</div>
-            <p className="mt-2 text-sm font-semibold text-white">{incomingDashboardInvites[0].requester_name || 'A friend'} invited you to their dashboard.</p>
-            <p className="mt-1 text-[10px] leading-4 text-white/35">Accepting joins the same dashboard multiplayer channel, voice room, lobby presence and shared session.</p>
+            <div className="flex items-center gap-2"><Bell className="h-3.5 w-3.5 text-cyan-200/65" /><div className="text-[8px] font-black uppercase tracking-[.2em] text-cyan-100/40">System Notification</div></div>
+            <p className="mt-2 text-sm font-semibold text-white">{pendingSocialAction.kind === 'friend' ? `${pendingSocialAction.item.sender_name || 'A player'} sent you a friend request.` : `${pendingSocialAction.item.requester_name || 'A friend'} invited you to their dashboard.`}</p>
+            <p className="mt-1 text-[10px] leading-4 text-white/35">{pendingSocialAction.kind === 'friend' ? 'Accept to add each other to your Friends lists and enable party/social shortcuts.' : 'Accept to join the same Luna dashboard session.'}</p>
             <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => declineDashboardInvite(incomingDashboardInvites[0])} className="h-9 flex-1 rounded-xl bg-white/[0.045] text-[9px] font-bold uppercase tracking-wider text-white/55 hover:bg-white/[0.08] hover:text-white">Decline</button>
-              <button type="button" onClick={() => acceptDashboardInvite(incomingDashboardInvites[0])} className="h-9 flex-1 rounded-xl bg-white text-[9px] font-black uppercase tracking-wider text-black hover:bg-slate-100">Join Dashboard</button>
+              <button type="button" onClick={() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, false) : declineDashboardInvite(pendingSocialAction.item)} className="h-9 flex-1 rounded-xl bg-white/[0.045] text-[9px] font-bold uppercase tracking-wider text-white/55 hover:bg-white/[0.08] hover:text-white">Decline</button>
+              <button type="button" onClick={() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, true) : acceptDashboardInvite(pendingSocialAction.item)} className="h-9 flex-1 rounded-xl bg-cyan-200 text-[9px] font-black uppercase tracking-wider text-slate-950 hover:bg-cyan-100">{pendingSocialAction.kind === 'friend' ? 'Accept Friend' : 'Join Dashboard'}</button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {messageTarget && (
-          <FriendMessengerPanel friend={messageTarget} currentUserId={user?.id} onClose={() => setMessageTarget(null)} />
         )}
       </AnimatePresence>
 
