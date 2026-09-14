@@ -1,0 +1,307 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+});
+
+const nameOf = (user: any) => user?.full_name || user?.username || user?.email?.split?.('@')?.[0] || 'Player';
+const avatarOf = (user: any) => user?.avatar_url || user?.profile_image || '';
+const conversationIdFor = (a: string, b: string) => [String(a), String(b)].sort().join('::');
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return json({ error: 'Unauthorized' }, 401);
+
+    const payload = await req.json().catch(() => ({}));
+    const action = String(payload?.action || '');
+    const data = payload?.data || {};
+    const svc = base44.asServiceRole.entities;
+
+    const createNotification = async (input: any) => {
+      try {
+        return await svc.SocialNotification.create({
+          recipient_id: input.recipient_id,
+          actor_id: user.id,
+          actor_name: input.actor_name || nameOf(user),
+          actor_avatar: input.actor_avatar || avatarOf(user),
+          type: input.type,
+          title: input.title,
+          body: input.body || '',
+          related_entity_id: input.related_entity_id || '',
+          conversation_id: input.conversation_id || '',
+          status: 'unread',
+          action_kind: input.action_kind || 'none',
+        });
+      } catch (error) {
+        console.warn('[socialActions] notification create failed', error);
+        return null;
+      }
+    };
+
+    if (action === 'send_friend_request') {
+      const targetId = String(data.target_user_id || '').trim();
+      if (!targetId) return json({ error: 'Target user is required' }, 400);
+      if (targetId === String(user.id)) return json({ error: 'You cannot add yourself' }, 400);
+
+      const existingFriend = await svc.Friend.filter({ user_id: user.id, friend_id: targetId }, '-created_date', 1);
+      if (existingFriend?.length) return json({ success: true, already_friends: true });
+
+      const pending = await svc.FriendRequest.filter({ sender_id: user.id, receiver_id: targetId, status: 'pending' }, '-created_date', 1);
+      if (pending?.length) return json({ success: true, request: pending[0], already_pending: true });
+
+      const reverse = await svc.FriendRequest.filter({ sender_id: targetId, receiver_id: user.id, status: 'pending' }, '-created_date', 1);
+      if (reverse?.length) return json({ success: true, incoming_request: reverse[0], already_pending: true });
+
+      const request = await svc.FriendRequest.create({
+        sender_id: user.id,
+        sender_name: nameOf(user),
+        sender_avatar: avatarOf(user),
+        receiver_id: targetId,
+        status: 'pending',
+        message: String(data.message || 'Would like to add you as a friend').slice(0, 300),
+      });
+      await createNotification({
+        recipient_id: targetId,
+        type: 'friend_request',
+        title: 'Friend request',
+        body: `${nameOf(user)} sent you a friend request.`,
+        related_entity_id: request.id,
+        action_kind: 'friend_request',
+      });
+      return json({ success: true, request });
+    }
+
+    if (action === 'respond_friend_request') {
+      const requestId = String(data.request_id || '').trim();
+      const decision = data.decision === 'accept' ? 'accepted' : 'declined';
+      const request = await svc.FriendRequest.get(requestId).catch(() => null);
+      if (!request || String(request.receiver_id) !== String(user.id)) return json({ error: 'Friend request not found' }, 404);
+      if (request.status !== 'pending') return json({ success: true, request });
+
+      const updated = await svc.FriendRequest.update(request.id, { status: decision });
+      if (decision === 'accepted') {
+        const sender = await svc.User.get(request.sender_id).catch(() => null);
+        const mine = await svc.Friend.filter({ user_id: user.id, friend_id: request.sender_id }, '-created_date', 1);
+        if (!mine?.length) {
+          await svc.Friend.create({
+            user_id: user.id,
+            friend_id: request.sender_id,
+            friend_name: request.sender_name || nameOf(sender),
+            friend_avatar: request.sender_avatar || avatarOf(sender),
+            status: 'online',
+          });
+        }
+        const theirs = await svc.Friend.filter({ user_id: request.sender_id, friend_id: user.id }, '-created_date', 1);
+        if (!theirs?.length) {
+          await svc.Friend.create({
+            user_id: request.sender_id,
+            friend_id: user.id,
+            friend_name: nameOf(user),
+            friend_avatar: avatarOf(user),
+            status: 'online',
+          });
+        }
+        await createNotification({
+          recipient_id: request.sender_id,
+          type: 'friend_accepted',
+          title: 'Friend request accepted',
+          body: `${nameOf(user)} accepted your friend request.`,
+          related_entity_id: request.id,
+          action_kind: 'none',
+        });
+      }
+
+      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id, status: 'unread' });
+      for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
+      return json({ success: true, request: updated, accepted: decision === 'accepted' });
+    }
+
+    if (action === 'send_dashboard_invite') {
+      const targetId = String(data.target_user_id || '').trim();
+      if (!targetId) return json({ error: 'Target user is required' }, 400);
+      if (targetId === String(user.id)) return json({ error: 'You are already on your own dashboard' }, 400);
+
+      const duplicate = await svc.LunarDashboardRequest.filter({
+        request_type: 'invite', requester_id: user.id, target_user_id: targetId, host_user_id: user.id, status: 'pending'
+      }, '-created_date', 1);
+      const request = duplicate?.[0] || await svc.LunarDashboardRequest.create({
+        request_type: 'invite',
+        requester_id: user.id,
+        requester_name: nameOf(user),
+        target_user_id: targetId,
+        host_user_id: user.id,
+        status: 'pending',
+      });
+      if (!duplicate?.length) {
+        await createNotification({
+          recipient_id: targetId,
+          type: 'dashboard_invite',
+          title: 'Dashboard invitation',
+          body: `${nameOf(user)} invited you to join their Luna dashboard.`,
+          related_entity_id: request.id,
+          action_kind: 'dashboard_invite',
+        });
+      }
+      return json({ success: true, request, already_pending: !!duplicate?.length });
+    }
+
+    if (action === 'respond_dashboard_invite') {
+      const requestId = String(data.request_id || '').trim();
+      const decision = data.decision === 'accept' ? 'accepted' : 'declined';
+      const request = await svc.LunarDashboardRequest.get(requestId).catch(() => null);
+      if (!request || String(request.target_user_id) !== String(user.id)) return json({ error: 'Dashboard invitation not found' }, 404);
+      if (request.status === 'pending') await svc.LunarDashboardRequest.update(request.id, { status: decision });
+      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, related_entity_id: request.id, status: 'unread' });
+      for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'actioned' });
+      return json({ success: true, accepted: decision === 'accepted', host_user_id: request.host_user_id, host_name: request.requester_name });
+    }
+
+    if (action === 'get_dashboard_join') {
+      const targetId = String(data.target_user_id || '').trim();
+      if (!targetId) return json({ error: 'Target user is required' }, 400);
+      const rows = await svc.PlayerState.filter({ player_id: targetId }, '-last_update', 20);
+      const live = (rows || []).sort((a: any, b: any) => Number(b.last_update || 0) - Number(a.last_update || 0))[0] || null;
+      return json({ success: true, target_user_id: targetId, player_state: live ? {
+        player_id: live.player_id,
+        display_name: live.display_name,
+        status: live.status,
+        channel_id: live.channel_id,
+        env_url: live.env_url,
+        model_url: live.model_url,
+        last_update: live.last_update,
+      } : null });
+    }
+
+    if (action === 'send_message') {
+      const targetId = String(data.target_user_id || '').trim();
+      const content = String(data.content || '').trim().slice(0, 5000);
+      const mediaUrl = String(data.media_url || '').trim();
+      if (!targetId) return json({ error: 'Recipient is required' }, 400);
+      if (targetId === String(user.id)) return json({ error: 'You cannot message yourself' }, 400);
+      if (!content && !mediaUrl) return json({ error: 'Message is empty' }, 400);
+      const conversationId = conversationIdFor(user.id, targetId);
+      const type = ['image', 'screenshot', 'video', 'file', 'call'].includes(data.message_type) ? data.message_type : 'text';
+      const message = await svc.DirectMessage.create({
+        sender_id: user.id,
+        receiver_id: targetId,
+        conversation_id: conversationId,
+        content,
+        is_read: false,
+        message_type: type,
+        media_url: mediaUrl,
+        media_name: String(data.media_name || '').slice(0, 300),
+        media_mime: String(data.media_mime || '').slice(0, 150),
+        ...(data.call_mode ? { call_mode: data.call_mode } : {}),
+        ...(data.call_status ? { call_status: data.call_status } : {}),
+      });
+      await createNotification({
+        recipient_id: targetId,
+        type: 'message',
+        title: nameOf(user),
+        body: content || (type === 'screenshot' ? 'Sent a screenshot.' : type === 'image' ? 'Sent a picture.' : 'Sent an attachment.'),
+        related_entity_id: message.id,
+        conversation_id: conversationId,
+        action_kind: 'open_message',
+      });
+      return json({ success: true, message, conversation_id: conversationId });
+    }
+
+    if (action === 'get_thread') {
+      const targetId = String(data.target_user_id || '').trim();
+      if (!targetId) return json({ error: 'Conversation user is required' }, 400);
+      const conversationId = conversationIdFor(user.id, targetId);
+      const rows = await svc.DirectMessage.filter({ conversation_id: conversationId }, 'created_date', 1000);
+      const messages = (rows || []).filter((m: any) => String(m.sender_id) === String(user.id) || String(m.receiver_id) === String(user.id));
+      return json({ success: true, conversation_id: conversationId, messages });
+    }
+
+    if (action === 'mark_thread_read') {
+      const targetId = String(data.target_user_id || '').trim();
+      if (!targetId) return json({ error: 'Conversation user is required' }, 400);
+      const conversationId = conversationIdFor(user.id, targetId);
+      const rows = await svc.DirectMessage.filter({ conversation_id: conversationId, receiver_id: user.id, is_read: false }, '-created_date', 500);
+      const readAt = new Date().toISOString();
+      for (const message of rows || []) await svc.DirectMessage.update(message.id, { is_read: true, read_at: readAt });
+      const notices = await svc.SocialNotification.filter({ recipient_id: user.id, conversation_id: conversationId, type: 'message', status: 'unread' }, '-created_date', 500);
+      for (const notice of notices || []) await svc.SocialNotification.update(notice.id, { status: 'read' });
+      return json({ success: true, marked: rows?.length || 0 });
+    }
+
+    if (action === 'get_inbox') {
+      const [received, sent, friends] = await Promise.all([
+        svc.DirectMessage.filter({ receiver_id: user.id }, '-created_date', 1000),
+        svc.DirectMessage.filter({ sender_id: user.id }, '-created_date', 1000),
+        svc.Friend.filter({ user_id: user.id }, '-created_date', 1000),
+      ]);
+      const friendIds = new Set((friends || []).map((f: any) => String(f.friend_id)));
+      const all = [...(received || []), ...(sent || [])].sort((a: any, b: any) => new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime());
+      const byConversation = new Map<string, any>();
+      for (const message of all) {
+        if (!message?.conversation_id || byConversation.has(message.conversation_id)) continue;
+        const partnerId = String(message.sender_id) === String(user.id) ? String(message.receiver_id) : String(message.sender_id);
+        byConversation.set(message.conversation_id, { message, partnerId });
+      }
+      const unreadByPartner = new Map<string, number>();
+      for (const message of received || []) {
+        if (message.is_read) continue;
+        const key = String(message.sender_id);
+        unreadByPartner.set(key, (unreadByPartner.get(key) || 0) + 1);
+      }
+      const profiles = new Map<string, any>();
+      for (const { partnerId } of byConversation.values()) {
+        if (profiles.has(partnerId)) continue;
+        profiles.set(partnerId, await svc.User.get(partnerId).catch(() => null));
+      }
+      const conversations = [...byConversation.values()].map(({ message, partnerId }) => {
+        const profile = profiles.get(partnerId);
+        return {
+          conversation_id: message.conversation_id,
+          partner_id: partnerId,
+          partner_name: nameOf(profile),
+          partner_avatar: avatarOf(profile),
+          is_friend: friendIds.has(partnerId),
+          unread_count: unreadByPartner.get(partnerId) || 0,
+          last_message: message.content || (message.message_type === 'screenshot' ? 'Screenshot' : message.message_type === 'image' ? 'Photo' : message.message_type === 'video' ? 'Video' : 'Attachment'),
+          last_message_type: message.message_type || 'text',
+          last_message_at: message.created_date,
+          last_sender_id: message.sender_id,
+        };
+      });
+      const friendUnread = conversations.filter((c: any) => c.is_friend).reduce((sum: number, c: any) => sum + Number(c.unread_count || 0), 0);
+      const nonfriendUnread = conversations.filter((c: any) => !c.is_friend).reduce((sum: number, c: any) => sum + Number(c.unread_count || 0), 0);
+      return json({ success: true, conversations, unread_total: friendUnread + nonfriendUnread, friend_unread: friendUnread, nonfriend_unread: nonfriendUnread });
+    }
+
+    if (action === 'get_pending_actions') {
+      const [friendRequests, dashboardInvites, notifications] = await Promise.all([
+        svc.FriendRequest.filter({ receiver_id: user.id, status: 'pending' }, '-created_date', 50),
+        svc.LunarDashboardRequest.filter({ target_user_id: user.id, request_type: 'invite', status: 'pending' }, '-created_date', 50),
+        svc.SocialNotification.filter({ recipient_id: user.id, status: 'unread' }, '-created_date', 100),
+      ]);
+      return json({ success: true, friend_requests: friendRequests || [], dashboard_invites: dashboardInvites || [], notifications: notifications || [] });
+    }
+
+    if (action === 'mark_notification_read') {
+      const id = String(data.notification_id || '').trim();
+      const notice = await svc.SocialNotification.get(id).catch(() => null);
+      if (!notice || String(notice.recipient_id) !== String(user.id)) return json({ error: 'Notification not found' }, 404);
+      await svc.SocialNotification.update(id, { status: 'read' });
+      return json({ success: true });
+    }
+
+    return json({ error: 'Unknown social action' }, 400);
+  } catch (error) {
+    console.error('[socialActions]', error);
+    return json({ error: error?.message || 'Social service failed' }, 500);
+  }
+});
