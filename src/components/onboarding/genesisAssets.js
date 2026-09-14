@@ -3,8 +3,9 @@ const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/m
 
 // One canonical player-avatar body for every Atom × Eve viewer. A user's
 // generated/selfie avatar may override this through model_url, but every
-// uncustomized surface falls back to this same Artemis body.
-export const GLOBAL_AVATAR_MODEL_URL = '/models/artemis.gltf';
+// uncustomized surface falls back to the same white-shirt Luna Hi3D body
+// used in the center of the Luna dashboard.
+export const GLOBAL_AVATAR_MODEL_URL = '/models/luna-hi3d/warrior.glb';
 export const GLOBAL_AVATAR_NAME = 'Artemis';
 
 export const COMPANION_MODELS = {
@@ -92,9 +93,10 @@ export function getAvatarStylePreset(id) {
 
 export function companionModel(avatar) {
   const requested = String(avatar?.model_url || '').trim();
-  const legacyDefault = /(?:3f915913a_ErikaArcher\.fbx|608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
-  // Migrate the old Erika / Y-Bot defaults at render time. A generated face
-  // avatar or explicitly uploaded custom model still wins over Artemis.
+  const legacyDefault = /(?:3f915913a_ErikaArcher\.fbx|608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
+  // Migrate the accidentally-selected Artemis model plus the older Erika /
+  // Y-Bot defaults at render time. A generated face avatar or explicitly
+  // uploaded custom model still wins over the Luna Hi3D body.
   if (requested && !legacyDefault && /^(https?:\/\/|\/)/i.test(requested)) return requested;
   return GLOBAL_AVATAR_MODEL_URL;
 }
