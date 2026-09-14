@@ -3,6 +3,7 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
 import useAvatarStore from './useAvatarStore';
+import { GLOBAL_AVATAR_MODEL_URL } from '@/components/onboarding/genesisAssets';
 
 // --- Mannequin & Items (Fallback System) ---
 function MannequinBody() {
@@ -85,9 +86,10 @@ export default function AvatarModel({ modelUrl }) {
   const groupRef = useRef();
   const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
 
-  // Handle Custom GLB Loading - useLoader must be called unconditionally
-  const gltfResult = useLoader(GLTFLoader, modelUrl || '__SKIP__', (loader) => loader);
-  const gltf = modelUrl ? gltfResult : null;
+  // The Artemis body is the universal default; a generated/custom avatar
+  // overrides it when modelUrl is present.
+  const resolvedModelUrl = modelUrl || GLOBAL_AVATAR_MODEL_URL;
+  const gltf = useLoader(GLTFLoader, resolvedModelUrl, (loader) => loader);
 
   // Animation Mixer for Custom Models
   const mixerRef = useRef();
@@ -115,19 +117,9 @@ export default function AvatarModel({ modelUrl }) {
     }
   });
 
-  // Render Custom Model if available
-  if (modelUrl && gltf) {
-    return (
-        <group ref={groupRef} position={[0, -1, 0]}>
-            <primitive object={gltf.scene} scale={1.5} />
-        </group>
-    );
-  }
-
-  // Render Default Composite Avatar
   return (
     <group ref={groupRef} position={[0, -1, 0]}>
-      <MannequinBody />
+      <primitive object={gltf.scene} scale={1.5} />
       {equipped.body !== 'base' && <BodyItem type={equipped.body} />}
       {equipped.head !== 'none' && <HeadItem type={equipped.head} />}
       {equipped.accessory !== 'none' && <AccessoryItem type={equipped.accessory} />}
