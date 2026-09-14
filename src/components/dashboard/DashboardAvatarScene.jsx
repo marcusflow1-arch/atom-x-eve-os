@@ -6,6 +6,7 @@ import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityC
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import Hi3DPlayerPreview from '@/components/dashboard/Hi3DPlayerPreview';
 import FriendsListContent from '@/components/dashboard/FriendsListContent';
+import MessengerHub from '@/components/friends/MessengerHub';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 
@@ -19,6 +20,7 @@ export default function DashboardAvatarScene({ focusMode = false }) {
   const [remoteGuest, setRemoteGuest] = useState(null);
   const [remoteGuestAvatar, setRemoteGuestAvatar] = useState(null);
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
+  const [messagesWorkspace, setMessagesWorkspace] = useState(null);
 
   useEffect(() => {
     let requestId = 0;
@@ -111,7 +113,9 @@ export default function DashboardAvatarScene({ focusMode = false }) {
     if (typeof document === 'undefined') return undefined;
     const resolveWorkspace = () => {
       const node = document.querySelector('[aria-label="friends workspace"]');
+      const messageNode = document.querySelector('[aria-label="messages workspace"]');
       setFriendsWorkspace((current) => current === node ? current : node);
+      setMessagesWorkspace((current) => current === messageNode ? current : messageNode);
     };
     resolveWorkspace();
     const observer = new MutationObserver(resolveWorkspace);
@@ -133,17 +137,17 @@ export default function DashboardAvatarScene({ focusMode = false }) {
           The two 150–190px pedestals touch edge-to-edge, which keeps avatar
           centerlines roughly one rendered body-width apart in the open lane. */}
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        {leftIsLocal ? <Hi3DPlayerPreview config={leftConfig} interactive={focusMode} /> : <GenesisModelPreview config={leftConfig} compact />}
+        {leftIsLocal ? <Hi3DPlayerPreview config={leftConfig} interactive={focusMode} controls="none" /> : <GenesisModelPreview config={leftConfig} compact />}
         {!focusMode && <div className="pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-md">{leftName}</div>}
       </div>
       <div className="relative h-full w-[clamp(150px,14%,190px)] overflow-visible">
-        {rightIsLocal ? <Hi3DPlayerPreview config={rightConfig} interactive={focusMode} /> : <GenesisModelPreview config={rightConfig} compact />}
+        {rightIsLocal ? <Hi3DPlayerPreview config={rightConfig} interactive={focusMode} controls="none" /> : <GenesisModelPreview config={rightConfig} compact />}
         {!focusMode && <div className={`pointer-events-none absolute bottom-[10%] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border bg-black/35 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md ${rightIsLocal ? 'border-cyan-200/15 text-cyan-100/80' : 'border-white/10 text-white/70'}`}>{rightName}</div>}
       </div>
     </div>
   );
 
-  let avatarStage = <Hi3DPlayerPreview config={localAvatar || FALLBACK_AVATAR} interactive={focusMode} />;
+  let avatarStage = <Hi3DPlayerPreview config={localAvatar || FALLBACK_AVATAR} interactive={focusMode} controls="none" />;
   if (joinedElsewhere) {
     avatarStage = pairedStage(
       hostAvatar || { ...FALLBACK_AVATAR, name: socialHost.name },
@@ -173,6 +177,12 @@ export default function DashboardAvatarScene({ focusMode = false }) {
           <FriendsListContent />
         </div>,
         friendsWorkspace
+      )}
+      {messagesWorkspace && createPortal(
+        <div className="relative z-10 h-full w-full overflow-hidden">
+          <MessengerHub />
+        </div>,
+        messagesWorkspace
       )}
       <EnvironmentHubWorkspace />
     </>
