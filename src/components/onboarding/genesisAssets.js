@@ -92,9 +92,10 @@ export function getAvatarStylePreset(id) {
 
 export function companionModel(avatar) {
   const requested = String(avatar?.model_url || '').trim();
-  // Generated avatars are normally absolute Base44 URLs, while bundled
-  // project avatars use root-relative paths such as /models/artemis.gltf.
-  if (/^(https?:\/\/|\/)/i.test(requested)) return requested;
+  const legacyDefault = /(?:3f915913a_ErikaArcher\.fbx|608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
+  // Migrate the old Erika / Y-Bot defaults at render time. A generated face
+  // avatar or explicitly uploaded custom model still wins over Artemis.
+  if (requested && !legacyDefault && /^(https?:\/\/|\/)/i.test(requested)) return requested;
   return GLOBAL_AVATAR_MODEL_URL;
 }
 
