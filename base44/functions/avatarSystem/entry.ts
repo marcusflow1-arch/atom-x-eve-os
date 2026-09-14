@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
+const GLOBAL_AVATAR_MODEL = '/models/artemis.gltf';
 
 export default async function(req) {
     try {
@@ -133,7 +134,7 @@ async function initializeAvatar(base44, user, requestBody) {
             experience: 0,
             social_influence: 0,
             reputation_badges: [],
-            model_url: requestBody.setup ? requestBody.model_url : 'base_humanoid.glb',
+            model_url: requestBody.setup ? (requestBody.model_url || GLOBAL_AVATAR_MODEL) : GLOBAL_AVATAR_MODEL,
             ...(requestBody.setup ? {setup_status:'pending'} : {}),
             equipped_items: [],
             unlocked_abilities: [],
@@ -240,7 +241,7 @@ async function saveAvatarAppearance(base44, userId, appearance = {}) {
             gender: appearance.gender === 'female' ? 'female' : 'male',
             level: 1,
             experience: 0,
-            model_url: normalized.model_url || 'base_humanoid.glb',
+            model_url: normalized.model_url || GLOBAL_AVATAR_MODEL,
             ...normalized,
         });
     }
