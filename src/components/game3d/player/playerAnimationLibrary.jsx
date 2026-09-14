@@ -1,3 +1,5 @@
+import {retargetAvatarClip} from '@/components/onboarding/retargetAvatarClip';
+import {isHi3DAvatar} from '@/components/onboarding/modelAppearance';
 import { base44 } from '@/api/base44Client';
 
 const norm = (value = '') => value.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -38,9 +40,9 @@ const makeRunClipInPlace = (key, clip) => {
   return inPlaceClip;
 };
 
-export async function loadPlayerAnimationClips(loader) {
-  const rows = await base44.entities.AnimationFBX.filter({ folder: 'player character' }, '-created_date', 100);
-  const clipsByKey = {};
+export async function loadPlayerAnimationClips(loader, target) {
+  const rows = await base44.entities.AnimationFBX.filter({ folder: 'player character' }, '-created_date', 100).catch(()=>[]);
+  const clipsByKey = {}, sourceClips = {};
 
   const loadOne = (row) => new Promise((resolve) => {
     const key = pickRequestedKey(row.name);
@@ -51,7 +53,8 @@ export async function loadPlayerAnimationClips(loader) {
       (fbx) => {
         const clip = fbx.animations?.[0];
         if (clip) {
-          const finalClip = makeRunClipInPlace(key, clip);
+          sourceClips[key]=clip;
+          const finalClip=target&&isHi3DAvatar(target)?retargetAvatarClip(fbx,target,clip):makeRunClipInPlace(key,clip);
           finalClip.name = key;
           clipsByKey[key] = finalClip;
         }
@@ -63,5 +66,6 @@ export async function loadPlayerAnimationClips(loader) {
   });
 
   await Promise.all(rows.map(loadOne));
-  return clipsByKey;
+  for(const [key,name] of [['idle','Idle'],['walk','Walk']]){const clip=target?.animations?.find(c=>c.name===name);if(clip)clipsByKey[key]=clip;}
+  return {clipsByKey,sourceClips};
 }

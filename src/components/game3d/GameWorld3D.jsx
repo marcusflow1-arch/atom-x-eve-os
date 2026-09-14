@@ -1,3 +1,5 @@
+import {useGameAvatar} from './useGameAvatar';
+import {loadAvatarModel,applyPlayerAppearance} from '@/components/onboarding/avatarAssetRuntime';
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -107,6 +109,8 @@ import { grantQuestReward } from './questRewards';
 import QuestRewardToast from './QuestRewardToast';
 
 export default function GameWorld3D() {
+  const avatarConfig=useGameAvatar();
+  const appearanceRef=useRef(avatarConfig);appearanceRef.current=avatarConfig;
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [envSystem, setEnvSystem] = useState(null);
@@ -233,6 +237,7 @@ export default function GameWorld3D() {
   useEffect(() => subscribeQuests((s) => setQuestState({ ...s })), []);
   // Toast when mic permission is denied
   useEffect(() => attachMicErrorListener(), []);
+  useEffect(()=>{if(modelRef.current)applyPlayerAppearance(modelRef.current,avatarConfig);},[JSON.stringify(avatarConfig)]);
   // Fetch the logged-in user's display name — shown above the player's head + portrait box
   useEffect(() => {
     base44.auth.me().then((u) => { if (u) setPlayerName(u.username || u.full_name || u.email?.split('@')[0] || 'Player'); }).catch(() => setPlayerName('Player'));
@@ -866,16 +871,11 @@ export default function GameWorld3D() {
     const lastDirectionTap = { current: {} };
     const DOUBLE_TAP_MS = 280;
 
-    loader.load(ARCHER_URL, (fbx) => {
+    loadAvatarModel(appearanceRef.current,1.7).then((fbx) => {
       model = fbx;
       modelRef.current = fbx;
       playerModelRef.current = fbx;
-      const box = new THREE.Box3().setFromObject(fbx);
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 1.7 / maxDim;
-      fbx.scale.setScalar(scale);
-      window.__gw3dPlayerHeight = size.y * scale;
+      window.__gw3dPlayerHeight=1.7*(appearanceRef.current.height_scale||1);
       fbx.position.set(0, 0.3, 0);
 
       fbx.traverse((node) => {
@@ -948,11 +948,11 @@ export default function GameWorld3D() {
       window.__gw3dSpawnQuestEnemies = spawnQuestEnemiesRef.current;
 
       // Load player animation clips once — bind to player AND reuse for quest NPC idle
-      loadPlayerAnimationClips(loader)
-        .then((clipsByKey) => {
+      loadPlayerAnimationClips(loader,fbx)
+        .then(({clipsByKey,sourceClips}) => {
           playerAnim.bindClips(clipsByKey);
           // Bind idle to the quest NPC using the already-loaded clip (no extra fetch)
-          const idleClip = clipsByKey['idle'];
+          const idleClip = sourceClips['idle'];
           if (idleClip) {
             questNPCs.forEach((qn) => {
               if (qn._pendingMixer) {
@@ -966,7 +966,7 @@ export default function GameWorld3D() {
           // Spawn the oversized Living Quest NPC away from the cluster
           spawnLivingQuestNPC({
             scene, loader, archerUrl: ARCHER_URL, snapToGround,
-            idleClip: clipsByKey['idle'] || null,
+            idleClip: sourceClips['idle'] || null,
             onReady: (h) => { livingQuestEntity = h; window.__gw3dLivingQuestNPC = h?.group || null; },
           });
           renderer.shadowMap.needsUpdate = true; setLoading(false);
@@ -975,8 +975,8 @@ export default function GameWorld3D() {
           console.error('Player AnimationFBX library load error:', err);
           setLoading(false);
         });
-    }, undefined, (err) => {
-      console.error('Archer load error:', err);
+    }).catch((err) => {
+      console.error('Player model load error:', err);
       setLoading(false);
     });
 

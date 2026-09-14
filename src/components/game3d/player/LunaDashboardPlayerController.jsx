@@ -3,6 +3,7 @@ import * as THREE from 'three';
 const STATES = {
   IDLE: 'idle',
   RUN: 'run',
+  WALK: 'walk',
   RUN_STOP: 'runStop',
   RUN_BACK: 'runBack',
   DRAW_ARROW: 'drawArrow',
@@ -18,7 +19,7 @@ const STATES = {
 };
 
 const LOOP_STATES = new Set([
-  STATES.IDLE, STATES.RUN, STATES.RUN_BACK,
+  STATES.IDLE, STATES.WALK, STATES.RUN, STATES.RUN_BACK,
   STATES.AIM_WALK_RIGHT, STATES.AIM_WALK_LEFT, STATES.AIM_WALK_FORWARD, STATES.AIM_WALK_BACKWARD,
 ]);
 
@@ -83,9 +84,10 @@ export function createLunaDashboardPlayerController({ mixer, oneShotRef }) {
     return direction === 'backward' ? STATES.RUN_BACK : STATES.RUN;
   };
 
-  const movementStateFor = ({ moving, direction, aiming }) => {
+  const movementStateFor = ({ moving, running, direction, aiming }) => {
     if (!moving) return STATES.IDLE;
     if (aiming) return combatMovementState(direction);
+    if (!running && hasAction(STATES.WALK)) return STATES.WALK;
     if (direction === 'backward') return STATES.RUN_BACK;
     return STATES.RUN;
   };
