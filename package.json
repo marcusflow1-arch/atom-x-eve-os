@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "avatar:validate": "node tools/hi3d-avatar/validate.mjs",
     "prebuild": "node tools/hi3d-avatar/prepare-face-assets.mjs",
-    "predev": "node tools/hi3d-avatar/prepare-face-assets.mjs"
+    "predev": "node tools/hi3d-avatar/prepare-face-assets.mjs",
+    "avatar:check": "node tools/hi3d-avatar/validate.mjs && node tools/hi3d-avatar/validate-appearance.mjs && node tools/hi3d-avatar/validate-camera.mjs"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.48",

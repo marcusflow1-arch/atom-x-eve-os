@@ -67,5 +67,6 @@ export async function loadPlayerAnimationClips(loader, target) {
 
   await Promise.all(rows.map(loadOne));
   for(const [key,name] of [['idle','Idle'],['walk','Walk']]){const clip=target?.animations?.find(c=>c.name===name);if(clip)clipsByKey[key]=clip;}
+  clipsByKey.run ||= clipsByKey.walk;
   return {clipsByKey,sourceClips};
 }

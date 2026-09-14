@@ -144,7 +144,7 @@ export function applyCompanionAppearance(model, rawAppearance = {}) {
 
       if (!embeddedRig && material.color) {
         if (isSkin && appearance.skin_tint_enabled) material.color.set(hex(appearance.skin_tone, '#bb927c'));
-        if (isEye) material.color.set(hex(appearance.eye_color, '#5ca9c9'));
+        if (isEye && appearance.eye_tint_enabled) material.color.set(hex(appearance.eye_color, '#5ca9c9'));
         if (isHair && appearance.hair_tint_enabled) material.color.set(hex(appearance.hair_color, '#323030'));
       }
       applyAvatarSurface(node, material, appearance, embeddedRig);

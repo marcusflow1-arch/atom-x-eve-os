@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {build} from 'esbuild';
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader.js';
+import {retargetAvatarClip} from '../../src/components/onboarding/retargetAvatarClip.js';
+const dir=path.resolve('node_modules/.cache/luna-check');fs.mkdirSync(dir,{recursive:true});
+await build({entryPoints:['src/components/onboarding/genesisAssets.js'],outfile:dir+'/appearance.mjs',bundle:true,format:'esm',platform:'node',packages:'external',plugins:[{name:'shader-text',setup(b){b.onResolve({filter:/\.glsl\?raw$/},a=>({path:path.resolve(a.resolveDir,a.path.replace('?raw','')),namespace:'shader'}));b.onLoad({filter:/.*/,namespace:'shader'},a=>({contents:fs.readFileSync(a.path,'utf8'),loader:'text'}));}}]});
+await build({entryPoints:['base44/shared/normalizeAvatarAppearance.ts'],outfile:dir+'/normalize.mjs',bundle:true,format:'esm',platform:'node'});
+const {applyCompanionAppearance,AVATAR_STYLE_PRESETS}=await import('file://'+dir+'/appearance.mjs');
+const {normalizeAvatarAppearance}=await import('file://'+dir+'/normalize.mjs');
+assert.equal(AVATAR_STYLE_PRESETS.length,7);
+const normalized=normalizeAvatarAppearance({id:'other-user',user_id:'other-user',level:999,gender:'female',model_url:'https://example.com/foreign.glb',height_scale:NaN,face_shape:{jaw_width:Infinity,face_width:9},style_preset:'noir',face_capture_preview_url:'data:image/png;base64,test',skin_tint_enabled:true,tattoo_style:'bands'});
+assert(!('id' in normalized)&&!('user_id'in normalized)&&!('level'in normalized)&&!('face_capture_preview_url'in normalized));assert.equal(normalized.height_scale,1);assert.equal(normalized.face_shape.face_width,1);assert.equal(normalized.face_shape.jaw_width,0);assert(normalized.model_url.includes('ErikaArcher'));assert.equal(normalized.style_preset,'noir');assert.deepEqual(normalizeAvatarAppearance(normalized),normalized);
+globalThis.self=globalThis;
+const loader=new GLTFLoader();loader.register(()=>({name:'NO_IMAGE_DECODE',loadTexture:()=>Promise.resolve(new THREE.Texture())}));
+const bytes=fs.readFileSync('public/models/luna-hi3d/warrior.glb'),asset=await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
+let mesh;asset.scene.traverse(n=>{if(n.isSkinnedMesh)mesh=n;});const original=mesh.geometry.attributes.position.array.slice();
+applyCompanionAppearance(asset.scene,{face_shape:{jaw_width:.8,face_width:.7,nose_width:-.5}});
+let changed=0,max=0;const pos=mesh.geometry.attributes.position.array;
+for(let i=0;i<pos.length;i+=3){const distance=Math.hypot(pos[i]-original[i],pos[i+1]-original[i+1],pos[i+2]-original[i+2]);if(distance>1e-7)changed++;if(original[i+1]<1.548)assert.equal(distance,0,'Body vertices must be unchanged by head fitting');max=Math.max(max,distance);}
+assert(changed>100&&max<.04,'Bounded head fitting must affect the actual mesh');
+applyCompanionAppearance(asset.scene,{});assert.deepEqual(mesh.geometry.attributes.position.array,original,'Reset restores every original vertex');
+const m=mesh.material,shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.onBeforeCompile(shader,null);
+assert(shader.fragmentShader.includes('lunaStyle'));assert(shader.vertexShader.includes('vLunaRest=lunaRestPosition'));assert(shader.uniforms.lunaSkinOn.value===0);
+const fbxBytes=fs.readFileSync('tools/hi3d-avatar/walk-source.fbx'),walk=new FBXLoader().parse(fbxBytes.buffer.slice(fbxBytes.byteOffset,fbxBytes.byteOffset+fbxBytes.byteLength),'');
+const clip=retargetAvatarClip(walk,asset.scene,walk.animations[0]);assert(clip.validate());assert(clip.tracks.length>=20);assert(clip.tracks.every(t=>!t.name.includes('mixamorig')));
+const mixer=new THREE.AnimationMixer(asset.scene),action=mixer.clipAction(clip);action.play();for(const frac of [0,.25,.5,.75]){mixer.setTime(frac*clip.duration);asset.scene.updateMatrixWorld(true);mesh.skeleton.update();for(let i=0;i<mesh.geometry.attributes.position.count;i+=71){const p=mesh.getVertexPosition(i,new THREE.Vector3());assert(p.toArray().every(Number.isFinite)&&p.length()<3,'Retargeted mesh remains finite and bounded');}}
+mixer.stopAllAction();console.log(JSON.stringify({passed:true,styles:7,headVertices:changed,maxHeadDelta:max,backend:'whitelist, finite bounds, round trip',retargetTracks:clip.tracks.length}));

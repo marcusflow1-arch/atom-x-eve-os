@@ -3,7 +3,7 @@ export const FACE_CONTROLS = [
  ['eye_spacing','Eye spacing'],['nose_width','Nose width'],['nose_length','Nose length'],['mouth_width','Mouth width'],
 ];
 export const FIT_DEFAULTS = {
- appearance_version:3,skin_tint_enabled:false,hair_tint_enabled:false,face_shape:{},face_fit_source:'manual',
+ appearance_version:3,skin_tint_enabled:false,eye_tint_enabled:false,hair_tint_enabled:false,face_shape:{},face_fit_source:'manual',
  complexion:'natural',facial_hair:'none',facial_hair_color:'#30241e',tattoo_style:'none',tattoo_placement:'left',
  tattoo_color:'#263b42',tattoo_opacity:.65,hair_style:'original',hair_length:1,hair_volume:1,
 };

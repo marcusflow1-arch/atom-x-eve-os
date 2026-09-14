@@ -2,6 +2,7 @@
   "name": "Avatar",
   "type": "object",
   "properties": {
+"eye_tint_enabled":{"type":"boolean","default":false},
 
   "face_shape": {
     "type": "object"

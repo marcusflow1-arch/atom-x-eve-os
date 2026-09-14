@@ -41,8 +41,8 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
         <div className="genesis-color-presets" aria-label="Skin complexion presets">{SKIN_PRESETS.map(color => <button key={color} type="button" aria-label={`Skin tone ${color}`} style={{background:color}} onClick={() => update({ skin_tint_enabled: true, skin_tone: color })} />)}</div>
       </div>
       {capabilities.eyes && <div className="genesis-color-row">
-        <label><span>Eye color</span><input type="color" aria-label="Eye color" value={config.eye_color || DEFAULT_AVATAR_APPEARANCE.eye_color} onChange={e => update({ eye_color: e.target.value })} /></label>
-        <div className="genesis-color-presets" aria-label="Eye color presets">{EYE_PRESETS.map(color => <button key={color} type="button" aria-label={`Eye color ${color}`} style={{background:color}} onClick={() => update({ eye_color: color })} />)}</div>
+        <label><span>Eye color</span><input type="color" aria-label="Eye color" value={config.eye_color || DEFAULT_AVATAR_APPEARANCE.eye_color} onChange={e => update({eye_tint_enabled:true, eye_color: e.target.value })} /></label>
+        <div className="genesis-color-presets" aria-label="Eye color presets">{EYE_PRESETS.map(color => <button key={color} type="button" aria-label={`Eye color ${color}`} style={{background:color}} onClick={() => update({eye_tint_enabled:true, eye_color: color })} />)}</div>
       </div>
       }<div className="genesis-field-pair">
         <label>Hair color<input type="color" aria-label="Hair color" value={config.hair_color || DEFAULT_AVATAR_APPEARANCE.hair_color} onChange={e => update({ hair_tint_enabled: true, hair_color: e.target.value })} /></label>

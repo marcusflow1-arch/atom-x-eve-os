@@ -10,7 +10,7 @@ export function normalizeAvatarAppearance(input={}){
  const colors=Object.fromEntries(Object.entries(a.material_colors||{}).slice(0,100).filter(([k,v])=>k.length<200&&/^#[a-f0-9]{6}$/i.test(String(v))));
  const morphs=Object.fromEntries(Object.entries(a.morph_targets||{}).slice(0,100).filter(([k,v])=>k.length<200&&Number.isFinite(v)).map(([k,v])=>[k,bound(v,0,1,0)]));
  return {appearance_version:3,gender,model_url,style_preset:choice(a.style_preset,styles,styles[0]),
- skin_tone:hex(a.skin_tone,'#bb927c'),skin_tint_enabled:a.skin_tint_enabled===true,hair_color:hex(a.hair_color,'#323030'),hair_tint_enabled:a.hair_tint_enabled===true,eye_color:hex(a.eye_color,'#5ca9c9'),
+ skin_tone:hex(a.skin_tone,'#bb927c'),skin_tint_enabled:a.skin_tint_enabled===true,hair_color:hex(a.hair_color,'#323030'),hair_tint_enabled:a.hair_tint_enabled===true,eye_tint_enabled:a.eye_tint_enabled===true,eye_color:hex(a.eye_color,'#5ca9c9'),
  eyelash_style:choice(a.eyelash_style,['soft','natural','bold'],'natural'),hood_enabled:a.hood_enabled!==false,weapon_visible:a.weapon_visible!==false,
  height_scale:bound(a.height_scale,.84,1.18),body_proportions:{width:bound(a.body_proportions?.width,.88,1.12),depth:bound(a.body_proportions?.depth,.9,1.1)},
  face_shape:Object.fromEntries(faceKeys.map(k=>[k,bound(a.face_shape?.[k],-1,1,0)])),
