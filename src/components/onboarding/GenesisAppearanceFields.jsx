@@ -61,7 +61,20 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
 
     {morphs.length > 0 && <div className="genesis-subsection"><div className="genesis-subsection-title"><PersonStanding size={15}/><span>Face & shape controls</span></div>{morphs.map(m => <label key={m.key}>{m.label}<input aria-label={m.label} type="range" min="0" max="1" step="0.05" value={config.morph_targets?.[m.key] || 0} onChange={e => setConfig(c => ({ ...c, morph_targets: { ...(c.morph_targets || {}), [m.key]: Number(e.target.value) } }))} /></label>)}</div>}
 
-    <button type="button" className="genesis-link" onClick={() => setConfig(c => ({...c, ...DEFAULT_AVATAR_APPEARANCE, model_url: '', material_colors: {}, morph_targets: {}, body_proportions: { width: 1, depth: 1 }}))}>Restore original appearance</button>
+    <button type="button" className="genesis-link" onClick={() => setConfig(c => ({
+      ...c,
+      style_preset: DEFAULT_AVATAR_APPEARANCE.style_preset,
+      skin_tone: DEFAULT_AVATAR_APPEARANCE.skin_tone,
+      eye_color: DEFAULT_AVATAR_APPEARANCE.eye_color,
+      hair_color: DEFAULT_AVATAR_APPEARANCE.hair_color,
+      eyelash_style: DEFAULT_AVATAR_APPEARANCE.eyelash_style,
+      hood_enabled: DEFAULT_AVATAR_APPEARANCE.hood_enabled,
+      weapon_visible: DEFAULT_AVATAR_APPEARANCE.weapon_visible,
+      height_scale: 1,
+      material_colors: {},
+      morph_targets: {},
+      body_proportions: { width: 1, depth: 1 },
+    }))}>Restore original appearance</button>
     <p className="genesis-note">Controls are capability-aware. Erika's current clothing is largely one combined mesh, so a true removable hood appears only when a model contains a separate hood/cowl mesh. Generated and future modular avatars can expose that control automatically.</p>
   </section>;
 }
