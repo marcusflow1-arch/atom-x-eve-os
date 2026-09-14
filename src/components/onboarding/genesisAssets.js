@@ -6,11 +6,11 @@ const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/m
 // uncustomized surface falls back to the same white-shirt Luna Hi3D body
 // used in the center of the Luna dashboard.
 export const GLOBAL_AVATAR_MODEL_URL = '/models/luna-hi3d/warrior.glb';
-export const GLOBAL_AVATAR_NAME = 'Artemis';
+export const GLOBAL_AVATAR_NAME = 'Luna AI';
 
 export const COMPANION_MODELS = {
-  female: { name: `${GLOBAL_AVATAR_NAME} Base`, url: GLOBAL_AVATAR_MODEL_URL },
-  male: { name: `${GLOBAL_AVATAR_NAME} Base`, url: GLOBAL_AVATAR_MODEL_URL },
+  male: { name: 'Luna AI Male', url: GLOBAL_AVATAR_MODEL_URL },
+  female: { name: 'Erika Archer Female', url: root + '3f915913a_ErikaArcher.fbx' },
 };
 
 export const COMPANION_MOTIONS = [
@@ -93,10 +93,10 @@ export function getAvatarStylePreset(id) {
 
 export function companionModel(avatar) {
   const requested = String(avatar?.model_url || '').trim();
-  const legacyDefault = /(?:3f915913a_ErikaArcher\.fbx|608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
-  // Migrate the accidentally-selected Artemis model plus the older Erika /
-  // Y-Bot defaults at render time. A generated face avatar or explicitly
-  // uploaded custom model still wins over the Luna Hi3D body.
+  const legacyDefault = /(?:608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
+  // Migrate the accidentally-selected Artemis / Y-Bot defaults at render time.
+  // Erika is now the explicit female base, while the Luna Hi3D warrior is the
+  // explicit male base. A generated face avatar or custom model still wins.
   if (requested && !legacyDefault && /^(https?:\/\/|\/)/i.test(requested)) return requested;
   return GLOBAL_AVATAR_MODEL_URL;
 }
