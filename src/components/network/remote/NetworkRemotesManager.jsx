@@ -1,3 +1,5 @@
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
+import {retargetAvatarClip} from '@/components/onboarding/retargetAvatarClip';
 // Slice C — manages the lifecycle of network-authoritative remote players.
 // Pure JS class-style factory; no React. Mounted by NetworkRemotesMount.jsx.
 //
@@ -27,21 +29,11 @@ let assetsPromise = null;
 function loadAssetsOnce() {
   if (assetsPromise) return assetsPromise;
   const loader = new FBXLoader();
-  const loadModel = () => new Promise((res, rej) => loader.load(ARCHER_URL, res, undefined, rej));
-  const loadClip = (url) => new Promise((res) => loader.load(url, (fbx) => res(fbx.animations?.[0] || null), undefined, () => res(null)));
-  assetsPromise = Promise.all([
-    loadModel(),
-    loadClip(ANIM_URLS.idle),
-    loadClip(ANIM_URLS.run),
-    loadClip(ANIM_URLS.jump),
-  ]).then(([fbx, idle, run, jump]) => {
-    cachedFBX = fbx;
-    if (idle) cachedClips.idle = idle;
-    if (run)  { cachedClips.run = run; cachedClips.walk = run; } // share clip — server's 'walk' uses same anim
-    if (jump) { cachedClips.jump = jump; cachedClips.fall = jump; }
-  }).catch((e) => {
-    console.error('[NetworkRemotes] asset load failed:', e);
-  });
+  assetsPromise=new GLTFLoader().loadAsync('/models/luna-hi3d/warrior.glb').then(async asset=>{
+    cachedFBX=asset.scene;cachedClips.idle=asset.animations.find(c=>c.name==='Idle');cachedClips.walk=asset.animations.find(c=>c.name==='Walk');cachedClips.run=cachedClips.walk;
+    for(const name of ['run','jump']){try{const source=await loader.loadAsync(ANIM_URLS[name]);if(source.animations[0])cachedClips[name]=retargetAvatarClip(source,cachedFBX,source.animations[0]);}catch{}}
+    cachedClips.fall=cachedClips.jump;
+  }).catch(error=>{assetsPromise=null;console.error('Remote avatar load failed',error);});
   return assetsPromise;
 }
 

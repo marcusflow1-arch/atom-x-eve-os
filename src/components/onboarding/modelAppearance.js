@@ -7,6 +7,7 @@ export function isHi3DAvatar(model) { let found=false;model?.traverse(n=>{found 
 const smooth=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 function prepare(mesh,hi3d,model){
  const g=mesh.geometry,p=g.getAttribute('position'); if(!p)return;
+ if(!g.getAttribute('normal'))g.computeVertexNormals();
  if(!g.getAttribute('lunaRestPosition')){
   g.setAttribute('lunaRestPosition',p.clone());g.setAttribute('lunaRestNormal',g.getAttribute('normal').clone());
   const mask=new Float32Array(p.count),uv=g.getAttribute('uv'),mat=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;

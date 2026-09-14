@@ -9,7 +9,7 @@ import {saveAppearance} from './saveAppearance';
 import './genesis.css';
 export default function AvatarAppearanceDialog({onClose,onSaved,create=false}){
  const saved=useCompanionIdentity(),[config,setConfig]=useState(()=>playerAppearance(saved)),[caps,setCaps]=useState({}),[step,setStep]=useState(0),[name,setName]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const save=async()=>{setBusy(true);setError('');try{const avatar=await saveAppearance(config);await onSaved?.(avatar,name);onClose?.();}catch(e){setError(e.message);}finally{setBusy(false);}};
+ const save=async()=>{setBusy(true);setError('');try{const avatar=await saveAppearance(config,{broadcast:!create});await onSaved?.(avatar,name);if(create)window.dispatchEvent(new CustomEvent('avatarAppearanceSaved',{detail:{avatar}}));onClose?.();}catch(e){setError(e.message);}finally{setBusy(false);}};
  return <div className="fixed inset-0 z-[300] bg-black/80 p-3 grid place-items-center" role="dialog" aria-modal="true" aria-label={create?'Create character':'Customize character'}><div className="genesis-surface w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-2xl border border-cyan-200/20 bg-slate-950 p-5">
  <div className="flex justify-between items-center"><h2>{create?'Create character':'Customize your character'}</h2><button type="button" disabled={busy} onClick={onClose} aria-label="Close character creator">Close</button></div>
  <div className="grid lg:grid-cols-2 gap-6 mt-4"><div className="h-[420px] lg:sticky lg:top-4"><GenesisModelPreview config={config} compact interactive onCapabilities={setCaps}/></div><div className="genesis-fields">

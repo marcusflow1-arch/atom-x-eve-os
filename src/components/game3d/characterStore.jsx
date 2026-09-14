@@ -145,7 +145,7 @@ export function setActiveCharacter(id) {
 // Just switches the active character — every progression store will
 // automatically reload from that character's namespaced slot.
 export async function activateAndSyncToHUD(id) {
-  const character=state.roster.find(c=>c.id===id);if(character&&!character.isDevTest)await saveAppearance(character);
-  setActiveCharacter(id);
+  const character=state.roster.find(c=>c.id===id);const avatar=character&&!character.isDevTest?await saveAppearance(character,{broadcast:false}):null;
+  setActiveCharacter(id);if(avatar)window.dispatchEvent(new CustomEvent('avatarAppearanceSaved',{detail:{avatar}}));
 }
 window.addEventListener('avatarAppearanceSaved',event=>{const avatar=event.detail?.avatar;if(!avatar)return;const patch=Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','model_url'].filter(k=>avatar[k]!==undefined).map(k=>[k,avatar[k]]));state={...state,roster:state.roster.map(c=>c.id===state.activeId&&!c.isDevTest?{...c,...patch}:c)};emit();});
