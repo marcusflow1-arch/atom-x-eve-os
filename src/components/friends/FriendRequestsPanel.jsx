@@ -46,27 +46,14 @@ export default function FriendRequestsPanel({ currentUserId }) {
 
   const acceptRequest = async (request) => {
     try {
-      await base44.entities.FriendRequest.update(request.id, { status: 'accepted' });
-      
-      const user = await base44.auth.me();
-      
-      await base44.entities.Friend.create({
-        user_id: currentUserId,
-        friend_id: request.sender_id,
-        friend_name: request.sender_name,
-        friend_avatar: request.sender_avatar,
-        status: 'online'
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'respond_friend_request',
+        data: { request_id: request.id, decision: 'accept' },
       });
-
-      await base44.entities.Friend.create({
-        user_id: request.sender_id,
-        friend_id: currentUserId,
-        friend_name: user.full_name || user.email,
-        friend_avatar: user.avatar_url || 'https://i.pravatar.cc/150',
-        status: 'online'
-      });
-
-      loadRequests();
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      await loadRequests();
+      window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: true, requestId: request.id } }));
     } catch (error) {
       console.error('Failed to accept request:', error);
     }
@@ -74,8 +61,14 @@ export default function FriendRequestsPanel({ currentUserId }) {
 
   const declineRequest = async (request) => {
     try {
-      await base44.entities.FriendRequest.update(request.id, { status: 'declined' });
-      loadRequests();
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'respond_friend_request',
+        data: { request_id: request.id, decision: 'decline' },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      await loadRequests();
+      window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: false, requestId: request.id } }));
     } catch (error) {
       console.error('Failed to decline request:', error);
     }
