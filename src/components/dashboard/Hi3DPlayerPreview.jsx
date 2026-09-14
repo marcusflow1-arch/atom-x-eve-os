@@ -1,34 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {avatarAnimationStore} from '@/components/onboarding/avatarAnimationStore';
 import { createGenesisScene } from '@/components/onboarding/genesisScene';
 import { HI3D_COMMANDS, HI3D_MODEL_URL } from '@/components/onboarding/embeddedAvatarController';
 
-export default function Hi3DPlayerPreview({ config, interactive = false }) {
+export default function Hi3DPlayerPreview({ config, interactive = false, portrait = false, controls = "compact", onCapabilities }) {
   const mount = useRef(null), stage = useRef(null), scene = useRef(null);
   const keys = useRef(new Set()), lastInput = useRef(Date.now());
   const [status, setStatus] = useState('loading'), [clip, setClip] = useState('Idle');
   const [ready, setReady] = useState(false), [armed, setArmed] = useState(false);
-  const [paused, setPaused] = useState(false), [armLift, setArmLift] = useState(0), [retry, setRetry] = useState(0);
+  const shared=useSyncExternalStore(avatarAnimationStore.subscribe,avatarAnimationStore.getSnapshot);
+  const {paused,armLift}=shared;const [retry,setRetry]=useState(0);const callback=useRef(onCapabilities);callback.current=onCapabilities;
 
-  const command = useCallback((value) => {
-    lastInput.current = Date.now(); setPaused(false); setArmLift(0);
-    scene.current?.command(value);
-  }, []);
-
+  const command=useCallback(value=>avatarAnimationStore.command(value),[]);
   useEffect(() => {
     setReady(false); setStatus('loading');
     try {
-      scene.current = createGenesisScene(mount.current, HI3D_MODEL_URL, () => setReady(true), (value, name) => {
+      scene.current = createGenesisScene(mount.current, HI3D_MODEL_URL+'?v=3', caps=>{callback.current?.(caps);setReady(true);}, (value, name) => {
         setStatus(value); if (name) setClip(name);
-      });
+      }, {portrait});
       scene.current.appearance({ ...(config || {}), style_preset: config?.style_preset || 'heroic_fantasy' });
     } catch { setStatus('error'); }
-    const afkTimer = window.setInterval(() => {
-      const animation = scene.current?.animationState();
-      if (!keys.current.size && Date.now() - lastInput.current > 20000 && animation?.clip === 'Idle' && !animation.armLift && !scene.current?.isPaused()) scene.current.command('afk');
-    }, 5000);
-    return () => { clearInterval(afkTimer); scene.current?.dispose(); scene.current = null; };
-  }, [retry]);
-
+    return ()=>{scene.current?.dispose();scene.current=null;};
+  },[retry,portrait]);
+  useEffect(()=>{if(ready)scene.current?.command(shared.command);},[ready,shared.revision]);
+  useEffect(()=>{if(ready&&(shared.armLift||scene.current?.animationState()?.armLift))scene.current?.setArmLift(shared.armLift);},[ready,shared.armLift]);
+  useEffect(()=>{scene.current?.setPaused(shared.paused||shared.hidden);},[ready,shared.paused,shared.hidden,shared.revision,shared.armLift]);
   useEffect(() => { scene.current?.appearance({ ...(config || {}), style_preset: config?.style_preset || 'heroic_fantasy' }); }, [config]);
 
   useEffect(() => {
@@ -37,7 +33,7 @@ export default function Hi3DPlayerPreview({ config, interactive = false }) {
     const typing = target => target instanceof Element && Boolean(target.closest('input,textarea,select,[contenteditable="true"]'));
     const sync = () => command(held.size ? 'walk' : 'idle');
     const down = event => {
-      if (typing(event.target) || !['w', 'a', 's', 'd'].includes(event.key.toLowerCase())) return;
+      if (!stage.current?.contains(document.activeElement) || typing(event.target) || !['w', 'a', 's', 'd'].includes(event.key.toLowerCase())) return;
       event.preventDefault();
       const key = event.key.toLowerCase(); if (!held.has(key)) { held.add(key); sync(); }
     };
@@ -72,20 +68,21 @@ export default function Hi3DPlayerPreview({ config, interactive = false }) {
     {status === 'error' ? <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-xs text-white/80" role="alert">
       <p>The character could not load.</p><button type="button" className="rounded border border-white/20 px-3 py-2" onClick={() => setRetry(value => value + 1)}>Retry</button>
     </div> : !ready && <p className="pointer-events-none absolute inset-x-0 top-1/2 text-center text-xs text-white/70" role="status">Loading your Hi3D character…</p>}
-    {interactive && <div data-player-animation-controls className="pointer-events-auto absolute bottom-3 left-1/2 z-30 max-h-[42%] w-[min(92%,560px)] -translate-x-1/2 overflow-y-auto rounded-xl border border-cyan-200/15 bg-slate-950/85 p-3 text-white backdrop-blur-md"
+    {controls !== "none" && <div data-player-animation-controls className="pointer-events-auto absolute bottom-3 left-1/2 z-30 max-h-[42%] w-[min(92%,560px)] -translate-x-1/2 overflow-y-auto rounded-xl border border-cyan-200/15 bg-slate-950/85 p-3 text-white backdrop-blur-md"
       onClick={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
       <div className="flex flex-wrap justify-center gap-1.5" aria-label="Character animations">
-        {HI3D_COMMANDS.map(item => <button key={item.command} type="button" disabled={!ready} aria-pressed={animationState?.command === item.command}
+        {(interactive?HI3D_COMMANDS:HI3D_COMMANDS.filter(item=>item.command==='wave')).map(item => <button key={item.command} type="button" disabled={!ready} aria-pressed={animationState?.command === item.command}
           className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs transition hover:bg-white/10 focus-visible:outline focus-visible:outline-cyan-300 disabled:opacity-40 aria-pressed:border-cyan-300/60 aria-pressed:bg-cyan-300/10"
-          onClick={() => command(item.command)}>{item.label}</button>)}
-        <button type="button" disabled={!ready} aria-pressed={paused} className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs" onClick={() => setPaused(scene.current.togglePaused())}>{paused ? 'Resume' : 'Pause'}</button>
+          onClick={() => command(item.command)}>{item.command==='wave'?'Wave hello':item.label}</button>)}
+        <button type="button" disabled={!ready} aria-pressed={paused} className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs" onClick={()=>avatarAnimationStore.setPaused(!paused)}>{paused ? 'Resume' : 'Pause'}</button>
+        <button type="button" disabled={!ready} aria-pressed={shared.cycling} className="rounded-md border border-white/15 px-2 py-1 text-xs" onClick={()=>avatarAnimationStore.setCycling(!shared.cycling)}>Cycle {shared.cycling?'on':'off'}</button>
       </div>
-      <label className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300">Right arm
+      {interactive && <label className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300">Right arm
         <input aria-label="Raise right arm" type="range" min="0" max="1" step="0.01" value={armLift} disabled={!armEnabled} className="w-24 max-w-full min-w-0 accent-cyan-300 disabled:opacity-30"
-          onChange={event => { const value = Number(event.target.value); lastInput.current = Date.now(); setArmLift(value); setPaused(false); scene.current.setArmLift(value); }} />
+          onChange={event => { const value = Number(event.target.value); avatarAnimationStore.setArmLift(value); }} />
         <output>{Math.round(armLift * 100)}%</output>
-      </label>
-      <p className="mt-2 text-center text-[10px] text-slate-400">Click character, then WASD to move · Double-click to wave · Drag to rotate</p>
+      </label>}
+      {interactive && <p className="mt-2 text-center text-[10px] text-slate-400">Click character, then WASD to move · Double-click to wave · Drag to rotate</p>}
     </div>}
   </div>;
 }

@@ -1,3 +1,4 @@
+import Hi3DPlayerPreview from '@/components/dashboard/Hi3DPlayerPreview';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RotateCcw, RotateCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -79,7 +80,7 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-export default function GenesisModelPreview({ config, onCapabilities, compact = false, interactive = false }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
@@ -326,3 +327,5 @@ export default function GenesisModelPreview({ config, onCapabilities, compact = 
     </div>
   );
 }
+
+export default function GenesisModelPreview(props){const url=companionModel(props.config);if(url.includes('/models/luna-hi3d/'))return <div className={props.compact?'h-full w-full':'genesis-preview-stage'} style={props.compact?undefined:{minHeight:540,height:'70vh'}}><Hi3DPlayerPreview {...props} interactive={props.interactive||!props.compact}/></div>;return <LegacyGenesisModelPreview {...props}/>;}
