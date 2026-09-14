@@ -30,7 +30,7 @@ Live camera hardware, browser WASM inference, GPU shader rendering and authentic
 
 ## Model dependencies
 
-`@mediapipe/tasks-vision` is pinned to 0.10.32. `predev`/`prebuild` copy its WASM runtime into `public/vendor/face-landmarker`. This pinned release was statically checked for the automatic logging endpoint present in 1.0.1; that endpoint is absent. Public model weights are served by the app rather than uploading a selfie to a service. Their exact file hashes, the avatar hash and walk-source hash are in `tools/hi3d-avatar/asset-checksums.json`.
+`@mediapipe/tasks-vision` is pinned to 0.10.32. `predev`/`prebuild` copy its WASM runtime into a versioned directory under `public/vendor/face-landmarker` to avoid stale WASM caches. This pinned release was statically checked for the automatic logging endpoint present in 1.0.1; that endpoint is absent. Public model weights are served by the app rather than uploading a selfie to a service. Their exact file hashes, the avatar hash and walk-source hash are in `tools/hi3d-avatar/asset-checksums.json`.
 
 Public weight sources:
 - https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task

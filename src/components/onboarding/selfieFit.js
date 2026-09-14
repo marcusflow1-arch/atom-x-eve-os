@@ -3,7 +3,7 @@ let models;
 async function loadModels() {
  if(!models)models=(async()=>{
   const {FilesetResolver,FaceLandmarker,ImageSegmenter}=await import('@mediapipe/tasks-vision');
-  const files=await FilesetResolver.forVisionTasks('/vendor/face-landmarker');
+  const files=await FilesetResolver.forVisionTasks('/vendor/face-landmarker/0.10.32');
   const face=await FaceLandmarker.createFromOptions(files,{
    baseOptions:{modelAssetPath:'/models/face-landmarker/face_landmarker.task',delegate:'CPU'},
    runningMode:'IMAGE',numFaces:2,minFaceDetectionConfidence:.65,minFacePresenceConfidence:.65,

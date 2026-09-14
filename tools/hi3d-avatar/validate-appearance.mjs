@@ -12,6 +12,7 @@ await build({entryPoints:['base44/shared/normalizeAvatarAppearance.ts'],outfile:
 const {applyCompanionAppearance,AVATAR_STYLE_PRESETS}=await import('file://'+dir+'/appearance.mjs');
 const {normalizeAvatarAppearance}=await import('file://'+dir+'/normalize.mjs');
 assert.equal(AVATAR_STYLE_PRESETS.length,7);
+assert(!fs.readFileSync('node_modules/@mediapipe/tasks-vision/vision_bundle.mjs','utf8').includes('odml.pa.googleapis.com'),'Face runtime must not include automatic logging endpoint');
 const normalized=normalizeAvatarAppearance({id:'other-user',user_id:'other-user',level:999,gender:'female',model_url:'https://example.com/foreign.glb',height_scale:NaN,face_shape:{jaw_width:Infinity,face_width:9},style_preset:'noir',face_capture_preview_url:'data:image/png;base64,test',skin_tint_enabled:true,tattoo_style:'bands'});
 assert(!('id' in normalized)&&!('user_id'in normalized)&&!('level'in normalized)&&!('face_capture_preview_url'in normalized));assert.equal(normalized.height_scale,1);assert.equal(normalized.face_shape.face_width,1);assert.equal(normalized.face_shape.jaw_width,0);assert(normalized.model_url.includes('ErikaArcher'));assert.equal(normalized.style_preset,'noir');assert.deepEqual(normalizeAvatarAppearance(normalized),normalized);
 globalThis.self=globalThis;

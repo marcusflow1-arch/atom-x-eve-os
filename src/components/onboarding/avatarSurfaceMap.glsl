@@ -5,7 +5,8 @@
  float front=dot(p.xz-vec2(.044,.074),vec2(.362,.932));
  float warm=smoothstep(.015,.10,diffuseColor.r-diffuseColor.g)*smoothstep(-.01,.045,diffuseColor.g-diffuseColor.b);
  float mid=smoothstep(.045,.12,max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b)))*(1.0-smoothstep(.7,.9,min(diffuseColor.r,min(diffuseColor.g,diffuseColor.b))));
- float skin=warm*mid*(1.0-vLunaHair)*max(smoothstep(1.50,1.56,p.y),smoothstep(.21,.28,abs(p.x))*(1.0-smoothstep(1.27,1.34,p.y)));
+ float legs=(1.0-smoothstep(.72,.80,p.y))*smoothstep(.06,.10,abs(p.x));
+ float skin=warm*mid*(1.0-vLunaHair)*max(legs,max(smoothstep(1.50,1.56,p.y),smoothstep(.21,.28,abs(p.x))*(1.0-smoothstep(1.27,1.34,p.y))));
  diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*lunaSkin/max(vec3(.4969,.2874,.2016),vec3(.01)),skin*lunaSkinOn);
  diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*lunaHair/vec3(.032,.030,.030),vLunaHair*lunaHairOn);
  float frontGate=smoothstep(-.005,.012,front);
