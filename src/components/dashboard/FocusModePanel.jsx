@@ -1211,6 +1211,7 @@ export function LibraryBannerSection({
   const [invitedUsers, setInvitedUsers] = useState({});
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
+  const [joiningUsers, setJoiningUsers] = useState({});
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
@@ -1218,7 +1219,7 @@ export function LibraryBannerSection({
     refetchInterval: 5000,
   });
 
-  const { data: dashboardFriends = [] } = useQuery({
+  const { data: dashboardFriends = [], refetch: refetchDashboardFriends } = useQuery({
     queryKey: ['luna_presence_friends', user?.id],
     queryFn: () => base44.entities.Friend.filter({ user_id: user.id }),
     enabled: !!user?.id,
@@ -1307,20 +1308,44 @@ export function LibraryBannerSection({
   };
 
   const handleJoin = async (u) => {
-    if (!u?.id) return;
+    if (!u?.id || joiningUsers[u.id]) return;
+    const targetId = String(u.id);
+    const targetChannel = `dashboard_${targetId}`;
+    setJoiningUsers((prev) => ({ ...prev, [targetId]: true }));
+
+    // Join immediately from the click. The previous flow waited on a backend
+    // lookup before dispatching the multiplayer event, so a failed/stale lookup
+    // made the highlighted button appear to do nothing.
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: {
+        channelId: targetChannel,
+        hostId: targetId,
+        hostName: u.name || 'Friend',
+        socialJoin: true,
+      }
+    }));
     onActiveFriendChange(null);
+
     try {
-      const response = await base44.functions.invoke('socialActions', { action: 'get_dashboard_join', data: { target_user_id: u.id } });
+      // Resolve optional live metadata after joining; this can improve the
+      // environment/name without ever blocking the actual dashboard switch.
+      const response = await base44.functions.invoke('socialActions', { action: 'get_dashboard_join', data: { target_user_id: targetId } });
       const body = response?.data ?? response ?? {};
       if (body?.error) throw new Error(body.error);
       const state = body.player_state || {};
       const envUrl = state.env_url || u.envUrl;
       if (envUrl) window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl } }));
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: state.channel_id || `dashboard_${u.id}`, hostId: u.id, hostName: state.display_name || u.name, socialJoin: true }
-      }));
+      if (state.display_name && state.display_name !== u.name) {
+        window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+          detail: { channelId: targetChannel, hostId: targetId, hostName: state.display_name, socialJoin: true }
+        }));
+      }
     } catch (error) {
-      console.error('[Luna Presence] join dashboard failed', error);
+      // The direct dashboard join above is authoritative. Metadata lookup
+      // failures should not undo or block the join.
+      console.warn('[Luna Presence] dashboard metadata lookup failed after join', error);
+    } finally {
+      setJoiningUsers((prev) => ({ ...prev, [targetId]: false }));
     }
   };
 
@@ -1390,8 +1415,8 @@ export function LibraryBannerSection({
     const response = await base44.functions.invoke('socialActions', { action: 'respond_friend_request', data: { request_id: request.id, decision: accept ? 'accept' : 'decline' } });
     const body = response?.data ?? response ?? {};
     if (body?.error) throw new Error(body.error);
-    await refetchFriendRequests();
-    window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: accept } }));
+    await Promise.all([refetchFriendRequests(), refetchDashboardFriends()]);
+    window.dispatchEvent(new CustomEvent('lunaSocialChanged', { detail: { type: 'friend-request', accepted: accept, requestId: request.id } }));
   };
 
   const handleHomeClick = () => {
@@ -1442,6 +1467,7 @@ export function LibraryBannerSection({
                     requestState={friendRequestUsers[friend.id]}
                     dashboardInviteState={invitedUsers[friend.id]}
                     partyInviteState={partyInviteUsers[friend.id]}
+                    joining={!!joiningUsers[friend.id]}
                     onClick={handleFriendClick}
                     onAddFriend={handleAddFriend}
                     onMessage={handleMessage}
