@@ -140,11 +140,77 @@ async function loadModel(url, gltfLoader, fbxLoader) {
   return gltfLoader.loadAsync(url);
 }
 
+function roundedRectPath(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+/** Immediate local camera likeness while the high-quality generated head is processing. */
+export async function attachInstantFaceCaptureToBody({ baseModel, imageUrl }) {
+  if (!baseModel || !imageUrl) return { dispose() {} };
+  const baseHead = findBaseHead(baseModel);
+  if (!baseHead) throw new Error('The selected body does not expose a skinned Head bone.');
+
+  const baseBox = baseHead.headGeometry.boundingBox.clone();
+  const size = baseBox.getSize(new THREE.Vector3());
+  const center = baseBox.getCenter(new THREE.Vector3());
+  baseHead.headGeometry.dispose();
+
+  const image = await new Promise((resolve, reject) => {
+    const next = new Image();
+    next.crossOrigin = 'anonymous';
+    next.onload = () => resolve(next);
+    next.onerror = () => reject(new Error('Captured face preview could not load.'));
+    next.src = imageUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 512, 512);
+  ctx.save();
+  roundedRectPath(ctx, 24, 14, 464, 484, 168);
+  ctx.clip();
+  ctx.drawImage(image, 0, 0, 512, 512);
+  ctx.restore();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.flipY = false;
+  texture.needsUpdate = true;
+
+  const geometry = new THREE.SphereGeometry(1, 48, 32, Math.PI * .08, Math.PI * .84, Math.PI * .16, Math.PI * .68);
+  geometry.scale(Math.max(size.x * .49, .001), Math.max(size.y * .55, .001), Math.max(size.z * .28, .001));
+  const material = new THREE.MeshStandardMaterial({ map: texture, color: 0xffffff, roughness: .72, metalness: 0, transparent: true, alphaTest: .02, side: THREE.DoubleSide });
+  const shell = new THREE.Mesh(geometry, material);
+  shell.name = 'AtomXE_InstantFaceCapture';
+  shell.castShadow = true;
+  shell.renderOrder = 4;
+  shell.position.set(center.x, center.y, baseBox.max.z + size.z * .015);
+  shell.rotation.y = Math.PI;
+  baseHead.headBone.add(shell);
+  baseHead.headBone.updateMatrixWorld(true);
+
+  return {
+    dispose() {
+      shell.removeFromParent();
+      geometry.dispose();
+      texture.dispose();
+      material.dispose();
+    },
+  };
+}
+
 /**
  * Keeps the selected Atom × Eve body and replaces only its head region with
  * the head extracted from the generated, Mixamo-compatible likeness model.
- * The extracted head is parented to the base Head bone, so body animations
- * continue to drive it without swapping the entire avatar body.
  */
 export async function attachGeneratedFaceToBody({ baseModel, faceUrl, gltfLoader, fbxLoader }) {
   if (!baseModel || !faceUrl) return { dispose() {} };
@@ -220,8 +286,6 @@ export async function attachGeneratedFaceToBody({ baseModel, faceUrl, gltfLoader
         if (!node.isMesh) return;
         node.geometry?.dispose?.();
         (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean).forEach((material) => {
-          // The overlay materials clone the material object but share texture maps,
-          // so textures remain alive until this composite is removed.
           Object.values(material).forEach((value) => { if (value?.isTexture) value.dispose?.(); });
           material.dispose?.();
         });
