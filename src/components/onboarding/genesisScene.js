@@ -105,7 +105,7 @@ export function createGenesisScene(container, url, onReady, onStatus) {
     if (!model || disposed) return;
     const generatedUrl = value?.face_scan_generated ? String(value?.face_model_url || '') : '';
     const previewUrl = !generatedUrl ? String(value?.face_capture_preview_url || '') : '';
-    const nextKey = generatedUrl ? `generated:${generatedUrl}` : previewUrl ? `preview:${previewUrl.slice(0, 120)}` : '';
+    const nextKey = generatedUrl ? `generated:${generatedUrl}` : previewUrl ? `preview:${previewUrl.length}:${previewUrl.slice(-96)}` : '';
     if (nextKey === faceCompositeKey) return;
     const version = ++faceCompositeVersion;
     faceComposite?.dispose?.();
