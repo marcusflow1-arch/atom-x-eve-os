@@ -54,7 +54,8 @@
         "friend_request",
         "dashboard_invite",
         "open_message",
-        "call"
+        "call",
+        "party_invite"
       ]
     }
   },

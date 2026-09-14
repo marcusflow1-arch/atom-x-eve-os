@@ -10,6 +10,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { ...corsHeaders, 'Content-Type': 'application/json' },
 });
 
+const PARTY_MAX = 5;
 const ACTIVE_STATUSES = new Set(['forming', 'full', 'active']);
 const displayName = (user: any) => user?.full_name || user?.username || 'Player';
 const avatarUrl = (user: any) => user?.avatar_url || user?.profile_image || '';
@@ -34,10 +35,22 @@ Deno.serve(async (req) => {
       for (const membership of memberships || []) {
         try {
           const party = await svc.Party.get(membership.party_id);
-          if (party && ACTIVE_STATUSES.has(party.status || 'forming')) return { party, membership };
+          if (party && ACTIVE_STATUSES.has(party.status || 'forming')) {
+            if (party.maxSize !== PARTY_MAX) await svc.Party.update(party.id,{maxSize:PARTY_MAX});
+            return {party:{...party,maxSize:PARTY_MAX},membership};
+          }
         } catch (_) {}
       }
       return { party: null, membership: null };
+    };
+
+    const notifyInvite = async (invite: any) => {
+      const previous = await svc.SocialNotification.filter({recipient_id:invite.invitee_id,type:'party_invite',related_entity_id:invite.id},'-created_date',1);
+      if (!previous.length) await svc.SocialNotification.create({recipient_id:invite.invitee_id,actor_id:user.id,actor_name:displayName(user),actor_avatar:avatarUrl(user),type:'party_invite',title:'Party invitation',body:`${displayName(user)} invited you to a party.`,related_entity_id:invite.id,action_kind:'party_invite',status:'unread'});
+    };
+    const actionInviteNotices = async (id: string) => {
+      const notices = await svc.SocialNotification.filter({recipient_id:user.id,related_entity_id:id,type:'party_invite'});
+      for (const notice of notices) await svc.SocialNotification.update(notice.id,{status:'actioned'});
     };
 
     const rosterFor = async (partyId: string) => svc.PartyMember.filter({ party_id: partyId });
@@ -45,7 +58,7 @@ Deno.serve(async (req) => {
     const syncRoster = async (party: any) => {
       const roster = await rosterFor(party.id);
       const ids = roster.map((m: any) => m.user_id);
-      const max = Number(party.maxSize || 4);
+      const max = PARTY_MAX;
       await svc.Party.update(party.id, {
         members: ids,
         status: ids.length >= max ? 'full' : 'active',
@@ -62,7 +75,7 @@ Deno.serve(async (req) => {
         leaderId: user.id,
         partyName: `${displayName(user)}'s Party`,
         goal: 'Play together',
-        maxSize: 4,
+        maxSize: PARTY_MAX,
         members: [user.id],
         status: 'forming',
         micRequired: false,
@@ -134,11 +147,11 @@ Deno.serve(async (req) => {
       const { party } = await createParty();
       const roster = await rosterFor(party.id);
       if (roster.some((m: any) => m.user_id === inviteeId)) return json({ error: 'That friend is already in your party' }, 409);
-      if (roster.length >= Number(party.maxSize || 4)) return json({ error: 'Party is full' }, 409);
+      if (roster.length >= PARTY_MAX) return json({ error: 'Party is full' }, 409);
 
       const duplicates = await svc.PartyInvite.filter({ party_id: party.id, invitee_id: inviteeId, status: 'pending' });
       for (const duplicate of duplicates || []) {
-        if (!isExpired(duplicate.expires_at)) return json({ error: 'Party invite already pending' }, 409);
+        if (!isExpired(duplicate.expires_at)) { await notifyInvite(duplicate); return json({success:true,party,invite:duplicate,already_pending:true}); }
         await svc.PartyInvite.update(duplicate.id, { status: 'expired' });
       }
 
@@ -151,12 +164,17 @@ Deno.serve(async (req) => {
         expires_at: expiresIn(10),
         message: data.message || `${displayName(user)} invited you to a party`,
       });
+      await notifyInvite(invite);
       return json({ success: true, party, invite });
     }
 
     if (action === 'accept_invite') {
       const invite = await svc.PartyInvite.get(String(data.inviteId || ''));
       if (!invite || invite.invitee_id !== user.id) return json({ error: 'Invite not found' }, 404);
+      if (invite.status === 'accepted') {
+        const state = await activePartyFor(user.id);
+        if (state.party?.id === invite.party_id) { await actionInviteNotices(invite.id); return json({success:true,party:state.party,members:await rosterFor(state.party.id)}); }
+      }
       if (invite.status !== 'pending') return json({ error: 'Invite is no longer pending' }, 409);
       if (isExpired(invite.expires_at)) {
         await svc.PartyInvite.update(invite.id, { status: 'expired' });
@@ -168,9 +186,9 @@ Deno.serve(async (req) => {
       const party = await svc.Party.get(invite.party_id);
       if (!party || !ACTIVE_STATUSES.has(party.status || 'forming')) return json({ error: 'Party is no longer active' }, 409);
       const roster = await rosterFor(party.id);
-      if (roster.length >= Number(party.maxSize || 4)) return json({ error: 'Party is full' }, 409);
+      if (roster.length >= PARTY_MAX) return json({ error: 'Party is full' }, 409);
 
-      await svc.PartyMember.create({
+      const member = await svc.PartyMember.create({
         party_id: party.id,
         user_id: user.id,
         user_name: displayName(user),
@@ -180,7 +198,17 @@ Deno.serve(async (req) => {
         is_ready: false,
         joined_date: new Date().toISOString(),
       });
+      const admitted = (await rosterFor(party.id)).sort((a:any,b:any)=>{
+        if(a.user_id===party.leaderId)return -1;
+        if(b.user_id===party.leaderId)return 1;
+        return Date.parse(a.joined_date)-Date.parse(b.joined_date) || String(a.id).localeCompare(String(b.id));
+      }).slice(0,PARTY_MAX);
+      if (!admitted.some((m:any)=>m.id===member.id)) {
+        await svc.PartyMember.delete(member.id);
+        return json({error:'Party just filled up.'},409);
+      }
       await svc.PartyInvite.update(invite.id, { status: 'accepted' });
+      await actionInviteNotices(invite.id);
       const members = await syncRoster(party);
       return json({ success: true, party: await svc.Party.get(party.id), members });
     }
@@ -189,6 +217,7 @@ Deno.serve(async (req) => {
       const invite = await svc.PartyInvite.get(String(data.inviteId || ''));
       if (!invite || invite.invitee_id !== user.id) return json({ error: 'Invite not found' }, 404);
       if (invite.status === 'pending') await svc.PartyInvite.update(invite.id, { status: 'declined' });
+      await actionInviteNotices(invite.id);
       return json({ success: true });
     }
 
@@ -257,7 +286,7 @@ Deno.serve(async (req) => {
         activeGameTitle: title,
         activeGameCover: cover,
         gameId,
-        status: roster.length >= Number(party.maxSize || 4) ? 'full' : 'active',
+        status: roster.length >= PARTY_MAX ? 'full' : 'active',
         lastActive: new Date().toISOString(),
       });
 
