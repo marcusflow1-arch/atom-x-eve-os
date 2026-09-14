@@ -1107,7 +1107,7 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
 }
 
 // Friend Reference - clickable friends that show join/invite options
-function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite }) {
+function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite }) {
   const openMenu = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -1115,7 +1115,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
   };
 
   return (
-    <div className="relative">
+    <div className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`}>
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -1148,27 +1148,27 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
             animate={{ opacity: 1, y: 5, scale: 1 }}
             exit={{ opacity: 0, y: -5, scale: .96 }}
             onContextMenu={(event) => event.preventDefault()}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-[#090c11]/98 backdrop-blur-2xl border border-white/10 rounded-xl p-1.5 shadow-2xl z-[120] flex flex-col gap-1"
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-[#090c11]/98 backdrop-blur-2xl border border-white/10 rounded-xl p-1.5 shadow-2xl z-[10001] pointer-events-auto flex flex-col gap-1"
           >
             <div className="px-2 py-1.5 border-b border-white/[0.06] mb-1">
               <p className="truncate text-[9px] font-bold text-white/85">{friend.name}</p>
               <p className="text-[7px] uppercase tracking-[.14em] text-white/30">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
             </div>
             {!isFriend && (
-              <button disabled={requestState === 'sending' || requestState === 'sent'} onClick={(e) => { e.stopPropagation(); onAddFriend(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+              <button type="button" disabled={requestState === 'sending' || requestState === 'sent'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddFriend(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
                 {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'error' ? 'Request Failed · Retry' : 'Add Friend'}
               </button>
             )}
-            <button onClick={(e) => { e.stopPropagation(); onMessage(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMessage(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
               Chat / Message
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onJoin(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white transition-colors">
-              Join Dashboard
+            <button type="button" disabled={joining} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onJoin(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white transition-colors disabled:opacity-50">
+              {joining ? 'Joining Dashboard…' : 'Join Dashboard'}
             </button>
-            <button disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} onClick={(e) => { e.stopPropagation(); onInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+            <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
               {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
             </button>
-            <button disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} onClick={(e) => { e.stopPropagation(); onPartyInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+            <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPartyInvite(friend); }} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
               {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
             </button>
           </motion.div>
