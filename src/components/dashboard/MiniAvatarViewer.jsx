@@ -4,6 +4,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { companionModel, applyCompanionAppearance, COMPANION_MOTIONS } from '@/components/onboarding/genesisAssets';
+import { attachGeneratedFaceToBody } from '@/components/onboarding/faceComposite';
 
 async function loadAsset(url) {
   if (/\.(glb|gltf)(?:\?|$)/i.test(url)) {
@@ -50,6 +51,7 @@ export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
     let frameId = null;
     let mixer = null;
     let model = null;
+    let faceComposite = null;
     const clock = new THREE.Clock();
 
     const start = async () => {
@@ -76,6 +78,13 @@ export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
         });
         applyCompanionAppearance(model, savedCompanion || {});
         scene.add(model);
+        if (savedCompanion?.face_scan_generated && savedCompanion?.face_model_url) {
+          const gltfLoader = new GLTFLoader();
+          const fbxLoader = new FBXLoader();
+          attachGeneratedFaceToBody({ baseModel: model, faceUrl: savedCompanion.face_model_url, gltfLoader, fbxLoader })
+            .then((composite) => { if (disposed) composite.dispose?.(); else faceComposite = composite; })
+            .catch((error) => console.warn('Mini avatar could not apply generated face:', error));
+        }
         mixer = new THREE.AnimationMixer(model);
         const embedded = asset.animations?.[0];
         if (embedded) mixer.clipAction(embedded).play();
@@ -113,6 +122,8 @@ export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', resize);
       mixer?.stopAllAction();
+      faceComposite?.dispose?.();
+      faceComposite = null;
       renderer.dispose();
       renderer.domElement?.remove();
     };
