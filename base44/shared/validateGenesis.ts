@@ -39,6 +39,13 @@ export function validateGenesis(input) {
     : defaultModel;
   const style_preset = STYLE_PRESETS.has(c.style_preset) ? c.style_preset : 'heroic_fantasy';
   const eyelash_style = LASH_STYLES.has(c.eyelash_style) ? c.eyelash_style : 'natural';
+  const faceModelRequested = String(c.face_model_url || '');
+  const face_model_url = faceModelRequested.startsWith(APP_FILE_PREFIX) ? faceModelRequested.slice(0, 1000) : '';
+  const base_body_gender = c.gender === 'female' ? 'female' : 'male';
+  const requestedBaseBody = String(c.base_body_model_url || model_url || defaultModel);
+  const base_body_model_url = requestedBaseBody === GLOBAL_AVATAR_MODEL || requestedBaseBody.startsWith(APP_FILE_PREFIX)
+    ? requestedBaseBody.slice(0, 1000)
+    : defaultModel;
 
   return {
     profile: { display_name, username, date_of_birth: dob, phone },
@@ -56,7 +63,10 @@ export function validateGenesis(input) {
       eyelash_style,
       hood_enabled: c.hood_enabled !== false,
       weapon_visible: c.weapon_visible !== false,
-      face_scan_generated: Boolean(c.face_scan_generated && model_url !== defaultModel),
+      face_scan_generated: Boolean(c.face_scan_generated && face_model_url),
+      face_model_url,
+      base_body_gender,
+      base_body_model_url,
       tripo_model_id: String(c.tripo_model_id || '').slice(0, 120),
       material_colors: Object.fromEntries(colors),
       morph_targets: Object.fromEntries(morphs),
