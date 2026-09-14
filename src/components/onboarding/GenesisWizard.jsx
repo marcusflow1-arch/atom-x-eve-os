@@ -14,8 +14,9 @@ import { withAppearanceDefaults } from '@/components/onboarding/genesisAssets';
 import '@/components/onboarding/genesis.css';
 
 const baseCompanion = {
-  gender: 'female',
-  name: 'Eve',
+  gender: 'male',
+  name: '',
+  model_url: '/models/luna-hi3d/warrior.glb',
   personality: 'calm',
   voice: { uri: '', pitch: 1, rate: 1 },
 };
@@ -50,12 +51,12 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
 
   return <div className="genesis-surface genesis-shell" data-testid="genesis-wizard">
     <header><span className="genesis-brand"><Moon size={24}/>ATOM × EVE</span>{preview ? <span className="genesis-preview-badge">Developer preview<Link to="/LunaTemplate">Exit preview</Link></span> : <span className="genesis-preview-badge">First-time setup</span>}</header>
-    <ol className="genesis-steps">{['Account','Companion','Appearance','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
+    <ol className="genesis-steps">{['Body','Identity','Appearance','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
     <div className="genesis-workspace">
       <GenesisModelPreview config={config} onCapabilities={setCapabilities}/>
       <form className="genesis-editor" onSubmit={submit}><fieldset disabled={busy}><AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:reduced?0:.18}}>
-        {step === 0 && <GenesisProfileFields profile={profile} setProfile={setProfile} email={user?.email}/>}
-        {step === 1 && <GenesisCompanionFields config={config} setConfig={setConfig}/>}
+        {step === 0 && <GenesisCompanionFields config={config} setConfig={setConfig}/>} 
+        {step === 1 && <GenesisProfileFields profile={profile} setProfile={setProfile} email={user?.email} config={config} setConfig={setConfig}/>}
         {step === 2 && <GenesisAppearanceFields config={config} setConfig={setConfig} capabilities={capabilities}/>}
         {step === 3 && <GenesisVoiceFields config={config} setConfig={setConfig}/>}
         {step === 4 && <GenesisReview profile={profile} config={config} preview={preview}/>}
