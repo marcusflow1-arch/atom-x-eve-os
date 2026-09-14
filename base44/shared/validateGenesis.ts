@@ -1,5 +1,5 @@
-const ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const APP_FILE_PREFIX = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/';
+const GLOBAL_AVATAR_MODEL = '/models/artemis.gltf';
 const STYLE_PRESETS = new Set(['heroic_fantasy', 'graphic_ink', 'grounded_rpg']);
 const LASH_STYLES = new Set(['soft', 'natural', 'bold']);
 
@@ -32,9 +32,11 @@ export function validateGenesis(input) {
   const colors = Object.entries(c.material_colors || {}), morphs = Object.entries(c.morph_targets || {});
   if (colors.length > 100 || morphs.length > 100 || colors.some(([k,v]) => k.length > 200 || !/^#[0-9a-f]{6}$/i.test(String(v))) || morphs.some(([k,v]) => k.length > 200 || typeof v !== 'number' || v < 0 || v > 1)) throw new Error('Invalid appearance settings.');
 
-  const defaultModel = ROOT + (c.gender === 'female' ? '3f915913a_ErikaArcher.fbx' : '608211a0f_YBot1.fbx');
+  const defaultModel = GLOBAL_AVATAR_MODEL;
   const requestedModel = String(c.model_url || '');
-  const model_url = requestedModel.startsWith(APP_FILE_PREFIX) ? requestedModel.slice(0, 1000) : defaultModel;
+  const model_url = requestedModel === GLOBAL_AVATAR_MODEL || requestedModel.startsWith(APP_FILE_PREFIX)
+    ? requestedModel.slice(0, 1000)
+    : defaultModel;
   const style_preset = STYLE_PRESETS.has(c.style_preset) ? c.style_preset : 'heroic_fantasy';
   const eyelash_style = LASH_STYLES.has(c.eyelash_style) ? c.eyelash_style : 'natural';
 
