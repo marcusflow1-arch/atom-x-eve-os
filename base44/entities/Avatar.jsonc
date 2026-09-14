@@ -2,6 +2,79 @@
   "name": "Avatar",
   "type": "object",
   "properties": {
+
+  "face_shape": {
+    "type": "object"
+  },
+  "face_fit_source": {
+    "type": "string",
+    "enum": [
+      "manual",
+      "selfie"
+    ]
+  },
+  "skin_tint_enabled": {
+    "type": "boolean"
+  },
+  "hair_tint_enabled": {
+    "type": "boolean"
+  },
+  "complexion": {
+    "type": "string",
+    "enum": [
+      "natural",
+      "freckles",
+      "rosy"
+    ]
+  },
+  "facial_hair": {
+    "type": "string",
+    "enum": [
+      "none",
+      "fine",
+      "trimmed"
+    ]
+  },
+  "facial_hair_color": {
+    "type": "string"
+  },
+  "tattoo_style": {
+    "type": "string",
+    "enum": [
+      "none",
+      "bands",
+      "botanical"
+    ]
+  },
+  "tattoo_placement": {
+    "type": "string",
+    "enum": [
+      "left",
+      "right"
+    ]
+  },
+  "tattoo_color": {
+    "type": "string"
+  },
+  "tattoo_opacity": {
+    "type": "number",
+    "minimum": 0,
+    "maximum": 1
+  },
+  "hair_style": {
+    "type": "string"
+  },
+  "hair_length": {
+    "type": "number",
+    "minimum": 0.35,
+    "maximum": 1.35
+  },
+  "hair_volume": {
+    "type": "number",
+    "minimum": 0.8,
+    "maximum": 1.2
+  }
+,
     "user_id": {
       "type": "string",
       "description": "The ID of the user this avatar belongs to. Each user has one avatar."
@@ -66,7 +139,7 @@
       "enum": [
         "heroic_fantasy",
         "graphic_ink",
-        "grounded_rpg"
+        "grounded_rpg", "anime", "watercolor", "noir", "neon"
       ],
       "default": "heroic_fantasy"
     },

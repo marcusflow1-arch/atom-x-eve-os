@@ -1,3 +1,4 @@
+import {normalizeAvatarAppearance} from '../../shared/normalizeAvatarAppearance.ts';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
 
@@ -227,31 +228,7 @@ async function initializeAvatar(base44, user, requestBody) {
 
 async function saveAvatarAppearance(base44, userId, appearance = {}) {
     const avatars = await base44.entities.Avatar.filter({ user_id: userId });
-    const normalized: AnyObj = {
-        model_url: appearance.model_url ? normalizeAvatarModel(appearance.model_url) : undefined,
-        skin_tone: appearance.skin_tone || appearance.skinTone || '#b97855',
-        eye_color: appearance.eye_color || appearance.eyeColor || '#5ca9c9',
-        hair_color: appearance.hair_color || appearance.hairColor || '#2a1d18',
-        eyelash_style: ['soft','natural','bold'].includes(appearance.eyelash_style) ? appearance.eyelash_style : 'natural',
-        style_preset: ['heroic_fantasy','graphic_ink','grounded_rpg'].includes(appearance.style_preset) ? appearance.style_preset : 'heroic_fantasy',
-        hood_enabled: appearance.hood_enabled !== false,
-        weapon_visible: appearance.weapon_visible !== false,
-        height_scale: Math.min(1.18, Math.max(.84, Number(appearance.height_scale || 1))),
-        body_proportions: {
-            width: Math.min(1.12, Math.max(.88, Number(appearance.body_proportions?.width || 1))),
-            depth: Math.min(1.1, Math.max(.9, Number(appearance.body_proportions?.depth || 1))),
-        },
-        material_colors: appearance.material_colors || {},
-        morph_targets: appearance.morph_targets || appearance.morphTargets || {},
-        face_scan_generated: Boolean(appearance.face_scan_generated && appearance.face_model_url),
-        face_model_url: String(appearance.face_model_url || '').slice(0, 1000),
-        base_body_gender: appearance.gender === 'female' ? 'female' : 'male',
-        base_body_model_url: normalizeAvatarModel(appearance.base_body_model_url || appearance.model_url || GLOBAL_AVATAR_MODEL),
-        tripo_model_id: String(appearance.tripo_model_id || '').slice(0, 120),
-        appearance_version: 3,
-    };
-    Object.keys(normalized).forEach((key) => normalized[key] === undefined && delete normalized[key]);
-
+    const normalized=normalizeAvatarAppearance(appearance);
     if (avatars.length === 0) {
         return base44.entities.Avatar.create({
             user_id: userId,

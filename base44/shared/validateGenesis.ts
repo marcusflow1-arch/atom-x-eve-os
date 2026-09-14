@@ -1,3 +1,4 @@
+import {normalizeAvatarAppearance} from './normalizeAvatarAppearance.ts';
 const APP_FILE_PREFIX = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/';
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
 const STYLE_PRESETS = new Set(['heroic_fantasy', 'graphic_ink', 'grounded_rpg']);
@@ -71,7 +72,8 @@ export function validateGenesis(input) {
       material_colors: Object.fromEntries(colors),
       morph_targets: Object.fromEntries(morphs),
       voice: { uri: String(c.voice?.uri || '').slice(0,200), pitch, rate },
-      setup_version: 2,
+      ...normalizeAvatarAppearance(c),
+      setup_version: 3,
     },
   };
 }
