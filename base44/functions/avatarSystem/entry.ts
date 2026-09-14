@@ -2,7 +2,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
-const GLOBAL_AVATAR_MODEL = '/models/artemis.gltf';
+const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
+const LEGACY_DEFAULT_MODELS = new Set([
+    '/models/artemis.gltf',
+    '/models/ybot.fbx',
+    '/models/eve.glb',
+]);
+
+function normalizeAvatarModel(value: unknown) {
+    const requested = String(value || '').trim();
+    return !requested || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase()) ? GLOBAL_AVATAR_MODEL : requested;
+}
 
 export default async function(req) {
     try {
@@ -125,6 +135,11 @@ async function initializeAvatar(base44, user, requestBody) {
 
     const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, 'created_date', 1);
     let avatar = existing[0];
+    if (avatar && normalizeAvatarModel(avatar.model_url) !== avatar.model_url) {
+        avatar = await base44.asServiceRole.entities.Avatar.update(avatar.id, {
+            model_url: normalizeAvatarModel(avatar.model_url),
+        });
+    }
     if (!avatar) {
         avatar = await base44.asServiceRole.entities.Avatar.create({
             user_id: user.id,
@@ -134,7 +149,7 @@ async function initializeAvatar(base44, user, requestBody) {
             experience: 0,
             social_influence: 0,
             reputation_badges: [],
-            model_url: requestBody.setup ? (requestBody.model_url || GLOBAL_AVATAR_MODEL) : GLOBAL_AVATAR_MODEL,
+            model_url: requestBody.setup ? normalizeAvatarModel(requestBody.model_url) : GLOBAL_AVATAR_MODEL,
             ...(requestBody.setup ? {setup_status:'pending'} : {}),
             equipped_items: [],
             unlocked_abilities: [],
@@ -213,7 +228,7 @@ async function initializeAvatar(base44, user, requestBody) {
 async function saveAvatarAppearance(base44, userId, appearance = {}) {
     const avatars = await base44.entities.Avatar.filter({ user_id: userId });
     const normalized: AnyObj = {
-        model_url: appearance.model_url || undefined,
+        model_url: appearance.model_url ? normalizeAvatarModel(appearance.model_url) : undefined,
         skin_tone: appearance.skin_tone || appearance.skinTone || '#b97855',
         eye_color: appearance.eye_color || appearance.eyeColor || '#5ca9c9',
         hair_color: appearance.hair_color || appearance.hairColor || '#2a1d18',
