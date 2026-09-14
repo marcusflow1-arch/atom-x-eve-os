@@ -1,6 +1,5 @@
 import React from 'react';
 import { Eye, Palette, PersonStanding, Sparkles } from 'lucide-react';
-import GenesisFaceScan from '@/components/onboarding/GenesisFaceScan';
 import { AVATAR_STYLE_PRESETS, DEFAULT_AVATAR_APPEARANCE } from '@/components/onboarding/genesisAssets';
 
 const SKIN_PRESETS = ['#f2d4bf', '#d9aa88', '#b97855', '#8a553a', '#5c3828', '#3a241c'];
@@ -15,7 +14,7 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
   return <section className="genesis-fields genesis-appearance-fields">
     <p className="genesis-kicker">03 / APPEARANCE</p>
     <h1>Build your<br />signature look.</h1>
-    <p className="genesis-description">A modern character creator built around the real 3D model. Choose the rendering language, tune proportions and materials, or generate a rigged likeness from your own photo.</p>
+    <p className="genesis-description">Fine-tune the 3D character you selected. Your face scan now lives with your personal information on the previous step, while this screen focuses on style, proportions, complexion and model-specific details.</p>
 
     <div className="genesis-subsection">
       <div className="genesis-subsection-title"><Sparkles size={15}/><span>Art direction</span></div>
@@ -26,8 +25,6 @@ export default function GenesisAppearanceFields({ config, setConfig, capabilitie
         </button>)}
       </div>
     </div>
-
-    <GenesisFaceScan config={config} setConfig={setConfig} />
 
     <div className="genesis-subsection">
       <div className="genesis-subsection-title"><PersonStanding size={15}/><span>Body proportions</span></div>
