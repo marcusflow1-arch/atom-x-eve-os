@@ -7,11 +7,11 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import AvatarStatCard from './AvatarStatCard';
 import { Mic, MicOff, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { companionModel, applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 
 const ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const MP_ROOT = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
-const YBOT_URL = ROOT + '608211a0f_YBot1.fbx';
 const DASHBOARD_MOTIONS = [
   { name: 'Idle', url: ROOT + '9922e6dd0_Idle.fbx', loop: true },
   { name: 'Look Around', url: MP_ROOT + '3d7dec95f_standingidle02looking.fbx', loop: true },
@@ -31,6 +31,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
   const idleTimerRef = useRef(null);
   const isUiVisibleRef = useRef(isUiVisible);
   const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0));
+  const savedCompanion = useCompanionIdentity();
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [activeInvite, setActiveInvite] = useState(null);
   const [webglFailed, setWebglFailed] = useState(false);
@@ -94,7 +95,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    const style = getAvatarStylePreset('heroic_fantasy');
+    const style = getAvatarStylePreset(savedCompanion?.style_preset || 'heroic_fantasy');
     renderer.toneMappingExposure = style.exposure;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -123,7 +124,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
 
     const fbxLoader = new FBXLoader();
     const gltfLoader = new GLTFLoader();
-    const modelUrl = YBOT_URL;
+    const modelUrl = companionModel(savedCompanion);
     let disposed = false;
     let model = null;
     let currentAction = null;
@@ -197,6 +198,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
           material.needsUpdate = true;
         });
       });
+      applyCompanionAppearance(model, savedCompanion || {});
       scene.add(model);
       mixerRef.current = new THREE.AnimationMixer(model);
       const embeddedClip = asset.animations?.[0] || model.animations?.[0];
