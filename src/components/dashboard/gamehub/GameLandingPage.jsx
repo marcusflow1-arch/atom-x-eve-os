@@ -5,6 +5,9 @@ import {
   Bug, SlidersHorizontal, Image, ShoppingBag, BookOpen,
   Film, Activity, CalendarDays, Target, Gift, Server, ArrowRight
 } from 'lucide-react';
+import ThreeScene from '@/components/shared/ThreeScene';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { companionModel } from '@/components/onboarding/genesisAssets';
 
 const FALLBACK_UPDATES = [
   { id: 'season', title: 'Season 4 — Void Ascendancy', type: 'Season', date: 'Live now', summary: 'New playable content, seasonal rewards and progression updates.', features: ['New seasonal progression track', 'Fresh map rotation and rewards', 'New collectible unlocks'], balance: ['Role tuning across competitive modes', 'Adjusted progression pacing'], fixes: ['Improved matchmaking stability', 'Resolved several UI and performance issues'] },
@@ -46,6 +49,8 @@ function GlassSection({ children, className = '' }) {
 
 export default function GameLandingPage({ game, onClose }) {
   const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const companion = useCompanionIdentity();
+  const avatarModelUrl = companionModel(companion);
   const title = game?.title || 'Selected Game';
   const hero = game?.image || game?.cover_image || game?.thumb;
   const hours = game?.playtime || game?.hours_played || '128h';
@@ -195,6 +200,14 @@ export default function GameLandingPage({ game, onClose }) {
             <div className="mb-5">
               <div className="text-[9px] uppercase tracking-[0.24em] text-white/30">Game hub</div>
               <h2 className="mt-1 text-lg font-bold">Explore {title}</h2>
+            </div>
+
+            <div className="relative mb-5 h-56 overflow-hidden bg-cyan-500/[0.025]" aria-label="Your AI avatar in this game">
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-cyan-200/55">Your AI Avatar</span>
+                <span className="text-[9px] text-white/25">Synced across Atom × Eve</span>
+              </div>
+              <ThreeScene modelUrl={avatarModelUrl} scale={0.9} autoRotate />
             </div>
 
             <div className="grid gap-3">
