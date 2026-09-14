@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property -- React Three Fiber uses Three.js object properties. */
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {useFrame} from '@react-three/fiber';
 import {AnimationMixer} from 'three';

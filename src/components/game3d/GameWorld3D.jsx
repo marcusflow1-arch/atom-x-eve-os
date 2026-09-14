@@ -1,5 +1,5 @@
 import {useGameAvatar} from './useGameAvatar';
-import {loadAvatarModel,applyPlayerAppearance} from '@/components/onboarding/avatarAssetRuntime';
+import {loadAvatarModel,applyPlayerAppearance,disposeAvatarModel} from '@/components/onboarding/avatarAssetRuntime';
 import { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -848,6 +848,7 @@ export default function GameWorld3D() {
     });
 
     // Load the player model + admin-managed player animation library
+    let avatarLoadDisposed=false;
     let mixer;
     let model;
     let playerAnim;
@@ -860,6 +861,7 @@ export default function GameWorld3D() {
     const DOUBLE_TAP_MS = 280;
 
     loadAvatarModel(appearanceRef.current,1.7).then((fbx) => {
+      if(avatarLoadDisposed){disposeAvatarModel(fbx);return;}
       model = fbx;
       modelRef.current = fbx;
       playerModelRef.current = fbx;
@@ -2253,6 +2255,7 @@ export default function GameWorld3D() {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      avatarLoadDisposed=true;
       // Mark guard disposed FIRST so any in-flight animate() bails before
       // touching the renderer — prevents the null.trim shadow-map crash.
       rendererGuard.markDisposed();
@@ -2287,7 +2290,7 @@ export default function GameWorld3D() {
       if (window.__gw3dBosses === bossEntities) window.__gw3dBosses = null;
       window.dispatchEvent(new CustomEvent('gw3dSceneTeardown'));
     };
-  }, []);
+  }, [avatarConfig.model_url]);
 
   return (
     <div className="relative w-full h-full">

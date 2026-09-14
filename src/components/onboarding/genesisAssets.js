@@ -52,11 +52,7 @@ export const DEFAULT_AVATAR_APPEARANCE = {
   material_colors: {},
   morph_targets: {},
   face_scan_generated: false,
-  face_model_url: '',
-  face_capture_preview_url: '',
-  base_body_gender: 'male',
-  base_body_model_url: GLOBAL_AVATAR_MODEL_URL,
-  tripo_model_id: '',
+
 };
 
 export function withAppearanceDefaults(value = {}) {
