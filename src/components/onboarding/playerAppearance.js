@@ -1,6 +1,11 @@
-import {withAppearanceDefaults} from './genesisAssets';
-import {HI3D_MODEL_URL} from './embeddedAvatarController';
+import {COMPANION_MODELS,companionModel,withAppearanceDefaults} from './genesisAssets';
+
 export function playerAppearance(value) {
  const avatar=value||{};
- return withAppearanceDefaults(Number(avatar.appearance_version)>=3?avatar:{...avatar,gender:'male',model_url:HI3D_MODEL_URL});
+ const gender=avatar.gender==='female'?'female':'male';
+ const upgraded=Number(avatar.appearance_version)>=3
+  ? {...avatar,gender}
+  : {...avatar,appearance_version:3,gender,model_url:avatar.model_url||COMPANION_MODELS[gender].url};
+ const normalized=withAppearanceDefaults(upgraded);
+ return {...normalized,gender,model_url:companionModel(normalized)};
 }
