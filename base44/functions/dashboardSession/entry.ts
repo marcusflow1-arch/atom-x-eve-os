@@ -3,7 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const TTL = 20000;
 const MAX_PLAYERS = 5;
 const MODEL = '/models/luna-hi3d/warrior.glb';
-const APPEARANCE = ['name','gender','model_url','appearance_version','style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled','complexion','facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color','tattoo_opacity','hair_style','hair_length','hair_volume','face_shape','height_scale','body_proportions','material_colors','morph_targets','eyelash_style','hood_enabled','weapon_visible'];
+const FEMALE_MODEL = '/models/atomxe-greco-girl.glb';
+const APPEARANCE = ['name','gender','female_model_variant','model_url','base_body_gender','base_body_model_url','appearance_version','style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled','complexion','facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color','tattoo_opacity','hair_style','hair_length','hair_volume','face_shape','height_scale','body_proportions','material_colors','morph_targets','eyelash_style','hood_enabled','weapon_visible'];
 const live = (p: any) => p.status !== 'offline' && Number(p.last_update) > Date.now() - TTL;
 const publicPlayer = (p: any) => Object.fromEntries(['player_id','display_name','avatar_url','model_url','appearance','channel_id','last_update','dashboard_joined_at','x','y','z','yaw','anim','status'].map(k => [k,p[k]]));
 const latest = (rows: any[]) => [...rows].sort((a,b) => Number(b.last_update)-Number(a.last_update));
@@ -46,7 +47,12 @@ Deno.serve(async req => {
     const avatarRows = await svc.Avatar.filter({user_id:user.id},'-updated_date',1);
     const avatar = avatarRows[0] || {};
     const appearance = Object.fromEntries(APPEARANCE.filter(k => avatar[k] !== undefined).map(k => [k,avatar[k]]));
-    if (Number(avatar.appearance_version) < 3) Object.assign(appearance,{gender:'male',model_url:MODEL});
+    if (Number(avatar.appearance_version) < 3) {
+      const legacyGender = avatar.gender === 'female' ? 'female' : 'male';
+      Object.assign(appearance, legacyGender === 'female'
+        ? {gender:'female',female_model_variant:'greco_girl',model_url:FEMALE_MODEL,base_body_gender:'female',base_body_model_url:FEMALE_MODEL}
+        : {gender:'male',female_model_variant:'',model_url:MODEL,base_body_gender:'male',base_body_model_url:MODEL});
+    }
     const row = {
       player_id:user.id,display_name:user.full_name || user.username || 'Player',
       avatar_url:user.avatar_url || user.profile_image || '',
