@@ -566,6 +566,44 @@ Deno.serve(async (req) => {
       return json({ success: true, progress: updated, refunded });
     }
 
+    if (action === 'grant_points') {
+      if (user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const targetUserId = String(data.user_id || '').trim();
+      const genreId = canonicalGenre(data.genre_id);
+      const amount = Math.max(1, Math.floor(Number(data.amount || 0)));
+      if (!targetUserId || !buildCatalog(genreId)) return json({ error: 'Valid user_id and genre_id are required' }, 400);
+      const progress = await syncProgress(svc, targetUserId, genreId);
+      const earned = Number(progress.earned_points || 0) + amount;
+      const updated = await svc.GenreSkillProgress.update(progress.id, {
+        earned_points: earned,
+        available_points: Math.max(0, earned - Number(progress.spent_points || 0)),
+        revision: Number(progress.revision || 0) + 1,
+      });
+      await audit(svc, targetUserId, genreId, 'sync_points', { point_delta: amount, metadata: { source: String(data.source || 'admin_reward').slice(0, 120) } });
+      return json({ success: true, progress: updated, granted: amount });
+    }
+
+    if (action === 'configure_game_integration') {
+      if (user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const gameId = String(data.game_id || '').trim();
+      if (!gameId) return json({ error: 'game_id is required' }, 400);
+      const genreIds = [...new Set((data.genre_ids || []).map(canonicalGenre).filter((id: string) => !!GENRES[id]))];
+      if (!genreIds.length) return json({ error: 'At least one valid genre_id is required' }, 400);
+      const payload = {
+        game_id: gameId,
+        enabled: data.enabled !== false,
+        integration_tier: data.integration_tier === 'exclusive' ? 'exclusive' : 'supported',
+        genre_ids: genreIds,
+        supported_effect_keys: [...new Set((data.supported_effect_keys || []).map((value: any) => String(value).trim()).filter(Boolean))],
+        sdk_version: String(data.sdk_version || '1.0').slice(0, 40),
+        build_id: String(data.build_id || '').slice(0, 120),
+        notes: String(data.notes || '').slice(0, 1000),
+      };
+      const existing = await svc.GamePerkIntegration.filter({ game_id: gameId }, '-updated_date', 1).catch(() => []);
+      const integration = existing?.length ? await svc.GamePerkIntegration.update(existing[0].id, payload) : await svc.GamePerkIntegration.create(payload);
+      return json({ success: true, integration });
+    }
+
     if (action === 'get_game_effects') {
       const gameId = String(data.game_id || '').trim();
       if (!gameId) return json({ error: 'game_id is required' }, 400);
