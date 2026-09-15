@@ -52,7 +52,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
-  let embeddedController = null, preserveAppearance = false;
+  let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false;
 
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
   const fbx = new FBXLoader(), gltf = new GLTFLoader(), clock = new THREE.Clock();
@@ -147,7 +147,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const asset = /\.fbx(?:\?|$)/i.test(url) ? await fbx.loadAsync(url) : await gltf.loadAsync(url);
       model = asset.scene || asset;
       if (disposed) { disposeModel(model); return; }
-      model.traverse((node) => { preserveAppearance ||= node.userData?.avatarRig === 'luna-hi3d-v1'; });
+      model.traverse((node) => {
+        preserveAppearance ||= node.userData?.avatarRig === 'luna-hi3d-v1';
+        atomxeRuntimeRig ||= node.userData?.avatarRig === 'atomxe-mixamo-v1';
+      });
       let box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
       model.scale.setScalar(1.8 / (size.y || 1));
@@ -180,15 +183,25 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         if (node.morphTargetDictionary) Object.keys(node.morphTargetDictionary).forEach((name) => morphs.push({ key: `${node.name}:${name}`, label: name }));
       });
 
-      model.visible = preserveAppearance;
+      model.visible = preserveAppearance || atomxeRuntimeRig;
       scene.add(model);
       mixer = new THREE.AnimationMixer(model);
       applyStyle(appearance);
       applyCompanionAppearance(model, appearance);
       if (preserveAppearance) {
         embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
+      } else if (atomxeRuntimeRig) {
+        // Both selectable female bodies ship with an embedded Idle fallback and
+        // standard Mixamo bone names. Start the fallback immediately so the
+        // avatar never appears frozen while an external motion clip is loading.
+        const idleClip = (asset.animations || []).find((clip) => /^idle$/i.test(clip.name || '')) || asset.animations?.[0];
+        if (idleClip) {
+          action = mixer.clipAction(idleClip);
+          action.setLoop(THREE.LoopRepeat, Infinity).play();
+          onStatus('ready', idleClip.name || 'Idle');
+        }
       }
-      onReady({ hi3d: preserveAppearance, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: preserveAppearance ? (asset.animations || []).map(clip => clip.name) : [] });
+      onReady({ hi3d: preserveAppearance, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
       
     } catch (error) {
       console.error('Avatar model failed:', error);
