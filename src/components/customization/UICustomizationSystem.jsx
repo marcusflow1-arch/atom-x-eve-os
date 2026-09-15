@@ -18,6 +18,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Users,
+  Wheat,
   X,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -581,6 +582,7 @@ export function UICustomizationControls({ className = '' }) {
   const roster = () => window.dispatchEvent(new Event('toggleClanRoster'));
   const quickChat = () => window.dispatchEvent(new Event('openClanChatOverlay'));
   const watched = () => window.dispatchEvent(new Event('openAuraStreamsDrawer'));
+  const quickFarm = () => window.dispatchEvent(new Event('openFarmQuickAccess'));
 
   const action = (key) => {
     if (key === 'play') return { label: 'Play', icon: Play, action: play, play: true };
@@ -610,6 +612,7 @@ export function UICustomizationControls({ className = '' }) {
           return <RailButton key={`${key}-${index}`} icon={item.icon} label={item.label} onClick={item.action} play={item.play} compact={page === 'clan' && key === 'chat'} />;
         })}
         {showEdit && <RailButton icon={SlidersHorizontal} label={editMode ? 'Exit Layout Edit' : 'Layout Edit'} active={editMode} onClick={() => setEditMode((value) => !value)} />}
+        {page === 'farm' && <RailButton icon={Wheat} label="Quick Farm Hub Access" onClick={quickFarm} />}
       </div>
       {typeof document !== 'undefined' && drawer ? createPortal(drawer, document.body) : drawer}
     </>
