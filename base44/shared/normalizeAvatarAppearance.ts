@@ -6,7 +6,8 @@ const hex=(v,f)=>/^#[a-f0-9]{6}$/i.test(String(v||''))?v:f;
 const choice=(v,list,f)=>list.includes(v)?v:f;
 export function normalizeAvatarAppearance(input={}){
  const a=input&&typeof input==='object'?input:{},gender=a.gender==='female'?'female':'male',requested=String(a.model_url||'');
- const model_url=(requested===male||requested.startsWith(prefix))?requested.slice(0,1000):(gender==='female'?female:male);
+ const selectedBase=gender==='female'?female:male,isKnownBase=requested===male||requested===female;
+ const model_url=isKnownBase?selectedBase:(requested.startsWith(prefix)?requested.slice(0,1000):selectedBase);
  const colors=Object.fromEntries(Object.entries(a.material_colors||{}).slice(0,100).filter(([k,v])=>k.length<200&&/^#[a-f0-9]{6}$/i.test(String(v))));
  const morphs=Object.fromEntries(Object.entries(a.morph_targets||{}).slice(0,100).filter(([k,v])=>k.length<200&&Number.isFinite(v)).map(([k,v])=>[k,bound(v,0,1,0)]));
  return {appearance_version:3,gender,model_url,style_preset:choice(a.style_preset,styles,styles[0]),
