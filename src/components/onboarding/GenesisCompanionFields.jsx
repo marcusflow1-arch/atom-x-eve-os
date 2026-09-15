@@ -20,11 +20,11 @@ export default function GenesisCompanionFields({ config, setConfig }) {
 
   const chooseGender = (gender) => {
     const model = COMPANION_MODELS[gender];
-    setConfig((current) => resetBody(current, gender, model, gender === 'female' ? 'greco_girl' : ''));
+    setConfig((current) => resetBody(current, gender, model, gender === 'female' ? 'artemis_archer' : ''));
   };
 
   const chooseFemaleModel = (variantId) => {
-    const model = FEMALE_MODEL_VARIANTS[variantId] || FEMALE_MODEL_VARIANTS.greco_girl;
+    const model = FEMALE_MODEL_VARIANTS[variantId] || FEMALE_MODEL_VARIANTS.artemis_archer;
     setConfig((current) => resetBody(current, 'female', model, model.id));
   };
 
@@ -54,7 +54,7 @@ export default function GenesisCompanionFields({ config, setConfig }) {
               <button type="button" key={model.id} aria-pressed={selected} onClick={() => chooseFemaleModel(model.id)}>
                 <span className="genesis-gender-icon"><UserRound size={21} /></span>
                 <strong>{model.name}</strong>
-                <small>{model.id === 'greco_girl' ? 'New default female · idle rig' : 'Original female option'}</small>
+                <small>{model.id === 'artemis_archer' ? 'Default female · Mythic Greek Archer · idle rig' : 'Greco-Roman female · alternate body'}</small>
                 {model.isDefault && <em>Default</em>}
               </button>
             );
@@ -63,6 +63,6 @@ export default function GenesisCompanionFields({ config, setConfig }) {
       </div>
     )}
 
-    <p className="genesis-note">Changing Male/Female restores that body's default face. Female characters can choose either female body; the new Greco Girl is the current default. After you capture a new face, the live 3D preview updates to the fitted likeness.</p>
+    <p className="genesis-note">Changing Male/Female restores that body's default face. Female characters can choose the Mythic Greek Archer or the Greco-Roman Girl; the Mythic Greek Archer is the current default. After you capture a new face, the live 3D preview updates to the fitted likeness.</p>
   </section>;
 }
