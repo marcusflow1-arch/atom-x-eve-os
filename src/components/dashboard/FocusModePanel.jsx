@@ -1,5 +1,6 @@
 import { joinDashboard, isLivePlayer } from '@/components/social/dashboardSession';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
         Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
@@ -1110,91 +1111,105 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
 
 // Friend Reference - clickable friends that show join/invite options
 function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite }) {
+  const anchorRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
   const openMenu = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     onClick(friend);
   };
 
-  // Fire the social action on pointer-down instead of waiting for click. This
-  // prevents transformed/stacked dashboard layers from swallowing the click
-  // after the button has already highlighted. Keyboard activation still uses
-  // the synthetic click path (detail === 0).
+  useEffect(() => {
+    if (!isActive || typeof window === 'undefined') return undefined;
+    const updatePosition = () => {
+      const rect = anchorRef.current?.getBoundingClientRect?.();
+      if (!rect) return;
+      const width = 176;
+      const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.left + (rect.width / 2) - (width / 2)));
+      const top = Math.min(window.innerHeight - 260, rect.bottom + 8);
+      setMenuPosition({ top: Math.max(8, top), left });
+    };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [isActive]);
+
   const actionHandlers = (action) => ({
     onPointerDown: (event) => {
       if (event.button !== undefined && event.button !== 0) return;
-      event.preventDefault();
       event.stopPropagation();
-      action(friend);
     },
     onClick: (event) => {
       event.preventDefault();
       event.stopPropagation();
-      if (event.detail === 0) action(friend);
+      action(friend);
     },
   });
 
+  const menu = isActive && typeof document !== 'undefined' ? createPortal(
+    <motion.div
+      initial={{ opacity: 0, y: -5, scale: .96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -5, scale: .96 }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+      onContextMenu={(event) => event.preventDefault()}
+      className="fixed w-44 bg-[#090c11]/98 backdrop-blur-2xl border border-white/10 rounded-xl p-1.5 shadow-2xl pointer-events-auto flex flex-col gap-1"
+      style={{ top: menuPosition.top, left: menuPosition.left, zIndex: 2147483000 }}
+      data-luna-social-menu={friend.id}
+    >
+      <div className="px-2 py-1.5 border-b border-white/[0.06] mb-1">
+        <p className="truncate text-[9px] font-bold text-white/85">{friend.name}</p>
+        <p className="text-[7px] uppercase tracking-[.14em] text-white/30">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
+      </div>
+      {!isFriend && (
+        <button type="button" disabled={requestState === 'sending' || requestState === 'sent' || requestState === 'friend'} {...actionHandlers(onAddFriend)} className="pointer-events-auto cursor-pointer w-full text-left px-2 py-1.5 hover:bg-white/[0.09] focus-visible:bg-white/[0.09] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+          {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'friend' ? 'Friends' : requestState === 'error' ? 'Request Failed · Retry' : 'Add Friend'}
+        </button>
+      )}
+      <button type="button" {...actionHandlers(onMessage)} className="pointer-events-auto cursor-pointer w-full text-left px-2 py-1.5 hover:bg-white/[0.09] focus-visible:bg-white/[0.09] rounded text-[9px] text-white/70 transition-colors">
+        Chat / Message
+      </button>
+      <button type="button" disabled={joining} {...actionHandlers(onJoin)} className="pointer-events-auto cursor-pointer w-full text-left px-2 py-1.5 hover:bg-purple-400/[0.16] focus-visible:bg-purple-400/[0.16] rounded text-[9px] text-white transition-colors disabled:opacity-50" data-social-action="join-dashboard">
+        {joining ? 'Joining Dashboard…' : 'Join Dashboard'}
+      </button>
+      <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} {...actionHandlers(onInvite)} className="pointer-events-auto cursor-pointer w-full text-left px-2 py-1.5 hover:bg-white/[0.09] focus-visible:bg-white/[0.09] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+        {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
+      </button>
+      <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} {...actionHandlers(onPartyInvite)} className="pointer-events-auto cursor-pointer w-full text-left px-2 py-1.5 hover:bg-white/[0.09] focus-visible:bg-white/[0.09] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
+        {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
+      </button>
+    </motion.div>,
+    document.body,
+  ) : null;
+
   return (
-    <div className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`}>
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onClick(friend)}
-        onContextMenu={openMenu}
-        title="Right-click for social actions"
-        className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
-          isActive ? 'border-white/45 shadow-[0_0_18px_rgba(226,232,240,0.16)]' : 'border-white/10 hover:border-white/30'
-        }`}
-      >
-        <img 
-          src={friend.avatar} 
-          alt={friend.name}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
-        <div className="absolute bottom-1 left-1 right-1">
-          <p className="text-white text-[7px] font-bold truncate text-center">{friend.name}</p>
-        </div>
-        <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-          friend.status === 'online' ? 'bg-green-500' : friend.status === 'away' ? 'bg-yellow-400' : 'bg-slate-500'
-        }`} />
-        {isFriend && <div className="absolute top-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[6px] font-black uppercase tracking-wider text-white/65">Friend</div>}
-      </motion.div>
-      
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            initial={{ opacity: 0, y: -5, scale: .96 }}
-            animate={{ opacity: 1, y: 5, scale: 1 }}
-            exit={{ opacity: 0, y: -5, scale: .96 }}
-            onContextMenu={(event) => event.preventDefault()}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-[#090c11]/98 backdrop-blur-2xl border border-white/10 rounded-xl p-1.5 shadow-2xl z-[10001] pointer-events-auto flex flex-col gap-1"
-          >
-            <div className="px-2 py-1.5 border-b border-white/[0.06] mb-1">
-              <p className="truncate text-[9px] font-bold text-white/85">{friend.name}</p>
-              <p className="text-[7px] uppercase tracking-[.14em] text-white/30">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
-            </div>
-            {!isFriend && (
-              <button type="button" disabled={requestState === 'sending' || requestState === 'sent' || requestState === 'friend'} {...actionHandlers(onAddFriend)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-                {requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'friend' ? 'Friends' : requestState === 'error' ? 'Request Failed · Retry' : 'Add Friend'}
-              </button>
-            )}
-            <button type="button" {...actionHandlers(onMessage)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors">
-              Chat / Message
-            </button>
-            <button type="button" disabled={joining} {...actionHandlers(onJoin)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white transition-colors disabled:opacity-50">
-              {joining ? 'Joining Dashboard…' : 'Join Dashboard'}
-            </button>
-            <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} {...actionHandlers(onInvite)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-              {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
-            </button>
-            <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} {...actionHandlers(onPartyInvite)} className="pointer-events-auto w-full text-left px-2 py-1.5 hover:bg-white/[0.06] rounded text-[9px] text-white/70 transition-colors disabled:opacity-50">
-              {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <>
+      <div ref={anchorRef} className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`}>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => onClick(friend)}
+          onContextMenu={openMenu}
+          title="Click for social actions"
+          className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
+            isActive ? 'border-white/45 shadow-[0_0_18px_rgba(226,232,240,0.16)]' : 'border-white/10 hover:border-white/30'
+          }`}
+        >
+          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+          <div className="absolute bottom-1 left-1 right-1"><p className="text-white text-[7px] font-bold truncate text-center">{friend.name}</p></div>
+          <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : friend.status === 'away' ? 'bg-yellow-400' : 'bg-slate-500'}`} />
+          {isFriend && <div className="absolute top-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[6px] font-black uppercase tracking-wider text-white/65">Friend</div>}
+        </motion.div>
+      </div>
+      <AnimatePresence>{menu}</AnimatePresence>
+    </>
   );
 }
 
