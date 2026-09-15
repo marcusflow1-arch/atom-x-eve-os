@@ -35,7 +35,7 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
 
   const handleHome = () => {
     if (inFarmHub) {
-      onTabSelect?.('farm_hub');
+      onTabSelect?.('home');
       return;
     }
     onTabSelect?.('home');
