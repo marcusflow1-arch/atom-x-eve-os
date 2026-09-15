@@ -94,6 +94,12 @@ export default function LibrarySidebar() {
   }, []);
 
   useEffect(() => {
+    const openFarmQuickAccess = () => setQuickGamesDrawer({ open: true, type: 'farm' });
+    window.addEventListener('openFarmQuickAccess', openFarmQuickAccess);
+    return () => window.removeEventListener('openFarmQuickAccess', openFarmQuickAccess);
+  }, []);
+
+  useEffect(() => {
     const loadRecentGames = () => {
       try {
         const stored = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
@@ -402,18 +408,6 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`${positionClass} ${railLeftClass} top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
           >
-            {/* Farm keeps its existing center shortcut; Clan and Forum quick
-                menus are rendered in the separate page-owned lane below. */}
-            {isFarm && !isSidebarCollapsed && (
-              <button
-                onClick={() => setQuickGamesDrawer({ open: true, type: 'farm' })}
-                className="w-10 h-10 rounded-xl flex items-center justify-center border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 backdrop-blur-lg shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300"
-                title="Quick Farming Hub"
-              >
-                <Wheat className="w-4 h-4" />
-              </button>
-            )}
-
             {(isGameDetail || pathname.includes('/game/')) && (
               <>
                 <button
