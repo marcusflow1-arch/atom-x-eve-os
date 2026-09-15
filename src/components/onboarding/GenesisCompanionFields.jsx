@@ -1,23 +1,31 @@
 import { UserRound } from 'lucide-react';
 
-import { COMPANION_MODELS } from '@/components/onboarding/genesisAssets';
+import { COMPANION_MODELS, FEMALE_MODEL_VARIANTS } from '@/components/onboarding/genesisAssets';
 
 export default function GenesisCompanionFields({ config, setConfig }) {
+  const resetBody = (current, gender, model, femaleVariant = '') => ({
+    ...current,
+    gender, female_model_variant: gender === 'female' ? femaleVariant : '',
+    face_shape: {}, face_fit_source: 'manual', appearance_version: 3,
+    model_url: model.url,
+    base_body_gender: gender,
+    base_body_model_url: model.url,
+    face_scan_generated: false,
+    face_model_url: '',
+    face_capture_preview_url: '',
+    tripo_model_id: '',
+    material_colors: {},
+    morph_targets: {},
+  });
+
   const chooseGender = (gender) => {
     const model = COMPANION_MODELS[gender];
-    setConfig((current) => ({
-      ...current,
-      gender, face_shape: {}, face_fit_source: 'manual', appearance_version: 3,
-      model_url: model.url,
-      base_body_gender: gender,
-      base_body_model_url: model.url,
-      face_scan_generated: false,
-      face_model_url: '',
-      face_capture_preview_url: '',
-      tripo_model_id: '',
-      material_colors: {},
-      morph_targets: {},
-    }));
+    setConfig((current) => resetBody(current, gender, model, gender === 'female' ? 'greco_girl' : ''));
+  };
+
+  const chooseFemaleModel = (variantId) => {
+    const model = FEMALE_MODEL_VARIANTS[variantId] || FEMALE_MODEL_VARIANTS.greco_girl;
+    setConfig((current) => resetBody(current, 'female', model, model.id));
   };
 
   return <section className="genesis-fields genesis-gender-step">
