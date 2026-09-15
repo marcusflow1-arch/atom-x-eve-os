@@ -1,12 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Play, Radio, X, Clock3, Trophy, Gauge, Sparkles, ChevronRight,
   Bug, SlidersHorizontal, Image, ShoppingBag, BookOpen,
   Film, Activity, CalendarDays, Target, Gift, Server, ArrowRight
 } from 'lucide-react';
-import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
-import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 
 const FALLBACK_UPDATES = [
   { id: 'season', title: 'Season 4 — Void Ascendancy', type: 'Season', date: 'Live now', summary: 'New playable content, seasonal rewards and progression updates.', features: ['New seasonal progression track', 'Fresh map rotation and rewards', 'New collectible unlocks'], balance: ['Role tuning across competitive modes', 'Adjusted progression pacing'], fixes: ['Improved matchmaking stability', 'Resolved several UI and performance issues'] },
@@ -48,7 +47,6 @@ function GlassSection({ children, className = '' }) {
 
 export default function GameLandingPage({ game, onClose }) {
   const [selectedUpdate, setSelectedUpdate] = useState(null);
-  const companion = useCompanionIdentity();
   const title = game?.title || 'Selected Game';
   const hero = game?.image || game?.cover_image || game?.thumb;
   const hours = game?.playtime || game?.hours_played || '128h';
@@ -205,7 +203,7 @@ export default function GameLandingPage({ game, onClose }) {
                 <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-cyan-200/55">Your AI Avatar</span>
                 <span className="text-[9px] text-white/25">Synced across Atom × Eve</span>
               </div>
-              <GenesisModelPreview config={companion || { gender: 'male' }} compact />
+              <PlayerAvatarPreview controls="none" idleOnly />
             </div>
 
             <div className="grid gap-3">
