@@ -78,17 +78,17 @@ export default function FriendMessengerPanel({ friend, currentUserId, onClose })
     setSending(true);
     setError('');
     try {
-      await base44.entities.DirectMessage.create({
-        sender_id: currentUserId,
-        receiver_id: friendId,
-        conversation_id: conversationId,
-        content,
+      const response = await base44.functions.invoke('socialActions', {
+        action: 'send_message',
+        data: { target_user_id: friendId, content, message_type: 'text' },
       });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
       setDraft('');
       await loadMessages();
     } catch (err) {
       console.error('Failed to send direct message:', err);
-      setError('Message could not send. Please try again.');
+      setError(err.message || 'Message could not send. Please try again.');
     } finally {
       setSending(false);
     }
