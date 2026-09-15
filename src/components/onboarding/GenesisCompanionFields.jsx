@@ -49,7 +49,7 @@ export default function GenesisCompanionFields({ config, setConfig }) {
         <p className="genesis-kicker">FEMALE MODEL</p>
         <div className="genesis-choices genesis-gender-choices mt-2">
           {Object.values(FEMALE_MODEL_VARIANTS).map((model) => {
-            const selected = (config.female_model_variant || 'greco_girl') === model.id;
+            const selected = (config.female_model_variant || 'artemis_archer') === model.id;
             return (
               <button type="button" key={model.id} aria-pressed={selected} onClick={() => chooseFemaleModel(model.id)}>
                 <span className="genesis-gender-icon"><UserRound size={21} /></span>
