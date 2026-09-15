@@ -296,16 +296,24 @@ Deno.serve(async (req) => {
         ...(data.call_mode ? { call_mode: data.call_mode } : {}),
         ...(data.call_status ? { call_status: data.call_status } : {}),
       });
-      await createNotification({
-        recipient_id: targetId,
-        type: 'message',
-        title: nameOf(user),
-        body: content || (type === 'screenshot' ? 'Sent a screenshot.' : type === 'image' ? 'Sent a picture.' : 'Sent an attachment.'),
-        related_entity_id: message.id,
-        conversation_id: conversationId,
-        action_kind: 'open_message',
-      });
-      return json({ success: true, message, conversation_id: conversationId });
+      let notification_warning = '';
+      try {
+        await createNotification({
+          recipient_id: targetId,
+          type: 'message',
+          title: nameOf(user),
+          body: content || (type === 'screenshot' ? 'Sent a screenshot.' : type === 'image' ? 'Sent a picture.' : 'Sent an attachment.'),
+          related_entity_id: message.id,
+          conversation_id: conversationId,
+          action_kind: 'open_message',
+        });
+      } catch (notificationError) {
+        // The message is already committed. Notification delivery is secondary;
+        // never tell the sender their message failed after it was persisted.
+        notification_warning = notificationError?.message || 'Notification delivery was delayed.';
+        console.warn('[socialActions] message notification failed', notificationError);
+      }
+      return json({ success: true, message, conversation_id: conversationId, notification_warning });
     }
 
     if (action === 'get_thread') {
