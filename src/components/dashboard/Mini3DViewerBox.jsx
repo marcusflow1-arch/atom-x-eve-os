@@ -158,7 +158,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
           aria-label={!isUiVisible ? 'Open full avatar view' : undefined}
           onKeyDown={!isUiVisible ? (event) => { if (event.key !== 'Enter' && event.key !== ' ') return; event.preventDefault(); event.stopPropagation(); if (onModelFocus) onModelFocus(); else window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode')); } : undefined}
         >
-          <div className="relative z-0 h-full w-full"><PlayerAvatarPreview controls="none" interactive={isUiVisible} /></div>
+          <div className="relative z-0 h-full w-full"><PlayerAvatarPreview controls="none" idleOnly interactive={isUiVisible} /></div>
 
           {prompt && !isUiVisible && (
             <div onClick={(event) => event.stopPropagation()} className="absolute bottom-2 left-2 right-2 z-30 rounded-xl border border-cyan-200/15 bg-slate-950/72 p-2 shadow-[0_14px_30px_rgba(0,0,0,.34)] backdrop-blur-2xl">
