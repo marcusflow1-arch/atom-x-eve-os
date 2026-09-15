@@ -1,7 +1,8 @@
 import {normalizeAvatarAppearance} from './normalizeAvatarAppearance.ts';
 const APP_FILE_PREFIX = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/';
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
-const FEMALE_AVATAR_MODEL = APP_FILE_PREFIX + 'public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+const FEMALE_GRECO_MODEL = '/models/atomxe-greco-girl.glb';
+const FEMALE_ERIKA_MODEL = APP_FILE_PREFIX + 'public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const STYLE_PRESETS = new Set(['heroic_fantasy', 'graphic_ink', 'grounded_rpg']);
 const LASH_STYLES = new Set(['soft', 'natural', 'bold']);
 
@@ -34,10 +35,13 @@ export function validateGenesis(input) {
   const colors = Object.entries(c.material_colors || {}), morphs = Object.entries(c.morph_targets || {});
   if (colors.length > 100 || morphs.length > 100 || colors.some(([k,v]) => k.length > 200 || !/^#[0-9a-f]{6}$/i.test(String(v))) || morphs.some(([k,v]) => k.length > 200 || typeof v !== 'number' || v < 0 || v > 1)) throw new Error('Invalid appearance settings.');
 
-  const defaultModel = c.gender === 'female' ? FEMALE_AVATAR_MODEL : GLOBAL_AVATAR_MODEL;
+  const female_model_variant = c.gender === 'female' && c.female_model_variant === 'erika_archer' ? 'erika_archer' : c.gender === 'female' ? 'greco_girl' : '';
+  const defaultModel = c.gender === 'female'
+    ? (female_model_variant === 'erika_archer' ? FEMALE_ERIKA_MODEL : FEMALE_GRECO_MODEL)
+    : GLOBAL_AVATAR_MODEL;
   const requestedModel = String(c.model_url || '');
-  const knownBaseModel = requestedModel === GLOBAL_AVATAR_MODEL || requestedModel === FEMALE_AVATAR_MODEL;
-  const model_url = knownBaseModel
+  const knownBaseModel = requestedModel === GLOBAL_AVATAR_MODEL || requestedModel === FEMALE_GRECO_MODEL || requestedModel === FEMALE_ERIKA_MODEL;
+  const model_url = knownBaseModel || !requestedModel
     ? defaultModel
     : requestedModel.startsWith(APP_FILE_PREFIX)
       ? requestedModel.slice(0, 1000)
@@ -48,8 +52,8 @@ export function validateGenesis(input) {
   const face_model_url = faceModelRequested.startsWith(APP_FILE_PREFIX) ? faceModelRequested.slice(0, 1000) : '';
   const base_body_gender = c.gender === 'female' ? 'female' : 'male';
   const requestedBaseBody = String(c.base_body_model_url || model_url || defaultModel);
-  const knownBaseBody = requestedBaseBody === GLOBAL_AVATAR_MODEL || requestedBaseBody === FEMALE_AVATAR_MODEL;
-  const base_body_model_url = knownBaseBody
+  const knownBaseBody = requestedBaseBody === GLOBAL_AVATAR_MODEL || requestedBaseBody === FEMALE_GRECO_MODEL || requestedBaseBody === FEMALE_ERIKA_MODEL;
+  const base_body_model_url = knownBaseBody || !requestedBaseBody
     ? defaultModel
     : requestedBaseBody.startsWith(APP_FILE_PREFIX)
       ? requestedBaseBody.slice(0, 1000)
@@ -60,6 +64,7 @@ export function validateGenesis(input) {
     companion: {
       name: String(c.name).trim(),
       gender: c.gender,
+      female_model_variant,
       model_url,
       personality: c.personality,
       height_scale: height,
