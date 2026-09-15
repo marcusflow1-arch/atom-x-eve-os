@@ -136,15 +136,20 @@ export default async function(req) {
 
 async function initializeAvatar(base44, user, requestBody) {
     const gender = requestBody.gender === 'female' ? 'female' : 'male';
+    const femaleVariant = gender === 'female' && requestBody.female_model_variant === 'erika_archer' ? 'erika_archer' : gender === 'female' ? 'greco_girl' : '';
     const defaultName = gender === 'female' ? 'Eve' : 'Atum';
     const name = String(requestBody.name || defaultName).trim().slice(0, 40) || defaultName;
 
     const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, 'created_date', 1);
     let avatar = existing[0];
-    if (avatar && normalizeAvatarModel(avatar.model_url, gender) !== avatar.model_url) {
+    const savedFemaleVariant = gender === 'female' && avatar?.female_model_variant === 'erika_archer' ? 'erika_archer' : femaleVariant;
+    if (avatar && (normalizeAvatarModel(avatar.model_url, gender, savedFemaleVariant) !== avatar.model_url || avatar.gender !== gender || avatar.female_model_variant !== savedFemaleVariant)) {
         avatar = await base44.asServiceRole.entities.Avatar.update(avatar.id, {
             gender,
-            model_url: normalizeAvatarModel(avatar.model_url, gender),
+            female_model_variant: savedFemaleVariant,
+            model_url: normalizeAvatarModel(avatar.model_url, gender, savedFemaleVariant),
+            base_body_gender: gender,
+            base_body_model_url: normalizeAvatarModel('', gender, savedFemaleVariant),
             appearance_version: Math.max(3, Number(avatar.appearance_version || 0)),
         });
     }
@@ -157,7 +162,10 @@ async function initializeAvatar(base44, user, requestBody) {
             experience: 0,
             social_influence: 0,
             reputation_badges: [],
-            model_url: requestBody.setup ? normalizeAvatarModel(requestBody.model_url, gender) : normalizeAvatarModel('', gender),
+            female_model_variant: femaleVariant,
+            model_url: requestBody.setup ? normalizeAvatarModel(requestBody.model_url, gender, femaleVariant) : normalizeAvatarModel('', gender, femaleVariant),
+            base_body_gender: gender,
+            base_body_model_url: normalizeAvatarModel('', gender, femaleVariant),
             ...(requestBody.setup ? {setup_status:'pending'} : {}),
             equipped_items: [],
             unlocked_abilities: [],
