@@ -384,43 +384,193 @@ const GENRES: Record<string, any> = {
   },
 };
 
+const WEB_WIDTH = 2600;
+const WEB_HEIGHT = 2400;
+const WEB_CENTER = { x: 1300, y: 1200 };
+const BRANCH_ANGLES = [-90, 30, 150];
+const ABILITY_RADII = [320, 570, 820, 1070];
+const ABILITY_LEVELS = [1, 10, 22, 38];
+const ABILITY_COSTS = [1, 2, 3, 4];
+const PERK_LEVEL_OFFSETS = [1, 2, 3, 5, 7, 9, 12];
+const PERK_COSTS = [1, 1, 1, 1, 1, 2, 2];
+const PERK_ANGLE_OFFSETS = [-78, -54, -28, 0, 28, 54, 78];
+const PERK_RADII = [118, 108, 102, 96, 102, 108, 118];
+const PERK_FACTORS = [0.16, 0.2, 0.24, 0.18, 0.22, 0.28, 0.36];
+const PERK_TITLES = ['Calibration', 'Efficiency', 'Control', 'Rhythm', 'Synergy', 'Momentum', 'Apex'];
+
+function polarPoint(angleDegrees: number, radius: number) {
+  const angle = (angleDegrees * Math.PI) / 180;
+  return {
+    x: Math.round(WEB_CENTER.x + Math.cos(angle) * radius),
+    y: Math.round(WEB_CENTER.y + Math.sin(angle) * radius),
+  };
+}
+
+function scaledEffect(base: any, index: number, abilityName: string) {
+  const numeric = Number(base?.value || 0);
+  const raw = numeric * PERK_FACTORS[index];
+  const wholeUnits = new Set(['rounds', 'ms', 'HP', 'mistake', 'meters', 'm']);
+  const value = wholeUnits.has(String(base?.unit || ''))
+    ? Math.max(1, Math.round(raw))
+    : Math.max(0.5, Math.round(raw * 10) / 10);
+  return {
+    ...base,
+    value,
+    exclusive: !!base?.exclusive,
+    description: `${PERK_TITLES[index]} further develops ${abilityName}. It stacks through the same Atom x Eve integration key while preserving the supported game's own balance rules.`,
+  };
+}
+
 function buildCatalog(genreId: string) {
   const genre = GENRES[genreId];
   if (!genre) return null;
+
   const nodes: any[] = [];
+  const rootId = `${genreId}:core`;
+  nodes.push({
+    id: rootId,
+    genre_id: genreId,
+    node_type: 'core',
+    branch_id: 'core',
+    branch_name: 'Core',
+    branch_icon: 'sparkles',
+    name: `${genre.name} Core`,
+    tier: 0,
+    cost: 0,
+    required_level: 1,
+    prerequisite_id: null,
+    link_ids: [],
+    exclusive: false,
+    effect: null,
+    x: WEB_CENTER.x,
+    y: WEB_CENTER.y,
+    description: `The center of the ${genre.name} mastery web. Every specialization grows outward from this core as your genre level rises.`,
+    demo: { kind: 'system', title: `${genre.name} mastery core`, before_label: 'Level 1', after_label: 'Choose a path' },
+  });
+
   genre.branches.forEach((branch: any, branchIndex: number) => {
-    const [branchId, branchName, branchIcon, perks] = branch;
-    perks.forEach((perk: any, index: number) => {
+    const [branchId, branchName, branchIcon, abilities] = branch;
+    const branchAngle = BRANCH_ANGLES[branchIndex] ?? (branchIndex * 120 - 90);
+    const gatewayId = `${genreId}:${branchId}:gateway`;
+    const gatewayPoint = polarPoint(branchAngle, 165);
+    nodes.push({
+      id: gatewayId,
+      genre_id: genreId,
+      node_type: 'gateway',
+      branch_id: branchId,
+      branch_name: branchName,
+      branch_icon: branchIcon,
+      name: `${branchName} Path`,
+      tier: 0,
+      cost: 0,
+      required_level: 1,
+      prerequisite_id: rootId,
+      link_ids: [rootId],
+      exclusive: false,
+      effect: null,
+      x: gatewayPoint.x,
+      y: gatewayPoint.y,
+      description: `Gateway into the ${branchName} specialization web.`,
+      demo: { kind: 'system', title: `${branchName} path`, before_label: 'Core', after_label: 'Specialize' },
+    });
+
+    abilities.forEach((ability: any, index: number) => {
       const tier = index + 1;
-      const [name, fx] = perk;
-      const id = `${genreId}:${branchId}:t${tier}`;
+      const [name, fx] = ability;
+      const id = `${genreId}:${branchId}:t${tier}`; // preserved for existing player unlocks
+      const abilityPoint = polarPoint(branchAngle, ABILITY_RADII[index] || ABILITY_RADII[ABILITY_RADII.length - 1]);
+      const previousAbilityId = tier === 1 ? gatewayId : `${genreId}:${branchId}:t${tier - 1}`;
       nodes.push({
         id,
         genre_id: genreId,
+        node_type: 'ability',
         branch_id: branchId,
         branch_name: branchName,
         branch_icon: branchIcon,
         name,
         tier,
-        cost: tierCost[tier],
-        required_level: tierLevel[tier],
-        prerequisite_id: tier === 1 ? null : `${genreId}:${branchId}:t${tier - 1}`,
+        cost: ABILITY_COSTS[index] || 1,
+        required_level: ABILITY_LEVELS[index] || 1,
+        prerequisite_id: previousAbilityId,
+        link_ids: [previousAbilityId],
         exclusive: !!fx.exclusive,
         effect: fx,
-        x: posX[tier],
-        y: branchY[branchIndex],
+        x: abilityPoint.x,
+        y: abilityPoint.y,
         description: fx.description,
-        demo: { kind: fx.demo, title: `${name} demonstration`, before_label: 'Base game', after_label: 'With perk' },
+        demo: { kind: fx.demo, title: `${name} demonstration`, before_label: 'Base game', after_label: 'With ability' },
+        satellite_count: 7,
+      });
+
+      const satelliteIds = Array.from({ length: 7 }, (_, perkIndex) => `${id}:p${perkIndex + 1}`);
+      satelliteIds.forEach((perkId, perkIndex) => {
+        const satelliteAngle = branchAngle + PERK_ANGLE_OFFSETS[perkIndex];
+        const radius = PERK_RADII[perkIndex];
+        const radians = (satelliteAngle * Math.PI) / 180;
+        const x = Math.round(abilityPoint.x + Math.cos(radians) * radius);
+        const y = Math.round(abilityPoint.y + Math.sin(radians) * radius);
+        const dependencyMap = [null, null, 0, 0, 1, 2, 4];
+        const dependencyIndex = dependencyMap[perkIndex];
+        const prerequisiteId = dependencyIndex === null ? id : satelliteIds[dependencyIndex];
+        const secondaryLinks = [
+          [],
+          [satelliteIds[0]],
+          [satelliteIds[1]],
+          [satelliteIds[1]],
+          [satelliteIds[2]],
+          [satelliteIds[3]],
+          [satelliteIds[5]],
+        ][perkIndex] || [];
+        const perkFx = scaledEffect(fx, perkIndex, name);
+        nodes.push({
+          id: perkId,
+          genre_id: genreId,
+          node_type: 'perk',
+          ability_id: id,
+          ability_name: name,
+          branch_id: branchId,
+          branch_name: branchName,
+          branch_icon: branchIcon,
+          name: `${PERK_TITLES[perkIndex]} ${name}`,
+          short_name: PERK_TITLES[perkIndex],
+          tier,
+          perk_index: perkIndex + 1,
+          cost: PERK_COSTS[perkIndex],
+          required_level: Math.min(50, (ABILITY_LEVELS[index] || 1) + PERK_LEVEL_OFFSETS[perkIndex]),
+          prerequisite_id: prerequisiteId,
+          link_ids: [prerequisiteId, ...secondaryLinks].filter(Boolean),
+          exclusive: !!perkFx.exclusive,
+          effect: perkFx,
+          x,
+          y,
+          description: perkFx.description,
+          demo: { kind: fx.demo, title: `${PERK_TITLES[perkIndex]} ${name}`, before_label: name, after_label: 'Enhanced' },
+        });
       });
     });
   });
+
   return {
     id: genreId,
     name: genre.name,
     short: genre.short,
     aliases: genre.aliases,
     xp_name: genre.xpName,
-    branches: genre.branches.map((b: any) => ({ id: b[0], name: b[1], icon: b[2] })),
+    branches: genre.branches.map((b: any, index: number) => ({ id: b[0], name: b[1], icon: b[2], angle: BRANCH_ANGLES[index] })),
+    world: {
+      width: WEB_WIDTH,
+      height: WEB_HEIGHT,
+      center_x: WEB_CENTER.x,
+      center_y: WEB_CENTER.y,
+      level_rings: [
+        { level: 1, radius: 320 },
+        { level: 10, radius: 570 },
+        { level: 22, radius: 820 },
+        { level: 38, radius: 1070 },
+        { level: 50, radius: 1210 },
+      ],
+    },
+    node_count: nodes.length,
     nodes,
   };
 }
