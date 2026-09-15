@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDashboardSession } from '@/components/social/dashboardSession';
 import { useAuth } from '@/components/auth/AuthContext';
-import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import FriendsListContent from '@/components/dashboard/FriendsListContent';
@@ -14,7 +13,6 @@ const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 
 export default function DashboardAvatarScene({ focusMode = false }) {
   const { user } = useAuth();
-  const localAvatar = useCompanionIdentity();
   const session = useDashboardSession();
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
   const [messagesWorkspace, setMessagesWorkspace] = useState(null);
