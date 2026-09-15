@@ -1,4 +1,4 @@
-const male='/models/luna-hi3d/warrior.glb',greco='/models/atomxe-greco-girl.glb',prefix='https://base44.app/api/apps/6876751a602125f45f1861b9/files/',erika=prefix+'public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+const male='/models/luna-hi3d/warrior.glb',artemis='/models/atomxe-artemis-archer.glb',greco='/models/atomxe-greco-girl.glb',prefix='https://base44.app/api/apps/6876751a602125f45f1861b9/files/',erika=prefix+'public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const styles=['heroic_fantasy','graphic_ink','grounded_rpg','anime','watercolor','noir','neon'];
 const faceKeys=['face_width','jaw_width','face_height','eye_spacing','nose_width','nose_length','mouth_width'];
 const bound=(v,min,max,f=1)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):f;
@@ -6,8 +6,10 @@ const hex=(v,f)=>/^#[a-f0-9]{6}$/i.test(String(v||''))?v:f;
 const choice=(v,list,f)=>list.includes(v)?v:f;
 export function normalizeAvatarAppearance(input={}){
  const a=input&&typeof input==='object'?input:{},gender=a.gender==='female'?'female':'male',requested=String(a.model_url||'');
- const female_model_variant=gender==='female'&&a.female_model_variant==='erika_archer'?'erika_archer':gender==='female'?'greco_girl':'';
- const selectedBase=gender==='female'?(female_model_variant==='erika_archer'?erika:greco):male,isKnownBase=requested===male||requested===greco||requested===erika;
+ const requestedVariant=String(a.female_model_variant||'');
+ const female_model_variant=gender==='female'?(requestedVariant==='greco_girl'||requestedVariant==='erika_archer'?requestedVariant:'artemis_archer'):'';
+ const selectedBase=gender==='female'?(female_model_variant==='greco_girl'?greco:female_model_variant==='erika_archer'?erika:artemis):male;
+ const isKnownBase=requested===male||requested===artemis||requested===greco||requested===erika;
  const model_url=isKnownBase||!requested?selectedBase:(requested.startsWith(prefix)?requested.slice(0,1000):selectedBase);
  const colors=Object.fromEntries(Object.entries(a.material_colors||{}).slice(0,100).filter(([k,v])=>k.length<200&&/^#[a-f0-9]{6}$/i.test(String(v))));
  const morphs=Object.fromEntries(Object.entries(a.morph_targets||{}).slice(0,100).filter(([k,v])=>k.length<200&&Number.isFinite(v)).map(([k,v])=>[k,bound(v,0,1,0)]));
