@@ -44,8 +44,25 @@ export default function GenesisCompanionFields({ config, setConfig }) {
       ))}
     </div>
 
+    {config.gender === 'female' && (
+      <div className="mt-5">
+        <p className="genesis-kicker">FEMALE MODEL</p>
+        <div className="genesis-choices genesis-gender-choices mt-2">
+          {Object.values(FEMALE_MODEL_VARIANTS).map((model) => {
+            const selected = (config.female_model_variant || 'greco_girl') === model.id;
+            return (
+              <button type="button" key={model.id} aria-pressed={selected} onClick={() => chooseFemaleModel(model.id)}>
+                <span className="genesis-gender-icon"><UserRound size={21} /></span>
+                <strong>{model.name}</strong>
+                <small>{model.id === 'greco_girl' ? 'New default female · idle rig' : 'Original female option'}</small>
+                {model.isDefault && <em>Default</em>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    )}
 
-
-    <p className="genesis-note">Changing Male/Female restores that body's default face. After you capture a new face, the live 3D preview updates to the fitted likeness.</p>
+    <p className="genesis-note">Changing Male/Female restores that body's default face. Female characters can choose either female body; the new Greco Girl is the current default. After you capture a new face, the live 3D preview updates to the fitted likeness.</p>
   </section>;
 }
