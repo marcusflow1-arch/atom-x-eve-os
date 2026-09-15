@@ -26,13 +26,23 @@ Deno.serve(async req => {
     const channel = 'dashboard_' + hostId;
     const hostRows = hostId === user.id ? [] : await svc.PlayerState.filter({player_id:hostId,channel_id:channel});
     const host = latest(hostRows).find(live);
-    if (hostId !== user.id && !host) return Response.json({error:'This player is not on their dashboard right now.'},{status:409});
+    // Join is intentionally non-blocking. The client switches channels first and
+    // heartbeat becomes the authority for whether the host is currently live.
+    // This keeps a stale presence row from making the Join Dashboard button dead.
+    if (action === 'join') return Response.json({
+      success:true,
+      host_id:hostId,
+      host_name:host?.display_name || String(data.host_name || '') || 'Friend',
+      channel_id:channel,
+      env_url:host?.env_url || '',
+      online:!!host,
+    });
+    if (action !== 'heartbeat') return Response.json({error:'Unknown dashboard action.'},{status:400});
+    if (hostId !== user.id && !host) return Response.json({error:'Waiting for this player to open their dashboard.'},{status:409});
     const room = latest(await svc.PlayerState.filter({channel_id:channel}));
     const byId = new Map();
     for (const p of room) if (live(p) && !byId.has(p.player_id)) byId.set(p.player_id,p);
     if (!byId.has(user.id) && byId.size >= MAX_PLAYERS) return Response.json({error:'This dashboard is full (five players).'}, {status:409});
-    if (action === 'join') return Response.json({success:true,host_id:hostId,host_name:host?.display_name || user.full_name,channel_id:channel,env_url:host?.env_url || ''});
-    if (action !== 'heartbeat') return Response.json({error:'Unknown dashboard action.'},{status:400});
     const avatarRows = await svc.Avatar.filter({user_id:user.id},'-updated_date',1);
     const avatar = avatarRows[0] || {};
     const appearance = Object.fromEntries(APPEARANCE.filter(k => avatar[k] !== undefined).map(k => [k,avatar[k]]));
