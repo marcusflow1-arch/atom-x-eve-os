@@ -6,11 +6,18 @@ const root = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/
 const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
 
 export const GLOBAL_AVATAR_MODEL_URL = '/models/luna-hi3d/warrior.glb';
+export const FEMALE_GRECO_MODEL_URL = '/models/atomxe-greco-girl.glb';
+export const FEMALE_ERIKA_MODEL_URL = root + '3f915913a_ErikaArcher.fbx';
 export const GLOBAL_AVATAR_NAME = 'Luna AI';
+
+export const FEMALE_MODEL_VARIANTS = {
+  greco_girl: { id: 'greco_girl', name: 'Greco Girl', url: FEMALE_GRECO_MODEL_URL, idleOnly: true, isDefault: true },
+  erika_archer: { id: 'erika_archer', name: 'Erika Archer', url: FEMALE_ERIKA_MODEL_URL, idleOnly: true },
+};
 
 export const COMPANION_MODELS = {
   male: { name: 'Luna AI Male', url: GLOBAL_AVATAR_MODEL_URL },
-  female: { name: 'Erika Archer Female', url: root + '3f915913a_ErikaArcher.fbx' },
+  female: FEMALE_MODEL_VARIANTS.greco_girl,
 };
 
 export const COMPANION_MOTIONS = [
@@ -70,22 +77,29 @@ export function getAvatarStylePreset(id) {
   return AVATAR_STYLE_PRESETS.find((preset) => preset.id === id) || AVATAR_STYLE_PRESETS[0];
 }
 
+export function femaleModelVariant(avatar = {}) {
+  return avatar?.female_model_variant === 'erika_archer'
+    ? FEMALE_MODEL_VARIANTS.erika_archer
+    : FEMALE_MODEL_VARIANTS.greco_girl;
+}
+
 export function companionModel(avatar) {
   const gender = avatar?.gender === 'female' ? 'female' : 'male';
   const requested = String(avatar?.model_url || '').trim();
-  const maleBase = COMPANION_MODELS.male.url;
-  const femaleBase = COMPANION_MODELS.female.url;
+  const maleBase = GLOBAL_AVATAR_MODEL_URL;
+  const newFemaleBase = FEMALE_GRECO_MODEL_URL;
+  const oldFemaleBase = FEMALE_ERIKA_MODEL_URL;
+  const selectedBase = gender === 'female' ? femaleModelVariant(avatar).url : maleBase;
   const legacyDefault = /(?:608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
-  const isBaseBody = requested === maleBase || requested === femaleBase || legacyDefault;
+  const isStandardBase = requested === maleBase || requested === newFemaleBase || requested === oldFemaleBase || legacyDefault;
 
-  // Male/Female selection is authoritative for every standard Atom × Eve avatar
-  // surface. A stale base-body URL from an older save must never override gender.
-  if (!requested || isBaseBody) return COMPANION_MODELS[gender].url;
+  // Female accounts that pre-date model choices are intentionally migrated to
+  // Greco Girl. Erika remains available only when it was explicitly selected.
+  if (!requested || isStandardBase) return selectedBase;
 
-  // Preserve explicit generated/custom avatar assets (for example future fitted
-  // heads/bodies), while the standard male/female bodies stay gender-locked.
+  // Preserve true generated/custom assets (for example a future fitted body).
   if (/^(https?:\/\/|\/)/i.test(requested)) return requested;
-  return COMPANION_MODELS[gender].url;
+  return selectedBase;
 }
 
 function rememberMaterialBase(material) {
