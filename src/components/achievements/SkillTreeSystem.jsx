@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity, BadgeCheck, Brain, Check, ChevronRight, CircleDot, Clock3, Coins,
   Crosshair, Crown, Eye, Flag, Gauge, Ghost, Grid3X3, Hammer, Heart, Lock,
-  Map, Maximize2, Minus, Navigation, Play, Plus, Puzzle, Radar, RefreshCw,
+  Map as MapIcon, Maximize2, Minus, Navigation, Play, Plus, Puzzle, Radar, RefreshCw,
   Rocket, Ruler, Search, Settings, Shield, Sparkles, Swords, Target, Users,
   Wind, X, Zap
 } from 'lucide-react';
@@ -14,7 +14,7 @@ const ICONS = {
   activity: Activity, brain: Brain, campfire: Sparkles, circuit: Settings, clock: Clock3,
   coins: Coins, crosshair: Crosshair, crown: Crown, eye: Eye, flag: Flag,
   gauge: Gauge, ghost: Ghost, grid: Grid3X3, hammer: Hammer, heart: Heart,
-  map: Map, navigation: Navigation, puzzle: Puzzle, radar: Radar, rocket: Rocket,
+  map: MapIcon, navigation: Navigation, puzzle: Puzzle, radar: Radar, rocket: Rocket,
   ruler: Ruler, search: Search, settings: Settings, shield: Shield, sparkles: Sparkles,
   steering: Gauge, swords: Swords, target: Target, users: Users, wind: Wind,
   flame: Zap, cpu: Brain, zap: Zap,
