@@ -4,17 +4,19 @@ import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
-const FEMALE_AVATAR_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+const FEMALE_GRECO_MODEL = '/models/atomxe-greco-girl.glb';
+const FEMALE_ERIKA_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const LEGACY_DEFAULT_MODELS = new Set([
     '/models/artemis.gltf',
     '/models/ybot.fbx',
     '/models/eve.glb',
 ]);
 
-function normalizeAvatarModel(value: unknown, gender: 'male' | 'female' = 'male') {
+function normalizeAvatarModel(value: unknown, gender: 'male' | 'female' = 'male', femaleVariant = '') {
     const requested = String(value || '').trim();
-    const selectedBase = gender === 'female' ? FEMALE_AVATAR_MODEL : GLOBAL_AVATAR_MODEL;
-    const isKnownBase = requested === GLOBAL_AVATAR_MODEL || requested === FEMALE_AVATAR_MODEL;
+    const selectedFemale = femaleVariant === 'erika_archer' ? FEMALE_ERIKA_MODEL : FEMALE_GRECO_MODEL;
+    const selectedBase = gender === 'female' ? selectedFemale : GLOBAL_AVATAR_MODEL;
+    const isKnownBase = requested === GLOBAL_AVATAR_MODEL || requested === FEMALE_GRECO_MODEL || requested === FEMALE_ERIKA_MODEL;
     return !requested || isKnownBase || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase()) ? selectedBase : requested;
 }
 
