@@ -103,7 +103,7 @@ export function getActiveCharacter() {
 export function createCharacter({ name, appearance, avatarConfig = {} }) {
   const id = `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const character = {
-    ...Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','model_url'].filter(k=>avatarConfig[k]!==undefined).map(k=>[k,avatarConfig[k]])), appearance_version:3,
+    ...Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatarConfig[k]!==undefined).map(k=>[k,avatarConfig[k]])), appearance_version:3,
     id,
     name: (name || 'New Character').trim().slice(0, 24),
     appearance: {
@@ -148,4 +148,4 @@ export async function activateAndSyncToHUD(id) {
   const character=state.roster.find(c=>c.id===id);const avatar=character&&!character.isDevTest?await saveAppearance(character,{broadcast:false}):null;
   setActiveCharacter(id);if(avatar)window.dispatchEvent(new CustomEvent('avatarAppearanceSaved',{detail:{avatar}}));
 }
-window.addEventListener('avatarAppearanceSaved',event=>{const avatar=event.detail?.avatar;if(!avatar)return;const patch=Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','model_url'].filter(k=>avatar[k]!==undefined).map(k=>[k,avatar[k]]));state={...state,roster:state.roster.map(c=>c.id===state.activeId&&!c.isDevTest?{...c,...patch}:c)};emit();});
+window.addEventListener('avatarAppearanceSaved',event=>{const avatar=event.detail?.avatar;if(!avatar)return;const patch=Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatar[k]!==undefined).map(k=>[k,avatar[k]]));state={...state,roster:state.roster.map(c=>c.id===state.activeId&&!c.isDevTest?{...c,...patch}:c)};emit();});
