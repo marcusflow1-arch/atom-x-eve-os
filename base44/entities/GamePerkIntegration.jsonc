@@ -1,0 +1,70 @@
+{
+  "name": "GamePerkIntegration",
+  "type": "object",
+  "properties": {
+    "game_id": {
+      "type": "string",
+      "description": "Game entity ID"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether Atom x Eve genre perks may be consumed by this game"
+    },
+    "integration_tier": {
+      "type": "string",
+      "enum": [
+        "supported",
+        "exclusive"
+      ],
+      "default": "supported",
+      "description": "Supported games receive standard perks; exclusive games may consume exclusive keystones"
+    },
+    "genre_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Genre trees this game consumes"
+    },
+    "supported_effect_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Whitelisted effect keys implemented by the game; use * only during development"
+    },
+    "sdk_version": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "build_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "game_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

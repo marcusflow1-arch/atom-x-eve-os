@@ -1,0 +1,76 @@
+{
+  "name": "GenreSkillProgress",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner user ID"
+    },
+    "genre_id": {
+      "type": "string",
+      "description": "Canonical Atom x Eve genre ID"
+    },
+    "genre_level_snapshot": {
+      "type": "number",
+      "default": 1,
+      "description": "Genre level used the last time point entitlement was synchronized"
+    },
+    "earned_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Total genre skill points earned from progression and rewards"
+    },
+    "spent_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Total points currently spent in this genre tree"
+    },
+    "available_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Unspent genre skill points"
+    },
+    "unlocked_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Unlocked genre perk node IDs"
+    },
+    "revision": {
+      "type": "number",
+      "default": 1,
+      "description": "Monotonic revision for synchronization"
+    },
+    "last_respec_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last genre respec timestamp"
+    }
+  },
+  "required": [
+    "user_id",
+    "genre_id"
+  ],
+  "rls": {
+    "read": {
+      "data.user_id": "{{user.id}}"
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

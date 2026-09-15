@@ -1,0 +1,59 @@
+{
+  "name": "GenreSkillAudit",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "genre_id": {
+      "type": "string"
+    },
+    "node_id": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "unlock",
+        "respec",
+        "sync_points",
+        "resolve_game_effects"
+      ]
+    },
+    "point_delta": {
+      "type": "number",
+      "default": 0
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "user_id",
+    "genre_id",
+    "action"
+  ],
+  "rls": {
+    "read": {
+      "data.user_id": "{{user.id}}"
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
