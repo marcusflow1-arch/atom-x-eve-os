@@ -4,6 +4,7 @@ import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
+const FEMALE_ARTEMIS_MODEL = '/models/atomxe-artemis-archer.glb';
 const FEMALE_GRECO_MODEL = '/models/atomxe-greco-girl.glb';
 const FEMALE_ERIKA_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const LEGACY_DEFAULT_MODELS = new Set([
@@ -14,9 +15,13 @@ const LEGACY_DEFAULT_MODELS = new Set([
 
 function normalizeAvatarModel(value: unknown, gender: 'male' | 'female' = 'male', femaleVariant = '') {
     const requested = String(value || '').trim();
-    const selectedFemale = femaleVariant === 'erika_archer' ? FEMALE_ERIKA_MODEL : FEMALE_GRECO_MODEL;
+    const selectedFemale = femaleVariant === 'greco_girl'
+        ? FEMALE_GRECO_MODEL
+        : femaleVariant === 'erika_archer'
+            ? FEMALE_ERIKA_MODEL
+            : FEMALE_ARTEMIS_MODEL;
     const selectedBase = gender === 'female' ? selectedFemale : GLOBAL_AVATAR_MODEL;
-    const isKnownBase = requested === GLOBAL_AVATAR_MODEL || requested === FEMALE_GRECO_MODEL || requested === FEMALE_ERIKA_MODEL;
+    const isKnownBase = requested === GLOBAL_AVATAR_MODEL || requested === FEMALE_ARTEMIS_MODEL || requested === FEMALE_GRECO_MODEL || requested === FEMALE_ERIKA_MODEL;
     return !requested || isKnownBase || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase()) ? selectedBase : requested;
 }
 
@@ -136,13 +141,19 @@ export default async function(req) {
 
 async function initializeAvatar(base44, user, requestBody) {
     const gender = requestBody.gender === 'female' ? 'female' : 'male';
-    const femaleVariant = gender === 'female' && requestBody.female_model_variant === 'erika_archer' ? 'erika_archer' : gender === 'female' ? 'greco_girl' : '';
+    const requestedFemaleVariant = String(requestBody.female_model_variant || '');
+    const femaleVariant = gender === 'female'
+        ? (requestedFemaleVariant === 'greco_girl' || requestedFemaleVariant === 'erika_archer' ? requestedFemaleVariant : 'artemis_archer')
+        : '';
     const defaultName = gender === 'female' ? 'Eve' : 'Atum';
     const name = String(requestBody.name || defaultName).trim().slice(0, 40) || defaultName;
 
     const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, 'created_date', 1);
     let avatar = existing[0];
-    const savedFemaleVariant = gender === 'female' && avatar?.female_model_variant === 'erika_archer' ? 'erika_archer' : femaleVariant;
+    const savedVariant = String(avatar?.female_model_variant || '');
+    const savedFemaleVariant = gender === 'female'
+        ? (savedVariant === 'greco_girl' || savedVariant === 'erika_archer' || savedVariant === 'artemis_archer' ? savedVariant : femaleVariant)
+        : '';
     if (avatar && (normalizeAvatarModel(avatar.model_url, gender, savedFemaleVariant) !== avatar.model_url || avatar.gender !== gender || avatar.female_model_variant !== savedFemaleVariant)) {
         avatar = await base44.asServiceRole.entities.Avatar.update(avatar.id, {
             gender,
