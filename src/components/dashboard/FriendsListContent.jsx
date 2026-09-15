@@ -212,14 +212,12 @@ export default function FriendsListContent() {
   const pointerAction = (action) => ({
     onPointerDown: (event) => {
       if (event.button !== undefined && event.button !== 0) return;
-      event.preventDefault();
       event.stopPropagation();
-      action();
     },
     onClick: (event) => {
       event.preventDefault();
       event.stopPropagation();
-      if (event.detail === 0) action();
+      action();
     },
   });
 
