@@ -603,10 +603,10 @@ async function getGenreLevel(svc: any, userId: string, genreId: string) {
 }
 
 function pointEntitlement(level: number) {
-  // One point at level 1, then one additional point every two genre levels.
-  // A level-50 genre earns 25 total points, enough to specialize deeply without
-  // automatically buying every branch.
-  return Math.max(1, 1 + Math.floor((Math.max(1, level) - 1) / 2));
+  // The web is intentionally much larger than the available point pool. Each
+  // genre level grants one point, so level 50 means 50 meaningful choices
+  // across a 100-node mastery web instead of automatically owning everything.
+  return Math.max(1, Math.floor(Math.max(1, level)));
 }
 
 async function audit(svc: any, userId: string, genreId: string, action: string, extra: any = {}) {
@@ -624,13 +624,15 @@ async function syncProgress(svc: any, userId: string, genreId: string) {
   const entitlement = pointEntitlement(level);
   const rows = await svc.GenreSkillProgress.filter({ user_id: userId, genre_id: genreId }, '-updated_date', 5);
   let record = rows?.[0] || null;
+  const structuralIds = catalog.nodes.filter((node: any) => node.node_type === 'core' || node.node_type === 'gateway').map((node: any) => node.id);
   if (!record) {
-    record = await svc.GenreSkillProgress.create({ user_id: userId, genre_id: genreId, genre_level_snapshot: level, earned_points: entitlement, spent_points: 0, available_points: entitlement, unlocked_node_ids: [], revision: 1 });
-    await audit(svc, userId, genreId, 'sync_points', { point_delta: entitlement, metadata: { level, initial: true } });
+    record = await svc.GenreSkillProgress.create({ user_id: userId, genre_id: genreId, genre_level_snapshot: level, earned_points: entitlement, spent_points: 0, available_points: entitlement, unlocked_node_ids: structuralIds, revision: 1 });
+    await audit(svc, userId, genreId, 'sync_points', { point_delta: entitlement, metadata: { level, initial: true, web_version: 2 } });
     return record;
   }
 
   const unlocked = new Set((record.unlocked_node_ids || []).filter((id: string) => catalog.nodes.some((n: any) => n.id === id)));
+  structuralIds.forEach((id: string) => unlocked.add(id));
   const spent = catalog.nodes.filter((n: any) => unlocked.has(n.id)).reduce((sum: number, n: any) => sum + Number(n.cost || 0), 0);
   const earned = Math.max(Number(record.earned_points || 0), entitlement, spent);
   const available = Math.max(0, earned - spent);
@@ -770,6 +772,7 @@ Deno.serve(async (req) => {
         const unlocked = new Set(progress.unlocked_node_ids || []);
         for (const node of catalog.nodes) {
           if (!unlocked.has(node.id)) continue;
+          if (!node.effect?.key) continue;
           if (node.exclusive && integration.integration_tier !== 'exclusive') continue;
           if (!allowAll && !allowedKeys.has(node.effect.key)) continue;
           appliedNodes.push(node);
