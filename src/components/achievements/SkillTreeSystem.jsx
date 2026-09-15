@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity, BadgeCheck, Brain, Check, ChevronRight, CircleDot, Clock3, Coins,
-  Crosshair, Crown, Eye, Flag, Footprints, Gauge, Ghost, Grid3X3, Hammer,
+  Crosshair, Crown, Eye, Flag, Gauge, Ghost, Grid3X3, Hammer,
   Heart, Lock, Map, Navigation, Play, Puzzle, Radar, RefreshCw, Rocket,
-  Ruler, Search, Settings, Shield, Sparkles, Swords, Target, Unlock, Users,
+  Ruler, Search, Settings, Shield, Sparkles, Swords, Target, Users,
   Wind, X, Zap
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
