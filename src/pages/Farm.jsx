@@ -80,6 +80,21 @@ export default function FarmPage() {
     setTimeout(() => setSelectedGame(null), 220);
   };
 
+  useEffect(() => {
+    if (view !== 'game') return undefined;
+    const handleReturnHome = (event) => {
+      if (event.defaultPrevented) return;
+      const target = event.target;
+      const isTyping = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
+      if (event.key === 'Escape' || (event.key === 'Home' && !isTyping)) {
+        event.preventDefault();
+        handleBackToHub();
+      }
+    };
+    window.addEventListener('keydown', handleReturnHome);
+    return () => window.removeEventListener('keydown', handleReturnHome);
+  }, [view]);
+
   const handleSelectForum = (game) => {
     setForumDirectoryOpen(false);
     navigate(createPageUrl('Community'), { state: { selectedGame: game || null } });
@@ -87,7 +102,7 @@ export default function FarmPage() {
 
   const handleTabSelect = (tabId) => {
     if (tabId === 'hub') navigate(createPageUrl('Community'));
-    if (tabId === 'farm_hub') handleBackToHub();
+    if (tabId === 'farm_hub' || tabId === 'home') handleBackToHub();
   };
 
   return (
