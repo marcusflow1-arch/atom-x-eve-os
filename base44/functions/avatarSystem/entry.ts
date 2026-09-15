@@ -4,15 +4,18 @@ import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
+const FEMALE_AVATAR_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const LEGACY_DEFAULT_MODELS = new Set([
     '/models/artemis.gltf',
     '/models/ybot.fbx',
     '/models/eve.glb',
 ]);
 
-function normalizeAvatarModel(value: unknown) {
+function normalizeAvatarModel(value: unknown, gender: 'male' | 'female' = 'male') {
     const requested = String(value || '').trim();
-    return !requested || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase()) ? GLOBAL_AVATAR_MODEL : requested;
+    const selectedBase = gender === 'female' ? FEMALE_AVATAR_MODEL : GLOBAL_AVATAR_MODEL;
+    const isKnownBase = requested === GLOBAL_AVATAR_MODEL || requested === FEMALE_AVATAR_MODEL;
+    return !requested || isKnownBase || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase()) ? selectedBase : requested;
 }
 
 export default async function(req) {
@@ -136,9 +139,11 @@ async function initializeAvatar(base44, user, requestBody) {
 
     const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, 'created_date', 1);
     let avatar = existing[0];
-    if (avatar && normalizeAvatarModel(avatar.model_url) !== avatar.model_url) {
+    if (avatar && normalizeAvatarModel(avatar.model_url, gender) !== avatar.model_url) {
         avatar = await base44.asServiceRole.entities.Avatar.update(avatar.id, {
-            model_url: normalizeAvatarModel(avatar.model_url),
+            gender,
+            model_url: normalizeAvatarModel(avatar.model_url, gender),
+            appearance_version: Math.max(3, Number(avatar.appearance_version || 0)),
         });
     }
     if (!avatar) {
@@ -150,7 +155,7 @@ async function initializeAvatar(base44, user, requestBody) {
             experience: 0,
             social_influence: 0,
             reputation_badges: [],
-            model_url: requestBody.setup ? normalizeAvatarModel(requestBody.model_url) : GLOBAL_AVATAR_MODEL,
+            model_url: requestBody.setup ? normalizeAvatarModel(requestBody.model_url, gender) : normalizeAvatarModel('', gender),
             ...(requestBody.setup ? {setup_status:'pending'} : {}),
             equipped_items: [],
             unlocked_abilities: [],
