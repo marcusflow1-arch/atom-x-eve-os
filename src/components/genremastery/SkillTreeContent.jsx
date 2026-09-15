@@ -1,4 +1,3 @@
-import React from 'react';
 import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
 
 export default function SkillTreeContent({ genre }) {
