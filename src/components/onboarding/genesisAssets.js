@@ -71,10 +71,21 @@ export function getAvatarStylePreset(id) {
 }
 
 export function companionModel(avatar) {
+  const gender = avatar?.gender === 'female' ? 'female' : 'male';
   const requested = String(avatar?.model_url || '').trim();
+  const maleBase = COMPANION_MODELS.male.url;
+  const femaleBase = COMPANION_MODELS.female.url;
   const legacyDefault = /(?:608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
-  if (requested && !legacyDefault && /^(https?:\/\/|\/)/i.test(requested)) return requested;
-  return COMPANION_MODELS[avatar?.gender === 'female' ? 'female' : 'male'].url;
+  const isBaseBody = requested === maleBase || requested === femaleBase || legacyDefault;
+
+  // Male/Female selection is authoritative for every standard Atom × Eve avatar
+  // surface. A stale base-body URL from an older save must never override gender.
+  if (!requested || isBaseBody) return COMPANION_MODELS[gender].url;
+
+  // Preserve explicit generated/custom avatar assets (for example future fitted
+  // heads/bodies), while the standard male/female bodies stay gender-locked.
+  if (/^(https?:\/\/|\/)/i.test(requested)) return requested;
+  return COMPANION_MODELS[gender].url;
 }
 
 function rememberMaterialBase(material) {
