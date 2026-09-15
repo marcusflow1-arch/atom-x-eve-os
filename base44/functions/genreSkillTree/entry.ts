@@ -6,11 +6,6 @@ const corsHeaders = {
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const tierCost = [0, 1, 1, 2, 3];
-const tierLevel = [0, 1, 5, 12, 25];
-const posX = [0, 18, 42, 67, 90];
-const branchY = [24, 50, 76];
-
 const effect = (key: string, value: number, unit: string, scope: string, demo: string, description: string, exclusive = false) => ({ key, value, unit, scope, demo, description, exclusive });
 
 const GENRES: Record<string, any> = {
@@ -703,7 +698,7 @@ Deno.serve(async (req) => {
       unlocked.add(node.id);
       const spent = catalog.nodes.filter((n: any) => unlocked.has(n.id)).reduce((sum: number, n: any) => sum + Number(n.cost || 0), 0);
       const updated = await svc.GenreSkillProgress.update(progress.id, { unlocked_node_ids: [...unlocked], spent_points: spent, available_points: Math.max(0, Number(progress.earned_points || 0) - spent), revision: Number(progress.revision || 0) + 1 });
-      await audit(svc, String(user.id), genreId, 'unlock', { node_id: node.id, point_delta: -Number(node.cost || 0), metadata: { effect_key: node.effect.key, exclusive: node.exclusive } });
+      await audit(svc, String(user.id), genreId, 'unlock', { node_id: node.id, point_delta: -Number(node.cost || 0), metadata: { effect_key: node.effect?.key || '', node_type: node.node_type, exclusive: node.exclusive } });
       return json({ success: true, progress: updated, node });
     }
 
