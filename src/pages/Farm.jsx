@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import FarmHub from '@/components/farm/FarmHub';
@@ -24,7 +24,7 @@ export default function FarmPage() {
       try {
         let rows;
         try { rows = await base44.entities.Game.list('-original_year', 1000); }
-        catch (_) { rows = await base44.entities.Game.list('-original_year', 250); }
+        catch { rows = await base44.entities.Game.list('-original_year', 250); }
         if (!cancelled) setGames(rows || []);
       } catch (error) {
         console.error('Failed to load Farm Hub games', error);
