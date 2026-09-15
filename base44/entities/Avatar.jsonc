@@ -96,11 +96,12 @@
       "type": "string",
       "enum": [
         "",
+        "artemis_archer",
         "greco_girl",
         "erika_archer"
       ],
       "default": "",
-      "description": "Explicit female body selection. Legacy female accounts with no prior choice migrate to greco_girl."
+      "description": "Explicit female body selection. New and legacy female accounts with no prior explicit body choice use the Mythic Greek Archer; Erika is retained for legacy compatibility."
     },
     "level": {
       "type": "number",
