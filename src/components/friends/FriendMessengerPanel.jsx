@@ -15,18 +15,21 @@ export default function FriendMessengerPanel({ friend, currentUserId, onClose })
   const friendId = friend?.friend_id || friend?.player_id || friend?.id;
   const conversationId = useMemo(() => {
     if (!currentUserId || !friendId) return '';
-    return [String(currentUserId), String(friendId)].sort().join('-');
+    return [String(currentUserId), String(friendId)].sort().join('::');
   }, [currentUserId, friendId]);
 
   const loadMessages = async () => {
-    if (!conversationId) return;
+    if (!friendId) return;
     try {
-      const rows = await base44.entities.DirectMessage.filter({ conversation_id: conversationId });
-      setMessages((rows || []).slice().sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
+      const response = await base44.functions.invoke('socialActions', { action: 'get_thread', data: { target_user_id: friendId } });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      setMessages((body.messages || []).slice().sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
+      await base44.functions.invoke('socialActions', { action: 'mark_thread_read', data: { target_user_id: friendId } }).catch(() => {});
       setError('');
     } catch (err) {
       console.error('Failed to load direct messages:', err);
-      setError('Conversation history could not load.');
+      setError(err.message || 'Conversation history could not load.');
     } finally {
       setLoading(false);
     }
