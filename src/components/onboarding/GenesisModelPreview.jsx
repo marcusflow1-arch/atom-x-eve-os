@@ -106,6 +106,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   callback.current = onCapabilities;
   controlArmedRef.current = controlArmed;
   const url = companionModel(config);
+  const fixedFemaleIdle = Boolean(idleOnly && config?.gender === 'female');
 
   const playMotion = useCallback((nextMotion) => {
     if (!nextMotion?.url || !scene.current) return;
@@ -115,12 +116,19 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, []);
 
   const playIdle = useCallback(() => {
+    // The female Luna dashboard/avatar previews are intentionally locked to the
+    // known-good base Idle clip for now. Do not cycle admin idles/showcase clips
+    // here; one of those retargets was causing Erika to repeatedly jump.
+    if (fixedFemaleIdle) {
+      playMotion(COMPANION_MOTIONS[0]);
+      return;
+    }
     const idles = motionSetRef.current.idles || [];
     if (!idles.length) return;
     const next = idles[idleIndex.current % idles.length];
     idleIndex.current += 1;
     playMotion(next);
-  }, [playMotion]);
+  }, [fixedFemaleIdle, playMotion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,7 +153,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
         (caps) => {
           callback.current?.(caps);
           setReady(true);
-          playMotion(motionSetRef.current.idles?.[0] || COMPANION_MOTIONS[0]);
+          playMotion(fixedFemaleIdle ? COMPANION_MOTIONS[0] : (motionSetRef.current.idles?.[0] || COMPANION_MOTIONS[0]));
         },
         (value, name) => {
           setStatus(value);
@@ -164,7 +172,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       scene.current?.dispose();
       scene.current = null;
     };
-  }, [url, playMotion]);
+  }, [url, playMotion, fixedFemaleIdle]);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
