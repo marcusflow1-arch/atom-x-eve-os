@@ -15,7 +15,7 @@ import {
   subscribeCharacterChange,
   userScopedKey,
 } from './characterStorage';
-import { GLOBAL_AVATAR_MODEL_URL, DEFAULT_AVATAR_APPEARANCE } from '@/components/onboarding/genesisAssets';
+import { GLOBAL_AVATAR_MODEL_URL, DEFAULT_AVATAR_APPEARANCE, companionModel } from '@/components/onboarding/genesisAssets';
 
 // Roster + active-character keys are scoped to the signed-in user, so one
 // account's roster is never visible to another account on the same browser.
@@ -111,7 +111,7 @@ export function createCharacter({ name, appearance, avatarConfig = {} }) {
       body:      appearance?.body      || 'default',
       shoulders: appearance?.shoulders || 'default',
     },
-    model_url: avatarConfig.model_url || GLOBAL_AVATAR_MODEL_URL,
+    model_url: companionModel(avatarConfig),
     face_scan_generated: Boolean(avatarConfig.face_scan_generated),
     tripo_model_id: avatarConfig.tripo_model_id || '',
     style_preset: avatarConfig.style_preset || 'heroic_fantasy',
