@@ -437,16 +437,21 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       return !!element.closest('button, a, input, textarea, select, label, [role="button"], [data-no-camera], .pointer-events-auto, .overflow-y-auto, .overflow-auto, .scroll-auto');
     };
 
-    // MMO-style right-click camera controls
+    // MMO-style right-click camera controls. IMPORTANT: never consume a
+    // dashboard/UI right-click. The Luna social player tiles rely on the native
+    // context-menu event to open Invite / Join / Message / Friend / Trade actions.
+    // Camera rotation is only allowed when the pointer is actually inside this
+    // 3D viewer and is not over an interactive UI element.
     const onMouseDown = (e) => {
-      if (e.button === 2) {
-        isRightMouseDownRef.current = true;
-        lastMouseRef.current = { x: e.clientX, y: e.clientY };
-        document.body.style.cursor = 'none';
-        if (containerRef.current) containerRef.current.focus();
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      if (e.button !== 2) return;
+      if (!containerRef.current?.contains(e.target)) return;
+      if (isInteractiveUiTarget(e.target)) return;
+      isRightMouseDownRef.current = true;
+      lastMouseRef.current = { x: e.clientX, y: e.clientY };
+      document.body.style.cursor = 'none';
+      containerRef.current.focus();
+      e.preventDefault();
+      e.stopPropagation();
     };
     const onMouseUp = (e) => {
       if (e.button === 2) {
@@ -472,6 +477,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       e.stopPropagation();
     };
     const onContextMenu = (e) => {
+      // Scope context-menu suppression to empty 3D viewer space only. Previously
+      // this window-level listener suppressed right-clicks across the entire Luna
+      // dashboard, including the five online-player boxes at the top.
+      if (!containerRef.current?.contains(e.target)) return;
+      if (isInteractiveUiTarget(e.target)) return;
       e.preventDefault();
       e.stopPropagation();
     };
