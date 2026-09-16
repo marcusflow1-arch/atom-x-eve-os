@@ -1,9 +1,10 @@
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AvatarStatCard from './AvatarStatCard';
-import { Check, LayoutDashboard, Mic, MicOff, UserPlus, X } from 'lucide-react';
+import { Check, LayoutDashboard, Mic, MicOff, UserPlus, Users, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { joinDashboard } from '@/components/social/dashboardSession';
 
 const unwrap = (response) => {
   const body = response?.data ?? response;
@@ -14,7 +15,7 @@ const unwrap = (response) => {
 export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModelFocus }) {
   const { user } = useAuth();
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [pending, setPending] = useState({ friend_requests: [], dashboard_invites: [] });
+  const [pending, setPending] = useState({ friend_requests: [], dashboard_invites: [], party_invites: [] });
   const [legacyInvite, setLegacyInvite] = useState(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -25,7 +26,11 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
     if (!user?.id) return;
     try {
       const body = await social('get_pending_actions');
-      setPending({ friend_requests: body.friend_requests || [], dashboard_invites: body.dashboard_invites || [] });
+      setPending({
+        friend_requests: body.friend_requests || [],
+        dashboard_invites: body.dashboard_invites || [],
+        party_invites: body.party_invites || [],
+      });
       setActionError('');
     } catch (error) {
       console.warn('[Mini3DViewer] pending social actions', error);
@@ -66,6 +71,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
     const items = [
       ...(pending.friend_requests || []).map((item) => ({ kind: 'friend', item, date: item.created_date })),
       ...(pending.dashboard_invites || []).map((item) => ({ kind: 'dashboard', item, date: item.created_date })),
+      ...(pending.party_invites || []).map((item) => ({ kind: 'party', item, date: item.created_date })),
     ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     if (items[0]) return items[0];
     if (legacyInvite) return { kind: 'legacy-dashboard', item: legacyInvite, date: new Date().toISOString() };
@@ -83,15 +89,19 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       } else if (pendingAction.kind === 'dashboard') {
         const result = await social('respond_dashboard_invite', { request_id: pendingAction.item.id, decision: accept ? 'accept' : 'decline' });
         if (accept && result.accepted) {
-          window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-            detail: {
-              channelId: `dashboard_${result.host_user_id}`,
-              hostId: result.host_user_id,
-              hostName: result.host_name || pendingAction.item.requester_name || 'Friend',
-              socialJoin: true,
-            }
-          }));
+          await joinDashboard({
+            id: result.host_user_id,
+            name: result.host_name || pendingAction.item.requester_name || 'Friend',
+          });
         }
+      } else if (pendingAction.kind === 'party') {
+        const response = await base44.functions.invoke('partySystem', {
+          action: accept ? 'accept_invite' : 'decline_invite',
+          data: { inviteId: pendingAction.item.id },
+        });
+        const body = response?.data ?? response ?? {};
+        if (body?.error) throw new Error(body.error);
+        if (accept) window.dispatchEvent(new Event('openLunaParty'));
       } else {
         const invite = pendingAction.item;
         setLegacyInvite(null);
@@ -137,6 +147,12 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       eyebrow: 'Dashboard Invite',
       text: `${pendingAction.item.requester_name || 'A friend'} invited you to join their dashboard.`,
       accept: 'Join',
+    };
+    if (pendingAction.kind === 'party') return {
+      icon: Users,
+      eyebrow: 'Party Invite',
+      text: `${pendingAction.item.inviter_name || 'A friend'} invited you to their party.`,
+      accept: 'Join Party',
     };
     return {
       icon: LayoutDashboard,
