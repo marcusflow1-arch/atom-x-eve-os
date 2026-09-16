@@ -1113,12 +1113,13 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
 // Friend Reference - clickable friends that show join/invite options
 function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite, onTrade }) {
   const anchorRef = useRef(null);
+  const menuRef = useRef(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const placeMenu = (x, y) => {
     if (typeof window === 'undefined') return { top: 0, left: 0 };
-    const width = 212;
-    const height = 286;
+    const width = 192;
+    const height = 250;
     return {
       left: Math.max(8, Math.min(window.innerWidth - width - 8, x)),
       top: Math.max(8, Math.min(window.innerHeight - height - 8, y)),
@@ -1129,12 +1130,10 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
     event?.preventDefault?.();
     event?.stopPropagation?.();
     const rect = anchorRef.current?.getBoundingClientRect?.();
-    const x = Number.isFinite(event?.clientX) && event.clientX > 0
-      ? event.clientX
-      : (rect ? rect.left + rect.width + 8 : 24);
-    const y = Number.isFinite(event?.clientY) && event.clientY > 0
-      ? event.clientY
-      : (rect ? rect.top : 80);
+    // Keep this as a small anchored popover. It should never replace, dim, or
+    // cover the Luna dashboard itself.
+    const x = rect ? rect.left : 24;
+    const y = rect ? rect.bottom + 6 : 80;
     setMenuPosition(placeMenu(x, y));
     onClick(friend);
   };
@@ -1144,8 +1143,17 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') onClick(null);
     };
+    const closeOnOutsideClick = (event) => {
+      if (anchorRef.current?.contains(event.target)) return;
+      if (menuRef.current?.contains(event.target)) return;
+      onClick(null);
+    };
     window.addEventListener('keydown', closeOnEscape, true);
-    return () => window.removeEventListener('keydown', closeOnEscape, true);
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape, true);
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+    };
   }, [isActive, onClick]);
 
   const actionHandlers = (action) => ({
@@ -1168,23 +1176,16 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
   const menuButton = 'pointer-events-auto cursor-pointer w-full rounded-lg px-3 py-2 text-left text-[10px] font-semibold text-white/72 transition-colors hover:bg-white/[0.09] focus-visible:bg-white/[0.09] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45';
 
   const menu = isActive && typeof document !== 'undefined' ? createPortal(
-    <>
-      <div
-        className="fixed inset-0 pointer-events-auto"
-        style={{ zIndex: 2147482998 }}
-        onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); onClick(null); }}
-        onContextMenu={(event) => { event.preventDefault(); event.stopPropagation(); onClick(null); }}
-        data-luna-social-menu-backdrop="true"
-      />
       <motion.div
-        initial={{ opacity: 0, y: -5, scale: .96 }}
+        ref={menuRef}
+        initial={{ opacity: 0, y: -4, scale: .98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -5, scale: .96 }}
+        exit={{ opacity: 0, y: -4, scale: .98 }}
         onPointerDown={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
         onContextMenu={(event) => event.preventDefault()}
-        className="fixed w-[212px] rounded-2xl border border-white/12 bg-[#090c11]/98 p-2 text-white shadow-2xl backdrop-blur-2xl pointer-events-auto"
+        className="fixed w-48 rounded-xl border border-white/12 bg-[#090c11]/96 p-1.5 text-white shadow-2xl backdrop-blur-xl pointer-events-auto"
         style={{ top: menuPosition.top, left: menuPosition.left, zIndex: 2147483000 }}
         data-luna-social-menu={friend.id}
         data-social-menu-ready="invite-join-message-friend-trade-party"
@@ -1212,35 +1213,36 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
         <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} {...actionHandlers(onPartyInvite)} className={menuButton} data-social-action="invite-party">
           {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
         </button>
-      </motion.div>
-    </>,
+      </motion.div>,
     document.body,
   ) : null;
 
   return (
     <>
       <div ref={anchorRef} className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`} onContextMenu={openMenu}>
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onPointerDown={(event) => {
-            if (event.button === 2) openMenu(event);
-          }}
-          onClick={openMenu}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
           onContextMenu={openMenu}
-          title="Right-click for invite, join, message, friend, trade, and party options"
-          className={`relative block w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 bg-black/25 ${
+          title="Click the name or right-click the player for social options"
+          className={`relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-black/25 ${
             isActive ? 'border-white/45 shadow-[0_0_18px_rgba(226,232,240,0.16)]' : 'border-white/10 hover:border-white/30'
           }`}
           data-luna-presence-slot={friend.id}
         >
-          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" draggable={false} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
-          <div className="absolute bottom-1 left-1 right-1"><p className="text-white text-[7px] font-bold truncate text-center">{friend.name}</p></div>
-          <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : friend.status === 'away' ? 'bg-yellow-400' : 'bg-slate-500'}`} />
-          {isFriend && <div className="absolute top-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[6px] font-black uppercase tracking-wider text-white/65">Friend</div>}
-        </motion.button>
+          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover select-none" draggable={false} />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+          <button
+            type="button"
+            onClick={openMenu}
+            onContextMenu={openMenu}
+            className="absolute bottom-0 left-0 right-0 z-10 h-5 px-1 text-center text-[7px] font-bold text-white hover:bg-white/[0.08] focus-visible:bg-white/[0.1] focus-visible:outline-none"
+            aria-label={`Open social actions for ${friend.name}`}
+          >
+            <span className="block truncate">{friend.name}</span>
+          </button>
+          <div className={`pointer-events-none absolute top-1 right-1 w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : friend.status === 'away' ? 'bg-yellow-400' : 'bg-slate-500'}`} />
+          {isFriend && <div className="pointer-events-none absolute top-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[6px] font-black uppercase tracking-wider text-white/65">Friend</div>}
+        </motion.div>
       </div>
       <AnimatePresence>{menu}</AnimatePresence>
     </>
