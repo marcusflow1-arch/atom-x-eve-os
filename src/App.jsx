@@ -29,11 +29,9 @@ import CalendarReminderBridge from '@/components/calendar/CalendarReminderBridge
 import '@/components/onboarding/genesis.css';
 
 const { Pages, Layout, mainPage } = pagesConfig;
-// Admin tooling stays registered in the source for the Base44/editor workflow,
-// but is excluded from the published production build.
-const livePages = import.meta.env.PROD
-  ? Object.entries(Pages).filter(([path]) => !['Admin', 'AdminUIBuilder'].includes(path))
-  : Object.entries(Pages);
+// Admin tooling is available in production for signed-in admin users.
+// The Admin pages still enforce their own role checks before rendering content.
+const livePages = Object.entries(Pages);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 

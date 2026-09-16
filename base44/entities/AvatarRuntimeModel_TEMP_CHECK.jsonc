@@ -1,0 +1,10 @@
+{
+  "name": "AvatarRuntimeModel_TEMP_CHECK",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    }
+  },
+  "required": []
+}
