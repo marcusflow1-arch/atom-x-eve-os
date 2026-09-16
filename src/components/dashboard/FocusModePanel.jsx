@@ -1281,6 +1281,7 @@ export function LibraryBannerSection({
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
   const [joiningUsers, setJoiningUsers] = useState({});
+  const [tradeFriend, setTradeFriend] = useState(null);
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
@@ -1430,20 +1431,29 @@ export function LibraryBannerSection({
     }
   };
 
+  const friendTargetFor = (u) => ({
+    id: u.id,
+    friend_id: u.id,
+    friend_name: u.name,
+    name: u.name,
+    friend_avatar: u.avatar,
+    avatar: u.avatar,
+    status: u.status || 'online',
+    current_game: u.current_game || null,
+    is_friend: friendIds.has(String(u.id)),
+  });
+
   const handleMessage = (u) => {
     onActiveFriendChange(null);
-    const target = {
-      id: u.id,
-      friend_id: u.id,
-      friend_name: u.name,
-      friend_avatar: u.avatar,
-      status: u.status || 'online',
-      current_game: u.current_game || null,
-      is_friend: friendIds.has(String(u.id)),
-    };
+    const target = friendTargetFor(u);
     window.__lunaPendingMessageTarget = target;
     window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target } }));
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target } })), 120);
+  };
+
+  const handleTrade = (u) => {
+    onActiveFriendChange(null);
+    setTradeFriend(friendTargetFor(u));
   };
 
   const acceptDashboardInvite = async (request) => {
@@ -1544,6 +1554,7 @@ export function LibraryBannerSection({
                     onJoin={handleJoin}
                     onInvite={handleInvite}
                     onPartyInvite={handlePartyInvite}
+                    onTrade={handleTrade}
                     isActive={activeFriend?.id === friend.id}
                   />
                 </div>
@@ -1603,6 +1614,16 @@ export function LibraryBannerSection({
               <button type="button" {...socialPromptAction(() => pendingSocialAction.kind === 'friend' ? respondFriendRequest(pendingSocialAction.item, true) : acceptDashboardInvite(pendingSocialAction.item))} className="h-9 flex-1 rounded-xl bg-cyan-200 text-[9px] font-black uppercase tracking-wider text-slate-950 hover:bg-cyan-100">{pendingSocialAction.kind === 'friend' ? 'Accept Friend' : 'Join Dashboard'}</button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {tradeFriend && (
+          <FriendTradePanel
+            friend={tradeFriend}
+            currentUser={user}
+            onClose={() => setTradeFriend(null)}
+          />
         )}
       </AnimatePresence>
 
