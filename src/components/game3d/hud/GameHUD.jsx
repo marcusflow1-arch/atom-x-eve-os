@@ -1,4 +1,3 @@
-import React from 'react';
 import HUDMinimapQuest from './HUDMinimapQuest';
 import HUDVitals from './HUDVitals';
 import TargetDisplay from './TargetDisplay';
