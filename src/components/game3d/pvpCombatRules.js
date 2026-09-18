@@ -61,8 +61,6 @@ export function validateLockedPvpTarget({
 
 export function pvpFailureMessage(result, weaponPath) {
   if (!result || result.ok) return '';
-  const range = result.range ?? getPvpAttackRange(weaponPath);
-
   switch (result.reason) {
     case 'target_required':
       return 'Lock onto your PvP target first.';
