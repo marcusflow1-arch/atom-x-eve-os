@@ -36,6 +36,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
     const definition = getEquipmentSlotDefinition(slotId);
     const Icon = SLOT_ICONS[slotId] || Layers3;
     const label = definition?.label || slotId;
+    const sideMarker = slotId.endsWith('-left') ? 'L' : slotId.endsWith('-right') ? 'R' : null;
 
     return (
       <button
@@ -56,6 +57,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
         aria-label={`Select ${label}`}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        {sideMarker && <span className="absolute right-1 top-1 z-20 text-[6px] font-black text-white/22">{sideMarker}</span>}
         {!equippedItem && <Icon className="relative z-10 h-5 w-5 text-white/22 transition-colors group-hover:text-white/42" strokeWidth={1.35} />}
         {equippedItem && (
           <>
@@ -106,7 +108,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
               original row/column membership is preserved. */}
           <div className="grid grid-cols-[minmax(210px,.9fr)_minmax(0,1.1fr)] items-start gap-x-7 gap-y-5">
             <section className="flex flex-col items-center gap-3">
-              <CompactHeader width="w-48">Armor</CompactHeader>
+              <CompactHeader width="w-48">Equipment</CompactHeader>
               <div className="grid grid-cols-3 gap-3">
                 {EQUIPMENT_SLOT_DEFINITIONS.filter((slot) => slot.group === 'armor').map((slot) => compactSlot(slot.id))}
               </div>
