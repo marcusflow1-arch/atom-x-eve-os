@@ -1851,6 +1851,7 @@ export default function GameWorld3D() {
           }
         }
       }
+    }
 
       combatSystem.update(delta);
       tickSkillCooldowns(delta); tickLegacyAbilityCooldowns(delta); tickRegen(delta); tickCompanionCooldowns(delta); tickBuffs(); tickFusion();
