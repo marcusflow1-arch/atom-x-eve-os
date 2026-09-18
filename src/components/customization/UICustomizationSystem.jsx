@@ -265,6 +265,9 @@ export function UICustomizationProvider({ children, pathname }) {
   const rootRef = useRef(null);
   const saveTimerRef = useRef(null);
   const preset = PRESETS.find((item) => item.id === config.presetId) || PRESETS[0];
+  const cardsGraphite = page === 'cards' && preset.id === 'graphite';
+  const cardsGraphitePanel = 'radial-gradient(circle at 18% 10%, rgba(148,163,184,.10), transparent 34%), linear-gradient(145deg, rgba(46,51,58,.70), rgba(29,33,39,.68) 48%, rgba(17,20,25,.72))';
+  const cardsGraphiteAmbient = 'radial-gradient(circle at 18% 10%, rgba(148,163,184,.10), transparent 34%), radial-gradient(circle at 84% 76%, rgba(203,213,225,.05), transparent 30%), linear-gradient(145deg, rgba(31,36,42,.34), rgba(10,13,18,.10))';
   usePagePrefabSurfaces(rootRef, Boolean(config.updatedAt) && config.scope === scope && !preset.isDefault, scope, config.elementSettings);
 
   useEffect(() => {
@@ -420,16 +423,17 @@ export function UICustomizationProvider({ children, pathname }) {
         ref={rootRef}
         className={`atom-ui-customization-root relative h-full w-full overflow-hidden ${editMode ? 'atom-ui-edit-mode' : ''}`}
         data-ui-page-theme={preset.id}
+        data-ui-page-family={page}
         style={{
           '--atom-ui-accent': preset.accent,
           '--atom-ui-accent-rgb': preset.accentRgb,
-          '--atom-ui-page-bg': preset.isDefault ? 'transparent' : (preset.pageBackground || '#090c11'),
-          '--atom-ui-ambient': preset.isDefault ? 'none' : preset.ambient,
+          '--atom-ui-page-bg': preset.isDefault ? 'transparent' : (cardsGraphite ? '#171b20' : (preset.pageBackground || '#090c11')),
+          '--atom-ui-ambient': preset.isDefault ? 'none' : (cardsGraphite ? cardsGraphiteAmbient : preset.ambient),
           ...(preset.isDefault ? {} : {
-            '--glass-bg': preset.surface,
-            '--glass-bg-strong': preset.surfaceStrong,
-            '--glass-border': preset.border,
-            '--atom-ui-panel-bg': preset.panelBackground || preset.surface,
+            '--glass-bg': cardsGraphite ? 'rgba(35,40,47,.64)' : preset.surface,
+            '--glass-bg-strong': cardsGraphite ? 'rgba(46,51,58,.76)' : preset.surfaceStrong,
+            '--glass-border': cardsGraphite ? 'rgba(255,255,255,.07)' : preset.border,
+            '--atom-ui-panel-bg': cardsGraphite ? cardsGraphitePanel : (preset.panelBackground || preset.surface),
             '--forum-accent': preset.accent,
             '--forum-accent-rgb': preset.accentRgb,
           }),
