@@ -75,7 +75,7 @@ import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
 import LunaSplitInventory from '../components/dashboard/LunaSplitInventory';
-import LunaEquipmentUpgradeTemp from '../components/dashboard/LunaEquipmentUpgradeTemp';
+import LunaEquipmentUpgradeWorkspace from '../components/dashboard/LunaEquipmentUpgradeWorkspace';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
@@ -1465,8 +1465,9 @@ export default function LunaTemplate() {
                           {/* I-key workspace: exactly half loadout slots, half inventory. */}
                           <section className="h-full w-1/2 min-w-0 overflow-hidden">
                             {inventoryUpgradeItem ? (
-                              <LunaEquipmentUpgradeTemp
+                              <LunaEquipmentUpgradeWorkspace
                                 item={inventoryUpgradeItem}
+                                inventory={inventoryData}
                                 onBack={() => setInventoryUpgradeItem(null)}
                               />
                             ) : (
