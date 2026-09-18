@@ -74,6 +74,7 @@ import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
+import LunaSplitInventory from '../components/dashboard/LunaSplitInventory';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
@@ -1460,9 +1461,9 @@ export default function LunaTemplate() {
                           
                     </motion.div> :
 
-                        <div className="flex h-full w-full min-w-0 pointer-events-auto">
+                        <div className="relative flex h-full w-full min-w-0 pointer-events-auto">
                           {/* I-key workspace: exactly half loadout slots, half inventory. */}
-                          <section className="h-full w-1/2 min-w-0 overflow-hidden border-r border-white/[0.07]">
+                          <section className="h-full w-1/2 min-w-0 overflow-hidden">
                             <InventoryGrid
                               equippedItems={equippedItems}
                               handleBoxClick={handleBoxClick}
@@ -1470,14 +1471,23 @@ export default function LunaTemplate() {
                               selectedSlotId={clickedSlot}
                             />
                           </section>
+
+                          {/* Very light 50%-height divider. Brightest at center and fades
+                              toward both the top and bottom so it never feels like a hard wall. */}
+                          <div
+                            aria-hidden="true"
+                            className="pointer-events-none absolute left-1/2 top-1/2 z-30 h-1/2 w-px -translate-x-1/2 -translate-y-1/2"
+                            style={{
+                              background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.055) 18%, rgba(255,255,255,.23) 50%, rgba(255,255,255,.055) 82%, transparent 100%)',
+                              boxShadow: '0 0 10px rgba(207,238,255,.06)',
+                            }}
+                          />
+
                           <section className="h-full w-1/2 min-w-0 overflow-hidden">
-                            <InventoryPanel
+                            <LunaSplitInventory
                               inventory={inventoryData}
-                              capacity={profileData.inventoryCapacity}
-                              profile={profileData}
+                              selectedSlotId={clickedSlot}
                               onEquip={handleEquipItem}
-                              compact
-                              embedded
                             />
                           </section>
                         </div>
