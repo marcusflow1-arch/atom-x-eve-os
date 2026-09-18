@@ -3,7 +3,7 @@ import {avatarAnimationStore} from '@/components/onboarding/avatarAnimationStore
 import { createGenesisScene } from '@/components/onboarding/genesisScene';
 import { HI3D_COMMANDS, HI3D_MODEL_URL } from '@/components/onboarding/embeddedAvatarController';
 
-export default function Hi3DPlayerPreview({ config, interactive = false, portrait = false, controls = "none", idleOnly = controls == "none", onCapabilities }) {
+export default function Hi3DPlayerPreview({ config, interactive = false, portrait = false, controls = "none", idleOnly = controls == "none", onCapabilities, secondaryCharacter = null }) {
   const mount = useRef(null), stage = useRef(null), scene = useRef(null);
   const keys = useRef(new Set()), lastInput = useRef(Date.now());
   const [status, setStatus] = useState('loading'), [clip, setClip] = useState('Idle');
@@ -17,11 +17,11 @@ export default function Hi3DPlayerPreview({ config, interactive = false, portrai
     try {
       scene.current = createGenesisScene(mount.current, HI3D_MODEL_URL+'?v=3', caps=>{callback.current?.(caps);setReady(true);}, (value, name) => {
         setStatus(value); if (name) setClip(name);
-      }, {portrait});
+      }, { portrait, secondaryCharacter });
       scene.current.appearance({ ...(config || {}), style_preset: config?.style_preset || 'heroic_fantasy' });
     } catch { setStatus('error'); }
     return ()=>{scene.current?.dispose();scene.current=null;};
-  },[retry,portrait]);
+  },[retry, portrait, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
   useEffect(()=>{if(ready)scene.current?.command(idleOnly ? "idle" : shared.command);},[ready,shared.revision,idleOnly]);
   useEffect(()=>{if(!idleOnly&&ready&&(shared.armLift||scene.current?.animationState()?.armLift))scene.current?.setArmLift(shared.armLift);},[ready,shared.armLift,idleOnly]);
   useEffect(()=>{scene.current?.setPaused((!idleOnly&&shared.paused)||shared.hidden);},[ready,shared.paused,shared.hidden,shared.revision,shared.armLift,idleOnly]);
