@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
+import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -52,6 +53,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
+  let secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false;
 
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
@@ -123,6 +125,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     const dt = Math.min(clock.getDelta(), .05);
     if (!visible || document.hidden) return;
     mixer?.update(dt);
+    secondaryMixer?.update(dt);
     if (options.portrait && model) { const head = model.getObjectByName('Head'); if (head) { const p = head.getWorldPosition(new THREE.Vector3()); const shift = p.y - controls.target.y; controls.target.y = p.y; camera.position.y += shift; } }
     controls.update();
     outline.render(scene, camera);
@@ -132,6 +135,97 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   async function loadAnimationAsset(motion) {
     if (/\.(glb|gltf)(?:\?|$)/i.test(motion.url)) return gltf.loadAsync(motion.url);
     return fbx.loadAsync(motion.url);
+  }
+
+  async function loadSecondaryCharacter(config) {
+    if (!config?.modelUrl || disposed) return;
+
+    try {
+      const asset = await loadAnimationAsset({ url: config.modelUrl });
+      secondaryModel = asset.scene || asset;
+      if (disposed) { disposeModel(secondaryModel); secondaryModel = null; return; }
+
+      let box = new THREE.Box3().setFromObject(secondaryModel);
+      const size = box.getSize(new THREE.Vector3());
+      const targetHeight = Number(config.height || 1.28);
+      secondaryModel.scale.setScalar(targetHeight / (size.y || 1));
+
+      box = new THREE.Box3().setFromObject(secondaryModel);
+      const center = box.getCenter(new THREE.Vector3());
+      secondaryModel.position.set(
+        -center.x + Number(config.offsetX ?? 0.9),
+        -box.min.y + Number(config.offsetY ?? 0),
+        -center.z + Number(config.offsetZ ?? 0),
+      );
+      secondaryModel.rotation.y = Number(config.yaw || 0);
+
+      secondaryModel.traverse((node) => {
+        if (!node.isMesh) return;
+        node.castShadow = true;
+        node.receiveShadow = true;
+        if (node.isSkinnedMesh) node.frustumCulled = false;
+        (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean).forEach((material) => {
+          material.side = THREE.DoubleSide;
+        });
+      });
+
+      scene.add(secondaryModel);
+      secondaryMixer = new THREE.AnimationMixer(secondaryModel);
+      secondaryBasePosition = secondaryModel.position.clone();
+
+      if (model && Number.isFinite(config.parentOffsetX)) {
+        model.position.x += Number(config.parentOffsetX);
+        basePosition = model.position.clone();
+      }
+
+      controls.target.x = Number.isFinite(config.targetX)
+        ? Number(config.targetX)
+        : ((model?.position.x || 0) + secondaryModel.position.x) / 2;
+      if (!options.portrait) camera.position.z = Math.max(camera.position.z, Number(config.cameraDistance || 4.2));
+      controls.update();
+
+      const embeddedIdle = (asset.animations || []).find((clip) => /^idle$/i.test(clip.name || '')) || asset.animations?.[0];
+
+      if (config.animationUrl) {
+        const animationAsset = await loadAnimationAsset({ url: config.animationUrl });
+        const animationRoot = animationAsset.scene || animationAsset;
+        const clips = animationAsset.animations?.length ? animationAsset.animations : (animationRoot.animations || []);
+        if (clips.length) {
+          const requested = String(config.animationName || 'Idle').trim().toLowerCase();
+          const sourceClip = clips.find((clip) => String(clip?.name || '').trim().toLowerCase() === requested)
+            || clips.find((clip) => String(clip?.name || '').trim().toLowerCase().includes(requested))
+            || clips[0];
+
+          let retargeted = sourceClip.clone();
+          try {
+            retargeted = retargetAvatarClip(animationRoot, secondaryModel, sourceClip);
+          } catch (error) {
+            console.warn('Adaptive child animation retarget fallback:', error);
+          }
+
+          secondaryAction = secondaryMixer.clipAction(retargeted);
+          secondaryAction.setLoop(config.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, config.loop === false ? 1 : Infinity);
+          secondaryAction.clampWhenFinished = config.loop === false;
+          secondaryAction.reset().play();
+        }
+        if (animationRoot !== secondaryModel) disposeModel(animationRoot);
+      } else if (embeddedIdle) {
+        secondaryAction = secondaryMixer.clipAction(embeddedIdle);
+        secondaryAction.setLoop(THREE.LoopRepeat, Infinity).play();
+      }
+
+      secondaryModel.visible = true;
+    } catch (error) {
+      console.warn('Adaptive child failed to load in Luna viewer:', error);
+      if (secondaryModel) {
+        scene.remove(secondaryModel);
+        disposeModel(secondaryModel);
+      }
+      secondaryModel = null;
+      secondaryMixer = null;
+      secondaryAction = null;
+      secondaryBasePosition = null;
+    }
   }
 
   async function play(motion) {
@@ -233,6 +327,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
           onStatus('ready', idleClip.name || 'Idle');
         }
       }
+      if (options.secondaryCharacter?.modelUrl) {
+        await loadSecondaryCharacter(options.secondaryCharacter);
+      }
+
       onReady({ hi3d: preserveAppearance, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
       
     } catch (error) {
@@ -244,12 +342,38 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const move = (x = 0, z = 0, distance = .05) => {
     if (!model || !basePosition) return;
     if (paused || (embeddedController && !embeddedController.canMove())) return;
+
+    const previous = model.position.clone();
     model.position.x = THREE.MathUtils.clamp(model.position.x + (x * distance), basePosition.x - 1.65, basePosition.x + 1.65);
     model.position.z = THREE.MathUtils.clamp(model.position.z + (z * distance), basePosition.z - 1.05, basePosition.z + 1.05);
-    if (x || z) model.rotation.y = Math.atan2(x, z);
+
+    if (secondaryModel) {
+      secondaryModel.position.x += model.position.x - previous.x;
+      secondaryModel.position.z += model.position.z - previous.z;
+    }
+
+    if (x || z) {
+      const yaw = Math.atan2(x, z);
+      model.rotation.y = yaw;
+      if (secondaryModel) secondaryModel.rotation.y = yaw;
+    }
   };
-  const resetPosition = () => { if (model && basePosition) { model.position.copy(basePosition); model.rotation.y = 0; } };
-  const setPaused = (value) => { paused = Boolean(value); if (mixer) mixer.timeScale = paused ? 0 : 1; return paused; };
+  const resetPosition = () => {
+    if (model && basePosition) {
+      model.position.copy(basePosition);
+      model.rotation.y = 0;
+    }
+    if (secondaryModel && secondaryBasePosition) {
+      secondaryModel.position.copy(secondaryBasePosition);
+      secondaryModel.rotation.y = 0;
+    }
+  };
+  const setPaused = (value) => {
+    paused = Boolean(value);
+    if (mixer) mixer.timeScale = paused ? 0 : 1;
+    if (secondaryMixer) secondaryMixer.timeScale = paused ? 0 : 1;
+    return paused;
+  };
   const togglePaused = () => setPaused(!paused);
 
   return {
@@ -263,7 +387,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     setPaused,
     togglePaused,
     isPaused: () => paused,
-    rotate: (amount) => { if (model) model.rotation.y += amount; },
+    rotate: (amount) => {
+      if (model) model.rotation.y += amount;
+      if (secondaryModel) secondaryModel.rotation.y += amount;
+    },
     dispose: () => {
       disposed = true;
       cancelAnimationFrame(frame);
@@ -272,8 +399,16 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       controls.dispose();
       embeddedController?.dispose();
       mixer?.stopAllAction();
+      secondaryMixer?.stopAllAction();
 
-
+      if (secondaryModel) {
+        scene.remove(secondaryModel);
+        disposeModel(secondaryModel);
+      }
+      secondaryModel = null;
+      secondaryMixer = null;
+      secondaryAction = null;
+      secondaryBasePosition = null;
 
       disposeModel(model);
       shadowPlane.geometry.dispose();
