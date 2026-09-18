@@ -13,7 +13,7 @@ import { canUseCreatorParentingPreview } from '@/components/parenting/parentingS
 
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 
-export default function DashboardAvatarScene({ focusMode = false }) {
+export default function DashboardAvatarScene({ focusMode: _focusMode = false }) {
   const { user } = useAuth();
   const session = useDashboardSession();
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
