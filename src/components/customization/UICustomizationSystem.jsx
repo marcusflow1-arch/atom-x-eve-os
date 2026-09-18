@@ -56,7 +56,7 @@ const PRESETS = [
   {
     id: 'graphite',
     name: 'Graphite',
-    hint: 'Quiet console glass',
+    hint: 'Soft graphite glass with a light-to-dark console finish',
     accent: '#9de8f2',
     accentRgb: '157,232,242',
     surface: 'rgba(20,24,30,.58)',
@@ -64,8 +64,8 @@ const PRESETS = [
     border: 'rgba(255,255,255,.09)',
     ambient: 'radial-gradient(circle at 18% 10%, rgba(148,163,184,.12), transparent 32%), linear-gradient(145deg, rgba(34,39,46,.32), rgba(10,13,18,.12))',
     pageBackground: '#090c11',
-    panelBackground: 'radial-gradient(38px 30px at 47% 32%,rgba(255,255,255,.09),transparent 72%),radial-gradient(42px 34px at 51% 68%,rgba(148,163,184,.10),transparent 72%),linear-gradient(116deg,rgba(23,30,39,.82) 0 44%,rgba(226,232,240,.10) 46%,rgba(255,255,255,.28) 48%,rgba(111,129,151,.13) 50%,rgba(13,18,24,.84) 54% 100%)',
-    preview: 'linear-gradient(116deg,#1c2732 0 46%,#cbd5e1 48%,#546477 50%,#0b1017 54% 100%)',
+    panelBackground: 'radial-gradient(85% 75% at 10% 8%, rgba(203,213,225,.10), transparent 58%), radial-gradient(70% 80% at 88% 92%, rgba(8,11,15,.16), transparent 62%), linear-gradient(100deg, rgba(70,76,84,.52) 0%, rgba(47,52,59,.56) 42%, rgba(30,34,40,.64) 70%, rgba(20,24,29,.72) 100%)',
+    preview: 'linear-gradient(100deg,#464c54 0%,#343941 42%,#252a30 70%,#15191e 100%)',
   },
   {
     id: 'sapphire_green',
@@ -264,8 +264,6 @@ export function UICustomizationProvider({ children, pathname }) {
   const rootRef = useRef(null);
   const saveTimerRef = useRef(null);
   const preset = PRESETS.find((item) => item.id === config.presetId) || PRESETS[0];
-  const cardsGraphite = page === 'cards' && preset.id === 'graphite';
-  const cardsGraphitePanel = 'radial-gradient(85% 75% at 10% 8%, rgba(203,213,225,.10), transparent 58%), radial-gradient(70% 80% at 88% 92%, rgba(8,11,15,.16), transparent 62%), linear-gradient(100deg, rgba(70,76,84,.52) 0%, rgba(47,52,59,.56) 42%, rgba(30,34,40,.64) 70%, rgba(20,24,29,.72) 100%)';
   usePagePrefabSurfaces(rootRef, Boolean(config.updatedAt) && config.scope === scope && !preset.isDefault, scope, config.elementSettings);
 
   useEffect(() => {
@@ -431,7 +429,7 @@ export function UICustomizationProvider({ children, pathname }) {
             '--glass-bg': preset.surface,
             '--glass-bg-strong': preset.surfaceStrong,
             '--glass-border': preset.border,
-            '--atom-ui-panel-bg': cardsGraphite ? cardsGraphitePanel : (preset.panelBackground || preset.surface),
+            '--atom-ui-panel-bg': preset.panelBackground || preset.surface,
             '--forum-accent': preset.accent,
             '--forum-accent-rgb': preset.accentRgb,
           }),
