@@ -1135,6 +1135,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
     const x = rect ? rect.left : 24;
     const y = rect ? rect.bottom + 6 : 80;
     setMenuPosition(placeMenu(x, y));
+    window.dispatchEvent(new Event('lunaPresenceMenuOpened'));
     onClick(friend);
   };
 
