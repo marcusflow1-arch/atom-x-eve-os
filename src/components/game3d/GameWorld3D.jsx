@@ -2238,8 +2238,6 @@ export default function GameWorld3D() {
 
       {/* Day/night + season + weather HUD */}
       {!loading && envSystem && <WorldEnvironmentHUD system={envSystem} />}
-      {!loading && tornadoSystemState && <TornadoHUD system={tornadoSystemState} />}
-      {!loading && envSystem && <WeatherTestPanel system={envSystem} />}
       <PlayerInteractionMenu
         open={!!playerMenu}
         x={playerMenu?.x || 0}
