@@ -143,8 +143,12 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const asset = await loadAnimationAsset(motion);
       const animationRoot = asset.scene || asset;
       if (disposed || version !== animationVersion) { if (animationRoot !== model) disposeModel(animationRoot); return; }
-      if (!asset.animations?.length && !animationRoot.animations?.length) throw new Error('No animation available');
-      const sourceClip = asset.animations?.[0] || animationRoot.animations?.[0];
+      const availableClips = asset.animations?.length ? asset.animations : (animationRoot.animations || []);
+      if (!availableClips.length) throw new Error('No animation available');
+      const requestedClip = String(motion?.clipName || motion?.name || '').trim().toLowerCase();
+      const sourceClip = availableClips.find((candidate) => String(candidate?.name || '').trim().toLowerCase() === requestedClip)
+        || availableClips.find((candidate) => String(candidate?.name || '').trim().toLowerCase().includes(requestedClip))
+        || availableClips[0];
       const clip = retargetClipToModel(sourceClip.clone());
       clip.tracks.forEach((track) => {
         if (/Hips\.position$/i.test(track.name) || /mixamorig:Hips\.position$/i.test(track.name)) {
