@@ -60,5 +60,8 @@ export const inventoryData = [
     { id: 'inv_3', "itemId": "inv_3", "type": "armor", "subtype": "boots", "name": "Treads of the Wanderer", "rarity": "Uncommon", "levelRequirement": 3, "icon_url": "https://res.cloudinary.com/dji1safpy/image/upload/v1715013696/eve_assets/boots_jfrlrm.png", "genreCompatibility": ["MMO", "Shooter"] },
     { id: 'inv_4', "itemId": "inv_4", "type": "armor", "subtype": "cape", "name": "Shadow Cloak", "rarity": "Rare", "levelRequirement": 12, "icon_url": "https://res.cloudinary.com/dji1safpy/image/upload/v1715013696/eve_assets/armor_x5vljs.png", "genreCompatibility": ["Fantasy", "MMO"] },
     { id: 'inv_5', ...itemData['artifact_2'] },
-    { id: 'inv_6', ...itemData['artifact_3'] }
+    { id: 'inv_6', ...itemData['artifact_3'] },
+    { id: 'mat_1', itemId: 'mat_1', type: 'material', subtype: 'upgrade crystal', ascKind: 'materials', name: 'Arcane Upgrade Crystal', rarity: 'Rare', quantity: 18, game: 'Elder Scrolls: Reborn', genreCompatibility: ['RPG', 'Fantasy'] },
+    { id: 'mat_2', itemId: 'mat_2', type: 'material', subtype: 'tempering alloy', ascKind: 'materials', name: 'Tempering Alloy', rarity: 'Uncommon', quantity: 32, game: 'Elder Scrolls: Reborn', genreCompatibility: ['RPG', 'Fantasy'] },
+    { id: 'mat_3', itemId: 'mat_3', type: 'material', subtype: 'void essence', ascKind: 'materials', name: 'Void Essence', rarity: 'Epic', quantity: 9, game: 'Cyberpunk 2088', genreCompatibility: ['Sci-Fi'] }
 ];
