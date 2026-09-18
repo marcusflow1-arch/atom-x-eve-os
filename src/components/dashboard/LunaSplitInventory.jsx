@@ -11,7 +11,6 @@ import {
   Search,
   Shield,
   Sparkles,
-  Sword,
   UserRound,
   Wrench,
 } from 'lucide-react';
@@ -414,11 +413,14 @@ export default function LunaSplitInventory({
                             ? 'border-cyan-200/30 bg-cyan-200/[0.075] shadow-[0_0_24px_rgba(103,232,249,.07)]'
                             : 'border-white/[0.065] bg-black/15 hover:border-white/[0.12] hover:bg-white/[0.035]'}`}
                         >
-                          <div className="flex h-[62%] items-center justify-center rounded-xl border border-white/[0.04] bg-black/15">
+                          <div className="relative flex h-[62%] items-center justify-center rounded-xl border border-white/[0.04] bg-black/15">
                             {item.icon_url || item.icon ? (
                               <img src={item.icon_url || item.icon} alt={item.name} className="h-[72%] w-[72%] object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,.35)]" />
                             ) : (
                               <Package className="h-7 w-7 text-white/20" />
+                            )}
+                            {item.quantity != null && (
+                              <span className="absolute bottom-1 right-1 rounded-md border border-white/[0.07] bg-black/55 px-1.5 py-0.5 text-[7px] font-mono text-white/55">x{item.quantity}</span>
                             )}
                           </div>
                           <div className="mt-2 min-w-0">
@@ -480,7 +482,10 @@ export default function LunaSplitInventory({
                       <p className="mt-1 text-[8px] leading-3 text-white/50">{selectedItem.game}</p>
                       {selectedItem.inventoryCategory === 'asc' && selectedItem.ascKind === 'materials' && (
                         <div className="mt-3 rounded-xl border border-amber-200/[0.08] bg-amber-200/[0.025] p-2">
-                          <p className="text-[7px] font-black uppercase tracking-[.16em] text-amber-100/40">Upgrade Material</p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[7px] font-black uppercase tracking-[.16em] text-amber-100/40">Upgrade Material</p>
+                            {selectedItem.quantity != null && <span className="text-[8px] font-mono text-amber-100/55">x{selectedItem.quantity}</span>}
+                          </div>
                           <p className="mt-1 text-[7px] leading-3 text-white/30">Used by equipment upgrade systems.</p>
                         </div>
                       )}
