@@ -456,88 +456,125 @@ export default function LunaSplitInventory({
                 )}
               </div>
 
-              <aside
-                className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.07] p-3"
-                style={{
-                  background: 'linear-gradient(155deg, rgba(255,255,255,.052), rgba(255,255,255,.018))',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.055)',
-                }}
-              >
-                {selectedItem ? (
-                  <>
-                    <div className="flex h-28 items-center justify-center rounded-xl border border-white/[0.055] bg-black/15">
-                      {selectedItem.icon_url || selectedItem.icon ? (
-                        <img src={selectedItem.icon_url || selectedItem.icon} alt={selectedItem.name} className="h-20 w-20 object-contain" />
-                      ) : (
-                        <Package className="h-8 w-8 text-white/20" />
-                      )}
-                    </div>
-                    <div className="mt-3">
-                      <p className="text-[11px] font-semibold leading-4 text-white/85">{selectedItem.name}</p>
-                      <p className="mt-1 text-[8px] uppercase tracking-[.14em] text-white/28">
-                        {selectedItem.inventoryCategory === 'asc' ? 'A.S.C.' : selectedItem.inventoryCategory}
-                      </p>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-1.5">
-                      <div className="rounded-lg border border-white/[0.05] bg-black/10 p-2">
-                        <p className="text-[6px] uppercase tracking-[.15em] text-white/20">Rarity</p>
-                        <p className="mt-1 truncate text-[8px] font-semibold text-white/60">{selectedItem.rarity || 'Common'}</p>
+              {narrow ? (
+                <aside
+                  className="shrink-0 rounded-xl border border-white/[0.07] p-2.5"
+                  style={{
+                    background: 'linear-gradient(155deg, rgba(255,255,255,.052), rgba(255,255,255,.018))',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.055)',
+                  }}
+                >
+                  {selectedItem ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/[0.055] bg-black/15">
+                        {selectedItem.icon_url || selectedItem.icon ? (
+                          <img src={selectedItem.icon_url || selectedItem.icon} alt={selectedItem.name} className="h-9 w-9 object-contain" />
+                        ) : (
+                          <Package className="h-5 w-5 text-white/20" />
+                        )}
                       </div>
-                      <div className="rounded-lg border border-white/[0.05] bg-black/10 p-2">
-                        <p className="text-[6px] uppercase tracking-[.15em] text-white/20">Level</p>
-                        <p className="mt-1 text-[8px] font-semibold text-white/60">{selectedItem.level || selectedItem.levelRequirement || 1}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[9px] font-semibold text-white/78">{selectedItem.name}</p>
+                        <p className="mt-0.5 truncate text-[7px] text-white/28">{selectedItem.rarity || 'Common'} · {selectedItem.level || selectedItem.levelRequirement || 1}</p>
                       </div>
-                    </div>
-
-                    <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
-                      <p className="text-[7px] font-black uppercase tracking-[.18em] text-white/22">Game</p>
-                      <p className="mt-1 text-[8px] leading-3 text-white/50">{selectedItem.game}</p>
-                      {selectedItem.inventoryCategory === 'asc' && selectedItem.ascKind === 'materials' && (
-                        <div className="mt-3 rounded-xl border border-amber-200/[0.08] bg-amber-200/[0.025] p-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[7px] font-black uppercase tracking-[.16em] text-amber-100/40">Upgrade Material</p>
-                            {selectedItem.quantity != null && <span className="text-[8px] font-mono text-amber-100/55">x{selectedItem.quantity}</span>}
-                          </div>
-                          <p className="mt-1 text-[7px] leading-3 text-white/30">Used by equipment upgrade systems.</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-3 grid gap-1.5">
-                      {selectedSlotId && !selectedItemFitsTarget && (
-                        <div className="flex items-center gap-1.5 rounded-lg border border-amber-200/[0.08] bg-amber-200/[0.025] px-2 py-2 text-[7px] leading-3 text-amber-100/45">
-                          <Lock className="h-3 w-3 shrink-0" />
-                          This item cannot be equipped in {targetLabel}.
-                        </div>
-                      )}
                       {selectedItem.inventoryCategory === 'equipment' && (
                         <button
                           type="button"
                           onClick={() => onUpgrade?.(selectedItem)}
-                          className="flex h-9 items-center justify-center gap-2 rounded-xl border border-violet-200/15 bg-violet-200/[0.065] text-[8px] font-black uppercase tracking-[.13em] text-violet-100/70 transition-all hover:bg-violet-200/[0.11]"
+                          className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-violet-200/12 bg-violet-200/[0.055] px-2 text-[7px] font-black uppercase tracking-[.1em] text-violet-100/62"
                         >
                           <Wrench className="h-3 w-3" /> Upgrade
                         </button>
                       )}
-                      <button
-                        type="button"
-                        disabled={!selectedSlotId || !selectedItemFitsTarget}
-                        onClick={() => selectedSlotId && selectedItemFitsTarget && onEquip?.(selectedItem)}
-                        className="flex h-9 items-center justify-center gap-2 rounded-xl border border-cyan-200/15 bg-cyan-200/[0.085] text-[8px] font-black uppercase tracking-[.13em] text-cyan-100/75 transition-all hover:bg-cyan-200/[0.13] disabled:cursor-not-allowed disabled:border-white/[0.05] disabled:bg-white/[0.025] disabled:text-white/22"
-                      >
-                        {selectedSlotId && !selectedItemFitsTarget ? <Lock className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-                        {!selectedSlotId ? 'Select Slot' : selectedItemFitsTarget ? 'Equip' : 'Wrong Slot'}
-                      </button>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center text-center">
-                    <Package className="h-7 w-7 text-white/15" />
-                    <p className="mt-3 text-[9px] text-white/28">Select an inventory item.</p>
-                  </div>
-                )}
-              </aside>
+                  ) : (
+                    <div className="flex h-12 items-center justify-center text-[8px] text-white/25">Select an item</div>
+                  )}
+                </aside>
+              ) : (
+                <aside
+                  className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.07] p-3"
+                  style={{
+                    background: 'linear-gradient(155deg, rgba(255,255,255,.052), rgba(255,255,255,.018))',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.055)',
+                  }}
+                >
+                  {selectedItem ? (
+                    <>
+                      <div className="flex h-28 items-center justify-center rounded-xl border border-white/[0.055] bg-black/15">
+                        {selectedItem.icon_url || selectedItem.icon ? (
+                          <img src={selectedItem.icon_url || selectedItem.icon} alt={selectedItem.name} className="h-20 w-20 object-contain" />
+                        ) : (
+                          <Package className="h-8 w-8 text-white/20" />
+                        )}
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-[11px] font-semibold leading-4 text-white/85">{selectedItem.name}</p>
+                        <p className="mt-1 text-[8px] uppercase tracking-[.14em] text-white/28">
+                          {selectedItem.inventoryCategory === 'asc' ? 'A.S.C.' : selectedItem.inventoryCategory}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-1.5">
+                        <div className="rounded-lg border border-white/[0.05] bg-black/10 p-2">
+                          <p className="text-[6px] uppercase tracking-[.15em] text-white/20">Rarity</p>
+                          <p className="mt-1 truncate text-[8px] font-semibold text-white/60">{selectedItem.rarity || 'Common'}</p>
+                        </div>
+                        <div className="rounded-lg border border-white/[0.05] bg-black/10 p-2">
+                          <p className="text-[6px] uppercase tracking-[.15em] text-white/20">Level</p>
+                          <p className="mt-1 text-[8px] font-semibold text-white/60">{selectedItem.level || selectedItem.levelRequirement || 1}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+                        <p className="text-[7px] font-black uppercase tracking-[.18em] text-white/22">Game</p>
+                        <p className="mt-1 text-[8px] leading-3 text-white/50">{selectedItem.game}</p>
+                        {selectedItem.inventoryCategory === 'asc' && selectedItem.ascKind === 'materials' && (
+                          <div className="mt-3 rounded-xl border border-amber-200/[0.08] bg-amber-200/[0.025] p-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-[7px] font-black uppercase tracking-[.16em] text-amber-100/40">Upgrade Material</p>
+                              {selectedItem.quantity != null && <span className="text-[8px] font-mono text-amber-100/55">x{selectedItem.quantity}</span>}
+                            </div>
+                            <p className="mt-1 text-[7px] leading-3 text-white/30">Used by equipment upgrade systems.</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3 grid gap-1.5">
+                        {selectedSlotId && !selectedItemFitsTarget && (
+                          <div className="flex items-center gap-1.5 rounded-lg border border-amber-200/[0.08] bg-amber-200/[0.025] px-2 py-2 text-[7px] leading-3 text-amber-100/45">
+                            <Lock className="h-3 w-3 shrink-0" />
+                            This item cannot be equipped in {targetLabel}.
+                          </div>
+                        )}
+                        {selectedItem.inventoryCategory === 'equipment' && (
+                          <button
+                            type="button"
+                            onClick={() => onUpgrade?.(selectedItem)}
+                            className="flex h-9 items-center justify-center gap-2 rounded-xl border border-violet-200/15 bg-violet-200/[0.065] text-[8px] font-black uppercase tracking-[.13em] text-violet-100/70 transition-all hover:bg-violet-200/[0.11]"
+                          >
+                            <Wrench className="h-3 w-3" /> Upgrade
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={!selectedSlotId || !selectedItemFitsTarget}
+                          onClick={() => selectedSlotId && selectedItemFitsTarget && onEquip?.(selectedItem)}
+                          className="flex h-9 items-center justify-center gap-2 rounded-xl border border-cyan-200/15 bg-cyan-200/[0.085] text-[8px] font-black uppercase tracking-[.13em] text-cyan-100/75 transition-all hover:bg-cyan-200/[0.13] disabled:cursor-not-allowed disabled:border-white/[0.05] disabled:bg-white/[0.025] disabled:text-white/22"
+                        >
+                          {selectedSlotId && !selectedItemFitsTarget ? <Lock className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                          {!selectedSlotId ? 'Select Slot' : selectedItemFitsTarget ? 'Equip' : 'Wrong Slot'}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center text-center">
+                      <Package className="h-7 w-7 text-white/15" />
+                      <p className="mt-3 text-[9px] text-white/28">Select an inventory item.</p>
+                    </div>
+                  )}
+                </aside>
+              )}
             </div>
           )}
         </div>
