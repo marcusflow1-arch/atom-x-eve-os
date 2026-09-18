@@ -139,7 +139,17 @@ Deno.serve(async (req) => {
       if (inviteeId === user.id) return json({ error: 'You cannot invite yourself' }, 400);
 
       const friendship = await svc.Friend.filter({ user_id: user.id, friend_id: inviteeId });
-      if (!friendship?.length) return json({ error: 'Only friends can be invited to a party' }, 403);
+      if (!friendship?.length) {
+        // Luna's top presence bar shows live players, not only persisted Friend
+        // rows. Allow a party invite from that live-presence surface while
+        // still blocking arbitrary/offline user IDs.
+        const presence = await svc.PlayerState.filter({ player_id: inviteeId }, '-last_update', 10);
+        const live = (presence || []).some((row: any) => (
+          row?.status !== 'offline'
+          && Number(row?.last_update || 0) > Date.now() - 20_000
+        ));
+        if (!live) return json({ error: 'Only friends or currently online players can be invited to a party' }, 403);
+      }
 
       const targetState = await activePartyFor(inviteeId);
       if (targetState.party) return json({ error: 'That friend is already in an active party' }, 409);
