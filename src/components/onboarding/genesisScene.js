@@ -287,14 +287,18 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       secondaryModel.visible = true;
     } catch (error) {
       console.warn('Adaptive child failed to load in Luna viewer:', error);
-      if (secondaryModel) {
-        scene.remove(secondaryModel);
-        disposeModel(secondaryModel);
-      }
+      if (secondaryRoot) scene.remove(secondaryRoot);
+      if (secondaryModel) disposeModel(secondaryModel);
+      if (secondaryMotionRoot) disposeModel(secondaryMotionRoot);
+      secondaryRoot = null;
       secondaryModel = null;
       secondaryMixer = null;
       secondaryAction = null;
       secondaryBasePosition = null;
+      secondaryMotionRoot = null;
+      secondaryMotionMixer = null;
+      secondaryMotionAction = null;
+      secondaryMotionBridge = null;
     }
   }
 
@@ -417,15 +421,15 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     model.position.x = THREE.MathUtils.clamp(model.position.x + (x * distance), basePosition.x - 1.65, basePosition.x + 1.65);
     model.position.z = THREE.MathUtils.clamp(model.position.z + (z * distance), basePosition.z - 1.05, basePosition.z + 1.05);
 
-    if (secondaryModel) {
-      secondaryModel.position.x += model.position.x - previous.x;
-      secondaryModel.position.z += model.position.z - previous.z;
+    if (secondaryRoot) {
+      secondaryRoot.position.x += model.position.x - previous.x;
+      secondaryRoot.position.z += model.position.z - previous.z;
     }
 
     if (x || z) {
       const yaw = Math.atan2(x, z);
       model.rotation.y = yaw;
-      if (secondaryModel) secondaryModel.rotation.y = yaw;
+      if (secondaryRoot) secondaryRoot.rotation.y = yaw;
     }
   };
   const resetPosition = () => {
@@ -433,15 +437,16 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       model.position.copy(basePosition);
       model.rotation.y = 0;
     }
-    if (secondaryModel && secondaryBasePosition) {
-      secondaryModel.position.copy(secondaryBasePosition);
-      secondaryModel.rotation.y = 0;
+    if (secondaryRoot && secondaryBasePosition) {
+      secondaryRoot.position.copy(secondaryBasePosition);
+      secondaryRoot.rotation.y = 0;
     }
   };
   const setPaused = (value) => {
     paused = Boolean(value);
     if (mixer) mixer.timeScale = paused ? 0 : 1;
     if (secondaryMixer) secondaryMixer.timeScale = paused ? 0 : 1;
+    if (secondaryMotionMixer) secondaryMotionMixer.timeScale = paused ? 0 : 1;
     return paused;
   };
   const togglePaused = () => setPaused(!paused);
@@ -459,7 +464,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     isPaused: () => paused,
     rotate: (amount) => {
       if (model) model.rotation.y += amount;
-      if (secondaryModel) secondaryModel.rotation.y += amount;
+      if (secondaryRoot) secondaryRoot.rotation.y += amount;
     },
     dispose: () => {
       disposed = true;
@@ -470,15 +475,20 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       embeddedController?.dispose();
       mixer?.stopAllAction();
       secondaryMixer?.stopAllAction();
+      secondaryMotionMixer?.stopAllAction();
 
-      if (secondaryModel) {
-        scene.remove(secondaryModel);
-        disposeModel(secondaryModel);
-      }
+      if (secondaryRoot) scene.remove(secondaryRoot);
+      if (secondaryModel) disposeModel(secondaryModel);
+      if (secondaryMotionRoot) disposeModel(secondaryMotionRoot);
+      secondaryRoot = null;
       secondaryModel = null;
       secondaryMixer = null;
       secondaryAction = null;
       secondaryBasePosition = null;
+      secondaryMotionRoot = null;
+      secondaryMotionMixer = null;
+      secondaryMotionAction = null;
+      secondaryMotionBridge = null;
 
       disposeModel(model);
       shadowPlane.geometry.dispose();
