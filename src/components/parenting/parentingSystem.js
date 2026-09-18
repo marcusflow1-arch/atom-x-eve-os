@@ -5,26 +5,25 @@ export const CREATOR_PARENTING_PREVIEW = {
   parentGender: 'any',
   children: [
     {
-      id: 'creator-daughter-1',
-      relationship: 'daughter',
-      displayName: 'Daughter',
+      id: 'creator-adaptive-child',
+      relationship: 'adaptive-child',
+      displayName: 'Adaptive Child',
+      adminModelName: 'caieshioa',
       gender: 'female',
-      modelSearch: [
-        'hi3d_stylized 3d greco-roman child girl character',
-        'greco-roman child girl character',
-        'greco roman child girl character',
-        'child girl character_allparts',
-      ],
-      expectedFileSize: 146627668,
-      fallbackModelUrl: null,
-      animation: 'idle',
+      animationName: 'AFK',
       idleOnly: true,
+      dashboardOnly: true,
+      faceParent: true,
     },
   ],
 };
 
 export function canUseCreatorParentingPreview(user) {
   return CREATOR_PARENTING_PREVIEW.enabledForRoles.includes(String(user?.role || '').toLowerCase());
+}
+
+function normalize(value = '') {
+  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
 
 function searchableModelText(model) {
@@ -35,38 +34,32 @@ function searchableModelText(model) {
     model?.category,
     tags,
     model?.file_url,
-  ].filter(Boolean).join(' ').toLowerCase();
+  ].filter(Boolean).join(' ');
 }
 
 export function findCreatorChildModel(models = [], child = CREATOR_PARENTING_PREVIEW.children[0]) {
   if (!Array.isArray(models) || !child) return null;
 
-  const scored = models
-    .map((model) => {
-      const haystack = searchableModelText(model);
-      const exactRomanChild = /greco[- ]?roman child girl character/.test(haystack)
-        || /hi3d[_ ]stylized 3d greco[- ]?roman child girl character/.test(haystack);
-      let score = exactRomanChild ? 1000 : 0;
+  const wanted = normalize(child.adminModelName);
+  if (!wanted) return null;
 
-      child.modelSearch.forEach((needle, index) => {
-        if (haystack.includes(needle)) score += 140 - (index * 10);
-      });
+  const exact = models.find((model) => normalize(model?.name) === wanted && model?.file_url);
+  if (exact) return exact;
 
-      if (/greco[- ]?roman/.test(haystack)) score += 70;
-      if (/child/.test(haystack)) score += 65;
-      if (/girl/.test(haystack)) score += 65;
-      if (/character/.test(haystack)) score += 25;
-      if (/stylized/.test(haystack)) score += 14;
-      if (/allparts/.test(haystack)) score += 12;
-      if (Number(model?.file_size || 0) === Number(child.expectedFileSize || 0)) score += 180;
+  const titleMatch = models.find((model) => normalize(model?.name).includes(wanted) && model?.file_url);
+  if (titleMatch) return titleMatch;
 
-      // Do not allow the adult/general Greco model to win this lookup.
-      if (/atomxe-greco-girl/.test(haystack) && !/child/.test(haystack)) score = -1;
+  return models.find((model) => normalize(searchableModelText(model)).includes(wanted) && model?.file_url) || null;
+}
 
-      return { model, score, exactRomanChild };
-    })
-    .filter(({ model, score, exactRomanChild }) => exactRomanChild && score > 0 && model?.file_url)
-    .sort((a, b) => b.score - a.score);
+export function findCreatorChildAnimation(animations = [], child = CREATOR_PARENTING_PREVIEW.children[0]) {
+  if (!Array.isArray(animations) || !child) return null;
 
-  return scored[0]?.model || null;
+  const wanted = normalize(child.animationName || 'AFK');
+  const candidates = animations.filter((animation) => animation?.file_url);
+
+  return candidates.find((animation) => normalize(animation?.name) === wanted)
+    || candidates.find((animation) => normalize(animation?.name).includes(wanted))
+    || candidates.find((animation) => normalize(String(animation?.name || '') + ' ' + normalize(animation?.tags || '') + ' ' + String(animation?.folder || '')).includes(wanted))
+    || null;
 }
