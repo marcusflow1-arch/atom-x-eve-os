@@ -1118,8 +1118,8 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
 
   const placeMenu = (x, y) => {
     if (typeof window === 'undefined') return { top: 0, left: 0 };
-    const width = 192;
-    const height = 250;
+    const width = 208;
+    const height = 230;
     return {
       left: Math.max(8, Math.min(window.innerWidth - width - 8, x)),
       top: Math.max(8, Math.min(window.innerHeight - height - 8, y)),
@@ -1185,7 +1185,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
         onContextMenu={(event) => event.preventDefault()}
-        className="fixed w-48 rounded-xl border border-white/12 bg-[#090c11]/96 p-1.5 text-white shadow-2xl backdrop-blur-xl pointer-events-auto"
+        className="fixed w-52 rounded-xl border border-white/12 bg-[#090c11]/96 p-1.5 text-white shadow-2xl backdrop-blur-xl pointer-events-auto"
         style={{ top: menuPosition.top, left: menuPosition.left, zIndex: 2147483000 }}
         data-luna-social-menu={friend.id}
         data-social-menu-ready="invite-join-message-friend-trade-party"
@@ -1195,24 +1195,34 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
           <p className="mt-0.5 text-[7px] uppercase tracking-[.16em] text-white/34">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
         </div>
 
-        <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} {...actionHandlers(onInvite)} className={menuButton} data-social-action="invite-dashboard">
-          {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
-        </button>
-        <button type="button" disabled={joining} {...actionHandlers(onJoin)} className={`${menuButton} hover:bg-purple-400/[0.16]`} data-social-action="join-dashboard">
-          {joining ? 'Joining Dashboard…' : 'Join Dashboard'}
-        </button>
-        <button type="button" {...actionHandlers(onMessage)} className={menuButton} data-social-action="message-player">
-          Message
-        </button>
-        <button type="button" disabled={isFriend || requestState === 'sending' || requestState === 'sent' || requestState === 'friend'} {...actionHandlers(onAddFriend)} className={menuButton} data-social-action="add-friend">
-          {isFriend || requestState === 'friend' ? 'Already Friends' : requestState === 'sending' ? 'Sending Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'error' ? 'Request Failed · Retry' : 'Add as Friend'}
-        </button>
-        <button type="button" {...actionHandlers(onTrade)} className={`${menuButton} hover:bg-cyan-300/[0.12]`} data-social-action="trade-player">
-          Trade
-        </button>
         <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} {...actionHandlers(onPartyInvite)} className={menuButton} data-social-action="invite-party">
           {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
         </button>
+        <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} {...actionHandlers(onInvite)} className={menuButton} data-social-action="invite-dashboard">
+          {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
+        </button>
+        <button type="button" disabled={joining} {...actionHandlers(onJoin)} className={menuButton} data-social-action="join-dashboard">
+          {joining ? 'Joining Dashboard…' : 'Join Dashboard as Friend'}
+        </button>
+        <button type="button" {...actionHandlers(onMessage)} className={menuButton} data-social-action="message-player">
+          Whisper
+        </button>
+
+        {!isFriend && (
+          <div className="mt-1 border-t border-white/[0.06] pt-1">
+            <button type="button" disabled={requestState === 'sending' || requestState === 'sent'} {...actionHandlers(onAddFriend)} className={menuButton} data-social-action="add-friend">
+              {requestState === 'sending' ? 'Sending Friend Request…' : requestState === 'sent' ? 'Friend Request Sent' : requestState === 'error' ? 'Friend Request Failed · Retry' : 'Add as Friend'}
+            </button>
+          </div>
+        )}
+
+        {isFriend && (
+          <div className="mt-1 border-t border-white/[0.06] pt-1">
+            <button type="button" {...actionHandlers(onTrade)} className={menuButton} data-social-action="trade-player">
+              Trade
+            </button>
+          </div>
+        )}
       </motion.div>,
     document.body,
   ) : null;
