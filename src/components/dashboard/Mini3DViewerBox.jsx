@@ -12,7 +12,7 @@ const unwrap = (response) => {
   return body || {};
 };
 
-export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModelFocus }) {
+export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModelFocus, onReturnDashboard }) {
   const { user } = useAuth();
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [pending, setPending] = useState({ friend_requests: [], dashboard_invites: [], party_invites: [] });
@@ -175,6 +175,23 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
           onKeyDown={!isUiVisible ? (event) => { if (event.key !== 'Enter' && event.key !== ' ') return; event.preventDefault(); event.stopPropagation(); if (onModelFocus) onModelFocus(); else window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode')); } : undefined}
         >
           <div className="relative z-0 h-full w-full"><PlayerAvatarPreview controls="none" idleOnly interactive={isUiVisible} /></div>
+
+          {isUiVisible && onReturnDashboard && (
+            <button
+              type="button"
+              aria-label="Return to Luna dashboard"
+              title="Return to Dashboard"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onReturnDashboard();
+              }}
+              className="absolute left-1/2 top-3 z-40 flex h-9 w-9 -translate-x-1/2 items-center justify-center border border-white/[0.11] bg-black/28 text-white/48 backdrop-blur-xl transition-all hover:border-cyan-200/25 hover:bg-cyan-200/[0.07] hover:text-cyan-100/80"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+            </button>
+          )}
 
           {prompt && !isUiVisible && (
             <div onClick={(event) => event.stopPropagation()} className="absolute bottom-2 left-2 right-2 z-30 rounded-xl border border-cyan-200/15 bg-slate-950/72 p-2 shadow-[0_14px_30px_rgba(0,0,0,.34)] backdrop-blur-2xl">
