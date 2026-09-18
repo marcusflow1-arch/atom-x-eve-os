@@ -358,8 +358,30 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
                     <Progress value={state.combineStage} max={COMBINE_STAGE_MAX} accent="rgba(34,211,238,.8)" />
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {sameTypeLowerCards.length ? sameTypeLowerCards.slice(0, 6).map((candidate) => {
+                </div>
+              </div>
+            </section>
+
+            <div className="relative py-4">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.10] to-transparent" />
+
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[7px] font-black uppercase tracking-[0.18em] text-cyan-100/34">Quick Access</p>
+                  <h4 className="mt-1 text-[10px] font-semibold text-white/62">Combine Stage Cards</h4>
+                  <p className="mt-1 text-[7px] text-white/24">Eligible lower-level cards of the same type appear here.</p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-[6px] uppercase tracking-[0.14em] text-white/18">Selected</p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-white/52">{selectedCombineCount}</p>
+                </div>
+              </div>
+
+              {sameTypeLowerCards.length ? (
+                <>
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-2 pr-1">
+                    {sameTypeLowerCards.slice(0, 10).map((candidate) => {
                       const candidateId = idOf(candidate);
                       const selected = selectedCombineIds.includes(candidateId);
                       return (
@@ -368,42 +390,55 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
                           type="button"
                           disabled={state.combineStage >= COMBINE_STAGE_MAX}
                           onClick={() => toggleCombineCard(candidate)}
-                          className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-left transition-all ${selected
-                            ? 'border-cyan-200/22 bg-cyan-200/[0.07]'
-                            : 'border-white/[0.05] bg-white/[0.018] hover:bg-white/[0.045]'} disabled:opacity-30`}
+                          className={`group relative w-[92px] shrink-0 overflow-hidden rounded-xl border p-2 text-left transition-all ${selected
+                            ? 'border-cyan-200/28 bg-cyan-200/[0.075] shadow-[0_0_16px_rgba(103,232,249,.06)]'
+                            : 'border-white/[0.055] bg-white/[0.018] hover:border-white/[0.10] hover:bg-white/[0.045]'} disabled:opacity-30`}
                         >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.05] bg-black/15">
+                          <div className="relative flex h-14 items-center justify-center rounded-lg border border-white/[0.045] bg-black/15">
                             {candidate.icon_url || candidate.icon ? (
-                              <img src={candidate.icon_url || candidate.icon} alt={candidate.name} className="h-7 w-7 object-contain" />
+                              <img src={candidate.icon_url || candidate.icon} alt={candidate.name} className="h-10 w-10 object-contain" />
                             ) : (
-                              <Package className="h-4 w-4 text-white/18" />
+                              <Package className="h-5 w-5 text-white/18" />
+                            )}
+                            {selected && (
+                              <div className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full border border-cyan-100/20 bg-cyan-200/[0.14] text-cyan-100/75">
+                                <Plus className="h-2.5 w-2.5" />
+                              </div>
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-[8px] font-semibold text-white/55">{candidate.name}</p>
-                            <p className="mt-0.5 text-[7px] text-white/22">Lv {levelOf(candidate)} · {typeOf(candidate)}</p>
-                          </div>
+                          <p className="mt-2 truncate text-[8px] font-semibold text-white/55">{candidate.name}</p>
+                          <p className="mt-0.5 truncate text-[6px] uppercase tracking-[0.08em] text-white/22">
+                            Lv {levelOf(candidate)} · {typeOf(candidate)}
+                          </p>
                         </button>
                       );
-                    }) : (
-                      <div className="col-span-2 rounded-xl border border-dashed border-white/[0.055] px-3 py-4 text-center">
-                        <p className="text-[8px] text-white/28">No lower-level cards of this type are currently available to combine.</p>
-                      </div>
-                    )}
+                    })}
                   </div>
 
-                  <button
-                    type="button"
-                    disabled={!combineGain || state.combineStage >= COMBINE_STAGE_MAX}
-                    onClick={doCombine}
-                    className="mt-3 flex h-8 items-center gap-1.5 rounded-lg border border-cyan-200/12 bg-cyan-200/[0.05] px-3 text-[8px] font-black uppercase tracking-[0.12em] text-cyan-100/58 transition-all hover:bg-cyan-200/[0.09] disabled:cursor-not-allowed disabled:opacity-25"
-                  >
-                    <Layers3 className="h-3 w-3" />
-                    Combine {combineGain ? `+${combineGain} Stage` : 'Selected Cards'}
-                  </button>
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <div className="min-w-0 text-[7px] text-white/24">
+                      {combineGain > 0
+                        ? `Ready to add +${combineGain} stage${combineGain === 1 ? '' : 's'}`
+                        : 'Select one or more cards to stage this card.'}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={!combineGain || state.combineStage >= COMBINE_STAGE_MAX}
+                      onClick={doCombine}
+                      className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-cyan-200/12 bg-cyan-200/[0.05] px-3 text-[8px] font-black uppercase tracking-[0.12em] text-cyan-100/58 transition-all hover:bg-cyan-200/[0.09] disabled:cursor-not-allowed disabled:opacity-25"
+                    >
+                      <Layers3 className="h-3 w-3" />
+                      Add to Stage {combineGain ? `+${combineGain}` : ''}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="mt-3 rounded-xl border border-dashed border-white/[0.055] px-3 py-4 text-center">
+                  <p className="text-[8px] text-white/28">No eligible lower-level cards of this type are available right now.</p>
                 </div>
-              </div>
-            </section>
+              )}
+            </div>
               </div>
             ) : (
               <div>
