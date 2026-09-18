@@ -177,8 +177,6 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
     }
   }, [item, state]);
 
-  if (!item) return null;
-
   const cardLevel = levelOf(item);
   const sameTypeLowerCards = useMemo(() => {
     const targetType = typeOf(item);
@@ -187,6 +185,8 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
       return typeOf(candidate) === targetType && levelOf(candidate) <= cardLevel;
     });
   }, [inventory, item, cardLevel]);
+
+  if (!item) return null;
 
   const gradeStyle = gradeVisual(state.grade);
   const auraOpacity = 0.04 + (state.auraLevel / AURA_MAX) * 0.22;
