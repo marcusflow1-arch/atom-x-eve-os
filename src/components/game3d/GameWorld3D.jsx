@@ -1441,69 +1441,9 @@ export default function GameWorld3D() {
         // Boss encounter controller — ticks encounter phase + dialogue auto-clear.
         bossEncounter.update(delta);
 
-        // ─── Auto-start the encounter + cycle scripted boss attack patterns ───
-        // Rotates tornado-lift-beam → line beam → meteor strike so the boss
-        // attacks on its own. The tornado-lift-beam locks movement while active,
-        // so the timer pauses until it finishes before the next pattern fires.
-        if (!bossEncounterAutoStarted) {
-          bossEncounterAutoStarted = true;
-          bossEncounter.start({
-            bossId: 'kali',
-            introLine: { name: 'Kali', text: 'You have entered my storm.', duration: 4 },
-          });
-          setTimeout(() => bossEncounter.beginCombat(), 1200);
-        }
-        if (bossEncounter.isActive() && !bossTornadoLiftBeam.isActive()) {
-          // Tornado-lift-beam — its own ~60s cooldown, fires once per minute at
-          // a random point in the window so it doesn't spam the player.
-          bossTornadoTimer -= delta;
-          if (bossTornadoTimer <= 0) {
-            bossTornadoTimer = BOSS_TORNADO_COOLDOWN + (Math.random() * 20 - 10);
-            const tornadoBoss = bossEntities[0] || {
-              group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
-            };
-            bossDialogue.queueLine({ id: 'auto_tornado', name: 'Kali', text: 'Rise inside the cyclone.', duration: 2.8, cooldown: 10 });
-            bossTornadoLiftBeam.start({ boss: tornadoBoss, player: model });
-          }
-          // Beam / meteor — fast 8s rotation (tornado removed from the cycle).
-          bossAutoAttackTimer -= delta;
-          if (bossAutoAttackTimer <= 0) {
-            bossAutoAttackTimer = BOSS_AUTO_ATTACK_INTERVAL;
-            const pattern = bossAutoAttackIndex % 2;
-            bossAutoAttackIndex += 1;
-            if (pattern === 0) {
-              // Telegraphed line beam (yellow lane warning → fire).
-              bossDialogue.queueLine({ id: 'auto_beam', name: 'Kali', text: 'The heavens answer my call.', duration: 2.5, cooldown: 8 });
-              const ang = Math.random() * Math.PI * 2;
-              const len = 10;
-              const cx = model.position.x, cz = model.position.z;
-              bossTelegraphs.spawnLine({
-                from: { x: cx + Math.cos(ang) * len, z: cz + Math.sin(ang) * len },
-                to: { x: cx - Math.cos(ang) * len, z: cz - Math.sin(ang) * len },
-                width: 1.4, delay: 1.0, damage: 34, color: 0xfacc15,
-                onFire: ({ hit, from, to }) => {
-                  playActionSound('light_beam');
-                  window.dispatchEvent(new CustomEvent('bossBeamImpact', { detail: { hit, from, to } }));
-                },
-              });
-            } else {
-              // Telegraphed meteor strike (circle warning → impact + camera shake).
-              bossDialogue.queueLine({ id: 'auto_meteor', name: 'Kali', text: 'The sky itself falls upon you.', duration: 2.8, cooldown: 10 });
-              bossTelegraphs.spawnCircle({
-                x: model.position.x, z: model.position.z, radius: 2.8, delay: 1.2, damage: 40, color: 0xfb7185,
-                onFire: ({ hit, x, z }) => {
-                  playActionSound('meteor_impact');
-                  cameraShake.shake({ amplitude: 0.16, duration: 0.32, frequency: 24 });
-                  window.dispatchEvent(new CustomEvent('bossMeteorImpact', { detail: { hit, x, z } }));
-                },
-              });
-            }
-          }
-        }
-
-        // Move + animate each world boss (chase/wander/idle). Extracted into
-        // updateBossMovement to keep this file compact. The autonomous attack
-        // cycle fires scripted patterns from the boss entity's position.
+        // World-boss special abilities are disabled for this build. The boss
+        // remains present and continues its normal movement/animation only.
+        // Move + animate each world boss (chase/wander/idle).
         updateBossMovement(delta, bossEntities, model, mapReady, sampleGroundY);
 
         // ─── NPC proximity & interaction (generic npcs array is empty) ───
