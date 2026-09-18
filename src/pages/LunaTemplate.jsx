@@ -75,6 +75,7 @@ import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
 import LunaSplitInventory from '../components/dashboard/LunaSplitInventory';
+import LunaEquipmentUpgradeTemp from '../components/dashboard/LunaEquipmentUpgradeTemp';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
@@ -166,6 +167,7 @@ export default function LunaTemplate() {
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [uiVisible, setUiVisible] = useState(false);
+  const [inventoryUpgradeItem, setInventoryUpgradeItem] = useState(null);
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
@@ -533,12 +535,10 @@ export default function LunaTemplate() {
       const key = (e.key || '').toLowerCase();
       if (key === 'i') {
         // I toggles the dedicated 50/50 loadout + inventory workspace.
-        // Closing it also clears the active equip target.
-        setUiVisible((visible) => {
-          const next = !visible;
-          if (!next) setClickedSlot(null);
-          return next;
-        });
+        // Each open/close starts from the normal loadout view.
+        setClickedSlot(null);
+        setInventoryUpgradeItem(null);
+        setUiVisible((visible) => !visible);
       }
       if (key === 'c') {
         setShowConsoleMode((v) => !v);
@@ -1464,12 +1464,19 @@ export default function LunaTemplate() {
                         <div className="relative flex h-full w-full min-w-0 pointer-events-auto">
                           {/* I-key workspace: exactly half loadout slots, half inventory. */}
                           <section className="h-full w-1/2 min-w-0 overflow-hidden">
-                            <InventoryGrid
-                              equippedItems={equippedItems}
-                              handleBoxClick={handleBoxClick}
-                              compact
-                              selectedSlotId={clickedSlot}
-                            />
+                            {inventoryUpgradeItem ? (
+                              <LunaEquipmentUpgradeTemp
+                                item={inventoryUpgradeItem}
+                                onBack={() => setInventoryUpgradeItem(null)}
+                              />
+                            ) : (
+                              <InventoryGrid
+                                equippedItems={equippedItems}
+                                handleBoxClick={handleBoxClick}
+                                compact
+                                selectedSlotId={clickedSlot}
+                              />
+                            )}
                           </section>
 
                           {/* Very light 50%-height divider. Brightest at center and fades
@@ -1488,6 +1495,7 @@ export default function LunaTemplate() {
                               inventory={inventoryData}
                               selectedSlotId={clickedSlot}
                               onEquip={handleEquipItem}
+                              onUpgrade={setInventoryUpgradeItem}
                             />
                           </section>
                         </div>
