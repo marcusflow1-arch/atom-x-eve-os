@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useLunaStore from '../useLunaStore';
+import { itemFitsSlot } from '@/components/dashboard/equipmentSlotRules';
 
 /**
  * Hook for managing equipment state with Zustand store integration
@@ -16,6 +17,8 @@ export function useEquipment() {
    * @param {Object} item - Item to equip
    */
   const equipItem = (slotId, item) => {
+    if (!itemFitsSlot(item, slotId)) return false;
+
     setEquippedItems((prev) => ({
       ...prev,
       [slotId]: item
@@ -29,6 +32,8 @@ export function useEquipment() {
       setWeapon(null);
       setEquippedWeapon(null);
     }
+
+    return true;
   };
 
   /**
