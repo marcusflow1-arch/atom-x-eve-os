@@ -295,7 +295,7 @@ export default function DashboardAvatarOverview() {
                           setInteractionDimmed(false);
                           window.dispatchEvent(new Event('openLunaInventoryWorkspace'));
                         }}
-                        className="flex h-9 w-9 items-center justify-center border border-white/[0.10] bg-black/20 text-white/42 backdrop-blur-xl transition-all hover:border-cyan-200/24 hover:bg-cyan-200/[0.06] hover:text-cyan-100/78"
+                        className="inline-flex items-center justify-center p-0.5 text-white/42 transition-colors hover:text-cyan-100/80 focus-visible:outline-none focus-visible:text-cyan-100"
                       >
                         <PackageOpen className="h-4 w-4" />
                       </button>
