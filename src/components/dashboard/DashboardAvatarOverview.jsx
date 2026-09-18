@@ -268,23 +268,6 @@ export default function DashboardAvatarOverview() {
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
-      {!avatarFocusMode && surface === 'dashboard' && (
-        <button
-          type="button"
-          data-dashboard-quick-control
-          aria-label="Open Inventory"
-          onClick={() => {
-            setActiveQuickPanel(null);
-            setInteractionDimmed(false);
-            window.dispatchEvent(new Event('openLunaInventoryWorkspace'));
-          }}
-          className="absolute right-[8px] top-[-10px] z-[70] flex h-8 w-[132px] items-center justify-start gap-2 border border-white/[0.10] bg-white/[0.035] px-3 text-white/48 backdrop-blur-xl transition-all hover:border-cyan-200/22 hover:bg-cyan-200/[0.06] hover:text-cyan-100/78"
-        >
-          <PackageOpen className="h-3.5 w-3.5 shrink-0" />
-          <span className="text-[8px] font-black uppercase tracking-[0.14em]">Inventory</span>
-        </button>
-      )}
-
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
@@ -294,7 +277,31 @@ export default function DashboardAvatarOverview() {
             <div className="relative px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-7">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
-                <div><div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div><div className="text-white font-bold text-base">{companion?.name || 'AI Avatar'}</div></div>
+                <div>
+                  <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-white font-bold text-base">{companion?.name || 'AI Avatar'}</div>
+                    {surface === 'dashboard' && (
+                      <button
+                        type="button"
+                        data-dashboard-quick-control
+                        aria-label="Open Inventory"
+                        title="Inventory"
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setActiveQuickPanel(null);
+                          setInteractionDimmed(false);
+                          window.dispatchEvent(new Event('openLunaInventoryWorkspace'));
+                        }}
+                        className="flex h-9 w-9 items-center justify-center border border-white/[0.10] bg-black/20 text-white/42 backdrop-blur-xl transition-all hover:border-cyan-200/24 hover:bg-cyan-200/[0.06] hover:text-cyan-100/78"
+                      >
+                        <PackageOpen className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
               <button onClick={() => setAttributeMenuOpen(v => !v)} className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-16 bg-transparent flex items-center justify-center text-white/50 z-30">
                 <ChevronRight className={`w-4 h-4 ${attributeMenuOpen ? 'rotate-180' : ''}`} />
