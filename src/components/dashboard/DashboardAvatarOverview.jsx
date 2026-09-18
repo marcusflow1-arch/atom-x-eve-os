@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
