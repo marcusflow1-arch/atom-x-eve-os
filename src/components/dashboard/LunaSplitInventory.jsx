@@ -106,6 +106,7 @@ export default function LunaSplitInventory({
   selectedSlotId = null,
   onEquip,
   onUpgrade,
+  narrow = false,
 }) {
   const [browseMode, setBrowseMode] = useState('all');
   const [filter, setFilter] = useState('all');
@@ -230,7 +231,7 @@ export default function LunaSplitInventory({
   };
 
   return (
-    <div className="h-full w-full overflow-hidden p-5">
+    <div className={`h-full w-full overflow-hidden ${narrow ? 'p-3' : 'p-5'}`}>
       <div
         className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[26px] border border-white/[0.09]"
         style={{
@@ -384,8 +385,8 @@ export default function LunaSplitInventory({
               )}
             </div>
           ) : (
-            <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_176px] gap-3">
-              <div className="min-h-0 overflow-y-auto pr-1">
+            <div className={narrow ? 'flex h-full min-h-0 flex-col gap-2' : 'grid h-full min-h-0 grid-cols-[minmax(0,1fr)_176px] gap-3'}>
+              <div className={narrow ? 'min-h-0 flex-1 overflow-y-auto pr-1' : 'min-h-0 overflow-y-auto pr-1'}>
                 {selectedGameMeta && (
                   <div className="relative mb-3 h-24 overflow-hidden rounded-2xl border border-white/[0.07] bg-black/15">
                     {selectedGameMeta.image && <img src={selectedGameMeta.image} alt={selectedGameMeta.title} className="absolute inset-0 h-full w-full object-cover opacity-45" />}
@@ -403,7 +404,7 @@ export default function LunaSplitInventory({
                 )}
 
                 {visibleItems.length ? (
-                  <div className="grid grid-cols-3 gap-2.5">
+                  <div className={narrow ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-3 gap-2.5'}>
                     {visibleItems.map((item) => {
                       const id = itemIdOf(item);
                       const selected = id === selectedItemId;
