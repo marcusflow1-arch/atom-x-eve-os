@@ -347,12 +347,17 @@ export default function GameWorld3D() {
     // crush character visibility.
     const charLights = createCharacterReadabilityLights({ scene });
 
-    // Tornado weather event — spawned on demand (T key or the HUD button).
-    const tornado = createTornadoSystem({ scene });
-    setTornadoSystemState(tornado);
-    window.__tornado = tornado;
-    // Set each frame from the tornado: while above the storm the camera is
-    // allowed to crane up at the open sky.
+    // Tornado weather/boss effect is temporarily removed from the playable
+    // Game Viewer. Keep an inert compatibility object so older movement/camera
+    // code can run without spawning visuals, physics, lift, or camera shake.
+    const tornado = {
+      update: () => ({ allowLookUp: false, lockMovement: false, liftY: 0, shake: 0 }),
+      getState: () => ({ active: false }),
+      spawn: () => false,
+      stop: () => {},
+      dispose: () => {},
+    };
+    window.__tornado = null;
     const tornadoView = { allowLookUp: false, wasActive: false };
 
     // Fetch the real 7-day Detroit forecast from the NWS and feed it to the
