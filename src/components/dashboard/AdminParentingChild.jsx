@@ -1,29 +1,43 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
+import { createGenesisScene } from '@/components/onboarding/genesisScene';
 import {
   CREATOR_PARENTING_PREVIEW,
+  findCreatorChildAnimation,
   findCreatorChildModel,
 } from '@/components/parenting/parentingSystem';
 
 const childProfile = CREATOR_PARENTING_PREVIEW.children[0];
 
 export default function AdminParentingChild({ enabled = false, className = '' }) {
-  const [modelUrl, setModelUrl] = useState(null);
+  const mountRef = useRef(null);
+  const sceneRef = useRef(null);
+  const [asset, setAsset] = useState({ model: null, animation: null });
+  const [status, setStatus] = useState('idle');
 
   useEffect(() => {
-    if (!enabled) return undefined;
+    if (!enabled) {
+      setAsset({ model: null, animation: null });
+      return undefined;
+    }
+
     let cancelled = false;
 
     (async () => {
       try {
-        // Fetch fresh Admin model data instead of reusing the shared scene cache.
-        // The parenting preview must resolve the exact Roman child asset.
-        const models = await base44.entities.Model3D.list('-created_date', 500);
+        const [models, animations] = await Promise.all([
+          base44.entities.Model3D.list('-created_date', 500),
+          base44.entities.AnimationFBX.list('-created_date', 500),
+        ]);
+
+        if (cancelled) return;
+
         const model = findCreatorChildModel(models, childProfile);
-        if (!cancelled) setModelUrl(model?.file_url || null);
+        const animation = findCreatorChildAnimation(animations, childProfile);
+        setAsset({ model, animation });
       } catch (error) {
-        console.warn('Parenting preview child model lookup unavailable', error);
+        console.warn('Adaptive child Admin asset lookup unavailable', error);
+        if (!cancelled) setAsset({ model: null, animation: null });
       }
     })();
 
@@ -32,30 +46,70 @@ export default function AdminParentingChild({ enabled = false, className = '' })
     };
   }, [enabled]);
 
-  if (!enabled || !modelUrl) return null;
+  useEffect(() => {
+    if (!enabled || !mountRef.current || !asset.model?.file_url) return undefined;
 
-  const config = {
-    name: childProfile.displayName,
-    gender: childProfile.gender,
-    model_url: modelUrl,
-    style_preset: 'heroic_fantasy',
-    hood_enabled: false,
-    weapon_visible: false,
-  };
+    let disposed = false;
+    setStatus('loading');
+
+    const scene = createGenesisScene(
+      mountRef.current,
+      asset.model.file_url,
+      () => {
+        if (disposed) return;
+
+        if (asset.animation?.file_url) {
+          setStatus('afk');
+          sceneRef.current?.play({
+            name: childProfile.animationName,
+            clipName: asset.animation.name || childProfile.animationName,
+            url: asset.animation.file_url,
+            loop: asset.animation.is_loopable !== false,
+          });
+        } else {
+          setStatus('model-ready');
+        }
+      },
+      (nextStatus, motionName) => {
+        if (disposed) return;
+        if (nextStatus === 'ready' && motionName) setStatus(motionName);
+        else setStatus(nextStatus);
+      },
+      {
+        retargetExternalMotions: true,
+        initialYaw: 0.52,
+      },
+    );
+
+    sceneRef.current = scene;
+    scene.appearance({
+      name: childProfile.displayName,
+      gender: childProfile.gender,
+      model_url: asset.model.file_url,
+      style_preset: 'heroic_fantasy',
+      hood_enabled: false,
+      weapon_visible: false,
+    });
+
+    return () => {
+      disposed = true;
+      scene.dispose();
+      sceneRef.current = null;
+    };
+  }, [enabled, asset.model, asset.animation]);
+
+  if (!enabled || !asset.model?.file_url) return null;
 
   return (
     <div
-      className={`pointer-events-none absolute bottom-[5%] left-[8%] z-[3] h-[78%] w-[30%] min-w-[130px] max-w-[250px] ${className}`}
-      data-parenting-preview="creator-daughter"
-      aria-label="Creator parenting preview daughter"
+      className={`pointer-events-none absolute bottom-[5%] left-[7%] z-[3] h-[74%] w-[28%] min-w-[120px] max-w-[235px] ${className}`}
+      data-parenting-preview="adaptive-child"
+      data-parenting-model={asset.model?.name || ''}
+      data-parenting-animation={asset.animation?.name || ''}
+      data-parenting-status={status}
+      aria-label="Creator adaptive child preview"
     >
-      <GenesisModelPreview
-        config={config}
-        compact
-        controls="none"
-        idleOnly
-        interactive={false}
-      />
+      <div ref={mountRef} className="h-full w-full" />
     </div>
   );
 }
