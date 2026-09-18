@@ -222,6 +222,22 @@ async function createTask(input: any) {
 
 async function getTask(taskId: string) { return tripoFetch(`/tasks/${encodeURIComponent(taskId)}`, { method: 'GET' }); }
 
+async function startAnimationTask(endpoint: string, payload: any) {
+  const result = await tripoFetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+  const data = result?.data || {};
+  if (data?.riggable !== undefined) return { immediate: data };
+  const taskId = data?.task_id;
+  if (!taskId) throw new Error(`Tripo did not return a task_id for ${endpoint}.`);
+  return { taskId };
+}
+
+async function runAnimationTask(endpoint: string, payload: any) {
+  const started = await startAnimationTask(endpoint, payload);
+  if (started.immediate) return { status: 'success', output: started.immediate };
+  const task = await waitForTask(started.taskId);
+  return task;
+}
+
 async function waitForTask(taskId: string, onProgress?: (task: any) => Promise<void>) {
   const deadline = Date.now() + 115_000;
   let latest: any = null;
@@ -245,9 +261,44 @@ Deno.serve(async (req) => {
 
     if (body.action === 'avatarPipelineStart') return startAvatarPipeline(base44, user, body);
     if (body.action === 'avatarPipelineStatus') return advanceAvatarPipeline(base44, user, body);
-    if (body.action === 'status') {
+    if (body.action === 'status' || body.action === 'animationTaskStatus') {
       if (!body.taskId) return json({ error: 'taskId is required.' }, 400);
       return json({ success: true, task: (await getTask(body.taskId))?.data });
+    }
+
+    if (body.action === 'animationRigCheck') {
+      const input = String(body.input || body.modelUrl || body.taskId || body.fileToken || '').trim();
+      if (!input) return json({ error: 'input, modelUrl, taskId, or fileToken is required.' }, 400);
+      const task = await runAnimationTask('/animations/rig-check', { input });
+      if (task.timeout) return json({ success: true, taskId: task.task_id, task, timed_out: true }, 202);
+      if (task.status !== 'success') return json({ success: false, task, error: task.error_message || 'Rig check failed.' }, 502);
+      return json({ success: true, taskId: task.task_id || '', riggable: Boolean(task.output?.riggable), rig_type: task.output?.rig_type || '', task });
+    }
+
+    if (body.action === 'animationRig') {
+      const input = String(body.input || body.modelUrl || body.taskId || body.fileToken || '').trim();
+      if (!input) return json({ error: 'input, modelUrl, taskId, or fileToken is required.' }, 400);
+      const rigType = String(body.rigType || 'biped');
+      const payload = {
+        input,
+        model: String(body.model || (rigType === 'biped' ? 'v1.0-20240301' : 'v2.5-20260210')),
+        rig_type: rigType,
+        spec: String(body.spec || 'mixamo'),
+        out_format: String(body.outFormat || 'glb'),
+      };
+      const started = await startAnimationTask('/animations/rig', payload);
+      if (!started.taskId) return json({ success: false, error: 'Rig task did not start.' }, 502);
+      return json({ success: true, taskId: started.taskId, stage: 'rig', status: 'queued' }, 202);
+    }
+
+    if (body.action === 'animationRetarget') {
+      const input = String(body.input || body.rigTaskId || body.taskId || body.fileToken || body.modelUrl || '').trim();
+      const animations = Array.isArray(body.animations) ? body.animations.map((item: any) => String(item)).filter(Boolean) : [];
+      if (!input) return json({ error: 'A rigged model task/input is required.' }, 400);
+      if (!animations.length) return json({ error: 'animations must contain at least one preset or animation reference.' }, 400);
+      const started = await startAnimationTask('/animations/retarget', { input, animations });
+      if (!started.taskId) return json({ success: false, error: 'Animation retarget task did not start.' }, 502);
+      return json({ success: true, taskId: started.taskId, stage: 'retarget', animations, status: 'queued' }, 202);
     }
 
     const name = String(body.name || body.prompt || 'Tripo Generated Asset').slice(0, 160);
