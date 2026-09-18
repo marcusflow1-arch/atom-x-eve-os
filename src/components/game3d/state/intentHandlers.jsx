@@ -76,7 +76,8 @@ async function handleDamageEnemy(state, intent) {
 }
 
 // ── 2. Player vs player damage ────────────────────────────────────────
-//    intent: { kind: 'pvp_damage', targetId, attackerId, weaponMult?, crit? }
+//    intent: { kind: 'pvp_damage', targetId, attackerId, lockedTargetId,
+//              weaponPath: 'damage'|'defense'|'ranged', weaponMult?, crit? }
 async function handlePvpDamage(state, intent) {
   const target = state.players[intent.targetId];
   const attacker = state.players[intent.attackerId];
@@ -87,12 +88,19 @@ async function handlePvpDamage(state, intent) {
     return { events: [{ kind: 'pvp_blocked', targetId: target.id, reason: 'invuln' }] };
   }
 
-  // Range check — anti-cheat: reject hits beyond plausible range
+  // PvP is locked single-target only. Never accept a hit for a player
+  // other than the attacker's explicit target lock.
+  if (!intent.lockedTargetId || intent.lockedTargetId !== target.id) {
+    return { events: [{ kind: 'pvp_blocked', targetId: target.id, attackerId: attacker.id, reason: 'target_not_locked' }] };
+  }
+
+  // Range check — damage/defense weapons are melee (3m); ranged weapons are 7m.
   const dx = target.x - attacker.x;
   const dz = target.z - attacker.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
-  if (dist > 4.0) {
-    return { events: [{ kind: 'pvp_blocked', targetId: target.id, attackerId: attacker.id, reason: 'out_of_range', dist }] };
+  const maxRange = intent.weaponPath === 'ranged' ? 7.0 : 3.0;
+  if (dist > maxRange) {
+    return { events: [{ kind: 'pvp_blocked', targetId: target.id, attackerId: attacker.id, reason: 'out_of_range', dist, maxRange }] };
   }
 
   const mult = Math.max(0.1, Math.min(3.0, intent.weaponMult || 1));
