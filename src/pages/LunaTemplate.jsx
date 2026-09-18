@@ -74,6 +74,7 @@ import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
+import { getEquipmentSlotLabel, itemFitsSlot } from '../components/dashboard/equipmentSlotRules';
 import LunaSplitInventory from '../components/dashboard/LunaSplitInventory';
 import LunaEquipmentUpgradeWorkspace from '../components/dashboard/LunaEquipmentUpgradeWorkspace';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
@@ -611,11 +612,26 @@ export default function LunaTemplate() {
   };
 
   const handleEquipItem = (item) => {
-    if (clickedSlot && item) {
-      equipItem(clickedSlot, item);
-      // Do NOT close inventory on equip - keeps UI stable
+    if (!clickedSlot || !item) return;
+
+    if (!itemFitsSlot(item, clickedSlot)) {
+      showError(`${item.name || 'That item'} cannot be equipped in ${getEquipmentSlotLabel(clickedSlot)}.`);
+      return;
     }
+
+    equipItem(clickedSlot, item);
+    // Do NOT close inventory on equip - keeps UI stable
   };
+
+  useEffect(() => {
+    const openInventoryWorkspace = () => {
+      setInventoryUpgradeItem(null);
+      setClickedSlot(null);
+      setUiVisible(true);
+    };
+    window.addEventListener('openLunaInventoryWorkspace', openInventoryWorkspace);
+    return () => window.removeEventListener('openLunaInventoryWorkspace', openInventoryWorkspace);
+  }, []);
 
   // Open InventoryPanel from other components (e.g., StatsDropdown InventoryGrid)
   useEffect(() => {
@@ -722,11 +738,27 @@ export default function LunaTemplate() {
           ) : avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             /* Avatar focus mode: just the 3D viewer — the Focus Hub renders the rest */
             <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
-              <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+              <Mini3DViewerBox
+              isUiVisible={uiVisible}
+              hostName={currentHostName}
+              onReturnDashboard={uiVisible ? () => {
+                setInventoryUpgradeItem(null);
+                setClickedSlot(null);
+                setUiVisible(false);
+              } : undefined}
+            />
             </div>
           ) : (
             /* Non-avatar sections: just show the 3D viewer standalone */
-            <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+            <Mini3DViewerBox
+              isUiVisible={uiVisible}
+              hostName={currentHostName}
+              onReturnDashboard={uiVisible ? () => {
+                setInventoryUpgradeItem(null);
+                setClickedSlot(null);
+                setUiVisible(false);
+              } : undefined}
+            />
           )}
         </div>
               }
