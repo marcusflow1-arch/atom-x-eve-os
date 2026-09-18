@@ -8,12 +8,13 @@ export const CREATOR_PARENTING_PREVIEW = {
       id: 'creator-adaptive-child',
       relationship: 'adaptive-child',
       displayName: 'Adaptive Child',
+      adminModelId: '6aad7cc497402e7ea78b154c',
       adminModelName: 'caieshioa',
       gender: 'female',
-      animationName: 'AFK',
+      animationName: 'Idle',
       idleOnly: true,
       dashboardOnly: true,
-      faceParent: true,
+      faceParent: false,
     },
   ],
 };
@@ -39,6 +40,11 @@ function searchableModelText(model) {
 
 export function findCreatorChildModel(models = [], child = CREATOR_PARENTING_PREVIEW.children[0]) {
   if (!Array.isArray(models) || !child) return null;
+
+  if (child.adminModelId) {
+    const byId = models.find((model) => model?.id === child.adminModelId && model?.file_url);
+    if (byId) return byId;
+  }
 
   const wanted = normalize(child.adminModelName);
   if (!wanted) return null;
