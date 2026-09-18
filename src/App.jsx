@@ -35,9 +35,16 @@ const livePages = Object.entries(Pages);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
+const LayoutWrapper = ({ children, currentPageName }) => {
+  // GameView is a full-screen immersive surface. Do not wrap it in the
+  // application shell, otherwise the owner/dashboard sidebar and global
+  // navigation controls leak into the game.
+  if (currentPageName === 'GameView') return <>{children}</>;
+
+  return Layout
+    ? <Layout currentPageName={currentPageName}>{children}</Layout>
+    : <>{children}</>;
+};
 
 const AuthenticatedApp = () => {
   const { user, isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
