@@ -159,6 +159,7 @@ const SKILL_NODES = [
 
 export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], onBack }) {
   const [tab, setTab] = useState('forge');
+  const [forgeSection, setForgeSection] = useState('enhance');
   const [state, setState] = useState(() => loadUpgradeState(item));
   const [selectedCombineIds, setSelectedCombineIds] = useState([]);
 
@@ -166,6 +167,7 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
     setState(loadUpgradeState(item));
     setSelectedCombineIds([]);
     setTab('forge');
+    setForgeSection('enhance');
   }, [item]);
 
   useEffect(() => {
