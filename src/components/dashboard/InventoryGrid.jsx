@@ -1,6 +1,4 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import AIAttributesBox from './AIAttributesBox';
 
 export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null }) {
   const compactSlot = (slotId, round = false) => {
