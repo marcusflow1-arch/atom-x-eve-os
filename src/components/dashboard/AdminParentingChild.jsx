@@ -26,8 +26,8 @@ export default function AdminParentingChild({ enabled = false, className = '' })
     (async () => {
       try {
         const [models, animations] = await Promise.all([
-          base44.entities.Model3D.list('-created_date', 500),
-          base44.entities.AnimationFBX.list('-created_date', 500),
+          base44.entities.Model3D.filter({ id: childProfile.adminModelId }),
+          base44.entities.AnimationFBX.filter({ name: childProfile.animationName }),
         ]);
 
         if (cancelled) return;
@@ -77,7 +77,7 @@ export default function AdminParentingChild({ enabled = false, className = '' })
       },
       {
         retargetExternalMotions: true,
-        initialYaw: 0.52,
+        initialYaw: 0,
       },
     );
 
@@ -102,7 +102,7 @@ export default function AdminParentingChild({ enabled = false, className = '' })
 
   return (
     <div
-      className={`pointer-events-none absolute bottom-[5%] left-[7%] z-[3] h-[74%] w-[28%] min-w-[120px] max-w-[235px] ${className}`}
+      className={`pointer-events-none absolute bottom-[5%] left-[32%] z-[3] h-[74%] w-[23%] min-w-[120px] max-w-[235px] ${className}`}
       data-parenting-preview="adaptive-child"
       data-parenting-model={asset.model?.name || ''}
       data-parenting-animation={asset.animation?.name || ''}
