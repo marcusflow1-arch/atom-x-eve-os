@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swords, Trophy, Skull } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { getPvpAttackRange } from '../pvpCombatRules';
 
 const DUEL_MAX_HP = 100;
-const DUEL_DAMAGE = 10;       // damage per middle-click on opponent
-const DUEL_RANGE = 6;         // max distance in world units for a hit to land
+const DUEL_DAMAGE = 10;
 
 /**
  * DuelSystem — global handler for the active duel between two players.
@@ -80,24 +80,34 @@ export default function DuelSystem({ userId }) {
     }));
   }, [duel?.id, duel?.challenger_id, duel?.opponent_id, userId]);
 
-  // Handle middle-click damage: a player-target middle-click while duel is active
-  // dispatches `duelAttack` from the middleClickHandler. We apply damage here.
+  // Handle locked-target PvP damage. Middle-click only selects/locks the
+  // opponent; basic attacks and offensive abilities dispatch `duelAttack`.
   useEffect(() => {
     if (!userId) return;
     const onDuelAttack = async (e) => {
       const targetId = e.detail?.targetPlayerId;
-      const distance = e.detail?.distance ?? 0;
+      const distance = Number(e.detail?.distance ?? Infinity);
+      const weaponPath = e.detail?.weaponPath || 'damage';
+      const lockedTargetId = e.detail?.lockedTargetId || null;
       const d = duelRef.current;
       if (!d || !targetId) return;
-      if (distance > DUEL_RANGE) return;
 
-      // Verify target is the other duelist
+      // Verify target is the other duelist AND the exact player currently locked.
       const otherId = d.challenger_id === userId ? d.opponent_id : d.challenger_id;
-      if (targetId !== otherId) return;
+      if (targetId !== otherId || lockedTargetId !== otherId) return;
 
-      // Apply damage to the right column
+      // Damage range is weapon-class specific:
+      // damage + defense = melee (3m), ranged = 7m.
+      const maxRange = getPvpAttackRange(weaponPath);
+      if (!Number.isFinite(distance) || distance > maxRange) return;
+
+      const multiplier = Math.max(0.1, Math.min(3, Number(e.detail?.skillMultiplier || 1)));
+      const override = Number(e.detail?.damageOverride || 0);
+      const hitDamage = override > 0 ? Math.round(override) : Math.max(1, Math.round(DUEL_DAMAGE * multiplier));
+
+      // Apply damage to the one locked target only.
       const isOpponent = otherId === d.opponent_id;
-      const newHP = Math.max(0, (isOpponent ? d.opponent_hp : d.challenger_hp) - DUEL_DAMAGE);
+      const newHP = Math.max(0, (isOpponent ? d.opponent_hp : d.challenger_hp) - hitDamage);
       const patch = isOpponent ? { opponent_hp: newHP } : { challenger_hp: newHP };
 
       if (newHP <= 0) {
@@ -141,7 +151,7 @@ export default function DuelSystem({ userId }) {
             <HPBar label="You" hp={myHP} maxHp={duel.max_hp || DUEL_MAX_HP} color="#22d3ee" />
             <div className="text-red-300 text-xs font-mono">VS</div>
             <HPBar label={theirName || 'Opponent'} hp={theirHP} maxHp={duel.max_hp || DUEL_MAX_HP} color="#ef4444" />
-            <div className="text-[10px] text-white/50 font-mono ml-2">Mid-click to strike</div>
+            <div className="text-[10px] text-white/50 font-mono ml-2">Middle-click to lock · Left-click / skills to attack</div>
           </motion.div>
         )}
       </AnimatePresence>
