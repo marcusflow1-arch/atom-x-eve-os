@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, LogOut, Play, Volume2, VolumeX, Monitor, ChevronRight } from 'lucide-react';
+import { X, LogOut, Play, Volume2, VolumeX, Monitor, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 /**
