@@ -202,8 +202,16 @@ export default function DashboardAvatarOverview() {
       setActiveQuickPanel('messages');
       setInteractionDimmed(false);
     };
+    const clearForPresenceMenu = () => {
+      setInteractionDimmed(false);
+      lastInteractiveRef.current = null;
+    };
     window.addEventListener('openLunaMessages', openMessages);
-    return () => window.removeEventListener('openLunaMessages', openMessages);
+    window.addEventListener('lunaPresenceMenuOpened', clearForPresenceMenu);
+    return () => {
+      window.removeEventListener('openLunaMessages', openMessages);
+      window.removeEventListener('lunaPresenceMenuOpened', clearForPresenceMenu);
+    };
   }, []);
 
   const levelProgress = Math.min(100, stats.currentXP / stats.nextXP * 100);
