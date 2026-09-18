@@ -35,6 +35,8 @@ import { loadCompanionFolderClips } from './companionAnimationLoader';
 import { getAbilityState, tickCooldowns as tickLegacyAbilityCooldowns, startCooldown as startLegacyAbilityCooldown, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
 import { getLoadout, startCooldown as startSkillCooldown, tickCooldowns as tickSkillCooldowns } from './skills/loadoutStore';
 import { castSkill } from './skills/skillExecutor';
+import { getSkillById } from './skills/skillRegistry';
+import { SKILL_TYPE } from './skills/skillTypes';
 import { getPlayerHUD as getHUDForSkill } from './playerHUDStore';
 import { tickCompanionCooldowns } from './companionAbilityStore';
 import { processCompanionAbilityPress } from './companionAbilityHandler';
@@ -59,6 +61,7 @@ import { getRunMultiplier } from './runSkillStore';
 import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
+import { pvpFailureMessage, validateLockedPvpTarget } from './pvpCombatRules';
 import { applyMasteryToHit, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
@@ -87,6 +90,11 @@ import { spawnLivingQuestNPC } from './npc/spawnLivingQuestNPC';
 import LivingQuestWorldOverlay from './npc/LivingQuestWorldOverlay';
 import { grantQuestReward } from './questRewards';
 import QuestRewardToast from './QuestRewardToast';
+
+const showCombatNotice = (text) => {
+  if (!text || typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('skillActivatedToast', { detail: { text } }));
+};
 
 export default function GameWorld3D() {
   const avatarConfig=useGameAvatar();
