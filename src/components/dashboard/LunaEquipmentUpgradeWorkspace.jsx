@@ -300,6 +300,25 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
 
         {tab === 'forge' ? (
           <div className="mt-1">
+            <div className="flex justify-center pb-1 pt-3">
+              <div className="flex items-center gap-2">
+                <IconTab
+                  active={forgeSection === 'enhance'}
+                  icon={Combine}
+                  label="Enchantment + Combine Stage"
+                  onClick={() => setForgeSection('enhance')}
+                />
+                <IconTab
+                  active={forgeSection === 'aura'}
+                  icon={Crown}
+                  label="Aura + Grading"
+                  onClick={() => setForgeSection('aura')}
+                />
+              </div>
+            </div>
+
+            {forgeSection === 'enhance' ? (
+              <div>
             <UpgradeStepper
               label="Enchantment"
               eyebrow="Power Infusion"
@@ -385,7 +404,9 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
                 </div>
               </div>
             </section>
-
+              </div>
+            ) : (
+              <div>
             <UpgradeStepper
               label="Aura"
               eyebrow="Visual Resonance"
@@ -453,6 +474,8 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
                 </div>
               </div>
             </section>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mt-5">
