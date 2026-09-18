@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import useQuestLog from '@/components/dashboard/avatarFocus/sections/useQuestLog';
 import { motion } from 'framer-motion';
 import { Trophy, Plus, Check, RotateCcw, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -10,16 +11,9 @@ const PRIORITY_COLOR = { high: '#f87171', medium: '#facc15', low: '#4ade80' };
 // Quest Log — real UserTask backend: list, create, complete / reopen
 export default function QuestSection({ accent }) {
   const { user } = useAuth();
-  const [quests, setQuests] = useState(null);
+  const { quests, setQuests, load, error, rateLimited, retryDisabled } = useQuestLog(user?.id);
   const [newTitle, setNewTitle] = useState('');
   const [saving, setSaving] = useState(false);
-
-  const load = async () => {
-    if (!user?.id) return;
-    const rows = await base44.entities.UserTask.filter({ user_id: user.id }, '-created_date', 100);
-    setQuests(rows);
-  };
-  useEffect(() => { load(); }, [user?.id]);
 
   const addQuest = async () => {
     const title = newTitle.trim();
@@ -37,6 +31,16 @@ export default function QuestSection({ accent }) {
     await base44.entities.UserTask.update(q.id, { status });
   };
 
+  if (error && quests === null) return (
+    <SectionShell title="Quest Log" accent={accent}>
+      <div role="alert" className="text-foreground space-y-3">
+        <p>{rateLimited ? 'Quests are temporarily busy. Please wait a minute before trying again.' : 'Quests could not be loaded. Please try again.'}</p>
+        <button type="button" onClick={load} disabled={retryDisabled} className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground disabled:opacity-50">
+          {retryDisabled ? 'Please wait…' : 'Try again'}
+        </button>
+      </div>
+    </SectionShell>
+  );
   if (quests === null) return <LoadingState />;
   const active = quests.filter((q) => q.status !== 'completed' && q.status !== 'cancelled');
   const done = quests.filter((q) => q.status === 'completed');
