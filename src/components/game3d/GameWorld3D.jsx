@@ -620,71 +620,30 @@ export default function GameWorld3D() {
     });
     window.__gw3dBossEncounter = bossEncounter;
 
-    // Boss pattern controller — orchestrates the tornado as a scripted boss move
-    // (spawn → pull → capture → lift → beam → knockback → fall). The world passes
-    // its already-computed tornado result in each frame so tornado physics only
-    // update once per tick.
-    const bossTornadoLiftBeam = createBossTornadoLiftBeam({
-      tornadoSystem: tornado,
-      modelRef,
-      setHP,
-      getPlayerHUD,
-      spawnDamageFloat,
-      playActionSound,
-      bossEncounter,
-    });
-    window.__gw3dBossTornadoLiftBeam = bossTornadoLiftBeam;
+    // World-boss special abilities are temporarily disabled. The boss itself
+    // stays in the world and can move / take damage, but tornado, beam, meteor,
+    // summon and telegraph systems cannot fire or spam the player.
+    const bossTornadoLiftBeam = {
+      start: () => false,
+      update: () => ({ lockMovement: false, forcedFall: false }),
+      isActive: () => false,
+      cancel: () => {},
+    };
+    const cameraShake = { update: () => {}, shake: () => {}, dispose: () => {} };
+    const bossTelegraphs = {
+      update: () => {},
+      spawnLine: () => false,
+      spawnCircle: () => false,
+      dispose: () => {},
+    };
+    const detachBossBus = () => {};
+    window.__gw3dBossTornadoLiftBeam = null;
+    window.__gw3dCameraShake = null;
+    window.__gw3dBossTelegraphs = null;
 
-    // Camera shake controller — meteor impacts and crit jolts. Created without
-    // `orbit` so it adds offsets directly to camera.position (same pattern as
-    // the tornado turbulence); the camera system recomputes position each
-    // frame, so there's no drift or orbit corruption.
-    const cameraShake = createCameraShakeController({ camera });
-    window.__gw3dCameraShake = cameraShake;
-
-    // Boss telegraph system — ground circles (meteors/stomps) and lines (beams/
-    // lanes) that warn, then fire + deal damage if the player is still inside.
-    const bossTelegraphs = createBossTelegraphSystem({
-      scene,
-      setHP,
-      getPlayerHUD,
-      spawnDamageFloat,
-      playActionSound,
-      cameraShake,
-    });
-    window.__gw3dBossTelegraphs = bossTelegraphs;
-
-    // Boss combat dialogue — non-blocking banter queue (intro, attack callouts,
-    // HP thresholds, outro). Shows one line at a time and auto-hides; never
-    // pauses gameplay. Owns combat dialogue display so the encounter controller
-    // only needs to start/stop music + suppress NPCs.
+    // Boss combat dialogue remains available for encounter/HP feedback only.
     const bossDialogue = createBossCombatDialogue({ setActiveDialogue });
     window.__gw3dBossDialogue = bossDialogue;
-
-    // ─── Boss auto-attack cycle ─────────────────────────────────────────────
-    // The boss fires its scripted patterns (tornado-lift-beam → line beam →
-    // meteor strike) on a rotating timer while the encounter is active, so it
-    // attacks on its own instead of requiring the 0 / - / [ test keys. The
-    // encounter also auto-starts once the player model is ready.
-    let bossEncounterAutoStarted = false;
-    let bossAutoAttackTimer = 6;        // first scripted attack ~6s after load
-    let bossAutoAttackIndex = 0;
-    const BOSS_AUTO_ATTACK_INTERVAL = 8; // seconds between beam/meteor patterns
-    // Tornado-lift-beam is on its own ~60s cooldown so it doesn't spam: it
-    // fires roughly once per minute at a random point in the window.
-    const BOSS_TORNADO_COOLDOWN = 60;
-    let bossTornadoTimer = 20 + Math.random() * 40; // first tornado: 20–60s in
-
-    const detachBossBus = attachBossEventBus({
-      scene, getPlayerHUD, setHP, spawnDamageFloat,
-      activeEffectsRef: activeEffects,
-      sampleGroundY,
-      modelRef,
-      gltfLoader: worldGltfLoader,
-      applyLocalBossDamage,
-      getBossById: (id) => bossEntities.find((b) => b.id === id),
-      spawnBossMinion: (bid, p) => _spawnBossMinion(bid, p),
-    });
 
     // Pre-load enemy creature clips once (shared across all enemies).
     // These come from the "creature" folder in admin → AnimationFBX manager
