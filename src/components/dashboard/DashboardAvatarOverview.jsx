@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -267,6 +267,23 @@ export default function DashboardAvatarOverview() {
       <div className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}>
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
+
+      {!avatarFocusMode && surface === 'dashboard' && (
+        <button
+          type="button"
+          data-dashboard-quick-control
+          aria-label="Open Inventory"
+          onClick={() => {
+            setActiveQuickPanel(null);
+            setInteractionDimmed(false);
+            window.dispatchEvent(new Event('openLunaInventoryWorkspace'));
+          }}
+          className="absolute right-[8px] top-[-10px] z-[70] flex h-8 w-[132px] items-center justify-start gap-2 border border-white/[0.10] bg-white/[0.035] px-3 text-white/48 backdrop-blur-xl transition-all hover:border-cyan-200/22 hover:bg-cyan-200/[0.06] hover:text-cyan-100/78"
+        >
+          <PackageOpen className="h-3.5 w-3.5 shrink-0" />
+          <span className="text-[8px] font-black uppercase tracking-[0.14em]">Inventory</span>
+        </button>
+      )}
 
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
