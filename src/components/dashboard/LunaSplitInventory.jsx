@@ -7,6 +7,7 @@ import {
   Gamepad2,
   GraduationCap,
   Layers3,
+  Lock,
   Package,
   Search,
   Shield,
@@ -15,6 +16,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { libraryGames } from '@/components/dashboard/gamehub/mockLibraryData';
+import { getEquipmentSlotLabel, itemFitsSlot } from './equipmentSlotRules';
 
 const FILTERS = [
   { id: 'all', label: 'All', icon: Package },
@@ -215,8 +217,12 @@ export default function LunaSplitInventory({
     : null;
 
   const targetLabel = selectedSlotId
-    ? selectedSlotId.replace('-', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+    ? getEquipmentSlotLabel(selectedSlotId)
     : 'Choose a loadout slot';
+
+  const selectedItemFitsTarget = Boolean(
+    selectedSlotId && selectedItem && itemFitsSlot(selectedItem, selectedSlotId)
+  );
 
   const resetGameBrowse = () => {
     setSelectedGame(null);
@@ -402,6 +408,7 @@ export default function LunaSplitInventory({
                       const id = itemIdOf(item);
                       const selected = id === selectedItemId;
                       const rarity = rarityClass[item.rarity] || rarityClass.Common;
+                      const compatibleWithTarget = !selectedSlotId || itemFitsSlot(item, selectedSlotId);
                       return (
                         <motion.button
                           key={id}
@@ -411,7 +418,7 @@ export default function LunaSplitInventory({
                           onClick={() => setSelectedItemId(id)}
                           className={`group relative aspect-[1/1.08] overflow-hidden rounded-2xl border p-2.5 text-left transition-all ${selected
                             ? 'border-cyan-200/30 bg-cyan-200/[0.075] shadow-[0_0_24px_rgba(103,232,249,.07)]'
-                            : 'border-white/[0.065] bg-black/15 hover:border-white/[0.12] hover:bg-white/[0.035]'}`}
+                            : 'border-white/[0.065] bg-black/15 hover:border-white/[0.12] hover:bg-white/[0.035]'} ${compatibleWithTarget ? '' : 'opacity-45'}`}
                         >
                           <div className="relative flex h-[62%] items-center justify-center rounded-xl border border-white/[0.04] bg-black/15">
                             {item.icon_url || item.icon ? (
@@ -421,6 +428,11 @@ export default function LunaSplitInventory({
                             )}
                             {item.quantity != null && (
                               <span className="absolute bottom-1 right-1 rounded-md border border-white/[0.07] bg-black/55 px-1.5 py-0.5 text-[7px] font-mono text-white/55">x{item.quantity}</span>
+                            )}
+                            {!compatibleWithTarget && selectedSlotId && (
+                              <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-md border border-white/[0.07] bg-black/55 text-white/35" title={`Does not fit ${targetLabel}`}>
+                                <Lock className="h-2.5 w-2.5" />
+                              </span>
                             )}
                           </div>
                           <div className="mt-2 min-w-0">
@@ -492,6 +504,12 @@ export default function LunaSplitInventory({
                     </div>
 
                     <div className="mt-3 grid gap-1.5">
+                      {selectedSlotId && !selectedItemFitsTarget && (
+                        <div className="flex items-center gap-1.5 rounded-lg border border-amber-200/[0.08] bg-amber-200/[0.025] px-2 py-2 text-[7px] leading-3 text-amber-100/45">
+                          <Lock className="h-3 w-3 shrink-0" />
+                          This item cannot be equipped in {targetLabel}.
+                        </div>
+                      )}
                       {selectedItem.inventoryCategory === 'equipment' && (
                         <button
                           type="button"
@@ -503,12 +521,12 @@ export default function LunaSplitInventory({
                       )}
                       <button
                         type="button"
-                        disabled={!selectedSlotId}
-                        onClick={() => selectedSlotId && onEquip?.(selectedItem)}
+                        disabled={!selectedSlotId || !selectedItemFitsTarget}
+                        onClick={() => selectedSlotId && selectedItemFitsTarget && onEquip?.(selectedItem)}
                         className="flex h-9 items-center justify-center gap-2 rounded-xl border border-cyan-200/15 bg-cyan-200/[0.085] text-[8px] font-black uppercase tracking-[.13em] text-cyan-100/75 transition-all hover:bg-cyan-200/[0.13] disabled:cursor-not-allowed disabled:border-white/[0.05] disabled:bg-white/[0.025] disabled:text-white/22"
                       >
-                        <Check className="h-3 w-3" />
-                        {selectedSlotId ? 'Equip' : 'Select Slot'}
+                        {selectedSlotId && !selectedItemFitsTarget ? <Lock className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                        {!selectedSlotId ? 'Select Slot' : selectedItemFitsTarget ? 'Equip' : 'Wrong Slot'}
                       </button>
                     </div>
                   </>
