@@ -18,11 +18,7 @@ import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioSto
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
 import { setBosses, updateBoss } from './bossStore';
-import { attachBossEventBus } from './boss/useBossEventBus';
 import { createBossEncounterController } from './boss/BossEncounterController';
-import { createBossTornadoLiftBeam } from './boss/BossTornadoLiftBeam';
-import { createBossTelegraphSystem } from './boss/BossTelegraphSystem';
-import { createCameraShakeController } from './camera/CameraShakeController';
 import { createBossCombatDialogue } from './boss/BossCombatDialogue';
 import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { spawnWorldBoss } from './boss/spawnWorldBoss';
@@ -82,9 +78,6 @@ import { CorePlayerStateMachine } from './player/CorePlayerStateMachine';
 import { CoreAnimationController } from './player/CoreAnimationController';
 import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
-import { createTornadoSystem } from './weather/TornadoSystem';
-import TornadoHUD from './weather/TornadoHUD';
-import WeatherTestPanel from './weather/WeatherTestPanel';
 import { createCharacterReadabilityLights } from './CharacterReadabilityLights';
 import { getCharacterDodge, getPlanarBasisFromYaw } from './player/characterDodgeVector';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
@@ -103,7 +96,6 @@ export default function GameWorld3D() {
   const modelRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [envSystem, setEnvSystem] = useState(null);
-  const [tornadoSystemState, setTornadoSystemState] = useState(null);
   const [activeDialogue, setActiveDialogue] = useState(null); // { name, text }
   // Boss encounter — suppresses quest NPCs + gates boss music/dialogue while active.
   const [questNPCSuppressed, setQuestNPCSuppressed] = useState(false);
