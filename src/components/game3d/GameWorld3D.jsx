@@ -20,7 +20,6 @@ import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
 import { setBosses, updateBoss } from './bossStore';
 import { createBossEncounterController } from './boss/BossEncounterController';
 import { createBossCombatDialogue } from './boss/BossCombatDialogue';
-import { makeBossMinionSpawner } from './boss/spawnBossMinion';
 import { spawnWorldBoss } from './boss/spawnWorldBoss';
 import { updateBossMovement, projectBossHead } from './boss/updateBossMovement';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
@@ -586,22 +585,6 @@ export default function GameWorld3D() {
     window.__gw3dEnemies = enemies; window.__gw3dBosses = bossEntities;
     window.dispatchEvent(new CustomEvent('gw3dSceneReady'));
 
-    // Boss event bus — applies bossAction events (AOE / cone / orb / dash / summon)
-    // dispatched by BossBrain. Decouples boss AI from world mutation (multiplayer seam).
-    // The shared model ref also lets appearance updates reach the loaded player.
-    // Assign .current when the player finishes loading below.
-    let _spawnBossMinion = () => {};
-    const applyLocalBossDamage = (amount) => {
-      if (playerInvulTimer.current > 0 || rollDodge() || rollGuard() || rollRangedEvade() || rollDodgeBuff()) return;
-      let dmg = amount;
-      const absorbed = absorbShield(dmg);
-      dmg = Math.max(0, dmg - absorbed);
-      if (dmg <= 0) return;
-      setHP(Math.max(0, getPlayerHUD().hp - dmg));
-      spawnDamageFloat('player', dmg);
-      playerInvulTimer.current = Math.max(playerInvulTimer.current, 0.1);
-    };
-
     // ─── Boss Encounter Controller ──────────────────────────────────────────
     // Single source of truth for "boss encounter" mode. While active: quest NPCs
     // hide, boss music plays, combat dialogue is scoped to the fight. Boss attack
@@ -667,12 +650,6 @@ export default function GameWorld3D() {
     let cachedAttackClip = null;
     deathClipPromise.then((clip) => { cachedDeathClip = clip; });
     attackClipPromise.then((clip) => { cachedAttackClip = clip; });
-
-    // Boss minion spawner — wired now that loader + clip promises exist.
-    _spawnBossMinion = makeBossMinionSpawner({
-      scene, loader, enemies, bossEntities, snapToGround,
-      walkClipPromise, idleClipPromise, setEnemyCount,
-    });
 
     // Helper: pick a random wander point inside the enemy's zone
     const pickWanderTarget = (enemy) => {
