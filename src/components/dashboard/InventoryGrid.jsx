@@ -1,15 +1,49 @@
 import { motion } from 'framer-motion';
+import { CircleDot, Footprints, Gem, Hand, HardHat, Layers3, Shirt, Shield, Sparkles, Swords } from 'lucide-react';
+import { EQUIPMENT_SLOT_DEFINITIONS, getEquipmentSlotDefinition } from './equipmentSlotRules';
 
 export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null }) {
+  const SLOT_ICONS = {
+    helmet: HardHat,
+    armor: Shirt,
+    pants: Shield,
+    boots: Footprints,
+    gloves: Hand,
+    'ring-left': CircleDot,
+    'ring-right': CircleDot,
+    'earring-left': Gem,
+    'earring-right': Gem,
+    'weapon-1': Swords,
+    'weapon-2': Swords,
+    'weapon-3': Swords,
+    'aspect-1': Sparkles,
+    'aspect-2': Sparkles,
+    'aspect-3': Sparkles,
+    'genre-1': Layers3,
+    'genre-2': Layers3,
+    'genre-3': Layers3,
+    'genre-4': Layers3,
+    'artifact-1': Gem,
+    'artifact-2': Gem,
+    'artifact-3': Gem,
+    'artifact-4': Gem,
+    'artifact-5': Gem,
+  };
+
   const compactSlot = (slotId, round = false) => {
     const equippedItem = equippedItems[slotId];
     const selected = selectedSlotId === slotId;
+    const definition = getEquipmentSlotDefinition(slotId);
+    const Icon = SLOT_ICONS[slotId] || Layers3;
+    const label = definition?.label || slotId;
+
     return (
       <button
         key={slotId}
         type="button"
+        title={label}
         onClick={() => handleBoxClick(slotId)}
-        className={`relative flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-hidden border transition-all duration-300 ${round ? 'rounded-full' : 'rounded-xl'} ${selected ? 'scale-[1.04]' : 'hover:scale-[1.03]'}`}
+        className={`group relative flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-hidden border transition-all duration-300 ${round ? 'rounded-full' : 'rounded-xl'} ${selected ? 'scale-[1.04]' : 'hover:scale-[1.03]'}`}
         style={{
           background: selected ? 'rgba(8, 29, 39, 0.92)' : 'rgba(11, 11, 11, 0.85)',
           backdropFilter: 'blur(28px)',
@@ -19,10 +53,21 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
             ? 'inset 0 1px 2px rgba(255,255,255,.12), 0 0 18px rgba(34,211,238,.2)'
             : 'inset 0 1px 2px rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.4)',
         }}
-        aria-label={`Select ${slotId}`}
+        aria-label={`Select ${label}`}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 transition-opacity duration-300 hover:opacity-100" />
-        {equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="relative z-10 h-full w-full object-contain p-2" />}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        {!equippedItem && <Icon className="relative z-10 h-5 w-5 text-white/22 transition-colors group-hover:text-white/42" strokeWidth={1.35} />}
+        {equippedItem && (
+          <>
+            <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="relative z-10 h-full w-full object-contain p-2" />
+            <div className="absolute left-1 top-1 z-20 flex h-4 w-4 items-center justify-center border border-white/[0.08] bg-black/45">
+              <Icon className="h-2.5 w-2.5 text-white/38" strokeWidth={1.5} />
+            </div>
+          </>
+        )}
+        <span className="pointer-events-none absolute inset-x-1 bottom-1 z-20 truncate text-center text-[5px] font-bold uppercase tracking-[0.08em] text-white/18 opacity-0 transition-opacity group-hover:opacity-100">
+          {label}
+        </span>
       </button>
     );
   };
@@ -63,7 +108,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
             <section className="flex flex-col items-center gap-3">
               <CompactHeader width="w-48">Armor</CompactHeader>
               <div className="grid grid-cols-3 gap-3">
-                {[1,2,3,4,5,6,7,8,9].map((i) => compactSlot(`armor-${i}`))}
+                {EQUIPMENT_SLOT_DEFINITIONS.filter((slot) => slot.group === 'armor').map((slot) => compactSlot(slot.id))}
               </div>
             </section>
 
