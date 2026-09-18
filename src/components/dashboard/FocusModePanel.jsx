@@ -1188,6 +1188,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
         className="fixed w-52 rounded-xl border border-white/12 bg-[#090c11]/96 p-1.5 text-white shadow-2xl backdrop-blur-xl pointer-events-auto"
         style={{ top: menuPosition.top, left: menuPosition.left, zIndex: 2147483000 }}
         data-luna-social-menu={friend.id}
+        data-dashboard-quick-control="luna-presence-social-menu"
         data-social-menu-ready="invite-join-message-friend-trade-party"
       >
         <div className="mb-1 border-b border-white/[0.06] px-2 py-2">
@@ -1244,6 +1245,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
             isActive ? 'border-white/45 shadow-[0_0_18px_rgba(226,232,240,0.16)]' : 'border-white/10 hover:border-white/30'
           }`}
           data-luna-presence-slot={friend.id}
+          data-dashboard-quick-control="luna-presence-player"
         >
           <img src={friend.avatar} alt={friend.name} className="pointer-events-none w-full h-full object-cover select-none" draggable={false} />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
