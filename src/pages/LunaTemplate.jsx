@@ -1494,8 +1494,12 @@ export default function LunaTemplate() {
                     </motion.div> :
 
                         <div className="relative flex h-full w-full min-w-0 pointer-events-auto">
-                          {/* I-key workspace: exactly half loadout slots, half inventory. */}
-                          <section className="h-full w-1/2 min-w-0 overflow-hidden">
+                          {/* Normal inventory mode is 30/70 (loadout/inventory).
+                              Enhancement reverses to 70/30 for the detailed card workspace. */}
+                          <section
+                            className="h-full min-w-0 overflow-hidden transition-[width] duration-300"
+                            style={{ width: inventoryUpgradeItem ? '70%' : '30%' }}
+                          >
                             {inventoryUpgradeItem ? (
                               <LunaEquipmentUpgradeWorkspace
                                 item={inventoryUpgradeItem}
@@ -1516,19 +1520,24 @@ export default function LunaTemplate() {
                               toward both the top and bottom so it never feels like a hard wall. */}
                           <div
                             aria-hidden="true"
-                            className="pointer-events-none absolute left-1/2 top-1/2 z-30 h-1/2 w-px -translate-x-1/2 -translate-y-1/2"
+                            className="pointer-events-none absolute top-1/2 z-30 h-1/2 w-px -translate-x-1/2 -translate-y-1/2 transition-[left] duration-300"
                             style={{
+                              left: inventoryUpgradeItem ? '70%' : '30%',
                               background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.055) 18%, rgba(255,255,255,.23) 50%, rgba(255,255,255,.055) 82%, transparent 100%)',
                               boxShadow: '0 0 10px rgba(207,238,255,.06)',
                             }}
                           />
 
-                          <section className="h-full w-1/2 min-w-0 overflow-hidden">
+                          <section
+                            className="h-full min-w-0 overflow-hidden transition-[width] duration-300"
+                            style={{ width: inventoryUpgradeItem ? '30%' : '70%' }}
+                          >
                             <LunaSplitInventory
                               inventory={inventoryData}
                               selectedSlotId={clickedSlot}
                               onEquip={handleEquipItem}
                               onUpgrade={setInventoryUpgradeItem}
+                              narrow={Boolean(inventoryUpgradeItem)}
                             />
                           </section>
                         </div>
