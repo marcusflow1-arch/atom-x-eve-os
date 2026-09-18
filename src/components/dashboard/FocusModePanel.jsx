@@ -1230,29 +1230,29 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
   return (
     <>
       <div ref={anchorRef} className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`} onContextMenu={openMenu}>
-        <motion.div
+        <motion.button
+          type="button"
           whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.985 }}
+          onClick={openMenu}
           onContextMenu={openMenu}
-          title="Click the name or right-click the player for social options"
-          className={`relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-black/25 ${
+          title="Open player social options"
+          aria-label={`Open social actions for ${friend.name}`}
+          aria-haspopup="menu"
+          aria-expanded={isActive}
+          className={`relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-black/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-200/50 ${
             isActive ? 'border-white/45 shadow-[0_0_18px_rgba(226,232,240,0.16)]' : 'border-white/10 hover:border-white/30'
           }`}
           data-luna-presence-slot={friend.id}
         >
-          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover select-none" draggable={false} />
+          <img src={friend.avatar} alt={friend.name} className="pointer-events-none w-full h-full object-cover select-none" draggable={false} />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
-          <button
-            type="button"
-            onClick={openMenu}
-            onContextMenu={openMenu}
-            className="absolute bottom-0 left-0 right-0 z-10 h-5 px-1 text-center text-[7px] font-bold text-white hover:bg-white/[0.08] focus-visible:bg-white/[0.1] focus-visible:outline-none"
-            aria-label={`Open social actions for ${friend.name}`}
-          >
+          <span className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-5 px-1 text-center text-[7px] font-bold leading-5 text-white">
             <span className="block truncate">{friend.name}</span>
-          </button>
+          </span>
           <div className={`pointer-events-none absolute top-1 right-1 w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : friend.status === 'away' ? 'bg-yellow-400' : 'bg-slate-500'}`} />
           {isFriend && <div className="pointer-events-none absolute top-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[6px] font-black uppercase tracking-wider text-white/65">Friend</div>}
-        </motion.div>
+        </motion.button>
       </div>
       <AnimatePresence>{menu}</AnimatePresence>
     </>
