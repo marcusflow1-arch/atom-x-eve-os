@@ -9,7 +9,7 @@ import {
 const childProfile = CREATOR_PARENTING_PREVIEW.children[0];
 
 export default function AdminParentingChild({ enabled = false, className = '' }) {
-  const [modelUrl, setModelUrl] = useState(childProfile.fallbackModelUrl);
+  const [modelUrl, setModelUrl] = useState(null);
 
   useEffect(() => {
     if (!enabled) return undefined;
@@ -17,11 +17,11 @@ export default function AdminParentingChild({ enabled = false, className = '' })
 
     (async () => {
       try {
-        const cached = Array.isArray(window.__model3dCache) ? window.__model3dCache : null;
-        const models = cached || await base44.entities.Model3D.list('-created_date', 200);
-        if (!cached) window.__model3dCache = models;
+        // Fetch fresh Admin model data instead of reusing the shared scene cache.
+        // The parenting preview must resolve the exact Roman child asset.
+        const models = await base44.entities.Model3D.list('-created_date', 500);
         const model = findCreatorChildModel(models, childProfile);
-        if (!cancelled && model?.file_url) setModelUrl(model.file_url);
+        if (!cancelled) setModelUrl(model?.file_url || null);
       } catch (error) {
         console.warn('Parenting preview child model lookup unavailable', error);
       }
@@ -32,12 +32,11 @@ export default function AdminParentingChild({ enabled = false, className = '' })
     };
   }, [enabled]);
 
-  if (!enabled) return null;
+  if (!enabled || !modelUrl) return null;
 
   const config = {
     name: childProfile.displayName,
     gender: childProfile.gender,
-    female_model_variant: 'greco_girl',
     model_url: modelUrl,
     style_preset: 'heroic_fantasy',
     hood_enabled: false,
