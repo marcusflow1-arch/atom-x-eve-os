@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useCallback,
   useContext,
@@ -16,7 +16,6 @@ import {
   Play,
   RotateCcw,
   SlidersHorizontal,
-  Sparkles,
   Users,
   Wheat,
   X,
