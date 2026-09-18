@@ -1002,12 +1002,6 @@ export default function GameWorld3D() {
       // Ability keys: 1..8 → slots 0..7
       if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
-      // T = spawn / stop the tornado weather event (test control)
-      if (k === 't') {
-        if (tornado.getState().active) tornado.stop();
-        else tornado.spawn({ x: (model?.position.x || 0) + 14, z: (model?.position.z || 0) + 10 });
-        e.preventDefault();
-      }
       // 9 = toggle boss encounter mode (test trigger until the real boss is wired)
       if (k === '9' && !e.repeat) {
         if (!bossEncounter.isActive()) {
@@ -1033,101 +1027,10 @@ export default function GameWorld3D() {
         }
         e.preventDefault();
       }
-      // 0 = trigger the tornado-lift-beam boss pattern (only during an encounter).
-      // Falls back to a stand-in boss origin when no boss entity is loaded so the
-      // pattern stays testable before boss AI selection is wired in.
-      if (k === '0' && !e.repeat) {
-        if (model && bossEncounter.isActive()) {
-          bossDialogue.queueLine({
-            id: 'boss_tornado_call',
-            name: 'Kali',
-            text: 'Rise inside the cyclone.',
-            duration: 2.8,
-            cooldown: 10,
-          });
-          const boss = bossEntities[0] || {
-            group: { position: { x: model.position.x + 6, y: model.position.y, z: model.position.z } },
-          };
-          bossTornadoLiftBeam.start({ boss, player: model });
-        }
-        e.preventDefault();
-      }
-      // - = test a telegraphed line beam (yellow lane warning → fire).
-      if (k === '-' && !e.repeat) {
-        if (model) {
-          bossDialogue.queueLine({
-            id: 'boss_beam_call',
-            name: 'Kali',
-            text: 'The heavens answer my call.',
-            duration: 2.5,
-            cooldown: 8,
-          });
-          bossTelegraphs.spawnLine({
-            from: { x: model.position.x - 8, z: model.position.z },
-            to: { x: model.position.x + 8, z: model.position.z },
-            width: 1.4,
-            delay: 1.0,
-            damage: 34,
-            color: 0xfacc15,
-            onFire: ({ hit, from, to }) => {
-              playActionSound('light_beam');
-              window.dispatchEvent(new CustomEvent('bossBeamImpact', { detail: { hit, from, to } }));
-            },
-          });
-        }
-        e.preventDefault();
-      }
-      // [ = test a telegraphed meteor strike (circle warning → impact + shake).
-      if (k === '[' && !e.repeat) {
-        if (model) {
-          bossDialogue.queueLine({
-            id: 'boss_meteor_call',
-            name: 'Kali',
-            text: 'The sky itself falls upon you.',
-            duration: 2.8,
-            cooldown: 10,
-          });
-          bossTelegraphs.spawnCircle({
-            x: model.position.x,
-            z: model.position.z,
-            radius: 2.8,
-            delay: 1.2,
-            damage: 40,
-            color: 0xfb7185,
-            onFire: ({ hit, x, z }) => {
-              playActionSound('meteor_impact');
-              cameraShake.shake({ amplitude: 0.16, duration: 0.32, frequency: 24 });
-              window.dispatchEvent(new CustomEvent('bossMeteorImpact', { detail: { hit, x, z } }));
-            },
-          });
-        }
-        e.preventDefault();
-      }
       // = = toggle all non-boss entities (quest NPCs, mutant enemies, companion)
       //      on/off the map. Hidden by default so only the boss remains.
       if (k === '=' && !e.repeat) {
         npcsVisibleRef.current = !npcsVisibleRef.current;
-        e.preventDefault();
-      }
-      // 8 = queue a generic combat banter line (test the dialogue queue).
-      if (k === '8' && !e.repeat) {
-        bossDialogue.queueLine({
-          id: `test_${Date.now()}`,
-          name: 'Kali',
-          text: 'You are beneath the storm.',
-          duration: 3,
-        });
-        e.preventDefault();
-      }
-      // 7 = queue a once-style threshold line (test once: true behavior).
-      if (k === '7' && !e.repeat) {
-        bossDialogue.queueLine({
-          id: 'boss_40_test',
-          name: 'Kali',
-          text: 'Then face the heart of the storm!',
-          duration: 3.4,
-          once: true,
-        });
         e.preventDefault();
       }
       // Z/X/V/B = companion abilities or Deity Fusion (resolved via loadout).
