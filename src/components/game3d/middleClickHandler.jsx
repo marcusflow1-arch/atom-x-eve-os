@@ -24,29 +24,10 @@ export function handleMiddleClick({ event, renderer, camera, enemies, remoteMana
       const pid = hitMesh.userData?.remotePlayerId;
       const pname = hitMesh.userData?.remotePlayerName || 'Player';
       if (pid) {
-        // If we're in an active duel and this is the opponent → strike instead of opening the menu.
-        const activeDuel = (typeof window !== 'undefined') ? window.__activeDuel : null;
-        if (activeDuel && activeDuel.opponentId === pid) {
-          const point = remoteHits[0].point;
-          let distance = 0;
-          if (window.__localPlayerPos) {
-            const lp = window.__localPlayerPos;
-            const dx = point.x - lp.x, dz = point.z - lp.z;
-            distance = Math.sqrt(dx * dx + dz * dz);
-          }
-          window.dispatchEvent(new CustomEvent('duelAttack', {
-            detail: { targetPlayerId: pid, distance },
-          }));
-          const remote = remoteManager?.getRemotes?.()?.get(pid);
-          return remote?.group ? {
-            id: pid,
-            group: remote.group,
-            name: pname,
-            kind: 'player',
-            aliveRef: () => remoteManager?.getRemotes?.()?.has(pid),
-          } : null;
-        }
-        // Also set the player as the active ability target so dual-mode skills
+        // PvP uses explicit lock-on. Middle-click selects the player only;
+        // it never deals damage by itself. Basic attacks and offensive abilities
+        // are validated against this locked target later in GameWorld3D.
+        // Also set the player as the active ability target so targeted skills
         // (e.g. Lightning Strike, Frost Tornado) know the target is a player
         // and apply their PvP effect instead of enemy damage.
         setTarget({
