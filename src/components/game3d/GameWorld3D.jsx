@@ -1719,16 +1719,52 @@ export default function GameWorld3D() {
           const isRangedClickAttack = rangedClickAttackPressed.current;
           rangedClickAttackPressed.current = false;
           if (playerAttackCooldown.current > 0) return;
-          const attackConsumedByPriorityTarget = dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
-          // 0.2 second delay between attacks.
-          playerAttackCooldown.current = 0.2;
-          // Attack montage is manually gated by the animation state machine.
-          if (!playerAnim?.HandleCombat?.(isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick')) {
-            playOneShot(isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? 'attack' : 'kick', 1.4);
-          }
-          playActionSound('player_attack');
-          let closestEnemy = null;
-          let closestEnemyDist = isRangedClickAttack || getActiveWeaponPath() === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
+
+          const activeDuel = typeof window !== 'undefined' ? window.__activeDuel : null;
+          const activeWeaponPath = getActiveWeaponPath();
+
+          if (activeDuel) {
+            const pvpCheck = validateLockedPvpTarget({
+              attackerPosition: model.position,
+              lockedTarget: lockOnTargetRef.current,
+              activeDuel,
+              weaponPath: activeWeaponPath,
+            });
+
+            if (!pvpCheck.ok) {
+              skillStrikeMultRef.current = 1.0;
+              showCombatNotice(pvpFailureMessage(pvpCheck, activeWeaponPath));
+            } else {
+              // PvP is strictly one locked target. No cones, cleaves, nearest-target
+              // fallback, or collateral hits are allowed.
+              playerAttackCooldown.current = 0.2;
+              if (!playerAnim?.HandleCombat?.(activeWeaponPath === 'ranged' ? 'attack' : 'kick')) {
+                playOneShot(activeWeaponPath === 'ranged' ? 'attack' : 'kick', 1.4);
+              }
+              playActionSound('player_attack');
+              window.dispatchEvent(new CustomEvent('duelAttack', {
+                detail: {
+                  targetPlayerId: pvpCheck.targetId,
+                  lockedTargetId: lockOnTargetRef.current?.id || null,
+                  distance: pvpCheck.distance,
+                  weaponPath: activeWeaponPath,
+                  skillMultiplier: skillStrikeMultRef.current,
+                  source: skillStrikeMultRef.current !== 1 ? 'ability' : 'basic_attack',
+                },
+              }));
+              skillStrikeMultRef.current = 1.0;
+            }
+          } else {
+            const attackConsumedByPriorityTarget = dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
+            // 0.2 second delay between attacks.
+            playerAttackCooldown.current = 0.2;
+            // Attack montage is manually gated by the animation state machine.
+            if (!playerAnim?.HandleCombat?.(isRangedClickAttack || activeWeaponPath === 'ranged' ? 'attack' : 'kick')) {
+              playOneShot(isRangedClickAttack || activeWeaponPath === 'ranged' ? 'attack' : 'kick', 1.4);
+            }
+            playActionSound('player_attack');
+            let closestEnemy = null;
+            let closestEnemyDist = isRangedClickAttack || activeWeaponPath === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
           if (!attackConsumedByPriorityTarget) {
             enemies.forEach((enemy) => {
               if (!enemy.alive || enemy.dying) return;
