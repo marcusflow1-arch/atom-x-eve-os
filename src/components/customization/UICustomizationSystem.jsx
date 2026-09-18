@@ -266,7 +266,6 @@ export function UICustomizationProvider({ children, pathname }) {
   const preset = PRESETS.find((item) => item.id === config.presetId) || PRESETS[0];
   const cardsGraphite = page === 'cards' && preset.id === 'graphite';
   const cardsGraphitePanel = 'radial-gradient(85% 75% at 10% 8%, rgba(203,213,225,.10), transparent 58%), radial-gradient(70% 80% at 88% 92%, rgba(8,11,15,.16), transparent 62%), linear-gradient(100deg, rgba(70,76,84,.52) 0%, rgba(47,52,59,.56) 42%, rgba(30,34,40,.64) 70%, rgba(20,24,29,.72) 100%)';
-  const cardsGraphiteAmbient = 'radial-gradient(70% 62% at 14% 12%, rgba(203,213,225,.10), transparent 60%), radial-gradient(62% 70% at 82% 78%, rgba(12,15,19,.18), transparent 62%), linear-gradient(108deg, rgba(48,53,60,.34) 0%, rgba(31,35,41,.26) 48%, rgba(19,22,27,.34) 100%)';
   usePagePrefabSurfaces(rootRef, Boolean(config.updatedAt) && config.scope === scope && !preset.isDefault, scope, config.elementSettings);
 
   useEffect(() => {
