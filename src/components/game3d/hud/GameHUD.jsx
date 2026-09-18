@@ -4,7 +4,6 @@ import HUDVitals from './HUDVitals';
 import TargetDisplay from './TargetDisplay';
 import HUDGameQuickActions from './HUDGameQuickActions';
 import HUDKillStreakChip from './HUDKillStreakChip';
-import GameEngineEditLauncher from '../GameEngineEditLauncher';
 
 export default function GameHUD() {
   return (
@@ -14,7 +13,6 @@ export default function GameHUD() {
       <HUDGameQuickActions />
       <TargetDisplay />
       <HUDVitals />
-      <GameEngineEditLauncher />
     </>
   );
 }
