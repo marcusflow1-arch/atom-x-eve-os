@@ -426,12 +426,12 @@ export function UICustomizationProvider({ children, pathname }) {
         style={{
           '--atom-ui-accent': preset.accent,
           '--atom-ui-accent-rgb': preset.accentRgb,
-          '--atom-ui-page-bg': preset.isDefault ? 'transparent' : (cardsGraphite ? '#20252b' : (preset.pageBackground || '#090c11')),
-          '--atom-ui-ambient': preset.isDefault ? 'none' : (cardsGraphite ? cardsGraphiteAmbient : preset.ambient),
+          '--atom-ui-page-bg': preset.isDefault ? 'transparent' : (preset.pageBackground || '#090c11'),
+          '--atom-ui-ambient': preset.isDefault ? 'none' : preset.ambient,
           ...(preset.isDefault ? {} : {
-            '--glass-bg': cardsGraphite ? 'rgba(35,40,47,.64)' : preset.surface,
-            '--glass-bg-strong': cardsGraphite ? 'rgba(46,51,58,.76)' : preset.surfaceStrong,
-            '--glass-border': cardsGraphite ? 'rgba(255,255,255,.07)' : preset.border,
+            '--glass-bg': preset.surface,
+            '--glass-bg-strong': preset.surfaceStrong,
+            '--glass-border': preset.border,
             '--atom-ui-panel-bg': cardsGraphite ? cardsGraphitePanel : (preset.panelBackground || preset.surface),
             '--forum-accent': preset.accent,
             '--forum-accent-rgb': preset.accentRgb,
