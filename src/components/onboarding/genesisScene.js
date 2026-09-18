@@ -53,7 +53,8 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
-  let secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
+  let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
+  let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
   let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false;
 
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
@@ -126,6 +127,29 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     if (!visible || document.hidden) return;
     mixer?.update(dt);
     secondaryMixer?.update(dt);
+    secondaryMotionMixer?.update(dt);
+
+    if (secondaryMotionBridge && secondaryModel) {
+      const { hips, spine, restHipsPosition, restHipsQuaternion, restSpineQuaternion, basePosition: childBasePosition, baseQuaternion } = secondaryMotionBridge;
+      const hipsDeltaQuaternion = restHipsQuaternion.clone().invert().multiply(hips.quaternion);
+      const spineDeltaQuaternion = restSpineQuaternion.clone().invert().multiply(spine.quaternion);
+      const hipsEuler = new THREE.Euler().setFromQuaternion(hipsDeltaQuaternion, 'YXZ');
+      const spineEuler = new THREE.Euler().setFromQuaternion(spineDeltaQuaternion, 'YXZ');
+      const motionEuler = new THREE.Euler(
+        THREE.MathUtils.clamp((hipsEuler.x * 0.16) + (spineEuler.x * 0.24), -0.08, 0.08),
+        THREE.MathUtils.clamp((hipsEuler.y * 0.12) + (spineEuler.y * 0.16), -0.10, 0.10),
+        THREE.MathUtils.clamp((hipsEuler.z * 0.18) + (spineEuler.z * 0.28), -0.09, 0.09),
+        'YXZ',
+      );
+      const motionQuaternion = new THREE.Quaternion().setFromEuler(motionEuler);
+      secondaryModel.quaternion.copy(baseQuaternion).multiply(motionQuaternion);
+
+      const sourceBob = hips.position.y - restHipsPosition.y;
+      const bob = THREE.MathUtils.clamp(sourceBob * 0.0035, -0.022, 0.022);
+      secondaryModel.position.copy(childBasePosition);
+      secondaryModel.position.y += bob;
+    }
+
     if (options.portrait && model) { const head = model.getObjectByName('Head'); if (head) { const p = head.getWorldPosition(new THREE.Vector3()); const shift = p.y - controls.target.y; controls.target.y = p.y; camera.position.y += shift; } }
     controls.update();
     outline.render(scene, camera);
