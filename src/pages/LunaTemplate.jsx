@@ -627,14 +627,15 @@ export default function LunaTemplate() {
   };
 
   useEffect(() => {
-    const openInventoryWorkspace = () => {
+    const toggleInventoryWorkspace = () => {
+      // Match the I-key behavior exactly.
+      setClickedSlot(null);
       setInventoryUpgradeItem(null);
       setInventoryPreviewItem(null);
-      setClickedSlot(null);
-      setUiVisible(true);
+      setUiVisible((visible) => !visible);
     };
-    window.addEventListener('openLunaInventoryWorkspace', openInventoryWorkspace);
-    return () => window.removeEventListener('openLunaInventoryWorkspace', openInventoryWorkspace);
+    window.addEventListener('openLunaInventoryWorkspace', toggleInventoryWorkspace);
+    return () => window.removeEventListener('openLunaInventoryWorkspace', toggleInventoryWorkspace);
   }, []);
 
   // Open InventoryPanel from other components (e.g., StatsDropdown InventoryGrid)
