@@ -224,19 +224,61 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
             || clips.find((clip) => String(clip?.name || '').trim().toLowerCase().includes(requested))
             || clips[0];
 
-          let retargeted = sourceClip.clone();
-          try {
-            retargeted = retargetAvatarClip(animationRoot, secondaryModel, sourceClip);
-          } catch (error) {
-            console.warn('Adaptive child animation retarget fallback:', error);
-          }
+          let targetBoneCount = 0;
+          secondaryModel.traverse((node) => {
+            if (node.isBone) targetBoneCount += 1;
+          });
 
-          secondaryAction = secondaryMixer.clipAction(retargeted);
-          secondaryAction.setLoop(config.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, config.loop === false ? 1 : Infinity);
-          secondaryAction.clampWhenFinished = config.loop === false;
-          secondaryAction.reset().play();
+          if (targetBoneCount > 0) {
+            let retargeted = sourceClip.clone();
+            try {
+              retargeted = retargetAvatarClip(animationRoot, secondaryModel, sourceClip);
+            } catch (error) {
+              console.warn('Adaptive child animation retarget fallback:', error);
+            }
+
+            secondaryAction = secondaryMixer.clipAction(retargeted);
+            secondaryAction.setLoop(config.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, config.loop === false ? 1 : Infinity);
+            secondaryAction.clampWhenFinished = config.loop === false;
+            secondaryAction.reset().play();
+
+            if (animationRoot !== secondaryModel) disposeModel(animationRoot);
+          } else {
+            // The current caieshioa GLB is an unskinned static mesh. Keep the
+            // Admin Idle FBX as a hidden motion source and drive a lightweight
+            // runtime rig bridge from its Hips/Spine motion. This keeps the
+            // exact child model while still using the Admin animation library.
+            secondaryMotionRoot = animationRoot;
+            secondaryMotionMixer = new THREE.AnimationMixer(secondaryMotionRoot);
+            secondaryMotionAction = secondaryMotionMixer.clipAction(sourceClip);
+            secondaryMotionAction.setLoop(config.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, config.loop === false ? 1 : Infinity);
+            secondaryMotionAction.clampWhenFinished = config.loop === false;
+            secondaryMotionAction.reset().play();
+
+            const sourceBones = new Map();
+            secondaryMotionRoot.traverse((node) => {
+              if (node.isBone) sourceBones.set(normalizeBoneName(node.name), node);
+            });
+
+            const hips = sourceBones.get('hips');
+            const spine = sourceBones.get('spine')
+              || sourceBones.get('spine1')
+              || sourceBones.get('spine2')
+              || hips;
+
+            if (hips && spine) {
+              secondaryMotionBridge = {
+                hips,
+                spine,
+                restHipsPosition: hips.position.clone(),
+                restHipsQuaternion: hips.quaternion.clone(),
+                restSpineQuaternion: spine.quaternion.clone(),
+                basePosition: secondaryModel.position.clone(),
+                baseQuaternion: secondaryModel.quaternion.clone(),
+              };
+            }
+          }
         }
-        if (animationRoot !== secondaryModel) disposeModel(animationRoot);
       } else if (embeddedIdle) {
         secondaryAction = secondaryMixer.clipAction(embeddedIdle);
         secondaryAction.setLoop(THREE.LoopRepeat, Infinity).play();
