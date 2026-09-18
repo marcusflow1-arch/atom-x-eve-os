@@ -54,7 +54,7 @@ const augmentItem = (item) => {
     return { ...details, ...item, game, genre };
 };
 
-export default function InventoryPanel({ inventory = [], capacity, profile, onClose, onEquip }) {
+export default function InventoryPanel({ inventory = [], capacity, profile, onClose, onEquip, compact = false, embedded = false }) {
     const [subTabGenre, setSubTabGenre] = useState(null);
     const [subTabGame, setSubTabGame] = useState(null);
     const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
@@ -99,9 +99,9 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
     }, [processedInventory]);
 
     return (
-        <div className="w-full h-full flex items-center justify-center p-8 relative">
+        <div className={`w-full h-full flex items-center justify-center relative ${compact ? 'p-2' : 'p-8'}`}>
             {/* Main Container - Liquid Glass */}
-            <div className="w-full h-full max-w-[1600px] flex gap-8 p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden"
+            <div className={`w-full h-full max-w-[1600px] flex border border-white/10 shadow-2xl relative overflow-hidden ${compact ? 'gap-3 p-3 rounded-2xl' : 'gap-8 p-8 rounded-3xl'}`}
                 style={{
                     background: 'rgba(15, 23, 42, 0.6)', 
                     backdropFilter: 'blur(40px) saturate(180%)',
@@ -110,17 +110,19 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                 }}
             >
                 {/* Close Button - positioned absolutely within the glass container */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all group"
-                >
-                    <X className="w-5 h-5" />
-                </button>
+                {!embedded && (
+                  <button
+                      onClick={onClose}
+                      className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all group"
+                  >
+                      <X className="w-5 h-5" />
+                  </button>
+                )}
 
                 {/* Sidebar (Left) */}
-                <aside className="w-72 flex-shrink-0 flex flex-col relative z-10 pt-12">
+                <aside className={`${compact ? 'w-36 pt-1' : 'w-72 pt-12'} flex-shrink-0 flex flex-col relative z-10`}>
                     {/* Search */}
-                    <div className="relative mb-8 px-2">
+                    <div className={`relative px-2 ${compact ? 'mb-3' : 'mb-8'}`}>
                         <input 
                             type="text"
                             value={searchQuery}
@@ -131,7 +133,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                     </div>
 
                     {/* Genres Menu */}
-                    <div className="flex-1 bg-black/20 rounded-2xl p-4 border border-white/5 flex flex-col overflow-hidden">
+                    <div className={`flex-1 bg-black/20 border border-white/5 flex flex-col overflow-hidden ${compact ? 'rounded-xl p-2' : 'rounded-2xl p-4'}`}>
                         <div className="flex items-center gap-2 mb-4 px-2">
                             <Grid className="w-4 h-4 text-cyan-400" />
                             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Game Genres</h3>
@@ -143,7 +145,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                 <button 
                                     key={genre}
                                     onClick={() => { setSubTabGenre(genre); setSubTabGame(null); setSelectedInventoryItem(null); }}
-                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-300 flex items-center justify-between group 
+                                    className={`w-full text-left transition-all duration-300 flex items-center justify-between group ${compact ? 'px-2.5 py-2 rounded-lg text-[11px]' : 'px-4 py-3 rounded-xl text-sm'} 
                                         ${subTabGenre === genre 
                                             ? 'bg-white/10 text-white font-medium shadow-[0_0_15px_rgba(255,255,255,0.1)]' 
                                             : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -158,7 +160,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                 </aside>
 
                 {/* Main Content (Right) */}
-                <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar relative z-10 pt-4">
+                <div className={`flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar relative z-10 ${compact ? 'pt-1' : 'pt-4'}`}>
                 {!subTabGenre ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-500">
                         <Gamepad2 className="w-16 h-16 mb-4 opacity-20" />
@@ -167,12 +169,12 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                     </div>
                 ) : !subTabGame ? (
                     <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                        <div className="flex items-center gap-3 mb-8">
+                        <div className={`flex items-center gap-3 ${compact ? 'mb-4' : 'mb-8'}`}>
                             <Badge variant="outline" className="text-cyan-400 border-cyan-500/30 px-3 py-1">{subTabGenre}</Badge>
-                            <h2 className="text-2xl font-bold text-white">Available Games</h2>
+                            <h2 className={`${compact ? 'text-lg' : 'text-2xl'} font-bold text-white`}>Available Games</h2>
                         </div>
                         
-                        <div className="grid grid-cols-3 gap-6">
+                        <div className={`grid ${compact ? 'grid-cols-2 gap-3' : 'grid-cols-3 gap-6'}`}>
                             {(gamesByGenre[subTabGenre] || []).length > 0 ? (
                                 gamesByGenre[subTabGenre].map((game) => (
                                     <motion.div 
@@ -180,7 +182,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => setSubTabGame(game)}
-                                        className="bg-slate-800/40 border border-white/5 rounded-xl p-4 cursor-pointer hover:bg-slate-800/60 hover:border-cyan-500/30 transition-all group h-48 flex flex-col"
+                                        className={`bg-slate-800/40 border border-white/5 rounded-xl cursor-pointer hover:bg-slate-800/60 hover:border-cyan-500/30 transition-all group flex flex-col ${compact ? 'p-3 h-32' : 'p-4 h-48'}`}
                                     >
                                         <div className="flex-1 flex items-center justify-center bg-black/20 rounded-lg mb-4 relative overflow-hidden">
                                             <Gamepad2 className="w-12 h-12 text-slate-600 group-hover:text-cyan-400 transition-colors" />
@@ -212,19 +214,19 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                             <ChevronLeft className="w-4 h-4" /> Back to {subTabGenre} Games
                         </button>
                         
-                        <div className="flex items-end gap-6 mb-8 border-b border-white/5 pb-6">
-                            <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 flex items-center justify-center shadow-xl">
+                        <div className={`flex items-end border-b border-white/5 ${compact ? 'gap-3 mb-4 pb-4' : 'gap-6 mb-8 pb-6'}`}>
+                            <div className={`${compact ? 'w-14 h-14 rounded-xl' : 'w-24 h-24 rounded-2xl'} bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center shadow-xl`}>
                                 <Gamepad2 className="w-10 h-10 text-cyan-400" />
                             </div>
                             <div>
                                 <Badge className="mb-2 bg-cyan-500/10 text-cyan-400 border-cyan-500/20">{subTabGenre}</Badge>
-                                <h2 className="text-4xl font-black text-white tracking-tight">{subTabGame}</h2>
+                                <h2 className={`${compact ? 'text-2xl' : 'text-4xl'} font-black text-white tracking-tight`}>{subTabGame}</h2>
                                 <p className="text-slate-400 mt-1">Your Progress & Collection</p>
                             </div>
                         </div>
 
-                        <div className="flex flex-1 gap-6 overflow-hidden">
-                            <div className="w-2/3 flex flex-col gap-4">
+                        <div className={`flex flex-1 overflow-hidden ${compact ? 'gap-3' : 'gap-6'}`}>
+                            <div className={`${compact ? 'w-[62%]' : 'w-2/3'} flex flex-col gap-4`}>
                                 {/* Content: Filters & Items (No Box) */}
                                 <div className="flex items-center gap-2 overflow-x-auto pb-2">
                                     {['All Items', 'Weapons', 'Armor', 'Consumables', 'Materials'].map((filter) => (
@@ -239,7 +241,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
 
                                 {/* Items Grid - Removed Outer Box Styles */}
                                 <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
-                                    <div className="grid grid-cols-5 gap-3">
+                                    <div className={`grid ${compact ? 'grid-cols-3 gap-2' : 'grid-cols-5 gap-3'}`}>
                                         {(itemsByGame[subTabGame] || []).map((item) => (
                                             <div 
                                                 key={item.id}
@@ -286,7 +288,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                             </div>
 
                             <div 
-                                className={`w-1/3 rounded-2xl border flex flex-col overflow-hidden shadow-2xl transition-all duration-500 relative
+                                className={`${compact ? 'w-[38%] rounded-xl' : 'w-1/3 rounded-2xl'} border flex flex-col overflow-hidden shadow-2xl transition-all duration-500 relative
                                     ${selectedInventoryItem 
                                         ? selectedInventoryItem.rarity === 'Mythic' || selectedInventoryItem.rarity === 'Mythical'
                                             ? 'bg-red-900/20 border-red-500/30'
@@ -307,11 +309,11 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                 )}
 
                                 {selectedInventoryItem ? (
-                                    <div className="flex flex-col h-full relative z-10 p-5">
+                                    <div className={`flex flex-col h-full relative z-10 ${compact ? 'p-3' : 'p-5'}`}>
                                         {/* Simple Clean Header */}
                                         <div className="flex items-start gap-4 mb-6">
                                             <div className={`
-                                                w-20 h-20 rounded-xl flex items-center justify-center flex-shrink-0 bg-black/20 border border-white/10
+                                                ${compact ? 'w-12 h-12 rounded-lg' : 'w-20 h-20 rounded-xl'} flex items-center justify-center flex-shrink-0 bg-black/20 border border-white/10
                                                 ${selectedInventoryItem.rarity === 'Mythic' ? 'shadow-[0_0_20px_rgba(220,38,38,0.3)]' : ''}
                                                 ${selectedInventoryItem.rarity === 'Epic' ? 'shadow-[0_0_20px_rgba(147,51,234,0.3)]' : ''}
                                             `}>
@@ -322,7 +324,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                                 )}
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-white leading-tight mb-1">{selectedInventoryItem.name}</h3>
+                                                <h3 className={`${compact ? 'text-sm' : 'text-xl'} font-bold text-white leading-tight mb-1`}>{selectedInventoryItem.name}</h3>
                                                 <div className="flex items-center gap-2">
                                                     <Badge variant="outline" className={`
                                                         border px-2 py-0 text-[10px] uppercase tracking-wider font-bold bg-transparent
@@ -363,7 +365,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                         </div>
 
                                         {/* Action Footer */}
-                                        <div className="grid grid-cols-3 gap-2 mt-auto">
+                                        <div className={`grid gap-2 mt-auto ${compact ? 'grid-cols-1' : 'grid-cols-3'}`}>
                                             <Button 
                                                 onClick={() => {
                                                     // Trade with friends/guild - to be implemented
