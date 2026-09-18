@@ -1891,11 +1891,34 @@ export default function GameWorld3D() {
 
         // Try new system first.
         if (newSkillId && newCooldown <= 0) {
-          const result = castSkill(newSkillId, {
-            level: 1,
-            maxHP: getHUDForSkill().maxHP || 100,
-          });
-          if (result.ok) startSkillCooldown(slotIndex);
+          const skill = getSkillById(newSkillId);
+          const activeDuel = typeof window !== 'undefined' ? window.__activeDuel : null;
+          let canCast = true;
+
+          // In PvP, every offensive weapon skill is single-target and requires
+          // the opponent to be explicitly locked and inside that weapon's range.
+          // Self buffs remain self-cast and do not require a target.
+          if (activeDuel && skill?.skill_type === SKILL_TYPE.ACTIVE_ATTACK) {
+            const weaponPath = getActiveWeaponPath();
+            const pvpCheck = validateLockedPvpTarget({
+              attackerPosition: model.position,
+              lockedTarget: lockOnTargetRef.current,
+              activeDuel,
+              weaponPath,
+            });
+            canCast = pvpCheck.ok;
+            if (!canCast) showCombatNotice(pvpFailureMessage(pvpCheck, weaponPath));
+          }
+
+          if (canCast) {
+            const result = castSkill(newSkillId, {
+              level: 1,
+              maxHP: getHUDForSkill().maxHP || 100,
+              slotIndex,
+              targetId: lockOnTargetRef.current?.id || null,
+            });
+            if (result.ok) startSkillCooldown(slotIndex);
+          }
         }
 
         // Legacy targeted abilities still live on abilityStore for now.
@@ -1906,19 +1929,48 @@ export default function GameWorld3D() {
           const ab = ABILITY_DEFINITIONS.find((a) => a.id === abId);
           const target = abState.target;
           if (ab && target) {
-            // Find the live enemy entry
-            const targetEnemy = enemies.find((e) => e.id === target.id && e.alive && !e.dying);
-            startLegacyAbilityCooldown(slotIndex);
-            castLegacyTargetedAbility({
-              ab, target, enemies, scene, model,
-              activeEffectsRef: activeEffects,
-              playActionSound, spawnDamageFloat, spawnXPFloat,
-              getPlayerHUD, playerDerivedRef, cachedDeathClip,
-              awardCompanionXP, companionDefRef, reportEnemyKill, QUESTS,
-              setScore, setPlayerXP, setPlayerLevel, awardXP,
-              playerXPRef, playerLevelRef, xpForLevel,
-              clearTarget, updateTargetHP, getAbilityState,
-            });
+            const activeDuel = typeof window !== 'undefined' ? window.__activeDuel : null;
+
+            if (activeDuel) {
+              const weaponPath = getActiveWeaponPath();
+              const pvpCheck = validateLockedPvpTarget({
+                attackerPosition: model.position,
+                lockedTarget: lockOnTargetRef.current,
+                activeDuel,
+                weaponPath,
+              });
+
+              if (!pvpCheck.ok) {
+                showCombatNotice(pvpFailureMessage(pvpCheck, weaponPath));
+              } else {
+                // Legacy PvP abilities are converted to one locked-target hit.
+                // Their old enemy AOE/nearest-target paths never execute in PvP.
+                startLegacyAbilityCooldown(slotIndex);
+                window.dispatchEvent(new CustomEvent('duelAttack', {
+                  detail: {
+                    targetPlayerId: pvpCheck.targetId,
+                    lockedTargetId: lockOnTargetRef.current?.id || null,
+                    distance: pvpCheck.distance,
+                    weaponPath,
+                    damageOverride: Math.max(1, Number(ab.pvpDamage || ab.damage || 10)),
+                    source: 'ability',
+                    abilityId: ab.id,
+                  },
+                }));
+              }
+            } else {
+              startLegacyAbilityCooldown(slotIndex);
+              castLegacyTargetedAbility({
+                ab, target, enemies, scene, model,
+                activeEffectsRef: activeEffects,
+                playActionSound, spawnDamageFloat, spawnXPFloat,
+                getPlayerHUD, playerDerivedRef, cachedDeathClip,
+                awardCompanionXP, companionDefRef, reportEnemyKill, QUESTS,
+                setScore, setPlayerXP, setPlayerLevel, awardXP,
+                playerXPRef, playerLevelRef, xpForLevel,
+                clearTarget, updateTargetHP, getAbilityState,
+              });
+            }
           }
         }
       }
