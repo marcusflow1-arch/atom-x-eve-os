@@ -8,16 +8,23 @@ import FriendsListContent from '@/components/dashboard/FriendsListContent';
 import MessengerHub from '@/components/friends/MessengerHub';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
-import AdminParentingChild from '@/components/dashboard/AdminParentingChild';
-import { canUseCreatorParentingPreview } from '@/components/parenting/parentingSystem';
+import { base44 } from '@/api/base44Client';
+import {
+  CREATOR_PARENTING_PREVIEW,
+  canUseCreatorParentingPreview,
+  findCreatorChildAnimation,
+  findCreatorChildModel,
+} from '@/components/parenting/parentingSystem';
 
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
+const CREATOR_CHILD = CREATOR_PARENTING_PREVIEW.children[0];
 
 export default function DashboardAvatarScene({ focusMode: _focusMode = false }) {
   const { user } = useAuth();
   const session = useDashboardSession();
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
   const [messagesWorkspace, setMessagesWorkspace] = useState(null);
+  const [creatorChild, setCreatorChild] = useState(null);
 
   // The Friends quick-control workspace is owned by DashboardAvatarOverview.
   // Portal the live Friends/Global Online browser into that existing glass
@@ -39,24 +46,72 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
   const host = session.players.find(p => p.player_id === session.host_id);
   const showCreatorDaughter = canUseCreatorParentingPreview(user);
+
+  useEffect(() => {
+    if (!showCreatorDaughter) {
+      setCreatorChild(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [models, animations] = await Promise.all([
+          base44.entities.Model3D.filter({ id: CREATOR_CHILD.adminModelId }),
+          base44.entities.AnimationFBX.filter({ name: CREATOR_CHILD.animationName }),
+        ]);
+
+        if (cancelled) return;
+
+        const model = findCreatorChildModel(models, CREATOR_CHILD);
+        const animation = findCreatorChildAnimation(animations, CREATOR_CHILD);
+
+        if (!model?.file_url) {
+          setCreatorChild(null);
+          return;
+        }
+
+        setCreatorChild({
+          modelUrl: model.file_url,
+          animationUrl: animation?.file_url || null,
+          animationName: animation?.name || CREATOR_CHILD.animationName,
+          loop: animation?.is_loopable !== false,
+          height: 1.24,
+          offsetX: 0.94,
+          parentOffsetX: -0.34,
+          targetX: 0.24,
+          cameraDistance: 4.3,
+          yaw: 0,
+        });
+      } catch (error) {
+        console.warn('Creator adaptive child assets unavailable', error);
+        if (!cancelled) setCreatorChild(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showCreatorDaughter]);
+
   // Host stays on the right on every client. Guests occupy adjacent body lanes to the left.
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const avatarStage = roster.length > 1 ? (
     <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{right:'min(410px, 36vw)'}} aria-label="Shared dashboard">
       {roster.map(player => <div key={player.player_id} data-dashboard-player={player.player_id} className="relative h-full min-w-0 flex-1" style={{maxWidth:190}}>
         {player.player_id === user?.id
-          ? <PlayerAvatarPreview controls="none" idleOnly />
+          ? <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} />
           : <GenesisModelPreview config={player.appearance || FALLBACK_AVATAR} compact controls="none" idleOnly />}
         <div className="pointer-events-none absolute bottom-[12%] inset-x-0 text-center text-[10px] text-white/80 truncate">{player.player_id === user?.id ? 'You' : player.display_name}</div>
       </div>)}
     </div>
-  ) : <PlayerAvatarPreview controls="none" idleOnly />;
+  ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} />;
 
   return (
     <>
       <EnvironmentHubStageLayer />
       {avatarStage}
-      <AdminParentingChild enabled={showCreatorDaughter} />
       {friendsWorkspace && createPortal(
         <div className="relative z-10 h-full w-full p-4 md:p-5">
           <FriendsListContent />
