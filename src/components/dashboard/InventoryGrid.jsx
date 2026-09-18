@@ -2,7 +2,116 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AIAttributesBox from './AIAttributesBox';
 
-export default function InventoryGrid({ equippedItems, handleBoxClick }) {
+export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null }) {
+  const compactSlot = (slotId, round = false) => {
+    const equippedItem = equippedItems[slotId];
+    const selected = selectedSlotId === slotId;
+    return (
+      <button
+        key={slotId}
+        type="button"
+        onClick={() => handleBoxClick(slotId)}
+        className={`relative flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-hidden border transition-all duration-300 ${round ? 'rounded-full' : 'rounded-xl'} ${selected ? 'scale-[1.04]' : 'hover:scale-[1.03]'}`}
+        style={{
+          background: selected ? 'rgba(8, 29, 39, 0.92)' : 'rgba(11, 11, 11, 0.85)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          borderColor: selected ? 'rgba(103, 232, 249, 0.72)' : 'rgba(255, 255, 255, 0.12)',
+          boxShadow: selected
+            ? 'inset 0 1px 2px rgba(255,255,255,.12), 0 0 18px rgba(34,211,238,.2)'
+            : 'inset 0 1px 2px rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.4)',
+        }}
+        aria-label={`Select ${slotId}`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 transition-opacity duration-300 hover:opacity-100" />
+        {equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="relative z-10 h-full w-full object-contain p-2" />}
+      </button>
+    );
+  };
+
+  const CompactHeader = ({ children, width = 'w-40' }) => (
+    <div className="flex flex-col items-center gap-2">
+      <h2 className="text-[9px] font-light uppercase tracking-[0.3em] text-[#9A9A9A]">{children}</h2>
+      <div className={`relative h-3 ${width}`}>
+        <div className="absolute left-0 right-0 top-1.5 h-px bg-white/10" />
+        <div className="absolute left-1/2 top-0.5 h-px w-12 -translate-x-1/2 bg-white/10" />
+        <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/60" />
+      </div>
+    </div>
+  );
+
+  if (compact) {
+    return (
+      <motion.div
+        key="boxes-compact"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="h-full w-full overflow-y-auto overflow-x-hidden"
+      >
+        <div className="mx-auto min-h-full w-full max-w-[640px] px-5 py-5">
+          <div className="mb-4 flex items-center justify-between border-b border-white/[0.06] pb-3">
+            <div>
+              <p className="text-[8px] font-black uppercase tracking-[0.22em] text-cyan-100/40">Loadout</p>
+              <p className="mt-1 text-[10px] text-white/30">Choose a slot, then equip from the inventory.</p>
+            </div>
+            {selectedSlotId && <span className="rounded-full border border-cyan-200/15 bg-cyan-200/[0.06] px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] text-cyan-100/65">{selectedSlotId}</span>}
+          </div>
+
+          {/* Sections may move to fit this half of the screen, but every group's
+              original row/column membership is preserved. */}
+          <div className="grid grid-cols-[minmax(210px,.9fr)_minmax(0,1.1fr)] items-start gap-x-7 gap-y-5">
+            <section className="flex flex-col items-center gap-3">
+              <CompactHeader width="w-48">Armor</CompactHeader>
+              <div className="grid grid-cols-3 gap-3">
+                {[1,2,3,4,5,6,7,8,9].map((i) => compactSlot(`armor-${i}`))}
+              </div>
+            </section>
+
+            <div className="flex min-w-0 flex-col gap-5">
+              <section className="flex flex-col items-center gap-3">
+                <CompactHeader width="w-52">Weapons</CompactHeader>
+                <div className="flex gap-3">
+                  {[1,2,3].map((i) => compactSlot(`weapon-${i}`))}
+                </div>
+              </section>
+
+              <section className="flex flex-col items-center gap-3">
+                <CompactHeader>Aspects</CompactHeader>
+                <div className="flex gap-3">
+                  {[1,2,3].map((i) => compactSlot(`aspect-${i}`, true))}
+                </div>
+              </section>
+
+              <div className="grid grid-cols-2 gap-4">
+                <section className="flex flex-col items-center gap-3">
+                  <CompactHeader width="w-24">Genre</CompactHeader>
+                  <div className="flex gap-3">
+                    {[1,2].map((i) => compactSlot(`genre-${i}`))}
+                  </div>
+                </section>
+                <section className="flex flex-col items-center gap-3">
+                  <CompactHeader width="w-24">Genre</CompactHeader>
+                  <div className="flex gap-3">
+                    {[3,4].map((i) => compactSlot(`genre-${i}`))}
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <section className="col-span-2 flex flex-col items-center gap-3 border-t border-white/[0.055] pt-5">
+              <CompactHeader width="w-52">Artifacts</CompactHeader>
+              <div className="flex gap-3">
+                {[1,2,3,4,5].map((i) => compactSlot(`artifact-${i}`))}
+              </div>
+            </section>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       key="boxes"
