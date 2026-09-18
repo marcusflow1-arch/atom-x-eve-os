@@ -106,7 +106,7 @@ export default function LunaSplitInventory({
   selectedSlotId = null,
   onEquip,
   onUpgrade,
-  narrow = false,
+  onPreviewItem,
 }) {
   const [browseMode, setBrowseMode] = useState('all');
   const [filter, setFilter] = useState('all');
@@ -114,6 +114,7 @@ export default function LunaSplitInventory({
   const [query, setQuery] = useState('');
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [pinnedPreviewId, setPinnedPreviewId] = useState(null);
 
   const items = useMemo(() => (inventory || []).map(normalizeItem), [inventory]);
 
@@ -212,6 +213,7 @@ export default function LunaSplitInventory({
   }, [games, selectedGame]);
 
   const selectedItem = visibleItems.find((item) => itemIdOf(item) === selectedItemId) || null;
+  const pinnedPreviewItem = visibleItems.find((item) => itemIdOf(item) === pinnedPreviewId) || null;
   const selectedGameMeta = selectedGame
     ? games.find((game) => game.title === selectedGame)
       || { title: selectedGame, ...(gameMeta.get(selectedGame.toLowerCase()) || {}) }
@@ -228,6 +230,23 @@ export default function LunaSplitInventory({
   const resetGameBrowse = () => {
     setSelectedGame(null);
     setSelectedItemId(null);
+    setPinnedPreviewId(null);
+    onPreviewItem?.(null);
+  };
+
+  const previewItem = (item) => {
+    onPreviewItem?.(item || null);
+  };
+
+  const pinItemPreview = (item) => {
+    const id = itemIdOf(item);
+    setSelectedItemId(id);
+    setPinnedPreviewId(id);
+    previewItem(item);
+  };
+
+  const restorePinnedPreview = () => {
+    previewItem(pinnedPreviewItem);
   };
 
   return (
