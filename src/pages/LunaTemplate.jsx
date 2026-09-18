@@ -76,6 +76,7 @@ import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
 import { getEquipmentSlotLabel, itemFitsSlot } from '../components/dashboard/equipmentSlotRules';
 import LunaSplitInventory from '../components/dashboard/LunaSplitInventory';
+import LunaInventoryItemPreview from '../components/dashboard/LunaInventoryItemPreview';
 import LunaEquipmentUpgradeWorkspace from '../components/dashboard/LunaEquipmentUpgradeWorkspace';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
@@ -169,6 +170,7 @@ export default function LunaTemplate() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [uiVisible, setUiVisible] = useState(false);
   const [inventoryUpgradeItem, setInventoryUpgradeItem] = useState(null);
+  const [inventoryPreviewItem, setInventoryPreviewItem] = useState(null);
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
@@ -539,6 +541,7 @@ export default function LunaTemplate() {
         // Each open/close starts from the normal loadout view.
         setClickedSlot(null);
         setInventoryUpgradeItem(null);
+        setInventoryPreviewItem(null);
         setUiVisible((visible) => !visible);
       }
       if (key === 'c') {
@@ -626,6 +629,7 @@ export default function LunaTemplate() {
   useEffect(() => {
     const openInventoryWorkspace = () => {
       setInventoryUpgradeItem(null);
+      setInventoryPreviewItem(null);
       setClickedSlot(null);
       setUiVisible(true);
     };
@@ -743,6 +747,7 @@ export default function LunaTemplate() {
               hostName={currentHostName}
               onReturnDashboard={uiVisible ? () => {
                 setInventoryUpgradeItem(null);
+                setInventoryPreviewItem(null);
                 setClickedSlot(null);
                 setUiVisible(false);
               } : undefined}
@@ -755,6 +760,7 @@ export default function LunaTemplate() {
               hostName={currentHostName}
               onReturnDashboard={uiVisible ? () => {
                 setInventoryUpgradeItem(null);
+                setInventoryPreviewItem(null);
                 setClickedSlot(null);
                 setUiVisible(false);
               } : undefined}
@@ -1494,50 +1500,67 @@ export default function LunaTemplate() {
                     </motion.div> :
 
                         <div className="relative flex h-full w-full min-w-0 pointer-events-auto">
-                          {/* Normal inventory mode is 30/70 (loadout/inventory).
-                              Enhancement reverses to 70/30 for the detailed card workspace. */}
-                          <section
-                            className="h-full min-w-0 overflow-hidden transition-[width] duration-300"
-                            style={{ width: inventoryUpgradeItem ? '70%' : '30%' }}
-                          >
+                          {/* Keep the compact stacked loadout layout, but restore the
+                              overall workspace to an even 50/50 split. */}
+                          <section className="relative h-full w-1/2 min-w-0 overflow-hidden">
                             {inventoryUpgradeItem ? (
                               <LunaEquipmentUpgradeWorkspace
                                 item={inventoryUpgradeItem}
                                 inventory={inventoryData}
-                                onBack={() => setInventoryUpgradeItem(null)}
+                                onBack={() => {
+                                  setInventoryUpgradeItem(null);
+                                  setInventoryPreviewItem(null);
+                                }}
                               />
                             ) : (
-                              <InventoryGrid
-                                equippedItems={equippedItems}
-                                handleBoxClick={handleBoxClick}
-                                compact
-                                selectedSlotId={clickedSlot}
-                              />
+                              <>
+                                <InventoryGrid
+                                  equippedItems={equippedItems}
+                                  handleBoxClick={handleBoxClick}
+                                  compact
+                                  selectedSlotId={clickedSlot}
+                                />
+                                <AnimatePresence>
+                                  {inventoryPreviewItem && (
+                                    <motion.div
+                                      key={inventoryPreviewItem.id || inventoryPreviewItem.itemId || inventoryPreviewItem.name}
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                      transition={{ duration: 0.16 }}
+                                      className="absolute inset-0 z-40"
+                                    >
+                                      <LunaInventoryItemPreview
+                                        item={inventoryPreviewItem}
+                                        selectedSlotId={clickedSlot}
+                                        onEquip={handleEquipItem}
+                                        onUpgrade={(item) => {
+                                          setInventoryPreviewItem(null);
+                                          setInventoryUpgradeItem(item);
+                                        }}
+                                        onClose={() => setInventoryPreviewItem(null)}
+                                      />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </>
                             )}
                           </section>
 
-                          {/* Very light 50%-height divider. Brightest at center and fades
-                              toward both the top and bottom so it never feels like a hard wall. */}
                           <div
                             aria-hidden="true"
-                            className="pointer-events-none absolute top-1/2 z-30 h-1/2 w-px -translate-x-1/2 -translate-y-1/2 transition-[left] duration-300"
+                            className="pointer-events-none absolute left-1/2 top-1/2 z-30 h-1/2 w-px -translate-x-1/2 -translate-y-1/2"
                             style={{
-                              left: inventoryUpgradeItem ? '70%' : '30%',
                               background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.055) 18%, rgba(255,255,255,.23) 50%, rgba(255,255,255,.055) 82%, transparent 100%)',
                               boxShadow: '0 0 10px rgba(207,238,255,.06)',
                             }}
                           />
 
-                          <section
-                            className="h-full min-w-0 overflow-hidden transition-[width] duration-300"
-                            style={{ width: inventoryUpgradeItem ? '30%' : '70%' }}
-                          >
+                          <section className="h-full w-1/2 min-w-0 overflow-hidden">
                             <LunaSplitInventory
                               inventory={inventoryData}
                               selectedSlotId={clickedSlot}
-                              onEquip={handleEquipItem}
-                              onUpgrade={setInventoryUpgradeItem}
-                              narrow={Boolean(inventoryUpgradeItem)}
+                              onPreviewItem={setInventoryPreviewItem}
                             />
                           </section>
                         </div>
