@@ -162,7 +162,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
         { secondaryCharacter },
       );
       scene.current.appearance(config);
-    } catch (error) {
+    } catch {
       setStatus('error');
     }
     return () => {
