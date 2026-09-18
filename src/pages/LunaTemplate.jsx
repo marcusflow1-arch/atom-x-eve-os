@@ -28,7 +28,7 @@ import AINewsContent from '../components/dashboard/AINewsContent';
 import ShinyCard from '../components/shared/ShinyCard';
 import HolographicTile from '@/components/dashboard/HolographicTile';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
-import { inventoryData, profileData, itemData } from '../components/profile/mockData';
+import { inventoryData, itemData } from '../components/profile/mockData';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
