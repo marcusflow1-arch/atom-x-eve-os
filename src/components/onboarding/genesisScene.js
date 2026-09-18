@@ -176,12 +176,16 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
 
       box = new THREE.Box3().setFromObject(secondaryModel);
       const center = box.getCenter(new THREE.Vector3());
-      secondaryModel.position.set(
-        -center.x + Number(config.offsetX ?? 0.9),
-        -box.min.y + Number(config.offsetY ?? 0),
-        -center.z + Number(config.offsetZ ?? 0),
+      secondaryModel.position.set(-center.x, -box.min.y, -center.z);
+
+      secondaryRoot = new THREE.Group();
+      secondaryRoot.position.set(
+        Number(config.offsetX ?? 0.9),
+        Number(config.offsetY ?? 0),
+        Number(config.offsetZ ?? 0),
       );
-      secondaryModel.rotation.y = Number(config.yaw || 0);
+      secondaryRoot.rotation.y = Number(config.yaw || 0);
+      secondaryRoot.add(secondaryModel);
 
       secondaryModel.traverse((node) => {
         if (!node.isMesh) return;
@@ -193,9 +197,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         });
       });
 
-      scene.add(secondaryModel);
+      scene.add(secondaryRoot);
       secondaryMixer = new THREE.AnimationMixer(secondaryModel);
-      secondaryBasePosition = secondaryModel.position.clone();
+      secondaryBasePosition = secondaryRoot.position.clone();
 
       if (model && Number.isFinite(config.parentOffsetX)) {
         model.position.x += Number(config.parentOffsetX);
@@ -204,7 +208,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
 
       controls.target.x = Number.isFinite(config.targetX)
         ? Number(config.targetX)
-        : ((model?.position.x || 0) + secondaryModel.position.x) / 2;
+        : ((model?.position.x || 0) + secondaryRoot.position.x) / 2;
       if (!options.portrait) camera.position.z = Math.max(camera.position.z, Number(config.cameraDistance || 4.2));
       controls.update();
 
