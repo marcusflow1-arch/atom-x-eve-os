@@ -8,6 +8,8 @@ import FriendsListContent from '@/components/dashboard/FriendsListContent';
 import MessengerHub from '@/components/friends/MessengerHub';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
+import AdminParentingChild from '@/components/dashboard/AdminParentingChild';
+import { canUseCreatorParentingPreview } from '@/components/parenting/parentingSystem';
 
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 
@@ -36,6 +38,8 @@ export default function DashboardAvatarScene({ focusMode = false }) {
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
   const host = session.players.find(p => p.player_id === session.host_id);
+  const showCreatorDaughter = canUseCreatorParentingPreview(user)
+    && (!session.host_id || session.host_id === user?.id);
   // Host stays on the right on every client. Guests occupy adjacent body lanes to the left.
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const avatarStage = roster.length > 1 ? (
@@ -53,6 +57,7 @@ export default function DashboardAvatarScene({ focusMode = false }) {
     <>
       <EnvironmentHubStageLayer />
       {avatarStage}
+      <AdminParentingChild enabled={showCreatorDaughter} />
       {friendsWorkspace && createPortal(
         <div className="relative z-10 h-full w-full p-4 md:p-5">
           <FriendsListContent />
