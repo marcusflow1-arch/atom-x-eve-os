@@ -66,6 +66,33 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     });
   });
 
+  const normalizeBoneName = (value = '') => String(value)
+    .replace(/^mixamorig[:_]?/i, '')
+    .replace(/[^a-z0-9]/gi, '')
+    .toLowerCase();
+
+  const retargetClipToModel = (clip) => {
+    if (!options.retargetExternalMotions || !model || !clip?.tracks?.length) return clip;
+
+    const targetBones = new Map();
+    model.traverse((node) => {
+      if (!node.isBone) return;
+      const key = normalizeBoneName(node.name);
+      if (key && !targetBones.has(key)) targetBones.set(key, node.name);
+    });
+    if (!targetBones.size) return clip;
+
+    clip.tracks.forEach((track) => {
+      const separator = track.name.lastIndexOf('.');
+      if (separator <= 0) return;
+      const sourceBone = track.name.slice(0, separator);
+      const property = track.name.slice(separator + 1);
+      const targetName = targetBones.get(normalizeBoneName(sourceBone));
+      if (targetName) track.name = targetName + '.' + property;
+    });
+    return clip;
+  };
+
   const resize = () => {
     const width = Math.max(1, container.clientWidth), height = Math.max(1, container.clientHeight);
     renderer.setSize(width, height);
@@ -118,7 +145,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       if (disposed || version !== animationVersion) { if (animationRoot !== model) disposeModel(animationRoot); return; }
       if (!asset.animations?.length && !animationRoot.animations?.length) throw new Error('No animation available');
       const sourceClip = asset.animations?.[0] || animationRoot.animations?.[0];
-      const clip = sourceClip.clone();
+      const clip = retargetClipToModel(sourceClip.clone());
       clip.tracks.forEach((track) => {
         if (/Hips\.position$/i.test(track.name) || /mixamorig:Hips\.position$/i.test(track.name)) {
           for (let index = 0; index < track.values.length; index += 3) {
@@ -157,6 +184,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
       model.position.set(-center.x, -box.min.y, -center.z);
+      if (Number.isFinite(options.initialYaw)) model.rotation.y = options.initialYaw;
       basePosition = model.position.clone();
       camera.position.set(0, options.portrait ? 1.64 : 1.08, options.portrait ? 1.15 : 3.75);
       controls.target.set(0, options.portrait ? 1.62 : .96, 0);
