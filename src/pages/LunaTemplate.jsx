@@ -531,11 +531,13 @@ export default function LunaTemplate() {
       if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
       const key = (e.key || '').toLowerCase();
       if (key === 'i') {
-        if (clickedSlot) {
-          setClickedSlot(null);
-        } else {
-          setUiVisible((v) => !v);
-        }
+        // I toggles the dedicated 50/50 loadout + inventory workspace.
+        // Closing it also clears the active equip target.
+        setUiVisible((visible) => {
+          const next = !visible;
+          if (!next) setClickedSlot(null);
+          return next;
+        });
       }
       if (key === 'c') {
         setShowConsoleMode((v) => !v);
@@ -1434,7 +1436,8 @@ export default function LunaTemplate() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.5 }}
-                      className="w-full">
+                      className="absolute inset-0 z-10 pointer-events-none"
+                      style={{ paddingLeft: '388px', paddingTop: '64px', paddingBottom: '32px' }}>
 
                   <AnimatePresence mode="wait">
                   {expandedGenre ?
@@ -1443,7 +1446,7 @@ export default function LunaTemplate() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="fixed inset-0 z-[70] p-8"
+                          className="fixed inset-0 z-[70] p-8 pointer-events-auto"
                           style={{
                             background: 'rgba(11, 11, 11, 0.95)',
                             backdropFilter: 'blur(40px)',
@@ -1457,7 +1460,27 @@ export default function LunaTemplate() {
                           
                     </motion.div> :
 
-                        <InventoryGrid equippedItems={equippedItems} handleBoxClick={handleBoxClick} />
+                        <div className="flex h-full w-full min-w-0 pointer-events-auto">
+                          {/* I-key workspace: exactly half loadout slots, half inventory. */}
+                          <section className="h-full w-1/2 min-w-0 overflow-hidden border-r border-white/[0.07]">
+                            <InventoryGrid
+                              equippedItems={equippedItems}
+                              handleBoxClick={handleBoxClick}
+                              compact
+                              selectedSlotId={clickedSlot}
+                            />
+                          </section>
+                          <section className="h-full w-1/2 min-w-0 overflow-hidden">
+                            <InventoryPanel
+                              inventory={inventoryData}
+                              capacity={profileData.inventoryCapacity}
+                              profile={profileData}
+                              onEquip={handleEquipItem}
+                              compact
+                              embedded
+                            />
+                          </section>
+                        </div>
                         }
                   </AnimatePresence>
                 </motion.div>
@@ -1469,7 +1492,7 @@ export default function LunaTemplate() {
 
       {/* Inventory Panel Overlay (Global) - Single Instance */}
       {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
-      {clickedSlot &&
+      {clickedSlot && !uiVisible &&
               <div
                 className="absolute inset-0 z-[60]"
                 key="inventory-panel-container">
