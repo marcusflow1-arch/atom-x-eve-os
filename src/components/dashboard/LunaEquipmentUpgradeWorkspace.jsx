@@ -182,7 +182,7 @@ export default function LunaEquipmentUpgradeWorkspace({ item, inventory = [], on
     const targetType = typeOf(item);
     return (inventory || []).filter((candidate) => {
       if (!candidate || idOf(candidate) === idOf(item)) return false;
-      return typeOf(candidate) === targetType && levelOf(candidate) <= cardLevel;
+      return typeOf(candidate) === targetType && levelOf(candidate) < cardLevel;
     });
   }, [inventory, item, cardLevel]);
 
