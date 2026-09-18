@@ -104,53 +104,45 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
             {selectedSlotId && <span className="rounded-full border border-cyan-200/15 bg-cyan-200/[0.06] px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] text-cyan-100/65">{selectedSlotId}</span>}
           </div>
 
-          {/* Sections may move to fit this half of the screen, but every group's
-              original row/column membership is preserved. */}
-          <div className="grid grid-cols-[minmax(210px,.9fr)_minmax(0,1.1fr)] items-start gap-x-7 gap-y-5">
-            <section className="flex flex-col items-center gap-3">
+          {/* Narrow 30% loadout rail. Keep each slot family intact and stack
+              the families vertically so the grid stays readable at smaller widths. */}
+          <div className="flex flex-col items-center gap-5">
+            <section className="flex w-full flex-col items-center gap-3">
+              <CompactHeader width="w-52">Weapons</CompactHeader>
+              <div className="flex gap-3">
+                {[1,2,3].map((i) => compactSlot(`weapon-${i}`))}
+              </div>
+            </section>
+
+            <section className="flex w-full flex-col items-center gap-3 border-t border-white/[0.05] pt-4">
               <CompactHeader width="w-48">Equipment</CompactHeader>
               <div className="grid grid-cols-3 gap-3">
                 {EQUIPMENT_SLOT_DEFINITIONS.filter((slot) => slot.group === 'armor').map((slot) => compactSlot(slot.id))}
               </div>
             </section>
 
-            <div className="flex min-w-0 flex-col gap-5">
-              <section className="flex flex-col items-center gap-3">
-                <CompactHeader width="w-52">Weapons</CompactHeader>
-                <div className="flex gap-3">
-                  {[1,2,3].map((i) => compactSlot(`weapon-${i}`))}
-                </div>
-              </section>
-
-              <section className="flex flex-col items-center gap-3">
-                <CompactHeader>Aspects</CompactHeader>
-                <div className="flex gap-3">
-                  {[1,2,3].map((i) => compactSlot(`aspect-${i}`, true))}
-                </div>
-              </section>
-
-              <div className="grid grid-cols-2 gap-4">
-                <section className="flex flex-col items-center gap-3">
-                  <CompactHeader width="w-24">Genre</CompactHeader>
-                  <div className="flex gap-3">
-                    {[1,2].map((i) => compactSlot(`genre-${i}`))}
-                  </div>
-                </section>
-                <section className="flex flex-col items-center gap-3">
-                  <CompactHeader width="w-24">Genre</CompactHeader>
-                  <div className="flex gap-3">
-                    {[3,4].map((i) => compactSlot(`genre-${i}`))}
-                  </div>
-                </section>
-              </div>
-            </div>
-
-            <section className="col-span-2 flex flex-col items-center gap-3 border-t border-white/[0.055] pt-5">
+            <section className="flex w-full flex-col items-center gap-3 border-t border-white/[0.05] pt-4">
               <CompactHeader width="w-52">Artifacts</CompactHeader>
               <div className="flex gap-3">
                 {[1,2,3,4,5].map((i) => compactSlot(`artifact-${i}`))}
               </div>
             </section>
+
+            <div className="grid w-full grid-cols-2 items-start gap-4 border-t border-white/[0.05] pt-4">
+              <section className="flex min-w-0 flex-col items-center gap-3">
+                <CompactHeader width="w-32">Genre</CompactHeader>
+                <div className="grid grid-cols-2 gap-3">
+                  {[1,2,3,4].map((i) => compactSlot(`genre-${i}`))}
+                </div>
+              </section>
+
+              <section className="flex min-w-0 flex-col items-center gap-3">
+                <CompactHeader width="w-32">Aspects</CompactHeader>
+                <div className="grid grid-cols-2 gap-3">
+                  {[1,2,3].map((i) => compactSlot(`aspect-${i}`, true))}
+                </div>
+              </section>
+            </div>
           </div>
         </div>
       </motion.div>
