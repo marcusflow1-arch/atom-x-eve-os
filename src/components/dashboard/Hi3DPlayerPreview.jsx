@@ -5,7 +5,7 @@ import { HI3D_COMMANDS, HI3D_MODEL_URL } from '@/components/onboarding/embeddedA
 
 export default function Hi3DPlayerPreview({ config, interactive = false, portrait = false, controls = "none", idleOnly = controls == "none", onCapabilities, secondaryCharacter = null }) {
   const mount = useRef(null), stage = useRef(null), scene = useRef(null);
-  const keys = useRef(new Set()), lastInput = useRef(Date.now());
+  const keys = useRef(new Set());
   const [status, setStatus] = useState('loading'), [clip, setClip] = useState('Idle');
   const [ready, setReady] = useState(false), [armed, setArmed] = useState(false);
   const shared=useSyncExternalStore(avatarAnimationStore.subscribe,avatarAnimationStore.getSnapshot);
