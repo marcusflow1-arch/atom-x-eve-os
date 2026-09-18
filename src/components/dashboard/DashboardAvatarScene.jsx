@@ -38,8 +38,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
   const host = session.players.find(p => p.player_id === session.host_id);
-  const showCreatorDaughter = canUseCreatorParentingPreview(user)
-    && (!session.host_id || session.host_id === user?.id);
+  const showCreatorDaughter = canUseCreatorParentingPreview(user);
   // Host stays on the right on every client. Guests occupy adjacent body lanes to the left.
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const avatarStage = roster.length > 1 ? (
