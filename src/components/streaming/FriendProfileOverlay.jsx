@@ -1,384 +1,572 @@
-import React, { useEffect, useState } from 'react';
-import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star, Phone, Video, Mic, Paperclip, Image as ImageIcon, Smile, MoreHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  Check,
+  ChevronRight,
+  CircleUserRound,
+  Clock3,
+  Crown,
+  Film,
+  Flame,
+  Gamepad2,
+  Gem,
+  Grid3X3,
+  Heart,
+  Image as ImageIcon,
+  Layers3,
+  MapPin,
+  MessageSquare,
+  MoreHorizontal,
+  Play,
+  Search,
+  Shield,
+  Sparkles,
+  Star,
+  Swords,
+  Trophy,
+  Upload,
+  UserRound,
+  Users,
+  X,
+  Zap,
+} from 'lucide-react';
 import FriendMessenger from '../friends/FriendMessenger';
 
-const recentGamesData = [
-  { name: 'Elden Ring', image: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=200&q=80' },
-  { name: 'Cyberpunk', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&q=80' },
-  { name: 'Shadow Tome', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&q=80' },
-  { name: 'Hollow Odyssey', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&q=80' },
-  { name: 'Norse Legends', image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&q=80' },
-  { name: 'Dungeon Age', image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=200&q=80' },
-  { name: 'Apex Chronicles', image: 'https://images.unsplash.com/photo-1559163499-413811fb2344?w=200&q=80' },
-  { name: 'The Witcher', image: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=200&q=80' },
+const NAV_ITEMS = [
+  ['overview', 'Overview'],
+  ['achievements', 'Achievements'],
+  ['games', 'Games'],
+  ['cards', 'Cards'],
+  ['activity', 'Activity'],
+  ['clips', 'Clips'],
+  ['media', 'Media'],
+  ['stats', 'Stats'],
+  ['about', 'About'],
 ];
 
-const achievementCards = [
-  { rarity: 'LEGENDARY', color: 'border-yellow-400/60', glow: 'shadow-yellow-500/20', bg: 'bg-yellow-500/10' },
-  { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
-  { rarity: 'RARE', color: 'border-blue-400/50', glow: 'shadow-blue-500/10', bg: 'bg-blue-500/10' },
-  { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
-  { rarity: 'EPIC', color: 'border-purple-400/50', glow: 'shadow-purple-500/10', bg: 'bg-purple-500/10' },
-  { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
-  { rarity: 'RARE', color: 'border-blue-400/50', glow: '', bg: 'bg-blue-500/10' },
-  { rarity: 'LEGENDARY', color: 'border-yellow-400/60', glow: 'shadow-yellow-500/20', bg: 'bg-yellow-500/10' },
-  { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
-  { rarity: 'RARE', color: 'border-blue-400/50', glow: '', bg: 'bg-blue-500/10' },
-  { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
-  { rarity: 'EPIC', color: 'border-purple-400/50', glow: '', bg: 'bg-purple-500/10' },
-  { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
+const demoGames = [
+  { name: 'Neon Racer', genre: 'Racing', progress: 92, image: 'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=700&q=85' },
+  { name: 'Elden Ring', genre: 'RPG', progress: 78, image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=700&q=85' },
+  { name: 'Starfield', genre: 'Sci-Fi', progress: 84, image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=700&q=85' },
+  { name: 'Shadow Realm', genre: 'Action', progress: 71, image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=700&q=85' },
+  { name: 'Cyberwake', genre: 'Shooter', progress: 88, image: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=700&q=85' },
+  { name: 'Frostline', genre: 'Survival', progress: 62, image: 'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=700&q=85' },
 ];
 
-// Liquid glass style — slightly darker translucent
-const glassStyle = {
-  background: 'rgba(6, 9, 16, 0.72)',
-  backdropFilter: 'blur(60px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(60px) saturate(180%)',
-  borderLeft: '1px solid rgba(255,255,255,0.07)',
-  boxShadow: '0 4px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
+const cardArt = [
+  ['Elden Lord', 'LEGENDARY', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&q=85'],
+  ['Cyberpunk 2077', 'LEGENDARY', 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85'],
+  ['Starlight', 'EPIC', 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=500&q=85'],
+  ['Resident Evil 4', 'EPIC', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=500&q=85'],
+  ['Forza Horizon 5', 'RARE', 'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=500&q=85'],
+  ['Shadow Realm', 'RARE', 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=500&q=85'],
+  ['Neon Racer', 'RARE', 'https://images.unsplash.com/photo-1493238792000-8113da705763?w=500&q=85'],
+  ['Master Chief', 'RARE', 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500&q=85'],
+];
+
+const clipArt = [
+  ['Neon Rush – Perfect Drift', '0:24', demoGames[0].image],
+  ['Clutch 1v3 – Final Circle', '0:31', demoGames[1].image],
+  ['Starfall Takeoff', '0:18', demoGames[2].image],
+  ['Blade Parry Masterclass', '0:27', demoGames[3].image],
+  ['Insane Overtake', '0:20', demoGames[4].image],
+  ['Squad Wipe', '0:33', demoGames[5].image],
+];
+
+const mediaArt = [
+  ['Neon Horizon', 'Photo Mode', demoGames[0].image],
+  ['EVE City Nights', 'Screenshot', 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=700&q=85'],
+  ['Solitude', 'Fan Art', 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=700&q=85'],
+  ['Race Forever', 'Wallpaper', 'https://images.unsplash.com/photo-1470214304380-aadaedcfff1b?w=700&q=85'],
+  ['Midnight Run', 'Screenshot', 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=700&q=85'],
+  ['A New Dawn', 'Wallpaper', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=700&q=85'],
+  ['Pit Stop', 'Photo Mode', 'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=700&q=85'],
+  ['Neon & Rain', 'Screenshot', 'https://images.unsplash.com/photo-1493238792000-8113da705763?w=700&q=85'],
+];
+
+const glass = {
+  background: 'linear-gradient(145deg, rgba(7,16,29,.76), rgba(6,13,24,.58))',
+  border: '1px solid rgba(125,211,252,.14)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.035), 0 12px 30px rgba(0,0,0,.16)',
 };
 
-export default function FriendProfileOverlay({ friend, onClose, onPanelChange }) {
+function Section({ children, className = '' }) {
+  return <section className={`rounded-2xl overflow-hidden ${className}`} style={glass}>{children}</section>;
+}
+
+function SectionTitle({ title, action = 'View All', icon: Icon }) {
+  return (
+    <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className="h-3.5 w-3.5 text-cyan-300/70" />}
+        <h3 className="text-[11px] font-bold text-white/82">{title}</h3>
+      </div>
+      {action && <button className="text-[8px] font-semibold text-cyan-200/62 hover:text-cyan-100">{action}</button>}
+    </div>
+  );
+}
+
+function StatTile({ label, value, sub, icon: Icon, accent = 'text-cyan-300' }) {
+  return (
+    <div className="rounded-xl border border-white/[0.055] bg-black/15 px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className={`h-3.5 w-3.5 ${accent}`} />}
+        <div>
+          <p className="text-[6px] font-black uppercase tracking-[.15em] text-white/22">{label}</p>
+          <p className="mt-0.5 text-[15px] font-black text-white/86">{value}</p>
+        </div>
+      </div>
+      {sub && <p className="mt-1 text-[7px] text-white/28">{sub}</p>}
+    </div>
+  );
+}
+
+function ProgressRing({ value, label, color = '#22d3ee' }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        className="grid h-12 w-12 place-items-center rounded-full"
+        style={{ background: `conic-gradient(${color} ${value * 3.6}deg, rgba(255,255,255,.06) 0deg)` }}
+      >
+        <div className="grid h-[38px] w-[38px] place-items-center rounded-full bg-[#08111d] text-[9px] font-black text-white/85">{value}%</div>
+      </div>
+      <span className="text-[7px] text-white/36">{label}</span>
+    </div>
+  );
+}
+
+function OverviewPage({ friend }) {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-8">
+        <SectionTitle title="Recent Games" icon={Gamepad2} />
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+          {demoGames.slice(0, 6).map((game) => (
+            <div key={game.name} className="group relative h-24 overflow-hidden rounded-xl border border-white/[0.05]">
+              <img src={game.image} alt={game.name} className="absolute inset-0 h-full w-full object-cover opacity-48 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-62" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060b13] via-[#060b13]/28 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-2.5">
+                <p className="text-[9px] font-bold text-white/84">{game.name}</p>
+                <p className="text-[6px] uppercase tracking-[.12em] text-white/30">{game.genre} · {game.progress}%</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Profile Snapshot" icon={UserRound} action={null} />
+        <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+          <StatTile label="Games" value="28" icon={Gamepad2} />
+          <StatTile label="Friends" value="652" icon={Users} />
+          <StatTile label="Achievements" value="1.2K" icon={Trophy} />
+          <StatTile label="Card Power" value="3.3K" icon={Zap} />
+        </div>
+      </Section>
+
+      <Section className="col-span-5">
+        <SectionTitle title="Achievement Progress" icon={Trophy} />
+        <div className="flex items-center gap-4 px-4 pb-4">
+          <ProgressRing value={86} label="Complete" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-end justify-between">
+              <div><span className="text-2xl font-black text-white">1,248</span><span className="ml-1 text-sm text-white/38">/ 1,450</span></div>
+              <span className="text-[8px] text-cyan-200/60">202 to go</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div className="h-full w-[86%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" />
+            </div>
+            <p className="mt-2 text-[8px] italic text-white/28">“Progress isn’t a number. It’s a story.”</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Top Genres" icon={Layers3} />
+        <div className="flex justify-between px-4 pb-4">
+          <ProgressRing value={92} label="RPG" />
+          <ProgressRing value={84} label="Horror" color="#34d399" />
+          <ProgressRing value={78} label="Action" color="#60a5fa" />
+          <ProgressRing value={71} label="Strategy" color="#a78bfa" />
+        </div>
+      </Section>
+
+      <Section className="col-span-3">
+        <SectionTitle title="Current Streak" icon={Flame} action={null} />
+        <div className="px-4 pb-4">
+          <div className="flex items-center gap-3">
+            <Flame className="h-8 w-8 text-amber-400" />
+            <div><p className="text-xl font-black text-amber-300">12 Weeks</p><p className="text-[7px] text-white/28">Challenge streak</p></div>
+          </div>
+          <div className="mt-3 flex justify-between">
+            {['M','T','W','T','F','S','S'].map((d, i) => <span key={i} className={`grid h-5 w-5 place-items-center rounded-full border text-[6px] ${i < 5 ? 'border-cyan-300/40 text-cyan-200' : 'border-white/10 text-white/22'}`}>{i < 5 ? <Check className="h-2.5 w-2.5" /> : d}</span>)}
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-12">
+        <SectionTitle title="Recent Activity" icon={Activity} />
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+          {[
+            ['Unlocked “Celestial Blade”', '2 hours ago', Trophy],
+            ['Won 5 ranked matches in a row', 'Yesterday', Swords],
+            ['Uploaded a new Neon Racer clip', '2 days ago', Film],
+          ].map(([text, time, Icon]) => (
+            <div key={text} className="flex items-center gap-3 rounded-xl border border-white/[0.045] bg-white/[0.018] p-3">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-300/[0.06]"><Icon className="h-3.5 w-3.5 text-cyan-200/65" /></div>
+              <div><p className="text-[8px] font-medium text-white/62">{text}</p><p className="mt-1 text-[7px] text-white/22">{time}</p></div>
+            </div>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function AchievementsPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-6">
+        <SectionTitle title="Achievement Progress" icon={Trophy} />
+        <div className="flex items-center gap-5 px-4 pb-4">
+          <div className="grid h-20 w-20 place-items-center rounded-full border border-cyan-300/20 bg-cyan-300/[0.04] shadow-[0_0_26px_rgba(34,211,238,.08)]">
+            <Trophy className="h-9 w-9 text-cyan-200" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div><span className="text-3xl font-black text-white">1,248</span><span className="ml-1 text-lg text-white/36">/ 1,450</span></div>
+            <p className="text-sm font-bold text-white/78">86% <span className="font-normal text-white/32">Complete</span></p>
+            <div className="mt-2 h-1.5 rounded-full bg-white/[0.06]"><div className="h-full w-[86%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" /></div>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-6">
+        <SectionTitle title="Completion by Genre" icon={Layers3} />
+        <div className="flex justify-around px-3 pb-4">
+          {[[92,'RPG','#22d3ee'],[78,'Action','#60a5fa'],[84,'Horror','#34d399'],[71,'Strategy','#a78bfa'],[88,'Racing','#67e8f9'],[62,'Other','#c084fc']].map(([v,l,c]) => <ProgressRing key={l} value={v} label={l} color={c} />)}
+        </div>
+      </Section>
+
+      <Section className="col-span-7">
+        <SectionTitle title="Rarest Achievements" icon={Gem} />
+        <div className="grid grid-cols-5 gap-2 px-4 pb-4">
+          {cardArt.slice(0,5).map(([name, rarity, image], i) => (
+            <div key={name} className="overflow-hidden rounded-xl border border-violet-300/18 bg-violet-300/[0.025]">
+              <div className="relative h-20"><img src={image} alt={name} className="h-full w-full object-cover opacity-62" /><div className="absolute inset-0 bg-gradient-to-t from-[#070d17] to-transparent" /><Gem className="absolute left-2 top-2 h-3 w-3 text-violet-300" /></div>
+              <div className="p-2"><p className="truncate text-[7px] font-bold text-white/72">{name}</p><p className="mt-1 text-[6px] text-violet-300/70">Ultra Rare · {['0.2','0.3','0.4','0.9','0.6'][i]}%</p></div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-5">
+        <SectionTitle title="Perfect Games (37)" icon={Crown} />
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+          {demoGames.slice(0,6).map(game => <div key={game.name} className="rounded-lg border border-white/[0.05] bg-white/[0.015] p-2"><img src={game.image} alt={game.name} className="h-12 w-full rounded-md object-cover opacity-70" /><p className="mt-1 truncate text-[7px] font-bold text-white/62">{game.name}</p><p className="text-[6px] text-amber-300/60">🏆 100%</p></div>)}
+        </div>
+      </Section>
+
+      <Section className="col-span-8">
+        <SectionTitle title="Achievement Milestones" icon={Star} action={null} />
+        <div className="grid grid-cols-3 gap-4 px-4 pb-4">
+          {['250 Achievements','500 Achievements','1,000 Achievements'].map((m,i)=><div key={m} className="flex gap-2"><div className={`mt-0.5 h-7 w-1 rounded-full ${i===2?'bg-cyan-300':'bg-emerald-400/60'}`} /><div><p className="text-[8px] font-bold text-white/68">{m}</p><p className="mt-1 text-[7px] italic text-white/25">{['The journey begins.','Halfway there.','A major milestone.'][i]}</p></div></div>)}
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Next Unlock Targets" icon={Zap} action={null} />
+        <div className="space-y-2 px-4 pb-4">
+          {['Master of Speed','Into the Unknown','Survival Instinct'].map((x,i)=><div key={x}><div className="flex justify-between text-[7px]"><span className="text-white/60">{x}</span><span className="text-white/30">{[80,80,60][i]}%</span></div><div className="mt-1 h-1 rounded bg-white/[0.06]"><div className="h-full rounded bg-cyan-400" style={{width:`${[80,80,60][i]}%`}} /></div></div>)}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function GamesPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-8">
+        <SectionTitle title="Game Library" icon={Gamepad2} />
+        <div className="grid grid-cols-3 gap-3 px-4 pb-4">
+          {demoGames.map((game) => (
+            <div key={game.name} className="group overflow-hidden rounded-xl border border-white/[0.05] bg-black/10">
+              <div className="relative h-28"><img src={game.image} alt={game.name} className="h-full w-full object-cover opacity-55 transition group-hover:scale-[1.03] group-hover:opacity-70" /><div className="absolute inset-0 bg-gradient-to-t from-[#070d16] via-transparent to-transparent" /><span className="absolute bottom-2 left-2 rounded-md bg-black/50 px-2 py-1 text-[6px] text-white/62">{game.genre}</span></div>
+              <div className="p-3"><div className="flex justify-between"><p className="text-[9px] font-bold text-white/78">{game.name}</p><span className="text-[7px] text-cyan-200/60">{game.progress}%</span></div><div className="mt-2 h-1 rounded-full bg-white/[0.06]"><div className="h-full rounded-full bg-cyan-400" style={{width:`${game.progress}%`}} /></div></div>
+            </div>
+          ))}
+        </div>
+      </Section>
+      <div className="col-span-4 space-y-3">
+        <Section><SectionTitle title="Playing Now" icon={Play} action={null} /><div className="px-4 pb-4"><img src={demoGames[0].image} alt="" className="h-24 w-full rounded-xl object-cover opacity-60" /><p className="mt-2 text-sm font-bold text-white/78">Neon Racer</p><p className="text-[7px] text-white/28">Ranked · 2h 14m this session</p></div></Section>
+        <Section><SectionTitle title="Library Stats" icon={BarChart3} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Owned" value="28" /><StatTile label="Completed" value="11" /><StatTile label="Hours" value="3.4K" /><StatTile label="Favorites" value="8" /></div></Section>
+      </div>
+    </div>
+  );
+}
+
+function CardsPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-4">
+        <SectionTitle title="Featured Card" icon={Crown} />
+        <div className="flex gap-3 px-4 pb-4">
+          <div className="relative h-52 w-36 shrink-0 overflow-hidden rounded-xl border border-amber-300/45 shadow-[0_0_28px_rgba(245,158,11,.12)]">
+            <img src={cardArt[0][2]} alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-amber-300/10" />
+            <div className="absolute inset-x-2 bottom-2"><p className="text-center text-[9px] font-black text-amber-100">ELDEN LORD</p><p className="text-center text-[6px] text-amber-300">LEGENDARY</p></div>
+          </div>
+          <div className="min-w-0 pt-2">
+            <p className="text-sm font-black text-white">Elden Lord</p><p className="text-[8px] text-white/35">The Fallen Crown</p>
+            <div className="mt-3 space-y-2 text-[8px] text-white/48"><p>🔥 +12% Damage Boost</p><p>🟠 +8% XP Gain</p><p>⚔ +6% Move Speed</p><p>✨ +4% Rare Drop Rate</p></div>
+          </div>
+        </div>
+      </Section>
+      <Section className="col-span-4">
+        <SectionTitle title="Collection Overview" icon={Grid3X3} />
+        <div className="px-4 pb-4"><p className="text-3xl font-black text-cyan-200">248</p><p className="text-[7px] text-white/28">Total Cards</p><div className="mt-4 grid grid-cols-4 gap-2 text-center">{[['32','Legendary','#facc15'],['78','Epic','#c084fc'],['124','Rare','#22d3ee'],['239','Common','#cbd5e1']].map(([v,l,c])=><div key={l}><div className="mx-auto h-8 w-5 rounded-sm border" style={{borderColor:c}} /><p className="mt-1 text-[9px] font-bold text-white/65">{v}</p><p className="text-[5px]" style={{color:c}}>{l}</p></div>)}</div><div className="mt-4 h-1.5 rounded bg-white/[0.06]"><div className="h-full w-[68%] rounded bg-cyan-400" /></div><p className="mt-1 text-[6px] text-white/25">68% Collection Completion</p></div>
+      </Section>
+      <Section className="col-span-4"><SectionTitle title="Active Deck / Build" icon={Layers3} /><div className="flex gap-2 px-4 pb-3">{cardArt.slice(0,5).map(([n,,img])=><img key={n} src={img} alt={n} className="h-20 min-w-0 flex-1 rounded-lg border border-white/[0.08] object-cover opacity-78" />)}</div><div className="grid grid-cols-3 gap-2 px-4 pb-4"><StatTile label="Deck Power" value="3,280" /><StatTile label="Playstyle" value="Balanced" /><StatTile label="Synergy" value="5/5" /></div></Section>
+      <Section className="col-span-8">
+        <SectionTitle title="My Cards" icon={Layers3} />
+        <div className="flex gap-2 px-4 pb-3"><div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-white/20" /><input className="h-8 w-full rounded-lg border border-white/[0.06] bg-black/15 pl-8 text-[8px] text-white/60 outline-none" placeholder="Search cards..." /></div><button className="rounded-lg border border-white/[0.06] px-3 text-[7px] text-white/40">All Rarities</button><button className="rounded-lg border border-white/[0.06] px-3 text-[7px] text-white/40">All Types</button></div>
+        <div className="grid grid-cols-4 gap-2 px-4 pb-4">{cardArt.map(([n,r,img])=><div key={n} className="overflow-hidden rounded-lg border border-cyan-300/[0.12] bg-black/10"><img src={img} alt={n} className="h-20 w-full object-cover opacity-72" /><div className="p-2"><p className="truncate text-[7px] font-bold text-white/65">{n}</p><p className="text-[6px] text-cyan-200/45">{r}</p></div></div>)}</div>
+      </Section>
+      <Section className="col-span-4"><SectionTitle title="Recent Unlocks" icon={Sparkles} /><div className="space-y-2 px-4 pb-4">{cardArt.slice(0,5).map(([n,r,img],i)=><div key={n} className="flex items-center gap-2"><img src={img} alt="" className="h-9 w-12 rounded object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-[7px] font-bold text-white/62">{n}</p><p className="text-[6px] text-cyan-200/42">{r}</p></div><span className="text-[6px] text-white/20">{i+2}h ago</span></div>)}</div></Section>
+    </div>
+  );
+}
+
+function ActivityPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-8"><SectionTitle title="Activity Feed" icon={Activity} /><div className="space-y-2 px-4 pb-4">{[
+        ['Unlocked Celestial Blade in Elden Ring','2 hours ago',Trophy],
+        ['Finished a 6-match ranked session in Neon Racer','4 hours ago',Gamepad2],
+        ['Reached 1,248 total achievements','Yesterday',Crown],
+        ['Shared a new clip: Perfect Drift','2 days ago',Film],
+        ['Added Starlight to active card deck','3 days ago',Layers3],
+        ['Completed Frostline survival challenge','4 days ago',Shield],
+      ].map(([t,time,Icon])=><div key={t} className="flex gap-3 rounded-xl border border-white/[0.045] bg-white/[0.015] p-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-300/[0.06]"><Icon className="h-4 w-4 text-cyan-200/62" /></div><div><p className="text-[9px] font-semibold text-white/62">{t}</p><p className="mt-1 text-[7px] text-white/22">{time}</p></div></div>)}</div></Section>
+      <div className="col-span-4 space-y-3"><Section><SectionTitle title="This Week" icon={Clock3} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Play Time" value="27h" /><StatTile label="Sessions" value="18" /><StatTile label="Wins" value="42" /><StatTile label="Uploads" value="9" /></div></Section><Section><SectionTitle title="Most Active" icon={Flame} action={null} /><div className="px-4 pb-4"><p className="text-sm font-black text-white/76">Neon Racer</p><p className="mt-1 text-[7px] text-white/28">11h 42m played this week</p><div className="mt-3 h-1 rounded bg-white/[0.06]"><div className="h-full w-[78%] rounded bg-cyan-400" /></div></div></Section></div>
+    </div>
+  );
+}
+
+function ClipsPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-8">
+        <SectionTitle title="Featured Clip" icon={Film} />
+        <div className="px-3 pb-3">
+          <div className="relative h-[270px] overflow-hidden rounded-xl border border-white/[0.06]">
+            <img src={demoGames[0].image} alt="" className="h-full w-full object-cover opacity-72" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
+            <button className="absolute left-1/2 top-1/2 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white/70 bg-black/35"><Play className="h-6 w-6 fill-white text-white" /></button>
+            <div className="absolute inset-x-4 bottom-3"><p className="text-sm font-black text-white">Neon Rush – Perfect Drift</p><p className="text-[7px] text-white/35">Neon Racer · 12.4K views · 842 reactions · 126 comments</p></div>
+          </div>
+        </div>
+      </Section>
+      <Section className="col-span-4"><SectionTitle title="Clip Performance" icon={BarChart3} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Views" value="12.4K" sub="+38%" /><StatTile label="Reactions" value="842" sub="+21%" /><StatTile label="Comments" value="126" sub="+12%" /><StatTile label="Shares" value="314" sub="+27%" /></div><div className="px-4 pb-4"><button className="h-9 w-full rounded-lg border border-cyan-300/30 bg-cyan-300/[0.05] text-[8px] font-bold text-cyan-200">View Clip Analytics</button></div></Section>
+      <Section className="col-span-12"><SectionTitle title="Recent Clips" icon={Film} /><div className="grid grid-cols-6 gap-2 px-4 pb-4">{clipArt.map(([n,t,img])=><div key={n}><div className="relative h-20 overflow-hidden rounded-lg border border-white/[0.05]"><img src={img} alt={n} className="h-full w-full object-cover opacity-70" /><span className="absolute bottom-1 right-1 rounded bg-black/65 px-1 text-[6px] text-white">{t}</span></div><p className="mt-1 truncate text-[7px] font-bold text-white/58">{n}</p></div>)}</div></Section>
+      <Section className="col-span-4"><SectionTitle title="Trending Clips" icon={Flame} /><div className="space-y-2 px-4 pb-4">{clipArt.slice(0,3).map(([n,,img],i)=><div key={n} className="flex gap-2"><span className="grid h-7 w-7 place-items-center rounded-full bg-amber-300/[0.08] text-[8px] font-black text-amber-300">{i+1}</span><img src={img} alt="" className="h-8 w-12 rounded object-cover" /><p className="text-[7px] font-semibold text-white/56">{n}</p></div>)}</div></Section>
+      <Section className="col-span-4"><SectionTitle title="Most Viewed" icon={Play} /><div className="px-4 pb-4"><StatTile label="Top Clip" value="112.4K" sub="Zero to Hero · Starfield" /></div></Section>
+      <Section className="col-span-4"><SectionTitle title="Top Reactions" icon={Heart} /><div className="px-4 pb-4"><StatTile label="Reactions" value="6.1K" sub="Unstoppable · Elden Ring" /></div></Section>
+    </div>
+  );
+}
+
+function MediaPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-9">
+        <SectionTitle title="Featured Media" icon={ImageIcon} />
+        <div className="px-3 pb-3"><div className="relative h-44 overflow-hidden rounded-xl border border-white/[0.06]"><img src={mediaArt[0][2]} alt="" className="h-full w-full object-cover opacity-78" /><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" /><div className="absolute inset-x-4 bottom-3"><p className="text-[10px] font-black text-white">Neon Horizon</p><p className="text-[7px] text-white/35">Neon Racer · Photo Mode</p></div></div></div>
+      </Section>
+      <Section className="col-span-3"><SectionTitle title="Upload Stats" icon={Upload} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Uploads" value="247" /><StatTile label="Screenshots" value="124" /><StatTile label="Fan Art" value="68" /><StatTile label="Wallpapers" value="32" /></div></Section>
+      <Section className="col-span-9"><SectionTitle title="All Media (247)" icon={Grid3X3} /><div className="flex gap-2 px-4 pb-3">{['All Media','Screenshots','Fan Art','Wallpapers','Photo Mode','Playlists'].map((x,i)=><button key={x} className={`rounded-full border px-3 py-1.5 text-[7px] ${i===0?'border-cyan-300/35 bg-cyan-300/[0.08] text-cyan-200':'border-white/[0.06] text-white/32'}`}>{x}</button>)}</div><div className="grid grid-cols-4 gap-2 px-4 pb-4">{mediaArt.map(([n,t,img])=><div key={n}><img src={img} alt={n} className="h-24 w-full rounded-lg border border-white/[0.05] object-cover opacity-72" /><p className="mt-1 text-[7px] font-bold text-white/58">{n}</p><p className="text-[6px] text-white/25">{t}</p></div>)}</div></Section>
+      <div className="col-span-3 space-y-3"><Section><SectionTitle title="Favorite Media" icon={Star} /><div className="grid grid-cols-3 gap-1.5 px-4 pb-4">{mediaArt.slice(0,3).map(([n,,img])=><img key={n} src={img} alt={n} className="h-14 w-full rounded-md object-cover" />)}</div></Section><Section><SectionTitle title="Recent Comments" icon={MessageSquare} /><div className="space-y-2 px-4 pb-4">{['This shot is insane! 🔥','Clean edit, wallpaper material!','What a vibe. Love this game.'].map((t,i)=><div key={t}><p className="text-[7px] font-bold text-white/58">{['Ariana','marcus flowers','Kairo'][i]}</p><p className="text-[7px] text-white/28">{t}</p></div>)}</div></Section></div>
+    </div>
+  );
+}
+
+function StatsPage() {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-12"><SectionTitle title="Career Stats" icon={BarChart3} /><div className="grid grid-cols-6 gap-2 px-4 pb-4"><StatTile label="Hours Played" value="3.4K" /><StatTile label="Games" value="28" /><StatTile label="Wins" value="1,094" /><StatTile label="Achievements" value="1.2K" /><StatTile label="Perfect Games" value="37" /><StatTile label="Card Power" value="3.3K" /></div></Section>
+      <Section className="col-span-7"><SectionTitle title="Genre Mastery" icon={Layers3} /><div className="space-y-3 px-4 pb-4">{demoGames.map(g=><div key={g.genre}><div className="flex justify-between text-[7px]"><span className="text-white/52">{g.genre}</span><span className="text-cyan-200/52">{g.progress}%</span></div><div className="mt-1 h-1.5 rounded bg-white/[0.05]"><div className="h-full rounded bg-gradient-to-r from-cyan-500 to-blue-400" style={{width:`${g.progress}%`}} /></div></div>)}</div></Section>
+      <Section className="col-span-5"><SectionTitle title="Competitive Snapshot" icon={Swords} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Rank" value="Diamond II" /><StatTile label="Win Rate" value="59%" /><StatTile label="K/D" value="2.18" /><StatTile label="Streak" value="12W" /></div></Section>
+    </div>
+  );
+}
+
+function AboutPage({ friend }) {
+  return (
+    <div className="grid grid-cols-12 gap-3">
+      <Section className="col-span-7"><SectionTitle title="About" icon={BookOpen} action={null} /><div className="px-4 pb-4"><p className="text-sm font-bold text-white/76">{friend.name}</p><p className="mt-2 max-w-2xl text-[9px] leading-5 text-white/38">Competitive player, collector, clip maker and achievement hunter. Loves racing, RPGs and finding difficult challenges worth mastering.</p><div className="mt-5 grid grid-cols-2 gap-3">{[['Location','Detroit, MI'],['Member Since','Mar 2024'],['Current Game',friend.game || 'Neon Racer'],['Status',friend.status || 'Online']].map(([l,v])=><div key={l}><p className="text-[6px] font-black uppercase tracking-[.16em] text-white/18">{l}</p><p className="mt-1 text-[9px] text-white/56">{v}</p></div>)}</div></div></Section>
+      <Section className="col-span-5"><SectionTitle title="Favorite Genres" icon={Heart} action={null} /><div className="flex flex-wrap gap-2 px-4 pb-4">{['RPG','Action','Racing','Horror','Strategy','Shooter'].map(x=><span key={x} className="rounded-full border border-cyan-300/[0.12] bg-cyan-300/[0.035] px-3 py-1.5 text-[7px] text-cyan-100/52">{x}</span>)}</div></Section>
+      <Section className="col-span-12"><SectionTitle title="Profile Badges" icon={Crown} /><div className="grid grid-cols-5 gap-2 px-4 pb-4">{['Elden Lord','The Legend','Survivor','Master Pilot','Night City Legend'].map((x,i)=><div key={x} className="rounded-xl border border-white/[0.05] bg-white/[0.015] p-4 text-center"><div className={`mx-auto grid h-10 w-10 place-items-center rounded-xl ${['bg-amber-300/10','bg-cyan-300/10','bg-violet-300/10','bg-sky-300/10','bg-fuchsia-300/10'][i]}`}><Star className="h-4 w-4 text-white/60" /></div><p className="mt-2 text-[8px] font-bold text-white/58">{x}</p></div>)}</div></Section>
+    </div>
+  );
+}
+
+export default function FriendProfileOverlay({ friend, onClose }) {
+  const [activeTab, setActiveTab] = useState('overview');
   const [showChat, setShowChat] = useState(false);
 
-  const statusColor =
-    friend.status === 'online' ? 'bg-green-400' :
-    friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
-
-  const handleOpenMessenger = () => {
-    setShowChat((current) => !current);
-  };
+  const normalized = useMemo(() => ({
+    id: friend?.id || friend?.friend_id || 'friend',
+    name: friend?.name || friend?.friend_name || friend?.display_name || 'Player',
+    avatar: friend?.avatar || friend?.friend_avatar || `https://i.pravatar.cc/300?u=${friend?.friend_id || friend?.id || 'friend'}`,
+    status: friend?.status || 'online',
+    game: friend?.game || friend?.current_game || 'Neon Racer',
+    background: friend?.bg_image || 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600&q=90',
+  }), [friend]);
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const onKey = (event) => {
       if (event.key !== 'Escape') return;
-
-      if (showChat) {
-        setShowChat(false);
-        return;
-      }
-
-      onClose?.();
+      if (showChat) setShowChat(false);
+      else onClose?.();
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [showChat, onClose]);
+
+  const content = {
+    overview: <OverviewPage friend={normalized} />,
+    achievements: <AchievementsPage />,
+    games: <GamesPage />,
+    cards: <CardsPage />,
+    activity: <ActivityPage />,
+    clips: <ClipsPage />,
+    media: <MediaPage />,
+    stats: <StatsPage />,
+    about: <AboutPage friend={normalized} />,
+  }[activeTab];
 
   return (
     <AnimatePresence>
       <motion.div
-        key="friend-profile-panel"
-        initial={{ x: 20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: 20, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="fixed z-[68] flex flex-col overflow-hidden"
+        key="friend-profile-redesign"
+        initial={{ opacity: 0, x: 18 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 18 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+        className="fixed z-[68] overflow-hidden text-white"
         style={{
-          left: '320px',   // 80px sidebar + 240px friends panel
+          left: '320px',
           top: '64px',
-          bottom: '52px',
           right: 0,
-          ...glassStyle,
+          bottom: '52px',
+          background: 'linear-gradient(180deg, rgba(6,12,22,.98), rgba(4,10,18,.98))',
+          borderLeft: '1px solid rgba(125,211,252,.09)',
         }}
       >
-        {/* Header bar */}
-        <div
-          className="flex items-center justify-between px-5 py-3 flex-shrink-0"
-          style={{ background: 'rgba(255,255,255,0.025)' }}
-        >
-          <div className="flex items-center gap-2.5">
-            <div className={`w-2 h-2 rounded-full ${statusColor}`} />
-            <span className="text-white font-bold text-sm tracking-wide">{friend.name}</span>
-            {friend.game && <span className="text-white/35 text-xs">· {friend.game}</span>}
-          </div>
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="relative h-[208px] shrink-0 overflow-hidden border-b border-cyan-200/[0.10]">
+            <img src={normalized.background} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,9,17,.96)_0%,rgba(4,11,20,.74)_38%,rgba(4,10,18,.34)_70%,rgba(3,8,15,.72)_100%)]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#06101c] via-transparent to-black/10" />
 
-        </div>
-
-        {/* Body: two columns */}
-        <div className="flex flex-1 overflow-hidden min-h-0">
-
-          {/* LEFT column — avatar + stats */}
-          <div
-            className="w-[220px] flex-shrink-0 flex flex-col overflow-y-auto border-r border-white/[0.05]"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {/* Avatar */}
-            <div className="relative h-64 flex-shrink-0 overflow-hidden">
-              <MiniAvatarViewer fill />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#060910cc] via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-2.5 left-3 pointer-events-none">
-                <p className="text-white font-bold text-base leading-tight">{friend.name}</p>
-                <p className="text-white/45 text-[10px]">Recruit · Lvl 5</p>
-              </div>
-              <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center pointer-events-none"
-                style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                <Star className="w-3.5 h-3.5 text-yellow-400" />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="px-3.5 py-3 space-y-1">
-              {[
-                { label: 'Gamer Score', value: '0' },
-                { label: 'AI Points', value: '0' },
-                { label: 'Influence', value: '0' },
-                { label: 'Games Played', value: '0' },
-                { label: 'Achievements', value: '0' },
-              ].map(s => (
-                <div key={s.label} className="flex items-center justify-between py-1 border-b border-white/[0.04]">
-                  <span className="text-white/40 text-[10px] flex items-center gap-1.5">
-                    <TrendingUp className="w-2.5 h-2.5" /> {s.label}
-                  </span>
-                  <span className="text-white text-[10px] font-semibold">{s.value}</span>
+            <div className="absolute inset-x-0 bottom-0 top-0 flex items-end px-6 pb-5">
+              <div className="flex min-w-0 flex-1 items-end gap-5">
+                <div className="relative h-[170px] w-[155px] shrink-0 overflow-hidden rounded-t-[34px] border border-white/[0.06] bg-black/15">
+                  <img src={normalized.avatar} alt={normalized.name} className="h-full w-full object-cover object-top opacity-88" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#07101b]/85 via-transparent to-transparent" />
                 </div>
-              ))}
-            </div>
 
-            {/* Top Genre */}
-            <div className="px-3.5 pb-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-white/35 text-[9px] uppercase tracking-wider">Top Genre</span>
-                <span className="text-white/40 text-[9px]">Lv. 7</span>
-              </div>
-              <div className="px-2.5 py-1 rounded-lg text-white/70 text-[10px] font-semibold"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                Action
-              </div>
-            </div>
-
-            {/* PUP Rank */}
-            <div className="px-3.5 pb-3">
-              <p className="text-white/35 text-[9px] uppercase tracking-wider mb-1.5">PUP Rank Score</p>
-              <p className="text-yellow-400 font-black text-2xl mb-1">8,420</p>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
-                style={{ background: 'rgba(59,130,246,0.18)', border: '1px solid rgba(96,165,250,0.35)', color: '#93c5fd' }}>
-                Diamond II
-              </span>
-              <div className="w-full h-1 rounded-full mt-2 overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                <div className="h-full rounded-full" style={{ width: '71%', background: 'linear-gradient(to right, #3b82f6, #22d3ee)' }} />
-              </div>
-              <p className="text-white/25 text-[9px] mt-1">71% to Diamond I</p>
-            </div>
-
-            {/* Action buttons */}
-            <div className="px-3.5 pb-4 flex gap-1.5">
-              <button
-                onClick={handleOpenMessenger}
-                className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-cyan-400 text-[8px] font-semibold">{showChat ? 'Profile' : 'Message'}</span>
-              </button>
-              <button
-                className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-              >
-                <Swords className="w-3.5 h-3.5 text-white/50" />
-                <span className="text-white/40 text-[8px]">Challenge</span>
-              </button>
-              <button
-                className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-              >
-                <Users className="w-3.5 h-3.5 text-white/50" />
-                <span className="text-white/40 text-[8px]">Interact</span>
-              </button>
-            </div>
-          </div>
-
-          {/* RIGHT column — main content OR inline chat */}
-          <div className="flex-1 overflow-hidden min-w-0 flex flex-col" style={{ scrollbarWidth: 'none' }}>
-            {showChat ? (
-              <div className="flex flex-col h-full min-h-0">
-                <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                <div className="min-w-0 flex-1 pb-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/10">
-                      <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+                    <h1 className="truncate text-[28px] font-black tracking-tight text-white">{normalized.name}</h1>
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.55)]" />
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[8px] text-white/48">
+                    <span className="text-emerald-300/80">● {normalized.status}</span><span>·</span><span>{normalized.game}</span>
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-full border border-cyan-200/25 bg-black/25 text-xl font-black text-white">47</div>
+                    <div className="w-64 max-w-[38vw]">
+                      <div className="flex justify-between text-[7px] text-white/30"><span>12,449 / 28,000 XP</span><span>Lv. 47</span></div>
+                      <div className="mt-1 h-1.5 rounded-full bg-white/[0.07]"><div className="h-full w-[44%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" /></div>
+                      <p className="mt-1.5 text-[8px] italic text-white/46">“Different games. Same drive.”</p>
                     </div>
-                    <div>
-                      <p className="text-white/80 text-[11px] font-semibold leading-none">{friend.name}</p>
-                      <p className="text-white/35 text-[9px] mt-0.5">{friend.status === 'online' ? 'Active now' : friend.game ? `Playing ${friend.game}` : 'Available'}</p>
-                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    {[
-                      { icon: Phone, color: 'text-cyan-300', label: 'Call', eventName: 'friendMessengerStartVoiceCall' },
-                      { icon: Video, color: 'text-violet-300', label: 'Video', eventName: 'friendMessengerStartVideoCall' },
-                      { icon: Paperclip, color: 'text-amber-300', label: 'Files' },
-                      { icon: MoreHorizontal, color: 'text-white/60', label: 'More' },
-                    ].map(action => {
-                      const Icon = action.icon;
-                      return (
-                        <button
-                          key={action.label}
-                          onClick={() => {
-                            if (action.eventName) {
-                              window.dispatchEvent(new CustomEvent(action.eventName));
-                            }
-                          }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
-                          style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
-                          title={action.label}
-                        >
-                          <Icon className={`w-3.5 h-3.5 ${action.color}`} />
-                        </button>
-                      );
-                    })}
-
+                  <div className="mt-2 flex items-center gap-4 text-[7px] text-white/34">
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Detroit, MI</span>
+                    <span className="flex items-center gap-1"><Clock3 className="h-3 w-3" /> Member since Mar 2024</span>
                   </div>
-                </div>
 
-                <div className="px-4 py-2 flex items-center gap-2 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.16)', boxShadow: 'inset 0 -10px 30px rgba(0,0,0,0.18)' }}>
-                  <button className="px-2.5 py-1 rounded-full text-[9px] font-semibold text-cyan-300" style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.22)' }}>Messages</button>
-                  <button className="px-2.5 py-1 rounded-full text-[9px] font-semibold text-white/45" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>Voice Chat</button>
-                  <button className="px-2.5 py-1 rounded-full text-[9px] font-semibold text-white/45" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>Files</button>
-                </div>
-
-                <div className="flex-1 overflow-hidden min-h-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.28), rgba(0,0,0,0.18))', boxShadow: 'inset 0 18px 40px rgba(0,0,0,0.22)' }}>
-                  <FriendMessenger
-                    friend={{
-                      friend_id: friend.id?.toString() || 'temp',
-                      friend_name: friend.name,
-                      friend_avatar: friend.avatar,
-                      status: friend.status,
-                      current_game: friend.game
-                    }}
-                    onClose={() => setShowChat(false)}
-                    inline
-                  />
-                </div>
-
-                <div className="px-4 py-3 flex items-center gap-2 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Send file">
-                    <Paperclip className="w-3.5 h-3.5 text-amber-300" />
-                  </button>
-                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Send image">
-                    <ImageIcon className="w-3.5 h-3.5 text-violet-300" />
-                  </button>
-                  <div className="flex-1 h-10 rounded-2xl flex items-center px-3" style={{ background: 'rgba(0,0,0,0.26)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: 'inset 0 8px 18px rgba(0,0,0,0.18)' }}>
-                    <span className="text-white/30 text-[10px]">Message {friend.name}...</span>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button onClick={() => setShowChat(true)} className="flex h-8 items-center gap-2 rounded-lg bg-cyan-400 px-4 text-[8px] font-black text-[#03111b] hover:bg-cyan-300"><MessageSquare className="h-3 w-3" /> Message</button>
+                    <button className="flex h-8 items-center gap-2 rounded-lg border border-white/[0.10] bg-black/20 px-4 text-[8px] font-semibold text-white/62"><Users className="h-3 w-3" /> Invite to Party</button>
+                    <button className="flex h-8 items-center gap-2 rounded-lg border border-white/[0.10] bg-black/20 px-3 text-[8px] font-semibold text-white/48">More <ChevronRight className="h-3 w-3 rotate-90" /></button>
                   </div>
-                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Emoji">
-                    <Smile className="w-3.5 h-3.5 text-cyan-300" />
-                  </button>
-                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Voice message">
-                    <Mic className="w-3.5 h-3.5 text-emerald-300" />
-                  </button>
                 </div>
               </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
 
-            {/* Recent Games */}
-            <div>
-              <p className="text-white/35 text-[9px] uppercase tracking-wider mb-2">Recent Games</p>
-              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                {recentGamesData.map((g, i) => (
-                  <div key={i} className="flex-shrink-0 w-14 rounded-lg overflow-hidden border border-white/10 relative group cursor-pointer hover:border-white/25 transition-colors">
-                    <img src={g.image} alt={g.name} className="w-full h-[72px] object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Gamepad2 className="w-3.5 h-3.5 text-white/80" />
-                    </div>
-                  </div>
+              <div className="mb-1 ml-4 grid w-[430px] max-w-[37vw] grid-cols-5 overflow-hidden rounded-xl border border-cyan-200/[0.12] bg-[#07101b]/72 backdrop-blur-xl">
+                {[['652','Friends'],['28','Games'],['1.2K','Achievements'],['4','Clans'],['3.3K','Card Power']].map(([v,l]) => (
+                  <div key={l} className="border-r border-white/[0.05] px-3 py-3 text-center last:border-r-0"><p className="text-lg font-black text-white/90">{v}</p><p className="mt-0.5 text-[6px] uppercase tracking-[.1em] text-white/30">{l}</p></div>
                 ))}
               </div>
             </div>
 
-            {/* Achievement Cards */}
-            <div>
-              <p className="text-white/35 text-[9px] uppercase tracking-wider mb-2">Achievement Cards</p>
-              <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                {achievementCards.map((card, i) => (
-                  <div key={i}
-                    className={`flex-shrink-0 w-12 h-[68px] rounded-lg border ${card.color} ${card.bg} ${card.glow ? `shadow-lg ${card.glow}` : ''} flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:scale-105 transition-transform`}>
-                    <span className="text-white/25 text-xl font-black">?</span>
-                    <span className={`text-[6px] font-bold uppercase ${
-                      card.rarity === 'LEGENDARY' ? 'text-yellow-400' :
-                      card.rarity === 'EPIC' ? 'text-purple-400' :
-                      card.rarity === 'RARE' ? 'text-blue-400' : 'text-white/25'
-                    }`}>{card.rarity}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Trophies + Clip */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-white/45 text-[10px] font-semibold flex items-center gap-1.5">
-                    <Trophy className="w-3 h-3" /> Trophies
-                  </span>
-                  <span className="text-white/30 text-[9px]">4,088 Total</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    { type: 'Platinum', count: 0, color: 'text-cyan-300', emoji: '🏆' },
-                    { type: 'Gold', count: 136, color: 'text-yellow-400', emoji: '🥇' },
-                    { type: 'Silver', count: 652, color: 'text-slate-300', emoji: '🥈' },
-                    { type: 'Bronze', count: '3.3K', color: 'text-amber-600', emoji: '🥉' },
-                  ].map(t => (
-                    <div key={t.type} className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <span className="text-sm">{t.emoji}</span>
-                      <div>
-                        <p className={`text-xs font-black ${t.color}`}>{t.count}</p>
-                        <p className="text-white/25 text-[8px] uppercase">{t.type}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-xl overflow-hidden relative cursor-pointer group" style={{ border: '1px solid rgba(255,255,255,0.06)', minHeight: '120px' }}>
-                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80" alt="Latest Clip" className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity absolute inset-0" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-black/20" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(4px)' }}>
-                    <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[9px] border-l-white border-b-[5px] border-b-transparent ml-0.5" />
-                  </div>
-                </div>
-                <div className="absolute bottom-2 left-2 right-2 z-10">
-                  <p className="text-white/40 text-[8px] uppercase tracking-wider">Latest Clip</p>
-                  <p className="text-white text-[10px] font-bold leading-tight">Shadow Realm – Boss Kill</p>
-                </div>
-                <div className="absolute top-1.5 right-1.5 z-10 px-1 py-0.5 rounded text-white/50 text-[8px]" style={{ background: 'rgba(0,0,0,0.5)' }}>0:08</div>
-              </div>
-            </div>
-
-            {/* Top Genres + Status */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="text-white/35 text-[9px] uppercase tracking-wider mb-2">Top Genres</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {['RPG', 'Action', 'Horror', 'Strategy'].map(g => (
-                    <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                      style={{ background: 'rgba(99,102,241,0.14)', border: '1px solid rgba(99,102,241,0.28)', color: '#a5b4fc' }}>
-                      {g}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
-                    <img src={friend.avatar} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="text-white/35 text-[9px] uppercase tracking-wider">Status Update</span>
-                </div>
-                <p className="text-white/60 text-[10px] italic leading-relaxed">
-                  "Going AFK for 30 mins, back for the raid at 9pm!"
-                </p>
-                <p className="text-white/25 text-[9px] mt-1.5">⏱ 12 minutes ago</p>
-              </div>
-            </div>
-
-              </div>
-            )}
+            <button onClick={onClose} className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg border border-white/[0.08] bg-black/25 text-white/46 hover:text-white"><X className="h-4 w-4" /></button>
           </div>
+
+          <nav className="flex h-10 shrink-0 items-center border-b border-cyan-200/[0.10] bg-[#07111e]/96 px-3">
+            {NAV_ITEMS.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                className={`relative h-full min-w-0 flex-1 px-2 text-[8px] font-semibold transition-colors ${activeTab === id ? 'text-white' : 'text-white/42 hover:text-white/65'}`}
+              >
+                {label}
+                {activeTab === id && <span className="absolute inset-x-2 bottom-0 h-[2px] rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,.75)]" />}
+              </button>
+            ))}
+          </nav>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-3.5" style={{ scrollbarWidth: 'thin' }}>
+            <AnimatePresence mode="wait">
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.14 }}>
+                {content}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <AnimatePresence>
+            {showChat && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-[#050b14]/96 backdrop-blur-xl">
+                <div className="flex h-full flex-col">
+                  <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.06] px-5">
+                    <div className="flex items-center gap-3"><img src={normalized.avatar} alt="" className="h-8 w-8 rounded-full object-cover" /><div><p className="text-[10px] font-bold text-white/80">{normalized.name}</p><p className="text-[7px] text-emerald-300/60">Active now</p></div></div>
+                    <button onClick={() => setShowChat(false)} className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.07]"><X className="h-4 w-4 text-white/50" /></button>
+                  </div>
+                  <div className="min-h-0 flex-1">
+                    <FriendMessenger
+                      friend={{
+                        friend_id: normalized.id?.toString(),
+                        friend_name: normalized.name,
+                        friend_avatar: normalized.avatar,
+                        status: normalized.status,
+                        current_game: normalized.game,
+                      }}
+                      onClose={() => setShowChat(false)}
+                      inline
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </AnimatePresence>
