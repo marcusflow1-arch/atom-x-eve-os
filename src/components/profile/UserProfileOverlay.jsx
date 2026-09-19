@@ -3,7 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   X, User, Camera, Edit, Save, Trophy, Zap, Users, Crown, Flame, Target,
   TrendingUp, Clock, Star, Gamepad2, Layers, Shield, Activity, Image,
-  BarChart3, Info, Play, MessageSquare, Heart, Sparkles, Sword
+  BarChart3, Info, Play, MessageSquare, Heart, Sparkles, Sword, MapPin,
+  CalendarDays, Quote, CheckCircle2, ExternalLink, Award, Mic2, Handshake,
+  Swords, Compass
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -450,21 +452,203 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                   )}
 
                   {activeTab === 'about' && (
-                    <div className="space-y-7">
-                      <SectionTitle eyebrow="Player identity" title="About" detail="Public profile details, preferences, groups, platforms and playstyle information." />
-                      <div className="grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
-                        <Glass className="p-7">
-                          <div className="text-2xl font-black">{name}</div>
-                          <p className="mt-4 leading-relaxed text-white/50">{formData.bio || 'This player has not added a longer profile biography yet.'}</p>
-                          <div className="mt-7 space-y-3 text-sm">
-                            {[['Playstyle',formData.social_profile?.playstyle || 'Adaptive'],['Account level',stats.level],['Games',stats.games],['Achievements',stats.achievements],['Clans',stats.clans]].map(([k,v])=><div key={k} className="flex justify-between border-b border-white/5 py-3"><span className="text-white/35">{k}</span><span className="font-bold">{v}</span></div>)}
+                    <div className="space-y-4">
+                      <div className="grid gap-4 xl:grid-cols-[1.08fr_.82fr_1.28fr]">
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-sm font-black">Biography</h3>
+                            {isSelf && (
+                              <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-bold text-white/50 hover:text-white">
+                                <Edit className="h-3 w-3" /> Edit
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[13px] leading-6 text-white/60">
+                            {formData.bio || `Lifelong gamer, night owl, and racing enthusiast. I play to explore new worlds, meet great people, and push my limits. Whether it's high-octane races or epic co-op adventures, I'm always up for the next challenge.`}
+                          </p>
+                          <div className="mt-5 rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.055] p-4">
+                            <div className="flex gap-3">
+                              <Quote className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
+                              <div>
+                                <div className="italic text-white/75">“{formData.social_profile?.tagline || 'Different games. Same drive.'}”</div>
+                                <div className="mt-2 text-right text-[10px] text-white/35">— {name}</div>
+                              </div>
+                            </div>
                           </div>
                         </Glass>
-                        <div className="space-y-5">
-                          <Glass className="p-6"><h3 className="font-black">Favorite games</h3><div className="mt-4 flex flex-wrap gap-2">{favoriteGames.map(g=><PlaceholderBadge key={g}>{g}</PlaceholderBadge>)}</div></Glass>
-                          <Glass className="p-6"><h3 className="font-black">Profile badges</h3><div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">{['Founder','Collector','Achievement Hunter','Party Regular'].map((b,i)=><div key={b} className="rounded-2xl border border-white/8 bg-white/[.035] p-4 text-center"><div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-200">{[Crown,Trophy,Target,Users].map((Icon,j)=>j===i?<Icon key={j} className="h-5 w-5" />:null)}</div><div className="mt-3 text-xs font-black">{b}</div></div>)}</div></Glass>
-                          <Glass className="border-orange-300/10 bg-orange-500/[0.04] p-6"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-[.2em] text-orange-200/70">Custom replacement marker</div><div className="mt-2 text-sm text-white/50">If you later provide a dedicated About-page screenshot, this block is intentionally easy to identify and replace without affecting the shared profile shell.</div></div><Info className="ml-5 h-7 w-7 shrink-0 text-orange-200/70" /></div></Glass>
-                        </div>
+
+                        <Glass className="p-5">
+                          <h3 className="mb-4 text-sm font-black">Quick Info</h3>
+                          <div className="space-y-2">
+                            {[
+                              [Gamepad2, 'Gamer Tagline', formData.social_profile?.tagline || 'Neon Racer'],
+                              [CalendarDays, 'Member Since', displayUser?.member_since || displayUser?.created_date?.slice?.(0,10) || 'March 15, 2024'],
+                              [MapPin, 'Location', displayUser?.location || 'Detroit, MI, USA'],
+                              [Gamepad2, 'Preferred Genres', displayUser?.preferred_genres?.join?.(', ') || 'RPG, Racing, Action, Strategy'],
+                              [Star, 'Favorite Franchises', displayUser?.favorite_franchises?.join?.(', ') || 'Elden Ring, Forza, Cyberpunk, Halo']
+                            ].map(([Icon, label, value]) => (
+                              <div key={label} className="grid grid-cols-[28px_110px_1fr] items-center gap-2 rounded-xl border border-white/[0.05] bg-white/[0.035] px-3 py-2.5">
+                                <Icon className="h-4 w-4 text-cyan-300" />
+                                <span className="text-[10px] font-bold text-white/40">{label}</span>
+                                <span className="min-w-0 truncate text-[10px] font-semibold text-white/75">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-5">
+                          <div className="mb-3 flex items-center justify-between">
+                            <h3 className="text-sm font-black">Personality & Playstyle</h3>
+                            {isSelf && <Edit className="h-3.5 w-3.5 text-white/30" />}
+                          </div>
+                          <div className="grid gap-4 md:grid-cols-[1fr_.9fr]">
+                            <div className="relative min-h-[210px]">
+                              <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-cyan-300/20 bg-cyan-400/[0.035]" />
+                              <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-cyan-300/20" />
+                              <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-cyan-300/20 bg-cyan-400/15 shadow-[0_0_35px_rgba(34,211,238,.15)]" />
+                              <div className="absolute inset-x-0 top-0 text-center text-[10px] font-black text-white/65"><Crown className="mx-auto mb-1 h-4 w-4 text-cyan-300" />Competitive</div>
+                              <div className="absolute left-0 top-[42%] text-center text-[10px] font-black text-white/65"><Sparkles className="mx-auto mb-1 h-4 w-4 text-violet-300" />Strategic</div>
+                              <div className="absolute right-0 top-[42%] text-center text-[10px] font-black text-white/65"><Users className="mx-auto mb-1 h-4 w-4 text-sky-300" />Team Player</div>
+                              <div className="absolute bottom-0 left-3 text-center text-[10px] font-black text-white/65"><Compass className="mx-auto mb-1 h-4 w-4 text-emerald-300" />Explorer</div>
+                              <div className="absolute bottom-0 right-3 text-center text-[10px] font-black text-white/65"><Activity className="mx-auto mb-1 h-4 w-4 text-fuchsia-300" />Chill</div>
+                            </div>
+                            <div className="flex flex-col justify-between">
+                              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.035] p-4">
+                                <Quote className="mb-2 h-4 w-4 text-white/30" />
+                                <p className="text-[11px] italic leading-5 text-white/60">Competitive when it matters, relaxed when it counts. Always down for good people and great games.</p>
+                                <div className="mt-2 text-right text-[10px] text-white/30">— {name}</div>
+                              </div>
+                              <div className="mt-3 flex flex-wrap gap-1.5">
+                                {['Friendly','Focused','Helpful','Team Player','Achievement Hunter','Night Owl'].map(tag => (
+                                  <span key={tag} className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.055] px-2 py-1 text-[9px] font-bold text-cyan-100/70">{tag}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Glass>
+                      </div>
+
+                      <div className="grid gap-4 xl:grid-cols-[1.08fr_.82fr_1.28fr]">
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-sm font-black">Play Schedule</h3>
+                            {isSelf && <Edit className="h-3.5 w-3.5 text-white/30" />}
+                          </div>
+                          <div className="grid grid-cols-7 gap-2">
+                            {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day,i) => (
+                              <div key={day} className="text-center">
+                                <div className="text-[9px] font-bold text-white/35">{day}</div>
+                                <div className="mx-auto mt-2 flex h-14 w-4 items-end overflow-hidden rounded-full bg-white/[0.05] p-[2px]">
+                                  <div className="w-full rounded-full bg-cyan-400" style={{height:`${[45,65,55,70,85,62,72][i]}%`}} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-4 text-[9px] text-white/35">
+                            <span>● Light (1–2h)</span><span>● Moderate (3–5h)</span><span>● Heavy (5h+)</span>
+                          </div>
+                          <div className="mt-3 text-[10px] text-white/45">Most active: Evenings (7PM – 1AM)</div>
+                        </Glass>
+
+                        <Glass className="p-5">
+                          <h3 className="mb-4 text-sm font-black">Multiplayer Preferences</h3>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              [Handshake,'Co-op','Love it','border-emerald-300/25 bg-emerald-400/[0.06] text-emerald-200'],
+                              [Swords,'Competitive','Sometimes','border-rose-300/20 bg-rose-400/[0.05] text-rose-200'],
+                              [Users,'Casual','Always','border-cyan-300/20 bg-cyan-400/[0.05] text-cyan-200'],
+                              [Mic2,'Voice Chat','Usually','border-violet-300/20 bg-violet-400/[0.05] text-violet-200']
+                            ].map(([Icon,label,value,tone]) => (
+                              <div key={label} className={`rounded-2xl border p-3 text-center ${tone}`}>
+                                <Icon className="mx-auto h-5 w-5" />
+                                <div className="mt-2 text-[10px] font-black">{label}</div>
+                                <div className="mt-1 text-[9px] opacity-60">{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between"><h3 className="text-sm font-black">Clan Affiliations</h3><button className="text-[10px] font-bold text-cyan-300/70">View All</button></div>
+                          <div className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.035] p-4">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-400/10 text-xl font-black text-cyan-200">AXE</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-black">Atom X Eve Official</div>
+                              <div className="mt-1 text-[10px] text-white/40">Member · Play. Connect. Belong.</div>
+                              <div className="mt-2 flex gap-1.5"><PlaceholderBadge>Casual</PlaceholderBadge><PlaceholderBadge>Social</PlaceholderBadge><PlaceholderBadge>All Games</PlaceholderBadge></div>
+                            </div>
+                            <div className="text-right text-[10px] text-white/35">1.2K Members</div>
+                          </div>
+                        </Glass>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_.78fr_.9fr_.62fr]">
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between"><h3 className="text-sm font-black">Badges</h3><button className="text-[10px] font-bold text-cyan-300/70">View All</button></div>
+                          <div className="grid grid-cols-5 gap-3">
+                            {[
+                              [Crown,'Early Adopter'],[Target,'Racing Fanatic'],[Handshake,'Co-op Legend'],[Trophy,'100% Club'],[Users,'Community']
+                            ].map(([Icon,label],i) => (
+                              <div key={label} className="text-center">
+                                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.045] shadow-[0_0_20px_rgba(34,211,238,.08)]"><Icon className="h-5 w-5 text-cyan-200" /></div>
+                                <div className="mt-2 text-[8px] font-bold text-white/55">{label}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between"><h3 className="text-sm font-black">Current Goals</h3>{isSelf && <Edit className="h-3.5 w-3.5 text-white/30" />}</div>
+                          <div className="space-y-3">
+                            {[
+                              ['Complete Elden Ring DLC','In Progress',false],
+                              ['Reach Diamond in Ranked Racing','In Progress',false],
+                              ['Build a full legendary card deck','Complete',true],
+                              ['Grow my clip collection to 100','In Progress',false]
+                            ].map(([goal,status,done]) => (
+                              <div key={goal} className="flex items-center gap-2 text-[10px]">
+                                {done ? <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300" /> : <div className="h-3.5 w-3.5 rounded-full border border-cyan-300/50" />}
+                                <span className="min-w-0 flex-1 truncate text-white/60">{goal}</span>
+                                <span className="text-[8px] text-white/25">{status}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between"><h3 className="text-sm font-black">Personal Highlights</h3>{isSelf && <Edit className="h-3.5 w-3.5 text-white/30" />}</div>
+                          <div className="space-y-2.5">
+                            {[
+                              [Trophy,'First Platinum Trophy','Elden Ring · Apr 2024'],
+                              [Award,'Top 1% in Neon Racer Time Trials','Feb 2025'],
+                              [Crown,'Organized 24-player community event','Atom X Eve · Jan 2025'],
+                              [Heart,'Met some of my best friends here','Ongoing']
+                            ].map(([Icon,title,meta]) => (
+                              <div key={title} className="flex items-center gap-2">
+                                <Icon className="h-3.5 w-3.5 shrink-0 text-amber-300" />
+                                <div className="min-w-0 flex-1"><div className="truncate text-[10px] font-semibold text-white/70">{title}</div><div className="text-[8px] text-white/25">{meta}</div></div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-5">
+                          <div className="mb-4 flex items-center justify-between"><h3 className="text-sm font-black">Social Links</h3>{isSelf && <Edit className="h-3.5 w-3.5 text-white/30" />}</div>
+                          <div className="space-y-2.5">
+                            {[
+                              ['Twitch', formData.streaming_profile?.twitch_username || `${name.toLowerCase().replace(/\s+/g,'') }0427`],
+                              ['YouTube', formData.streaming_profile?.youtube_channel || `${name}Plays`],
+                              ['X', formData.streaming_profile?.twitter_handle || `@${name.toLowerCase().replace(/\s+/g,'') }X`],
+                              ['Discord', displayUser?.discord_username || name]
+                            ].map(([platform,handle]) => (
+                              <div key={platform} className="flex items-center gap-2 text-[10px]">
+                                <div className="w-14 text-white/35">{platform}</div>
+                                <div className="min-w-0 flex-1 truncate font-semibold text-white/65">{handle}</div>
+                                <ExternalLink className="h-3 w-3 text-white/25" />
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
                       </div>
                     </div>
                   )}
