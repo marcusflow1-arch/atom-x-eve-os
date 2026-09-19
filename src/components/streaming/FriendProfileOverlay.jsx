@@ -6,7 +6,6 @@ import {
   BookOpen,
   Check,
   ChevronRight,
-  CircleUserRound,
   Clock3,
   Crown,
   Film,
@@ -19,7 +18,6 @@ import {
   Layers3,
   MapPin,
   MessageSquare,
-  MoreHorizontal,
   Play,
   Search,
   Shield,
@@ -138,7 +136,7 @@ function ProgressRing({ value, label, color = '#22d3ee' }) {
   );
 }
 
-function OverviewPage({ friend }) {
+function OverviewPage() {
   return (
     <div className="grid grid-cols-12 gap-3">
       <Section className="col-span-8">
@@ -329,7 +327,7 @@ function CardsPage() {
         <SectionTitle title="Collection Overview" icon={Grid3X3} />
         <div className="px-4 pb-4"><p className="text-3xl font-black text-cyan-200">248</p><p className="text-[7px] text-white/28">Total Cards</p><div className="mt-4 grid grid-cols-4 gap-2 text-center">{[['32','Legendary','#facc15'],['78','Epic','#c084fc'],['124','Rare','#22d3ee'],['239','Common','#cbd5e1']].map(([v,l,c])=><div key={l}><div className="mx-auto h-8 w-5 rounded-sm border" style={{borderColor:c}} /><p className="mt-1 text-[9px] font-bold text-white/65">{v}</p><p className="text-[5px]" style={{color:c}}>{l}</p></div>)}</div><div className="mt-4 h-1.5 rounded bg-white/[0.06]"><div className="h-full w-[68%] rounded bg-cyan-400" /></div><p className="mt-1 text-[6px] text-white/25">68% Collection Completion</p></div>
       </Section>
-      <Section className="col-span-4"><SectionTitle title="Active Deck / Build" icon={Layers3} /><div className="flex gap-2 px-4 pb-3">{cardArt.slice(0,5).map(([n,,img])=><img key={n} src={img} alt={n} className="h-20 min-w-0 flex-1 rounded-lg border border-white/[0.08] object-cover opacity-78" />)}</div><div className="grid grid-cols-3 gap-2 px-4 pb-4"><StatTile label="Deck Power" value="3,280" /><StatTile label="Playstyle" value="Balanced" /><StatTile label="Synergy" value="5/5" /></div></Section>
+      <Section className="col-span-4"><SectionTitle title="Active Deck / Build" icon={Layers3} /><div className="flex gap-2 px-4 pb-3">{cardArt.slice(0,5).map(([n, _rarity, img])=><img key={n} src={img} alt={n} className="h-20 min-w-0 flex-1 rounded-lg border border-white/[0.08] object-cover opacity-78" />)}</div><div className="grid grid-cols-3 gap-2 px-4 pb-4"><StatTile label="Deck Power" value="3,280" /><StatTile label="Playstyle" value="Balanced" /><StatTile label="Synergy" value="5/5" /></div></Section>
       <Section className="col-span-8">
         <SectionTitle title="My Cards" icon={Layers3} />
         <div className="flex gap-2 px-4 pb-3"><div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-white/20" /><input className="h-8 w-full rounded-lg border border-white/[0.06] bg-black/15 pl-8 text-[8px] text-white/60 outline-none" placeholder="Search cards..." /></div><button className="rounded-lg border border-white/[0.06] px-3 text-[7px] text-white/40">All Rarities</button><button className="rounded-lg border border-white/[0.06] px-3 text-[7px] text-white/40">All Types</button></div>
@@ -437,7 +435,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
   }, [showChat, onClose]);
 
   const content = {
-    overview: <OverviewPage friend={normalized} />,
+    overview: <OverviewPage />,
     achievements: <AchievementsPage />,
     games: <GamesPage />,
     cards: <CardsPage />,
