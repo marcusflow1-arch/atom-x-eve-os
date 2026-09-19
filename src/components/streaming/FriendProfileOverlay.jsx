@@ -225,59 +225,238 @@ function OverviewPage() {
 }
 
 function AchievementsPage() {
+  const rarest = [
+    ['Eclipse Protocol', '0.2%', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&q=90'],
+    ['Void Walker', '0.3%', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=90'],
+    ['Perfect Sync', '0.4%', 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=600&q=90'],
+    ['The Last Light', '0.5%', 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=90'],
+    ['Zero Footprint', '0.6%', 'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=600&q=90'],
+  ];
+
+  const showcase = [
+    ['Elden Lord', 'Legendary', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=90', 'border-amber-400/45 text-amber-300'],
+    ['The Legend', 'Rare', 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=600&q=90', 'border-cyan-400/45 text-cyan-300'],
+    ['Survivor', 'Epic', 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=600&q=90', 'border-violet-400/45 text-violet-300'],
+    ['Master Pilot', 'Rare', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&q=90', 'border-cyan-400/45 text-cyan-300'],
+    ['Night City Legend', 'Legendary', 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&q=90', 'border-fuchsia-400/45 text-amber-300'],
+  ];
+
+  const recent = [
+    ['Celestial Blade', 'Elden Ring', '2 hours ago', showcase[0][2]],
+    ['Knight’s End', 'Elden Ring', '5 hours ago', rarest[1][2]],
+    ['Tactical Master', 'Starfield', '1 day ago', rarest[2][2]],
+    ['Speed Demon', 'Neon Racer', '2 days ago', demoGames[0].image],
+    ['Frozen Resolve', 'Frostline', '3 days ago', demoGames[5].image],
+  ];
+
   return (
-    <div className="grid grid-cols-12 gap-3">
+    <div className="grid grid-cols-12 gap-2">
       <Section className="col-span-6">
         <SectionTitle title="Achievement Progress" icon={Trophy} />
-        <div className="flex items-center gap-5 px-4 pb-4">
-          <div className="grid h-20 w-20 place-items-center rounded-full border border-cyan-300/20 bg-cyan-300/[0.04] shadow-[0_0_26px_rgba(34,211,238,.08)]">
-            <Trophy className="h-9 w-9 text-cyan-200" />
+        <div className="grid grid-cols-[116px_1fr] items-center gap-4 px-4 pb-4">
+          <div className="relative grid h-24 w-24 place-items-center rounded-full bg-[conic-gradient(#22d3ee_0deg,#22d3ee_310deg,rgba(255,255,255,.06)_310deg)] p-[6px] shadow-[0_0_30px_rgba(34,211,238,.18)]">
+            <div className="grid h-full w-full place-items-center rounded-full border border-cyan-300/10 bg-[#071321]">
+              <Trophy className="h-10 w-10 text-cyan-100" />
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <div><span className="text-3xl font-black text-white">1,248</span><span className="ml-1 text-lg text-white/36">/ 1,450</span></div>
-            <p className="text-sm font-bold text-white/78">86% <span className="font-normal text-white/32">Complete</span></p>
-            <div className="mt-2 h-1.5 rounded-full bg-white/[0.06]"><div className="h-full w-[86%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" /></div>
+          <div>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-black text-white">1,248</span>
+              <span className="pb-1 text-sm text-white/40">/ 1,450</span>
+            </div>
+            <p className="text-lg font-black text-white/88">86% <span className="text-sm font-normal text-white/42">Complete</span></p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+              <div className="h-full w-[86%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" />
+            </div>
+            <p className="mt-2 text-[7px] text-cyan-200/55">202 achievements to go</p>
+            <div className="mt-3 grid grid-cols-4 divide-x divide-white/[0.06] rounded-lg border border-white/[0.05] bg-black/15 py-2.5">
+              {[
+                [Trophy,'1,248','Unlocked','text-amber-300'],
+                [Shield,'202','Locked','text-slate-300'],
+                [Star,'37','Perfect Games','text-yellow-300'],
+                [Gem,'0.8%','Rarest Rarity','text-violet-300'],
+              ].map(([Icon,value,label,tone])=>(
+                <div key={label} className="text-center">
+                  <Icon className={`mx-auto h-3.5 w-3.5 ${tone}`} />
+                  <p className="mt-1 text-[10px] font-black text-white/82">{value}</p>
+                  <p className="text-[6px] text-white/28">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Completion by Genre" icon={Layers3} />
+        <div className="grid grid-cols-6 gap-1 px-3 pb-4">
+          {[
+            [92,'RPG','#22d3ee','128 / 139'],
+            [78,'Action','#60a5fa','256 / 328'],
+            [84,'Horror','#34d399','67 / 80'],
+            [71,'Strategy','#a78bfa','71 / 100'],
+            [88,'Racing','#67e8f9','106 / 120'],
+            [62,'Other','#c084fc','54 / 87'],
+          ].map(([v,l,color,count])=>(
+            <div key={l} className="text-center">
+              <ProgressRing value={v} label={l} color={color} />
+              <p className="mt-1 text-[5px] text-white/23">{count}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-2">
+        <SectionTitle title="Challenge Streak" icon={Flame} action={null} />
+        <div className="px-3 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-full border border-orange-400/20 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,.12)]">
+              <Flame className="h-7 w-7 text-orange-400" />
+            </div>
+            <div>
+              <p className="text-xl font-black text-amber-300">12 <span className="text-sm text-white">Weeks</span></p>
+              <p className="text-[6px] text-white/28">Current Streak</p>
+            </div>
+          </div>
+          <p className="mt-3 text-[7px] italic text-white/35">“Keep going. Greatness compounds.”</p>
+          <div className="mt-3 grid grid-cols-7 gap-1">
+            {['M','T','W','T','F','S','S'].map((d,i)=>(
+              <div key={d+i} className="text-center">
+                <div className={`mx-auto grid h-5 w-5 place-items-center rounded-full border text-[7px] ${i<6?'border-cyan-300/60 bg-cyan-300/[0.08] text-cyan-200':'border-white/12 text-white/18'}`}>{i<6?'✓':''}</div>
+                <p className="mt-1 text-[5px] text-white/28">{d}</p>
+              </div>
+            ))}
           </div>
         </div>
       </Section>
 
       <Section className="col-span-6">
-        <SectionTitle title="Completion by Genre" icon={Layers3} />
-        <div className="flex justify-around px-3 pb-4">
-          {[[92,'RPG','#22d3ee'],[78,'Action','#60a5fa'],[84,'Horror','#34d399'],[71,'Strategy','#a78bfa'],[88,'Racing','#67e8f9'],[62,'Other','#c084fc']].map(([v,l,c]) => <ProgressRing key={l} value={v} label={l} color={c} />)}
+        <SectionTitle title="Rarest Achievements" icon={Gem} />
+        <div className="grid grid-cols-5 gap-2 px-3 pb-3">
+          {rarest.map(([name,rate,image])=>(
+            <div key={name} className="overflow-hidden rounded-lg border border-cyan-300/20 bg-[#071321]">
+              <div className="relative h-20">
+                <img src={image} alt={name} className="h-full w-full object-cover opacity-68" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#071321] via-transparent to-transparent" />
+                <Gem className="absolute left-2 top-2 h-3 w-3 text-violet-300" />
+              </div>
+              <div className="px-2 pb-2">
+                <p className="truncate text-[7px] font-black text-white/72">{name}</p>
+                <p className="mt-0.5 text-[6px] text-cyan-300/70">Ultra Rare · <span className="text-fuchsia-300">{rate}</span></p>
+              </div>
+            </div>
+          ))}
         </div>
       </Section>
 
-      <Section className="col-span-7">
-        <SectionTitle title="Rarest Achievements" icon={Gem} />
-        <div className="grid grid-cols-5 gap-2 px-4 pb-4">
-          {cardArt.slice(0,5).map(([name, _rarity, image], i) => (
-            <div key={name} className="overflow-hidden rounded-xl border border-violet-300/18 bg-violet-300/[0.025]">
-              <div className="relative h-20"><img src={image} alt={name} className="h-full w-full object-cover opacity-62" /><div className="absolute inset-0 bg-gradient-to-t from-[#070d17] to-transparent" /><Gem className="absolute left-2 top-2 h-3 w-3 text-violet-300" /></div>
-              <div className="p-2"><p className="truncate text-[7px] font-bold text-white/72">{name}</p><p className="mt-1 text-[6px] text-violet-300/70">Ultra Rare · {['0.2','0.3','0.4','0.9','0.6'][i]}%</p></div>
+      <Section className="col-span-4">
+        <SectionTitle title="Perfect Games (37)" icon={Crown} />
+        <div className="grid grid-cols-5 gap-1.5 px-3 pb-3">
+          {demoGames.slice(0,5).map(game=>(
+            <div key={game.name} className="overflow-hidden rounded-lg border border-white/[0.06] bg-black/10">
+              <img src={game.image} alt={game.name} className="h-20 w-full object-cover opacity-72" />
+              <div className="p-1.5">
+                <p className="truncate text-[6px] font-black text-white/66">{game.name}</p>
+                <p className="mt-0.5 text-[6px] text-amber-300/72">🏆 100%</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-2 row-span-2">
+        <SectionTitle title="Next Unlock Targets" icon={Zap} />
+        <div className="space-y-3 px-3 pb-3">
+          {[
+            ['Master of Speed','Neon Racer',80,'8 / 10'],
+            ['Into the Unknown','Eclipse',80,'12 / 15'],
+            ['Survival Instinct','Shadow Realm',60,'3 / 5'],
+          ].map(([title,game,pct,count],i)=>(
+            <div key={title} className="flex gap-2">
+              <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border ${i===0?'border-cyan-300/35 text-cyan-300':i===1?'border-amber-300/35 text-amber-300':'border-rose-300/35 text-rose-300'}`}>
+                <Target className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex justify-between gap-1">
+                  <div>
+                    <p className="truncate text-[7px] font-black text-white/65">{title}</p>
+                    <p className="text-[6px] text-cyan-300/50">{game}</p>
+                  </div>
+                  <p className="text-right text-[6px] text-white/28">{count}<br/>{pct}%</p>
+                </div>
+                <div className="mt-1 h-1 rounded-full bg-white/[0.06]">
+                  <div className="h-full rounded-full bg-cyan-400" style={{width:`${pct}%`}} />
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </Section>
 
       <Section className="col-span-5">
-        <SectionTitle title="Perfect Games (37)" icon={Crown} />
-        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
-          {demoGames.slice(0,6).map(game => <div key={game.name} className="rounded-lg border border-white/[0.05] bg-white/[0.015] p-2"><img src={game.image} alt={game.name} className="h-12 w-full rounded-md object-cover opacity-70" /><p className="mt-1 truncate text-[7px] font-bold text-white/62">{game.name}</p><p className="text-[6px] text-amber-300/60">🏆 100%</p></div>)}
+        <SectionTitle title="Achievement Showcase" icon={Star} action="Edit Showcase" />
+        <div className="grid grid-cols-5 gap-2 px-3 pb-3">
+          {showcase.map(([name,rarity,image,tone])=>(
+            <div key={name} className={`overflow-hidden rounded-lg border bg-black/10 ${tone}`}>
+              <img src={image} alt={name} className="h-16 w-full object-cover opacity-70" />
+              <div className="p-1.5 text-center">
+                <p className="truncate text-[6px] font-black text-white/70">{name}</p>
+                <p className="text-[5px]">{rarity}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </Section>
 
-      <Section className="col-span-8">
+      <Section className="col-span-5">
         <SectionTitle title="Achievement Milestones" icon={Star} action={null} />
-        <div className="grid grid-cols-3 gap-4 px-4 pb-4">
-          {['250 Achievements','500 Achievements','1,000 Achievements'].map((m,i)=><div key={m} className="flex gap-2"><div className={`mt-0.5 h-7 w-1 rounded-full ${i===2?'bg-cyan-300':'bg-emerald-400/60'}`} /><div><p className="text-[8px] font-bold text-white/68">{m}</p><p className="mt-1 text-[7px] italic text-white/25">{['The journey begins.','Halfway there.','A major milestone.'][i]}</p></div></div>)}
+        <div className="relative px-4 pb-4 pt-2">
+          <div className="absolute left-[11%] right-[11%] top-6 h-px bg-cyan-300/22" />
+          <div className="relative grid grid-cols-4 gap-2">
+            {[
+              [250,'Completed','Jan 10, 2024',true],
+              [500,'Completed','Jun 22, 2024',true],
+              [750,'Achievements','Mar 12, 2024',true],
+              [1000,'Achievements','In Progress',false],
+            ].map(([num,label,date,done])=>(
+              <div key={num} className="text-center">
+                <div className={`mx-auto grid h-8 w-8 place-items-center rounded-full border-2 bg-[#071321] text-[8px] ${done?'border-cyan-300 text-cyan-200':'border-white/15 text-white/25'}`}>{done?'✓':'🔒'}</div>
+                <p className="mt-2 text-[8px] font-black text-white/72">{num}</p>
+                <p className="text-[6px] text-white/35">{label}</p>
+                <p className="mt-1 text-[5px] text-cyan-300/50">{date}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 
-      <Section className="col-span-4">
-        <SectionTitle title="Next Unlock Targets" icon={Zap} action={null} />
-        <div className="space-y-2 px-4 pb-4">
-          {['Master of Speed','Into the Unknown','Survival Instinct'].map((x,i)=><div key={x}><div className="flex justify-between text-[7px]"><span className="text-white/60">{x}</span><span className="text-white/30">{[80,80,60][i]}%</span></div><div className="mt-1 h-1 rounded bg-white/[0.06]"><div className="h-full rounded bg-cyan-400" style={{width:`${[80,80,60][i]}%`}} /></div></div>)}
+      <Section className="col-span-7">
+        <SectionTitle title="Recent Unlocks" icon={Clock3} />
+        <div className="grid grid-cols-5 gap-2 px-3 pb-3">
+          {recent.map(([title,game,time,image])=>(
+            <div key={title} className="flex items-center gap-2 rounded-lg border border-white/[0.05] bg-white/[0.015] p-2">
+              <img src={image} alt={title} className="h-10 w-10 shrink-0 rounded-md object-cover opacity-75" />
+              <div className="min-w-0">
+                <p className="truncate text-[6px] font-black text-white/68">{title}</p>
+                <p className="truncate text-[5px] text-white/32">{game}</p>
+                <p className="text-[5px] text-white/20">{time}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-5">
+        <div className="relative h-full min-h-[76px] overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1200&q=85" alt="" className="absolute inset-0 h-full w-full object-cover opacity-28" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071321]/95 via-[#071321]/82 to-cyan-950/35" />
+          <div className="relative flex h-full items-center gap-3 px-5 py-3">
+            <Quote className="h-5 w-5 shrink-0 text-cyan-300/45" />
+            <div>
+              <p className="text-[7px] italic leading-4 text-white/52">“Achievements aren’t just checkboxes. They’re proof of where you’ve been — and a hint of what’s next.”</p>
+              <p className="mt-1 text-[6px] text-white/25">— Logan</p>
+            </div>
+          </div>
         </div>
       </Section>
     </div>
