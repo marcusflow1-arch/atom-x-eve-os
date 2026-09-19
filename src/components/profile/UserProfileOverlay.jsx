@@ -26,7 +26,7 @@ const TABS = [
 ];
 
 const Glass = ({ children, className = '' }) => (
-  <div className={`relative overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/50 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,.28)] ${className}`}>
+  <div className={`relative overflow-hidden rounded-[14px] border border-cyan-300/[0.10] bg-[#061425]/78 backdrop-blur-2xl shadow-[0_14px_42px_rgba(0,0,0,.26)] ${className}`}>
     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-cyan-500/[0.03]" />
     <div className="relative z-10">{children}</div>
   </div>
@@ -158,12 +158,42 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
               <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.015)_1px,transparent_1px)] bg-[size:72px_72px]" />
             </div>
 
-            <div className="relative mx-auto min-h-full w-full max-w-[1660px]">
-              <header className="relative min-h-[390px] overflow-hidden border-x border-white/5">
+            <div className="relative mx-auto min-h-full w-full max-w-[1480px] overflow-hidden border-x border-white/[0.04] bg-[#03101d]/35">
+              <aside className="absolute bottom-0 left-0 top-0 z-30 hidden w-[230px] border-r border-cyan-300/[0.08] bg-[#04101c]/92 backdrop-blur-2xl xl:block">
+                <div className="border-b border-white/[0.06] px-4 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-black tracking-[0.16em] text-white/75">FRIENDS</div>
+                    <X className="h-3.5 w-3.5 text-white/25" />
+                  </div>
+                </div>
+                <div className="space-y-1.5 p-3">
+                  {[
+                    [name, 'Neon Racer', true],
+                    ['marcus flowers', 'Online', false],
+                    ['Ariana', 'In Game', false],
+                    ['Kairo', 'Away', false],
+                    ['Tae', 'Do Not Disturb', false]
+                  ].map(([friend, status, selected], i) => (
+                    <div key={friend} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${selected ? 'border-cyan-300/25 bg-cyan-400/[0.10]' : 'border-transparent bg-white/[0.015]'}`}>
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br ${['from-cyan-500 to-blue-700','from-emerald-500 to-cyan-700','from-fuchsia-500 to-violet-700','from-sky-500 to-indigo-700','from-rose-500 to-red-700'][i]}`}>
+                        <User className="h-4 w-4 text-white/85" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-[11px] font-black text-white/80">{friend}</div>
+                        <div className="mt-0.5 text-[9px] text-white/35">{status}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center justify-between border-t border-white/[0.05] py-4 text-[10px] font-bold text-white/45">
+                  <span>View All Friends (21)</span><span>›</span>
+                </button>
+              </aside>
+              <header className="relative min-h-[250px] overflow-hidden border-b border-cyan-300/[0.08] xl:ml-[230px]">
                 <img
                   src={displayUser?.banner_url || 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1800&q=85'}
                   alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-55"
+                  className="absolute inset-0 h-full w-full object-cover opacity-50"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-[#02060d]/25 via-[#02060d]/50 to-[#02060d]" />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#02060d]/80 via-transparent to-[#02060d]/65" />
@@ -180,11 +210,11 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                   </Button>
                 </div>
 
-                <div className="relative z-10 flex min-h-[390px] items-end px-6 pb-9 pt-24 md:px-10 xl:px-14">
-                  <div className="flex w-full flex-col gap-7 lg:flex-row lg:items-end">
+                <div className="relative z-10 flex min-h-[250px] items-end px-5 pb-5 pt-14 md:px-7 xl:px-8">
+                  <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-end">
                     <div className="relative shrink-0">
-                      <div className="h-36 w-36 overflow-hidden rounded-[34px] border border-white/20 bg-slate-900/90 p-1 shadow-[0_25px_70px_rgba(0,0,0,.55)] md:h-44 md:w-44">
-                        <div className="relative h-full w-full overflow-hidden rounded-[30px]">
+                      <div className="h-28 w-28 overflow-hidden rounded-[22px] border border-cyan-300/15 bg-slate-900/90 p-1 shadow-[0_18px_50px_rgba(0,0,0,.5)] md:h-32 md:w-32">
+                        <div className="relative h-full w-full overflow-hidden rounded-[18px]">
                           {formData.avatar_url ? (
                             <img src={formData.avatar_url} alt={name} className="h-full w-full object-cover" />
                           ) : (
@@ -209,14 +239,14 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                         {isEditing ? (
                           <Input value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} className="h-auto max-w-xl border-white/15 bg-black/30 py-2 text-4xl font-black text-white" />
                         ) : (
-                          <h1 className="truncate text-4xl font-black tracking-[-0.04em] md:text-6xl">{name}</h1>
+                          <h1 className="truncate text-3xl font-black tracking-[-0.04em] md:text-4xl">{name}</h1>
                         )}
                         <Badge className="border border-cyan-300/15 bg-cyan-400/10 px-3 py-1 text-cyan-200 hover:bg-cyan-400/10">ATOM PLAYER</Badge>
                       </div>
                       {isEditing ? (
                         <Textarea value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} className="max-w-2xl border-white/15 bg-black/30 text-white/75" placeholder="Write a bio..." />
                       ) : (
-                        <p className="max-w-2xl text-base leading-relaxed text-white/55 md:text-lg">{formData.bio || formData.social_profile?.tagline || 'No profile message yet.'}</p>
+                        <p className="max-w-xl text-sm leading-relaxed text-white/50">{formData.bio || formData.social_profile?.tagline || 'No profile message yet.'}</p>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/45">
                         <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5">Online</span>
@@ -225,7 +255,7 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 md:grid-cols-5 lg:max-w-[640px]">
+                    <div className="grid grid-cols-2 gap-1.5 md:grid-cols-5 lg:max-w-[520px]">
                       <Metric icon={Users} label="Friends" value={stats.friends} />
                       <Metric icon={Gamepad2} label="Games" value={stats.games} />
                       <Metric icon={Trophy} label="Achievements" value={stats.achievements} />
@@ -236,12 +266,12 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                 </div>
               </header>
 
-              <div className="sticky top-0 z-40 border-y border-white/[0.07] bg-[#02060d]/85 px-4 backdrop-blur-2xl md:px-8">
+              <div className="sticky top-0 z-40 border-b border-cyan-300/[0.10] bg-[#04111f]/94 px-2 backdrop-blur-2xl md:px-4 xl:ml-[230px]">
                 <div className="no-scrollbar flex overflow-x-auto">
                   {TABS.map(({ id, label, icon: Icon }) => {
                     const active = activeTab === id;
                     return (
-                      <button key={id} onClick={() => setActiveTab(id)} className={`relative flex shrink-0 items-center gap-2 px-4 py-5 text-xs font-black uppercase tracking-[0.12em] transition-colors md:px-5 ${active ? 'text-white' : 'text-white/35 hover:text-white/70'}`}>
+                      <button key={id} onClick={() => setActiveTab(id)} className={`relative flex shrink-0 items-center gap-2 px-3 py-3.5 text-[10px] font-black uppercase tracking-[0.10em] transition-colors md:px-5 ${active ? 'text-white' : 'text-white/35 hover:text-white/70'}`}>
                         <Icon className={`h-4 w-4 ${active ? 'text-cyan-300' : ''}`} />
                         {label}
                         {active && <motion.div layoutId="profile-tab" className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,.9)]" />}
@@ -251,7 +281,7 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                 </div>
               </div>
 
-              <main className="relative px-5 py-9 md:px-10 xl:px-14">
+              <main className="relative px-3 py-3 md:px-4 xl:ml-[230px] xl:px-4">
                 <PageFrame activeTab={activeTab}>
                   {activeTab === 'overview' && (
                     <div className="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
