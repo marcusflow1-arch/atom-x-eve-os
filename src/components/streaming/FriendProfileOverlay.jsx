@@ -251,7 +251,7 @@ function AchievementsPage() {
       <Section className="col-span-7">
         <SectionTitle title="Rarest Achievements" icon={Gem} />
         <div className="grid grid-cols-5 gap-2 px-4 pb-4">
-          {cardArt.slice(0,5).map(([name, rarity, image], i) => (
+          {cardArt.slice(0,5).map(([name, _rarity, image], i) => (
             <div key={name} className="overflow-hidden rounded-xl border border-violet-300/18 bg-violet-300/[0.025]">
               <div className="relative h-20"><img src={image} alt={name} className="h-full w-full object-cover opacity-62" /><div className="absolute inset-0 bg-gradient-to-t from-[#070d17] to-transparent" /><Gem className="absolute left-2 top-2 h-3 w-3 text-violet-300" /></div>
               <div className="p-2"><p className="truncate text-[7px] font-bold text-white/72">{name}</p><p className="mt-1 text-[6px] text-violet-300/70">Ultra Rare · {['0.2','0.3','0.4','0.9','0.6'][i]}%</p></div>
