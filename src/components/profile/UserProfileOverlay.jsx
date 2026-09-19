@@ -334,28 +334,219 @@ export default function UserProfileOverlay({ isOpen, onClose, profileUser, readO
                   )}
 
                   {activeTab === 'achievements' && (
-                    <div className="space-y-7">
-                      <SectionTitle eyebrow="Achievement record" title="Milestones, rarity and completion" detail="This page is dedicated to the player’s full achievement identity rather than only a recent-unlocks list." />
-                      <div className="grid gap-4 md:grid-cols-4">
-                        <Metric icon={Trophy} label="Unlocked" value={stats.achievements} />
-                        <Metric icon={Target} label="Completion" value={`${achievementPct}%`} />
-                        <Metric icon={Star} label="Ultra Rare" value={displayUser?.rare_achievements || 12} />
-                        <Metric icon={Layers} label="Cards Earned" value={displayUser?.cards_from_achievements || stats.achievements} />
-                      </div>
-                      <div className="grid gap-6 lg:grid-cols-[1.15fr_.85fr]">
-                        <Glass className="p-6">
-                          <div className="flex items-center justify-between"><h3 className="text-lg font-black">Game completion</h3><PlaceholderBadge>Live profile data</PlaceholderBadge></div>
-                          <div className="mt-6 space-y-5">
-                            {favoriteGames.map((game, i) => {
-                              const pct = [92, 74, 61, 48][i % 4];
-                              return <div key={game}><div className="mb-2 flex justify-between text-sm"><span className="font-bold">{game}</span><span className="text-white/45">{pct}%</span></div><Progress value={pct} /></div>;
-                            })}
+                    <div className="space-y-2.5">
+                      <div className="grid gap-2.5 xl:grid-cols-[1.35fr_1.02fr_.55fr]">
+                        <Glass className="p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Trophy className="h-4 w-4 text-cyan-300" />
+                              <h3 className="text-sm font-black">Achievement Progress</h3>
+                            </div>
+                            <button className="text-[9px] font-bold text-cyan-300/75">View All</button>
+                          </div>
+                          <div className="grid items-center gap-4 md:grid-cols-[125px_1fr]">
+                            <div className="relative mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-cyan-300/20 bg-[conic-gradient(#22d3ee_0deg,#22d3ee_310deg,rgba(255,255,255,.06)_310deg)] p-[7px] shadow-[0_0_32px_rgba(34,211,238,.18)]">
+                              <div className="flex h-full w-full items-center justify-center rounded-full bg-[#061425]">
+                                <Trophy className="h-12 w-12 text-cyan-100" />
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-end gap-2">
+                                <div className="text-3xl font-black">{stats.achievements || 1248}</div>
+                                <div className="pb-1 text-sm text-white/40">/ {displayUser?.achievement_total || 1450}</div>
+                              </div>
+                              <div className="mt-0.5 text-xl font-black">{achievementPct || 86}% <span className="text-sm font-medium text-white/50">Complete</span></div>
+                              <div className="mt-3 h-2 overflow-hidden rounded-full border border-cyan-300/15 bg-black/30">
+                                <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-sky-400" style={{width:`${achievementPct || 86}%`}} />
+                              </div>
+                              <div className="mt-2 text-[9px] text-cyan-200/60">{Math.max(0,(displayUser?.achievement_total || 1450)-(stats.achievements || 1248))} achievements to go</div>
+                            </div>
+                          </div>
+                          <div className="mt-4 grid grid-cols-4 divide-x divide-white/[0.06] rounded-xl border border-white/[0.05] bg-white/[0.025] py-3">
+                            {[
+                              [Trophy, stats.achievements || 1248, 'Unlocked', 'text-amber-300'],
+                              [Shield, Math.max(0,(displayUser?.achievement_total || 1450)-(stats.achievements || 1248)), 'Locked', 'text-slate-300'],
+                              [Star, displayUser?.perfect_games || 37, 'Perfect Games', 'text-yellow-300'],
+                              [Sparkles, `${displayUser?.rarest_percent || '0.8'}%`, 'Rarest Rarity', 'text-violet-300']
+                            ].map(([Icon,value,label,tone]) => (
+                              <div key={label} className="px-3 text-center">
+                                <Icon className={`mx-auto h-4 w-4 ${tone}`} />
+                                <div className="mt-1 text-sm font-black">{value}</div>
+                                <div className="mt-0.5 text-[8px] text-white/30">{label}</div>
+                              </div>
+                            ))}
                           </div>
                         </Glass>
-                        <Glass className="p-6">
-                          <div className="text-lg font-black">Rarity spectrum</div>
-                          <div className="mt-6 grid grid-cols-2 gap-3">
-                            {['Common','Unique','Rare','Epic','Legendary','Mystical','Ascendant'].map((r,i)=><div key={r} className="rounded-2xl border border-white/8 bg-white/[0.035] p-4"><div className="text-xs text-white/40">{r}</div><div className="mt-1 text-2xl font-black">{[86,34,22,14,8,4,2][i]}</div></div>)}
+
+                        <Glass className="p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-sm font-black">Completion by Genre</h3>
+                            <button className="text-[9px] font-bold text-cyan-300/75">View All</button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-6 xl:grid-cols-6">
+                            {[
+                              ['RPG',92,'128 / 139','cyan'],
+                              ['Action',78,'256 / 328','sky'],
+                              ['Horror',84,'67 / 80','emerald'],
+                              ['Strategy',71,'71 / 100','violet'],
+                              ['Racing',88,'106 / 120','cyan'],
+                              ['Other',62,'54 / 87','fuchsia']
+                            ].map(([label,pct,count,tone]) => (
+                              <div key={label} className="text-center">
+                                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full p-[4px] bg-[conic-gradient(var(--tw-gradient-from)_0deg,var(--tw-gradient-from)_${Math.round(Number(pct)*3.6)}deg,rgba(255,255,255,.06)_0)] ${tone==='emerald'?'from-emerald-400':tone==='violet'?'from-violet-400':tone==='fuchsia'?'from-fuchsia-400':tone==='sky'?'from-sky-400':'from-cyan-400'}`}>
+                                  <div className="flex h-full w-full items-center justify-center rounded-full bg-[#071626] text-xs font-black">{pct}%</div>
+                                </div>
+                                <div className="mt-2 text-[9px] font-black">{label}</div>
+                                <div className="mt-0.5 text-[8px] text-white/30">{count}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2"><Flame className="h-4 w-4 text-fuchsia-300" /><h3 className="text-sm font-black">Challenge Streak</h3></div>
+                            <span className="text-white/30">›</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-orange-400/20 bg-orange-500/10"><Flame className="h-9 w-9 text-orange-400" /></div>
+                            <div><div className="text-2xl font-black text-amber-300">12 <span className="text-base text-white">Weeks</span></div><div className="text-[9px] text-white/35">Current Streak</div></div>
+                          </div>
+                          <div className="mt-4 text-[9px] italic text-white/45">“Keep going. Greatness compounds.”</div>
+                          <div className="mt-4 grid grid-cols-7 gap-1">
+                            {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=><div key={d} className="text-center"><div className={`mx-auto flex h-6 w-6 items-center justify-center rounded-full border ${i<6?'border-cyan-300/60 bg-cyan-400/10 text-cyan-200':'border-white/15 text-white/25'}`}>{i<6?'✓':''}</div><div className="mt-1 text-[7px] text-white/35">{d}</div></div>)}
+                          </div>
+                        </Glass>
+                      </div>
+
+                      <div className="grid gap-2.5 xl:grid-cols-[1.35fr_1.02fr_.55fr]">
+                        <Glass className="p-3">
+                          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-black">Rarest Achievements</h3><button className="text-[9px] font-bold text-cyan-300/75">View All</button></div>
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+                            {[
+                              ['Eclipse Protocol','0.2%','from-indigo-950 via-slate-900 to-cyan-950'],
+                              ['Void Walker','0.3%','from-slate-950 via-slate-900 to-blue-950'],
+                              ['Perfect Sync','0.4%','from-violet-950 via-indigo-950 to-cyan-950'],
+                              ['The Last Light','0.5%','from-slate-950 via-blue-950 to-cyan-950'],
+                              ['Zero Footprint','0.6%','from-blue-950 via-slate-950 to-indigo-950']
+                            ].map(([title,rate,bg],i)=>(
+                              <div key={title} className="overflow-hidden rounded-lg border border-cyan-300/25 bg-[#061425]">
+                                <div className={`relative flex aspect-[1.15/1] items-center justify-center bg-gradient-to-br ${bg}`}>
+                                  <Sparkles className="h-9 w-9 text-violet-200/80" />
+                                  <div className="absolute left-2 top-2 text-violet-300">◆</div>
+                                </div>
+                                <div className="p-2"><div className="truncate text-[9px] font-black">{title}</div><div className="mt-0.5 text-[8px] text-cyan-300">Ultra Rare · <span className="text-fuchsia-300">{rate}</span></div></div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-3">
+                          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-black">Perfect Games ({displayUser?.perfect_games || 37})</h3><button className="text-[9px] font-bold text-cyan-300/75">View All</button></div>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            {[
+                              ['Neon Racer','from-fuchsia-700 to-blue-950'],
+                              ['Shadow Realm','from-rose-900 to-slate-950'],
+                              ['Eclipse','from-slate-900 to-black'],
+                              ['Cyberwake','from-cyan-950 to-slate-900'],
+                              ['Frostline','from-sky-900 to-slate-950']
+                            ].map(([game,bg])=>(
+                              <div key={game} className="overflow-hidden rounded-lg border border-white/[0.08] bg-[#071525]">
+                                <div className={`flex aspect-[.82/1] items-center justify-center bg-gradient-to-br ${bg}`}><Gamepad2 className="h-7 w-7 text-white/40" /></div>
+                                <div className="p-1.5"><div className="truncate text-[8px] font-black">{game}</div><div className="mt-0.5 text-[7px] text-amber-300">🏆 100%</div></div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-3">
+                          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-black">Next Unlock Targets</h3><button className="text-[9px] font-bold text-cyan-300/75">View All</button></div>
+                          <div className="space-y-3">
+                            {[
+                              ['Master of Speed','Neon Racer',80,'8 / 10'],
+                              ['Into the Unknown','Eclipse',80,'12 / 15'],
+                              ['Survival Instinct','Shadow Realm',60,'3 / 5']
+                            ].map(([title,game,pct,count],i)=>(
+                              <div key={title} className="flex gap-3">
+                                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${i===0?'border-cyan-300/40 text-cyan-300':i===1?'border-amber-300/40 text-amber-300':'border-rose-300/40 text-rose-300'}`}><Target className="h-4 w-4" /></div>
+                                <div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><div><div className="truncate text-[9px] font-black">{title}</div><div className="text-[8px] text-cyan-300/65">{game}</div></div><div className="text-right text-[8px] text-white/60">{count}<br/>{pct}%</div></div><div className="mt-1 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-cyan-400" style={{width:`${pct}%`}} /></div></div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+                      </div>
+
+                      <div className="grid gap-2.5 xl:grid-cols-[1.12fr_1fr_.55fr]">
+                        <Glass className="p-3">
+                          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-black">Achievement Showcase</h3>{isSelf && <button className="rounded-full border border-white/10 px-3 py-1 text-[8px] font-bold text-white/50">Edit Showcase</button>}</div>
+                          <div className="grid grid-cols-5 gap-2">
+                            {[
+                              ['Elden Lord','Legendary','border-amber-400/50 text-amber-300'],
+                              ['The Legend','Rare','border-cyan-400/50 text-cyan-300'],
+                              ['Survivor','Epic','border-violet-400/50 text-violet-300'],
+                              ['Master Pilot','Rare','border-cyan-400/50 text-cyan-300'],
+                              ['Night City Legend','Legendary','border-fuchsia-400/50 text-amber-300']
+                            ].map(([title,rarity,tone],i)=>(
+                              <div key={title} className={`rounded-lg border bg-black/20 p-2 text-center ${tone}`}>
+                                <div className="flex aspect-[1.2/1] items-center justify-center rounded-md bg-white/[0.025]"><Award className="h-7 w-7" /></div>
+                                <div className="mt-1 truncate text-[8px] font-black text-white">{title}</div><div className="text-[7px]">{rarity}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="p-3">
+                          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-black">Achievement Milestones</h3><span className="text-[8px] italic text-white/35">A bigger horizon awaits.</span></div>
+                          <div className="relative mt-5">
+                            <div className="absolute left-[10%] right-[10%] top-4 h-px bg-cyan-300/25" />
+                            <div className="relative grid grid-cols-4 gap-2">
+                              {[
+                                [250,'Completed','Jan 10, 2024',true],
+                                [500,'Completed','Jun 22, 2024',true],
+                                [750,'Achievements','Mar 12, 2024',true],
+                                [1000,'Achievements','In Progress',false]
+                              ].map(([num,label,date,done])=>(
+                                <div key={num} className="text-center">
+                                  <div className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full border-2 bg-[#071525] ${done?'border-cyan-300 text-cyan-200':'border-white/20 text-white/30'}`}>{done?'✓':'🔒'}</div>
+                                  <div className="mt-2 text-[10px] font-black">{num}</div><div className="text-[8px] text-white/45">{label}</div><div className="mt-1 text-[7px] text-cyan-300/55">{date}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </Glass>
+
+                        <Glass className="relative overflow-hidden p-0">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_25%,rgba(34,211,238,.18),transparent_30%),linear-gradient(135deg,#05111f,#0b1c35_55%,#0c1830)]" />
+                          <div className="relative flex min-h-[128px] flex-col justify-end p-4">
+                            <div className="text-right text-[10px] font-black tracking-[.18em] text-cyan-100/80">HIGHER<br/>TOGETHER</div>
+                          </div>
+                        </Glass>
+                      </div>
+
+                      <div className="grid gap-2.5 xl:grid-cols-[1.35fr_1fr]">
+                        <Glass className="p-3">
+                          <div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-black">Recent Unlocks</h3><button className="text-[9px] font-bold text-cyan-300/75">View All</button></div>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                            {[
+                              ['Celestial Blade','Elden Ring','2 hours ago'],
+                              ['Knight’s End','Elden Ring','5 hours ago'],
+                              ['Tactical Master','Starfield','1 day ago'],
+                              ['Speed Demon','Neon Racer','2 days ago'],
+                              ['Frozen Resolve','Frostline','3 days ago']
+                            ].map(([title,game,time],i)=>(
+                              <div key={title} className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.025] p-2">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-cyan-300/20 bg-cyan-400/[0.06]"><Trophy className="h-4 w-4 text-amber-300" /></div>
+                                <div className="min-w-0"><div className="truncate text-[8px] font-black">{title}</div><div className="truncate text-[7px] text-white/35">{game}</div><div className="text-[7px] text-white/25">{time}</div></div>
+                              </div>
+                            ))}
+                          </div>
+                        </Glass>
+
+                        <Glass className="relative overflow-hidden p-0">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(217,70,239,.12),transparent_24%),radial-gradient(circle_at_15%_80%,rgba(34,211,238,.15),transparent_28%),linear-gradient(115deg,#061425,#0a1c31)]" />
+                          <div className="relative flex min-h-[88px] items-center px-7">
+                            <Quote className="mr-4 h-6 w-6 text-cyan-300/45" />
+                            <div><div className="text-[10px] italic leading-5 text-white/65">“Achievements aren’t just checkboxes. They’re proof of where you’ve been — and a hint of what’s next.”</div><div className="mt-1 text-[8px] text-white/30">— {name}</div></div>
                           </div>
                         </Glass>
                       </div>
