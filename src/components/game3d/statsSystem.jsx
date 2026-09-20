@@ -265,7 +265,11 @@ export function applySpellScaling(baseDamage, attackerDerived) {
 }
 
 export const ENEMY_STAT_TEMPLATES = Object.freeze({
-  normal:   { strength: 2, dexterity: 1, constitution: 2, focus: 1 },
-  elite:    { strength: 4, dexterity: 2, constitution: 4, focus: 2 },
-  champion: { strength: 6, dexterity: 3, constitution: 7, focus: 3 },
+  normal:    { strength: 2,  dexterity: 1,  constitution: 2,  focus: 1 },
+  champion:  { strength: 4,  dexterity: 2,  constitution: 5,  focus: 2 },
+  elite:     { strength: 7,  dexterity: 4,  constitution: 9,  focus: 4 },
+  miniBoss:  { strength: 12, dexterity: 6,  constitution: 22, focus: 7 },
+  caveBoss:  { strength: 20, dexterity: 9,  constitution: 48, focus: 12 },
+  gateBoss:  { strength: 30, dexterity: 13, constitution: 80, focus: 18 },
+  worldBoss: { strength: 45, dexterity: 18, constitution: 160, focus: 28 },
 });
