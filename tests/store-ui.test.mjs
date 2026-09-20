@@ -23,6 +23,7 @@ const code=await build({
  stdin:{contents:"export {default as Store} from './src/components/store/redesign/StorefrontLayout.jsx';export {default as Search} from './src/components/store/redesign/StoreSearch.jsx';",resolveDir:process.cwd(),loader:'jsx'},
  bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
  plugins:[{name:'isolated-sdk',setup(b){
+  b.onResolve({filter:/^lucide-react$/},()=>({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
   b.onResolve({filter:/base44Client|AuthContext|WishlistButton/},args=>({path:args.path,namespace:'test'}));
   b.onLoad({filter:/.*/,namespace:'test'},args=>({loader:'js',contents:args.path.includes('base44Client')?'export const base44=globalThis.testSDK;':args.path.includes('AuthContext')?"export const useAuth=()=>({user:{id:'test-player',purchased_items:['sky']},isAuthenticated:true});":'export default function WishlistButton(){return null;}'}));
  }}]
