@@ -1,22 +1,34 @@
 // Backend store for the equipment menu.
 // Holds: equipped abilities (martial arts + inner way + mystic skills),
 // gear slots, and talents. Persists to localStorage and notifies subscribers.
+//
+// AXE Prompt 018 integration:
+// - slot definitions come from the AXE-native equipment contract
+// - legacy inventory remains usable through an adapter
+// - equip validation is centralized instead of being UI-only
 
 import { INVENTORY, getAllEquippedInCategory } from './inventoryData';
+import {
+  AXE_EQUIPMENT_SLOT_DEFS,
+  migrateLegacyEquipmentItem,
+  validateAXEEquip,
+} from '../axe/equipment/AXEEquipmentSystem';
 
 const STORAGE_KEY = 'wwm_equipment_state_v1';
 
-// Slot definitions used by the UI. Info text intentionally left blank
-// so the layout matches Where Winds Meet without copying its content.
+// Existing UI categories are preserved, with AXE prestige/appearance slots added.
 export const GEAR_CATEGORIES = [
-  { id: 'weapon',    label: 'Weapon',    slots: 2 },
-  { id: 'helm',      label: 'Helm',      slots: 1 },
-  { id: 'chest',     label: 'Chest',     slots: 1 },
-  { id: 'gloves',    label: 'Gloves',    slots: 1 },
-  { id: 'legs',      label: 'Legs',      slots: 1 },
-  { id: 'boots',     label: 'Boots',     slots: 1 },
+  { id: 'weapon',    label: 'Weapon',    slots: AXE_EQUIPMENT_SLOT_DEFS.weapon.maxEquipped },
+  { id: 'helm',      label: 'Helm',      slots: AXE_EQUIPMENT_SLOT_DEFS.helm.maxEquipped },
+  { id: 'chest',     label: 'Chest',     slots: AXE_EQUIPMENT_SLOT_DEFS.chest.maxEquipped },
+  { id: 'gloves',    label: 'Gloves',    slots: AXE_EQUIPMENT_SLOT_DEFS.gloves.maxEquipped },
+  { id: 'legs',      label: 'Legs',      slots: AXE_EQUIPMENT_SLOT_DEFS.legs.maxEquipped },
+  { id: 'boots',     label: 'Boots',     slots: AXE_EQUIPMENT_SLOT_DEFS.boots.maxEquipped },
   { id: 'accessory', label: 'Accessory', slots: 3 },
   { id: 'trinket',   label: 'Trinket',   slots: 2 },
+  { id: 'cape',      label: 'Cape',      slots: AXE_EQUIPMENT_SLOT_DEFS.cape.maxEquipped },
+  { id: 'wings',     label: 'Wings',     slots: AXE_EQUIPMENT_SLOT_DEFS.wings.maxEquipped },
+  { id: 'costume',   label: 'Costume',   slots: AXE_EQUIPMENT_SLOT_DEFS.costume.maxEquipped },
 ];
 
 export const ABILITY_GROUPS = [
@@ -41,9 +53,7 @@ const buildDefaultState = () => ({
     acc[c.id] = new Array(c.slots).fill(null);
     return acc;
   }, {}),
-  // Per-tree: array of allocated node ids
   talents: TALENT_TREES.reduce((acc, t) => { acc[t.id] = []; return acc; }, {}),
-  // Selected item per tab (drives right-side detail panel)
   selectedAbilityGroup: 'martial_arts',
   selectedGearCategory: 'weapon',
   selectedTalentTree: 'tree_range',
@@ -52,7 +62,15 @@ const buildDefaultState = () => ({
 let state = (() => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...buildDefaultState(), ...JSON.parse(saved) };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const base = buildDefaultState();
+      return {
+        ...base,
+        ...parsed,
+        gear: { ...base.gear, ...(parsed.gear || {}) },
+      };
+    }
   } catch {}
   return buildDefaultState();
 })();
@@ -84,7 +102,7 @@ export const equipAbility = (groupId, slotIndex, abilityId) => {
 
 export const equipGear = (categoryId, slotIndex, itemId) => {
   const next = { ...state, gear: { ...state.gear } };
-  const arr = [...next.gear[categoryId]];
+  const arr = [...(next.gear[categoryId] || [])];
   arr[slotIndex] = itemId;
   next.gear[categoryId] = arr;
   state = next;
@@ -107,38 +125,40 @@ export const setSelected = (key, value) => {
 };
 
 // --- Inventory equip / unequip --------------------------------------------
-// Flips the `equipped` flag on items inside INVENTORY for a category.
-// For single-slot categories, equipping a new item unequips the previous one.
-// For multi-slot categories (weapon/accessory/trinket), we cap equipped count
-// at the category's slot count and unequip the oldest equipped item if full.
 
 const findCategoryDef = (categoryId) =>
   GEAR_CATEGORIES.find((c) => c.id === categoryId);
 
-export const equipItem = (categoryId, itemId) => {
+export const equipItem = (categoryId, itemId, context = {}) => {
   const items = INVENTORY[categoryId];
-  if (!items) return;
+  if (!items) return { ok: false, reason: 'CATEGORY_MISSING' };
   const target = items.find((it) => it.id === itemId);
-  if (!target || target.equipped) { emit(); return; }
+  if (!target) return { ok: false, reason: 'ITEM_MISSING' };
+  if (target.equipped) { emit(); return { ok: true, reason: 'ALREADY_EQUIPPED' }; }
+
+  const axeItem = migrateLegacyEquipmentItem(target, categoryId);
+  const validation = validateAXEEquip(axeItem, context);
+  if (!validation.ok) return validation;
 
   const cat = findCategoryDef(categoryId);
   const maxSlots = cat?.slots || 1;
   const currentlyEquipped = getAllEquippedInCategory(categoryId);
 
   if (currentlyEquipped.length >= maxSlots) {
-    // Unequip the first equipped item to make room
     const toRemove = currentlyEquipped[0];
     if (toRemove) toRemove.equipped = false;
   }
   target.equipped = true;
   emit();
+  return { ok: true, reason: null };
 };
 
 export const unequipItem = (categoryId, itemId) => {
   const items = INVENTORY[categoryId];
-  if (!items) return;
+  if (!items) return { ok: false, reason: 'CATEGORY_MISSING' };
   const target = items.find((it) => it.id === itemId);
-  if (!target) return;
+  if (!target) return { ok: false, reason: 'ITEM_MISSING' };
   target.equipped = false;
   emit();
+  return { ok: true, reason: null };
 };
