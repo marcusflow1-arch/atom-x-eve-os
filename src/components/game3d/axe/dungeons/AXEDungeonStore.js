@@ -323,6 +323,7 @@ export function completeAXEDungeonBoss(bossId) {
 export function finalizeAXEDungeonClear() {
   const session = state.activeSession;
   if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
+  if (session.rewardClaimed) return { ok: false, reason: 'REWARD_ALREADY_CLAIMED' };
   if (session.phase !== 'completed') return { ok: false, reason: 'DUNGEON_INCOMPLETE' };
 
   const dungeon = getAXEDungeonDefinition(session.dungeonId);
@@ -337,6 +338,11 @@ export function finalizeAXEDungeonClear() {
     bestClearMs: {
       ...state.bestClearMs,
       [session.dungeonId]: previousBest > 0 ? Math.min(previousBest, elapsedMs) : elapsedMs,
+    },
+    activeSession: {
+      ...session,
+      rewardClaimed: true,
+      rewardClaimedAt: Date.now(),
     },
   };
   emit();
