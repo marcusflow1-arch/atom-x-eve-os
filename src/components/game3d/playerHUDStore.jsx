@@ -16,6 +16,7 @@ import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
 import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
 import { AXE_PRIMARY_STATS, createDefaultAXEPowerProgression, normalizeAXEPowerProgression } from './axe/progression/AXECharacterProgressionConfig';
+import { getRegisteredAXECoreBonuses, subscribeAXECores } from './axe/progression/AXECoreStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -34,15 +35,23 @@ const sumAttr = (...objs) => {
   return out;
 };
 const sumFlat = (...objs) => {
-  const out = { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
+  const out = { hp: 0, chi: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0, attributionAttack: 0, attributionDefense: 0 };
   objs.forEach((o) => { if (!o) return; Object.keys(out).forEach((k) => { out[k] += o[k] || 0; }); });
   return out;
 };
 
-const getBonuses = () => ({
-  halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses()),
-  title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses()),
-});
+const getBonuses = () => {
+  const core = getRegisteredAXECoreBonuses();
+  const coreFlat = {
+    ...core,
+    attributionAttack: core.attributeAttack || core.attributionAttack || 0,
+    attributionDefense: core.attributeDefense || core.attributionDefense || 0,
+  };
+  return {
+    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses()),
+    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat),
+  };
+};
 
 const buildDefault = () => {
   const b = getBonuses();
@@ -206,6 +215,7 @@ subscribeHalo(recomputeFromBonuses);
 subscribeAura(recomputeFromBonuses);
 subscribeWings(recomputeFromBonuses);
 subscribeTitles(recomputeFromBonuses);
+subscribeAXECores(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
