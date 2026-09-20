@@ -52,7 +52,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 32, system: 'Pet foundation', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 33, system: 'Pet tiers / God pets', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 34, system: 'Mount foundation', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 35, system: 'High-end mounts', status: AXE_STATUS.MISSING },
+  { prompt: 35, system: 'High-end mounts', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 36, system: 'Quest/campaign framework', status: AXE_STATUS.PARTIAL },
   { prompt: 37, system: 'Caves/dungeons/SOS access', status: AXE_STATUS.MISSING },
   { prompt: 38, system: 'Unified Services menu', status: AXE_STATUS.PARTIAL },
