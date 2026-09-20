@@ -269,8 +269,8 @@ export default function GameView() {
   }, [themeVolume]);
 
   // Hotkeys while in-game:
-  // TAB = store/build, C = unified Character Hub, V = Character Hub Services,
-  // ESC = close the active overlay / pause.
+  // TAB = store/build, C = unified Character Hub, ESC = close overlay / pause.
+  // V remains reserved for the companion combat loadout; Services live inside C.
   useEffect(() => {
     if (phase !== 'world') return;
     const onKey = (e) => {
@@ -282,10 +282,6 @@ export default function GameView() {
         setRequestedService(null);
         setRequestedCharacterTab(null);
         setProgressionOpen((v) => !v);
-      } else if (e.key.toLowerCase() === 'v') {
-        setRequestedCharacterTab('services');
-        setRequestedService('reinforcement');
-        setProgressionOpen(true);
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'g') {
@@ -331,7 +327,7 @@ export default function GameView() {
           setProgressionOpen(true);
         }}
         className="absolute right-4 top-4 z-[135] rounded-xl border border-white/15 bg-neutral-800/55 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/80 backdrop-blur-xl hover:bg-white/10 hover:text-white"
-        title="Open Services inside Character Hub (V)"
+        title="Open Services inside Character Hub"
       >
         Services
       </button>
