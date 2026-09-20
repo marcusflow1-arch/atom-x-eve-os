@@ -4,6 +4,7 @@ import { ArrowLeftRight, Check, Package, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { tradeStore, closeTrade } from './socialStores';
 import { base44 } from '@/api/base44Client';
+import { setCombatFlag } from '../talents/advancedClassStore';
 
 const dataOf = (response) => response?.data || response || {};
 const nameOf = (card) => card?.card_name || card?.name || 'Card';
@@ -39,6 +40,12 @@ export default function TradePanel() {
 
   useEffect(() => tradeStore.subscribe(setTrade), []);
   useEffect(() => { base44.auth.me().then(setMe).catch(() => null); }, []);
+
+  // Advanced Classes cannot be switched while the trade UI/session is active.
+  useEffect(() => {
+    setCombatFlag('trading', !!trade.open);
+    return () => setCombatFlag('trading', false);
+  }, [trade.open]);
 
   const partnerId = trade.partner?.id;
   const invoke = useCallback(async (action, payload = {}) => {
