@@ -256,7 +256,7 @@ export function applyMasteryToHit(rawDamage, ctx = {}) {
     chain: momentum.count,
     lifeStealPct: Math.max(0, Number(advanced.lifeStealPct || 0)),
     bleedChancePct: Math.max(0, Number(advanced.bleedChancePct || 0)),
-    advancedClassId: getActiveEquippedAXEWeapon()
+    advancedWeaponType: getActiveEquippedAXEWeapon()
       ? resolveAXEWeaponIdentity(getActiveEquippedAXEWeapon()).advancedWeaponType
       : null,
   };
@@ -289,6 +289,13 @@ export function applyMasteryToIncomingDamage(rawDamage, ctx = {}) {
   if (advanced.blockChancePct > 0 && Math.random() * 100 < advanced.blockChancePct) {
     blocked = true;
     dmg *= 0.5;
+    if (advanced.counterDamagePct > 0) {
+      reflect = true;
+      reflectedDamage = Math.max(
+        reflectedDamage,
+        Math.round(rawDamage * (advanced.counterDamagePct / 100)),
+      );
+    }
   }
 
   // ── Dodge Roll (soft + hard capped via CombatBalanceConfig) ───────────
