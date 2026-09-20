@@ -16,6 +16,9 @@ import { resolveWeaponPassives } from './WeaponPassiveResolver';
 import { resolveWeaponType, WEAPON_TYPES } from './weaponMasteryConfig';
 import { getActiveWeaponPath } from '../../weaponClassBuffStore';
 import { getMasteryState } from '../weaponMasteryStore';
+import { getActiveEquippedAXEWeapon } from '../../axe/equipment/AXEEquipmentInventoryStore';
+import { resolveAXEWeaponIdentity } from '../../axe/weapons/AXEWeaponIdentity';
+import { getAXEAdvancedClassCombatModifiers } from '../../talents/AXEAdvancedClassRuntime';
 import {
   effectiveCritChance,
   defenseMitigation,
@@ -69,6 +72,14 @@ function refreshOnHitStack(weaponId, cap) {
 
 // ─── Resolve the active weaponId ────────────────────────────────────────
 export function getActiveWeaponId() {
+  // Inventory is authoritative for the active weapon. The mastery store mirrors
+  // it for persistence/UI, but can no longer override the equipped loadout.
+  const activeItem = getActiveEquippedAXEWeapon();
+  if (activeItem) {
+    const identity = resolveAXEWeaponIdentity(activeItem);
+    if (identity.masteryWeaponId) return identity.masteryWeaponId;
+  }
+
   const ms = getMasteryState();
   if (ms.activeWeaponId) return ms.activeWeaponId;
   const path = getActiveWeaponPath();
@@ -212,6 +223,29 @@ export function applyMasteryToHit(rawDamage, ctx = {}) {
     if (milestones.skyCritDmgPct && isCrit) dmg *= 1 + milestones.skyCritDmgPct / 100;
   }
 
+  // Advanced Class specialization is a downstream modifier of the same active
+  // weapon. It does not create another damage pipeline.
+  const advanced = getAXEAdvancedClassCombatModifiers();
+
+  if (
+    typeof ctx.targetHPPct === 'number' &&
+    advanced.executeThresholdPct > 0 &&
+    ctx.targetHPPct * 100 <= advanced.executeThresholdPct
+  ) {
+    execute = true;
+    dmg *= 1 + Math.max(0, advanced.executeDamagePct) / 100;
+  }
+
+  if (ctx.isCharged && advanced.chargeDamagePct) {
+    dmg *= 1 + Number(advanced.chargeDamagePct || 0) / 100;
+  }
+  if (ctx.isWeakspot && advanced.weakspotDamagePct) {
+    dmg *= 1 + Number(advanced.weakspotDamagePct || 0) / 100;
+  }
+  if (ctx.isStealthed && advanced.stealthDamagePct) {
+    dmg *= 1 + Number(advanced.stealthDamagePct || 0) / 100;
+  }
+
   const armorPenPct = (global.armorPenPct || 0) + (milestones.armorPenPct || 0);
 
   return {
@@ -220,6 +254,11 @@ export function applyMasteryToHit(rawDamage, ctx = {}) {
     execute,
     armorPenPct,
     chain: momentum.count,
+    lifeStealPct: Math.max(0, Number(advanced.lifeStealPct || 0)),
+    bleedChancePct: Math.max(0, Number(advanced.bleedChancePct || 0)),
+    advancedClassId: getActiveEquippedAXEWeapon()
+      ? resolveAXEWeaponIdentity(getActiveEquippedAXEWeapon()).advancedWeaponType
+      : null,
   };
 }
 
@@ -235,10 +274,22 @@ export function applyMasteryToHit(rawDamage, ctx = {}) {
 export function applyMasteryToIncomingDamage(rawDamage, ctx = {}) {
   const weaponId = ctx.weaponId || getActiveWeaponId();
   const { identity, milestones, weaponType } = resolveWeaponPassives(weaponId);
+  const advanced = getAXEAdvancedClassCombatModifiers();
   let dmg = rawDamage;
   let dodged = false;
+  let blocked = false;
   let reflect = false;
   let reflectedDamage = 0;
+
+  // Advanced-class dodge/block are additive combat capabilities attached to
+  // the same equipped weapon specialization.
+  if (advanced.dodgeChancePct > 0 && Math.random() * 100 < advanced.dodgeChancePct) {
+    return { damage: 0, dodged: true, blocked: false, reflect: false, reflectedDamage: 0 };
+  }
+  if (advanced.blockChancePct > 0 && Math.random() * 100 < advanced.blockChancePct) {
+    blocked = true;
+    dmg *= 0.5;
+  }
 
   // ── Dodge Roll (soft + hard capped via CombatBalanceConfig) ───────────
   if (ctx.dodgeStat != null || weaponType === WEAPON_TYPES.GUARDIAN) {
@@ -283,7 +334,22 @@ export function applyMasteryToIncomingDamage(rawDamage, ctx = {}) {
     dmg *= 1 + milestones.bossDmgTakenPct / 100; // negative = less damage
   }
 
-  return { damage: Math.max(0, Math.round(dmg)), dodged, reflect, reflectedDamage };
+  if (!reflect && advanced.reflectDamagePct > 0 && dmg > 0) {
+    reflect = true;
+    reflectedDamage = Math.max(
+      reflectedDamage,
+      Math.round(rawDamage * (advanced.reflectDamagePct / 100)),
+    );
+  }
+
+  return {
+    damage: Math.max(0, Math.round(dmg)),
+    dodged,
+    blocked,
+    reflect,
+    reflectedDamage,
+    ccResistancePct: Math.max(0, Number(advanced.ccResistancePct || 0)),
+  };
 }
 
 // ─── Skill / Buff Scaling ────────────────────────────────────────────────
@@ -319,9 +385,14 @@ export function getMasteryAttackSpeedMult(weaponId = null) {
   bonusPct += milestones.attackSpeedPct || 0;
   if (milestones.atkSpdPerChain) bonusPct += milestones.atkSpdPerChain * Math.min(5, momentum.count);
 
-  // Apply DR + hard cap from CombatBalanceConfig
-  bonusPct = Math.min(bonusPct, ATTACK_SPEED.hardCapPct);
-  return 1 + bonusPct / 100;
+  // Advanced Class attack speed uses the same final cap instead of running as
+  // a second uncapped multiplier.
+  bonusPct += Number(getAXEAdvancedClassCombatModifiers().attackSpeedPct || 0);
+
+  // Apply DR + hard cap from CombatBalanceConfig. Negative specialization
+  // penalties (for example a precision/sniper path) remain valid.
+  bonusPct = Math.max(-75, Math.min(bonusPct, ATTACK_SPEED.hardCapPct));
+  return Math.max(0.25, 1 + bonusPct / 100);
 }
 
 /** Crit chance bonus in percentage points (hard-capped to not exceed CRIT.hardCapPct). */
@@ -357,7 +428,8 @@ export function getMasteryCDR(weaponId = null) {
   let cdrPct = Math.min(global.cdrPct || 0, GLOBAL_TRAINING.maxCooldownReductionPct);
   if (weaponType === WEAPON_TYPES.SWORD) cdrPct += (identity.cdrPct || 0) + (milestones.cdrPct || 0);
   if (weaponType === WEAPON_TYPES.SKY)   cdrPct += (identity.cooldownReductionPct || 0) + (milestones.cdrPct || 0);
-  return Math.min(cdrPct, 35) / 100; // absolute CDR ceiling 35%
+  cdrPct += Number(getAXEAdvancedClassCombatModifiers().cooldownReductionPct || 0);
+  return Math.min(Math.max(0, cdrPct), 35) / 100; // absolute CDR ceiling 35%
 }
 
 /**
