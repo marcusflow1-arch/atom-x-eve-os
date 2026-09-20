@@ -20,6 +20,7 @@ import { getRegisteredAXECoreBonuses, subscribeAXECores } from './axe/progressio
 import { getEquippedAXECostumeBonuses, subscribeAXECostumes } from './axe/progression/AXECostumeStore';
 import { getEquippedAXECapeBonuses, subscribeAXECapes } from './axe/progression/AXECapeStore';
 import { getAXEElixirAttributeBonuses, subscribeAXEElixirs } from './axe/progression/AXEElixirStore';
+import { getRegisteredAXEPetBonuses, subscribeAXEPets } from './axe/progression/AXEPetStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -65,6 +66,7 @@ const normalizeCostumeBonuses = (raw = {}) => ({
 
 const getBonuses = () => {
   const core = getRegisteredAXECoreBonuses();
+  const pet = getRegisteredAXEPetBonuses();
   const costume = normalizeCostumeBonuses(getEquippedAXECostumeBonuses());
   const cape = getEquippedAXECapeBonuses();
   const capeFlat = {
@@ -83,7 +85,7 @@ const getBonuses = () => {
   };
   return {
     halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), getAXEElixirAttributeBonuses(), costume.attr),
-    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, capeFlat),
+    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, capeFlat, pet),
   };
 };
 
@@ -253,6 +255,7 @@ subscribeAXECores(recomputeFromBonuses);
 subscribeAXECostumes(recomputeFromBonuses);
 subscribeAXECapes(recomputeFromBonuses);
 subscribeAXEElixirs(recomputeFromBonuses);
+subscribeAXEPets(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
