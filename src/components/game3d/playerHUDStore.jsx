@@ -19,6 +19,7 @@ import { AXE_PRIMARY_STATS, createDefaultAXEPowerProgression, normalizeAXEPowerP
 import { getRegisteredAXECoreBonuses, subscribeAXECores } from './axe/progression/AXECoreStore';
 import { getEquippedAXECostumeBonuses, subscribeAXECostumes } from './axe/progression/AXECostumeStore';
 import { getEquippedAXECapeBonuses, subscribeAXECapes } from './axe/progression/AXECapeStore';
+import { getAXEElixirAttributeBonuses, subscribeAXEElixirs } from './axe/progression/AXEElixirStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -81,7 +82,7 @@ const getBonuses = () => {
     attributionDefense: core.attributeDefense || core.attributionDefense || 0,
   };
   return {
-    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), costume.attr),
+    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), getAXEElixirAttributeBonuses(), costume.attr),
     title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, capeFlat),
   };
 };
@@ -251,6 +252,7 @@ subscribeTitles(recomputeFromBonuses);
 subscribeAXECores(recomputeFromBonuses);
 subscribeAXECostumes(recomputeFromBonuses);
 subscribeAXECapes(recomputeFromBonuses);
+subscribeAXEElixirs(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
