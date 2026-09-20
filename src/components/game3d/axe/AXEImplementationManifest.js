@@ -54,7 +54,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 34, system: 'Mount foundation', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 35, system: 'High-end mounts', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 36, system: 'Quest/campaign framework', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 37, system: 'Caves/dungeons/SOS access', status: AXE_STATUS.MISSING },
+  { prompt: 37, system: 'Caves/dungeons/SOS access', status: AXE_STATUS.PARTIAL },
   { prompt: 38, system: 'Unified Services menu', status: AXE_STATUS.PARTIAL },
   { prompt: 39, system: 'Faction wars / objective PvP / invasion', status: AXE_STATUS.PARTIAL },
   { prompt: 40, system: 'Settlement / housing', status: AXE_STATUS.MISSING },
