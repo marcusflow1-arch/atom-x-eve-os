@@ -17,6 +17,7 @@ import {
 } from './characterStorage';
 import { GLOBAL_AVATAR_MODEL_URL, DEFAULT_AVATAR_APPEARANCE, companionModel } from '@/components/onboarding/genesisAssets';
 import { makeAXECharacterEntryFields, validateAXECharacterName } from './axe/characters/AXECharacterEntry';
+import { getAXEFaction, AXE_WEAPON_ROLES } from './axe/factions/AXEFactionWeaponConfig';
 
 // Roster + active-character keys are scoped to the signed-in user, so one
 // account's roster is never visible to another account on the same browser.
@@ -154,3 +155,41 @@ export async function activateAndSyncToHUD(id) {
   window.dispatchEvent(new CustomEvent('axeCharacterActivated',{detail:{characterId:id,character}}));
 }
 window.addEventListener('avatarAppearanceSaved',event=>{const avatar=event.detail?.avatar;if(!avatar)return;const patch=Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatar[k]!==undefined).map(k=>[k,avatar[k]]));state={...state,roster:state.roster.map(c=>c.id===state.activeId&&!c.isDevTest?{...c,...patch}:c)};emit();});
+
+
+// AXE Prompt 012 — faction and starting combat-identity setters.
+export function setActiveCharacterFaction(factionId) {
+  const active = getActiveCharacter();
+  if (!active || active.isDevTest) return false;
+  if (factionId !== 'AXE_Faction_Unassigned' && !getAXEFaction(factionId)) return false;
+  state = {
+    ...state,
+    roster: state.roster.map((character) =>
+      character.id === active.id ? { ...character, factionId } : character,
+    ),
+  };
+  emit();
+  window.dispatchEvent(new CustomEvent('axeCharacterFactionChanged', {
+    detail: { characterId: active.id, factionId },
+  }));
+  return true;
+}
+
+export function setActiveCharacterStartingWeaponRole(role) {
+  const active = getActiveCharacter();
+  if (!active || active.isDevTest) return false;
+  if (!Object.values(AXE_WEAPON_ROLES).includes(role)) return false;
+  state = {
+    ...state,
+    roster: state.roster.map((character) =>
+      character.id === active.id
+        ? { ...character, startingWeaponStyleId: `AXE_WeaponRole_${role}` }
+        : character,
+    ),
+  };
+  emit();
+  window.dispatchEvent(new CustomEvent('axeCharacterWeaponRoleChanged', {
+    detail: { characterId: active.id, role },
+  }));
+  return true;
+}
