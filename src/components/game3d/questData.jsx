@@ -1,3 +1,5 @@
+import { AXE_QUESTS } from './axe/quests/AXEQuestFramework';
+
 // ─────────────────────────────────────────────
 // Quest Data — 10 hand-tuned quests.
 // All unlocked at level 1 so the system can be tested end-to-end.
@@ -255,16 +257,20 @@ export const QUESTS = [
   },
 ];
 
+QUESTS.push(...AXE_QUESTS);
+
 // Helper: which quest (if any) is currently available from this NPC for this player?
 // Picks the lowest-unlockLevel quest from this NPC that the player has unlocked
 // but not yet accepted or completed.
 export function getAvailableQuestForNPC(npcId, playerLevel, acceptedIds, completedIds) {
-  return QUESTS.find(
-    (q) =>
-      q.npcId === npcId &&
-      q.unlockLevel <= playerLevel &&
-      (!q.requires || completedIds.includes(q.requires)) &&
-      !acceptedIds.includes(q.id) &&
-      !completedIds.includes(q.id)
-  ) || null;
+  return QUESTS
+    .filter(
+      (q) =>
+        q.npcId === npcId &&
+        q.unlockLevel <= playerLevel &&
+        (!q.requires || completedIds.includes(q.requires)) &&
+        !acceptedIds.includes(q.id) &&
+        (!completedIds.includes(q.id) || q.repeatable)
+    )
+    .sort((a, b) => (Number(b.priority || 0) - Number(a.priority || 0)) || (Number(a.unlockLevel || 1) - Number(b.unlockLevel || 1)))[0] || null;
 }
