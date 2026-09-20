@@ -59,6 +59,7 @@ import {
 } from './AXEServiceRegistry';
 import { executeAXEServiceTransaction } from './AXEServiceTransactionGateway';
 import { getAXEServiceInventoryCost } from './AXEServiceEconomy';
+import { filterAXEItemsForService, getAXEServiceEligibility, describeAXEServiceEligibility } from './AXEServiceEligibility';
 
 const PROGRESSION_PANELS = {
   halo: HaloSubTab,
@@ -186,7 +187,7 @@ function MaterialPill({ id, need = null }) {
   );
 }
 
-function EquipmentServicePanel({ serviceId }) {
+function EquipmentServicePanel({ serviceId, requestedItemId = null }) {
   const [inventoryState, setInventoryState] = useState(() => ({
     items: getAllAXEEquipmentItems(),
   }));
@@ -211,7 +212,11 @@ function EquipmentServicePanel({ serviceId }) {
   useEffect(() => subscribeAXESockets(() => setBackendVersion((v) => v + 1)), []);
   useEffect(() => subscribeAXEAura(() => setBackendVersion((v) => v + 1)), []);
 
-  const items = inventoryState.items || [];
+  const allItems = inventoryState.items || [];
+  const items = useMemo(
+    () => filterAXEItemsForService(serviceId, allItems),
+    [serviceId, allItems],
+  );
 
   useEffect(() => {
     if (!items.length) {
@@ -227,6 +232,15 @@ function EquipmentServicePanel({ serviceId }) {
     setLastResult(null);
     setDonorId('');
   }, [serviceId, selectedId]);
+
+  useEffect(() => {
+    if (!requestedItemId) return;
+    const requested = allItems.find((entry) => entry.instanceId === requestedItemId);
+    if (!requested) return;
+    const eligibility = getAXEServiceEligibility(serviceId, requested);
+    if (eligibility.eligible) setSelectedId(requested.instanceId);
+    else setLastResult({ ok: false, reason: describeAXEServiceEligibility(eligibility) });
+  }, [requestedItemId, serviceId, allItems]);
 
   const filteredItems = useMemo(
     () => items.filter((item) => matchesInventoryFilter(item, filter)),
@@ -582,6 +596,7 @@ export default function AXEGlobalServicesMenu({
   isOpen = true,
   onClose,
   requestedService = null,
+  requestedItemId = null,
   embedded = false,
 }) {
   const [activeServiceId, setActiveServiceId] = useState(() =>
@@ -666,7 +681,7 @@ export default function AXEGlobalServicesMenu({
 
           <div className={embedded ? 'h-full' : 'h-full pt-2'}>
             {active.kind === 'equipment_action' && (
-              <EquipmentServicePanel serviceId={active.id} />
+              <EquipmentServicePanel serviceId={active.id} requestedItemId={requestedItemId} />
             )}
             {active.kind === 'progression_panel' && ProgressionPanel && (
               <div className="h-full pt-6">
