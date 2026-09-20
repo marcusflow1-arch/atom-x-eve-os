@@ -1,3 +1,5 @@
+import { classifyAXEAirState } from '../axe/player/AXEPlayerTraversalConfig';
+
 export const PLAYER_PRIORITIES = {
   none: 0,
   aim: 1,
@@ -18,6 +20,9 @@ export class CorePlayerStateMachine {
       stance: 'normal',
       mounted: false,
       locked: false,
+      grounded: true,
+      verticalVelocity: 0,
+      justLanded: false,
     };
     this.intent = {
       moveAmount: 0,
@@ -26,6 +31,9 @@ export class CorePlayerStateMachine {
       aimHeld: false,
       blockHeld: false,
       direction: 'forward',
+      grounded: true,
+      verticalVelocity: 0,
+      justLanded: false,
     };
     this.lockTimer = 0;
     this.cancelTimer = 0;
@@ -34,6 +42,15 @@ export class CorePlayerStateMachine {
 
   setIntent(nextIntent) {
     this.intent = { ...this.intent, ...nextIntent };
+  }
+
+  setAirborneState({ grounded, verticalVelocity = 0, justLanded = false }) {
+    this.intent.grounded = !!grounded;
+    this.intent.verticalVelocity = Number(verticalVelocity) || 0;
+    this.intent.justLanded = !!justLanded;
+    this.current.grounded = !!grounded;
+    this.current.verticalVelocity = this.intent.verticalVelocity;
+    this.current.justLanded = !!justLanded;
   }
 
   setMounted(enabled) {
@@ -85,7 +102,15 @@ export class CorePlayerStateMachine {
     }
 
     if (!this.current.locked) {
-      if (this.current.stance === 'crouch') {
+      const airState = classifyAXEAirState({
+        grounded: this.intent.grounded,
+        verticalVelocity: this.intent.verticalVelocity,
+        justLanded: this.intent.justLanded,
+      });
+
+      if (airState) {
+        this.current.locomotion = airState;
+      } else if (this.current.stance === 'crouch') {
         this.current.locomotion = this.intent.moveAmount > 0 ? 'crouch_walk' : 'crouch_idle';
       } else if (this.current.mounted) {
         this.current.locomotion = this.intent.moveAmount > 0 ? (this.intent.runHeld ? 'mounted_run' : 'mounted_walk') : 'mounted_idle';
@@ -100,6 +125,11 @@ export class CorePlayerStateMachine {
       }
       this.current.combat = this.intent.blockHeld ? 'block' : this.intent.aimHeld ? 'aim' : this.current.combat === 'none' ? 'none' : this.current.combat;
     }
+
+    this.current.grounded = !!this.intent.grounded;
+    this.current.verticalVelocity = Number(this.intent.verticalVelocity) || 0;
+    this.current.justLanded = !!this.intent.justLanded;
+    if (this.intent.justLanded) this.intent.justLanded = false;
 
     const buffered = this.comboBuffer;
     if (buffered && !this.current.locked) {
