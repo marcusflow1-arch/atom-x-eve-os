@@ -346,6 +346,39 @@ export function applyAttributeAllocationPlan(plan = {}) {
   };
 }
 
+export function respecAttributes({ confirmed = false } = {}) {
+  if (!confirmed) return { ok: false, reason: 'CONFIRMATION_REQUIRED' };
+
+  const current = state.baseStats || {};
+  const refund = Object.keys(DEFAULT_PLAYER_STATS).reduce(
+    (sum, key) => sum + Math.max(0, Number(current[key] || 0) - Number(DEFAULT_PLAYER_STATS[key] || 0)),
+    0,
+  );
+
+  if (refund <= 0) return { ok: false, reason: 'NOTHING_TO_RESPEC' };
+
+  const newBase = { ...DEFAULT_PLAYER_STATS };
+  const b = getBonuses();
+  const newDerived = computeDerivedWithVanity(newBase, b);
+
+  state = {
+    ...state,
+    baseStats: newBase,
+    unspentPoints: Number(state.unspentPoints || 0) + refund,
+    derived: newDerived,
+    maxHP: newDerived.maxHP,
+    hp: Math.min(newDerived.maxHP, state.hp),
+  };
+  emit();
+
+  return {
+    ok: true,
+    refunded: refund,
+    baseStats: { ...newBase },
+    unspentPoints: state.unspentPoints,
+  };
+}
+
 export function refundStat(statKey) {
   const current = Number(state.baseStats?.[statKey] || 0);
   if (current <= 1 || !(statKey in state.baseStats)) return false;
