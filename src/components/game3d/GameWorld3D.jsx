@@ -26,6 +26,7 @@ import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
+import { getActiveAXEMountSpeedMultiplier, setAXEMountRiding, tickAXEMountRideActivity } from './axe/progression/AXEMountStore';
 import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
 import CompanionHealthBar from './CompanionHealthBar';
 import PlayerNameTag from './PlayerNameTag';
@@ -1217,14 +1218,18 @@ export default function GameWorld3D() {
           isMountedRef.current = false;
           setIsMounted(false);
           setMounted(false);
+          setAXEMountRiding(false);
         } else if (compGroup) {
           // Only mount if close enough
           const dx = compGroup.position.x - model.position.x;
           const dz = compGroup.position.z - model.position.z;
           if (Math.sqrt(dx * dx + dz * dz) < 3.5) {
-            isMountedRef.current = true;
-            setIsMounted(true);
-            setMounted(true);
+            const rideResult = setAXEMountRiding(true);
+            if (rideResult.ok) {
+              isMountedRef.current = true;
+              setIsMounted(true);
+              setMounted(true);
+            }
           }
         }
       }
@@ -1233,7 +1238,8 @@ export default function GameWorld3D() {
       if (model) {
         const mounted = isMountedRef.current;
         const compGroup = companionGroupRef.current;
-        const speedMult = mounted ? getEffectiveSpeedMultiplier() : 1.0;
+        const axeMountSpeed = getActiveAXEMountSpeedMultiplier();
+        const speedMult = mounted ? (axeMountSpeed || getEffectiveSpeedMultiplier()) : 1.0;
         const yaw = orbit.current.yaw;
         const move = new THREE.Vector3();
         const combatAxes = getCombatAxes();
@@ -1315,6 +1321,12 @@ export default function GameWorld3D() {
           move.normalize();
           model.position.x += move.x * speed * delta;
           model.position.z += move.z * speed * delta;
+          if (mounted) {
+            tickAXEMountRideActivity(delta, {
+              moving: true,
+              distanceMeters: speed * delta,
+            });
+          }
           const arenaRadius = 36.5;
           const distFromCenter = Math.sqrt(model.position.x * model.position.x + model.position.z * model.position.z);
           if (distFromCenter > arenaRadius) {
