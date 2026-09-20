@@ -75,6 +75,7 @@ export default function GameView() {
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [requestedService, setRequestedService] = useState(null);
+  const [requestedCharacterTab, setRequestedCharacterTab] = useState(null);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [clanOverlayOpen, setClanOverlayOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
@@ -238,10 +239,21 @@ export default function GameView() {
   // Living Quest NPC interaction is now handled in-world by CinematicQuestDialogue
   // (mounted below), which listens for the same 'openLivingQuest' event.
 
+  useEffect(() => {
+    const onOpenHub = (event) => {
+      setRequestedService(null);
+      setRequestedCharacterTab(event?.detail?.tab || 'inventory');
+      setProgressionOpen(true);
+    };
+    window.addEventListener('axeOpenCharacterHub', onOpenHub);
+    return () => window.removeEventListener('axeOpenCharacterHub', onOpenHub);
+  }, []);
+
   // NPC/global service requests route into the Services tab of the C Character
   // Hub. There is no second standalone Services overlay anymore.
   useEffect(() => {
     const onService = (event) => {
+      setRequestedCharacterTab('services');
       setRequestedService(event?.detail?.service || 'reinforcement');
       setProgressionOpen(true);
     };
@@ -268,8 +280,10 @@ export default function GameView() {
         setStoreOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'c') {
         setRequestedService(null);
+        setRequestedCharacterTab(null);
         setProgressionOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'v') {
+        setRequestedCharacterTab('services');
         setRequestedService('reinforcement');
         setProgressionOpen(true);
       } else if (e.key.toLowerCase() === 'l') {
@@ -282,6 +296,7 @@ export default function GameView() {
         else if (progressionOpen) {
           setProgressionOpen(false);
           setRequestedService(null);
+          setRequestedCharacterTab(null);
         }
         else if (friendsListOpen) setFriendsListOpen(false);
         else if (clanOverlayOpen) setClanOverlayOpen(false);
@@ -311,6 +326,7 @@ export default function GameView() {
     <div className="fixed inset-0 bg-black overflow-hidden">
       <button
         onClick={() => {
+          setRequestedCharacterTab('services');
           setRequestedService('reinforcement');
           setProgressionOpen(true);
         }}
@@ -357,8 +373,10 @@ export default function GameView() {
         onClose={() => {
           setProgressionOpen(false);
           setRequestedService(null);
+          setRequestedCharacterTab(null);
         }}
         requestedService={requestedService}
+        initialTab={requestedCharacterTab}
         onServiceRequestConsumed={() => setRequestedService(null)}
       />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
