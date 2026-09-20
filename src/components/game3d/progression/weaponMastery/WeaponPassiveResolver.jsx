@@ -15,7 +15,6 @@ import {
   WEAPON_TYPES,
 } from './weaponMasteryConfig';
 import { getAllocatedModifiers } from './weaponMasteryTreeStore';
-import { getEnchantmentAtkBonus, getEnchantmentElementBonus } from './enchantmentStore';
 
 // Linear progress 0..1 based on current level vs max.
 function progress(level) {
@@ -100,14 +99,11 @@ export function resolveWeaponPassives(weaponId) {
     else milestones[k] = v;
   }
 
-  // ── Enchantment contribution ────────────────────────────────────────────
-  // Flat ATK from enchantment is converted to a % damage multiplier on top of
-  // the weapon's own base ATK (assumed ~10 for normalisation). This means that
-  // both the weapon's own base stats AND the enchantment bonus stack together,
-  // then mastery passives multiply the final result — giving the player two
-  // independent levers to grow their damage.
-  const enchantAtk = getEnchantmentAtkBonus(weaponId);       // flat ATK pts
-  const enchantElem = getEnchantmentElementBonus(weaponId);  // elemental pts
+  // Equipment enchantment/reinforcement is resolved from the actual equipped
+  // item in AXEEquipmentRuntimeStats. Weapon Mastery never owns a duplicate
+  // blacksmith/enchantment layer.
+  const enchantAtk = 0;
+  const enchantElem = 0;
 
   return {
     weaponType,
@@ -116,7 +112,7 @@ export function resolveWeaponPassives(weaponId) {
     identity:       identityPassives(weaponType, level),
     milestones,
     tree:           treeMods,
-    enchantAtkBonus:  enchantAtk,   // flat bonus — add to raw damage before pipeline
-    enchantElemBonus: enchantElem,  // elemental damage on top
+    enchantAtkBonus: enchantAtk,
+    enchantElemBonus: enchantElem
   };
 }
