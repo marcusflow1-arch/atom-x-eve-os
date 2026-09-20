@@ -11,6 +11,7 @@ import {
   increaseAXEPetOverEnchant,
   normalizeAXEPetInstance,
 } from './AXEPetSystem';
+import { previewAXEPetFusion } from './AXEPetTierSystem';
 
 const storage = characterScopedStorage('axe_pet_progression_v1');
 
@@ -18,7 +19,7 @@ const starter = () => ({
   pets: [createAXEPetInstance('shadow_wolf', 'axe_pet_shadow_wolf_starter')],
   activeRegisteredPetId: null,
   summonedPetId: null,
-  materials: { pet_feed: 12, pet_catalyst: 8 },
+  materials: { pet_feed: 12, pet_catalyst: 8, pet_soul: 8, god_essence: 1 },
 });
 
 const load = () => {
@@ -156,12 +157,89 @@ export function overEnchantAXEPet(instanceId) {
   return result;
 }
 
-export function grantAXEPet(definitionId) {
+export function grantAXEPet(definitionId, overrides = {}) {
   if (!getAXEPetDefinition(definitionId)) return { ok: false, reason: 'PET_DEFINITION_MISSING' };
-  const pet = createAXEPetInstance(definitionId);
+  const pet = normalizeAXEPetInstance({
+    ...createAXEPetInstance(definitionId),
+    ...overrides,
+  });
   state = { ...state, pets: [...state.pets, pet] };
   emit();
   return { ok: true, pet };
+}
+
+export function previewAXEPetFusionByIds(instanceIds = [], resultSpecialty = null) {
+  const uniqueIds = [...new Set(instanceIds)];
+  const pets = uniqueIds
+    .map((id) => state.pets.find((pet) => pet.instanceId === id))
+    .filter(Boolean);
+  if (pets.length !== uniqueIds.length) return { ok: false, reason: 'PET_MISSING' };
+
+  const preview = previewAXEPetFusion(pets, resultSpecialty);
+  if (!preview.ok) return preview;
+
+  const canAfford = Object.entries(preview.materialCost || {})
+    .every(([id, amount]) => Number(state.materials[id] || 0) >= Number(amount || 0));
+  return {
+    ...preview,
+    canAfford,
+    materials: { ...state.materials },
+  };
+}
+
+export function fuseAXEPets(instanceIds = [], {
+  resultSpecialty = null,
+  confirmed = false,
+  roll = Math.random(),
+} = {}) {
+  const preview = previewAXEPetFusionByIds(instanceIds, resultSpecialty);
+  if (!preview.ok) return preview;
+  if (!confirmed) return { ...preview, ok: false, reason: 'CONFIRMATION_REQUIRED' };
+  if (!preview.canAfford) return { ...preview, ok: false, reason: 'INSUFFICIENT_MATERIALS' };
+
+  const donors = preview.donorIds
+    .map((id) => state.pets.find((pet) => pet.instanceId === id))
+    .filter(Boolean);
+  if (donors.length !== preview.requiredPetCount) return { ok: false, reason: 'DONOR_STATE_CHANGED' };
+
+  if (roll > preview.successChance) {
+    // Default AXE recipes are currently safe/100%; this branch exists so future
+    // recipes can introduce risk without rewriting the transaction.
+    return { ...preview, ok: false, reason: 'FUSION_FAILED', donorsConsumed: false };
+  }
+
+  const source = donors[0];
+  const result = normalizeAXEPetInstance({
+    ...createAXEPetInstance(source.definitionId),
+    tierId: preview.resultTier,
+    specialty: preview.resultSpecialty,
+    level: preview.retainedLevel,
+    overEnchantPercent: preview.retainedOverEnchantPercent,
+    evolutionStage: (source.evolutionStage || 0) + 1,
+    registered: false,
+    summoned: false,
+    bound: donors.some((pet) => pet.bound),
+  });
+
+  const donorSet = new Set(preview.donorIds);
+  const nextMaterials = { ...state.materials };
+  for (const [id, amount] of Object.entries(preview.materialCost || {})) {
+    nextMaterials[id] = Math.max(0, Number(nextMaterials[id] || 0) - Number(amount || 0));
+  }
+
+  state = {
+    ...state,
+    materials: nextMaterials,
+    pets: [...state.pets.filter((pet) => !donorSet.has(pet.instanceId)), result],
+  };
+  emit();
+  return {
+    ok: true,
+    result,
+    donorsConsumed: true,
+    donorIds: preview.donorIds,
+    materialCost: preview.materialCost,
+  };
 }
 
 export function grantAXEPetMaterials(delta = {}) {
@@ -170,6 +248,8 @@ export function grantAXEPetMaterials(delta = {}) {
     materials: {
       pet_feed: Number(state.materials.pet_feed || 0) + Math.max(0, Number(delta.pet_feed || 0)),
       pet_catalyst: Number(state.materials.pet_catalyst || 0) + Math.max(0, Number(delta.pet_catalyst || 0)),
+      pet_soul: Number(state.materials.pet_soul || 0) + Math.max(0, Number(delta.pet_soul || 0)),
+      god_essence: Number(state.materials.god_essence || 0) + Math.max(0, Number(delta.god_essence || 0)),
     },
   };
   emit();
