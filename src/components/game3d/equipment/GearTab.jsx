@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GEAR_CATEGORIES, setSelected, equipItem, unequipItem } from './equipmentStore';
-import { INVENTORY, getEquippedItem } from './inventoryData';
+import { getEquippedAXEItemInCategory, getAXEInventoryItemsByCategory, subscribeAXEEquipmentInventory } from '../axe/equipment/AXEEquipmentInventoryStore';
 import GearSlotsPanel from './GearSlotsPanel';
 import GearInventoryGrid from './GearInventoryGrid';
 import GearDetailPanel from './GearDetailPanel';
@@ -228,13 +228,18 @@ export default function GearTab({ state }) {
   const selectedCat = GEAR_CATEGORIES.find((c) => c.id === state.selectedGearCategory)
     || GEAR_CATEGORIES[0];
 
-  // Track inspected item per-category; default to the equipped one
+  // Track the canonical owned equipment inventory so this screen and Services
+  // operate on the exact same item instances.
+  const [, setInventoryVersion] = useState(0);
+  useEffect(() => subscribeAXEEquipmentInventory(() => setInventoryVersion((v) => v + 1)), []);
+
+  // Track inspected item per-category; default to the equipped one.
   const [inspectedByCat, setInspectedByCat] = useState({});
   const inspectedId = !isExtraSlot
-    ? (inspectedByCat[selectedCat.id] || getEquippedItem(selectedCat.id)?.id || null)
+    ? (inspectedByCat[selectedCat.id] || getEquippedAXEItemInCategory(selectedCat.id)?.instanceId || null)
     : null;
   const inspectedItem = !isExtraSlot
-    ? ((INVENTORY[selectedCat.id] || []).find((it) => it.id === inspectedId) || null)
+    ? (getAXEInventoryItemsByCategory(selectedCat.id).find((it) => it.instanceId === inspectedId) || null)
     : null;
 
   // Right-click context menu state
@@ -378,9 +383,9 @@ export default function GearTab({ state }) {
           <EquipmentSlotsColumn
             selectedCategoryId={selectedCat.id}
             onSelectCategory={(id) => {
-              const equipped = getEquippedItem(id);
+              const equipped = getEquippedAXEItemInCategory(id);
               if (equipped) {
-                setInspectedByCat((prev) => ({ ...prev, [id]: equipped.id }));
+                setInspectedByCat((prev) => ({ ...prev, [id]: equipped.instanceId }));
               }
             }}
           />
@@ -504,10 +509,13 @@ export default function GearTab({ state }) {
           x={contextMenu.x}
           y={contextMenu.y}
           item={contextMenu.item}
-          onEquip={() => equipItem(selectedCat.id, contextMenu.item.id)}
-          onUnequip={() => unequipItem(selectedCat.id, contextMenu.item.id)}
+          onEquip={() => equipItem(selectedCat.id, contextMenu.item.instanceId || contextMenu.item.id)}
+          onUnequip={() => unequipItem(selectedCat.id, contextMenu.item.instanceId || contextMenu.item.id)}
           onInspect={() =>
-            setInspectedByCat((prev) => ({ ...prev, [selectedCat.id]: contextMenu.item.id }))
+            setInspectedByCat((prev) => ({
+              ...prev,
+              [selectedCat.id]: contextMenu.item.instanceId || contextMenu.item.id,
+            }))
           }
           onClose={() => setContextMenu(null)}
         />
