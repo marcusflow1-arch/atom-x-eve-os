@@ -1,11 +1,15 @@
 // ─── Loot Store — Drop definitions, RNG, and inventory state ─────────────────
 import { SKILLS_DATABASE } from './equipment/skillData';
+import { finalizeAXEDrop } from './axe/loot/AXELootQuality';
 
 export const LOOT_RARITIES = {
   common:    { color: '#9ca3af', hex: 0x9ca3af, glow: 0x9ca3af, label: 'Common'    },
+  uncommon:  { color: '#4ade80', hex: 0x4ade80, glow: 0x4ade80, label: 'Uncommon'  },
   rare:      { color: '#60a5fa', hex: 0x60a5fa, glow: 0x60a5fa, label: 'Rare'      },
+  elite:     { color: '#a78bfa', hex: 0xa78bfa, glow: 0xa78bfa, label: 'Elite'     },
   epic:      { color: '#a78bfa', hex: 0xa78bfa, glow: 0xa78bfa, label: 'Epic'      },
   legendary: { color: '#f59e0b', hex: 0xf59e0b, glow: 0xf59e0b, label: 'Legendary' },
+  heroic:    { color: '#fb7185', hex: 0xfb7185, glow: 0xfb7185, label: 'Heroic'    },
   mythic:    { color: '#f43f5e', hex: 0xf43f5e, glow: 0xf43f5e, label: 'Mythic'    },
   divine:    { color: '#e879f9', hex: 0xe879f9, glow: 0xe879f9, label: 'Divine'    },
 };
@@ -33,6 +37,8 @@ export const LOOT_TABLE = [
   { id: 'mat_void_crystal',      name: 'Void Crystal',     category: 'material',  rarity: 'epic',      icon: '🔮',  weight: 15 },
   { id: 'mat_divine_essence',    name: 'Divine Essence',   category: 'material',  rarity: 'legendary', icon: '✨',  weight: 5  },
   { id: 'mat_aura_shard',        name: 'Aura Shard',       category: 'material',  rarity: 'rare',      icon: '🌟',  weight: 20 },
+  { id: 'mat_elite_temper',       name: 'Elite Tempering Stone', category: 'material', rarity: 'elite', icon: '🔷', weight: 4 },
+  { id: 'mat_heroic_core',        name: 'Heroic Core',       category: 'material',  rarity: 'heroic',    icon: '💎',  weight: 1 },
   // ── Crafting Resources ────────────────────────────────────────────────────
   { id: 'craft_bone',            name: 'Creature Bone',    category: 'crafting',  rarity: 'common',    icon: '🦴',  weight: 40 },
   { id: 'craft_fang',            name: 'Toxic Fang',       category: 'crafting',  rarity: 'common',    icon: '🦷',  weight: 35 },
@@ -61,29 +67,32 @@ const BOSS_LEGENDARY_BOOST = 3.0; // multiplies legendary/mythic/divine weights 
  * Roll loot drops from a dead enemy.
  * Returns an array of 0–3 loot items (can be empty).
  */
-export function rollEnemyDrops(enemyTier = 'normal', isBoss = false) {
+export function rollEnemyDrops(enemyTier = 'normal', isBoss = false, ctx = {}) {
   const drops = [];
+  const rng = typeof ctx.rng === 'function' ? ctx.rng : Math.random;
+  const authorityTag = ctx.authorityTag || 'host-authoritative';
+  const generatedAt = Number(ctx.generatedAt || Date.now());
 
-  // 1. Primary drop: always rolled
-  const primaryRoll = Math.random();
+  const makeDrop = (item) => item ? finalizeAXEDrop({
+    ...item,
+    dropId: `drop_${generatedAt}_${Math.floor(rng() * 0xFFFFFF).toString(36)}`,
+  }, { rng, enemyTier, isBoss, authorityTag, generatedAt }) : null;
+
   const mult = TIER_MULTIPLIERS[enemyTier] || 1.0;
-  const adjustedChance = Math.min(0.92, BASE_SKILL_DROP_CHANCE * mult);
-  if (primaryRoll <= adjustedChance) {
-    const item = weightedSample(buildWeightedTable(isBoss));
-    if (item) drops.push({ ...item, dropId: `drop_${Date.now()}_${Math.random().toString(36).slice(2)}` });
+  if (rng() <= Math.min(0.92, BASE_SKILL_DROP_CHANCE * mult)) {
+    const drop = makeDrop(weightedSample(buildWeightedTable(isBoss), rng));
+    if (drop) drops.push(drop);
   }
 
-  // 2. Secondary drop: only for elite/champion/boss
-  if ((enemyTier === 'elite' || enemyTier === 'champion' || enemyTier === 'boss') && Math.random() < 0.45) {
-    const item = weightedSample(buildWeightedTable(isBoss));
-    if (item) drops.push({ ...item, dropId: `drop_${Date.now()}_${Math.random().toString(36).slice(2)}` });
+  if ((['elite','champion','miniBoss','caveBoss','gateBoss','worldBoss','boss'].includes(enemyTier) || isBoss) && rng() < 0.45) {
+    const drop = makeDrop(weightedSample(buildWeightedTable(isBoss), rng));
+    if (drop) drops.push(drop);
   }
 
-  // 3. Bonus boss drop: guaranteed extra rare+
   if (isBoss && drops.length < 3) {
-    const rareTable = LOOT_TABLE.filter((i) => ['legendary', 'mythic', 'divine'].includes(i.rarity));
-    const item = rareTable[Math.floor(Math.random() * rareTable.length)];
-    if (item) drops.push({ ...item, dropId: `drop_${Date.now()}_${Math.random().toString(36).slice(2)}` });
+    const rareTable = LOOT_TABLE.filter((i) => ['legendary','heroic','mythic','divine'].includes(i.rarity));
+    const drop = makeDrop(rareTable[Math.floor(rng() * rareTable.length)]);
+    if (drop) drops.push(drop);
   }
 
   return drops;
@@ -92,14 +101,14 @@ export function rollEnemyDrops(enemyTier = 'normal', isBoss = false) {
 function buildWeightedTable(isBoss) {
   if (!isBoss) return LOOT_TABLE;
   return LOOT_TABLE.map((item) => {
-    const isHighRarity = ['legendary', 'mythic', 'divine'].includes(item.rarity);
-    return isHighRarity ? { ...item, weight: item.weight * BOSS_LEGENDARY_BOOST } : item;
+    const high = ['legendary','heroic','mythic','divine'].includes(item.rarity);
+    return high ? { ...item, weight: item.weight * BOSS_LEGENDARY_BOOST } : item;
   });
 }
 
-function weightedSample(table) {
+function weightedSample(table, rng = Math.random) {
   const total = table.reduce((s, i) => s + i.weight, 0);
-  let r = Math.random() * total;
+  let r = rng() * total;
   for (const item of table) {
     r -= item.weight;
     if (r <= 0) return item;
