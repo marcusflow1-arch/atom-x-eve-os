@@ -15,6 +15,7 @@ import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleSto
 import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
 import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
+import { AXE_PRIMARY_STATS, createDefaultAXEPowerProgression, normalizeAXEPowerProgression } from './axe/progression/AXECharacterProgressionConfig';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -55,6 +56,7 @@ const buildDefault = () => {
     hp: derived.maxHP,
     maxHP: derived.maxHP,
     derived,
+    powerProgression: createDefaultAXEPowerProgression(),
   };
 };
 
@@ -76,6 +78,7 @@ const loadState = () => {
         maxHP: derived.maxHP,
         hp: Math.min(derived.maxHP, parsed.hp ?? derived.maxHP),
         derived,
+        powerProgression: normalizeAXEPowerProgression(parsed.powerProgression),
       };
     }
   } catch {}
@@ -93,6 +96,7 @@ const persist = () => {
     baseStats: state.baseStats,
     unspentPoints: state.unspentPoints,
     hp: state.hp,
+    powerProgression: state.powerProgression,
   }));
 };
 const emit = () => {
@@ -232,4 +236,36 @@ export function subscribePlayerHUD(fn) {
   listeners.add(fn);
   fn(state);
   return () => listeners.delete(fn);
+}
+
+// AXE Prompt 011 — canonical stat aliases + post-level power progression.
+export function allocateAXEStat(statName) {
+  const key = AXE_PRIMARY_STATS[statName] || statName;
+  return allocateStat(key);
+}
+
+export function setAXEPowerProgression(patch = {}) {
+  state = {
+    ...state,
+    powerProgression: normalizeAXEPowerProgression({
+      ...(state.powerProgression || createDefaultAXEPowerProgression()),
+      ...patch,
+    }),
+  };
+  emit();
+  return state.powerProgression;
+}
+
+export function getAXEPowerProgression() {
+  return normalizeAXEPowerProgression(state.powerProgression);
+}
+
+export function getAXEPrimaryStats() {
+  const base = migrateBaseStats(state.baseStats);
+  return {
+    Strength: base.strength,
+    Agility: base.dexterity,
+    Vitality: base.constitution,
+    Spirit: base.focus,
+  };
 }
