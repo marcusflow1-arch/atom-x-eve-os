@@ -1,6 +1,7 @@
 import { evaluateAXESetBonuses } from './AXESetBonusSystem';
 import { collectAXEGemStats } from './AXESocketGemSystem';
 import { collectAXEAuraStats } from './AXEEquipmentAuraSystem';
+import { evaluateAXEAuxiliaryBonuses } from './AXEAuxiliaryGearSystem';
 
 // AXE Prompt 018 — equipment, inventory and gear-slot foundation.
 // This module is the AXE-native contract around the existing browser Game3D
@@ -21,6 +22,7 @@ export const AXE_EQUIPMENT_SLOT_DEFS = Object.freeze({
   costume:    Object.freeze({ id: 'costume', label: 'Costume', maxEquipped: 1, layer: 'appearance' }),
   accessory:  Object.freeze({ id: 'accessory', label: 'Accessory', maxEquipped: 3, layer: 'special' }),
   trinket:    Object.freeze({ id: 'trinket', label: 'Trinket', maxEquipped: 2, layer: 'special' }),
+  auxiliary:  Object.freeze({ id: 'auxiliary', label: 'Auxiliary Gear', maxEquipped: 4, layer: 'auxiliary' }),
 });
 
 export const AXE_APPEARANCE_LAYERS = Object.freeze([
@@ -49,6 +51,7 @@ export function makeAXEItemInstance(template = {}) {
     baseStats: { ...(template.baseStats || template.stats || {}) },
     rolledStats: { ...(template.rolledStats || template.affixes || {}) },
     setId: template.setId || null,
+    auxSetId: template.auxSetId || null,
     reinforcement: { ...(template.reinforcement || { level: 0, percent: 0 }) },
     enchantment: { ...(template.enchantment || { level: 0 }) },
     sockets: Array.isArray(template.sockets) ? [...template.sockets] : [],
@@ -98,11 +101,21 @@ export function collectAXEEquipmentStats(items = []) {
   for (const [key, value] of Object.entries(setResult.stats || {})) {
     total[key] = (total[key] || 0) + Number(value || 0);
   }
+  const auxResult = evaluateAXEAuxiliaryBonuses(
+    items.map((raw) => raw?.instanceId ? raw : makeAXEItemInstance(raw || {})).filter(Boolean),
+  );
+  for (const [key, value] of Object.entries(auxResult.setStats || {})) {
+    total[key] = (total[key] || 0) + Number(value || 0);
+  }
   return total;
 }
 
 export function getAXEEquipmentSetState(items = []) {
   return evaluateAXESetBonuses(items.map((raw) => raw?.instanceId ? raw : makeAXEItemInstance(raw || {})).filter(Boolean));
+}
+
+export function getAXEAuxiliarySetState(items = []) {
+  return evaluateAXEAuxiliaryBonuses(items.map((raw) => raw?.instanceId ? raw : makeAXEItemInstance(raw || {})).filter(Boolean));
 }
 
 export function getAXEAppearanceLayers(items = []) {
