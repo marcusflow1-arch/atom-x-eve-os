@@ -17,6 +17,8 @@ import {
   getRespawnPoint,
   saveCheckpointId,
 } from '../mapSpawnPoints';
+import { exitAXEDungeon, getAXEDungeonCheckpointPosition, getAXEDungeonState } from '../axe/dungeons/AXEDungeonStore';
+import { getAXEDungeonDefinition, getAXEDungeonRoom } from '../axe/dungeons/AXEDungeonSystem';
 
 const MAP_PX = 480;
 const WORLD_EXTENT = 45; // half-size of the mapped world area, in world units
@@ -32,6 +34,16 @@ const dist2D = (a, b) => Math.round(Math.hypot(a.x - b.x, a.z - b.z));
 export default function RespawnMapOverlay() {
   const death = getDeathState();
   const deathPos = death.deathPosition || { x: 0, z: 0 };
+  const dungeonState = getAXEDungeonState();
+  const dungeonSession = dungeonState.activeSession;
+  const dungeonCheckpoint = dungeonSession ? getAXEDungeonCheckpointPosition() : null;
+  const dungeonDef = dungeonSession ? getAXEDungeonDefinition(dungeonSession.dungeonId) : null;
+  const dungeonCheckpointRoom = dungeonSession
+    ? getAXEDungeonRoom(
+        dungeonSession.dungeonId,
+        dungeonSession.checkpointRoomId || dungeonSession.currentRoomId,
+      )
+    : null;
 
   // Saved checkpoint (or the map default) is the starting selection.
   const [selected, setSelected] = useState(() => getRespawnPoint().id);
@@ -40,11 +52,26 @@ export default function RespawnMapOverlay() {
 
   const handleRespawn = () => {
     const point = selectedPoint;
+    if (dungeonSession) exitAXEDungeon({ failed: true });
     saveCheckpointId(point.id);
     const { maxHP } = getPlayerHUD();
     setHP(maxHP);
     window.dispatchEvent(new CustomEvent('playerRespawn', {
       detail: { x: point.x, z: point.z, spawnId: point.id },
+    }));
+    setDeathPhase('alive', { deathPosition: null });
+  };
+
+  const handleDungeonCheckpointRespawn = () => {
+    if (!dungeonCheckpoint || !dungeonSession) return;
+    const { maxHP } = getPlayerHUD();
+    setHP(maxHP);
+    window.dispatchEvent(new CustomEvent('playerRespawn', {
+      detail: {
+        ...dungeonCheckpoint,
+        spawnId: dungeonSession.checkpointRoomId || dungeonSession.currentRoomId,
+        source: 'axe-dungeon-checkpoint',
+      },
     }));
     setDeathPhase('alive', { deathPosition: null });
   };
@@ -59,6 +86,23 @@ export default function RespawnMapOverlay() {
           <h2 className="text-white text-3xl font-bold tracking-wider">Choose a Respawn Point</h2>
           <p className="text-white/50 text-sm mt-1">Your last checkpoint is selected by default</p>
         </div>
+
+        {dungeonCheckpoint && (
+          <button
+            onClick={handleDungeonCheckpointRespawn}
+            className="w-full max-w-[480px] rounded-2xl border border-fuchsia-300/35 bg-fuchsia-300/10 px-5 py-4 text-left transition hover:bg-fuchsia-300/15"
+          >
+            <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-fuchsia-200/70">
+              Dungeon Checkpoint
+            </div>
+            <div className="mt-1 text-lg font-bold text-white">
+              Return to {dungeonCheckpointRoom?.name || 'Last Dungeon Checkpoint'}
+            </div>
+            <div className="mt-1 text-xs text-white/50">
+              Continue {dungeonDef?.name || dungeonSession?.dungeonId} without abandoning the active run.
+            </div>
+          </button>
+        )}
 
         <div
           className="relative rounded-2xl overflow-hidden border border-white/15"
