@@ -98,6 +98,7 @@ export default function GameWorldLootLayer() {
     const gearDrop = rollAXEEquipmentDrop(tier, isBoss, {
       rng,
       playerLevel: getPlayerHUD()?.level || 1,
+      sourceId: enemyId,
     });
     const combined = gearDrop ? [...rolled, gearDrop] : rolled;
     if (combined.length === 0) return;
