@@ -24,6 +24,12 @@ import { getRegisteredAXEPetBonuses, subscribeAXEPets } from './axe/progression/
 import { getRegisteredAXEMountBonuses, subscribeAXEMounts } from './axe/progression/AXEMountStore';
 import { getEquippedAXEVanityActivationProfile, getEquippedAXEVanityBaseBonuses, subscribeAXEVanity } from './axe/progression/AXEVanityStore';
 import { applyAXEVanityActivationToDerived, getAXEVanitySpiritVirtualBonus } from './axe/progression/AXEVanitySystem';
+import { getAXEEquipmentRuntimeBonuses, applyAXEEquipmentFinalMultipliers } from './axe/equipment/AXEEquipmentRuntimeStats';
+import { subscribeAXEEquipmentInventory } from './axe/equipment/AXEEquipmentInventoryStore';
+import { subscribeEnchantments } from './equipment/enchantmentStore';
+import { subscribeAXEItemAdvancement } from './axe/equipment/AXEItemAdvancementStore';
+import { subscribeAXESockets } from './axe/equipment/AXESocketGemStore';
+import { subscribeAXEAura } from './axe/equipment/AXEEquipmentAuraStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -42,7 +48,12 @@ const sumAttr = (...objs) => {
   return out;
 };
 const sumFlat = (...objs) => {
-  const out = { hp: 0, chi: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0, attributionAttack: 0, attributionDefense: 0 };
+  const out = {
+    hp: 0, chi: 0, damage: 0, defense: 0,
+    critChance: 0, critDamage: 0, criticalDefense: 0,
+    attributionAttack: 0, attributionDefense: 0,
+    attackSuccess: 0, attackBlock: 0,
+  };
   objs.forEach((o) => { if (!o) return; Object.keys(out).forEach((k) => { out[k] += o[k] || 0; }); });
   return out;
 };
@@ -68,6 +79,7 @@ const normalizeCostumeBonuses = (raw = {}) => ({
 });
 
 const getBonuses = () => {
+  const equipment = getAXEEquipmentRuntimeBonuses();
   const core = getRegisteredAXECoreBonuses();
   const pet = getRegisteredAXEPetBonuses();
   const mount = getRegisteredAXEMountBonuses();
@@ -90,9 +102,30 @@ const getBonuses = () => {
     attributionDefense: core.attributeDefense || core.attributionDefense || 0,
   };
   return {
-    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), getAXEElixirAttributeBonuses(), costume.attr, vanity.attr),
-    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, vanity.flat, capeFlat, pet, mount),
+    halo: sumAttr(
+      getHaloBonuses(),
+      getAuraBonuses(),
+      getEquippedWingsMultiplierBonuses(),
+      getEquippedTitleAttributeBonuses(),
+      getAXEElixirAttributeBonuses(),
+      costume.attr,
+      vanity.attr,
+      equipment.attr,
+    ),
+    title: sumFlat(
+      getEquippedTitleBonuses(),
+      getEquippedWingsFlatBonuses(),
+      coreFlat,
+      costume.flat,
+      vanity.flat,
+      capeFlat,
+      pet,
+      mount,
+      equipment.flat,
+    ),
     vanityActivation,
+    equipmentMultipliers: equipment.multipliers,
+    equipmentDebug: equipment,
   };
 };
 
@@ -110,7 +143,8 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
         bonuses.title,
       )
     : preliminary;
-  return applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
+  const withVanity = applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
+  return applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
 };
 
 const buildDefault = () => {
@@ -300,6 +334,11 @@ subscribeAXEElixirs(recomputeFromBonuses);
 subscribeAXEPets(recomputeFromBonuses);
 subscribeAXEMounts(recomputeFromBonuses);
 subscribeAXEVanity(recomputeFromBonuses);
+subscribeAXEEquipmentInventory(recomputeFromBonuses);
+subscribeEnchantments(recomputeFromBonuses);
+subscribeAXEItemAdvancement(recomputeFromBonuses);
+subscribeAXESockets(recomputeFromBonuses);
+subscribeAXEAura(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
