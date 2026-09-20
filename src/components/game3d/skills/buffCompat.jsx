@@ -13,6 +13,10 @@ import {
   tickBuffEngine,
   getBuffs,
   subscribeBuffs as subscribeBuffEngine,
+  consumeAXEPowerCharge,
+  applyAXEReflectionProtection,
+  getAXEControlResistance,
+  rollAXEControlProtection,
 } from './buffEngine';
 
 // Damage absorption — old name: absorbShield. New impl: AEGIS only.
@@ -24,10 +28,8 @@ export function rollReflect() { return rollRiposte(); }
 // Damage buff consumer — old name: consumeDamageBuffMultiplier. New impl: Focus.
 export function consumeDamageBuffMultiplier() { return consumeFocusHit(); }
 
-// Power Charge — DEPRECATED in new system. Returns 1 (no-op) so old call
-// sites continue to multiply by 1 with zero effect. Once GameWorld3D is
-// fully migrated this can be removed.
-export function consumePowerChargeMultiplier() { return 1; }
+// AXE Power Charge — consumed by the next eligible outgoing hit.
+export function consumePowerChargeMultiplier() { return consumeAXEPowerCharge(); }
 
 // Attack speed — DEPRECATED in new system. Returns 1 (no-op).
 export function getAttackSpeedMultiplier() { return 1; }
@@ -45,3 +47,9 @@ export function tickBuffs() { tickBuffEngine(); }
 // Re-shaped to match the new state so HUD can read new buff records.
 export const subscribeBuffs = subscribeBuffEngine;
 export { getBuffs };
+// AXE Prompt 015 divine-protection compatibility hooks.
+export function applyReflectionProtection(incomingReflectedDamage) {
+  return applyAXEReflectionProtection(incomingReflectedDamage);
+}
+export function getControlResistance() { return getAXEControlResistance(); }
+export function rollControlProtection() { return rollAXEControlProtection(); }
