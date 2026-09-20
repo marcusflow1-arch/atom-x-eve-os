@@ -142,6 +142,17 @@ function emit() {
   }
 }
 
+function emitItemRemoved(item, reason) {
+  if (typeof window === 'undefined' || !item?.instanceId) return;
+  window.dispatchEvent(new CustomEvent('axeEquipmentItemRemoved', {
+    detail: {
+      instanceId: item.instanceId,
+      templateId: item.templateId || item.id || null,
+      reason: reason || 'removed',
+    },
+  }));
+}
+
 subscribeCharacterChange(() => {
   state = load();
   const snap = snapshot();
@@ -342,6 +353,7 @@ export function consumeAXEEquipmentItem(instanceId, options = {}) {
     activeWeaponInstanceId: chooseActiveWeaponInstanceId(nextItems, state.activeWeaponInstanceId),
   };
   emit();
+  emitItemRemoved(check.item, 'consumed');
   return { ok: true, consumed: check.item };
 }
 
@@ -355,6 +367,7 @@ export function destroyAXEEquipmentItem(instanceId, reason = 'destroyed') {
     activeWeaponInstanceId: chooseActiveWeaponInstanceId(nextItems, state.activeWeaponInstanceId),
   };
   emit();
+  emitItemRemoved(item, reason || 'destroyed');
   return { ok: true, destroyed: { ...item }, destroyReason: reason };
 }
 
