@@ -1,5 +1,7 @@
 // AXE Prompt 022 — socket/gem persistence adapter.
+// Character-scoped and reactive so sockets are real per-character item state.
 
+import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
 import {
   resolveDrill,
   insertAXEGem,
@@ -8,10 +10,11 @@ import {
   collectAXEGemStats,
 } from './AXESocketGemSystem';
 
-const STORAGE_KEY = 'axe_socket_gems_v1';
+const storage = characterScopedStorage('axe_socket_gems_v2');
+
 const load = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.get();
     if (raw) return JSON.parse(raw);
   } catch {}
   return {};
@@ -20,14 +23,23 @@ const load = () => {
 let state = load();
 const listeners = new Set();
 
-const save = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  listeners.forEach((fn) => fn({ ...state }));
+const snapshot = () => ({ ...state });
+
+const emit = () => {
+  storage.set(JSON.stringify(state));
+  const snap = snapshot();
+  listeners.forEach((fn) => fn(snap));
 };
+
+subscribeCharacterChange(() => {
+  state = load();
+  const snap = snapshot();
+  listeners.forEach((fn) => fn(snap));
+});
 
 export function subscribeAXESockets(fn) {
   listeners.add(fn);
-  fn({ ...state });
+  fn(snapshot());
   return () => listeners.delete(fn);
 }
 
@@ -39,8 +51,15 @@ export function drillAXESocket(itemId, item, options = {}) {
   const current = getAXESocketState(itemId);
   const result = resolveDrill({ ...item, ...current }, options);
   if (result.ok) {
-    state = { ...state, [itemId]: { ...current, maxSockets: current.maxSockets || 4, sockets: result.sockets } };
-    save();
+    state = {
+      ...state,
+      [itemId]: {
+        ...current,
+        maxSockets: current.maxSockets || item?.maxSockets || 4,
+        sockets: result.sockets,
+      },
+    };
+    emit();
   }
   return result;
 }
@@ -50,7 +69,7 @@ export function insertGemIntoAXEItem(itemId, item, socketIndex, gemId) {
   const result = insertAXEGem({ ...item, ...current }, socketIndex, gemId);
   if (result.ok) {
     state = { ...state, [itemId]: { ...current, sockets: result.sockets } };
-    save();
+    emit();
   }
   return result;
 }
@@ -60,7 +79,7 @@ export function removeGemFromAXEItem(itemId, item, socketIndex, options = {}) {
   const result = removeAXEGem({ ...item, ...current }, socketIndex, options);
   if (result.ok) {
     state = { ...state, [itemId]: { ...current, sockets: result.sockets } };
-    save();
+    emit();
   }
   return result;
 }
@@ -70,7 +89,7 @@ export function replaceGemInAXEItem(itemId, item, socketIndex, gemId, options = 
   const result = replaceAXEGem({ ...item, ...current }, socketIndex, gemId, options);
   if (result.ok) {
     state = { ...state, [itemId]: { ...current, sockets: result.sockets } };
-    save();
+    emit();
   }
   return result;
 }
