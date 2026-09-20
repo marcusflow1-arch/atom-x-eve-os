@@ -704,6 +704,31 @@ export default function GameWorld3D() {
       loader, scene, snapToGround, bossEntities, setBosses,
       walkClipPromise, idleClipPromise,
     });
+    window.__gw3dSpawnAXEDungeonBoss = ({
+      bossDef,
+      position,
+      sessionId = null,
+      roomId = null,
+    } = {}) => {
+      if (!bossDef?.id || !position) return null;
+      return spawnWorldBoss({
+        loader,
+        scene,
+        snapToGround,
+        bossEntities,
+        setBosses,
+        walkClipPromise,
+        idleClipPromise,
+        bossDefOverride: bossDef,
+        spawnPosition: position,
+        instanceId: `${bossDef.id}::${sessionId || 'runtime'}`,
+        metadata: {
+          dungeonBossId: bossDef.id,
+          dungeonSessionId: sessionId,
+          dungeonRoomId: roomId,
+        },
+      });
+    };
 
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(CREATURE_MODEL_URL, (fbx) => {
