@@ -9,6 +9,7 @@ import {
   getAXEWeaponRoleFromLegacyPath,
   getLegacyWeaponPathFromAXERole,
 } from './axe/factions/AXEFactionWeaponConfig';
+import { getMasteryState, subscribeMastery } from './progression/weaponMasteryStore';
 
 const storage = characterScopedStorage('weapon_class_buffs_v2');
 
@@ -34,7 +35,7 @@ export const WEAPON_CLASS_BUFFS = {
     axeRole: 'ranged',
     icon: '🏹',
     color: '#10b981',
-    maxLevel: 25,
+    maxLevel: 20,
     description: 'Native passive of ranged weapons. Increases mobility, accuracy, damage and critical strike.',
     curves: {
       moveSpeedBonusPct: { min: 0, max: 0.25 },
@@ -65,6 +66,22 @@ const defaultState = () => ({
   levels: { damage: 1, ranged: 1, defense: 1 },
   activePath: 'damage',
 });
+
+function masteryPathForWeapon(weaponId) {
+  if (weaponId === 'bow' || weaponId === 'ranged') return 'ranged';
+  if (weaponId === 'dual_blades' || weaponId === 'guardian' || weaponId === 'shield') return 'defense';
+  return 'damage';
+}
+
+function getDerivedLevels() {
+  const mastery = getMasteryState();
+  const levels = { damage: 1, ranged: 1, defense: 1 };
+  for (const [weaponId, entry] of Object.entries(mastery.weapons || {})) {
+    const path = masteryPathForWeapon(weaponId);
+    levels[path] = Math.max(levels[path], Number(entry?.level || 1));
+  }
+  return levels;
+}
 
 function loadState() {
   try {
@@ -105,37 +122,36 @@ const save = () => {
   try { storage.set(JSON.stringify(state)); } catch {}
 };
 
+const getSnapshot = () => ({
+  levels: getDerivedLevels(),
+  activePath: state.activePath,
+  activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
+});
+
 const emit = () => {
   save();
-  const snapshot = {
-    levels: { ...state.levels },
-    activePath: state.activePath,
-    activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
-  };
+  const snapshot = getSnapshot();
   listeners.forEach((fn) => fn(snapshot));
 };
 
 subscribeCharacterChange(() => {
   state = loadState();
-  const snapshot = {
-    levels: { ...state.levels },
-    activePath: state.activePath,
-    activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
-  };
+  const snapshot = getSnapshot();
+  listeners.forEach((fn) => fn(snapshot));
+});
+
+subscribeMastery(() => {
+  const snapshot = getSnapshot();
   listeners.forEach((fn) => fn(snapshot));
 });
 
 export function subscribeWeaponBuffs(fn) {
   listeners.add(fn);
-  fn({
-    levels: { ...state.levels },
-    activePath: state.activePath,
-    activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
-  });
+  fn(getSnapshot());
   return () => listeners.delete(fn);
 }
 
-export function getWeaponBuffLevels() { return { ...state.levels }; }
+export function getWeaponBuffLevels() { return getDerivedLevels(); }
 export function getActiveWeaponPath() { return state.activePath; }
 export function getActiveAXEWeaponRole() { return getAXEWeaponRoleFromLegacyPath(state.activePath); }
 
@@ -151,22 +167,14 @@ export function setActiveAXEWeaponRole(role) {
   return setActiveWeaponPath(getLegacyWeaponPathFromAXERole(role));
 }
 
+// Deprecated compatibility mutations: role passive level is derived from real
+// Weapon Mastery and cannot be independently leveled anymore.
 export function setWeaponBuffLevel(path, level) {
-  const cfg = WEAPON_CLASS_BUFFS[path];
-  if (!cfg) return false;
-  const clamped = Math.max(0, Math.min(cfg.maxLevel, Math.round(level)));
-  state = {
-    ...state,
-    levels: { ...state.levels, [path]: clamped },
-  };
-  emit();
-  return true;
+  return false;
 }
 
 export function levelUpWeaponBuff(path) {
-  const cfg = WEAPON_CLASS_BUFFS[path];
-  if (!cfg) return false;
-  return setWeaponBuffLevel(path, (state.levels[path] || 0) + 1);
+  return false;
 }
 
 function curveValue(curve, level, maxLevel) {
@@ -178,7 +186,7 @@ function curveValue(curve, level, maxLevel) {
 export function getBuffValuesFor(path) {
   const cfg = WEAPON_CLASS_BUFFS[path];
   if (!cfg) return {};
-  const lvl = state.levels[path] || 0;
+  const lvl = getDerivedLevels()[path] || 0;
   const out = {};
   for (const key of Object.keys(cfg.curves)) {
     out[key] = curveValue(cfg.curves[key], lvl, cfg.maxLevel);
