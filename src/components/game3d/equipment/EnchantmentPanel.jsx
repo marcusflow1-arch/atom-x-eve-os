@@ -29,7 +29,7 @@ export default function EnchantmentPanel({ item, onClose }) {
 
   const itemName = item.name || 'Equipment';
   const itemType = item.type || item.categoryLabel || 'Weapon';
-  const itemId = item.id;
+  const itemId = item.instanceId || item.id;
 
   // Live data
   const levels = itemId ? getItemEnchantments(itemId) : new Array(ENCH_SLOTS).fill(0);
