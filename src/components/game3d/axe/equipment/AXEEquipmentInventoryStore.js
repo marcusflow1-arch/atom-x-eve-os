@@ -69,7 +69,21 @@ function load() {
     // template is missing from an older save, add it without touching owned gear.
     const byId = new Map(owned.map((item) => [item.instanceId, item]));
     for (const starter of seedItems()) {
-      if (!byId.has(starter.instanceId)) byId.set(starter.instanceId, starter);
+      const existing = byId.get(starter.instanceId);
+      if (!existing) {
+        byId.set(starter.instanceId, starter);
+      } else {
+        // Pull forward non-destructive template metadata added by newer builds
+        // (weapon identity, display/type metadata, etc.) without overwriting
+        // player-owned progression/equip/lock/stat state.
+        byId.set(starter.instanceId, {
+          ...starter,
+          ...existing,
+          masteryWeaponId: existing.masteryWeaponId || starter.masteryWeaponId || null,
+          axeWeaponRole: existing.axeWeaponRole || starter.axeWeaponRole || null,
+          templateId: existing.templateId || starter.templateId,
+        });
+      }
     }
     return { items: [...byId.values()] };
   } catch {
