@@ -40,24 +40,24 @@ export function resolveWeaponType(weaponInstanceId) {
 // ─── Global Combat Training Passives ─────────────────────────────────────
 // These are universal bonuses from general combat training, NOT from any
 // specific weapon. They are intentionally modest — NOT a primary damage source.
-// At level 100 a player gets these max values; scaled linearly before that.
+// At max mastery a player gets these max values; scaled linearly before that.
 export const GLOBAL_PASSIVE_CURVES = {
-  // Each value is the BONUS at level 100. Level 1 = ~1% of max.
+  // Each value is the BONUS at max mastery. Level 1 begins at baseline and scales to the configured mastery cap.
   attackSpeedPct:      15,   // +15% atk speed (moderate, capped via CombatBalanceConfig)
   cdrPct:              10,   // +10% cooldown reduction (replaces "critical thinking")
   ccResistancePct:     15,   // +15% CC/crowd-control resistance
   damageReductionPct:   5,   // +5% resilience (small damage taken reduction)
   skillTierBonus:       2,   // +2 to all skills, soft-capped (never exceeds max skill limit)
   // Carry-over utility stats (unchanged role)
-  critChancePct:       10,   // +10 crit% at level 100 (soft-capped separately)
+  critChancePct:       10,   // +10 crit% at max mastery (soft-capped separately)
   critDamagePct:       30,   // +30% crit damage (down from 50 to avoid stacking bloat)
   hitChancePct:        10,   // +10 hit chance
   armorPenPct:         10,   // +10% armor pen (late-game)
-  armorPenUnlockLevel: 35,   // armor pen starts contributing at lvl 35
+  armorPenUnlockLevel: 7,   // armor pen starts contributing at lvl 35
 };
 
 // ─── Identity Scaling (per weapon TYPE) ──────────────────────────────────
-// Each weapon type focuses on a different fantasy. Values at level 100.
+// Each weapon type focuses on a different fantasy. Values at max mastery.
 // "perHitBonus" entries are stacking bonuses applied by the combat pipeline
 // (momentum / combo) — read by WeaponScalingPipeline.
 // ─── Identity Scaling (per weapon TYPE) ──────────────────────────────────
@@ -120,58 +120,58 @@ export const WEAPON_IDENTITY_AT_MAX = {
 // Unlock at specific levels. Each milestone has an id + display name + brief
 // description + applied modifier(s). Engine emits ON_MILESTONE_UNLOCK when
 // the player reaches one of these levels for a weapon.
-export const MILESTONE_LEVELS = [5, 10, 20, 35, 50, 75, 100];
+export const MILESTONE_LEVELS = [2, 4, 7, 10, 13, 16, 20];
 
 export const MILESTONE_PASSIVES = {
   // Sword — ability/DPS milestones (% based, no flat +skill levels)
   [WEAPON_TYPES.SWORD]: {
-    5:   { id: 'ability_surge',      name: 'Ability Surge',      desc: '+10% ability damage', mod: { abilityDmgBonusPct: 10 } },
-    10:  { id: 'execution_flow',     name: 'Execution Flow',     desc: '+5% damage per chained hit', mod: { comboBonusPct: 5 } },
-    20:  { id: 'skill_amplifier',    name: 'Skill Amplifier',    desc: '+15% skill effectiveness', mod: { skillEffectPct: 15 } },
-    35:  { id: 'soulcleaver',        name: 'Soulcleaver',        desc: 'Crits restore 3% max HP', mod: { critHealPct: 3 } },
-    50:  { id: 'blade_mastery',      name: 'Blade Mastery',      desc: '+20% ability damage & -8% cooldowns', mod: { abilityDmgBonusPct: 20, cdrPct: 8 } },
-    75:  { id: 'mortal_resolve',     name: 'Mortal Resolve',     desc: 'Execute threshold raised to 30%', mod: { executeThresholdAddPct: 10 } },
-    100: { id: 'legendary_swordsman',name: 'Legendary Swordsman',desc: '+20% ability & skill damage permanently', mod: { abilityDmgBonusPct: 20, skillEffectPct: 10 } },
+    2:   { id: 'ability_surge',      name: 'Ability Surge',      desc: '+10% ability damage', mod: { abilityDmgBonusPct: 10 } },
+    4:  { id: 'execution_flow',     name: 'Execution Flow',     desc: '+5% damage per chained hit', mod: { comboBonusPct: 5 } },
+    7:  { id: 'skill_amplifier',    name: 'Skill Amplifier',    desc: '+15% skill effectiveness', mod: { skillEffectPct: 15 } },
+    4:  { id: 'soulcleaver',        name: 'Soulcleaver',        desc: 'Crits restore 3% max HP', mod: { critHealPct: 3 } },
+    13:  { id: 'blade_mastery',      name: 'Blade Mastery',      desc: '+20% ability damage & -8% cooldowns', mod: { abilityDmgBonusPct: 20, cdrPct: 8 } },
+    16:  { id: 'mortal_resolve',     name: 'Mortal Resolve',     desc: 'Execute threshold raised to 30%', mod: { executeThresholdAddPct: 10 } },
+    7: { id: 'legendary_swordsman',name: 'Legendary Swordsman',desc: '+20% ability & skill damage permanently', mod: { abilityDmgBonusPct: 20, skillEffectPct: 10 } },
   },
 
   // Guardian (Dual Blades) — deflect, dodge, counter milestones
   [WEAPON_TYPES.GUARDIAN]: {
-    5:   { id: 'swift_reflex',       name: 'Swift Reflex',       desc: '+8% dodge chance', mod: { dodgeBonusPct: 8 } },
-    10:  { id: 'counter_edge',       name: 'Counter Edge',       desc: '+10% deflection chance', mod: { deflectBonusPct: 10 } },
-    20:  { id: 'mirror_guard',       name: 'Mirror Guard',       desc: 'Deflect reflects +20% bonus damage (capped at 50% total)', mod: { bonusReflectPct: 20 } },
-    35:  { id: 'fortress_stance',    name: 'Fortress Stance',    desc: 'Take 8% less damage from bosses', mod: { bossDmgTakenPct: -8 } },
-    50:  { id: 'phantom_body',       name: 'Phantom Body',       desc: '+10% dodge & +5% crit defense', mod: { dodgeBonusPct: 10, critDefensePct: 5 } },
-    75:  { id: 'thornbreaker',       name: 'Thornbreaker',       desc: 'Overcap reflect converts to +5% deflect chance', mod: { overflowToDeflectBonus: 5 } },
-    100: { id: 'immortal_guardian',  name: 'Immortal Guardian',  desc: 'Revive once per fight at 25% HP', mod: { reviveOnce: true } },
+    2:   { id: 'swift_reflex',       name: 'Swift Reflex',       desc: '+8% dodge chance', mod: { dodgeBonusPct: 8 } },
+    4:  { id: 'counter_edge',       name: 'Counter Edge',       desc: '+10% deflection chance', mod: { deflectBonusPct: 10 } },
+    7:  { id: 'mirror_guard',       name: 'Mirror Guard',       desc: 'Deflect reflects +20% bonus damage (capped at 50% total)', mod: { bonusReflectPct: 20 } },
+    4:  { id: 'fortress_stance',    name: 'Fortress Stance',    desc: 'Take 8% less damage from bosses', mod: { bossDmgTakenPct: -8 } },
+    13:  { id: 'phantom_body',       name: 'Phantom Body',       desc: '+10% dodge & +5% crit defense', mod: { dodgeBonusPct: 10, critDefensePct: 5 } },
+    16:  { id: 'thornbreaker',       name: 'Thornbreaker',       desc: 'Overcap reflect converts to +5% deflect chance', mod: { overflowToDeflectBonus: 5 } },
+    7: { id: 'immortal_guardian',  name: 'Immortal Guardian',  desc: 'Revive once per fight at 25% HP', mod: { reviveOnce: true } },
   },
 
   // Ranged — attack speed, on-hit stacking, moderate crit (NO heavy ability scaling)
   [WEAPON_TYPES.RANGED]: {
-    5:   { id: 'swift_nock',         name: 'Swift Nock',         desc: '+10% attack speed', mod: { attackSpeedPct: 10 } },
-    10:  { id: 'piercing_aim',       name: 'Piercing Aim',       desc: '+5% armor penetration', mod: { armorPenPct: 5 } },
-    20:  { id: 'on_hit_tempo',       name: 'On-Hit Tempo',       desc: '+1 on-hit stack cap & +5% per stack', mod: { onHitStackCapAdd: 1, onHitStackBonusPct: 5 } },
-    35:  { id: 'rapid_cadence',      name: 'Rapid Cadence',      desc: '+8% attack speed', mod: { attackSpeedPct: 8 } },
-    50:  { id: 'hawkeye',            name: 'Hawkeye',            desc: 'Cannot miss when target is > 6 units away', mod: { rangedCannotMissFar: 6 } },
-    75:  { id: 'phantom_arrow',      name: 'Phantom Arrow',      desc: 'Ranged attacks pierce 1 extra target', mod: { pierceTargets: 1 } },
-    100: { id: 'legendary_marksman', name: 'Legendary Marksman', desc: '+12% attack speed & +3 on-hit stacks', mod: { attackSpeedPct: 12, onHitStackCapAdd: 3 } },
+    2:   { id: 'swift_nock',         name: 'Swift Nock',         desc: '+10% attack speed', mod: { attackSpeedPct: 10 } },
+    4:  { id: 'piercing_aim',       name: 'Piercing Aim',       desc: '+5% armor penetration', mod: { armorPenPct: 5 } },
+    7:  { id: 'on_hit_tempo',       name: 'On-Hit Tempo',       desc: '+1 on-hit stack cap & +5% per stack', mod: { onHitStackCapAdd: 1, onHitStackBonusPct: 5 } },
+    4:  { id: 'rapid_cadence',      name: 'Rapid Cadence',      desc: '+8% attack speed', mod: { attackSpeedPct: 8 } },
+    13:  { id: 'hawkeye',            name: 'Hawkeye',            desc: 'Cannot miss when target is > 6 units away', mod: { rangedCannotMissFar: 6 } },
+    16:  { id: 'phantom_arrow',      name: 'Phantom Arrow',      desc: 'Ranged attacks pierce 1 extra target', mod: { pierceTargets: 1 } },
+    7: { id: 'legendary_marksman', name: 'Legendary Marksman', desc: '+12% attack speed & +3 on-hit stacks', mod: { attackSpeedPct: 12, onHitStackCapAdd: 3 } },
   },
   [WEAPON_TYPES.FISTS]: {
-    5:   { id: 'momentum_breaker',  name: 'Momentum Breaker',  desc: '+3% stagger chance per chained hit', mod: { staggerPerChain: 3 } },
-    10:  { id: 'rolling_thunder',   name: 'Rolling Thunder',   desc: '+5% atk speed per chained hit (max 5)', mod: { atkSpdPerChain: 5 } },
-    20:  { id: 'flow_state',        name: 'Flow State',        desc: 'Chain cap +2', mod: { chainCapAdd: 2 } },
-    35:  { id: 'iron_knuckles',     name: 'Iron Knuckles',     desc: '+10% armor pen', mod: { armorPenPct: 10 } },
-    50:  { id: 'pressure_point',    name: 'Pressure Point',    desc: 'Every 5th hit is a guaranteed crit', mod: { everyNthCrit: 5 } },
-    75:  { id: 'inner_fire',        name: 'Inner Fire',        desc: 'Momentum window +1.5s', mod: { momentumWindowAddSec: 1.5 } },
-    100: { id: 'transcendent_form', name: 'Transcendent Form', desc: '+30% damage at full chain', mod: { fullChainDmgPct: 30 } },
+    2:   { id: 'momentum_breaker',  name: 'Momentum Breaker',  desc: '+3% stagger chance per chained hit', mod: { staggerPerChain: 3 } },
+    4:  { id: 'rolling_thunder',   name: 'Rolling Thunder',   desc: '+5% atk speed per chained hit (max 5)', mod: { atkSpdPerChain: 5 } },
+    7:  { id: 'flow_state',        name: 'Flow State',        desc: 'Chain cap +2', mod: { chainCapAdd: 2 } },
+    4:  { id: 'iron_knuckles',     name: 'Iron Knuckles',     desc: '+10% armor pen', mod: { armorPenPct: 10 } },
+    13:  { id: 'pressure_point',    name: 'Pressure Point',    desc: 'Every 5th hit is a guaranteed crit', mod: { everyNthCrit: 5 } },
+    16:  { id: 'inner_fire',        name: 'Inner Fire',        desc: 'Momentum window +1.5s', mod: { momentumWindowAddSec: 1.5 } },
+    7: { id: 'transcendent_form', name: 'Transcendent Form', desc: '+30% damage at full chain', mod: { fullChainDmgPct: 30 } },
   },
   [WEAPON_TYPES.SKY]: {
-    5:   { id: 'sky_flow',          name: 'Sky Flow',          desc: '+8% elemental damage', mod: { elementalDmgPct: 8 } },
-    10:  { id: 'aerial_grace',      name: 'Aerial Grace',      desc: '-10% ability cooldowns', mod: { cdrPct: 10 } },
-    20:  { id: 'celestial_edge',    name: 'Celestial Edge',    desc: '+15% damage vs airborne enemies', mod: { aerialDmgPct: 15 } },
-    35:  { id: 'void_resonance',    name: 'Void Resonance',    desc: 'Abilities leave a 3s lingering damage field', mod: { lingerDmgSec: 3 } },
-    50:  { id: 'star_touched',      name: 'Star Touched',      desc: '+20% crit damage for sky abilities', mod: { skyCritDmgPct: 20 } },
-    75:  { id: 'cosmic_will',       name: 'Cosmic Will',       desc: 'Cooldowns reset on kill', mod: { cdrOnKill: true } },
-    100: { id: 'ascendant',         name: 'Ascendant',         desc: '+25% all damage permanently', mod: { damageMultPct: 25 } },
+    2:   { id: 'sky_flow',          name: 'Sky Flow',          desc: '+8% elemental damage', mod: { elementalDmgPct: 8 } },
+    4:  { id: 'aerial_grace',      name: 'Aerial Grace',      desc: '-10% ability cooldowns', mod: { cdrPct: 10 } },
+    7:  { id: 'celestial_edge',    name: 'Celestial Edge',    desc: '+15% damage vs airborne enemies', mod: { aerialDmgPct: 15 } },
+    4:  { id: 'void_resonance',    name: 'Void Resonance',    desc: 'Abilities leave a 3s lingering damage field', mod: { lingerDmgSec: 3 } },
+    13:  { id: 'star_touched',      name: 'Star Touched',      desc: '+20% crit damage for sky abilities', mod: { skyCritDmgPct: 20 } },
+    16:  { id: 'cosmic_will',       name: 'Cosmic Will',       desc: 'Cooldowns reset on kill', mod: { cdrOnKill: true } },
+    7: { id: 'ascendant',         name: 'Ascendant',         desc: '+25% all damage permanently', mod: { damageMultPct: 25 } },
   },
 };
 
