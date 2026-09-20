@@ -21,6 +21,7 @@ import AXEInteractionMount from '../components/game3d/axe/interactions/AXEIntera
 import AXECapitalBlockoutMount from '../components/game3d/axe/cities/AXECapitalBlockoutMount';
 import AXEDungeonMount from '../components/game3d/axe/dungeons/AXEDungeonMount';
 import AXEDungeonRuntime from '../components/game3d/axe/dungeons/AXEDungeonRuntime';
+import AXEGlobalServicesMenu from '../components/game3d/axe/services/AXEGlobalServicesMenu';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -72,6 +73,8 @@ export default function GameView() {
   const [phase, setPhase] = useState('login'); // 'login' | 'world'
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [requestedService, setRequestedService] = useState('reinforcement');
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [clanOverlayOpen, setClanOverlayOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
@@ -235,6 +238,17 @@ export default function GameView() {
   // Living Quest NPC interaction is now handled in-world by CinematicQuestDialogue
   // (mounted below), which listens for the same 'openLivingQuest' event.
 
+  // NPC service interactions and the global Services button route through the
+  // same menu instead of maintaining separate rule sets.
+  useEffect(() => {
+    const onService = (event) => {
+      setRequestedService(event?.detail?.service || 'reinforcement');
+      setServicesOpen(true);
+    };
+    window.addEventListener('axeServiceRequested', onService);
+    return () => window.removeEventListener('axeServiceRequested', onService);
+  }, []);
+
   // Live-update audio volume when slider changes (without reloading the track)
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = themeVolume;
@@ -242,7 +256,7 @@ export default function GameView() {
     localStorage.setItem('game_theme_volume', String(themeVolume));
   }, [themeVolume]);
 
-  // Hotkeys while in-game: TAB = store/build, C = character progression, ESC = pause menu
+  // Hotkeys while in-game: TAB = store/build, C = character progression, V = global Services, ESC = pause menu
   useEffect(() => {
     if (phase !== 'world') return;
     const onKey = (e) => {
@@ -252,6 +266,8 @@ export default function GameView() {
         setStoreOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'c') {
         setProgressionOpen((v) => !v);
+      } else if (e.key.toLowerCase() === 'v') {
+        setServicesOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'g') {
@@ -260,6 +276,7 @@ export default function GameView() {
         // Close any open sub-panels first; otherwise toggle pause menu
         if (storeOpen) setStoreOpen(false);
         else if (progressionOpen) setProgressionOpen(false);
+        else if (servicesOpen) setServicesOpen(false);
         else if (friendsListOpen) setFriendsListOpen(false);
         else if (clanOverlayOpen) setClanOverlayOpen(false);
         else setPauseMenuOpen((v) => !v);
@@ -267,7 +284,7 @@ export default function GameView() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen, progressionOpen, friendsListOpen, clanOverlayOpen]);
+  }, [phase, storeOpen, progressionOpen, servicesOpen, friendsListOpen, clanOverlayOpen]);
 
   if (phase === 'login') {
     return (
@@ -286,6 +303,13 @@ export default function GameView() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
+      <button
+        onClick={() => setServicesOpen(true)}
+        className="absolute right-4 top-4 z-[135] rounded-xl border border-cyan-300/20 bg-slate-950/70 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100 backdrop-blur-xl hover:bg-cyan-300/10"
+        title="Open Services (V)"
+      >
+        Services
+      </button>
       {/* Hybrid host-authoritative simulation layer.
           Owns enemies / loot / pvp damage / player hp.
           GameWorld3D is becoming a renderer that reads from this. */}
@@ -316,6 +340,7 @@ export default function GameView() {
       <AXEDungeonRuntime />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
+      <AXEGlobalServicesMenu isOpen={servicesOpen} requestedService={requestedService} onClose={() => setServicesOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
       <PartyPanel />
       <TradePanel />
