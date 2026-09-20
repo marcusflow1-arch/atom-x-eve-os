@@ -30,7 +30,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 10, system: 'Audit / requirements lock', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 11, system: 'Character stats and progression', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 12, system: 'Factions and weapon identities', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 13, system: 'Authoritative combat math', status: AXE_STATUS.PARTIAL },
+  { prompt: 13, system: 'Authoritative combat math', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 14, system: 'Skills 1–10 ladder', status: AXE_STATUS.PARTIAL },
   { prompt: 15, system: 'A-skill / God skills / charge', status: AXE_STATUS.PARTIAL },
   { prompt: 16, system: 'PvE mobs / elites / bosses', status: AXE_STATUS.PARTIAL },
