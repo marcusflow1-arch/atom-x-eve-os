@@ -1,6 +1,7 @@
 // ─── Loot Store — Drop definitions, RNG, and inventory state ─────────────────
 import { SKILLS_DATABASE } from './equipment/skillData';
 import { finalizeAXEDrop } from './axe/loot/AXELootQuality';
+import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
 
 export const LOOT_RARITIES = {
   common:    { color: '#9ca3af', hex: 0x9ca3af, glow: 0x9ca3af, label: 'Common'    },
@@ -116,34 +117,107 @@ function weightedSample(table, rng = Math.random) {
   return table[table.length - 1];
 }
 
-// ── In-memory collected loot inventory (categorized) ─────────────────────
-let _lootInventory = {};
+// ── Character-scoped collected loot inventory ─────────────────────────────
+// Materials/skills now survive reloads and never leak between characters.
+const lootStorage = characterScopedStorage('game_loot_inventory_v2');
+const learnedStorage = characterScopedStorage('game_learned_skills_v2');
+
+function loadLootInventory() {
+  try {
+    const raw = lootStorage.get();
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistLootInventory() {
+  lootStorage.set(JSON.stringify(_lootInventory));
+}
+
+let _lootInventory = loadLootInventory();
 const _listeners = new Set();
+
+function emitLootInventory() {
+  persistLootInventory();
+  _listeners.forEach((fn) => fn(_lootInventory));
+}
 
 export function getLootInventory() { return _lootInventory; }
 
 export function addLootToInventory(item) {
+  if (!item) return null;
   const cat = item.category || 'misc';
+  const stored = {
+    ...item,
+    collectedAt: item.collectedAt || Date.now(),
+    dropId: item.dropId || `inv_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+  };
   _lootInventory = {
     ..._lootInventory,
-    [cat]: [...(_lootInventory[cat] || []), { ...item, collectedAt: Date.now() }],
+    [cat]: [...(_lootInventory[cat] || []), stored],
   };
-  _listeners.forEach((fn) => fn(_lootInventory));
+  emitLootInventory();
+  return stored;
+}
+
+export function getLootItemCount(itemId, category = null) {
+  const categories = category ? [category] : Object.keys(_lootInventory);
+  return categories.reduce((sum, cat) =>
+    sum + (_lootInventory[cat] || []).filter((item) => item.id === itemId).length
+  , 0);
+}
+
+export function consumeLootItemById(itemId, count = 1, category = null) {
+  let remaining = Math.max(0, Math.floor(Number(count) || 0));
+  if (!itemId || remaining <= 0) return { ok: false, reason: 'INVALID_CONSUME' };
+
+  const categories = category ? [category] : Object.keys(_lootInventory);
+  const next = { ..._lootInventory };
+  let consumed = 0;
+
+  for (const cat of categories) {
+    if (remaining <= 0) break;
+    const source = [...(next[cat] || [])];
+    const kept = [];
+    for (const item of source) {
+      if (remaining > 0 && item.id === itemId) {
+        remaining -= 1;
+        consumed += 1;
+      } else {
+        kept.push(item);
+      }
+    }
+    next[cat] = kept;
+  }
+
+  if (consumed < Math.max(0, Math.floor(Number(count) || 0))) {
+    return { ok: false, reason: 'INSUFFICIENT_ITEMS', itemId, have: consumed };
+  }
+
+  _lootInventory = next;
+  emitLootInventory();
+  return { ok: true, itemId, consumed };
+}
+
+export function grantLootItemById(itemId, count = 1) {
+  const def = LOOT_TABLE.find((item) => item.id === itemId);
+  if (!def) return { ok: false, reason: 'LOOT_DEFINITION_MISSING' };
+  const n = Math.max(1, Math.floor(Number(count) || 1));
+  for (let i = 0; i < n; i += 1) addLootToInventory({ ...def });
+  return { ok: true, itemId, count: n };
 }
 
 export function subscribeLootInventory(fn) {
   _listeners.add(fn);
+  fn(_lootInventory);
   return () => _listeners.delete(fn);
 }
 
-// ── Learned skills — IDs of skill scroll items the player has "learned" ──
-// Stored as a Set of skill loot item IDs (matches LOOT_TABLE id, e.g. 'skill_berserker_slash')
-// Persisted to localStorage so learned skills survive game sessions.
-const LS_LEARNED_KEY = 'game_learned_skills_v1';
-
+// ── Learned skills — character scoped ─────────────────────────────────────
 function loadLearned() {
   try {
-    const raw = localStorage.getItem(LS_LEARNED_KEY);
+    const raw = learnedStorage.get();
     return raw ? new Set(JSON.parse(raw)) : new Set();
   } catch { return new Set(); }
 }
@@ -175,7 +249,7 @@ let _learnedSkillIds = loadInitialLearned();
 const _learnListeners = new Set();
 
 function persistLearned() {
-  try { localStorage.setItem(LS_LEARNED_KEY, JSON.stringify([..._learnedSkillIds])); } catch {}
+  learnedStorage.set(JSON.stringify([..._learnedSkillIds]));
 }
 
 // IDs in this set are ACTIVE abilities (matches abilityStore ABILITY_DEFINITIONS.id)
@@ -212,7 +286,7 @@ export function learnSkill(lootItem) {
     const updated = [...skills];
     updated.splice(idx, 1);
     _lootInventory = { ..._lootInventory, skill: updated };
-    _listeners.forEach((fn) => fn(_lootInventory));
+    emitLootInventory();
   }
 }
 
@@ -220,3 +294,10 @@ export function subscribeLearnedSkills(fn) {
   _learnListeners.add(fn);
   return () => _learnListeners.delete(fn);
 }
+
+subscribeCharacterChange(() => {
+  _lootInventory = loadLootInventory();
+  _learnedSkillIds = loadInitialLearned();
+  _listeners.forEach((fn) => fn(_lootInventory));
+  _learnListeners.forEach((fn) => fn(_learnedSkillIds));
+});
