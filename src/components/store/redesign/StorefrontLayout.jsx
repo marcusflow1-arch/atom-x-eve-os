@@ -32,7 +32,7 @@ export default function StorefrontLayout({onNavigateToGame,games=[],searchTerm='
  const filtering=!!searchTerm||filters.genres.length>0||filters.price!=='any'||!!filters.mode||filters.availability!=='all'||filters.hideOwned;
  const overview=tab==='discover'&&!filtering;
  const availableIds=new Set(selected.map(g=>g.id));
- let results=tab==='sellers'?sellers.filter(g=>availableIds.has(g.id)):tab==='new'?newGames.filter(g=>availableIds.has(g.id)):tab==='you'?matches.map(r=>r.game).filter(g=>availableIds.has(g.id)):selected;
+ let results=searchTerm?selected:tab==='sellers'?sellers.filter(g=>availableIds.has(g.id)):tab==='new'?newGames.filter(g=>availableIds.has(g.id)):tab==='you'?matches.map(r=>r.game).filter(g=>availableIds.has(g.id)):selected;
  results=[...results].sort((a,b)=>sort==='price'?(priceOf(a)??Infinity)-(priceOf(b)??Infinity):sort==='title'?a.title.localeCompare(b.title):sort==='new'?releaseTime(b)-releaseTime(a):searchTerm?queryScore(b,searchTerm)-queryScore(a,searchTerm):0);
  useEffect(()=>setLimit(24),[tab,filters,searchTerm,sort]);
  const update=(key,value)=>setFilters(f=>({...f,[key]:value}));

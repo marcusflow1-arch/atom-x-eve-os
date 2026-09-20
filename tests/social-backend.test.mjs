@@ -105,3 +105,28 @@ assert.equal((await social('stranger','get_thread',{target_user_id:'a'})).messag
 await social('b','mark_thread_read',{target_user_id:'a'});
 assert.equal((await entities.DirectMessage.get(dm.message.id)).is_read,true);
 console.log('PASS: authenticated friend requests, partial-write retry, notifications, mutual friendship, parties/capacity, dashboard positioning/presence, and private messages. No live records changed.');
+
+const store=(u,a,d,s)=>call('storeDiscovery',u,a,d,s);
+await store('missing','save',{genres:['rpg']},401);
+await store('a','save',{user_id:'b',genres:['rpg','rpg',null,5],played_game_ids:['sky','sky'],use_play_history:false});
+assert.deepEqual((await store('a','context')).preference.genres,['rpg']);
+assert.equal((await store('a','context')).preference.user_id,'a');
+assert.deepEqual((await store('b','context')).preference.genres,[]);
+await store('a','save',{genres:['simulation'],played_game_ids:[],use_play_history:true});
+assert.equal(tables.get('StorePreference').filter(p=>p.user_id==='a').length,1);
+tables.set('Game',[{id:'sky',title:'Skybound'}]);
+await store('a','record_play',{game_id:'sky'});
+await store('a','record_play',{game_id:'sky'});
+assert.deepEqual((await store('a','context')).played_game_ids,['sky']);
+assert.deepEqual((await store('b','context')).played_game_ids,[]);
+tables.set('Order',[
+ {id:'o1',user_id:'a',status:'completed',created_date:new Date().toISOString(),items:[{game_id:'sky',quantity:2}]},
+ {id:'o2',user_id:'b',status:'completed',created_date:new Date().toISOString(),items:[{game_id:'sky',quantity:1},{game_id:'race',quantity:1}]},
+ {id:'o3',user_id:'c',status:'refunded',created_date:new Date().toISOString(),items:[{game_id:'sky',quantity:20}]},
+ {id:'o4',user_id:'a',status:'completed',created_date:new Date(Date.now()-31*86400000).toISOString(),items:[{game_id:'old',quantity:10}]},
+]);
+const sales=await store('missing','sales');
+assert.deepEqual(sales.sales,{sky:3,race:1});
+assert.equal(sales.complete,true);
+assert.deepEqual(Object.keys(sales).sort(),['complete','sales','window_days']);
+console.log('PASS: store preference ownership, save/reload, launch history isolation, and anonymous sales aggregation without buyer data.');
