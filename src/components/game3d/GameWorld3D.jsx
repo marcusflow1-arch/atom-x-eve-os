@@ -64,7 +64,13 @@ import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, cons
 import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { pvpFailureMessage, validateLockedPvpTarget } from './pvpCombatRules';
-import { applyMasteryToHit, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
+import {
+  applyMasteryToHit,
+  applyMasteryToIncomingDamage,
+  getActiveWeaponId,
+  getMasteryAttackSpeedMult,
+} from './progression/weaponMastery/WeaponScalingPipeline';
+import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore';
 import { getHaloState } from './progression/haloStore';
 import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
@@ -1729,9 +1735,37 @@ export default function GameWorld3D() {
                 const levelDiff = enemy.level - playerLevelRef.current;
                 if (levelDiff > 0) dmg = Math.round(dmg * (1 + levelDiff * 0.25));
                 else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
-                // God's Deflection: chance to reflect 100% back at attacker
-                if (rollReflect()) { enemy.hp -= dmg; spawnDamageFloat(enemy.id, dmg); playActionSound('enemy_hit'); }
-                else { const absorbed = absorbShield(dmg); dmg = Math.max(0, dmg - absorbed); if (dmg > 0) { setHP(Math.max(0, getPlayerHUD().hp - dmg)); playerAnim?.requestHitReact(); playActionSound('player_hit'); } }
+                // God's Deflection keeps priority. Otherwise, weapon mastery and
+                // the active Advanced Class resolve dodge/block/reflect/mitigation
+                // through the same incoming-damage backend.
+                if (rollReflect()) {
+                  enemy.hp -= dmg;
+                  spawnDamageFloat(enemy.id, dmg);
+                  playActionSound('enemy_hit');
+                } else {
+                  const defenseResult = applyMasteryToIncomingDamage(dmg, {
+                    weaponId: getActiveWeaponId(),
+                    isCrit: false,
+                    fromBoss: !!enemy.isBoss,
+                  });
+                  dmg = defenseResult.damage;
+
+                  if (defenseResult.reflectedDamage > 0) {
+                    enemy.hp -= defenseResult.reflectedDamage;
+                    spawnDamageFloat(enemy.id, defenseResult.reflectedDamage);
+                    playActionSound('enemy_hit');
+                  }
+
+                  if (dmg > 0) {
+                    const absorbed = absorbShield(dmg);
+                    dmg = Math.max(0, dmg - absorbed);
+                    if (dmg > 0) {
+                      setHP(Math.max(0, getPlayerHUD().hp - dmg));
+                      playerAnim?.requestHitReact();
+                      playActionSound('player_hit');
+                    }
+                  }
+                }
                 playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
               }
               // End attack ~0.4s after damage so anim has time to complete
@@ -1814,7 +1848,7 @@ export default function GameWorld3D() {
             } else {
               // PvP is strictly one locked target. No cones, cleaves, nearest-target
               // fallback, or collateral hits are allowed.
-              playerAttackCooldown.current = 0.2;
+              playerAttackCooldown.current = Math.max(0.06, 0.2 / Math.max(0.25, getMasteryAttackSpeedMult()));
               if (!playerAnim?.HandleCombat?.(activeWeaponPath === 'ranged' ? 'attack' : 'kick')) {
                 playOneShot(activeWeaponPath === 'ranged' ? 'attack' : 'kick', 1.4);
               }
@@ -1834,7 +1868,7 @@ export default function GameWorld3D() {
           } else {
             const attackConsumedByPriorityTarget = dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
             // 0.2 second delay between attacks.
-            playerAttackCooldown.current = 0.2;
+            playerAttackCooldown.current = Math.max(0.06, 0.2 / Math.max(0.25, getMasteryAttackSpeedMult()));
             // Attack montage is manually gated by the animation state machine.
             if (!playerAnim?.HandleCombat?.(isRangedClickAttack || activeWeaponPath === 'ranged' ? 'attack' : 'kick')) {
               playOneShot(isRangedClickAttack || activeWeaponPath === 'ranged' ? 'attack' : 'kick', 1.4);
@@ -1878,6 +1912,15 @@ export default function GameWorld3D() {
             reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: masteryRes.isCrit, isBoss: !!closestEnemy.isBoss });
 
             combatSystem.applyDamage(closestEnemy, dmg, { sourceId: closestEnemy.id, sound: 'enemy_hit' });
+
+            // Advanced-class life steal is resolved by the same weapon/mastery
+            // pipeline. It heals from real post-scaling damage, never from UI text.
+            if (masteryRes.lifeStealPct > 0 && dmg > 0) {
+              const hudNow = getPlayerHUD();
+              const heal = Math.max(1, Math.round(dmg * masteryRes.lifeStealPct / 100));
+              setHP(Math.min(hudNow.maxHP || 1, (hudNow.hp || 0) + heal));
+            }
+
             // Boss threat credit — feeds the boss brain's aggro table.
             if (closestEnemy.isBoss && closestEnemy.brain) {
               closestEnemy.brain.recordDamage('local_player', dmg);
