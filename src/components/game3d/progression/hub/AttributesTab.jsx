@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { applyAttributeAllocationPlan } from '../../playerHUDStore';
+import { applyAttributeAllocationPlan, respecAttributes } from '../../playerHUDStore';
 
 const ATTRIBUTE_ROWS = [
   {
@@ -151,6 +151,18 @@ export default function AttributesTab({ hud }) {
             <div className="mt-2 text-[10px] text-emerald-200/70">{pendingTotal} point{pendingTotal === 1 ? '' : 's'} pending</div>
           )}
         </div>
+
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined' && !window.confirm('Reset all allocated Attribute points back to your base stats?')) return;
+            const result = respecAttributes({ confirmed: true });
+            setPending({});
+            setFeedback(result);
+          }}
+          className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45 hover:bg-white/[0.08] hover:text-white/70"
+        >
+          Reset Allocated Points
+        </button>
 
         <div className="mt-5">
           <StatLine label="Level" value={hud?.level || 1} />
