@@ -5,6 +5,8 @@
 
 import { getSkillById } from './skillRegistry';
 import { getActiveWeaponPath } from '../weaponClassBuffStore';
+import { getActiveEquippedAXEWeapon } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
 
 // Legacy weapon path names → new WEAPON_TYPE.
 // The old code uses 'damage' / 'defense' / 'ranged'. New skills declare
@@ -17,6 +19,14 @@ const LEGACY_TO_WEAPON = {
 };
 
 export function getEquippedWeaponType() {
+  const activeWeapon = getActiveEquippedAXEWeapon();
+  if (activeWeapon) {
+    const identity = resolveAXEWeaponIdentity(activeWeapon);
+    if (identity.advancedWeaponType) return identity.advancedWeaponType;
+  }
+
+  // Compatibility fallback for old saves before the canonical inventory weapon
+  // has been established.
   const legacy = getActiveWeaponPath();
   return LEGACY_TO_WEAPON[legacy] || legacy || null;
 }
