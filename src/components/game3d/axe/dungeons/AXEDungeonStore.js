@@ -216,7 +216,11 @@ export function enterAXEDungeonRoom(roomId) {
       currentRoomId: room.id,
       checkpointRoomId: room.checkpoint ? room.id : session.checkpointRoomId,
       visitedRoomIds: [...new Set([...session.visitedRoomIds, room.id])],
-      phase: room.type === 'boss' ? 'boss_locked' : 'exploring',
+      phase: room.type === 'boss'
+        ? 'boss_locked'
+        : room.encounter
+          ? 'encounter'
+          : 'exploring',
     },
   };
   emit();
@@ -228,6 +232,38 @@ export function enterAXEDungeonRoom(roomId) {
   }
 
   return { ok: true, room };
+}
+
+export function completeAXEDungeonEncounter(roomId) {
+  const session = state.activeSession;
+  if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
+  const room = getAXEDungeonRoom(session.dungeonId, roomId);
+  if (!room) return { ok: false, reason: 'ROOM_MISSING' };
+
+  state = {
+    ...state,
+    activeSession: {
+      ...session,
+      clearedEncounterRoomIds: [...new Set([
+        ...(session.clearedEncounterRoomIds || []),
+        roomId,
+      ])],
+      phase: room.type === 'boss' ? session.phase : 'exploring',
+    },
+  };
+  emit();
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('axeDungeonEncounterCleared', {
+      detail: {
+        dungeonId: session.dungeonId,
+        roomId,
+        sessionId: session.sessionId,
+      },
+    }));
+  }
+
+  return { ok: true, roomId };
 }
 
 export function startAXEDungeonBoss(bossId) {
