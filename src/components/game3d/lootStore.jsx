@@ -33,7 +33,14 @@ export const LOOT_TABLE = [
   { id: 'lightning_strike',          name: 'Lightning Strike',     category: 'skill',     rarity: 'rare',      icon: '⚡',  weight: 6  },
   { id: 'shadow_teleport',           name: 'Shadow Teleport',      category: 'skill',     rarity: 'epic',      icon: '🌀',  weight: 4  },
   { id: 'frost_tornado',             name: 'Frost Tornado',        category: 'skill',     rarity: 'rare',      icon: '🌪️', weight: 6  },
-  // ── Enchanting Materials ──────────────────────────────────────────────────
+  // ── Equipment service materials (real inventory items) ────────────────────
+  { id: 'mat_essence',          name: 'Essence Shard',          category: 'material', rarity: 'common',    icon: '◈',  weight: 30 },
+  { id: 'mat_crystal',          name: 'Spirit Crystal',         category: 'material', rarity: 'rare',      icon: '◆',  weight: 20 },
+  { id: 'mat_starlight',        name: 'Starlight Dust',         category: 'material', rarity: 'epic',      icon: '✦',  weight: 10 },
+  { id: 'mat_reinforce',        name: 'Reinforcement Stone',    category: 'material', rarity: 'uncommon',  icon: '⬟',  weight: 24 },
+  { id: 'mat_over_enchant',     name: 'Over-Enchant Catalyst',  category: 'material', rarity: 'elite',     icon: '✧',  weight: 9  },
+  { id: 'mat_protection',       name: 'Stabilizer',             category: 'material', rarity: 'heroic',    icon: '⬢',  weight: 4  },
+  // ── Other Enchanting Materials ─────────────────────────────────────────────
   { id: 'mat_soul_fragment',     name: 'Soul Fragment',    category: 'material',  rarity: 'rare',      icon: '💠',  weight: 25 },
   { id: 'mat_void_crystal',      name: 'Void Crystal',     category: 'material',  rarity: 'epic',      icon: '🔮',  weight: 15 },
   { id: 'mat_divine_essence',    name: 'Divine Essence',   category: 'material',  rarity: 'legendary', icon: '✨',  weight: 5  },
