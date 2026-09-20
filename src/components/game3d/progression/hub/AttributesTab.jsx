@@ -1,27 +1,9 @@
 import React, { useState } from 'react';
-import { allocateStat, getPlayerHUD, setPlayerHUD } from '../../playerHUDStore';
-import { computeDerivedStats } from '../../statsSystem';
-import { getHaloBonuses } from '../haloStore';
-import { getEquippedTitleBonuses } from '../titleStore';
+import { allocateStat, refundStat } from '../../playerHUDStore';
 import { STAT_SYNERGY } from '../weaponSynergyData';
 import AttributeRow from './AttributeRow';
 import { ATTRIBUTE_CONFIG, ATTRIBUTE_ORDER } from './attributeSpecializationConfig';
 
-function refundStat(statKey) {
-  const hud = getPlayerHUD();
-  const current = hud.baseStats?.[statKey] ?? 0;
-  if (current <= 1) return false;
-  const newBase = { ...hud.baseStats, [statKey]: current - 1 };
-  const newDerived = computeDerivedStats(newBase, [], getHaloBonuses(), getEquippedTitleBonuses());
-  setPlayerHUD({
-    baseStats: newBase,
-    unspentPoints: hud.unspentPoints + 1,
-    derived: newDerived,
-    maxHP: newDerived.maxHP,
-    hp: Math.min(hud.hp, newDerived.maxHP),
-  });
-  return true;
-}
 
 export default function AttributesTab({ hud }) {
   const d = hud.derived || {};
