@@ -11,9 +11,6 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import FriendMessengerPanel from '@/components/friends/FriendMessengerPanel';
 
-const BODY_WIDTH = 0.9;
-const SAFE_STAGE = { minX: -1.35, maxX: 1.35, minZ: -0.55, maxZ: 0.55 };
-const clamp = (value, min, max) => Math.min(max, Math.max(min, Number.isFinite(Number(value)) ? Number(value) : 0));
 const playerIdFor = (userObj) => String(userObj?.friend_id || userObj?.player_id || userObj?.id || '').trim();
 
 export default function FriendsListContent() {
