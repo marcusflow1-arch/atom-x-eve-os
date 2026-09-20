@@ -6,7 +6,8 @@ import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
 import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
 import AdvancedClassPanel from '../../talents/AdvancedClassPanel';
 import {
-  getEquippedAXEItemInCategory,
+  getActiveEquippedAXEWeapon,
+  setActiveAXEWeapon,
   subscribeAXEEquipmentInventory,
 } from '../../axe/equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from '../../axe/weapons/AXEWeaponIdentity';
@@ -209,11 +210,11 @@ export default function WeaponMasteryTab() {
   const [mastery, setMastery] = useState(null);
   const [selected, setSelected] = useState(null);
   const [topView, setTopView] = useState('mastery');
-  const [equippedWeapon, setEquippedWeapon] = useState(() => getEquippedAXEItemInCategory('weapon'));
+  const [equippedWeapon, setEquippedWeapon] = useState(() => getActiveEquippedAXEWeapon());
 
   useEffect(() => subscribeMastery(setMastery), []);
   useEffect(() => subscribeAXEEquipmentInventory(() => {
-    setEquippedWeapon(getEquippedAXEItemInCategory('weapon'));
+    setEquippedWeapon(getActiveEquippedAXEWeapon());
   }), []);
 
   const activeIdentity = useMemo(
