@@ -1,3 +1,4 @@
+import { useSocialNotifications } from '@/components/social/SocialNotifications';
 import React from 'react';
 import { Mail, Bell, User, Settings, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -6,6 +7,7 @@ import { useAuth } from '../auth/AuthContext';
 
 export default function ProfileModule() {
   const { user, isAuthenticated } = useAuth();
+  const {notifications} = useSocialNotifications();
 
   const getDisplayName = () => {
     if (!user) return 'Guest User';
@@ -19,7 +21,7 @@ export default function ProfileModule() {
 
   const menuItems = [
     { icon: Mail, label: 'Messages', href: createPageUrl('Mailbox'), badge: user?.unread_messages || 0 },
-    { icon: Bell, label: 'Notifications', href: createPageUrl('Notifications'), badge: user?.unread_notifications || 0 },
+    { icon: Bell, label: 'Notifications', href: createPageUrl('Notifications'), badge: notifications.filter(n=>n.status==='unread').length },
     { icon: Trophy, label: 'Achievements', href: createPageUrl('Achievements'), badge: 0 },
     { icon: Settings, label: 'Settings', href: '#', badge: 0 },
   ];

@@ -1,15 +1,18 @@
+import { partySession } from '@/components/social/partySession';
+import { unwrap } from '@/components/social/dashboardSession';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Crown, Gamepad2, Headphones, Mic, MicOff, Plus, UserMinus, Users, X, Check, LogOut, Link2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const unwrap = (result) => result?.data ?? result ?? {};
+
 
 export default function PartyDrawer({ user }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState({ party: null, membership: null, members: [], invitations: [], launchInvites: [] });
   const [friends, setFriends] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const seenIncomingRef = useRef(new Set());
 
   const invoke = useCallback(async (action, data = {}) => unwrap(await base44.functions.invoke('partySystem', { action, data })), []);
@@ -19,6 +22,7 @@ export default function PartyDrawer({ user }) {
     try {
       const next = await invoke('get_state');
       setState(next);
+      partySession.publish(next);
       const roomId = next.party?.voiceRoomId || null;
       const participantIds = (next.members || []).map(m => m.user_id).filter(Boolean);
       window.dispatchEvent(new CustomEvent('lunaPartyVoiceRoom', { detail: { roomId, participantIds } }));
@@ -34,7 +38,7 @@ export default function PartyDrawer({ user }) {
   }, [invoke, user?.id]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) { partySession.publish({party:null,members:[]}); return; }
     load({ quiet: true });
     base44.entities.Friend.filter({ user_id: user.id }).then(setFriends).catch(() => setFriends([]));
     const interval = setInterval(() => load({ quiet: false }), 5000);
@@ -43,6 +47,8 @@ export default function PartyDrawer({ user }) {
 
   useEffect(() => {
     const openDrawer = () => { setOpen(true); load({ quiet: true }); };
+    const refresh = () => { load({quiet:true}); if(user?.id) base44.entities.Friend.filter({user_id:user.id}).then(setFriends).catch(()=>{}); };
+    window.addEventListener('lunaSocialChanged', refresh);
     const launch = async (event) => {
       const game = event.detail?.game;
       if (!game?.title) return;
@@ -64,6 +70,7 @@ export default function PartyDrawer({ user }) {
     window.addEventListener('atomxe:game-launch', launch);
     window.addEventListener('toggleDashboardMic', mic);
     return () => {
+      window.removeEventListener('lunaSocialChanged', refresh);
       window.removeEventListener('openLunaParty', openDrawer);
       window.removeEventListener('atomxe:game-launch', launch);
       window.removeEventListener('toggleDashboardMic', mic);
@@ -72,12 +79,14 @@ export default function PartyDrawer({ user }) {
 
   const act = async (action, data = {}) => {
     setBusy(true);
+    setError('');
     try {
       const result = await invoke(action, data);
       if (result?.error) throw new Error(result.error);
       await load({ quiet: true });
       return result;
     } catch (error) {
+      setError(error.response?.data?.error || error.message || 'Party action failed.');
       console.error(`[PartyDrawer] ${action} failed`, error);
       window.dispatchEvent(new CustomEvent('partyActionError', { detail: { message: error.message || 'Party action failed' } }));
       return null;
@@ -139,6 +148,7 @@ export default function PartyDrawer({ user }) {
               </header>
 
               <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3 [scrollbar-width:none]">
+                {error && <p role="alert" className="text-xs text-rose-300">{error}</p>}
                 {(state.invitations || []).map(invite => (
                   <section key={invite.id} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.045] p-3">
                     <div className="text-[10px] uppercase tracking-widest text-cyan-300/65">Party invitation</div>
@@ -168,7 +178,7 @@ export default function PartyDrawer({ user }) {
                 {state.party ? (
                   <>
                     <section>
-                      <div className="mb-2 flex items-center justify-between px-1"><span className="text-[10px] uppercase tracking-[0.18em] text-white/35">Members {state.members?.length || 0}/{state.party.maxSize || 4}</span><Headphones className="h-3.5 w-3.5 text-cyan-300/60" /></div>
+                      <div className="mb-2 flex items-center justify-between px-1"><span className="text-[10px] uppercase tracking-[0.18em] text-white/35">Members {state.members?.length || 0}/{state.party.maxSize || 5}</span><Headphones className="h-3.5 w-3.5 text-cyan-300/60" /></div>
                       <div className="space-y-1.5">
                         {(state.members || []).map(member => (
                           <div key={member.id} className="group flex items-center gap-2 rounded-xl border border-white/[0.055] bg-white/[0.035] p-2.5">

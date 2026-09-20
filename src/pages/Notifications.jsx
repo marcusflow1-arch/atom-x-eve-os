@@ -1,3 +1,4 @@
+import SocialNotifications from '@/components/social/SocialNotifications';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -159,7 +160,7 @@ export default function Notifications() {
                 <Shield className="w-4 h-4 text-cyan-400" />
               </div>
               <div>
-                <span className="text-sm font-bold tracking-wider text-white/90 block">System Version Updates</span>
+                <span className="text-sm font-bold tracking-wider text-white/90 block">System notifications</span>
                 <span className="text-[10px] text-white/30 font-mono tracking-widest">v2.5.0 • {updates.length} update{updates.length !== 1 ? 's' : ''} available</span>
               </div>
             </div>
@@ -173,6 +174,8 @@ export default function Notifications() {
             className="w-1/2 border-r border-white/8 overflow-y-auto p-4 space-y-2"
             style={{ scrollbarWidth: 'none' }}
           >
+            <SocialNotifications />
+            <h2 className="pt-6 pb-2 text-sm font-semibold text-white/60">System updates</h2>
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-8 h-8 border-2 border-white/15 border-t-cyan-400 rounded-full animate-spin" />

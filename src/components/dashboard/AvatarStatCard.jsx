@@ -4,7 +4,6 @@ import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Zap, Trophy, Star, Gamepad2, TrendingUp, Network } from 'lucide-react';
 import DashboardAvatarOverview from './DashboardAvatarOverview';
-import PartyDrawer from './PartyDrawer';
 
 function StatLine({ icon, label, value, color = 'text-white/70' }) {
   return <div className="flex items-center justify-between py-[3px]"><div className="flex items-center gap-2"><span className={color}>{icon}</span><span className="text-white/50 text-[11px]">{label}</span></div><span className="text-white font-semibold text-[11px] tabular-nums">{value}</span></div>;
@@ -48,6 +47,6 @@ export default function AvatarStatCard() {
       </div>
       <div className="px-3 py-2 flex-1 flex flex-col justify-between"><div><StatLine icon={<Trophy className="w-3 h-3"/>} label="Gamer Score" value={gamerScore.toLocaleString()} color="text-amber-400"/><StatLine icon={<Zap className="w-3 h-3"/>} label="AI Points" value={aiPoints.toLocaleString()} color="text-cyan-400"/><StatLine icon={<Star className="w-3 h-3"/>} label="Influence" value={socialInfluence.toLocaleString()} color="text-pink-400"/><StatLine icon={<Gamepad2 className="w-3 h-3"/>} label="Games Played" value={gamesPlayed} color="text-green-400"/><StatLine icon={<TrendingUp className="w-3 h-3"/>} label="Achievements" value={achievementsCount} color="text-purple-400"/></div>{topGenre && <div className="pt-2 mt-auto border-t border-white/6"><div className="flex items-center justify-between"><span className="text-white/30 text-[9px] uppercase tracking-wider font-bold">Top Genre</span><span className="text-cyan-300 text-[10px] font-bold">Lv. {topGenre.level || 1}</span></div><p className="text-white/60 text-[11px] font-medium">{topGenre.name}</p></div>}</div>
     </div>
-    {typeof document !== 'undefined' && createPortal(<><DashboardAvatarOverview hostName={user?.full_name || user?.username || 'My'} /><PartyDrawer user={user} /></>, document.body)}
+    {typeof document !== 'undefined' && createPortal(<><DashboardAvatarOverview hostName={user?.full_name || user?.username || 'My'} /></>, document.body)}
   </>;
 }

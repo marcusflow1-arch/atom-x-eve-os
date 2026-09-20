@@ -1,3 +1,5 @@
+import PartyDrawer from './components/dashboard/PartyDrawer';
+import { SocialNotificationAlerts } from './components/social/SocialNotifications';
 import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -562,6 +564,8 @@ function LayoutContent({ children, currentPageName }) {
         <MoodAuraLayer />
         <EnvStatus />
         <Toaster position="top-right" />
+      <SocialNotificationAlerts />
+      <PartyDrawer user={user} />
         <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
         <MobileLayoutShell>
@@ -593,6 +597,8 @@ function LayoutContent({ children, currentPageName }) {
 
       <EnvStatus />
       <Toaster position="top-right" />
+      <SocialNotificationAlerts />
+      <PartyDrawer user={user} />
       <PWAManifest />
       <ServiceWorker />
 
