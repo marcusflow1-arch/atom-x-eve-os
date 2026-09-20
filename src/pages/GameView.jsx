@@ -75,6 +75,7 @@ export default function GameView() {
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [requestedService, setRequestedService] = useState(null);
+  const [requestedServiceItemId, setRequestedServiceItemId] = useState(null);
   const [requestedCharacterTab, setRequestedCharacterTab] = useState(null);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [clanOverlayOpen, setClanOverlayOpen] = useState(false);
@@ -255,6 +256,7 @@ export default function GameView() {
     const onService = (event) => {
       setRequestedCharacterTab('services');
       setRequestedService(event?.detail?.service || 'reinforcement');
+      setRequestedServiceItemId(event?.detail?.itemId || event?.detail?.instanceId || null);
       setProgressionOpen(true);
     };
     window.addEventListener('axeServiceRequested', onService);
@@ -324,6 +326,7 @@ export default function GameView() {
         onClick={() => {
           setRequestedCharacterTab('services');
           setRequestedService('reinforcement');
+          setRequestedServiceItemId(null);
           setProgressionOpen(true);
         }}
         className="absolute right-4 top-4 z-[135] rounded-xl border border-white/15 bg-neutral-800/55 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/80 backdrop-blur-xl hover:bg-white/10 hover:text-white"
