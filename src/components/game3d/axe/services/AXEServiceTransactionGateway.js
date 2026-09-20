@@ -34,6 +34,7 @@ import {
 import { getAXEServiceInventoryCost } from './AXEServiceEconomy';
 import { getNextStage, AXE_REFINE_CONFIG, AXE_ULTIMATE_CONFIG } from '../equipment/AXEItemAdvancementSystem';
 import { getAXEServiceEligibility } from './AXEServiceEligibility';
+import { appendAXEServiceAudit, createAXEServiceTransactionId } from './AXEServiceAuditStore';
 
 const getOwned = (itemId) => getAXEEquipmentItem(itemId);
 
@@ -183,19 +184,75 @@ const localHandlers = {
   }, 'equipment_aura'),
 };
 
+const inFlight = new Set();
+
 export async function executeAXEServiceTransaction(serviceId, payload = {}) {
-  if (
-    typeof window !== 'undefined' &&
-    typeof window.__axeAuthoritativeServiceRequest === 'function'
-  ) {
-    return window.__axeAuthoritativeServiceRequest({
-      serviceId,
-      payload,
-      requestedAt: Date.now(),
-    });
+  const itemId = payload.itemId || payload.item?.instanceId || payload.item?.id || null;
+  const lockKey = `${serviceId}::${itemId || 'global'}`;
+  if (inFlight.has(lockKey)) {
+    return { ok: false, reason: 'TRANSACTION_IN_PROGRESS' };
   }
 
-  const handler = localHandlers[serviceId];
-  if (!handler) return { ok: false, reason: 'SERVICE_TRANSACTION_NOT_AVAILABLE' };
-  return handler(payload);
+  const requestedAt = Date.now();
+  const transactionId = payload.transactionId
+    || createAXEServiceTransactionId(serviceId, itemId);
+
+  inFlight.add(lockKey);
+  try {
+    let result;
+    let authoritative = false;
+
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.__axeAuthoritativeServiceRequest === 'function'
+    ) {
+      authoritative = true;
+      result = await window.__axeAuthoritativeServiceRequest({
+        transactionId,
+        serviceId,
+        payload: { ...payload, transactionId },
+        requestedAt,
+      });
+    } else {
+      const handler = localHandlers[serviceId];
+      result = handler
+        ? await handler({ ...payload, transactionId })
+        : { ok: false, reason: 'SERVICE_TRANSACTION_NOT_AVAILABLE' };
+    }
+
+    const normalized = result || { ok: false, reason: 'EMPTY_TRANSACTION_RESULT' };
+    appendAXEServiceAudit({
+      transactionId,
+      serviceId,
+      itemId,
+      requestedAt,
+      completedAt: Date.now(),
+      authoritative,
+      ok: !!normalized.ok,
+      outcome: normalized.outcome || null,
+      reason: normalized.reason || null,
+      cost: normalized.cost || null,
+    });
+
+    return { ...normalized, transactionId };
+  } catch (error) {
+    appendAXEServiceAudit({
+      transactionId,
+      serviceId,
+      itemId,
+      requestedAt,
+      completedAt: Date.now(),
+      authoritative: false,
+      ok: false,
+      reason: error?.message || 'TRANSACTION_EXCEPTION',
+    });
+    return {
+      ok: false,
+      reason: 'TRANSACTION_EXCEPTION',
+      message: error?.message || String(error),
+      transactionId,
+    };
+  } finally {
+    inFlight.delete(lockKey);
+  }
 }
