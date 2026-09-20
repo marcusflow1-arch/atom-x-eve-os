@@ -294,6 +294,7 @@ export default function GameView() {
         else if (progressionOpen) {
           setProgressionOpen(false);
           setRequestedService(null);
+          setRequestedServiceItemId(null);
           setRequestedCharacterTab(null);
         }
         else if (friendsListOpen) setFriendsListOpen(false);
@@ -375,8 +376,12 @@ export default function GameView() {
           setRequestedCharacterTab(null);
         }}
         requestedService={requestedService}
+        requestedItemId={requestedServiceItemId}
         initialTab={requestedCharacterTab}
-        onServiceRequestConsumed={() => setRequestedService(null)}
+        onServiceRequestConsumed={() => {
+          setRequestedService(null);
+          setRequestedServiceItemId(null);
+        }}
       />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
       <PartyPanel />
