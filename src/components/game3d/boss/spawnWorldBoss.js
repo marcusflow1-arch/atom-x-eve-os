@@ -51,6 +51,18 @@ export function spawnWorldBoss({
         ENEMY_STAT_TEMPLATES.champion ||
         ENEMY_STAT_TEMPLATES[Object.keys(ENEMY_STAT_TEMPLATES)[0]];
       const bossDerived = computeDerivedStats(bossBaseStats, []);
+      const damageScale = bossDefOverride ? Math.max(0.1, Number(bossDef.damageScale || 1)) : 1;
+      const defenseScale = bossDefOverride ? Math.max(0.1, Number(bossDef.defenseScale || 1)) : 1;
+      const scaledDamage = Math.max(1, Math.round(Number(bossDerived.damage || bossDerived.totalDamage || 1) * damageScale));
+      const scaledBossDerived = bossDefOverride
+        ? {
+            ...bossDerived,
+            damage: scaledDamage,
+            totalDamage: scaledDamage,
+            physicalDamage: Math.max(1, Math.round(Number(bossDerived.physicalDamage || scaledDamage) * damageScale)),
+            defense: Math.max(0, Number(bossDerived.defense || 0) * defenseScale),
+          }
+        : bossDerived;
       const box = new THREE.Box3().setFromObject(fbx);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
@@ -102,7 +114,7 @@ export function spawnWorldBoss({
       const hpMultiplier = bossDefOverride
         ? Math.max(1, Number(bossDef.hpScale || 8))
         : 1000;
-      const bossHp = Math.round(bossDerived.maxHP * hpMultiplier);
+      const bossHp = Math.round(scaledBossDerived.maxHP * hpMultiplier);
       const bossEntry = {
         id: resolvedId,
         bossDefinitionId: bossDef.id,
@@ -123,7 +135,7 @@ export function spawnWorldBoss({
         alive: true,
         hp: bossHp,
         maxHp: bossHp,
-        derived: bossDerived,
+        derived: scaledBossDerived,
         level: Math.max(1, Number(bossDef.level || 1)),
         xpReward: Math.max(0, Number(bossDef.xpReward || 0)),
         tintMaterials: bossTintMaterials,
