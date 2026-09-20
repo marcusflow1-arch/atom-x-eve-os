@@ -23,6 +23,7 @@ export default function CharacterProgressionMenu({
   isOpen,
   onClose,
   requestedService = null,
+  requestedItemId = null,
   initialTab = null,
   onServiceRequestConsumed,
 }) {
@@ -66,7 +67,7 @@ export default function CharacterProgressionMenu({
   useEffect(() => {
     if (!isOpen || !requestedService) return;
     setServiceId(requestedService);
-    setServiceItemId(null);
+    setServiceItemId(requestedItemId || null);
     setMainTab('services');
     onServiceRequestConsumed?.();
   }, [isOpen, requestedService, requestedItemId, onServiceRequestConsumed]);
