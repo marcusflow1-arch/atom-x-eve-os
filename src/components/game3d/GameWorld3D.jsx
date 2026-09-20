@@ -66,7 +66,7 @@ import { applyMasteryToHit, getActiveWeaponId } from './progression/weaponMaster
 import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
-import { xpForLevel, pickTier,
+import { xpForLevel, pickTier, getEnemyTierByName,
   ARCHER_URL, ANIMATION_URLS,
   DEATH_FADE_DELAY, WALK_SPEED, RUN_SPEED, ROT_SMOOTH, BLEND,
   ENEMY_SPEED, ENEMY_WALK_TIME, ENEMY_IDLE_TIME, ENEMY_WANDER_RADIUS,
@@ -698,7 +698,7 @@ export default function GameWorld3D() {
         const enemyModel = fbx;
         // DETERMINISTIC tier + level — uses the seeded tierRoll from spawn config
         // so every client picks the same tier for the same enemy id.
-        const tier = pickTier(spawn.tierRoll);
+        const tier = spawn.fixedTier ? getEnemyTierByName(spawn.fixedTier) : pickTier(spawn.tierRoll);
         const enemyLevel = tier.level + (spawn.tierRoll > 0.5 ? 1 : 0);
         // Derive enemy combat stats from the shared stat system
         const enemyBaseStats = ENEMY_STAT_TEMPLATES[tier.name];
@@ -762,6 +762,7 @@ export default function GameWorld3D() {
           derived: enemyDerived,
           xpReward: tier.xp,
           attackCooldown: Math.random() * 1.5, // stagger initial attacks
+          aiProfile: spawn.aiProfile || 'standard',
           attacking: false,
           attackWindupTimer: 0,
           // Phase 5 desync fix — per-enemy randomized think/move/idle timing.
