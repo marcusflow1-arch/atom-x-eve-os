@@ -7,7 +7,6 @@ import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weap
 import AdvancedClassPanel from '../../talents/AdvancedClassPanel';
 import {
   getActiveEquippedAXEWeapon,
-  setActiveAXEWeapon,
   subscribeAXEEquipmentInventory,
 } from '../../axe/equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from '../../axe/weapons/AXEWeaponIdentity';
@@ -206,7 +205,7 @@ function WeaponDetail({ weaponId, masteryEntry, activeIdentity, onBack }) {
   );
 }
 
-export default function WeaponMasteryTab() {
+export default function WeaponMasteryTab({ onOpenInventory }) {
   const [mastery, setMastery] = useState(null);
   const [selected, setSelected] = useState(null);
   const [topView, setTopView] = useState('mastery');
@@ -251,7 +250,14 @@ export default function WeaponMasteryTab() {
           </div>
         </div>
 
-        <div className="flex rounded-xl border border-white/10 bg-black/[0.08] p-1">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenInventory}
+            className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45 hover:bg-white/[0.08] hover:text-white/70"
+          >
+            Manage Weapon
+          </button>
+          <div className="flex rounded-xl border border-white/10 bg-black/[0.08] p-1">
           {[
             { id: 'mastery', label: 'Weapon Mastery' },
             { id: 'advanced', label: 'Advanced Classes' },
@@ -271,6 +277,7 @@ export default function WeaponMasteryTab() {
               {tab.label}
             </button>
           ))}
+          </div>
         </div>
       </div>
 
