@@ -1902,7 +1902,8 @@ export default function GameWorld3D() {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * consumePowerChargeMultiplier() * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
+            const powerChargeMult = consumePowerChargeMultiplier();
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * powerChargeMult * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
 
             // Weapon Mastery — adjust damage, apply identity/milestone passives.
@@ -1914,6 +1915,7 @@ export default function GameWorld3D() {
               playerHPPct: (getPlayerHUD().hp || 0) / (getPlayerHUD().maxHP || 1),
               distance: distM,
               isCrit: false,
+              isCharged: powerChargeMult > 1,
             });
             dmg = masteryRes.damage;
             if (masteryRes.armorPenPct > 0) {
