@@ -126,6 +126,16 @@ export async function joinAXEFactionWar({
 
   const bracket = getAXEWarBracket(powerTier);
 
+  if (state.joinedCycleId === cycle.cycleId && state.joinedFactionId === factionId) {
+    return {
+      ok: true,
+      alreadyJoined: true,
+      cycleId: cycle.cycleId,
+      factionId,
+      bracketId: state.bracketId || bracket.id,
+    };
+  }
+
   if (typeof window !== 'undefined' && typeof window.__axeAuthoritativeWarRequest === 'function') {
     const remote = await window.__axeAuthoritativeWarRequest({
       action: 'join',
