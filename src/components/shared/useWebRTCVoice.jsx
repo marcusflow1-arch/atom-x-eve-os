@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
-export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds = []) {
+export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds = [], options = {}) {
+    const dataEnabled = options.data !== false;
+    const participantsRef = useRef(participantIds); participantsRef.current = participantIds;
+    const mutedRef = useRef(isMuted); mutedRef.current = isMuted;
+    const deafenedRef = useRef(isDeafened); deafenedRef.current = isDeafened;
     const localStreamRef = useRef(null);
     const peersRef = useRef({});
     const dataChannelsRef = useRef({});
@@ -12,6 +16,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
     // Expose a method to broadcast data to all peers
     useEffect(() => {
+        if (!dataEnabled) return;
         window.webrtcBroadcast = (data) => {
             const msg = JSON.stringify(data);
             Object.values(dataChannelsRef.current).forEach(dc => {
@@ -23,45 +28,37 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         return () => {
             delete window.webrtcBroadcast;
         };
-    }, []);
+    }, [dataEnabled]);
 
     useEffect(() => {
         if (!roomId || !user) return;
 
         let isMounted = true;
-        let unsubscribe = null;
+        let unsubscribe = null, pollTimer;
+        const startedAt = Date.now() - 15000;
+        processedSignals.current = new Set();
+        let queue = Promise.resolve();
+        const receive = signal => {
+          if (!isMounted || signal.channel_id !== roomId || signal.target_id !== user.id || Date.parse(signal.created_date || 0) < startedAt) return;
+          if (processedSignals.current.has(signal.id)) return;
+          processedSignals.current.add(signal.id);
+          queue = queue.then(() => isMounted && handleSignal(signal)).catch(console.error);
+        };
+        const poll = async () => {
+          try {
+            const rows = await base44.entities.VoiceSignal.filter({channel_id:roomId,target_id:user.id},'-created_date',200);
+            rows.reverse().forEach(receive);
+            for(const id of participantsRef.current) if(id !== user.id && user.id > id && !peersRef.current[id]) initiateCall(id);
+          } catch(error) { console.warn('[Voice] signaling retry',error); }
+          finally { if(isMounted) pollTimer=setTimeout(poll,3000); }
+        };
 
         const initWebRTC = async () => {
             try {
-                // Try to get microphone for voice — but do NOT block the data
-                // channel (movement sync) if the user denies mic access.
-                // The data channel is what carries real-time position updates;
-                // it must come up even with no mic permission.
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    if (!isMounted) {
-                        stream.getTracks().forEach(t => t.stop());
-                        return;
-                    }
-                    localStreamRef.current = stream;
-                    stream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-                } catch (micErr) {
-                    console.warn('[WebRTC] Mic unavailable — continuing with data-channel only', micErr);
-                    if (micErr.name === 'NotAllowedError' || micErr.name === 'PermissionDeniedError') {
-                        window.dispatchEvent(new CustomEvent('webrtcPermissionDenied'));
-                    }
-                    if (!isMounted) return;
-                }
-
                 unsubscribe = base44.entities.VoiceSignal.subscribe((event) => {
                     if (event.type === 'create' || event.type === 'update') {
                         const signal = event.data;
-                        if (signal.channel_id === roomId && signal.target_id === user.id) {
-                            // De-dupe — subscribe can replay the same record
-                            if (signal.id && processedSignals.current.has(signal.id)) return;
-                            if (signal.id) processedSignals.current.add(signal.id);
-                            handleSignal(signal);
-                        }
+                        receive(signal);
                     }
                 });
 
@@ -80,9 +77,13 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         };
 
         initWebRTC();
+        poll();
 
         return () => {
             isMounted = false;
+            clearTimeout(pollTimer);
+            initiateCallRef.current = null;
+            dataChannelsRef.current = {};
             if (unsubscribe) unsubscribe();
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach(t => t.stop());
@@ -160,21 +161,19 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             peersRef.current[peerId] = pc;
 
             // Create Data Channel for this peer
-            const dataChannel = pc.createDataChannel('gameData', {
+            const dataChannel = dataEnabled && pc.createDataChannel('gameData', {
                 ordered: false, // UDP-like, fast
                 maxRetransmits: 0
             });
-            setupDataChannel(dataChannel, peerId);
+            if (dataChannel) setupDataChannel(dataChannel, peerId);
 
             pc.ondatachannel = (event) => {
                 setupDataChannel(event.channel, peerId);
             };
 
-            if (localStreamRef.current) {
-                localStreamRef.current.getTracks().forEach(track => {
-                    pc.addTrack(track, localStreamRef.current);
-                });
-            }
+            const transceiver = pc.addTransceiver('audio', {direction:'sendrecv'});
+            const track = localStreamRef.current?.getAudioTracks()[0];
+            if (track) transceiver.sender.replaceTrack(track);
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
@@ -182,7 +181,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         channel_id: roomId,
                         sender_id: user.id,
                         target_id: peerId,
-                        type: 'ice-candidate',
+                        type: 'ice',
                         payload: event.candidate.toJSON()
                     }).catch(() => {});
                 }
@@ -196,14 +195,14 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     audioRefs.current[peerId] = audio;
                 }
                 audioRefs.current[peerId].srcObject = event.streams[0];
-                audioRefs.current[peerId].muted = isDeafened;
+                audioRefs.current[peerId].muted = deafenedRef.current;
                 
                 // Ensure play is called to bypass some browser autoplay policies
-                audioRefs.current[peerId].play().catch(e => console.log("Audio play blocked by browser policy:", e));
+                audioRefs.current[peerId].play().catch(() => window.dispatchEvent(new CustomEvent('voicePlaybackBlocked')));
             };
 
             pc.onconnectionstatechange = () => {
-                if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+                if (['failed', 'closed'].includes(pc.connectionState)) {
                     if (audioRefs.current[peerId]) {
                         audioRefs.current[peerId].pause();
                         audioRefs.current[peerId].srcObject = null;
@@ -213,6 +212,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         delete audioRefs.current[peerId];
                     }
                     delete peersRef.current[peerId];
+                    pc.close();
                 }
             };
 
@@ -298,7 +298,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     } else if (pc) {
                         console.warn('[WebRTC] Skipping answer — state:', pc.signalingState);
                     }
-                } else if (signal.type === 'ice-candidate') {
+                } else if ((signal.type === 'ice' || signal.type === 'ice-candidate')) {
                     let pc = peersRef.current[peerId];
                     if (!pc) {
                         pc = createPeerConnection(peerId);
@@ -314,14 +314,34 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 console.error("Error handling signal", err);
             }
         }
-    }, [roomId, user?.id]);
+    }, [roomId, user?.id, dataEnabled]);
 
-    // Handle mute toggling without re-initializing WebRTC
+    // Acquire microphone only after the user enables it; data/presence never waits for permission.
     useEffect(() => {
-        if (localStreamRef.current) {
-            localStreamRef.current.getAudioTracks().forEach(t => t.enabled = !isMuted);
-        }
-    }, [isMuted]);
+        let cancelled = false;
+        const enable = async () => {
+          try {
+            if (!roomId || isMuted) {
+              localStreamRef.current?.getAudioTracks().forEach(t => {t.enabled=false;});
+              return;
+            }
+            if (!localStreamRef.current) {
+              const stream = await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+              if(cancelled){stream.getTracks().forEach(t=>t.stop());return;}
+              localStreamRef.current=stream;
+              await Promise.all(Object.values(peersRef.current).map(pc=>pc.getTransceivers().find(t=>t.receiver.track.kind==='audio')?.sender.replaceTrack(stream.getAudioTracks()[0])));
+            }
+            localStreamRef.current?.getAudioTracks().forEach(t=>{t.enabled=!mutedRef.current;});
+            window.dispatchEvent(new CustomEvent('dashboardVoiceReady',{detail:{roomId}}));
+          }catch(error){
+            if(!cancelled)window.dispatchEvent(new CustomEvent('webrtcPermissionDenied',{detail:{message:error.message}}));
+          }
+        };
+        enable();
+        const resume = () => Object.values(audioRefs.current).forEach(a=>a.play().catch(()=>{}));
+        window.addEventListener('pointerdown',resume);
+        return()=>{cancelled=true;window.removeEventListener('pointerdown',resume);};
+    }, [isMuted,roomId,user?.id]);
 
     // Handle deafen toggling
     useEffect(() => {
@@ -333,6 +353,9 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
     // Handle newly joined participants
     useEffect(() => {
         if (!roomId || !user) return;
+        Object.keys(peersRef.current).filter(id=>!participantIds.includes(id)).forEach(id=>{
+          const pc=peersRef.current[id]; delete peersRef.current[id]; pc.close();
+        });
         participantIds.forEach(pid => {
             if (pid !== user.id && !peersRef.current[pid]) {
                 // To avoid race conditions, only one side initiates the call.
