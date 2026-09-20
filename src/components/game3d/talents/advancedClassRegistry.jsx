@@ -456,5 +456,5 @@ export const resolveAdvancedWeaponType = (masteryWeaponId) => {
   if (id.includes('bow') || id.includes('range') || id.includes('arrow') || id.includes('crossbow')) return WEAPON_TYPES.RANGED;
   if (id.includes('shield') || id.includes('guardian') || id.includes('dual') || id.includes('defense')) return WEAPON_TYPES.GUARDIAN;
   if (id.includes('sword') || id.includes('blade') || id.includes('saber') || id.includes('katana')) return WEAPON_TYPES.SWORD;
-  return WEAPON_TYPES.SWORD; // fallback
+  return null; // unsupported weapon families must never inherit the wrong class tree
 };
