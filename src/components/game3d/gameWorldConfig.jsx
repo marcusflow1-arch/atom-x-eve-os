@@ -46,14 +46,25 @@ export const PLAYER_ATTACK_COOLDOWN = 0.6;
 export const PLAYER_INVUL_AFTER_HIT = 0.5;
 
 export const ENEMY_TIERS = [
-  { name: 'normal',   weight: 0.70, xp: 1, level: 1, scale: 1.0,  tintMix: 0.55 },
-  { name: 'elite',    weight: 0.22, xp: 3, level: 2, scale: 1.15, tintMix: 0.70 },
-  { name: 'champion', weight: 0.08, xp: 5, level: 4, scale: 1.30, tintMix: 0.85 },
+  { name: 'normal',    weight: 0.70, xp: 1,   level: 1,  scale: 1.00, tintMix: 0.55 },
+  { name: 'champion',  weight: 0.20, xp: 3,   level: 3,  scale: 1.12, tintMix: 0.68 },
+  { name: 'elite',     weight: 0.10, xp: 5,   level: 5,  scale: 1.22, tintMix: 0.82 },
+  { name: 'miniBoss',  weight: 0.00, xp: 12,  level: 8,  scale: 1.55, tintMix: 0.90 },
+  { name: 'caveBoss',  weight: 0.00, xp: 30,  level: 12, scale: 1.90, tintMix: 0.95 },
+  { name: 'gateBoss',  weight: 0.00, xp: 50,  level: 18, scale: 2.25, tintMix: 1.00 },
+  { name: 'worldBoss', weight: 0.00, xp: 150, level: 25, scale: 3.00, tintMix: 1.00 },
 ];
+
+export const getEnemyTierByName = (name) =>
+  ENEMY_TIERS.find((tier) => tier.name === name) || ENEMY_TIERS[0];
 
 export const pickTier = (roll = Math.random()) => {
   let acc = 0;
-  for (const t of ENEMY_TIERS) { acc += t.weight; if (roll < acc) return t; }
+  for (const t of ENEMY_TIERS) {
+    if (t.weight <= 0) continue;
+    acc += t.weight;
+    if (roll < acc) return t;
+  }
   return ENEMY_TIERS[0];
 };
 
