@@ -74,8 +74,10 @@ export function getAXEDungeonState() {
     activeSession: state.activeSession
       ? {
           ...state.activeSession,
-          visitedRoomIds: [...state.activeSession.visitedRoomIds],
+              visitedRoomIds: [...state.activeSession.visitedRoomIds],
           clearedBossIds: [...state.activeSession.clearedBossIds],
+          spawnedEncounterRoomIds: [...(state.activeSession.spawnedEncounterRoomIds || [])],
+          clearedEncounterRoomIds: [...(state.activeSession.clearedEncounterRoomIds || [])],
           partyMemberIds: [...state.activeSession.partyMemberIds],
         }
       : null,
@@ -171,6 +173,8 @@ export function enterAXEDungeon(dungeonId, {
       checkpointRoomId: firstRoom?.checkpoint ? firstRoom.id : null,
       visitedRoomIds: firstRoom ? [firstRoom.id] : [],
       clearedBossIds: [],
+      spawnedEncounterRoomIds: [],
+      clearedEncounterRoomIds: [],
       failed: false,
     },
   };
@@ -378,5 +382,109 @@ export function exitAXEDungeon({ failed = false } = {}) {
     }));
   }
 
+  return { ok: true };
+}
+
+
+export function markAXEDungeonRoomEncounterStarted(roomId) {
+  const session = state.activeSession;
+  if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
+  const room = getAXEDungeonRoom(session.dungeonId, roomId);
+  if (!room) return { ok: false, reason: 'ROOM_MISSING' };
+
+  state = {
+    ...state,
+    activeSession: {
+      ...session,
+      phase: room.type === 'boss' ? 'boss_locked' : 'encounter',
+      spawnedEncounterRoomIds: [
+        ...new Set([...(session.spawnedEncounterRoomIds || []), roomId]),
+      ],
+    },
+  };
+  emit();
+  return { ok: true };
+}
+
+export function completeAXEDungeonRoomEncounter(roomId) {
+  const session = state.activeSession;
+  if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
+  const room = getAXEDungeonRoom(session.dungeonId, roomId);
+  if (!room) return { ok: false, reason: 'ROOM_MISSING' };
+
+  state = {
+    ...state,
+    activeSession: {
+      ...session,
+      phase: room.type === 'boss' ? session.phase : 'exploring',
+      clearedEncounterRoomIds: [
+        ...new Set([...(session.clearedEncounterRoomIds || []), roomId]),
+      ],
+    },
+  };
+  emit();
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('axeDungeonEncounterCleared', {
+      detail: {
+        dungeonId: session.dungeonId,
+        roomId,
+        sessionId: session.sessionId,
+      },
+    }));
+  }
+  return { ok: true };
+}
+
+export function isAXEDungeonRoomEncounterCleared(roomId) {
+  const session = state.activeSession;
+  if (!session) return false;
+  const room = getAXEDungeonRoom(session.dungeonId, roomId);
+  if (!room) return false;
+  if (!room.encounter) return true;
+  return (session.clearedEncounterRoomIds || []).includes(roomId);
+}
+
+export function canLeaveCurrentAXEDungeonRoom() {
+  const session = state.activeSession;
+  if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
+  const room = getAXEDungeonRoom(session.dungeonId, session.currentRoomId);
+  if (!room) return { ok: false, reason: 'ROOM_MISSING' };
+
+  if (room.encounter && !(session.clearedEncounterRoomIds || []).includes(room.id)) {
+    return { ok: false, reason: 'ENCOUNTER_ACTIVE', roomId: room.id };
+  }
+
+  if (room.bossId && !(session.clearedBossIds || []).includes(room.bossId)) {
+    return { ok: false, reason: 'BOSS_ALIVE', bossId: room.bossId };
+  }
+
+  return { ok: true, room };
+}
+
+export function getAXEDungeonCheckpointPosition() {
+  const session = state.activeSession;
+  if (!session) return null;
+  const room = getAXEDungeonRoom(
+    session.dungeonId,
+    session.checkpointRoomId || session.currentRoomId,
+  );
+  return room?.runtimePosition ? { ...room.runtimePosition } : null;
+}
+
+export function failAXEDungeonSession(reason = 'FAILED') {
+  const session = state.activeSession;
+  if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
+  state = {
+    ...state,
+    activeSession: {
+      ...session,
+      phase: 'failed',
+      failed: true,
+      failureReason: reason,
+      failedAt: Date.now(),
+    },
+  };
+  emit();
   return { ok: true };
 }
