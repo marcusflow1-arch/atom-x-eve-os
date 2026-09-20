@@ -217,6 +217,9 @@ const SKILLS = [
   },
 ];
 
+// AXE Prompt 014 — extend the existing registry without replacing legacy skills.
+SKILLS.push(...AXE_CORE_SKILLS);
+
 // Validate at module load — duplicate ids would be a developer error.
 const _byId = new Map();
 for (const s of SKILLS) {
@@ -237,8 +240,7 @@ export function getSkillsForWeapon(weaponType) {
 
 // Linear scaling helper — interpolates a scaling stat by current level.
 export function scaleStat(skill, statKey, level) {
-  const range = skill?.scaling?.[statKey  ...AXE_CORE_SKILLS,
-];
+  const range = skill?.scaling?.[statKey];
   if (!range) return 0;
   const lvl = Math.max(1, Math.min(skill.max_level, level || 1));
   const t = (lvl - 1) / Math.max(1, skill.max_level - 1);
