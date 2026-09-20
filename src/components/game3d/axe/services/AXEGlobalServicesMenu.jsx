@@ -1,4 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Backpack,
+  Check,
+  ChevronRight,
+  Gem,
+  Lock,
+  Shield,
+  Sparkles,
+  Swords,
+} from 'lucide-react';
+
 import HaloSubTab from '../../progression/hub/HaloSubTab';
 import TitleSubTab from '../../progression/hub/TitleSubTab';
 import WingsSubTab from '../../progression/hub/WingsSubTab';
@@ -9,17 +20,37 @@ import PetSubTab from '../../progression/hub/PetSubTab';
 import MountSubTab from '../../progression/hub/MountSubTab';
 import VanitySubTab from '../../progression/hub/VanitySubTab';
 import CostumeSubTab from '../../progression/hub/CostumeSubTab';
-import { INVENTORY } from '../../equipment/inventoryData';
+
 import {
   getItemEnchantments,
   getItemOverEnchant,
   getItemReinforcement,
   getMaterials,
+  getCostForNextLevel,
+  subscribeEnchantments,
 } from '../../equipment/enchantmentStore';
-import { getAXEAdvancementState } from '../equipment/AXEItemAdvancementStore';
-import { getAXESocketState } from '../equipment/AXESocketGemStore';
+import {
+  getAXEAdvancementState,
+  subscribeAXEItemAdvancement,
+} from '../equipment/AXEItemAdvancementStore';
+import {
+  getAXESocketState,
+  subscribeAXESockets,
+} from '../equipment/AXESocketGemStore';
 import { AXE_GEM_DEFINITIONS } from '../equipment/AXESocketGemSystem';
-import { getAXEItemAura } from '../equipment/AXEEquipmentAuraStore';
+import {
+  getAXEItemAura,
+  subscribeAXEAura,
+} from '../equipment/AXEEquipmentAuraStore';
+import {
+  getAllAXEEquipmentItems,
+  subscribeAXEEquipmentInventory,
+} from '../equipment/AXEEquipmentInventoryStore';
+import {
+  getLootInventory,
+  getLootItemCount,
+  subscribeLootInventory,
+} from '../../lootStore';
 import {
   AXE_SERVICE_CATEGORIES,
   AXE_SERVICE_REGISTRY,
@@ -27,6 +58,7 @@ import {
   normalizeAXEServiceRequest,
 } from './AXEServiceRegistry';
 import { executeAXEServiceTransaction } from './AXEServiceTransactionGateway';
+import { getAXEServiceInventoryCost } from './AXEServiceEconomy';
 
 const PROGRESSION_PANELS = {
   halo: HaloSubTab,
@@ -42,41 +74,174 @@ const PROGRESSION_PANELS = {
 };
 
 const CATEGORY_LABELS = {
-  [AXE_SERVICE_CATEGORIES.EQUIPMENT]: 'Equipment Services',
-  [AXE_SERVICE_CATEGORIES.PROGRESSION]: 'Progression Services',
-  [AXE_SERVICE_CATEGORIES.APPEARANCE]: 'Appearance Services',
+  [AXE_SERVICE_CATEGORIES.EQUIPMENT]: 'Equipment',
+  [AXE_SERVICE_CATEGORIES.PROGRESSION]: 'Progression',
+  [AXE_SERVICE_CATEGORIES.APPEARANCE]: 'Appearance',
 };
 
-const allItems = () =>
-  Object.entries(INVENTORY)
-    .flatMap(([category, items]) => (items || []).map((item) => ({
-      ...item,
-      category,
-      instanceId: item.instanceId || item.id,
-    })))
-    .filter((item) => item.instanceId);
+const INVENTORY_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'weapon', label: 'Weapons' },
+  { id: 'armor', label: 'Armor' },
+  { id: 'accessory', label: 'Accessories' },
+  { id: 'prestige', label: 'Prestige' },
+  { id: 'auxiliary', label: 'Auxiliary' },
+];
+
+const ARMOR_SLOTS = new Set(['helm', 'chest', 'gloves', 'legs', 'boots']);
+const ACCESSORY_SLOTS = new Set(['ring', 'necklace', 'accessory', 'trinket']);
+const PRESTIGE_SLOTS = new Set(['cape', 'wings', 'costume']);
+
+function matchesInventoryFilter(item, filterId) {
+  if (filterId === 'all') return true;
+  if (filterId === 'weapon') return item.slot === 'weapon' || item.category === 'weapon';
+  if (filterId === 'armor') return ARMOR_SLOTS.has(item.slot || item.category);
+  if (filterId === 'accessory') return ACCESSORY_SLOTS.has(item.slot || item.category);
+  if (filterId === 'prestige') return PRESTIGE_SLOTS.has(item.slot || item.category);
+  if (filterId === 'auxiliary') return item.slot === 'auxiliary' || item.category === 'auxiliary';
+  return true;
+}
 
 function describeResult(result) {
   if (!result) return '';
-  if (result.ok) return result.outcome ? `Success — ${result.outcome}` : 'Transaction completed.';
-  return `Not completed — ${result.reason || result.outcome || 'unknown result'}`;
+  if (result.ok) {
+    if (result.outcome) return `Success — ${String(result.outcome).replaceAll('_', ' ')}`;
+    return 'Transaction completed.';
+  }
+  return `Not completed — ${String(result.reason || result.outcome || 'unknown result').replaceAll('_', ' ')}`;
+}
+
+function rarityClass(rarity) {
+  switch (String(rarity || '').toLowerCase()) {
+    case 'heroic': return 'text-rose-200';
+    case 'legendary': return 'text-amber-200';
+    case 'elite':
+    case 'epic': return 'text-violet-200';
+    case 'rare': return 'text-sky-200';
+    case 'uncommon': return 'text-emerald-200';
+    default: return 'text-white/60';
+  }
+}
+
+function InventoryItemCard({ item, selected, onClick }) {
+  const reinforcement = getItemReinforcement(item.instanceId);
+  const enchantments = getItemEnchantments(item.instanceId);
+  const totalEnchant = enchantments.reduce((sum, value) => sum + Number(value || 0), 0);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full rounded-xl border p-3 text-left transition ${
+        selected
+          ? 'border-white/30 bg-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]'
+          : 'border-white/8 bg-black/[0.10] hover:border-white/18 hover:bg-white/[0.06]'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
+          {item.slot === 'weapon' ? (
+            <Swords className="h-4 w-4 text-white/55" />
+          ) : item.slot === 'ring' || item.slot === 'necklace' ? (
+            <Gem className="h-4 w-4 text-white/55" />
+          ) : (
+            <Shield className="h-4 w-4 text-white/55" />
+          )}
+          {item.equipped && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-emerald-200/30 bg-emerald-300/15">
+              <Check className="h-2.5 w-2.5 text-emerald-100" />
+            </span>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-xs font-semibold text-white/85">{item.name}</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[9px] uppercase tracking-wider">
+            <span className={rarityClass(item.rarity)}>{item.rarity || 'common'}</span>
+            <span className="text-white/25">·</span>
+            <span className="text-white/35">{item.slot || item.category}</span>
+            {item.locked && <Lock className="h-2.5 w-2.5 text-amber-200/70" />}
+          </div>
+          <div className="mt-1 text-[9px] text-white/35">
+            Reinforce {reinforcement.percent || 0}% · Enchant +{totalEnchant}
+          </div>
+        </div>
+
+        <ChevronRight className="mt-2 h-3.5 w-3.5 text-white/20" />
+      </div>
+    </button>
+  );
+}
+
+function MaterialPill({ id, need = null }) {
+  const have = getLootItemCount(id);
+  const ok = need == null || have >= need;
+  return (
+    <span className={`rounded-md border px-2 py-1 text-[9px] ${
+      ok
+        ? 'border-white/10 bg-white/[0.04] text-white/55'
+        : 'border-rose-300/20 bg-rose-300/[0.04] text-rose-200/75'
+    }`}>
+      {id.replaceAll('_', ' ')}: <b>{have}{need != null ? `/${need}` : ''}</b>
+    </span>
+  );
 }
 
 function EquipmentServicePanel({ serviceId }) {
-  const items = useMemo(() => allItems(), []);
-  const [selectedId, setSelectedId] = useState(items[0]?.instanceId || '');
+  const [inventoryState, setInventoryState] = useState(() => ({
+    items: getAllAXEEquipmentItems(),
+  }));
+  const [lootState, setLootState] = useState(() => getLootInventory());
+  const [selectedId, setSelectedId] = useState(() => getAllAXEEquipmentItems()[0]?.instanceId || '');
+  const [filter, setFilter] = useState('all');
+  const [donorId, setDonorId] = useState('');
+  const [selectedGemId, setSelectedGemId] = useState('');
   const [lastResult, setLastResult] = useState(null);
-  const [version, setVersion] = useState(0);
-  const item = items.find((entry) => entry.instanceId === selectedId) || items[0] || null;
+  const [, setBackendVersion] = useState(0);
 
-  const refresh = () => setVersion((v) => v + 1);
+  useEffect(() => subscribeAXEEquipmentInventory((snapshot) => {
+    setInventoryState(snapshot);
+    setBackendVersion((v) => v + 1);
+  }), []);
+  useEffect(() => subscribeLootInventory((snapshot) => {
+    setLootState(snapshot);
+    setBackendVersion((v) => v + 1);
+  }), []);
+  useEffect(() => subscribeEnchantments(() => setBackendVersion((v) => v + 1)), []);
+  useEffect(() => subscribeAXEItemAdvancement(() => setBackendVersion((v) => v + 1)), []);
+  useEffect(() => subscribeAXESockets(() => setBackendVersion((v) => v + 1)), []);
+  useEffect(() => subscribeAXEAura(() => setBackendVersion((v) => v + 1)), []);
+
+  const items = inventoryState.items || [];
+
+  useEffect(() => {
+    if (!items.length) {
+      setSelectedId('');
+      return;
+    }
+    if (!items.some((item) => item.instanceId === selectedId)) {
+      setSelectedId(items[0].instanceId);
+    }
+  }, [items, selectedId]);
 
   useEffect(() => {
     setLastResult(null);
+    setDonorId('');
   }, [serviceId, selectedId]);
 
+  const filteredItems = useMemo(
+    () => items.filter((item) => matchesInventoryFilter(item, filter)),
+    [items, filter],
+  );
+
+  const item = items.find((entry) => entry.instanceId === selectedId) || items[0] || null;
+  const service = getAXEService(serviceId);
+
   if (!item) {
-    return <div className="p-8 text-sm text-white/50">No eligible equipment is available.</div>;
+    return (
+      <div className="flex h-full items-center justify-center p-8 text-sm text-white/45">
+        No owned equipment exists yet.
+      </div>
+    );
   }
 
   const reinforcement = getItemReinforcement(item.instanceId);
@@ -85,172 +250,305 @@ function EquipmentServicePanel({ serviceId }) {
   const advancement = getAXEAdvancementState(item.instanceId);
   const sockets = getAXESocketState(item.instanceId);
   const aura = getAXEItemAura(item.instanceId);
-  const materials = getMaterials();
 
-  const transact = async (transactionServiceId, payload) => {
-    const result = await executeAXEServiceTransaction(transactionServiceId, payload);
+  const compatibleDonors = items.filter((candidate) =>
+    candidate.instanceId !== item.instanceId &&
+    !candidate.equipped &&
+    !candidate.locked &&
+    (candidate.templateId || candidate.id) === (item.templateId || item.id) &&
+    String(candidate.rarity || '').toLowerCase() === String(item.rarity || '').toLowerCase()
+  );
+  const donor = compatibleDonors.find((candidate) => candidate.instanceId === donorId) || null;
+
+  const ownedGems = (lootState.gem || [])
+    .map((lootItem) => AXE_GEM_DEFINITIONS[lootItem.id])
+    .filter(Boolean);
+  const uniqueOwnedGems = [...new Map(ownedGems.map((gem) => [gem.id, gem])).values()];
+  const selectedGem = AXE_GEM_DEFINITIONS[selectedGemId] || uniqueOwnedGems[0] || null;
+
+  const openSocketIndexes = (sockets.sockets || [])
+    .map((socket, index) => ({ socket, index }))
+    .filter(({ socket }) => socket?.open && !socket?.gemId);
+
+  const execute = async (transactionServiceId, payload = {}) => {
+    const result = await executeAXEServiceTransaction(transactionServiceId, {
+      itemId: item.instanceId,
+      item,
+      ...payload,
+    });
     setLastResult(result);
-    refresh();
     return result;
   };
 
-  const donor = items.find((candidate) =>
-    candidate.instanceId !== item.instanceId &&
-    (candidate.slot || candidate.category) === (item.slot || item.category)
-  );
+  const serviceCost = getAXEServiceInventoryCost(serviceId, {
+    advancement,
+    sockets,
+  });
 
-  const firstOpenSocket = sockets.sockets?.findIndex((socket) => socket?.open && !socket?.gemId) ?? -1;
-  const firstAllowedGem = Object.values(AXE_GEM_DEFINITIONS).find((gem) =>
-    !gem.allowedSlots?.length || gem.allowedSlots.includes(item.slot || item.category)
-  );
-
-  const service = getAXEService(serviceId);
+  const showInventory = service?.kind === 'equipment_action';
 
   return (
-    <div className="h-full overflow-y-auto px-6 py-5 text-white">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-end md:justify-between">
+    <div className="grid h-full min-h-0 grid-cols-[minmax(250px,31%)_1fr] overflow-hidden text-white">
+      {/* Real inventory browser */}
+      <aside className="min-h-0 overflow-y-auto border-r border-white/10 bg-black/[0.10] p-4">
+        <div className="flex items-center gap-2">
+          <Backpack className="h-4 w-4 text-white/55" />
           <div>
-            <div className="text-[10px] uppercase tracking-[0.3em] text-white/45">Remote Blacksmith Access</div>
-            <h2 className="mt-1 text-2xl font-semibold">{service?.label || serviceId}</h2>
-            <p className="mt-1 text-xs text-white/40">
-              This global view calls the existing upgrade rules. A mounted authoritative service bridge takes precedence over browser fallback transactions.
-            </p>
-          </div>
-          <select
-            value={item.instanceId}
-            onChange={(event) => setSelectedId(event.target.value)}
-            className="rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none"
-          >
-            {items.map((entry) => (
-              <option key={entry.instanceId} value={entry.instanceId}>
-                {entry.name} · {entry.slot || entry.category}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat label="Reinforcement" value={`${reinforcement.percent || 0}%`} />
-          <Stat label="Enchant" value={enchantments.reduce((sum, v) => sum + Number(v || 0), 0)} />
-          <Stat label="Over-Enchant" value={`+${overEnchant.level || 0}`} />
-          <Stat label="Stage" value={advancement.stage?.label || 'Base'} />
-          <Stat label="Refine" value={`+${advancement.refine?.level || 0}`} />
-          <Stat label="Ultimate" value={`+${advancement.ultimate?.level || 0}`} />
-          <Stat label="Sockets" value={`${sockets.sockets?.length || 0}/${sockets.maxSockets || 0}`} />
-          <Stat label="Aura" value={aura ? `Tier ${aura.tierRank || 1}` : 'None'} />
-        </div>
-
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.025] p-4">
-          <div className="text-[9px] uppercase tracking-[0.25em] text-white/35">Upgrade Materials</div>
-          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-white/55">
-            {Object.entries(materials).map(([id, value]) => (
-              <span key={id} className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1">
-                {id.replace('mat_', '').replaceAll('_', ' ')}: <b className="text-white/80">{value}</b>
-              </span>
-            ))}
+            <div className="text-[9px] uppercase tracking-[0.30em] text-white/35">Owned Equipment</div>
+            <div className="text-sm font-semibold text-white/80">{items.length} Items</div>
           </div>
         </div>
 
-        {lastResult && (
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/70">
-            {describeResult(lastResult)}
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {INVENTORY_FILTERS.map((entry) => (
+            <button
+              key={entry.id}
+              onClick={() => setFilter(entry.id)}
+              className={`rounded-md border px-2 py-1 text-[9px] uppercase tracking-wider ${
+                filter === entry.id
+                  ? 'border-white/25 bg-white/[0.10] text-white'
+                  : 'border-white/8 bg-white/[0.025] text-white/35 hover:text-white/60'
+              }`}
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {filteredItems.map((entry) => (
+            <InventoryItemCard
+              key={entry.instanceId}
+              item={entry}
+              selected={entry.instanceId === item.instanceId}
+              onClick={() => setSelectedId(entry.instanceId)}
+            />
+          ))}
+        </div>
+      </aside>
+
+      {/* Service action workspace */}
+      <section className="min-h-0 overflow-y-auto p-5">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex flex-col gap-3 border-b border-white/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-[9px] uppercase tracking-[0.34em] text-white/35">
+                Services · {service?.label || serviceId}
+              </div>
+              <h2 className="mt-1 text-2xl font-semibold text-white/90">{item.name}</h2>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-white/40">
+                <span>{item.slot || item.category}</span>
+                <span>·</span>
+                <span className={rarityClass(item.rarity)}>{item.rarity}</span>
+                {item.equipped && <span className="text-emerald-200/70">Equipped</span>}
+                {item.locked && <span className="text-amber-200/70">Locked</span>}
+              </div>
+            </div>
+            <div className="text-right text-[10px] text-white/35">
+              Instance<br/>
+              <span className="font-mono text-white/55">{item.instanceId}</span>
+            </div>
           </div>
-        )}
 
-        <div className="mt-5">
-          {serviceId === 'reinforcement' && (
-            <ActionGrid>
-              <Action label="Reinforce" onClick={() => transact('reinforcement', { itemId: item.instanceId })} />
-              <Action label="Protected Reinforce" onClick={() => transact('reinforcement', { itemId: item.instanceId, options: { protectedAttempt: true } })} />
-            </ActionGrid>
-          )}
+          <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+            <Stat label="Reinforcement" value={`${reinforcement.percent || 0}%`} />
+            <Stat label="Enchant" value={`+${enchantments.reduce((s, v) => s + Number(v || 0), 0)}`} />
+            <Stat label="Over-Enchant" value={`+${overEnchant.level || 0}`} />
+            <Stat label="Stage" value={advancement.stage?.label || 'Base'} />
+            <Stat label="Refine" value={`+${advancement.refine?.level || 0}`} />
+            <Stat label="Ultimate" value={`+${advancement.ultimate?.level || 0}`} />
+            <Stat label="Sockets" value={`${sockets.sockets?.length || 0}/${sockets.maxSockets || 0}`} />
+            <Stat label="Aura" value={aura ? `Tier ${aura.tierRank || 1}` : 'None'} />
+          </div>
 
-          {serviceId === 'enchant' && (
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-              {enchantments.map((level, index) => (
-                <Action
-                  key={index}
-                  label={`Enchant Slot ${index + 1} · +${level}`}
-                  onClick={() => transact('enchant', { itemId: item.instanceId, slotIndex: index })}
-                />
+          {/* Real resource inventory */}
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-[9px] uppercase tracking-[0.25em] text-white/35">Inventory Resources</div>
+              <div className="text-[9px] text-white/25">Consumed directly from Materials / Gems inventory</div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {Object.entries(getMaterials()).map(([id, value]) => (
+                <span key={id} className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[9px] text-white/55">
+                  {id.replaceAll('_', ' ')}: <b className="text-white/80">{value}</b>
+                </span>
               ))}
+              {Object.keys(serviceCost).map((id) => (
+                <MaterialPill key={`cost-${id}`} id={id} need={serviceCost[id]} />
+              ))}
+            </div>
+          </div>
+
+          {lastResult && (
+            <div className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+              lastResult.ok
+                ? 'border-emerald-300/15 bg-emerald-300/[0.04] text-emerald-100/80'
+                : 'border-rose-300/15 bg-rose-300/[0.04] text-rose-100/80'
+            }`}>
+              {describeResult(lastResult)}
             </div>
           )}
 
-          {serviceId === 'over_enchant' && (
-            <ActionGrid>
-              <Action label="Over-Enchant" onClick={() => transact('over_enchant', { itemId: item.instanceId })} />
-              <Action label="Protected Over-Enchant" onClick={() => transact('over_enchant', { itemId: item.instanceId, options: { protectedAttempt: true } })} />
-            </ActionGrid>
-          )}
-
-          {serviceId === 'combine' && (
-            <ActionGrid>
-              <Action
-                label={donor ? `Combine with ${donor.name}` : 'No Matching Donor'}
-                disabled={!donor}
-                onClick={() => transact('combine', { item, donor })}
-              />
-            </ActionGrid>
-          )}
-
-          {serviceId === 'stage' && (
-            <ActionGrid>
-              <Action label="Advance Stage" onClick={() => transact('stage', { itemId: item.instanceId })} />
-            </ActionGrid>
-          )}
-
-          {serviceId === 'refine' && (
-            <ActionGrid>
-              <Action label="Refine" onClick={() => transact('refine', { itemId: item.instanceId })} />
-              <Action label="Protected Refine" onClick={() => transact('refine', { itemId: item.instanceId, options: { protectedAttempt: true } })} />
-            </ActionGrid>
-          )}
-
-          {serviceId === 'ultimate' && (
-            <ActionGrid>
-              <Action label="Ultimate Reinforcement" onClick={() => transact('ultimate', { item })} />
-              <Action label="Protected Ultimate" onClick={() => transact('ultimate', { item, options: { protectedAttempt: true } })} />
-            </ActionGrid>
-          )}
-
-          {serviceId === 'sockets' && (
-            <>
+          <div className="mt-5">
+            {serviceId === 'reinforcement' && (
               <ActionGrid>
-                <Action label="Drill Socket" onClick={() => transact('sockets', { itemId: item.instanceId, item })} />
-                <Action
-                  label={firstOpenSocket >= 0 && firstAllowedGem ? `Insert ${firstAllowedGem.name}` : 'Open Socket Needed'}
-                  disabled={firstOpenSocket < 0 || !firstAllowedGem}
-                  onClick={() => transact('insert_gem', {
-                    itemId: item.instanceId,
-                    item: { ...item, ...sockets },
-                    socketIndex: firstOpenSocket,
-                    gemId: firstAllowedGem.id,
-                  })}
-                />
+                <Action label="Reinforce Item" onClick={() => execute('reinforcement')} />
+                <Action label="Protected Reinforcement" onClick={() => execute('reinforcement', { options: { protectedAttempt: true } })} />
               </ActionGrid>
-              <div className="mt-4 space-y-2 text-xs text-white/55">
-                {(sockets.sockets || []).map((socket, index) => (
-                  <div key={index} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                    Socket {index + 1}: {socket.gemId || 'Empty'}
-                  </div>
-                ))}
+            )}
+
+            {serviceId === 'enchant' && (
+              <div>
+                <div className="mb-3 text-[10px] uppercase tracking-[0.28em] text-white/35">
+                  Enchantment Slots
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {enchantments.map((level, index) => {
+                    const cost = getCostForNextLevel(level);
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => execute('enchant', { slotIndex: index })}
+                        className="rounded-xl border border-white/12 bg-white/[0.04] p-4 text-left transition hover:bg-white/[0.08]"
+                      >
+                        <div className="text-[9px] uppercase tracking-[0.25em] text-white/30">Slot {index + 1}</div>
+                        <div className="mt-1 text-xl font-semibold text-white/85">+{level}</div>
+                        <div className="mt-3 space-y-1 text-[9px] text-white/35">
+                          {Object.entries(cost).map(([id, need]) => (
+                            <div key={id} className="flex justify-between gap-2">
+                              <span>{id.replaceAll('_', ' ')}</span>
+                              <span className={getLootItemCount(id) >= need ? 'text-emerald-200/65' : 'text-rose-200/70'}>
+                                {getLootItemCount(id)}/{need}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </>
-          )}
+            )}
 
-          {serviceId === 'equipment_aura' && (
-            <ActionGrid>
-              <Action label={aura ? 'Reroll via Equipment Aura Menu' : 'Apply Equipment Aura'} onClick={() => transact('equipment_aura', { item })} />
-            </ActionGrid>
-          )}
-        </div>
+            {serviceId === 'over_enchant' && (
+              <ActionGrid>
+                <Action label="Over-Enchant Item" onClick={() => execute('over_enchant')} />
+                <Action label="Protected Over-Enchant" onClick={() => execute('over_enchant', { options: { protectedAttempt: true } })} />
+              </ActionGrid>
+            )}
 
-        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.025] p-4 text-xs text-white/45">
-          Remote access changes where the player opens the service, not its costs, success rates, protection rules, or failure consequences.
+            {serviceId === 'combine' && (
+              <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4">
+                <div className="text-[9px] uppercase tracking-[0.28em] text-white/35">Matching Donor Item</div>
+                {compatibleDonors.length ? (
+                  <>
+                    <select
+                      value={donorId}
+                      onChange={(event) => setDonorId(event.target.value)}
+                      className="mt-3 w-full rounded-lg border border-white/10 bg-neutral-900/90 px-3 py-2 text-sm text-white"
+                    >
+                      <option value="">Choose a donor from inventory</option>
+                      {compatibleDonors.map((candidate) => (
+                        <option key={candidate.instanceId} value={candidate.instanceId}>
+                          {candidate.name} · {candidate.rarity}
+                        </option>
+                      ))}
+                    </select>
+                    <Action
+                      className="mt-3"
+                      label={donor ? `Combine and consume ${donor.name}` : 'Select a donor first'}
+                      disabled={!donor}
+                      onClick={() => execute('combine', { donorId: donor.instanceId, donor })}
+                    />
+                  </>
+                ) : (
+                  <div className="mt-3 text-sm text-white/40">
+                    No unequipped, unlocked matching duplicate is owned. Combine requires a real matching donor item.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {serviceId === 'stage' && (
+              <ActionGrid>
+                <Action label="Advance Item Stage" onClick={() => execute('stage')} />
+              </ActionGrid>
+            )}
+
+            {serviceId === 'refine' && (
+              <ActionGrid>
+                <Action label="Refine Item" onClick={() => execute('refine')} />
+                <Action label="Protected Refine" onClick={() => execute('refine', { options: { protectedAttempt: true } })} />
+              </ActionGrid>
+            )}
+
+            {serviceId === 'ultimate' && (
+              <ActionGrid>
+                <Action label="Ultimate Reinforcement" onClick={() => execute('ultimate')} />
+                <Action label="Protected Ultimate" onClick={() => execute('ultimate', { options: { protectedAttempt: true } })} />
+              </ActionGrid>
+            )}
+
+            {serviceId === 'sockets' && (
+              <div className="space-y-4">
+                <ActionGrid>
+                  <Action label="Drill New Socket" onClick={() => execute('sockets')} />
+                  <Action label="Protected Drill" onClick={() => execute('sockets', { options: { protectedAttempt: true } })} />
+                </ActionGrid>
+
+                <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4">
+                  <div className="text-[9px] uppercase tracking-[0.28em] text-white/35">Insert Owned Gem</div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
+                    <select
+                      value={selectedGem?.id || ''}
+                      onChange={(event) => setSelectedGemId(event.target.value)}
+                      className="rounded-lg border border-white/10 bg-neutral-900/90 px-3 py-2 text-sm text-white"
+                    >
+                      {uniqueOwnedGems.length === 0 && <option value="">No owned gems</option>}
+                      {uniqueOwnedGems.map((gem) => (
+                        <option key={gem.id} value={gem.id}>
+                          {gem.name} · owned {getLootItemCount(gem.id, 'gem')}
+                        </option>
+                      ))}
+                    </select>
+                    <Action
+                      label={openSocketIndexes.length && selectedGem ? 'Insert Gem' : 'Need open socket + owned gem'}
+                      disabled={!openSocketIndexes.length || !selectedGem}
+                      onClick={() => execute('insert_gem', {
+                        socketIndex: openSocketIndexes[0]?.index,
+                        gemId: selectedGem?.id,
+                      })}
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+                    {Array.from({ length: sockets.maxSockets || 4 }).map((_, index) => {
+                      const socket = sockets.sockets?.[index];
+                      return (
+                        <div key={index} className="rounded-lg border border-white/10 bg-black/[0.10] px-3 py-2 text-xs">
+                          <div className="text-[9px] uppercase tracking-wider text-white/30">Socket {index + 1}</div>
+                          <div className="mt-1 text-white/65">
+                            {!socket ? 'Closed' : socket.gemId ? AXE_GEM_DEFINITIONS[socket.gemId]?.name || socket.gemId : 'Open'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {serviceId === 'equipment_aura' && (
+              <ActionGrid>
+                <Action label={aura ? 'Reroll Equipment Aura' : 'Apply Equipment Aura'} onClick={() => execute('equipment_aura')} />
+              </ActionGrid>
+            )}
+          </div>
+
+          <div className="mt-6 rounded-xl border border-white/8 bg-black/[0.10] p-4 text-xs leading-5 text-white/35">
+            This screen operates on the same owned item instances used by the Gear menu and live combat stats. Upgrades, donor consumption, sockets, materials and destruction are backend state changes—not display-only text.
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -268,12 +566,12 @@ function ActionGrid({ children }) {
   return <div className="grid grid-cols-1 gap-2 md:grid-cols-2">{children}</div>;
 }
 
-function Action({ label, onClick, disabled = false }) {
+function Action({ label, onClick, disabled = false, className = '' }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-left text-sm font-semibold text-white transition hover:bg-white/[0.10] disabled:opacity-30"
+      className={`${className} rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-left text-sm font-semibold text-white transition hover:bg-white/[0.10] disabled:cursor-not-allowed disabled:opacity-30`}
     >
       {label}
     </button>
@@ -300,9 +598,7 @@ export default function AXEGlobalServicesMenu({
   const ProgressionPanel = PROGRESSION_PANELS[active.id] || null;
 
   return (
-    <div
-      className={embedded ? 'h-full w-full' : 'fixed inset-0 z-[190] bg-black/75 p-4 backdrop-blur-md'}
-    >
+    <div className={embedded ? 'h-full w-full' : 'fixed inset-0 z-[190] bg-black/75 p-4 backdrop-blur-md'}>
       <div
         className={embedded
           ? 'relative flex h-full w-full overflow-hidden'
@@ -322,12 +618,13 @@ export default function AXEGlobalServicesMenu({
               'radial-gradient(circle at 13% 18%, rgba(255,255,255,0.16), transparent 16%), radial-gradient(circle at 70% 10%, rgba(255,255,255,0.10), transparent 13%), radial-gradient(circle at 88% 72%, rgba(255,255,255,0.07), transparent 18%)',
           }}
         />
-        <aside className="relative z-10 w-[270px] shrink-0 overflow-y-auto border-r border-white/10 bg-black/[0.10] p-4 backdrop-blur-xl">
+
+        <aside className="relative z-10 w-[230px] shrink-0 overflow-y-auto border-r border-white/10 bg-black/[0.10] p-4 backdrop-blur-xl">
           <div className="px-2 pb-4">
             <div className="text-[9px] uppercase tracking-[0.35em] text-white/45">Character Hub</div>
             <div className="mt-1 text-xl font-semibold text-white">Services</div>
             <div className="mt-1 text-xs leading-5 text-white/35">
-              Blacksmith and progression systems without unnecessary NPC travel.
+              Inventory-backed equipment and progression services.
             </div>
           </div>
 
@@ -372,7 +669,7 @@ export default function AXEGlobalServicesMenu({
               <EquipmentServicePanel serviceId={active.id} />
             )}
             {active.kind === 'progression_panel' && ProgressionPanel && (
-              <div className="h-full pt-10">
+              <div className="h-full pt-6">
                 <ProgressionPanel />
               </div>
             )}
