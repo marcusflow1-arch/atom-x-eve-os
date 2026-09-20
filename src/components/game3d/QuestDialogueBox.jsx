@@ -14,6 +14,7 @@ export default function QuestDialogueBox({
   quest,
   mode = 'offer',
   progress = 0,
+  objectiveProgress = {},
   onAccept,
   onDecline,
   onClose,
@@ -57,12 +58,35 @@ export default function QuestDialogueBox({
 
   const hasVoice = !!audioUrl || !!onPlayVoice;
 
-  const objectiveText = (() => {
-    const o = quest.objective;
-    if (o.type === 'kill') return `Defeat ${o.count} enemies`;
-    if (o.type === 'kill_tier') return `Defeat ${o.count} ${o.tier}${o.count > 1 ? 's' : ''}`;
+  const objectives = Array.isArray(quest.objectives) && quest.objectives.length
+    ? quest.objectives
+    : (quest.objective ? [quest.objective] : []);
+
+  const objectiveLabel = (o = {}) => {
+    if (o.type === 'kill') return `Defeat ${o.count || 1} enemies`;
+    if (o.type === 'kill_tier') return `Defeat ${o.count || 1} ${o.tier || 'target'}${Number(o.count || 1) > 1 ? 's' : ''}`;
+    if (o.type === 'defeat_boss') return 'Defeat the target boss';
+    if (o.type === 'discover_location') return 'Discover the marked location';
+    if (o.type === 'collect_item') return `Collect ${o.count || 1} required item${Number(o.count || 1) > 1 ? 's' : ''}`;
+    if (o.type === 'interact') return 'Interact with the marked object';
+    if (o.type === 'talk') return 'Speak with the marked character';
+    if (o.type === 'escort') return 'Complete the escort';
+    if (o.type === 'defend') return 'Complete the defense objective';
+    if (o.type === 'capture') return 'Capture the objective';
+    if (o.type === 'craft') return 'Craft the required item';
+    if (o.type === 'enter_cave') return 'Enter the marked cave';
+    if (o.type === 'faction_war') return 'Participate in the faction war';
+    if (o.type === 'explore') return 'Explore the marked area';
     return 'Complete the objective';
-  })();
+  };
+
+  const getObjectiveProgress = (objective, index) => {
+    const id = objective?.id || `objective_${index}`;
+    if (objectiveProgress && Number.isFinite(Number(objectiveProgress[id]))) {
+      return Number(objectiveProgress[id]);
+    }
+    return index === 0 ? Number(progress || 0) : 0;
+  };
 
   return (
     <div
@@ -112,27 +136,40 @@ export default function QuestDialogueBox({
         "{getQuestDialogue(quest.id, quest.description)}"
       </div>
 
-      {/* Objective + reward */}
-      <div className="flex items-center gap-3 mb-5">
+      {/* Objectives + reward */}
+      <div className="grid grid-cols-1 gap-3 mb-5 md:grid-cols-[1fr_auto]">
         <div
-          className="flex-1 px-3 py-2 rounded-lg"
+          className="px-3 py-2 rounded-lg"
           style={{
             background: 'rgba(255, 255, 255, 0.04)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
           }}
         >
-          <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/40 mb-0.5">Objective</div>
-          <div className="text-sm text-white/90 font-semibold">
-            {objectiveText}
-            {mode === 'in_progress' && (
-              <span className="ml-2 text-yellow-300 font-mono">
-                {progress} / {quest.objective.count}
-              </span>
-            )}
+          <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/40 mb-1.5">
+            {objectives.length > 1 ? 'Objectives' : 'Objective'}
+          </div>
+          <div className="space-y-1.5">
+            {objectives.map((objective, index) => {
+              const current = getObjectiveProgress(objective, index);
+              const required = Math.max(1, Number(objective.count) || 1);
+              const done = current >= required;
+              return (
+                <div key={objective.id || index} className="flex items-center justify-between gap-3 text-sm">
+                  <span className={done ? 'text-emerald-200' : 'text-white/90'}>
+                    {objective.optional ? 'Optional: ' : ''}{objectiveLabel(objective)}
+                  </span>
+                  {(mode === 'in_progress' || mode === 'turn_in') && (
+                    <span className={`font-mono text-xs ${done ? 'text-emerald-300' : 'text-yellow-300'}`}>
+                      {Math.min(current, required)} / {required}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div
-          className="px-3 py-2 rounded-lg"
+          className="px-3 py-2 rounded-lg min-w-[170px]"
           style={{
             background: 'rgba(250, 204, 21, 0.08)',
             border: '1px solid rgba(250, 204, 21, 0.25)',
@@ -140,9 +177,19 @@ export default function QuestDialogueBox({
         >
           <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-yellow-300/60 mb-0.5">Reward</div>
           <div className="text-sm text-yellow-200 font-semibold">
-            +{quest.reward.xp} XP · +{quest.reward.points} pt
+            +{Number(quest.reward?.xp || 0)} XP · +{Number(quest.reward?.points || 0)} pt
           </div>
-          {quest.reward.unlock && (
+          {Number(quest.reward?.contribution || 0) > 0 && (
+            <div className="text-xs text-cyan-200/80 mt-0.5">
+              +{quest.reward.contribution} Contribution
+            </div>
+          )}
+          {Number(quest.reward?.reputation || 0) > 0 && (
+            <div className="text-xs text-emerald-200/80 mt-0.5">
+              +{quest.reward.reputation} Faction Reputation
+            </div>
+          )}
+          {quest.reward?.unlock && (
             <div className="text-xs text-amber-300 font-semibold mt-0.5">
               {quest.reward.unlock.icon} {quest.reward.unlock.type === 'class' ? 'Class Change' : 'Ability'}: {quest.reward.unlock.name}
             </div>
