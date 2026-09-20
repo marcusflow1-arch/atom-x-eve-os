@@ -14,10 +14,10 @@ const QUEST_TIER_MAP = {
  * Creates a quest enemy spawner bound to the live scene + enemies array.
  *
  * @param {{ scene, enemies, loader, snapToGround, walkClipPromise, idleClipPromise, setEnemyCount }} ctx
- * @returns {Function} spawnQuestEnemies({ count, tierName, playerPos })
+ * @returns {Function} spawnQuestEnemies({ count, tierName, playerPos, metadata })
  */
 export function createQuestEnemySpawner({ scene, enemies, loader, snapToGround, walkClipPromise, idleClipPromise, setEnemyCount }) {
-  return function spawnQuestEnemies({ count, tierName, playerPos }) {
+  return function spawnQuestEnemies({ count, tierName, playerPos, metadata = null }) {
     const tierDef = QUEST_TIER_MAP[tierName] || QUEST_TIER_MAP.normal;
     const enemyStats = ENEMY_STAT_TEMPLATES[tierDef.name] || ENEMY_STAT_TEMPLATES['normal'];
     const derived = computeDerivedStats(enemyStats, []);
@@ -95,10 +95,16 @@ export function createQuestEnemySpawner({ scene, enemies, loader, snapToGround, 
           idleVariance: 0.7 + Math.random() * 0.8,
           walkVariance: 0.7 + Math.random() * 0.8,
           isQuestSpawn: true,
+          metadata: metadata ? { ...metadata } : null,
         };
 
         enemies.push(entry);
         setEnemyCount(enemies.filter((e) => e.alive && !e.dying).length);
+        if (typeof window !== 'undefined' && metadata) {
+          window.dispatchEvent(new CustomEvent('axeRuntimeEnemySpawned', {
+            detail: { enemyId: entry.id, metadata: entry.metadata },
+          }));
+        }
 
         Promise.all([walkClipPromise, idleClipPromise]).then(([wc, ic]) => {
           if (wc) { const wa = em.clipAction(wc); wa.setEffectiveTimeScale(0.55); entry.walkAction = wa; }
