@@ -32,6 +32,7 @@ import {
   getLootItemCount,
 } from '../../lootStore';
 import { getAXEServiceInventoryCost } from './AXEServiceEconomy';
+import { getAXEServiceEligibility } from './AXEServiceEligibility';
 
 const getOwned = (itemId) => getAXEEquipmentItem(itemId);
 
@@ -56,30 +57,36 @@ const consumeCost = (cost = {}) => {
   return { ok: true };
 };
 
-const withOwnedItem = (payload, fn) => {
+const withOwnedItem = (payload, fn, serviceId = null) => {
   const check = requireOwned(payload.itemId || payload.item?.instanceId || payload.item?.id);
   if (!check.ok) return check;
+  if (serviceId) {
+    const eligible = getAXEServiceEligibility(serviceId, check.item);
+    if (!eligible.eligible) return { ok: false, reason: eligible.reason };
+  }
   return fn(check.item);
 };
 
 const localHandlers = {
   reinforcement: (payload) => withOwnedItem(payload, (item) =>
     reinforceItem(item.instanceId, payload.options || {})
-  ),
+  , 'reinforcement'),
 
   enchant: (payload) => withOwnedItem(payload, (item) =>
     enchantSlot(item.instanceId, payload.slotIndex ?? 0)
-  ),
+  , 'enchant'),
 
   over_enchant: (payload) => withOwnedItem(payload, (item) =>
     overEnchantItem(item.instanceId, payload.options || {})
-  ),
+  , 'over_enchant'),
 
   combine: (payload) => {
     const targetId = payload.itemId || payload.item?.instanceId || payload.item?.id;
     const donorId = payload.donorId || payload.donor?.instanceId || payload.donor?.id;
     const targetCheck = requireOwned(targetId);
     if (!targetCheck.ok) return targetCheck;
+    const eligibility = getAXEServiceEligibility('combine', targetCheck.item);
+    if (!eligibility.eligible) return { ok: false, reason: eligibility.reason };
     const donorCheck = canConsumeAXEEquipmentItem(donorId);
     if (!donorCheck.ok) return donorCheck;
 
@@ -102,7 +109,7 @@ const localHandlers = {
     if (result.reason === 'MAX_STAGE') return { ...result, cost };
     const paid = consumeCost(cost);
     return paid.ok ? { ...result, cost } : paid;
-  }),
+  }, 'stage'),
 
   refine: (payload) => withOwnedItem(payload, (item) => {
     const advancement = getAXEAdvancementState(item.instanceId);
@@ -117,7 +124,7 @@ const localHandlers = {
     if (!paid.ok) return paid;
     if (result.destroyed) destroyAXEEquipmentItem(item.instanceId, 'refine_failure');
     return { ...result, cost };
-  }),
+  }, 'refine'),
 
   ultimate: (payload) => withOwnedItem(payload, (item) => {
     const advancement = getAXEAdvancementState(item.instanceId);
@@ -131,7 +138,7 @@ const localHandlers = {
     }
     const paid = consumeCost(cost);
     return paid.ok ? { ...result, cost } : paid;
-  }),
+  }, 'ultimate'),
 
   sockets: (payload) => withOwnedItem(payload, (item) => {
     const sockets = getAXESocketState(item.instanceId);
@@ -143,7 +150,7 @@ const localHandlers = {
     if (result.reason === 'MAX_SOCKETS') return { ...result, cost };
     const paid = consumeCost(cost);
     return paid.ok ? { ...result, cost } : paid;
-  }),
+  }, 'sockets'),
 
   insert_gem: (payload) => withOwnedItem(payload, (item) => {
     if (!payload.gemId) return { ok: false, reason: 'GEM_MISSING' };
@@ -162,7 +169,7 @@ const localHandlers = {
 
     const consumed = consumeLootItemById(payload.gemId, 1, 'gem');
     return consumed.ok ? result : consumed;
-  }),
+  }, 'insert_gem'),
 
   equipment_aura: (payload) => withOwnedItem(payload, (item) => {
     const cost = getAXEServiceInventoryCost('equipment_aura');
@@ -171,7 +178,7 @@ const localHandlers = {
     if (!result.ok) return result;
     const paid = consumeCost(cost);
     return paid.ok ? { ...result, cost } : paid;
-  }),
+  }, 'equipment_aura'),
 };
 
 export async function executeAXEServiceTransaction(serviceId, payload = {}) {
