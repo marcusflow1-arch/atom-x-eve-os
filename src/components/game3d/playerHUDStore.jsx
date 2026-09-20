@@ -22,6 +22,8 @@ import { getEquippedAXECapeBonuses, subscribeAXECapes } from './axe/progression/
 import { getAXEElixirAttributeBonuses, subscribeAXEElixirs } from './axe/progression/AXEElixirStore';
 import { getRegisteredAXEPetBonuses, subscribeAXEPets } from './axe/progression/AXEPetStore';
 import { getRegisteredAXEMountBonuses, subscribeAXEMounts } from './axe/progression/AXEMountStore';
+import { getEquippedAXEVanityActivationProfile, getEquippedAXEVanityBaseBonuses, subscribeAXEVanity } from './axe/progression/AXEVanityStore';
+import { applyAXEVanityActivationToDerived, getAXEVanitySpiritVirtualBonus } from './axe/progression/AXEVanitySystem';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -70,6 +72,8 @@ const getBonuses = () => {
   const pet = getRegisteredAXEPetBonuses();
   const mount = getRegisteredAXEMountBonuses();
   const costume = normalizeCostumeBonuses(getEquippedAXECostumeBonuses());
+  const vanity = getEquippedAXEVanityBaseBonuses();
+  const vanityActivation = getEquippedAXEVanityActivationProfile();
   const cape = getEquippedAXECapeBonuses();
   const capeFlat = {
     hp: cape.hp || cape.maxHP || 0,
@@ -86,14 +90,32 @@ const getBonuses = () => {
     attributionDefense: core.attributeDefense || core.attributionDefense || 0,
   };
   return {
-    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), getAXEElixirAttributeBonuses(), costume.attr),
-    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, capeFlat, pet, mount),
+    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), getAXEElixirAttributeBonuses(), costume.attr, vanity.attr),
+    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, vanity.flat, capeFlat, pet, mount),
+    vanityActivation,
   };
+};
+
+const computeDerivedWithVanity = (baseStats, bonuses) => {
+  const preliminary = computeDerivedStats(baseStats, [], bonuses.halo, bonuses.title);
+  const extraSpirit = getAXEVanitySpiritVirtualBonus(preliminary, bonuses.vanityActivation);
+  const withSpirit = extraSpirit > 0
+    ? computeDerivedStats(
+        baseStats,
+        [],
+        {
+          ...bonuses.halo,
+          spirit: Number(bonuses.halo?.spirit || 0) + extraSpirit,
+        },
+        bonuses.title,
+      )
+    : preliminary;
+  return applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
 };
 
 const buildDefault = () => {
   const b = getBonuses();
-  const derived = computeDerivedStats(DEFAULT_PLAYER_STATS, [], b.halo, b.title);
+  const derived = computeDerivedWithVanity(DEFAULT_PLAYER_STATS, b);
   return {
     level: 1,
     xp: 0,
@@ -115,7 +137,7 @@ const loadState = () => {
       // Migrate legacy stat keys (hp/spirit/elemental) → new NW keys.
       const base = migrateBaseStats(parsed.baseStats);
       const b = getBonuses();
-      const derived = computeDerivedStats(base, [], b.halo, b.title);
+      const derived = computeDerivedWithVanity(base, b);
       return {
         level: parsed.level || 1,
         xp: parsed.xp || 0,
@@ -218,7 +240,7 @@ export function allocateStat(statKey) {
   if (!(statKey in state.baseStats)) return false;
   const newBase = { ...state.baseStats, [statKey]: state.baseStats[statKey] + 1 };
   const b = getBonuses();
-  const newDerived = computeDerivedStats(newBase, [], b.halo, b.title);
+  const newDerived = computeDerivedWithVanity(newBase, b);
   // Heal by the maxHP increase (so investing in vitality feels rewarding)
   const hpGain = newDerived.maxHP - state.maxHP;
   state = {
@@ -239,7 +261,7 @@ export function allocateStat(statKey) {
 // Heals the player by any maxHP increase so leveling up Halo feels rewarding.
 function recomputeFromBonuses() {
   const b = getBonuses();
-  const newDerived = computeDerivedStats(state.baseStats, [], b.halo, b.title);
+  const newDerived = computeDerivedWithVanity(state.baseStats, b);
   const hpGain = newDerived.maxHP - state.maxHP;
   state = {
     ...state,
@@ -259,6 +281,7 @@ subscribeAXECapes(recomputeFromBonuses);
 subscribeAXEElixirs(recomputeFromBonuses);
 subscribeAXEPets(recomputeFromBonuses);
 subscribeAXEMounts(recomputeFromBonuses);
+subscribeAXEVanity(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
