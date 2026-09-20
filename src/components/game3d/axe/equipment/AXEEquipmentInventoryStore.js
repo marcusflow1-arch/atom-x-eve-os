@@ -14,6 +14,7 @@ import {
 } from './AXEEquipmentSystem';
 
 const storage = characterScopedStorage('axe_equipment_inventory_v2');
+const CURRENT_STARTER_CATALOG_VERSION = 1;
 
 function seedItems() {
   return Object.entries(INVENTORY).flatMap(([category, items]) =>
@@ -63,6 +64,7 @@ function buildDefault() {
   return {
     items,
     activeWeaponInstanceId: chooseActiveWeaponInstanceId(items),
+    starterCatalogVersion: CURRENT_STARTER_CATALOG_VERSION,
   };
 }
 
@@ -75,26 +77,32 @@ function load() {
       ? parsed.items.map((item) => normalizeItem(item, item.category)).filter((item) => item.instanceId)
       : [];
 
-    // Non-destructive schema/content migration: if a newly-added starter
-    // template is missing from an older save, add it without touching owned gear.
+    // Starter content is migrated ONCE per catalog version. Previously a consumed
+    // starter item was silently re-created on every reload, which made combine /
+    // destruction non-persistent. Existing starter instances still receive safe
+    // metadata updates, but missing/consumed instances stay missing after the
+    // catalog migration has been recorded.
     const byId = new Map(owned.map((item) => [item.instanceId, item]));
-    for (const starter of seedItems()) {
+    const starters = seedItems();
+    const shouldAddNewStarters =
+      Number(parsed.starterCatalogVersion || 0) < CURRENT_STARTER_CATALOG_VERSION;
+
+    for (const starter of starters) {
       const existing = byId.get(starter.instanceId);
       if (!existing) {
-        byId.set(starter.instanceId, starter);
-      } else {
-        // Pull forward non-destructive template metadata added by newer builds
-        // (weapon identity, display/type metadata, etc.) without overwriting
-        // player-owned progression/equip/lock/stat state.
-        byId.set(starter.instanceId, {
-          ...starter,
-          ...existing,
-          masteryWeaponId: existing.masteryWeaponId || starter.masteryWeaponId || null,
-          axeWeaponRole: existing.axeWeaponRole || starter.axeWeaponRole || null,
-          templateId: existing.templateId || starter.templateId,
-        });
+        if (shouldAddNewStarters) byId.set(starter.instanceId, starter);
+        continue;
       }
+
+      byId.set(starter.instanceId, {
+        ...starter,
+        ...existing,
+        masteryWeaponId: existing.masteryWeaponId || starter.masteryWeaponId || null,
+        axeWeaponRole: existing.axeWeaponRole || starter.axeWeaponRole || null,
+        templateId: existing.templateId || starter.templateId,
+      });
     }
+
     const items = [...byId.values()];
     return {
       items,
@@ -102,6 +110,7 @@ function load() {
         items,
         parsed.activeWeaponInstanceId || null,
       ),
+      starterCatalogVersion: CURRENT_STARTER_CATALOG_VERSION,
     };
   } catch {
     return buildDefault();
@@ -120,6 +129,7 @@ function snapshot() {
       sockets: Array.isArray(item.sockets) ? item.sockets.map((s) => ({ ...s })) : [],
     })),
     activeWeaponInstanceId: state.activeWeaponInstanceId || null,
+    starterCatalogVersion: Number(state.starterCatalogVersion || CURRENT_STARTER_CATALOG_VERSION),
   };
 }
 
