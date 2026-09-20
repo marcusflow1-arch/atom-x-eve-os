@@ -23,6 +23,7 @@
 //   vfx_ref            string  // hooks into existing FX system
 
 import { SKILL_TYPE, WEAPON_TYPE, CAST_TYPE } from './skillTypes';
+import { AXE_CORE_SKILLS } from '../axe/skills/AXECoreSkillLadder';
 
 const SKILLS = [
   // ════════ SWORD WEAPON TYPE ════════════════════════════════════════
@@ -236,7 +237,8 @@ export function getSkillsForWeapon(weaponType) {
 
 // Linear scaling helper — interpolates a scaling stat by current level.
 export function scaleStat(skill, statKey, level) {
-  const range = skill?.scaling?.[statKey];
+  const range = skill?.scaling?.[statKey  ...AXE_CORE_SKILLS,
+];
   if (!range) return 0;
   const lvl = Math.max(1, Math.min(skill.max_level, level || 1));
   const t = (lvl - 1) / Math.max(1, skill.max_level - 1);
