@@ -48,7 +48,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 28, system: 'Capes', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 29, system: 'Titles', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 30, system: 'Halo', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 31, system: 'Elixirs', status: AXE_STATUS.MISSING },
+  { prompt: 31, system: 'Elixirs', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 32, system: 'Pet foundation', status: AXE_STATUS.PARTIAL },
   { prompt: 33, system: 'Pet tiers / God pets', status: AXE_STATUS.MISSING },
   { prompt: 34, system: 'Mount foundation', status: AXE_STATUS.PARTIAL },
