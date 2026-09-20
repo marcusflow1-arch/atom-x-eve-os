@@ -157,7 +157,7 @@ export default function CharacterProgressionMenu({
               <div className="border-b border-white/8 px-7 py-3 text-[10px] uppercase tracking-[0.32em] text-white/35">
                 Weapon Mastery · Combat Specialization
               </div>
-              <div className="h-[calc(100%-42px)]">
+              <div style={{ height: "calc(100% - 42px)" }}>
                 <WeaponMasteryTab />
               </div>
             </div>
