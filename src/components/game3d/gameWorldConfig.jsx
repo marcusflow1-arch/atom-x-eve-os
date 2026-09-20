@@ -3,8 +3,9 @@
 // line-count limit for find_replace operations.
 
 import { AXE_FOUNDATION } from './axe/core/axeFoundation';
+import { AXE_PLAYER_TRAVERSAL_CONFIG } from './axe/player/AXEPlayerTraversalConfig';
 
-export { AXE_FOUNDATION };
+export { AXE_FOUNDATION, AXE_PLAYER_TRAVERSAL_CONFIG };
 
 export const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 export const ANIMATION_URLS = {
@@ -19,8 +20,8 @@ export const ANIMATION_URLS = {
 export const DEATH_FADE_DELAY = 5.0;
 // Prompt 001: movement defaults now come from the shared AXE foundation so
 // the world uses one meter-based source of truth instead of duplicated literals.
-export const WALK_SPEED = AXE_FOUNDATION.defaults.walkSpeedMetersPerSecond;
-export const RUN_SPEED = AXE_FOUNDATION.defaults.runSpeedMetersPerSecond;
+export const WALK_SPEED = AXE_PLAYER_TRAVERSAL_CONFIG.movement.walkSpeed;
+export const RUN_SPEED = AXE_PLAYER_TRAVERSAL_CONFIG.movement.runSpeed;
 export const ROT_SMOOTH = 0.18;
 export const BLEND = 0.2;
 
