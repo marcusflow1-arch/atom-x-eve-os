@@ -20,6 +20,7 @@ import AXETraversalSafetyMount from '../components/game3d/axe/player/AXETraversa
 import AXEInteractionMount from '../components/game3d/axe/interactions/AXEInteractionMount';
 import AXECapitalBlockoutMount from '../components/game3d/axe/cities/AXECapitalBlockoutMount';
 import AXEDungeonMount from '../components/game3d/axe/dungeons/AXEDungeonMount';
+import AXEDungeonRuntime from '../components/game3d/axe/dungeons/AXEDungeonRuntime';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -312,6 +313,7 @@ export default function GameView() {
       <AXECapitalBlockoutMount />
       {/* AXE Prompt 037 — cave/dungeon/SOS-access prototype entrances and session state. */}
       <AXEDungeonMount />
+      <AXEDungeonRuntime />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
