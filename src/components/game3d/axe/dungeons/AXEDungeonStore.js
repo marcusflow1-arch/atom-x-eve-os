@@ -110,15 +110,8 @@ export function canEnterAXEDungeon(dungeonId, {
   const dungeon = getAXEDungeonDefinition(dungeonId);
   if (!dungeon) return { ok: false, reason: 'DUNGEON_MISSING' };
 
-  if (Number(playerLevel || 1) < Number(dungeon.recommendedLevel || 1)) {
-    return {
-      ok: false,
-      reason: 'LEVEL_RECOMMENDATION',
-      recommendedLevel: dungeon.recommendedLevel,
-      hardBlocked: false,
-    };
-  }
-
+  // Hard gates must be evaluated BEFORE the soft recommended-level warning.
+  // Otherwise a low-level player could accidentally bypass SOS or power access.
   if (Number(powerTier || 0) < Number(dungeon.recommendedPower || 0)) {
     return {
       ok: false,
@@ -136,6 +129,15 @@ export function canEnterAXEDungeon(dungeonId, {
       itemId: requirement.accessItemId,
       itemCount: getAXEAccessItemCount(requirement.accessItemId),
       hardBlocked: true,
+    };
+  }
+
+  if (Number(playerLevel || 1) < Number(dungeon.recommendedLevel || 1)) {
+    return {
+      ok: false,
+      reason: 'LEVEL_RECOMMENDATION',
+      recommendedLevel: dungeon.recommendedLevel,
+      hardBlocked: false,
     };
   }
 
