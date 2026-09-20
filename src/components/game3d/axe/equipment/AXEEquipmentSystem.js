@@ -1,3 +1,5 @@
+import { evaluateAXESetBonuses } from './AXESetBonusSystem';
+
 // AXE Prompt 018 — equipment, inventory and gear-slot foundation.
 // This module is the AXE-native contract around the existing browser Game3D
 // equipment UI/store. It keeps item rules data-driven while allowing the legacy
@@ -90,7 +92,15 @@ export function collectAXEEquipmentStats(items = []) {
       }
     }
   }
+  const setResult = evaluateAXESetBonuses(items.map((raw) => raw?.instanceId ? raw : makeAXEItemInstance(raw || {})).filter(Boolean));
+  for (const [key, value] of Object.entries(setResult.stats || {})) {
+    total[key] = (total[key] || 0) + Number(value || 0);
+  }
   return total;
+}
+
+export function getAXEEquipmentSetState(items = []) {
+  return evaluateAXESetBonuses(items.map((raw) => raw?.instanceId ? raw : makeAXEItemInstance(raw || {})).filter(Boolean));
 }
 
 export function getAXEAppearanceLayers(items = []) {
