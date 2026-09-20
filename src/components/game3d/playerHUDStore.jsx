@@ -17,6 +17,7 @@ import { xpForLevel } from './gameWorldConfig';
 import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
 import { AXE_PRIMARY_STATS, createDefaultAXEPowerProgression, normalizeAXEPowerProgression } from './axe/progression/AXECharacterProgressionConfig';
 import { getRegisteredAXECoreBonuses, subscribeAXECores } from './axe/progression/AXECoreStore';
+import { getEquippedAXECostumeBonuses, subscribeAXECostumes } from './axe/progression/AXECostumeStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -40,16 +41,37 @@ const sumFlat = (...objs) => {
   return out;
 };
 
+const normalizeCostumeBonuses = (raw = {}) => ({
+  attr: {
+    strength: raw.strength || 0,
+    dexterity: raw.dexterity || raw.agility || 0,
+    constitution: raw.constitution || raw.vitality || 0,
+    focus: raw.focus || raw.spirit || 0,
+  },
+  flat: {
+    hp: raw.hp || raw.maxHP || 0,
+    chi: raw.chi || raw.maxChi || 0,
+    damage: raw.damage || raw.attack || 0,
+    defense: raw.defense || 0,
+    critChance: raw.critChance || raw.criticalChance || 0,
+    critDamage: raw.critDamage || raw.criticalDamage || 0,
+    criticalDefense: raw.criticalDefense || raw.critDefense || 0,
+    attributionAttack: raw.attributionAttack || raw.attributeAttack || 0,
+    attributionDefense: raw.attributionDefense || raw.attributeDefense || 0,
+  },
+});
+
 const getBonuses = () => {
   const core = getRegisteredAXECoreBonuses();
+  const costume = normalizeCostumeBonuses(getEquippedAXECostumeBonuses());
   const coreFlat = {
     ...core,
     attributionAttack: core.attributeAttack || core.attributionAttack || 0,
     attributionDefense: core.attributeDefense || core.attributionDefense || 0,
   };
   return {
-    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses()),
-    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat),
+    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), costume.attr),
+    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat),
   };
 };
 
@@ -216,6 +238,7 @@ subscribeAura(recomputeFromBonuses);
 subscribeWings(recomputeFromBonuses);
 subscribeTitles(recomputeFromBonuses);
 subscribeAXECores(recomputeFromBonuses);
+subscribeAXECostumes(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
