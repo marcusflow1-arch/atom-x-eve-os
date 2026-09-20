@@ -22,6 +22,7 @@ import AXECapitalBlockoutMount from '../components/game3d/axe/cities/AXECapitalB
 import AXEDungeonMount from '../components/game3d/axe/dungeons/AXEDungeonMount';
 import AXEDungeonRuntime from '../components/game3d/axe/dungeons/AXEDungeonRuntime';
 import AXEFactionWarRuntime from '../components/game3d/axe/factions/AXEFactionWarRuntime';
+import AXEWeaponIdentityMount from '../components/game3d/axe/weapons/AXEWeaponIdentityMount';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -328,6 +329,8 @@ export default function GameView() {
       <BossWaypoint />
       <MultiplayerSystem envUrl="game_world_lowpoly" />
       <GameWorldServerManager />
+      {/* Equipped weapon is the canonical source for mastery/class/role identity. */}
+      <AXEWeaponIdentityMount />
       {/* Host-authoritative enemy/boss sync — elects one host per channel,
           broadcasts world snapshots, and applies them on non-hosts. */}
       <WorldSyncMount />
