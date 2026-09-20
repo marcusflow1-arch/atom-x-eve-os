@@ -2,8 +2,13 @@
 // Every client must spawn enemies at IDENTICAL positions so two players see
 // the same world. Use this module instead of Math.random() in GameWorld3D.
 
-// Generic creature spawns disabled; the arena uses one visible rogue player AI instead.
-export const ENEMY_ZONES = [];
+// AXE Prompt 016 — deterministic first-region PvE populations.
+export const ENEMY_ZONES = [
+  { id: 'axe_starter_spirits', center: [40, 0, -150], radius: 90, count: 8 },
+  { id: 'axe_bamboo_raiders', center: [-560, 0, -250], radius: 150, count: 10, fixedTier: 'champion' },
+  { id: 'axe_bamboo_elites', center: [-700, 0, -350], radius: 90, count: 3, fixedTier: 'elite' },
+  { id: 'axe_cave_guardian', center: [620, 0, -520], radius: 8, count: 1, fixedTier: 'miniBoss' },
+];
 
 // 10 seconds after death, the enemy respawns at its home position with full HP.
 export const ENEMY_RESPAWN_SECONDS = 10;
@@ -42,6 +47,8 @@ export const ENEMY_SPAWNS = ENEMY_ZONES.flatMap((zone) =>
         zone.center[2] + Math.sin(angle) * dist,
       ],
       tierRoll, // deterministic tier pick (replaces Math.random in pickTier)
+      fixedTier: zone.fixedTier || null,
+      aiProfile: zone.fixedTier === 'miniBoss' ? 'boss' : zone.fixedTier === 'elite' ? 'aggressive' : 'standard',
     };
   })
 );
