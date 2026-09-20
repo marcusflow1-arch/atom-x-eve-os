@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeHalo, attemptEnhancement, attemptEnhancementBatch, setHaloLevel } from '../haloStore';
+import { subscribeHalo, attemptEnhancement, attemptEnhancementBatch, setHaloHidden, setHaloLevel, setHaloLowEffects } from '../haloStore';
 import { MAX_HALO_LEVEL } from '../haloData';
 import MaxOutButton from './devMaxOut';
 
@@ -84,6 +84,20 @@ export default function HaloSubTab() {
         >
           {tier?.label}
         </div>
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={() => setHaloHidden(!halo.hidden)}
+            className="rounded-sm border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[9px] uppercase tracking-widest text-white/60"
+          >
+            {halo.hidden ? 'Show Halo' : 'Hide Halo'}
+          </button>
+          <button
+            onClick={() => setHaloLowEffects(!halo.lowEffects)}
+            className="rounded-sm border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[9px] uppercase tracking-widest text-white/60"
+          >
+            {halo.lowEffects ? 'Full FX' : 'Low FX'}
+          </button>
+        </div>
         <div className="text-[10px] text-white/50 text-center mt-2 px-2">
           {tier?.auraDesc}
         </div>
@@ -96,6 +110,8 @@ export default function HaloSubTab() {
           <Stat label="Attempt Cost"     value={halo.attemptCost} />
           <Stat label="Success Chance"   value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
           <Stat label="Total Attempts"   value={halo.totalAttempts} />
+          <Stat label="Elixir Capacity"   value={`+${halo.elixirCapacityBonus}`} accent={tier?.color} />
+          <Stat label="World FX"          value={halo.hidden ? 'Hidden' : (halo.lowEffects ? 'Low' : 'Full')} accent={tier?.color} />
           <div className="col-span-2 flex items-end justify-end">
             <MaxOutButton
               accent="#ffd86b"
