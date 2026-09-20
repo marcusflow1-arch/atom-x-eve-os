@@ -1055,10 +1055,12 @@ export default function GameWorld3D() {
         if (playerAnim?.requestJump()) playActionSound('player_jump');
         e.preventDefault();
       }
-      // C is reserved for the unified Character Hub. Crouch uses Ctrl.
-      if ((k === 'control' || e.code === 'ControlLeft' || e.code === 'ControlRight') && !crouchTogglePressed.current) {
+      // C is reserved for the unified Character Hub. Ctrl remains Sprint.
+      // Q is the dedicated crouch toggle so movement and UI controls cannot collide.
+      if (k === 'q' && !crouchTogglePressed.current) {
         crouchTogglePressed.current = true;
         playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
+        e.preventDefault();
       }
       // E = interact, F = Kick
       if (k === 'e') interactPressed.current = true;
@@ -1114,7 +1116,7 @@ export default function GameWorld3D() {
     const onKeyUp = (e) => {
       const k = e.key.toLowerCase();
       keys.current[k] = false;
-      if (k === 'control' || e.code === 'ControlLeft' || e.code === 'ControlRight') crouchTogglePressed.current = false;
+      if (k === 'q') crouchTogglePressed.current = false;
     };
     const rightDragMoved = { current: false };
     const onMouseDown = (e) => {
@@ -1286,6 +1288,15 @@ export default function GameWorld3D() {
         const axeMountSpeed = getActiveAXEMountSpeedMultiplier();
         const speedMult = mounted ? (axeMountSpeed || getEffectiveSpeedMultiplier()) : 1.0;
         const yaw = orbit.current.yaw;
+        // Opening the C Character Hub immediately releases movement input. This
+        // prevents a held W/Shift/Ctrl key from continuing to move the character
+        // behind a full-screen UI.
+        if (typeof window !== 'undefined' && window.__axeUiModalOpen) {
+          keys.current = {};
+          attackPressed.current = false;
+          rangedClickAttackPressed.current = false;
+          interactPressed.current = false;
+        }
         const move = new THREE.Vector3();
         const combatAxes = getCombatAxes();
 
