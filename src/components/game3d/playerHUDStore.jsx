@@ -30,6 +30,8 @@ import { subscribeEnchantments } from './equipment/enchantmentStore';
 import { subscribeAXEItemAdvancement } from './axe/equipment/AXEItemAdvancementStore';
 import { subscribeAXESockets } from './axe/equipment/AXESocketGemStore';
 import { subscribeAXEAura } from './axe/equipment/AXEEquipmentAuraStore';
+import { getActiveAXEAdvancedClassRuntime, applyAXEAdvancedClassDerivedMultipliers } from './talents/AXEAdvancedClassRuntime';
+import { subscribeAdvancedClass } from './talents/advancedClassStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -80,6 +82,7 @@ const normalizeCostumeBonuses = (raw = {}) => ({
 
 const getBonuses = () => {
   const equipment = getAXEEquipmentRuntimeBonuses();
+  const advancedClass = getActiveAXEAdvancedClassRuntime();
   const core = getRegisteredAXECoreBonuses();
   const pet = getRegisteredAXEPetBonuses();
   const mount = getRegisteredAXEMountBonuses();
@@ -122,10 +125,14 @@ const getBonuses = () => {
       pet,
       mount,
       equipment.flat,
+      advancedClass.flat,
     ),
     vanityActivation,
     equipmentMultipliers: equipment.multipliers,
+    advancedClassMultipliers: advancedClass.multipliers,
+    advancedClassCombat: advancedClass.combat,
     equipmentDebug: equipment,
+    advancedClassDebug: advancedClass,
   };
 };
 
@@ -144,7 +151,8 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
       )
     : preliminary;
   const withVanity = applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
-  return applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
+  const withEquipment = applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
+  return applyAXEAdvancedClassDerivedMultipliers(withEquipment, bonuses.advancedClassMultipliers);
 };
 
 const buildDefault = () => {
@@ -339,6 +347,7 @@ subscribeEnchantments(recomputeFromBonuses);
 subscribeAXEItemAdvancement(recomputeFromBonuses);
 subscribeAXESockets(recomputeFromBonuses);
 subscribeAXEAura(recomputeFromBonuses);
+subscribeAdvancedClass(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
