@@ -16,6 +16,7 @@ import {
   userScopedKey,
 } from './characterStorage';
 import { GLOBAL_AVATAR_MODEL_URL, DEFAULT_AVATAR_APPEARANCE, companionModel } from '@/components/onboarding/genesisAssets';
+import { makeAXECharacterEntryFields, validateAXECharacterName } from './axe/characters/AXECharacterEntry';
 
 // Roster + active-character keys are scoped to the signed-in user, so one
 // account's roster is never visible to another account on the same browser.
@@ -100,12 +101,15 @@ export function getActiveCharacter() {
 // Create a new character. Stored progression starts EMPTY for this id —
 // the namespaced storage layer returns nothing for new ids, so every store
 // initializes to its defaults (level 1, 0 XP, 0 halo, no titles, etc.).
-export function createCharacter({ name, appearance, avatarConfig = {} }) {
+export function createCharacter({ name, appearance, avatarConfig = {}, factionId, startingWeaponStyleId }) {
+  const nameCheck = validateAXECharacterName(name || 'New Character');
+  if (!nameCheck.ok) throw new Error(`Invalid character name: ${nameCheck.reason}`);
   const id = `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const character = {
     ...Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatarConfig[k]!==undefined).map(k=>[k,avatarConfig[k]])), appearance_version:3,
     id,
-    name: (name || 'New Character').trim().slice(0, 24),
+    name: nameCheck.value,
+    ...makeAXECharacterEntryFields({ factionId, startingWeaponStyleId }),
     appearance: {
       head:      appearance?.head      || 'default',
       body:      appearance?.body      || 'default',
@@ -147,5 +151,6 @@ export function setActiveCharacter(id) {
 export async function activateAndSyncToHUD(id) {
   const character=state.roster.find(c=>c.id===id);const avatar=character&&!character.isDevTest?await saveAppearance(character,{broadcast:false}):null;
   setActiveCharacter(id);if(avatar)window.dispatchEvent(new CustomEvent('avatarAppearanceSaved',{detail:{avatar}}));
+  window.dispatchEvent(new CustomEvent('axeCharacterActivated',{detail:{characterId:id,character}}));
 }
 window.addEventListener('avatarAppearanceSaved',event=>{const avatar=event.detail?.avatar;if(!avatar)return;const patch=Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatar[k]!==undefined).map(k=>[k,avatar[k]]));state={...state,roster:state.roster.map(c=>c.id===state.activeId&&!c.isDevTest?{...c,...patch}:c)};emit();});
