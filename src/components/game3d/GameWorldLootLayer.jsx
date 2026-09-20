@@ -3,6 +3,8 @@ import WorldLootDrops from './WorldLootDrops';
 import LootPickupToast from './LootPickupToast';
 import { rollEnemyDrops } from './lootStore';
 import { createAXESeededRng } from './axe/loot/AXELootQuality';
+import { rollAXEEquipmentDrop } from './axe/loot/AXEEquipmentLootSystem';
+import { getPlayerHUD } from './playerHUDStore';
 import { getHostState, isHost } from './network/hostElectionStore';
 
 /**
@@ -93,8 +95,13 @@ export default function GameWorldLootLayer() {
     // remains the authoritative source when multiplayer identity is available.
     const rng = createAXESeededRng(`${enemyId}:${tier}:${isBoss ? 'boss' : 'mob'}`);
     const rolled = rollEnemyDrops(tier, isBoss, { rng, authorityTag });
-    if (rolled.length === 0) return;
-    const newDrops = rolled.map((item) => ({
+    const gearDrop = rollAXEEquipmentDrop(tier, isBoss, {
+      rng,
+      playerLevel: getPlayerHUD()?.level || 1,
+    });
+    const combined = gearDrop ? [...rolled, gearDrop] : rolled;
+    if (combined.length === 0) return;
+    const newDrops = combined.map((item) => ({
       ...item,
       x: x + (Math.random() - 0.5) * 1.4,
       y: y || 0,
