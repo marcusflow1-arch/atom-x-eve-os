@@ -18,6 +18,7 @@ import AXEFirstRegionMount from '../components/game3d/axe/world/AXEFirstRegionMo
 import AXEFirstSpawnMount from '../components/game3d/axe/characters/AXEFirstSpawnMount';
 import AXETraversalSafetyMount from '../components/game3d/axe/player/AXETraversalSafetyMount';
 import AXEInteractionMount from '../components/game3d/axe/interactions/AXEInteractionMount';
+import AXECapitalBlockoutMount from '../components/game3d/axe/cities/AXECapitalBlockoutMount';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -306,6 +307,8 @@ export default function GameView() {
       <AXETraversalSafetyMount />
       {/* AXE Prompt 008 — reusable NPC/door/gate/teleport/service interactions. */}
       <AXEInteractionMount />
+      {/* AXE Prompt 009 — defended faction capital blockout and districts. */}
+      <AXECapitalBlockoutMount />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
