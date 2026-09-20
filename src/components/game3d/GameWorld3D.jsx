@@ -1906,6 +1906,17 @@ export default function GameWorld3D() {
               spawnXPFloat(closestEnemy.xpReward);
               awardCompanionXP(companionDefRef.current?.id, closestEnemy.xpReward);
               reportEnemyKill(QUESTS, closestEnemy.tier);
+              if (closestEnemy.metadata || closestEnemy.dungeonBoss) {
+                window.dispatchEvent(new CustomEvent('axeRuntimeEnemyDefeated', {
+                  detail: {
+                    enemyId: closestEnemy.id,
+                    tier: closestEnemy.tier || 'normal',
+                    isBoss: !!closestEnemy.isBoss,
+                    dungeonBoss: !!closestEnemy.dungeonBoss,
+                    metadata: closestEnemy.metadata ? { ...closestEnemy.metadata } : null,
+                  },
+                }));
+              }
               // Award XP, handle level-ups against the custom curve.
               // Each level-up grants stat points (handled inside awardXP).
               let newXP = playerXPRef.current + closestEnemy.xpReward;
