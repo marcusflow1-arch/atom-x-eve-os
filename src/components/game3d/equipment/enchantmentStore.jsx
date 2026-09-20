@@ -126,12 +126,15 @@ export const subscribeEnchantments = (fn) => {
   return () => listeners.delete(fn);
 };
 
-export const getMaterials = () => Object.fromEntries(
-  MATERIALS.map((material) => [
-    material.id,
-    getLootItemCount(material.id, 'material'),
-  ]),
-);
+// Hoisted: subscribeLootInventory immediately requests a snapshot during startup.
+export function getMaterials() {
+  return Object.fromEntries(
+    MATERIALS.map((material) => [
+      material.id,
+      getLootItemCount(material.id, 'material'),
+    ]),
+  );
+}
 
 export const getItemEnchantments = (itemId) => {
   if (!itemId) return new Array(ENCH_SLOTS).fill(0);
