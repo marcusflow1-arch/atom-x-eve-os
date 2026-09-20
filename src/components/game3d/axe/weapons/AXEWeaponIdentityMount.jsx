@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {
-  getEquippedAXEItemInCategory,
+  getActiveEquippedAXEWeapon,
   subscribeAXEEquipmentInventory,
 } from '../equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from './AXEWeaponIdentity';
@@ -27,7 +27,7 @@ export function subscribeAXEWeaponIdentity(fn) {
 }
 
 function syncFromEquipment() {
-  const equipped = getEquippedAXEItemInCategory('weapon');
+  const equipped = getActiveEquippedAXEWeapon();
   const next = resolveAXEWeaponIdentity(equipped);
 
   currentIdentity = next;
