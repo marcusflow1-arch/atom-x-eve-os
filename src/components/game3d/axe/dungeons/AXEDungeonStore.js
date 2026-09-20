@@ -176,6 +176,7 @@ export function enterAXEDungeon(dungeonId, {
       spawnedEncounterRoomIds: [],
       clearedEncounterRoomIds: [],
       failed: false,
+      rewardClaimed: false,
     },
   };
   emit();
@@ -361,6 +362,7 @@ export function finalizeAXEDungeonClear() {
   if (!session) return { ok: false, reason: 'NO_ACTIVE_DUNGEON' };
   if (session.rewardClaimed) return { ok: false, reason: 'REWARD_ALREADY_CLAIMED' };
   if (session.phase !== 'completed') return { ok: false, reason: 'DUNGEON_INCOMPLETE' };
+  if (session.rewardClaimed) return { ok: false, reason: 'CLEAR_REWARD_ALREADY_CLAIMED' };
 
   const dungeon = getAXEDungeonDefinition(session.dungeonId);
   const elapsedMs = Math.max(0, Number(session.completedAt || Date.now()) - Number(session.enteredAt || Date.now()));
