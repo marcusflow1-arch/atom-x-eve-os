@@ -1,6 +1,6 @@
 import { partySession } from '@/components/social/partySession';
 import { unwrap } from '@/components/social/dashboardSession';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Crown, Gamepad2, Headphones, Mic, MicOff, Plus, UserMinus, Users, X, Check, LogOut, Link2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';

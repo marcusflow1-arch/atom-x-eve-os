@@ -17,6 +17,13 @@ export function useSocialNotifications(){
 export function SocialNotificationAlerts(){
  const {notifications}=useSocialNotifications();
  const seen=useRef(new Set());const navigate=useNavigate();
+ const {user}=useAuth();
+ useEffect(()=>{
+  if(!user?.id)return;
+  const record=event=>{const id=event.detail?.game?.id;if(id)base44.functions.invoke('storeDiscovery',{action:'record_play',data:{game_id:id}}).catch(()=>{});};
+  window.addEventListener('atomxe:game-launch',record);
+  return()=>window.removeEventListener('atomxe:game-launch',record);
+ },[user?.id]);
  useEffect(()=>{
   const fresh=notifications.filter(n=>n.status==='unread'&&!seen.current.has(n.id));
   notifications.forEach(n=>seen.current.add(n.id));

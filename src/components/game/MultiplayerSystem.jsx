@@ -1,6 +1,6 @@
 import { usePartySession } from '@/components/social/partySession';
 import { useDashboardRoom } from '@/components/social/useDashboardRoom';
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';

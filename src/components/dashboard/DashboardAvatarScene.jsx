@@ -112,6 +112,10 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     <>
       <EnvironmentHubStageLayer />
       {avatarStage}
+      {(session.status === 'connecting' || session.error) && <div role="status" className="absolute left-4 top-4 z-40 max-w-xs rounded-xl bg-slate-950/85 p-3 text-xs text-white/80">
+        {session.error || 'Connecting to dashboard…'}
+        {session.host_id !== user?.id && <button type="button" className="mt-2 block text-cyan-200" onClick={() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel',{detail:{channelId:`dashboard_${user.id}`,hostId:user.id,hostName:'My'}}))}>Return to my dashboard</button>}
+      </div>}
       {friendsWorkspace && createPortal(
         <div className="relative z-10 h-full w-full p-4 md:p-5">
           <FriendsListContent />

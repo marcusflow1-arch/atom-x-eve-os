@@ -1,13 +1,12 @@
 import SocialNotifications from '@/components/social/SocialNotifications';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bot, AlertCircle, CheckCircle, Info, ChevronRight, Clock, Shield,
   Home, ShoppingBag, Gamepad2, Trophy, Users, Radio, MessageSquare,
   Layers, Swords, Rocket, Crown
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import moment from 'moment';
