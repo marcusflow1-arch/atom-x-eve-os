@@ -11,6 +11,7 @@ import HaloSubTab from './progression/hub/HaloSubTab';
 import WingsSubTab from './progression/hub/WingsSubTab';
 import AuraSubTab from './progression/hub/AuraSubTab';
 import TitleSubTab from './progression/hub/TitleSubTab';
+import CoreSubTab from './progression/hub/CoreSubTab';
 
 // ─── Character Hub ────────────────────────────────────────────────────────
 // MMORPG-style progression overlay (replaces the legacy split-panel screen).
@@ -27,6 +28,7 @@ const MASTERY_SUB_TABS = [
   { id: 'wings', label: 'Wings' },
   { id: 'aura',  label: 'Aura' },
   { id: 'title', label: 'Title' },
+  { id: 'core',  label: 'Core' },
 ];
 
 export default function CharacterProgressionMenu({ isOpen, onClose }) {
@@ -119,6 +121,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'wings' && <WingsSubTab />}
           {mainTab === 'mastery' && subTab === 'aura'  && <AuraSubTab />}
           {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
+          {mainTab === 'mastery' && subTab === 'core'  && <CoreSubTab />}
         </div>
 
         {/* Close */}
