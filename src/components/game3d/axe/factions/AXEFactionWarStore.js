@@ -9,9 +9,11 @@ import {
   AXE_WAR_CONFIG,
   AXE_WAR_REWARDS,
   createAXEWarDefenseState,
+  canAdvanceAXEInvasionTo,
   getAXEWarBracket,
   getAXEWarCycle,
   getAXEWarDefense,
+  getAXEWarMap,
 } from './AXEFactionWarSystem';
 
 const storage = characterScopedStorage('axe_faction_war_progression_v1');
@@ -209,6 +211,11 @@ export function damageAXEWarDefense(defenseId, damage, attackingFactionId) {
   const defConfig = getAXEWarDefense(defenseId);
   if (!def || !defConfig) return { ok: false, reason: 'DEFENSE_MISSING' };
   if (def.destroyed) return { ok: false, reason: 'ALREADY_DESTROYED' };
+
+  const map = getAXEWarMap(defConfig.mapId);
+  if (map?.routeIndex > 1 && !canAdvanceAXEInvasionTo(map.routeIndex, sharedPrototype.defenses)) {
+    return { ok: false, reason: 'INVASION_ROUTE_LOCKED', mapId: map.id, routeIndex: map.routeIndex };
+  }
 
   const nextHP = Math.max(0, Number(def.hp || 0) - Math.max(0, Number(damage) || 0));
   const destroyed = nextHP <= 0;
