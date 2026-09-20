@@ -7,12 +7,33 @@ import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 import { primeCriticalFocus, consumeCriticalFocusForSingleHit } from './twelveSkyFocusState';
 import { armForcedCriticalHit } from '../combat/forcedCriticalBridge';
+import { setCombatFlag } from '../talents/advancedClassStore';
 import {
   onTripleSlashCast,
   onTripleSlashFinalHit,
   onDoubleShotHit,
   onDoubleShotCastEnd,
 } from './skillSoundEffects';
+
+let castingUntil = 0;
+let castingTimer = null;
+
+function markCasting(durationMs = 350) {
+  const now = Date.now();
+  castingUntil = Math.max(castingUntil, now + Math.max(80, Number(durationMs) || 350));
+  setCombatFlag('casting', true);
+  if (castingTimer) clearTimeout(castingTimer);
+  const release = () => {
+    const remaining = castingUntil - Date.now();
+    if (remaining > 0) {
+      castingTimer = setTimeout(release, remaining);
+      return;
+    }
+    castingTimer = null;
+    setCombatFlag('casting', false);
+  };
+  castingTimer = setTimeout(release, Math.max(80, castingUntil - now));
+}
 
 function toast(text) {
   if (typeof window === 'undefined') return;
@@ -110,6 +131,7 @@ export function castSkill(skillId, ctx = {}) {
     : getLoadout().activeSlots.indexOf(skillId);
 
   if (inferredSlot === 1) {
+    markCasting(180);
     primeCriticalFocus(inferredSlot);
     if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) activateBuff(skillId, level, { maxHP: ctx.maxHP });
     reportSkillCast(getActiveWeaponId());
@@ -118,6 +140,7 @@ export function castSkill(skillId, ctx = {}) {
   }
 
   if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) {
+    markCasting(220);
     activateBuff(skillId, level, { maxHP: ctx.maxHP });
     reportSkillCast(getActiveWeaponId());
     toast(`${skill.icon} ${skill.skill_name} activated`);
@@ -129,6 +152,24 @@ export function castSkill(skillId, ctx = {}) {
       detail: { skillId: skill.skill_id, role: skill.axe_role, criticalAllowed: true },
     }));
   }
+
+  const inferredDurationMs = Math.max(
+    300,
+    Math.round(
+      (
+        skill.cast_type === CAST_TYPE.RANGED_BARRAGE
+          ? ((skill.hit_count - 1) * skill.hit_delay + 0.35)
+          : skill.cast_type === CAST_TYPE.MULTI_HIT_SEQUENTIAL
+            ? ((skill.hit_count - 1) * skill.hit_delay + 0.35)
+            : skill.cast_type === CAST_TYPE.MULTI_HIT_BURST
+              ? (skill.hit_delay + (skill.follow_up_delay || 0.4) + 0.25)
+              : skill.cast_type === CAST_TYPE.RANGED_DOUBLE
+                ? (skill.hit_delay + 0.25)
+                : 0.45
+      ) * 1000
+    ),
+  );
+  markCasting(inferredDurationMs);
 
   switch (skill.cast_type) {
     case CAST_TYPE.SINGLE_HIT:
