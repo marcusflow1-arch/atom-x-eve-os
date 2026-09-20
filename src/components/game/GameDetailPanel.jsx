@@ -864,7 +864,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="relative z-10 flex-1 overflow-y-auto max-w-7xl mx-auto w-full px-12 py-12"
+        className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full px-4 py-6 sm:px-7 lg:px-10 2xl:px-12"
       >
         <AnimatePresence mode="wait">
           {activeTab === 'system' ? (
@@ -877,7 +877,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               className="space-y-8"
             >
               {/* Header Section: Title & Actions */}
-              <div className="flex items-center justify-between gap-6 mb-8">
+              <div className="flex flex-wrap items-start justify-between gap-5 mb-7">
                 <div className="flex items-center gap-4">
                   <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
                     {game.title}
@@ -918,7 +918,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
 
               {/* Main Grid: Trailer Left, Info Right */}
-              <div className="flex flex-col lg:flex-row gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,1fr)] gap-6 xl:gap-10">
 
                 {/* Left: Trailer Section */}
                 <div className="flex-[1.4] min-w-0 flex flex-col gap-4">
@@ -1002,7 +1002,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
 
                 {/* Right: Game Info Sidebar */}
-                <div className="flex-1 lg:max-w-md flex flex-col gap-6">
+                <div className="flex-1 min-w-0 flex flex-col gap-6">
                   {/* Info Box */}
                   <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
                     {/* Header Image (Capsule) - Reduced to 30% */}
