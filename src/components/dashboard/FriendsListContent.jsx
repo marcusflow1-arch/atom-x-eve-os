@@ -23,6 +23,7 @@ export default function FriendsListContent() {
   const [invitedUsers, setInvitedUsers] = useState({});
   const [messageTarget, setMessageTarget] = useState(null);
   const [joiningUserId, setJoiningUserId] = useState(null);
+  const [partyInvitingId, setPartyInvitingId] = useState(null);
   const [addingUserId, setAddingUserId] = useState(null);
   const { user } = useAuth();
 
@@ -113,6 +114,20 @@ export default function FriendsListContent() {
     }
   };
 
+  const handlePartyInvite = async (person) => {
+    const id = playerIdFor(person);
+    if (!id || partyInvitingId) return;
+    setPartyInvitingId(id);
+    try {
+      const response = await base44.functions.invoke('partySystem', {action:'invite_member',data:{inviteeId:id}});
+      const body = response?.data ?? response;
+      if (body?.error) throw new Error(body.error);
+      showSuccess('Party invitation sent.');
+      window.dispatchEvent(new CustomEvent('lunaSocialChanged'));
+    } catch (error) { showError(error, 'Party Invite'); }
+    finally { setPartyInvitingId(null); }
+  };
+
   const handleAddFriend = async (userObj) => {
     const targetId = playerIdFor(userObj);
     if (!targetId || !user?.id || targetId === String(user.id) || addingUserId === targetId) return;
@@ -158,7 +173,7 @@ export default function FriendsListContent() {
     const id = playerIdFor(person);
     if (!id || joiningUserId) return;
     setJoiningUserId(id);
-    try { await joinDashboard(person); showSuccess('Connected to dashboard.'); }
+    try { await joinDashboard(person); showSuccess('Joining dashboard…'); }
     catch (error) { showError(error, 'Join Dashboard'); }
     finally { setJoiningUserId(null); }
   };
@@ -298,6 +313,9 @@ export default function FriendsListContent() {
                       title="Invite to my dashboard"
                     >
                       <UserPlus className="w-4 h-4" />{invitingUserId === selectedId ? '…' : invitedUsers[selectedId] === 'sent' ? 'Sent' : invitedUsers[selectedId] === 'error' ? 'Retry Invite' : 'Invite'}
+                    </Button>
+                    <Button size="sm" variant="outline" {...pointerAction(() => handlePartyInvite(selectedFriend))} disabled={partyInvitingId === selectedId} className="border-white/20 text-white hover:bg-white/10 px-2">
+                      {partyInvitingId === selectedId ? 'Inviting…' : 'Invite to Party'}
                     </Button>
                     <Button size="sm" onClick={() => openMessages(selectedFriend)} className="bg-blue-600 hover:bg-blue-500 text-white gap-2"><MessageSquare className="w-4 h-4" /> Message</Button>
                     <Button

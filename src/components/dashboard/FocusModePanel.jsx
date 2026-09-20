@@ -1406,7 +1406,7 @@ export function LibraryBannerSection({
     setJoiningUsers(prev => ({...prev,[u.id]:true}));
     try {
       await joinDashboard(u);
-      showSuccess(`Connected to ${u.name || 'player'}'s dashboard.`);
+      showSuccess(`Joining ${u.name || 'player'}'s dashboard.`);
       onActiveFriendChange(null);
     } catch (error) { showError(error, 'Join Dashboard'); }
     finally { setJoiningUsers(prev => ({...prev,[u.id]:false})); }

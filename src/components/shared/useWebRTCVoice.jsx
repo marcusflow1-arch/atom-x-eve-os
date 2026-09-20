@@ -48,6 +48,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         const poll = async () => {
           try {
             const rows = await base44.entities.VoiceSignal.filter({channel_id:roomId,target_id:user.id},'-created_date',200);
+            if (!isMounted) return;
             rows.reverse().forEach(receive);
             for(const id of participantsRef.current) if(id !== user.id && user.id > id && !peersRef.current[id]) initiateCall(id);
           } catch(error) { console.warn('[Voice] signaling retry',error); }
@@ -149,7 +150,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 }
             };
             channel.onclose = () => {
-                delete dataChannelsRef.current[peerId];
+                if (dataChannelsRef.current[peerId] === channel) delete dataChannelsRef.current[peerId];
             };
         }
 
@@ -162,7 +163,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             peersRef.current[peerId] = pc;
 
             // Create Data Channel for this peer
-            const dataChannel = dataEnabled && pc.createDataChannel('gameData', {
+            const dataChannel = dataEnabled && user.id > peerId && pc.createDataChannel('gameData', {
                 ordered: false, // UDP-like, fast
                 maxRetransmits: 0
             });
@@ -204,6 +205,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
             pc.onconnectionstatechange = () => {
                 if (['failed', 'closed'].includes(pc.connectionState)) {
+                    pc.onconnectionstatechange = null;
                     if (audioRefs.current[peerId]) {
                         audioRefs.current[peerId].pause();
                         audioRefs.current[peerId].srcObject = null;
@@ -212,7 +214,9 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         }
                         delete audioRefs.current[peerId];
                     }
-                    delete peersRef.current[peerId];
+                    if (peersRef.current[peerId] === pc) delete peersRef.current[peerId];
+                    delete dataChannelsRef.current[peerId];
+                    delete pendingCandidates.current[peerId];
                     pc.close();
                 }
             };
@@ -222,6 +226,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
         async function initiateCall(peerId) {
             try {
+                if (!isMounted || !participantsRef.current.includes(peerId)) return;
                 const pc = createPeerConnection(peerId);
                 // Only initiate if we're in a clean state — prevents duplicate offers
                 // that put the connection into "have-local-offer" and break later answers.
@@ -230,7 +235,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     return;
                 }
                 const offer = await pc.createOffer();
-                if (pc.signalingState !== 'stable') return; // re-check after async createOffer
+                if (!isMounted || pc.signalingState !== 'stable' || peersRef.current[peerId] !== pc) return; // re-check after async createOffer
                 await pc.setLocalDescription(offer);
 
                 await base44.entities.VoiceSignal.create({
