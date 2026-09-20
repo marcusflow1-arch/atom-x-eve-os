@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { GEAR_CATEGORIES, setSelected, equipItem, unequipItem } from './equipmentStore';
-import { getEquippedAXEItemInCategory, getAXEInventoryItemsByCategory, subscribeAXEEquipmentInventory } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { GEAR_CATEGORIES, setSelected } from './equipmentStore';
+import { equipAXEInventoryItem, getEquippedAXEItemInCategory, getAXEInventoryItemsByCategory, subscribeAXEEquipmentInventory, unequipAXEInventoryItem } from '../axe/equipment/AXEEquipmentInventoryStore';
 import GearSlotsPanel from './GearSlotsPanel';
 import GearInventoryGrid from './GearInventoryGrid';
 import GearDetailPanel from './GearDetailPanel';
@@ -509,8 +509,8 @@ export default function GearTab({ state }) {
           x={contextMenu.x}
           y={contextMenu.y}
           item={contextMenu.item}
-          onEquip={() => equipItem(selectedCat.id, contextMenu.item.instanceId || contextMenu.item.id)}
-          onUnequip={() => unequipItem(selectedCat.id, contextMenu.item.instanceId || contextMenu.item.id)}
+          onEquip={() => equipAXEInventoryItem(contextMenu.item.instanceId || contextMenu.item.id)}
+          onUnequip={() => unequipAXEInventoryItem(contextMenu.item.instanceId || contextMenu.item.id)}
           onInspect={() =>
             setInspectedByCat((prev) => ({
               ...prev,
