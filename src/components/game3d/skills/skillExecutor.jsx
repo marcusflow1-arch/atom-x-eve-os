@@ -23,7 +23,8 @@ function dispatchStrike(skill, hitIndex, level) {
   if (typeof window === 'undefined') return;
   const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
   const multiplier = applyMasteryToSkillMultiplier(baseMult);
-  const forceCritical = skill.cast_type === CAST_TYPE.SINGLE_HIT
+  const criticalAllowed = skill.critical_allowed !== false;
+  const forceCritical = criticalAllowed && skill.cast_type === CAST_TYPE.SINGLE_HIT
     ? consumeCriticalFocusForSingleHit()
     : false;
   if (forceCritical) armForcedCriticalHit(1);
@@ -37,6 +38,12 @@ function dispatchStrike(skill, hitIndex, level) {
       castType: skill.cast_type,
       weaponType: skill.weapon_type,
       forceCritical,
+      criticalAllowed,
+      axeSkillNumber: skill.axe_skill_number || null,
+      axeRole: skill.axe_role || null,
+      axePattern: skill.axe_pattern || null,
+      aoeRadius: Number(skill.aoe_radius || 0),
+      divine: Boolean(skill.divine),
     },
   }));
 }
