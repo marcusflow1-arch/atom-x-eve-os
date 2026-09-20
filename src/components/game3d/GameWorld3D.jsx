@@ -265,7 +265,7 @@ export default function GameWorld3D() {
     // No static skybox: the WorldEnvironmentSystem paints a gradient sky
     // (day/night/season/weather) and drives the sun + moon across it.
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x080b18, 90, 260);
+    scene.fog = new THREE.Fog(0x080b18, 350, 2200);
     scene.background = null;
 
     // Renderer — keep it simple and proven. Create a canvas explicitly so we
@@ -313,7 +313,7 @@ export default function GameWorld3D() {
     const rendererGuard = attachContextGuard(renderer);
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(55, (w0 || 1) / (h0 || 1), 0.1, 200);
+    const camera = new THREE.PerspectiveCamera(55, (w0 || 1) / (h0 || 1), 0.1, 3200);
     camera.position.set(0, 3, -5);
 
     remoteManagerRef.current = createRemotePlayersManager(scene);
