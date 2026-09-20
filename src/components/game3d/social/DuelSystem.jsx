@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Swords, Trophy, Skull } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getPvpAttackRange } from '../pvpCombatRules';
+import { setCombatFlag } from '../talents/advancedClassStore';
 
 const DUEL_MAX_HP = 100;
 const DUEL_DAMAGE = 10;
@@ -61,6 +62,12 @@ export default function DuelSystem({ userId }) {
     });
     return () => { cancelled = true; unsub && unsub(); };
   }, [userId]);
+
+  // Advanced Classes cannot be switched during an active duel.
+  useEffect(() => {
+    setCombatFlag('dueling', !!duel);
+    return () => setCombatFlag('dueling', false);
+  }, [!!duel]);
 
   // Broadcast the duel pair so GameWorld3D can draw red circles under both players.
   // Also expose the active duel to middleClickHandler via a global flag.
