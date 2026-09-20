@@ -52,8 +52,18 @@ function normalizeItem(raw = {}, fallbackCategory = null) {
   };
 }
 
+function chooseActiveWeaponInstanceId(items = [], preferred = null) {
+  const equippedWeapons = items.filter((item) => item.category === 'weapon' && item.equipped);
+  if (preferred && equippedWeapons.some((item) => item.instanceId === preferred)) return preferred;
+  return equippedWeapons[0]?.instanceId || null;
+}
+
 function buildDefault() {
-  return { items: seedItems() };
+  const items = seedItems();
+  return {
+    items,
+    activeWeaponInstanceId: chooseActiveWeaponInstanceId(items),
+  };
 }
 
 function load() {
@@ -85,7 +95,14 @@ function load() {
         });
       }
     }
-    return { items: [...byId.values()] };
+    const items = [...byId.values()];
+    return {
+      items,
+      activeWeaponInstanceId: chooseActiveWeaponInstanceId(
+        items,
+        parsed.activeWeaponInstanceId || null,
+      ),
+    };
   } catch {
     return buildDefault();
   }
@@ -102,6 +119,7 @@ function snapshot() {
       rolledStats: { ...(item.rolledStats || {}) },
       sockets: Array.isArray(item.sockets) ? item.sockets.map((s) => ({ ...s })) : [],
     })),
+    activeWeaponInstanceId: state.activeWeaponInstanceId || null,
   };
 }
 
@@ -159,6 +177,38 @@ export function getEquippedAXEItemInCategory(categoryId) {
   return getEquippedAXEItemsByCategory(categoryId)[0] || null;
 }
 
+export function getActiveEquippedAXEWeapon() {
+  const activeId = state.activeWeaponInstanceId;
+  const active = state.items.find(
+    (item) =>
+      item.instanceId === activeId &&
+      item.category === 'weapon' &&
+      item.equipped,
+  );
+  if (active) return { ...active };
+
+  const fallback = state.items.find((item) => item.category === 'weapon' && item.equipped) || null;
+  return fallback ? { ...fallback } : null;
+}
+
+export function setActiveAXEWeapon(instanceId) {
+  const target = state.items.find(
+    (item) =>
+      (item.instanceId === instanceId || item.id === instanceId) &&
+      item.category === 'weapon',
+  );
+  if (!target) return { ok: false, reason: 'WEAPON_NOT_OWNED' };
+  if (!target.equipped) return { ok: false, reason: 'WEAPON_NOT_EQUIPPED' };
+
+  if (state.activeWeaponInstanceId === target.instanceId) {
+    return { ok: true, reason: 'ALREADY_ACTIVE', item: { ...target } };
+  }
+
+  state = { ...state, activeWeaponInstanceId: target.instanceId };
+  emit();
+  return { ok: true, item: getActiveEquippedAXEWeapon() };
+}
+
 export function equipAXEInventoryItem(instanceId, context = {}) {
   const index = state.items.findIndex((item) => item.instanceId === instanceId || item.id === instanceId);
   if (index < 0) return { ok: false, reason: 'ITEM_MISSING' };
@@ -166,7 +216,14 @@ export function equipAXEInventoryItem(instanceId, context = {}) {
   const target = state.items[index];
   const validation = validateAXEEquip(target, context);
   if (!validation.ok) return validation;
-  if (target.equipped) return { ok: true, reason: 'ALREADY_EQUIPPED', item: { ...target } };
+  if (target.equipped) {
+    if (target.category === 'weapon' && state.activeWeaponInstanceId !== target.instanceId) {
+      state = { ...state, activeWeaponInstanceId: target.instanceId };
+      emit();
+      return { ok: true, reason: 'ALREADY_EQUIPPED_NOW_ACTIVE', item: getActiveEquippedAXEWeapon() };
+    }
+    return { ok: true, reason: 'ALREADY_EQUIPPED', item: { ...target } };
+  }
 
   const slotDef = AXE_EQUIPMENT_SLOT_DEFS[target.slot];
   if (!slotDef) return { ok: false, reason: 'INVALID_SLOT' };
@@ -181,13 +238,17 @@ export function equipAXEInventoryItem(instanceId, context = {}) {
       .map((item) => item.instanceId),
   );
 
+  const nextItems = state.items.map((item) => {
+    if (removeIds.has(item.instanceId)) return { ...item, equipped: false };
+    if (item.instanceId === target.instanceId) return { ...item, equipped: true };
+    return item;
+  });
   state = {
     ...state,
-    items: state.items.map((item) => {
-      if (removeIds.has(item.instanceId)) return { ...item, equipped: false };
-      if (item.instanceId === target.instanceId) return { ...item, equipped: true };
-      return item;
-    }),
+    items: nextItems,
+    activeWeaponInstanceId: target.category === 'weapon'
+      ? target.instanceId
+      : chooseActiveWeaponInstanceId(nextItems, state.activeWeaponInstanceId),
   };
   emit();
   return { ok: true, item: getAXEEquipmentItem(target.instanceId), autoUnequippedIds: [...removeIds] };
@@ -198,9 +259,11 @@ export function unequipAXEInventoryItem(instanceId) {
   if (index < 0) return { ok: false, reason: 'ITEM_MISSING' };
   if (!state.items[index].equipped) return { ok: true, reason: 'ALREADY_UNEQUIPPED' };
 
+  const nextItems = state.items.map((item, i) => i === index ? { ...item, equipped: false } : item);
   state = {
     ...state,
-    items: state.items.map((item, i) => i === index ? { ...item, equipped: false } : item),
+    items: nextItems,
+    activeWeaponInstanceId: chooseActiveWeaponInstanceId(nextItems, state.activeWeaponInstanceId),
   };
   emit();
   return { ok: true };
@@ -262,9 +325,11 @@ export function canConsumeAXEEquipmentItem(instanceId, {
 export function consumeAXEEquipmentItem(instanceId, options = {}) {
   const check = canConsumeAXEEquipmentItem(instanceId, options);
   if (!check.ok) return check;
+  const nextItems = state.items.filter((item) => item.instanceId !== check.item.instanceId);
   state = {
     ...state,
-    items: state.items.filter((item) => item.instanceId !== check.item.instanceId),
+    items: nextItems,
+    activeWeaponInstanceId: chooseActiveWeaponInstanceId(nextItems, state.activeWeaponInstanceId),
   };
   emit();
   return { ok: true, consumed: check.item };
@@ -273,9 +338,11 @@ export function consumeAXEEquipmentItem(instanceId, options = {}) {
 export function destroyAXEEquipmentItem(instanceId, reason = 'destroyed') {
   const item = state.items.find((entry) => entry.instanceId === instanceId || entry.id === instanceId);
   if (!item) return { ok: false, reason: 'ITEM_MISSING' };
+  const nextItems = state.items.filter((entry) => entry.instanceId !== item.instanceId);
   state = {
     ...state,
-    items: state.items.filter((entry) => entry.instanceId !== item.instanceId),
+    items: nextItems,
+    activeWeaponInstanceId: chooseActiveWeaponInstanceId(nextItems, state.activeWeaponInstanceId),
   };
   emit();
   return { ok: true, destroyed: { ...item }, destroyReason: reason };
