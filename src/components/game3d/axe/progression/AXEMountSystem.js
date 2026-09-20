@@ -1,3 +1,5 @@
+import { collectAXELegendaryMountBonuses } from './AXELegendaryMountSystem';
+
 // AXE Prompt 034 — Mount foundation: riding, EXP, PvP growth and stat percentages.
 // Mount progression is separate from Pet progression even when a placeholder
 // creature model is shared by both systems.
@@ -141,6 +143,11 @@ export function getAXEMountBonuses(mount) {
   for (const [key, value] of Object.entries(def.maxStats || {})) {
     out[key] = Math.round(Number(value || 0) * scale);
   }
+  const legendary = collectAXELegendaryMountBonuses(m.legendary);
+  for (const [key, value] of Object.entries(legendary)) {
+    if (key === 'mountSpeedBonus') continue;
+    out[key] = (out[key] || 0) + Number(value || 0);
+  }
   return out;
 }
 
@@ -149,7 +156,12 @@ export function getAXEMountSpeedMultiplier(mount) {
   if (!m) return null;
   const def = getAXEMountDefinition(m.definitionId);
   const scale = Math.max(0, Math.min(1, m.growthPercent / AXE_MOUNT_CONFIG.maxGrowthPercent));
-  return Number((def.baseSpeedMultiplier + def.maxSpeedGrowthBonus * scale).toFixed(3));
+  const legendary = collectAXELegendaryMountBonuses(m.legendary);
+  return Number((
+    def.baseSpeedMultiplier
+    + def.maxSpeedGrowthBonus * scale
+    + Number(legendary.mountSpeedBonus || 0)
+  ).toFixed(3));
 }
 
 export function addAXEMountXP(mount, amount, source = 'pve') {
