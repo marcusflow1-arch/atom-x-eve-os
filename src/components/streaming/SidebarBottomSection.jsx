@@ -1,4 +1,3 @@
-import React from 'react';
 import { Play, Users, Library, Trophy, Tv } from 'lucide-react';
 
 // Shared bottom section used by every sidebar variant. In the narrow rail the
@@ -6,11 +5,13 @@ import { Play, Users, Library, Trophy, Tv } from 'lucide-react';
 // slot is deliberately preserved so Friends/Library/Rewards/Entertainment keep
 // their exact established vertical positions.
 
+const ACTIVE_PANEL_STYLE = 'border-slate-300/20 bg-slate-300/[0.12] text-slate-200/90 shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_6px_18px_rgba(0,0,0,.16)]';
+
 const PANELS = [
-  { key: 'friends', label: 'Friends', Icon: Users, active: 'border-green-400/50 bg-green-500/20 text-green-400', idle: 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10' },
-  { key: 'library', label: 'Library', Icon: Library, active: 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400', idle: 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10' },
-  { key: 'rewards', label: 'Rewards', Icon: Trophy, active: 'border-amber-400/50 bg-amber-500/20 text-amber-400', idle: 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10' },
-  { key: 'entertainment', label: 'Entertain', Icon: Tv, active: 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400', idle: 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10' },
+  { key: 'friends', label: 'Friends', Icon: Users, active: ACTIVE_PANEL_STYLE, idle: 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10' },
+  { key: 'library', label: 'Library', Icon: Library, active: ACTIVE_PANEL_STYLE, idle: 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10' },
+  { key: 'rewards', label: 'Rewards', Icon: Trophy, active: ACTIVE_PANEL_STYLE, idle: 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10' },
+  { key: 'entertainment', label: 'Entertain', Icon: Tv, active: ACTIVE_PANEL_STYLE, idle: 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10' },
 ];
 
 export default function SidebarBottomSection({
