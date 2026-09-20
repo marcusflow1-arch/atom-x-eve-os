@@ -956,11 +956,217 @@ function MediaPage() {
 }
 
 function StatsPage() {
+  const genres = [
+    ['RPG', 18, 72, '#22d3ee'],
+    ['Action', 14, 58, '#60a5fa'],
+    ['Fighting', 9, 44, '#fb7185'],
+    ['MMORPG', 16, 63, '#a78bfa'],
+    ['Adventure', 12, 51, '#34d399'],
+    ['Sci-Fi', 15, 68, '#38bdf8'],
+    ['Strategy', 8, 37, '#c084fc'],
+    ['Simulation', 6, 29, '#94a3b8'],
+    ['Sports', 7, 34, '#facc15'],
+    ['Racing', 17, 81, '#67e8f9'],
+    ['Puzzle', 5, 22, '#818cf8'],
+    ['Platformer', 10, 49, '#2dd4bf'],
+    ['Horror', 13, 57, '#f472b6'],
+    ['Survival', 11, 46, '#4ade80'],
+    ['Sandbox', 9, 42, '#f59e0b'],
+    ['Shooter', 15, 66, '#06b6d4'],
+  ];
+
+  const equipment = [
+    ['Helmet', 'Nightguard Helm', HardHat, 'Epic', '+7'],
+    ['Armor', 'Nightguard Chest', Shirt, 'Legendary', '+8'],
+    ['Gloves', 'Vanguard Grips', Hand, 'Rare', '+6'],
+    ['Pants', 'Shadow Greaves', Shield, 'Epic', '+7'],
+    ['Boots', 'Stormrunner Boots', Footprints, 'Rare', '+5'],
+    ['Left Ring', 'Ring of Focus', CircleDot, 'Epic', '+4'],
+    ['Right Ring', 'Ring of Resolve', CircleDot, 'Rare', '+3'],
+    ['Left Earring', 'Astral Drop', Gem, 'Epic', '+5'],
+    ['Right Earring', 'Neon Shard', Gem, 'Rare', '+4'],
+  ];
+
+  const attributes = [
+    ['Power', '3,280', Zap, 'text-cyan-300'],
+    ['HP', '12,480', Heart, 'text-rose-300'],
+    ['Strength', '146', Swords, 'text-amber-300'],
+    ['Defense', '132', Shield, 'text-sky-300'],
+    ['Agility', '118', TrendingUp, 'text-emerald-300'],
+    ['Card Power', '3.3K', Layers3, 'text-violet-300'],
+  ];
+
   return (
     <div className="grid grid-cols-12 gap-3">
-      <Section className="col-span-12"><SectionTitle title="Career Stats" icon={BarChart3} /><div className="grid grid-cols-6 gap-2 px-4 pb-4"><StatTile label="Hours Played" value="3.4K" /><StatTile label="Games" value="28" /><StatTile label="Wins" value="1,094" /><StatTile label="Achievements" value="1.2K" /><StatTile label="Perfect Games" value="37" /><StatTile label="Card Power" value="3.3K" /></div></Section>
-      <Section className="col-span-7"><SectionTitle title="Genre Mastery" icon={Layers3} /><div className="space-y-3 px-4 pb-4">{demoGames.map(g=><div key={g.genre}><div className="flex justify-between text-[7px]"><span className="text-white/52">{g.genre}</span><span className="text-cyan-200/52">{g.progress}%</span></div><div className="mt-1 h-1.5 rounded bg-white/[0.05]"><div className="h-full rounded bg-gradient-to-r from-cyan-500 to-blue-400" style={{width:`${g.progress}%`}} /></div></div>)}</div></Section>
-      <Section className="col-span-5"><SectionTitle title="Competitive Snapshot" icon={Swords} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Rank" value="Diamond II" /><StatTile label="Win Rate" value="59%" /><StatTile label="K/D" value="2.18" /><StatTile label="Streak" value="12W" /></div></Section>
+      <Section className="col-span-8">
+        <div className="flex items-center gap-5 px-5 py-4">
+          <div className="relative grid h-24 w-24 shrink-0 place-items-center rounded-full border border-cyan-200/20 bg-black/20 shadow-[0_0_34px_rgba(34,211,238,.10)]">
+            <div className="absolute inset-1 rounded-full border border-cyan-300/10" />
+            <div className="text-center">
+              <p className="text-[6px] font-black uppercase tracking-[.18em] text-cyan-100/35">Level</p>
+              <p className="text-[34px] font-black leading-none text-white">47</p>
+              <p className="mt-1 text-[6px] text-white/25">Global</p>
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-cyan-300/70" />
+                  <h2 className="text-[14px] font-black text-white/88">Total Progression</h2>
+                </div>
+                <p className="mt-1 text-[7px] text-white/28">Account level combines genre growth, achievements, cards, skills and equipment progression.</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[18px] font-black text-cyan-100/82">44%</p>
+                <p className="text-[6px] uppercase tracking-[.14em] text-white/22">To Level 48</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-[7px]">
+                <span className="text-white/36">12,449 XP</span>
+                <span className="text-white/22">28,000 XP</span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/[0.055]">
+                <div className="h-full w-[44%] rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-blue-400 shadow-[0_0_14px_rgba(34,211,238,.25)]" />
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-4 gap-2">
+              {[
+                ['Achievements', '1,248', Trophy],
+                ['Skills', '86', Sparkles],
+                ['Cards', '248', Layers3],
+                ['Gear Score', '2,740', Shield],
+              ].map(([label, value, Icon]) => (
+                <div key={label} className="rounded-lg border border-white/[0.045] bg-black/10 px-2.5 py-2">
+                  <Icon className="h-3 w-3 text-cyan-200/52" />
+                  <p className="mt-1 text-[11px] font-black text-white/70">{value}</p>
+                  <p className="text-[5px] uppercase tracking-[.1em] text-white/20">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Upgrade Readiness" icon={TrendingUp} action={null} />
+        <div className="space-y-2 px-4 pb-4">
+          {[
+            ['Avatar Level', 'Ready soon', '15,551 XP remaining', 44, Crown, 'text-cyan-300'],
+            ['Nightguard Helm', 'Upgrade available', '2 / 3 materials ready', 67, HardHat, 'text-amber-300'],
+            ['Stormrunner Boots', 'Behind current tier', 'Recommended +7', 52, Footprints, 'text-violet-300'],
+          ].map(([name, status, detail, pct, Icon, tone]) => (
+            <div key={name} className="rounded-xl border border-white/[0.045] bg-white/[0.012] p-3">
+              <div className="flex items-start gap-2.5">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-black/15">
+                  <Icon className={`h-3.5 w-3.5 ${tone}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[8px] font-bold text-white/64">{name}</p>
+                      <p className="mt-0.5 text-[6px] text-cyan-100/38">{status}</p>
+                    </div>
+                    <span className="text-[7px] font-black text-white/36">{pct}%</span>
+                  </div>
+                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.05]">
+                    <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="mt-1.5 text-[6px] text-white/20">{detail}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-8">
+        <SectionTitle title="Genre Progression" icon={Layers3} action={null} />
+        <div className="grid grid-cols-4 gap-2 px-4 pb-4">
+          {genres.map(([name, level, progress, color]) => (
+            <div key={name} className="rounded-xl border border-white/[0.045] bg-black/10 p-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[8px] font-bold text-white/62">{name}</p>
+                  <p className="mt-0.5 text-[6px] text-white/22">Genre Level {level}</p>
+                </div>
+                <span className="text-[8px] font-black" style={{ color }}>{progress}%</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
+                <div className="h-full rounded-full" style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${color}, rgba(255,255,255,.55))` }} />
+              </div>
+              <div className="mt-1.5 flex justify-between text-[5px] text-white/18">
+                <span>{Math.round(progress * 18)} XP</span>
+                <span>Next Lv.</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Equipped Armor" icon={Shield} action={null} />
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+          {equipment.map(([slot, item, Icon, rarity, upgrade]) => (
+            <div key={slot} title={item} className="group relative min-h-[78px] rounded-xl border border-white/[0.05] bg-black/10 p-2 text-center transition-colors hover:border-cyan-200/[0.14] hover:bg-cyan-200/[0.025]">
+              <div className="mx-auto grid h-8 w-8 place-items-center rounded-lg border border-white/[0.045] bg-white/[0.018]">
+                <Icon className="h-3.5 w-3.5 text-white/32 group-hover:text-cyan-100/60" />
+              </div>
+              <p className="mt-1.5 truncate text-[6px] font-black uppercase tracking-[.08em] text-white/28">{slot}</p>
+              <p className="mt-0.5 truncate text-[6px] text-white/46">{item}</p>
+              <div className="mt-1 flex items-center justify-center gap-1">
+                <span className={`text-[5px] ${rarity === 'Legendary' ? 'text-amber-300/70' : rarity === 'Epic' ? 'text-violet-300/65' : 'text-cyan-300/55'}`}>{rarity}</span>
+                <span className="text-[5px] font-black text-emerald-300/55">{upgrade}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-white/[0.04] px-4 py-3">
+          <p className="text-[6px] font-black uppercase tracking-[.14em] text-white/20">Weapons Equipped</p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {[
+              ['Attack', 'Celestial Blade', Swords, '3,420'],
+              ['Defense', 'Aegis Edge', Shield, '2,980'],
+              ['Ranged', 'Moonpiercer Bow', Target, '3,110'],
+            ].map(([type, name, Icon, power]) => (
+              <div key={type} className="flex items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.012] p-2">
+                <Icon className="h-3.5 w-3.5 shrink-0 text-cyan-200/48" />
+                <div className="min-w-0">
+                  <p className="text-[5px] uppercase tracking-[.09em] text-white/19">{type}</p>
+                  <p className="truncate text-[6px] font-bold text-white/48">{name}</p>
+                  <p className="text-[5px] text-cyan-200/38">Power {power}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-7">
+        <SectionTitle title="Core Attributes" icon={Zap} action={null} />
+        <div className="grid grid-cols-6 gap-2 px-4 pb-4">
+          {attributes.map(([label, value, Icon, tone]) => (
+            <div key={label} className="rounded-xl border border-white/[0.045] bg-black/10 p-3">
+              <Icon className={`h-3.5 w-3.5 ${tone}`} />
+              <p className="mt-2 text-[13px] font-black text-white/76">{value}</p>
+              <p className="mt-0.5 text-[5px] uppercase tracking-[.1em] text-white/22">{label}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-5">
+        <SectionTitle title="Career Totals" icon={BarChart3} action={null} />
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+          <StatTile label="Hours Played" value="3.4K" icon={Clock3} />
+          <StatTile label="Games" value="28" icon={Gamepad2} />
+          <StatTile label="Wins" value="1,094" icon={Trophy} />
+          <StatTile label="Perfect Games" value="37" icon={Crown} />
+          <StatTile label="Companions" value="14" icon={UserRound} />
+          <StatTile label="Teachers" value="9" icon={BookOpen} />
+        </div>
+      </Section>
     </div>
   );
 }
