@@ -1,3 +1,10 @@
+import {
+  applyAXEPetTierProfile,
+  getAXEPetTier,
+  getAXEPetTierVisualProfile,
+  getAXEPetSpecialty,
+} from './AXEPetTierSystem';
+
 // AXE Prompt 032 — Pet / Companion foundation.
 // Pets are stat companions and long-term progression. They are separate from
 // mount progression even when an existing 3D creature model can also be ridden.
@@ -15,11 +22,44 @@ export const AXE_PET_DEFINITIONS = Object.freeze({
     name: 'Baby Wolf',
     species: 'wolf',
     tier: 'base',
-    specialty: 'balanced',
+    specialty: 'hp',
     modelRef: 'shadow_wolf',
     tradeable: true,
     bindOnRegister: false,
-    level200Stats: Object.freeze({ hp: 1200, chi: 350, defense: 140, attack: 170 }),
+    level200Stats: Object.freeze({ hp: 1200, chi: 350, defense: 140, attack: 170, attributeAttack: 80, attributeDefense: 70 }),
+  }),
+  war_wolf: Object.freeze({
+    id: 'war_wolf',
+    name: 'War Wolf',
+    species: 'wolf',
+    tier: 'base',
+    specialty: 'attack',
+    modelRef: 'shadow_wolf',
+    tradeable: true,
+    bindOnRegister: false,
+    level200Stats: Object.freeze({ hp: 900, chi: 250, defense: 110, attack: 230, attributeAttack: 100, attributeDefense: 55 }),
+  }),
+  iron_wolf: Object.freeze({
+    id: 'iron_wolf',
+    name: 'Iron Wolf',
+    species: 'wolf',
+    tier: 'base',
+    specialty: 'defense',
+    modelRef: 'shadow_wolf',
+    tradeable: true,
+    bindOnRegister: false,
+    level200Stats: Object.freeze({ hp: 1050, chi: 250, defense: 220, attack: 125, attributeAttack: 60, attributeDefense: 105 }),
+  }),
+  spirit_wolf: Object.freeze({
+    id: 'spirit_wolf',
+    name: 'Spirit Wolf',
+    species: 'wolf',
+    tier: 'base',
+    specialty: 'chi',
+    modelRef: 'shadow_wolf',
+    tradeable: true,
+    bindOnRegister: false,
+    level200Stats: Object.freeze({ hp: 950, chi: 650, defense: 125, attack: 135, attributeAttack: 90, attributeDefense: 80 }),
   }),
 });
 
@@ -38,6 +78,8 @@ export function createAXEPetInstance(definitionId, instanceId = null) {
   return {
     instanceId: instanceId || `${definitionId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     definitionId,
+    tierId: def.tier || 'base',
+    specialty: def.specialty || 'balanced',
     level: 1,
     xp: 0,
     overEnchantPercent: 0,
@@ -52,8 +94,13 @@ export function createAXEPetInstance(definitionId, instanceId = null) {
 export function normalizeAXEPetInstance(pet = {}) {
   const def = getAXEPetDefinition(pet.definitionId);
   if (!def) return null;
+  const tier = getAXEPetTier(pet.tierId || def.tier || 'base');
+  const specialty = getAXEPetSpecialty(pet.specialty || def.specialty || 'balanced');
   return {
     ...pet,
+    tierId: tier.id,
+    specialty: specialty.id,
+    visualProfile: getAXEPetTierVisualProfile(tier.id, specialty.id),
     level: Math.max(1, Math.min(AXE_PET_CONFIG.maxLevel, Number(pet.level) || 1)),
     xp: Math.max(0, Number(pet.xp) || 0),
     overEnchantPercent: Math.max(0, Math.min(
@@ -79,12 +126,19 @@ export function getAXEPetStatBonuses(pet) {
   const overFraction =
     (p.overEnchantPercent / 100) * AXE_PET_CONFIG.overEnchantBonusAt100PctFraction;
   const scale = levelT * (1 + overFraction);
+  const tiered = applyAXEPetTierProfile(
+    def.level200Stats,
+    p.tierId || def.tier || 'base',
+    p.specialty || def.specialty || 'balanced',
+  );
 
   return {
-    hp: Math.round(def.level200Stats.hp * scale),
-    chi: Math.round(def.level200Stats.chi * scale),
-    defense: Math.round(def.level200Stats.defense * scale),
-    damage: Math.round(def.level200Stats.attack * scale),
+    hp: Math.round(tiered.hp * scale),
+    chi: Math.round(tiered.chi * scale),
+    defense: Math.round(tiered.defense * scale),
+    damage: Math.round(tiered.attack * scale),
+    attributionAttack: Math.round((tiered.attributeAttack || 0) * scale),
+    attributionDefense: Math.round((tiered.attributeDefense || 0) * scale),
   };
 }
 
