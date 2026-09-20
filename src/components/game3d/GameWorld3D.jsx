@@ -1007,11 +1007,12 @@ export default function GameWorld3D() {
         if (playerAnim?.requestAttack('kick', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
         e.preventDefault();
       }
-      // Ability keys: 1..8 → slots 0..7
-      if (k >= '1' && k <= '8') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
+      // AXE Prompt 014: Skills 1..9 use keys 1..9, Skill 10 uses key 0.
+      if (k >= '1' && k <= '9') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
+      if (k === '0') { abilityKeyPressed.current = 9; }
       if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
-      // 9 = toggle boss encounter mode (test trigger until the real boss is wired)
-      if (k === '9' && !e.repeat) {
+      // F9 keeps the old boss-encounter development toggle without stealing Skill 9.
+      if (e.code === 'F9' && !e.repeat) {
         if (!bossEncounter.isActive()) {
           bossEncounter.start({ bossId: 'kali' });
           bossDialogue.queueLine({
