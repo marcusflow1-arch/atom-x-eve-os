@@ -1,6 +1,6 @@
 // AXE Prompt 037 — cave / dungeon / boss / SOS-access definitions.
-// This layer keeps dungeon structure data-driven and separate from the render
-// implementation. Open exploration caves coexist with specially-gated wings.
+// Open exploration caves coexist with specially-gated wings. Runtime positions
+// are temporary browser-Game3D blockout coordinates, not final map geometry.
 
 export const AXE_DUNGEON_INSTANCE_MODES = Object.freeze({
   OPEN_WORLD: 'open_world',
@@ -25,7 +25,13 @@ const freezeRoom = (room) => Object.freeze({
   checkpoint: false,
   accessItemId: null,
   bossId: null,
+  runtimePosition: Object.freeze({ x: 0, y: 0, z: 0 }),
+  runtimeSize: Object.freeze({ width: 28, depth: 24, height: 6 }),
+  encounter: null,
   ...room,
+  runtimePosition: Object.freeze({ ...(room.runtimePosition || { x: 0, y: 0, z: 0 }) }),
+  runtimeSize: Object.freeze({ ...(room.runtimeSize || { width: 28, depth: 24, height: 6 }) }),
+  encounter: room.encounter ? Object.freeze({ ...room.encounter }) : null,
 });
 
 export const AXE_DUNGEON_DEFINITIONS = Object.freeze({
@@ -40,18 +46,28 @@ export const AXE_DUNGEON_DEFINITIONS = Object.freeze({
     entryAccessItemId: null,
     entryPosition: Object.freeze({ x: 650, y: 0, z: -500 }),
     prototypeEntryPosition: Object.freeze({ x: 24, y: 0, z: -10 }),
-    exitPosition: Object.freeze({ x: 650, y: 0, z: -485 }),
+    prototypeReturnPosition: Object.freeze({ x: 22, y: 0, z: -10 }),
+    interiorOrigin: Object.freeze({ x: 6000, y: 0, z: -6000 }),
     rooms: Object.freeze([
       freezeRoom({
         id: 'AXE_Dungeon_StoneVein_Entry',
         name: 'Weathered Mouth',
         type: 'exploration',
         checkpoint: true,
+        runtimePosition: { x: 6000, y: 0, z: -6000 },
+        nextRoomIds: Object.freeze(['AXE_Dungeon_StoneVein_Forks']),
       }),
       freezeRoom({
         id: 'AXE_Dungeon_StoneVein_Forks',
         name: 'Three-Way Fork',
         type: 'combat',
+        runtimePosition: { x: 6042, y: 0, z: -6000 },
+        runtimeSize: { width: 34, depth: 28, height: 7 },
+        encounter: { count: 4, tierName: 'normal' },
+        nextRoomIds: Object.freeze([
+          'AXE_Dungeon_StoneVein_DeepChamber',
+          'AXE_Dungeon_StoneVein_SOSVault',
+        ]),
       }),
       freezeRoom({
         id: 'AXE_Dungeon_StoneVein_DeepChamber',
@@ -59,6 +75,9 @@ export const AXE_DUNGEON_DEFINITIONS = Object.freeze({
         type: 'boss',
         bossId: 'AXE_Boss_CavernWarden',
         checkpoint: true,
+        runtimePosition: { x: 6086, y: 0, z: -6000 },
+        runtimeSize: { width: 38, depth: 34, height: 9 },
+        nextRoomIds: Object.freeze([]),
       }),
       freezeRoom({
         id: 'AXE_Dungeon_StoneVein_SOSVault',
@@ -66,6 +85,10 @@ export const AXE_DUNGEON_DEFINITIONS = Object.freeze({
         type: 'special',
         accessItemId: 'AXE_Item_SOS_Access',
         checkpoint: true,
+        runtimePosition: { x: 6042, y: 0, z: -6042 },
+        runtimeSize: { width: 28, depth: 28, height: 7 },
+        encounter: { count: 2, tierName: 'elite' },
+        nextRoomIds: Object.freeze(['AXE_Dungeon_StoneVein_Forks']),
       }),
     ]),
     completion: Object.freeze({
@@ -90,17 +113,24 @@ export const AXE_DUNGEON_DEFINITIONS = Object.freeze({
     entryAccessItemId: 'AXE_Item_SOS_Access',
     entryPosition: Object.freeze({ x: 690, y: 0, z: -540 }),
     prototypeEntryPosition: Object.freeze({ x: 28, y: 0, z: -10 }),
-    exitPosition: Object.freeze({ x: 650, y: 0, z: -485 }),
+    prototypeReturnPosition: Object.freeze({ x: 30, y: 0, z: -10 }),
+    interiorOrigin: Object.freeze({ x: 6400, y: 0, z: -6000 }),
     rooms: Object.freeze([
       freezeRoom({
         id: 'AXE_Dungeon_SealedSanctum_Threshold',
         name: 'Sealed Threshold',
         checkpoint: true,
+        runtimePosition: { x: 6400, y: 0, z: -6000 },
+        nextRoomIds: Object.freeze(['AXE_Dungeon_SealedSanctum_Gauntlet']),
       }),
       freezeRoom({
         id: 'AXE_Dungeon_SealedSanctum_Gauntlet',
         name: 'Sanctum Gauntlet',
         type: 'combat',
+        runtimePosition: { x: 6446, y: 0, z: -6000 },
+        runtimeSize: { width: 38, depth: 30, height: 8 },
+        encounter: { count: 6, tierName: 'elite' },
+        nextRoomIds: Object.freeze(['AXE_Dungeon_SealedSanctum_Core']),
       }),
       freezeRoom({
         id: 'AXE_Dungeon_SealedSanctum_Core',
@@ -108,6 +138,9 @@ export const AXE_DUNGEON_DEFINITIONS = Object.freeze({
         type: 'boss',
         bossId: 'AXE_Boss_SealedGuardian',
         checkpoint: true,
+        runtimePosition: { x: 6494, y: 0, z: -6000 },
+        runtimeSize: { width: 44, depth: 38, height: 10 },
+        nextRoomIds: Object.freeze([]),
       }),
     ]),
     completion: Object.freeze({
@@ -135,6 +168,8 @@ export const AXE_DUNGEON_BOSSES = Object.freeze({
     defenseScale: 1.4,
     encounterProfile: 'melee-control',
     respawnMode: 'session',
+    color: 0x8b5cf6,
+    speed: 1.4,
   }),
   AXE_Boss_SealedGuardian: Object.freeze({
     id: 'AXE_Boss_SealedGuardian',
@@ -148,6 +183,8 @@ export const AXE_DUNGEON_BOSSES = Object.freeze({
     defenseScale: 2,
     encounterProfile: 'multi-phase',
     respawnMode: 'session',
+    color: 0xec4899,
+    speed: 1.7,
   }),
 });
 
@@ -162,6 +199,11 @@ export function getAXEDungeonBossDefinition(bossId) {
 export function getAXEDungeonRoom(dungeonId, roomId) {
   const dungeon = getAXEDungeonDefinition(dungeonId);
   return dungeon?.rooms?.find((room) => room.id === roomId) || null;
+}
+
+export function getAXEDungeonRoomIndex(dungeonId, roomId) {
+  const dungeon = getAXEDungeonDefinition(dungeonId);
+  return Math.max(-1, dungeon?.rooms?.findIndex((room) => room.id === roomId) ?? -1);
 }
 
 export function getAXEDungeonEntryRequirement(dungeonId, roomId = null) {
