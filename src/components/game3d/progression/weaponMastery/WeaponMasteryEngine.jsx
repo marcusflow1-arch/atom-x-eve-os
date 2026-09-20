@@ -20,6 +20,7 @@ import {
   recordWeaponKill,
   setMasteryLevel,
 } from '../weaponMasteryStore';
+import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
 import {
   XP_WEIGHTS,
   MILESTONE_LEVELS,
@@ -27,7 +28,7 @@ import {
   resolveWeaponType,
 } from './weaponMasteryConfig';
 
-const STORAGE_KEY = 'weapon_mastery_stats_v1';
+const statsStorage = characterScopedStorage('weapon_mastery_stats_v2');
 
 // Per-weapon stats kept in memory + persisted. These are usage counters that
 // drive the XP curve in addition to the existing kills-into-level system.
@@ -39,13 +40,15 @@ const buildDefaultStats = () => ({
   mastery_xp: 0, // fractional XP accumulator (1.0 = one kill-equivalent)
 });
 
-let stats = (() => {
+const loadStats = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = statsStorage.get();
     if (raw) return JSON.parse(raw);
   } catch {}
   return {};
-})();
+};
+
+let stats = loadStats();
 
 const ensure = (weaponId) => {
   if (!stats[weaponId]) stats[weaponId] = buildDefaultStats();
@@ -53,8 +56,12 @@ const ensure = (weaponId) => {
 };
 
 const persist = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stats)); } catch {}
+  try { statsStorage.set(JSON.stringify(stats)); } catch {}
 };
+
+subscribeCharacterChange(() => {
+  stats = loadStats();
+});
 
 const emit = (payload) => {
   if (typeof window === 'undefined') return;
