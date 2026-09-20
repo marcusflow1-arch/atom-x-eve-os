@@ -40,7 +40,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 20, system: 'Combine / stage / refine / ultimate', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 21, system: 'Set 2–5 bonuses', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 22, system: 'Sockets / gems', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 23, system: 'Equipment Aura', status: AXE_STATUS.PARTIAL },
+  { prompt: 23, system: 'Equipment Aura', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 24, system: 'Core progression layer', status: AXE_STATUS.MISSING },
   { prompt: 25, system: 'Four-piece auxiliary gear', status: AXE_STATUS.MISSING },
   { prompt: 26, system: 'Vanity/costume stat layer', status: AXE_STATUS.PARTIAL },
