@@ -32,12 +32,20 @@ import {
   subscribeKillCount,
 } from '../killCountStore';
 import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
+import {
+  AXE_WING_REINFORCEMENT_CONFIG,
+  getAXEWingReinforcementChance,
+  getAXEWingReinforcementCost,
+  getAXEWingStatScale,
+  getAXEWingVisualTier,
+  resolveAXEWingReinforcement,
+} from '../axe/progression/AXEWingReinforcementSystem';
 
 const storage = characterScopedStorage('wings_progression_v1');
 
 const initialPaths = () => {
   const p = {};
-  WING_PATHS.forEach((w) => { p[w.id] = { level: 0, totalAttempts: 0, totalSuccesses: 0 }; });
+  WING_PATHS.forEach((w) => { p[w.id] = { level: 0, totalAttempts: 0, totalSuccesses: 0, reinforcementPercent: 0 }; });
   return p;
 };
 
@@ -54,13 +62,29 @@ const loadState = () => {
             level:          Math.max(0, Math.min(MAX_WING_LEVEL, p.level || 0)),
             totalAttempts:  Math.max(0, p.totalAttempts || 0),
             totalSuccesses: Math.max(0, p.totalSuccesses || 0),
+            reinforcementPercent: Math.max(
+              0,
+              Math.min(AXE_WING_REINFORCEMENT_CONFIG.maxPercent, Number(p.reinforcementPercent || 0)),
+            ),
           };
         }
       });
-      return { paths, equippedPathId: parsed.equippedPathId || null };
+      return {
+        paths,
+        equippedPathId: parsed.equippedPathId || null,
+        materials: {
+          wing_feather: Math.max(0, Number(parsed.materials?.wing_feather ?? 24)),
+          wing_essence: Math.max(0, Number(parsed.materials?.wing_essence ?? 12)),
+          wing_stabilizer: Math.max(0, Number(parsed.materials?.wing_stabilizer ?? 3)),
+        },
+      };
     }
   } catch {}
-  return { paths: initialPaths(), equippedPathId: null };
+  return {
+    paths: initialPaths(),
+    equippedPathId: null,
+    materials: { wing_feather: 24, wing_essence: 12, wing_stabilizer: 3 },
+  };
 };
 
 let state = loadState();
@@ -71,6 +95,16 @@ const emit = () => { listeners.forEach((fn) => fn(getWingsState())); };
 subscribeCharacterChange(() => { state = loadState(); emit(); });
 subscribeKillCount(() => emit());
 
+const scaleWingBonuses = (bonuses = {}, percent = 0) => {
+  const scale = getAXEWingStatScale(percent);
+  return Object.fromEntries(
+    Object.entries(bonuses || {}).map(([key, value]) => [
+      key,
+      Number.isFinite(Number(value)) ? Number(value) * scale : value,
+    ]),
+  );
+};
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 export function getWingsState() {
@@ -78,17 +112,23 @@ export function getWingsState() {
   const paths = {};
   WING_PATHS.forEach((def) => {
     const p = state.paths[def.id];
+    const reinforcementPercent = Number(p.reinforcementPercent || 0);
     paths[def.id] = {
       ...def,
       level:           p.level,
       totalAttempts:   p.totalAttempts,
       totalSuccesses:  p.totalSuccesses,
+      reinforcementPercent,
+      reinforcementChance: getAXEWingReinforcementChance(reinforcementPercent),
+      reinforcementCost: getAXEWingReinforcementCost(reinforcementPercent, false),
+      visualTier: getAXEWingVisualTier(reinforcementPercent),
+      isMaxReinforcement: reinforcementPercent >= AXE_WING_REINFORCEMENT_CONFIG.maxPercent,
       isMaxLevel:      p.level >= MAX_WING_LEVEL,
       successChance:   getWingSuccessChance(p.level),
-      multiplierBonuses: getWingMultiplierForLevel(p.level),
-      flatBonuses:     getWingFlatBonusesForLevel(def.id, p.level),
+      multiplierBonuses: scaleWingBonuses(getWingMultiplierForLevel(p.level), reinforcementPercent),
+      flatBonuses: scaleWingBonuses(getWingFlatBonusesForLevel(def.id, p.level), reinforcementPercent),
       nextFlatBonuses: p.level < MAX_WING_LEVEL
-        ? getWingFlatBonusesForLevel(def.id, p.level + 1)
+        ? scaleWingBonuses(getWingFlatBonusesForLevel(def.id, p.level + 1), reinforcementPercent)
         : null,
     };
   });
@@ -98,6 +138,8 @@ export function getWingsState() {
     equippedWing: state.equippedPathId ? paths[state.equippedPathId] : null,
     attemptCost: WING_ATTEMPT_COST,
     kills,
+    materials: { ...(state.materials || {}) },
+    maxReinforcementPercent: AXE_WING_REINFORCEMENT_CONFIG.maxPercent,
   };
 }
 
@@ -158,13 +200,68 @@ export function attemptWingEnhancementBatch(pathId, count) {
   return { attempts, successes, finalLevel: state.paths[pathId]?.level || 0 };
 }
 
+const canAffordWingMaterials = (cost = {}) =>
+  Object.entries(cost).every(([id, amount]) => Number(state.materials?.[id] || 0) >= Number(amount || 0));
+
+const consumeWingMaterials = (cost = {}) => {
+  const next = { ...(state.materials || {}) };
+  for (const [id, amount] of Object.entries(cost)) next[id] = Math.max(0, Number(next[id] || 0) - Number(amount || 0));
+  state = { ...state, materials: next };
+};
+
+export function attemptWingReinforcement(pathId, {
+  protectedAttempt = false,
+  roll,
+} = {}) {
+  const p = state.paths[pathId];
+  if (!p) return { ok: false, reason: 'no_path' };
+
+  const current = Number(p.reinforcementPercent || 0);
+  if (current >= AXE_WING_REINFORCEMENT_CONFIG.maxPercent) {
+    return { ok: false, reason: 'max_reinforcement', percent: current };
+  }
+
+  const cost = getAXEWingReinforcementCost(current, protectedAttempt);
+  if (!canAffordWingMaterials(cost)) {
+    return { ok: false, reason: 'insufficient_materials', cost, materials: { ...(state.materials || {}) } };
+  }
+
+  const result = resolveAXEWingReinforcement(current, {
+    protectedAttempt,
+    ...(Number.isFinite(roll) ? { roll } : {}),
+  });
+
+  consumeWingMaterials(cost);
+  state.paths[pathId] = {
+    ...p,
+    reinforcementPercent: result.percent,
+  };
+  save();
+  emit();
+  return { ...result, cost, pathId, visualTier: getAXEWingVisualTier(result.percent) };
+}
+
+export function grantWingMaterials(delta = {}) {
+  state = {
+    ...state,
+    materials: {
+      wing_feather: Number(state.materials?.wing_feather || 0) + Math.max(0, Number(delta.wing_feather || 0)),
+      wing_essence: Number(state.materials?.wing_essence || 0) + Math.max(0, Number(delta.wing_essence || 0)),
+      wing_stabilizer: Number(state.materials?.wing_stabilizer || 0) + Math.max(0, Number(delta.wing_stabilizer || 0)),
+    },
+  };
+  save();
+  emit();
+  return { ...state.materials };
+}
+
 // ── Stats pipeline hooks ──────────────────────────────────────────────────
 // Only the EQUIPPED wing contributes bonuses. Multiplier = virtual attribute
 // points (same shape as Halo); flat = final stats (same shape as Title).
 export function getEquippedWingsMultiplierBonuses() {
   if (!state.equippedPathId) return null;
   const p = state.paths[state.equippedPathId];
-  return getWingMultiplierForLevel(p.level);
+  return scaleWingBonuses(getWingMultiplierForLevel(p.level), p.reinforcementPercent || 0);
 }
 
 export function getEquippedWingsFlatBonuses() {
@@ -172,7 +269,10 @@ export function getEquippedWingsFlatBonuses() {
     return { hp: 0, damage: 0, defense: 0, critChance: 0, critDamage: 0, criticalDefense: 0 };
   }
   const p = state.paths[state.equippedPathId];
-  return getWingFlatBonusesForLevel(state.equippedPathId, p.level);
+  return scaleWingBonuses(
+    getWingFlatBonusesForLevel(state.equippedPathId, p.level),
+    p.reinforcementPercent || 0,
+  );
 }
 
 export function setWingLevel(pathId, level) {
@@ -184,7 +284,7 @@ export function setWingLevel(pathId, level) {
 }
 
 export function resetWings() {
-  state = { paths: initialPaths(), equippedPathId: null };
+  state = { paths: initialPaths(), equippedPathId: null, materials: { wing_feather: 24, wing_essence: 12, wing_stabilizer: 3 } };
   save();
   emit();
 }
