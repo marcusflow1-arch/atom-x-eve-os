@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LOOT_RARITIES, addLootToInventory } from './lootStore';
+import { addAXEEquipmentItem } from './axe/equipment/AXEEquipmentInventoryStore';
 
 const PICKUP_RANGE = 2.8;   // world units
 const BOB_SPEED    = 1.8;   // rad/s
@@ -177,13 +178,21 @@ export default function WorldLootDrops({ scene, camera, drops, onPickup, playerR
     scene.remove(mesh);
     if (light) scene.remove(light);
     delete meshesRef.current[data.dropId];
-    // Add to inventory
-    addLootToInventory(data);
+    // Equipment drops become canonical AXE equipment instances. Everything
+    // else continues into the character-scoped loot/material inventory.
+    let stored = data;
+    if (data.category === 'equipment' && data.equipmentItem) {
+      const result = addAXEEquipmentItem(data.equipmentItem, { source: 'world_loot' });
+      if (!result.ok) return;
+      stored = { ...data, equipmentInstance: result.item };
+    } else {
+      addLootToInventory(data);
+    }
     setNearbyDrop(null);
     // Notify parent to remove from drops list
     if (onPickup) onPickup(data.dropId);
     // Dispatch global toast event
-    window.dispatchEvent(new CustomEvent('lootPickup', { detail: data }));
+    window.dispatchEvent(new CustomEvent('lootPickup', { detail: stored }));
   }, [scene, onPickup]);
 
   const rarity = nearbyDrop ? (LOOT_RARITIES[nearbyDrop.rarity] || LOOT_RARITIES.common) : null;
