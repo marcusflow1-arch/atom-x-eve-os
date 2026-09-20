@@ -15,6 +15,7 @@ import GameWorldServerManager from '../components/game3d/GameWorldServerManager'
 import WorldSyncMount from '../components/game3d/network/WorldSyncMount';
 import AXEWorldStreamingMount from '../components/game3d/axe/world/AXEWorldStreamingMount';
 import AXEFirstRegionMount from '../components/game3d/axe/world/AXEFirstRegionMount';
+import AXEFirstSpawnMount from '../components/game3d/axe/characters/AXEFirstSpawnMount';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -297,6 +298,8 @@ export default function GameView() {
       <AXEWorldStreamingMount />
       {/* AXE Prompt 004 — first 2.4 km macro-region blockout. */}
       <AXEFirstRegionMount />
+      {/* AXE Prompt 005 — character first-spawn entry and tutorial handoff. */}
+      <AXEFirstSpawnMount />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
