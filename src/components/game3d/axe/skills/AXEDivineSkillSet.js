@@ -1,0 +1,86 @@
+// AXE Prompt 015 — A-skill, charge and divine-protection definitions.
+// These are original AXE working names. Exact legacy names remain reference-only.
+
+import { SKILL_TYPE, WEAPON_TYPE, CAST_TYPE } from '../../skills/skillTypes';
+
+const aerial = (role, weaponType, icon) => Object.freeze({
+  skill_id: `axe_${role}_a_skill`,
+  skill_name: `${role[0].toUpperCase() + role.slice(1)} Aerial Art`,
+  skill_type: SKILL_TYPE.ACTIVE_ATTACK,
+  weapon_type: weaponType,
+  cast_type: CAST_TYPE.SINGLE_HIT,
+  hit_count: 1,
+  hit_delay: 0,
+  cooldown: 12,
+  duration: 0,
+  max_level: 30,
+  scaling: { damage_pct: { min: 1.65, max: 2.45 } },
+  icon,
+  description: 'A high-tier aerial strike. This attack is explicitly allowed to critically hit.',
+  animation_ref: `axe_${role}_aerial`,
+  vfx_ref: `axe_${role}_aerial_vfx`,
+  axe_role: role,
+  axe_pattern: 'aerial',
+  aerial: true,
+  critical_allowed: true,
+});
+
+export const AXE_DIVINE_SKILLS = Object.freeze([
+  aerial('offensive', WEAPON_TYPE.SWORD, '⚔️'),
+  aerial('defensive', WEAPON_TYPE.GUARDIAN, '🛡️'),
+  aerial('ranged', WEAPON_TYPE.RANGED, '🏹'),
+  Object.freeze({
+    skill_id: 'axe_power_charge',
+    skill_name: 'Power Charge',
+    skill_type: SKILL_TYPE.ACTIVE_BUFF,
+    weapon_type: null,
+    cast_type: CAST_TYPE.SELF_CAST,
+    hit_count: 1,
+    hit_delay: 0,
+    cooldown: 45,
+    duration: 20,
+    max_level: 30,
+    scaling: { next_hit_multiplier: { min: 1.50, max: 2.00 } },
+    icon: '⚡',
+    description: 'Empowers the next eligible attack. The charge multiplier is applied before normal critical resolution.',
+    axe_effect: 'next_hit_charge',
+  }),
+  Object.freeze({
+    skill_id: 'axe_anti_reflection',
+    skill_name: 'Divine Reflection Guard',
+    skill_type: SKILL_TYPE.ACTIVE_BUFF,
+    weapon_type: null,
+    cast_type: CAST_TYPE.SELF_CAST,
+    hit_count: 0,
+    hit_delay: 0,
+    cooldown: 75,
+    duration: 30,
+    max_level: 30,
+    scaling: { reflection_reduction_pct: { min: 0.35, max: 1.00 } },
+    icon: '🔰',
+    description: 'Reduces reflected damage and can reach full reflection protection at maximum configured rank.',
+    axe_effect: 'anti_reflection',
+  }),
+  Object.freeze({
+    skill_id: 'axe_control_protection',
+    skill_name: 'Divine Control Guard',
+    skill_type: SKILL_TYPE.ACTIVE_BUFF,
+    weapon_type: null,
+    cast_type: CAST_TYPE.SELF_CAST,
+    hit_count: 0,
+    hit_delay: 0,
+    cooldown: 75,
+    duration: 12,
+    max_level: 30,
+    scaling: { control_resist_pct: { min: 0.35, max: 1.00 } },
+    icon: '✨',
+    description: 'Provides temporary resistance to stun and other control effects; maximum rank can provide immunity.',
+    axe_effect: 'control_protection',
+  }),
+]);
+
+export const AXE_DIVINE_EXISTING_SKILL_BRIDGES = Object.freeze({
+  shield: 'aegis_shield',
+  reflection: 'heavens_riposte',
+  criticalProtection: 'gods_deflection',
+});
