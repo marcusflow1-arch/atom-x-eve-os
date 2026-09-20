@@ -21,7 +21,6 @@ import AXEInteractionMount from '../components/game3d/axe/interactions/AXEIntera
 import AXECapitalBlockoutMount from '../components/game3d/axe/cities/AXECapitalBlockoutMount';
 import AXEDungeonMount from '../components/game3d/axe/dungeons/AXEDungeonMount';
 import AXEDungeonRuntime from '../components/game3d/axe/dungeons/AXEDungeonRuntime';
-import AXEGlobalServicesMenu from '../components/game3d/axe/services/AXEGlobalServicesMenu';
 import AXEFactionWarRuntime from '../components/game3d/axe/factions/AXEFactionWarRuntime';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
@@ -74,8 +73,7 @@ export default function GameView() {
   const [phase, setPhase] = useState('login'); // 'login' | 'world'
   const [storeOpen, setStoreOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const [requestedService, setRequestedService] = useState('reinforcement');
+  const [requestedService, setRequestedService] = useState(null);
   const [friendsListOpen, setFriendsListOpen] = useState(false);
   const [clanOverlayOpen, setClanOverlayOpen] = useState(false);
   const [learnedSkillIds, setLearnedSkillIds] = useState(() => getLearnedSkillIds());
@@ -239,12 +237,12 @@ export default function GameView() {
   // Living Quest NPC interaction is now handled in-world by CinematicQuestDialogue
   // (mounted below), which listens for the same 'openLivingQuest' event.
 
-  // NPC service interactions and the global Services button route through the
-  // same menu instead of maintaining separate rule sets.
+  // NPC/global service requests route into the Services tab of the C Character
+  // Hub. There is no second standalone Services overlay anymore.
   useEffect(() => {
     const onService = (event) => {
       setRequestedService(event?.detail?.service || 'reinforcement');
-      setServicesOpen(true);
+      setProgressionOpen(true);
     };
     window.addEventListener('axeServiceRequested', onService);
     return () => window.removeEventListener('axeServiceRequested', onService);
@@ -257,7 +255,9 @@ export default function GameView() {
     localStorage.setItem('game_theme_volume', String(themeVolume));
   }, [themeVolume]);
 
-  // Hotkeys while in-game: TAB = store/build, C = character progression, V = global Services, ESC = pause menu
+  // Hotkeys while in-game:
+  // TAB = store/build, C = unified Character Hub, V = Character Hub Services,
+  // ESC = close the active overlay / pause.
   useEffect(() => {
     if (phase !== 'world') return;
     const onKey = (e) => {
@@ -266,18 +266,22 @@ export default function GameView() {
         e.preventDefault();
         setStoreOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'c') {
+        setRequestedService(null);
         setProgressionOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'v') {
-        setServicesOpen((v) => !v);
+        setRequestedService('reinforcement');
+        setProgressionOpen(true);
       } else if (e.key.toLowerCase() === 'l') {
         setFriendsListOpen((v) => !v);
       } else if (e.key.toLowerCase() === 'g') {
         setClanOverlayOpen((v) => !v);
       } else if (e.key === 'Escape') {
-        // Close any open sub-panels first; otherwise toggle pause menu
+        // Close any open sub-panels first; otherwise toggle pause menu.
         if (storeOpen) setStoreOpen(false);
-        else if (progressionOpen) setProgressionOpen(false);
-        else if (servicesOpen) setServicesOpen(false);
+        else if (progressionOpen) {
+          setProgressionOpen(false);
+          setRequestedService(null);
+        }
         else if (friendsListOpen) setFriendsListOpen(false);
         else if (clanOverlayOpen) setClanOverlayOpen(false);
         else setPauseMenuOpen((v) => !v);
@@ -285,7 +289,7 @@ export default function GameView() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, storeOpen, progressionOpen, servicesOpen, friendsListOpen, clanOverlayOpen]);
+  }, [phase, storeOpen, progressionOpen, friendsListOpen, clanOverlayOpen]);
 
   if (phase === 'login') {
     return (
@@ -305,9 +309,12 @@ export default function GameView() {
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
       <button
-        onClick={() => setServicesOpen(true)}
-        className="absolute right-4 top-4 z-[135] rounded-xl border border-cyan-300/20 bg-slate-950/70 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100 backdrop-blur-xl hover:bg-cyan-300/10"
-        title="Open Services (V)"
+        onClick={() => {
+          setRequestedService('reinforcement');
+          setProgressionOpen(true);
+        }}
+        className="absolute right-4 top-4 z-[135] rounded-xl border border-white/15 bg-neutral-800/55 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/80 backdrop-blur-xl hover:bg-white/10 hover:text-white"
+        title="Open Services inside Character Hub (V)"
       >
         Services
       </button>
@@ -342,8 +349,15 @@ export default function GameView() {
       {/* AXE Prompt 039 — recurring faction-war objectives and invasion defenses. */}
       <AXEFactionWarRuntime />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
-      <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
-      <AXEGlobalServicesMenu isOpen={servicesOpen} requestedService={requestedService} onClose={() => setServicesOpen(false)} />
+      <CharacterProgressionMenu
+        isOpen={progressionOpen}
+        onClose={() => {
+          setProgressionOpen(false);
+          setRequestedService(null);
+        }}
+        requestedService={requestedService}
+        onServiceRequestConsumed={() => setRequestedService(null)}
+      />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
       <PartyPanel />
       <TradePanel />
