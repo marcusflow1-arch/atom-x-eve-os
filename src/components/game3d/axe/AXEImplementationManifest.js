@@ -45,7 +45,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 25, system: 'Four-piece auxiliary gear', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 26, system: 'Vanity/costume stat layer', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 27, system: 'Wings', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 28, system: 'Capes', status: AXE_STATUS.MISSING },
+  { prompt: 28, system: 'Capes', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 29, system: 'Titles', status: AXE_STATUS.PARTIAL },
   { prompt: 30, system: 'Halo', status: AXE_STATUS.PARTIAL },
   { prompt: 31, system: 'Elixirs', status: AXE_STATUS.MISSING },
