@@ -18,6 +18,7 @@ import { characterScopedStorage, subscribeCharacterChange } from './characterSto
 import { AXE_PRIMARY_STATS, createDefaultAXEPowerProgression, normalizeAXEPowerProgression } from './axe/progression/AXECharacterProgressionConfig';
 import { getRegisteredAXECoreBonuses, subscribeAXECores } from './axe/progression/AXECoreStore';
 import { getEquippedAXECostumeBonuses, subscribeAXECostumes } from './axe/progression/AXECostumeStore';
+import { getEquippedAXECapeBonuses, subscribeAXECapes } from './axe/progression/AXECapeStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -64,6 +65,16 @@ const normalizeCostumeBonuses = (raw = {}) => ({
 const getBonuses = () => {
   const core = getRegisteredAXECoreBonuses();
   const costume = normalizeCostumeBonuses(getEquippedAXECostumeBonuses());
+  const cape = getEquippedAXECapeBonuses();
+  const capeFlat = {
+    hp: cape.hp || cape.maxHP || 0,
+    chi: cape.chi || cape.maxChi || 0,
+    damage: cape.damage || cape.attack || 0,
+    defense: cape.defense || 0,
+    critChance: cape.critChance || cape.criticalChance || 0,
+    critDamage: cape.critDamage || cape.criticalDamage || 0,
+    criticalDefense: cape.criticalDefense || cape.critDefense || 0,
+  };
   const coreFlat = {
     ...core,
     attributionAttack: core.attributeAttack || core.attributionAttack || 0,
@@ -71,7 +82,7 @@ const getBonuses = () => {
   };
   return {
     halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), costume.attr),
-    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat),
+    title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, capeFlat),
   };
 };
 
@@ -239,6 +250,7 @@ subscribeWings(recomputeFromBonuses);
 subscribeTitles(recomputeFromBonuses);
 subscribeAXECores(recomputeFromBonuses);
 subscribeAXECostumes(recomputeFromBonuses);
+subscribeAXECapes(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
