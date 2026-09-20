@@ -23,7 +23,6 @@ import { createBossCombatDialogue } from './boss/BossCombatDialogue';
 import { spawnWorldBoss } from './boss/spawnWorldBoss';
 import { updateBossMovement, projectBossHead } from './boss/updateBossMovement';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
-import EquipmentMenu from './equipment/EquipmentMenu';
 import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
 import { getActiveAXEMountSpeedMultiplier, setAXEMountRiding, tickAXEMountRideActivity } from './axe/progression/AXEMountStore';
@@ -131,7 +130,6 @@ export default function GameWorld3D() {
   const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
   const spawnQuestEnemiesRef = useRef(null); // set inside useEffect once scene is ready
   const [questState, setQuestState] = useState(getQuestState());
-  const [equipmentOpen, setEquipmentOpen] = useState(false);
   const [playerMenu, setPlayerMenu] = useState(null); const remoteManagerRef = useRef(null);
   const [localMicOn, setLocalMicOn] = useState(false);
   const [talkingPeers, setTalkingPeers] = useState({});
@@ -1057,8 +1055,8 @@ export default function GameWorld3D() {
         if (playerAnim?.requestJump()) playActionSound('player_jump');
         e.preventDefault();
       }
-      // C = toggle crouch once per press
-      if (k === 'c' && !crouchTogglePressed.current) {
+      // C is reserved for the unified Character Hub. Crouch uses Ctrl.
+      if ((k === 'control' || e.code === 'ControlLeft' || e.code === 'ControlRight') && !crouchTogglePressed.current) {
         crouchTogglePressed.current = true;
         playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
       }
@@ -1071,7 +1069,10 @@ export default function GameWorld3D() {
       // AXE Prompt 014: Skills 1..9 use keys 1..9, Skill 10 uses key 0.
       if (k >= '1' && k <= '9') { abilityKeyPressed.current = parseInt(k, 10) - 1; }
       if (k === '0') { abilityKeyPressed.current = 9; }
-      if (k === 'i') { setEquipmentOpen((v) => !v); e.preventDefault(); }
+      if (k === 'i') {
+        window.dispatchEvent(new CustomEvent('axeOpenCharacterHub', { detail: { tab: 'inventory' } }));
+        e.preventDefault();
+      }
       // F9 keeps the old boss-encounter development toggle without stealing Skill 9.
       if (e.code === 'F9' && !e.repeat) {
         if (!bossEncounter.isActive()) {
@@ -1113,10 +1114,11 @@ export default function GameWorld3D() {
     const onKeyUp = (e) => {
       const k = e.key.toLowerCase();
       keys.current[k] = false;
-      if (k === 'c') crouchTogglePressed.current = false;
+      if (k === 'control' || e.code === 'ControlLeft' || e.code === 'ControlRight') crouchTogglePressed.current = false;
     };
     const rightDragMoved = { current: false };
     const onMouseDown = (e) => {
+      if (typeof window !== 'undefined' && window.__axeUiModalOpen) return;
       // Left click = attack, middle click = Lock-On, right click = camera drag (+ block if no drag)
       if (e.button === 0) {
         rangedClickAttackPressed.current = true;
@@ -2476,8 +2478,7 @@ export default function GameWorld3D() {
         </div>
       )}
 
-      {/* Equipment menu (I) — Where Winds Meet–style layout */}
-      <EquipmentMenu open={equipmentOpen} onClose={() => setEquipmentOpen(false)} />
+      {/* I now opens Inventory / Gear inside the unified C Character Hub. */}
 
       {/* Milestone quest unlock announcements (abilities / class changes) */}
       <QuestRewardToast />
