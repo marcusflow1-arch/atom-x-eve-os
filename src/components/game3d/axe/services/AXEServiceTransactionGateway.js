@@ -32,6 +32,7 @@ import {
   getLootItemCount,
 } from '../../lootStore';
 import { getAXEServiceInventoryCost } from './AXEServiceEconomy';
+import { getNextStage, AXE_REFINE_CONFIG, AXE_ULTIMATE_CONFIG } from '../equipment/AXEItemAdvancementSystem';
 import { getAXEServiceEligibility } from './AXEServiceEligibility';
 
 const getOwned = (itemId) => getAXEEquipmentItem(itemId);
@@ -102,54 +103,56 @@ const localHandlers = {
 
   stage: (payload) => withOwnedItem(payload, (item) => {
     const advancement = getAXEAdvancementState(item.instanceId);
+    if (!getNextStage(advancement.stage)) return { ok: false, reason: 'MAX_STAGE' };
     const cost = getAXEServiceInventoryCost('stage', { advancement });
-    if (!canAfford(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
+    const paid = consumeCost(cost);
+    if (!paid.ok) return paid;
 
     const result = applyAXEStage(item.instanceId, payload.options || {});
-    if (result.reason === 'MAX_STAGE') return { ...result, cost };
-    const paid = consumeCost(cost);
-    return paid.ok ? { ...result, cost } : paid;
+    return { ...result, cost };
   }, 'stage'),
 
   refine: (payload) => withOwnedItem(payload, (item) => {
     const advancement = getAXEAdvancementState(item.instanceId);
+    if (Number(advancement.refine?.level || 0) >= AXE_REFINE_CONFIG.maxLevel) {
+      return { ok: false, reason: 'MAX_REFINE' };
+    }
     const protectedAttempt = !!payload.options?.protectedAttempt;
     const cost = getAXEServiceInventoryCost('refine', { advancement, protectedAttempt });
-    if (!canAfford(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
-
-    const result = applyAXERefine(item.instanceId, payload.options || {});
-    if (result.reason === 'MAX_REFINE') return { ...result, cost };
-
     const paid = consumeCost(cost);
     if (!paid.ok) return paid;
+
+    const result = applyAXERefine(item.instanceId, payload.options || {});
     if (result.destroyed) destroyAXEEquipmentItem(item.instanceId, 'refine_failure');
     return { ...result, cost };
   }, 'refine'),
 
   ultimate: (payload) => withOwnedItem(payload, (item) => {
     const advancement = getAXEAdvancementState(item.instanceId);
+    if (Number(advancement.ultimate?.level || 0) >= AXE_ULTIMATE_CONFIG.maxLevel) {
+      return { ok: false, reason: 'MAX_ULTIMATE' };
+    }
     const protectedAttempt = !!payload.options?.protectedAttempt;
     const cost = getAXEServiceInventoryCost('ultimate', { advancement, protectedAttempt });
-    if (!canAfford(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
+    const paid = consumeCost(cost);
+    if (!paid.ok) return paid;
 
     const result = applyAXEUltimate(item, payload.options || {});
-    if (['RARITY_NOT_ELIGIBLE', 'MAX_ULTIMATE'].includes(result.reason)) {
-      return { ...result, cost };
-    }
-    const paid = consumeCost(cost);
-    return paid.ok ? { ...result, cost } : paid;
+    return { ...result, cost };
   }, 'ultimate'),
 
   sockets: (payload) => withOwnedItem(payload, (item) => {
     const sockets = getAXESocketState(item.instanceId);
+    if ((sockets.sockets?.length || 0) >= Number(sockets.maxSockets || 0)) {
+      return { ok: false, reason: 'MAX_SOCKETS' };
+    }
     const protectedAttempt = !!payload.options?.protectedAttempt;
     const cost = getAXEServiceInventoryCost('sockets', { sockets, protectedAttempt });
-    if (!canAfford(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
+    const paid = consumeCost(cost);
+    if (!paid.ok) return paid;
 
     const result = drillAXESocket(item.instanceId, item, payload.options || {});
-    if (result.reason === 'MAX_SOCKETS') return { ...result, cost };
-    const paid = consumeCost(cost);
-    return paid.ok ? { ...result, cost } : paid;
+    return { ...result, cost };
   }, 'sockets'),
 
   insert_gem: (payload) => withOwnedItem(payload, (item) => {
@@ -173,11 +176,10 @@ const localHandlers = {
 
   equipment_aura: (payload) => withOwnedItem(payload, (item) => {
     const cost = getAXEServiceInventoryCost('equipment_aura');
-    if (!canAfford(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
-    const result = applyAXEItemAura(item, payload.options || {});
-    if (!result.ok) return result;
     const paid = consumeCost(cost);
-    return paid.ok ? { ...result, cost } : paid;
+    if (!paid.ok) return paid;
+    const result = applyAXEItemAura(item, payload.options || {});
+    return { ...result, cost };
   }, 'equipment_aura'),
 };
 
