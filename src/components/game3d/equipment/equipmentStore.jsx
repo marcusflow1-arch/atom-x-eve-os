@@ -29,6 +29,7 @@ export const GEAR_CATEGORIES = [
   { id: 'cape',      label: 'Cape',      slots: AXE_EQUIPMENT_SLOT_DEFS.cape.maxEquipped },
   { id: 'wings',     label: 'Wings',     slots: AXE_EQUIPMENT_SLOT_DEFS.wings.maxEquipped },
   { id: 'costume',   label: 'Costume',   slots: AXE_EQUIPMENT_SLOT_DEFS.costume.maxEquipped },
+  { id: 'auxiliary', label: 'Auxiliary Gear', slots: AXE_EQUIPMENT_SLOT_DEFS.auxiliary.maxEquipped },
 ];
 
 export const ABILITY_GROUPS = [
