@@ -508,6 +508,16 @@ export function canLeaveCurrentAXEDungeonRoom() {
   return { ok: true, room };
 }
 
+export { isAXEDungeonRoomEncounterCleared as isAXEDungeonEncounterCleared };
+
+export function getAXEDungeonReturnPosition() {
+  const session = state.activeSession;
+  if (!session) return null;
+  const dungeon = getAXEDungeonDefinition(session.dungeonId);
+  const position = dungeon?.prototypeReturnPosition || dungeon?.prototypeEntryPosition;
+  return position ? { ...position } : null;
+}
+
 export function getAXEDungeonCheckpointPosition() {
   const session = state.activeSession;
   if (!session) return null;

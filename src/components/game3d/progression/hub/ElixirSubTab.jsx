@@ -3,7 +3,7 @@ import {
   getAXEElixirState,
   resetAXEElixirs,
   subscribeAXEElixirs,
-  useAXEElixir,
+  useAXEElixir as consumeAXEElixir,
 } from '../../axe/progression/AXEElixirStore';
 import { AXE_ELIXIR_TYPES } from '../../axe/progression/AXEElixirSystem';
 
@@ -53,7 +53,7 @@ export default function ElixirSubTab() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setLastResult(useAXEElixir(type.id, 1))}
+                  onClick={() => setLastResult(consumeAXEElixir(type.id, 1))}
                   disabled={owned < 1 || state.remainingCapacity < 1}
                   className="mt-4 w-full rounded-lg border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-2 text-xs font-semibold text-emerald-100 disabled:opacity-30"
                 >
