@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import WorldLootDrops from './WorldLootDrops';
 import LootPickupToast from './LootPickupToast';
 import { rollEnemyDrops } from './lootStore';
+import { createAXESeededRng } from './axe/loot/AXELootQuality';
+import { getHostState, isHost } from './network/hostElectionStore';
 
 /**
  * GameWorldLootLayer
@@ -55,7 +57,7 @@ export default function GameWorldLootLayer() {
     const handleDrop = (e) => {
       const { enemyId, tier, isBoss, x, y, z } = e.detail || {};
       if (!enemyId) return;
-      spawnDrops(tier || 'normal', !!isBoss, x ?? 0, y ?? 0, z ?? 0);
+      spawnDrops(tier || 'normal', !!isBoss, x ?? 0, y ?? 0, z ?? 0, enemyId);
     };
 
     const handleMultiplayer = (e) => {
@@ -71,7 +73,7 @@ export default function GameWorldLootLayer() {
           }
         });
       }
-      spawnDrops('normal', false, ex, ey, ez);
+      spawnDrops('normal', false, ex, ey, ez, d.enemy_id);
     };
 
     window.addEventListener('enemyLootDrop', handleDrop);
@@ -82,8 +84,15 @@ export default function GameWorldLootLayer() {
     };
   }, []);
 
-  const spawnDrops = (tier, isBoss, x, y, z) => {
-    const rolled = rollEnemyDrops(tier, isBoss);
+  const spawnDrops = (tier, isBoss, x, y, z, enemyId = 'unknown') => {
+    const hostState = getHostState();
+    const authorityTag = hostState.myId
+      ? (isHost() ? `host:${hostState.myId}` : `replica:${hostState.hostId || 'pending'}`)
+      : 'single-player';
+    // All clients derive identical drops from the enemy id. The elected host
+    // remains the authoritative source when multiplayer identity is available.
+    const rng = createAXESeededRng(`${enemyId}:${tier}:${isBoss ? 'boss' : 'mob'}`);
+    const rolled = rollEnemyDrops(tier, isBoss, { rng, authorityTag });
     if (rolled.length === 0) return;
     const newDrops = rolled.map((item) => ({
       ...item,
