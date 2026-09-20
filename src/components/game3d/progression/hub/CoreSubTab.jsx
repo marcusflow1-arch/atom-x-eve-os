@@ -5,13 +5,13 @@ import {
   subscribeAXECores,
   unregisterAXECore,
   upgradeAXECore,
-} from '../../../axe/progression/AXECoreStore';
+} from '../../axe/progression/AXECoreStore';
 import {
   AXE_CORE_CONFIG,
   getAXECoreBonuses,
   getAXECoreDefinition,
   xpForAXECoreLevel,
-} from '../../../axe/progression/AXECoreSystem';
+} from '../../axe/progression/AXECoreSystem';
 
 const fmt = (bonuses) =>
   Object.entries(bonuses || {})
