@@ -1095,38 +1095,363 @@ function ActivityPage() {
 }
 
 function ClipsPage() {
+  const [selectedDate, setSelectedDate] = useState('all');
+  const [selectedClipId, setSelectedClipId] = useState(PROFILE_CLIPS[0].id);
+
+  const dates = useMemo(() => {
+    const grouped = new Map();
+    PROFILE_CLIPS.forEach((clip) => {
+      if (!grouped.has(clip.date)) grouped.set(clip.date, []);
+      grouped.get(clip.date).push(clip);
+    });
+    return [...grouped.entries()].map(([date, clips]) => ({
+      date,
+      clips,
+      label: new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      weekday: new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short' }),
+    }));
+  }, []);
+
+  const visibleDates = selectedDate === 'all'
+    ? dates
+    : dates.filter((entry) => entry.date === selectedDate);
+
+  const activeClip = PROFILE_CLIPS.find((clip) => clip.id === selectedClipId)
+    || visibleDates[0]?.clips[0]
+    || PROFILE_CLIPS[0];
+
+  const chooseDate = (date) => {
+    setSelectedDate(date);
+    if (date !== 'all') {
+      const first = PROFILE_CLIPS.find((clip) => clip.date === date);
+      if (first) setSelectedClipId(first.id);
+    }
+  };
+
   return (
     <div className="grid grid-cols-12 gap-3">
       <Section className="col-span-8">
-        <SectionTitle title="Featured Clip" icon={Film} />
+        <SectionTitle title="Clip Player" icon={Film} action={null} />
         <div className="px-3 pb-3">
-          <div className="relative h-[270px] overflow-hidden rounded-xl border border-white/[0.06]">
-            <img src={demoGames[0].image} alt="" className="h-full w-full object-cover opacity-72" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
-            <button className="absolute left-1/2 top-1/2 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white/70 bg-black/35"><Play className="h-6 w-6 fill-white text-white" /></button>
-            <div className="absolute inset-x-4 bottom-3"><p className="text-sm font-black text-white">Neon Rush – Perfect Drift</p><p className="text-[7px] text-white/35">Neon Racer · 12.4K views · 842 reactions · 126 comments</p></div>
+          <div className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-black/30">
+            <video
+              key={activeClip.id}
+              src={activeClip.video}
+              poster={activeClip.image}
+              controls
+              playsInline
+              preload="metadata"
+              className="h-[300px] w-full object-cover"
+            />
+            <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
+              <span className="rounded-md border border-cyan-200/20 bg-[#07111e]/80 px-2 py-1 text-[6px] font-black uppercase tracking-[.12em] text-cyan-100/70 backdrop-blur-md">{activeClip.category}</span>
+              <span className="rounded-md border border-white/[0.08] bg-black/55 px-2 py-1 text-[6px] font-bold text-white/55">{activeClip.duration}</span>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[14px] font-black text-white/88">{activeClip.title}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[7px] text-white/30">
+                <span>{activeClip.game}</span><span>·</span><span>{activeClip.time}</span><span>·</span>
+                <span>{new Date(`${activeClip.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+              <p className="mt-2 max-w-3xl text-[8px] leading-4 text-white/38">{activeClip.description}</p>
+            </div>
+            <div className="flex shrink-0 gap-1.5">
+              <button className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.06] bg-white/[0.02] text-white/35 hover:text-cyan-200" title="Bookmark clip"><Bookmark className="h-3.5 w-3.5" /></button>
+              <button className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.06] bg-white/[0.02] text-white/35 hover:text-cyan-200" title="Share clip"><Share2 className="h-3.5 w-3.5" /></button>
+            </div>
           </div>
         </div>
       </Section>
-      <Section className="col-span-4"><SectionTitle title="Clip Performance" icon={BarChart3} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Views" value="12.4K" sub="+38%" /><StatTile label="Reactions" value="842" sub="+21%" /><StatTile label="Comments" value="126" sub="+12%" /><StatTile label="Shares" value="314" sub="+27%" /></div><div className="px-4 pb-4"><button className="h-9 w-full rounded-lg border border-cyan-300/30 bg-cyan-300/[0.05] text-[8px] font-bold text-cyan-200">View Clip Analytics</button></div></Section>
-      <Section className="col-span-12"><SectionTitle title="Recent Clips" icon={Film} /><div className="grid grid-cols-6 gap-2 px-4 pb-4">{clipArt.map(([n,t,img])=><div key={n}><div className="relative h-20 overflow-hidden rounded-lg border border-white/[0.05]"><img src={img} alt={n} className="h-full w-full object-cover opacity-70" /><span className="absolute bottom-1 right-1 rounded bg-black/65 px-1 text-[6px] text-white">{t}</span></div><p className="mt-1 truncate text-[7px] font-bold text-white/58">{n}</p></div>)}</div></Section>
-      <Section className="col-span-4"><SectionTitle title="Trending Clips" icon={Flame} /><div className="space-y-2 px-4 pb-4">{clipArt.slice(0,3).map(([n,,img],i)=><div key={n} className="flex gap-2"><span className="grid h-7 w-7 place-items-center rounded-full bg-amber-300/[0.08] text-[8px] font-black text-amber-300">{i+1}</span><img src={img} alt="" className="h-8 w-12 rounded object-cover" /><p className="text-[7px] font-semibold text-white/56">{n}</p></div>)}</div></Section>
-      <Section className="col-span-4"><SectionTitle title="Most Viewed" icon={Play} /><div className="px-4 pb-4"><StatTile label="Top Clip" value="112.4K" sub="Zero to Hero · Starfield" /></div></Section>
-      <Section className="col-span-4"><SectionTitle title="Top Reactions" icon={Heart} /><div className="px-4 pb-4"><StatTile label="Reactions" value="6.1K" sub="Unstoppable · Elden Ring" /></div></Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Selected Clip" icon={BarChart3} action={null} />
+        <div className="grid grid-cols-2 gap-2 px-4 pb-3">
+          <StatTile label="Views" value={activeClip.views} icon={Eye} />
+          <StatTile label="Reactions" value={activeClip.reactions} icon={Heart} accent="text-rose-300" />
+          <StatTile label="Comments" value={activeClip.comments} icon={MessageSquare} accent="text-sky-300" />
+          <StatTile label="Shares" value={activeClip.shares} icon={Share2} accent="text-violet-300" />
+        </div>
+        <div className="border-t border-white/[0.045] px-4 py-3">
+          <p className="text-[6px] font-black uppercase tracking-[.15em] text-white/20">Archive position</p>
+          <div className="mt-2 flex items-center justify-between text-[8px]">
+            <span className="text-white/48">{PROFILE_CLIPS.findIndex((clip) => clip.id === activeClip.id) + 1} of {PROFILE_CLIPS.length}</span>
+            <span className="text-cyan-200/50">{activeClip.category}</span>
+          </div>
+          <p className="mt-3 text-[7px] leading-4 text-white/28">Clips are short gameplay moments. Selecting a dated moment loads it into the player without leaving the friend profile.</p>
+        </div>
+      </Section>
+
+      <Section className="col-span-12">
+        <div className="flex items-center justify-between px-4 pt-3.5">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-3.5 w-3.5 text-cyan-300/70" />
+            <div>
+              <h3 className="text-[11px] font-bold text-white/82">Clip Timeline</h3>
+              <p className="mt-0.5 text-[6px] text-white/22">Browse moments by the day they were captured.</p>
+            </div>
+          </div>
+          <p className="text-[7px] text-white/25">{PROFILE_CLIPS.length} saved moments</p>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto px-4 py-3" style={{ scrollbarWidth: 'thin' }}>
+          <button
+            type="button"
+            onClick={() => chooseDate('all')}
+            className={`min-w-[92px] rounded-xl border px-3 py-2 text-left transition-all ${selectedDate === 'all' ? 'border-cyan-300/32 bg-cyan-300/[0.075]' : 'border-white/[0.055] bg-black/10 hover:bg-white/[0.025]'}`}
+          >
+            <p className={`text-[8px] font-black ${selectedDate === 'all' ? 'text-cyan-100/80' : 'text-white/55'}`}>All dates</p>
+            <p className="mt-1 text-[6px] text-white/24">{PROFILE_CLIPS.length} clips</p>
+          </button>
+          {dates.map((entry) => (
+            <button
+              key={entry.date}
+              type="button"
+              onClick={() => chooseDate(entry.date)}
+              className={`min-w-[92px] rounded-xl border px-3 py-2 text-left transition-all ${selectedDate === entry.date ? 'border-cyan-300/32 bg-cyan-300/[0.075]' : 'border-white/[0.055] bg-black/10 hover:bg-white/[0.025]'}`}
+            >
+              <div className="flex items-center justify-between">
+                <p className={`text-[8px] font-black ${selectedDate === entry.date ? 'text-cyan-100/80' : 'text-white/55'}`}>{entry.label}</p>
+                <span className="text-[5px] uppercase tracking-[.1em] text-white/20">{entry.weekday}</span>
+              </div>
+              <p className="mt-1 text-[6px] text-white/24">{entry.clips.length} clip{entry.clips.length === 1 ? '' : 's'}</p>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <div className="col-span-9 space-y-3">
+        {visibleDates.map((entry) => (
+          <Section key={entry.date}>
+            <div className="flex items-center gap-3 border-b border-white/[0.045] px-4 py-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg border border-cyan-200/12 bg-cyan-200/[0.04]">
+                <span className="text-[11px] font-black text-cyan-100/70">{entry.label.split(' ')[1]}</span>
+              </div>
+              <div>
+                <p className="text-[9px] font-bold text-white/68">{new Date(`${entry.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                <p className="mt-0.5 text-[6px] text-white/22">{entry.clips.length} captured moment{entry.clips.length === 1 ? '' : 's'}</p>
+              </div>
+              <div className="ml-auto h-px min-w-12 flex-1 bg-gradient-to-r from-white/[0.07] to-transparent" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 p-3 xl:grid-cols-3">
+              {entry.clips.map((clip) => {
+                const selected = clip.id === activeClip.id;
+                return (
+                  <button
+                    key={clip.id}
+                    type="button"
+                    onClick={() => setSelectedClipId(clip.id)}
+                    className={`group overflow-hidden rounded-xl border text-left transition-all ${selected ? 'border-cyan-300/38 bg-cyan-300/[0.045] shadow-[0_0_20px_rgba(34,211,238,.08)]' : 'border-white/[0.05] bg-black/10 hover:border-white/[0.11] hover:bg-white/[0.02]'}`}
+                  >
+                    <div className="relative h-28 overflow-hidden">
+                      <img src={clip.image} alt={clip.title} className="h-full w-full object-cover opacity-68 transition-transform duration-300 group-hover:scale-[1.025]" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#06101b]/92 via-transparent to-black/10" />
+                      <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[6px] font-bold text-white/70">{clip.duration}</span>
+                      <span className="absolute left-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-white/25 bg-black/40 text-white/75"><Play className="h-3 w-3 fill-current" /></span>
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-[8px] font-black text-white/68">{clip.title}</p>
+                          <p className="mt-0.5 text-[6px] text-white/24">{clip.game} · {clip.time}</p>
+                        </div>
+                        <span className="shrink-0 text-[6px] text-cyan-200/45">{clip.category}</span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-3 text-[6px] text-white/22">
+                        <span className="flex items-center gap-1"><Eye className="h-2.5 w-2.5" />{clip.views}</span>
+                        <span className="flex items-center gap-1"><Heart className="h-2.5 w-2.5" />{clip.reactions}</span>
+                        <span className="flex items-center gap-1"><MessageSquare className="h-2.5 w-2.5" />{clip.comments}</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        ))}
+      </div>
+
+      <div className="col-span-3 space-y-3">
+        <Section>
+          <SectionTitle title="Clip Archive" icon={Film} action={null} />
+          <div className="space-y-2 px-4 pb-4">
+            {[
+              ['Total Clips', PROFILE_CLIPS.length, Film],
+              ['Timeline Days', dates.length, CalendarDays],
+              ['Most Viewed', '112.4K', Eye],
+              ['Bookmarked', '28', Bookmark],
+            ].map(([label, value, Icon]) => (
+              <div key={label} className="flex items-center justify-between rounded-lg border border-white/[0.045] bg-white/[0.012] px-3 py-2.5">
+                <div className="flex items-center gap-2"><Icon className="h-3 w-3 text-cyan-200/48" /><span className="text-[7px] text-white/36">{label}</span></div>
+                <span className="text-[9px] font-black text-white/68">{value}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section>
+          <SectionTitle title="Top Clip Categories" icon={Flame} action={null} />
+          <div className="space-y-2 px-4 pb-4">
+            {['Clutch', 'Combat', 'Skill', 'Boss', 'Cinematic'].map((category, index) => (
+              <div key={category} className="flex items-center gap-2">
+                <span className="w-4 text-[7px] font-black text-white/20">0{index + 1}</span>
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+                  <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" style={{ width: `${88 - index * 12}%` }} />
+                </div>
+                <span className="w-12 text-right text-[6px] text-white/32">{category}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
     </div>
   );
 }
 
 function MediaPage() {
+  const [selectedStreamId, setSelectedStreamId] = useState(PROFILE_STREAMS[0].id);
+  const activeStream = PROFILE_STREAMS.find((stream) => stream.id === selectedStreamId) || PROFILE_STREAMS[0];
+
   return (
     <div className="grid grid-cols-12 gap-3">
-      <Section className="col-span-9">
-        <SectionTitle title="Featured Media" icon={ImageIcon} />
-        <div className="px-3 pb-3"><div className="relative h-44 overflow-hidden rounded-xl border border-white/[0.06]"><img src={mediaArt[0][2]} alt="" className="h-full w-full object-cover opacity-78" /><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" /><div className="absolute inset-x-4 bottom-3"><p className="text-[10px] font-black text-white">Neon Horizon</p><p className="text-[7px] text-white/35">Neon Racer · Photo Mode</p></div></div></div>
+      <Section className="col-span-8">
+        <SectionTitle title="Gameplay & Stream Showcase" icon={Radio} action={null} />
+        <div className="px-3 pb-3">
+          <div className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-black/30">
+            <video
+              key={activeStream.id}
+              src={activeStream.video}
+              poster={activeStream.image}
+              controls
+              playsInline
+              preload="metadata"
+              className="h-[295px] w-full object-cover"
+            />
+            <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5">
+              <span className="flex items-center gap-1 rounded-md border border-rose-300/18 bg-rose-500/10 px-2 py-1 text-[6px] font-black uppercase tracking-[.12em] text-rose-200/75 backdrop-blur-md"><Radio className="h-2.5 w-2.5" /> {activeStream.status}</span>
+              <span className="rounded-md border border-white/[0.08] bg-black/55 px-2 py-1 text-[6px] text-white/58">{activeStream.duration}</span>
+            </div>
+          </div>
+        </div>
       </Section>
-      <Section className="col-span-3"><SectionTitle title="Upload Stats" icon={Upload} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Uploads" value="247" /><StatTile label="Screenshots" value="124" /><StatTile label="Fan Art" value="68" /><StatTile label="Wallpapers" value="32" /></div></Section>
-      <Section className="col-span-9"><SectionTitle title="All Media (247)" icon={Grid3X3} /><div className="flex gap-2 px-4 pb-3">{['All Media','Screenshots','Fan Art','Wallpapers','Photo Mode','Playlists'].map((x,i)=><button key={x} className={`rounded-full border px-3 py-1.5 text-[7px] ${i===0?'border-cyan-300/35 bg-cyan-300/[0.08] text-cyan-200':'border-white/[0.06] text-white/32'}`}>{x}</button>)}</div><div className="grid grid-cols-4 gap-2 px-4 pb-4">{mediaArt.map(([n,t,img])=><div key={n}><img src={img} alt={n} className="h-24 w-full rounded-lg border border-white/[0.05] object-cover opacity-72" /><p className="mt-1 text-[7px] font-bold text-white/58">{n}</p><p className="text-[6px] text-white/25">{t}</p></div>)}</div></Section>
-      <div className="col-span-3 space-y-3"><Section><SectionTitle title="Favorite Media" icon={Star} /><div className="grid grid-cols-3 gap-1.5 px-4 pb-4">{mediaArt.slice(0,3).map(([n,,img])=><img key={n} src={img} alt={n} className="h-14 w-full rounded-md object-cover" />)}</div></Section><Section><SectionTitle title="Recent Comments" icon={MessageSquare} /><div className="space-y-2 px-4 pb-4">{['This shot is insane! 🔥','Clean edit, wallpaper material!','What a vibe. Love this game.'].map((t,i)=><div key={t}><p className="text-[7px] font-bold text-white/58">{['Ariana','marcus flowers','Kairo'][i]}</p><p className="text-[7px] text-white/28">{t}</p></div>)}</div></Section></div>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Broadcast Details" icon={Video} action={null} />
+        <div className="px-4 pb-4">
+          <p className="text-[14px] font-black text-white/82">{activeStream.title}</p>
+          <p className="mt-1 text-[8px] text-cyan-200/52">{activeStream.game}</p>
+          <p className="mt-2 text-[8px] leading-4 text-white/34">{activeStream.description}</p>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <StatTile label="Peak Viewers" value={activeStream.viewers.replace(' peak','')} icon={Eye} />
+            <StatTile label="Replay Views" value={activeStream.watched.split(' ')[0]} icon={Play} />
+            <StatTile label="Length" value={activeStream.duration} icon={Clock3} />
+            <StatTile label="Broadcast" value={activeStream.date} icon={CalendarDays} />
+          </div>
+
+          <div className="mt-3 flex gap-2">
+            <button className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-cyan-300/20 bg-cyan-300/[0.05] text-[7px] font-black uppercase tracking-[.1em] text-cyan-100/60"><Play className="h-3 w-3" /> Watch Replay</button>
+            <button className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.06] bg-white/[0.02] text-white/35"><Share2 className="h-3 w-3" /></button>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-12">
+        <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
+          <div className="flex items-center gap-2">
+            <Video className="h-3.5 w-3.5 text-cyan-300/70" />
+            <div>
+              <h3 className="text-[11px] font-bold text-white/82">Broadcast Archive</h3>
+              <p className="mt-0.5 text-[6px] text-white/22">Full streams and longer gameplay sessions — separate from short clips.</p>
+            </div>
+          </div>
+          <span className="text-[7px] text-white/25">{PROFILE_STREAMS.length} recent broadcasts</span>
+        </div>
+
+        <div className="grid grid-cols-5 gap-2 px-4 pb-4">
+          {PROFILE_STREAMS.map((stream) => {
+            const selected = stream.id === activeStream.id;
+            return (
+              <button
+                key={stream.id}
+                type="button"
+                onClick={() => setSelectedStreamId(stream.id)}
+                className={`group overflow-hidden rounded-xl border text-left transition-all ${selected ? 'border-cyan-300/32 bg-cyan-300/[0.045]' : 'border-white/[0.05] bg-black/10 hover:border-white/[0.10]'}`}
+              >
+                <div className="relative h-24 overflow-hidden">
+                  <img src={stream.image} alt={stream.title} className="h-full w-full object-cover opacity-68 transition-transform group-hover:scale-[1.025]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#06101b]/92 via-transparent to-transparent" />
+                  <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[6px] text-white/64">{stream.duration}</span>
+                  <span className="absolute left-1.5 top-1.5 rounded-md border border-white/[0.08] bg-black/55 px-1.5 py-0.5 text-[5px] font-black uppercase tracking-[.08em] text-white/54">{stream.date}</span>
+                </div>
+                <div className="p-2.5">
+                  <p className="truncate text-[8px] font-black text-white/66">{stream.title}</p>
+                  <p className="mt-0.5 truncate text-[6px] text-cyan-200/40">{stream.game}</p>
+                  <div className="mt-2 flex justify-between text-[5.5px] text-white/22">
+                    <span>{stream.viewers}</span>
+                    <span>{stream.watched}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section className="col-span-8">
+        <SectionTitle title="Gameplay Showcase" icon={Gamepad2} action={null} />
+        <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+          {PROFILE_GAMEPLAY_SHOWCASE.map((item) => (
+            <div key={item.title} className="group relative h-32 overflow-hidden rounded-xl border border-white/[0.05] bg-black/10">
+              <img src={item.image} alt={item.game} className="absolute inset-0 h-full w-full object-cover opacity-46 transition-transform duration-300 group-hover:scale-[1.025] group-hover:opacity-58" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#06101b]/92 via-[#06101b]/45 to-transparent" />
+              <div className="absolute inset-y-0 left-0 flex w-[64%] flex-col justify-end p-3">
+                <p className="text-[10px] font-black text-white/78">{item.title}</p>
+                <p className="mt-0.5 text-[7px] text-cyan-200/48">{item.game}</p>
+                <div className="mt-2 flex gap-2 text-[6px] text-white/30">
+                  <span>{item.hours}</span><span>·</span><span>{item.sessions} sessions</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <div className="col-span-4 space-y-3">
+        <Section>
+          <SectionTitle title="Streaming Footprint" icon={BarChart3} action={null} />
+          <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+            <StatTile label="Hours Streamed" value="130h" sub="This season" icon={Clock3} />
+            <StatTile label="Broadcasts" value="51" sub="Public sessions" icon={Video} />
+            <StatTile label="Peak Viewers" value="4.7K" sub="Single broadcast" icon={Eye} />
+            <StatTile label="Clip Moments" value={PROFILE_CLIPS.length} sub="Saved from streams" icon={Film} />
+          </div>
+        </Section>
+
+        <Section>
+          <SectionTitle title="Recent Stream Pattern" icon={CalendarDays} action={null} />
+          <div className="space-y-2 px-4 pb-4">
+            {[
+              ['Fri', 'Neon Racer', '2h 16m'],
+              ['Thu', 'Shadow Realm', '3h 04m'],
+              ['Tue', 'Starfield', '1h 48m'],
+              ['Mon', 'Cyberwake', '2h 41m'],
+            ].map(([day, game, length]) => (
+              <div key={day + game} className="flex items-center gap-3 rounded-lg border border-white/[0.045] bg-white/[0.012] px-3 py-2">
+                <span className="grid h-7 w-7 place-items-center rounded-md border border-cyan-300/12 bg-cyan-300/[0.035] text-[7px] font-black text-cyan-100/55">{day}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[7px] font-bold text-white/50">{game}</p>
+                  <p className="text-[6px] text-white/22">{length}</p>
+                </div>
+                <Radio className="h-3 w-3 text-white/20" />
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
     </div>
   );
 }
