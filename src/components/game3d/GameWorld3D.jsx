@@ -13,7 +13,7 @@ import FloatingDamageNumbers from './FloatingDamageNumbers';
 import { setPlayerHUD, awardXP, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
 import { DEFAULT_PLAYER_STATS, ENEMY_STAT_TEMPLATES, computeDerivedStats, calculateHit } from './statsSystem';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
-import { acceptQuest, completeQuest, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
+import { acceptQuest, completeQuest, isQuestComplete, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 import { setPlayerPosition } from './playerPositionStore';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from './creatureAssets';
@@ -31,6 +31,7 @@ import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgressio
 import CompanionHealthBar from './CompanionHealthBar';
 import PlayerNameTag from './PlayerNameTag';
 import { base44 } from '@/api/base44Client';
+import { getActiveCharacter } from './characterStore';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
 import { getAbilityState, tickCooldowns as tickLegacyAbilityCooldowns, startCooldown as startLegacyAbilityCooldown, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
@@ -1538,17 +1539,25 @@ export default function GameWorld3D() {
             );
             if (acceptedFromHere) {
               const prog = qs.progress[acceptedFromHere.id] || 0;
-              const isDone = prog >= acceptedFromHere.objective.count;
+              const isDone = isQuestComplete(acceptedFromHere, qs);
               setActiveQuestDialogue({
                 npcName: closestQuestNPC.name,
                 quest: acceptedFromHere,
                 mode: isDone ? 'turn_in' : 'in_progress',
                 progress: prog,
+                objectiveProgress: qs.objectiveProgress?.[acceptedFromHere.id] || {},
               });
             } else {
               // Offer the next available quest, or fall back to a generic "no quests" message
               const available = getAvailableQuestForNPC(
-                closestQuestNPC.id, lvl, qs.acceptedIds, qs.completedIds
+                closestQuestNPC.id,
+                lvl,
+                qs.acceptedIds,
+                qs.completedIds,
+                {
+                  factionId: getActiveCharacter()?.factionId || null,
+                  storyFlags: qs.storyFlags || {},
+                },
               );
               if (available) {
                 setActiveQuestDialogue({
@@ -1556,6 +1565,7 @@ export default function GameWorld3D() {
                   quest: available,
                   mode: 'offer',
                   progress: 0,
+                  objectiveProgress: {},
                 });
               } else {
                 setActiveDialogue({
@@ -2295,9 +2305,14 @@ export default function GameWorld3D() {
           quest={activeQuestDialogue.quest}
           mode={activeQuestDialogue.mode}
           progress={activeQuestDialogue.progress}
+          objectiveProgress={activeQuestDialogue.objectiveProgress}
           onAccept={() => {
             const q = activeQuestDialogue.quest;
-            acceptQuest(q.id);
+            const accepted = acceptQuest(q.id, q);
+            if (!accepted?.ok) {
+              setActiveQuestDialogue(null);
+              return;
+            }
             playActionSound('quest_accept');
             // Spawn the required enemies on the map so the player can fight them
             if (spawnQuestEnemiesRef.current && q.spawnCount) {
@@ -2313,11 +2328,17 @@ export default function GameWorld3D() {
           onClose={() => setActiveQuestDialogue(null)}
           onClaim={() => {
             const q = activeQuestDialogue.quest;
-            completeQuest(q.id);
-            // Milestone unlocks: new abilities / class changes
+            const completed = completeQuest(q.id, q);
+            if (!completed?.ok) {
+              setActiveQuestDialogue((current) => current ? { ...current, mode: 'in_progress' } : current);
+              return;
+            }
+            // Milestone unlocks, contribution, reputation and future reward hooks
             grantQuestReward(q);
             // Pay the reward: XP + stat points
-            let newXP = playerXPRef.current + q.reward.xp;
+            const rewardXP = Math.max(0, Number(q.reward?.xp) || 0);
+            const rewardPoints = Math.max(0, Number(q.reward?.points) || 0);
+            let newXP = playerXPRef.current + rewardXP;
             let newLevel = playerLevelRef.current;
             let needed = xpForLevel(newLevel);
             let levelsGained = 0;
@@ -2337,8 +2358,8 @@ export default function GameWorld3D() {
               newXP,
               xpForNext: xpForLevel(newLevel),
               levelsGained,
-              bonusPoints: q.reward.points,
-              xpGained: q.reward.xp,
+              bonusPoints: rewardPoints,
+              xpGained: rewardXP,
             });
             playActionSound('quest_complete');
             if (levelsGained > 0) playActionSound('level_up');
