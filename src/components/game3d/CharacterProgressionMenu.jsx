@@ -23,6 +23,7 @@ export default function CharacterProgressionMenu({
   isOpen,
   onClose,
   requestedService = null,
+  initialTab = null,
   onServiceRequestConsumed,
 }) {
   const [hud, setHud] = useState(null);
@@ -36,6 +37,19 @@ export default function CharacterProgressionMenu({
     if (!isOpen) return;
     return subscribePlayerHUD(setHud);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    window.__axeUiModalOpen = !!isOpen;
+    return () => {
+      if (window.__axeUiModalOpen) window.__axeUiModalOpen = false;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !initialTab) return;
+    if (MAIN_TABS.some((tab) => tab.id === initialTab)) setMainTab(initialTab);
+  }, [isOpen, initialTab]);
 
   useEffect(() => subscribeKillCount(setKillCount), []);
 
