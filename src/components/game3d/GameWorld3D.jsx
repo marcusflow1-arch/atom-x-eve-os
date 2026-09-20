@@ -63,7 +63,7 @@ import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge,
 import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { pvpFailureMessage, validateLockedPvpTarget } from './pvpCombatRules';
 import { applyMasteryToHit, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
-import { recordTitleKill } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
+import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
 import { xpForLevel, pickTier, getEnemyTierByName,
@@ -140,6 +140,10 @@ export default function GameWorld3D() {
   const [companionUI, setCompanionUI] = useState(null); // { x, y, hp, maxHp, level }
   // Player name tag floating above the player's head
   const [playerName, setPlayerName] = useState('');
+  const [playerTitleDisplay, setPlayerTitleDisplay] = useState(() => {
+    const s = getTitleState();
+    return (!s.displayHidden && s.equippedTitle?.level > 0) ? s.equippedTitle.name : '';
+  });
   const [playerNameUI, setPlayerNameUI] = useState(null); // { x, y }
   // Companion live combat stats (HP, derived, level) — updated when stats are allocated
   const companionStatsRef = useRef(null);
@@ -230,6 +234,10 @@ export default function GameWorld3D() {
   useEffect(() => {
     base44.auth.me().then((u) => { if (u) setPlayerName(u.username || u.full_name || u.email?.split('@')[0] || 'Player'); }).catch(() => setPlayerName('Player'));
   }, []);
+
+  useEffect(() => subscribeTitles((s) => {
+    setPlayerTitleDisplay((!s.displayHidden && s.equippedTitle?.level > 0) ? s.equippedTitle.name : '');
+  }), []);
 
   // Keep companion def ref in sync when player picks a different companion in the menu
   useEffect(() => {
@@ -2203,7 +2211,7 @@ export default function GameWorld3D() {
           )}
           {/* Player name floating above the player character's head */}
           {playerNameUI && playerName && (
-            <PlayerNameTag x={playerNameUI.x} y={playerNameUI.y} name={playerName} visible />
+            <PlayerNameTag x={playerNameUI.x} y={playerNameUI.y} name={playerName} title={playerTitleDisplay} visible />
           )}
           {/* Liquid-glass mic indicators — above local player when on, and above remote talkers */}
           {playerNameUI && localMicOn && <VoiceMicIndicator x={playerNameUI.x} y={playerNameUI.y} visible />}
