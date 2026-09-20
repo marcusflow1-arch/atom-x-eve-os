@@ -11,7 +11,7 @@ import {
   getEquippedWingsFlatBonuses,
   subscribeWings,
 } from './progression/wingsStore';
-import { getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
+import { getEquippedTitleAttributeBonuses, getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
 import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
 import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
@@ -81,7 +81,7 @@ const getBonuses = () => {
     attributionDefense: core.attributeDefense || core.attributionDefense || 0,
   };
   return {
-    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), costume.attr),
+    halo:  sumAttr(getHaloBonuses(), getAuraBonuses(), getEquippedWingsMultiplierBonuses(), getEquippedTitleAttributeBonuses(), costume.attr),
     title: sumFlat(getEquippedTitleBonuses(), getEquippedWingsFlatBonuses(), coreFlat, costume.flat, capeFlat),
   };
 };
