@@ -1843,8 +1843,8 @@ export default function GameWorld3D() {
             let closestEnemy = null;
             let closestEnemyDist = isRangedClickAttack || activeWeaponPath === 'ranged' ? RANGED_ATTACK_RANGE : ENEMY_ATTACK_RANGE;
           if (!attackConsumedByPriorityTarget) {
-            enemies.forEach((enemy) => {
-              if (!enemy.alive || enemy.dying) return;
+            [...enemies, ...bossEntities].forEach((enemy) => {
+              if (!enemy?.alive || enemy.dying || enemy.defeated || !enemy.group) return;
               const dx = enemy.group.position.x - model.position.x;
               const dz = enemy.group.position.z - model.position.z;
               const d = Math.sqrt(dx * dx + dz * dz);
@@ -2091,8 +2091,12 @@ export default function GameWorld3D() {
         });
         setEnemiesUI(ui);
 
-        // World boss head → floating HP tank (projected above its head).
-        setBossHeadUI(projectBossHead(bossEntities[0], camera, w, h));
+        // Prefer an active dungeon boss for the floating boss HUD while inside
+        // a dungeon; otherwise preserve the original world-boss HUD behavior.
+        const dungeonBossForUI = bossEntities.find((b) =>
+          b?.dungeonBoss && b.alive && !b.dying && !b.defeated && b.group?.visible
+        );
+        setBossHeadUI(projectBossHead(dungeonBossForUI || bossEntities[0], camera, w, h));
 
         // ─── Project quest NPC heads → screen-space for floating "QUEST" labels ───
         const qs = getQuestState();
