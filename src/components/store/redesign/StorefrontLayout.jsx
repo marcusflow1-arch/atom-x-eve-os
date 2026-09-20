@@ -53,3 +53,30 @@ export default function StorefrontLayout({onNavigateToGame,games=[],searchTerm='
     <button className="pb-2 text-xs text-cyan-200" onClick={reset}>Reset filters</button>
    </div>
   </section>}
+  {filtering&&<div className="mb-5 flex flex-wrap items-center gap-2 text-xs">
+    {searchTerm&&<span className="rounded-full bg-cyan-300/10 px-3 py-1.5 text-cyan-100">Search: {searchTerm}</span>}
+    {filters.genres.map(g=><button key={g} onClick={()=>toggleGenre(g)} className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">{label(g)}<X size={12}/></button>)}
+    <button onClick={reset} className="text-white/40 hover:text-white">Clear all</button>
+  </div>}
+  {overview&&<div className="space-y-10">
+   <DiscoveryHero games={discovery.slice(0,8)} onSelect={onNavigateToGame}/>
+   <section className="flex flex-wrap items-center gap-x-6 gap-y-3"><h2 className="text-sm font-medium text-white/50">Browse by genre</h2><div className="flex flex-wrap gap-2">{genres.map(g=><button key={g} onClick={()=>{update('genres',[g]);setTab('all');}} className="rounded-full bg-white/[0.045] px-4 py-2 text-xs text-white/60 hover:bg-cyan-200/10 hover:text-cyan-100">{label(g)}</button>)}</div></section>
+   <section><div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="text-xl font-semibold">Worth discovering</h2><p className="mt-1 text-xs text-white/40">A rotating selection from the whole catalog.</p></div><button onClick={()=>setOffset(v=>v+6)} className="flex items-center gap-2 text-xs text-cyan-200"><RefreshCw size={14}/>Show different games</button></div>
+    <div className="grid grid-cols-2 gap-5 md:grid-cols-3 2xl:grid-cols-6">{rotateGames(discovery,8,6).map(g=><GameCard key={g.id} game={g} onSelect={onNavigateToGame}/>)}</div>
+   </section>
+   <div className="grid gap-10 lg:grid-cols-2">
+    <Shelf title="Top sellers" subtitle="Completed purchases · past 30 days" games={sellers} onSelect={onNavigateToGame} onViewAll={()=>setTab('sellers')} empty={salesLoading?'Loading top sellers…':salesError?'Sales rankings are unavailable right now.':'Rankings will appear as games are purchased.'}/>
+    <Shelf title="New releases" subtitle="Latest confirmed release dates" games={newGames} onSelect={onNavigateToGame} onViewAll={()=>setTab('new')} empty="No confirmed release dates in the catalog yet."/>
+   </div>
+   <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-gradient-to-r from-cyan-300/[0.08] to-blue-500/[0.035] px-6 py-6"><div className="flex items-center gap-4"><Sparkles className="text-cyan-200/70"/><div><h2 className="text-lg font-medium">More of what you love. A little of what you haven't tried.</h2><p className="mt-1 text-sm text-white/40">Choose your genres and games to shape your recommendations.</p></div></div><button onClick={()=>setTab('you')} className="rounded-lg bg-white/10 px-5 py-2.5 text-sm text-cyan-100">Make it yours</button></div>
+  </div>}
+  {tab==='you'&&<div className="mb-8"><StorePreferences games={games} genres={genres} preference={preference} onSave={save} saving={saving} error={error}/></div>}
+  <section className={overview?'mt-12':''}>
+   <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">{searchTerm?'Search results':tab==='you'?'Recommended for you':tab==='sellers'?'Top sellers':tab==='new'?'New releases':'Explore all games'}</h2><p role="status" className="mt-1 text-xs text-white/40">{results.length} {results.length===1?'game':'games'}{filtering?' match your filters':''}</p></div>
+    <label className="flex items-center gap-2 text-xs text-white/45">Sort by<select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-lg bg-slate-900 px-3 py-2 text-white/75"><option value="discovery">{searchTerm?'Relevance':tab==='sellers'?'Best selling':tab==='new'?'Release date':tab==='you'?'Best match':'Discovery'}</option><option value="new">Release date</option><option value="price">Price: low to high</option><option value="title">Title: A–Z</option></select></label>
+   </div>
+   {results.length?<div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">{results.slice(0,limit).map(g=><GameCard key={g.id} game={g} onSelect={onNavigateToGame} reason={tab==='you'?reasons.get(g.id):undefined}/>)}</div>:<div className="rounded-2xl bg-white/[0.025] px-6 py-14 text-center"><p className="text-white/60">{tab==='you'?'Select your favorite genres or games above to get started.':tab==='sellers'?(salesError?'Sales rankings could not load.':salesLoading?'Loading rankings…':'No completed purchases in this period yet.'):tab==='new'?'No dated releases match these filters.':'No games match these filters.'}</p>{filtering&&<button onClick={reset} className="mt-4 text-sm text-cyan-200">Clear filters</button>}</div>}
+   {results.length>limit&&<div className="mt-8 text-center"><button onClick={()=>setLimit(v=>v+24)} className="rounded-lg bg-white/5 px-6 py-3 text-sm text-white/70">Show more games · {results.length-limit} remaining</button></div>}
+  </section>
+ </main>;
+}
