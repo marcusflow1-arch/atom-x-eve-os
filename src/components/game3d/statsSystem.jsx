@@ -1,4 +1,5 @@
 import { consumeForcedCriticalHit } from './combat/forcedCriticalBridge';
+import { resolveAXEHit, AXE_COMBAT_MODE } from './axe/combat/AXECombatMath';
 
 // TwelveSky-style combat stat model for Mines.
 // Canonical player attributes are Strength, Agility, Vitality and Spirit.
@@ -197,28 +198,65 @@ function rollCrit(attackerStats) {
   return Math.random() * 100 < (attackerStats.critChance || 0);
 }
 
-export function calculateHit(attackerStats, defenderStats) {
-  let raw = attackerStats.totalDamage || attackerStats.damage || 1;
+export function calculateHit(attackerStats, defenderStats, context = {}) {
   const crit = rollCrit(attackerStats);
-  if (crit) {
-    const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
-    const bonus = raw * (critMult - 1);
-    const critDefense = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
-    raw += bonus * (1 - critDefense);
-  }
-  return mitigate(raw, defenderStats);
+  return resolveAXEHit({
+    attackerStats,
+    defenderStats,
+    mode: context.mode || AXE_COMBAT_MODE.PVE,
+    baseDamage: context.baseDamage,
+    skillCoefficient: context.skillCoefficient ?? 1,
+    weaponCoefficient: context.weaponCoefficient ?? 1,
+    outgoingMultiplier: context.outgoingMultiplier ?? 1,
+    critical: crit,
+    criticalAllowed: context.criticalAllowed !== false,
+    flatMitigation: context.flatMitigation || 0,
+    percentMitigation: context.percentMitigation,
+    shield: context.shield || 0,
+    reflected: context.reflected || false,
+    reflectedDamageMultiplier: context.reflectedDamageMultiplier || 0,
+  }).damage;
 }
 
-export function calculateHitWithCrit(attackerStats, defenderStats) {
+export function calculateHitWithCrit(attackerStats, defenderStats, context = {}) {
   const crit = rollCrit(attackerStats);
-  let raw = attackerStats.totalDamage || attackerStats.damage || 1;
-  if (crit) {
-    const critMult = CRIT_MULTIPLIER + (attackerStats.criticalDamage || 0);
-    const bonus = raw * (critMult - 1);
-    const critDefense = Math.max(0, Math.min(1, defenderStats?.criticalDefense || 0));
-    raw += bonus * (1 - critDefense);
-  }
-  return { damage: mitigate(raw, defenderStats), crit };
+  const result = resolveAXEHit({
+    attackerStats,
+    defenderStats,
+    mode: context.mode || AXE_COMBAT_MODE.PVE,
+    baseDamage: context.baseDamage,
+    skillCoefficient: context.skillCoefficient ?? 1,
+    weaponCoefficient: context.weaponCoefficient ?? 1,
+    outgoingMultiplier: context.outgoingMultiplier ?? 1,
+    critical: crit,
+    criticalAllowed: context.criticalAllowed !== false,
+    flatMitigation: context.flatMitigation || 0,
+    percentMitigation: context.percentMitigation,
+    shield: context.shield || 0,
+    reflected: context.reflected || false,
+    reflectedDamageMultiplier: context.reflectedDamageMultiplier || 0,
+  });
+  return { damage: result.damage, crit: result.critical };
+}
+
+export function calculateAXEHitDetailed(attackerStats, defenderStats, context = {}) {
+  const crit = context.critical ?? rollCrit(attackerStats);
+  return resolveAXEHit({
+    attackerStats,
+    defenderStats,
+    mode: context.mode || AXE_COMBAT_MODE.PVE,
+    baseDamage: context.baseDamage,
+    skillCoefficient: context.skillCoefficient ?? 1,
+    weaponCoefficient: context.weaponCoefficient ?? 1,
+    outgoingMultiplier: context.outgoingMultiplier ?? 1,
+    critical: crit,
+    criticalAllowed: context.criticalAllowed !== false,
+    flatMitigation: context.flatMitigation || 0,
+    percentMitigation: context.percentMitigation,
+    shield: context.shield || 0,
+    reflected: context.reflected || false,
+    reflectedDamageMultiplier: context.reflectedDamageMultiplier || 0,
+  });
 }
 
 export function applySpellScaling(baseDamage, attackerDerived) {
