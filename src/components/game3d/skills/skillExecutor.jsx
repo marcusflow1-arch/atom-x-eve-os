@@ -44,6 +44,7 @@ function dispatchStrike(skill, hitIndex, level) {
       axePattern: skill.axe_pattern || null,
       aoeRadius: Number(skill.aoe_radius || 0),
       divine: Boolean(skill.divine),
+      aerial: Boolean(skill.aerial),
     },
   }));
 }
@@ -121,6 +122,12 @@ export function castSkill(skillId, ctx = {}) {
     reportSkillCast(getActiveWeaponId());
     toast(`${skill.icon} ${skill.skill_name} activated`);
     return { ok: true };
+  }
+
+  if (skill.aerial && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('axeAerialSkillCast', {
+      detail: { skillId: skill.skill_id, role: skill.axe_role, criticalAllowed: true },
+    }));
   }
 
   switch (skill.cast_type) {
