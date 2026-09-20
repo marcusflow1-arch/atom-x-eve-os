@@ -24,6 +24,7 @@
 
 import { SKILL_TYPE, WEAPON_TYPE, CAST_TYPE } from './skillTypes';
 import { AXE_CORE_SKILLS } from '../axe/skills/AXECoreSkillLadder';
+import { AXE_DIVINE_SKILLS } from '../axe/skills/AXEDivineSkillSet';
 
 const SKILLS = [
   // ════════ SWORD WEAPON TYPE ════════════════════════════════════════
@@ -219,6 +220,7 @@ const SKILLS = [
 
 // AXE Prompt 014 — extend the existing registry without replacing legacy skills.
 SKILLS.push(...AXE_CORE_SKILLS);
+SKILLS.push(...AXE_DIVINE_SKILLS);
 
 // Validate at module load — duplicate ids would be a developer error.
 const _byId = new Map();
