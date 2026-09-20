@@ -63,7 +63,9 @@ import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge,
 import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { pvpFailureMessage, validateLockedPvpTarget } from './pvpCombatRules';
 import { applyMasteryToHit, getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline'; import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
-import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
+import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore';
+import { getHaloState } from './progression/haloStore';
+import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
 import { xpForLevel, pickTier, getEnemyTierByName,
@@ -805,6 +807,7 @@ export default function GameWorld3D() {
     let mixer;
     let model;
     let playerAnim;
+    let haloVisualRuntime = null;
     const playerStateMachine = new CorePlayerStateMachine();
     let coreAnimationController = null;
     const playerCameraSystem = new PlayerCameraSystem({ camera, orbit, modelRef, lockOnTargetRef });
@@ -829,6 +832,7 @@ export default function GameWorld3D() {
       });
 
       scene.add(fbx);
+      haloVisualRuntime = createAXEHaloVisualRuntime({ model: fbx, initialState: getHaloState() });
       // Snap the player's feet to the terrain at spawn
       snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
@@ -1179,6 +1183,7 @@ export default function GameWorld3D() {
       const delta = clock.getDelta();
       const npcsVisible = npcsVisibleRef.current; // '=' toggles all non-boss entities (NPCs/enemies/companion)
       envSystem.update(delta);
+      haloVisualRuntime?.update?.(delta);
       bossEncounter.update(delta);
       charLights.update(delta, envSystem.getState, modelRef.current, camera);
       if (mixer) mixer.update(delta);
@@ -2142,6 +2147,8 @@ export default function GameWorld3D() {
 
     return () => {
       avatarLoadDisposed=true;
+      haloVisualRuntime?.dispose?.();
+      haloVisualRuntime = null;
       modelRef.current = null;
       // Mark guard disposed FIRST so any in-flight animate() bails before
       // touching the renderer — prevents the null.trim shadow-map crash.
