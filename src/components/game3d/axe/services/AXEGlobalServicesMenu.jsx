@@ -111,7 +111,7 @@ function EquipmentServicePanel({ serviceId }) {
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.3em] text-cyan-200/60">Remote Blacksmith Access</div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-white/45">Remote Blacksmith Access</div>
             <h2 className="mt-1 text-2xl font-semibold">{service?.label || serviceId}</h2>
             <p className="mt-1 text-xs text-white/40">
               This global view calls the existing upgrade rules. A mounted authoritative service bridge takes precedence over browser fallback transactions.
@@ -247,7 +247,7 @@ function EquipmentServicePanel({ serviceId }) {
           )}
         </div>
 
-        <div className="mt-6 rounded-xl border border-cyan-300/10 bg-cyan-300/[0.025] p-4 text-xs text-white/45">
+        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.025] p-4 text-xs text-white/45">
           Remote access changes where the player opens the service, not its costs, success rates, protection rules, or failure consequences.
         </div>
       </div>
@@ -273,7 +273,7 @@ function Action({ label, onClick, disabled = false }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="rounded-xl border border-cyan-300/15 bg-cyan-300/[0.055] px-4 py-3 text-left text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/[0.09] disabled:opacity-30"
+      className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-left text-sm font-semibold text-white transition hover:bg-white/[0.10] disabled:opacity-30"
     >
       {label}
     </button>
@@ -281,9 +281,10 @@ function Action({ label, onClick, disabled = false }) {
 }
 
 export default function AXEGlobalServicesMenu({
-  isOpen,
+  isOpen = true,
   onClose,
   requestedService = null,
+  embedded = false,
 }) {
   const [activeServiceId, setActiveServiceId] = useState(() =>
     normalizeAXEServiceRequest(requestedService || 'reinforcement')
@@ -293,17 +294,37 @@ export default function AXEGlobalServicesMenu({
     if (requestedService) setActiveServiceId(normalizeAXEServiceRequest(requestedService));
   }, [requestedService]);
 
-  if (!isOpen) return null;
+  if (!embedded && !isOpen) return null;
 
   const active = getAXEService(activeServiceId) || AXE_SERVICE_REGISTRY[0];
   const ProgressionPanel = PROGRESSION_PANELS[active.id] || null;
 
   return (
-    <div className="fixed inset-0 z-[190] bg-black/75 p-4 backdrop-blur-md">
-      <div className="mx-auto flex h-full max-w-[1500px] overflow-hidden rounded-3xl border border-white/10 bg-[#071019]/95 shadow-2xl">
-        <aside className="w-[260px] shrink-0 overflow-y-auto border-r border-white/10 bg-white/[0.02] p-4">
+    <div
+      className={embedded ? 'h-full w-full' : 'fixed inset-0 z-[190] bg-black/75 p-4 backdrop-blur-md'}
+    >
+      <div
+        className={embedded
+          ? 'relative flex h-full w-full overflow-hidden'
+          : 'relative mx-auto flex h-full max-w-[1500px] overflow-hidden rounded-[28px] border border-white/10 shadow-2xl'}
+        style={{
+          background: embedded
+            ? 'linear-gradient(105deg, rgba(99,103,110,0.24) 0%, rgba(48,52,59,0.16) 38%, rgba(15,18,23,0.08) 100%)'
+            : 'linear-gradient(105deg, rgba(82,86,93,0.88) 0%, rgba(42,46,53,0.92) 44%, rgba(14,17,22,0.96) 100%)',
+          backdropFilter: 'blur(26px) saturate(120%)',
+          WebkitBackdropFilter: 'blur(26px) saturate(120%)',
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            background:
+              'radial-gradient(circle at 13% 18%, rgba(255,255,255,0.16), transparent 16%), radial-gradient(circle at 70% 10%, rgba(255,255,255,0.10), transparent 13%), radial-gradient(circle at 88% 72%, rgba(255,255,255,0.07), transparent 18%)',
+          }}
+        />
+        <aside className="relative z-10 w-[270px] shrink-0 overflow-y-auto border-r border-white/10 bg-black/[0.10] p-4 backdrop-blur-xl">
           <div className="px-2 pb-4">
-            <div className="text-[9px] uppercase tracking-[0.35em] text-cyan-200/55">Global Access</div>
+            <div className="text-[9px] uppercase tracking-[0.35em] text-white/45">Character Hub</div>
             <div className="mt-1 text-xl font-semibold text-white">Services</div>
             <div className="mt-1 text-xs leading-5 text-white/35">
               Blacksmith and progression systems without unnecessary NPC travel.
@@ -322,8 +343,8 @@ export default function AXEGlobalServicesMenu({
                     onClick={() => setActiveServiceId(entry.id)}
                     className={`w-full rounded-xl px-3 py-2 text-left text-xs transition ${
                       active.id === entry.id
-                        ? 'bg-cyan-300/10 text-cyan-100 ring-1 ring-cyan-300/20'
-                        : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
+                        ? 'bg-white/[0.12] text-white ring-1 ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                        : 'text-white/50 hover:bg-white/[0.06] hover:text-white/80'
                     }`}
                   >
                     {entry.label}
@@ -334,17 +355,19 @@ export default function AXEGlobalServicesMenu({
           ))}
         </aside>
 
-        <section className="relative min-w-0 flex-1">
-          <div className="absolute right-4 top-4 z-20">
-            <button
-              onClick={onClose}
-              className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs text-white/60 hover:text-white"
-            >
-              Close
-            </button>
-          </div>
+        <section className="relative z-10 min-w-0 flex-1">
+          {!embedded && (
+            <div className="absolute right-4 top-4 z-20">
+              <button
+                onClick={onClose}
+                className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs text-white/65 backdrop-blur-xl hover:bg-white/[0.10] hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+          )}
 
-          <div className="h-full pt-2">
+          <div className={embedded ? 'h-full' : 'h-full pt-2'}>
             {active.kind === 'equipment_action' && (
               <EquipmentServicePanel serviceId={active.id} />
             )}
