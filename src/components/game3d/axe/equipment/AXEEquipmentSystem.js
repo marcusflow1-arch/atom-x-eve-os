@@ -20,6 +20,10 @@ export const AXE_EQUIPMENT_SLOT_DEFS = Object.freeze({
   cape:       Object.freeze({ id: 'cape', label: 'Cape', maxEquipped: 1, layer: 'prestige' }),
   wings:      Object.freeze({ id: 'wings', label: 'Wings', maxEquipped: 1, layer: 'prestige' }),
   costume:    Object.freeze({ id: 'costume', label: 'Costume', maxEquipped: 1, layer: 'appearance' }),
+  vanity_head: Object.freeze({ id: 'vanity_head', label: 'Vanity Head', maxEquipped: 1, layer: 'vanity' }),
+  vanity_torso: Object.freeze({ id: 'vanity_torso', label: 'Vanity Torso', maxEquipped: 1, layer: 'vanity' }),
+  vanity_pelvis: Object.freeze({ id: 'vanity_pelvis', label: 'Vanity Pelvis', maxEquipped: 1, layer: 'vanity' }),
+  vanity_leggings: Object.freeze({ id: 'vanity_leggings', label: 'Vanity Leggings', maxEquipped: 1, layer: 'vanity' }),
   accessory:  Object.freeze({ id: 'accessory', label: 'Accessory', maxEquipped: 3, layer: 'special' }),
   trinket:    Object.freeze({ id: 'trinket', label: 'Trinket', maxEquipped: 2, layer: 'special' }),
   auxiliary:  Object.freeze({ id: 'auxiliary', label: 'Auxiliary Gear', maxEquipped: 4, layer: 'auxiliary' }),
@@ -28,6 +32,7 @@ export const AXE_EQUIPMENT_SLOT_DEFS = Object.freeze({
 export const AXE_APPEARANCE_LAYERS = Object.freeze([
   'combat',
   'costume',
+  'vanity',
   'cape',
   'wings',
   'weapon',
@@ -119,12 +124,13 @@ export function getAXEAuxiliarySetState(items = []) {
 }
 
 export function getAXEAppearanceLayers(items = []) {
-  const result = { combat: [], costume: [], cape: [], wings: [], weapon: [] };
+  const result = { combat: [], costume: [], vanity: [], cape: [], wings: [], weapon: [] };
   for (const raw of items) {
     if (!raw?.equipped || !raw.appearance) continue;
     const slot = AXE_EQUIPMENT_SLOT_DEFS[raw.slot || raw.category];
     if (!slot) continue;
     const layer = slot.id === 'costume' ? 'costume'
+      : slot.layer === 'vanity' ? 'vanity'
       : slot.id === 'cape' ? 'cape'
       : slot.id === 'wings' ? 'wings'
       : slot.id === 'weapon' ? 'weapon'
