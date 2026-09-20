@@ -1,123 +1,184 @@
 // ─── Weapon-Class Native Passive Buffs ─────────────────────────────────────
-// Three native passives — one per weapon class — that are ALWAYS-ON and scale
-// with their own level (1 → max). The player swaps weapon classes via the
-// bottom-right weapon switcher; whichever class is active applies its buff.
-//
-//   DAMAGE  → Brutal Force   (max lvl 20): +damage, +lethal-blow instant-kill %
-//   RANGED  → Swift Marksman (max lvl 25): +move, +hit, +damage, +crit
-//   DEFENSE → Iron Stance    (max lvl 20): +defense, +damage, +dodge, +guard
-//
-// Values scale LINEARLY from 0% at level 0 to the listed max at the cap level.
-// Level 1 = first tick of the curve.
+// AXE Prompt 012: the existing damage/defense/ranged browser paths are retained
+// for compatibility, while AXE exposes them as offensive/defensive/ranged roles.
+// State is now scoped per character so swapping characters cannot leak weapon
+// class levels or the active weapon identity between save slots.
 
-const STORAGE_KEY = 'weapon_class_buffs_v1';
+import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
+import {
+  getAXEWeaponRoleFromLegacyPath,
+  getLegacyWeaponPathFromAXERole,
+} from './axe/factions/AXEFactionWeaponConfig';
+
+const storage = characterScopedStorage('weapon_class_buffs_v2');
 
 export const WEAPON_CLASS_BUFFS = {
   damage: {
     id: 'brutal_force',
     name: 'Brutal Force',
     path: 'damage',
+    axeRole: 'offensive',
     icon: '⚔️',
     color: '#ef4444',
     maxLevel: 20,
-    description: 'Native passive of all damage-class weapons. Increases damage and grants a chance for Lethal Blow — an instant-kill on the target.',
+    description: 'Native passive of offensive weapons. Increases damage and grants a chance for Lethal Blow.',
     curves: {
-      damageBonusPct:  { min: 0, max: 0.35 }, // 0% → 35% bonus damage
-      lethalBlowPct:   { min: 0, max: 0.02 }, // 0% → 2% instant-kill chance
+      damageBonusPct:  { min: 0, max: 0.35 },
+      lethalBlowPct:   { min: 0, max: 0.02 },
     },
   },
   ranged: {
     id: 'swift_marksman',
     name: 'Swift Marksman',
     path: 'ranged',
+    axeRole: 'ranged',
     icon: '🏹',
     color: '#10b981',
     maxLevel: 25,
-    description: 'Native passive of all ranged-class weapons. Increases mobility, accuracy, damage and critical strike.',
+    description: 'Native passive of ranged weapons. Increases mobility, accuracy, damage and critical strike.',
     curves: {
-      moveSpeedBonusPct: { min: 0, max: 0.25 }, // +25% movement
-      damageBonusPct:    { min: 0, max: 0.10 }, // +10% damage
-      hitChanceBonusPct: { min: 0, max: 0.15 }, // +15% hit chance
-      critChanceBonusPct:{ min: 0, max: 0.05 }, // +5% crit chance
+      moveSpeedBonusPct: { min: 0, max: 0.25 },
+      damageBonusPct:    { min: 0, max: 0.10 },
+      hitChanceBonusPct: { min: 0, max: 0.15 },
+      critChanceBonusPct:{ min: 0, max: 0.05 },
     },
   },
   defense: {
     id: 'iron_stance',
     name: 'Iron Stance',
     path: 'defense',
+    axeRole: 'defensive',
     icon: '🛡️',
     color: '#3b82f6',
     maxLevel: 20,
-    description: 'Native passive of all defense-class weapons. Hardens your stance — bolstering defense, damage, evasion and guard.',
+    description: 'Native passive of defensive weapons. Bolsters defense, damage, evasion and guard.',
     curves: {
-      defenseBonusPct: { min: 0, max: 0.40 }, // +40% defense
-      damageBonusPct:  { min: 0, max: 0.20 }, // +20% damage
-      dodgeChancePct:  { min: 0, max: 0.07 }, // +7% dodge
-      guardChancePct:  { min: 0, max: 0.07 }, // +7% enemy-miss/guard
+      defenseBonusPct: { min: 0, max: 0.40 },
+      damageBonusPct:  { min: 0, max: 0.20 },
+      dodgeChancePct:  { min: 0, max: 0.07 },
+      guardChancePct:  { min: 0, max: 0.07 },
     },
   },
 };
 
-// ── State ───────────────────────────────────────────────────────────────
-const loadLevels = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { damage: 1, ranged: 1, defense: 1 };
-};
+const defaultState = () => ({
+  levels: { damage: 1, ranged: 1, defense: 1 },
+  activePath: 'damage',
+});
 
-let levels = loadLevels();
-let activePath = 'damage'; // current weapon class equipped
+function loadState() {
+  try {
+    const raw = storage.get();
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // v2 state shape
+      if (parsed?.levels) {
+        return {
+          levels: {
+            damage: Math.max(0, Number(parsed.levels.damage ?? 1)),
+            ranged: Math.max(0, Number(parsed.levels.ranged ?? 1)),
+            defense: Math.max(0, Number(parsed.levels.defense ?? 1)),
+          },
+          activePath: WEAPON_CLASS_BUFFS[parsed.activePath] ? parsed.activePath : 'damage',
+        };
+      }
+      // migration from an old levels-only object if one is ever copied into this key
+      if (parsed && typeof parsed === 'object') {
+        return {
+          levels: {
+            damage: Math.max(0, Number(parsed.damage ?? 1)),
+            ranged: Math.max(0, Number(parsed.ranged ?? 1)),
+            defense: Math.max(0, Number(parsed.defense ?? 1)),
+          },
+          activePath: 'damage',
+        };
+      }
+    }
+  } catch {}
+  return defaultState();
+}
+
+let state = loadState();
 const listeners = new Set();
 
 const save = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(levels)); } catch {}
+  try { storage.set(JSON.stringify(state)); } catch {}
 };
-const emit = () => listeners.forEach((fn) => fn({ levels, activePath }));
+
+const emit = () => {
+  save();
+  const snapshot = {
+    levels: { ...state.levels },
+    activePath: state.activePath,
+    activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
+  };
+  listeners.forEach((fn) => fn(snapshot));
+};
+
+subscribeCharacterChange(() => {
+  state = loadState();
+  const snapshot = {
+    levels: { ...state.levels },
+    activePath: state.activePath,
+    activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
+  };
+  listeners.forEach((fn) => fn(snapshot));
+});
 
 export function subscribeWeaponBuffs(fn) {
   listeners.add(fn);
-  fn({ levels, activePath });
+  fn({
+    levels: { ...state.levels },
+    activePath: state.activePath,
+    activeAXERole: getAXEWeaponRoleFromLegacyPath(state.activePath),
+  });
   return () => listeners.delete(fn);
 }
 
-export function getWeaponBuffLevels() { return levels; }
-export function getActiveWeaponPath() { return activePath; }
+export function getWeaponBuffLevels() { return { ...state.levels }; }
+export function getActiveWeaponPath() { return state.activePath; }
+export function getActiveAXEWeaponRole() { return getAXEWeaponRoleFromLegacyPath(state.activePath); }
 
 export function setActiveWeaponPath(path) {
-  if (!WEAPON_CLASS_BUFFS[path]) return;
-  activePath = path;
+  if (!WEAPON_CLASS_BUFFS[path]) return false;
+  if (state.activePath === path) return true;
+  state = { ...state, activePath: path };
   emit();
+  return true;
+}
+
+export function setActiveAXEWeaponRole(role) {
+  return setActiveWeaponPath(getLegacyWeaponPathFromAXERole(role));
 }
 
 export function setWeaponBuffLevel(path, level) {
   const cfg = WEAPON_CLASS_BUFFS[path];
-  if (!cfg) return;
+  if (!cfg) return false;
   const clamped = Math.max(0, Math.min(cfg.maxLevel, Math.round(level)));
-  levels = { ...levels, [path]: clamped };
-  save();
+  state = {
+    ...state,
+    levels: { ...state.levels, [path]: clamped },
+  };
   emit();
+  return true;
 }
 
 export function levelUpWeaponBuff(path) {
   const cfg = WEAPON_CLASS_BUFFS[path];
-  if (!cfg) return;
-  setWeaponBuffLevel(path, (levels[path] || 0) + 1);
+  if (!cfg) return false;
+  return setWeaponBuffLevel(path, (state.levels[path] || 0) + 1);
 }
 
-// Linear interp between min and max at level/maxLevel.
 function curveValue(curve, level, maxLevel) {
   if (maxLevel <= 0) return 0;
   const t = Math.max(0, Math.min(1, level / maxLevel));
   return curve.min + (curve.max - curve.min) * t;
 }
 
-// Resolve all curve values for a given class at its current level.
 export function getBuffValuesFor(path) {
   const cfg = WEAPON_CLASS_BUFFS[path];
   if (!cfg) return {};
-  const lvl = levels[path] || 0;
+  const lvl = state.levels[path] || 0;
   const out = {};
   for (const key of Object.keys(cfg.curves)) {
     out[key] = curveValue(cfg.curves[key], lvl, cfg.maxLevel);
@@ -125,7 +186,6 @@ export function getBuffValuesFor(path) {
   return out;
 }
 
-// Convenience: values of the CURRENTLY-ACTIVE weapon class only.
 export function getActiveBuffValues() {
-  return getBuffValuesFor(activePath);
+  return getBuffValuesFor(state.activePath);
 }
