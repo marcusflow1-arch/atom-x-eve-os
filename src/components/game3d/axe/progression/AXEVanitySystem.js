@@ -65,7 +65,7 @@ export const AXE_VANITY_PIECES = Object.freeze({
     slot: 'head',
     rarity: 'rare',
     appearanceAssetId: 'axe_vanity_wanderer_head',
-    baseBonus: Object.freeze({ focus: 2 }),
+    baseBonus: Object.freeze({ spirit: 2 }),
   }),
   axe_vanity_wanderer_torso: Object.freeze({
     id: 'axe_vanity_wanderer_torso',
@@ -114,6 +114,7 @@ export function collectAXEVanityBaseBonuses(equippedBySlot = {}) {
     dexterity: 0,
     constitution: 0,
     focus: 0,
+    spirit: 0,
   };
   const flat = {
     hp: 0,
