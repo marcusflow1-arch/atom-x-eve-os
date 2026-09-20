@@ -33,7 +33,7 @@ export const AXE_PROMPT_MANIFEST = Object.freeze([
   { prompt: 13, system: 'Authoritative combat math', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 14, system: 'Skills 1–10 ladder', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 15, system: 'A-skill / God skills / charge', status: AXE_STATUS.IMPLEMENTED },
-  { prompt: 16, system: 'PvE mobs / elites / bosses', status: AXE_STATUS.PARTIAL },
+  { prompt: 16, system: 'PvE mobs / elites / bosses', status: AXE_STATUS.IMPLEMENTED },
   { prompt: 17, system: 'Loot rarity / quality rolls', status: AXE_STATUS.PARTIAL },
   { prompt: 18, system: 'Equipment and slots', status: AXE_STATUS.PARTIAL },
   { prompt: 19, system: 'Reinforcement / enchant / over-enchant', status: AXE_STATUS.PARTIAL },
