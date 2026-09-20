@@ -297,6 +297,55 @@ export function allocateStat(statKey) {
   return true;
 }
 
+// Atomic attribute allocation used by the C Character Hub. The UI may preview
+// several points, but committed state changes only once after validation.
+export function applyAttributeAllocationPlan(plan = {}) {
+  const allowed = new Set(['strength', 'dexterity', 'constitution', 'focus']);
+  const normalized = {};
+  let total = 0;
+
+  for (const [key, raw] of Object.entries(plan || {})) {
+    if (!allowed.has(key)) return { ok: false, reason: 'INVALID_ATTRIBUTE', statKey: key };
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 0) {
+      return { ok: false, reason: 'INVALID_ATTRIBUTE_DELTA', statKey: key };
+    }
+    normalized[key] = value;
+    total += value;
+  }
+
+  if (total <= 0) return { ok: false, reason: 'NO_PENDING_POINTS' };
+  if (total > state.unspentPoints) {
+    return { ok: false, reason: 'NOT_ENOUGH_ATTRIBUTE_POINTS', need: total, have: state.unspentPoints };
+  }
+
+  const newBase = { ...state.baseStats };
+  for (const [key, value] of Object.entries(normalized)) {
+    newBase[key] = Number(newBase[key] || 0) + value;
+  }
+
+  const b = getBonuses();
+  const newDerived = computeDerivedWithVanity(newBase, b);
+  const hpGain = newDerived.maxHP - state.maxHP;
+
+  state = {
+    ...state,
+    baseStats: newBase,
+    unspentPoints: state.unspentPoints - total,
+    derived: newDerived,
+    maxHP: newDerived.maxHP,
+    hp: Math.min(newDerived.maxHP, state.hp + Math.max(0, hpGain)),
+  };
+  emit();
+  return {
+    ok: true,
+    spent: total,
+    plan: { ...normalized },
+    baseStats: { ...newBase },
+    unspentPoints: state.unspentPoints,
+  };
+}
+
 export function refundStat(statKey) {
   const current = Number(state.baseStats?.[statKey] || 0);
   if (current <= 1 || !(statKey in state.baseStats)) return false;
