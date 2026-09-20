@@ -77,6 +77,7 @@ export const AXE_PET_FUSION_RECIPES = Object.freeze({
     sameTierRequired: true,
     sameSpecialtyRequired: false,
     successChance: 1,
+    materialCost: Object.freeze({ pet_soul: 2 }),
   }),
   master: Object.freeze({
     sourceTier: 'master',
@@ -85,6 +86,7 @@ export const AXE_PET_FUSION_RECIPES = Object.freeze({
     sameTierRequired: true,
     sameSpecialtyRequired: false,
     successChance: 1,
+    materialCost: Object.freeze({ pet_soul: 4 }),
   }),
   adept_master: Object.freeze({
     sourceTier: 'adept_master',
@@ -93,6 +95,7 @@ export const AXE_PET_FUSION_RECIPES = Object.freeze({
     sameTierRequired: true,
     sameSpecialtyRequired: false,
     successChance: 1,
+    materialCost: Object.freeze({ pet_soul: 8 }),
   }),
   grand_master: Object.freeze({
     sourceTier: 'grand_master',
@@ -101,6 +104,7 @@ export const AXE_PET_FUSION_RECIPES = Object.freeze({
     sameTierRequired: true,
     sameSpecialtyRequired: false,
     successChance: 1,
+    materialCost: Object.freeze({ pet_soul: 12, god_essence: 1 }),
   }),
 });
 
@@ -212,6 +216,7 @@ export function previewAXEPetFusion(pets = [], resultSpecialty = null) {
     resultSpecialty: specialty,
     requiredPetCount: recipe.requiredPetCount,
     successChance: recipe.successChance,
+    materialCost: { ...(recipe.materialCost || {}) },
     retainedLevel: Math.max(...pets.map((pet) => Number(pet.level) || 1)),
     retainedOverEnchantPercent: Math.max(...pets.map((pet) => Number(pet.overEnchantPercent) || 0)),
     donorIds: pets.map((pet) => pet.instanceId),
