@@ -68,6 +68,15 @@ export function activateBuff(skill_id, level = 1, ctx = {}) {
       values.crit_damage_reduction_pct = scaleStat(skill, 'crit_damage_reduction_pct', level);
       values.crit_resist_pct           = scaleStat(skill, 'crit_resist_pct', level);
       break;
+    case 'axe_power_charge':
+      values.next_hit_multiplier = scaleStat(skill, 'next_hit_multiplier', level);
+      break;
+    case 'axe_anti_reflection':
+      values.reflection_reduction_pct = scaleStat(skill, 'reflection_reduction_pct', level);
+      break;
+    case 'axe_control_protection':
+      values.control_resist_pct = scaleStat(skill, 'control_resist_pct', level);
+      break;
     default:
       break;
   }
@@ -114,6 +123,34 @@ export function consumeFocusHit() {
     emit();
   }
   return mult;
+}
+
+/** Consume AXE Power Charge on the next eligible outgoing hit. */
+export function consumeAXEPowerCharge() {
+  const b = _state.buffs.axe_power_charge;
+  if (!b || b.expiresAt < now()) return 1;
+  const mult = Math.max(1, Number(b.values.next_hit_multiplier || 1));
+  clearBuff('axe_power_charge');
+  return mult;
+}
+
+/** Reduce reflected damage while Divine Reflection Guard is active. */
+export function applyAXEReflectionProtection(reflectedDamage) {
+  const b = _state.buffs.axe_anti_reflection;
+  if (!b || b.expiresAt < now()) return Math.max(0, Number(reflectedDamage) || 0);
+  const reduction = Math.max(0, Math.min(1, Number(b.values.reflection_reduction_pct || 0)));
+  return Math.max(0, Math.round((Number(reflectedDamage) || 0) * (1 - reduction)));
+}
+
+/** Current stun/control resistance from Divine Control Guard, 0..1. */
+export function getAXEControlResistance() {
+  const b = _state.buffs.axe_control_protection;
+  if (!b || b.expiresAt < now()) return 0;
+  return Math.max(0, Math.min(1, Number(b.values.control_resist_pct || 0)));
+}
+
+export function rollAXEControlProtection() {
+  return Math.random() < getAXEControlResistance();
 }
 
 /** Roll Heaven's Riposte reflect on incoming damage. */
