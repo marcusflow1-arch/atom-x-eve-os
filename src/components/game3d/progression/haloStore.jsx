@@ -34,6 +34,10 @@ import {
   subscribeKillCount,
 } from '../killCountStore';
 import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
+import {
+  getAXEHaloElixirCapacityBonus,
+  getAXEHaloVisualProfile,
+} from '../axe/progression/AXEHaloSystem';
 
 const storage = characterScopedStorage('halo_progression_v3');
 
@@ -46,10 +50,12 @@ const loadState = () => {
         level:           Math.max(0, Math.min(MAX_HALO_LEVEL, parsed.level || 0)),
         totalAttempts:   Math.max(0, parsed.totalAttempts || 0),
         totalSuccesses:  Math.max(0, parsed.totalSuccesses || 0),
+        hidden: !!parsed.hidden,
+        lowEffects: !!parsed.lowEffects,
       };
     }
   } catch {}
-  return { level: 0, totalAttempts: 0, totalSuccesses: 0 };
+  return { level: 0, totalAttempts: 0, totalSuccesses: 0, hidden: false, lowEffects: false };
 };
 
 let state = loadState();
@@ -63,6 +69,17 @@ subscribeCharacterChange(() => { state = loadState(); emit(); });
 const emit = () => {
   const snapshot = getHaloState();
   listeners.forEach((fn) => fn(snapshot));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('axeHaloChanged', {
+      detail: {
+        level: snapshot.level,
+        tier: snapshot.tier,
+        hidden: snapshot.hidden,
+        lowEffects: snapshot.lowEffects,
+        visualProfile: snapshot.visualProfile,
+      },
+    }));
+  }
 };
 
 // Re-emit whenever the player's kill count changes so the UI (banked-kills
@@ -85,6 +102,13 @@ export function getHaloState() {
     successChance,                          // 0..1 for the NEXT attempt
     tier:            getTierForLevel(state.level),
     bonuses,
+    hidden:           !!state.hidden,
+    lowEffects:       !!state.lowEffects,
+    elixirCapacityBonus: getAXEHaloElixirCapacityBonus(state.level),
+    visualProfile:    getAXEHaloVisualProfile(getTierForLevel(state.level)?.id, {
+      hidden: !!state.hidden,
+      lowEffects: !!state.lowEffects,
+    }),
     isMaxLevel:      state.level >= MAX_HALO_LEVEL,
   };
 }
@@ -159,8 +183,24 @@ export function setHaloLevel(level) {
   emit();
 }
 
+export function setHaloHidden(hidden) {
+  state = { ...state, hidden: !!hidden };
+  save();
+  emit();
+}
+
+export function setHaloLowEffects(lowEffects) {
+  state = { ...state, lowEffects: !!lowEffects };
+  save();
+  emit();
+}
+
+export function getHaloElixirCapacityBonus() {
+  return getAXEHaloElixirCapacityBonus(state.level);
+}
+
 export function resetHalo() {
-  state = { level: 0, totalAttempts: 0, totalSuccesses: 0 };
+  state = { level: 0, totalAttempts: 0, totalSuccesses: 0, hidden: false, lowEffects: false };
   save();
   emit();
 }
