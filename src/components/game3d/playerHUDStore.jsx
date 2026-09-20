@@ -255,6 +255,24 @@ export function allocateStat(statKey) {
   return true;
 }
 
+export function refundStat(statKey) {
+  const current = Number(state.baseStats?.[statKey] || 0);
+  if (current <= 1 || !(statKey in state.baseStats)) return false;
+  const newBase = { ...state.baseStats, [statKey]: current - 1 };
+  const b = getBonuses();
+  const newDerived = computeDerivedWithVanity(newBase, b);
+  state = {
+    ...state,
+    baseStats: newBase,
+    unspentPoints: state.unspentPoints + 1,
+    derived: newDerived,
+    maxHP: newDerived.maxHP,
+    hp: Math.min(newDerived.maxHP, state.hp),
+  };
+  emit();
+  return true;
+}
+
 // Real-time recompute: when Halo level changes (or equipped title changes),
 // re-run computeDerivedStats with the new virtual attribute points so the
 // HUD, damage formulas, and UI all reflect the new bonuses instantly.
