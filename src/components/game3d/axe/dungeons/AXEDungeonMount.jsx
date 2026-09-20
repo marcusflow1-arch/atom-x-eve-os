@@ -14,6 +14,7 @@ import {
 } from './AXEDungeonSystem';
 import {
   getAXEAccessItemCount,
+  getAXEAccessItemState,
   subscribeAXEAccessItems,
 } from './AXEAccessItemStore';
 
@@ -53,11 +54,11 @@ function createPortalMarker(scene, entry, gated) {
 
 export default function AXEDungeonMount() {
   const [dungeonState, setDungeonState] = useState(getAXEDungeonState());
-  const [accessVersion, setAccessVersion] = useState(0);
+  const [accessState, setAccessState] = useState(getAXEAccessItemState());
   const [notice, setNotice] = useState(null);
 
   useEffect(() => subscribeAXEDungeons(setDungeonState), []);
-  useEffect(() => subscribeAXEAccessItems(() => setAccessVersion((v) => v + 1)), []);
+  useEffect(() => subscribeAXEAccessItems(setAccessState), []);
 
   useEffect(() => {
     let disposed = false;
@@ -169,7 +170,7 @@ export default function AXEDungeonMount() {
   }, []);
 
   const active = dungeonState.activeSession;
-  const sosCount = getAXEAccessItemCount('AXE_Item_SOS_Access');
+  const sosCount = Number(accessState.items?.AXE_Item_SOS_Access ?? getAXEAccessItemCount('AXE_Item_SOS_Access'));
 
   return (
     <>
