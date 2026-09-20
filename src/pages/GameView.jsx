@@ -17,6 +17,7 @@ import AXEWorldStreamingMount from '../components/game3d/axe/world/AXEWorldStrea
 import AXEFirstRegionMount from '../components/game3d/axe/world/AXEFirstRegionMount';
 import AXEFirstSpawnMount from '../components/game3d/axe/characters/AXEFirstSpawnMount';
 import AXETraversalSafetyMount from '../components/game3d/axe/player/AXETraversalSafetyMount';
+import AXEInteractionMount from '../components/game3d/axe/interactions/AXEInteractionMount';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -303,6 +304,8 @@ export default function GameView() {
       <AXEFirstSpawnMount />
       {/* AXE Prompt 007 — fall safety, landing severity and world trigger volumes. */}
       <AXETraversalSafetyMount />
+      {/* AXE Prompt 008 — reusable NPC/door/gate/teleport/service interactions. */}
+      <AXEInteractionMount />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <FriendsListPanel open={friendsListOpen} onClose={() => setFriendsListOpen(false)} />
