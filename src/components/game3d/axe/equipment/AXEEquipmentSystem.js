@@ -1,4 +1,5 @@
 import { evaluateAXESetBonuses } from './AXESetBonusSystem';
+import { collectAXEGemStats } from './AXESocketGemSystem';
 
 // AXE Prompt 018 — equipment, inventory and gear-slot foundation.
 // This module is the AXE-native contract around the existing browser Game3D
@@ -83,7 +84,7 @@ export function collectAXEEquipmentStats(items = []) {
     if (!raw) continue;
     const item = raw.instanceId ? raw : makeAXEItemInstance(raw);
     if (!item.equipped) continue;
-    const sources = [item.baseStats, item.rolledStats];
+    const sources = [item.baseStats, item.rolledStats, collectAXEGemStats(item)];
     for (const source of sources) {
       for (const [key, value] of Object.entries(source || {})) {
         const numeric = Number(value);
