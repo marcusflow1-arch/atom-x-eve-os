@@ -1,22 +1,19 @@
-// Backend store for the equipment menu.
-// Holds: equipped abilities (martial arts + inner way + mystic skills),
-// gear slots, and talents. Persists to localStorage and notifies subscribers.
-//
-// AXE Prompt 018 integration:
-// - slot definitions come from the AXE-native equipment contract
-// - legacy inventory remains usable through an adapter
-// - equip validation is centralized instead of being UI-only
+// Character-scoped equipment UI/loadout adapter.
+// Actual owned equipment + equipped state is canonical in AXEEquipmentInventoryStore.
+// This module now owns only UI selections, ability/talent choices and compatibility
+// wrappers used by the legacy equipment menu.
 
-import { INVENTORY, getAllEquippedInCategory } from './inventoryData';
+import { AXE_EQUIPMENT_SLOT_DEFS } from '../axe/equipment/AXEEquipmentSystem';
 import {
-  AXE_EQUIPMENT_SLOT_DEFS,
-  migrateLegacyEquipmentItem,
-  validateAXEEquip,
-} from '../axe/equipment/AXEEquipmentSystem';
+  equipAXEInventoryItem,
+  getEquippedAXEItemsByCategory,
+  subscribeAXEEquipmentInventory,
+  unequipAXEInventoryItem,
+} from '../axe/equipment/AXEEquipmentInventoryStore';
+import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 
-const STORAGE_KEY = 'wwm_equipment_state_v1';
+const storage = characterScopedStorage('wwm_equipment_state_v2');
 
-// Existing UI categories are preserved, with AXE prestige/appearance slots added.
 export const GEAR_CATEGORIES = [
   { id: 'weapon',    label: 'Weapon',    slots: AXE_EQUIPMENT_SLOT_DEFS.weapon.maxEquipped },
   { id: 'helm',      label: 'Helm',      slots: AXE_EQUIPMENT_SLOT_DEFS.helm.maxEquipped },
@@ -50,6 +47,8 @@ const buildDefaultState = () => ({
     inner_way: [null, null, null, null],
     mystic_skills: [null, null, null, null],
   },
+  // Compatibility mirror only. Real equipped items come from the canonical
+  // AXE inventory store and this mirror is rebuilt on inventory updates.
   gear: GEAR_CATEGORIES.reduce((acc, c) => {
     acc[c.id] = new Array(c.slots).fill(null);
     return acc;
@@ -60,32 +59,61 @@ const buildDefaultState = () => ({
   selectedTalentTree: 'tree_range',
 });
 
-let state = (() => {
+function rebuildGearMirror(baseState) {
+  const gear = { ...baseState.gear };
+  for (const cat of GEAR_CATEGORIES) {
+    const ids = getEquippedAXEItemsByCategory(cat.id).map((item) => item.instanceId);
+    gear[cat.id] = new Array(cat.slots).fill(null).map((_, index) => ids[index] || null);
+  }
+  return { ...baseState, gear };
+}
+
+function load() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const base = buildDefaultState();
-      return {
-        ...base,
+    const raw = storage.get();
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const def = buildDefaultState();
+      return rebuildGearMirror({
+        ...def,
         ...parsed,
-        gear: { ...base.gear, ...(parsed.gear || {}) },
-      };
+        gear: { ...def.gear },
+        abilities: { ...def.abilities, ...(parsed.abilities || {}) },
+        talents: { ...def.talents, ...(parsed.talents || {}) },
+      });
     }
   } catch {}
-  return buildDefaultState();
-})();
+  return rebuildGearMirror(buildDefaultState());
+}
 
+let state = load();
 const listeners = new Set();
+
 const persist = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  // Gear is derived; do not persist duplicate ownership/equip authority here.
+  const { gear, ...rest } = state;
+  storage.set(JSON.stringify(rest));
 };
+
 const emit = () => {
+  state = rebuildGearMirror(state);
   persist();
   listeners.forEach((fn) => fn(state));
 };
 
+subscribeCharacterChange(() => {
+  state = load();
+  listeners.forEach((fn) => fn(state));
+});
+
+subscribeAXEEquipmentInventory(() => {
+  // Canonical equipment state changed due to inventory, service or loot.
+  state = rebuildGearMirror(state);
+  listeners.forEach((fn) => fn(state));
+});
+
 export const getEquipmentState = () => state;
+
 export const subscribeEquipment = (fn) => {
   listeners.add(fn);
   fn(state);
@@ -93,30 +121,34 @@ export const subscribeEquipment = (fn) => {
 };
 
 export const equipAbility = (groupId, slotIndex, abilityId) => {
-  const next = { ...state, abilities: { ...state.abilities } };
-  const arr = [...next.abilities[groupId]];
+  const arr = [...(state.abilities[groupId] || [])];
+  if (slotIndex < 0 || slotIndex >= arr.length) return false;
   arr[slotIndex] = abilityId;
-  next.abilities[groupId] = arr;
-  state = next;
+  state = {
+    ...state,
+    abilities: { ...state.abilities, [groupId]: arr },
+  };
   emit();
+  return true;
 };
 
-export const equipGear = (categoryId, slotIndex, itemId) => {
-  const next = { ...state, gear: { ...state.gear } };
-  const arr = [...(next.gear[categoryId] || [])];
-  arr[slotIndex] = itemId;
-  next.gear[categoryId] = arr;
-  state = next;
+export const equipGear = (categoryId, slotIndex, itemId, context = {}) => {
+  const result = equipAXEInventoryItem(itemId, context);
   emit();
+  return result;
 };
 
 export const toggleTalent = (treeId, nodeId) => {
-  const next = { ...state, talents: { ...state.talents } };
-  const arr = next.talents[treeId] || [];
-  next.talents[treeId] = arr.includes(nodeId)
-    ? arr.filter((n) => n !== nodeId)
-    : [...arr, nodeId];
-  state = next;
+  const arr = state.talents[treeId] || [];
+  state = {
+    ...state,
+    talents: {
+      ...state.talents,
+      [treeId]: arr.includes(nodeId)
+        ? arr.filter((n) => n !== nodeId)
+        : [...arr, nodeId],
+    },
+  };
   emit();
 };
 
@@ -125,41 +157,14 @@ export const setSelected = (key, value) => {
   emit();
 };
 
-// --- Inventory equip / unequip --------------------------------------------
-
-const findCategoryDef = (categoryId) =>
-  GEAR_CATEGORIES.find((c) => c.id === categoryId);
-
 export const equipItem = (categoryId, itemId, context = {}) => {
-  const items = INVENTORY[categoryId];
-  if (!items) return { ok: false, reason: 'CATEGORY_MISSING' };
-  const target = items.find((it) => it.id === itemId);
-  if (!target) return { ok: false, reason: 'ITEM_MISSING' };
-  if (target.equipped) { emit(); return { ok: true, reason: 'ALREADY_EQUIPPED' }; }
-
-  const axeItem = migrateLegacyEquipmentItem(target, categoryId);
-  const validation = validateAXEEquip(axeItem, context);
-  if (!validation.ok) return validation;
-
-  const cat = findCategoryDef(categoryId);
-  const maxSlots = cat?.slots || 1;
-  const currentlyEquipped = getAllEquippedInCategory(categoryId);
-
-  if (currentlyEquipped.length >= maxSlots) {
-    const toRemove = currentlyEquipped[0];
-    if (toRemove) toRemove.equipped = false;
-  }
-  target.equipped = true;
+  const result = equipAXEInventoryItem(itemId, context);
   emit();
-  return { ok: true, reason: null };
+  return result;
 };
 
 export const unequipItem = (categoryId, itemId) => {
-  const items = INVENTORY[categoryId];
-  if (!items) return { ok: false, reason: 'CATEGORY_MISSING' };
-  const target = items.find((it) => it.id === itemId);
-  if (!target) return { ok: false, reason: 'ITEM_MISSING' };
-  target.equipped = false;
+  const result = unequipAXEInventoryItem(itemId);
   emit();
-  return { ok: true, reason: null };
+  return result;
 };
