@@ -16,6 +16,7 @@ import CostumeSubTab from './progression/hub/CostumeSubTab';
 import CapeSubTab from './progression/hub/CapeSubTab';
 import ElixirSubTab from './progression/hub/ElixirSubTab';
 import PetSubTab from './progression/hub/PetSubTab';
+import MountSubTab from './progression/hub/MountSubTab';
 
 // ─── Character Hub ────────────────────────────────────────────────────────
 // MMORPG-style progression overlay (replaces the legacy split-panel screen).
@@ -37,6 +38,7 @@ const MASTERY_SUB_TABS = [
   { id: 'cape', label: 'Cape' },
   { id: 'elixir', label: 'Elixir' },
   { id: 'pet', label: 'Pet' },
+  { id: 'mount', label: 'Mount' },
 ];
 
 export default function CharacterProgressionMenu({ isOpen, onClose }) {
@@ -134,6 +136,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'cape' && <CapeSubTab />}
           {mainTab === 'mastery' && subTab === 'elixir' && <ElixirSubTab />}
           {mainTab === 'mastery' && subTab === 'pet' && <PetSubTab />}
+          {mainTab === 'mastery' && subTab === 'mount' && <MountSubTab />}
         </div>
 
         {/* Close */}
