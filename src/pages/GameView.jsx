@@ -22,6 +22,7 @@ import AXECapitalBlockoutMount from '../components/game3d/axe/cities/AXECapitalB
 import AXEDungeonMount from '../components/game3d/axe/dungeons/AXEDungeonMount';
 import AXEDungeonRuntime from '../components/game3d/axe/dungeons/AXEDungeonRuntime';
 import AXEGlobalServicesMenu from '../components/game3d/axe/services/AXEGlobalServicesMenu';
+import AXEFactionWarRuntime from '../components/game3d/axe/factions/AXEFactionWarRuntime';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -338,6 +339,8 @@ export default function GameView() {
       {/* AXE Prompt 037 — cave/dungeon/SOS-access prototype entrances and session state. */}
       <AXEDungeonMount />
       <AXEDungeonRuntime />
+      {/* AXE Prompt 039 — recurring faction-war objectives and invasion defenses. */}
+      <AXEFactionWarRuntime />
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu isOpen={progressionOpen} onClose={() => setProgressionOpen(false)} />
       <AXEGlobalServicesMenu isOpen={servicesOpen} requestedService={requestedService} onClose={() => setServicesOpen(false)} />
