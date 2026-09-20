@@ -4,8 +4,13 @@
 
 import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 import { ADVANCED_CLASS_REGISTRY, getClassById, WEAPON_TYPES } from './advancedClassRegistry';
+import { getEquippedAXEItemInCategory } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
+import { getWeaponLevel } from '../progression/weaponMasteryStore';
 
 const storage = characterScopedStorage('advanced_class_v1');
+
+export const ADVANCED_CLASS_REQUIRED_MASTERY_LEVEL = 10;
 
 // ─── Combat state flags (set externally by combat systems) ────────────────────
 let _inCombat        = false;
@@ -106,6 +111,45 @@ export const getActiveClassForCurrentWeapon = (activeWeaponType) => {
 export const isClassUnlocked = (classId) =>
   state.unlockedClasses.includes(classId);
 
+export const getAdvancedClassEligibility = (classId) => {
+  const classDef = getClassById(classId);
+  if (!classDef) return { eligible: false, reason: 'Unknown class.' };
+  if (!isClassUnlocked(classId)) return { eligible: false, reason: 'Class not unlocked.' };
+
+  const equippedWeapon = getEquippedAXEItemInCategory('weapon');
+  if (!equippedWeapon) {
+    return { eligible: false, reason: 'Equip a weapon before selecting an advanced class.' };
+  }
+
+  const identity = resolveAXEWeaponIdentity(equippedWeapon);
+  if (identity.advancedWeaponType !== classDef.weapon_type) {
+    return {
+      eligible: false,
+      reason: `Equip a compatible ${classDef.weapon_type} weapon first.`,
+      identity,
+    };
+  }
+
+  const masteryLevel = getWeaponLevel(identity.masteryWeaponId);
+  if (masteryLevel < ADVANCED_CLASS_REQUIRED_MASTERY_LEVEL) {
+    return {
+      eligible: false,
+      reason: `Reach Weapon Mastery ${ADVANCED_CLASS_REQUIRED_MASTERY_LEVEL} with the equipped weapon first.`,
+      masteryLevel,
+      requiredMasteryLevel: ADVANCED_CLASS_REQUIRED_MASTERY_LEVEL,
+      identity,
+    };
+  }
+
+  return {
+    eligible: true,
+    classDef,
+    identity,
+    masteryLevel,
+    requiredMasteryLevel: ADVANCED_CLASS_REQUIRED_MASTERY_LEVEL,
+  };
+};
+
 // ─── Mutations ───────────────────────────────────────────────────────────────
 export const selectAdvancedClass = (classId) => {
   const check = canSwitchAdvancedClass();
@@ -114,9 +158,9 @@ export const selectAdvancedClass = (classId) => {
     return { success: false, reason: check.reason };
   }
 
-  const classDef = getClassById(classId);
-  if (!classDef) return { success: false, reason: 'Unknown class.' };
-  if (!isClassUnlocked(classId)) return { success: false, reason: 'Class not unlocked.' };
+  const eligibility = getAdvancedClassEligibility(classId);
+  if (!eligibility.eligible) return { success: false, reason: eligibility.reason };
+  const classDef = eligibility.classDef;
 
   state.selectedClasses[classDef.weapon_type] = classId;
   save();
