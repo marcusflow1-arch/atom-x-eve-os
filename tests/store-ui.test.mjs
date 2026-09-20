@@ -11,7 +11,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 window.matchMedia=()=>({matches:true});
 const React=await import('react'),{act}=React;
 const {createRoot}=await import('react-dom/client');
-const {QueryClient,QueryClientProvider}=await import('@tanstack/react-query');
+const {QueryClient,QueryClientProvider}=createRequire(import.meta.url)('@tanstack/react-query');
 let preference={genres:[],played_game_ids:[],use_play_history:true},saves=0,selected;
 const base44={functions:{invoke:async(name,{action,data})=>{
  assert.equal(name,'storeDiscovery');
