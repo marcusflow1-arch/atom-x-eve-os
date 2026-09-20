@@ -120,6 +120,7 @@ export function rollAXEEquipmentDrop(enemyTier = 'normal', isBoss = false, {
     icon: template.slot === 'weapon' ? '⚔️' : '🛡️',
     equipmentItem: {
       ...template,
+      category: template.sourceCategory,
       id: template.id,
       templateId: template.templateId || template.id,
       name: displayName,
