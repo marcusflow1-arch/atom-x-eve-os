@@ -704,6 +704,7 @@ export default function GameWorld3D() {
       loader, scene, snapToGround, bossEntities, setBosses,
       walkClipPromise, idleClipPromise,
     });
+    const pendingAXEDungeonBossSpawns = new Set();
     window.__gw3dSpawnAXEDungeonBoss = ({
       bossDef,
       position,
@@ -711,6 +712,15 @@ export default function GameWorld3D() {
       roomId = null,
     } = {}) => {
       if (!bossDef?.id || !position) return null;
+      const runtimeId = `${bossDef.id}::${sessionId || 'runtime'}`;
+      const alreadyLive = bossEntities.some((boss) =>
+        boss?.id === runtimeId &&
+        boss.alive !== false &&
+        !boss.dying &&
+        !boss.defeated
+      );
+      if (alreadyLive || pendingAXEDungeonBossSpawns.has(runtimeId)) return null;
+      pendingAXEDungeonBossSpawns.add(runtimeId);
       return spawnWorldBoss({
         loader,
         scene,
@@ -721,12 +731,13 @@ export default function GameWorld3D() {
         idleClipPromise,
         bossDefOverride: bossDef,
         spawnPosition: position,
-        instanceId: `${bossDef.id}::${sessionId || 'runtime'}`,
+        instanceId: runtimeId,
         metadata: {
           dungeonBossId: bossDef.id,
           dungeonSessionId: sessionId,
           dungeonRoomId: roomId,
         },
+        onSpawn: () => pendingAXEDungeonBossSpawns.delete(runtimeId),
       });
     };
 
