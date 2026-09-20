@@ -172,7 +172,7 @@ export default function CharacterProgressionMenu({
                 Weapon Mastery · Combat Specialization
               </div>
               <div style={{ height: "calc(100% - 42px)" }}>
-                <WeaponMasteryTab />
+                <WeaponMasteryTab onOpenInventory={() => setMainTab('inventory')} />
               </div>
             </div>
           )}
