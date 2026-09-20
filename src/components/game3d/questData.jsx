@@ -262,15 +262,38 @@ QUESTS.push(...AXE_QUESTS);
 // Helper: which quest (if any) is currently available from this NPC for this player?
 // Picks the lowest-unlockLevel quest from this NPC that the player has unlocked
 // but not yet accepted or completed.
-export function getAvailableQuestForNPC(npcId, playerLevel, acceptedIds, completedIds) {
+export function getAvailableQuestForNPC(
+  npcId,
+  playerLevel,
+  acceptedIds,
+  completedIds,
+  {
+    factionId = null,
+    storyFlags = {},
+  } = {},
+) {
   return QUESTS
-    .filter(
-      (q) =>
+    .filter((q) => {
+      const factionAllowed =
+        !q.factionId ||
+        q.factionId === 'AXE_Faction_Unassigned' ||
+        !factionId ||
+        factionId === 'AXE_Faction_Unassigned' ||
+        q.factionId === factionId;
+      const flagsAllowed = (q.storyFlagsRequired || []).every((flag) => !!storyFlags[flag]);
+      return (
         q.npcId === npcId &&
         q.unlockLevel <= playerLevel &&
         (!q.requires || completedIds.includes(q.requires)) &&
         !acceptedIds.includes(q.id) &&
-        (!completedIds.includes(q.id) || q.repeatable)
-    )
-    .sort((a, b) => (Number(b.priority || 0) - Number(a.priority || 0)) || (Number(a.unlockLevel || 1) - Number(b.unlockLevel || 1)))[0] || null;
+        (!completedIds.includes(q.id) || q.repeatable) &&
+        factionAllowed &&
+        flagsAllowed
+      );
+    })
+    .sort(
+      (a, b) =>
+        (Number(b.priority || 0) - Number(a.priority || 0)) ||
+        (Number(a.unlockLevel || 1) - Number(b.unlockLevel || 1)),
+    )[0] || null;
 }
