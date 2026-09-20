@@ -1,7 +1,7 @@
 // Runtime resolver for the Advanced Class attached to the ACTUALLY equipped weapon.
 // Advanced Classes specialize mastery; they do not replace Attributes or Equipment.
 
-import { getEquippedAXEItemInCategory } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { getActiveEquippedAXEWeapon } from '../axe/equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
 import {
   getActivePassiveBonuses,
@@ -45,7 +45,7 @@ const empty = () => ({
 const pct = (value) => Number(value || 0) * 100;
 
 export function getActiveAXEAdvancedClassRuntime() {
-  const weapon = getEquippedAXEItemInCategory('weapon');
+  const weapon = getActiveEquippedAXEWeapon();
   if (!weapon) return empty();
 
   const identity = resolveAXEWeaponIdentity(weapon);
