@@ -47,6 +47,12 @@ export const LOOT_TABLE = [
   { id: 'mat_aura_shard',        name: 'Aura Shard',       category: 'material',  rarity: 'rare',      icon: '🌟',  weight: 20 },
   { id: 'mat_elite_temper',       name: 'Elite Tempering Stone', category: 'material', rarity: 'elite', icon: '🔷', weight: 4 },
   { id: 'mat_heroic_core',        name: 'Heroic Core',       category: 'material',  rarity: 'heroic',    icon: '💎',  weight: 1 },
+  // ── Socket Gems (real owned inventory) ───────────────────────────────────
+  { id: 'gem_ruby_i',     name: 'Ruby I',          category: 'gem', rarity: 'common',   icon: '🔴', weight: 14 },
+  { id: 'gem_sapphire_i', name: 'Sapphire I',      category: 'gem', rarity: 'common',   icon: '🔵', weight: 14 },
+  { id: 'gem_jade_i',     name: 'Jade I',          category: 'gem', rarity: 'uncommon', icon: '🟢', weight: 10 },
+  { id: 'gem_spirit_i',   name: 'Spirit Gem I',    category: 'gem', rarity: 'uncommon', icon: '🟣', weight: 9  },
+  { id: 'gem_crit_i',     name: 'Critical Gem I',  category: 'gem', rarity: 'rare',     icon: '💎', weight: 5  },
   // ── Crafting Resources ────────────────────────────────────────────────────
   { id: 'craft_bone',            name: 'Creature Bone',    category: 'crafting',  rarity: 'common',    icon: '🦴',  weight: 40 },
   { id: 'craft_fang',            name: 'Toxic Fang',       category: 'crafting',  rarity: 'common',    icon: '🦷',  weight: 35 },
