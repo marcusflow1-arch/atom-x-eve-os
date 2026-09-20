@@ -69,9 +69,15 @@ export default function CharacterProgressionMenu({
     setServiceItemId(null);
     setMainTab('services');
     onServiceRequestConsumed?.();
-  }, [isOpen, requestedService, onServiceRequestConsumed]);
+  }, [isOpen, requestedService, requestedItemId, onServiceRequestConsumed]);
 
   if (!isOpen || !hud) return null;
+
+  const openServiceForItem = (nextServiceId, itemId = null) => {
+    setServiceId(nextServiceId || 'reinforcement');
+    setServiceItemId(itemId || null);
+    setMainTab('services');
+  };
 
   return (
     <div
