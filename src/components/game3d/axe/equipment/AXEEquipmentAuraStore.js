@@ -1,5 +1,8 @@
-// AXE Prompt 023 — Aura persistence adapter.
+// AXE Prompt 023 — Equipment Aura persistence adapter.
+// Aura is character-scoped and reactive so changing an equipped item's aura
+// immediately updates the character's real combat stats.
 
+import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
 import {
   canApplyAXEAura,
   collectAXEAuraStats,
@@ -7,11 +10,11 @@ import {
   upgradeAXEAura,
 } from './AXEEquipmentAuraSystem';
 
-const STORAGE_KEY = 'axe_equipment_aura_v1';
+const storage = characterScopedStorage('axe_equipment_aura_v2');
 
 const load = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.get();
     if (raw) return JSON.parse(raw);
   } catch {}
   return {};
@@ -20,14 +23,23 @@ const load = () => {
 let state = load();
 const listeners = new Set();
 
+const snapshot = () => ({ ...state });
+
 const emit = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  listeners.forEach((fn) => fn({ ...state }));
+  storage.set(JSON.stringify(state));
+  const snap = snapshot();
+  listeners.forEach((fn) => fn(snap));
 };
+
+subscribeCharacterChange(() => {
+  state = load();
+  const snap = snapshot();
+  listeners.forEach((fn) => fn(snap));
+});
 
 export function subscribeAXEAura(fn) {
   listeners.add(fn);
-  fn({ ...state });
+  fn(snapshot());
   return () => listeners.delete(fn);
 }
 
