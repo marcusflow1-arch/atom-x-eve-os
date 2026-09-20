@@ -1,12 +1,8 @@
-// Mock inventory data — each gear category has its own list of items.
-// Items live in their own per-category slots (no shared bag), matching
-// the Where Winds Meet inventory style.
-//
-// NOTE: INVENTORY is mutated by equipmentStore (equipItem / unequipItem).
-// Components should subscribe to the store and re-read these helpers so
-// the UI reflects equip changes.
+// AXE Prompt 018 inventory seed data.
+// Existing UI reads this object directly; each entry now includes enough metadata
+// for the AXE equipment adapter to validate/evaluate item instances.
 
-import { Swords, Shield, Shirt, HardHat, Footprints, Hand, Gem, Sparkles } from 'lucide-react';
+import { Swords, Shield, Shirt, HardHat, Footprints, Hand, Gem, Sparkles, Wind, Layers3 } from 'lucide-react';
 
 export const CATEGORY_ICONS = {
   weapon: Swords,
@@ -17,37 +13,63 @@ export const CATEGORY_ICONS = {
   boots: Footprints,
   accessory: Gem,
   trinket: Sparkles,
+  cape: Layers3,
+  wings: Wind,
+  costume: Shirt,
 };
 
-// Per-category item pools. `equipped` marks the currently worn item(s).
+const gear = (item) => ({
+  rarity: 'common',
+  qualityBand: 0,
+  baseStats: {},
+  rolledStats: {},
+  reinforcement: { level: 0, percent: 0 },
+  enchantment: { level: 0 },
+  sockets: [],
+  aura: null,
+  core: null,
+  bindState: 'unbound',
+  tradeable: true,
+  ...item,
+});
+
 export const INVENTORY = {
   weapon: [
-    { id: 'wp_truesword',  name: 'True Heart — Sword', type: 'Weapon — Sword',  mastery: 7, tier: 1, atk: '2-3', durability: '99/100', level: 1, equipped: true,  locked: false },
-    { id: 'wp_dagger',     name: 'Whisper Dagger',     type: 'Weapon — Dagger', mastery: 3, tier: 1, atk: '1-2', durability: '88/100', level: 1, equipped: false, locked: false },
-    { id: 'wp_fan',        name: 'Painted Fan',        type: 'Weapon — Fan',    mastery: 2, tier: 1, atk: '1-2', durability: '92/100', level: 1, equipped: false, locked: false },
+    gear({ id: 'wp_truesword', name: 'True Heart — Sword', type: 'Weapon — Sword', slot: 'weapon', mastery: 7, tier: 1, atk: '2-3', durability: '99/100', level: 1, equipped: true, locked: false, rarity: 'rare', qualityBand: 10, baseStats: { attack: 3 } }),
+    gear({ id: 'wp_dagger', name: 'Whisper Dagger', type: 'Weapon — Dagger', slot: 'weapon', mastery: 3, tier: 1, atk: '1-2', durability: '88/100', level: 1, equipped: false, locked: false, baseStats: { attack: 2 } }),
+    gear({ id: 'wp_fan', name: 'Painted Fan', type: 'Weapon — Fan', slot: 'weapon', mastery: 2, tier: 1, atk: '1-2', durability: '92/100', level: 1, equipped: false, locked: false, baseStats: { attack: 2, spirit: 1 } }),
   ],
   helm: [
-    { id: 'hl_hood',  name: "Wanderer's Hood", type: 'Helm', mastery: 1, tier: 1, atk: '—', durability: '70/100', level: 1, equipped: true, locked: false },
+    gear({ id: 'hl_hood', name: "Wanderer's Hood", type: 'Helm', slot: 'helm', mastery: 1, tier: 1, atk: '—', durability: '70/100', level: 1, equipped: true, locked: false, baseStats: { defense: 1 } }),
   ],
   chest: [
-    { id: 'ch_robe', name: 'Linen Robe', type: 'Chest', mastery: 1, tier: 1, atk: '—', durability: '95/100', level: 1, equipped: true, locked: false },
+    gear({ id: 'ch_robe', name: 'Linen Robe', type: 'Chest', slot: 'chest', mastery: 1, tier: 1, atk: '—', durability: '95/100', level: 1, equipped: true, locked: false, baseStats: { defense: 2, maxHP: 10 } }),
   ],
   gloves: [
-    { id: 'gl_wraps', name: 'Cloth Wraps', type: 'Gloves', mastery: 1, tier: 1, atk: '—', durability: '80/100', level: 1, equipped: true, locked: false },
+    gear({ id: 'gl_wraps', name: 'Cloth Wraps', type: 'Gloves', slot: 'gloves', mastery: 1, tier: 1, atk: '—', durability: '80/100', level: 1, equipped: true, locked: false, baseStats: { attack: 1 } }),
   ],
   legs: [
-    { id: 'lg_pants', name: 'Travel Pants', type: 'Legs', mastery: 1, tier: 1, atk: '—', durability: '78/100', level: 1, equipped: true, locked: false },
+    gear({ id: 'lg_pants', name: 'Travel Pants', type: 'Legs', slot: 'legs', mastery: 1, tier: 1, atk: '—', durability: '78/100', level: 1, equipped: true, locked: false, baseStats: { defense: 1, maxHP: 5 } }),
   ],
   boots: [
-    { id: 'bt_boots', name: 'Soft Boots', type: 'Boots', mastery: 1, tier: 1, atk: '—', durability: '82/100', level: 1, equipped: true, locked: false },
+    gear({ id: 'bt_boots', name: 'Soft Boots', type: 'Boots', slot: 'boots', mastery: 1, tier: 1, atk: '—', durability: '82/100', level: 1, equipped: true, locked: false, baseStats: { evasion: 1 } }),
   ],
   accessory: [
-    { id: 'ac_ring1', name: 'Brass Ring',    type: 'Ring',    mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: true,  locked: false },
-    { id: 'ac_ring2', name: 'Silver Ring',   type: 'Ring',    mastery: 2, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false },
-    { id: 'ac_neck',  name: 'Jade Necklace', type: 'Neck',    mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false },
+    gear({ id: 'ac_ring1', name: 'Brass Ring', type: 'Ring', slot: 'ring', mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: true, locked: false, baseStats: { critChance: 0.5 } }),
+    gear({ id: 'ac_ring2', name: 'Silver Ring', type: 'Ring', slot: 'ring', mastery: 2, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false, rarity: 'uncommon', qualityBand: 5, baseStats: { critChance: 0.75 } }),
+    gear({ id: 'ac_neck', name: 'Jade Necklace', type: 'Necklace', slot: 'necklace', mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false, baseStats: { spirit: 1, maxChi: 5 } }),
   ],
   trinket: [
-    { id: 'tr_coin', name: 'Lucky Coin', type: 'Trinket', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: true, locked: false },
+    gear({ id: 'tr_coin', name: 'Lucky Coin', type: 'Trinket', slot: 'trinket', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: true, locked: false, baseStats: { luck: 1 } }),
+  ],
+  cape: [
+    gear({ id: 'cape_trainee', name: 'Trainee Cape', type: 'Cape', slot: 'cape', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: false, locked: false, baseStats: { defense: 1, critDefense: 0.5 }, appearance: { assetId: 'axe_cape_trainee' } }),
+  ],
+  wings: [
+    gear({ id: 'wing_starter', name: 'Starter Wings', type: 'Wings', slot: 'wings', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: false, locked: false, baseStats: { maxHP: 5 }, appearance: { assetId: 'axe_wings_starter' } }),
+  ],
+  costume: [
+    gear({ id: 'costume_wanderer', name: 'Wanderer Outfit', type: 'Costume', slot: 'costume', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: false, locked: false, baseStats: {}, appearance: { assetId: 'axe_costume_wanderer' } }),
   ],
 };
 
