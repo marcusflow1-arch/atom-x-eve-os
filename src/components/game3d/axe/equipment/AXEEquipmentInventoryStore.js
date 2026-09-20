@@ -1,0 +1,273 @@
+// Canonical AXE equipment inventory backend.
+// This is the single runtime ownership/equip source used by Gear UI, Services,
+// combat-stat recomputation, combine consumption and future loot/economy paths.
+//
+// inventoryData.jsx remains a template/seed catalog only. The player's actual
+// owned item instances live here and are persisted per user + per character.
+
+import { INVENTORY } from '../../equipment/inventoryData';
+import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
+import {
+  AXE_EQUIPMENT_SLOT_DEFS,
+  migrateLegacyEquipmentItem,
+  validateAXEEquip,
+} from './AXEEquipmentSystem';
+
+const storage = characterScopedStorage('axe_equipment_inventory_v2');
+
+function seedItems() {
+  return Object.entries(INVENTORY).flatMap(([category, items]) =>
+    (items || []).map((raw) => {
+      const item = migrateLegacyEquipmentItem(raw, category);
+      return {
+        ...raw,
+        ...item,
+        id: raw.id || item.templateId,
+        instanceId: item.instanceId || raw.id,
+        templateId: item.templateId || raw.id,
+        category,
+        equipped: !!raw.equipped,
+        locked: !!raw.locked,
+        acquiredAt: 0,
+        source: 'starter',
+      };
+    }),
+  );
+}
+
+function normalizeItem(raw = {}, fallbackCategory = null) {
+  const category = raw.category || fallbackCategory || raw.slot || 'misc';
+  const migrated = migrateLegacyEquipmentItem(raw, category);
+  return {
+    ...raw,
+    ...migrated,
+    id: raw.id || migrated.templateId,
+    instanceId: raw.instanceId || migrated.instanceId || raw.id,
+    templateId: raw.templateId || migrated.templateId || raw.id,
+    category,
+    equipped: !!raw.equipped,
+    locked: !!raw.locked,
+    acquiredAt: Number(raw.acquiredAt || Date.now()),
+    source: raw.source || 'owned',
+  };
+}
+
+function buildDefault() {
+  return { items: seedItems() };
+}
+
+function load() {
+  try {
+    const raw = storage.get();
+    if (!raw) return buildDefault();
+    const parsed = JSON.parse(raw);
+    const owned = Array.isArray(parsed.items)
+      ? parsed.items.map((item) => normalizeItem(item, item.category)).filter((item) => item.instanceId)
+      : [];
+
+    // Non-destructive schema/content migration: if a newly-added starter
+    // template is missing from an older save, add it without touching owned gear.
+    const byId = new Map(owned.map((item) => [item.instanceId, item]));
+    for (const starter of seedItems()) {
+      if (!byId.has(starter.instanceId)) byId.set(starter.instanceId, starter);
+    }
+    return { items: [...byId.values()] };
+  } catch {
+    return buildDefault();
+  }
+}
+
+let state = load();
+const listeners = new Set();
+
+function snapshot() {
+  return {
+    items: state.items.map((item) => ({
+      ...item,
+      baseStats: { ...(item.baseStats || {}) },
+      rolledStats: { ...(item.rolledStats || {}) },
+      sockets: Array.isArray(item.sockets) ? item.sockets.map((s) => ({ ...s })) : [],
+    })),
+  };
+}
+
+function emit() {
+  storage.set(JSON.stringify(state));
+  const snap = snapshot();
+  listeners.forEach((fn) => fn(snap));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('axeEquipmentInventoryChanged', { detail: snap }));
+  }
+}
+
+subscribeCharacterChange(() => {
+  state = load();
+  const snap = snapshot();
+  listeners.forEach((fn) => fn(snap));
+});
+
+export function getAXEEquipmentInventoryState() {
+  return snapshot();
+}
+
+export function subscribeAXEEquipmentInventory(fn) {
+  listeners.add(fn);
+  fn(snapshot());
+  return () => listeners.delete(fn);
+}
+
+export function getAllAXEEquipmentItems() {
+  return state.items.map((item) => ({ ...item }));
+}
+
+export function getAXEEquipmentItem(instanceId) {
+  const item = state.items.find((entry) => entry.instanceId === instanceId || entry.id === instanceId);
+  return item ? { ...item } : null;
+}
+
+export function getAXEInventoryItemsByCategory(categoryId) {
+  return state.items
+    .filter((item) => item.category === categoryId)
+    .map((item) => ({ ...item }));
+}
+
+export function getEquippedAXEItems() {
+  return state.items.filter((item) => item.equipped).map((item) => ({ ...item }));
+}
+
+export function getEquippedAXEItemsByCategory(categoryId) {
+  return state.items
+    .filter((item) => item.category === categoryId && item.equipped)
+    .map((item) => ({ ...item }));
+}
+
+export function getEquippedAXEItemInCategory(categoryId) {
+  return getEquippedAXEItemsByCategory(categoryId)[0] || null;
+}
+
+export function equipAXEInventoryItem(instanceId, context = {}) {
+  const index = state.items.findIndex((item) => item.instanceId === instanceId || item.id === instanceId);
+  if (index < 0) return { ok: false, reason: 'ITEM_MISSING' };
+
+  const target = state.items[index];
+  const validation = validateAXEEquip(target, context);
+  if (!validation.ok) return validation;
+  if (target.equipped) return { ok: true, reason: 'ALREADY_EQUIPPED', item: { ...target } };
+
+  const slotDef = AXE_EQUIPMENT_SLOT_DEFS[target.slot];
+  if (!slotDef) return { ok: false, reason: 'INVALID_SLOT' };
+
+  const sameSlotEquipped = state.items.filter(
+    (item) => item.equipped && item.slot === target.slot && item.instanceId !== target.instanceId,
+  );
+
+  const removeIds = new Set(
+    sameSlotEquipped
+      .slice(0, Math.max(0, sameSlotEquipped.length - slotDef.maxEquipped + 1))
+      .map((item) => item.instanceId),
+  );
+
+  state = {
+    ...state,
+    items: state.items.map((item) => {
+      if (removeIds.has(item.instanceId)) return { ...item, equipped: false };
+      if (item.instanceId === target.instanceId) return { ...item, equipped: true };
+      return item;
+    }),
+  };
+  emit();
+  return { ok: true, item: getAXEEquipmentItem(target.instanceId), autoUnequippedIds: [...removeIds] };
+}
+
+export function unequipAXEInventoryItem(instanceId) {
+  const index = state.items.findIndex((item) => item.instanceId === instanceId || item.id === instanceId);
+  if (index < 0) return { ok: false, reason: 'ITEM_MISSING' };
+  if (!state.items[index].equipped) return { ok: true, reason: 'ALREADY_UNEQUIPPED' };
+
+  state = {
+    ...state,
+    items: state.items.map((item, i) => i === index ? { ...item, equipped: false } : item),
+  };
+  emit();
+  return { ok: true };
+}
+
+export function setAXEInventoryItemLocked(instanceId, locked) {
+  const index = state.items.findIndex((item) => item.instanceId === instanceId || item.id === instanceId);
+  if (index < 0) return { ok: false, reason: 'ITEM_MISSING' };
+  state = {
+    ...state,
+    items: state.items.map((item, i) => i === index ? { ...item, locked: !!locked } : item),
+  };
+  emit();
+  return { ok: true };
+}
+
+export function addAXEEquipmentItem(rawItem, {
+  source = 'loot',
+  equipped = false,
+} = {}) {
+  if (!rawItem) return { ok: false, reason: 'ITEM_MISSING' };
+  const category = rawItem.category || rawItem.slot;
+  const uniqueInstanceId =
+    rawItem.instanceId ||
+    rawItem.instance_id ||
+    `${rawItem.id || rawItem.templateId || 'axe_item'}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+
+  if (state.items.some((item) => item.instanceId === uniqueInstanceId)) {
+    return { ok: false, reason: 'DUPLICATE_INSTANCE' };
+  }
+
+  const item = normalizeItem({
+    ...rawItem,
+    instanceId: uniqueInstanceId,
+    category,
+    source,
+    equipped: false,
+    acquiredAt: Date.now(),
+  }, category);
+
+  state = { ...state, items: [...state.items, item] };
+  emit();
+
+  if (equipped) return equipAXEInventoryItem(item.instanceId);
+  return { ok: true, item: getAXEEquipmentItem(item.instanceId) };
+}
+
+export function canConsumeAXEEquipmentItem(instanceId, {
+  allowEquipped = false,
+  allowLocked = false,
+} = {}) {
+  const item = state.items.find((entry) => entry.instanceId === instanceId || entry.id === instanceId);
+  if (!item) return { ok: false, reason: 'ITEM_MISSING' };
+  if (item.equipped && !allowEquipped) return { ok: false, reason: 'ITEM_EQUIPPED', item: { ...item } };
+  if (item.locked && !allowLocked) return { ok: false, reason: 'ITEM_LOCKED', item: { ...item } };
+  return { ok: true, item: { ...item } };
+}
+
+export function consumeAXEEquipmentItem(instanceId, options = {}) {
+  const check = canConsumeAXEEquipmentItem(instanceId, options);
+  if (!check.ok) return check;
+  state = {
+    ...state,
+    items: state.items.filter((item) => item.instanceId !== check.item.instanceId),
+  };
+  emit();
+  return { ok: true, consumed: check.item };
+}
+
+export function destroyAXEEquipmentItem(instanceId, reason = 'destroyed') {
+  const item = state.items.find((entry) => entry.instanceId === instanceId || entry.id === instanceId);
+  if (!item) return { ok: false, reason: 'ITEM_MISSING' };
+  state = {
+    ...state,
+    items: state.items.filter((entry) => entry.instanceId !== item.instanceId),
+  };
+  emit();
+  return { ok: true, destroyed: { ...item }, destroyReason: reason };
+}
+
+export function resetAXEEquipmentInventoryToStarter() {
+  state = buildDefault();
+  emit();
+}
