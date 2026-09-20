@@ -574,6 +574,9 @@ export default function GameWorld3D() {
     };
     window.addEventListener('webrtcRemoteAction', handleRemoteAction);
     const handlePlayerSkillStrike = (e) => { const { multiplier = 1.0, hits = 1 } = e.detail || {}; for (let i = 0; i < hits; i++) setTimeout(() => { skillStrikeMultRef.current = multiplier; attackPressed.current = true; }, i * 180); };
+    const handleAXEAerialSkillCast = () => {
+      playerAnim?.requestJump?.();
+    };
     const handlePlayerSkillCastStart = (e) => {
       const duration = e.detail?.duration || 0.45;
       activeEffects.current.push(createPlayerCastLightBeam({
@@ -586,6 +589,7 @@ export default function GameWorld3D() {
     };
     window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
     window.addEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
+    window.addEventListener('axeAerialSkillCast', handleAXEAerialSkillCast);
 
     // Boss entities — declared early so the bus + minion spawner can close over it.
     const bossEntities = [];
@@ -2141,6 +2145,7 @@ export default function GameWorld3D() {
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
       window.removeEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
+      window.removeEventListener('axeAerialSkillCast', handleAXEAerialSkillCast);
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('wheel', onWheel);
       renderer.domElement.removeEventListener('contextmenu', onContext);
