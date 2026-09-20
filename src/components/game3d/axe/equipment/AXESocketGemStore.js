@@ -98,3 +98,20 @@ export function getAXEGemStats(itemId, item) {
   const current = getAXESocketState(itemId);
   return collectAXEGemStats({ ...item, ...current });
 }
+
+
+export function purgeAXESocketState(itemId) {
+  if (!itemId || !state[itemId]) return false;
+  const next = { ...state };
+  delete next[itemId];
+  state = next;
+  emit();
+  return true;
+}
+
+if (typeof window !== 'undefined' && !window.__axeSocketLifecycleHook) {
+  window.__axeSocketLifecycleHook = true;
+  window.addEventListener('axeEquipmentItemRemoved', (event) => {
+    purgeAXESocketState(event?.detail?.instanceId);
+  });
+}
