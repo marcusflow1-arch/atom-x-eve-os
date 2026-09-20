@@ -1,32 +1,43 @@
 import React from 'react';
 
-// Top-level tab bar — matches the engraved-gold MMORPG header look.
+// Platinum / liquid-glass top navigation used by the full-screen C Character Hub.
 export default function CharacterHubTabs({ tabs, activeId, onChange }) {
   return (
-    <div className="flex items-center justify-center gap-10 px-6 pt-2 pb-3 border-b border-yellow-500/15">
+    <div className="flex items-center justify-center gap-8 px-6 pb-3 pt-2">
       {tabs.map((t) => {
         const isActive = t.id === activeId;
         return (
           <button
             key={t.id}
             onClick={() => onChange(t.id)}
-            className="relative group flex flex-col items-center"
+            className="group relative flex min-w-[132px] flex-col items-center px-3 py-1.5"
           >
             <span
-              className="text-[11px] tracking-[0.35em] font-semibold uppercase transition-colors"
+              className="text-[10px] font-semibold uppercase tracking-[0.32em] transition-all"
               style={{
-                color: isActive ? '#ffd86b' : 'rgba(255,255,255,0.45)',
-                textShadow: isActive ? '0 0 12px rgba(255,216,107,0.55)' : 'none',
+                color: isActive ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.42)',
+                textShadow: isActive ? '0 0 18px rgba(255,255,255,0.32)' : 'none',
               }}
             >
               {t.label}
             </span>
+
+            <span
+              className="absolute -bottom-[7px] left-1/2 h-px -translate-x-1/2 transition-all"
+              style={{
+                width: isActive ? '82%' : '0%',
+                background:
+                  'linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent)',
+                boxShadow: isActive ? '0 0 12px rgba(255,255,255,0.28)' : 'none',
+              }}
+            />
+
             {isActive && (
               <span
-                className="absolute -bottom-[14px] w-2 h-2 rotate-45"
+                className="absolute -bottom-[11px] h-2.5 w-2.5 rotate-45 border border-white/35 bg-white/15"
                 style={{
-                  background: '#ffd86b',
-                  boxShadow: '0 0 12px rgba(255,216,107,0.85)',
+                  boxShadow:
+                    '0 0 14px rgba(255,255,255,0.26), inset 0 1px 0 rgba(255,255,255,0.32)',
                 }}
               />
             )}
