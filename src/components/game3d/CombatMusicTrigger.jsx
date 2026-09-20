@@ -17,6 +17,7 @@
 import { useEffect, useRef } from 'react';
 import { enterCombat, exitCombat } from './combatMusicController';
 import { subscribePlayerHUD } from './playerHUDStore';
+import { setCombatFlag } from './talents/advancedClassStore';
 
 const COMBAT_IDLE_TIMEOUT_MS = 5000;
 
@@ -25,12 +26,25 @@ export default function CombatMusicTrigger() {
   const lastHpRef = useRef(null);
 
   useEffect(() => {
+    let recentlyDamagedTimer = null;
+
     const bump = () => {
       enterCombat();
+      setCombatFlag('in_combat', true);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => {
         idleTimerRef.current = null;
         exitCombat();
+        setCombatFlag('in_combat', false);
+      }, COMBAT_IDLE_TIMEOUT_MS);
+    };
+
+    const markRecentlyDamaged = () => {
+      setCombatFlag('recently_damaged', true);
+      if (recentlyDamagedTimer) clearTimeout(recentlyDamagedTimer);
+      recentlyDamagedTimer = setTimeout(() => {
+        recentlyDamagedTimer = null;
+        setCombatFlag('recently_damaged', false);
       }, COMBAT_IDLE_TIMEOUT_MS);
     };
 
@@ -47,7 +61,11 @@ export default function CombatMusicTrigger() {
     // HP-drop detection — if HP decreased, the player just took damage.
     const unsubHud = subscribePlayerHUD((s) => {
       const prev = lastHpRef.current;
-      if (prev != null && s.hp < prev) bump();
+      if (prev != null && s.hp < prev) {
+        bump();
+        markRecentlyDamaged();
+      }
+      setCombatFlag('dead', Number(s.hp || 0) <= 0);
       lastHpRef.current = s.hp;
     });
 
@@ -58,6 +76,13 @@ export default function CombatMusicTrigger() {
         clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
       }
+      if (recentlyDamagedTimer) {
+        clearTimeout(recentlyDamagedTimer);
+        recentlyDamagedTimer = null;
+      }
+      setCombatFlag('in_combat', false);
+      setCombatFlag('recently_damaged', false);
+      setCombatFlag('dead', false);
     };
   }, []);
 
