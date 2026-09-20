@@ -26,6 +26,7 @@ import { addFusionPoints, FUSION_POINTS_PER_KILL } from './fusionStore';
 import { registerKill as registerStreakKill } from './killStreakStore';
 import { awardCompanionXP } from './companionProgressionStore';
 import { getCompanionState } from './companionStore';
+import { awardActiveAXEMountPvPXP } from './axe/progression/AXEMountStore';
 import toast from 'react-hot-toast';
 
 // Radius around each rogue that blocks the player from walking through them.
@@ -198,6 +199,7 @@ export default function EnemyPlayerSpawner() {
         const killReward = Math.round(basePoints * streakMult);
         addGold(r.goldReward || 75);
         recordTitleKill('pvp', killReward);
+        awardActiveAXEMountPvPXP({ opponentId: r.id, opponentLevel: r.level || 1 });
         incrementKillCount(killReward);
         addFusionPoints(FUSION_POINTS_PER_KILL);
 
