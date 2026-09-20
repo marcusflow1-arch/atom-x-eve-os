@@ -466,227 +466,165 @@ function AchievementsPage() {
 }
 
 function GamesPage() {
-  const favoriteGames = [
-    ['Cyberpunk 2077','RPG','https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=700&q=90'],
-    ['Elden Ring','Action RPG','https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=700&q=90'],
-    ['Red Dead Redemption II','Action','https://images.unsplash.com/photo-1511512578047-dfb367046420?w=700&q=90'],
-    ['The Last of Us Part I','Action Adventure','https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=700&q=90'],
-    ['Baldur’s Gate 3','RPG','https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=700&q=90'],
+  const library = [
+    { name: 'Cyberpunk 2077', genre: 'RPG', platform: 'PC', hours: 184, lastPlayed: 'Today', progress: 72, image: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=900&q=90' },
+    { name: 'Elden Ring', genre: 'Action RPG', platform: 'PS5', hours: 326, lastPlayed: 'Yesterday', progress: 94, image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=900&q=90' },
+    { name: 'Neon Racer', genre: 'Racing', platform: 'PC', hours: 118, lastPlayed: '2 days ago', progress: 81, image: 'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=900&q=90' },
+    { name: 'Starfield', genre: 'Sci-Fi RPG', platform: 'Xbox', hours: 91, lastPlayed: '4 days ago', progress: 53, image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=900&q=90' },
+    { name: 'Resident Evil 4', genre: 'Horror', platform: 'PS5', hours: 46, lastPlayed: '1 week ago', progress: 68, image: 'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=900&q=90' },
+    { name: 'Baldur’s Gate 3', genre: 'RPG', platform: 'PC', hours: 212, lastPlayed: '1 week ago', progress: 87, image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=900&q=90' },
   ];
 
-  const recentGames = [
-    ['Helldivers 2','12.4 hrs','2 days ago','https://images.unsplash.com/photo-1511512578047-dfb367046420?w=700&q=90'],
-    ['Forza Horizon 5','6.8 hrs','3 days ago','https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=700&q=90'],
-    ['Starfield','4.1 hrs','5 days ago','https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=700&q=90'],
-    ['Hades II','3.6 hrs','6 days ago','https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=700&q=90'],
-    ['Resident Evil 4','2.9 hrs','1 week ago','https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=700&q=90'],
-  ];
-
-  const showcase = [
-    ['Mass Effect','Legendary','https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=700&q=90','border-amber-400/45 text-amber-300'],
-    ['The Witcher 3','Legendary','https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=700&q=90','border-cyan-400/45 text-cyan-300'],
-    ['HALO','Iconic','https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=700&q=90','border-fuchsia-400/45 text-fuchsia-300'],
-    ['God of War','Iconic','https://images.unsplash.com/photo-1511512578047-dfb367046420?w=700&q=90','border-cyan-400/45 text-cyan-300'],
-    ['Final Fantasy VII','Legendary','https://images.unsplash.com/photo-1514565131-fce0801e5785?w=700&q=90','border-violet-400/45 text-amber-300'],
-  ];
-
-  const recentSessions = [
-    ['Helldivers 2','PS5','2 hours ago',recentGames[0][3]],
-    ['Forza Horizon 5','Xbox','5 hours ago',recentGames[1][3]],
-    ['Starfield','PC','1 day ago',recentGames[2][3]],
-    ['Hades II','PC','2 days ago',recentGames[3][3]],
-    ['Resident Evil 4','PS5','3 days ago',recentGames[4][3]],
-  ];
+  const current = library[2];
 
   return (
-    <div className="grid grid-cols-12 gap-2">
-      <Section className="col-span-6">
-        <SectionTitle title="Game Library Overview" icon={Gamepad2} />
-        <div className="grid grid-cols-[118px_1fr] items-center gap-4 px-4 pb-4">
-          <div className="relative grid h-24 w-24 place-items-center rounded-full bg-[conic-gradient(#22d3ee_0deg,#22d3ee_280deg,rgba(255,255,255,.06)_280deg)] p-[6px] shadow-[0_0_30px_rgba(34,211,238,.18)]">
-            <div className="grid h-full w-full place-items-center rounded-full border border-cyan-300/10 bg-[#071321]">
-              <Gamepad2 className="h-10 w-10 text-cyan-100" />
-            </div>
+    <div className="grid grid-cols-12 gap-3">
+      <section
+        className="relative col-span-8 min-h-[255px] overflow-hidden rounded-2xl border border-cyan-200/[0.12]"
+        style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.04), 0 18px 42px rgba(0,0,0,.18)' }}
+      >
+        <img src={current.image} alt={current.name} className="absolute inset-0 h-full w-full object-cover opacity-70" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,10,19,.96)_0%,rgba(4,12,23,.82)_42%,rgba(4,11,20,.34)_72%,rgba(3,9,17,.70)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050b13] via-transparent to-black/10" />
+
+        <div className="relative flex h-full min-h-[255px] flex-col justify-between p-5">
+          <div className="flex items-center gap-2 text-[7px] font-black uppercase tracking-[.18em] text-cyan-100/50">
+            <Play className="h-3.5 w-3.5" />
+            Currently Playing
           </div>
-          <div>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-black text-white">28</span>
-              <span className="pb-1 text-sm text-white/40">/ 36</span>
-            </div>
-            <p className="text-lg font-black text-white/88">78% <span className="text-sm font-normal text-white/42">Complete</span></p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
-              <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" />
-            </div>
-            <p className="mt-2 text-[7px] text-cyan-200/55">28 games owned · 22 games played</p>
-            <p className="mt-2 text-[7px] italic text-white/32">“It’s not just a library. It’s a collection of worlds.”</p>
-            <div className="mt-3 grid grid-cols-4 divide-x divide-white/[0.06] rounded-lg border border-white/[0.05] bg-black/15 py-2.5">
-              {[
-                [Gamepad2,'28','Owned','text-sky-300'],
-                [Play,'22','Played','text-cyan-300'],
-                [Trophy,'8','Completed','text-amber-300'],
-                [Crown,'3','100% Games','text-yellow-300'],
-              ].map(([Icon,value,label,tone])=>(
-                <div key={label} className="text-center">
-                  <Icon className={`mx-auto h-3.5 w-3.5 ${tone}`} />
-                  <p className="mt-1 text-[10px] font-black text-white/82">{value}</p>
-                  <p className="text-[6px] text-white/28">{label}</p>
+
+          <div className="max-w-xl">
+            <p className="text-[9px] uppercase tracking-[.18em] text-white/30">{current.platform} · {current.genre}</p>
+            <h2 className="mt-1 text-[30px] font-black tracking-tight text-white">{current.name}</h2>
+            <p className="mt-2 max-w-lg text-[9px] leading-4 text-white/42">
+              Current game activity, session time and progression live here instead of being mixed into achievement statistics.
+            </p>
+
+            <div className="mt-4 flex items-center gap-6">
+              <div>
+                <p className="text-[6px] uppercase tracking-[.15em] text-white/22">Total Time</p>
+                <p className="mt-1 text-lg font-black text-white/82">{current.hours}h</p>
+              </div>
+              <div>
+                <p className="text-[6px] uppercase tracking-[.15em] text-white/22">Last Played</p>
+                <p className="mt-1 text-lg font-black text-white/82">{current.lastPlayed}</p>
+              </div>
+              <div className="min-w-[180px] flex-1">
+                <div className="flex items-center justify-between text-[6px] uppercase tracking-[.12em] text-white/24">
+                  <span>Game Progress</span>
+                  <span className="text-cyan-200/62">{current.progress}%</span>
                 </div>
-              ))}
+                <div className="mt-2 h-1.5 rounded-full bg-white/[0.08]">
+                  <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" style={{ width: `${current.progress}%` }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button className="flex h-8 items-center gap-2 rounded-lg bg-cyan-400 px-4 text-[8px] font-black text-[#03111b]">
+                <Gamepad2 className="h-3 w-3" /> View Game
+              </button>
+              <button className="flex h-8 items-center gap-2 rounded-lg border border-white/[0.10] bg-black/20 px-4 text-[8px] font-semibold text-white/55">
+                <Users className="h-3 w-3" /> Invite to Play
+              </button>
             </div>
           </div>
         </div>
-      </Section>
+      </section>
 
       <Section className="col-span-4">
-        <SectionTitle title="Completion by Genre" icon={Layers3} />
-        <div className="grid grid-cols-6 gap-1 px-3 pb-4">
-          {[
-            [92,'RPG','#22d3ee','12 / 13'],
-            [78,'Action','#60a5fa','7 / 9'],
-            [64,'Horror','#34d399','5 / 8'],
-            [71,'Strategy','#a78bfa','5 / 7'],
-            [56,'Racing','#67e8f9','3 / 5'],
-            [38,'Other','#c084fc','2 / 6'],
-          ].map(([v,l,color,count])=>(
-            <div key={l} className="text-center">
-              <ProgressRing value={v} label={l} color={color} />
-              <p className="mt-1 text-[5px] text-white/23">{count}</p>
-            </div>
-          ))}
+        <SectionTitle title="Library Snapshot" icon={Gamepad2} action={null} />
+        <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+          <StatTile label="Owned" value="28" icon={Gamepad2} />
+          <StatTile label="Installed" value="17" icon={Play} />
+          <StatTile label="Favorites" value="8" icon={Star} />
+          <StatTile label="Hours Played" value="1.9K" icon={Clock3} />
         </div>
-      </Section>
 
-      <Section className="col-span-2">
-        <SectionTitle title="Current Play Streak" icon={Flame} action={null} />
-        <div className="px-3 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-full border border-orange-400/20 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,.12)]">
-              <Flame className="h-7 w-7 text-orange-400" />
-            </div>
-            <div>
-              <p className="text-xl font-black text-amber-300">12 <span className="text-sm text-white">Days</span></p>
-              <p className="text-[6px] text-white/28">Longest streak: 21 days</p>
-            </div>
-          </div>
-          <p className="mt-3 text-[7px] italic text-white/35">“Good games make better days.”</p>
-          <div className="mt-3 grid grid-cols-7 gap-1">
-            {['M','T','W','T','F','S','S'].map((d,i)=>(
-              <div key={d+i} className="text-center">
-                <div className={`mx-auto grid h-5 w-5 place-items-center rounded-full border text-[7px] ${i<6?'border-cyan-300/60 bg-cyan-300/[0.08] text-cyan-200':'border-white/12 text-white/18'}`}>{i<6?'✓':''}</div>
-                <p className="mt-1 text-[5px] text-white/28">{d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      <Section className="col-span-6">
-        <SectionTitle title="Favorite Games" icon={Star} />
-        <div className="grid grid-cols-5 gap-2 px-3 pb-3">
-          {favoriteGames.map(([name,genre,image])=>(
-            <div key={name} className="overflow-hidden rounded-lg border border-cyan-300/18 bg-[#071321]">
-              <img src={image} alt={name} className="h-24 w-full object-cover opacity-78" />
-              <div className="px-2 pb-2 pt-1.5 text-center">
-                <p className="truncate text-[7px] font-black text-white/72">{name}</p>
-                <p className="mt-0.5 text-[6px] text-cyan-300/60">{genre}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section className="col-span-4">
-        <SectionTitle title="Recently Played" icon={Clock3} />
-        <div className="grid grid-cols-5 gap-1.5 px-3 pb-3">
-          {recentGames.map(([name,hours,ago,image])=>(
-            <div key={name} className="overflow-hidden rounded-lg border border-white/[0.06] bg-black/10">
-              <img src={image} alt={name} className="h-20 w-full object-cover opacity-74" />
-              <div className="p-1.5">
-                <p className="truncate text-[6px] font-black text-white/66">{name}</p>
-                <p className="text-[5px] text-white/30">{hours}</p>
-                <p className="text-[5px] text-white/20">{ago}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section className="col-span-2 row-span-2">
-        <SectionTitle title="Next Game Goals" icon={Target} />
-        <div className="space-y-3 px-3 pb-3">
-          {[
-            ['Starfield','Complete Main Story',53,'8 / 15'],
-            ['Hades II','Reach 100% Completion',50,'12 / 24'],
-            ['Cyberpunk 2077','Complete Phantom Liberty',60,'6 / 10'],
-          ].map(([title,goal,pct,count],i)=>(
-            <div key={title} className="flex gap-2">
-              <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border ${i===0?'border-cyan-300/35 text-cyan-300':i===1?'border-amber-300/35 text-amber-300':'border-rose-300/35 text-rose-300'}`}>
-                <Target className="h-3.5 w-3.5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex justify-between gap-1">
-                  <div>
-                    <p className="truncate text-[7px] font-black text-white/65">{title}</p>
-                    <p className="text-[6px] text-cyan-300/50">{goal}</p>
-                  </div>
-                  <p className="text-right text-[6px] text-white/28">{count}<br/>{pct}%</p>
-                </div>
-                <div className="mt-1 h-1 rounded-full bg-white/[0.06]">
-                  <div className="h-full rounded-full bg-cyan-400" style={{width:`${pct}%`}} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section className="col-span-5">
-        <SectionTitle title="Game Showcase" icon={Crown} action="Edit Showcase" />
-        <div className="grid grid-cols-5 gap-2 px-3 pb-3">
-          {showcase.map(([name,rarity,image,tone])=>(
-            <div key={name} className={`overflow-hidden rounded-lg border bg-black/10 ${tone}`}>
-              <img src={image} alt={name} className="h-16 w-full object-cover opacity-72" />
-              <div className="p-1.5 text-center">
-                <p className="truncate text-[6px] font-black text-white/70">{name}</p>
-                <p className="text-[5px]">{rarity}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section className="col-span-5">
-        <SectionTitle title="Library Milestones" icon={Trophy} action={null} />
-        <div className="relative px-4 pb-4 pt-2">
-          <div className="absolute left-[11%] right-[11%] top-6 h-px bg-cyan-300/22" />
-          <div className="relative grid grid-cols-4 gap-2">
+        <div className="border-t border-white/[0.05] px-4 pb-4 pt-3">
+          <p className="text-[6px] font-black uppercase tracking-[.16em] text-white/20">Favorite Genres</p>
+          <div className="mt-2 space-y-2">
             {[
-              [28,'Games Owned','Mar 12, 2024',true],
-              [25,'Games Played','Already there.',true],
-              [10,'Games Completed','5 to go.',true],
-              [5,'Games at 100%','2 to go.',false],
-            ].map(([num,label,date,done])=>(
-              <div key={label} className="text-center">
-                <div className={`mx-auto grid h-8 w-8 place-items-center rounded-full border-2 bg-[#071321] text-[8px] ${done?'border-cyan-300 text-cyan-200':'border-emerald-300 text-emerald-200'}`}>{done?'✓':'○'}</div>
-                <p className="mt-2 text-[8px] font-black text-white/72">{num}</p>
-                <p className="text-[6px] text-white/35">{label}</p>
-                <p className="mt-1 text-[5px] text-cyan-300/50">{date}</p>
+              ['RPG', 88],
+              ['Action', 73],
+              ['Racing', 66],
+              ['Sci-Fi', 59],
+            ].map(([genre, value]) => (
+              <div key={genre}>
+                <div className="flex justify-between text-[7px]">
+                  <span className="text-white/42">{genre}</span>
+                  <span className="text-cyan-200/48">{value}%</span>
+                </div>
+                <div className="mt-1 h-1 rounded-full bg-white/[0.05]">
+                  <div className="h-full rounded-full bg-cyan-400/70" style={{ width: `${value}%` }} />
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-12">
+        <div className="flex items-center justify-between px-4 pb-3 pt-3.5">
+          <div>
+            <div className="flex items-center gap-2">
+              <Grid3X3 className="h-3.5 w-3.5 text-cyan-300/70" />
+              <h3 className="text-[11px] font-bold text-white/82">Game Library</h3>
+            </div>
+            <p className="mt-1 text-[7px] text-white/24">Browse what this player owns, plays and returns to.</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative w-48">
+              <Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-white/20" />
+              <input
+                className="h-8 w-full rounded-lg border border-white/[0.06] bg-black/15 pl-8 pr-2 text-[8px] text-white/60 outline-none"
+                placeholder="Search games..."
+              />
+            </div>
+            <button className="h-8 rounded-lg border border-white/[0.06] bg-black/10 px-3 text-[7px] text-white/36">All Platforms</button>
+            <button className="h-8 rounded-lg border border-white/[0.06] bg-black/10 px-3 text-[7px] text-white/36">Recently Played</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-6 gap-2 px-4 pb-4">
+          {library.map((game) => (
+            <button key={game.name} className="group overflow-hidden rounded-xl border border-white/[0.06] bg-black/10 text-left transition hover:border-cyan-300/24 hover:bg-white/[0.025]">
+              <div className="relative h-28 overflow-hidden">
+                <img src={game.image} alt={game.name} className="h-full w-full object-cover opacity-68 transition duration-300 group-hover:scale-[1.035] group-hover:opacity-82" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#06101b] via-transparent to-transparent" />
+                <span className="absolute right-2 top-2 rounded-md border border-white/[0.08] bg-black/50 px-1.5 py-0.5 text-[5px] font-bold text-white/54">{game.platform}</span>
+              </div>
+              <div className="p-2.5">
+                <p className="truncate text-[8px] font-black text-white/70">{game.name}</p>
+                <p className="mt-0.5 text-[6px] text-cyan-200/42">{game.genre}</p>
+                <div className="mt-2 flex items-center justify-between text-[5px] text-white/24">
+                  <span>{game.hours}h played</span>
+                  <span>{game.lastPlayed}</span>
+                </div>
+              </div>
+            </button>
+          ))}
         </div>
       </Section>
 
       <Section className="col-span-7">
-        <SectionTitle title="Recent Sessions" icon={Clock3} />
-        <div className="grid grid-cols-5 gap-2 px-3 pb-3">
-          {recentSessions.map(([title,platform,time,image])=>(
-            <div key={title} className="flex items-center gap-2 rounded-lg border border-white/[0.05] bg-white/[0.015] p-2">
-              <img src={image} alt={title} className="h-10 w-10 shrink-0 rounded-md object-cover opacity-75" />
+        <SectionTitle title="Recently Played" icon={Clock3} />
+        <div className="space-y-1.5 px-4 pb-4">
+          {library.slice(0, 5).map((game, index) => (
+            <div key={game.name} className="grid grid-cols-[44px_minmax(0,1fr)_82px_86px] items-center gap-3 rounded-xl border border-white/[0.045] bg-white/[0.014] p-2">
+              <img src={game.image} alt={game.name} className="h-10 w-10 rounded-lg object-cover opacity-76" />
               <div className="min-w-0">
-                <p className="truncate text-[6px] font-black text-white/68">{title}</p>
-                <p className="truncate text-[5px] text-white/32">{platform}</p>
-                <p className="text-[5px] text-white/20">{time}</p>
+                <p className="truncate text-[8px] font-black text-white/64">{game.name}</p>
+                <p className="mt-0.5 text-[6px] text-white/24">{game.platform} · {game.genre}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[8px] font-bold text-white/54">{game.hours}h</p>
+                <p className="text-[5px] text-white/20">Total playtime</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[7px] text-cyan-200/46">{game.lastPlayed}</p>
+                <p className="text-[5px] text-white/18">Session #{index + 1}</p>
               </div>
             </div>
           ))}
@@ -694,16 +632,55 @@ function GamesPage() {
       </Section>
 
       <Section className="col-span-5">
-        <div className="relative h-full min-h-[76px] overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1200&q=85" alt="" className="absolute inset-0 h-full w-full object-cover opacity-28" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071321]/95 via-[#071321]/82 to-cyan-950/35" />
-          <div className="relative flex h-full items-center gap-3 px-5 py-3">
-            <Quote className="h-5 w-5 shrink-0 text-cyan-300/45" />
-            <div>
-              <p className="text-[7px] italic leading-4 text-white/52">“Every game is a world. Every world leaves something with you.”</p>
-              <p className="mt-1 text-[6px] text-white/25">— Logan</p>
+        <SectionTitle title="Favorite Worlds" icon={Star} />
+        <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+          {library.slice(0, 4).map((game, index) => (
+            <div key={game.name} className="relative h-28 overflow-hidden rounded-xl border border-white/[0.06]">
+              <img src={game.image} alt={game.name} className="absolute inset-0 h-full w-full object-cover opacity-58" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050b13] via-[#050b13]/28 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-2.5">
+                <p className="text-[8px] font-black text-white/72">{game.name}</p>
+                <p className="mt-0.5 text-[6px] text-cyan-200/42">Favorite #{index + 1}</p>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="col-span-8">
+        <SectionTitle title="Playtime by Game" icon={BarChart3} action={null} />
+        <div className="space-y-3 px-4 pb-4">
+          {library.slice(0, 5).map((game) => {
+            const width = Math.max(18, Math.min(100, (game.hours / 326) * 100));
+            return (
+              <div key={game.name}>
+                <div className="flex items-center justify-between text-[7px]">
+                  <span className="text-white/46">{game.name}</span>
+                  <span className="text-white/28">{game.hours}h</span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-white/[0.05]">
+                  <div className="h-full rounded-full bg-gradient-to-r from-cyan-500/80 to-blue-400/80" style={{ width: `${width}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section className="col-span-4">
+        <SectionTitle title="Platform Mix" icon={Layers3} action={null} />
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+          {[
+            ['PC', '14', '50%'],
+            ['PS5', '9', '32%'],
+            ['Xbox', '5', '18%'],
+          ].map(([platform, count, share]) => (
+            <div key={platform} className="rounded-xl border border-white/[0.05] bg-black/10 p-3 text-center">
+              <p className="text-[6px] font-black uppercase tracking-[.14em] text-white/20">{platform}</p>
+              <p className="mt-1 text-xl font-black text-white/78">{count}</p>
+              <p className="mt-1 text-[6px] text-cyan-200/42">{share}</p>
+            </div>
+          ))}
         </div>
       </Section>
     </div>
