@@ -13,6 +13,7 @@ import AuraSubTab from './progression/hub/AuraSubTab';
 import TitleSubTab from './progression/hub/TitleSubTab';
 import CoreSubTab from './progression/hub/CoreSubTab';
 import CostumeSubTab from './progression/hub/CostumeSubTab';
+import VanitySubTab from './progression/hub/VanitySubTab';
 import CapeSubTab from './progression/hub/CapeSubTab';
 import ElixirSubTab from './progression/hub/ElixirSubTab';
 import PetSubTab from './progression/hub/PetSubTab';
@@ -35,6 +36,7 @@ const MASTERY_SUB_TABS = [
   { id: 'title', label: 'Title' },
   { id: 'core',  label: 'Core' },
   { id: 'costume', label: 'Costume' },
+  { id: 'vanity', label: 'Vanity' },
   { id: 'cape', label: 'Cape' },
   { id: 'elixir', label: 'Elixir' },
   { id: 'pet', label: 'Pet' },
@@ -133,6 +135,7 @@ export default function CharacterProgressionMenu({ isOpen, onClose }) {
           {mainTab === 'mastery' && subTab === 'title' && <TitleSubTab />}
           {mainTab === 'mastery' && subTab === 'core'  && <CoreSubTab />}
           {mainTab === 'mastery' && subTab === 'costume' && <CostumeSubTab />}
+          {mainTab === 'mastery' && subTab === 'vanity' && <VanitySubTab />}
           {mainTab === 'mastery' && subTab === 'cape' && <CapeSubTab />}
           {mainTab === 'mastery' && subTab === 'elixir' && <ElixirSubTab />}
           {mainTab === 'mastery' && subTab === 'pet' && <PetSubTab />}
