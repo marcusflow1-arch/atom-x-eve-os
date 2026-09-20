@@ -2,6 +2,10 @@
 // Extracted from GameWorld3D.jsx so that file stays under the editor's
 // line-count limit for find_replace operations.
 
+import { AXE_FOUNDATION } from './axe/core/axeFoundation';
+
+export { AXE_FOUNDATION };
+
 export const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 export const ANIMATION_URLS = {
   idle:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx',
@@ -13,8 +17,10 @@ export const ANIMATION_URLS = {
 };
 
 export const DEATH_FADE_DELAY = 5.0;
-export const WALK_SPEED = 4.0;
-export const RUN_SPEED = 9.0;
+// Prompt 001: movement defaults now come from the shared AXE foundation so
+// the world uses one meter-based source of truth instead of duplicated literals.
+export const WALK_SPEED = AXE_FOUNDATION.defaults.walkSpeedMetersPerSecond;
+export const RUN_SPEED = AXE_FOUNDATION.defaults.runSpeedMetersPerSecond;
 export const ROT_SMOOTH = 0.18;
 export const BLEND = 0.2;
 
@@ -31,8 +37,7 @@ export const ENEMY_WANDER_RADIUS = 4;
 export const NPC_INTERACT_RANGE = 3.5;
 export const ENEMY_ATTACK_RANGE = 2.0;
 // Ranged weapons (bows/firearms/energy) can engage from much further away
-// than melee. ~3 feet ≈ 1 unit; we use 12 units so the bow feels properly
-// ranged while still rewarding the player for closing distance with melee.
+// than melee. In the AXE world 1 Three.js unit ~= 1 real-world meter.
 export const RANGED_ATTACK_RANGE = 12.0;
 export const ENEMY_ATTACK_COOLDOWN = 2.2;
 export const ENEMY_ATTACK_WINDUP = 0.4;
