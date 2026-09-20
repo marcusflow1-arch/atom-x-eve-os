@@ -24,7 +24,7 @@ const entities=new Proxy({}, {get:(_,name)=>{
    const row={...clone(data),id:name+'_'+(++serial),created_date:new Date(Date.now()+serial).toISOString()};
    rows().push(row);return clone(row);
   },
-  update:async(id,data)=>{const r=rows().find(x=>x.id===id);if(!r)throw new Error('Not found');Object.assign(r,clone(data));return clone(r);},
+  update:async(id,data)=>{if(failure?.(name,data))throw new Error('Simulated database failure');const r=rows().find(x=>x.id===id);if(!r)throw new Error('Not found');Object.assign(r,clone(data));return clone(r);},
   delete:async id=>{tables.set(name,rows().filter(r=>r.id!==id));}
  };
 }});
@@ -77,7 +77,11 @@ for(const id of ['b','c','d','e','f'])invitations[id]=await party('a','invite_me
 assert.equal(invitations.b.party.maxSize,5);
 assert.ok((await social('b','get_pending_actions')).notifications.some(n=>n.action_kind==='party_invite'));
 await party('stranger','accept_invite',{inviteId:invitations.b.invite.id},404);
+failure=(name,data)=>name==='PartyInvite'&&data.status==='accepted';
+await party('b','accept_invite',{inviteId:invitations.b.invite.id},500);
+failure=null;
 for(const id of ['b','c','d','e'])await party(id,'accept_invite',{inviteId:invitations[id].invite.id});
+assert.equal(tables.get('PartyMember').filter(m=>m.user_id==='b').length,1);
 await party('b','accept_invite',{inviteId:invitations.b.invite.id});
 assert.equal((await party('a','get_state')).members.length,5);
 await party('f','accept_invite',{inviteId:invitations.f.invite.id},409);

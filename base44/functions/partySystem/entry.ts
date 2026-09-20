@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
       if (!invite || invite.invitee_id !== user.id) return json({ error: 'Invite not found' }, 404);
       if (invite.status === 'accepted') {
         const state = await activePartyFor(user.id);
-        if (state.party?.id === invite.party_id) { await actionInviteNotices(invite.id); return json({success:true,party:state.party,members:await rosterFor(state.party.id)}); }
+        if (state.party?.id === invite.party_id) { await actionInviteNotices(invite.id); const members=await syncRoster(state.party); return json({success:true,party:await svc.Party.get(state.party.id),members}); }
       }
       if (invite.status !== 'pending') return json({ error: 'Invite is no longer pending' }, 409);
       if (isExpired(invite.expires_at)) {
@@ -192,6 +192,13 @@ Deno.serve(async (req) => {
       }
 
       const existing = await activePartyFor(user.id);
+      if (existing.party?.id === invite.party_id) {
+        // Repair a retry after membership succeeded but accepting the invitation failed.
+        await svc.PartyInvite.update(invite.id, {status:'accepted'});
+        await actionInviteNotices(invite.id);
+        const members=await syncRoster(existing.party);
+        return json({success:true,party:await svc.Party.get(existing.party.id),members});
+      }
       if (existing.party) return json({ error: 'Leave your current party first' }, 409);
       const party = await svc.Party.get(invite.party_id);
       if (!party || !ACTIVE_STATUSES.has(party.status || 'forming')) return json({ error: 'Party is no longer active' }, 409);

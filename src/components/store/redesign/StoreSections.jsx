@@ -26,9 +26,9 @@ export function Shelf({title,subtitle,games,onSelect,onViewAll,empty='No games i
  return <section>
   <div className="mb-4 flex items-end justify-between gap-4"><div><h2 className="text-xl font-semibold tracking-tight text-white">{title}</h2>{subtitle&&<p className="mt-1 text-xs text-white/40">{subtitle}</p>}</div>{onViewAll&&<button className="flex shrink-0 items-center gap-1 text-xs text-cyan-200" onClick={onViewAll}>View all<ArrowRight size={14}/></button>}</div>
   {games.length?<div className="divide-y divide-white/[0.06]">{games.slice(0,4).map((game,i)=><button key={game.id} onClick={()=>onSelect(game.id)} className="group flex w-full items-center gap-4 rounded-lg py-3 text-left hover:bg-white/[0.03]">
-   <span className="w-5 text-xs text-white/25">{String(i+1).padStart(2,'0')}</span>
-   <div className="h-16 w-28 shrink-0 overflow-hidden rounded-lg"><GameCover game={game}/></div>
-   <div className="min-w-0 flex-1"><h3 className="truncate text-sm font-medium text-white/90">{game.title}</h3><p className="mt-1 text-xs text-white/40">{label(game.genre)}</p></div><span className="shrink-0 text-xs text-white/75">{priceLabel(game)}</span>
+   <span className="hidden w-5 text-xs text-white/25 sm:block">{String(i+1).padStart(2,'0')}</span>
+   <div className="h-14 w-20 sm:h-16 sm:w-28 shrink-0 overflow-hidden rounded-lg"><GameCover game={game}/></div>
+   <div className="min-w-0 flex-1"><h3 className="truncate text-sm font-medium text-white/90">{game.title}</h3><p className="mt-1 text-xs text-white/40">{label(game.genre)}</p></div><span className="max-w-24 shrink-0 text-right text-xs text-white/75">{priceLabel(game)}</span>
   </button>)}</div>:<p className="rounded-xl bg-white/[0.025] px-4 py-10 text-sm text-white/40">{empty}</p>}
  </section>;
 }
@@ -52,7 +52,7 @@ export function DiscoveryHero({games,onSelect}){
    <div className="mt-6 flex items-center gap-5"><button onClick={()=>onSelect(game.id)} className="flex items-center gap-2 rounded-lg bg-cyan-100 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-white">Explore game<ArrowRight size={16}/></button><span className="text-sm text-white/80">{priceLabel(game)}</span></div>
   </div>
   <div className="absolute bottom-5 left-7 right-7 flex items-center justify-between md:left-10 md:right-10">
-   <span className="text-[11px] text-white/50">Across every genre. A different find each visit.</span>
+   <span className="hidden text-[11px] text-white/50 sm:block">Across every genre. A different find each visit.</span>
    <div className="flex items-center gap-3 text-white/80">
     <button aria-label="Previous discovery" onClick={()=>setIndex(i=>(i-1+games.length)%games.length)}><ChevronLeft size={18}/></button>
     <span className="text-xs tabular-nums">{index%games.length+1} / {games.length}</span>

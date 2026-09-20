@@ -11,6 +11,9 @@ export default function GamePlayButton({ game, compact = false }) {
     const target = game?.play_link?.trim();
     if (!target) { setMessage(`No launch link is configured for ${game.title}.`); return; }
 
+    const supported = /^\/(?!\/)/.test(target) || /^https?:\/\//i.test(target) || /^steam:\/\/rungameid\/\d+\/?$/i.test(target);
+    if (!supported) { setMessage('This launch command cannot run in a browser. A web link or Steam launch link is required.'); return; }
+
     // PartyDrawer listens for this event and securely asks partySystem to notify
     // every other active party member. The local launch is never blocked by the
     // notification request, matching Steam-style party launch behavior.
