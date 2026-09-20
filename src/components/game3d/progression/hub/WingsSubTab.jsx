@@ -5,6 +5,7 @@ import {
   unequipWings,
   attemptWingEnhancement,
   attemptWingEnhancementBatch,
+  attemptWingReinforcement,
   setWingLevel,
 } from '../wingsStore';
 import { MAX_WING_LEVEL } from '../wingsData';
@@ -31,11 +32,21 @@ export default function WingsSubTab() {
   const maxAttempts = wings.attemptCost > 0 ? Math.floor(wings.kills / wings.attemptCost) : 0;
   const canAttempt = wings.kills >= wings.attemptCost && !path.isMaxLevel;
   const chancePct = Math.round((path.successChance || 0) * 100);
+  const reinforcementChancePct = Math.round((path.reinforcementChance || 0) * 100);
+  const reinforceCost = path.reinforcementCost || {};
+  const canReinforce = !path.isMaxReinforcement &&
+    Object.entries(reinforceCost).every(([id, amount]) => (wings.materials?.[id] || 0) >= amount);
 
   const handleAttempt = () => {
     const r = attemptWingEnhancement(selectedId);
     setLastResult(r);
     if (r.ok) window.setTimeout(() => setLastResult(null), 2500);
+  };
+
+  const handleReinforce = (protectedAttempt = false) => {
+    const r = attemptWingReinforcement(selectedId, { protectedAttempt });
+    setLastResult({ ...r, reinforcement: true });
+    window.setTimeout(() => setLastResult(null), 2800);
   };
 
   const handleBatch = (count) => {
@@ -88,7 +99,7 @@ export default function WingsSubTab() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-white truncate">{p.name}</div>
                   <div className="text-[10px] tracking-[0.2em] uppercase text-white/50 mt-0.5">
-                    Lv {p.level} · {p.primaryStat}
+                    Lv {p.level} · +{p.reinforcementPercent || 0}% · {p.primaryStat}
                   </div>
                 </div>
                 {wings.equippedPathId === p.id && (
@@ -112,7 +123,7 @@ export default function WingsSubTab() {
           <div className="flex-1">
             <div className="text-xl font-semibold text-white tracking-wide">{path.name}</div>
             <div className="text-[10px] tracking-[0.3em] uppercase mt-1" style={{ color: path.color }}>
-              {path.primaryStat} · Level {path.level} / {MAX_WING_LEVEL}
+              {path.primaryStat} · Level {path.level} / {MAX_WING_LEVEL} · +{path.reinforcementPercent || 0}% Reinforcement
             </div>
             <div className="text-xs text-white/60 mt-3 max-w-lg">{path.description}</div>
           </div>
@@ -129,8 +140,48 @@ export default function WingsSubTab() {
           </button>
         </div>
 
+        {/* AXE Prompt 027 — independent wing reinforcement (0–120%) */}
+        <div className="mt-8 rounded-md border border-white/10 bg-white/[0.025] p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[10px] tracking-[0.3em] uppercase text-white/45">Wing Reinforcement</div>
+              <div className="mt-1 text-xl font-light text-white">
+                +{path.reinforcementPercent || 0}% <span className="text-xs text-white/40">/ {wings.maxReinforcementPercent}%</span>
+              </div>
+              <div className="mt-1 text-[10px] uppercase tracking-[0.2em]" style={{ color: path.color }}>
+                {path.visualTier?.label || 'Dormant'} · {reinforcementChancePct}% success
+              </div>
+            </div>
+            <div className="text-right text-[10px] text-white/50">
+              <div>Feathers: <span className="text-white">{wings.materials?.wing_feather || 0}</span></div>
+              <div>Essence: <span className="text-white">{wings.materials?.wing_essence || 0}</span></div>
+              <div>Stabilizers: <span className="text-white">{wings.materials?.wing_stabilizer || 0}</span></div>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => handleReinforce(false)}
+              disabled={!canReinforce}
+              className="rounded-sm border border-white/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] disabled:opacity-30"
+              style={{ color: path.color, borderColor: `${path.color}66`, background: `${path.color}12` }}
+            >
+              {path.isMaxReinforcement ? 'Reinforcement Maxed' : 'Reinforce'}
+            </button>
+            <button
+              onClick={() => handleReinforce(true)}
+              disabled={path.isMaxReinforcement || (wings.materials?.wing_stabilizer || 0) < 1}
+              className="rounded-sm border border-emerald-300/30 bg-emerald-300/[0.06] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200 disabled:opacity-30"
+            >
+              Protected Attempt
+            </button>
+          </div>
+          <div className="mt-2 text-[9px] text-white/35">
+            Cost: {Object.entries(reinforceCost).map(([id, amount]) => `${id.replace('wing_', '')} ×${amount}`).join(' · ') || '—'}
+          </div>
+        </div>
+
         {/* Enhancement controls — spend kills to level THIS wing separately */}
-        <div className="mt-8 grid grid-cols-2 gap-6 mb-6">
+        <div className="mt-6 grid grid-cols-2 gap-6 mb-6">
           <Stat label="Banked Kills" value={wings.kills} />
           <Stat label="Attempt Cost" value={wings.attemptCost} />
           <Stat label="Success Chance" value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
@@ -234,11 +285,15 @@ export default function WingsSubTab() {
               color: lastResult.success ? '#a3e635' : '#fb7185',
             }}
           >
-            {lastResult.batch
-              ? `${lastResult.batch.attempts} attempts — ${lastResult.batch.successes} success · ${path.name} Lv ${lastResult.batch.finalLevel}`
-              : lastResult.success
-                ? `Success — ${path.name} Lv ${lastResult.level}`
-                : 'Failure — kills consumed'}
+            {lastResult.reinforcement
+              ? (lastResult.ok
+                  ? `Wing reinforcement success — +${lastResult.percent}%`
+                  : `Wing reinforcement ${lastResult.outcome || lastResult.reason || 'failed'}`)
+              : lastResult.batch
+                ? `${lastResult.batch.attempts} attempts — ${lastResult.batch.successes} success · ${path.name} Lv ${lastResult.batch.finalLevel}`
+                : lastResult.success
+                  ? `Success — ${path.name} Lv ${lastResult.level}`
+                  : 'Failure — kills consumed'}
           </div>
         )}
 
