@@ -148,3 +148,21 @@ export function applyAXEUltimate(item, options = {}) {
   emit();
   return result;
 }
+
+
+export function purgeAXEAdvancementState(itemId) {
+  if (!itemId || !state[itemId]) return false;
+  const next = { ...state };
+  delete next[itemId];
+  state = next;
+  tx('purge', itemId, {}, { ok: true, outcome: 'item_removed' });
+  emit();
+  return true;
+}
+
+if (typeof window !== 'undefined' && !window.__axeAdvancementLifecycleHook) {
+  window.__axeAdvancementLifecycleHook = true;
+  window.addEventListener('axeEquipmentItemRemoved', (event) => {
+    purgeAXEAdvancementState(event?.detail?.instanceId);
+  });
+}
