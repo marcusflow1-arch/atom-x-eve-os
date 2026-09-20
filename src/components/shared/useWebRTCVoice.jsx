@@ -40,6 +40,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         let queue = Promise.resolve();
         const receive = signal => {
           if (!isMounted || signal.channel_id !== roomId || signal.target_id !== user.id || Date.parse(signal.created_date || 0) < startedAt) return;
+          if (!participantsRef.current.includes(signal.sender_id)) return;
           if (processedSignals.current.has(signal.id)) return;
           processedSignals.current.add(signal.id);
           queue = queue.then(() => isMounted && handleSignal(signal)).catch(console.error);
@@ -194,7 +195,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     document.body.appendChild(audio);
                     audioRefs.current[peerId] = audio;
                 }
-                audioRefs.current[peerId].srcObject = event.streams[0];
+                audioRefs.current[peerId].srcObject = event.streams[0] || new MediaStream([event.track]);
                 audioRefs.current[peerId].muted = deafenedRef.current;
                 
                 // Ensure play is called to bypass some browser autoplay policies

@@ -1,3 +1,4 @@
+import PartyPortraitRail from './PartyPortraitRail';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -120,7 +121,7 @@ export default function DashboardAvatarOverview() {
     const handlePointerDown = event => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-player-animation-controls]')) return;
+      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-player-animation-controls]') || target.closest('[data-social-controls]')) return;
 
       const interactive = target.closest('button, a, [role="button"], input, select, textarea');
       if (!interactive) return;
@@ -276,6 +277,7 @@ export default function DashboardAvatarOverview() {
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
+      {!avatarFocusMode && surface === 'dashboard' && <PartyPortraitRail />}
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
