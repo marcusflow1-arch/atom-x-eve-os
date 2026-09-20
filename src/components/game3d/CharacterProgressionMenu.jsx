@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import CharacterHubTabs from './progression/hub/CharacterHubTabs';
 import AttributesTab from './progression/hub/AttributesTab';
 import WeaponMasteryTab from './progression/hub/WeaponMasteryTab';
+import CharacterInventoryTab from './progression/hub/CharacterInventoryTab';
 import AXEGlobalServicesMenu from './axe/services/AXEGlobalServicesMenu';
 
 // AXE Character Hub
@@ -13,6 +14,7 @@ import AXEGlobalServicesMenu from './axe/services/AXEGlobalServicesMenu';
 // The old standalone Services overlay is intentionally fused into this shell.
 const MAIN_TABS = [
   { id: 'attributes', label: 'Attributes' },
+  { id: 'inventory', label: 'Inventory / Gear' },
   { id: 'mastery', label: 'Weapon Mastery' },
   { id: 'services', label: 'Services' },
 ];
@@ -26,6 +28,7 @@ export default function CharacterProgressionMenu({
   const [hud, setHud] = useState(null);
   const [mainTab, setMainTab] = useState('attributes');
   const [serviceId, setServiceId] = useState('reinforcement');
+  const [serviceItemId, setServiceItemId] = useState(null);
   const [killCount, setKillCount] = useState(0);
   const [playerName, setPlayerName] = useState('');
 
@@ -49,6 +52,7 @@ export default function CharacterProgressionMenu({
   useEffect(() => {
     if (!isOpen || !requestedService) return;
     setServiceId(requestedService);
+    setServiceItemId(null);
     setMainTab('services');
     onServiceRequestConsumed?.();
   }, [isOpen, requestedService, onServiceRequestConsumed]);
@@ -152,6 +156,16 @@ export default function CharacterProgressionMenu({
         <main className="relative z-10 min-h-0 flex-1">
           {mainTab === 'attributes' && <AttributesTab hud={hud} />}
 
+          {mainTab === 'inventory' && (
+            <CharacterInventoryTab
+              onOpenService={(nextServiceId, itemId) => {
+                setServiceId(nextServiceId);
+                setServiceItemId(itemId);
+                setMainTab('services');
+              }}
+            />
+          )}
+
           {mainTab === 'mastery' && (
             <div className="h-full overflow-hidden">
               <div className="border-b border-white/8 px-7 py-3 text-[10px] uppercase tracking-[0.32em] text-white/35">
@@ -168,6 +182,7 @@ export default function CharacterProgressionMenu({
               embedded
               isOpen
               requestedService={serviceId}
+              requestedItemId={serviceItemId}
             />
           )}
         </main>
