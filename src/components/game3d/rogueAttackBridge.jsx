@@ -27,7 +27,9 @@ function calculateOutgoingDamage(playerDerivedRef, skillStrikeMult = 1.0) {
     ...liveDerived,
     critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct(),
   };
-  const raw = calculateHit(boosted, { defense: 0 }) * getWeaponDamageMult() * skillStrikeMult;
+  const lockedTarget = getAbilityState().target;
+  const combatMode = lockedTarget?.kind === 'rogue' ? 'pvp' : 'pve';
+  const raw = calculateHit(boosted, { defense: 0 }, { mode: combatMode }) * getWeaponDamageMult() * skillStrikeMult;
   return Number.isFinite(raw) ? Math.max(1, Math.round(raw)) : 1;
 }
 
