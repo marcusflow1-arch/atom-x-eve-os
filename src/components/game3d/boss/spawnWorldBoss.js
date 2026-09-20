@@ -60,7 +60,7 @@ export function spawnWorldBoss({
       // may provide an explicit room position without duplicating boss code.
       bossModel.scale.setScalar(bossScale);
       const sourcePos = spawnPosition || (
-        Array.isArray(bossDef.pos)
+        bossDefOverride && Array.isArray(bossDef.pos)
           ? { x: bossDef.pos[0], y: bossDef.pos[1], z: bossDef.pos[2] }
           : { x: 0, y: 0.3, z: 16 }
       );
