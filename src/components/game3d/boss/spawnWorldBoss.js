@@ -17,9 +17,20 @@ export function spawnWorldBoss({
   setBosses,
   walkClipPromise,
   idleClipPromise,
+  bossDefOverride = null,
+  spawnPosition = null,
+  instanceId = null,
+  metadata = null,
+  onSpawn = null,
 }) {
-  const bossDef = BOSSES[0];
-  if (!bossDef) return;
+  const bossDef = bossDefOverride || BOSSES[0];
+  if (!bossDef) return null;
+
+  const resolvedId = instanceId || bossDef.id;
+  const existing = bossEntities.find((entry) =>
+    entry?.id === resolvedId && entry.alive !== false && !entry.dying && !entry.defeated
+  );
+  if (existing) return existing;
 
   // Preload the creature's real death clip for the world boss. Keeping this
   // local means every damage source can use the same bossEntry.deathAction.
@@ -45,9 +56,19 @@ export function spawnWorldBoss({
       const maxDim = Math.max(size.x, size.y, size.z);
       const bossScale = (1.7 / maxDim) * BOSS_SCALE_MULT;
 
-      // Spawn in front of the player so the boss is immediately visible.
+      // Default world-boss placement remains unchanged. Dungeon/runtime callers
+      // may provide an explicit room position without duplicating boss code.
       bossModel.scale.setScalar(bossScale);
-      bossModel.position.set(0, 0.3, 16);
+      const sourcePos = spawnPosition || (
+        Array.isArray(bossDef.pos)
+          ? { x: bossDef.pos[0], y: bossDef.pos[1], z: bossDef.pos[2] }
+          : { x: 0, y: 0.3, z: 16 }
+      );
+      bossModel.position.set(
+        Number(sourcePos.x || 0),
+        Number(sourcePos.y ?? 0.3),
+        Number(sourcePos.z || 0),
+      );
 
       const bossTintMaterials = [];
       bossModel.traverse((node) => {
@@ -78,9 +99,13 @@ export function spawnWorldBoss({
       snapToGround(bossModel, 0);
 
       const bossMixer = new THREE.AnimationMixer(bossModel);
-      const bossHp = Math.round(bossDerived.maxHP * 1000);
+      const hpMultiplier = bossDefOverride
+        ? Math.max(1, Number(bossDef.hpScale || 8))
+        : 1000;
+      const bossHp = Math.round(bossDerived.maxHP * hpMultiplier);
       const bossEntry = {
-        id: bossDef.id,
+        id: resolvedId,
+        bossDefinitionId: bossDef.id,
         name: bossDef.name,
         title: bossDef.title,
         color: bossDef.color,
@@ -99,8 +124,8 @@ export function spawnWorldBoss({
         hp: bossHp,
         maxHp: bossHp,
         derived: bossDerived,
-        level: 1,
-        xpReward: 0,
+        level: Math.max(1, Number(bossDef.level || 1)),
+        xpReward: Math.max(0, Number(bossDef.xpReward || 0)),
         tintMaterials: bossTintMaterials,
         fadeMaterials: [...bossTintMaterials, ringMat],
         // Segmented HP tanks (10 tanks) — consumed by the top-center
@@ -112,10 +137,15 @@ export function spawnWorldBoss({
         state: 'idle',
         stateTimer: 0,
         target: null,
-        speed: 1.6,
+        speed: Number(bossDef.speed || 1.6),
+        dungeonBoss: !!bossDefOverride,
+        metadata: metadata ? { ...metadata } : null,
+        damageScale: Math.max(0.1, Number(bossDef.damageScale || 1)),
+        defenseScale: Math.max(0.1, Number(bossDef.defenseScale || 1)),
       };
       bossEntities.push(bossEntry);
       try { setBosses(bossEntities); } catch (e) { /* store sync is non-fatal */ }
+      onSpawn?.(bossEntry);
 
       // Attach idle, walk and the real mutant death clip. The death action is
       // LoopOnce + clampWhenFinished so the defeated boss stays down until fade.
