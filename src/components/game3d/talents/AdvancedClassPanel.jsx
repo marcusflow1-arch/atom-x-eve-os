@@ -7,6 +7,8 @@ import { resolveAdvancedWeaponType, WEAPON_TYPES, getClassById } from './advance
 import { getPassiveSummary } from './advancedClassPassives';
 import { getSkillModSummary } from './advancedClassSkills';
 import AdvancedClassSelector from './AdvancedClassSelector';
+import { getActiveEquippedAXEWeapon, subscribeAXEEquipmentInventory } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
 
 const WEAPON_TABS = [
   { type: WEAPON_TYPES.SWORD,    label: 'Sword',    icon: '⚔️' },
@@ -17,18 +19,22 @@ const WEAPON_TABS = [
 export default function AdvancedClassPanel() {
   const [advancedState, setAdvancedState] = useState(null);
   const [masteryState,  setMasteryState]  = useState(null);
+  const [activeWeapon, setActiveWeapon] = useState(() => getActiveEquippedAXEWeapon());
   const [activeTab,     setActiveTab]     = useState(WEAPON_TYPES.SWORD);
   const [showDetail,    setShowDetail]    = useState(false);
 
   useEffect(() => subscribeAdvancedClass(setAdvancedState), []);
   useEffect(() => subscribeMastery(setMasteryState),        []);
+  useEffect(() => subscribeAXEEquipmentInventory(() => {
+    setActiveWeapon(getActiveEquippedAXEWeapon());
+  }), []);
 
   if (!advancedState) return null;
 
-  // Derive the active weapon type from mastery store
-  const activeAdvancedType = masteryState?.activeWeaponId
-    ? resolveAdvancedWeaponType(masteryState.activeWeaponId)
-    : null;
+  // The inventory loadout owns the active weapon. Mastery follows it; it does
+  // not get to invent a second active weapon.
+  const activeIdentity = resolveAXEWeaponIdentity(activeWeapon);
+  const activeAdvancedType = activeIdentity.advancedWeaponType || null;
 
   const selectedClassId = advancedState.selectedClasses[activeTab];
   const selectedClassDef = selectedClassId ? getClassById(selectedClassId) : null;
