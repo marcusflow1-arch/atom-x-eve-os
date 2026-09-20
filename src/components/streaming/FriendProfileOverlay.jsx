@@ -726,17 +726,194 @@ function CardsPage() {
 }
 
 function ActivityPage() {
+  const progressionEvents = [
+    {
+      title: 'Reached Global Level 47',
+      detail: 'Global progression advanced after completing cross-game objectives.',
+      time: '18 min ago',
+      icon: Crown,
+      accent: 'text-amber-300',
+      glow: 'bg-amber-300/[0.07]',
+      tag: 'LEVEL UP',
+    },
+    {
+      title: 'Unlocked Skill: Aerial Step',
+      detail: 'New mobility skill unlocked in the Action genre skill tree.',
+      time: '1 hour ago',
+      icon: Sparkles,
+      accent: 'text-violet-300',
+      glow: 'bg-violet-300/[0.07]',
+      tag: 'SKILL',
+    },
+    {
+      title: 'Acquired Celestial Blade',
+      detail: 'Legendary equipment card added to the account collection.',
+      time: '2 hours ago',
+      icon: Swords,
+      accent: 'text-cyan-300',
+      glow: 'bg-cyan-300/[0.07]',
+      tag: 'EQUIPMENT',
+    },
+    {
+      title: 'Card Stage Increased',
+      detail: 'Elden Lord advanced to Combined Stage 7.',
+      time: '4 hours ago',
+      icon: Layers3,
+      accent: 'text-fuchsia-300',
+      glow: 'bg-fuchsia-300/[0.07]',
+      tag: 'CARD',
+    },
+    {
+      title: 'RPG Mastery Reached Level 18',
+      detail: 'Genre progression increased and a new RPG perk point became available.',
+      time: 'Yesterday',
+      icon: Gamepad2,
+      accent: 'text-emerald-300',
+      glow: 'bg-emerald-300/[0.07]',
+      tag: 'GENRE',
+    },
+    {
+      title: 'Armor Enhanced to +8',
+      detail: 'Nightguard Chestplate gained additional defense and endurance.',
+      time: 'Yesterday',
+      icon: Shield,
+      accent: 'text-sky-300',
+      glow: 'bg-sky-300/[0.07]',
+      tag: 'UPGRADE',
+    },
+    {
+      title: 'Unlocked Achievement Reward',
+      detail: 'Perfect Sync granted a new card reward and account XP.',
+      time: '2 days ago',
+      icon: Trophy,
+      accent: 'text-yellow-300',
+      glow: 'bg-yellow-300/[0.07]',
+      tag: 'ACHIEVEMENT',
+    },
+  ];
+
   return (
     <div className="grid grid-cols-12 gap-3">
-      <Section className="col-span-8"><SectionTitle title="Activity Feed" icon={Activity} /><div className="space-y-2 px-4 pb-4">{[
-        ['Unlocked Celestial Blade in Elden Ring','2 hours ago',Trophy],
-        ['Finished a 6-match ranked session in Neon Racer','4 hours ago',Gamepad2],
-        ['Reached 1,248 total achievements','Yesterday',Crown],
-        ['Shared a new clip: Perfect Drift','2 days ago',Film],
-        ['Added Starlight to active card deck','3 days ago',Layers3],
-        ['Completed Frostline survival challenge','4 days ago',Shield],
-      ].map(([t,time,Icon])=><div key={t} className="flex gap-3 rounded-xl border border-white/[0.045] bg-white/[0.015] p-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-300/[0.06]"><Icon className="h-4 w-4 text-cyan-200/62" /></div><div><p className="text-[9px] font-semibold text-white/62">{t}</p><p className="mt-1 text-[7px] text-white/22">{time}</p></div></div>)}</div></Section>
-      <div className="col-span-4 space-y-3"><Section><SectionTitle title="This Week" icon={Clock3} action={null} /><div className="grid grid-cols-2 gap-2 px-4 pb-4"><StatTile label="Play Time" value="27h" /><StatTile label="Sessions" value="18" /><StatTile label="Wins" value="42" /><StatTile label="Uploads" value="9" /></div></Section><Section><SectionTitle title="Most Active" icon={Flame} action={null} /><div className="px-4 pb-4"><p className="text-sm font-black text-white/76">Neon Racer</p><p className="mt-1 text-[7px] text-white/28">11h 42m played this week</p><div className="mt-3 h-1 rounded bg-white/[0.06]"><div className="h-full w-[78%] rounded bg-cyan-400" /></div></div></Section></div>
+      <Section className="col-span-12">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-cyan-300/70" />
+              <h2 className="text-[13px] font-black text-white/88">Progression Activity</h2>
+            </div>
+            <p className="mt-1 text-[7px] text-white/28">A clean history of meaningful account progression — levels, skills, cards, gear and genre growth.</p>
+          </div>
+          <div className="flex gap-2">
+            {[
+              ['+3', 'Skills'],
+              ['+5', 'Cards'],
+              ['+2', 'Upgrades'],
+              ['+1', 'Level'],
+            ].map(([value, label]) => (
+              <div key={label} className="min-w-[62px] rounded-lg border border-white/[0.05] bg-black/10 px-2.5 py-2 text-center">
+                <p className="text-[12px] font-black text-cyan-100/78">{value}</p>
+                <p className="mt-0.5 text-[5px] uppercase tracking-[.12em] text-white/24">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section className="col-span-8">
+        <SectionTitle title="Recent Progress" icon={Activity} action={null} />
+        <div className="relative px-4 pb-4">
+          <div className="absolute bottom-4 left-[37px] top-1 w-px bg-gradient-to-b from-cyan-300/30 via-white/[0.07] to-transparent" />
+          <div className="space-y-1">
+            {progressionEvents.map((event, index) => {
+              const Icon = event.icon;
+              return (
+                <div key={event.title} className="relative flex gap-3 py-2.5">
+                  <div className={`relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/[0.06] ${event.glow}`}>
+                    <Icon className={`h-4 w-4 ${event.accent}`} />
+                  </div>
+                  <div className="min-w-0 flex-1 border-b border-white/[0.035] pb-2.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[9px] font-bold text-white/72">{event.title}</p>
+                          <span className="shrink-0 rounded border border-white/[0.05] bg-white/[0.02] px-1.5 py-0.5 text-[5px] font-black tracking-[.11em] text-white/28">{event.tag}</span>
+                        </div>
+                        <p className="mt-1 text-[7px] leading-3.5 text-white/28">{event.detail}</p>
+                      </div>
+                      <span className="shrink-0 text-[6px] text-white/18">{event.time}</span>
+                    </div>
+                    {index === 0 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+                          <div className="h-full w-[44%] rounded-full bg-gradient-to-r from-cyan-500 to-sky-300" />
+                        </div>
+                        <span className="text-[6px] text-cyan-200/45">12,449 / 28,000 XP</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Section>
+
+      <div className="col-span-4 space-y-3">
+        <Section>
+          <SectionTitle title="Progress Gained" icon={Zap} action={null} />
+          <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+            <StatTile label="Account XP" value="+8.4K" sub="Last 7 days" icon={TrendingUp} />
+            <StatTile label="Card Power" value="+240" sub="Last 7 days" icon={Layers3} />
+            <StatTile label="Skill Points" value="+4" sub="Earned" icon={Sparkles} />
+            <StatTile label="Gear Score" value="+86" sub="Upgraded" icon={Shield} />
+          </div>
+        </Section>
+
+        <Section>
+          <SectionTitle title="Latest Unlocks" icon={Gem} action={null} />
+          <div className="space-y-2 px-4 pb-4">
+            {[
+              ['Aerial Step', 'Action Skill', Sparkles, 'text-violet-300'],
+              ['Celestial Blade', 'Legendary Equipment', Swords, 'text-amber-300'],
+              ['RPG Perk Point', 'Genre Mastery', Layers3, 'text-emerald-300'],
+              ['Perfect Sync', 'Achievement Reward', Trophy, 'text-cyan-300'],
+            ].map(([name, type, Icon, tone]) => (
+              <div key={name} className="flex items-center gap-2.5 rounded-lg border border-white/[0.04] bg-white/[0.012] p-2.5">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-black/15">
+                  <Icon className={`h-3.5 w-3.5 ${tone}`} />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-[8px] font-bold text-white/62">{name}</p>
+                  <p className="mt-0.5 text-[6px] text-white/24">{type}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section>
+          <SectionTitle title="Current Momentum" icon={Flame} action={null} />
+          <div className="px-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[18px] font-black text-white/82">7 days</p>
+                <p className="text-[6px] uppercase tracking-[.12em] text-white/23">Progression streak</p>
+              </div>
+              <Flame className="h-8 w-8 text-orange-300/70" />
+            </div>
+            <div className="mt-3 grid grid-cols-7 gap-1">
+              {['M','T','W','T','F','S','S'].map((day, index) => (
+                <div key={day + index} className="text-center">
+                  <div className="mx-auto grid h-5 w-5 place-items-center rounded-full border border-cyan-300/25 bg-cyan-300/[0.045] text-[6px] text-cyan-100/55">
+                    <Check className="h-2.5 w-2.5" />
+                  </div>
+                  <p className="mt-1 text-[5px] text-white/22">{day}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Section>
+      </div>
     </div>
   );
 }
