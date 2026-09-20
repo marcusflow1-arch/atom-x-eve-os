@@ -14,6 +14,13 @@ import {
   getAXEMountXPReward,
   normalizeAXEMountInstance,
 } from './AXEMountSystem';
+import {
+  AXE_LEGENDARY_MOUNT_CONFIG,
+  addAXELegendaryMountExtraAbility,
+  createAXELegendaryMountState,
+  rerollAXELegendaryMountAbility,
+  validateAXELegendaryMountCraft,
+} from './AXELegendaryMountSystem';
 
 const storage = characterScopedStorage('axe_mount_progression_v1');
 
@@ -29,6 +36,13 @@ const starter = () => ({
   activeMountId: 'axe_mount_starter_war_wolf',
   ridingMountId: null,
   pvpVictimCooldowns: {},
+  materials: {
+    legendary_mount_soul: 1,
+    ascension_core: 2,
+    mount_ability_seal: 1,
+    gold: 20000,
+  },
+  audit: [],
 });
 
 const load = () => {
@@ -42,6 +56,8 @@ const load = () => {
       ...parsed,
       mounts: mounts.length ? mounts : starter().mounts,
       pvpVictimCooldowns: parsed.pvpVictimCooldowns || {},
+      materials: { ...starter().materials, ...(parsed.materials || {}) },
+      audit: Array.isArray(parsed.audit) ? parsed.audit.slice(-100) : [],
       ridingMountId: null,
     };
   } catch {
@@ -52,6 +68,27 @@ const load = () => {
 let state = load();
 const listeners = new Set();
 let rideActivity = { seconds: 0, distanceMeters: 0 };
+
+const appendAudit = (action, mountId, detail = {}) => {
+  state = {
+    ...state,
+    audit: [
+      ...(state.audit || []),
+      { id: `mount_audit_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, action, mountId, at: Date.now(), detail },
+    ].slice(-100),
+  };
+};
+
+const canAffordMountMaterials = (cost = {}) =>
+  Object.entries(cost).every(([id, amount]) => Number(state.materials?.[id] || 0) >= Number(amount || 0));
+
+const consumeMountMaterials = (cost = {}) => {
+  const next = { ...(state.materials || {}) };
+  for (const [id, amount] of Object.entries(cost)) {
+    next[id] = Math.max(0, Number(next[id] || 0) - Number(amount || 0));
+  }
+  state = { ...state, materials: next };
+};
 
 const persistedState = () => ({
   ...state,
@@ -84,6 +121,8 @@ export function getAXEMountState() {
       speedMultiplier: getAXEMountSpeedMultiplier(mount),
     })),
     pvpVictimCooldowns: { ...state.pvpVictimCooldowns },
+    materials: { ...(state.materials || {}) },
+    audit: [...(state.audit || [])],
   };
 }
 
@@ -246,4 +285,142 @@ export function grantAXEMount(definitionId) {
   state = { ...state, mounts: [...state.mounts, mount] };
   emit();
   return { ok: true, mount };
+}
+
+
+export function previewLegendaryAXEMountCraft(instanceId) {
+  const mount = state.mounts.find((entry) => entry.instanceId === instanceId);
+  const valid = validateAXELegendaryMountCraft(mount);
+  if (!valid.ok) return valid;
+  const cost = { ...AXE_LEGENDARY_MOUNT_CONFIG.craftCost };
+  return {
+    ok: true,
+    mountId: instanceId,
+    cost,
+    canAfford: canAffordMountMaterials(cost),
+    abilityCount: AXE_LEGENDARY_MOUNT_CONFIG.baseAbilityCount,
+  };
+}
+
+export function craftLegendaryAXEMount(instanceId, {
+  confirmed = false,
+  rng = Math.random,
+} = {}) {
+  const preview = previewLegendaryAXEMountCraft(instanceId);
+  if (!preview.ok) return preview;
+  if (!confirmed) return { ...preview, ok: false, reason: 'CONFIRMATION_REQUIRED' };
+  if (!preview.canAfford) return { ...preview, ok: false, reason: 'INSUFFICIENT_MATERIALS' };
+
+  const index = state.mounts.findIndex((entry) => entry.instanceId === instanceId);
+  const result = createAXELegendaryMountState(state.mounts[index], rng);
+  if (!result.ok) return result;
+
+  consumeMountMaterials(preview.cost);
+  state = {
+    ...state,
+    mounts: state.mounts.map((entry, i) =>
+      i === index ? { ...entry, legendary: result.legendary } : entry
+    ),
+  };
+  appendAudit('craft_legendary', instanceId, {
+    cost: preview.cost,
+    abilities: result.legendary.abilities,
+    passiveId: result.legendary.passiveId,
+  });
+  emit();
+  return { ok: true, mount: state.mounts[index], legendary: result.legendary, cost: preview.cost };
+}
+
+export function addLegendaryAXEMountAbility(instanceId, {
+  confirmed = false,
+  rng = Math.random,
+} = {}) {
+  const index = state.mounts.findIndex((entry) => entry.instanceId === instanceId);
+  if (index < 0) return { ok: false, reason: 'MOUNT_MISSING' };
+  const mount = state.mounts[index];
+  if (!mount.legendary?.isLegendary) return { ok: false, reason: 'NOT_LEGENDARY' };
+
+  const cost = { ...AXE_LEGENDARY_MOUNT_CONFIG.extraAbilityCost };
+  if (!confirmed) return { ok: false, reason: 'CONFIRMATION_REQUIRED', cost, canAfford: canAffordMountMaterials(cost) };
+  if (!canAffordMountMaterials(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
+
+  const result = addAXELegendaryMountExtraAbility(mount.legendary, rng);
+  if (!result.ok) return result;
+
+  consumeMountMaterials(cost);
+  state = {
+    ...state,
+    mounts: state.mounts.map((entry, i) =>
+      i === index ? { ...entry, legendary: result.legendary } : entry
+    ),
+  };
+  appendAudit('add_legendary_ability', instanceId, { cost, ability: result.ability });
+  emit();
+  return { ok: true, ability: result.ability, cost };
+}
+
+export function rerollLegendaryAXEMountAbility(instanceId, abilityIndex, {
+  confirmed = false,
+  rng = Math.random,
+} = {}) {
+  const index = state.mounts.findIndex((entry) => entry.instanceId === instanceId);
+  if (index < 0) return { ok: false, reason: 'MOUNT_MISSING' };
+  const mount = state.mounts[index];
+  if (!mount.legendary?.isLegendary) return { ok: false, reason: 'NOT_LEGENDARY' };
+
+  const cost = { ...AXE_LEGENDARY_MOUNT_CONFIG.rerollAbilityCost };
+  if (!confirmed) return { ok: false, reason: 'CONFIRMATION_REQUIRED', cost, canAfford: canAffordMountMaterials(cost) };
+  if (!canAffordMountMaterials(cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS', cost };
+
+  const result = rerollAXELegendaryMountAbility(mount.legendary, abilityIndex, rng);
+  if (!result.ok) return result;
+
+  consumeMountMaterials(cost);
+  state = {
+    ...state,
+    mounts: state.mounts.map((entry, i) =>
+      i === index ? { ...entry, legendary: result.legendary } : entry
+    ),
+  };
+  appendAudit('reroll_legendary_ability', instanceId, { abilityIndex, cost, ability: result.ability });
+  emit();
+  return { ok: true, ability: result.ability, cost };
+}
+
+export function grantAXEMountMaterials(delta = {}) {
+  const current = state.materials || {};
+  state = {
+    ...state,
+    materials: {
+      legendary_mount_soul: Number(current.legendary_mount_soul || 0) + Math.max(0, Number(delta.legendary_mount_soul || 0)),
+      ascension_core: Number(current.ascension_core || 0) + Math.max(0, Number(delta.ascension_core || 0)),
+      mount_ability_seal: Number(current.mount_ability_seal || 0) + Math.max(0, Number(delta.mount_ability_seal || 0)),
+      gold: Number(current.gold || 0) + Math.max(0, Number(delta.gold || 0)),
+    },
+  };
+  emit();
+  return { ...state.materials };
+}
+
+export function releaseAXEMount(instanceId, { confirmed = false } = {}) {
+  const mount = state.mounts.find((entry) => entry.instanceId === instanceId);
+  if (!mount) return { ok: false, reason: 'MOUNT_MISSING' };
+  if (!confirmed) {
+    return {
+      ok: false,
+      reason: 'CONFIRMATION_REQUIRED',
+      highValue: !!mount.legendary?.isLegendary || Number(mount.growthPercent || 0) >= 20,
+    };
+  }
+  if (state.activeMountId === instanceId || state.registeredMountId === instanceId || state.ridingMountId === instanceId) {
+    return { ok: false, reason: 'MOUNT_IN_USE' };
+  }
+
+  appendAudit('release_mount', instanceId, {
+    legendary: !!mount.legendary?.isLegendary,
+    growthPercent: mount.growthPercent,
+  });
+  state = { ...state, mounts: state.mounts.filter((entry) => entry.instanceId !== instanceId) };
+  emit();
+  return { ok: true };
 }
