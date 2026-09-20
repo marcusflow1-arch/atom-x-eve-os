@@ -76,6 +76,7 @@ const buildTemplatePool = () =>
 export function rollAXEEquipmentDrop(enemyTier = 'normal', isBoss = false, {
   rng = Math.random,
   playerLevel = 1,
+  sourceId = 'enemy',
 } = {}) {
   const tier = normalizeTier(enemyTier, isBoss);
   const chance = AXE_EQUIPMENT_DROP_CONFIG.chanceByTier[tier]
@@ -109,7 +110,7 @@ export function rollAXEEquipmentDrop(enemyTier = 'normal', isBoss = false, {
     : `${rarity[0].toUpperCase() + rarity.slice(1)} ${template.name}`;
 
   return {
-    dropId: `axe_gear_drop_${Date.now()}_${Math.floor(clampRng(rng()) * 1e8).toString(36)}`,
+    dropId: `axe_gear_drop_${String(sourceId).replace(/[^a-zA-Z0-9_-]/g, '_')}`,
     id: template.id,
     templateId: template.templateId || template.id,
     name: displayName,
