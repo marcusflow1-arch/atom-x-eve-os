@@ -1,3 +1,4 @@
+import { usePartySession } from '@/components/social/partySession';
 import { useDashboardRoom } from '@/components/social/useDashboardRoom';
 import React, { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
@@ -10,6 +11,9 @@ import { getCompanionProgression } from '@/components/game3d/companionProgressio
 export default function MultiplayerSystem({ envUrl }) {
   const { user } = useAuth();
   const [currentChannel, setCurrentChannel] = useState(null);
+  const party = usePartySession();
+  const [voiceScope,setVoiceScope] = useState('dashboard');
+  const partyVoice = voiceScope === 'party' && !!party.party;
   const [participantIds, setParticipantIds] = useState([]);
   const [micEnabled, setMicEnabled] = useState(false);
   const localStateRef = useRef({ x: 0, y: -0.5, z: 0, yaw: 0, anim: 'idle' });
@@ -23,9 +27,12 @@ export default function MultiplayerSystem({ envUrl }) {
   }, [envUrl]);
 
   const dashboardParticipants = useDashboardRoom(currentChannel, user, envUrl);
-  useWebRTCVoice(currentChannel, user, !micEnabled, false, currentChannel?.startsWith("dashboard_") ? dashboardParticipants : participantIds);
+  useWebRTCVoice(currentChannel, user, !micEnabled || partyVoice, partyVoice, currentChannel?.startsWith("dashboard_") ? dashboardParticipants : participantIds);
+  useWebRTCVoice(party.party?.voiceRoomId, user, !micEnabled || !partyVoice, !partyVoice, (party.members || []).map(m=>m.user_id), {data:false});
 
   useEffect(() => {
+    const selectVoice = e => setVoiceScope(e.detail?.scope === 'party' ? 'party' : 'dashboard');
+    window.addEventListener('lunaVoiceScope', selectVoice);
     const handleMicToggle = (e) => {
       setMicEnabled(e.detail.enabled);
     };
@@ -41,6 +48,7 @@ export default function MultiplayerSystem({ envUrl }) {
     window.addEventListener('toggleDashboardMic', handleMicToggle);
     window.addEventListener('webrtcPermissionDenied', handlePermissionDenied);
     return () => {
+      window.removeEventListener('lunaVoiceScope', selectVoice);
       window.removeEventListener('toggleDashboardMic', handleMicToggle);
       window.removeEventListener('webrtcPermissionDenied', handlePermissionDenied);
     };

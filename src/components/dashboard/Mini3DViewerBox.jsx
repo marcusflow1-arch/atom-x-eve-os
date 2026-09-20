@@ -1,3 +1,4 @@
+import { usePartySession } from '@/components/social/partySession';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AvatarStatCard from './AvatarStatCard';
@@ -14,7 +15,9 @@ const unwrap = (response) => {
 
 export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModelFocus, onReturnDashboard }) {
   const { user } = useAuth();
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const party = usePartySession();
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceScope,setVoiceScope] = useState('dashboard');
   const [pending, setPending] = useState({ friend_requests: [], dashboard_invites: [], party_invites: [] });
   const [legacyInvite, setLegacyInvite] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -51,7 +54,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
 
   useEffect(() => {
     const onKey = (event) => {
-      if (event.key !== '`') return;
+      if (event.key !== '`' || event.target?.closest?.('input,textarea,[contenteditable=true]')) return;
       setVoiceEnabled((value) => {
         const next = !value;
         window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: next } }));
@@ -59,9 +62,12 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
       });
     };
     const onDisabled = () => setVoiceEnabled(false);
+    const onToggle = e => setVoiceEnabled(Boolean(e.detail?.enabled));
+    window.addEventListener('toggleDashboardMic', onToggle);
     window.addEventListener('keydown', onKey);
     window.addEventListener('dashboardMicDisabled', onDisabled);
     return () => {
+      window.removeEventListener('toggleDashboardMic', onToggle);
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('dashboardMicDisabled', onDisabled);
     };
@@ -206,7 +212,8 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
 
           {hostName && !isUiVisible && !prompt && <div className="pointer-events-none absolute left-2 top-2 z-20 flex max-w-[150px] items-start gap-1.5 rounded border border-white/10 bg-black/60 px-2 py-1.5 shadow-lg backdrop-blur-md"><div className="mt-[3px] h-1.5 w-1.5 flex-shrink-0 animate-pulse rounded-full bg-cyan-400" /><div><span className="block truncate text-[9px] font-bold uppercase tracking-wider text-white">{hostName.toLowerCase() === 'my' ? 'My' : hostName}</span><span className="text-[7px] uppercase tracking-wider text-white/60">Dashboard</span></div></div>}
 
-          {!isUiVisible && <button type="button" className="absolute right-2 top-2 z-20 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md transition-colors hover:bg-white/10" onClick={(event) => { event.stopPropagation(); setVoiceEnabled((value) => { const next = !value; window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: next } })); return next; }); }} aria-label="Toggle dashboard microphone">{voiceEnabled ? <Mic className="h-3.5 w-3.5 text-green-400" /> : <MicOff className="h-3.5 w-3.5 text-red-400/80" />}</button>}
+          {party.party && !isUiVisible && <select aria-label="Voice channel" value={voiceScope} onClick={e=>e.stopPropagation()} onChange={e=>{setVoiceScope(e.target.value);window.dispatchEvent(new CustomEvent('lunaVoiceScope',{detail:{scope:e.target.value}}));}} className="absolute bottom-2 left-2 z-20 max-w-[130px] rounded bg-slate-950/80 p-1 text-[10px] text-white"><option value="dashboard">Dashboard voice</option><option value="party">Party voice</option></select>}
+          {!isUiVisible && <button type="button" className="absolute right-2 top-2 z-20 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md transition-colors hover:bg-white/10" onClick={(event) => { event.stopPropagation(); setVoiceEnabled((value) => { const next = !value; window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: next } })); return next; }); }} aria-label={voiceEnabled ? "Mute microphone" : "Enable microphone"} aria-pressed={voiceEnabled} title={voiceEnabled ? "Mute microphone" : "Enable voice chat"}>{voiceEnabled ? <Mic className="h-3.5 w-3.5 text-green-400" /> : <MicOff className="h-3.5 w-3.5 text-red-400/80" />}</button>}
         </div>
         {!isUiVisible && <div onClick={(event) => event.stopPropagation()}><AvatarStatCard /></div>}
       </div>
