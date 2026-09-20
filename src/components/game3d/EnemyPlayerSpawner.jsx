@@ -27,6 +27,7 @@ import { registerKill as registerStreakKill } from './killStreakStore';
 import { awardCompanionXP } from './companionProgressionStore';
 import { getCompanionState } from './companionStore';
 import { awardActiveAXEMountPvPXP } from './axe/progression/AXEMountStore';
+import { registerAXEWarKill } from './axe/factions/AXEFactionWarStore';
 import toast from 'react-hot-toast';
 
 // Radius around each rogue that blocks the player from walking through them.
@@ -200,6 +201,7 @@ export default function EnemyPlayerSpawner() {
         addGold(r.goldReward || 75);
         recordTitleKill('pvp', killReward);
         awardActiveAXEMountPvPXP({ opponentId: r.id, opponentLevel: r.level || 1 });
+        registerAXEWarKill({ victimFactionId: r.factionId || null });
         incrementKillCount(killReward);
         addFusionPoints(FUSION_POINTS_PER_KILL);
 
