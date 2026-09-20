@@ -4,7 +4,7 @@
 
 import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 import { ADVANCED_CLASS_REGISTRY, getClassById, WEAPON_TYPES } from './advancedClassRegistry';
-import { getEquippedAXEItemInCategory } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { getActiveEquippedAXEWeapon } from '../axe/equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
 import { getWeaponLevel } from '../progression/weaponMasteryStore';
 
@@ -116,7 +116,7 @@ export const getAdvancedClassEligibility = (classId) => {
   if (!classDef) return { eligible: false, reason: 'Unknown class.' };
   if (!isClassUnlocked(classId)) return { eligible: false, reason: 'Class not unlocked.' };
 
-  const equippedWeapon = getEquippedAXEItemInCategory('weapon');
+  const equippedWeapon = getActiveEquippedAXEWeapon();
   if (!equippedWeapon) {
     return { eligible: false, reason: 'Equip a weapon before selecting an advanced class.' };
   }
