@@ -264,3 +264,35 @@ export const grantMaterials = (delta = {}) => {
   emit();
   return getMaterials();
 };
+
+export function purgeEnhancementStateForItem(itemId) {
+  if (!itemId) return false;
+  let changed = false;
+  if (enchState[itemId]) {
+    const next = { ...enchState };
+    delete next[itemId];
+    enchState = next;
+    changed = true;
+  }
+  if (reinforcementState[itemId]) {
+    const next = { ...reinforcementState };
+    delete next[itemId];
+    reinforcementState = next;
+    changed = true;
+  }
+  if (overEnchantState[itemId]) {
+    const next = { ...overEnchantState };
+    delete next[itemId];
+    overEnchantState = next;
+    changed = true;
+  }
+  if (changed) emit();
+  return changed;
+}
+
+if (typeof window !== 'undefined' && !window.__axeEnhancementLifecycleHook) {
+  window.__axeEnhancementLifecycleHook = true;
+  window.addEventListener('axeEquipmentItemRemoved', (event) => {
+    purgeEnhancementStateForItem(event?.detail?.instanceId);
+  });
+}
