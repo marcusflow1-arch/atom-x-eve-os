@@ -6,6 +6,7 @@ import { characterScopedStorage, subscribeCharacterChange } from '../../characte
 import { getActiveCharacter } from '../../characterStore';
 import { addContribution } from '../../progression/contributionStore';
 import {
+  AXE_WAR_CONFIG,
   AXE_WAR_REWARDS,
   createAXEWarDefenseState,
   getAXEWarBracket,
@@ -181,9 +182,9 @@ export function tickAXECentralCapture({
     [factionId]: next,
   };
 
-  if (next >= 30 && sharedPrototype.centralOwnerFactionId !== factionId) {
+  if (next >= AXE_WAR_CONFIG.captureSeconds && sharedPrototype.centralOwnerFactionId !== factionId) {
     sharedPrototype.centralOwnerFactionId = factionId;
-    sharedPrototype.centralCaptureProgress = { [factionId]: 30 };
+    sharedPrototype.centralCaptureProgress = { [factionId]: AXE_WAR_CONFIG.captureSeconds };
     if (state.joinedFactionId === factionId) {
       state = {
         ...state,
