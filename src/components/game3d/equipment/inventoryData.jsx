@@ -16,6 +16,7 @@ export const CATEGORY_ICONS = {
   cape: Layers3,
   wings: Wind,
   costume: Shirt,
+  auxiliary: Sparkles,
 };
 
 const gear = (item) => ({
@@ -70,6 +71,12 @@ export const INVENTORY = {
   ],
   costume: [
     gear({ id: 'costume_wanderer', name: 'Wanderer Outfit', type: 'Costume', slot: 'costume', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: false, locked: false, baseStats: {}, appearance: { assetId: 'axe_costume_wanderer' } }),
+  ],
+  auxiliary: [
+    gear({ id: 'aux_skyguard_sig', name: 'Skyguard Sigil', type: 'Auxiliary I', slot: 'auxiliary', rarity: 'rare', qualityBand: 10, level: 1, equipped: true, locked: false, auxSetId: 'AXE_AuxSet_Skyguard', baseStats: { defense: 2, maxHP: 8 } }),
+    gear({ id: 'aux_skyguard_talisman', name: 'Skyguard Talisman', type: 'Auxiliary II', slot: 'auxiliary', rarity: 'rare', qualityBand: 10, level: 1, equipped: true, locked: false, auxSetId: 'AXE_AuxSet_Skyguard', baseStats: { critDefense: 0.5, spirit: 1 } }),
+    gear({ id: 'aux_skyguard_emblem', name: 'Skyguard Emblem', type: 'Auxiliary III', slot: 'auxiliary', rarity: 'elite', qualityBand: 15, level: 1, equipped: false, locked: false, auxSetId: 'AXE_AuxSet_Skyguard', baseStats: { attack: 2, defense: 2 } }),
+    gear({ id: 'aux_skyguard_relic', name: 'Skyguard Relic', type: 'Auxiliary IV', slot: 'auxiliary', rarity: 'heroic', qualityBand: 20, level: 1, equipped: false, locked: false, auxSetId: 'AXE_AuxSet_Skyguard', baseStats: { attack: 3, maxHP: 12 } }),
   ],
 };
 
