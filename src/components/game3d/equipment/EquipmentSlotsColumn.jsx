@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { GEAR_CATEGORIES, setSelected, unequipItem } from './equipmentStore';
+import { GEAR_CATEGORIES, setSelected } from './equipmentStore';
 import { CATEGORY_ICONS } from './inventoryData';
 import {
   getEquippedAXEItemInCategory,
   getEquippedAXEItemsByCategory,
   subscribeAXEEquipmentInventory,
+  unequipAXEInventoryItem,
 } from '../axe/equipment/AXEEquipmentInventoryStore';
 
 export default function EquipmentSlotsColumn({ selectedCategoryId, onSelectCategory }) {
@@ -21,7 +22,7 @@ export default function EquipmentSlotsColumn({ selectedCategoryId, onSelectCateg
 
         const handleContext = (e) => {
           e.preventDefault();
-          if (equipped) unequipItem(cat.id, equipped.instanceId);
+          if (equipped) unequipAXEInventoryItem(equipped.instanceId);
         };
 
         return (
