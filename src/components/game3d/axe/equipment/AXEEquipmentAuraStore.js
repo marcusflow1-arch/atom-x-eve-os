@@ -92,3 +92,20 @@ export function upgradeAXEItemAura(itemId) {
 export function getAXEItemAuraStats(itemId) {
   return collectAXEAuraStats(getAXEItemAura(itemId));
 }
+
+
+export function purgeAXEItemAura(itemId) {
+  if (!itemId || !state[itemId]) return false;
+  const next = { ...state };
+  delete next[itemId];
+  state = next;
+  emit();
+  return true;
+}
+
+if (typeof window !== 'undefined' && !window.__axeAuraLifecycleHook) {
+  window.__axeAuraLifecycleHook = true;
+  window.addEventListener('axeEquipmentItemRemoved', (event) => {
+    purgeAXEItemAura(event?.detail?.instanceId);
+  });
+}
