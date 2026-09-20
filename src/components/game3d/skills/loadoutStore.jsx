@@ -4,6 +4,7 @@
 import { canEquipToSlot } from './slotValidator';
 import { SLOT_KIND } from './skillTypes';
 import { getSkillById } from './skillRegistry';
+import { getMasteryCDR } from '../progression/weaponMastery/WeaponScalingPipeline';
 
 export const ACTIVE_SLOTS = 10;
 const PASSIVE_SLOTS = 6;
@@ -99,7 +100,9 @@ export function startCooldown(slotIndex) {
   const skill = getActiveSkillAt(slotIndex);
   if (!skill) return;
   const cooldowns = [...state.cooldowns];
-  cooldowns[slotIndex] = skill.cooldown || 0;
+  const baseCooldown = Math.max(0, Number(skill.cooldown || 0));
+  const cdr = Math.max(0, Math.min(0.35, Number(getMasteryCDR() || 0)));
+  cooldowns[slotIndex] = baseCooldown * (1 - cdr);
   state = { ...state, cooldowns };
   emit();
 }
