@@ -81,7 +81,7 @@ export default function StorefrontLayout({onNavigateToGame,games=[],searchTerm='
     <button onClick={reset} className="text-white/40 hover:text-white">Clear all</button>
   </div>}
 
-  {overview&&<div className="grid gap-7 lg:grid-cols-[minmax(112px,10%)_minmax(0,90%)] xl:gap-9">
+  <div className="grid gap-7 lg:grid-cols-[minmax(112px,10%)_minmax(0,90%)] xl:gap-9">
    <aside className="relative min-w-0 pr-5 lg:pr-7">
     <div aria-hidden="true" className="absolute right-0 top-1/2 hidden h-[92%] w-px -translate-y-1/2 bg-gradient-to-b from-transparent via-white/25 to-transparent lg:block"/>
     <div className="lg:sticky lg:top-24">
@@ -95,7 +95,8 @@ export default function StorefrontLayout({onNavigateToGame,games=[],searchTerm='
     </div>
    </aside>
 
-   <div className="min-w-0 space-y-10">
+   <div className="min-w-0">
+    {overview&&<div className="space-y-10">
     <DiscoveryHero games={discovery.slice(0,8)} onSelect={onNavigateToGame}/>
 
     <section>
@@ -129,18 +130,22 @@ export default function StorefrontLayout({onNavigateToGame,games=[],searchTerm='
     </div>
 
     <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-gradient-to-r from-cyan-300/[0.08] to-blue-500/[0.035] px-6 py-6"><div className="flex items-center gap-4"><Sparkles className="text-cyan-200/70"/><div><h2 className="text-lg font-medium">More of what you love. A little of what you haven't tried.</h2><p className="mt-1 text-sm text-white/40">Choose your genres and games to shape your recommendations.</p></div></div><button onClick={()=>setTab('you')} className="rounded-lg bg-white/10 px-5 py-2.5 text-sm text-cyan-100">Make it yours</button></div>
-   </div>
-  </div>}
+    </div>}
 
-  {tab==='you'&&<div className="mb-8"><StorePreferences games={games} genres={genres} preference={preference} onSave={save} saving={saving} error={error}/></div>}
+   {tab==='you'&&<div className="mb-8"><StorePreferences games={games} genres={genres} preference={preference} onSave={save} saving={saving} error={error}/></div>}
 
-  <section className={overview?'mt-12':''}>
-   {tab==='sellers'&&salesData?.complete===false&&<p className="mb-4 text-xs text-white/50">Rankings reflect the most recent 10,000 completed orders within the past 30 days.</p>}
-   <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">{searchTerm?'Search results':tab==='you'?'Recommended for you':tab==='sellers'?'Top sellers':tab==='new'?'New releases':'Explore all games'}</h2><p role="status" className="mt-1 text-xs text-white/40">{results.length} {results.length===1?'game':'games'}{filtering?' match your filters':''}</p></div>
-    <label className="flex items-center gap-2 text-xs text-white/45">Sort by<select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-lg bg-slate-900 px-3 py-2 text-white/75"><option value="discovery">{searchTerm?'Relevance':tab==='sellers'?'Best selling':tab==='new'?'Release date':tab==='you'?'Best match':'Discovery'}</option><option value="new">Release date</option><option value="price">Price: low to high</option><option value="title">Title: A–Z</option></select></label>
+    {!overview&&<>
+     <section>
+     {tab==='sellers'&&salesData?.complete===false&&<p className="mb-4 text-xs text-white/50">Rankings reflect the most recent 10,000 completed orders within the past 30 days.</p>}
+     <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">{searchTerm?'Search results':tab==='you'?'Recommended for you':tab==='sellers'?'Top sellers':tab==='new'?'New releases':'Explore all games'}</h2><p role="status" className="mt-1 text-xs text-white/40">{results.length} {results.length===1?'game':'games'}{filtering?' match your filters':''}</p></div>
+     <label className="flex items-center gap-2 text-xs text-white/45">Sort by<select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-lg bg-slate-900 px-3 py-2 text-white/75"><option value="discovery">{searchTerm?'Relevance':tab==='sellers'?'Best selling':tab==='new'?'Release date':tab==='you'?'Best match':'Discovery'}</option><option value="new">Release date</option><option value="price">Price: low to high</option><option value="title">Title: A–Z</option></select></label>
+     </div>
+     {results.length?<div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">{results.slice(0,limit).map(g=><GameCard key={g.id} game={g} onSelect={onNavigateToGame} reason={tab==='you'?reasons.get(g.id):undefined}/>)}</div>:<div className="rounded-2xl bg-white/[0.025] px-6 py-14 text-center"><p className="text-white/60">{tab==='you'?'Select your favorite genres or games above to get started.':tab==='sellers'?(salesError?'Sales rankings could not load.':salesLoading?'Loading rankings…':'No completed purchases in this period yet.'):tab==='new'?'No dated releases match these filters.':'No games match these filters.'}</p>{filtering&&<button onClick={reset} className="mt-4 text-sm text-cyan-200">Clear filters</button>}</div>}
+     {results.length>limit&&<div className="mt-8 text-center"><button onClick={()=>setLimit(v=>v+24)} className="rounded-lg bg-white/5 px-6 py-3 text-sm text-white/70">Show more games · {results.length-limit} remaining</button></div>}
+     </section>
+     
+    </>}
    </div>
-   {results.length?<div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">{results.slice(0,limit).map(g=><GameCard key={g.id} game={g} onSelect={onNavigateToGame} reason={tab==='you'?reasons.get(g.id):undefined}/>)}</div>:<div className="rounded-2xl bg-white/[0.025] px-6 py-14 text-center"><p className="text-white/60">{tab==='you'?'Select your favorite genres or games above to get started.':tab==='sellers'?(salesError?'Sales rankings could not load.':salesLoading?'Loading rankings…':'No completed purchases in this period yet.'):tab==='new'?'No dated releases match these filters.':'No games match these filters.'}</p>{filtering&&<button onClick={reset} className="mt-4 text-sm text-cyan-200">Clear filters</button>}</div>}
-   {results.length>limit&&<div className="mt-8 text-center"><button onClick={()=>setLimit(v=>v+24)} className="rounded-lg bg-white/5 px-6 py-3 text-sm text-white/70">Show more games · {results.length-limit} remaining</button></div>}
-  </section>
+  </div>
  </main>;
 }
