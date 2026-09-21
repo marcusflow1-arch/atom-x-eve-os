@@ -91,6 +91,8 @@ import AvatarProgressionOverlay from '../components/dashboard/AvatarProgressionO
 import DeveloperSpotlightSection from '../components/dashboard/DeveloperSpotlightSection';
 import WhatsNewSection from '../components/dashboard/WhatsNewSection';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
+const GAME1_ENV_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/31ff46474_Hi3D_StylizedFantasyOrientalCoastalMarket3DAsset_allparts_20260921_170027.glb';
+
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
 {
@@ -281,7 +283,7 @@ export default function LunaTemplate() {
 
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState(null);
-  const [roomModelUrl, setRoomModelUrl] = useState(null);
+  const [roomModelUrl, setRoomModelUrl] = useState(GAME1_ENV_URL);
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [playerSpawn, setPlayerSpawn] = useState({ x: 0, y: -0.5, z: 0 });
@@ -365,7 +367,8 @@ export default function LunaTemplate() {
             found = models.find(m => queries[savedId].some(q => (m.name || '').toLowerCase().includes(q)));
           }
           if (!found) {
-            found = models.find(m => m.name?.toLowerCase().includes('room 2') || m.name?.toLowerCase().includes('room2'))
+            found = models.find(m => (m.name || '').toLowerCase() === 'game1')
+              || models.find(m => m.name?.toLowerCase().includes('room 2') || m.name?.toLowerCase().includes('room2'))
               || models.find(m => m.name?.toLowerCase().includes('room 1') || m.name?.toLowerCase().includes('room1'));
           }
           if (found?.file_url) {
@@ -373,7 +376,7 @@ export default function LunaTemplate() {
             if (found.player_spawn) setPlayerSpawn(found.player_spawn);
             if (found.use_mesh_collision) setUseMeshCollision(true);
           } else {
-            setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+            setRoomModelUrl(GAME1_ENV_URL);
           }
         }
       } catch (e) {
