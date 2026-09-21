@@ -10,7 +10,10 @@ export function priceOf(g){
  return sale!==null&&regular!==null&&sale<regular?sale:regular;
 }
 export const priceLabel=g=>priceOf(g)===null?'Price to be announced':priceOf(g)===0?'Free to play':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(priceOf(g));
-export const releaseTime=g=>g.release_date?Date.parse(g.release_date):g.release_year?Date.UTC(Number(g.release_year),0,1):0;
+export const releaseTime=g=>{
+ const exact=Date.parse(g.release_date);if(Number.isFinite(exact))return exact;
+ const year=Number(g.release_year||g.original_year);return Number.isInteger(year)&&year>=1950&&year<=2200?Date.UTC(year,0,1):0;
+};
 export const comingSoon=(g,now=Date.now())=>['planned','in development','coming soon'].includes(normalize(g.status))||releaseTime(g)>now;
 export function queryScore(g,query){
  const q=normalize(query);if(!q)return 1;
@@ -18,9 +21,10 @@ export function queryScore(g,query){
  if(!q.split(/\s+/).every(token=>text.includes(token)))return 0;
  return title===q?100:title.startsWith(q)?60:title.includes(q)?40:10;
 }
-export function filterGames(games,{query='',genres=[],price='any',mode='',availability='all',hideOwned=false}={},owned=[]){
+export function filterGames(games,{query='',genres=[],price='any',mode='',availability='all',hideOwned=false,onSale=false}={},owned=[]){
  return games.filter(g=>{
   if(!queryScore(g,query))return false;
+  if(onSale&&!isOnSale(g))return false;
   if(genres.length&&!genres.some(x=>genresOf(g).includes(normalize(x))))return false;
   const amount=priceOf(g);
   if(price==='free'&&amount!==0)return false;
@@ -29,7 +33,7 @@ export function filterGames(games,{query='',genres=[],price='any',mode='',availa
   if(target&&!tags.includes(target)&&!(target==='single player'&&g.single_player)&&!(target==='co op'&&(g.co_op||g.coop))&&!(target==='multiplayer'&&g.multiplayer))return false;
   if(availability==='available'&&comingSoon(g))return false;
   if(availability==='soon'&&!comingSoon(g))return false;
-  return !(hideOwned&&owned.includes(g.id));
+  return !(hideOwned&&(g.catalog_ids||[g.id]).some(id=>owned.includes(id)));
  });
 }
 const hash=value=>{let h=2166136261;for(const c of value)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;};
@@ -61,4 +65,52 @@ export function suggestions(games,query){
  const genres=[...new Set(games.flatMap(genresOf))].filter(g=>g.includes(q)).slice(0,3).map(g=>({kind:'genre',id:g,title:label(g)}));
  const titles=games.map(game=>({game,score:queryScore(game,q)})).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,5).map(({game})=>({kind:'game',id:game.id,title:game.title,game}));
  return [...genres,...titles];
+}
+
+export const discountPercent = game => {
+ const regular = Number(game.price), current = priceOf(game);
+ return current !== null && Number.isFinite(regular) && regular > current && regular > 0
+  ? Math.floor((regular - current) / regular * 100) : 0;
+};
+export const isOnSale = game => discountPercent(game) > 0 && !comingSoon(game);
+
+export function uniqueCatalog(games, ownedIds = []) {
+ const groups = new Map();
+ for (const game of games) {
+  if (!game?.id || !game.title) continue;
+  const key = normalize(game.title) + '|' + (game.original_year || game.release_year || '');
+  const previous = groups.get(key);
+  const score = g => (ownedIds.includes(g.id) ? 10000 : 0) + (g.banner_image ? 20 : 0) + (g.screenshots?.length || 0) + (g.release_date ? 5 : 0);
+  if (!previous) groups.set(key, { ...game, catalog_ids: [game.id] });
+  else {
+   const ids = [...new Set([...previous.catalog_ids, game.id])];
+   groups.set(key, { ...(score(game) > score(previous) ? game : previous), catalog_ids: ids });
+  }
+ }
+ return [...groups.values()];
+}
+
+export function buildStoreShelves(games, { day, offset = 0, sales = {} } = {}) {
+ const available = games.filter(game => !comingSoon(game));
+ const rotation = rotateGames(discoveryOrder(available, day || 'store'), offset);
+ const used = new Set();
+ const take = (pool, count) => {
+  const result = pool.filter(game => !used.has(game.id)).slice(0, count);
+  result.forEach(game => used.add(game.id));
+  return result;
+ };
+ const featured = take(rotation, 5);
+ const saleGames = rotation.filter(isOnSale).sort((a, b) => discountPercent(b) - discountPercent(a));
+ const lowPriceGames = rotation.filter(game => priceOf(game) !== null && priceOf(game) <= 25);
+ // Offer shelves retain current catalog prices; regular budget games have no discount badge.
+ const offers = take([...saleGames, ...lowPriceGames.filter(game => !isOnSale(game))], 4);
+ const dated = available.filter(game => releaseTime(game) > 0).sort((a, b) => releaseTime(b) - releaseTime(a));
+ const arrivals = available.filter(game => Number.isFinite(Date.parse(game.created_date))).sort((a, b) => Date.parse(b.created_date) - Date.parse(a.created_date));
+ const newest = take(dated.length ? dated : arrivals, 6);
+ const purchases = game => (game.catalog_ids || [game.id]).reduce((total, id) => total + (Number(sales[id]) || 0), 0);
+ const sellers = available.filter(game => purchases(game) > 0).sort((a, b) => purchases(b) - purchases(a));
+ const surprises = take(rotation, 6);
+ const free = take(rotation.filter(game => priceOf(game) === 0), 4);
+ const upcoming = take(games.filter(game => comingSoon(game)).sort((a, b) => (releaseTime(a) || Infinity) - (releaseTime(b) || Infinity)), 4);
+ return { featured, offers, newest, newestType: dated.length ? 'releases' : 'arrivals', sellers, surprises, free, upcoming };
 }
