@@ -23,6 +23,7 @@ import DevTools from './components/dev/DevTools';
 import ChangesConsole from './components/dev/ChangesConsole';
 import LibrarySidebar from './components/streaming/LibrarySidebar';
 import UniversalPageRail from './components/shared/UniversalPageRail';
+import SidebarToggle from './components/shared/SidebarToggle';
 import GuidedTour from './components/onboarding/GuidedTour';
 import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeContext';
 import ViewModeToggle from './components/mobile/ViewModeToggle';
@@ -606,8 +607,9 @@ function LayoutContent({ children, currentPageName }) {
       {/* Global Styles - Extracted to reduce inline violations */}
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
-      {/* Global Library Sidebar trigger (hidden on Entertainment, Library) */}
+      {/* Shared sidebar controls stay available independently of each page's footer. */}
       <LibrarySidebar />
+      <SidebarToggle className="fixed bottom-[10px] left-3 z-[90]" />
 
 
 

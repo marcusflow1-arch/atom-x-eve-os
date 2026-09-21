@@ -1,4 +1,5 @@
 import React from 'react';
+import SidebarToggle from '@/components/shared/SidebarToggle';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Home, ShoppingBag, Trophy, Users, Radio, MessageSquare } from 'lucide-react';
@@ -42,6 +43,7 @@ export default function MobileBottomNav() {
         boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(255, 255, 255, 0.06)',
       }}
     >
+      <div className="flex w-11 shrink-0 justify-center"><SidebarToggle /></div>
       {NAV_ITEMS.map((item) => {
         const active = item.page ? isActive(item.page) : false;
         return (

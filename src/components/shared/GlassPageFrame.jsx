@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import GameStreamPanel from './GameStreamPanel';
 import StudioProfileView from '@/components/studio/StudioProfileView';
 import DevGamesPanel from '@/components/studio/DevGamesPanel';
@@ -106,7 +105,7 @@ function StudioPillar({ side }) {
   );
 }
 
-export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible, onSidebarToggle, chromeHidden = false }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible: _sidebarVisible, onSidebarToggle: _onSidebarToggle, chromeHidden = false }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
 
@@ -282,19 +281,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
 
         {bottomContent && (
           <div className="h-full w-full flex items-center px-3 py-2 gap-3">
-            {/* Sidebar toggle button — far left of bottom bar */}
-            {onSidebarToggle && (
-              <button
-                onClick={onSidebarToggle}
-                title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
-                className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all hover:bg-white/10 text-white/40 hover:text-white"
-              >
-                {sidebarVisible
-                  ? <PanelLeftClose className="w-4 h-4" />
-                  : <PanelLeftOpen className="w-4 h-4" />
-                }
-              </button>
-            )}
+            {/* The shared layout owns one toggle; reserve its far-left footer space. */}
+            <span aria-hidden="true" className="w-7 flex-shrink-0" />
             <div className="flex-1 flex items-center justify-center">
               {bottomContent}
             </div>

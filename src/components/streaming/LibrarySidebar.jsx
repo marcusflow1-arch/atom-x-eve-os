@@ -88,7 +88,10 @@ export default function LibrarySidebar() {
   };
 
   useEffect(() => {
-    const handleToggle = (e) => setIsSidebarCollapsed(e.detail);
+    const handleToggle = (e) => {
+      setIsSidebarCollapsed(e.detail);
+      if (e.detail) closeAllSidebarUi();
+    };
     window.addEventListener('sidebarCollapseChange', handleToggle);
     return () => window.removeEventListener('sidebarCollapseChange', handleToggle);
   }, []);
@@ -228,8 +231,6 @@ export default function LibrarySidebar() {
     return localStorage.getItem(`environment_enabled_${currentEnvironmentPageKey}`) !== 'false';
   });
   const isAura = pathname.includes('/aura') || pathname.includes('/streaming') || pathname.includes('/discover');
-  const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
-  const isLibraryPage = pathname.includes('/library');
   const isClan = pathname.includes('/clan');
   const isForum = pathname.includes('/community');
   const isFarm = pathname.includes('/farm');
@@ -245,16 +246,11 @@ export default function LibrarySidebar() {
   const quickNavForumGames = recentForumGames.length > 0 ? recentForumGames : defaultQuickNavGames;
   const quickNavFarmGames = recentFarmGames.length > 0 ? recentFarmGames : defaultQuickNavGames;
   
-  // We want the sidebar to be available on more pages now that it has the Friends List
-  // Removing the strict page restrictions to allow it to be accessed generally if needed, 
-  // or at least keeping it consistent. The user context implies they are on a page where this sidebar exists.
-  // We'll keep existing logic but just note that if they want it "here", they are likely seeing it.
-  
   const isGenreMastery = pathname.includes('/genremastery');
   const isGameDetail = pathname.includes('/gamedetail');
-  const isGameView = pathname.includes('/gameview');
 
-  const shouldShow = !(isEntertainment || isLibraryPage || overlayActive || isGameDetail || isGameView || pathname.includes('/gamedetail'));
+  // Friends, Library, Rewards, and Entertainment are available on every app page.
+  const shouldShow = !overlayActive;
 
   // Center every floating control inside the shared Home-style 5% rail.
   const railLeftClass = 'left-[calc(max(5vw,80px)/2-20px)]';
