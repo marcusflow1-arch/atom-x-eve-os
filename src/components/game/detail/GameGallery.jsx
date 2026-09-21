@@ -31,7 +31,7 @@ export default function GameGallery({ game }) {
           onError={() => setPlaying(false)} aria-label={selected.title} />
       ) : (
         <>
-          <GameImage src={selected.image} fallback={game.cover_image} alt={game.title + ' — ' + selected.title} className="gd-stage-image" fetchPriority="high" />
+          <GameImage src={selected.image} fallback={game.cover_image} alt={game.title + ' — ' + selected.title} className="gd-stage-image" loading="eager" />
           {selected.type === 'video' && (selected.kind === 'external' ? (
             <a className="gd-play" href={selected.url} target="_blank" rel="noopener noreferrer"><span><ArrowUpRight size={25} /></span>Open trailer</a>
           ) : (

@@ -43,8 +43,8 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
         <h1>{game.title}</h1>
       </header>
       <div className="gd-hero-grid">
-        <GameGallery key={game.id} game={game} />
-        <GamePurchasePanel key={game.id} game={game} />
+        <GameGallery game={game} />
+        <GamePurchasePanel game={game} />
       </div>
       <div className="gd-details" ref={content}>
         <div className="gd-tablist" role="tablist" aria-label="Game details">

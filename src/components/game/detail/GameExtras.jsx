@@ -50,7 +50,7 @@ export default function GameExtras({ game }) {
     </div>
     <section className="gd-companion">
       <span className="gd-eyebrow">Made for your Luna dashboard</span><h3>Your companion</h3><p>Your character, with your current appearance.</p>
-      {preview ? <div className="gd-companion-view"><Suspense fallback={<div className="gd-empty" role="status"><Loader2 className="gd-spin" />Loading your character…</div>}><PlayerPreview showControls={false} /></Suspense></div> : <div className="gd-companion-placeholder"><UserRound size={44} /><button className="gd-secondary-button gd-button-fit" onClick={() => setPreview(true)}>Preview your character</button></div>}
+      {preview ? <div className="gd-companion-view"><Suspense fallback={<div className="gd-empty" role="status"><Loader2 className="gd-spin" />Loading your character…</div>}><PlayerPreview idleOnly={true} interactive={false} /></Suspense></div> : <div className="gd-companion-placeholder"><UserRound size={44} /><button className="gd-secondary-button gd-button-fit" onClick={() => setPreview(true)}>Preview your character</button></div>}
     </section>
   </div>;
 }
