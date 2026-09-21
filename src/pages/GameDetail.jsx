@@ -38,8 +38,8 @@ export default function GameDetail() {
       topContent={null}
       bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}
     >
-      <div className="h-screen overflow-hidden">
-        <GameHubTabs gameId={gameId} onClose={handleClose} onGameLoaded={handleGameLoaded} />
+      <div className="h-[100dvh] overflow-hidden">
+        <GameHubTabs gameId={gameId} onClose={handleClose} onGameLoaded={handleGameLoaded} returnLabel={from === 'library' ? 'Library' : 'Store'} />
       </div>
     </GlassPageFrame>
   );

@@ -39,7 +39,7 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
         <ChevronRight size={12} /><span>{label(game.genre) || 'Game'}</span>
       </nav>
       <header className="gd-title-block">
-        <div className="gd-title-meta"><span className="gd-eyebrow">The game. Your next adventure.</span><span className="gd-availability">{comingSoon(game) ? 'Coming soon' : <><Check size={12} />Available now</>}</span></div>
+        <div className="gd-title-meta"><span className="gd-eyebrow">Game overview</span><span className="gd-availability">{comingSoon(game) ? 'Coming soon' : <><Check size={12} />Available now</>}</span></div>
         <h1>{game.title}</h1>
       </header>
       <div className="gd-hero-grid">
@@ -60,9 +60,9 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
         </div>
         {sections.map(tab => <section key={tab.id} role="tabpanel" id={'gd-panel-' + tab.id} aria-labelledby={'gd-tab-' + tab.id} tabIndex={0} hidden={section !== tab.id} className="gd-tab-panel">
           {section === tab.id && (tab.id === 'overview' ? <div className="gd-about-grid">
-            <div><span className="gd-eyebrow">Step into the world</span><h2>About {game.title}</h2>
+            <div><span className="gd-eyebrow">About the game</span><h2>About {game.title}</h2>
               <div className="gd-description">{(game.description || 'The developer has not added a description yet.').split(/\n\s*\n/).map((paragraph, i) => <p key={i}>{paragraph}</p>)}</div>
-              {!!game.features?.length && <ul className="gd-feature-list">{game.features.filter(feature => typeof feature === 'string').map(feature => <li key={feature}><Check size={15} />{feature}</li>)}</ul>}
+              {Array.isArray(game.features) && !!game.features.length && <ul className="gd-feature-list">{game.features.filter(feature => typeof feature === 'string').map(feature => <li key={feature}><Check size={15} />{feature}</li>)}</ul>}
             </div>
             <aside className="gd-explore">
               <span className="gd-eyebrow">Before you jump in</span>

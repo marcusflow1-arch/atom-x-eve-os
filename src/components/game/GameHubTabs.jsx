@@ -1,51 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { WishlistProvider } from '@/components/store/WishlistContext';
 import GameDetailPanel from './GameDetailPanel';
 import { AtomEvents, trackAtomEvent } from '@/lib/atomTelemetry';
 
-/**
- * Game detail content for a selected store game.
- * The bottom Dev Info bar in GlassPageFrame owns the Game/Studio/Stream
- * navigation; this component intentionally does not render a second tab bar.
- */
-export default function GameHubTabs({ gameId, onClose, onGameLoaded }) {
-  const [game, setGame] = useState(null);
-
+/** One catalog request owns the landing page and the shared studio controls. */
+export default function GameHubTabs({ gameId, game: providedGame, onClose, onGameLoaded, returnLabel = 'Store' }) {
+  const [state, setState] = useState({ game: null, error: false, loading: true });
+  const [retry, setRetry] = useState(0);
+  const id = gameId || providedGame?.id;
   useEffect(() => {
     let cancelled = false;
+    setState({ game: null, error: false, loading: true });
+    const load = providedGame?.id === id ? Promise.resolve(providedGame) : id ? base44.entities.Game.get(id) : Promise.reject(new Error('No game selected'));
+    load.then(game => {
+      if (cancelled) return;
+      if (!game?.id) throw new Error('Game not found');
+      setState({ game, error: false, loading: false });
+      onGameLoaded?.(game);
+      trackAtomEvent(AtomEvents.GAME_HUB_OPENED, { gameId: id, gameTitle: game.title });
+    }).catch(() => {
+      if (cancelled) return;
+      setState({ game: null, error: true, loading: false });
+      onGameLoaded?.(null);
+    });
+    return () => { cancelled = true; };
+  }, [id, providedGame, onGameLoaded, retry]);
 
-    base44.entities.Game.get(gameId)
-      .then((loadedGame) => {
-        if (cancelled) return;
-        setGame(loadedGame);
-        onGameLoaded?.(loadedGame);
-        trackAtomEvent(AtomEvents.GAME_HUB_OPENED, {
-          gameId,
-          gameTitle: loadedGame?.title,
-        });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setGame(null);
-        onGameLoaded?.(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [gameId, onGameLoaded]);
-
-  if (!game) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-[#0d0d0d] text-white/30">
-        Loading game hub…
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full w-full relative bg-[#0d0d0d] text-white overflow-hidden">
-      <GameDetailPanel gameId={gameId} onClose={onClose} />
-    </div>
-  );
+  // Avoid showing the previous game's price or media while the route changes.
+  if (state.loading || (!state.error && state.game?.id !== id)) return <div className="gd-loading" role="status" aria-label="Loading game">
+    <p>Opening game…</p><div className="gd-loading-skeleton" aria-hidden="true" />
+  </div>;
+  if (state.error || !state.game) return <div className="gd-loading gd-load-error" role="alert">
+    <h1>This game couldn't be loaded.</h1><p>Try again, or return to the {returnLabel.toLowerCase()}.</p>
+    <button onClick={() => setRetry(value => value + 1)}>Try again</button>
+    {onClose && <button onClick={onClose}>Back to {returnLabel}</button>}
+  </div>;
+  return <WishlistProvider><GameDetailPanel key={state.game.id} game={state.game} onClose={onClose} returnLabel={returnLabel} /></WishlistProvider>;
 }
