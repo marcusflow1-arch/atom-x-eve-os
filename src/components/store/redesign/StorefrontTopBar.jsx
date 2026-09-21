@@ -26,10 +26,10 @@ export default function StorefrontTopBar({user,cartCount=0,searchTerm,onSearchCh
    </button>
    <button
     type="button"
-    onClick={()=>navigate('/Store')}
+    onClick={()=>navigate('/LunaTemplate')}
     className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[.16em] text-white"
    >
-    Adam X Eve Store
+    ATOM X EVE Store
    </button>
   </div>
 
