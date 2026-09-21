@@ -946,44 +946,73 @@ function LayoutContent({ children, currentPageName }) {
 
                     {showStoreHeader && (
                       <>
-                        <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
-                          {location.pathname.toLowerCase().includes('/gamedetail') ? 'Atom X Eve Store' : 'Atom X Eve Store'}
-                        </span>
+                        {/* Store identity/navigation button restored to the far-left header cluster. */}
+                        <button
+                          onClick={() => navigate(createPageUrl('Store'))}
+                          className={`ml-2 shrink-0 rounded-xl px-4 py-2 text-left text-base font-bold tracking-[0.08em] transition-all backdrop-blur-xl border ${
+                            location.pathname.toLowerCase().includes('/store') && !location.pathname.toLowerCase().includes('/gamedetail')
+                              ? 'bg-white/12 border-white/20 text-white shadow-[0_0_18px_rgba(255,255,255,0.10)]'
+                              : 'bg-white/[0.045] border-white/10 text-white/88 hover:bg-white/[0.09] hover:text-white'
+                          }`}
+                          title="Back to Adam XE Store"
+                        >
+                          Adam XE Store
+                        </button>
 
-                        <div className="h-6 w-px bg-white/20 mx-4"></div>
+                        {/* Vertical separator: Store identity on the left, Store-family sub-pages on the right. */}
+                        <div className="h-7 w-px shrink-0 bg-gradient-to-b from-transparent via-white/28 to-transparent mx-2"></div>
 
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => navigate(createPageUrl('LunaTemplate'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Home className="w-4 h-4" />
-                            Luna
-                          </button>
-
-                          <button
-                            onClick={() => navigate(createPageUrl('Store'))}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border flex items-center gap-2 ${
-                              location.pathname.toLowerCase().includes('/store')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            <ShoppingBag className="w-4 h-4" />
-                            Store
-                          </button>
-
-                          <div className="h-6 w-px bg-white/10 mx-1"></div>
-
-                          <button
-                            onClick={() => navigate(createPageUrl('GenreMastery'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Trophy className="w-4 h-4" />
-                            Cards
-                          </button>
-
-                        </div>
+                        <nav
+                          className="flex min-w-0 items-center gap-1.5 overflow-x-auto"
+                          aria-label="Adam XE Store sections"
+                        >
+                          {[
+                            {
+                              id: 'clan',
+                              label: 'Clan',
+                              icon: Users,
+                              active: location.pathname.toLowerCase().includes('/clan'),
+                              onClick: () => navigate(createPageUrl('Clan')),
+                            },
+                            {
+                              id: 'forum',
+                              label: 'Forum',
+                              icon: MessageSquare,
+                              active: location.pathname.toLowerCase().includes('/community'),
+                              onClick: () => navigate(createPageUrl('Community')),
+                            },
+                            {
+                              id: 'cards',
+                              label: 'Cards',
+                              icon: Trophy,
+                              active: location.pathname.toLowerCase().includes('/genremastery'),
+                              onClick: () => navigate(createPageUrl('GenreMastery')),
+                            },
+                            {
+                              id: 'aura',
+                              label: 'Aura',
+                              icon: Radio,
+                              active: location.pathname.toLowerCase().includes('/aura'),
+                              onClick: () => navigate(createPageUrl('Aura')),
+                            },
+                          ].map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={item.onClick}
+                                className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border flex items-center gap-2 ${
+                                  item.active
+                                    ? 'bg-white/16 border-white/24 text-white shadow-[0_0_14px_rgba(255,255,255,0.12)]'
+                                    : 'bg-transparent border-transparent text-white/58 hover:bg-white/[0.07] hover:text-white'
+                                }`}
+                              >
+                                <Icon className="w-4 h-4" />
+                                {item.label}
+                              </button>
+                            );
+                          })}
+                        </nav>
                       </>
                     )}
 
