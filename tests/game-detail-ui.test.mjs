@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
@@ -11,6 +12,9 @@ Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, co
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 window.HTMLElement.prototype.scrollIntoView = () => {};
 window.HTMLElement.prototype.scrollTo = () => {};
+const pageStyle = document.createElement('style');
+pageStyle.textContent = readFileSync('src/components/game/detail/game-detail.css', 'utf8');
+document.head.append(pageStyle);
 const React = await import('react'), { act } = React;
 const { createRoot } = await import('react-dom/client');
 const require = createRequire(import.meta.url);
@@ -71,6 +75,8 @@ const labelButton = text => { const el = buttons().find(x => x.getAttribute('ari
 const body = () => document.body.textContent;
 await render({ gameId: game.id, onClose: () => calls.closed = true });
 assert.equal(calls.get, 1, 'one game fetch per route');
+assert.equal(getComputedStyle(document.querySelector('.gd-page')).overflowY, 'auto', 'the fixed-height application frame must not clip lower detail sections');
+assert.equal(getComputedStyle(document.querySelector('.gd-page')).height, '100%');
 assert.ok(document.querySelector('h1').textContent === game.title);
 assert.equal(document.querySelectorAll('iframe').length, 0, 'no trailer autoplay on entry');
 await run(() => labelButton('Show Screenshot 2').click());
