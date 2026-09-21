@@ -29,7 +29,7 @@ export function trailerSource(value) {
 }
 
 export function gameArtwork(game) {
-  return mediaUrl(game.banner_image) || (game.screenshots || []).map(mediaUrl).find(Boolean) || mediaUrl(game.cover_image);
+  return mediaUrl(game.banner_image) || (Array.isArray(game.screenshots) ? game.screenshots : []).map(mediaUrl).find(Boolean) || mediaUrl(game.cover_image);
 }
 
 export function gameMedia(game) {
