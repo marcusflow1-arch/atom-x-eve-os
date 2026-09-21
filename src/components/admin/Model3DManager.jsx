@@ -15,6 +15,18 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 // Default folder name where auto-extracted companion animations get filed.
 const COMPANION_ANIM_FOLDER = 'companion';
 
+const GAME1_MODEL = {
+  id: 'builtin-game1-environment',
+  name: 'Game1',
+  description: 'Primary built-in game environment: Stylized Fantasy Oriental Coastal Market.',
+  file_url: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/31ff46474_Hi3D_StylizedFantasyOrientalCoastalMarket3DAsset_allparts_20260921_170027.glb',
+  file_type: 'glb',
+  category: 'environment',
+  tags: ['environment', 'game1', 'built-in', 'coastal-market'],
+  is_public: true,
+  is_builtin: true,
+};
+
 // Guess an animation_type enum value from a clip's name.
 // Enum: idle, walk, run, jump, attack, swing, dance, emote, other.
 function guessAnimationType(clipName) {
@@ -540,9 +552,13 @@ export default function Model3DManager() {
     }
   };
 
-  const filteredModels = models.filter(model => 
+  const libraryModels = models.some((model) =>
+    (model.name || '').toLowerCase() === 'game1' || model.file_url === GAME1_MODEL.file_url
+  ) ? models : [GAME1_MODEL, ...models];
+
+  const filteredModels = libraryModels.filter(model => 
     searchQuery === '' || 
-    model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (model.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     model.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -565,7 +581,7 @@ export default function Model3DManager() {
           </p>
         </div>
         <Badge variant="outline" className="text-slate-400 border-slate-700">
-          {models.length} Models
+          {libraryModels.length} Models
         </Badge>
       </div>
 
@@ -818,15 +834,17 @@ export default function Model3DManager() {
                     >
                         <Download className="w-4 h-4 mr-2"/> Download
                     </Button>
-                    <Button 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={() => {
-                            if(confirm('Delete this model?')) deleteMutation.mutate(selectedModel.id);
-                        }}
-                    >
-                        <Trash2 className="w-4 h-4"/>
-                    </Button>
+                    {!selectedModel.is_builtin && (
+                      <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={() => {
+                              if(confirm('Delete this model?')) deleteMutation.mutate(selectedModel.id);
+                          }}
+                      >
+                          <Trash2 className="w-4 h-4"/>
+                      </Button>
+                    )}
                   </div>
                 </div>
 
