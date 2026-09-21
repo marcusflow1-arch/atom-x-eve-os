@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ImageOff } from 'lucide-react';
 
 export default function GameImage({ src, fallback, alt = '', className = '', ...props }) {

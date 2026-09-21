@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowUpRight, ChevronLeft, ChevronRight, Maximize2, Play, X, ImageOff } from 'lucide-react';
 import { gameMedia } from './gameDetailData';

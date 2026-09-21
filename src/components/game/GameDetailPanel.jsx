@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronRight, Cpu, Sparkles } from 'lucide-react';
 import GameGallery from './detail/GameGallery';
 import GamePurchasePanel from './detail/GamePurchasePanel';
