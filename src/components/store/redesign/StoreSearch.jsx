@@ -1,7 +1,7 @@
 import {useMemo,useRef,useState} from 'react';
 import {Search,X} from 'lucide-react';
 import {suggestions,label} from './discovery';
-export default function StoreSearch({games=[],value='',onChange,onSelect}){
+export default function StoreSearch({games=[],value='',onChange,onSelect,onOpen}){
  const [open,setOpen]=useState(false),[active,setActive]=useState(-1);
  const items=useMemo(()=>suggestions(games,value),[games,value]);
  const root=useRef(null);
@@ -11,7 +11,7 @@ export default function StoreSearch({games=[],value='',onChange,onSelect}){
    <Search size={16} className="shrink-0 text-white/40"/>
    <input role="combobox" aria-label="Search the store" aria-expanded={open&&items.length>0} aria-controls="store-search-suggestions" aria-autocomplete="list"
     aria-activedescendant={open&&active>=0?'store-suggestion-'+active:undefined} value={value}
-    onFocus={()=>setOpen(true)} onChange={e=>{onChange(e.target.value);setOpen(true);setActive(-1);}}
+    onFocus={()=>{setOpen(true);onOpen?.();}} onClick={()=>onOpen?.()} onChange={e=>{onChange(e.target.value);setOpen(true);setActive(-1);onOpen?.();}}
     onKeyDown={e=>{
      if(e.key==='Escape'){setOpen(false);setActive(-1);}
      if(e.key==='ArrowDown'){e.preventDefault();setOpen(true);setActive(i=>Math.min(i+1,items.length-1));}

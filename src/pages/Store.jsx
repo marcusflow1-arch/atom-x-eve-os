@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useNavigate,useSearchParams} from 'react-router-dom';
 import {base44} from '@/api/base44Client';
@@ -10,6 +10,7 @@ import {WishlistProvider} from '@/components/store/WishlistContext';
 import StorefrontTopBar from '@/components/store/redesign/StorefrontTopBar';
 import StorefrontLayout from '@/components/store/redesign/StorefrontLayout';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
+import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
 import TradingPostContent from '@/components/store/TradingPostContent';
 import MarketplaceContent from '@/components/store/MarketplaceContent';
 import DevCardsContent from '@/components/store/DevCardsContent';
@@ -20,6 +21,14 @@ export default function Store(){
  const navigate=useNavigate(),[params]=useSearchParams(),{user}=useAuth(),{getCartCount}=useCart();
  const mode=params.get('mode')||'store',subview=params.get('subview')||'games';
  const [search,setSearch]=useState('');
+ const [searchPanelsOpen,setSearchPanelsOpen]=useState(false);
+ useEffect(()=>{
+  if(!searchPanelsOpen)return;
+  const closeOnEscape=event=>{if(event.key==='Escape')setSearchPanelsOpen(false);};
+  window.addEventListener('keydown',closeOnEscape);
+  return()=>window.removeEventListener('keydown',closeOnEscape);
+ },[searchPanelsOpen]);
+ useEffect(()=>setSearchPanelsOpen(false),[mode,subview]);
  const {data:games=[],isLoading,error,refetch}=useQuery({queryKey:['store-catalog'],queryFn:async()=>{
   const all=[],seen=new Set();let offset=0;
   while(true){
@@ -44,8 +53,9 @@ export default function Store(){
  else if(error)content=<div role="alert" className="grid h-full place-content-center gap-4 bg-[#0b101a] text-center text-white/70"><p>The catalog couldn't load.</p><button onClick={()=>refetch()} className="text-cyan-200">Try again</button></div>;
  else content=<StorefrontLayout games={games} searchTerm={search} onClearSearch={()=>setSearch('')} onNavigateToGame={openGame}/>;
  return <PageErrorBoundary pageName="Store"><WishlistProvider><GlassPageFrame
-  topContent={<StorefrontTopBar user={user} games={games} cartCount={getCartCount?.()||0} searchTerm={search} onSearchChange={setSearch} onSelectGame={openGame}/>}
+  topContent={<StorefrontTopBar user={user} games={games} cartCount={getCartCount?.()||0} searchTerm={search} onSearchChange={setSearch} onSelectGame={openGame} onSearchOpen={()=>setSearchPanelsOpen(true)}/>}
   bottomContent={<StoreBottomNav activeTab={mode} onTabChange={changeTab}/>}>
+  {searchPanelsOpen&&<LunaBottomNav hideNav forceLibraryOpen libraryLabel="Store Library" games={games} searchTerm={search} onLibraryClose={()=>setSearchPanelsOpen(false)}/>}
   <div className="h-screen w-full overflow-hidden pt-16 pb-[53px]">{content}</div>
  </GlassPageFrame></WishlistProvider></PageErrorBoundary>;
 }
