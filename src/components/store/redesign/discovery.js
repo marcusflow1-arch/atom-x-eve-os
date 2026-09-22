@@ -90,27 +90,30 @@ export function uniqueCatalog(games, ownedIds = []) {
  return [...groups.values()];
 }
 
-export function buildStoreShelves(games, { day, offset = 0, sales = {} } = {}) {
- const available = games.filter(game => !comingSoon(game));
- const rotation = rotateGames(discoveryOrder(available, day || 'store'), offset);
- const used = new Set();
- const take = (pool, count) => {
-  const result = pool.filter(game => !used.has(game.id)).slice(0, count);
-  result.forEach(game => used.add(game.id));
-  return result;
+export function buildStoreShelves(games,{day,offset=0,sales={}}={}){
+ const available=games.filter(game=>!comingSoon(game));
+ const rotation=rotateGames(discoveryOrder(available,day||'store'),offset);
+ // Prefer different titles across shelves; small catalogs may repeat in relevant categories.
+ const used=new Set();
+ const take=(pool,count,fill=true)=>{
+  const fresh=pool.filter(game=>!used.has(game.id));
+  const result=(fill?[...fresh,...pool.filter(game=>used.has(game.id))]:fresh).slice(0,count);
+  result.forEach(game=>used.add(game.id));return result;
  };
- const featured = take(rotation, 5);
- const saleGames = rotation.filter(isOnSale).sort((a, b) => discountPercent(b) - discountPercent(a));
- const lowPriceGames = rotation.filter(game => priceOf(game) !== null && priceOf(game) <= 25);
- // Offer shelves retain current catalog prices; regular budget games have no discount badge.
- const offers = take([...saleGames, ...lowPriceGames.filter(game => !isOnSale(game))], 4);
- const dated = available.filter(game => releaseTime(game) > 0).sort((a, b) => releaseTime(b) - releaseTime(a));
- const arrivals = available.filter(game => Number.isFinite(Date.parse(game.created_date))).sort((a, b) => Date.parse(b.created_date) - Date.parse(a.created_date));
- const newest = take(dated.length ? dated : arrivals, 6);
- const purchases = game => (game.catalog_ids || [game.id]).reduce((total, id) => total + (Number(sales[id]) || 0), 0);
- const sellers = available.filter(game => purchases(game) > 0).sort((a, b) => purchases(b) - purchases(a));
- const surprises = take(rotation, 6);
- const free = take(rotation.filter(game => priceOf(game) === 0), 4);
- const upcoming = take(games.filter(game => comingSoon(game)).sort((a, b) => (releaseTime(a) || Infinity) - (releaseTime(b) || Infinity)), 4);
- return { featured, offers, newest, newestType: dated.length ? 'releases' : 'arrivals', sellers, surprises, free, upcoming };
+ const featured=take(rotation,Math.min(4,Math.max(1,Math.floor(rotation.length/3))));
+ const picks=take(rotation,3);
+ const dated=available.filter(game=>releaseTime(game)>0).sort((a,b)=>releaseTime(b)-releaseTime(a));
+ const arrivals=available.filter(game=>Number.isFinite(Date.parse(game.created_date))).sort((a,b)=>Date.parse(b.created_date)-Date.parse(a.created_date));
+ // Dates determine this shelf even if a title is also featured.
+ const newest=(dated.length?dated:arrivals).slice(0,4);newest.forEach(game=>used.add(game.id));
+ const saleGames=rotation.filter(isOnSale).sort((a,b)=>discountPercent(b)-discountPercent(a));
+ const offers=[...saleGames.slice(0,4)];
+ offers.push(...rotation.filter(game=>!offers.some(item=>item.id===game.id)&&priceOf(game)!==null&&priceOf(game)<=25).slice(0,4-offers.length));
+ offers.forEach(game=>used.add(game.id));
+ const purchases=game=>(game.catalog_ids||[game.id]).reduce((total,id)=>total+(Number(sales[id])||0),0);
+ const sellers=available.filter(game=>purchases(game)>0).sort((a,b)=>purchases(b)-purchases(a));
+ const surprises=take(rotation,4);
+ const free=take(rotation.filter(game=>priceOf(game)===0),4);
+ const upcoming=take(games.filter(game=>comingSoon(game)).sort((a,b)=>(releaseTime(a)||Infinity)-(releaseTime(b)||Infinity)),4);
+ return {featured,picks,offers,newest,newestType:dated.length?'releases':'arrivals',sellers,surprises,free,upcoming};
 }
