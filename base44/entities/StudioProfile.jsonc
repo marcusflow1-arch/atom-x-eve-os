@@ -59,6 +59,25 @@
         }
       },
       "default": []
+    },
+    "upcoming_projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Published current and upcoming studio projects."
     }
   },
   "required": [

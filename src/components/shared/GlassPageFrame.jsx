@@ -105,11 +105,14 @@ function StudioPillar({ side }) {
   );
 }
 
-export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible: _sidebarVisible, onSidebarToggle: _onSidebarToggle, chromeHidden = false }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData, sidebarVisible: _sidebarVisible, onSidebarToggle: _onSidebarToggle, chromeHidden = false, activeGameView = 'overview', onGameViewChange }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
 
+  const gamesActive=onGameViewChange?activeGameView==='games':gamesOpen;
+  const overlayActive=onGameViewChange?activeGameView:overlay;
   const closeAll = () => {
+    onGameViewChange?.('overview');
     setOverlay(null);
     setGamesOpen(false);
   };
@@ -123,11 +126,13 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
   }, []);
 
   const toggleOverlay = (name) => {
+    if(onGameViewChange){onGameViewChange(activeGameView===name?'overview':name);return;}
     setGamesOpen(false);
     setOverlay(prev => prev === name ? null : name);
   };
 
   const toggleGames = () => {
+    if(onGameViewChange){onGameViewChange(activeGameView==='games'?'overview':'games');return;}
     setOverlay(null);
     setGamesOpen(prev => !prev);
   };
@@ -155,7 +160,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
       </div>
 
       {/* Games Top Panel */}
-      {showTriggerTab && <DevGamesPanel open={gamesOpen} game={gameData} />}
+      {showTriggerTab && !onGameViewChange && <DevGamesPanel open={gamesOpen} game={gameData} />}
 
       {/* Page Content */}
       <div className="relative z-[1]">
@@ -164,7 +169,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
 
       {/* Studio / Stream Overlay - between top and bottom bars */}
       <AnimatePresence>
-        {overlay && (
+        {!onGameViewChange && overlay && (
           <motion.div
             key={overlay}
             initial={{ opacity: 0, y: 10 }}
@@ -235,7 +240,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
                 top: '-48px',
               }}
             >
-              <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Dev Info</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Explore this game</span>
             </div>
             <div
               className="absolute left-1/2 -translate-x-1/2 flex overflow-hidden pointer-events-auto"
@@ -253,28 +258,28 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               }}
             >
               {/* Games */}
-              <div
+              <button type="button" aria-label="Games" aria-pressed={gamesActive}
                 onClick={toggleGames}
-                className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${gamesOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${gamesActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
               >
-                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${gamesOpen ? 'text-white/90' : 'text-white/50'}`}>Games</span>
-              </div>
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${gamesActive ? 'text-white/90' : 'text-white/50'}`}>Games</span>
+              </button>
 
               {/* Studio */}
-              <div
+              <button type="button" aria-label="Studio" aria-pressed={overlayActive==='studio'}
                 onClick={() => toggleOverlay('studio')}
-                className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${overlay === 'studio' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${overlayActive === 'studio' ? 'bg-white/10' : 'hover:bg-white/5'}`}
               >
-                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'studio' ? 'text-white/90' : 'text-white/50'}`}>Studio</span>
-              </div>
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlayActive === 'studio' ? 'text-white/90' : 'text-white/50'}`}>Studio</span>
+              </button>
 
               {/* Stream */}
-              <div
+              <button type="button" aria-label="Stream" aria-pressed={overlayActive==='stream'}
                 onClick={() => toggleOverlay('stream')}
-                className={`flex-1 flex items-center justify-center cursor-pointer transition-colors ${overlay === 'stream' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                className={`flex-1 flex items-center justify-center cursor-pointer transition-colors ${overlayActive === 'stream' ? 'bg-white/10' : 'hover:bg-white/5'}`}
               >
-                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'stream' ? 'text-white/90' : 'text-white/50'}`}>Stream</span>
-              </div>
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlayActive === 'stream' ? 'text-white/90' : 'text-white/50'}`}>Stream</span>
+              </button>
             </div>
           </>
         )}

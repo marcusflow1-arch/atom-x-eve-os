@@ -5,7 +5,7 @@ import GameDetailPanel from './GameDetailPanel';
 import { AtomEvents, trackAtomEvent } from '@/lib/atomTelemetry';
 
 /** One catalog request owns the landing page and the shared studio controls. */
-export default function GameHubTabs({ gameId, game: providedGame, onClose, onGameLoaded, returnLabel = 'Store' }) {
+export default function GameHubTabs({ gameId, game: providedGame, onClose, onGameLoaded, returnLabel = 'Store', view, onViewChange }) {
   const [state, setState] = useState({ game: null, error: false, loading: true });
   const [retry, setRetry] = useState(0);
   const id = gameId || providedGame?.id;
@@ -36,5 +36,5 @@ export default function GameHubTabs({ gameId, game: providedGame, onClose, onGam
     <button onClick={() => setRetry(value => value + 1)}>Try again</button>
     {onClose && <button onClick={onClose}>Back to {returnLabel}</button>}
   </div>;
-  return <WishlistProvider><GameDetailPanel key={state.game.id} game={state.game} onClose={onClose} returnLabel={returnLabel} /></WishlistProvider>;
+  return <WishlistProvider><GameDetailPanel key={state.game.id} game={state.game} onClose={onClose} returnLabel={returnLabel} view={view} onViewChange={onViewChange} /></WishlistProvider>;
 }

@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import {useNavigate} from 'react-router-dom';
+import GameRewards from './detail/GameRewards';
+import {StudioGameViews,GameStreams} from './detail/GameCommunityViews';
 import { ArrowLeft, ArrowRight, Check, ChevronRight, Cpu, Sparkles } from 'lucide-react';
 import GameGallery from './detail/GameGallery';
 import GamePurchasePanel from './detail/GamePurchasePanel';
@@ -16,12 +19,17 @@ const sections = [
   { id: 'extras', label: 'Luna extras' },
 ];
 
-export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }) {
+export default function GameDetailPanel({ game, onClose, returnLabel = 'Store', view: controlledView, onViewChange }) {
+  const navigate=useNavigate();
+  const [localView,setLocalView]=useState('overview');
+  const view=controlledView||localView;
+  const setView=onViewChange||setLocalView;
   const [section, setSection] = useState('overview');
   const content = useRef(null);
   const tabRefs = useRef([]);
   useEffect(() => {
     const showExtras = () => {
+      setView('overview');
       setSection('extras');
       content.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
     };
@@ -34,6 +42,7 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
   return <main className="gd-page" aria-label={game.title + ' game page'}>
     <div className="gd-backdrop" aria-hidden="true"><GameImage src={gameArtwork(game)} fallback={game.cover_image} alt="" /><div /></div>
     <div className="gd-shell">
+      <nav className="gd-store-links" aria-label="Store discovery"><button onClick={()=>navigate('/Store')}>Discover</button><button onClick={()=>navigate('/Store?section=all')}>Browse games</button><button onClick={()=>navigate('/Store?section=you')}>Recommended for you</button><button onClick={()=>navigate('/Store?section=new')}>New releases</button></nav>
       <nav className="gd-breadcrumb" aria-label="Breadcrumb">
         <button onClick={onClose}><ArrowLeft size={16} />{returnLabel}</button>
         <ChevronRight size={12} /><span>{label(game.genre) || 'Game'}</span>
@@ -42,10 +51,13 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
         <div className="gd-title-meta"><span className="gd-eyebrow">Game overview</span><span className="gd-availability">{comingSoon(game) ? 'Coming soon' : <><Check size={12} />Available now</>}</span></div>
         <h1>{game.title}</h1>
       </header>
+      <nav className="gd-game-nav" aria-label="Game subpages">{[['overview','Overview'],['games','Games'],['studio','Studio'],['stream','Stream']].map(([id,title])=><button key={id} aria-current={view===id?'page':undefined} onClick={()=>setView(id)}>{title}</button>)}</nav>
+      {view==='overview'?<>
       <div className="gd-hero-grid">
         <GameGallery game={game} />
         <GamePurchasePanel game={game} />
       </div>
+      <GameRewards game={game}/>
       <div className="gd-details" ref={content}>
         <div className="gd-tablist" role="tablist" aria-label="Game details">
           {sections.map((tab, index) => <button key={tab.id} id={'gd-tab-' + tab.id} ref={node => { tabRefs.current[index] = node; }}
@@ -76,6 +88,7 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
           </div> : tab.id === 'reviews' ? <GameReviews game={game} /> : <GameExtras game={game} />)}
         </section>)}
       </div>
+      </>:view==='stream'?<GameStreams game={game}/>:<StudioGameViews game={game} view={view}/>}
     </div>
   </main>;
 }
