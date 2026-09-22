@@ -198,6 +198,7 @@ export default function LunaTemplate() {
   const [openedGame, setOpenedGame] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
   const [selectedFocusGame, setSelectedFocusGame] = useState(null);
+  const [optionsGame, setOptionsGame] = useState(null);
   const [longPressGame, setLongPressGame] = useState(null);
   const [showLibraryLanding, setShowLibraryLanding] = useState(false);
   const [librarySelection, setLibrarySelection] = useState(null);
@@ -738,8 +739,9 @@ export default function LunaTemplate() {
                   selectedGame={selectedFocusGame}
                   fullView={showLibraryLanding}
                   onToggleFullView={() => { setLibrarySelection(null); setShowLibraryLanding(v => !v); }}
-                  onSelectGame={(game) => { setLongPressGame(null); setSelectedFocusGame(game); if (showLibraryLanding) setLibrarySelection(game); }}
-                  onLongPressGame={(game) => { setLongPressGame(game); setShowLibraryLanding(false); }}
+                  onSelectGame={(game) => { setOptionsGame(null); setLongPressGame(null); setSelectedFocusGame(game); if (showLibraryLanding) setLibrarySelection(game); }}
+                  onOptionsGame={(game) => { setSelectedFocusGame(null); setLongPressGame(null); setOptionsGame(game); setShowLibraryLanding(false); }}
+                  onLongPressGame={(game) => { setOptionsGame(null); setLongPressGame(game); setShowLibraryLanding(false); }}
                 />
               </div>
             </>
@@ -857,6 +859,8 @@ export default function LunaTemplate() {
                       onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
                       selectedFocusGame={selectedFocusGame}
                       onSelectFocusGame={setSelectedFocusGame}
+                      optionsGame={optionsGame}
+                      onCloseOptionsGame={() => setOptionsGame(null)}
                       longPressGame={longPressGame}
                       onCloseLongPress={() => setLongPressGame(null)} />
             </div>
