@@ -14,6 +14,9 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, lo
   const [page, setPage] = useState(1);
   const searchRef = useRef(null);
   const returnFocus = useRef(null);
+  const wasOpen = useRef(false);
+  if (open && !wasOpen.current) returnFocus.current = typeof document !== 'undefined' ? document.activeElement : null;
+  wasOpen.current = open;
   const genres = useMemo(() => {
     const counts = new Map();
     games.forEach((game) => genresFor(game).forEach((name) => counts.set(name, (counts.get(name) || 0) + 1)));
@@ -32,7 +35,7 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, lo
   return <Dialog.Root open={open} onOpenChange={(value) => { if (!value) onClose?.(); }}>
     <Dialog.Portal>
       <Dialog.Overlay className="forum-directory-scrim" />
-      <Dialog.Content className="forum-directory-v2" onOpenAutoFocus={(event) => { event.preventDefault(); returnFocus.current = document.activeElement; searchRef.current?.focus(); }} onCloseAutoFocus={(event) => { event.preventDefault(); if (returnFocus.current?.isConnected) returnFocus.current.focus(); }}>
+      <Dialog.Content className="forum-directory-v2" onOpenAutoFocus={(event) => { event.preventDefault(); searchRef.current?.focus(); }} onCloseAutoFocus={(event) => { event.preventDefault(); if (returnFocus.current?.isConnected) returnFocus.current.focus(); }}>
         <header className="forum-directory-heading">
           <div><span className="forum-eyebrow">EXPLORE THE COMMUNITY</span><Dialog.Title>Find your game. Find your people.</Dialog.Title><Dialog.Description>Choose a forum to read discussions, discover player guides, or start your own conversation.</Dialog.Description></div>
           <Dialog.Close className="forum-directory-close" aria-label="Close forum browser"><X size={20} /></Dialog.Close>
