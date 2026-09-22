@@ -62,8 +62,16 @@ export default function ChannelProfilePage({ streamerId, streamId, source }) {
     for (const name of ['Stream', 'AuraStream']) {
       try { cleanups.push(base44.entities[name].subscribe((event) => { if (event.type === 'delete' || [streamerId, query.data?.stream?.profileId].includes(event.data?.streamer_id)) client.invalidateQueries({ queryKey: ['channel-watch', streamerId] }); })); } catch { /* Timed refresh covers unavailable realtime. */ }
     }
+    try {
+      cleanups.push(base44.entities.StreamerProfile.subscribe((event) => {
+        const row = event.data || {};
+        if (event.type === 'delete' || [streamerId, query.data?.profile?.id, query.data?.profile?.user_id].includes(row.id) || [streamerId, query.data?.profile?.user_id].includes(row.user_id)) {
+          client.invalidateQueries({ queryKey: ['channel-watch', streamerId] });
+        }
+      }));
+    } catch { /* 30s refresh remains available. */ }
     return () => cleanups.forEach((unsubscribe) => unsubscribe?.());
-  }, [client, streamerId, query.data?.stream?.profileId]);
+  }, [client, streamerId, query.data?.stream?.profileId, query.data?.profile?.id, query.data?.profile?.user_id]);
   const stream = query.data?.stream;
   const profile = query.data?.profile;
   const owner = profile?.user_id || stream?.streamerId || streamerId;
