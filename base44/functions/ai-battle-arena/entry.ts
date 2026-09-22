@@ -214,6 +214,55 @@ async function roomFor(svc: any, id: string, user: Row) {
   if(!room||!accessible(room,user.id))fail('Encounter not found.',404);
   return room;
 }
+async function applyClaimReward(svc: any, user: Row, room: Row, state: Row, requestId: string) {
+  const route = routeFor(room.route_id);
+  if (!route) return null;
+  const existing = await svc.AIBattleRewardClaim.filter({encounter_id:room.id,user_id:user.id},'-created_date',10);
+  let claim = existing.find((row: Row)=>row.status==='applied') || existing[0] || null;
+  const avatarXp = Math.max(1,num(route.xp));
+  const cardXp = Math.max(10,Math.round(avatarXp*.28));
+  const agp = Math.max(10,Math.round(avatarXp*.5));
+  if (claim?.status === 'applied') return claim;
+  if (!claim) {
+    claim = await svc.AIBattleRewardClaim.create({
+      encounter_id:room.id,user_id:user.id,request_id:requestId,route_id:room.route_id,
+      avatar_xp:avatarXp,card_xp_each:cardXp,agp,status:'applying'
+    });
+  }
+
+  const player = state.players.find((p: Row)=>p.id===user.id);
+  if (!player) return claim;
+
+  const avatarRows = await svc.AvatarProgression.filter({user_id:user.id},'-updated_date',1);
+  const avatar = avatarRows[0];
+  if (avatar) {
+    const nextXp = num(avatar.global_xp) + avatarXp;
+    const nextLevel = Math.max(num(avatar.global_level,1),1+Math.floor(nextXp/1000));
+    await svc.AvatarProgression.update(avatar.id,{global_xp:nextXp,global_level:nextLevel});
+  } else {
+    await svc.AvatarProgression.create({user_id:user.id,global_xp:avatarXp,global_level:1+Math.floor(avatarXp/1000)});
+  }
+
+  for (const card of player.cards || []) {
+    const rows = await svc.CardProgression.filter({user_card_id:card.id},'-updated_date',1);
+    let progress = rows[0];
+    if (!progress) {
+      progress = await svc.CardProgression.create({
+        user_id:user.id,user_card_id:card.id,card_name:card.name||'Card',game_id:card.game_id||'',game_name:card.game_name||'',
+        level:num(card.level,1),xp:0,xp_to_next:120,max_level:10,skill_points:1,power_score:num(card.value,15),
+        last_action:'ai_battle_initialized',last_action_at:new Date().toISOString(),revision:1
+      });
+    }
+    let xp=num(progress.xp)+cardXp,level=num(progress.level,1),xpToNext=Math.max(1,num(progress.xp_to_next,120)),skillPoints=num(progress.skill_points);
+    while(xp>=xpToNext&&level<num(progress.max_level,10)){xp-=xpToNext;level++;skillPoints++;xpToNext=Math.max(120,Math.round(xpToNext*1.22));}
+    await svc.CardProgression.update(progress.id,{xp,level,xp_to_next:xpToNext,skill_points:skillPoints,last_action:'ai_battle_reward',last_action_at:new Date().toISOString(),revision:num(progress.revision)+1});
+  }
+
+  await svc.User.update(user.id,{avatar_gamer_points:num(user.avatar_gamer_points)+agp});
+  claim = await svc.AIBattleRewardClaim.update(claim.id,{status:'applied',applied_at:new Date().toISOString(),avatar_xp:avatarXp,card_xp_each:cardXp,agp});
+  return claim;
+}
+
 async function requireDashboard(svc: any, hostId: string, ids: string[]) {
   const players=await svc.PlayerState.filter({channel_id:'dashboard_'+hostId});
   if(ids.some(id=>!players.some((p: Row)=>p.player_id===id&&live(p))))fail('Everyone must join the host’s Luna dashboard before battle begins.');
@@ -258,7 +307,11 @@ Deno.serve(async req=>{
     if(action!=='command')fail('Unknown battle action.',400);
     const requestId=String(data.request_id||'').slice(0,100);
     if(!requestId)fail('A request identifier is required.',400);
-    if(applied.has(user.id+':'+requestId))return Response.json({encounter:publicRoom(room,state),server_time:Date.now()});
+    if(applied.has(user.id+':'+requestId)){
+      const prior=events.find((e: Row)=>e.actor_id===user.id&&e.request_id===requestId);
+      if(prior?.command==='claim'&&state.claimed.includes(user.id))await applyClaimReward(svc,user,room,state,requestId);
+      return Response.json({encounter:publicRoom(room,state),server_time:Date.now()});
+    }
     if(events.length>=900)fail('This encounter reached its action limit.');
     if(num(data.expected_revision,-1)!==state.revision)return Response.json({error:'The battle moved forward. Your view has refreshed; choose again.',encounter:publicRoom(room,state),server_time:Date.now()},{status:409});
     const command=String(data.command||'');
@@ -273,6 +326,10 @@ Deno.serve(async req=>{
     reduce(room,state,event); // validate before persisting; HP/amounts never come from request
     await svc.AIBattleTurn.create(event);
     const next=await replay(svc,room);
-    return Response.json({encounter:publicRoom(room,next.state),server_time:Date.now()});
+    let reward=null;
+    if(command==='claim'&&next.applied.has(user.id+':'+requestId)&&next.state.claimed.includes(user.id)){
+      reward=await applyClaimReward(svc,user,room,next.state,requestId);
+    }
+    return Response.json({encounter:publicRoom(room,next.state),reward,server_time:Date.now()});
   }catch(error){return Response.json({error:error instanceof Error?error.message:'Battle request failed.'},{status:num(error.status,500)});}
 });
