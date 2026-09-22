@@ -40,22 +40,38 @@
       "default": {},
       "description": "Persistent four-slot Luna Skill Book mapping. Keys 0-3 map to owned UserCard IDs."
     },
+    "skill_set_id": {
+      "type": "string",
+      "description": "Stable identifier for one of the three Luna dashboard skill/genre rows."
+    },
+    "skill_set_name": {
+      "type": "string",
+      "description": "Player-facing name for the Luna dashboard skill row."
+    },
+    "skill_set_genre": {
+      "type": "string",
+      "description": "Optional game genre assigned to this skill row."
+    },
+    "skill_set_order": {
+      "type": "number",
+      "description": "Display order for the three stacked Luna skill rows."
+    },
     "jawan_id": {
       "type": "string",
-      "description": "Stable AI Battle Jawan profile identifier for skill loadouts."
+      "description": "Legacy AI Battle Jawan profile identifier retained for compatibility."
     },
     "jawan_name": {
       "type": "string",
-      "description": "Player-facing Jawan profile name shown above the Luna skill slots."
+      "description": "Legacy AI Battle Jawan profile name retained for compatibility."
     },
     "jawan_role": {
       "type": "string",
-      "description": "Combat role label for the Jawan profile, such as Balanced, Assault, Guard, or Support."
+      "description": "Legacy AI Battle combat role retained for compatibility."
     },
     "is_active": {
       "type": "boolean",
       "default": false,
-      "description": "Whether this loadout is currently equipped"
+      "description": "Whether this skill loadout row is currently visible/equipped"
     },
     "tags": {
       "type": "array",
