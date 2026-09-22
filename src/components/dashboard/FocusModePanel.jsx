@@ -45,7 +45,6 @@ import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
 import GamePageView from '@/components/dashboard/gamehub/GamePageView';
-import GlobalOverlayLayer from '@/components/luna/GlobalOverlayLayer';
 import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
@@ -2079,39 +2078,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 )}
               </AnimatePresence>
 
-              {/* Selected Library games are promoted to Luna's root overlay so they cover
-                  the complete dashboard: Pocket Boss/date-time, quick boxes, Environment,
-                  the left rail, and every other dashboard layer. */}
-              <GlobalOverlayLayer
-                open={!!selectedFocusGame && !longPressGame}
-                onEscape={() => onSelectFocusGame?.(null)}
-              >
-                <AnimatePresence mode="wait">
-                  {selectedFocusGame && !longPressGame && (
-                    <motion.div
-                      key={selectedFocusGame.id}
-                      initial={{ opacity: 0, scale: 0.995 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.995 }}
-                      transition={{ duration: 0.24, ease: 'easeOut' }}
-                      className="pointer-events-auto h-full w-full overflow-hidden"
-                      style={{
-                        background: 'rgba(8,12,18,0.96)',
-                        backdropFilter: 'blur(30px)',
-                        WebkitBackdropFilter: 'blur(30px)'
-                      }}
-                    >
-                      <GamePageView
-                        game={selectedFocusGame}
-                        friendData={null}
-                        onOpenFriend={() => {}}
-                        onBackToSelf={() => onSelectFocusGame?.(null)}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </GlobalOverlayLayer>
-
               {/* Empty by default — content fades in only when a game is selected or Full Library is opened */}
 
             </div>
@@ -2122,6 +2088,37 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
 
+
+
+      {/* Selected Library game workspace — bounded by LunaTemplate's content region.
+          This intentionally starts to the RIGHT of the Library rail and remains
+          BELOW the top header / ABOVE the bottom header because FocusModePanel
+          itself is mounted at left:330px, top:64px, bottom:32px. */}
+      <AnimatePresence mode="wait">
+        {selectedFocusGame && !longPressGame && (
+          <motion.div
+            key={selectedFocusGame.id}
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 28 }}
+            transition={{ duration: 0.26, ease: 'easeOut' }}
+            className="absolute inset-0 z-[90] pointer-events-auto overflow-hidden"
+            style={{
+              background: 'rgba(8,12,18,0.96)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+              boxShadow: '-18px 0 45px rgba(0,0,0,0.28)'
+            }}
+          >
+            <GamePageView
+              game={selectedFocusGame}
+              friendData={null}
+              onOpenFriend={() => {}}
+              onBackToSelf={() => onSelectFocusGame?.(null)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       {/* System Updates Drawer */}
