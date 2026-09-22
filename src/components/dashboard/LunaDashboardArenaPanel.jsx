@@ -200,6 +200,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
   const [invites, setInvites] = useState([]);
   const [creating, setCreating] = useState(false);
   const [preparedField, setPreparedField] = useState(null);
+  const openedMatchRef = useRef('');
 
   const hub = arena.hub;
   const routes = useMemo(() => {
@@ -245,12 +246,54 @@ export default function LunaDashboardArenaPanel({ mode }) {
   const world = hub?.worlds?.find((item) => item.id === worldId) || hub?.worlds?.[0];
   const contacts = hub?.contacts || [];
   const pending = (hub?.encounters || []).filter((encounter) => ['lobby', 'active'].includes(encounter.status) && !encounter.declined?.includes(arena.user?.id));
+  const queue = hub?.queue || null;
+  const queueWaiting = mode === 'pvp' && queue?.status === 'waiting';
+
+  useEffect(() => {
+    const matchedId = queue?.status === 'matched' ? String(queue.matched_encounter_id || '') : '';
+    if (!matchedId || openedMatchRef.current === matchedId) return;
+    openedMatchRef.current = matchedId;
+    arenaPresentation.setEncounter(matchedId);
+    showSuccess('PvP match found. Jawan loadouts locked.');
+  }, [queue?.status, queue?.matched_encounter_id]);
 
   const toggleInvite = (id) => {
     const max = Math.max(0, Number(route?.max || 1) - 1);
     setInvites((current) => current.includes(id)
       ? current.filter((value) => value !== id)
       : current.length < max ? [...current, id] : current);
+  };
+
+  const queuePvp = async () => {
+    if (!world || creating) return;
+    setCreating(true);
+    try {
+      const response = await arena.queue({ world_id: world.id });
+      if (response?.encounter?.id) {
+        openedMatchRef.current = String(response.encounter.id);
+        arenaPresentation.setEncounter(response.encounter.id);
+        showSuccess('PvP match found. Jawan loadouts locked.');
+      } else {
+        showSuccess(`Queued with ${hub?.player?.jawan?.name || 'active Jawan'}. Searching for an opponent…`);
+      }
+    } catch (error) {
+      showError(error, 'PvP Matchmaking');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const cancelPvpQueue = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      await arena.cancelQueue();
+      showSuccess('PvP queue cancelled.');
+    } catch (error) {
+      showError(error, 'PvP Matchmaking');
+    } finally {
+      setCreating(false);
+    }
   };
 
   const create = async () => {
@@ -322,7 +365,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
         </div>
 
         <div>
-          <div className="flex items-center justify-between"><p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">Party / Opponent</p><span className="text-[5.5px] text-white/22">{invites.length + 1}/{route?.max || 1}</span></div>
+          <div className="flex items-center justify-between"><p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[5.5px] text-white/22">{hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`}</span></div>
           <div className="mt-2 flex max-h-[46px] gap-1.5 overflow-x-auto">
             {contacts.length ? contacts.map((contact) => {
               const chosen = invites.includes(contact.id);
@@ -333,12 +376,12 @@ export default function LunaDashboardArenaPanel({ mode }) {
 
         <button
           type="button"
-          onClick={create}
-          disabled={creating || !hub?.player?.cards?.length || !route || !world || invites.length + 1 < Number(route?.min || 1)}
-          className="mt-[18px] flex h-[46px] min-w-[130px] items-center justify-center gap-2 border border-cyan-100/16 bg-cyan-100/[0.065] px-4 text-[7px] font-black uppercase tracking-[0.1em] text-cyan-50/68 disabled:opacity-30"
+          onClick={mode === 'pvp' && invites.length === 0 ? (queueWaiting ? cancelPvpQueue : queuePvp) : create}
+          disabled={creating || !hub?.player?.cards?.length || !route || !world || (mode !== 'pvp' && invites.length + 1 < Number(route?.min || 1))}
+          className={`mt-[18px] flex h-[46px] min-w-[130px] items-center justify-center gap-2 border px-4 text-[7px] font-black uppercase tracking-[0.1em] disabled:opacity-30 ${queueWaiting ? 'border-amber-100/16 bg-amber-100/[0.05] text-amber-50/65' : 'border-cyan-100/16 bg-cyan-100/[0.065] text-cyan-50/68'}`}
         >
-          {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Swords className="h-3.5 w-3.5" />}
-          Deploy
+          {creating || queueWaiting ? <Loader2 className={`h-3.5 w-3.5 ${creating || queueWaiting ? 'animate-spin' : ''}`} /> : <Swords className="h-3.5 w-3.5" />}
+          {mode === 'pvp' && invites.length === 0 ? (queueWaiting ? 'Cancel Queue' : 'Queue PvP') : mode === 'pvp' ? 'Challenge' : 'Deploy'}
         </button>
       </div>
     </section>
