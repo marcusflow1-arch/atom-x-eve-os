@@ -8,6 +8,7 @@ import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityC
 import { useQuery } from '@tanstack/react-query';
 import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
+import LunaCardsPanel from './LunaCardsPanel';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
 import { inventoryData } from '../profile/mockData';
 import { useEquipment } from '../luna/hooks/useEquipment';
@@ -82,6 +83,7 @@ export default function DashboardAvatarOverview() {
   const [progression, setProgression] = useState(null);
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
+  const [cardsMode, setCardsMode] = useState(false);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
@@ -109,6 +111,7 @@ export default function DashboardAvatarOverview() {
       setActiveQuickPanel(null);
       setInventoryMode(false);
       setInventorySlot(null);
+      setCardsMode(false);
     }
   }, [surface]);
 
@@ -120,7 +123,8 @@ export default function DashboardAvatarOverview() {
         setActiveQuickPanel(null);
         setInventoryMode(false);
         setInventorySlot(null);
-          setAttributeMenuOpen(false);
+        setCardsMode(false);
+        setAttributeMenuOpen(false);
         setInteractionDimmed(false);
       }
     };
@@ -136,7 +140,7 @@ export default function DashboardAvatarOverview() {
     const handlePointerDown = event => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-dashboard-inventory-workspace]') || target.closest('[data-player-animation-controls]') || target.closest('[data-social-controls]')) return;
+      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-dashboard-utility-workspace]') || target.closest('[data-player-animation-controls]') || target.closest('[data-social-controls]')) return;
 
       const interactive = target.closest('button, a, [role="button"], input, select, textarea');
       if (!interactive) return;
@@ -161,6 +165,7 @@ export default function DashboardAvatarOverview() {
           setInventoryMode(false);
           setInventorySlot(null);
         }
+        if (cardsMode) setCardsMode(false);
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -173,13 +178,14 @@ export default function DashboardAvatarOverview() {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [inventoryMode, inventorySlot]);
+  }, [inventoryMode, inventorySlot, cardsMode]);
 
   useEffect(() => {
     const toggleInventory = () => {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
       setInventorySlot(null);
+      setCardsMode(false);
       setInventoryMode((current) => !current);
     };
 
@@ -282,13 +288,25 @@ export default function DashboardAvatarOverview() {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
       setInventorySlot(null);
+      setCardsMode(false);
       setInventoryMode((current) => !current);
+      return;
+    }
+    if (item.id === 'cards') {
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setCardsMode((current) => !current);
       return;
     }
     setInventoryMode(false);
     setInventorySlot(null);
+    setCardsMode(false);
     setActiveQuickPanel(current => current === item.id ? null : item.id);
   };
+
+  const embeddedUtilityMode = inventoryMode || cardsMode;
 
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
@@ -302,9 +320,9 @@ export default function DashboardAvatarOverview() {
     <div
       data-dashboard-avatar-overview
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
-      style={{ left: inventoryMode ? '330px' : '390px' }}
+      style={{ left: embeddedUtilityMode ? '330px' : '390px' }}
     >
-      {!avatarFocusMode && surface === 'dashboard' && !inventoryMode && activeQuickPanel && (
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
@@ -324,7 +342,7 @@ export default function DashboardAvatarOverview() {
 
       <div
         className={`absolute top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
-        style={inventoryMode
+        style={embeddedUtilityMode
           ? {
               left: 'auto',
               right: 'calc(338px + min(560px, calc(100% - 638px)))',
@@ -335,9 +353,9 @@ export default function DashboardAvatarOverview() {
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
-      {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
+      {!avatarFocusMode && surface === 'dashboard' && embeddedUtilityMode && (
         <div
-          data-dashboard-inventory-workspace
+          data-dashboard-utility-workspace
           className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
           style={{
             maxWidth: 'calc(100% - 638px)',
@@ -353,7 +371,9 @@ export default function DashboardAvatarOverview() {
                 background: 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
               }}
             >
-              {inventorySlot ? (
+              {cardsMode ? (
+                <LunaCardsPanel />
+              ) : inventorySlot ? (
                 <LunaSplitInventory
                   inventory={inventoryData}
                   selectedSlotId={inventorySlot}
@@ -374,7 +394,7 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
-      {!avatarFocusMode && surface === 'dashboard' && !inventoryMode && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && <PartyPortraitRail />}
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
@@ -445,7 +465,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'inventory' ? inventoryMode : activeQuickPanel === item.id}
+                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
