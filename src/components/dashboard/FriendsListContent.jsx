@@ -13,7 +13,7 @@ import FriendMessengerPanel from '@/components/friends/FriendMessengerPanel';
 
 const playerIdFor = (userObj) => String(userObj?.friend_id || userObj?.player_id || userObj?.id || '').trim();
 
-export default function FriendsListContent() {
+export default function FriendsListContent({ lunaOverlay = false }) {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [activeTab, setActiveTab] = useState('friends');
   const [invitingUserId, setInvitingUserId] = useState(null);
@@ -237,7 +237,14 @@ export default function FriendsListContent() {
     <>
       <div
         data-dashboard-quick-control="friends-workspace"
-        className="relative flex h-full w-full overflow-hidden bg-slate-900/50 rounded-xl border border-white/10"
+        className={`relative flex h-full w-full overflow-hidden ${lunaOverlay
+          ? 'bg-transparent'
+          : 'bg-slate-900/50 rounded-xl border border-white/10'}`}
+        style={lunaOverlay ? {
+          background: 'linear-gradient(135deg, rgba(20,31,47,.72), rgba(12,21,34,.62) 44%, rgba(8,15,25,.76))',
+          backdropFilter: 'blur(22px) saturate(130%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(130%)',
+        } : undefined}
       >
         {pendingInvite && (
           <div className="absolute left-1/3 right-0 top-0 z-30 flex min-h-14 items-center gap-3 border-b border-cyan-300/15 bg-[#07111d]/95 px-5 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.28)]">
@@ -250,7 +257,7 @@ export default function FriendsListContent() {
           </div>
         )}
 
-        <div className="w-1/3 border-r border-white/10 flex flex-col bg-black/20">
+        <div className={`${lunaOverlay ? 'w-[286px] shrink-0' : 'w-1/3'} border-r border-white/10 flex flex-col bg-black/20`}>
           <div className="p-4 border-b border-white/10">
             <div className="flex bg-white/5 rounded-lg p-1 mb-2">
               <button onClick={() => { setActiveTab('friends'); setSelectedFriend(null); }} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-colors ${activeTab === 'friends' ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/50 hover:text-white'}`}>Friends</button>
@@ -281,7 +288,7 @@ export default function FriendsListContent() {
           </div>
         </div>
 
-        <div className={`flex-1 bg-gradient-to-br from-slate-900/50 to-slate-800/50 relative overflow-hidden flex flex-col ${pendingInvite ? 'pt-14' : ''}`}>
+        <div className={`flex-1 relative overflow-hidden flex flex-col ${lunaOverlay ? 'bg-[radial-gradient(circle_at_34%_18%,rgba(56,84,116,.18),transparent_34%),linear-gradient(135deg,rgba(18,29,44,.42),rgba(10,17,28,.26))]' : 'bg-gradient-to-br from-slate-900/50 to-slate-800/50'} ${pendingInvite ? 'pt-14' : ''}`}>
           {selectedFriend ? (
             <motion.div key={`${activeTab}-${selectedId}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }} className="flex-1 flex flex-col h-full">
               <div className="h-32 bg-gradient-to-r from-blue-600/20 to-purple-600/20 relative"><div className="absolute inset-0 bg-black/20" /><div className="absolute bottom-4 right-4 flex gap-2"><Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full bg-black/40 hover:bg-black/60 text-white"><MoreHorizontal className="w-4 h-4" /></Button></div></div>
