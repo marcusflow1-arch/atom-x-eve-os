@@ -10,6 +10,8 @@ import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
+import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
+import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
 import { inventoryData } from '../profile/mockData';
 import { useEquipment } from '../luna/hooks/useEquipment';
@@ -86,6 +88,7 @@ export default function DashboardAvatarOverview() {
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
   const [leaderboardMode, setLeaderboardMode] = useState(false);
+  const [messagesMode, setMessagesMode] = useState(false);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
@@ -115,6 +118,7 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setCardsMode(false);
       setLeaderboardMode(false);
+      setMessagesMode(false);
     }
   }, [surface]);
 
@@ -128,6 +132,7 @@ export default function DashboardAvatarOverview() {
         setInventorySlot(null);
         setCardsMode(false);
         setLeaderboardMode(false);
+        setMessagesMode(false);
         setAttributeMenuOpen(false);
         setInteractionDimmed(false);
       }
@@ -171,6 +176,7 @@ export default function DashboardAvatarOverview() {
         }
         if (cardsMode) setCardsMode(false);
         if (leaderboardMode) setLeaderboardMode(false);
+        if (messagesMode) setMessagesMode(false);
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -183,7 +189,7 @@ export default function DashboardAvatarOverview() {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode]);
+  }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode, messagesMode]);
 
   useEffect(() => {
     const toggleInventory = () => {
@@ -192,6 +198,7 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setCardsMode(false);
       setLeaderboardMode(false);
+      setMessagesMode(false);
       setInventoryMode((current) => !current);
     };
 
@@ -249,9 +256,18 @@ export default function DashboardAvatarOverview() {
   });
 
   useEffect(() => {
-    const openMessages = () => {
-      setActiveQuickPanel('messages');
+    const openMessages = (event) => {
+      const target = event?.detail?.target || event?.detail;
+      if (target?.friend_id || target?.player_id || target?.id || target?.partner_id) {
+        window.__lunaPendingMessageTarget = target;
+      }
+      setActiveQuickPanel(null);
       setInteractionDimmed(false);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setCardsMode(false);
+      setLeaderboardMode(false);
+      setMessagesMode(true);
     };
     const clearForPresenceMenu = () => {
       setInteractionDimmed(false);
@@ -298,6 +314,7 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setCardsMode(false);
       setLeaderboardMode(false);
+      setMessagesMode(false);
       setInventoryMode((current) => !current);
       return;
     }
@@ -307,6 +324,7 @@ export default function DashboardAvatarOverview() {
       setInventoryMode(false);
       setInventorySlot(null);
       setLeaderboardMode(false);
+      setMessagesMode(false);
       setCardsMode((current) => !current);
       return;
     }
@@ -316,13 +334,25 @@ export default function DashboardAvatarOverview() {
       setInventoryMode(false);
       setInventorySlot(null);
       setCardsMode(false);
+      setMessagesMode(false);
       setLeaderboardMode((current) => !current);
+      return;
+    }
+    if (item.id === 'messages') {
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setCardsMode(false);
+      setLeaderboardMode(false);
+      setMessagesMode((current) => !current);
       return;
     }
     setInventoryMode(false);
     setInventorySlot(null);
     setCardsMode(false);
     setLeaderboardMode(false);
+    setMessagesMode(false);
     setActiveQuickPanel(current => current === item.id ? null : item.id);
   };
 
@@ -342,7 +372,7 @@ export default function DashboardAvatarOverview() {
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
       style={{ left: embeddedUtilityMode ? '330px' : '390px' }}
     >
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && activeQuickPanel && (
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && !messagesMode && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
@@ -418,7 +448,36 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !messagesMode && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && messagesMode && (
+        <div
+          data-dashboard-utility-workspace
+          aria-label="Luna messages workspace"
+          className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[800px] pointer-events-auto overflow-hidden"
+          style={{
+            maxWidth: 'calc(100% - 338px)',
+            boxShadow: '0 22px 54px rgba(0,0,0,.22)',
+          }}
+        >
+          <div
+            className="grid h-full min-h-0 w-full overflow-hidden"
+            style={{ gridTemplateColumns: 'clamp(190px, 30%, 240px) minmax(0, 1fr)' }}
+          >
+            <LunaMessageFriendsPanel />
+            <section
+              className="relative min-h-0 min-w-0 overflow-hidden border-y border-r border-white/[0.07]"
+              style={{
+                background: 'radial-gradient(ellipse at 48% 18%, rgba(48,68,94,.30), rgba(18,31,48,.64) 52%, rgba(8,15,25,.78) 100%)',
+                backdropFilter: 'blur(18px) saturate(125%)',
+                WebkitBackdropFilter: 'blur(18px) saturate(125%)',
+              }}
+            >
+              <MessengerHub threadOnly />
+            </section>
+          </div>
+        </div>
+      )}
+
       {!avatarFocusMode && surface === 'dashboard' && leaderboardMode && (
         <LunaLeaderboardOverlay onClose={() => setLeaderboardMode(false)} />
       )}
@@ -493,7 +552,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
+                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
