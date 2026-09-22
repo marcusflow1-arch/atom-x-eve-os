@@ -333,9 +333,14 @@ export default function DashboardAvatarOverview() {
         <div
           data-dashboard-inventory-workspace
           className="absolute left-[300px] right-[338px] top-[26px] bottom-0 z-40 pointer-events-auto overflow-hidden"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
+            maskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
+          }}
         >
           <div className="relative grid h-full min-h-0 grid-cols-2">
-            <section className="relative min-h-0 min-w-0 overflow-hidden border-r border-white/[0.08] bg-[#05080d]/90">
+            <section className="relative min-h-0 min-w-0 overflow-hidden">
               <InventoryGrid
                 equippedItems={equippedItems}
                 handleBoxClick={handleInventorySlot}
@@ -344,7 +349,7 @@ export default function DashboardAvatarOverview() {
               />
             </section>
 
-            <section className="relative min-h-0 min-w-0 overflow-hidden bg-[#05080d]/90">
+            <section className="relative min-h-0 min-w-0 overflow-hidden">
               <LunaSplitInventory
                 inventory={inventoryData}
                 selectedSlotId={inventorySlot}
@@ -356,8 +361,8 @@ export default function DashboardAvatarOverview() {
               aria-hidden="true"
               className="pointer-events-none absolute left-1/2 top-1/2 z-50 h-[74%] w-px -translate-x-1/2 -translate-y-1/2"
               style={{
-                background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,.18) 50%, transparent)',
-                boxShadow: '0 0 12px rgba(103,232,249,.05)',
+                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.05) 16%, rgba(255,255,255,.14) 50%, rgba(255,255,255,.05) 84%, transparent 100%)',
+                boxShadow: '0 0 14px rgba(103,232,249,.035)',
               }}
             />
           </div>
