@@ -63,6 +63,7 @@ export default function ScheduleSection({
   const [scheduleNote, setScheduleNote] = useState(profile?.schedule_note || '');
   const [ruleDraft, setRuleDraft] = useState('');
   const [error, setError] = useState('');
+  const [ownerGames, setOwnerGames] = useState([]);
 
   useEffect(() => {
     setRules(Array.isArray(profile?.channel_rules) ? profile.channel_rules : []);
@@ -70,10 +71,32 @@ export default function ScheduleSection({
   }, [profile?.channel_rules, profile?.schedule_note]);
 
   useEffect(() => {
+    if (!editable) {
+      setOwnerGames([]);
+      return undefined;
+    }
+    let cancelled = false;
+    base44.entities.Game.list('title', 500, 0, ['id', 'title', 'genre', 'cover_image'])
+      .then((rows) => {
+        const data = Array.isArray(rows) ? rows : rows?.data || [];
+        if (!cancelled) setOwnerGames(data);
+      })
+      .catch(() => {
+        if (!cancelled) setOwnerGames([]);
+      });
+    return () => { cancelled = true; };
+  }, [editable]);
+
+  useEffect(() => {
     if (initialDate) setBaseDate(new Date(initialDate));
   }, [initialDate]);
 
-  const gameMap = useMemo(() => new Map((games || []).map((game) => [String(game.id), game])), [games]);
+  const availableGames = useMemo(() => {
+    const merged = new Map();
+    for (const game of [...(games || []), ...(ownerGames || [])]) if (game?.id) merged.set(String(game.id), game);
+    return [...merged.values()].sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
+  }, [games, ownerGames]);
+  const gameMap = useMemo(() => new Map(availableGames.map((game) => [String(game.id), game])), [availableGames]);
   const entries = useMemo(
     () => [...(scheduledStreams || [])]
       .filter((row) => row.status === 'scheduled' && Number.isFinite(Date.parse(row.scheduled_start)))
@@ -308,7 +331,7 @@ export default function ScheduleSection({
           <form className="channel-schedule-editor" onSubmit={saveEntry}>
             <header><div><span>{draft.id ? 'EDIT SESSION' : 'NEW SESSION'}</span><h3>{draft.id ? 'Update scheduled stream' : 'Schedule a stream'}</h3></div><button type="button" onClick={() => setEditing(false)} aria-label="Close schedule editor"><X size={16} /></button></header>
             <label>Stream title<input value={draft.title} maxLength={180} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="What are you streaming?" required /></label>
-            <label>Game<select value={draft.game_id} onChange={(event) => setDraft((current) => ({ ...current, game_id: event.target.value }))}><option value="">Game to be announced</option>{games.map((game) => <option key={game.id} value={game.id}>{game.title}</option>)}</select></label>
+            <label>Game<select value={draft.game_id} onChange={(event) => setDraft((current) => ({ ...current, game_id: event.target.value }))}><option value="">Game to be announced</option>{availableGames.map((game) => <option key={game.id} value={game.id}>{game.title}</option>)}</select></label>
             <div className="channel-schedule-editor-times"><label>Starts<input type="datetime-local" value={draft.scheduled_start} onChange={(event) => setDraft((current) => ({ ...current, scheduled_start: event.target.value }))} required /></label><label>Ends<input type="datetime-local" value={draft.scheduled_end} onChange={(event) => setDraft((current) => ({ ...current, scheduled_end: event.target.value }))} /></label></div>
             <label className="channel-schedule-toggle"><input type="checkbox" checked={draft.send_notification} onChange={(event) => setDraft((current) => ({ ...current, send_notification: event.target.checked }))} /><Bell size={14} /><span>Notify followers when this stream is scheduled</span></label>
             <footer><button type="button" onClick={() => setEditing(false)}>Cancel</button><button type="submit" disabled={saving || !draft.title.trim() || !draft.scheduled_start}><Save size={14} />{saving ? 'Saving…' : 'Save schedule'}</button></footer>
