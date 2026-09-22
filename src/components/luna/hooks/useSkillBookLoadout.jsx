@@ -65,6 +65,8 @@ export function useSkillBookLoadout() {
     games: stateQuery.data?.games || [],
     skills: stateQuery.data?.skills || [],
     slots: stateQuery.data?.loadout?.slots || [],
+    skillSets: stateQuery.data?.skill_sets || stateQuery.data?.jawans || [],
+    activeSkillSetId: stateQuery.data?.active_skill_set_id || '',
     jawans: stateQuery.data?.jawans || [],
     activeJawanId: stateQuery.data?.active_jawan_id || '',
     isLoading: stateQuery.isLoading,
@@ -80,6 +82,10 @@ export function useSkillBookLoadout() {
       data: { slot },
     }),
     clear: () => mutation.mutateAsync({ action: 'clear', data: {} }),
+    selectSkillSet: (skillSetId) => mutation.mutateAsync({
+      action: 'selectSkillSet',
+      data: { skill_set_id: skillSetId },
+    }),
     selectJawan: (jawanId) => mutation.mutateAsync({
       action: 'selectJawan',
       data: { jawan_id: jawanId },
