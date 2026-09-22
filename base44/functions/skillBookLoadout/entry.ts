@@ -304,7 +304,17 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'clear') {
+      const oldIds = Object.values(loadout.skill_slots || {}).map(String).filter(Boolean);
       await svc.Loadout.update(loadout.id, { skill_slots: {}, is_active: true });
+      const otherLoadouts = (await svc.Loadout.filter({ user_id: user.id, loadout_type: 'skills' }, '-created_date', 20))
+        .filter((row: AnyObj) => String(row.id) !== String(loadout.id));
+      for (const oldCardId of oldIds) {
+        const usedElsewhere = otherLoadouts.some((row: AnyObj) => Object.values(row.skill_slots || {}).some((value: any) => String(value) === oldCardId));
+        if (!usedElsewhere) {
+          const oldCard = await svc.UserCard.get(oldCardId).catch(() => null);
+          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false });
+        }
+      }
       return json(await buildState(base44, user));
     }
 
