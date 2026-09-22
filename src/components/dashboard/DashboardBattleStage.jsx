@@ -64,6 +64,35 @@ function PartyFormation({ players, activeId, lastEvent }) {
   );
 }
 
+function TurnOrderRail({ encounter, allies, opponent, enemy, activeId }) {
+  const duel = encounter.route?.type === 'pvp';
+  const actors = duel
+    ? [...allies, ...(opponent ? [opponent] : [])]
+    : [...allies, ...(enemy ? [{ ...enemy, id: 'enemy', enemy: true }] : [])];
+  const alive = actors.filter((actor) => Number(actor.hp || 0) > 0);
+  if (!alive.length) return null;
+  return (
+    <div className="absolute left-5 top-[25%] z-30 w-[126px] border border-white/[0.055] bg-black/24 p-2 backdrop-blur-xl">
+      <div className="flex items-center justify-between border-b border-white/[0.045] pb-1.5">
+        <span className="text-[5px] font-black uppercase tracking-[0.14em] text-white/24">Turn Order</span>
+        <span className="text-[5px] text-white/18">R{encounter.round || 1}</span>
+      </div>
+      <div className="mt-1 space-y-1">
+        {alive.map((actor, index) => {
+          const active = actor.id === activeId;
+          return (
+            <div key={actor.id || actor.name || index} className={'grid grid-cols-[14px_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 ' + (active ? 'bg-cyan-100/[0.055] text-white/72' : 'text-white/30')}>
+              <span className={'grid h-3.5 w-3.5 place-items-center border text-[4.5px] font-black ' + (actor.enemy ? 'border-rose-100/12 text-rose-100/42' : 'border-white/[0.055]')}>{index + 1}</span>
+              <span className="truncate text-[5.5px]">{actor.name || 'Combatant'}</span>
+              {active ? <Zap className="h-2.5 w-2.5 text-cyan-100/46" /> : <span className="h-1 w-1 rounded-full bg-white/10" />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function EnemyFormation({ encounter, opponent, enemy, activeId, lastEvent }) {
   const duel = encounter.route?.type === 'pvp';
   const worldBoss = encounter.route?.type === 'world_boss';
@@ -157,6 +186,8 @@ export default function DashboardBattleStage({ encounterId }) {
         <span className="max-w-[430px] truncate text-[6px] text-white/46">{encounter.route?.objective || encounter.route?.description}</span>
         {encounter.source_field && <span className="border-l border-white/[0.07] pl-2 text-[5.5px] uppercase tracking-[0.08em] text-amber-100/38">Field · {encounter.source_field.title} · {Math.round(Number(encounter.source_field.distance_m || 0))}m</span>}
       </div>
+
+      <TurnOrderRail encounter={encounter} allies={model.allies} opponent={model.opponent} enemy={enemy} activeId={activeId} />
 
       <div className="absolute left-1/2 top-[12%] z-30 -translate-x-1/2 text-center">
         <div className="inline-flex items-center gap-2 border border-white/[0.07] bg-black/28 px-3 py-1.5 backdrop-blur-xl">
