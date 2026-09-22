@@ -167,6 +167,9 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
           secondaryCharacter,
           autoRigSingleMesh: fixedFemaleIdle,
           retargetExternalMotions: fixedFemaleIdle,
+          // Artemis sits visually high inside the Genesis ring. Raise the
+          // camera target slightly so the model renders lower and centered.
+          framingOffsetY: fixedFemaleIdle ? 0.16 : 0,
         },
       );
       scene.current.appearance(config);
