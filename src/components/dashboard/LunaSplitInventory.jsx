@@ -207,10 +207,9 @@ export default function LunaSplitInventory({
     <div
       className="relative h-full w-full overflow-hidden px-5 pb-5 pt-4"
       style={{
-        background: 'linear-gradient(180deg, rgba(3,6,11,.94), rgba(6,10,17,.90))',
-        backdropFilter: 'blur(14px) saturate(115%)',
-        WebkitBackdropFilter: 'blur(14px) saturate(115%)',
-        boxShadow: 'inset 1px 0 0 rgba(255,255,255,.035), inset -1px 0 0 rgba(255,255,255,.025)',
+        background: 'radial-gradient(ellipse at 48% 46%, rgba(2,5,10,.72) 0%, rgba(3,7,12,.52) 58%, rgba(3,7,12,.20) 82%, transparent 100%)',
+        backdropFilter: 'blur(10px) saturate(110%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(110%)',
       }}
     >
       <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/14 to-transparent" />
