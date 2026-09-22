@@ -253,7 +253,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               }}
             >
               {/* Games */}
-              <button type="button" aria-label="Games" aria-pressed={gamesActive}
+              <button type="button" aria-label="Games" aria-pressed={gamesOpen}
                 onClick={toggleGames}
                 className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${gamesOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
               >
