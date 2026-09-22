@@ -203,7 +203,8 @@ function Arsenal({ hub }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">Achievement Arsenal</p>
-          <h3 className="mt-1 text-[12px] font-semibold text-white/72">Your four battle cards</h3>
+          <h3 className="mt-1 text-[12px] font-semibold text-white/72">{hub?.player?.jawan?.name || 'Active Jawan'} · four battle cards</h3>
+          <p className="mt-1 text-[6px] uppercase tracking-[0.09em] text-cyan-100/28">{hub?.player?.jawan?.role || 'Balanced'} combat profile</p>
         </div>
         <Layers className="h-5 w-5 text-cyan-100/28" />
       </div>
