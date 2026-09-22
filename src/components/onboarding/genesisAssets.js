@@ -6,20 +6,15 @@ const root = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/
 const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
 
 export const GLOBAL_AVATAR_MODEL_URL = '/models/luna-hi3d/warrior.glb';
-export const FEMALE_ARTEMIS_MODEL_URL = '/models/atomxe-artemis-archer.glb';
-export const FEMALE_GRECO_MODEL_URL = '/models/atomxe-greco-girl.glb';
-export const FEMALE_ERIKA_MODEL_URL = root + '3f915913a_ErikaArcher.fbx';
+// Admin > 3D Models > "artemis" (Model3D id: 6aa956f030a57c7e90bbc7e6).
+// This is the only female base body used by Genesis.
+export const FEMALE_ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 export const GLOBAL_AVATAR_NAME = 'Luna AI';
 
-// These are the two female bodies presented to new players. Erika remains
-// supported below for avatars that explicitly selected her before this update,
-// but she is no longer shown as a new-character choice.
+// Female creation intentionally exposes one canonical body only.
 export const FEMALE_MODEL_VARIANTS = {
-  artemis_archer: { id: 'artemis_archer', name: 'Mythic Greek Archer', url: FEMALE_ARTEMIS_MODEL_URL, idleOnly: true, isDefault: true },
-  greco_girl: { id: 'greco_girl', name: 'Greco-Roman Girl', url: FEMALE_GRECO_MODEL_URL, idleOnly: true },
+  artemis_archer: { id: 'artemis_archer', name: 'Artemis', url: FEMALE_ARTEMIS_MODEL_URL, idleOnly: true, isDefault: true },
 };
-
-const LEGACY_ERIKA_VARIANT = { id: 'erika_archer', name: 'Erika Archer', url: FEMALE_ERIKA_MODEL_URL, idleOnly: true, legacy: true };
 
 export const COMPANION_MODELS = {
   male: { name: 'Luna AI Male', url: GLOBAL_AVATAR_MODEL_URL },
@@ -83,31 +78,20 @@ export function getAvatarStylePreset(id) {
   return AVATAR_STYLE_PRESETS.find((preset) => preset.id === id) || AVATAR_STYLE_PRESETS[0];
 }
 
-export function femaleModelVariant(avatar = {}) {
-  if (avatar?.female_model_variant === 'greco_girl') return FEMALE_MODEL_VARIANTS.greco_girl;
-  if (avatar?.female_model_variant === 'erika_archer') return LEGACY_ERIKA_VARIANT;
+export function femaleModelVariant() {
   return FEMALE_MODEL_VARIANTS.artemis_archer;
 }
 
 export function companionModel(avatar) {
   const gender = avatar?.gender === 'female' ? 'female' : 'male';
+  if (gender === 'female') return FEMALE_ARTEMIS_MODEL_URL;
+
   const requested = String(avatar?.model_url || '').trim();
   const maleBase = GLOBAL_AVATAR_MODEL_URL;
-  const artemisBase = FEMALE_ARTEMIS_MODEL_URL;
-  const grecoBase = FEMALE_GRECO_MODEL_URL;
-  const oldFemaleBase = FEMALE_ERIKA_MODEL_URL;
-  const selectedBase = gender === 'female' ? femaleModelVariant(avatar).url : maleBase;
   const legacyDefault = /(?:608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
-  const isStandardBase = requested === maleBase || requested === artemisBase || requested === grecoBase || requested === oldFemaleBase || legacyDefault;
-
-  // Female accounts without an explicit body choice migrate to the Mythic
-  // Greek Archer. Explicit Greco/legacy Erika selections continue to resolve
-  // to the exact body the player chose.
-  if (!requested || isStandardBase) return selectedBase;
-
-  // Preserve true generated/custom assets (for example a future fitted body).
+  if (!requested || requested === maleBase || legacyDefault) return maleBase;
   if (/^(https?:\/\/|\/)/i.test(requested)) return requested;
-  return selectedBase;
+  return maleBase;
 }
 
 function rememberMaterialBase(material) {
