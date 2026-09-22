@@ -130,6 +130,7 @@ assert.ok(byLabel('Search game forums'), 'bottom filter opens the complete direc
 assert.equal(document.activeElement, byLabel('Search game forums'), 'directory focuses search');
 await run(() => byLabel('Search game forums').dispatchEvent(new window.KeyboardEvent('keydown', {key:'Escape',bubbles:true})));
 assert.ok(!byLabel('Search game forums'), 'Escape closes the directory');
+await run(() => {}); // Radix restores focus after the closing content unmounts.
 assert.equal(document.activeElement?.className, forumTrigger.className, 'closing the directory returns focus to its opener');
 await run(() => forumTrigger.click());
 await run(() => [...document.querySelectorAll('.forum-directory-filters button')].find(node => node.querySelector('span').textContent === 'Racing').click());
