@@ -14,7 +14,12 @@ export default function ForumBottomNav({ activeTab = 'home', onBrowseForums, onT
   };
 
   useEffect(() => {
-    const openDirectory = () => handleForums();
+    const openDirectory = () => {
+      if (onBrowseForums) { onBrowseForums(); return; }
+      const quickMenu = document.querySelector('button[title="Forum Quick Menu"]');
+      if (quickMenu) quickMenu.click();
+      else handleForums();
+    };
     window.addEventListener('openForumDirectory', openDirectory);
     return () => window.removeEventListener('openForumDirectory', openDirectory);
   }, [onBrowseForums, navigate]);
