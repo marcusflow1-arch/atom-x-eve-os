@@ -360,7 +360,9 @@ export default function DashboardAvatarOverview() {
           className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
           style={{
             maxWidth: 'calc(100% - 638px)',
-            background: 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
+            background: cardsMode
+              ? 'radial-gradient(ellipse at 52% 48%, rgba(40,58,80,.54) 0%, rgba(26,42,62,.40) 58%, rgba(18,31,48,.18) 82%, transparent 100%)'
+              : 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
             WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
             maskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
           }}
@@ -369,7 +371,9 @@ export default function DashboardAvatarOverview() {
             <section
               className="absolute bottom-0 right-0 top-0 min-h-0 w-full max-w-[560px] overflow-hidden"
               style={{
-                background: 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
+                background: cardsMode
+                  ? 'radial-gradient(ellipse at 58% 48%, rgba(48,68,94,.34) 0%, rgba(27,45,67,.24) 60%, rgba(16,29,46,.08) 84%, transparent 100%)'
+                  : 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
               }}
             >
               {cardsMode ? (
