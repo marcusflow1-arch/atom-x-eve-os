@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import { GameCard } from '@/components/store/redesign/StoreSections';
 
 export default function StoreSection({ title, subtitle, games = [], onSelect, onViewAll, children }) {
+  if(!games.length&&!children)return null;
   return (
     <section className="sf-section" aria-label={title}>
       <div className="sf-section-heading">
