@@ -42,7 +42,7 @@ async function snapshot(svc: any, user: Row) {
   const appearance = Object.fromEntries(APPEARANCE.filter(k=>saved[k]!==undefined).map(k=>[k,saved[k]]));
   if (num(saved.appearance_version)<3) appearance.model_url = saved.gender === 'female' ? FEMALE : MODEL;
   const maxHp = Math.max(100,Math.min(400,num(levels[0]?.stats?.hp,100) + num(levels[0]?.global_level,1)*8));
-  return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,cards:deck,cooldowns:{},damage:0,actions:0};
+  return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,cards:deck,cooldowns:{},damage:0,actions:0};
 }
 async function contacts(svc: any, user: Row) {
   const [memberships, friends, own] = await Promise.all([
@@ -81,11 +81,24 @@ async function worlds(svc: any, user: Row) {
 function say(state: Row, text: string, kind = 'info', actor = '') {
   state.log = [...state.log,{id:state.revision+1,text,kind,actor}].slice(-30);
 }
+function staggerHit(state: Row, target: Row, amount: number, actorName: string) {
+  if (!target) return 0;
+  const max = Math.max(1,num(target.max_stagger,100));
+  target.stagger = Math.min(max,num(target.stagger)+Math.max(0,amount));
+  if (target.stagger < max) return 0;
+  target.stagger = 0;
+  target.shield = 0;
+  const bonus = Math.max(18,Math.round(max*.22));
+  target.hp = Math.max(0,num(target.hp)-bonus);
+  say(state,(target.name||'Target')+' was broken by '+actorName+' for '+bonus+' bonus damage.','break');
+  return bonus;
+}
 function enemyFor(room: Row, state: Row) {
   const route = routeFor(room.route_id)!;
   const count = state.players.length;
   const max = Math.round(route.hp*(1+.65*(count-1))*(1+.3*state.stage));
-  return {name:route.stages[state.stage],hp:max,max_hp:max,attack:Math.round(route.attack*(1+.15*state.stage)),intent:'Strike',shield:0};
+  const maxStagger = room.route_id==='colossus' ? 180 : 100 + state.stage*20;
+  return {name:route.stages[state.stage],hp:max,max_hp:max,attack:Math.round(route.attack*(1+.15*state.stage)),intent:'Strike',shield:0,stagger:0,max_stagger:maxStagger};
 }
 function nextRound(room: Row, state: Row, at: number) {
   state.round++;
@@ -153,7 +166,7 @@ function reduce(room: Row, previous: Row, event: Row) {
       if(!s.claimed.includes(actor.id)){s.claimed.push(actor.id);say(s,actor.name+' opened a field chest: '+routeFor(room.route_id)!.xp+' Expedition XP.','reward');}
     }else if(cmd==='continue'){
       if(s.status!=='active'||s.phase!=='camp'||actor.id!==room.host_id)fail('Only the host can continue after a cleared room.');
-      s.stage++;s.players.forEach((p: Row)=>{p.hp=Math.min(p.max_hp,p.hp+Math.round(p.max_hp*.2));p.shield=0;p.ap=3;p.cooldowns={};});
+      s.stage++;s.players.forEach((p: Row)=>{p.hp=Math.min(p.max_hp,p.hp+Math.round(p.max_hp*.2));p.shield=0;p.stagger=0;p.ap=3;p.cooldowns={};});
       s.enemy=enemyFor(room,s);nextRound(room,s,at);say(s,'Entered '+s.enemy.name+'. Camp restored 20% health.');
     }else{
       if(s.status!=='active')fail('This encounter is not active.');
@@ -168,13 +181,13 @@ function reduce(room: Row, previous: Row, event: Row) {
         const scale=success?0:cmd==='brace'?.4:1;
         const raw=Math.round(s.enemy.attack*(s.round%3===0?1.6:1)*scale);
         const hit=Math.max(0,raw-current.shield);current.shield=Math.max(0,current.shield-raw);current.hp=Math.max(0,current.hp-hit);
-        if(success&&cmd==='parry'){s.enemy.hp=Math.max(0,s.enemy.hp-20);current.damage+=20;current.ap=Math.min(5,current.ap+1);}
+        if(success&&cmd==='parry'){s.enemy.hp=Math.max(0,s.enemy.hp-20);const bonus=staggerHit(s,s.enemy,38,current.name);current.damage+=20+bonus;current.ap=Math.min(5,current.ap+1);}
         say(s,success?current.name+' '+(cmd==='parry'?'parried and countered.':'evaded the strike.'):current.name+' took '+hit+' damage'+(cmd==='brace'?' while bracing.':'.'),success?'defense':'hit',current.id);
         if(!finishIfNeeded(room,s))nextRound(room,s,at);
       }else if(s.phase==='turn'){
         let target=room.route_id==='duel'?s.players.find((p: Row)=>p.id!==current.id):s.enemy;
         if(cmd==='guard'||cmd==='timeout'){current.shield+=18;current.ap=Math.min(5,current.ap+1);say(s,current.name+' guarded: +18 shield, +1 AP.','defense',current.id);}
-        else if(cmd==='strike'){const hit=Math.max(0,16-target.shield);target.shield=Math.max(0,target.shield-16);target.hp=Math.max(0,target.hp-hit);current.damage+=hit;current.ap=Math.min(5,current.ap+1);say(s,current.name+' struck for '+hit+' damage.','hit',current.id);}
+        else if(cmd==='strike'){const hit=Math.max(0,16-target.shield);target.shield=Math.max(0,target.shield-16);target.hp=Math.max(0,target.hp-hit);const bonus=staggerHit(s,target,18,current.name);current.damage+=hit+bonus;current.ap=Math.min(5,current.ap+1);say(s,current.name+' struck for '+hit+' damage.','hit',current.id);}
         else if(cmd==='card'){
           const card=current.cards.find((c: Row)=>c.id===data.card_id);
           if(!card)fail('That card is not in your locked loadout.',403);
@@ -184,7 +197,7 @@ function reduce(room: Row, previous: Row, event: Row) {
           const value=card.value+(resonance?5:0);
           if(card.effect==='heal'){const before=current.hp;current.hp=Math.min(current.max_hp,current.hp+value);say(s,current.name+' used '+card.name+': restored '+(current.hp-before)+' HP.','heal',current.id);}
           else if(card.effect==='shield'){current.shield+=value;say(s,current.name+' used '+card.name+': +'+value+' shield.','defense',current.id);}
-          else {const hit=Math.max(0,value-target.shield);target.shield=Math.max(0,target.shield-value);target.hp=Math.max(0,target.hp-hit);current.damage+=hit;say(s,current.name+' used '+card.name+': '+hit+' damage'+(resonance?' · world resonance.':'.'),'hit',current.id);}
+          else {const hit=Math.max(0,value-target.shield);target.shield=Math.max(0,target.shield-value);target.hp=Math.max(0,target.hp-hit);const bonus=staggerHit(s,target,24+Math.min(16,num(card.level,1)*2),current.name);current.damage+=hit+bonus;say(s,current.name+' used '+card.name+': '+hit+' damage'+(resonance?' · world resonance.':'.'),'hit',current.id);}
         }else fail('Choose a card, strike, or guard.',400);
         current.actions++;advance(room,s,current,at);
       }else fail('This action is unavailable.');
