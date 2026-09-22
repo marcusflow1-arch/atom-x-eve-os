@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  BellRing, Check, Compass, Crown, Gamepad2, Layers, Map, Shield,
+  BellRing, Compass, Crown, Gamepad2, Layers, Map, Shield,
   Skull, Swords, Trophy, Users, X, Zap
 } from 'lucide-react';
 import LunaDashboardArenaPanel from './LunaDashboardArenaPanel';
