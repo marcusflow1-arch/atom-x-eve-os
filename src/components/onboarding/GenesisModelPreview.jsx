@@ -163,7 +163,11 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
           setStatus(value);
           if (name) setMotion(name);
         },
-        { secondaryCharacter },
+        {
+          secondaryCharacter,
+          autoRigSingleMesh: fixedFemaleIdle,
+          retargetExternalMotions: fixedFemaleIdle,
+        },
       );
       scene.current.appearance(config);
     } catch {
