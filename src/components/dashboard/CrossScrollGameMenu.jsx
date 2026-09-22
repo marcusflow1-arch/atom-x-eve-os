@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Play, MoreHorizontal, Star } from 'lucide-react';
+import { MoreHorizontal, Star } from 'lucide-react';
 import GamePlayButton from '@/components/dashboard/gamehub/GamePlayButton';
 
 // Simple flat games list:
@@ -65,21 +65,21 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
 
       {/* All games — simple flat list below the line */}
       <div ref={listRef} data-testid="library-game-list" tabIndex={0} aria-label="Scrollable game library" onWheel={e => e.stopPropagation()} className="absolute inset-0 overflow-y-auto overscroll-contain" style={{ scrollbarWidth: 'none', paddingTop: browsing ? 8 : 40, paddingBottom: 48 }}>
-        <div className="flex flex-col gap-2 px-2">
+        <div className="flex flex-col gap-1 px-2">
           {allGames.map((g) => {
             const isSel = selectedGame?.id === g.id;
             const completion = Math.min(100, Math.max(0, g.completion ?? g.progress ?? 0));
             const done = completion >= 100;
-            const TW = 44, TH = 60, R = 8;
+            const TW = 24, TH = 32, R = 5;
             const ringColor = done ? 'rgba(34,211,238,0.95)' : 'rgba(255,255,255,0.85)';
             return (
               <div
                 key={g.id}
                 data-library-game={g.id}
                 onClick={() => handleRowClick(g)}
-                className="flex items-center gap-2.5 w-full rounded-xl cursor-pointer transition-all"
+                className="flex items-center gap-1.5 w-full rounded-lg cursor-pointer transition-all"
                 style={{
-                  padding: '6px 8px',
+                  padding: '3px 5px',
                   background: isSel ? 'rgba(34,211,238,0.10)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isSel ? 'rgba(34,211,238,0.45)' : 'rgba(255,255,255,0.07)'}`,
                   boxShadow: isSel ? '0 0 14px rgba(34,211,238,0.18)' : 'none',
@@ -100,29 +100,41 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
                     <rect x={1.5} y={1.5} width={TW - 3} height={TH - 3} rx={R} ry={R} fill="none" stroke={ringColor} strokeWidth={2.5} pathLength={100} strokeDasharray={`${completion} 100`} strokeLinecap="round" style={{ filter: (done || isSel) ? `drop-shadow(0 0 6px ${ringColor})` : 'none', transition: 'stroke-dasharray 0.5s ease, stroke 0.4s' }} />
                   </svg>
                   {done && (
-                    <div className="absolute -top-1 -right-1 z-10 flex items-center justify-center" style={{ width: 14, height: 14, borderRadius: 999, background: 'rgba(34,211,238,0.95)', boxShadow: '0 0 8px rgba(34,211,238,0.7)' }}>
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#04121a" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    <div className="absolute -top-1 -right-1 z-10 flex items-center justify-center" style={{ width: 10, height: 10, borderRadius: 999, background: 'rgba(34,211,238,0.95)', boxShadow: '0 0 6px rgba(34,211,238,0.7)' }}>
+                      <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="#04121a" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
                   )}
                 </div>
 
                 {/* Title + genre (middle) */}
                 <div className="flex-1 min-w-0">
-                  <button aria-label={`View ${g.title}`} onClick={e => { e.stopPropagation(); handleRowClick(g); }} className="text-white text-[11px] font-semibold leading-tight truncate max-w-full text-left" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.85)' }}>{g.title}</button>
-                  <p className="text-white/45 text-[9px] truncate mt-0.5" style={{ textShadow: '0 1px 5px rgba(0,0,0,0.85)' }}>{g.genre}</p>
+                  <button aria-label={`View ${g.title}`} onClick={e => { e.stopPropagation(); handleRowClick(g); }} className="text-white text-[10px] font-semibold leading-tight truncate max-w-full text-left" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.85)' }}>{g.title}</button>
+                  <p className="text-white/45 text-[8px] truncate mt-0.5" style={{ textShadow: '0 1px 5px rgba(0,0,0,0.85)' }}>{g.genre}</p>
                 </div>
 
-                {/* Launch and favorite actions are separate from opening details. */}
-                {onToggleFavorite && <button aria-label={`${favorites.includes(g.id) ? 'Unfavorite' : 'Favorite'} ${g.title}`} aria-pressed={favorites.includes(g.id)} onClick={e => { e.stopPropagation(); onToggleFavorite(g); }} className="shrink-0 p-1"><Star className={`h-3.5 w-3.5 ${favorites.includes(g.id) ? 'fill-current text-primary' : ''}`} /></button>}
-                <GamePlayButton key={g.id} game={g} compact />
-                <button
-                  onClick={(e) => openOptions(g, e)}
-                  className="shrink-0 flex items-center justify-center rounded-lg transition-all hover:bg-white/10"
-                  style={{ width: 26, height: 28, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}
-                  title="Options"
-                >
-                  <MoreHorizontal className="w-3.5 h-3.5" />
-                </button>
+                {/* Steam-style compact action cluster: favorite, launch, options stay side-by-side. */}
+                <div className="shrink-0 flex items-center gap-1">
+                  {onToggleFavorite && (
+                    <button
+                      aria-label={`${favorites.includes(g.id) ? 'Unfavorite' : 'Favorite'} ${g.title}`}
+                      aria-pressed={favorites.includes(g.id)}
+                      onClick={e => { e.stopPropagation(); onToggleFavorite(g); }}
+                      className="w-6 h-6 shrink-0 flex items-center justify-center rounded-md transition-all hover:bg-white/10"
+                      style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)' }}
+                    >
+                      <Star className={`h-3 w-3 ${favorites.includes(g.id) ? 'fill-current text-primary' : ''}`} />
+                    </button>
+                  )}
+                  <GamePlayButton key={g.id} game={g} compact />
+                  <button
+                    onClick={(e) => openOptions(g, e)}
+                    className="w-6 h-6 shrink-0 flex items-center justify-center rounded-md transition-all hover:bg-white/10"
+                    style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)' }}
+                    title="Options"
+                  >
+                    <MoreHorizontal className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             );
           })}
