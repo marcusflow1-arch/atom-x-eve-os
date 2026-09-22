@@ -27,6 +27,7 @@ export default function LunaCardsPanel() {
   const [genreOpen, setGenreOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
   const [bezels, setBezels] = useState(false);
+  const [showcaseCardId, setShowcaseCardId] = useState(null);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -152,6 +153,41 @@ export default function LunaCardsPanel() {
     setQuery(entry.label);
   };
 
+  const showcasePayload = (card) => ({
+    id: card.id,
+    title: card.card_name || 'Unnamed Card',
+    name: card.card_name || 'Unnamed Card',
+    card_name: card.card_name || 'Unnamed Card',
+    image: card.card_image || '',
+    card_image: card.card_image || '',
+    type: String(card.card_type || 'Card').toLowerCase(),
+    card_type: card.card_type || 'Card',
+    rarity: card.card_rarity || 'Common',
+    card_rarity: card.card_rarity || 'Common',
+    game_name: card.game_name || selectedGroup?.title || '',
+    genre: card.genre || selectedGroup?.genre || '',
+    showcaseOnly: true,
+  });
+
+  const selectShowcaseCard = (card) => {
+    const payload = showcasePayload(card);
+    window.__lunaSelectedShowcaseCard = payload;
+    setShowcaseCardId(card.id);
+    window.dispatchEvent(new CustomEvent('lunaShowcaseCardSelected', { detail: { card: payload } }));
+  };
+
+  const beginCardDrag = (event, card) => {
+    const payload = showcasePayload(card);
+    window.__lunaSelectedShowcaseCard = payload;
+    setShowcaseCardId(card.id);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('application/json', JSON.stringify({ source: 'luna-card', card: payload }));
+      event.dataTransfer.setData('text/plain', payload.title);
+    }
+    window.dispatchEvent(new CustomEvent('lunaShowcaseCardSelected', { detail: { card: payload } }));
+  };
+
   const beginVoiceSearch = () => {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) return;
@@ -197,6 +233,7 @@ export default function LunaCardsPanel() {
                 </button>
                 <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/55">Owned Cards</p>
                 <h2 className="mt-1 truncate text-[15px] font-semibold text-white">{selectedGroup.title}</h2>
+                <p className="mt-1 text-[6.5px] text-cyan-100/45">Drag a card to a diamond · or select it, then choose a slot</p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-[6px] font-black uppercase tracking-[0.14em] text-white/40">Owned</p>
@@ -313,24 +350,50 @@ export default function LunaCardsPanel() {
           ) : selectedGroup ? (
             selectedCards.length ? (
               <div className="grid justify-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 86px))' }}>
-                {selectedCards.map((card) => (
-                  <div key={card.id} className="relative h-[112px] overflow-hidden border border-white/[0.10] bg-white/[0.035] p-1.5">
-                    <div className="relative flex h-[58px] items-center justify-center overflow-hidden border border-white/[0.07] bg-slate-950/25">
-                      {card.card_image ? (
-                        <img src={card.card_image} alt={card.card_name} className="h-full w-full object-cover" />
-                      ) : (
-                        <CreditCard className="h-5 w-5 text-white/55" />
-                      )}
+                {selectedCards.map((card) => {
+                  const selectedForShowcase = showcaseCardId === card.id;
+                  return (
+                    <div
+                      key={card.id}
+                      role="button"
+                      tabIndex={0}
+                      draggable
+                      onDragStart={(event) => beginCardDrag(event, card)}
+                      onClick={() => selectShowcaseCard(card)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          selectShowcaseCard(card);
+                        }
+                      }}
+                      className={`relative h-[112px] cursor-grab overflow-hidden border p-1.5 outline-none transition-all active:cursor-grabbing ${selectedForShowcase
+                        ? 'border-cyan-100/35 bg-cyan-100/[0.08] shadow-[0_0_18px_rgba(103,232,249,.10)]'
+                        : 'border-white/[0.10] bg-white/[0.035] hover:border-white/[0.18] hover:bg-white/[0.055]'}`}
+                      aria-pressed={selectedForShowcase}
+                      title="Drag to a showcase diamond or click, then choose a slot"
+                    >
+                      <div className="relative flex h-[58px] items-center justify-center overflow-hidden border border-white/[0.07] bg-slate-950/25">
+                        {card.card_image ? (
+                          <img src={card.card_image} alt={card.card_name} className="h-full w-full object-cover" draggable={false} />
+                        ) : (
+                          <CreditCard className="h-5 w-5 text-white/55" />
+                        )}
+                        {selectedForShowcase && (
+                          <span className="absolute inset-x-1 bottom-1 bg-cyan-950/80 px-1 py-0.5 text-center text-[5px] font-black uppercase tracking-[0.08em] text-cyan-50">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 line-clamp-2 min-h-[20px] text-[7px] font-semibold leading-[10px] text-white">{card.card_name || 'Unnamed Card'}</p>
+                      <div className="mt-0.5 flex items-center justify-between gap-1">
+                        <span className={`truncate border px-1 py-0.5 text-[4.5px] font-black uppercase tracking-[.07em] ${rarityTone[card.card_rarity] || rarityTone.Common}`}>
+                          {card.card_rarity || 'Common'}
+                        </span>
+                        <span className="truncate text-[5px] uppercase text-white/55">{card.card_type || 'Card'}</span>
+                      </div>
                     </div>
-                    <p className="mt-1 line-clamp-2 min-h-[20px] text-[7px] font-semibold leading-[10px] text-white">{card.card_name || 'Unnamed Card'}</p>
-                    <div className="mt-0.5 flex items-center justify-between gap-1">
-                      <span className={`truncate border px-1 py-0.5 text-[4.5px] font-black uppercase tracking-[.07em] ${rarityTone[card.card_rarity] || rarityTone.Common}`}>
-                        {card.card_rarity || 'Common'}
-                      </span>
-                      <span className="truncate text-[5px] uppercase text-white/55">{card.card_type || 'Card'}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="grid h-full min-h-44 place-items-center text-center text-[8px] text-white/55">No owned cards match this search.</div>
