@@ -1,11 +1,11 @@
 import {useMemo,useRef,useState} from 'react';
 import {Search,X} from 'lucide-react';
 import {suggestions,label} from './discovery';
-export default function StoreSearch({games=[],value='',onChange,onSelect,onOpen}){
+export default function StoreSearch({games=[],value='',onChange,onSelect,onOpen,onSubmit}){
  const [open,setOpen]=useState(false),[active,setActive]=useState(-1);
  const items=useMemo(()=>suggestions(games,value),[games,value]);
  const root=useRef(null);
- const choose=item=>{setOpen(false);setActive(-1);if(item.kind==='game')onSelect(item.id);else onChange(item.title);};
+ const choose=item=>{setOpen(false);setActive(-1);if(item.kind==='game')onSelect(item.id);else {onChange(item.title);onSubmit?.(item.title);}};
  return <div ref={root} className="relative min-w-0 w-full" onBlur={e=>{if(!root.current?.contains(e.relatedTarget))setOpen(false);}}>
   <div className="flex items-center gap-2 rounded-xl bg-white/[0.06] px-3 py-2.5 ring-1 ring-white/10 focus-within:ring-cyan-300/60">
    <Search size={16} className="shrink-0 text-white/40"/>
@@ -16,7 +16,7 @@ export default function StoreSearch({games=[],value='',onChange,onSelect,onOpen}
      if(e.key==='Escape'){setOpen(false);setActive(-1);}
      if(e.key==='ArrowDown'){e.preventDefault();setOpen(true);setActive(i=>Math.min(i+1,items.length-1));}
      if(e.key==='ArrowUp'){e.preventDefault();setActive(i=>Math.max(i-1,0));}
-     if(e.key==='Enter'){e.preventDefault();if(open&&active>=0&&items[active])choose(items[active]);else setOpen(false);}
+     if(e.key==='Enter'){e.preventDefault();if(open&&active>=0&&items[active])choose(items[active]);else {setOpen(false);onSubmit?.(value);}}
     }} placeholder="Search games, genres, or a play style" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"/>
    {value&&<button aria-label="Clear search" onClick={()=>{onChange('');setOpen(false);}}><X size={14}/></button>}
   </div>
