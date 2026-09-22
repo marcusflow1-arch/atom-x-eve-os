@@ -73,7 +73,6 @@ function OwnChannelHome() {
   const { saving, isEditMode, activeProfile, activeLayout, activeSponsors, enterEditMode, cancelEdit, saveEdit, updateEditProfile, updateEditLayout, addEditSponsor, removeEditSponsor, updateEditSponsor } = useCreatorEditMode(user?.id);
   const homeQuery = useChannelHomeData(user?.id, activeProfile?.id);
   const liveRecord = homeQuery.data?.streams?.find((stream) => stream.is_live && !stream.ended_at) || homeQuery.data?.auraStreams?.[0];
-  const scheduleData = activeLayout?.schedule_data || {};
   const galleryImages = activeLayout?.gallery_images || [];
   const pinnedGames = activeLayout?.pinned_games || [];
   const streamingGame = CARD_GAMES.find((game) => game.id === (activeLayout?.current_game_id || activeProfile?.current_game_id)) || CARD_GAMES[0];
@@ -101,8 +100,14 @@ function OwnChannelHome() {
   const closeOverlay = () => { setActiveTab(null); };
   const openTab = (tab, date) => {
     if (tab && !['schedule', 'cards', 'gallery', 'games'].includes(tab)) return;
-    setScheduleDate(date || null); setActiveTab(activeTab === tab ? null : tab);
-    if (activeTab !== tab && ['schedule', 'games'].includes(tab)) requestAnimationFrame(() => document.querySelector('.channel-stage-grid')?.scrollIntoView({ block: 'start', behavior: 'auto' }));
+    if (tab === 'schedule') {
+      setScheduleDate(date || null);
+      setActiveTab(null);
+      requestAnimationFrame(() => document.getElementById('channel-page-schedule')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+      return;
+    }
+    setActiveTab(activeTab === tab ? null : tab);
+    if (activeTab !== tab && tab === 'games') requestAnimationFrame(() => document.querySelector('.channel-stage-grid')?.scrollIntoView({ block: 'start', behavior: 'auto' }));
   };
   const handleAchievementPointerMove = (event, cardKey) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -190,7 +195,6 @@ function OwnChannelHome() {
   );
 
   const renderOverlayContent = () => {
-    if (activeTab === 'schedule') return <ScheduleSection isEditMode={isEditMode} scheduleData={scheduleData} scheduledStreams={homeQuery.data?.schedules} initialDate={scheduleDate} onUpdateSchedule={(data) => updateEditLayout('schedule_data', data)} onClose={closeOverlay} />;
     if (activeTab === 'games') return <GamesSection isEditMode={isEditMode} pinnedGames={pinnedGames} onUpdateGames={(games) => updateEditLayout('pinned_games', games)} onClose={closeOverlay} />;
     return null;
   };
@@ -211,6 +215,15 @@ function OwnChannelHome() {
             </div>
             <div ref={galleryAnchorRef}><ProfileInfoBar activeProfile={activeProfile || { display_name: user?.full_name || user?.username || 'My Channel' }} isEditMode={isEditMode} isLive={Boolean(liveRecord)} updateEditProfile={updateEditProfile} activeTab={activeTab} setActiveTab={openTab} onEnterEdit={enterEditMode} /></div>
             <ChannelOverview profile={activeProfile} schedules={homeQuery.data?.schedules} loading={homeQuery.isPending && Boolean(user?.id)} error={homeQuery.isError || homeQuery.data?.failures?.includes('schedules')} onRetry={() => homeQuery.refetch()} onOpenSchedule={openTab} isEditMode={isEditMode} onUpdateProfile={updateEditProfile} />
+            <ScheduleSection
+              ownerId={user?.id}
+              profile={activeProfile}
+              scheduledStreams={homeQuery.data?.schedules || []}
+              games={homeQuery.data?.games || []}
+              editable={Boolean(user?.id)}
+              initialDate={scheduleDate}
+              onRefresh={() => homeQuery.refetch()}
+            />
             <ChannelHomeContent sponsors={activeSponsors} isEditMode={isEditMode} allowEditing onAddSponsor={addEditSponsor} onRemoveSponsor={removeEditSponsor} onUpdateSponsor={updateEditSponsor} />
           </div>
         </div>
