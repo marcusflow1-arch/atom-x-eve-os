@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Sparkles, Zap } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
 
@@ -9,28 +9,56 @@ const slotPosition = [
   { left: 3, top: 38, key: '4' },
 ];
 
-function DiamondSkill({ index, active, onTrigger }) {
+function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const image = assigned?.image || assigned?.card_image || assigned?.icon_url || assigned?.icon || '';
-  const title = assigned?.title || assigned?.name || assigned?.card_name || `Skill ${index + 1}`;
+  const title = assigned?.title || assigned?.name || assigned?.card_name || `Showcase slot ${index + 1}`;
   const pos = slotPosition[index];
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    try {
+      const raw = event.dataTransfer?.getData('application/json');
+      const payload = raw ? JSON.parse(raw) : null;
+      if (payload?.source === 'luna-card' && payload.card) {
+        onAssign(index, payload.card);
+      }
+    } catch (error) {
+      console.error('Showcase card drop failed:', error);
+    }
+  };
+
+  const handleClick = () => {
+    if (pendingCard) {
+      onAssign(index, pendingCard);
+      return;
+    }
+    if (assigned) onSelect(index, assigned);
+  };
 
   return (
     <button
       type="button"
-      onClick={() => onTrigger(index)}
-      aria-label={assigned ? `Use ${title}` : `Skill slot ${index + 1}`}
-      title={assigned ? title : `Skill slot ${index + 1}`}
-      className={`absolute h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${active
+      onClick={handleClick}
+      onDragOver={(event) => {
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      }}
+      onDrop={handleDrop}
+      aria-label={assigned ? `Showcase ${title}` : `Showcase slot ${index + 1}`}
+      title={pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'card'} in slot ${index + 1}` : assigned ? title : `Drop a card into slot ${index + 1}`}
+      className={`absolute h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
         ? 'border-cyan-100/70 bg-cyan-200/[0.18] shadow-[0_0_18px_rgba(103,232,249,.28)]'
-        : assigned
-          ? 'border-white/[0.18] bg-slate-900/70 hover:border-cyan-100/35 hover:bg-cyan-100/[0.08]'
-          : 'border-white/[0.10] bg-slate-950/55 hover:border-white/[0.18]'}`}
+        : pendingCard
+          ? 'border-cyan-100/30 bg-cyan-100/[0.07] shadow-[0_0_14px_rgba(103,232,249,.10)]'
+          : assigned
+            ? 'border-white/[0.18] bg-slate-900/70 hover:border-cyan-100/35 hover:bg-cyan-100/[0.08]'
+            : 'border-white/[0.10] bg-slate-950/55 hover:border-white/[0.18]'}`}
       style={{ left: pos.left, top: pos.top }}
     >
       <span className="absolute inset-[-8px] -rotate-45">
         {image ? (
-          <img src={image} alt="" className="h-full w-full object-cover opacity-80" />
+          <img src={image} alt="" className="h-full w-full object-cover opacity-90" draggable={false} />
         ) : (
           <span className="grid h-full w-full place-items-center text-white/25">
             <Sparkles className="h-3.5 w-3.5" />
@@ -48,33 +76,35 @@ export default function LunaSkillXpHud({
   currentXp = 0,
   nextXp = 1000,
   level = 1,
+  showcaseEditing = false,
 }) {
-  const [activeSkills, setActiveSkills] = useState([false, false, false, false]);
-  const storeTriggerSkill = useLunaStore((state) => state.triggerSkill);
-  const isOnCooldown = useLunaStore((state) => state.isOnCooldown);
-  const setCooldown = useLunaStore((state) => state.setCooldown);
-  const getHotbarItem = useLunaStore((state) => state.getHotbarItem);
+  const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
+  const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [previewCard, setPreviewCard] = useState(null);
 
-  const triggerSkill = (index) => {
-    const assigned = getHotbarItem(index);
-    const derived = assigned?.type === 'ability' ? 'kick_ability' : 'kick_ability';
-    if (!assigned && index !== 0) return;
-    if (isOnCooldown(derived)) return;
+  useEffect(() => {
+    const handleSelected = (event) => {
+      const card = event?.detail?.card || null;
+      setPendingCard(card);
+    };
+    window.addEventListener('lunaShowcaseCardSelected', handleSelected);
+    return () => window.removeEventListener('lunaShowcaseCardSelected', handleSelected);
+  }, []);
 
-    storeTriggerSkill(derived);
-    setCooldown(derived, Date.now() + 3000);
-    setActiveSkills((current) => {
-      const next = [...current];
-      next[index] = true;
-      return next;
-    });
-    window.setTimeout(() => {
-      setActiveSkills((current) => {
-        const next = [...current];
-        next[index] = false;
-        return next;
-      });
-    }, 800);
+  const assignShowcaseCard = (index, card) => {
+    if (!card) return;
+    assignToHotbar(index, { ...card, showcaseOnly: true });
+    setSelectedSlot(index);
+    setPreviewCard(card);
+    setPendingCard(null);
+    window.__lunaSelectedShowcaseCard = null;
+    window.dispatchEvent(new CustomEvent('lunaShowcaseCardPlaced', { detail: { index, card } }));
+  };
+
+  const selectShowcaseCard = (index, card) => {
+    setSelectedSlot(index);
+    setPreviewCard(card);
   };
 
   const progress = useMemo(
@@ -100,12 +130,25 @@ export default function LunaSkillXpHud({
           <DiamondSkill
             key={index}
             index={index}
-            active={Boolean(activeSkills[index])}
-            onTrigger={triggerSkill}
+            selected={selectedSlot === index}
+            pendingCard={pendingCard}
+            onAssign={assignShowcaseCard}
+            onSelect={selectShowcaseCard}
           />
         ))}
       </div>
 
+      {showcaseEditing && (
+        <div className="pointer-events-none absolute left-[132px] top-[22px] min-w-[210px] border border-cyan-100/[0.10] bg-slate-950/55 px-3 py-2 backdrop-blur-xl">
+          <p className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/45">Card Showcase</p>
+          <p className="mt-0.5 text-[8px] text-white/65">
+            {pendingCard ? `Choose a diamond for ${pendingCard.title || pendingCard.card_name || 'this card'}` : 'Drag a card here or select one from Cards'}
+          </p>
+        </div>
+      )}
+
+      {!showcaseEditing && (
+        <>
       {/* Continuous seam: top point -> upper-right diamond edge -> right tip -> AI HQ. */}
       <div
         aria-hidden="true"
@@ -151,6 +194,23 @@ export default function LunaSkillXpHud({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.12]" />
         </div>
       </div>
+        </>
+      )}
+
+      {!showcaseEditing && previewCard && (
+        <div className="pointer-events-none absolute left-[144px] top-[6px] z-40 flex h-[48px] max-w-[250px] items-center gap-2.5 border border-white/[0.07] bg-slate-950/55 px-2.5 backdrop-blur-xl">
+          <div className="h-9 w-9 shrink-0 overflow-hidden border border-white/[0.08] bg-white/[0.03]">
+            {(previewCard.image || previewCard.card_image)
+              ? <img src={previewCard.image || previewCard.card_image} alt="" className="h-full w-full object-cover" />
+              : <div className="grid h-full place-items-center"><Sparkles className="h-3.5 w-3.5 text-white/30" /></div>}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[5.5px] font-black uppercase tracking-[0.12em] text-cyan-100/40">Showcase Preview</p>
+            <p className="mt-0.5 truncate text-[8px] font-semibold text-white/78">{previewCard.title || previewCard.card_name || 'Card'}</p>
+            <p className="truncate text-[6px] text-white/32">{previewCard.game_name || previewCard.card_rarity || 'Owned Card'}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
