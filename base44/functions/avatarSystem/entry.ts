@@ -4,25 +4,19 @@ import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
-const FEMALE_ARTEMIS_MODEL = '/models/atomxe-artemis-archer.glb';
-const FEMALE_GRECO_MODEL = '/models/atomxe-greco-girl.glb';
-const FEMALE_ERIKA_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+const FEMALE_ARTEMIS_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 const LEGACY_DEFAULT_MODELS = new Set([
     '/models/artemis.gltf',
     '/models/ybot.fbx',
     '/models/eve.glb',
 ]);
 
-function normalizeAvatarModel(value: unknown, gender: 'male' | 'female' = 'male', femaleVariant = '') {
+function normalizeAvatarModel(value: unknown, gender: 'male' | 'female' = 'male', _femaleVariant = '') {
+    if (gender === 'female') return FEMALE_ARTEMIS_MODEL;
     const requested = String(value || '').trim();
-    const selectedFemale = femaleVariant === 'greco_girl'
-        ? FEMALE_GRECO_MODEL
-        : femaleVariant === 'erika_archer'
-            ? FEMALE_ERIKA_MODEL
-            : FEMALE_ARTEMIS_MODEL;
-    const selectedBase = gender === 'female' ? selectedFemale : GLOBAL_AVATAR_MODEL;
-    const isKnownBase = requested === GLOBAL_AVATAR_MODEL || requested === FEMALE_ARTEMIS_MODEL || requested === FEMALE_GRECO_MODEL || requested === FEMALE_ERIKA_MODEL;
-    return !requested || isKnownBase || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase()) ? selectedBase : requested;
+    return !requested || requested === GLOBAL_AVATAR_MODEL || LEGACY_DEFAULT_MODELS.has(requested.toLowerCase())
+        ? GLOBAL_AVATAR_MODEL
+        : requested;
 }
 
 export default async function(req) {
@@ -141,19 +135,13 @@ export default async function(req) {
 
 async function initializeAvatar(base44, user, requestBody) {
     const gender = requestBody.gender === 'female' ? 'female' : 'male';
-    const requestedFemaleVariant = String(requestBody.female_model_variant || '');
-    const femaleVariant = gender === 'female'
-        ? (requestedFemaleVariant === 'greco_girl' || requestedFemaleVariant === 'erika_archer' ? requestedFemaleVariant : 'artemis_archer')
-        : '';
+    const femaleVariant = gender === 'female' ? 'artemis_archer' : '';
     const defaultName = gender === 'female' ? 'Eve' : 'Atum';
     const name = String(requestBody.name || defaultName).trim().slice(0, 40) || defaultName;
 
     const existing = await base44.asServiceRole.entities.Avatar.filter({ user_id: user.id }, 'created_date', 1);
     let avatar = existing[0];
-    const savedVariant = String(avatar?.female_model_variant || '');
-    const savedFemaleVariant = gender === 'female'
-        ? (savedVariant === 'greco_girl' || savedVariant === 'erika_archer' || savedVariant === 'artemis_archer' ? savedVariant : femaleVariant)
-        : '';
+    const savedFemaleVariant = gender === 'female' ? 'artemis_archer' : '';
     if (avatar && (normalizeAvatarModel(avatar.model_url, gender, savedFemaleVariant) !== avatar.model_url || avatar.gender !== gender || avatar.female_model_variant !== savedFemaleVariant)) {
         avatar = await base44.asServiceRole.entities.Avatar.update(avatar.id, {
             gender,
@@ -255,14 +243,24 @@ async function initializeAvatar(base44, user, requestBody) {
 async function saveAvatarAppearance(base44, userId, appearance = {}) {
     const avatars = await base44.entities.Avatar.filter({ user_id: userId });
     const normalized=normalizeAvatarAppearance(appearance);
+    const gender = appearance.gender === 'female' || avatars[0]?.gender === 'female' ? 'female' : 'male';
+
+    if (gender === 'female') {
+        normalized.gender = 'female';
+        normalized.female_model_variant = 'artemis_archer';
+        normalized.model_url = FEMALE_ARTEMIS_MODEL;
+        normalized.base_body_gender = 'female';
+        normalized.base_body_model_url = FEMALE_ARTEMIS_MODEL;
+    }
+
     if (avatars.length === 0) {
         return base44.entities.Avatar.create({
             user_id: userId,
             name: appearance.name || 'Player Avatar',
-            gender: appearance.gender === 'female' ? 'female' : 'male',
+            gender,
             level: 1,
             experience: 0,
-            model_url: normalized.model_url || GLOBAL_AVATAR_MODEL,
+            model_url: gender === 'female' ? FEMALE_ARTEMIS_MODEL : (normalized.model_url || GLOBAL_AVATAR_MODEL),
             ...normalized,
         });
     }
