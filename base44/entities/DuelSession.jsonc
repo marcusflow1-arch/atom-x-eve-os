@@ -42,34 +42,6 @@
     "max_hp": {
       "type": "number",
       "default": 100
-    },
-    "challenger_loadout": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "default": [],
-      "description": "Snapshot of challenger Skill Book cards when duel begins"
-    },
-    "opponent_loadout": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "default": [],
-      "description": "Snapshot of opponent Skill Book cards when duel begins"
-    },
-    "challenger_power": {
-      "type": "number",
-      "default": 0
-    },
-    "opponent_power": {
-      "type": "number",
-      "default": 0
-    },
-    "battle_format": {
-      "type": "string",
-      "default": "card_duel"
     }
   },
   "required": [
