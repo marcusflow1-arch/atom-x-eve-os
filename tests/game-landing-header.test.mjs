@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 import {JSDOM} from 'jsdom';
 
 const dom=new JSDOM('<div id="root"></div>',{url:'https://test.local/GameDetail?id=example'});
-for(const name of ['window','document','HTMLElement','Element','Node','Event','CustomEvent'])globalThis[name]=dom.window[name];
+for(const name of ['window','document','HTMLElement','Element','SVGElement','Node','Event','CustomEvent'])globalThis[name]=dom.window[name];
 Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 const React=await import('react'),{act}=React;
