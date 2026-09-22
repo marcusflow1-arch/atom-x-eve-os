@@ -11,7 +11,6 @@ import CommentSection from '@/components/community/CommentSection';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
 import ForumDirectoryOverlay from '@/components/community/ForumDirectoryOverlay';
 import '@/components/community/forumHub.css';
-import '@/components/community/forumRefresh.css';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
