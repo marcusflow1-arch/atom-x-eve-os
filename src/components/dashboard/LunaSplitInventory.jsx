@@ -104,6 +104,8 @@ export default function LunaSplitInventory({
   inventory = [],
   selectedSlotId = null,
   onEquipItem,
+  onBackToLoadout,
+  compactSlotMode = false,
 }) {
   const [browseMode, setBrowseMode] = useState('all');
   const [filter, setFilter] = useState('all');
@@ -182,6 +184,10 @@ export default function LunaSplitInventory({
   }, [categoryFilteredItems, selectedGame]);
 
   const visibleItems = selectedGame ? gameItems : allItems;
+  const slotItems = useMemo(() => {
+    if (!selectedSlotId) return items;
+    return items.filter((item) => itemFitsSlot(item, selectedSlotId));
+  }, [items, selectedSlotId]);
   const selectedGameMeta = selectedGame
     ? games.find((game) => game.title === selectedGame)
       || { title: selectedGame, ...(gameMeta.get(selectedGame.toLowerCase()) || {}) }
@@ -202,6 +208,99 @@ export default function LunaSplitInventory({
   const resetGameBrowse = () => {
     setSelectedGame(null);
   };
+
+  if (compactSlotMode && selectedSlotId) {
+    return (
+      <div
+        className="relative h-full w-full overflow-hidden px-5 pb-5 pt-4"
+        style={{
+          background: 'radial-gradient(ellipse at 52% 45%, rgba(2,5,10,.78) 0%, rgba(3,7,12,.54) 58%, rgba(3,7,12,.18) 84%, transparent 100%)',
+          backdropFilter: 'blur(10px) saturate(110%)',
+          WebkitBackdropFilter: 'blur(10px) saturate(110%)',
+        }}
+      >
+        <div className="relative z-10 flex h-full min-h-0 flex-col">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.07] pb-3">
+            <div className="min-w-0">
+              <button
+                type="button"
+                onClick={onBackToLoadout}
+                className="mb-2 flex items-center gap-1 text-[7px] font-black uppercase tracking-[0.14em] text-white/65 transition-colors hover:text-white"
+              >
+                <ChevronLeft className="h-3 w-3" />
+                Loadout
+              </button>
+              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">Inventory</p>
+              <h2 className="mt-1 truncate text-[15px] font-semibold text-white">
+                {getEquipmentSlotLabel(selectedSlotId)}
+              </h2>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[6px] font-black uppercase tracking-[0.14em] text-white/45">Compatible</p>
+              <p className="mt-1 text-[10px] font-semibold text-white">{slotItems.length}</p>
+            </div>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto pt-4 pr-1">
+            {slotItems.length ? (
+              <div
+                className="grid justify-start gap-2"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 86px))' }}
+              >
+                {slotItems.map((item) => {
+                  const id = itemIdOf(item);
+                  const rarity = rarityClass[item.rarity] || rarityClass.Common;
+                  return (
+                    <div
+                      key={id}
+                      className="relative h-[108px] overflow-hidden border border-white/[0.09] bg-black/35 p-1.5"
+                      title={item.name}
+                    >
+                      <div className="relative flex h-[48px] items-center justify-center border border-white/[0.06] bg-black/40">
+                        {item.icon_url || item.icon ? (
+                          <img src={item.icon_url || item.icon} alt={item.name} className="h-8 w-8 object-contain" />
+                        ) : (
+                          <Package className="h-4 w-4 text-white/60" />
+                        )}
+                        {item.quantity != null && (
+                          <span className="absolute bottom-0.5 right-0.5 bg-black/75 px-1 text-[5px] font-mono text-white">x{item.quantity}</span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-[7px] font-semibold text-white">{item.name}</p>
+                      <div className="mt-0.5">
+                        <span className={`inline-block max-w-full truncate border px-1 py-0.5 text-[4.5px] font-black uppercase tracking-[.07em] ${rarity}`}>
+                          {item.rarity || 'Common'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onEquipItem?.(item)}
+                        className="mt-1 flex h-[18px] w-full items-center justify-center border border-white/[0.12] bg-white/[0.07] text-[5.5px] font-black uppercase tracking-[0.10em] text-white transition-colors hover:bg-white/[0.14]"
+                      >
+                        Equip
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex h-full min-h-48 flex-col items-center justify-center text-center">
+                <Package className="h-6 w-6 text-white/35" />
+                <p className="mt-2 text-[8px] text-white/60">No compatible items for this slot.</p>
+                <button
+                  type="button"
+                  onClick={onBackToLoadout}
+                  className="mt-3 border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.1em] text-white/75 hover:text-white"
+                >
+                  Back to Loadout
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
