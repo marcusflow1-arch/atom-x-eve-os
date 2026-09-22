@@ -340,13 +340,7 @@ export default function DashboardAvatarOverview() {
       {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
         <div
           data-dashboard-inventory-workspace
-          className="absolute left-[300px] right-[338px] top-[26px] bottom-0 z-40 pointer-events-auto overflow-hidden border-y border-white/[0.07]"
-          style={{
-            background: 'linear-gradient(135deg, rgba(8,14,24,.46), rgba(11,18,29,.28) 50%, rgba(8,14,24,.42))',
-            backdropFilter: 'blur(22px) saturate(135%)',
-            WebkitBackdropFilter: 'blur(22px) saturate(135%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06), inset 0 -1px 0 rgba(255,255,255,.03)',
-          }}
+          className="absolute left-[300px] right-[338px] top-[26px] bottom-0 z-40 pointer-events-auto overflow-hidden"
         >
           <div className="relative grid h-full min-h-0 grid-cols-2">
             <section className="relative min-h-0 min-w-0 overflow-hidden border-r border-white/[0.08]">
