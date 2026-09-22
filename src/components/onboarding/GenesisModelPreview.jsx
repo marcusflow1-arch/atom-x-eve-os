@@ -80,7 +80,7 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0 }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
@@ -172,6 +172,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
           safeRigidIdle: fixedFemaleIdle,
           retargetExternalMotions: false,
           framingOffsetY: fixedFemaleIdle ? 0.16 : 0,
+          initialYaw,
           lockRootTranslation: false,
           lockModelPosition: fixedFemaleIdle,
         },
@@ -188,7 +189,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       scene.current?.dispose();
       scene.current = null;
     };
-  }, [url, playMotion, fixedFemaleIdle, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
+  }, [url, playMotion, fixedFemaleIdle, initialYaw, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
