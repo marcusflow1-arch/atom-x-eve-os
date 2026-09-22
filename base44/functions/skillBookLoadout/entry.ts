@@ -109,7 +109,7 @@ async function ensureSkillSets(base44: any, userId: string) {
 
 async function buildState(base44: any, user: AnyObj) {
   const svc = base44.asServiceRole.entities;
-  const { rows: loadouts, active } = await ensureJawans(base44, user.id);
+  const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
   const [ownedCards, achievements, games, progressions] = await Promise.all([
     svc.UserCard.filter({ user_id: user.id }, '-created_date', 1000),
     svc.Achievement.list('-created_date', 1500),
@@ -215,8 +215,12 @@ async function buildState(base44: any, user: AnyObj) {
     return {
       id: loadout.id,
       name: loadout.name,
+      skill_set_id: loadout.skill_set_id || '',
+      skill_set_name: loadout.skill_set_name || loadout.name || 'Genre Set',
+      skill_set_genre: loadout.skill_set_genre || loadout.genre || '',
+      skill_set_order: Number(loadout.skill_set_order || 0),
       jawan_id: loadout.jawan_id || '',
-      jawan_name: loadout.jawan_name || loadout.name || 'Jawan',
+      jawan_name: loadout.jawan_name || 'Jawan',
       jawan_role: loadout.jawan_role || 'Balanced',
       is_active: Boolean(loadout.is_active),
       skill_slots: loadout.skill_slots || {},
@@ -224,13 +228,15 @@ async function buildState(base44: any, user: AnyObj) {
     };
   };
 
-  const jawans = loadouts.map(serializeLoadout);
-  const activeLoadout = active ? serializeLoadout(active) : jawans[0];
+  const skillSets = loadouts.map(serializeLoadout);
+  const activeLoadout = active ? serializeLoadout(active) : skillSets[0];
 
   return {
     success: true,
     loadout: activeLoadout,
-    jawans,
+    skill_sets: skillSets,
+    active_skill_set_id: activeLoadout?.skill_set_id || '',
+    jawans: skillSets,
     active_jawan_id: activeLoadout?.jawan_id || '',
     games: [...grouped.values()].sort((a, b) => a.title.localeCompare(b.title)),
     skills: catalog.sort((a, b) => {
@@ -243,7 +249,7 @@ async function buildState(base44: any, user: AnyObj) {
 }
 
 async function activeLoadout(base44: any, userId: string) {
-  const { rows, active } = await ensureJawans(base44, userId);
+  const { rows, active } = await ensureSkillSets(base44, userId);
   return active || rows[0];
 }
 
@@ -259,11 +265,14 @@ Deno.serve(async (req) => {
 
     if (action === 'getState') return json(await buildState(base44, user));
 
-    if (action === 'selectJawan') {
-      const jawanId = String(data.jawan_id || '');
-      const { rows } = await ensureJawans(base44, user.id);
-      const selected = rows.find((r: AnyObj) => String(r.jawan_id) === jawanId);
-      if (!selected) return json({ error: 'Jawan loadout not found' }, 404);
+    if (action === 'selectSkillSet' || action === 'selectJawan') {
+      const skillSetId = String(data.skill_set_id || '');
+      const legacyJawanId = String(data.jawan_id || '');
+      const { rows } = await ensureSkillSets(base44, user.id);
+      const selected = rows.find((r: AnyObj) => skillSetId
+        ? String(r.skill_set_id) === skillSetId
+        : String(r.jawan_id) === legacyJawanId);
+      if (!selected) return json({ error: 'Skill set not found' }, 404);
       for (const row of rows) {
         const next = String(row.id) === String(selected.id);
         if (Boolean(row.is_active) !== next) await svc.Loadout.update(row.id, { is_active: next });
@@ -272,7 +281,7 @@ Deno.serve(async (req) => {
     }
 
     const loadout = await activeLoadout(base44, user.id);
-    if (!loadout) return json({ error: 'No active Jawan loadout' }, 404);
+    if (!loadout) return json({ error: 'No active skill set' }, 404);
 
     if (action === 'equip') {
       const slot = Number(data.slot);
