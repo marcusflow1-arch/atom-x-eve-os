@@ -71,7 +71,7 @@ const componentMocks = {
   EditModeToolbar: 'export default function Toolbar(p){return p.isEditMode?<button onClick={p.onSave}>Save channel</button>:null}',
   PlayerAchievementCollection: 'export default function Cards(p){globalThis.uiFixtures.collection=p;return <section id="player-achievement-collection" role="dialog" aria-label="Channel cards"><button onClick={p.onClose}>Close cards</button></section>}',
   GallerySection: 'export default function Gallery(p){globalThis.uiFixtures.gallery=p;return <section role="dialog" aria-label="Channel gallery"><button onClick={p.onClose}>Close gallery</button></section>}',
-  ScheduleSection: 'export default function Schedule(p){globalThis.uiFixtures.schedule=p;return <section role="dialog" aria-label="Channel schedule"><button onClick={p.onClose}>Close schedule</button></section>}',
+  ScheduleSection: 'export default function Schedule(p){globalThis.uiFixtures.schedule=p;return <section id="channel-page-schedule" aria-label="Channel schedule">Channel schedule</section>}',
   GamesSection: 'export default function Games(p){globalThis.uiFixtures.gameProps=p;return <section role="dialog" aria-label="Channel games"><button onClick={p.onClose}>Close games</button></section>}',
   SponsorEditor: 'export default function Sponsors(){return <div>Sponsors & Partners</div>}',
   SponsorsSection: 'export default function Sponsors(){return <div>Sponsors & Partners</div>}',
@@ -189,7 +189,9 @@ await unmount();
 await mount(Home, '/StreamingHome?streamerId=owner');
 assert.equal(document.querySelector('.channel-name-line h1').textContent, 'Moon Arcade');
 assert.equal(document.querySelector('[data-media-url]').dataset.mediaUrl, F.streams[0].playback_url);
-for (const [name, dialog] of [['Schedule','Channel schedule'],['Cards','Channel cards'],['Gallery','Channel gallery'],['Games','Channel games']]) {
+assert.ok(byLabel('Channel schedule'), 'schedule stays on the page');
+assert.equal(F.schedule.ownerId,'owner');
+for (const [name, dialog] of [['Cards','Channel cards'],['Gallery','Channel gallery'],['Games','Channel games']]) {
   const tab=[...document.querySelectorAll('.channel-section-nav button')].find(node=>node.querySelector('strong').textContent===name);
   await run(()=>tab.click());
   assert.ok(byLabel(dialog), name+' opens on the public profile');
@@ -201,7 +203,7 @@ for (const [name, dialog] of [['Schedule','Channel schedule'],['Cards','Channel 
 for (const feature of ['Sponsors & Partners','Products & Events','Channel season pass']) assert.ok(document.body.textContent.includes(feature));
 await run(()=>button('View schedule').click());
 assert.equal(F.schedule.initialDate,F.homeData.schedules[0].scheduled_start);
-await run(()=>button('Close schedule').click());
+
 const chatInput=document.querySelector('#channel-chat-message');
 assert.equal(chatInput.disabled,false);
 await input(chatInput,'Hello from the channel');
