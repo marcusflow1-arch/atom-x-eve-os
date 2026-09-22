@@ -58,11 +58,11 @@ assert.ok(document.querySelector('[data-test="studio-panel"]'),'Studio opens the
 assert.equal(byLabel('Studio').getAttribute('aria-pressed'),'true');
 await run(()=>byLabel('Games').click());
 assert.ok(document.querySelector('[data-test="games-panel"]'),'Games opens the original developer-games panel');
-assert.equal(document.querySelector('[data-test="studio-panel"]'),null,'opening Games closes Studio');
+assert.equal(byLabel('Studio').getAttribute('aria-pressed'),'false','opening Games deactivates Studio');
 await run(()=>byLabel('Stream').click());
 assert.ok(document.querySelector('[data-test="stream-panel"]'),'Stream opens the original stream overlay');
-assert.equal(document.querySelector('[data-test="games-panel"]'),null,'opening Stream closes Games');
+assert.equal(byLabel('Games').getAttribute('aria-pressed'),'false','opening Stream deactivates Games');
 await run(()=>window.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape'})));
-assert.equal(document.querySelector('[data-test="stream-panel"]'),null,'Escape closes the footer overlay');
+assert.equal(byLabel('Stream').getAttribute('aria-pressed'),'false','Escape closes the footer overlay');
 await run(()=>root.unmount());dom.window.close();
 console.log('PASS: game-page header navigation/balance/cart, catalog search, and restored footer-owned Games/Studio/Stream panels.');
