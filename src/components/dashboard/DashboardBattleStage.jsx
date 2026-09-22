@@ -41,14 +41,14 @@ function HealthPlate({ fighter, enemy = false, active = false, worldBoss = false
   );
 }
 
-function PartyFormation({ players, activeId, lastEvent }) {
+function PartyFormation({ players, activeId, lastEvent, duel = false }) {
   const count = Math.max(1, players.length);
   return (
     <div className="relative h-full w-full">
       {players.map((player, index) => {
         const spread = count === 1 ? 0 : (index - (count - 1) / 2);
-        const x = 50 + spread * Math.min(21, 52 / count);
-        const y = 5 + Math.abs(spread) * 3.5;
+        const x = (duel ? 58 : 50) + spread * Math.min(21, 52 / count);
+        const y = (duel ? 1 : 5) + Math.abs(spread) * 3.5;
         const scale = Math.max(.7, 1 - Math.abs(spread) * .07);
         return (
           <div
@@ -56,7 +56,7 @@ function PartyFormation({ players, activeId, lastEvent }) {
             className="absolute bottom-[5%] top-[1%] w-[42%] -translate-x-1/2 transition-all duration-500"
             style={{ left: String(x) + '%', transform: 'translateX(-50%) translateY(' + String(y) + '%) scale(' + String(scale) + ')', zIndex: 20 - Math.abs(spread) }}
           >
-            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} />
+            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} facing={duel ? 'right' : 'front'} />
           </div>
         );
       })}
@@ -98,8 +98,8 @@ function EnemyFormation({ encounter, opponent, enemy, activeId, lastEvent }) {
   const worldBoss = encounter.route?.type === 'world_boss';
   if (duel && opponent) {
     return (
-      <div className="absolute inset-[2%_12%_5%_12%] -scale-x-100">
-        <BattleAvatar player={opponent} active={activeId === opponent.id} event={lastEvent} />
+      <div className="absolute inset-[0%_4%_4%_18%]">
+        <BattleAvatar player={opponent} active={activeId === opponent.id} event={lastEvent} facing="left" />
       </div>
     );
   }
@@ -202,7 +202,7 @@ export default function DashboardBattleStage({ encounterId }) {
 
       <div className="absolute inset-x-[2%] bottom-[10%] top-[17%] z-10 grid grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] items-end">
         <div className="relative h-full">
-          <PartyFormation players={model.allies} activeId={activeId} lastEvent={model.last} />
+          <PartyFormation players={model.allies} activeId={activeId} lastEvent={model.last} duel={model.duel} />
         </div>
 
         <div className="self-center text-center">
