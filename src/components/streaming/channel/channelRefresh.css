@@ -1,0 +1,157 @@
+/* Shared presentation for the creator's Home and the public channel landing. */
+body .channel-home-page.channel-refresh {
+  --channel-stage-height: clamp(400px,60vh,700px);
+  --channel-muted: #9aadc1; --channel-cyan: #a7e6eb;
+  background: radial-gradient(ellipse at 90% 0%,#27526420,transparent 55%),#0b111c;
+  color: #e8f2fa;
+}
+body .channel-refresh .channel-home-inner { padding: 82px clamp(18px,3vw,52px) 100px; background: transparent; }
+body .channel-refresh .channel-page-content { max-width: 1740px; display: flex; flex-direction: column; gap: 24px; margin-inline: auto; position: relative; }
+body .channel-refresh.channel-public-page { padding: 22px clamp(18px,3vw,52px) 90px; }
+body .channel-refresh .channel-page-intro { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin: 0; min-height: 32px; }
+body .channel-refresh .channel-page-intro > div { display: flex; align-items: center; gap: 12px; font-size: 11px; color: #869eb4; }
+body .channel-refresh .channel-page-intro > div strong { color: #bfe4eb; font-size: 11px; letter-spacing: .16em; font-weight: 600; }
+body .channel-refresh .channel-page-intro > div > span::before { content: '/'; padding-right: 12px; color: #536a80; }
+body .channel-refresh .channel-page-intro :is(a,button) { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #a8bfce; }
+body .channel-refresh .channel-stage-grid { display: grid; grid-template-columns: minmax(0,1fr) clamp(300px,24vw,370px); align-items: start; gap: 20px; scroll-margin-top: 82px; }
+body .channel-refresh .channel-stage-player { grid-column: auto; height: calc(var(--channel-stage-height) + 56px); display: flex; flex-direction: column; min-width: 0; }
+body .channel-refresh .channel-stage-chat { grid-column: auto; height: var(--channel-stage-height); margin-top: 56px; min-width: 0; }
+body .channel-refresh .channel-stage-caption { height: 56px; flex: 0 0 56px; display: flex; align-items: center; flex-wrap: nowrap; justify-content: space-between; gap: 18px; padding: 0 0 13px; min-width: 0; }
+body .channel-refresh .channel-stage-caption > div { min-width: 0; }
+body .channel-refresh .channel-stage-caption small { display: block; font-size: 9px; letter-spacing: .14em; color: #94b8c8; text-transform: uppercase; }
+body .channel-refresh .channel-stage-caption strong { display: block; margin-top: 5px; font-size: 15px; font-weight: 550; color: #ddebf7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body .channel-refresh .channel-stage-caption > button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid #b5d9e324; border-radius: 7px; background: #ffffff04; color: #acdce6; font-size: 11px; flex-shrink: 0; }
+body .channel-refresh .channel-stage-caption > span { color: #9eb4c7; font-size: 11px; letter-spacing: 0; white-space: nowrap; }
+body .channel-refresh .channel-stage-media { position: relative; flex: 1; min-height: 0; }
+body .channel-refresh .channel-stage-player [data-stream-player-box] { min-height: 0; height: 100%; border: 1px solid #b2d5e524; border-radius: 13px; background: #080e17; box-shadow: 0 20px 45px #0003; overflow: hidden; backdrop-filter: none; }
+body .channel-refresh .channel-public-player { min-height: 0; height: auto; }
+body .channel-refresh .channel-community-chat { border: 1px solid #b3d6e51c; border-radius: 13px; background: linear-gradient(155deg,#1a2a3bad,#101a27e6); box-shadow: none; backdrop-filter: blur(18px); }
+body .channel-refresh .channel-community-chat > header { padding: 19px 18px; border-bottom: 1px solid #c0d9ea12; }
+body .channel-refresh .channel-community-chat > header > span { font-size: 13px; gap: 10px; }
+body .channel-refresh .channel-community-chat > header small { padding: 4px 6px; border-radius: 4px; background: #a3ddea0a; font-size: 9px; letter-spacing: .07em; color: #99b6c8; }
+body .channel-refresh .channel-chat-feed { padding: 18px; }
+body .channel-refresh .channel-chat-feed > p { font-size: 13px; line-height: 1.85; margin-bottom: 18px; color: #b6cadd; }
+body .channel-refresh .channel-chat-feed > p > strong { font-weight: 550; color: #a9e3eb; }
+body .channel-refresh .channel-chat-empty { gap: 16px; color: #92aec2; }
+body .channel-refresh .channel-chat-empty > svg { padding: 12px; width: 52px; height: 52px; background: #a1dfeb0b; border-radius: 15px; color: #80b5c5; }
+body .channel-refresh .channel-chat-empty p { font-size: 12px; max-width: 29ch; line-height: 1.9; }
+body .channel-refresh .channel-community-chat > form { margin: 14px; padding: 7px 9px 7px 13px; background: #07101a80; border: 1px solid #b0d2e321; border-radius: 8px; box-shadow: none; }
+body .channel-refresh .channel-community-chat > form input { font-size: 12px; padding-block: 7px; }
+body .channel-refresh .channel-community-chat > form button { background: #9ae3e90f; border-radius: 5px; padding: 8px; }
+body .channel-refresh .channel-community-chat > form button:disabled { opacity: .4; }
+body .channel-refresh .channel-offline-stage { background: radial-gradient(ellipse at 50% 65%,#4585a12b,transparent 65%),linear-gradient(145deg,#172a3d,#0a121f); gap: 14px; padding: 26px; position: relative; overflow: hidden; }
+body .channel-refresh .channel-offline-stage::before { content: ''; width: 300px; height: 300px; border: 1px solid #a7d9e316; border-radius: 50%; position: absolute; left: calc(50% - 150px); top: calc(50% - 150px); pointer-events: none; }
+body .channel-refresh .channel-offline-stage > .console-avatar { width: 72px; height: 72px; box-shadow: 0 0 0 8px #a7e3e804; }
+body .channel-refresh .channel-offline-stage > svg { color: #9ac4d2; }
+body .channel-refresh .channel-offline-stage h2 { color: #e3f2fc; font-size: clamp(22px,2.5vw,36px); letter-spacing: -.035em; }
+body .channel-refresh .channel-offline-stage p { color: #9bb5c9; font-size: 13px; max-width: 50ch; line-height: 1.8; }
+body .channel-refresh .channel-offline-stage button { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; background: #b0e5ed12; color: #c1eaf2; border: 1px solid #b0e5ed29; border-radius: 8px; font-size: 12px; }
+
+body .channel-refresh .channel-profile-v2 { display: block; background: linear-gradient(120deg,#162537ad,#12203170); padding: 24px 26px 0; border: 1px solid #bdd8e51a; border-radius: 13px; box-shadow: none; backdrop-filter: none; }
+body .channel-refresh .channel-profile-v2 > .channel-identity-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 24px; padding-bottom: 24px; }
+body .channel-refresh .channel-identity { display: flex; align-items: center; gap: 18px; flex: 1; min-width: 0; }
+body .channel-refresh .channel-identity-avatar { position: relative; flex-shrink: 0; width: 68px; height: 68px; border-radius: 19px; background: linear-gradient(145deg,#3b6c7f,#1f3a52); box-shadow: 0 0 0 4px #b6e9eb06; }
+body .channel-refresh .channel-identity-avatar > img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+body .channel-refresh .channel-identity-avatar > span { display: grid; place-items: center; width: 100%; height: 100%; color: #e7f9ff; font-size: 27px; font-weight: 600; }
+body .channel-refresh .channel-identity-avatar > button { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: #030a1c99; color: #e6f7ff; }
+body .channel-refresh .channel-identity-avatar i { position: absolute; right: -3px; bottom: -3px; width: 15px; height: 15px; border-radius: 50%; border: 3px solid #152232; background: #77889b; }
+body .channel-refresh .channel-identity-avatar i.is-live { background: #82dfb9; }
+body .channel-refresh .channel-identity-copy { min-width: 0; flex: 1; }
+body .channel-refresh .channel-name-line { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+body .channel-refresh .channel-name-line h1 { font-size: clamp(23px,2.2vw,32px); font-weight: 600; letter-spacing: -.035em; margin: 0; overflow-wrap: anywhere; }
+body .channel-refresh .channel-status { font-size: 8px; letter-spacing: .1em; padding: 5px 7px; background: #8bb2c512; color: #a8bbcb; border: 1px solid #b3d9e213; border-radius: 4px; }
+body .channel-refresh .channel-status.is-live { color: #a6efd0; background: #9bebc50c; border-color: #9bebc529; }
+body .channel-refresh .channel-identity-copy > p { font-size: 12px; color: #9eb5c9; line-height: 1.8; margin: 7px 0 0; }
+body .channel-refresh .channel-identity-actions { display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+body .channel-refresh .channel-follower-stat { display: flex; align-items: center; gap: 7px; color: #8ea9bf; font-size: 11px; }
+body .channel-refresh .channel-follower-stat strong { color: #dbeaf6; font-weight: 550; font-size: 14px; font-variant-numeric: tabular-nums; }
+body .channel-refresh .channel-edit-profile { display: flex; align-items: center; gap: 8px; border: 1px solid #b9d8e426; background: #ffffff04; border-radius: 7px; padding: 10px 12px; color: #bed1df; font-size: 11px; }
+body .channel-refresh .channel-profile-v2 .channel-section-nav { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border-top: 1px solid #c3dfed17; margin: 0; gap: 0; flex-shrink: 1; }
+body .channel-refresh .channel-section-nav > button { display: flex; align-items: center; gap: 12px; text-align: left; position: relative; padding: 19px 10px; color: #96b6ca; background: transparent; border-radius: 0; border: 0; min-width: 0; }
+body .channel-refresh .channel-section-nav > button > svg { flex-shrink: 0; }
+body .channel-refresh .channel-section-nav > button > span:not(.channel-nav-indicator) { min-width: 0; }
+body .channel-refresh .channel-section-nav strong { color: #d1e2ef; font-weight: 550; font-size: 13px; }
+body .channel-refresh .channel-section-nav small { display: block; font-size: 10px; color: #8fa8bd; margin-top: 4px; }
+body .channel-refresh .channel-section-nav button:hover,body .channel-refresh .channel-section-nav button[aria-pressed="true"] { background: #96dbe509; color: #c2f0f4; }
+body .channel-refresh .channel-section-nav button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 0; left: 10px; right: 10px; height: 2px; background: #9adddf; }
+body .channel-refresh .channel-nav-indicator { margin-left: auto; font-size: 15px; color: #6f9caf; }
+body .channel-refresh .channel-identity-fields { display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; }
+body .channel-refresh .channel-identity-fields label { font-size: 11px; color: #a5bdcf; }
+body .channel-refresh .channel-identity-fields input { background: #ffffff04; border: 1px solid #b0d5e32c; margin-top: 6px; color: #e1f3fc; font-size: 13px; }
+body .channel-refresh .channel-upload-error { color: #fecaca; font-size: 12px; padding: 10px 0; }
+body .channel-refresh .channel-overview { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(260px,1fr); gap: 40px; padding: 14px 6px 22px; }
+body .channel-refresh .channel-small-label { display: inline-flex; align-items: center; gap: 8px; font-size: 9px; font-weight: 550; color: #8cb2c4; letter-spacing: .12em; }
+body .channel-refresh .channel-overview h2 { color: #e2eef7; font-size: 18px; font-weight: 550; letter-spacing: -.02em; margin: 11px 0 10px; }
+body .channel-refresh .channel-overview p { color: #9bb2c6; font-size: 13px; line-height: 1.9; max-width: 80ch; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+body .channel-refresh .channel-next-panel { position: relative; padding-left: 30px; background: linear-gradient(180deg,transparent,#b0d5e72b,transparent) left center / 1px 100% no-repeat; }
+body .channel-refresh .channel-next-panel time { display: flex; flex-wrap: wrap; gap: 9px; font-size: 12px; line-height: 1.8; color: #a9c4d8; }
+body .channel-refresh .channel-next-panel button { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #b8e4ed; margin-top: 15px; }
+body .channel-refresh .channel-bio-editor { display: block; font-size: 12px; color: #a5bfd1; }
+body .channel-refresh .channel-bio-editor textarea { display: block; width: 100%; min-height: 110px; padding: 12px; margin-top: 9px; background: #ffffff04; border: 1px solid #b9d8e426; border-radius: 8px; color: #ddedf7; font-size: 13px; }
+body .channel-refresh .channel-commerce { padding-top: 8px; border-top: 1px solid #b4d5e318; }
+body .channel-refresh .channel-commerce-section { padding: 24px 0 30px; margin-bottom: 12px; background: transparent; }
+body .channel-refresh .channel-commerce-section + .channel-commerce-section::before { margin: -18px 0 30px; background: linear-gradient(90deg,#c3ddeb20,transparent); }
+body .channel-refresh .channel-commerce :is(.channel-partners-heading h3,.channel-sponsor-editor > h3,.channel-sponsor-editor > div > h3,.channel-pass-heading h3) { font-size: 21px; letter-spacing: -.025em; font-weight: 550; }
+body .channel-refresh .channel-commerce .channel-partner-feature { padding: 24px; border: 1px solid #bbd6e51a; border-radius: 12px; background: linear-gradient(130deg,#192a3b80,#14203140); box-shadow: none; }
+body .channel-refresh .channel-commerce .channel-partner-feature > .grid { gap: 28px; }
+body .channel-refresh .channel-commerce .channel-partner-social { display: flex; justify-content: flex-start; }
+body .channel-refresh .channel-commerce .channel-partner-about { padding-inline: 22px; background: linear-gradient(180deg,transparent,#aecde321,transparent) left / 1px 100% no-repeat; }
+body .channel-refresh .channel-commerce .channel-sponsor-item { background: #1b2f4355; border: 1px solid #a0c8e329; box-shadow: none; border-radius: 10px; }
+body .channel-refresh .channel-commerce .channel-shop-tabs { justify-content: flex-start; gap: 26px; min-height: 39px; }
+body .channel-refresh .channel-commerce .channel-shop-tabs > button { font-size: 21px; letter-spacing: -.025em; }
+body .channel-refresh .channel-commerce .channel-shop-card { width: clamp(220px,22vw,310px); border-radius: 12px; border: 1px solid #b8d5e321; background: #15223290; box-shadow: none; }
+body .channel-refresh .channel-commerce .channel-shop-art { border: 0; background: #13273a; box-shadow: none; }
+body .channel-refresh .channel-commerce .channel-shop-copy { padding: 18px; }
+body .channel-refresh .channel-commerce .channel-shop-copy h4 { font-size: 15px; color: #e2eff7; }
+body .channel-refresh .channel-commerce .channel-shop-copy p { font-size: 12px; color: #98b3c9; line-height: 1.8; }
+body .channel-refresh .channel-commerce .channel-shop-copy button { font-size: 11px; border-radius: 7px; border: 1px solid #abdae52d; color: #c1e7ed; }
+body .channel-refresh .channel-commerce .channel-pass { border: 1px solid #b0d4e51c; border-radius: 13px; padding: 26px; background: linear-gradient(125deg,#1d33473d,#16233166); box-shadow: none; }
+body .channel-refresh .channel-commerce .channel-pass-heading { margin-bottom: 24px; align-items: center; }
+body .channel-refresh .channel-commerce .channel-pass-heading p { font-size: 12px; color: #9bb4c8; margin-top: 8px; }
+body .channel-refresh .channel-commerce .channel-pass-reward-art { background: #203b514d; border: 1px solid #b2dce326; box-shadow: none; border-radius: 8px; }
+body .channel-refresh .channel-commerce .channel-pass-reel { padding-bottom: 14px; }
+body .channel-refresh :is(button,a,input,textarea):focus-visible { outline: 2px solid #a2e2ea; outline-offset: 3px; }
+@media (max-width:1100px) {
+ body .channel-refresh .channel-stage-grid { grid-template-columns: minmax(0,1fr) 300px; gap: 16px; }
+ body .channel-refresh .channel-identity-actions { gap: 15px; }
+ body .channel-refresh .channel-follower-stat { flex-wrap: wrap; max-width: 100px; justify-content: flex-end; }
+ body .channel-refresh .channel-overview { gap: 24px; }
+}
+@media (max-width:900px) {
+ body .channel-home-page.channel-refresh { --channel-stage-height: clamp(270px,53vw,510px); }
+ body .channel-refresh .channel-stage-grid { grid-template-columns: minmax(0,1fr); }
+ body .channel-refresh .channel-stage-chat { margin-top: 0; height: 320px; }
+ body .channel-refresh .channel-profile-v2 > .channel-identity-row { flex-wrap: wrap; }
+ body .channel-refresh .channel-identity-actions { width: 100%; justify-content: space-between; }
+ body .channel-refresh .channel-follower-stat { max-width: none; }
+ body .channel-refresh .channel-overview { grid-template-columns: minmax(0,1fr); gap: 24px; }
+ body .channel-refresh .channel-next-panel { background: #a9dfea04; padding: 22px; border: 1px solid #c1dae51a; border-radius: 10px; }
+ body .channel-refresh .channel-commerce .channel-partner-about { padding: 0; background: none; }
+}
+@media (max-width:600px) {
+ body .channel-refresh .channel-home-inner { padding: 78px 14px 90px; }
+ body .channel-refresh.channel-public-page { padding: 16px 14px 80px; }
+ body .channel-refresh .channel-page-content { gap: 20px; }
+ body .channel-refresh .channel-stage-caption { gap: 10px; }
+ body .channel-refresh .channel-stage-caption strong { font-size: 13px; }
+ body .channel-refresh .channel-stage-caption > button { font-size: 10px; padding: 8px; }
+ body .channel-refresh .channel-profile-v2 { padding: 20px 16px 0; }
+ body .channel-refresh .channel-identity { gap: 14px; }
+ body .channel-refresh .channel-identity-avatar { width: 55px; height: 55px; border-radius: 15px; }
+ body .channel-refresh .channel-name-line { gap: 8px; }
+ body .channel-refresh .channel-name-line h1 { font-size: 23px; }
+ body .channel-refresh .channel-identity-copy > p { font-size: 11px; }
+ body .channel-refresh .channel-profile-v2 .channel-section-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ body .channel-refresh .channel-section-nav button { padding: 15px 6px; gap: 10px; }
+ body .channel-refresh .channel-section-nav small { font-size: 9px; }
+ body .channel-refresh .channel-identity-fields { grid-template-columns: minmax(0,1fr); }
+ body .channel-refresh .channel-overview { padding-inline: 2px; }
+ body .channel-refresh .channel-commerce .channel-partner-feature { padding: 20px; }
+ body .channel-refresh .channel-commerce .channel-pass { padding: 20px 16px; }
+ body .channel-refresh .channel-commerce .channel-pass-heading { flex-direction: column; align-items: flex-start; gap: 20px; }
+ body .channel-refresh .channel-commerce .channel-shop-tabs { padding-right: 50px; gap: 18px; }
+ body .channel-refresh .channel-commerce .channel-shop-tabs > button { font-size: 18px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ body .channel-refresh * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
