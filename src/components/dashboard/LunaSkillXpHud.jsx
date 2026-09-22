@@ -11,6 +11,12 @@ const slotPosition = [
   { left: 3, top: 38, key: '4' },
 ];
 
+const skillStackLayers = [
+  { left: 10, top: 10, opacity: 1, scale: 1, zIndex: 14 },
+  { left: 16, top: 5, opacity: 0.48, scale: 0.985, zIndex: 12 },
+  { left: 22, top: 0, opacity: 0.24, scale: 0.97, zIndex: 10 },
+];
+
 function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const image = assigned?.image || assigned?.card_image || assigned?.icon_url || assigned?.icon || '';
@@ -49,7 +55,7 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
       onDrop={handleDrop}
       aria-label={assigned ? `Showcase ${title}` : `Showcase slot ${index + 1}`}
       title={pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
-      className={`absolute h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
+      className={`absolute z-30 h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
         ? 'border-cyan-100/70 bg-cyan-200/[0.18] shadow-[0_0_18px_rgba(103,232,249,.28)]'
         : pendingCard
           ? 'border-cyan-100/30 bg-cyan-100/[0.07] shadow-[0_0_14px_rgba(103,232,249,.10)]'
@@ -151,23 +157,48 @@ export default function LunaSkillXpHud({
       className="absolute bottom-[10px] left-[34px] right-[338px] z-[44] h-[122px] pointer-events-none"
     >
       <div className="absolute left-0 bottom-0 h-[118px] w-[118px] pointer-events-auto">
-        <div className="pointer-events-none absolute left-[29px] top-[-16px] z-40 max-w-[100px] truncate text-[7px] font-medium italic tracking-[0.03em] text-cyan-50/62">
-          {activeJawan?.jawan_name || 'Jawan I'}
+        <div className="pointer-events-none absolute left-[29px] top-[-18px] z-40 flex max-w-[112px] items-center gap-1.5 whitespace-nowrap text-[7px] font-medium italic tracking-[0.03em] text-cyan-50/62">
+          <span className="max-w-[78px] truncate">{activeSkillSet?.skill_set_genre || activeSkillSet?.skill_set_name || 'Genre I'}</span>
+          <span className="font-mono text-[5.5px] not-italic text-white/28">{activeSkillSetIndex + 1}/{Math.max(3, orderedSkillSets.length)}</span>
         </div>
         <button
           type="button"
-          onClick={rotateJawan}
-          disabled={isSaving || jawans.length < 2}
-          aria-label="Rotate Jawan skill loadout"
-          title="Switch Jawan"
-          className="absolute left-[-31px] top-[43px] z-50 grid h-7 w-7 place-items-center rounded-full border border-cyan-100/[0.12] bg-slate-950/64 text-cyan-50/48 shadow-[0_0_16px_rgba(103,232,249,.05)] backdrop-blur-md transition hover:border-cyan-100/25 hover:bg-cyan-100/[0.08] hover:text-white disabled:opacity-25"
+          onClick={rotateSkillSet}
+          disabled={isSaving || orderedSkillSets.length < 2}
+          aria-label="Switch skill genre"
+          title="Switch Genre"
+          className="absolute left-[-30px] top-[40px] z-50 flex h-[34px] w-[58px] items-center gap-1.5 border border-cyan-100/[0.14] bg-slate-950/92 px-2 text-left text-cyan-50/58 shadow-[0_0_16px_rgba(103,232,249,.05)] transition hover:border-cyan-100/30 hover:bg-cyan-100/[0.08] hover:text-white disabled:opacity-25"
         >
-          <RefreshCw className={`h-3 w-3 ${isSaving ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3 w-3 shrink-0 ${isSaving ? 'animate-spin' : ''}`} />
+          <span className="leading-[7px]">
+            <span className="block text-[5.5px] font-black uppercase tracking-[0.08em]">Switch</span>
+            <span className="block text-[5.5px] font-black uppercase tracking-[0.08em] text-cyan-100/72">Genre</span>
+          </span>
         </button>
-        <div
-          className="absolute left-[10px] top-[10px] h-[98px] w-[98px] rotate-45 border border-white/[0.12] bg-slate-950/28 backdrop-blur-md"
-          style={{ boxShadow: 'inset 0 0 28px rgba(103,232,249,.035), 0 12px 30px rgba(0,0,0,.18)' }}
-        />
+        {orderedSkillSets.map((set, index) => {
+          const count = Math.max(1, orderedSkillSets.length);
+          const relative = (index - activeSkillSetIndex + count) % count;
+          const layer = skillStackLayers[Math.min(relative, skillStackLayers.length - 1)];
+          return (
+            <div
+              key={set.skill_set_id || set.id || index}
+              aria-hidden="true"
+              className="pointer-events-none absolute h-[98px] w-[98px] border transition-all duration-300 ease-out"
+              style={{
+                left: layer.left,
+                top: layer.top,
+                opacity: layer.opacity,
+                zIndex: layer.zIndex,
+                transform: `rotate(45deg) scale(${layer.scale})`,
+                background: relative === 0 ? 'rgba(2, 6, 23, .42)' : 'rgba(8, 18, 35, .34)',
+                borderColor: relative === 0 ? 'rgba(226,232,240,.14)' : 'rgba(103,232,249,.13)',
+                boxShadow: relative === 0
+                  ? 'inset 0 0 28px rgba(103,232,249,.035), 0 12px 30px rgba(0,0,0,.18)'
+                  : '0 0 12px rgba(103,232,249,.025)',
+              }}
+            />
+          );
+        })}
         <div className="absolute left-[49px] top-[49px] z-20 h-[20px] w-[20px]">
           <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 rotate-45 bg-cyan-100/32" />
           <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 -rotate-45 bg-cyan-100/32" />
