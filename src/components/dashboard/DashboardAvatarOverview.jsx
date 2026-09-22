@@ -334,8 +334,9 @@ export default function DashboardAvatarOverview() {
       {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
         <div
           data-dashboard-inventory-workspace
-          className="absolute left-[300px] right-[338px] top-[26px] bottom-0 z-40 pointer-events-auto overflow-hidden"
+          className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
           style={{
+            maxWidth: 'calc(100% - 638px)',
             background: 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
             WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
             maskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
