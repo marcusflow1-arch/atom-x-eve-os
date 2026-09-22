@@ -1,223 +1,320 @@
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
-import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Minimize2, Plus, Trash2, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { format, addDays, startOfWeek, subDays, isToday } from 'date-fns';
-import { channelScheduleCalendar } from '../channel/channelHomeModel';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Bell, CalendarDays, Check, ChevronLeft, ChevronRight, Clock3,
+  Gamepad2, Pencil, Plus, Radio, Save, ShieldCheck, Trash2, X
+} from 'lucide-react';
+import { addDays, format, isSameDay, startOfWeek, subDays } from 'date-fns';
+import { base44 } from '@/api/base44Client';
 
-const EMPTY_DAY = { time: '', title: '', game: '', isGiveaway: false };
+const blankDraft = () => ({
+  id: '',
+  title: '',
+  game_id: '',
+  scheduled_start: '',
+  scheduled_end: '',
+  send_notification: true,
+});
 
-// Calendar console that blends into the streaming box itself, like the Games overlay:
-// a full-width glass panel portalled into the stream player container.
-export default function ScheduleSection({ isEditMode, scheduleData = {}, scheduledStreams = [], initialDate, onUpdateSchedule, onClose }) {
-  const [scheduleBaseDate, setScheduleBaseDate] = useState(() => initialDate ? new Date(initialDate) : new Date());
-  const calendarData = isEditMode ? scheduleData : channelScheduleCalendar(scheduleData, scheduledStreams);
-  const [editingDay, setEditingDay] = useState(null);
-  const [scheduleForm, setScheduleForm] = useState(EMPTY_DAY);
-  const [fullscreen, setFullscreen] = useState(false);
-  const [portalTarget, setPortalTarget] = useState(null);
+const localInput = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
+const toIso = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : '';
+};
+
+const displayTime = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+};
+
+const displayDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+export default function ScheduleSection({
+  ownerId,
+  profile,
+  scheduledStreams = [],
+  games = [],
+  editable = false,
+  initialDate,
+  onRefresh,
+}) {
+  const client = useQueryClient();
+  const [baseDate, setBaseDate] = useState(() => initialDate ? new Date(initialDate) : new Date());
+  const [draft, setDraft] = useState(blankDraft);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [rulesEditing, setRulesEditing] = useState(false);
+  const [rules, setRules] = useState(() => Array.isArray(profile?.channel_rules) ? profile.channel_rules : []);
+  const [scheduleNote, setScheduleNote] = useState(profile?.schedule_note || '');
+  const [ruleDraft, setRuleDraft] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
-    setPortalTarget(document.querySelector('[data-stream-player-box="true"]'));
-    const observer = new MutationObserver(() => setPortalTarget(document.querySelector('[data-stream-player-box="true"]')));
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
+    setRules(Array.isArray(profile?.channel_rules) ? profile.channel_rules : []);
+    setScheduleNote(profile?.schedule_note || '');
+  }, [profile?.channel_rules, profile?.schedule_note]);
 
   useEffect(() => {
-    if (!fullscreen) return undefined;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, [fullscreen]);
+    if (initialDate) setBaseDate(new Date(initialDate));
+  }, [initialDate]);
 
-  const startDate = startOfWeek(scheduleBaseDate, { weekStartsOn: 1 });
-  const scheduleDays = Array.from({ length: 14 }).map((_, i) => addDays(startDate, i));
-  const endDate = scheduleDays[13];
-  const dateRangeString = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
-  const scheduledCount = scheduleDays.filter((date) => calendarData[format(date, 'yyyy-MM-dd')]).length;
-
-  const handleScheduleClick = (date) => {
-    if (!isEditMode) return;
-    setEditingDay(date);
-    setScheduleForm(scheduleData[format(date, 'yyyy-MM-dd')] || EMPTY_DAY);
-  };
-
-  const saveScheduleDay = () => {
-    if (!editingDay) return;
-    const dateKey = format(editingDay, 'yyyy-MM-dd');
-    onUpdateSchedule({ ...scheduleData, [dateKey]: scheduleForm });
-    setEditingDay(null);
-  };
-
-  const handleClearDay = (date) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    const newData = { ...scheduleData };
-    delete newData[dateKey];
-    onUpdateSchedule(newData);
-  };
-
-  const headerNode = (
-    <div className="flex items-center justify-between gap-3 shrink-0 pb-2">
-      <div className="min-w-0 flex items-center gap-3">
-        <CalendarDays className="w-[18px] h-[18px] text-cyan-300/80 shrink-0" />
-        <div className="min-w-0">
-          <div className="text-[9px] uppercase tracking-[0.3em] text-cyan-300/60">Stream Schedule</div>
-          <h3 className="text-base md:text-lg font-bold text-white truncate">What I'm playing &amp; when</h3>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <span className="hidden sm:block text-xs font-semibold text-white/45 mr-1">{dateRangeString}</span>
-        <button type="button" onClick={() => setScheduleBaseDate((prev) => subDays(prev, 14))} className="h-7 w-7 flex items-center justify-center rounded-full bg-white/[0.06] border border-white/10 hover:bg-white/[0.13] text-white/70 hover:text-white" aria-label="Previous two weeks"><ChevronLeft className="w-3.5 h-3.5" /></button>
-        <button type="button" onClick={() => setScheduleBaseDate(new Date())} className="h-7 px-3 rounded-full bg-white/[0.06] border border-white/10 hover:bg-white/[0.13] text-[11px] font-semibold text-white/70 hover:text-white">Today</button>
-        <button type="button" onClick={() => setScheduleBaseDate((prev) => addDays(prev, 14))} className="h-7 w-7 flex items-center justify-center rounded-full bg-white/[0.06] border border-white/10 hover:bg-white/[0.13] text-white/70 hover:text-white" aria-label="Next two weeks"><ChevronRight className="w-3.5 h-3.5" /></button>
-        <button type="button" onClick={() => setFullscreen((value) => !value)} className="h-7 w-7 flex items-center justify-center rounded-full bg-white/[0.06] border border-white/10 hover:bg-white/[0.13] text-white/70 hover:text-white" aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}>
-          {fullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-        </button>
-        {onClose && <button type="button" onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-full bg-white/[0.06] border border-white/10 hover:bg-white/[0.13] text-white/70 hover:text-white" aria-label="Close schedule"><X className="w-3.5 h-3.5" /></button>}
-      </div>
-    </div>
+  const gameMap = useMemo(() => new Map((games || []).map((game) => [String(game.id), game])), [games]);
+  const entries = useMemo(
+    () => [...(scheduledStreams || [])]
+      .filter((row) => row.status === 'scheduled' && Number.isFinite(Date.parse(row.scheduled_start)))
+      .sort((a, b) => Date.parse(a.scheduled_start) - Date.parse(b.scheduled_start)),
+    [scheduledStreams]
   );
 
-  const calendarNode = (
-    <div className="flex-1 min-h-0 grid grid-cols-7 grid-rows-2 gap-px rounded-lg overflow-hidden border border-white/10 bg-white/[0.06]">
-      {scheduleDays.map((date, i) => {
-        const isCurrentDay = isToday(date);
-        const dateKey = format(date, 'yyyy-MM-dd');
-        const dayData = calendarData[dateKey];
-        return (
-          <div
-            key={i}
-            className={`relative flex flex-col min-h-0 p-2 transition-colors group/cell ${isCurrentDay ? 'bg-cyan-400/[0.07]' : 'bg-[#0f1419] hover:bg-[#1a1f2e]'}`}
-          >
-            {isCurrentDay && <div className="absolute inset-0 box-border rounded-[3px] border border-cyan-300/60 pointer-events-none shadow-[0_0_16px_rgba(103,232,249,.18)]" />}
-            <div className="flex items-baseline justify-between mb-1.5 shrink-0">
-              <span className={`text-[9px] font-bold uppercase tracking-[0.14em] ${isCurrentDay ? 'text-cyan-200' : 'text-white/40'}`}>{format(date, 'EEE')}</span>
-              <span className={`text-sm font-bold ${isCurrentDay ? 'text-cyan-300' : 'text-white/60'}`}>{format(date, 'd')}</span>
+  const startDate = startOfWeek(baseDate, { weekStartsOn: 1 });
+  const days = Array.from({ length: 14 }, (_, index) => addDays(startDate, index));
+  const next = entries.find((entry) => Date.parse(entry.scheduled_start) >= Date.now()) || entries[0] || null;
+
+  const invalidate = async () => {
+    if (ownerId) await client.invalidateQueries({ queryKey: ['channel-home-content', ownerId] });
+    await client.invalidateQueries({ queryKey: ['live-discovery-directory'] });
+    onRefresh?.();
+  };
+
+  const openNew = (day = new Date()) => {
+    const start = new Date(day);
+    start.setHours(19, 0, 0, 0);
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    setDraft({
+      ...blankDraft(),
+      scheduled_start: localInput(start),
+      scheduled_end: localInput(end),
+    });
+    setError('');
+    setEditing(true);
+  };
+
+  const openEdit = (entry) => {
+    setDraft({
+      id: entry.id,
+      title: entry.title || '',
+      game_id: entry.game_id || '',
+      scheduled_start: localInput(entry.scheduled_start),
+      scheduled_end: localInput(entry.scheduled_end),
+      send_notification: entry.send_notification !== false,
+    });
+    setError('');
+    setEditing(true);
+  };
+
+  const saveEntry = async (event) => {
+    event?.preventDefault?.();
+    if (!draft.title.trim() || !draft.scheduled_start || saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const response = await base44.functions.invoke('channelSchedule', {
+        action: draft.id ? 'update' : 'create',
+        data: {
+          ...draft,
+          scheduled_start: toIso(draft.scheduled_start),
+          scheduled_end: toIso(draft.scheduled_end),
+        },
+      });
+      const body = response?.data || response;
+      if (body?.error) throw new Error(body.error);
+      setEditing(false);
+      setDraft(blankDraft());
+      await invalidate();
+    } catch (err) {
+      setError(err?.message || 'Schedule could not be saved.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancelEntry = async (entry) => {
+    if (!entry?.id || saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const response = await base44.functions.invoke('channelSchedule', { action: 'cancel', data: { id: entry.id } });
+      const body = response?.data || response;
+      if (body?.error) throw new Error(body.error);
+      await invalidate();
+    } catch (err) {
+      setError(err?.message || 'Schedule could not be cancelled.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveRules = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const response = await base44.functions.invoke('channelSchedule', {
+        action: 'updateRules',
+        data: { rules, schedule_note: scheduleNote },
+      });
+      const body = response?.data || response;
+      if (body?.error) throw new Error(body.error);
+      setRulesEditing(false);
+      await invalidate();
+    } catch (err) {
+      setError(err?.message || 'Channel rules could not be saved.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addRule = () => {
+    const value = ruleDraft.trim();
+    if (!value || rules.length >= 12) return;
+    setRules((current) => [...current, value]);
+    setRuleDraft('');
+  };
+
+  return (
+    <section id="channel-page-schedule" className="channel-page-schedule" aria-label="Channel schedule">
+      <div className="channel-schedule-diamond-glow" aria-hidden="true" />
+
+      <header className="channel-schedule-header">
+        <div>
+          <span className="channel-schedule-kicker"><CalendarDays size={14} /> CHANNEL SCHEDULE</span>
+          <h2>When this channel goes live.</h2>
+          <p>{scheduleNote || 'Upcoming sessions, games, start times and community expectations — all in one place.'}</p>
+        </div>
+        <div className="channel-schedule-header-actions">
+          <span>{entries.length} upcoming</span>
+          {editable && <button type="button" onClick={() => openNew()}><Plus size={14} />Add stream</button>}
+        </div>
+      </header>
+
+      {error && <div className="channel-schedule-error" role="alert">{error}</div>}
+
+      <div className="channel-schedule-layout">
+        <div className="channel-schedule-main">
+          <section className="channel-schedule-next">
+            <div className="channel-schedule-next-mark"><Radio size={18} /></div>
+            <div className="channel-schedule-next-copy">
+              <span>NEXT SESSION</span>
+              <h3>{next?.title || 'Nothing announced yet'}</h3>
+              {next ? (
+                <>
+                  <p>{displayDate(next.scheduled_start)} · {displayTime(next.scheduled_start)}{next.scheduled_end ? ' – ' + displayTime(next.scheduled_end) : ''}</p>
+                  <small><Gamepad2 size={12} />{gameMap.get(String(next.game_id))?.title || 'Game to be announced'}</small>
+                </>
+              ) : <p>The creator has room for the next live session.</p>}
             </div>
-            <div className="flex-1 min-h-0 flex flex-col justify-center">
-              {dayData ? (
-                <div className="w-full rounded-md border border-white/10 bg-white/[0.04] px-2 py-1.5 text-center">
-                  <div className="text-[10px] font-bold text-cyan-300 mb-0.5">{dayData.time}</div>
-                  <div className="text-[11px] font-semibold text-white leading-tight line-clamp-2">{dayData.title}</div>
-                  {dayData.game && <div className="text-[9px] text-white/55 mt-0.5 truncate italic">{dayData.game}</div>}
-                  {dayData.isGiveaway && <Badge className="text-[8px] h-4 px-1 mt-1 bg-yellow-500/20 text-yellow-300 border-yellow-500/30">GIVEAWAY</Badge>}
-                </div>
-              ) : (
-                <div className="text-center">{isCurrentDay && !isEditMode && <span className="text-[10px] text-white/25 italic">No stream</span>}</div>
-              )}
+            {next?.send_notification && <div className="channel-schedule-notify"><Bell size={14} />Followers notified</div>}
+          </section>
+
+          <div className="channel-schedule-calendar-head">
+            <div>
+              <strong>{format(startDate, 'MMM d')} – {format(days[13], 'MMM d, yyyy')}</strong>
+              <span>Times display in your local timezone</span>
             </div>
-            {isEditMode && (
-              <>
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleScheduleClick(date); }}
-                    className="w-7 h-7 rounded-full bg-cyan-500 text-black flex items-center justify-center hover:scale-110 transition-transform shadow-lg pointer-events-auto"
-                    aria-label={`Schedule stream on ${format(date, 'MMMM do')}`}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-                {dayData && (
-                  <div className="absolute top-1 right-1 z-10">
-                    <button type="button" onClick={(e) => { e.stopPropagation(); handleClearDay(date); }} className="p-1 rounded-full bg-black/60 text-white/40 hover:text-red-400 hover:bg-black/80 transition-colors" aria-label={`Clear ${format(date, 'MMMM do')}`}>
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+            <div>
+              <button type="button" onClick={() => setBaseDate((date) => subDays(date, 14))} aria-label="Previous two weeks"><ChevronLeft size={14} /></button>
+              <button type="button" onClick={() => setBaseDate(new Date())}>Today</button>
+              <button type="button" onClick={() => setBaseDate((date) => addDays(date, 14))} aria-label="Next two weeks"><ChevronRight size={14} /></button>
+            </div>
+          </div>
+
+          <div className="channel-schedule-calendar">
+            {days.map((day) => {
+              const dayEntries = entries.filter((entry) => isSameDay(new Date(entry.scheduled_start), day));
+              const today = isSameDay(day, new Date());
+              return (
+                <div key={day.toISOString()} className={today ? 'is-today' : ''}>
+                  <div className="channel-schedule-day-head">
+                    <span>{format(day, 'EEE')}</span>
+                    <strong>{format(day, 'd')}</strong>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const footerNode = (
-    <div className="flex shrink-0 items-center justify-between pt-2">
-      <span className="text-[9px] uppercase tracking-[0.2em] text-white/30">{scheduledCount} scheduled stream{scheduledCount === 1 ? '' : 's'} these two weeks</span>
-      <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">{isEditMode ? 'Click a day to schedule' : 'Times shown in your local timezone'}</span>
-    </div>
-  );
-
-  const editDialog = (
-    <Dialog open={!!editingDay} onOpenChange={(open) => !open && setEditingDay(null)}>
-      <DialogContent className="bg-[#1a1f2e] border-white/10 text-white">
-        <DialogHeader>
-          <DialogTitle>Edit Schedule: {editingDay && format(editingDay, 'MMMM do, yyyy')}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/60">Time</label>
-            <Input value={scheduleForm.time} onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })} placeholder="e.g. 7:00 PM EST" className="bg-black/20 border-white/10 text-white" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/60">Activity / Title</label>
-            <Input value={scheduleForm.title} onChange={(e) => setScheduleForm({ ...scheduleForm, title: e.target.value })} placeholder="e.g. Ranked Climb" className="bg-black/20 border-white/10 text-white" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/60">Game</label>
-            <Input value={scheduleForm.game} onChange={(e) => setScheduleForm({ ...scheduleForm, game: e.target.value })} placeholder="e.g. Valorant" className="bg-black/20 border-white/10 text-white" />
-          </div>
-          <div className="flex items-center gap-2 pt-2">
-            <input type="checkbox" id="giveaway" checked={scheduleForm.isGiveaway} onChange={(e) => setScheduleForm({ ...scheduleForm, isGiveaway: e.target.checked })} className="w-4 h-4 rounded border-white/10 bg-black/20 text-cyan-500 focus:ring-cyan-500/50" />
-            <label htmlFor="giveaway" className="text-sm font-medium text-white/80 cursor-pointer">Doing a Giveaway?</label>
+                  <div className="channel-schedule-day-body">
+                    {dayEntries.length ? dayEntries.map((entry) => {
+                      const game = gameMap.get(String(entry.game_id));
+                      return <article key={entry.id}>
+                        <time>{displayTime(entry.scheduled_start)}</time>
+                        <strong>{entry.title}</strong>
+                        <span>{game?.title || 'Game TBA'}</span>
+                        {editable && <div>
+                          <button type="button" onClick={() => openEdit(entry)} aria-label={'Edit ' + entry.title}><Pencil size={11} /></button>
+                          <button type="button" onClick={() => cancelEntry(entry)} aria-label={'Cancel ' + entry.title}><Trash2 size={11} /></button>
+                        </div>}
+                      </article>;
+                    }) : (
+                      <button type="button" className="channel-schedule-empty-day" disabled={!editable} onClick={() => editable && openNew(day)}>
+                        {editable ? <><Plus size={11} />Add</> : <span>—</span>}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setEditingDay(null)}>Cancel</Button>
-          <Button onClick={saveScheduleDay} className="bg-white text-black hover:bg-gray-200">Save</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+        <aside className="channel-schedule-rules">
+          <div className="channel-schedule-rules-title">
+            <div><ShieldCheck size={17} /><span><strong>Channel rules</strong><small>How we keep the room welcoming</small></span></div>
+            {editable && !rulesEditing && <button type="button" onClick={() => setRulesEditing(true)}><Pencil size={12} />Edit</button>}
+          </div>
+
+          {rulesEditing && editable ? (
+            <div className="channel-rules-editor">
+              <label>Schedule note<textarea value={scheduleNote} maxLength={800} onChange={(event) => setScheduleNote(event.target.value)} placeholder="Tell viewers what to expect from your schedule." /></label>
+              <div className="channel-rule-add">
+                <input value={ruleDraft} maxLength={240} onChange={(event) => setRuleDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addRule(); } }} placeholder="Add a channel rule" />
+                <button type="button" onClick={addRule}><Plus size={13} /></button>
+              </div>
+              <ol>
+                {rules.map((rule, index) => <li key={rule + index}><span>{String(index + 1).padStart(2, '0')}</span><input value={rule} onChange={(event) => setRules((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><button type="button" onClick={() => setRules((current) => current.filter((_, itemIndex) => itemIndex !== index))}><X size={12} /></button></li>)}
+              </ol>
+              <div className="channel-rules-actions">
+                <button type="button" onClick={() => setRulesEditing(false)}>Cancel</button>
+                <button type="button" onClick={saveRules} disabled={saving}><Save size={13} />Save rules</button>
+              </div>
+            </div>
+          ) : rules.length ? (
+            <ol className="channel-rules-list">
+              {rules.map((rule, index) => <li key={rule + index}><span>{String(index + 1).padStart(2, '0')}</span><p>{rule}</p><Check size={13} /></li>)}
+            </ol>
+          ) : (
+            <div className="channel-rules-empty"><ShieldCheck size={22} /><p>{editable ? 'Add your channel rules so visitors know the room.' : 'This creator has not published channel rules yet.'}</p></div>
+          )}
+
+          <div className="channel-schedule-system-status">
+            <span><Clock3 size={13} />Live schedule sync</span>
+            <strong>Connected</strong>
+          </div>
+        </aside>
+      </div>
+
+      {editing && editable && (
+        <div className="channel-schedule-editor-shell" role="dialog" aria-modal="true" aria-label={draft.id ? 'Edit scheduled stream' : 'Add scheduled stream'}>
+          <form className="channel-schedule-editor" onSubmit={saveEntry}>
+            <header><div><span>{draft.id ? 'EDIT SESSION' : 'NEW SESSION'}</span><h3>{draft.id ? 'Update scheduled stream' : 'Schedule a stream'}</h3></div><button type="button" onClick={() => setEditing(false)} aria-label="Close schedule editor"><X size={16} /></button></header>
+            <label>Stream title<input value={draft.title} maxLength={180} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="What are you streaming?" required /></label>
+            <label>Game<select value={draft.game_id} onChange={(event) => setDraft((current) => ({ ...current, game_id: event.target.value }))}><option value="">Game to be announced</option>{games.map((game) => <option key={game.id} value={game.id}>{game.title}</option>)}</select></label>
+            <div className="channel-schedule-editor-times"><label>Starts<input type="datetime-local" value={draft.scheduled_start} onChange={(event) => setDraft((current) => ({ ...current, scheduled_start: event.target.value }))} required /></label><label>Ends<input type="datetime-local" value={draft.scheduled_end} onChange={(event) => setDraft((current) => ({ ...current, scheduled_end: event.target.value }))} /></label></div>
+            <label className="channel-schedule-toggle"><input type="checkbox" checked={draft.send_notification} onChange={(event) => setDraft((current) => ({ ...current, send_notification: event.target.checked }))} /><Bell size={14} /><span>Notify followers when this stream is scheduled</span></label>
+            <footer><button type="button" onClick={() => setEditing(false)}>Cancel</button><button type="submit" disabled={saving || !draft.title.trim() || !draft.scheduled_start}><Save size={14} />{saving ? 'Saving…' : 'Save schedule'}</button></footer>
+          </form>
+        </div>
+      )}
+    </section>
   );
-
-  const hideShellStyle = <style>{`body:has([data-schedule-overlay="true"]) > div.fixed.inset-0 > section { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`}</style>;
-
-  if (fullscreen) {
-    return createPortal(
-      <div data-schedule-overlay="true" role="dialog" aria-label="Stream schedule" className="fixed inset-0 z-[100001] flex flex-col overflow-hidden bg-slate-950/96 backdrop-blur-xl text-white px-6 py-5">
-        {hideShellStyle}
-        {headerNode}
-        <div className="flex-1 min-h-0 py-3">{calendarNode}</div>
-        {footerNode}
-        {editDialog}
-      </div>,
-      document.body
-    );
-  }
-
-  const content = (
-    <>
-      {hideShellStyle}
-      <motion.div
-        data-schedule-overlay="true"
-        role="dialog"
-        aria-label="Stream schedule"
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.32, ease: 'easeOut' }}
-        className="absolute inset-0 z-[100000] flex flex-col overflow-hidden rounded-xl px-5 py-4 text-white"
-        style={{
-          background: 'linear-gradient(180deg, rgba(2,6,23,.95), rgba(2,6,23,.88) 60%, rgba(2,6,23,.8))',
-          backdropFilter: 'blur(20px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-          boxShadow: '0 24px 70px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.06)',
-        }}
-      >
-        {headerNode}
-        <div className="flex-1 min-h-0 pt-2">{calendarNode}</div>
-        {footerNode}
-        {editDialog}
-      </motion.div>
-    </>
-  );
-
-  if (portalTarget) return createPortal(content, portalTarget);
-  return null;
 }
