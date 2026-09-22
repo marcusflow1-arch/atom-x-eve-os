@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {ArrowRight,ChevronLeft,ChevronRight,Pause,Play,Gamepad2} from 'lucide-react';
 import WishlistButton from '../WishlistButton';
 import {label,priceLabel,comingSoon} from './discovery';
+export { default as StoreSection } from '@/components/store/redesign/StoreSection';
 
 export function GameCover({game,wide=false,eager=false}){
  const [failed,setFailed]=useState(false);
