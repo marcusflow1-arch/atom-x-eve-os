@@ -80,7 +80,7 @@ export default function LunaSkillXpHud({
   level = 1,
   showcaseEditing = false,
 }) {
-  const { equip, isSaving, jawans, activeJawanId, selectJawan } = useSkillBookLoadout();
+  const { equip, isSaving, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [previewCard, setPreviewCard] = useState(null);
@@ -115,22 +115,28 @@ export default function LunaSkillXpHud({
     setPreviewCard(card);
   };
 
-  const activeJawan = useMemo(
-    () => jawans.find((jawan) => String(jawan.jawan_id) === String(activeJawanId)) || jawans.find((jawan) => jawan.is_active) || jawans[0] || null,
-    [jawans, activeJawanId]
+  const orderedSkillSets = useMemo(
+    () => [...(skillSets || [])].sort((a, b) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0)).slice(0, 3),
+    [skillSets]
   );
 
-  const rotateJawan = async () => {
-    if (isSaving || jawans.length < 2) return;
-    const currentIndex = Math.max(0, jawans.findIndex((jawan) => String(jawan.jawan_id) === String(activeJawan?.jawan_id)));
-    const next = jawans[(currentIndex + 1) % jawans.length];
-    if (!next?.jawan_id) return;
+  const activeSkillSet = useMemo(
+    () => orderedSkillSets.find((set) => String(set.skill_set_id) === String(activeSkillSetId)) || orderedSkillSets.find((set) => set.is_active) || orderedSkillSets[0] || null,
+    [orderedSkillSets, activeSkillSetId]
+  );
+
+  const activeSkillSetIndex = Math.max(0, orderedSkillSets.findIndex((set) => String(set.skill_set_id) === String(activeSkillSet?.skill_set_id)));
+
+  const rotateSkillSet = async () => {
+    if (isSaving || orderedSkillSets.length < 2) return;
+    const next = orderedSkillSets[(activeSkillSetIndex + 1) % orderedSkillSets.length];
+    if (!next?.skill_set_id) return;
     try {
-      await selectJawan(next.jawan_id);
+      await selectSkillSet(next.skill_set_id);
       setSelectedSlot(null);
       setPreviewCard(null);
     } catch (error) {
-      showError(error, 'Switch Jawan');
+      showError(error, 'Switch Genre');
     }
   };
 
