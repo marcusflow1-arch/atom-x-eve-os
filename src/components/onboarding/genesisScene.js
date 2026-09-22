@@ -57,6 +57,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
   let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false, runtimeBoneCount = 0, runtimeRigGenerated = false;
+  const lockedBonePositions = new Map();
 
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
   const fbx = new FBXLoader(), gltf = new GLTFLoader(), clock = new THREE.Clock();
@@ -128,9 +129,17 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     if (!visible || document.hidden) return;
     mixer?.update(dt);
     // Female Artemis must stay anchored to the character-creation platform.
-    // External FBX root motion is never allowed to move the loaded model itself.
+    // Idle is rotation-only: restore the model root and every bone's bind
+    // translation after the mixer runs, preventing any retargeted FBX position
+    // channel from lifting the character out of the circle.
     if (options.lockModelPosition && model && basePosition) {
       model.position.copy(basePosition);
+    }
+    if (options.lockRootTranslation && lockedBonePositions.size) {
+      lockedBonePositions.forEach((position, bone) => {
+        bone.position.copy(position);
+      });
+      model?.updateMatrixWorld(true);
     }
     secondaryMixer?.update(dt);
     secondaryMotionMixer?.update(dt);
@@ -337,15 +346,11 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         clip = retargetClipToModel(sourceClip.clone());
       }
       if (options.lockRootTranslation) {
-        // Artemis starts in the correct centered bind position. The source Idle
-        // FBX contains root/Hips translation that can pull the generated rig
-        // upward as soon as the action fades in. Remove that translation track
-        // entirely so the Hips stay at their bound local position while all
-        // rotation tracks continue to animate normally.
-        clip.tracks = clip.tracks.filter((track) =>
-          !/(?:^|[:/])Hips\.position$/i.test(track.name)
-          && !/^Hips\.position$/i.test(track.name)
-        );
+        // The Admin Idle FBX carries large positional channels (the source Hips
+        // sits around Y≈99). Retargeting may rename those channels, so filtering
+        // only "Hips.position" is not sufficient. For Artemis creation, keep
+        // Idle rotation-only and remove every translation track.
+        clip.tracks = clip.tracks.filter((track) => !/\.position$/i.test(track.name));
       } else {
         clip.tracks.forEach((track) => {
           if (/Hips\.position$/i.test(track.name) || /mixamorig:Hips\.position$/i.test(track.name)) {
@@ -391,6 +396,13 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       // Admin-uploaded Artemis is a raw GLB and may not contain Atom XE userData.
       // A real bone hierarchy is sufficient to treat it as an animatable runtime rig.
       if (runtimeBoneCount > 0) atomxeRuntimeRig = true;
+
+      if (options.lockRootTranslation) {
+        model.traverse((node) => {
+          if (node.isBone) lockedBonePositions.set(node, node.position.clone());
+        });
+      }
+
       let box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
       model.scale.setScalar(1.8 / (size.y || 1));
