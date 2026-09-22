@@ -1,32 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { 
-    Shield, Gamepad2, MessageSquare, Mic, 
-    ClipboardList, Settings, Crown, Users, 
-    Wifi, Activity, Zap, Search, Plus, ArrowLeft, BookOpen, ChevronLeft
+    Shield
 } from 'lucide-react';
 import ClanGameSelector from '@/components/clan/ClanGameSelector';
 import GameWorkspace from '@/components/clan/GameWorkspace';
-import AssignmentList from '@/components/clan/assignments/AssignmentList';
-import AssignmentManager from '@/components/clan/assignments/AssignmentManager';
-import ClanOverview from '@/components/clan/ClanOverview';
-import ClanChat from '@/components/clan/ClanChat';
 import ClanChatHub from '@/components/clan/ClanChatHub';
-import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import ClanIntro from '@/components/clan/ClanIntro';
-import ClanStronghold from '@/components/clan/ClanStronghold';
+import ClanHome from '@/components/clan/ClanHome';
 import ClanBottomNav from '@/components/clan/ClanBottomNav';
 import ClanAdminOverview from '@/components/clan/ClanAdminOverview';
 import ClanRosterPage from '@/components/clan/ClanRosterPage';
 import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 
@@ -214,21 +204,6 @@ export default function ClanPage() {
         }
     });
 
-    // Fetch Active Voice Rooms
-    const { data: activeVoiceRooms } = useQuery({
-        queryKey: ['activeVoiceRooms', activeClan?.id],
-        queryFn: async () => {
-            if (!activeClan) return [];
-            // Mocking active rooms for overview visibility
-            // In production: base44.entities.VoiceRoom.filter({ clanId: activeClan.id, isEmpty: false })
-            return [
-                { id: '1', topic: 'General Lounge', participants: [1,2] },
-                { id: '2', topic: 'Officer Meeting', participants: [] }
-            ]; 
-        },
-        enabled: !!activeClan
-    });
-
     // Create Clan Mutation removed - handled by ClanIntro
 
     // Update presence when viewing Clan Overview
@@ -406,63 +381,6 @@ export default function ClanPage() {
             <div className="flex-1 relative h-full pt-20">
                 <SidebarOverlays className="absolute top-[16px] left-6 right-6 bottom-[100px] z-[80]" />
 
-                {bottomTab === 'home' && (
-                    <>
-                        {/* Clan Info & Stats - Top Left under header */}
-                        <div className="absolute top-20 left-8 z-30 pointer-events-auto">
-                            <div className="flex items-center gap-4 mb-3">
-                                <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-3 pr-6 shadow-lg">
-                                    <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
-                                        {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-7 h-7 text-white/50" />}
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <h2 className="text-lg font-black text-white tracking-wider uppercase leading-tight mb-1">{clanForRender?.name || 'Entering Division'}</h2>
-                                        <div className="flex items-center gap-3 text-xs font-medium text-white/60">
-                                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
-                                            <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}/50</span>
-                                            <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Central Stats - Top Middle */}
-                        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex flex-col items-center gap-3">
-                            <div className="flex gap-3">
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Treasury</span>
-                                    <span className="text-base font-black text-amber-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"><Zap className="w-4 h-4" /> 1.45M</span>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Power</span>
-                                    <span className="text-base font-black text-cyan-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"><Activity className="w-4 h-4" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Rank</span>
-                                    <span className="text-base font-black text-purple-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"><Shield className="w-4 h-4" /> Gold III</span>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-lg flex flex-col items-center min-w-[100px]">
-                                    <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1 font-medium">Resources</span>
-                                    <span className="text-base font-black text-green-400 flex items-center gap-1 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">3,240</span>
-                                </div>
-                            </div>
-
-                        {/* Stronghold Toggle Box */}
-                        <button
-                            onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
-                                className={`px-6 py-2 rounded-xl border backdrop-blur-md shadow-lg transition-all flex items-center justify-center gap-2 w-[180px] ${
-                                    isStrongholdEnabled 
-                                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
-                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                                }`}
-                            >
-                                <span className="text-xs font-bold uppercase tracking-widest">Stronghold</span>
-                            </button>
-                        </div>
-                    </>
-                )}
-
                 <AnimatePresence mode="wait">
                     {bottomTab === 'home' && (
                         <motion.div
@@ -472,11 +390,17 @@ export default function ClanPage() {
                             exit={{ opacity: 0 }}
                             className="absolute inset-0"
                         >
-                            <ClanStronghold 
-                                clan={clanForRender} 
-                                activeVoiceRooms={activeVoiceRooms} 
-                                isRosterOpen={isRosterOpen} 
+                            <ClanHome
+                                key={clanForRender.id}
+                                clan={clanForRender}
+                                members={members || []}
+                                currentUserRole={currentUserRole}
                                 isStrongholdEnabled={isStrongholdEnabled}
+                                onToggleStronghold={() => setIsStrongholdEnabled((value) => !value)}
+                                onNavigate={setBottomTab}
+                                leaving={leaveClanMutation.isPending || disbandClanMutation.isPending}
+                                onLeave={() => { if (window.confirm('Are you sure you want to leave this clan?')) leaveClanMutation.mutate(); }}
+                                onDisband={() => { if (window.confirm('Are you sure you want to disband this clan? This cannot be undone.')) disbandClanMutation.mutate(); }}
                             />
                         </motion.div>
                     )}
@@ -574,7 +498,7 @@ export default function ClanPage() {
                 </AnimatePresence>
 
                 {/* Bottom Global Actions */}
-                {(bottomTab === 'home' || bottomTab === 'roster') && clanForRender && (
+                {bottomTab === 'roster' && clanForRender && (
                     <div className="absolute bottom-[80px] left-6 z-30 flex flex-col gap-3">
                         {/* Disband (Leader Only) or Leave (Everyone else) */}
                         {isLeader ? (

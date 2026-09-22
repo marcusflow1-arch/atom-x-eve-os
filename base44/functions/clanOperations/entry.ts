@@ -96,6 +96,42 @@ Deno.serve(async (req) => {
       return json({ success: true, message });
     }
 
+
+    // Member-facing home reads only the guild's shared information.
+    // Leadership-only channels never enter the homepage announcement feed.
+    if (action === 'home_state') {
+      const { clanId } = data;
+      const membership = await requireMember(clanId);
+      const division = await base44.asServiceRole.entities.Division.get(clanId);
+      if (!division) return json({ success: false, error: 'Clan not found' }, 404);
+      const requests: [string, () => Promise<any>][] = [
+        ['announcements', () => base44.asServiceRole.entities.ClanMessage.filter({ divisionId: clanId, isAnnouncement: true }, '-created_date', 100)],
+        ['upgrades', () => base44.asServiceRole.entities.ClanUpgrade.filter({ clan_id: clanId }, '-created_date', 100)],
+        ['halls', () => base44.asServiceRole.entities.ClanHall.filter({ clan_id: clanId }, '-created_date', 1)],
+        ['members', () => base44.asServiceRole.entities.ClanMember.filter({ clan_id: clanId }, '-joined_at', 1000)],
+      ];
+      const results = await Promise.allSettled(requests.map(([, read]) => read()));
+      const failures: string[] = [];
+      const records: Record<string, any[]> = {};
+      requests.forEach(([key], index) => {
+        const result = results[index];
+        if (result.status === 'fulfilled') records[key] = Array.isArray(result.value) ? result.value : [];
+        else { failures.push(key); records[key] = []; }
+      });
+      const fields = ['id', 'name', 'tag', 'motto', 'description', 'icon', 'banner', 'level', 'xp', 'reputation', 'sizeLimit', 'playstyles', 'focusTags', 'genres', 'gameTags', 'clanAchievements'];
+      const clan = Object.fromEntries(fields.filter((key) => division[key] !== undefined).map((key) => [key, division[key]]));
+      return json({
+        success: true, clan, role: membership.role, failures,
+        announcements: records.announcements
+          .filter((row) => !row.channelId || row.channelId === 'clan_global')
+          .map(({ id, author, authorAvatar, content, role, isPinned, created_date }) => ({ id, author, authorAvatar, content, role, isPinned, created_date }))
+          .sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) || Date.parse(b.created_date) - Date.parse(a.created_date)),
+        upgrades: records.upgrades.map(({ id, upgrade_name, tier, max_tier, status, progress_seconds, build_seconds, started_at, completed_at }) => ({ id, upgrade_name, tier, max_tier, status, progress_seconds, build_seconds, started_at, completed_at })),
+        hall: records.halls[0] ? { hall_name: records.halls[0].hall_name, hall_type: records.halls[0].hall_type, favor: records.halls[0].favor, aetherium: records.halls[0].aetherium } : null,
+        members: records.members.map(({ id, role, nickname, title }) => ({ id, role, nickname, title })),
+      });
+    }
+
     if (action === 'admin_state') {
       const { clanId } = data;
       await requireOfficer(clanId);
