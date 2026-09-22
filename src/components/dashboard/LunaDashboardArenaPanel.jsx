@@ -55,8 +55,6 @@ function CombatHUD({ arena, onExitStage }) {
     return () => window.clearInterval(timer);
   }, []);
 
-  if (!e) return null;
-
   const run = async (task, success) => {
     setError('');
     try {
@@ -92,6 +90,8 @@ function CombatHUD({ arena, onExitStage }) {
     timed.current = key;
     arena.command('timeout').catch(() => { timed.current = ''; });
   }, [e?.id, e?.revision, e?.deadline, e?.status, remaining, arena.busy]);
+
+  if (!e) return null;
 
   const accept = async () => {
     await joinDashboard({ id: e.host_id, name: e.host_name });
