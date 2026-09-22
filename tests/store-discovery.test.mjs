@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {filterGames,priceOf,priceLabel,queryScore,suggestions,comingSoon,discoveryOrder,rotateGames,recommendations} from '../src/components/store/redesign/discovery.js';
+import {filterGames,priceOf,priceLabel,queryScore,suggestions,comingSoon,discoveryOrder,rotateGames,recommendations,releaseTime,uniqueCatalog,buildStoreShelves,discountPercent} from '../src/components/store/redesign/discovery.js';
 const games=[
  {id:'a',title:'Skybound',genre:'rpg',price:20,tags:['co-op'],release_date:'2025-02-01',description:'Explore the open world'},
  {id:'b',title:'Skybound II',genre:'rpg',price:30,sale_price:10,single_player:true,release_date:'2025-03-01'},
@@ -41,3 +41,18 @@ assert.ok(!recs.some(r=>r.game.id==='a'));
 assert.deepEqual(recommendations(games,{genres:[],use_play_history:false},['a']),[]);
 assert.ok(recommendations(games,{},['c']).some(r=>r.game.id==='f'&&r.reason.includes('City Lights')));
 console.log('PASS: store prices, combined filters, search/suggestions, release availability, fair rotation, and personalized recommendations.');
+
+assert.equal(new Date(releaseTime({original_year:2024})).getUTCFullYear(),2024);
+assert.equal(releaseTime({original_year:'unknown'}),0);
+const duplicates=uniqueCatalog([{id:'one',title:'Shared Title',original_year:2025},{id:'two',title:'Shared Title',original_year:2025,banner_image:'https://example.com/x.jpg'}],['one']);
+assert.equal(duplicates.length,1);assert.equal(duplicates[0].id,'one');assert.equal(duplicates[0].catalog_ids.length,2);
+assert.equal(filterGames(duplicates,{hideOwned:true},['two']).length,0);
+assert.deepEqual(filterGames(games,{onSale:true}).map(g=>g.id),['b']);
+assert.equal(discountPercent(games[1]),66);
+const shelves=buildStoreShelves(games,{day:'fixed-day',sales:{b:3}});
+assert.ok(shelves.newest.length>0,'small catalogs still have release content');
+assert.equal(shelves.sellers[0].id,'b');
+assert.ok(!shelves.newest.some(coming=>coming.id==='d'),'future releases are not in new releases');
+assert.ok(shelves.upcoming.some(coming=>coming.id==='d'));
+assert.deepEqual(buildStoreShelves([]).featured,[]);
+console.log('PASS: release-year imports, duplicate ownership, real sale filtering, purchase rankings, and small catalog shelves.');

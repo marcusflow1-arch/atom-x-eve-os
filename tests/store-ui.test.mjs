@@ -6,6 +6,8 @@ import {JSDOM} from 'jsdom';
 const dom=new JSDOM('<div id="root"></div>',{url:'https://test.local'});
 globalThis.window=dom.window;globalThis.document=dom.window.document;
 globalThis.localStorage=dom.window.localStorage;
+for(const name of ['HTMLElement','Element','Node','NodeFilter','HTMLInputElement','MutationObserver','CustomEvent','Event'])globalThis[name]=dom.window[name];
+globalThis.getComputedStyle=dom.window.getComputedStyle.bind(dom.window);
 Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 window.matchMedia=()=>({matches:true});
@@ -21,7 +23,7 @@ const base44={functions:{invoke:async(name,{action,data})=>{
 }}};
 const code=await build({
  stdin:{contents:"export {default as Store} from './src/components/store/redesign/StorefrontLayout.jsx';export {default as Search} from './src/components/store/redesign/StoreSearch.jsx';",resolveDir:process.cwd(),loader:'jsx'},
- bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
+ loader:{'.css':'empty'},bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
  plugins:[{name:'isolated-sdk',setup(b){
   b.onResolve({filter:/^lucide-react$/},()=>({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
   b.onResolve({filter:/base44Client|AuthContext|WishlistButton/},args=>({path:args.path,namespace:'test'}));
@@ -57,14 +59,16 @@ const input=async(el,value)=>{
 await run(()=>root.render(React.createElement(QueryClientProvider,{client},React.createElement(App))));
 await run(()=>{});
 assert.ok(text().includes('Browse by genre'));
-assert.ok(text().includes('Worth discovering'));
-await run(()=>button('Filters').click());
-const filterPanel=document.getElementById('store-filters');
-const price=filterPanel.querySelector('select');
-await run(()=>{price.value='free';price.dispatchEvent(new window.Event('change',{bubbles:true}));});
-assert.ok(text().includes('1 game match your filters'));
+assert.ok(text().includes("Today's hot picks"));
+assert.ok(text().includes("What's new"));
+assert.ok(document.querySelector('.sf-filter-rail'));
+const filterPanel=document.querySelector('.sf-filter-rail');
+const filterLabel=title=>[...filterPanel.querySelectorAll('label')].find(el=>el.textContent.trim()===title);
+await run(()=>filterLabel('Free to play').querySelector('input').click());
+assert.ok(text().includes('1 game matches your filters'));
 assert.ok(document.querySelector('main article h3').textContent==='City Lights');
-await run(()=>button('RPG',filterPanel).click());
+const rpgFilter=[...filterPanel.querySelectorAll('label')].find(el=>el.querySelector('span')?.textContent==='RPG');
+await run(()=>rpgFilter.querySelector('input').click());
 assert.ok(text().includes('No games match these filters.'));
 assert.equal(document.querySelectorAll('main article').length,0);
 await run(()=>button('Reset filters').click());

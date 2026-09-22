@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import GameStreamPanel from './GameStreamPanel';
 import StudioProfileView from '@/components/studio/StudioProfileView';

@@ -18,12 +18,17 @@ document.head.append(pageStyle);
 const React = await import('react'), { act } = React;
 const { createRoot } = await import('react-dom/client');
 const require = createRequire(import.meta.url);
-const game = { id: 'game-one', title: 'The Glass Frontier', genre: 'rpg', description: 'Explore a fractured world.\n\nChoose your own path.', price: 29.99, status: 'available', original_year: 2025, cover_image: 'https://example.com/cover.jpg', screenshots: ['https://example.com/one.jpg', 'https://example.com/two.jpg', 'https://example.com/one.jpg'], video_urls: ['https://www.youtube.com/watch?v=abcdefghijk', 'https://www.youtube.com/watch?v=trailer1'], trailer_url: 'https://youtu.be/abcdefghijk', system_requirements: { memory: '8 GB RAM' } };
+const {QueryClient,QueryClientProvider}=require('@tanstack/react-query');
+const queryClient=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}});
+const game = { id: 'game-one', title: 'The Glass Frontier', developer:'Glassworks Studio', genre: 'rpg', description: 'Explore a fractured world.\n\nChoose your own path.', price: 29.99, status: 'available', original_year: 2025, cover_image: 'https://example.com/cover.jpg', screenshots: ['https://example.com/one.jpg', 'https://example.com/two.jpg', 'https://example.com/one.jpg'], video_urls: ['https://www.youtube.com/watch?v=abcdefghijk', 'https://www.youtube.com/watch?v=trailer1'], trailer_url: 'https://youtu.be/abcdefghijk', system_requirements: { memory: '8 GB RAM' } };
 const calls = { get: 0, cart: [], wishlist: [], reviews: [], login: 0 };
 const session = { authenticated: true, owned: false };
 let storedWishlist = [], storedReviews = [], failGet = false, failWishlist = false;
 const SDK = { entities: {
-  Game: { get: async id => { calls.get++; if (failGet) throw new Error('offline'); return { ...game, id }; } },
+  Achievement:{filter:async()=>[{id:'reward-1',game:game.title,title:'First Light',description:'Complete the opening chapter.',category:'ability',rarity:'Rare',points:100,reward:{name:'Dawnstrike',description:'A radiant ability for your avatar.'}}]},
+  StudioProfile:{filter:async()=>[{developer_name:'Glassworks Studio',description:'A studio focused on hand-crafted worlds.',upcoming_projects:[{title:'Frontier Beyond',description:'The next adventure.'}],notable_games:[{title:'Glass Origins',year:2023}]}]},
+  Stream:{filter:async()=>[]},AuraStream:{filter:async()=>[]},
+  Game: { list:async()=>[game,{...game,id:'other-title',title:'Glass Origins'}],get: async id => { calls.get++; if (failGet) throw new Error('offline'); return { ...game, id }; } },
   Wishlist: {
     filter: async () => storedWishlist,
     create: async data => { if (failWishlist) throw new Error('offline'); calls.wishlist.push(data); const row = { ...data, id: 'wish-one' }; storedWishlist.push(row); return row; },
@@ -68,9 +73,9 @@ assert.equal(requirementGroups(game)[0].rows.length, 1, 'do not invent specifica
 const root = createRoot(document.getElementById('root'));
 const tick = () => new Promise(resolve => setTimeout(resolve, 10));
 const run = async fn => act(async () => { fn?.(); await tick(); });
-const render = async props => { await run(() => root.render(React.createElement(Hub, props))); await run(); };
+const render = async props => { await run(() => root.render(React.createElement(QueryClientProvider,{client:queryClient},React.createElement(Hub, props)))); await run(); };
 const buttons = () => [...document.querySelectorAll('button')];
-const button = text => { const el = buttons().find(x => x.textContent.trim() === text); assert.ok(el, 'Missing button: ' + text); return el; };
+const button = text => { const el = buttons().find(x => x.textContent.trim() === text&&x.getAttribute('role')==='tab')||buttons().find(x => x.textContent.trim() === text); assert.ok(el, 'Missing button: ' + text); return el; };
 const labelButton = text => { const el = buttons().find(x => x.getAttribute('aria-label') === text); assert.ok(el, 'Missing labeled button: ' + text); return el; };
 const body = () => document.body.textContent;
 await render({ gameId: game.id, onClose: () => calls.closed = true });
@@ -79,6 +84,19 @@ assert.equal(getComputedStyle(document.querySelector('.gd-page')).overflowY, 'au
 assert.equal(getComputedStyle(document.querySelector('.gd-page')).height, '100%');
 assert.ok(document.querySelector('h1').textContent === game.title);
 assert.equal(document.querySelectorAll('iframe').length, 0, 'no trailer autoplay on entry');
+
+assert.ok(body().includes('Dawnstrike'),'published avatar reward is visible on the overview');
+const subpage=name=>[...document.querySelectorAll('.gd-game-nav button')].find(button=>button.textContent===name);
+await run(()=>subpage('Games').click());await run();
+assert.ok(body().includes('Glass Origins'));
+assert.equal(document.querySelectorAll('.sf-game-card').length,2);
+await run(()=>subpage('Studio').click());await run();
+assert.ok(body().includes('Frontier Beyond'));
+assert.ok(!document.querySelector('.sf-game-card'),'Studio focuses on the studio and projects, not a duplicate catalog');
+await run(()=>subpage('Stream').click());await run();
+assert.ok(body().includes('No live streams right now.'));
+assert.equal(document.querySelectorAll('iframe').length,0,'a trailer must not masquerade as a live stream');
+await run(()=>subpage('Overview').click());await run();
 await run(() => labelButton('Show Screenshot 2').click());
 assert.equal(labelButton('Show Screenshot 2').getAttribute('aria-pressed'), 'true');
 await run(() => labelButton('Expand media').click());
@@ -154,5 +172,5 @@ failGet = false;
 await run(() => button('Try again').click());
 assert.ok(document.querySelector('h1').textContent === game.title);
 await run(() => root.unmount());
-dom.window.close();
+queryClient.clear();dom.window.close();
 console.log('PASS: gallery/theater and keyboard controls, no autoplay, cart/sign-in/owned/upcoming states, wishlist failures + persistence, published requirements, saved reviews, real DLC/cards, route loading + recovery.');
