@@ -1,0 +1,45 @@
+{
+  "name": "GameAnnouncement",
+  "type": "object",
+  "properties": {
+    "game_id": {
+      "type": "string",
+      "description": "Parent Game entity ID"
+    },
+    "game_title": {
+      "type": "string",
+      "description": "Game title snapshot for discovery/fallback matching"
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "announcement_type": {
+      "type": "string",
+      "enum": ["announcement", "event", "update", "maintenance"],
+      "default": "announcement"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published": {
+      "type": "boolean",
+      "default": true
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Developer, publisher, or authorized game-page author display name"
+    }
+  },
+  "required": ["game_id", "title", "announcement_type"]
+}
