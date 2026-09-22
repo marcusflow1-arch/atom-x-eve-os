@@ -37,15 +37,18 @@ export default function GameExtras({ game }) {
   };
   return <div className="gd-extras-grid">
     <div>
-      <div className="gd-section-heading"><div><span className="gd-eyebrow">More from this game</span><h2>Expansions & cards</h2></div></div>
+      <div className="gd-section-heading"><div><span className="gd-eyebrow">Additional content</span><h2>DLC & add-ons</h2><p>Expansions, content packs and developer-published extras for this title.</p></div></div>
       {loading ? <p className="gd-empty" role="status">Loading game extras…</p> : <>
         {failed && <div className="gd-inline-error" role="alert">Some extras could not be loaded. <button className="gd-text-button" onClick={() => setRetry(value => value + 1)}>Try again</button></div>}
-        {!failed && !content.dlc.length && !content.cards.length && <p className="gd-muted">No expansions or developer cards have been published for this game yet.</p>}
+        {!failed && !content.dlc.length && <p className="gd-muted">No DLC or add-ons have been published for this game yet.</p>}
         {content.dlc.map(dlc => <details key={dlc.id} className="gd-extra-item">
           <summary><GameImage src={dlc.cover_image || game.cover_image} alt="" loading="lazy" /><span><strong>{dlc.name}</strong><small>{isPurchased(dlc.id) ? 'In your library' : priceLabel(dlc)}</small></span><ChevronDown size={16} /></summary>
           <div><p>{dlc.description}</p>{!isPurchased(dlc.id) && <button className="gd-secondary-button gd-button-fit" disabled={priceOf(dlc) === null} onClick={() => purchaseDLC(dlc)}><ShoppingBag size={15} />Add expansion to cart</button>}</div>
         </details>)}
-        {!!content.cards.length && <div className="gd-card-list">{content.cards.map(card => <details key={card.id} className="gd-card-item"><summary><span><strong>{card.name}</strong><small>{label(card.type)} · {card.base_rarity}</small></span><ChevronDown size={16} /></summary><p>{card.description || 'More details will be shared by the developer.'}</p></details>)}</div>}
+        <div className="gd-developer-card-section">
+          <div className="gd-section-heading gd-section-heading-compact"><div><span className="gd-eyebrow">Developer cards</span><h3>Published card content</h3></div></div>
+          {content.cards.length ? <div className="gd-card-list">{content.cards.map(card => <details key={card.id} className="gd-card-item"><summary><span><strong>{card.name}</strong><small>{label(card.type)} · {card.base_rarity}</small></span><ChevronDown size={16} /></summary><p>{card.description || 'More details will be shared by the developer.'}</p></details>)}</div> : <p className="gd-muted">No developer cards have been published for this game yet.</p>}
+        </div>
       </>}
     </div>
     <section className="gd-companion">
