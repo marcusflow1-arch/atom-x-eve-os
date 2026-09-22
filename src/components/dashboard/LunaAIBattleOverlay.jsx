@@ -36,7 +36,7 @@ const MODES = [
     tone: 'text-amber-100',
     title: 'Explore the connected frontier.',
     copy: 'Enter the worlds represented by the games and cards you own. Take quests, hunt guardians, rally against world bosses, and bring rewards back to Luna.',
-    routeIds: ['patrol', 'colossus'],
+    routeIds: ['patrol', 'vault', 'colossus'],
   },
 ];
 
@@ -47,7 +47,87 @@ const routeIcon = {
   world_boss: Crown,
 };
 
-function ConnectedWorlds({ hub, selectedMode }) {
+
+function FieldMode({ battle }) {
+  const [nodes, setNodes] = useState([]);
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState('');
+  const [prepared, setPrepared] = useState('');
+
+  const locate = () => {
+    if (!navigator.geolocation || locating) {
+      if (!navigator.geolocation) setError('Location services are unavailable in this browser.');
+      return;
+    }
+    setLocating(true);
+    setError('');
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const cellLat = Math.round(position.coords.latitude * 100) / 100;
+          const cellLng = Math.round(position.coords.longitude * 100) / 100;
+          const response = await battle.field({ cell_lat: cellLat, cell_lng: cellLng });
+          setNodes(response?.nodes || []);
+        } catch (err) {
+          setError(err?.message || 'Field signals could not be generated.');
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setError('Location permission is required only while you use Field Mode.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 12000 }
+    );
+  };
+
+  const prepare = (node) => {
+    setPrepared(node.id);
+    window.dispatchEvent(new CustomEvent('prepareAIBattleFieldNode', {
+      detail: { world_id: node.world?.id, route_id: node.route_id, field_node_id: node.id },
+    }));
+  };
+
+  return (
+    <section className="mt-5 border border-amber-100/[0.08] bg-amber-100/[0.018] p-3.5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[6px] font-black uppercase tracking-[0.15em] text-amber-100/38">Field Mode / Real-World Layer</p>
+          <h3 className="mt-1 text-[11px] font-semibold text-white/70">Your surroundings become a discovery surface.</h3>
+          <p className="mt-1 max-w-xl text-[7px] leading-4 text-white/30">Location is opt-in. The browser rounds it to a coarse cell before generating nearby game-world quests, caches, dungeon breaches and boss signals.</p>
+        </div>
+        <button type="button" onClick={locate} disabled={locating} className="flex h-9 shrink-0 items-center gap-2 border border-amber-100/12 bg-amber-100/[0.04] px-3 text-[7px] font-black uppercase tracking-[0.09em] text-amber-50/58 disabled:opacity-40">
+          {locating ? <Compass className="h-3.5 w-3.5 animate-spin" /> : <Map className="h-3.5 w-3.5" />}
+          {nodes.length ? 'Refresh Field' : 'Locate Field'}
+        </button>
+      </div>
+
+      {error && <p className="mt-2 text-[7px] text-rose-100/52">{error}</p>}
+
+      {nodes.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {nodes.slice(0, 4).map((node) => (
+            <article key={node.id} className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-2 border border-white/[0.05] bg-black/[0.12] p-2.5">
+              <div className="grid h-8 w-8 place-items-center border border-white/[0.06] bg-white/[0.015]">
+                <Compass className="h-3.5 w-3.5 text-amber-100/38" style={{ transform: 'rotate(' + String(node.bearing_deg || 0) + 'deg)' }} />
+              </div>
+              <div className="min-w-0">
+                <strong className="block truncate text-[8px] text-white/62">{node.title}</strong>
+                <span className="mt-0.5 block truncate text-[5.5px] uppercase tracking-[0.06em] text-white/24">{node.world?.title} · {Math.round(Number(node.distance_m || 0))} m · {String(node.type || '').replaceAll('_', ' ')}</span>
+              </div>
+              <button type="button" onClick={() => prepare(node)} className={'border px-2 py-1.5 text-[6px] font-black uppercase tracking-[0.08em] ' + (prepared === node.id ? 'border-emerald-100/12 bg-emerald-100/[0.04] text-emerald-100/55' : 'border-white/[0.06] text-white/36 hover:text-white/60')}>
+                {prepared === node.id ? 'Prepared' : 'Prepare'}
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ConnectedWorlds({ hub, selectedMode, battle }) {
   const worlds = hub?.worlds || [];
   const routes = (hub?.routes || []).filter((route) => selectedMode.routeIds.includes(route.id));
   return (
@@ -99,6 +179,7 @@ function ConnectedWorlds({ hub, selectedMode }) {
           })}
         </div>
       </div>
+      {selectedMode.id === 'pvwe' && <FieldMode battle={battle} />}
     </section>
   );
 }
@@ -250,7 +331,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
             <div className="flex h-full min-h-0 flex-col">
               <LunaDashboardArenaPanel mode={mode} />
               <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.45fr)_320px]">
-                <ConnectedWorlds hub={battle.hub} selectedMode={selectedMode} />
+                <ConnectedWorlds hub={battle.hub} selectedMode={selectedMode} battle={battle} />
                 <Arsenal hub={battle.hub} />
               </div>
               <CurrentExpeditions hub={battle.hub} onResume={(id) => arenaPresentation.setEncounter(id)} />
