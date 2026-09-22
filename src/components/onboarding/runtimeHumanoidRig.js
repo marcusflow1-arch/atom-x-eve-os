@@ -35,8 +35,26 @@ function normalizeWeights(entries) {
 function regionWeights(x, y, z, center, height, boneIndex) {
   const nx = (x - center.x) / height;
   const ny = (y - center.y) / height;
+  const nz = (z - center.z) / height;
   const ax = Math.abs(nx);
   const side = nx < 0 ? 'Left' : 'Right';
+
+  // Artemis' bow is part of the same source mesh but is not body geometry.
+  // Its upper limb is a thin diagonal island running behind the right shoulder.
+  // If it falls through to the arm rules below, different sections get weighted
+  // to Arm/ForeArm/Hand and the bow stretches apart during Idle.
+  //
+  // Keep that diagonal accessory rigid on the upper back instead. These bounds
+  // are normalized from the exact Admin Artemis GLB and intentionally narrow so
+  // normal arm/hair vertices are not affected.
+  if (
+    ny >= 0.75 && ny <= 0.995
+    && nz >= -0.055 && nz <= -0.004
+    && nx >= (0.02 + 0.60 * (ny - 0.75))
+    && nx <= (0.16 + 0.60 * (ny - 0.75))
+  ) {
+    return normalizeWeights([[boneIndex.Spine2, 1]]);
+  }
 
   // Arms. A small torso blend at the shoulder keeps the seam from tearing.
   if (ny > 0.53 && ax > 0.145) {
