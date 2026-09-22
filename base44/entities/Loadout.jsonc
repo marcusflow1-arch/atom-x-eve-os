@@ -2,6 +2,10 @@
   "name": "Loadout",
   "type": "object",
   "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this loadout"
+    },
     "name": {
       "type": "string",
       "description": "Loadout name"
@@ -10,9 +14,18 @@
       "type": "string",
       "description": "Loadout description"
     },
+    "loadout_type": {
+      "type": "string",
+      "enum": [
+        "equipment",
+        "skills"
+      ],
+      "default": "equipment",
+      "description": "Whether this is a gear loadout or the Luna Skill Book hotbar"
+    },
     "game_id": {
       "type": "string",
-      "description": "Game this loadout is for"
+      "description": "Optional game this loadout is for"
     },
     "genre": {
       "type": "string",
@@ -21,6 +34,11 @@
     "equipped_items": {
       "type": "object",
       "description": "Mapping of equipment slots to item IDs"
+    },
+    "skill_slots": {
+      "type": "object",
+      "default": {},
+      "description": "Persistent four-slot Luna Skill Book mapping. Keys 0-3 map to owned UserCard IDs."
     },
     "is_active": {
       "type": "boolean",
@@ -39,5 +57,34 @@
   "required": [
     "name",
     "equipped_items"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
