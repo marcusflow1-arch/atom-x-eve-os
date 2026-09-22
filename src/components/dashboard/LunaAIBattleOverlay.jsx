@@ -53,6 +53,7 @@ function FieldMode({ battle }) {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState('');
   const [prepared, setPrepared] = useState('');
+  const [fieldCell, setFieldCell] = useState(null);
 
   const locate = () => {
     if (!navigator.geolocation || locating) {
@@ -67,6 +68,8 @@ function FieldMode({ battle }) {
           const cellLat = Math.round(position.coords.latitude * 100) / 100;
           const cellLng = Math.round(position.coords.longitude * 100) / 100;
           const response = await battle.field({ cell_lat: cellLat, cell_lng: cellLng });
+          setFieldCell({ lat: cellLat, lng: cellLng });
+          setPrepared('');
           setNodes(response?.nodes || []);
         } catch (err) {
           setError(err?.message || 'Field signals could not be generated.');
@@ -85,7 +88,16 @@ function FieldMode({ battle }) {
   const prepare = (node) => {
     setPrepared(node.id);
     window.dispatchEvent(new CustomEvent('prepareAIBattleFieldNode', {
-      detail: { world_id: node.world?.id, route_id: node.route_id, field_node_id: node.id },
+      detail: {
+        world_id: node.world?.id,
+        route_id: node.route_id,
+        field_node_id: node.id,
+        field_cell_lat: fieldCell?.lat,
+        field_cell_lng: fieldCell?.lng,
+        field_title: node.title,
+        field_type: node.type,
+        field_distance_m: node.distance_m,
+      },
     }));
   };
 
