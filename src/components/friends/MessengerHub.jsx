@@ -58,9 +58,11 @@ export default function MessengerHub() {
       setConversations(body.conversations || []);
       setError('');
       if (!selectedId && body.conversations?.length) setSelectedId(String(body.conversations[0].partner_id));
+      return true;
     } catch (e) {
       console.error('[MessengerHub] inbox', e);
       setError(e.message || 'Messages could not load.');
+      return false;
     }
   }, [social, user?.id, selectedId]);
 
@@ -71,23 +73,35 @@ export default function MessengerHub() {
       setMessages((body.messages || []).slice().sort((a, b) => new Date(a.created_date || 0) - new Date(b.created_date || 0)));
       await social('mark_thread_read', { target_user_id: targetId });
       setError('');
+      return true;
     } catch (e) {
       console.error('[MessengerHub] thread', e);
       setError(e.message || 'Conversation could not load.');
+      return false;
     }
   }, [social, user?.id, selectedId]);
 
   useEffect(() => {
-    refreshInbox();
-    const timer = window.setInterval(refreshInbox, 3000);
-    return () => window.clearInterval(timer);
+    let cancelled = false;
+    let timer;
+    const poll = async () => {
+      const succeeded = await refreshInbox();
+      if (!cancelled) timer = window.setTimeout(poll, succeeded ? 30000 : 120000);
+    };
+    poll();
+    return () => { cancelled = true; window.clearTimeout(timer); };
   }, [refreshInbox]);
 
   useEffect(() => {
     if (!selectedId) { setMessages([]); return undefined; }
-    refreshThread(selectedId);
-    const timer = window.setInterval(() => refreshThread(selectedId), 2200);
-    return () => window.clearInterval(timer);
+    let cancelled = false;
+    let timer;
+    const poll = async () => {
+      const succeeded = await refreshThread(selectedId);
+      if (!cancelled) timer = window.setTimeout(poll, succeeded ? 30000 : 120000);
+    };
+    poll();
+    return () => { cancelled = true; window.clearTimeout(timer); };
   }, [selectedId, refreshThread]);
 
   useEffect(() => {

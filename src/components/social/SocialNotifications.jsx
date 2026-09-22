@@ -11,7 +11,9 @@ export function useSocialNotifications(){
  const {user}=useAuth();
  const query=useQuery({queryKey:['system-social-notifications',user?.id],enabled:!!user?.id,
   queryFn:async()=>unwrap(await base44.functions.invoke('socialActions',{action:'get_pending_actions'})),
-  refetchInterval:4000});
+  retry:false,
+  refetchInterval:(query)=>query.state.error?120000:30000,
+  refetchIntervalInBackground:false});
  return {...query,notifications:query.data?.notifications||[]};
 }
 export function SocialNotificationAlerts(){

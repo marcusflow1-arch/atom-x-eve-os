@@ -35,15 +35,22 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName, onModel
         party_invites: body.party_invites || [],
       });
       setActionError('');
+      return true;
     } catch (error) {
       console.warn('[Mini3DViewer] pending social actions', error);
+      return false;
     }
   }, [social, user?.id]);
 
   useEffect(() => {
-    refreshPending();
-    const timer = window.setInterval(refreshPending, 2500);
-    return () => window.clearInterval(timer);
+    let cancelled = false;
+    let timer;
+    const poll = async () => {
+      const succeeded = await refreshPending();
+      if (!cancelled) timer = window.setTimeout(poll, succeeded ? 30000 : 120000);
+    };
+    poll();
+    return () => { cancelled = true; window.clearTimeout(timer); };
   }, [refreshPending]);
 
   useEffect(() => {

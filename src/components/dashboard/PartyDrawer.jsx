@@ -32,17 +32,24 @@ export default function PartyDrawer({ user }) {
       const hasNew = incoming.some(item => !seenIncomingRef.current.has(item.id));
       incoming.forEach(item => seenIncomingRef.current.add(item.id));
       if (!quiet && hasNew && incoming.length) setOpen(true);
+      return true;
     } catch (error) {
       console.error('[PartyDrawer] state load failed', error);
+      return false;
     }
   }, [invoke, user?.id]);
 
   useEffect(() => {
     if (!user?.id) { partySession.publish({party:null,members:[]}); return; }
-    load({ quiet: true });
+    let cancelled = false;
+    let timer;
+    const poll = async () => {
+      const succeeded = await load({ quiet: true });
+      if (!cancelled) timer = setTimeout(poll, succeeded ? 30000 : 120000);
+    };
+    poll();
     base44.entities.Friend.filter({ user_id: user.id }).then(setFriends).catch(() => setFriends([]));
-    const interval = setInterval(() => load({ quiet: false }), 5000);
-    return () => clearInterval(interval);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [user?.id, load]);
 
   useEffect(() => {
