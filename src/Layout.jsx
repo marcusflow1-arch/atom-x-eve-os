@@ -815,8 +815,11 @@ function LayoutContent({ children, currentPageName }) {
           // The Store supplies its own complete top bar with centered search and account controls.
           headerConfig.hidden = true;
         } else if (p.includes('/gamedetail')) {
-          // GameDetail owns its header/search; the legacy z-40 bar would cover it.
-          headerConfig.hidden = true;
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/streaminghome')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
