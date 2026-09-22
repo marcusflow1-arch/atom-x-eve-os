@@ -11,7 +11,7 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 const routeForMode = {
   pvp: ['duel'],
   pve: ['vault'],
-  pvwe: ['patrol', 'colossus'],
+  pvwe: ['patrol', 'vault', 'colossus'],
 };
 
 const routeIcon = { duel: Swords, vault: Map, patrol: Map, colossus: Crown };
@@ -210,6 +210,19 @@ export default function LunaDashboardArenaPanel({ mode }) {
       setInvites([]);
     }
   }, [routes, routeId]);
+
+  useEffect(() => {
+    const prepareFieldNode = (event) => {
+      const detail = event?.detail || {};
+      const nextWorldId = String(detail.world_id || '');
+      const nextRouteId = String(detail.route_id || '');
+      if (nextWorldId && (hub?.worlds || []).some((item) => String(item.id) === nextWorldId)) setWorldId(nextWorldId);
+      if (nextRouteId && routes.some((item) => item.id === nextRouteId)) setRouteId(nextRouteId);
+      setInvites([]);
+    };
+    window.addEventListener('prepareAIBattleFieldNode', prepareFieldNode);
+    return () => window.removeEventListener('prepareAIBattleFieldNode', prepareFieldNode);
+  }, [hub?.worlds, routes]);
 
   const route = routes.find((item) => item.id === routeId) || routes[0];
   const world = hub?.worlds?.find((item) => item.id === worldId) || hub?.worlds?.[0];
