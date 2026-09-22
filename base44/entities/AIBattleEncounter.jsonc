@@ -25,6 +25,10 @@
     },
     "request_id": {
       "type": "string"
+    },
+    "source_field": {
+      "type": "object",
+      "description": "Validated coarse Field Mode discovery that launched this encounter"
     }
   },
   "required": [
