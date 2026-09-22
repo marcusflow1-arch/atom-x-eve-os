@@ -8,7 +8,7 @@ export async function readChannelHomeData(channelId, profileId, signal, now = Da
   const owners = [...new Set([channelId, profileId].filter(Boolean))];
   const requests = [
     ['layouts', () => base44.entities.StreamLayoutConfig.filter({ user_id: channelId }, '-created_date', 1, 0, ['id', 'user_id', 'gallery_images', 'schedule_data', 'pinned_games'])],
-    ['schedules', () => base44.entities.AuraStreamSchedule.filter({ user_id: { $in: owners }, status: 'scheduled', scheduled_start: { $gte: new Date(now).toISOString(), $lte: new Date(now + 14 * 86400000).toISOString() } }, 'scheduled_start', 6, 0, ['id', 'user_id', 'title', 'scheduled_start', 'status'])],
+    ['schedules', () => base44.entities.AuraStreamSchedule.filter({ user_id: { $in: owners }, status: 'scheduled', scheduled_start: { $gte: new Date(now - 86400000).toISOString(), $lte: new Date(now + 28 * 86400000).toISOString() } }, 'scheduled_start', 100, 0, ['id', 'user_id', 'title', 'game_id', 'scheduled_start', 'scheduled_end', 'send_notification', 'notification_sent', 'status'])],
     ['streams', () => base44.entities.Stream.filter({ streamer_id: { $in: owners } }, '-started_at', 6, 0, ['id', 'streamer_id', 'title', 'is_live', 'started_at', 'ended_at'])],
     ['auraStreams', () => base44.entities.AuraStream.filter({ streamer_id: { $in: owners }, is_live: true }, '-started_at', 1, 0, ['id', 'streamer_id', 'title', 'is_live', 'started_at'])],
     ['sponsors', () => base44.entities.AuraSponsor.filter({ user_id: channelId }, '-created_date', 100, 0, ['id', 'user_id', 'name', 'logo_url', 'affiliate_link', 'tier'])],
@@ -22,7 +22,19 @@ export async function readChannelHomeData(channelId, profileId, signal, now = Da
     return [key, results[index].status === 'fulfilled' ? rowsOf(results[index].value) : []];
   }));
   signal?.throwIfAborted();
-  return { ...data, failures };
+
+  const gameIds = [...new Set((data.schedules || []).map((row) => row.game_id).filter(Boolean))];
+  let games = [];
+  if (gameIds.length) {
+    try {
+      const pages = await Promise.all(gameIds.map((id) => base44.entities.Game.filter({ id }, '-created_date', 1, 0, ['id', 'title', 'cover_image', 'banner_image', 'genre'])));
+      games = pages.flatMap(rowsOf);
+    } catch {
+      failures.push('scheduleGames');
+    }
+  }
+  signal?.throwIfAborted();
+  return { ...data, games, failures };
 }
 
 export default function useChannelHomeData(channelId, profileId) {
