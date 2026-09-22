@@ -6,6 +6,13 @@ import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { useQuery } from '@tanstack/react-query';
+import InventoryGrid from './InventoryGrid';
+import LunaSplitInventory from './LunaSplitInventory';
+import LunaInventoryItemPreview from './LunaInventoryItemPreview';
+import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
+import { inventoryData } from '../profile/mockData';
+import { useEquipment } from '../luna/hooks/useEquipment';
+import { showError } from '@/components/error/ErrorToast';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
@@ -72,7 +79,11 @@ function GenreRows({ genres }) {
 export default function DashboardAvatarOverview() {
   const { user } = useAuth();
   const companion = useCompanionIdentity();
+  const { equipItem, equippedItems } = useEquipment();
   const [progression, setProgression] = useState(null);
+  const [inventoryMode, setInventoryMode] = useState(false);
+  const [inventorySlot, setInventorySlot] = useState(null);
+  const [inventoryPreviewItem, setInventoryPreviewItem] = useState(null);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
@@ -96,7 +107,12 @@ export default function DashboardAvatarOverview() {
   }, []);
 
   useEffect(() => {
-    if (surface !== 'dashboard') setActiveQuickPanel(null);
+    if (surface !== 'dashboard') {
+      setActiveQuickPanel(null);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setInventoryPreviewItem(null);
+    }
   }, [surface]);
 
   useEffect(() => {
@@ -105,6 +121,9 @@ export default function DashboardAvatarOverview() {
       setAvatarFocusMode(active);
       if (active) {
         setActiveQuickPanel(null);
+        setInventoryMode(false);
+        setInventorySlot(null);
+        setInventoryPreviewItem(null);
         setAttributeMenuOpen(false);
         setInteractionDimmed(false);
       }
@@ -121,7 +140,7 @@ export default function DashboardAvatarOverview() {
     const handlePointerDown = event => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-player-animation-controls]') || target.closest('[data-social-controls]')) return;
+      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-dashboard-inventory-workspace]') || target.closest('[data-player-animation-controls]') || target.closest('[data-social-controls]')) return;
 
       const interactive = target.closest('button, a, [role="button"], input, select, textarea');
       if (!interactive) return;
@@ -136,6 +155,11 @@ export default function DashboardAvatarOverview() {
 
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
+        if (inventoryMode) {
+          setInventoryMode(false);
+          setInventorySlot(null);
+          setInventoryPreviewItem(null);
+        }
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -148,6 +172,21 @@ export default function DashboardAvatarOverview() {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
+  }, [inventoryMode]);
+
+  useEffect(() => {
+    const toggleInventory = () => {
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryPreviewItem(null);
+      setInventoryMode((current) => {
+        if (current) setInventorySlot(null);
+        return !current;
+      });
+    };
+
+    window.addEventListener('openLunaInventoryWorkspace', toggleInventory);
+    return () => window.removeEventListener('openLunaInventoryWorkspace', toggleInventory);
   }, []);
 
   useEffect(() => {
@@ -218,7 +257,7 @@ export default function DashboardAvatarOverview() {
   const levelProgress = Math.min(100, stats.currentXP / stats.nextXP * 100);
   const backgroundDimmed = !avatarFocusMode && (interactionDimmed || surface !== 'dashboard');
   const slotItems = [
-    { id: 'stats', icon: BarChart3, label: 'Stats' },
+    { id: 'inventory', icon: PackageOpen, label: 'Inventory' },
     { id: 'friends', icon: Users, label: 'Friends', alert: Number(socialInbox.friend_unread || 0) > 0, badge: Number(socialInbox.friend_unread || 0) },
     { id: 'messages', icon: MessageSquare, label: 'Message', alert: Number(socialInbox.unread_total || 0) > 0, badge: Number(socialInbox.unread_total || 0) },
     { id: 'cards', icon: Trophy, label: 'Cards' },
@@ -226,6 +265,37 @@ export default function DashboardAvatarOverview() {
     { id: 'ai-battle', icon: Shield, label: 'AI Battle' },
     { id: 'season', icon: Crown, label: 'Season' }
   ];
+  const handleInventorySlot = (slotId) => {
+    setInventorySlot(slotId);
+    setInventoryPreviewItem(null);
+  };
+
+  const handleInventoryEquip = (item) => {
+    if (!inventorySlot || !item) return;
+    if (!itemFitsSlot(item, inventorySlot)) {
+      showError(`${item.name || 'That item'} cannot be equipped in ${getEquipmentSlotLabel(inventorySlot)}.`);
+      return;
+    }
+    equipItem(inventorySlot, item);
+  };
+
+  const handleQuickAction = (item) => {
+    if (item.id === 'inventory') {
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryPreviewItem(null);
+      setInventoryMode((current) => {
+        if (current) setInventorySlot(null);
+        return !current;
+      });
+      return;
+    }
+    setInventoryMode(false);
+    setInventorySlot(null);
+    setInventoryPreviewItem(null);
+    setActiveQuickPanel(current => current === item.id ? null : item.id);
+  };
+
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
     { id: 'blank-2', label: 'View 2', icon: Gauge },
@@ -235,8 +305,12 @@ export default function DashboardAvatarOverview() {
   ];
 
   return (
-    <div data-dashboard-avatar-overview className="fixed left-[390px] right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible">
-      {!avatarFocusMode && surface === 'dashboard' && activeQuickPanel && (
+    <div
+      data-dashboard-avatar-overview
+      className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
+      style={{ left: inventoryMode ? '330px' : '390px' }}
+    >
+      {!avatarFocusMode && surface === 'dashboard' && !inventoryMode && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
@@ -254,11 +328,66 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
-      <div className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div
+        className={`absolute top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
+        style={inventoryMode
+          ? { left: '0px', width: '300px', right: 'auto' }
+          : { left: '0px', right: '0px', width: 'auto' }}
+      >
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
-      {!avatarFocusMode && surface === 'dashboard' && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
+        <div
+          data-dashboard-inventory-workspace
+          className="absolute left-[300px] right-[338px] top-[26px] bottom-0 z-40 pointer-events-auto overflow-hidden border-y border-white/[0.07]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(8,14,24,.46), rgba(11,18,29,.28) 50%, rgba(8,14,24,.42))',
+            backdropFilter: 'blur(22px) saturate(135%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06), inset 0 -1px 0 rgba(255,255,255,.03)',
+          }}
+        >
+          <div className="relative grid h-full min-h-0 grid-cols-2">
+            <section className="relative min-h-0 min-w-0 overflow-hidden border-r border-white/[0.08]">
+              <InventoryGrid
+                equippedItems={equippedItems}
+                handleBoxClick={handleInventorySlot}
+                compact
+                selectedSlotId={inventorySlot}
+              />
+            </section>
+
+            <section className="relative min-h-0 min-w-0 overflow-hidden">
+              <LunaSplitInventory
+                inventory={inventoryData}
+                selectedSlotId={inventorySlot}
+                onPreviewItem={setInventoryPreviewItem}
+              />
+              {inventoryPreviewItem && (
+                <LunaInventoryItemPreview
+                  item={inventoryPreviewItem}
+                  selectedSlotId={inventorySlot}
+                  onEquip={handleInventoryEquip}
+                  showUpgrade={false}
+                  onClose={() => setInventoryPreviewItem(null)}
+                />
+              )}
+            </section>
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-50 h-[74%] w-px -translate-x-1/2 -translate-y-1/2"
+              style={{
+                background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,.18) 50%, transparent)',
+                boxShadow: '0 0 12px rgba(103,232,249,.05)',
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {!avatarFocusMode && surface === 'dashboard' && !inventoryMode && <PartyPortraitRail />}
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
@@ -272,25 +401,7 @@ export default function DashboardAvatarOverview() {
                   <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div>
                   <div className="flex items-center gap-2">
                     <div className="text-white font-bold text-base">{companion?.name || 'AI Avatar'}</div>
-                    {surface === 'dashboard' && (
-                      <button
-                        type="button"
-                        data-dashboard-quick-control
-                        aria-label="Open Inventory"
-                        title="Inventory"
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setActiveQuickPanel(null);
-                          setInteractionDimmed(false);
-                          window.dispatchEvent(new Event('openLunaInventoryWorkspace'));
-                        }}
-                        className="inline-flex items-center justify-center p-0.5 text-white/42 transition-colors hover:text-cyan-100/80 focus-visible:outline-none focus-visible:text-cyan-100"
-                      >
-                        <PackageOpen className="h-4 w-4" />
-                      </button>
-                    )}
+
                   </div>
                 </div>
               </div>
@@ -347,11 +458,11 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={activeQuickPanel === item.id}
+                      active={item.id === 'inventory' ? inventoryMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
-                      onClick={() => setActiveQuickPanel(current => current === item.id ? null : item.id)}
+                      onClick={() => handleQuickAction(item)}
                     />
                   ))}
                 </div>
