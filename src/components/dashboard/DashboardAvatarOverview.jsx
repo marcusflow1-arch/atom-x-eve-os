@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
-function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClick }) {
+function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClick, compact = false }) {
   return (
     <button
       type="button"
@@ -17,17 +17,17 @@ function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClic
       aria-pressed={active}
       data-dashboard-quick-control
       onClick={onClick}
-      className={`relative h-[54px] w-[54px] flex-shrink-0 rounded-xl border backdrop-blur-2xl transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.10] ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : alert ? 'border-cyan-200/45 bg-cyan-300/[0.09] animate-pulse' : 'border-white/[0.16] bg-white/[0.055]'}`}
+      className={`relative flex-shrink-0 border backdrop-blur-2xl transition-all duration-200 hover:bg-white/[0.10] ${compact ? 'h-[42px] w-full rounded-lg' : 'h-[54px] w-[54px] rounded-xl hover:-translate-y-1'} ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : alert ? 'border-cyan-200/45 bg-cyan-300/[0.09] animate-pulse' : 'border-white/[0.16] bg-white/[0.055]'}`}
       style={{
         boxShadow: active
-          ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 24px rgba(34,211,238,0.18), 0 8px 24px rgba(0,0,0,0.20)'
-          : 'inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 24px rgba(0,0,0,0.18)'
+          ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 20px rgba(34,211,238,0.16), 0 6px 18px rgba(0,0,0,0.18)'
+          : 'inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 18px rgba(0,0,0,0.16)'
       }}
     >
-      <div className={`pointer-events-none absolute inset-0 rounded-xl border ${active ? 'border-cyan-200/[0.12]' : 'border-cyan-300/[0.04]'}`} />
-      {Icon && <Icon className={`pointer-events-none absolute left-1/2 top-[12px] -translate-x-1/2 w-4 h-4 ${active || alert ? 'text-cyan-100' : 'text-white/55'}`} />}
-      {badge > 0 && <span className="pointer-events-none absolute -right-1 -top-1 grid min-h-[16px] min-w-[16px] place-items-center rounded-full bg-cyan-300 px-1 text-[7px] font-black text-slate-950 shadow-[0_0_14px_rgba(103,232,249,.35)]">{badge > 99 ? '99+' : badge}</span>}
-      <span className={`pointer-events-none absolute bottom-[5px] left-0 right-0 text-center text-[6px] uppercase tracking-wider ${active || alert ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
+      <div className={`pointer-events-none absolute inset-0 border ${compact ? 'rounded-lg' : 'rounded-xl'} ${active ? 'border-cyan-200/[0.12]' : 'border-cyan-300/[0.04]'}`} />
+      {Icon && <Icon className={`pointer-events-none absolute left-1/2 -translate-x-1/2 ${compact ? 'top-[7px] h-3.5 w-3.5' : 'top-[12px] h-4 w-4'} ${active || alert ? 'text-cyan-100' : 'text-white/55'}`} />}
+      {badge > 0 && <span className={`pointer-events-none absolute grid place-items-center rounded-full bg-cyan-300 px-1 font-black text-slate-950 shadow-[0_0_14px_rgba(103,232,249,.35)] ${compact ? '-right-1 -top-1 min-h-[14px] min-w-[14px] text-[6px]' : '-right-1 -top-1 min-h-[16px] min-w-[16px] text-[7px]'}`}>{badge > 99 ? '99+' : badge}</span>}
+      <span className={`pointer-events-none absolute left-0 right-0 text-center uppercase tracking-wider ${compact ? 'bottom-[4px] text-[5px]' : 'bottom-[5px] text-[6px]'} ${active || alert ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
     </button>
   );
 }
@@ -239,7 +239,7 @@ export default function DashboardAvatarOverview() {
       {!avatarFocusMode && surface === 'dashboard' && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
-          className="absolute left-[8px] right-[8px] top-[8px] bottom-[74px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
+          className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
           style={{
             background: 'linear-gradient(135deg, rgba(20,29,44,0.52) 0%, rgba(10,16,28,0.30) 48%, rgba(22,34,50,0.44) 100%)',
             backdropFilter: 'blur(28px) saturate(145%)',
@@ -254,37 +254,18 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
-      {!avatarFocusMode && surface === 'dashboard' && (
-        <div
-          className="absolute bottom-[10px] z-50 flex h-[54px] w-fit -translate-x-1/2 items-center gap-[4px] pointer-events-auto"
-          style={{ left: 'calc((100% - 338px) / 2)' }}
-        >
-          {slotItems.map(item => (
-            <GlassSlot
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              active={activeQuickPanel === item.id}
-              alert={item.alert}
-              badge={item.badge}
-              onClick={() => setActiveQuickPanel(current => current === item.id ? null : item.id)}
-            />
-          ))}
-        </div>
-      )}
-
       <div className={`absolute left-0 right-0 top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}>
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
       {!avatarFocusMode && surface === 'dashboard' && <PartyPortraitRail />}
       {!avatarFocusMode && <aside
-        className={`absolute right-[-1px] top-[26px] w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
+        className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
       >
         <div className="relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
-          <div className="relative h-full w-full bg-transparent backdrop-blur-[10px] overflow-hidden">
-            <div className="relative px-5 pt-3 pb-2 border-b border-white/[0.12]">
+          <div className="relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
+            <div className="relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-7">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div>
@@ -319,7 +300,7 @@ export default function DashboardAvatarOverview() {
               {attributeMenuOpen && <div className="absolute right-[-54px] top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">{circleOptions.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setAttributeView(id)} aria-label={label} className="w-10 h-10 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/55"><Icon className="w-4 h-4" /></button>)}</div>}
             </div>
 
-            <div className="relative px-5 py-1 h-[calc(100%-65px)] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="relative min-h-0 flex-1 px-5 py-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {attributeView === 'overview' && <>
                 <StatRow icon={<Zap className="w-3 h-3" />} label="Power" value={stats.power} />
                 <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} />
@@ -354,6 +335,28 @@ export default function DashboardAvatarOverview() {
                 ))}
               </div>
             </div>
+
+            {surface === 'dashboard' && (
+              <div
+                className="relative z-50 shrink-0 border-t border-white/[0.10] px-3 py-2 pointer-events-auto"
+                data-dashboard-attribute-actions
+              >
+                <div className="grid grid-cols-4 gap-1.5">
+                  {slotItems.map(item => (
+                    <GlassSlot
+                      key={item.id}
+                      icon={item.icon}
+                      label={item.label}
+                      active={activeQuickPanel === item.id}
+                      alert={item.alert}
+                      badge={item.badge}
+                      compact
+                      onClick={() => setActiveQuickPanel(current => current === item.id ? null : item.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </aside>}
