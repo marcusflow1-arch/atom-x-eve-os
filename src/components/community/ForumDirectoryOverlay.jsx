@@ -1,142 +1,71 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Gamepad2, Search, SlidersHorizontal, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { ArrowRight, Gamepad2, MessageSquare, Search, SlidersHorizontal, X } from 'lucide-react';
+import './forumRefresh.css';
 
-const PAGE_SIZE = 72;
+const PAGE_SIZE = 36;
 const artFor = (game) => game?.cover_image || game?.banner_image || game?.image || game?.thumbnail || '';
-const labelFor = (game) => game?.genre || game?.category || 'Game';
+const genresFor = (game) => String(game.genre || game.category || 'Other').split(/[,;|]/).map((name) => name.trim()).filter(Boolean);
 
-export default function ForumDirectoryOverlay({ open, games = [], activeGame, onClose, onSelectGame }) {
+export default function ForumDirectoryOverlay({ open, games = [], activeGame, loading = false, error = false, onRetry, onClose, onSelectGame }) {
   const [query, setQuery] = useState('');
   const [genre, setGenre] = useState('all');
   const [sort, setSort] = useState('az');
   const [page, setPage] = useState(1);
-
+  const searchRef = useRef(null);
+  const returnFocus = useRef(null);
   const genres = useMemo(() => {
     const counts = new Map();
-    games.forEach((game) => {
-      const value = labelFor(game);
-      counts.set(value, (counts.get(value) || 0) + 1);
-    });
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 28);
+    games.forEach((game) => genresFor(game).forEach((name) => counts.set(name, (counts.get(name) || 0) + 1)));
+    return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [games]);
-
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const rows = games.filter((game) => {
-      if (genre !== 'all' && labelFor(game) !== genre) return false;
-      if (!q) return true;
-      return [game.title, game.genre, game.developer, game.publisher, game.platform]
-        .some((value) => String(value || '').toLowerCase().includes(q));
-    });
-    return [...rows].sort((a, b) => {
-      if (sort === 'newest') return Number(b.original_year || b.release_year || 0) - Number(a.original_year || a.release_year || 0);
-      return String(a.title || '').localeCompare(String(b.title || ''));
-    });
+    return games.filter((game) => (genre === 'all' || genresFor(game).includes(genre)) &&
+      (!q || [game.title, game.genre, game.developer, game.publisher, game.platform].some((value) => String(value || '').toLowerCase().includes(q))))
+      .sort((a, b) => sort === 'newest' ? Number(b.original_year || b.release_year || 0) - Number(a.original_year || a.release_year || 0) || String(a.title).localeCompare(String(b.title)) : String(a.title || '').localeCompare(String(b.title || '')));
   }, [games, genre, query, sort]);
-
   useEffect(() => { setPage(1); }, [genre, query, sort]);
+  useEffect(() => { if (!open) { setQuery(''); setGenre('all'); setPage(1); } }, [open]);
   useEffect(() => {
-    if (!open) { setQuery(''); setGenre('all'); setPage(1); }
-  }, [open]);
-
-  useEffect(() => {
-    const handleForumHome = () => onSelectGame?.(null);
-    window.addEventListener('forumGoHome', handleForumHome);
-    return () => window.removeEventListener('forumGoHome', handleForumHome);
+    const home = () => onSelectGame?.(null);
+    window.addEventListener('forumGoHome', home);
+    return () => window.removeEventListener('forumGoHome', home);
   }, [onSelectGame]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') onClose?.();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
-
+  const reset = () => { setQuery(''); setGenre('all'); };
   const visible = filtered.slice(0, page * PAGE_SIZE);
-
-  const overlay = <AnimatePresence>
-    {open && <motion.section
-      className="forum-browser"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 12 }}
-      transition={{ duration: .22, ease: 'easeOut' }}
-      aria-label="Browse forums"
-      style={{
-        position: 'fixed',
-        top: '64px',
-        bottom: '48px',
-        left: 0,
-        right: 0,
-        zIndex: 210,
-        background: 'rgba(8, 12, 18, 0.96)',
-        backdropFilter: 'blur(30px) saturate(135%)',
-        WebkitBackdropFilter: 'blur(30px) saturate(135%)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.055), 0 20px 70px rgba(0,0,0,0.55)',
-      }}
-    >
-      <header className="forum-browser-header">
-        <div className="forum-browser-title">
-          <SlidersHorizontal size={20} />
-          <div>
-            <div className="forum-eyebrow">Forum directory</div>
-            <h2>Find a community</h2>
+  return <Dialog.Root open={open} onOpenChange={(value) => { if (!value) onClose?.(); }}>
+    <Dialog.Portal>
+      <Dialog.Overlay className="forum-directory-scrim" />
+      <Dialog.Content className="forum-directory-v2" onOpenAutoFocus={(event) => { event.preventDefault(); returnFocus.current = document.activeElement; searchRef.current?.focus(); }} onCloseAutoFocus={(event) => { event.preventDefault(); if (returnFocus.current?.isConnected) returnFocus.current.focus(); }}>
+        <header className="forum-directory-heading">
+          <div><span className="forum-eyebrow">EXPLORE THE COMMUNITY</span><Dialog.Title>Find your game. Find your people.</Dialog.Title><Dialog.Description>Choose a forum to read discussions, discover player guides, or start your own conversation.</Dialog.Description></div>
+          <Dialog.Close className="forum-directory-close" aria-label="Close forum browser"><X size={20} /></Dialog.Close>
+        </header>
+        <label className="forum-directory-search"><Search size={20} /><input ref={searchRef} aria-label="Search game forums" placeholder="Search games, genres, or studios…" value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button type="button" aria-label="Clear forum search" onClick={() => setQuery('')}><X size={17} /></button>}</label>
+        <div className="forum-directory-body">
+          <aside className="forum-directory-filters" aria-label="Filter forums by genre"><h3><SlidersHorizontal size={15} />Browse by genre</h3>
+            <button type="button" aria-pressed={genre === 'all'} onClick={() => setGenre('all')}><span>All genres</span><small>{games.length}</small></button>
+            {genres.map(([name, count]) => <button type="button" key={name} aria-pressed={genre === name} onClick={() => setGenre(name)}><span>{name}</span><small>{count}</small></button>)}
+          </aside>
+          <div className="forum-directory-results">
+            <div className="forum-directory-toolbar">
+              <div><strong>{genre === 'all' ? 'Game forums' : genre}</strong><span role="status">{loading ? 'Loading…' : filtered.length + ' games'}</span></div>
+              <label className="forum-mobile-genres"><span className="sr-only">Filter forums by genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}><option value="all">All genres</option>{genres.map(([name]) => <option key={name}>{name}</option>)}</select></label>
+              <select aria-label="Sort forums" value={sort} onChange={(event) => setSort(event.target.value)}><option value="az">Name: A–Z</option><option value="newest">Newest games</option></select>
+            </div>
+            {!query && genre === 'all' && <button type="button" className="forum-general-link" onClick={() => onSelectGame?.(null)}><MessageSquare size={24} /><div><strong>All community discussions</strong><span>One feed for every game. See what’s happening across Atom X Eve.</span></div><ArrowRight size={19} /></button>}
+            {loading ? <div className="forum-directory-state" role="status">Loading game communities…</div> : error ? <div className="forum-directory-state" role="alert"><h3>The game directory couldn’t load.</h3><button type="button" onClick={onRetry}>Try again</button></div> : <>
+              <div className="forum-directory-cards">{visible.map((game) => <button type="button" key={game.id || game.title} className="forum-directory-game" aria-current={activeGame?.title === game.title ? 'true' : undefined} onClick={() => onSelectGame?.(game)}>
+                <div className="forum-directory-cover"><Gamepad2 size={28} />{artFor(game) && <img src={artFor(game)} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} />}<span>{activeGame?.title === game.title ? 'Current forum' : genresFor(game)[0]}</span></div>
+                <div><strong>{game.title || 'Game community'}</strong><small>{game.developer || game.publisher || 'Discussion · Guides · Achievements'}</small><span>Visit forum <ArrowRight size={13} /></span></div>
+              </button>)}</div>
+              {!filtered.length && <div className="forum-directory-state"><Search size={28} /><h3>No matching game forums</h3><p>Try another game, studio, or genre.</p><button type="button" onClick={reset}>Clear filters</button></div>}
+              {visible.length < filtered.length && <button type="button" className="forum-directory-more" onClick={() => setPage((value) => value + 1)}>Show more games · {filtered.length - visible.length} remaining</button>}
+            </>}
           </div>
         </div>
-        <label className="forum-browser-search">
-          <Search size={15} />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search game, genre, developer or publisher" autoFocus />
-        </label>
-        <button className="forum-browser-close" type="button" onClick={onClose} aria-label="Close forum browser"><X size={17} /></button>
-      </header>
-
-      <div className="forum-browser-layout">
-        <aside className="forum-browser-sidebar">
-          <p>Filter communities</p>
-          <button type="button" className={`forum-filter-button ${genre === 'all' ? 'is-active' : ''}`} onClick={() => setGenre('all')}>
-            <span>All forums</span><span>{games.length}</span>
-          </button>
-          {genres.map(([name, count]) => <button key={name} type="button" className={`forum-filter-button ${genre === name ? 'is-active' : ''}`} onClick={() => setGenre(name)}>
-            <span>{name}</span><span>{count}</span>
-          </button>)}
-        </aside>
-
-        <main className="forum-browser-main">
-          <div className="forum-browser-toolbar">
-            <h3>{genre === 'all' ? 'All forums' : genre}<span>{filtered.length.toLocaleString()} found</span></h3>
-            <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort forums">
-              <option value="az">A–Z</option>
-              <option value="newest">Newest games</option>
-            </select>
-          </div>
-
-          <div className="forum-directory-grid">
-            {genre === 'all' && !query && <button type="button" className="forum-directory-card" onClick={() => onSelectGame?.(null)}>
-              <div className="forum-directory-art"><div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_top_right,rgba(34,211,238,.18),transparent_55%),linear-gradient(135deg,#0a1726,#071019)]"><Gamepad2 size={30} className="text-cyan-200/70" /></div><span className="forum-directory-badge">Platform-wide</span></div>
-              <strong>General Community</strong><small>All games · all discussions</small>
-            </button>}
-
-            {visible.map((game) => <button type="button" key={game.id || game.title} className="forum-directory-card" onClick={() => onSelectGame?.(game)}>
-              <div className="forum-directory-art">
-                {artFor(game) ? <img src={artFor(game)} alt="" loading="lazy" /> : <div className="absolute inset-0 grid place-items-center"><Gamepad2 size={25} className="text-cyan-200/45" /></div>}
-                <span className="forum-directory-badge">{activeGame?.id === game.id ? 'Current forum' : labelFor(game)}</span>
-              </div>
-              <strong>{game.title || 'Untitled Game'}</strong>
-              <small>{[game.developer || game.publisher, game.original_year || game.release_year].filter(Boolean).join(' · ') || 'Game community'}</small>
-            </button>)}
-          </div>
-
-          {!filtered.length && <div className="forum-empty"><Search size={26} /><h3>No forum matches that search</h3><p>Try a game title, developer, publisher or broader genre.</p></div>}
-          {visible.length < filtered.length && <button type="button" className="forum-load-more" onClick={() => setPage((value) => value + 1)}>Load more forums</button>}
-        </main>
-      </div>
-    </motion.section>}
-  </AnimatePresence>;
-
-  if (typeof document === 'undefined') return overlay;
-  return createPortal(overlay, document.body);
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>;
 }
