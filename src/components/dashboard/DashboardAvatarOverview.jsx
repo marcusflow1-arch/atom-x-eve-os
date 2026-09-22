@@ -12,6 +12,7 @@ import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
+import LunaSkillXpHud from './LunaSkillXpHud';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
@@ -295,7 +296,6 @@ export default function DashboardAvatarOverview() {
     };
   }, []);
 
-  const levelProgress = Math.min(100, stats.currentXP / stats.nextXP * 100);
   const backgroundDimmed = !avatarFocusMode && (interactionDimmed || surface !== 'dashboard');
   const slotItems = [
     { id: 'inventory', icon: PackageOpen, label: 'Inventory' },
@@ -497,6 +497,22 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
+      {!avatarFocusMode
+        && surface === 'dashboard'
+        && !embeddedUtilityMode
+        && !messagesMode
+        && !friendsMode
+        && !seasonMode
+        && !leaderboardMode
+        && !activeQuickPanel
+        && (
+          <LunaSkillXpHud
+            currentXp={stats.currentXP}
+            nextXp={stats.nextXP}
+            level={stats.level}
+          />
+        )}
+
       {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !messagesMode && !friendsMode && !seasonMode && <PartyPortraitRail />}
       {!avatarFocusMode && surface === 'dashboard' && friendsMode && (
         <div
@@ -591,11 +607,6 @@ export default function DashboardAvatarOverview() {
               </>}
 
               {attributeView.startsWith('blank-') && <div className="min-h-[300px]" />}
-
-              <div className="mt-1 pt-1 border-t border-white/[0.08]">
-                <div className="flex justify-between mb-1"><span className="text-white/40 text-[7px] uppercase">Overall Level Progress</span><span className="text-cyan-300/80 text-[7px]">{Math.round(levelProgress)}%</span></div>
-                <ProgressBar value={levelProgress} />
-              </div>
 
               <div className="mt-1 pt-1 border-t border-white/[0.08]">
                 <div className="flex justify-between mb-1"><span className="text-white/60 text-[7px] uppercase">Top Genres / Current Levels</span><span className="text-white/30 text-[6px]">XP / Level</span></div>
