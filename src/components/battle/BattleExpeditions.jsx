@@ -103,7 +103,7 @@ export default function BattleExpeditions({onClose,onClassic,initialEncounterId}
   const [worldId,setWorldId]=useState('luna'),[routeId,setRouteId]=useState('patrol'),[tab,setTab]=useState('explore');
   const [invites,setInvites]=useState([]),[error,setError]=useState('');
   const battle=useBattleArena(encounterId),{hub,user}=battle;
-  useEffect(()=>{arenaPresentation.setVisible(!!encounterId);return()=>arenaPresentation.setVisible(false);},[encounterId]);
+  useEffect(()=>{arenaPresentation.setEncounter(encounterId);return()=>arenaPresentation.clear();},[encounterId]);
   useEffect(()=>{if(initialEncounterId)setEncounterId(initialEncounterId);},[initialEncounterId]);
   const run=async task=>{setError('');try{return await task();}catch(e){setError(e.message||'This action could not finish. Please try again.');}};
   const world=hub?.worlds.find(w=>w.id===worldId)||hub?.worlds[0];
