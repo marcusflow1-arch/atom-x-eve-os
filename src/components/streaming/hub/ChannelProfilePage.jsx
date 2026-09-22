@@ -72,8 +72,14 @@ export default function ChannelProfilePage({ streamerId, streamId, source }) {
   const activeRecord = stream ? { id: stream.recordId, is_live: stream.isLive !== false } : null;
   const openTab = (tab, date) => {
     if (!['schedule', 'cards', 'gallery', 'games', null].includes(tab)) return;
-    setScheduleDate(date || null); setActiveTab((previous) => previous === tab ? null : tab);
-    if (activeTab !== tab && ['schedule', 'games'].includes(tab)) requestAnimationFrame(() => document.querySelector('.channel-stage-grid')?.scrollIntoView({ block: 'start', behavior: 'auto' }));
+    if (tab === 'schedule') {
+      setScheduleDate(date || null);
+      setActiveTab(null);
+      requestAnimationFrame(() => document.getElementById('channel-page-schedule')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+      return;
+    }
+    setActiveTab((previous) => previous === tab ? null : tab);
+    if (activeTab !== tab && tab === 'games') requestAnimationFrame(() => document.querySelector('.channel-stage-grid')?.scrollIntoView({ block: 'start', behavior: 'auto' }));
   };
   const closeTab = () => setActiveTab(null);
   useEffect(() => {
@@ -99,10 +105,18 @@ export default function ChannelProfilePage({ streamerId, streamId, source }) {
             </div>
             <div ref={anchorRef}><ProfileInfoBar activeProfile={profile || { display_name: stream?.name || 'Channel', avatar_url: stream?.avatar, follower_count: stream?.followers }} isEditMode={false} isLive={Boolean(stream)} activeTab={activeTab} setActiveTab={openTab} /></div>
             <ChannelOverview profile={profile} schedules={homeQuery.data?.schedules} loading={homeQuery.isPending} error={homeQuery.isError || homeQuery.data?.failures?.includes('schedules')} onRetry={() => homeQuery.refetch()} onOpenSchedule={openTab} />
+            <ScheduleSection
+              ownerId={owner}
+              profile={profile}
+              scheduledStreams={homeQuery.data?.schedules || []}
+              games={homeQuery.data?.games || []}
+              editable={user?.id === owner}
+              initialDate={scheduleDate}
+              onRefresh={() => { homeQuery.refetch(); query.refetch(); }}
+            />
             <ChannelHomeContent sponsors={homeQuery.data?.sponsors || []} allowEditing={false} />
             {activeTab === 'cards' && createPortal(<PlayerAchievementCollection user={user?.id === owner ? user : { id: owner }} publicView={user?.id !== owner} onClose={closeTab} />, document.body)}
             {activeTab === 'gallery' && createPortal(<GallerySection isEditMode={false} galleryImages={layout.gallery_images || []} onClose={closeTab} user={user} channelId={owner} anchorRef={anchorRef} />, document.body)}
-            {activeTab === 'schedule' && <ScheduleSection isEditMode={false} scheduleData={layout.schedule_data || {}} scheduledStreams={homeQuery.data?.schedules} initialDate={scheduleDate} onClose={closeTab} />}
             {activeTab === 'games' && <GamesSection isEditMode={false} pinnedGames={layout.pinned_games || []} onClose={closeTab} />}
           </>}
       </div>
