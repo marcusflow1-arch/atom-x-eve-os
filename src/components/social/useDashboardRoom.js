@@ -12,6 +12,7 @@ export function useDashboardRoom(channel,user,envUrl){
   const hostId=channel.slice(10);
   dashboardSession.publish({channel_id:channel,host_id:hostId,status:'connecting'});
   const tick=async()=>{
+   let retryDelay=15000;
    try{
     const state=unwrap(await base44.functions.invoke('dashboardSession',{action:'heartbeat',data:{host_id:hostId,env_url:env.current}}));
     if(disposed)return;
@@ -26,11 +27,12 @@ export function useDashboardRoom(channel,user,envUrl){
       window.dispatchEvent(new CustomEvent('changeEnvironment',{detail:{envUrl:state.env_url}}));
    }catch(error){
     if(disposed)return;
+    retryDelay=60000;
     const message=error.response?.data?.error||error.message||'Dashboard connection interrupted.';
     dashboardSession.publish({channel_id:channel,host_id:hostId,status:'error',error:message});
     setParticipants([]);
     window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate',{detail:{players:[],channelId:channel}}));
-   }finally{if(!disposed)timer=setTimeout(tick,3000);}
+   }finally{if(!disposed)timer=setTimeout(tick,retryDelay);}
   };
   tick();
   return()=>{

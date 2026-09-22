@@ -237,8 +237,9 @@ export default function DashboardAvatarOverview() {
       return body;
     },
     enabled: !!user?.id,
-    refetchInterval: 2500,
-    staleTime: 1200,
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   useEffect(() => {

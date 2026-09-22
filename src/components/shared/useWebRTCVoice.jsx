@@ -34,7 +34,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         if (!roomId || !user) return;
 
         let isMounted = true;
-        let unsubscribe = null, pollTimer;
+        let unsubscribe = null;
         const startedAt = Date.now() - 15000;
         processedSignals.current = new Set();
         let queue = Promise.resolve();
@@ -45,14 +45,13 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
           processedSignals.current.add(signal.id);
           queue = queue.then(() => isMounted && handleSignal(signal)).catch(console.error);
         };
-        const poll = async () => {
+        const loadInitialSignals = async () => {
           try {
-            const rows = await base44.entities.VoiceSignal.filter({channel_id:roomId,target_id:user.id},'-created_date',200);
+            const rows = await base44.entities.VoiceSignal.filter({channel_id:roomId,target_id:user.id},'-created_date',30);
             if (!isMounted) return;
             rows.reverse().forEach(receive);
             for(const id of participantsRef.current) if(id !== user.id && user.id > id && !peersRef.current[id]) initiateCall(id);
-          } catch(error) { console.warn('[Voice] signaling retry',error); }
-          finally { if(isMounted) pollTimer=setTimeout(poll,3000); }
+          } catch(error) { console.warn('[Voice] initial signaling load',error); }
         };
 
         const initWebRTC = async () => {
@@ -79,11 +78,10 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         };
 
         initWebRTC();
-        poll();
+        loadInitialSignals();
 
         return () => {
             isMounted = false;
-            clearTimeout(pollTimer);
             initiateCallRef.current = null;
             dataChannelsRef.current = {};
             if (unsubscribe) unsubscribe();

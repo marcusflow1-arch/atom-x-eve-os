@@ -33,13 +33,17 @@ export default function LunaCardsPanel() {
     queryKey: ['luna-mini-owned-cards', user?.id],
     queryFn: () => base44.entities.UserCard.filter({ user_id: user.id }, '-created_date', 500),
     enabled: Boolean(user?.id),
-    staleTime: 15000,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: games = [] } = useQuery({
     queryKey: ['luna-mini-card-games'],
-    queryFn: () => base44.entities.Game.list('-created_date', 500),
-    staleTime: 60000,
+    queryFn: () => base44.entities.Game.list('-created_date', 250),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const gameMeta = useMemo(() => {

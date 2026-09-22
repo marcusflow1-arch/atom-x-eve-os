@@ -1300,15 +1300,19 @@ export function LibraryBannerSection({
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
-    queryFn: () => base44.entities.PlayerState.list(),
-    refetchInterval: 5000,
+    queryFn: () => base44.entities.PlayerState.list('-last_update', 100),
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   const { data: dashboardFriends = [], refetch: refetchDashboardFriends } = useQuery({
     queryKey: ['luna_presence_friends', user?.id],
     queryFn: () => base44.entities.Friend.filter({ user_id: user.id }),
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   const { data: incomingDashboardInvites = [], refetch: refetchDashboardInvites } = useQuery({
@@ -1318,7 +1322,9 @@ export function LibraryBannerSection({
       return (rows || []).sort((a, b) => new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime());
     },
     enabled: !!user?.id,
-    refetchInterval: 3000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   const { data: incomingFriendRequests = [], refetch: refetchFriendRequests } = useQuery({
@@ -1328,7 +1334,9 @@ export function LibraryBannerSection({
       return (rows || []).sort((a, b) => new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime());
     },
     enabled: !!user?.id,
-    refetchInterval: 3000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   const pendingSocialAction = useMemo(() => {
