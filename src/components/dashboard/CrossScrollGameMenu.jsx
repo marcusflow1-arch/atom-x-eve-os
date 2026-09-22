@@ -9,7 +9,7 @@ import GamePlayButton from '@/components/dashboard/gamehub/GamePlayButton';
 // - Play = open the game page; Options (⋯) = open the blank focus UI.
 // - Long-press the thumbnail also opens the blank focus UI.
 // - 100%-complete games show a cyan checkmark and open the blank UI on Play.
-export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame, onLongPressGame, favorites = [], onToggleFavorite, browsing = false }) {
+export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame, onLongPressGame, onOptionsGame, favorites = [], onToggleFavorite, browsing = false }) {
   const listRef = useRef(null);
   const lpTimer = useRef(null);
   const longPressedRef = useRef(false);
@@ -36,7 +36,7 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
 
   const openOptions = (g, e) => {
     if (e) e.stopPropagation();
-    onLongPressGame?.(g);
+    onOptionsGame?.(g);
   };
 
   const handleRowClick = (g) => {
