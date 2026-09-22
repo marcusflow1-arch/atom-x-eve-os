@@ -302,3 +302,54 @@
 .gd-rewards{scroll-margin-top:85px}
 
 .gd-reward-card summary>span:nth-child(2){min-width:0;flex:1}.gd-reward-chevron{flex-shrink:0;color:hsl(var(--gd-muted));transition:transform .15s}.gd-reward-card[open] .gd-reward-chevron{transform:rotate(180deg)}
+
+
+/* Restored standalone DLC strip above the four Game detail tabs. */
+.gd-dlc-restored{margin-top:26px;padding:26px 0 28px;border-top:1px solid hsl(var(--gd-line)/.7);border-bottom:1px solid hsl(var(--gd-line)/.7);scroll-margin-top:84px}
+.gd-dlc-restored .gd-section-heading>svg{color:hsl(var(--gd-accent));flex-shrink:0}
+.gd-dlc-list{display:grid;gap:8px}
+.gd-dlc-list>article{overflow:hidden;border:1px solid hsl(var(--gd-line)/.7);border-radius:8px;background:hsl(var(--gd-surface)/.42)}
+.gd-dlc-row{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:16px;align-items:center;width:100%;padding:12px;text-align:left}
+.gd-dlc-row:hover{background:hsl(var(--gd-foreground)/.035)}
+.gd-dlc-art{height:72px;overflow:hidden;border-radius:5px;background:hsl(var(--gd-background))}
+.gd-dlc-art img,.gd-dlc-art .gd-image-fallback{width:100%;height:100%;object-fit:cover}
+.gd-dlc-copy{min-width:0}
+.gd-dlc-copy>strong{display:block;font-size:13px;font-weight:600}
+.gd-dlc-copy>p{margin-top:5px;color:hsl(var(--gd-muted));font-size:11px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gd-dlc-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;color:hsl(var(--gd-muted));font-size:9px}
+.gd-dlc-meta span:first-child{color:hsl(var(--gd-accent))}
+.gd-dlc-chevron{color:hsl(var(--gd-muted));transition:transform .18s ease}
+.gd-dlc-list article.is-open .gd-dlc-chevron{transform:rotate(180deg)}
+.gd-dlc-expanded{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:0 16px 16px 146px}
+.gd-dlc-includes{min-width:0;flex:1}
+.gd-dlc-includes>div{display:flex;flex-wrap:wrap;gap:7px 12px;margin-top:8px}
+.gd-dlc-includes>div>span{display:inline-flex;align-items:center;gap:5px;color:hsl(var(--gd-muted));font-size:10px}
+.gd-dlc-includes svg{color:hsl(var(--gd-accent));flex-shrink:0}
+
+/* Expansions & Cards: card library | divider | Luna 3D viewer. */
+.gd-expansions-cards{display:grid;grid-template-columns:minmax(0,1.45fr) 1px minmax(300px,.8fr);gap:28px;min-height:430px;align-items:stretch}
+.gd-expansions-divider{width:1px;height:100%;background:linear-gradient(180deg,transparent,hsl(var(--gd-line)) 10%,hsl(var(--gd-line)) 90%,transparent)}
+.gd-expansions-card-library{min-width:0}
+.gd-expansion-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:470px;overflow-y:auto;padding-right:5px;scrollbar-width:thin;scrollbar-color:hsl(var(--gd-line)) transparent}
+.gd-expansion-card{display:grid;grid-template-columns:68px minmax(0,1fr);gap:11px;min-width:0;padding:9px;border:1px solid hsl(var(--gd-line)/.7);border-radius:7px;background:hsl(var(--gd-surface)/.42)}
+.gd-expansion-card-art{display:grid;place-items:center;height:76px;overflow:hidden;border-radius:5px;background:hsl(var(--gd-background));color:hsl(var(--gd-muted))}
+.gd-expansion-card-art img{width:100%;height:100%;object-fit:cover}
+.gd-expansion-card-copy{min-width:0}
+.gd-expansion-card-copy>span{display:block;color:hsl(var(--gd-accent));font-size:8px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.gd-expansion-card-copy>strong{display:block;margin-top:5px;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gd-expansion-card-copy>p{margin-top:5px;color:hsl(var(--gd-muted));font-size:9px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.gd-expansions-viewer{position:relative;min-height:430px;overflow:hidden;background:radial-gradient(circle at 50% 42%,hsl(var(--gd-accent)/.06),transparent 58%)}
+.gd-expansions-viewer>div,.gd-expansions-viewer>section{position:absolute!important;inset:0}
+.gd-expansions-viewer canvas{max-width:100%;max-height:100%}
+
+@media(max-width:1000px){
+ .gd-expansions-cards{grid-template-columns:minmax(0,1fr);gap:22px}
+ .gd-expansions-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,hsl(var(--gd-line)),transparent)}
+ .gd-expansions-viewer{min-height:360px}
+}
+@media(max-width:700px){
+ .gd-dlc-row{grid-template-columns:82px minmax(0,1fr) auto;gap:10px}
+ .gd-dlc-art{height:58px}
+ .gd-dlc-expanded{padding-left:12px;align-items:stretch;flex-direction:column}
+ .gd-expansion-card-grid{grid-template-columns:minmax(0,1fr);max-height:none}
+}
