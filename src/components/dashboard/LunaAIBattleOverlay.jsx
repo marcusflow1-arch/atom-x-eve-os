@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity, BellRing, Check, ChevronRight, CircleDot, Crown,
-  Loader2, Map, Shield, Skull, Swords, Target, Treasure, Trophy,
+  Loader2, Map, Shield, Skull, Swords, Target, Gem as Treasure, Trophy,
   UserRound, Users, X, Zap
 } from 'lucide-react';
 import useAIBattleHub from '@/components/luna/hooks/useAIBattleHub';
