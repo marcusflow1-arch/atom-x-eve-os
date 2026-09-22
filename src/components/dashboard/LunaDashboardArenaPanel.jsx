@@ -365,7 +365,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
         </div>
 
         <div>
-          <div className="flex items-center justify-between"><p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[5.5px] text-white/22">{hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`}</span></div>
+          <div className="flex items-center justify-between"><p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[5.5px] text-white/22">{queueWaiting ? `${queue?.player_snapshot?.jawan?.name || 'Jawan'} locked` : (hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`)}</span></div>
           <div className="mt-2 flex max-h-[46px] gap-1.5 overflow-x-auto">
             {contacts.length ? contacts.map((contact) => {
               const chosen = invites.includes(contact.id);
