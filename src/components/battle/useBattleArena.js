@@ -19,7 +19,7 @@ export default function useBattleArena(encounterId){
   const {user}=useAuth(),client=useQueryClient();
   const offset=useRef(0);
   const key=['battle-expeditions',user?.id];
-  const hub=useQuery({queryKey:key,enabled:!!user?.id,queryFn:()=>invoke('hub'),staleTime:6000,refetchInterval:12000,refetchOnWindowFocus:true});
+  const hub=useQuery({queryKey:key,enabled:!!user?.id,queryFn:()=>invoke('hub'),staleTime:2500,refetchInterval:4000,refetchOnWindowFocus:true});
   const fightKey=['battle-encounter',user?.id,encounterId];
   const fight=useQuery({queryKey:fightKey,enabled:!!user?.id&&!!encounterId,queryFn:()=>invoke('state',{encounter_id:encounterId}),refetchInterval:1500,refetchOnWindowFocus:true});
   const body=fight.data;
@@ -42,5 +42,8 @@ export default function useBattleArena(encounterId){
     refresh:()=>{hub.refetch();if(encounterId)fight.refetch();},
     create:data=>mutation.mutateAsync({action:'create',data}),
     field:data=>mutation.mutateAsync({action:'field',data}),
+    queue:data=>mutation.mutateAsync({action:'queue',data}),
+    queueStatus:()=>mutation.mutateAsync({action:'queueStatus',data:{}}),
+    cancelQueue:()=>mutation.mutateAsync({action:'cancelQueue',data:{}}),
     command:(command,data={})=>mutation.mutateAsync({action:'command',data:{encounter_id:encounterId,expected_revision:encounter?.revision,command,...data}})};
 }
