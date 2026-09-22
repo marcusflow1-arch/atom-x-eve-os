@@ -2067,17 +2067,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
               />
 
-              {/* LONG-PRESS BLANK UI — shown when a game is held >1.5s */}
-              <AnimatePresence>
-                {longPressGame && (
-                  <BlankGameUI
-                    key="blank-ui"
-                    game={longPressGame}
-                    onClose={onCloseLongPress}
-                  />
-                )}
-              </AnimatePresence>
-
               {/* Empty by default — content fades in only when a game is selected or Full Library is opened */}
 
             </div>
@@ -2088,6 +2077,33 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
 
+
+
+      {/* Library options / three-dot workspace — same footprint as the selected-game
+          overlay, but one layer higher so it always comes to the front. */}
+      <AnimatePresence mode="wait">
+        {longPressGame && (
+          <motion.div
+            key={`options-${longPressGame.id || longPressGame.title || 'game'}`}
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 28 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="absolute inset-0 z-[110] pointer-events-auto overflow-hidden"
+            style={{
+              background: 'rgba(8,12,18,0.96)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+              boxShadow: '-18px 0 45px rgba(0,0,0,0.32)'
+            }}
+          >
+            <BlankGameUI
+              game={longPressGame}
+              onClose={onCloseLongPress}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       {/* Selected Library game workspace — bounded by LunaTemplate's content region.
