@@ -165,12 +165,14 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
         },
         {
           secondaryCharacter,
-          autoRigSingleMesh: fixedFemaleIdle,
-          retargetExternalMotions: fixedFemaleIdle,
-          // Artemis sits visually high inside the Genesis ring. Raise the
-          // camera target slightly so the model renders lower and centered.
+          // Artemis is an unskinned single-mesh Admin GLB. Do not generate
+          // runtime skin weights—the approximation tears hands, clothing and
+          // accessories apart. Keep the original mesh intact and use the Idle
+          // FBX only as a safe whole-body motion reference.
+          safeRigidIdle: fixedFemaleIdle,
+          retargetExternalMotions: false,
           framingOffsetY: fixedFemaleIdle ? 0.16 : 0,
-          lockRootTranslation: fixedFemaleIdle,
+          lockRootTranslation: false,
           lockModelPosition: fixedFemaleIdle,
         },
       );
