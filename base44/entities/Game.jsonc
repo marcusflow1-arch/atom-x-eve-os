@@ -115,6 +115,41 @@
         "type": "string"
       },
       "description": "Additional tags for categorization"
+    },
+    "short_description": {
+      "type": "string",
+      "description": "Compact store summary used beside the game media"
+    },
+    "developer": {
+      "type": "string",
+      "description": "Primary development studio"
+    },
+    "developerKey": {
+      "type": "string",
+      "description": "Optional developer/studio profile key"
+    },
+    "publisher": {
+      "type": "string",
+      "description": "Publisher of record"
+    },
+    "about_game": {
+      "type": "string",
+      "description": "Developer-authored About This Game marketing/editorial copy"
+    },
+    "development_history": {
+      "type": "string",
+      "description": "Developer-authored development history, production background, or project story"
+    },
+    "developer_message": {
+      "type": "string",
+      "description": "Optional developer message or promotional note shown on the game landing page"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Developer-published feature highlights"
     }
   },
   "required": [
