@@ -193,7 +193,7 @@ for (const [name, dialog] of [['Schedule','Channel schedule'],['Cards','Channel 
   const tab=[...document.querySelectorAll('.channel-section-nav button')].find(node=>node.querySelector('strong').textContent===name);
   await run(()=>tab.click());
   assert.ok(byLabel(dialog), name+' opens on the public profile');
-  assert.equal(tab.getAttribute('aria-pressed'),'true');
+  assert.equal(tab.getAttribute('aria-pressed'),'true',name+' shows its active state');
   if(name==='Cards') { assert.equal(F.collection.user.id,'owner'); assert.equal(F.collection.publicView,true); }
   if(name==='Gallery') assert.equal(F.gallery.channelId,'owner');
   await run(()=>byLabel(dialog).querySelector('button').click());
