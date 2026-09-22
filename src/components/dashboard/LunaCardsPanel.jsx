@@ -207,6 +207,15 @@ export default function LunaCardsPanel() {
     recognition.start();
   };
 
+  useEffect(() => {
+    const handlePlaced = (event) => {
+      const card = event?.detail?.card;
+      if (card?.id) setShowcaseCardId((current) => current === card.id ? null : current);
+    };
+    window.addEventListener('lunaShowcaseCardPlaced', handlePlaced);
+    return () => window.removeEventListener('lunaShowcaseCardPlaced', handlePlaced);
+  }, []);
+
   useEffect(() => () => recognitionRef.current?.stop?.(), []);
 
   return (
