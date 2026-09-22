@@ -27,11 +27,6 @@ export default function ForumDirectoryOverlay({ open, games = [], activeGame, lo
   }, [games, genre, query, sort]);
   useEffect(() => { setPage(1); }, [genre, query, sort]);
   useEffect(() => { if (!open) { setQuery(''); setGenre('all'); setPage(1); } }, [open]);
-  useEffect(() => {
-    const home = () => onSelectGame?.(null);
-    window.addEventListener('forumGoHome', home);
-    return () => window.removeEventListener('forumGoHome', home);
-  }, [onSelectGame]);
   const reset = () => { setQuery(''); setGenre('all'); };
   const visible = filtered.slice(0, page * PAGE_SIZE);
   return <Dialog.Root open={open} onOpenChange={(value) => { if (!value) onClose?.(); }}>

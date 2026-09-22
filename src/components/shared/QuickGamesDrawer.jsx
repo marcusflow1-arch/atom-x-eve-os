@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import ForumDirectoryOverlay from '@/components/community/ForumDirectoryOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, MessageSquare, Gamepad2, ChevronRight, Wheat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +16,22 @@ export default function QuickGamesDrawer({ isOpen, onClose, type, games }) {
   const themeBorder = isClan ? 'border-blue-500/30' : isFarm ? 'border-yellow-500/30' : 'border-emerald-500/30';
   const themeBg = isClan ? 'bg-blue-500/10' : isFarm ? 'bg-yellow-500/10' : 'bg-emerald-500/10';
 
+  const [forumGames, setForumGames] = useState([]);
+  const [forumLoading, setForumLoading] = useState(false);
+  const [forumError, setForumError] = useState(false);
+  const [forumRetry, setForumRetry] = useState(0);
+  useEffect(() => {
+    if (!isOpen || type !== 'forum') return;
+    let cancelled = false;
+    setForumLoading(true); setForumError(false);
+    base44.entities.Game.list('-original_year', 1000)
+      .catch(() => base44.entities.Game.list('-original_year', 250))
+      .then((rows) => { if (!cancelled) setForumGames(rows || []); })
+      .catch(() => { if (!cancelled) setForumError(true); })
+      .finally(() => { if (!cancelled) setForumLoading(false); });
+    return () => { cancelled = true; };
+  }, [isOpen, type, forumRetry]);
+
   const handleGameClick = (game) => {
     onClose();
     // Navigate to the respective page with the game query param
@@ -25,6 +43,8 @@ export default function QuickGamesDrawer({ isOpen, onClose, type, games }) {
       navigate(`/Community?game=${encodeURIComponent(game.name)}`);
     }
   };
+
+  if (type === 'forum') return <ForumDirectoryOverlay open={isOpen} games={forumGames} loading={forumLoading} error={forumError} onRetry={() => setForumRetry((value) => value + 1)} onClose={onClose} onSelectGame={(game) => { onClose(); navigate(game ? '/Community?game=' + encodeURIComponent(game.title) : '/Community'); }} />;
 
   return (
     <AnimatePresence>

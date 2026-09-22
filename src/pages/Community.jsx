@@ -368,6 +368,12 @@ export default function CommunityPage() {
     setBottomTab('home');
   };
 
+  useEffect(() => {
+    const home = () => selectForum(null);
+    window.addEventListener('forumGoHome', home);
+    return () => window.removeEventListener('forumGoHome', home);
+  }, [location.pathname, location.search]);
+
   const changeFeedMode = (mode) => {
     setFeedMode(mode);
     setBottomTab(mode === 'new' ? 'recent' : mode === 'popular' ? 'heated' : 'home');
