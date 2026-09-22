@@ -416,12 +416,15 @@ Deno.serve(async req=>{
     const svc=client.asServiceRole.entities;
     const {action='hub',data={}}=await req.json();
     if(action==='hub'){
-      const [availableWorlds,peers,player,rooms]=await Promise.all([
+      const [availableWorlds,peers,player,rooms,queueRows]=await Promise.all([
         worlds(svc,user),contacts(svc,user),snapshot(svc,user),
         svc.AIBattleEncounter.filter({$or:[{host_id:user.id},{invited_ids:{$in:[user.id]}}]},'-created_date',30),
+        svc.AIBattleQueue.filter({user_id:user.id},'-created_date',20),
       ]);
       const encounters=await Promise.all(rooms.filter((r: Row)=>accessible(r,user.id)).map(async(r: Row)=>publicRoom(r,(await replay(svc,r)).state)));
-      return Response.json({worlds:availableWorlds,contacts:peers,player,routes:ROUTES,encounters,server_time:Date.now()});
+      const activeEncounterIds=new Set(encounters.filter((e: Row)=>['lobby','active'].includes(e.status)).map((e: Row)=>String(e.id)));
+      const queue=queueRows.find((q: Row)=>q.status==='waiting')||queueRows.find((q: Row)=>q.status==='matched'&&activeEncounterIds.has(String(q.matched_encounter_id)))||null;
+      return Response.json({worlds:availableWorlds,contacts:peers,player,routes:ROUTES,encounters,queue,server_time:Date.now()});
     }
     if(action==='field'){
       const cellLat=Math.round(num(data.cell_lat)*100)/100;
