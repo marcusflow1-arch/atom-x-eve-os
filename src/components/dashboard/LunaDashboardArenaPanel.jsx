@@ -36,6 +36,7 @@ function CardButton({ card, player, disabled, onPlay, world }) {
           <span className="text-white/30">{card.effect} {Number(card.value || 0) + (resonance ? 5 : 0)}</span>
           <span className="font-bold text-cyan-100/52">{card.cost} AP</span>
         </div>
+        {resonance && <span className="mt-1 text-[5px] font-black uppercase tracking-[0.08em] text-emerald-100/48">World Resonance +5</span>}
         {cooldown > 0 && <span className="mt-1 text-[5px] text-amber-100/44">Ready in {cooldown}</span>}
       </div>
     </button>
