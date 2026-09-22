@@ -15,7 +15,7 @@ const unwrap = (response) => {
 const callChannel = (conversationId) => `dmcall_${conversationId}_${Date.now()}`;
 const conversationIdFor = (a, b) => [String(a), String(b)].sort().join('::');
 
-export default function MessengerHub() {
+export default function MessengerHub({ threadOnly = false }) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [manualTargets, setManualTargets] = useState({});
@@ -371,7 +371,7 @@ export default function MessengerHub() {
 
   return (
     <div className="relative flex h-full w-full overflow-hidden text-white">
-      <aside className="w-[292px] shrink-0 border-r border-white/[0.08] bg-slate-950/25 backdrop-blur-2xl">
+      {!threadOnly && <aside className="w-[292px] shrink-0 border-r border-white/[0.08] bg-slate-950/25 backdrop-blur-2xl">
         <div className="px-4 pb-3 pt-4">
           <div className="flex items-center justify-between"><div><p className="text-[9px] font-black uppercase tracking-[.22em] text-cyan-200/45">Luna Social</p><h2 className="text-xl font-semibold">Messages</h2></div><button className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-white/55"><MoreHorizontal className="h-4 w-4" /></button></div>
           <label className="mt-4 flex h-10 items-center gap-2 rounded-xl border border-white/[0.08] bg-black/20 px-3 focus-within:border-cyan-300/25"><Search className="h-4 w-4 text-white/30" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search messages" className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-white/25" /></label>
@@ -384,7 +384,7 @@ export default function MessengerHub() {
             </button>
           )) : <div className="px-4 py-12 text-center text-xs text-white/30">No conversations yet.</div>}
         </div>
-      </aside>
+      </aside>}
 
       <main className="flex min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,.055),transparent_35%)]">
         {selected ? <>
@@ -420,10 +420,10 @@ export default function MessengerHub() {
               <button onClick={() => send()} disabled={sending || !draft.trim()} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-400 text-slate-950 disabled:opacity-30"><Send className="h-4 w-4" /></button>
             </div>
           </div>
-        </> : <div className="grid h-full place-items-center text-center"><div><div className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-white/10 bg-white/[0.04]"><Send className="h-8 w-8 text-cyan-200/25" /></div><p className="mt-4 text-base font-semibold text-white/65">Your messages</p><p className="mt-1 text-xs text-white/30">Choose a conversation from the left.</p></div></div>}
+        </> : <div className="grid h-full place-items-center text-center"><div><div className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-white/10 bg-white/[0.04]"><Send className="h-8 w-8 text-cyan-200/25" /></div><p className="mt-4 text-base font-semibold text-white/65">Your messages</p><p className="mt-1 text-xs text-white/30">{threadOnly ? 'Choose a friend from the attached Friends panel.' : 'Choose a conversation from the left.'}</p></div></div>}
       </main>
 
-      {selected && <aside className="hidden w-[230px] shrink-0 border-l border-white/[0.08] bg-slate-950/20 p-4 xl:block"><div className="flex flex-col items-center pt-3"><div className="h-20 w-20 overflow-hidden rounded-full bg-white/10">{selected.partner_avatar ? <img src={selected.partner_avatar} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><UserRound className="h-8 w-8 text-white/30" /></div>}</div><p className="mt-3 max-w-full truncate text-sm font-semibold">{selected.partner_name}</p><p className="mt-1 text-[9px] uppercase tracking-[.16em] text-white/30">{selected.is_friend ? 'Friend' : 'Not a friend'}</p></div><div className="mt-6 border-t border-white/[0.08] pt-4"><p className="text-[8px] font-black uppercase tracking-[.18em] text-white/35">Shared media</p><div className="mt-3 grid grid-cols-3 gap-1.5">{sharedMedia.map((item) => <a key={item.id} href={item.media_url} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden rounded-lg border border-white/[0.06] bg-white/[0.04]">{item.message_type === 'video' ? <div className="grid h-full place-items-center"><Video className="h-4 w-4 text-white/40" /></div> : item.message_type === 'file' ? <div className="grid h-full place-items-center"><FileText className="h-4 w-4 text-white/40" /></div> : <img src={item.media_url} alt="" className="h-full w-full object-cover" />}</a>)}</div>{!sharedMedia.length && <p className="mt-3 text-[10px] text-white/25">No shared media yet.</p>}</div></aside>}
+      {selected && !threadOnly && <aside className="hidden w-[230px] shrink-0 border-l border-white/[0.08] bg-slate-950/20 p-4 xl:block"><div className="flex flex-col items-center pt-3"><div className="h-20 w-20 overflow-hidden rounded-full bg-white/10">{selected.partner_avatar ? <img src={selected.partner_avatar} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><UserRound className="h-8 w-8 text-white/30" /></div>}</div><p className="mt-3 max-w-full truncate text-sm font-semibold">{selected.partner_name}</p><p className="mt-1 text-[9px] uppercase tracking-[.16em] text-white/30">{selected.is_friend ? 'Friend' : 'Not a friend'}</p></div><div className="mt-6 border-t border-white/[0.08] pt-4"><p className="text-[8px] font-black uppercase tracking-[.18em] text-white/35">Shared media</p><div className="mt-3 grid grid-cols-3 gap-1.5">{sharedMedia.map((item) => <a key={item.id} href={item.media_url} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden rounded-lg border border-white/[0.06] bg-white/[0.04]">{item.message_type === 'video' ? <div className="grid h-full place-items-center"><Video className="h-4 w-4 text-white/40" /></div> : item.message_type === 'file' ? <div className="grid h-full place-items-center"><FileText className="h-4 w-4 text-white/40" /></div> : <img src={item.media_url} alt="" className="h-full w-full object-cover" />}</a>)}</div>{!sharedMedia.length && <p className="mt-3 text-[10px] text-white/25">No shared media yet.</p>}</div></aside>}
 
       <audio ref={remoteAudioRef} autoPlay />
 
