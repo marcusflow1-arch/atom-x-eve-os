@@ -1,6 +1,6 @@
 import { UserRound } from 'lucide-react';
 
-import { COMPANION_MODELS, FEMALE_MODEL_VARIANTS } from '@/components/onboarding/genesisAssets';
+import { COMPANION_MODELS } from '@/components/onboarding/genesisAssets';
 
 export default function GenesisCompanionFields({ config, setConfig }) {
   const resetBody = (current, gender, model, femaleVariant = '') => ({
@@ -23,11 +23,6 @@ export default function GenesisCompanionFields({ config, setConfig }) {
     setConfig((current) => resetBody(current, gender, model, gender === 'female' ? 'artemis_archer' : ''));
   };
 
-  const chooseFemaleModel = (variantId) => {
-    const model = FEMALE_MODEL_VARIANTS[variantId] || FEMALE_MODEL_VARIANTS.artemis_archer;
-    setConfig((current) => resetBody(current, 'female', model, model.id));
-  };
-
   return <section className="genesis-fields genesis-gender-step">
     <p className="genesis-kicker">01 / CHARACTER BODY + FACE</p>
     <h1>Choose your body.<br />Then scan your face.</h1>
@@ -44,25 +39,6 @@ export default function GenesisCompanionFields({ config, setConfig }) {
       ))}
     </div>
 
-    {config.gender === 'female' && (
-      <div className="mt-5">
-        <p className="genesis-kicker">FEMALE MODEL</p>
-        <div className="genesis-choices genesis-gender-choices mt-2">
-          {Object.values(FEMALE_MODEL_VARIANTS).map((model) => {
-            const selected = (config.female_model_variant || 'artemis_archer') === model.id;
-            return (
-              <button type="button" key={model.id} aria-pressed={selected} onClick={() => chooseFemaleModel(model.id)}>
-                <span className="genesis-gender-icon"><UserRound size={21} /></span>
-                <strong>{model.name}</strong>
-                <small>{model.id === 'artemis_archer' ? 'Default female · Mythic Greek Archer · idle rig' : 'Greco-Roman female · alternate body'}</small>
-                {model.isDefault && <em>Default</em>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    )}
-
-    <p className="genesis-note">Changing Male/Female restores that body's default face. Female characters can choose the Mythic Greek Archer or the Greco-Roman Girl; the Mythic Greek Archer is the current default. After you capture a new face, the live 3D preview updates to the fitted likeness.</p>
+    <p className="genesis-note">Changing Male/Female restores that body's default face. Female characters always use the Admin Artemis model with its Idle animation. After you capture a new face, the live 3D preview updates the appearance on that same body.</p>
   </section>;
 }
