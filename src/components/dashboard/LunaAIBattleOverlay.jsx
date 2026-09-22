@@ -5,6 +5,8 @@ import {
   UserRound, Users, X, Zap
 } from 'lucide-react';
 import useAIBattleHub from '@/components/luna/hooks/useAIBattleHub';
+import LunaDashboardArenaPanel from './LunaDashboardArenaPanel';
+import { arenaPresentation, useArenaPresentation } from '@/components/battle/arenaPresentation';
 import { useAuth } from '@/components/auth/AuthContext';
 import { sendDuelChallenge } from '@/components/game3d/social/duelChallenge';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -343,6 +345,13 @@ function ActivityPanel({ mode, activities, sessions, loadout, onStart, onAct, on
 export default function LunaAIBattleOverlay({ onClose }) {
   const [mode, setMode] = useState('pvp');
   const battle = useAIBattleHub();
+  const presentation = useArenaPresentation();
+  const arenaStage = Boolean(presentation.encounterId);
+
+  const closeOverlay = () => {
+    if (arenaStage) arenaPresentation.clear();
+    onClose?.();
+  };
 
   const run = async (promise, successMessage) => {
     try {
@@ -362,10 +371,12 @@ export default function LunaAIBattleOverlay({ onClose }) {
       aria-label="AI Battle workspace"
       className="fixed left-[330px] right-0 top-[64px] bottom-[32px] z-[130] pointer-events-auto overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, rgba(7,11,17,.96), rgba(13,20,30,.94) 46%, rgba(6,10,16,.97))',
-        backdropFilter: 'blur(26px) saturate(132%)',
-        WebkitBackdropFilter: 'blur(26px) saturate(132%)',
-        boxShadow: 'inset 1px 0 0 rgba(255,255,255,.055), inset 0 1px 0 rgba(255,255,255,.035)',
+        background: arenaStage
+          ? 'linear-gradient(180deg, rgba(5,9,14,.28), rgba(5,9,14,.035) 30%, rgba(5,9,14,.015) 72%, rgba(5,9,14,.12))'
+          : 'linear-gradient(135deg, rgba(7,11,17,.96), rgba(13,20,30,.94) 46%, rgba(6,10,16,.97))',
+        backdropFilter: arenaStage ? 'none' : 'blur(26px) saturate(132%)',
+        WebkitBackdropFilter: arenaStage ? 'none' : 'blur(26px) saturate(132%)',
+        boxShadow: arenaStage ? 'none' : 'inset 1px 0 0 rgba(255,255,255,.055), inset 0 1px 0 rgba(255,255,255,.035)',
       }}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(244,63,94,.07),transparent_30%),radial-gradient(circle_at_64%_18%,rgba(103,232,249,.055),transparent_34%),radial-gradient(circle_at_88%_88%,rgba(251,191,36,.045),transparent_30%)]" />
@@ -383,11 +394,11 @@ export default function LunaAIBattleOverlay({ onClose }) {
           </div>
           <div className="flex items-center gap-2">
             {battle.isFetching && <span className="flex items-center gap-1.5 text-[6px] uppercase tracking-[0.1em] text-white/25"><Loader2 className="h-3 w-3 animate-spin" />Syncing</span>}
-            <button type="button" onClick={onClose} aria-label="Close AI Battle" className="grid h-9 w-9 place-items-center border border-white/[0.07] bg-white/[0.02] text-white/45 hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={closeOverlay} aria-label="Close AI Battle" className="grid h-9 w-9 place-items-center border border-white/[0.07] bg-black/25 text-white/45 backdrop-blur-lg hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
           </div>
         </header>
 
-        <div className="flex shrink-0 items-center border-b border-white/[0.055] px-6">
+        {!arenaStage && <div className="flex shrink-0 items-center border-b border-white/[0.055] px-6">
           {MODES.map(({ id, label, full, icon: Icon, tone }) => (
             <button key={id} type="button" onClick={() => setMode(id)} className={'relative flex min-w-[170px] items-center gap-2.5 px-4 py-3 text-left transition-colors ' + (mode === id ? 'bg-white/[0.03]' : 'hover:bg-white/[0.018]')}>
               <Icon className={'h-3.5 w-3.5 ' + (mode === id ? tone : 'text-white/25')} />
@@ -402,33 +413,42 @@ export default function LunaAIBattleOverlay({ onClose }) {
             <span className="text-white/25">Power <strong className="ml-1 text-white/60">{Number(battle.loadout?.player_power || 0).toLocaleString()}</strong></span>
             <span className="text-white/25">Cards <strong className="ml-1 text-white/60">{battle.loadout?.cards?.length || 0}/4</strong></span>
           </div>
-        </div>
+        </div>}
 
         <main className="min-h-0 flex-1">
-          {battle.isLoading ? (
-            <div className="grid h-full place-items-center"><div className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-cyan-100/40" /><p className="mt-3 text-[8px] uppercase tracking-[0.14em] text-white/28">Connecting battle network</p></div></div>
-          ) : battle.error ? (
-            <div className="grid h-full place-items-center"><div className="text-center"><Shield className="mx-auto h-7 w-7 text-rose-100/35" /><p className="mt-3 text-[10px] text-white/48">AI Battle could not load.</p><button type="button" onClick={() => battle.refetch()} className="mt-3 border border-white/[0.07] bg-white/[0.02] px-4 py-2 text-[7px] uppercase tracking-[0.1em] text-white/50">Retry</button></div></div>
-          ) : mode === 'pvp' ? (
-            <PvPPanel loadout={battle.loadout} pvp={battle.pvp} opponents={battle.opponents} duels={battle.duels} onRefresh={battle.refetch} />
+          {arenaStage ? (
+            <LunaDashboardArenaPanel mode={mode} />
           ) : (
-            <ActivityPanel
-              mode={mode}
-              activities={battle.activities}
-              sessions={battle.sessions}
-              loadout={battle.loadout}
-              busy={battle.isActing}
-              onStart={(id) => run(battle.startActivity(id), 'Encounter started.')}
-              onAct={(id) => run(battle.act(id))}
-              onAbandon={(id) => run(battle.abandon(id), 'Encounter abandoned.')}
-            />
+            <div className="flex h-full min-h-0 flex-col">
+              <LunaDashboardArenaPanel mode={mode} />
+              <div className="min-h-0 flex-1">
+                {battle.isLoading ? (
+                  <div className="grid h-full place-items-center"><div className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-cyan-100/40" /><p className="mt-3 text-[8px] uppercase tracking-[0.14em] text-white/28">Connecting battle network</p></div></div>
+                ) : battle.error ? (
+                  <div className="grid h-full place-items-center"><div className="text-center"><Shield className="mx-auto h-7 w-7 text-rose-100/35" /><p className="mt-3 text-[10px] text-white/48">AI Battle could not load.</p><button type="button" onClick={() => battle.refetch()} className="mt-3 border border-white/[0.07] bg-white/[0.02] px-4 py-2 text-[7px] uppercase tracking-[0.1em] text-white/50">Retry</button></div></div>
+                ) : mode === 'pvp' ? (
+                  <PvPPanel loadout={battle.loadout} pvp={battle.pvp} opponents={battle.opponents} duels={battle.duels} onRefresh={battle.refetch} />
+                ) : (
+                  <ActivityPanel
+                    mode={mode}
+                    activities={battle.activities}
+                    sessions={battle.sessions}
+                    loadout={battle.loadout}
+                    busy={battle.isActing}
+                    onStart={(id) => run(battle.startActivity(id), 'Encounter started.')}
+                    onAct={(id) => run(battle.act(id))}
+                    onAbandon={(id) => run(battle.abandon(id), 'Encounter abandoned.')}
+                  />
+                )}
+              </div>
+            </div>
           )}
         </main>
 
-        <footer className="flex shrink-0 items-center justify-between border-t border-white/[0.055] px-6 py-2 text-[6px] uppercase tracking-[0.11em] text-white/22">
+        {!arenaStage && <footer className="flex shrink-0 items-center justify-between border-t border-white/[0.055] px-6 py-2 text-[6px] uppercase tracking-[0.11em] text-white/22">
           <span>Card loadout snapshots · persistent encounter state · realtime world health</span>
           <span className="flex items-center gap-1.5"><BellRing className="h-3 w-3" />Battle backend connected</span>
-        </footer>
+        </footer>}
       </div>
     </div>
   );
