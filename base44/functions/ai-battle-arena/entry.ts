@@ -11,10 +11,10 @@ const MODEL = '/models/luna-hi3d/warrior.glb';
 const FEMALE = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 const APPEARANCE = ['name','gender','model_url','base_body_model_url','appearance_version','style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled','complexion','facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color','tattoo_opacity','hair_style','face_shape','height_scale','body_proportions','material_colors','morph_targets','eyelash_style','hood_enabled','weapon_visible'];
 const ROUTES = [
-  { id:'patrol', title:'Rift patrol', type:'quest', description:'Scout the breach, defeat its guardian, and recover a field chest.', stages:['Rift scouts','Breach guardian'], hp:150, attack:18, xp:90, min:1, max:5 },
-  { id:'vault', title:'The sunken archive', type:'dungeon', description:'Three linked rooms. Carry your health forward and regroup between encounters.', stages:['Archive sentinels','The gatekeeper','Vault sovereign'], hp:200, attack:24, xp:180, min:1, max:5 },
-  { id:'colossus', title:'Rift colossus', type:'world_boss', description:'Rally your dashboard party against a shared boss with heavy, telegraphed attacks.', stages:['Rift colossus'], hp:550, attack:30, xp:240, min:2, max:5 },
-  { id:'duel', title:'Dashboard duel', type:'pvp', description:'A friendly card duel. Both players accept before the first turn.', stages:[], hp:0, attack:0, xp:60, min:2, max:2 },
+  { id:'patrol', title:'Rift patrol', type:'quest', description:'Scout the breach, defeat its guardian, and recover a field chest.', objective:'Clear the breach and secure its field chest.', stages:['Rift scouts','Breach guardian'], hp:150, attack:18, xp:90, min:1, max:5 },
+  { id:'vault', title:'The sunken archive', type:'dungeon', description:'Three linked rooms. Carry your health forward and regroup between encounters.', objective:'Survive all archive rooms and defeat the Vault Sovereign.', stages:['Archive sentinels','The gatekeeper','Vault sovereign'], hp:200, attack:24, xp:180, min:1, max:5 },
+  { id:'colossus', title:'Rift colossus', type:'world_boss', description:'Rally your dashboard party against a shared boss with heavy, telegraphed attacks.', objective:'Break and defeat the Rift Colossus with your dashboard party.', stages:['Rift colossus'], hp:550, attack:30, xp:240, min:2, max:5 },
+  { id:'duel', title:'Dashboard duel', type:'pvp', description:'A friendly card duel. Both players accept before the first turn.', objective:'Reduce the opposing avatar to 0 HP using your locked four-card loadout.', stages:[], hp:0, attack:0, xp:60, min:2, max:2 },
 ];
 const routeFor = (id: string) => ROUTES.find(r => r.id === id);
 const accessible = (room: Row, uid: string) => room.host_id === uid || (room.invited_ids || []).includes(uid);
@@ -220,7 +220,7 @@ async function replay(svc: any, room: Row) {
   return {state,events,applied};
 }
 function publicRoom(room: Row, state: Row) {
-  return {id:room.id,host_id:room.host_id,host_name:room.host_name,world:room.world,route:routeFor(room.route_id),invited_ids:room.invited_ids,created_date:room.created_date,...state};
+  return {id:room.id,host_id:room.host_id,host_name:room.host_name,world:room.world,route:routeFor(room.route_id),source_field:room.source_field||null,invited_ids:room.invited_ids,created_date:room.created_date,...state};
 }
 async function roomFor(svc: any, id: string, user: Row) {
   const room=await svc.AIBattleEncounter.get(id).catch(()=>null);
@@ -346,8 +346,19 @@ Deno.serve(async req=>{
     if(action==='create'){
       const route=routeFor(String(data.route_id));
       if(!route)fail('Choose an expedition route.',400);
-      const world=(await worlds(svc,user)).find(w=>w.id===data.world_id);
+      const availableWorlds=await worlds(svc,user);
+      const world=availableWorlds.find(w=>w.id===data.world_id);
       if(!world)fail('This world is not in your game collection.',403);
+      let sourceField=null;
+      if(data.field_node_id){
+        const cellLat=Math.round(num(data.field_cell_lat)*100)/100;
+        const cellLng=Math.round(num(data.field_cell_lng)*100)/100;
+        if(cellLat < -90 || cellLat > 90 || cellLng < -180 || cellLng > 180)fail('Field location is invalid.',400);
+        const node=fieldNodes(availableWorlds,cellLat,cellLng).find((item: Row)=>String(item.id)===String(data.field_node_id));
+        if(!node)fail('This field discovery expired or does not belong to this coarse field cell.',403);
+        if(String(node.route_id)!==String(route.id)||String(node.world?.id)!==String(world.id))fail('This field discovery does not match the selected expedition.',403);
+        sourceField={id:node.id,type:node.type,title:node.title,description:node.description,distance_m:node.distance_m,bearing_deg:node.bearing_deg,expires_at:node.expires_at};
+      }
       const peers=await contacts(svc,user);
       const ids=[...new Set((Array.isArray(data.invited_ids)?data.invited_ids:[]).map(String))];
       if(ids.length>route.max-1||ids.some(id=>!peers.some(p=>p.id===id)))fail('Invite friends, party members, or players on your dashboard.',403);
@@ -360,7 +371,7 @@ Deno.serve(async req=>{
       const duplicate=recent.find((r: Row)=>r.request_id===requestId);
       if(duplicate)return Response.json({encounter:publicRoom(duplicate,(await replay(svc,duplicate)).state),server_time:Date.now()});
       for(const r of recent){const s=(await replay(svc,r)).state;if(['active','lobby'].includes(s.status))fail('Finish or leave your current expedition first.');}
-      const room=await svc.AIBattleEncounter.create({host_id:user.id,host_name:label(user),host_snapshot:player,invited_ids:ids,world,route_id:route.id,request_id:requestId});
+      const room=await svc.AIBattleEncounter.create({host_id:user.id,host_name:label(user),host_snapshot:player,invited_ids:ids,world,route_id:route.id,request_id:requestId,...(sourceField?{source_field:sourceField}:{})});
       return Response.json({encounter:publicRoom(room,initial(room)),server_time:Date.now()});
     }
     const room=await roomFor(svc,String(data.encounter_id||''),user);
