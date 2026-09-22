@@ -1,67 +1,80 @@
 import { useMemo } from 'react';
-import { Crown, Shield, Skull, Sparkles, Swords, Zap } from 'lucide-react';
-import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
+import { Crown, Shield, Skull, Swords, Users, Zap } from 'lucide-react';
 import useBattleArena from '@/components/battle/useBattleArena';
 import { useAuth } from '@/components/auth/AuthContext';
+import { BattleAvatar, RiftEnemy } from '@/components/battle/BattleAvatar';
 
 const hpPct = (hp, max) => Math.max(0, Math.min(100, (Number(hp || 0) / Math.max(1, Number(max || 1))) * 100));
+const staggerPct = (value, max) => Math.max(0, Math.min(100, (Number(value || 0) / Math.max(1, Number(max || 100))) * 100));
 
-function HealthPlate({ fighter, enemy = false, active = false }) {
+function HealthPlate({ fighter, enemy = false, active = false, worldBoss = false }) {
   const name = fighter?.name || 'Combatant';
   const hp = Number(fighter?.hp || 0);
   const max = Math.max(1, Number(fighter?.max_hp || fighter?.maxHp || 1));
+  const stagger = Number(fighter?.stagger || 0);
+  const maxStagger = Math.max(1, Number(fighter?.max_stagger || 100));
   return (
-    <div className={'min-w-[150px] border px-3 py-2 backdrop-blur-xl ' + (active ? 'border-cyan-100/24 bg-cyan-100/[0.06]' : enemy ? 'border-rose-100/14 bg-rose-100/[0.035]' : 'border-white/[0.07] bg-black/20')}>
+    <div className={'min-w-[170px] border px-3 py-2.5 backdrop-blur-2xl transition-all duration-300 ' + (active ? 'border-cyan-100/26 bg-cyan-100/[0.065] shadow-[0_0_24px_rgba(103,232,249,.07)]' : enemy ? 'border-rose-100/14 bg-rose-100/[0.035]' : 'border-white/[0.07] bg-black/25')}>
       <div className="flex items-center justify-between gap-3">
-        <span className="truncate text-[8px] font-semibold text-white/78">{name}</span>
-        <span className="text-[7px] tabular-nums text-white/34">{Math.ceil(hp)} / {max}</span>
+        <span className="truncate text-[8px] font-semibold text-white/82">{name}</span>
+        <span className="text-[7px] tabular-nums text-white/38">{Math.ceil(hp)} / {max}</span>
       </div>
-      <div className="mt-2 h-[4px] overflow-hidden bg-white/[0.06]">
-        <div
-          className={'h-full transition-[width] duration-300 ' + (enemy ? 'bg-gradient-to-r from-rose-400/65 to-amber-200/60' : 'bg-gradient-to-r from-emerald-300/55 to-cyan-200/55')}
-          style={{ width: String(hpPct(hp, max)) + '%' }}
-        />
+      <div className="mt-2 h-[5px] overflow-hidden bg-white/[0.06]">
+        <div className={'h-full transition-[width] duration-300 ' + (enemy ? 'bg-gradient-to-r from-rose-400/70 to-amber-200/65' : 'bg-gradient-to-r from-emerald-300/60 to-cyan-200/60')} style={{ width: String(hpPct(hp, max)) + '%' }} />
       </div>
-      {Number(fighter?.shield || 0) > 0 && <div className="mt-1 text-right text-[6px] text-cyan-100/40">+{fighter.shield} shield</div>}
-    </div>
-  );
-}
 
-function AvatarFighter({ player, active, side = 'ally' }) {
-  return (
-    <div className={'relative h-full min-w-0 flex-1 transition-all duration-300 ' + (active ? 'scale-[1.035]' : 'opacity-90')}>
-      {active && <div className="pointer-events-none absolute left-1/2 top-[16%] h-[62%] w-[58%] -translate-x-1/2 rounded-[50%] bg-cyan-200/[0.055] blur-2xl" />}
-      <div className={'absolute inset-x-[5%] bottom-[7%] top-[3%] ' + (side === 'foe' ? '-scale-x-100' : '')}>
-        <GenesisModelPreview config={player?.appearance || { gender: 'male' }} compact controls="none" idleOnly />
+      <div className="mt-1.5 flex items-center gap-2">
+        <span className="text-[5px] font-black uppercase tracking-[0.11em] text-white/22">Break</span>
+        <div className="h-[3px] min-w-0 flex-1 overflow-hidden bg-white/[0.045]">
+          <div className={'h-full transition-[width] duration-300 ' + (enemy ? 'bg-amber-200/60' : 'bg-violet-200/50')} style={{ width: String(staggerPct(stagger, maxStagger)) + '%' }} />
+        </div>
       </div>
-      <div className="pointer-events-none absolute bottom-[5%] left-1/2 h-3 w-[48%] -translate-x-1/2 rounded-[50%] border border-cyan-100/10 bg-cyan-100/[0.035] blur-[1px]" />
-      <div className="pointer-events-none absolute bottom-[1%] inset-x-2 text-center">
-        <span className="block truncate text-[7px] font-semibold uppercase tracking-[0.09em] text-white/52">{player?.name || 'Player'}</span>
-        {active && <span className="mt-0.5 block text-[5px] font-black uppercase tracking-[0.16em] text-cyan-100/58">Active turn</span>}
+
+      <div className="mt-1 flex min-h-[10px] items-center justify-between">
+        <span className="text-[5px] uppercase tracking-[0.08em] text-white/20">{worldBoss ? 'WORLD BOSS' : active ? 'ACTIVE TURN' : ''}</span>
+        {Number(fighter?.shield || 0) > 0 && <span className="flex items-center gap-1 text-[6px] text-cyan-100/46"><Shield className="h-2.5 w-2.5" />{fighter.shield}</span>}
       </div>
     </div>
   );
 }
 
-function RiftBoss({ enemy, active, worldBoss }) {
+function PartyFormation({ players, activeId, lastEvent }) {
+  const count = Math.max(1, players.length);
   return (
     <div className="relative h-full w-full">
-      <div className="pointer-events-none absolute left-1/2 top-[46%] h-[54%] w-[66%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-rose-400/[0.055] blur-3xl" />
-      <div className={'absolute left-1/2 top-[45%] h-[230px] w-[230px] -translate-x-1/2 -translate-y-1/2 transition-transform duration-500 ' + (active ? 'scale-105' : '')}>
-        <div className="absolute inset-[14%] rotate-45 border border-rose-100/16 bg-gradient-to-br from-slate-900/80 via-cyan-950/60 to-rose-950/55 shadow-[0_0_70px_rgba(248,113,113,.08)]">
-          <div className="absolute inset-[19%] border border-cyan-100/15 bg-cyan-200/[0.035]" />
-          <div className="absolute left-1/2 top-1/2 h-[28%] w-[28%] -translate-x-1/2 -translate-y-1/2 bg-cyan-100/12 shadow-[0_0_34px_rgba(165,243,252,.22)]" />
-        </div>
-        <div className="absolute inset-0 animate-[spin_18s_linear_infinite] rounded-full border border-dashed border-white/[0.045]" />
-        <div className="absolute inset-[7%] animate-[spin_12s_linear_infinite_reverse] rounded-full border border-rose-100/[0.06]" />
+      {players.map((player, index) => {
+        const spread = count === 1 ? 0 : (index - (count - 1) / 2);
+        const x = 50 + spread * Math.min(21, 52 / count);
+        const y = 5 + Math.abs(spread) * 3.5;
+        const scale = Math.max(.7, 1 - Math.abs(spread) * .07);
+        return (
+          <div
+            key={player.id}
+            className="absolute bottom-[5%] top-[1%] w-[42%] -translate-x-1/2 transition-all duration-500"
+            style={{ left: String(x) + '%', transform: 'translateX(-50%) translateY(' + String(y) + '%) scale(' + String(scale) + ')', zIndex: 20 - Math.abs(spread) }}
+          >
+            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function EnemyFormation({ encounter, opponent, enemy, activeId, lastEvent }) {
+  const duel = encounter.route?.type === 'pvp';
+  const worldBoss = encounter.route?.type === 'world_boss';
+  if (duel && opponent) {
+    return (
+      <div className="absolute inset-[2%_12%_5%_12%] -scale-x-100">
+        <BattleAvatar player={opponent} active={activeId === opponent.id} event={lastEvent} />
       </div>
-      <div className="absolute bottom-[8%] inset-x-0 text-center">
-        <div className="mx-auto flex w-fit items-center gap-2 text-[7px] font-black uppercase tracking-[0.16em] text-rose-100/46">
-          {worldBoss ? <Crown className="h-3.5 w-3.5" /> : <Skull className="h-3.5 w-3.5" />}
-          {worldBoss ? 'World Boss' : 'Rift Enemy'}
-        </div>
-        <strong className="mt-1 block text-[12px] font-semibold text-white/72">{enemy?.name || 'Rift Construct'}</strong>
-      </div>
+    );
+  }
+  if (!enemy) return null;
+  return (
+    <div className={'absolute transition-all duration-500 ' + (worldBoss ? 'inset-[-8%_-2%_-5%_-2%] scale-[1.18]' : 'inset-[0_8%_4%_8%]')}>
+      <RiftEnemy enemy={enemy} event={lastEvent} />
     </div>
   );
 }
@@ -90,64 +103,96 @@ export default function DashboardBattleStage({ encounterId }) {
   const activeId = encounter.turn;
   const enemy = encounter.enemy || null;
   const worldBoss = encounter.route?.type === 'world_boss';
+  const isDungeon = encounter.route?.type === 'dungeon';
+  const isQuest = encounter.route?.type === 'quest';
+  const hitPulse = ['hit', 'break'].includes(model.last?.kind);
+  const defendPulse = model.last?.kind === 'defense';
   const backdrop = encounter.world?.image
     ? {
-        backgroundImage: 'linear-gradient(180deg,rgba(4,8,13,.52),rgba(4,8,13,.84)),url(' + JSON.stringify(encounter.world.image) + ')',
+        backgroundImage: 'linear-gradient(180deg,rgba(4,8,13,.34),rgba(4,8,13,.86)),url(' + JSON.stringify(encounter.world.image) + ')',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }
-    : {};
+    : {
+        background: 'radial-gradient(circle at 50% 15%,rgba(30,70,88,.20),transparent 34%),linear-gradient(180deg,#091019,#05090f 70%,#020407)',
+      };
+
+  const phaseLabel = encounter.phase === 'defend'
+    ? 'INCOMING STRIKE'
+    : encounter.phase === 'camp'
+      ? 'CAMP'
+      : encounter.status === 'lobby'
+        ? 'ASSEMBLING'
+        : 'ROUND ' + String(encounter.round || 1);
 
   return (
-    <div className="absolute inset-0 overflow-hidden" aria-label="Dashboard battle stage" style={backdrop}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_68%,rgba(103,232,249,.07),transparent_36%),linear-gradient(180deg,rgba(5,9,15,.30),rgba(5,9,15,.78))]" />
-      <div className="absolute inset-x-[9%] bottom-[12%] h-[27%] rounded-[50%] border border-white/[0.05] bg-gradient-to-b from-cyan-100/[0.015] to-black/20 [transform:perspective(800px)_rotateX(64deg)]" />
-      <div className="absolute left-1/2 top-[10%] h-[66%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.06] to-transparent" />
+    <div className={'absolute inset-0 overflow-hidden transition-transform duration-300 ' + (hitPulse ? 'scale-[1.006]' : '')} aria-label="Dashboard battle stage" style={backdrop}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_68%,rgba(103,232,249,.075),transparent_34%),linear-gradient(180deg,rgba(5,9,15,.08),rgba(5,9,15,.32)_42%,rgba(5,9,15,.84))]" />
+      <div className="absolute inset-x-[5%] bottom-[8%] h-[31%] rounded-[50%] border border-white/[0.05] bg-gradient-to-b from-cyan-100/[0.018] to-black/28 [transform:perspective(860px)_rotateX(65deg)] shadow-[0_0_90px_rgba(0,0,0,.28)]" />
+      <div className="absolute inset-x-[12%] bottom-[10%] h-px bg-gradient-to-r from-transparent via-cyan-100/[0.12] to-transparent" />
+      <div className="absolute left-1/2 top-[9%] h-[69%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.055] to-transparent" />
+      <div className="pointer-events-none absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(255,255,255,.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.014)_1px,transparent_1px)] [background-size:48px_48px]" />
 
-      <div className="absolute left-4 right-4 top-4 z-20 flex items-start justify-between gap-4">
-        <div className="flex max-w-[58%] flex-wrap gap-2">
+      {(hitPulse || defendPulse) && <div key={model.last?.id} className={'pointer-events-none absolute inset-0 animate-[pulse_.34s_ease-out_1] ' + (hitPulse ? 'bg-rose-200/[0.028]' : 'bg-cyan-200/[0.022]')} />}
+
+      <div className="absolute left-5 right-5 top-4 z-30 flex items-start justify-between gap-4">
+        <div className="flex max-w-[60%] flex-wrap gap-2">
           {model.allies.map((player) => <HealthPlate key={player.id} fighter={player} active={activeId === player.id} />)}
         </div>
         <div className="min-w-0">
-          {model.duel && model.opponent ? <HealthPlate fighter={model.opponent} enemy active={activeId === model.opponent.id} /> : enemy ? <HealthPlate fighter={enemy} enemy /> : null}
-        </div>
-      </div>
-
-      <div className="absolute inset-x-[3%] bottom-[13%] top-[16%] z-10 grid grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)] items-end">
-        <div className="flex h-full items-end justify-center gap-1">
-          {model.allies.map((player) => <AvatarFighter key={player.id} player={player} active={activeId === player.id} side="ally" />)}
-        </div>
-
-        <div className="self-center text-center">
-          <div className="mx-auto grid h-12 w-12 rotate-45 place-items-center border border-white/[0.08] bg-black/20 backdrop-blur-lg">
-            <Swords className="h-4 w-4 -rotate-45 text-white/28" />
-          </div>
-          <div className="mt-4 text-[6px] font-black uppercase tracking-[0.18em] text-white/24">Round {encounter.round || 1}</div>
-        </div>
-
-        <div className="h-full">
           {model.duel && model.opponent
-            ? <AvatarFighter player={model.opponent} active={activeId === model.opponent.id} side="foe" />
+            ? <HealthPlate fighter={model.opponent} enemy active={activeId === model.opponent.id} />
             : enemy
-              ? <RiftBoss enemy={enemy} active={encounter.phase === 'defend'} worldBoss={worldBoss} />
+              ? <HealthPlate fighter={enemy} enemy worldBoss={worldBoss} />
               : null}
         </div>
       </div>
 
-      <div className="absolute bottom-[4%] left-1/2 z-30 w-[min(720px,80%)] -translate-x-1/2 border border-white/[0.06] bg-black/35 px-4 py-2 text-center backdrop-blur-xl">
-        <div className="flex items-center justify-center gap-2 text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/32">
-          {encounter.phase === 'defend' ? <Shield className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
-          {encounter.route?.title} · {encounter.world?.title}
+      <div className="absolute left-1/2 top-[12%] z-30 -translate-x-1/2 text-center">
+        <div className="inline-flex items-center gap-2 border border-white/[0.07] bg-black/28 px-3 py-1.5 backdrop-blur-xl">
+          {worldBoss ? <Crown className="h-3 w-3 text-amber-100/50" /> : isDungeon ? <Skull className="h-3 w-3 text-violet-100/46" /> : isQuest ? <Map className="h-3 w-3 text-cyan-100/44" /> : <Swords className="h-3 w-3 text-rose-100/46" />}
+          <span className="text-[6px] font-black uppercase tracking-[0.16em] text-white/40">{phaseLabel}</span>
         </div>
-        <p className="mt-1 truncate text-[8px] text-white/52">{model.last?.text || (encounter.status === 'lobby' ? 'Assembling combatants on the dashboard.' : 'The battle field is ready.')}</p>
+        <p className="mt-1 text-[6px] uppercase tracking-[0.11em] text-white/23">
+          {encounter.world?.title} · {encounter.route?.title}
+          {encounter.route?.stages?.length ? ' · Stage ' + String((encounter.stage || 0) + 1) + '/' + String(encounter.route.stages.length) : ''}
+        </p>
+      </div>
+
+      <div className="absolute inset-x-[2%] bottom-[10%] top-[17%] z-10 grid grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] items-end">
+        <div className="relative h-full">
+          <PartyFormation players={model.allies} activeId={activeId} lastEvent={model.last} />
+        </div>
+
+        <div className="self-center text-center">
+          <div className="mx-auto grid h-12 w-12 rotate-45 place-items-center border border-white/[0.08] bg-black/22 backdrop-blur-xl shadow-[0_0_30px_rgba(103,232,249,.03)]">
+            <Swords className="h-4 w-4 -rotate-45 text-white/30" />
+          </div>
+          <div className="mt-4 text-[5.5px] font-black uppercase tracking-[0.17em] text-white/22">
+            {model.duel ? 'DUEL' : worldBoss ? 'RAID' : isDungeon ? 'DUNGEON' : 'EXPEDITION'}
+          </div>
+        </div>
+
+        <div className="relative h-full">
+          <EnemyFormation encounter={encounter} opponent={model.opponent} enemy={enemy} activeId={activeId} lastEvent={model.last} />
+        </div>
+      </div>
+
+      <div className="absolute bottom-[3.5%] left-1/2 z-30 w-[min(760px,82%)] -translate-x-1/2 border border-white/[0.065] bg-black/40 px-4 py-2.5 text-center backdrop-blur-2xl">
+        <div className="flex items-center justify-center gap-2 text-[5.5px] font-black uppercase tracking-[0.14em] text-cyan-100/30">
+          {encounter.phase === 'defend' ? <Shield className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
+          {encounter.phase === 'defend' ? 'ACTIVE DEFENSE WINDOW' : 'CARD COMBAT'}
+        </div>
+        <p className="mt-1 truncate text-[8px] text-white/56">{model.last?.text || (encounter.status === 'lobby' ? 'Assembling combatants on the dashboard.' : 'The battlefield is ready.')}</p>
       </div>
 
       {encounter.status === 'lobby' && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-black/20 backdrop-blur-[2px]">
-          <div className="border border-white/[0.08] bg-black/45 px-6 py-4 text-center backdrop-blur-xl">
+          <div className="border border-white/[0.08] bg-black/50 px-7 py-5 text-center backdrop-blur-2xl">
             <Users className="mx-auto h-5 w-5 text-cyan-100/38" />
-            <p className="mt-2 text-[7px] font-black uppercase tracking-[0.16em] text-white/34">Battle Lobby</p>
+            <p className="mt-2 text-[7px] font-black uppercase tracking-[0.16em] text-white/34">Dashboard Battle Lobby</p>
             <p className="mt-1 text-[10px] text-white/62">{encounter.players?.length || 0} / {encounter.route?.max || 5} combatants connected</p>
+            <p className="mt-2 text-[6px] text-white/26">Players fight here on the host dashboard once the expedition starts.</p>
           </div>
         </div>
       )}
