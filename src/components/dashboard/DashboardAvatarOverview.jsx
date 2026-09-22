@@ -11,6 +11,8 @@ import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import LunaAIBattleOverlay from './LunaAIBattleOverlay';
+import DashboardBattleNotice from '@/components/battle/DashboardBattleNotice';
+import { arenaPresentation } from '@/components/battle/arenaPresentation';
 import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
@@ -273,6 +275,25 @@ export default function DashboardAvatarOverview() {
     refetchInterval: 60 * 1000,
     refetchIntervalInBackground: false,
   });
+
+  useEffect(() => {
+    const openBattle = (event) => {
+      const encounterId = event?.detail?.encounterId || null;
+      if (encounterId) arenaPresentation.setEncounter(encounterId);
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setCardsMode(false);
+      setLeaderboardMode(false);
+      setMessagesMode(false);
+      setFriendsMode(false);
+      setSeasonMode(false);
+      setBattleMode(true);
+    };
+    window.addEventListener('openAIBattle', openBattle);
+    return () => window.removeEventListener('openAIBattle', openBattle);
+  }, []);
 
   useEffect(() => {
     const openMessages = (event) => {
@@ -589,6 +610,10 @@ export default function DashboardAvatarOverview() {
 
       {!avatarFocusMode && surface === 'dashboard' && seasonMode && (
         <LunaSeasonPassOverlay onClose={() => setSeasonMode(false)} />
+      )}
+
+      {!avatarFocusMode && surface === 'dashboard' && !battleMode && (
+        <DashboardBattleNotice />
       )}
 
       {!avatarFocusMode && surface === 'dashboard' && battleMode && (
