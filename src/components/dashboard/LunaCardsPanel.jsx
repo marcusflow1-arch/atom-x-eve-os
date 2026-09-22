@@ -26,6 +26,7 @@ export default function LunaCardsPanel() {
   const [genre, setGenre] = useState('all');
   const [genreOpen, setGenreOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
+  const [bezels, setBezels] = useState(false);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -176,9 +177,9 @@ export default function LunaCardsPanel() {
     <div
       className="relative h-full w-full overflow-hidden px-5 pb-5 pt-4"
       style={{
-        background: 'radial-gradient(ellipse at 54% 46%, rgba(2,5,10,.78) 0%, rgba(3,7,12,.54) 58%, rgba(3,7,12,.18) 84%, transparent 100%)',
-        backdropFilter: 'blur(10px) saturate(110%)',
-        WebkitBackdropFilter: 'blur(10px) saturate(110%)',
+        background: 'radial-gradient(ellipse at 54% 46%, rgba(42,60,84,.36) 0%, rgba(29,47,70,.26) 58%, rgba(19,34,52,.10) 84%, transparent 100%)',
+        backdropFilter: 'blur(10px) saturate(118%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(118%)',
       }}
     >
       <div className="relative z-10 flex h-full min-h-0 flex-col">
@@ -220,7 +221,7 @@ export default function LunaCardsPanel() {
               onClick={beginVoiceSearch}
               title="Voice search"
               aria-label="Voice search"
-              className={`flex h-9 w-9 shrink-0 items-center justify-center border transition-colors ${listening ? 'border-cyan-200/25 bg-cyan-200/[0.08] text-white' : 'border-white/[0.08] bg-black/20 text-white/70 hover:bg-white/[0.06] hover:text-white'}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center border transition-colors ${listening ? 'border-cyan-100/30 bg-cyan-100/[0.12] text-white' : 'border-white/[0.12] bg-white/[0.045] text-white/80 hover:bg-white/[0.09] hover:text-white'}`}
             >
               <Volume2 className="h-4 w-4" />
             </button>
@@ -231,11 +232,11 @@ export default function LunaCardsPanel() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={selectedGroup ? 'Search owned cards' : 'Search games, cards, or genre'}
-                className="h-9 w-full border border-white/[0.08] bg-black/25 pl-9 pr-3 text-[9px] text-white outline-none placeholder:text-white/35 focus:border-white/[0.16]"
+                className="h-9 w-full border border-white/[0.12] bg-white/[0.045] pl-9 pr-3 text-[9px] text-white outline-none placeholder:text-white/45 focus:border-white/[0.22]"
               />
 
               {!selectedGroup && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-[40px] z-50 overflow-hidden border border-white/[0.08] bg-[#070b12]/95 shadow-2xl backdrop-blur-xl">
+                <div className="absolute left-0 right-0 top-[40px] z-50 overflow-hidden border border-white/[0.08] bg-slate-900/88 shadow-2xl backdrop-blur-xl">
                   {suggestions.map((entry, index) => (
                     <button
                       key={`${entry.type}-${entry.label}-${index}`}
@@ -257,7 +258,7 @@ export default function LunaCardsPanel() {
               <button
                 type="button"
                 onClick={() => setGenre('all')}
-                className={`h-8 border px-4 text-[7px] font-black uppercase tracking-[0.12em] transition-colors ${genre === 'all' ? 'border-white/[0.16] bg-white/[0.08] text-white' : 'border-white/[0.07] bg-black/15 text-white/55 hover:text-white'}`}
+                className={`h-8 border px-4 text-[7px] font-black uppercase tracking-[0.12em] transition-colors ${genre === 'all' ? 'border-white/[0.16] bg-white/[0.08] text-white' : 'border-white/[0.09] bg-white/[0.025] text-white/65 hover:bg-white/[0.06] hover:text-white'}`}
               >
                 All
               </button>
@@ -266,13 +267,13 @@ export default function LunaCardsPanel() {
                 <button
                   type="button"
                   onClick={() => setGenreOpen((open) => !open)}
-                  className={`flex h-8 min-w-[132px] items-center justify-between gap-3 border px-3 text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${genre !== 'all' ? 'border-white/[0.16] bg-white/[0.08] text-white' : 'border-white/[0.07] bg-black/15 text-white/60 hover:text-white'}`}
+                  className={`flex h-8 min-w-[132px] items-center justify-between gap-3 border px-3 text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${genre !== 'all' ? 'border-white/[0.16] bg-white/[0.08] text-white' : 'border-white/[0.09] bg-white/[0.025] text-white/65 hover:bg-white/[0.06] hover:text-white'}`}
                 >
                   <span className="truncate">{genre === 'all' ? 'Genre' : genre}</span>
                   <ChevronDown className="h-3 w-3" />
                 </button>
                 {genreOpen && (
-                  <div className="absolute left-0 top-[34px] z-50 max-h-52 min-w-[170px] overflow-y-auto border border-white/[0.08] bg-[#070b12]/95 shadow-2xl backdrop-blur-xl">
+                  <div className="absolute left-0 top-[34px] z-50 max-h-52 min-w-[170px] overflow-y-auto border border-white/[0.08] bg-slate-900/88 shadow-2xl backdrop-blur-xl">
                     {genres.map((entry) => (
                       <button
                         key={entry}
@@ -287,7 +288,18 @@ export default function LunaCardsPanel() {
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 text-[7px] text-white/40">
+              <button
+                type="button"
+                onClick={() => setBezels((value) => !value)}
+                aria-pressed={bezels}
+                className={`h-8 border px-3 text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${bezels
+                  ? 'border-white/[0.16] bg-white/[0.08] text-white'
+                  : 'border-white/[0.07] bg-white/[0.025] text-white/60 hover:text-white'}`}
+              >
+                Bezels {bezels ? 'On' : 'Off'}
+              </button>
+
+              <div className="flex items-center gap-1.5 text-[7px] text-white/50">
                 <Layers3 className="h-3 w-3" />
                 {filteredGames.length} games
               </div>
@@ -302,8 +314,8 @@ export default function LunaCardsPanel() {
             selectedCards.length ? (
               <div className="grid justify-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 86px))' }}>
                 {selectedCards.map((card) => (
-                  <div key={card.id} className="relative h-[112px] overflow-hidden border border-white/[0.09] bg-black/35 p-1.5">
-                    <div className="relative flex h-[58px] items-center justify-center overflow-hidden border border-white/[0.06] bg-black/40">
+                  <div key={card.id} className="relative h-[112px] overflow-hidden border border-white/[0.10] bg-white/[0.035] p-1.5">
+                    <div className="relative flex h-[58px] items-center justify-center overflow-hidden border border-white/[0.07] bg-slate-950/25">
                       {card.card_image ? (
                         <img src={card.card_image} alt={card.card_name} className="h-full w-full object-cover" />
                       ) : (
@@ -330,16 +342,20 @@ export default function LunaCardsPanel() {
                   key={game.key}
                   type="button"
                   onClick={() => { setSelectedGame(game.key); setQuery(''); setGenreOpen(false); }}
-                  className="group relative h-[108px] overflow-hidden border border-white/[0.09] bg-black/35 p-1.5 text-left transition-colors hover:border-white/[0.16] hover:bg-white/[0.05]"
+                  className={`group relative h-[108px] overflow-hidden p-1.5 text-left transition-all ${bezels
+                    ? 'border border-white/[0.11] bg-white/[0.035] hover:border-white/[0.20] hover:bg-white/[0.07]'
+                    : 'border border-transparent bg-transparent hover:bg-white/[0.035]'}`}
                   title={game.title}
                 >
-                  <div className="relative flex h-[56px] items-center justify-center overflow-hidden border border-white/[0.06] bg-black/40">
+                  <div className={`relative flex h-[56px] items-center justify-center overflow-hidden ${bezels
+                    ? 'border border-white/[0.07] bg-slate-950/25'
+                    : 'border border-transparent bg-transparent'}`}>
                     {game.image ? (
                       <img src={game.image} alt={game.title} className="h-full w-full object-cover opacity-85 transition-transform duration-200 group-hover:scale-[1.03]" />
                     ) : (
                       <Gamepad2 className="h-5 w-5 text-white/55" />
                     )}
-                    <span className="absolute right-1 top-1 bg-black/70 px-1 text-[5px] font-black text-white">{game.cards.length}</span>
+                    <span className={`absolute right-1 top-1 px-1 text-[5px] font-black text-white ${bezels ? 'bg-black/70' : 'bg-slate-950/45 backdrop-blur-sm'}`}>{game.cards.length}</span>
                   </div>
                   <div className="mt-1 flex min-h-[28px] flex-col justify-between">
                     <p className="line-clamp-2 text-[7px] font-semibold leading-[10px] text-white">{game.title}</p>
