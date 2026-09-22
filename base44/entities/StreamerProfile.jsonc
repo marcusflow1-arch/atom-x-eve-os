@@ -52,6 +52,18 @@
     "follower_count": {
       "type": "number",
       "default": 0
+    },
+    "channel_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Public community/channel rules authored by the streamer"
+    },
+    "schedule_note": {
+      "type": "string",
+      "description": "Optional public note shown with the channel schedule"
     }
   },
   "required": [
