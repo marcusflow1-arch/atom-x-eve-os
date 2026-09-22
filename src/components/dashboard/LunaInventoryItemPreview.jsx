@@ -6,6 +6,7 @@ export default function LunaInventoryItemPreview({
   selectedSlotId,
   onEquip,
   onUpgrade,
+  showUpgrade = true,
   onClose,
 }) {
   if (!item) return null;
@@ -107,7 +108,7 @@ export default function LunaInventoryItemPreview({
           </div>
 
           <div className="flex gap-2 border-t border-white/[0.055] pt-3">
-            {item.inventoryCategory === 'equipment' && (
+            {showUpgrade && item.inventoryCategory === 'equipment' && (
               <button
                 type="button"
                 onClick={() => onUpgrade?.(item)}
