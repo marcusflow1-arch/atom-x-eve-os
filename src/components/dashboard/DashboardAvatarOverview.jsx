@@ -10,7 +10,7 @@ import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
-import LunaFriendsProfileOverlay from './LunaFriendsProfileOverlay';
+import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
@@ -380,6 +380,7 @@ export default function DashboardAvatarOverview() {
   };
 
   const embeddedUtilityMode = inventoryMode || cardsMode;
+  const libraryEdgeMode = embeddedUtilityMode || friendsMode;
 
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
@@ -393,7 +394,7 @@ export default function DashboardAvatarOverview() {
     <div
       data-dashboard-avatar-overview
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
-      style={{ left: embeddedUtilityMode ? '330px' : '390px' }}
+      style={{ left: libraryEdgeMode ? '330px' : '390px' }}
     >
       {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && !messagesMode && !friendsMode && activeQuickPanel && (
         <div
@@ -473,7 +474,18 @@ export default function DashboardAvatarOverview() {
 
       {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !messagesMode && !friendsMode && <PartyPortraitRail />}
       {!avatarFocusMode && surface === 'dashboard' && friendsMode && (
-        <LunaFriendsProfileOverlay onClose={() => setFriendsMode(false)} />
+        <div
+          data-dashboard-utility-workspace
+          aria-label="Friends quick access"
+          className="absolute left-0 top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
+          style={{
+            maxWidth: 'calc(100% - 338px)',
+            WebkitMaskImage: 'linear-gradient(to right, black 0%, black 92%, rgba(0,0,0,.80) 97%, transparent 100%)',
+            maskImage: 'linear-gradient(to right, black 0%, black 92%, rgba(0,0,0,.80) 97%, transparent 100%)',
+          }}
+        >
+          <LunaFriendsQuickAccessPanel />
+        </div>
       )}
 
       {!avatarFocusMode && surface === 'dashboard' && messagesMode && (
