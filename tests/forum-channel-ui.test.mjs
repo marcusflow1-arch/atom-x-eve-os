@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import Module from 'node:module';
+import Module, { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'https://test.local/Community', pretendToBeVisual: true });
-for (const name of ['window','document','HTMLElement','HTMLInputElement','HTMLTextAreaElement','Element','Node','NodeFilter','Event','CustomEvent','MutationObserver','DOMException']) globalThis[name] = dom.window[name];
+for (const name of ['window','document','HTMLElement','SVGElement','HTMLInputElement','HTMLTextAreaElement','Element','Node','NodeFilter','Event','CustomEvent','MutationObserver','DOMException']) globalThis[name] = dom.window[name];
 Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true });
 globalThis.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 globalThis.requestAnimationFrame = callback => setTimeout(callback, 0);
@@ -17,7 +17,7 @@ const React = await import('react');
 const { act } = React;
 const { createRoot } = await import('react-dom/client');
 const { MemoryRouter, useLocation, useNavigate } = await import('react-router-dom');
-const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
+const { QueryClient, QueryClientProvider } = createRequire(import.meta.url)('@tanstack/react-query');
 
 const games = [
   { id: 'river', title: 'River Knights', genre: 'RPG, Adventure', developer: 'River Studio' },
