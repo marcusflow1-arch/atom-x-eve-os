@@ -41,5 +41,6 @@ export default function useBattleArena(encounterId){
     error:hub.error||fight.error,busy:mutation.isPending,serverOffset:offset.current,
     refresh:()=>{hub.refetch();if(encounterId)fight.refetch();},
     create:data=>mutation.mutateAsync({action:'create',data}),
+    field:data=>mutation.mutateAsync({action:'field',data}),
     command:(command,data={})=>mutation.mutateAsync({action:'command',data:{encounter_id:encounterId,expected_revision:encounter?.revision,command,...data}})};
 }
