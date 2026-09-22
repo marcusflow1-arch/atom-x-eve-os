@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useDashboardSession } from '@/components/social/dashboardSession';
 import { useAuth } from '@/components/auth/AuthContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import FriendsListContent from '@/components/dashboard/FriendsListContent';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 import { base44 } from '@/api/base44Client';
@@ -21,23 +19,7 @@ const CREATOR_CHILD = CREATOR_PARENTING_PREVIEW.children[0];
 export default function DashboardAvatarScene({ focusMode: _focusMode = false }) {
   const { user } = useAuth();
   const session = useDashboardSession();
-  const [friendsWorkspace, setFriendsWorkspace] = useState(null);
   const [creatorChild, setCreatorChild] = useState(null);
-
-  // The Friends quick-control workspace is owned by DashboardAvatarOverview.
-  // Portal the live Friends/Global Online browser into that existing glass
-  // surface so clicking the Friends quick control opens the real social UI.
-  useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
-    const resolveWorkspace = () => {
-      const node = document.querySelector('[aria-label="friends workspace"]');
-      setFriendsWorkspace((current) => current === node ? current : node);
-    };
-    resolveWorkspace();
-    const observer = new MutationObserver(resolveWorkspace);
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
   const host = session.players.find(p => p.player_id === session.host_id);
@@ -112,12 +94,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
         {session.error || 'Connecting to dashboard…'}
         {session.host_id !== user?.id && <button type="button" className="mt-2 block text-cyan-200" onClick={() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel',{detail:{channelId:`dashboard_${user.id}`,hostId:user.id,hostName:'My'}}))}>Return to my dashboard</button>}
       </div>}
-      {friendsWorkspace && createPortal(
-        <div className="relative z-10 h-full w-full p-4 md:p-5">
-          <FriendsListContent />
-        </div>,
-        friendsWorkspace
-      )}
       <EnvironmentHubWorkspace />
     </>
   );
