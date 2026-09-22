@@ -45,6 +45,7 @@ import GameLandingPage from '@/components/dashboard/gamehub/GameLandingPage';
 import CrossRoleCardBrowser from '@/components/dashboard/CrossRoleCardBrowser';
 import GameProgressHub from '@/components/dashboard/gamehub/GameProgressHub';
 import GamePageView from '@/components/dashboard/gamehub/GamePageView';
+import GlobalOverlayLayer from '@/components/luna/GlobalOverlayLayer';
 import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
@@ -2078,27 +2079,38 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 )}
               </AnimatePresence>
 
-              {/* Keep outgoing and incoming game panels from stacking below the viewport. */}
-              <AnimatePresence mode="wait">
-                {selectedFocusGame && !longPressGame && (
-                  <motion.div
-                    key={selectedFocusGame.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 16 }}
-                    transition={{ duration: 0.3 }}
-                    className="pointer-events-auto mt-2 overflow-hidden"
-                    style={{ borderRadius: '14px', background: 'rgba(8,12,18,0.45)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)', height: 'calc(100vh - 224px)' }}
-                  >
-                    <GamePageView
-                      game={selectedFocusGame}
-                      friendData={null}
-                      onOpenFriend={() => {}}
-                      onBackToSelf={() => onSelectFocusGame?.(null)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Selected Library games are promoted to Luna's root overlay so they cover
+                  the complete dashboard: Pocket Boss/date-time, quick boxes, Environment,
+                  the left rail, and every other dashboard layer. */}
+              <GlobalOverlayLayer
+                open={!!selectedFocusGame && !longPressGame}
+                onEscape={() => onSelectFocusGame?.(null)}
+              >
+                <AnimatePresence mode="wait">
+                  {selectedFocusGame && !longPressGame && (
+                    <motion.div
+                      key={selectedFocusGame.id}
+                      initial={{ opacity: 0, scale: 0.995 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.995 }}
+                      transition={{ duration: 0.24, ease: 'easeOut' }}
+                      className="pointer-events-auto h-full w-full overflow-hidden"
+                      style={{
+                        background: 'rgba(8,12,18,0.96)',
+                        backdropFilter: 'blur(30px)',
+                        WebkitBackdropFilter: 'blur(30px)'
+                      }}
+                    >
+                      <GamePageView
+                        game={selectedFocusGame}
+                        friendData={null}
+                        onOpenFriend={() => {}}
+                        onBackToSelf={() => onSelectFocusGame?.(null)}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </GlobalOverlayLayer>
 
               {/* Empty by default — content fades in only when a game is selected or Full Library is opened */}
 
