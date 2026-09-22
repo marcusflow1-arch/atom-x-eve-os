@@ -106,7 +106,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   callback.current = onCapabilities;
   controlArmedRef.current = controlArmed;
   const url = companionModel(config);
-  const fixedFemaleIdle = Boolean(idleOnly && config?.gender === 'female');
+  const fixedFemaleIdle = config?.gender === 'female';
 
   const playMotion = useCallback((nextMotion) => {
     if (!nextMotion?.url || !scene.current) return;
@@ -136,8 +136,12 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       if (cancelled) return;
       motionSetRef.current = buildMotionSet(rows, config?.gender);
       const set = motionSetRef.current;
-      setPreviewMotions([...(set.idles || []).slice(0, 3), ...(set.showcase || [])].filter((item, index, items) => item?.url && items.findIndex((candidate) => candidate.name === item.name) === index));
-      if (ready && compact && !controlArmedRef.current) playIdle();
+      setPreviewMotions(
+        config?.gender === 'female'
+          ? [COMPANION_MOTIONS[0]]
+          : [...(set.idles || []).slice(0, 3), ...(set.showcase || [])].filter((item, index, items) => item?.url && items.findIndex((candidate) => candidate.name === item.name) === index)
+      );
+      if (ready && !controlArmedRef.current) playIdle();
     });
     return () => { cancelled = true; };
   }, [config?.gender, compact, ready, playIdle]);
@@ -203,6 +207,11 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, []);
 
   const syncMovementAnimation = useCallback(() => {
+    if (fixedFemaleIdle) {
+      activeMovement.current = '';
+      playIdle();
+      return;
+    }
     const move = movementForKeys();
     if (!move) {
       if (activeMovement.current) {
@@ -216,7 +225,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
     if (activeMovement.current === key) return;
     activeMovement.current = key;
     playMotion(motionSetRef.current[running ? 'run' : 'walk']?.[move.direction]);
-  }, [movementForKeys, playIdle, playMotion]);
+  }, [fixedFemaleIdle, movementForKeys, playIdle, playMotion]);
 
   useEffect(() => {
     if (!interactive || !controlArmed) {
@@ -277,7 +286,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, [interactive, ready]);
 
   const friendlyInteraction = useCallback(() => {
-    if (!interactive || !ready) return;
+    if (!interactive || !ready || fixedFemaleIdle) return;
     setControlArmed(true);
     if (interactionActive.current) {
       const nextPaused = scene.current?.togglePaused?.() ?? false;
@@ -296,7 +305,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       setPaused(false);
       playIdle();
     }, 3600);
-  }, [interactive, ready, playMotion, playIdle]);
+  }, [interactive, ready, fixedFemaleIdle, playMotion, playIdle]);
 
   const handleClick = useCallback((event) => {
     if (!interactive) return;
