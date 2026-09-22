@@ -68,6 +68,15 @@ export const acceptDuelChallenge = async (req, myName) => {
   } catch {
     // Non-fatal — sender can still discover the duel via DuelSession subscribe.
   }
+  try {
+    const snapshot = await base44.functions.invoke('aiBattleHub', {
+      action: 'snapshotDuel',
+      data: { duel_id: duel.id },
+    });
+    return snapshot?.data?.duel || snapshot?.duel || duel;
+  } catch {
+    // Duel remains valid even if card snapshot enrichment is temporarily unavailable.
+  }
   return duel;
 };
 
