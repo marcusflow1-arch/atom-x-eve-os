@@ -4,7 +4,6 @@ Scope: the page opened by clicking a game in the Store (`/GameDetail?id=…&from
 
 ## Layout and behavior
 
-- The global legacy header is suppressed only on GameDetail so it cannot cover the page’s own search.
 - Persistent game-page header includes navigation, catalog search, the player's AGP balance, cart, and profile. Focusing search offers catalog matches and retains the existing lower search panel.
 - Wide gallery on the left, compact information and purchase controls on the right, screenshots beneath, and the selected game's artwork in the background.
 - Achievements and avatar rewards are visible immediately below the gallery. Rewards are loaded for this game from Achievement records. Categories, unlock conditions, rewards, and existing unlock status use stored data.
