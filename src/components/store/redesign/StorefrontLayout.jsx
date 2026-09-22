@@ -4,7 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import {ArrowRight,RefreshCw,SlidersHorizontal,Sparkles,Trophy,X} from 'lucide-react';
 import {base44} from '@/api/base44Client';
 import {useAuth} from '@/components/auth/AuthContext';
-import {filterGames,genresOf,label,priceOf,queryScore,releaseTime,comingSoon,discoveryOrder,rotateGames,recommendations,uniqueCatalog,buildStoreShelves} from './discovery';
+import {filterGames,genresOf,label,priceOf,queryScore,releaseTime,comingSoon,discoveryOrder,rotateGames,recommendations,uniqueCatalog,buildStoreShelves,isOnSale} from './discovery';
 import {GameCard,GameCover,StoreSection,Shelf,DiscoveryHero} from './StoreSections';
 import StorePreferences from './StorePreferences';
 import StoreFilterRail from './StoreFilterRail';
@@ -35,7 +35,7 @@ export default function StorefrontLayout({onNavigateToGame,games=[],searchTerm='
  const filtering=!!searchTerm||filters.genres.length>0||filters.price!=='any'||!!filters.mode||filters.availability!=='all'||filters.hideOwned||filters.onSale;
  const overview=tab==='discover'&&!filtering;
  const availableIds=new Set(selected.map(g=>g.id));
- let results=searchTerm?selected:tab==='sellers'?shelves.sellers.filter(g=>availableIds.has(g.id)):tab==='new'?newGames.filter(g=>availableIds.has(g.id)):tab==='you'?matches.map(r=>r.game).filter(g=>availableIds.has(g.id)):tab==='offers'?selected.filter(g=>priceOf(g)!==null&&priceOf(g)<=25&&!comingSoon(g)):selected;
+ let results=searchTerm?selected:tab==='sellers'?shelves.sellers.filter(g=>availableIds.has(g.id)):tab==='new'?newGames.filter(g=>availableIds.has(g.id)):tab==='you'?matches.map(r=>r.game).filter(g=>availableIds.has(g.id)):tab==='offers'?selected.filter(g=>(isOnSale(g)||priceOf(g)!==null&&priceOf(g)<=25)&&!comingSoon(g)):selected;
  results=[...results].sort((a,b)=>sort==='price'?(priceOf(a)??Infinity)-(priceOf(b)??Infinity):sort==='title'?a.title.localeCompare(b.title):sort==='new'?releaseTime(b)-releaseTime(a):searchTerm?queryScore(b,searchTerm)-queryScore(a,searchTerm):0);
  useEffect(()=>setLimit(24),[tab,filters,searchTerm,sort]);
  const update=(key,value)=>setFilters(f=>({...f,[key]:value}));

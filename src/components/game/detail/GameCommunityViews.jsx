@@ -6,7 +6,8 @@ import {base44} from '@/api/base44Client';
 import {useStoreCatalog} from '@/components/store/redesign/useStoreCatalog';
 import {GameCard} from '@/components/store/redesign/StoreSections';
 import {comingSoon,normalize,uniqueCatalog} from '@/components/store/redesign/discovery';
-import {mediaUrl,trailerSource} from './gameDetailData';
+import {mediaUrl} from './gameDetailData';
+import StreamMedia,{resolveMedia} from '@/components/streaming/hub/StreamMedia';
 import GameImage from './GameImage';
 
 const rows=response=>{const data=response?.data||response;if(!Array.isArray(data))throw new Error('Invalid response');return data;};
@@ -48,10 +49,11 @@ export function StudioGameViews({game,view}){
 }
 
 function Broadcast({url,title,poster}){
- const [playing,setPlaying]=useState(false),[failed,setFailed]=useState(false);
- const source=trailerSource(url);if(!source)return null;
+ const [playing,setPlaying]=useState(false);
+ const source=resolveMedia(url,window.location.hostname);
+ const href=mediaUrl(url);if(!href)return null;
  return <div className="gd-broadcast">
-  {playing&&!failed&&source.kind==='embed'?<iframe src={source.url} title={title} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen/>:playing&&!failed&&source.kind==='video'?<video controls autoPlay playsInline src={source.url} onError={()=>setFailed(true)}/>:<><GameImage src={poster} alt=""/>{source.kind==='external'||failed?<a href={source.url} target="_blank" rel="noopener noreferrer"><ArrowUpRight size={22}/>Open broadcast</a>:<button onClick={()=>setPlaying(true)}><Play size={25}/>Watch broadcast</button>}</>}
+  {playing&&source?<StreamMedia url={href} poster={poster} title={title}/>:<><GameImage src={poster} alt=""/>{source?<button onClick={()=>setPlaying(true)}><Play size={25}/>Watch broadcast</button>:<a href={href} target="_blank" rel="noopener noreferrer"><ArrowUpRight size={22}/>Open broadcast</a>}</>}
  </div>;
 }
 export function GameStreams({game}){

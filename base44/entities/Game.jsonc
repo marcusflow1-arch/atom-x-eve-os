@@ -115,6 +115,11 @@
         "type": "string"
       },
       "description": "Additional tags for categorization"
+    },
+    "sale_price": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Optional current sale price in USD. Applied only below the regular price; checkout validates from the catalog."
     }
   },
   "required": [
