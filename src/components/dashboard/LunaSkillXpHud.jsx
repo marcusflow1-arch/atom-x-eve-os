@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Sparkles, Zap } from 'lucide-react';
+import { RefreshCw, Sparkles, Zap } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { showError } from '@/components/error/ErrorToast';
@@ -80,7 +80,7 @@ export default function LunaSkillXpHud({
   level = 1,
   showcaseEditing = false,
 }) {
-  const { equip, isSaving } = useSkillBookLoadout();
+  const { equip, isSaving, jawans, activeJawanId, selectJawan } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [previewCard, setPreviewCard] = useState(null);
@@ -115,6 +115,25 @@ export default function LunaSkillXpHud({
     setPreviewCard(card);
   };
 
+  const activeJawan = useMemo(
+    () => jawans.find((jawan) => String(jawan.jawan_id) === String(activeJawanId)) || jawans.find((jawan) => jawan.is_active) || jawans[0] || null,
+    [jawans, activeJawanId]
+  );
+
+  const rotateJawan = async () => {
+    if (isSaving || jawans.length < 2) return;
+    const currentIndex = Math.max(0, jawans.findIndex((jawan) => String(jawan.jawan_id) === String(activeJawan?.jawan_id)));
+    const next = jawans[(currentIndex + 1) % jawans.length];
+    if (!next?.jawan_id) return;
+    try {
+      await selectJawan(next.jawan_id);
+      setSelectedSlot(null);
+      setPreviewCard(null);
+    } catch (error) {
+      showError(error, 'Switch Jawan');
+    }
+  };
+
   const progress = useMemo(
     () => Math.max(0, Math.min(100, (Number(currentXp || 0) / Math.max(1, Number(nextXp || 1))) * 100)),
     [currentXp, nextXp]
@@ -126,6 +145,19 @@ export default function LunaSkillXpHud({
       className="absolute bottom-[10px] left-[34px] right-[338px] z-[44] h-[122px] pointer-events-none"
     >
       <div className="absolute left-0 bottom-0 h-[118px] w-[118px] pointer-events-auto">
+        <div className="pointer-events-none absolute left-[29px] top-[-16px] z-40 max-w-[100px] truncate text-[7px] font-medium italic tracking-[0.03em] text-cyan-50/62">
+          {activeJawan?.jawan_name || 'Jawan I'}
+        </div>
+        <button
+          type="button"
+          onClick={rotateJawan}
+          disabled={isSaving || jawans.length < 2}
+          aria-label="Rotate Jawan skill loadout"
+          title="Switch Jawan"
+          className="absolute left-[-31px] top-[43px] z-50 grid h-7 w-7 place-items-center rounded-full border border-cyan-100/[0.12] bg-slate-950/64 text-cyan-50/48 shadow-[0_0_16px_rgba(103,232,249,.05)] backdrop-blur-md transition hover:border-cyan-100/25 hover:bg-cyan-100/[0.08] hover:text-white disabled:opacity-25"
+        >
+          <RefreshCw className={`h-3 w-3 ${isSaving ? 'animate-spin' : ''}`} />
+        </button>
         <div
           className="absolute left-[10px] top-[10px] h-[98px] w-[98px] rotate-45 border border-white/[0.12] bg-slate-950/28 backdrop-blur-md"
           style={{ boxShadow: 'inset 0 0 28px rgba(103,232,249,.035), 0 12px 30px rgba(0,0,0,.18)' }}
