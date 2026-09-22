@@ -106,48 +106,49 @@ export default function LunaSkillXpHud({
         ))}
       </div>
 
-      <div className="absolute left-[128px] right-0 top-[14px] h-[82px]">
-        <svg
-          viewBox="0 0 1000 82"
-          preserveAspectRatio="none"
-          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-          aria-hidden="true"
-        >
-          <path
-            d="M 0 6 L 24 6 L 56 38 L 56 56 L 1000 56"
-            fill="none"
-            stroke="rgba(226,232,240,.20)"
-            strokeWidth="1.2"
-            vectorEffect="non-scaling-stroke"
-          />
-          <path
-            d="M 0 10 L 20 10 L 51 41 L 51 61 L 1000 61"
-            fill="none"
-            stroke="rgba(103,232,249,.08)"
-            strokeWidth="1"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
+      {/* Continuous seam: top point -> upper-right diamond edge -> right tip -> AI HQ. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[59px] top-[-2px] z-30 h-px w-[96px] origin-left rotate-45"
+        style={{
+          background: 'linear-gradient(90deg, rgba(226,232,240,.18), rgba(226,232,240,.28) 72%, rgba(226,232,240,.34))',
+          boxShadow: '0 0 8px rgba(103,232,249,.035)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[63px] top-[3px] z-30 h-px w-[89px] origin-left rotate-45"
+        style={{
+          background: 'linear-gradient(90deg, rgba(103,232,249,.045), rgba(103,232,249,.11))',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[127px] right-0 top-[66px] z-30 h-px"
+        style={{
+          background: 'linear-gradient(90deg, rgba(226,232,240,.32), rgba(226,232,240,.18) 58%, rgba(226,232,240,.10))',
+          boxShadow: '0 0 8px rgba(103,232,249,.03)',
+        }}
+      />
 
-        <div className="absolute left-[58px] right-0 top-[63px]">
-          <div className="mb-1.5 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Zap className="h-3 w-3 text-cyan-100/60" />
-              <span className="text-[7px] font-black uppercase tracking-[0.14em] text-white/40">Experience</span>
-              <span className="text-[7px] font-semibold text-white/72">Lv {level}</span>
-            </div>
-            <span className="text-[7px] font-mono text-white/38">
-              {Number(currentXp || 0).toLocaleString()} / {Number(nextXp || 0).toLocaleString()} XP
-            </span>
+      <div className="absolute left-[140px] right-0 top-[74px]">
+        <div className="mb-1.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Zap className="h-3 w-3 text-cyan-100/60" />
+            <span className="text-[7px] font-black uppercase tracking-[0.14em] text-white/40">Experience</span>
+            <span className="text-[7px] font-semibold text-white/72">Lv {level}</span>
           </div>
+          <span className="text-[7px] font-mono text-white/38">
+            {Number(currentXp || 0).toLocaleString()} / {Number(nextXp || 0).toLocaleString()} XP
+          </span>
+        </div>
 
-          <div className="relative h-[5px] overflow-hidden bg-white/[0.065]">
-            <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-300/55 via-sky-200/68 to-white/72 transition-[width] duration-500"
-              style={{ width: `${progress}%` }}
-            />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.12]" />
-          </div>
+        <div className="relative h-[5px] overflow-hidden bg-white/[0.065]">
+          <div
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-300/55 via-sky-200/68 to-white/72 transition-[width] duration-500"
+            style={{ width: `${progress}%` }}
+          />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.12]" />
         </div>
       </div>
     </div>
