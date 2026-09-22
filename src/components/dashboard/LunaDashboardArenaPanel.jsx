@@ -30,13 +30,20 @@ function CardButton({ card, player, disabled, onPlay, world }) {
       {card.image ? <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-24" /> : null}
       <div className="absolute inset-0 bg-gradient-to-t from-[#071019] via-[#071019]/84 to-transparent" />
       <div className="relative z-10 flex min-h-[76px] flex-col justify-end">
-        <span className="text-[5px] font-black uppercase tracking-[0.09em] text-cyan-100/32">{card.rarity} · {card.type}</span>
+        <span className="text-[5px] font-black uppercase tracking-[0.09em] text-cyan-100/32">
+          {card.rarity} · {card.type}{card.element ? ' · ' + String(card.element).toUpperCase() : ''}
+        </span>
         <strong className="mt-1 line-clamp-1 text-[8px] text-white/76">{card.name}</strong>
         <div className="mt-1 flex items-center justify-between text-[6px]">
-          <span className="text-white/30">{card.effect} {Number(card.value || 0) + (resonance ? 5 : 0)}</span>
+          <span className="text-white/30">{card.effect} {Number(card.value || 0) + (resonance ? Math.max(5, Math.round(Number(card.value || 0) * .12) + Number(card.ascension || 0) * 2) : 0)}</span>
           <span className="font-bold text-cyan-100/52">{card.cost} AP</span>
         </div>
-        {resonance && <span className="mt-1 text-[5px] font-black uppercase tracking-[0.08em] text-emerald-100/48">World Resonance +5</span>}
+        <div className="mt-1 flex items-center justify-between text-[5px] text-white/22">
+          <span>Lv {card.level || 1} · Stage {card.stage || 1}</span>
+          <span>BRK {card.stagger || 0}</span>
+        </div>
+        {Array.isArray(card.active_perks) && card.active_perks.length > 0 && <span className="mt-1 line-clamp-1 text-[5px] text-violet-100/40">{card.active_perks.slice(0, 2).map((perk) => String(perk).replaceAll('_', ' ')).join(' · ')}</span>}
+        {resonance && <span className="mt-1 text-[5px] font-black uppercase tracking-[0.08em] text-emerald-100/48">World Resonance Active</span>}
         {cooldown > 0 && <span className="mt-1 text-[5px] text-amber-100/44">Ready in {cooldown}</span>}
       </div>
     </button>
