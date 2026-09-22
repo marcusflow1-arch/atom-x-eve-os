@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sparkles, Zap } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
+import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
+import { showError } from '@/components/error/ErrorToast';
 
 const slotPosition = [
   { left: 38, top: 3, key: '1' },
@@ -20,8 +22,8 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
     try {
       const raw = event.dataTransfer?.getData('application/json');
       const payload = raw ? JSON.parse(raw) : null;
-      if (payload?.source === 'luna-card' && payload.card) {
-        onAssign(index, payload.card);
+      if ((payload?.source === 'luna-card' || payload?.source === 'luna-skill-book') && payload.card) {
+        onAssign(index, payload.card, payload.user_card_id || payload.card.user_card_id || payload.card.id);
       }
     } catch (error) {
       console.error('Showcase card drop failed:', error);
@@ -46,7 +48,7 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
       }}
       onDrop={handleDrop}
       aria-label={assigned ? `Showcase ${title}` : `Showcase slot ${index + 1}`}
-      title={pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'card'} in slot ${index + 1}` : assigned ? title : `Drop a card into slot ${index + 1}`}
+      title={pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
       className={`absolute h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
         ? 'border-cyan-100/70 bg-cyan-200/[0.18] shadow-[0_0_18px_rgba(103,232,249,.28)]'
         : pendingCard
@@ -78,7 +80,7 @@ export default function LunaSkillXpHud({
   level = 1,
   showcaseEditing = false,
 }) {
-  const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
+  const { equip, isSaving } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [previewCard, setPreviewCard] = useState(null);
@@ -92,14 +94,20 @@ export default function LunaSkillXpHud({
     return () => window.removeEventListener('lunaShowcaseCardSelected', handleSelected);
   }, []);
 
-  const assignShowcaseCard = (index, card) => {
-    if (!card) return;
-    assignToHotbar(index, { ...card, showcaseOnly: true });
-    setSelectedSlot(index);
-    setPreviewCard(card);
-    setPendingCard(null);
-    window.__lunaSelectedShowcaseCard = null;
-    window.dispatchEvent(new CustomEvent('lunaShowcaseCardPlaced', { detail: { index, card } }));
+  const assignShowcaseCard = async (index, card, explicitUserCardId) => {
+    if (!card || isSaving) return;
+    const userCardId = explicitUserCardId || card.user_card_id || card.id;
+    if (!userCardId) return;
+    try {
+      await equip(index, userCardId);
+      setSelectedSlot(index);
+      setPreviewCard(card);
+      setPendingCard(null);
+      window.__lunaSelectedShowcaseCard = null;
+      window.dispatchEvent(new CustomEvent('lunaShowcaseCardPlaced', { detail: { index, card } }));
+    } catch (error) {
+      showError(error, 'Equip Skill');
+    }
   };
 
   const selectShowcaseCard = (index, card) => {
@@ -142,7 +150,7 @@ export default function LunaSkillXpHud({
         <div className="pointer-events-none absolute left-[132px] top-[22px] min-w-[210px] border border-cyan-100/[0.10] bg-slate-950/55 px-3 py-2 backdrop-blur-xl">
           <p className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/45">Card Showcase</p>
           <p className="mt-0.5 text-[8px] text-white/65">
-            {pendingCard ? `Choose a diamond for ${pendingCard.title || pendingCard.card_name || 'this card'}` : 'Drag a card here or select one from Cards'}
+            {pendingCard ? `Choose a diamond for ${pendingCard.title || pendingCard.card_name || 'this skill'}` : 'Drag an owned skill here from the Skill Book'}
           </p>
         </div>
       )}
