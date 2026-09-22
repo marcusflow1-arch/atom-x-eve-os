@@ -115,7 +115,7 @@ async function snapshot(svc: any, user: Row) {
   const appearance = Object.fromEntries(APPEARANCE.filter(k=>saved[k]!==undefined).map(k=>[k,saved[k]]));
   if (num(saved.appearance_version)<3) appearance.model_url = saved.gender === 'female' ? FEMALE : MODEL;
   const maxHp = Math.max(100,Math.min(400,num(levels[0]?.stats?.hp,100) + num(levels[0]?.global_level,1)*8));
-  return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,cards:deck,cooldowns:{},damage:0,actions:0};
+  return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,cards:deck,cooldowns:{},damage:0,actions:0,jawan:{id:loadout?.jawan_id||'jawan-1',name:loadout?.jawan_name||loadout?.name||'Jawan I',role:loadout?.jawan_role||'Balanced',loadout_id:loadout?.id||''}};
 }
 async function contacts(svc: any, user: Row) {
   const [memberships, friends, own] = await Promise.all([
@@ -297,7 +297,9 @@ function reduce(room: Row, previous: Row, event: Row) {
   return s;
 }
 function initial(room: Row) {
-  return {revision:0,status:'lobby',phase:'lobby',players:[copy(room.host_snapshot)],round:1,stage:0,turn:room.host_id,deadline:0,enemy:null,claimed:[],declined:[],log:[]};
+  const players=[copy(room.host_snapshot)];
+  if(room.guest_snapshot)players.push(copy(room.guest_snapshot));
+  return {revision:0,status:'lobby',phase:'lobby',players,round:1,stage:0,turn:room.host_id,deadline:0,enemy:null,claimed:[],declined:[],log:room.matchmaking?[{id:0,text:'Match found. Both Jawan loadouts are locked for this duel.',kind:'info',actor:''}]:[]};
 }
 async function replay(svc: any, room: Row) {
   const events = await svc.AIBattleTurn.filter({encounter_id:room.id},'created_date',1000);
@@ -310,7 +312,7 @@ async function replay(svc: any, room: Row) {
   return {state,events,applied};
 }
 function publicRoom(room: Row, state: Row) {
-  return {id:room.id,host_id:room.host_id,host_name:room.host_name,world:room.world,route:routeFor(room.route_id),source_field:room.source_field||null,invited_ids:room.invited_ids,created_date:room.created_date,...state};
+  return {id:room.id,host_id:room.host_id,host_name:room.host_name,world:room.world,route:routeFor(room.route_id),source_field:room.source_field||null,invited_ids:room.invited_ids,matchmaking:Boolean(room.matchmaking),created_date:room.created_date,...state};
 }
 async function roomFor(svc: any, id: string, user: Row) {
   const room=await svc.AIBattleEncounter.get(id).catch(()=>null);
@@ -484,7 +486,7 @@ Deno.serve(async req=>{
       if(state.declined.includes(user.id))fail('This invitation was declined.');
       payload.player=await snapshot(svc,user);
     }
-    if(command==='start'&&state.players.length>1)await requireDashboard(svc,room.host_id,state.players.map((p: Row)=>p.id));
+    if(command==='start'&&state.players.length>1&&!room.matchmaking)await requireDashboard(svc,room.host_id,state.players.map((p: Row)=>p.id));
     const event={encounter_id:room.id,actor_id:user.id,request_id:requestId,expected_revision:state.revision,command,payload,received_at:Date.now()};
     reduce(room,state,event); // validate before persisting; HP/amounts never come from request
     await svc.AIBattleTurn.create(event);
