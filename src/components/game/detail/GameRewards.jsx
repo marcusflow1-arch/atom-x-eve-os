@@ -15,7 +15,7 @@ export default function GameRewards({game}){
  const categories=['all',...new Set(rewards.map(reward=>reward.category).filter(Boolean))];
  const filtered=rewards.filter(reward=>category==='all'||reward.category===category);
  return <section id="game-avatar-rewards" className="gd-rewards" aria-label="Achievements and avatar rewards">
-  <div className="gd-section-heading"><div><span className="gd-eyebrow">Cards & achievement rewards</span><h2>Skills, equipment and cards from this game.</h2><p>Every published achievement reward can become part of your Atom X Eve collection and AI avatar loadout.</p></div><Trophy size={27}/></div>
+  <div className="gd-section-heading"><div><span className="gd-eyebrow">The Atom XE difference</span><h2>Every achievement can be part of your story.</h2><p>Discover what this game can unlock for your AI avatar.</p></div><Trophy size={27}/></div>
   {isLoading?<p className="gd-muted" role="status">Loading achievements and rewards…</p>:error?<div role="alert"><p>Achievement rewards couldn't load.</p><button className="gd-text-button" onClick={()=>refetch()}>Try again</button></div>:!rewards.length?<p className="gd-muted">Rewards for this game haven't been published yet. Abilities, equipment, and achievement details will appear here when available.</p>:<>
    <div className="gd-reward-filters" aria-label="Reward categories">{categories.map(value=><button key={value} aria-pressed={category===value} onClick={()=>{setCategory(value);setExpanded(false);}}>{value==='all'?'All achievements':label(value)}<span>{value==='all'?rewards.length:rewards.filter(r=>r.category===value).length}</span></button>)}</div>
    <div className="gd-reward-grid">{filtered.slice(0,expanded?filtered.length:4).map(achievement=>{
