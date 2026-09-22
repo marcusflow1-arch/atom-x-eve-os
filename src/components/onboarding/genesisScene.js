@@ -6,7 +6,6 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
-import { ensureRuntimeHumanoidRig } from '@/components/onboarding/runtimeHumanoidRig';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -56,6 +55,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
+  let primaryMotionRoot = null, primaryMotionMixer = null, primaryMotionAction = null, primaryMotionBridge = null;
   let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false, runtimeBoneCount = 0, runtimeRigGenerated = false;
   const lockedBonePositions = new Map();
 
@@ -128,10 +128,6 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     const dt = Math.min(clock.getDelta(), .05);
     if (!visible || document.hidden) return;
     mixer?.update(dt);
-    // Female Artemis must stay anchored to the character-creation platform.
-    // Idle is rotation-only: restore the model root and every bone's bind
-    // translation after the mixer runs, preventing any retargeted FBX position
-    // channel from lifting the character out of the circle.
     if (options.lockModelPosition && model && basePosition) {
       model.position.copy(basePosition);
     }
@@ -141,6 +137,24 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       });
       model?.updateMatrixWorld(true);
     }
+
+    primaryMotionMixer?.update(dt);
+    if (primaryMotionBridge && model && basePosition) {
+      const { hips, spine, restHipsPosition, restHipsQuaternion, restSpineQuaternion, baseRotationX, baseRotationZ } = primaryMotionBridge;
+      const hipsDelta = restHipsQuaternion.clone().invert().multiply(hips.quaternion);
+      const spineDelta = restSpineQuaternion.clone().invert().multiply(spine.quaternion);
+      const hipsEuler = new THREE.Euler().setFromQuaternion(hipsDelta, 'YXZ');
+      const spineEuler = new THREE.Euler().setFromQuaternion(spineDelta, 'YXZ');
+
+      // Preserve the exact original Artemis mesh. Use the source Idle only as
+      // a subtle whole-body motion reference—never deform or skin vertices.
+      model.rotation.x = baseRotationX + THREE.MathUtils.clamp((hipsEuler.x * 0.08) + (spineEuler.x * 0.12), -0.035, 0.035);
+      model.rotation.z = baseRotationZ + THREE.MathUtils.clamp((hipsEuler.z * 0.08) + (spineEuler.z * 0.12), -0.04, 0.04);
+
+      const sourceBob = hips.position.y - restHipsPosition.y;
+      model.position.y = basePosition.y + THREE.MathUtils.clamp(sourceBob * 0.0015, -0.008, 0.008);
+    }
+
     secondaryMixer?.update(dt);
     secondaryMotionMixer?.update(dt);
 
@@ -302,6 +316,12 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       secondaryModel.visible = true;
     } catch (error) {
       console.warn('Adaptive child failed to load in Luna viewer:', error);
+      if (primaryMotionRoot) disposeModel(primaryMotionRoot);
+      primaryMotionRoot = null;
+      primaryMotionMixer = null;
+      primaryMotionAction = null;
+      primaryMotionBridge = null;
+
       if (secondaryRoot) scene.remove(secondaryRoot);
       if (secondaryModel) disposeModel(secondaryModel);
       if (secondaryMotionRoot) disposeModel(secondaryMotionRoot);
@@ -332,6 +352,42 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const sourceClip = availableClips.find((candidate) => String(candidate?.name || '').trim().toLowerCase() === requestedClip)
         || availableClips.find((candidate) => String(candidate?.name || '').trim().toLowerCase().includes(requestedClip))
         || availableClips[0];
+
+      if (options.safeRigidIdle && runtimeBoneCount === 0) {
+        primaryMotionAction?.stop();
+        if (primaryMotionRoot && primaryMotionRoot !== animationRoot) disposeModel(primaryMotionRoot);
+
+        primaryMotionRoot = animationRoot;
+        primaryMotionMixer = new THREE.AnimationMixer(primaryMotionRoot);
+        primaryMotionAction = primaryMotionMixer.clipAction(sourceClip);
+        primaryMotionAction.setLoop(motion.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, motion.loop === false ? 1 : Infinity);
+        primaryMotionAction.clampWhenFinished = motion.loop === false;
+        primaryMotionAction.reset().play();
+
+        const sourceBones = new Map();
+        primaryMotionRoot.traverse((node) => {
+          if (node.isBone) sourceBones.set(normalizeBoneName(node.name), node);
+        });
+        const hips = sourceBones.get('hips');
+        const spine = sourceBones.get('spine') || sourceBones.get('spine1') || sourceBones.get('spine2') || hips;
+
+        if (hips && spine && model) {
+          primaryMotionBridge = {
+            hips,
+            spine,
+            restHipsPosition: hips.position.clone(),
+            restHipsQuaternion: hips.quaternion.clone(),
+            restSpineQuaternion: spine.quaternion.clone(),
+            baseRotationX: model.rotation.x,
+            baseRotationZ: model.rotation.z,
+          };
+        }
+
+        model.visible = true;
+        onStatus('ready', motion.name);
+        return;
+      }
+
       let clip = sourceClip.clone();
       if (model && runtimeBoneCount > 0) {
         try {
@@ -381,11 +437,6 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const asset = /\.fbx(?:\?|$)/i.test(url) ? await fbx.loadAsync(url) : await gltf.loadAsync(url);
       model = asset.scene || asset;
       if (disposed) { disposeModel(model); return; }
-
-      if (options.autoRigSingleMesh) {
-        const rigResult = ensureRuntimeHumanoidRig(model);
-        runtimeRigGenerated = Boolean(rigResult?.generated);
-      }
 
       model.traverse((node) => {
         preserveAppearance ||= node.userData?.avatarRig === 'luna-hi3d-v1';
@@ -437,7 +488,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         if (node.morphTargetDictionary) Object.keys(node.morphTargetDictionary).forEach((name) => morphs.push({ key: `${node.name}:${name}`, label: name }));
       });
 
-      model.visible = preserveAppearance || atomxeRuntimeRig;
+      model.visible = preserveAppearance || atomxeRuntimeRig || options.safeRigidIdle;
       scene.add(model);
       mixer = new THREE.AnimationMixer(model);
       applyStyle(appearance);
@@ -499,6 +550,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const setPaused = (value) => {
     paused = Boolean(value);
     if (mixer) mixer.timeScale = paused ? 0 : 1;
+    if (primaryMotionMixer) primaryMotionMixer.timeScale = paused ? 0 : 1;
     if (secondaryMixer) secondaryMixer.timeScale = paused ? 0 : 1;
     if (secondaryMotionMixer) secondaryMotionMixer.timeScale = paused ? 0 : 1;
     return paused;
@@ -528,6 +580,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       controls.dispose();
       embeddedController?.dispose();
       mixer?.stopAllAction();
+      primaryMotionMixer?.stopAllAction();
       secondaryMixer?.stopAllAction();
       secondaryMotionMixer?.stopAllAction();
 
