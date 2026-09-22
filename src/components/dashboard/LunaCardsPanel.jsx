@@ -1,192 +1,109 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, CreditCard, Gamepad2, Layers3, Search, Volume2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/components/auth/AuthContext';
-import { libraryGames } from '@/components/dashboard/gamehub/mockLibraryData';
+import {
+  ArrowLeft, BookOpen, Check, ChevronDown, Gamepad2, Lock, Search,
+  Sparkles, Star, Volume2, Zap
+} from 'lucide-react';
+import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
 
-const normalizeText = (value) => String(value || '').trim().toLowerCase();
-const titleOf = (game) => game?.title || game?.name || game?.game_name || '';
-const coverOf = (game) => game?.cover_image || game?.cover || game?.banner_image || game?.image || game?.thumb || '';
-const genreOf = (game) => game?.genre || game?.genres?.[0] || '';
+const normalize = (value) => String(value || '').trim().toLowerCase();
 
 const rarityTone = {
-  Mythic: 'border-red-300/25 text-red-100',
-  Unique: 'border-fuchsia-300/25 text-fuchsia-100',
-  Legendary: 'border-amber-300/25 text-amber-100',
-  Epic: 'border-violet-300/25 text-violet-100',
-  Rare: 'border-cyan-300/25 text-cyan-100',
-  Uncommon: 'border-emerald-300/20 text-emerald-100',
-  Common: 'border-white/10 text-white/75',
+  Mythic: 'text-red-100 border-red-200/20',
+  Unique: 'text-fuchsia-100 border-fuchsia-200/20',
+  Legendary: 'text-amber-100 border-amber-200/20',
+  Epic: 'text-violet-100 border-violet-200/20',
+  Rare: 'text-cyan-100 border-cyan-200/20',
+  Uncommon: 'text-emerald-100 border-emerald-200/18',
+  Common: 'text-white/65 border-white/[0.08]',
 };
 
 export default function LunaCardsPanel() {
-  const { user } = useAuth();
+  const {
+    games,
+    skills,
+    slots,
+    isLoading,
+    isSaving,
+    equip,
+  } = useSkillBookLoadout();
+
+  const [selectedGameKey, setSelectedGameKey] = useState(null);
+  const [selectedSkillId, setSelectedSkillId] = useState(null);
   const [query, setQuery] = useState('');
   const [genre, setGenre] = useState('all');
   const [genreOpen, setGenreOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState(null);
-  const [bezels, setBezels] = useState(false);
-  const [showcaseCardId, setShowcaseCardId] = useState(null);
+  const [skillFilter, setSkillFilter] = useState('all');
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
-  const { data: ownedCards = [], isLoading: cardsLoading } = useQuery({
-    queryKey: ['luna-mini-owned-cards', user?.id],
-    queryFn: () => base44.entities.UserCard.filter({ user_id: user.id }, '-created_date', 500),
-    enabled: Boolean(user?.id),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: games = [] } = useQuery({
-    queryKey: ['luna-mini-card-games'],
-    queryFn: () => base44.entities.Game.list('-created_date', 250),
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const gameMeta = useMemo(() => {
-    const map = new Map();
-    [...libraryGames, ...(games || [])].forEach((game) => {
-      const title = titleOf(game);
-      if (!title) return;
-      const key = normalizeText(title);
-      const current = map.get(key) || {};
-      map.set(key, {
-        title,
-        image: coverOf(game) || current.image || '',
-        genre: genreOf(game) || current.genre || '',
-      });
-    });
-    return map;
-  }, [games]);
-
-  const groups = useMemo(() => {
-    const map = new Map();
-    (ownedCards || []).forEach((card) => {
-      const title = card.game_name || 'Unknown Game';
-      const key = normalizeText(title);
-      if (!map.has(key)) {
-        const meta = gameMeta.get(key) || {};
-        map.set(key, {
-          key,
-          title,
-          image: meta.image || card.card_image || '',
-          genre: card.genre || meta.genre || 'Uncategorized',
-          cards: [],
-        });
-      }
-      map.get(key).cards.push(card);
-    });
-    return [...map.values()].sort((a, b) => a.title.localeCompare(b.title));
-  }, [ownedCards, gameMeta]);
-
   const genres = useMemo(
-    () => [...new Set(groups.map((game) => game.genre).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
-    [groups]
+    () => [...new Set((games || []).map((game) => game.genre).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
+    [games]
+  );
+
+  const equippedIds = useMemo(
+    () => new Map((slots || []).filter((slot) => slot?.card?.user_card_id).map((slot) => [String(slot.card.user_card_id), Number(slot.index)])),
+    [slots]
   );
 
   const filteredGames = useMemo(() => {
-    const needle = normalizeText(query);
-    return groups.filter((game) => {
-      if (genre !== 'all' && normalizeText(game.genre) !== normalizeText(genre)) return false;
+    const needle = normalize(query);
+    return (games || []).filter((game) => {
+      if (genre !== 'all' && normalize(game.genre) !== normalize(genre)) return false;
       if (!needle) return true;
-      if (normalizeText(game.title).includes(needle)) return true;
-      if (normalizeText(game.genre).includes(needle)) return true;
-      return game.cards.some((card) =>
-        [card.card_name, card.card_type, card.card_rarity, card.genre]
-          .some((value) => normalizeText(value).includes(needle))
-      );
+      return normalize(game.title).includes(needle) || normalize(game.genre).includes(needle);
     });
-  }, [groups, genre, query]);
+  }, [games, query, genre]);
 
-  const suggestions = useMemo(() => {
-    const needle = normalizeText(query);
-    if (!needle) return [];
-    const out = [];
-    const seen = new Set();
-    const push = (type, label, sublabel = '') => {
-      const key = `${type}:${normalizeText(label)}`;
-      if (!label || seen.has(key)) return;
-      seen.add(key);
-      out.push({ type, label, sublabel });
-    };
-    groups.forEach((game) => {
-      if (normalizeText(game.title).includes(needle)) push('Game', game.title, game.genre);
-      if (normalizeText(game.genre).includes(needle)) push('Genre', game.genre, 'Filter');
-      game.cards.forEach((card) => {
-        if (normalizeText(card.card_name).includes(needle)) push('Card', card.card_name, game.title);
+  const selectedGame = useMemo(
+    () => (games || []).find((game) => game.key === selectedGameKey) || null,
+    [games, selectedGameKey]
+  );
+
+  const gameSkills = useMemo(() => {
+    if (!selectedGame) return [];
+    const needle = normalize(query);
+    return (skills || [])
+      .filter((skill) => normalize(skill.game_name) === normalize(selectedGame.title))
+      .filter((skill) => {
+        const equipped = skill.user_card_id && equippedIds.has(String(skill.user_card_id));
+        if (skillFilter === 'owned' && !skill.owned) return false;
+        if (skillFilter === 'equipped' && !equipped) return false;
+        if (skillFilter === 'locked' && skill.owned) return false;
+        if (!needle) return true;
+        return [
+          skill.title,
+          skill.description,
+          skill.rarity,
+          skill.unlock_condition,
+        ].some((value) => normalize(value).includes(needle));
+      })
+      .sort((a, b) => {
+        const aEquipped = a.user_card_id && equippedIds.has(String(a.user_card_id));
+        const bEquipped = b.user_card_id && equippedIds.has(String(b.user_card_id));
+        if (aEquipped !== bEquipped) return aEquipped ? -1 : 1;
+        if (a.owned !== b.owned) return a.owned ? -1 : 1;
+        return String(a.title).localeCompare(String(b.title));
       });
-    });
-    return out.slice(0, 7);
-  }, [groups, query]);
+  }, [skills, selectedGame, query, skillFilter, equippedIds]);
 
-  const selectedGroup = selectedGame ? groups.find((game) => game.key === selectedGame) : null;
-  const selectedCards = useMemo(() => {
-    if (!selectedGroup) return [];
-    const needle = normalizeText(query);
-    return selectedGroup.cards.filter((card) => {
-      if (!needle) return true;
-      return [card.card_name, card.card_type, card.card_rarity, card.genre]
-        .some((value) => normalizeText(value).includes(needle));
-    });
-  }, [selectedGroup, query]);
+  const selectedSkill = useMemo(() => {
+    if (!selectedGame) return null;
+    return gameSkills.find((skill) => String(skill.id) === String(selectedSkillId))
+      || gameSkills[0]
+      || null;
+  }, [gameSkills, selectedSkillId, selectedGame]);
 
-  const chooseSuggestion = (entry) => {
-    if (entry.type === 'Genre') {
-      setGenre(entry.label);
-      setQuery('');
-      setSelectedGame(null);
-      return;
+  useEffect(() => {
+    if (selectedSkill && String(selectedSkill.id) !== String(selectedSkillId || '')) {
+      setSelectedSkillId(selectedSkill.id);
     }
-    if (entry.type === 'Game') {
-      const group = groups.find((game) => normalizeText(game.title) === normalizeText(entry.label));
-      if (group) {
-        setSelectedGame(group.key);
-        setQuery('');
-      }
-      return;
-    }
-    setQuery(entry.label);
-  };
+  }, [selectedSkill, selectedSkillId]);
 
-  const showcasePayload = (card) => ({
-    id: card.id,
-    title: card.card_name || 'Unnamed Card',
-    name: card.card_name || 'Unnamed Card',
-    card_name: card.card_name || 'Unnamed Card',
-    image: card.card_image || '',
-    card_image: card.card_image || '',
-    type: String(card.card_type || 'Card').toLowerCase(),
-    card_type: card.card_type || 'Card',
-    rarity: card.card_rarity || 'Common',
-    card_rarity: card.card_rarity || 'Common',
-    game_name: card.game_name || selectedGroup?.title || '',
-    genre: card.genre || selectedGroup?.genre || '',
-    showcaseOnly: true,
-  });
-
-  const selectShowcaseCard = (card) => {
-    const payload = showcasePayload(card);
-    window.__lunaSelectedShowcaseCard = payload;
-    setShowcaseCardId(card.id);
-    window.dispatchEvent(new CustomEvent('lunaShowcaseCardSelected', { detail: { card: payload } }));
-  };
-
-  const beginCardDrag = (event, card) => {
-    const payload = showcasePayload(card);
-    window.__lunaSelectedShowcaseCard = payload;
-    setShowcaseCardId(card.id);
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'copy';
-      event.dataTransfer.setData('application/json', JSON.stringify({ source: 'luna-card', card: payload }));
-      event.dataTransfer.setData('text/plain', payload.title);
-    }
-    window.dispatchEvent(new CustomEvent('lunaShowcaseCardSelected', { detail: { card: payload } }));
-  };
+  useEffect(() => {
+    if (!selectedGame) setSelectedSkillId(null);
+  }, [selectedGame]);
 
   const beginVoiceSearch = () => {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -207,57 +124,103 @@ export default function LunaCardsPanel() {
     recognition.start();
   };
 
-  useEffect(() => {
-    const handlePlaced = (event) => {
-      const card = event?.detail?.card;
-      if (card?.id) setShowcaseCardId((current) => current === card.id ? null : current);
-    };
-    window.addEventListener('lunaShowcaseCardPlaced', handlePlaced);
-    return () => window.removeEventListener('lunaShowcaseCardPlaced', handlePlaced);
-  }, []);
-
   useEffect(() => () => recognitionRef.current?.stop?.(), []);
+
+  const equipSkill = async (slot, skill) => {
+    if (!skill?.owned || !skill?.user_card_id) return;
+    try {
+      await equip(slot, skill.user_card_id);
+      showSuccess(`${skill.title} equipped to Skill Slot ${slot + 1}.`);
+    } catch (error) {
+      showError(error, 'Equip Skill');
+    }
+  };
+
+  const dragSkill = (event, skill) => {
+    if (!skill?.owned || !skill?.user_card_id || !event.dataTransfer) return;
+    const payload = {
+      ...(skill.card || {}),
+      id: skill.user_card_id,
+      user_card_id: skill.user_card_id,
+      title: skill.title,
+      card_name: skill.title,
+      image: skill.image || skill.card?.image || '',
+      card_image: skill.image || skill.card?.card_image || '',
+      game_name: skill.game_name,
+      rarity: skill.rarity,
+      card_rarity: skill.rarity,
+      type: 'ability',
+      card_type: 'Ability',
+      showcaseOnly: false,
+    };
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('application/json', JSON.stringify({
+      source: 'luna-skill-book',
+      card: payload,
+      user_card_id: skill.user_card_id,
+    }));
+    event.dataTransfer.setData('text/plain', skill.title);
+  };
+
+  const openGame = (game) => {
+    setSelectedGameKey(game.key);
+    setSelectedSkillId(null);
+    setQuery('');
+    setSkillFilter('all');
+    setGenreOpen(false);
+  };
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden px-5 pb-5 pt-4"
+      className="relative h-full w-full overflow-hidden text-white"
       style={{
-        background: 'radial-gradient(ellipse at 54% 46%, rgba(42,60,84,.36) 0%, rgba(29,47,70,.26) 58%, rgba(19,34,52,.10) 84%, transparent 100%)',
-        backdropFilter: 'blur(10px) saturate(118%)',
-        WebkitBackdropFilter: 'blur(10px) saturate(118%)',
+        background: 'radial-gradient(ellipse at 48% 42%, rgba(48,66,90,.34) 0%, rgba(25,42,63,.24) 56%, rgba(14,27,43,.08) 86%, transparent 100%)',
+        backdropFilter: 'blur(12px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(120%)',
       }}
     >
-      <div className="relative z-10 flex h-full min-h-0 flex-col">
+      <div className="pointer-events-none absolute inset-y-5 left-1/2 w-px bg-gradient-to-b from-transparent via-white/[0.08] to-transparent" />
+
+      <div className="relative z-10 flex h-full min-h-0 flex-col px-5 pb-5 pt-4">
         <header className="shrink-0 border-b border-white/[0.07] pb-3">
-          {selectedGroup ? (
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              {selectedGame ? (
                 <button
                   type="button"
-                  onClick={() => { setSelectedGame(null); setQuery(''); }}
-                  className="mb-2 flex items-center gap-1 text-[7px] font-black uppercase tracking-[0.14em] text-white/65 transition-colors hover:text-white"
+                  onClick={() => {
+                    setSelectedGameKey(null);
+                    setSelectedSkillId(null);
+                    setQuery('');
+                  }}
+                  className="mb-2 flex items-center gap-1 text-[7px] font-black uppercase tracking-[0.14em] text-white/55 transition-colors hover:text-white"
                 >
                   <ArrowLeft className="h-3 w-3" />
-                  Games
+                  Game Index
                 </button>
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/55">Owned Cards</p>
-                <h2 className="mt-1 truncate text-[15px] font-semibold text-white">{selectedGroup.title}</h2>
-                <p className="mt-1 text-[6.5px] text-cyan-100/45">Drag a card to a diamond · or select it, then choose a slot</p>
+              ) : (
+                <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-100/45">Luna Codex</p>
+              )}
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-cyan-100/70" />
+                <h2 className="text-[16px] font-semibold text-white">
+                  {selectedGame ? selectedGame.title : 'Skill Book'}
+                </h2>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="text-[6px] font-black uppercase tracking-[0.14em] text-white/40">Owned</p>
-                <p className="mt-1 text-[10px] font-semibold text-white">{selectedGroup.cards.length}</p>
-              </div>
+              <p className="mt-1 text-[7px] text-white/36">
+                {selectedGame
+                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to the four Luna slots`
+                  : 'Choose a game chapter to browse its complete ability library.'}
+              </p>
             </div>
-          ) : (
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/55">Cards</p>
-                <h2 className="mt-1 text-[15px] font-semibold text-white">Game Collection</h2>
-              </div>
-              <p className="text-[8px] font-semibold text-white/55">{ownedCards.length} owned</p>
+
+            <div className="text-right">
+              <p className="text-[6px] font-black uppercase tracking-[0.12em] text-white/30">Loadout</p>
+              <p className="mt-1 text-[9px] font-semibold text-white/70">
+                {(slots || []).filter((slot) => slot.card).length} / 4 equipped
+              </p>
             </div>
-          )}
+          </div>
         </header>
 
         <div className="relative shrink-0 pt-3">
@@ -265,67 +228,56 @@ export default function LunaCardsPanel() {
             <button
               type="button"
               onClick={beginVoiceSearch}
-              title="Voice search"
               aria-label="Voice search"
-              className={`flex h-9 w-9 shrink-0 items-center justify-center border transition-colors ${listening ? 'border-cyan-100/30 bg-cyan-100/[0.12] text-white' : 'border-white/[0.12] bg-white/[0.045] text-white/80 hover:bg-white/[0.09] hover:text-white'}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center border transition-colors ${listening
+                ? 'border-cyan-100/30 bg-cyan-100/[0.10] text-white'
+                : 'border-white/[0.10] bg-white/[0.03] text-white/65 hover:bg-white/[0.07] hover:text-white'}`}
             >
               <Volume2 className="h-4 w-4" />
             </button>
 
-            <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/45" />
+            <label className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/35" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={selectedGroup ? 'Search owned cards' : 'Search games, cards, or genre'}
-                className="h-9 w-full border border-white/[0.12] bg-white/[0.045] pl-9 pr-3 text-[9px] text-white outline-none placeholder:text-white/45 focus:border-white/[0.22]"
+                placeholder={selectedGame ? 'Search skills in this game' : 'Search games'}
+                className="h-9 w-full border border-white/[0.10] bg-white/[0.03] pl-9 pr-3 text-[9px] text-white outline-none placeholder:text-white/30 focus:border-cyan-100/18"
               />
-
-              {!selectedGroup && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-[40px] z-50 overflow-hidden border border-white/[0.08] bg-slate-900/88 shadow-2xl backdrop-blur-xl">
-                  {suggestions.map((entry, index) => (
-                    <button
-                      key={`${entry.type}-${entry.label}-${index}`}
-                      type="button"
-                      onClick={() => chooseSuggestion(entry)}
-                      className="flex w-full items-center justify-between gap-3 border-b border-white/[0.05] px-3 py-2 text-left last:border-b-0 hover:bg-white/[0.05]"
-                    >
-                      <span className="min-w-0 truncate text-[8px] font-semibold text-white">{entry.label}</span>
-                      <span className="shrink-0 text-[6px] font-black uppercase tracking-[0.12em] text-white/45">{entry.type}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            </label>
           </div>
 
-          {!selectedGroup && (
+          {!selectedGame ? (
             <div className="mt-2 flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setGenre('all')}
-                className={`h-8 border px-4 text-[7px] font-black uppercase tracking-[0.12em] transition-colors ${genre === 'all' ? 'border-white/[0.16] bg-white/[0.08] text-white' : 'border-white/[0.09] bg-white/[0.025] text-white/65 hover:bg-white/[0.06] hover:text-white'}`}
+                className={`h-8 border px-4 text-[7px] font-black uppercase tracking-[0.12em] transition-colors ${genre === 'all'
+                  ? 'border-cyan-100/18 bg-cyan-100/[0.07] text-white'
+                  : 'border-white/[0.06] bg-white/[0.015] text-white/45 hover:text-white'}`}
               >
-                All
+                All Games
               </button>
-
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setGenreOpen((open) => !open)}
-                  className={`flex h-8 min-w-[132px] items-center justify-between gap-3 border px-3 text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${genre !== 'all' ? 'border-white/[0.16] bg-white/[0.08] text-white' : 'border-white/[0.09] bg-white/[0.025] text-white/65 hover:bg-white/[0.06] hover:text-white'}`}
+                  className="flex h-8 min-w-[132px] items-center justify-between gap-3 border border-white/[0.06] bg-white/[0.015] px-3 text-[7px] font-black uppercase tracking-[0.1em] text-white/50 hover:text-white"
                 >
                   <span className="truncate">{genre === 'all' ? 'Genre' : genre}</span>
                   <ChevronDown className="h-3 w-3" />
                 </button>
                 {genreOpen && (
-                  <div className="absolute left-0 top-[34px] z-50 max-h-52 min-w-[170px] overflow-y-auto border border-white/[0.08] bg-slate-900/88 shadow-2xl backdrop-blur-xl">
+                  <div className="absolute left-0 top-[34px] z-50 max-h-52 min-w-[170px] overflow-y-auto border border-white/[0.08] bg-slate-900/94 shadow-2xl backdrop-blur-xl">
                     {genres.map((entry) => (
                       <button
                         key={entry}
                         type="button"
-                        onClick={() => { setGenre(entry); setGenreOpen(false); }}
-                        className="block w-full border-b border-white/[0.05] px-3 py-2 text-left text-[7px] font-semibold text-white/75 last:border-b-0 hover:bg-white/[0.05] hover:text-white"
+                        onClick={() => {
+                          setGenre(entry);
+                          setGenreOpen(false);
+                        }}
+                        className="block w-full border-b border-white/[0.05] px-3 py-2 text-left text-[7px] font-semibold text-white/65 last:border-b-0 hover:bg-white/[0.05] hover:text-white"
                       >
                         {entry}
                       </button>
@@ -333,115 +285,238 @@ export default function LunaCardsPanel() {
                   </div>
                 )}
               </div>
-
-              <button
-                type="button"
-                onClick={() => setBezels((value) => !value)}
-                aria-pressed={bezels}
-                className={`h-8 border px-3 text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${bezels
-                  ? 'border-white/[0.16] bg-white/[0.08] text-white'
-                  : 'border-white/[0.07] bg-white/[0.025] text-white/60 hover:text-white'}`}
-              >
-                Bezels {bezels ? 'On' : 'Off'}
-              </button>
-
-              <div className="flex items-center gap-1.5 text-[7px] text-white/50">
-                <Layers3 className="h-3 w-3" />
-                {filteredGames.length} games
-              </div>
+            </div>
+          ) : (
+            <div className="mt-2 flex items-center gap-1.5">
+              {[
+                ['all', 'All Skills'],
+                ['owned', 'Owned'],
+                ['equipped', 'Equipped'],
+                ['locked', 'Locked'],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSkillFilter(id)}
+                  className={`h-7 border px-2.5 text-[6px] font-black uppercase tracking-[0.09em] transition-colors ${skillFilter === id
+                    ? 'border-cyan-100/18 bg-cyan-100/[0.07] text-white'
+                    : 'border-white/[0.055] bg-white/[0.012] text-white/38 hover:text-white'}`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pt-4 pr-1">
-          {cardsLoading ? (
-            <div className="grid h-full min-h-44 place-items-center text-[8px] text-white/55">Loading cards…</div>
-          ) : selectedGroup ? (
-            selectedCards.length ? (
-              <div className="grid justify-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 86px))' }}>
-                {selectedCards.map((card) => {
-                  const selectedForShowcase = showcaseCardId === card.id;
-                  return (
-                    <div
-                      key={card.id}
-                      role="button"
-                      tabIndex={0}
-                      draggable
-                      onDragStart={(event) => beginCardDrag(event, card)}
-                      onClick={() => selectShowcaseCard(card)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          selectShowcaseCard(card);
-                        }
-                      }}
-                      className={`relative h-[112px] cursor-grab overflow-hidden border p-1.5 outline-none transition-all active:cursor-grabbing ${selectedForShowcase
-                        ? 'border-cyan-100/35 bg-cyan-100/[0.08] shadow-[0_0_18px_rgba(103,232,249,.10)]'
-                        : 'border-white/[0.10] bg-white/[0.035] hover:border-white/[0.18] hover:bg-white/[0.055]'}`}
-                      aria-pressed={selectedForShowcase}
-                      title="Drag to a showcase diamond or click, then choose a slot"
-                    >
-                      <div className="relative flex h-[58px] items-center justify-center overflow-hidden border border-white/[0.07] bg-slate-950/25">
-                        {card.card_image ? (
-                          <img src={card.card_image} alt={card.card_name} className="h-full w-full object-cover" draggable={false} />
-                        ) : (
-                          <CreditCard className="h-5 w-5 text-white/55" />
-                        )}
-                        {selectedForShowcase && (
-                          <span className="absolute inset-x-1 bottom-1 bg-cyan-950/80 px-1 py-0.5 text-center text-[5px] font-black uppercase tracking-[0.08em] text-cyan-50">
-                            Selected
-                          </span>
-                        )}
+        <div className="min-h-0 flex-1 pt-4">
+          {isLoading ? (
+            <div className="grid h-full place-items-center text-[9px] text-white/38">Opening Skill Book…</div>
+          ) : !selectedGame ? (
+            filteredGames.length ? (
+              <div className="grid h-full auto-rows-min grid-cols-2 gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                {filteredGames.map((game) => (
+                  <button
+                    key={game.key}
+                    type="button"
+                    onClick={() => openGame(game)}
+                    className="group relative min-h-[108px] overflow-hidden border border-white/[0.065] bg-white/[0.018] p-3 text-left transition-all hover:border-cyan-100/16 hover:bg-white/[0.04]"
+                  >
+                    <div className="flex gap-3">
+                      <div className="flex h-[68px] w-[58px] shrink-0 items-center justify-center overflow-hidden border border-white/[0.07] bg-slate-950/25">
+                        {game.image
+                          ? <img src={game.image} alt="" className="h-full w-full object-cover opacity-85 transition-transform duration-200 group-hover:scale-[1.03]" />
+                          : <Gamepad2 className="h-5 w-5 text-white/35" />}
                       </div>
-                      <p className="mt-1 line-clamp-2 min-h-[20px] text-[7px] font-semibold leading-[10px] text-white">{card.card_name || 'Unnamed Card'}</p>
-                      <div className="mt-0.5 flex items-center justify-between gap-1">
-                        <span className={`truncate border px-1 py-0.5 text-[4.5px] font-black uppercase tracking-[.07em] ${rarityTone[card.card_rarity] || rarityTone.Common}`}>
-                          {card.card_rarity || 'Common'}
-                        </span>
-                        <span className="truncate text-[5px] uppercase text-white/55">{card.card_type || 'Card'}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-[10px] font-semibold leading-4 text-white">{game.title}</p>
+                        <p className="mt-1 text-[6px] uppercase tracking-[0.1em] text-cyan-100/38">{game.genre}</p>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-[6px] text-white/35">
+                            <span>Mastered</span>
+                            <span>{game.owned_skills} / {game.total_skills}</span>
+                          </div>
+                          <div className="mt-1 h-1 overflow-hidden bg-white/[0.05]">
+                            <div
+                              className="h-full bg-cyan-200/45"
+                              style={{ width: `${game.total_skills ? (game.owned_skills / game.total_skills) * 100 : 0}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </button>
+                ))}
               </div>
             ) : (
-              <div className="grid h-full min-h-44 place-items-center text-center text-[8px] text-white/55">No owned cards match this search.</div>
-            )
-          ) : filteredGames.length ? (
-            <div className="grid justify-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 86px))' }}>
-              {filteredGames.map((game) => (
-                <button
-                  key={game.key}
-                  type="button"
-                  onClick={() => { setSelectedGame(game.key); setQuery(''); setGenreOpen(false); }}
-                  className={`group relative h-[108px] overflow-hidden p-1.5 text-left transition-all ${bezels
-                    ? 'border border-white/[0.11] bg-white/[0.035] hover:border-white/[0.20] hover:bg-white/[0.07]'
-                    : 'border border-transparent bg-transparent hover:bg-white/[0.035]'}`}
-                  title={game.title}
-                >
-                  <div className={`relative flex h-[56px] items-center justify-center overflow-hidden ${bezels
-                    ? 'border border-white/[0.07] bg-slate-950/25'
-                    : 'border border-transparent bg-transparent'}`}>
-                    {game.image ? (
-                      <img src={game.image} alt={game.title} className="h-full w-full object-cover opacity-85 transition-transform duration-200 group-hover:scale-[1.03]" />
-                    ) : (
-                      <Gamepad2 className="h-5 w-5 text-white/55" />
-                    )}
-                    <span className={`absolute right-1 top-1 px-1 text-[5px] font-black text-white ${bezels ? 'bg-black/70' : 'bg-slate-950/45 backdrop-blur-sm'}`}>{game.cards.length}</span>
-                  </div>
-                  <div className="mt-1 flex min-h-[28px] flex-col justify-between">
-                    <p className="line-clamp-2 text-[7px] font-semibold leading-[10px] text-white">{game.title}</p>
-                    <p className="mt-0.5 truncate text-[5px] uppercase tracking-[0.06em] text-white/55">{game.genre}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="grid h-full min-h-44 place-items-center text-center">
-              <div>
-                <Gamepad2 className="mx-auto h-6 w-6 text-white/35" />
-                <p className="mt-2 text-[8px] text-white/60">No games with owned cards match this filter.</p>
+              <div className="grid h-full place-items-center text-center text-[9px] text-white/36">
+                No games match this Skill Book filter.
               </div>
+            )
+          ) : (
+            <div className="grid h-full min-h-0 grid-cols-[58%_42%] overflow-hidden border border-white/[0.055] bg-black/[0.06]">
+              <section className="min-h-0 border-r border-white/[0.065]">
+                <div className="flex items-center justify-between border-b border-white/[0.055] px-3 py-2">
+                  <span className="text-[6.5px] font-black uppercase tracking-[0.14em] text-white/35">Skill Index</span>
+                  <span className="text-[6.5px] text-white/28">{gameSkills.length} shown</span>
+                </div>
+
+                <div className="h-[calc(100%-33px)] overflow-y-auto p-2 [scrollbar-width:thin]">
+                  {gameSkills.length ? gameSkills.map((skill) => {
+                    const active = String(skill.id) === String(selectedSkill?.id);
+                    const equippedSlot = skill.user_card_id ? equippedIds.get(String(skill.user_card_id)) : undefined;
+                    return (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        draggable={Boolean(skill.owned)}
+                        onDragStart={(event) => dragSkill(event, skill)}
+                        onClick={() => setSelectedSkillId(skill.id)}
+                        className={`mb-1 flex w-full items-center gap-2.5 border px-2.5 py-2 text-left transition-all ${active
+                          ? 'border-cyan-100/18 bg-cyan-100/[0.055]'
+                          : 'border-transparent bg-transparent hover:border-white/[0.055] hover:bg-white/[0.025]'}`}
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden border border-white/[0.07] bg-white/[0.025]">
+                          {skill.image
+                            ? <img src={skill.image} alt="" className="h-full w-full object-cover" />
+                            : <Zap className="h-4 w-4 text-cyan-100/38" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-[9px] font-semibold text-white/82">{skill.title}</p>
+                            {equippedSlot !== undefined && (
+                              <span className="shrink-0 border border-cyan-100/16 bg-cyan-100/[0.055] px-1.5 py-0.5 text-[5px] font-black text-cyan-50">
+                                SLOT {equippedSlot + 1}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className={`border px-1.5 py-0.5 text-[5px] font-black uppercase tracking-[0.08em] ${rarityTone[skill.rarity] || rarityTone.Common}`}>
+                              {skill.rarity || 'Common'}
+                            </span>
+                            <span className={`text-[6px] ${skill.owned ? 'text-emerald-200/55' : 'text-white/28'}`}>
+                              {skill.owned ? 'Owned' : 'Locked'}
+                            </span>
+                            {skill.progression?.level ? (
+                              <span className="text-[6px] text-white/30">Lv {skill.progression.level}</span>
+                            ) : null}
+                          </div>
+                        </div>
+                        {skill.owned
+                          ? <Check className="h-3 w-3 shrink-0 text-emerald-300/45" />
+                          : <Lock className="h-3 w-3 shrink-0 text-white/18" />}
+                      </button>
+                    );
+                  }) : (
+                    <div className="grid min-h-40 place-items-center px-4 text-center text-[8px] text-white/35">
+                      No skills match this filter.
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="min-h-0 overflow-y-auto p-3 [scrollbar-width:thin]">
+                {selectedSkill ? (
+                  <>
+                    <div className="relative h-[118px] overflow-hidden border border-white/[0.07] bg-slate-950/22">
+                      {selectedSkill.image ? (
+                        <img src={selectedSkill.image} alt="" className="h-full w-full object-cover opacity-50" />
+                      ) : (
+                        <div className="grid h-full place-items-center">
+                          <Sparkles className="h-8 w-8 text-white/20" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
+                      <div className="absolute inset-x-3 bottom-2">
+                        <p className="text-[11px] font-semibold text-white">{selectedSkill.title}</p>
+                        <p className="mt-0.5 text-[6px] uppercase tracking-[0.12em] text-white/38">
+                          {selectedSkill.rarity || 'Common'} · {selectedGame.title}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <p className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/40">Skill Record</p>
+                      <p className="mt-1 text-[8px] leading-4 text-white/48">
+                        {selectedSkill.description || selectedSkill.unlock_condition || 'This skill is part of the game’s achievement ability set.'}
+                      </p>
+                    </div>
+
+                    {selectedSkill.progression && (
+                      <div className="mt-3 grid grid-cols-2 gap-1.5">
+                        {[
+                          ['Level', selectedSkill.progression.level],
+                          ['Power', selectedSkill.progression.power_score],
+                          ['Stage', selectedSkill.progression.stage],
+                          ['Stars', selectedSkill.progression.stars],
+                        ].map(([label, value]) => (
+                          <div key={label} className="border border-white/[0.055] bg-white/[0.018] px-2 py-1.5">
+                            <p className="text-[5px] font-black uppercase tracking-[0.1em] text-white/28">{label}</p>
+                            <p className="mt-0.5 text-[8px] font-semibold text-white/70">{value ?? 0}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-4 border-t border-white/[0.06] pt-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[6px] font-black uppercase tracking-[0.14em] text-white/35">Equip Skill</p>
+                          <p className="mt-0.5 text-[6px] text-white/25">Writes directly to the persistent Luna loadout.</p>
+                        </div>
+                      </div>
+
+                      {selectedSkill.owned ? (
+                        <div className="mt-2 grid grid-cols-4 gap-1.5">
+                          {[0, 1, 2, 3].map((slotIndex) => {
+                            const slot = slots.find((entry) => Number(entry.index) === slotIndex);
+                            const occupiedBySelected = String(slot?.card?.user_card_id || '') === String(selectedSkill.user_card_id || '');
+                            return (
+                              <button
+                                key={slotIndex}
+                                type="button"
+                                disabled={isSaving}
+                                onClick={() => equipSkill(slotIndex, selectedSkill)}
+                                className={`min-h-[52px] border px-1.5 py-2 text-center transition-colors disabled:opacity-40 ${occupiedBySelected
+                                  ? 'border-cyan-100/28 bg-cyan-100/[0.09] text-white'
+                                  : 'border-white/[0.065] bg-white/[0.018] text-white/48 hover:border-cyan-100/16 hover:bg-cyan-100/[0.045] hover:text-white'}`}
+                              >
+                                <span className="block text-[5px] font-black uppercase tracking-[0.1em]">Slot</span>
+                                <span className="mt-0.5 block text-[10px] font-semibold">{slotIndex + 1}</span>
+                                <span className="mt-1 block truncate text-[4.5px] text-white/28">
+                                  {occupiedBySelected ? 'Equipped' : slot?.card?.card_name || 'Empty'}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="mt-2 border border-white/[0.055] bg-white/[0.015] px-3 py-3">
+                          <div className="flex items-center gap-2 text-white/45">
+                            <Lock className="h-3.5 w-3.5" />
+                            <span className="text-[7px] font-semibold">Skill not owned</span>
+                          </div>
+                          <p className="mt-1 text-[6px] leading-3 text-white/27">
+                            {selectedSkill.unlock_condition || 'Unlock its achievement card before it can be equipped.'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedSkill.owned && (
+                      <div className="mt-3 border border-cyan-100/[0.07] bg-cyan-100/[0.02] px-3 py-2">
+                        <p className="text-[6px] leading-3 text-cyan-50/45">
+                          You can also drag this owned skill directly onto one of the four diamond slots.
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="grid h-full place-items-center text-center text-[8px] text-white/32">
+                    Select a skill from the index.
+                  </div>
+                )}
+              </section>
             </div>
           )}
         </div>
