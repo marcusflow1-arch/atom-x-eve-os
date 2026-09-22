@@ -541,12 +541,10 @@ export default function LunaTemplate() {
       if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
       const key = (e.key || '').toLowerCase();
       if (key === 'i') {
-        // I toggles the dedicated 50/50 loadout + inventory workspace.
-        // Each open/close starts from the normal loadout view.
-        setClickedSlot(null);
-        setInventoryUpgradeItem(null);
-        setInventoryPreviewItem(null);
-        setUiVisible((visible) => !visible);
+        // I now opens the embedded Luna inventory mode owned by the dashboard:
+        // Library remains visible, avatar shifts left, and loadout/inventory split
+        // the center workspace 50/50.
+        window.dispatchEvent(new Event('openLunaInventoryWorkspace'));
       }
       if (key === 'c') {
         setShowConsoleMode((v) => !v);
@@ -629,18 +627,6 @@ export default function LunaTemplate() {
     equipItem(clickedSlot, item);
     // Do NOT close inventory on equip - keeps UI stable
   };
-
-  useEffect(() => {
-    const toggleInventoryWorkspace = () => {
-      // Match the I-key behavior exactly.
-      setClickedSlot(null);
-      setInventoryUpgradeItem(null);
-      setInventoryPreviewItem(null);
-      setUiVisible((visible) => !visible);
-    };
-    window.addEventListener('openLunaInventoryWorkspace', toggleInventoryWorkspace);
-    return () => window.removeEventListener('openLunaInventoryWorkspace', toggleInventoryWorkspace);
-  }, []);
 
   // Open InventoryPanel from other components (e.g., StatsDropdown InventoryGrid)
   useEffect(() => {
