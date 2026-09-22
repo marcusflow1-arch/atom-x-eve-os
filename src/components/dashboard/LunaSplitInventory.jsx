@@ -58,7 +58,7 @@ const rarityClass = {
   Epic: 'border-violet-300/20 text-violet-100/70',
   Rare: 'border-cyan-300/20 text-cyan-100/70',
   Uncommon: 'border-emerald-300/16 text-emerald-100/65',
-  Common: 'border-white/[0.07] text-white/35',
+  Common: 'border-white/[0.07] text-white/70',
 };
 
 const itemIdOf = (item) => item?.id || item?.itemId || item?.name;
@@ -103,15 +103,13 @@ const gameGenreOf = (game) => game?.genre || game?.genres?.[0] || '';
 export default function LunaSplitInventory({
   inventory = [],
   selectedSlotId = null,
-  onPreviewItem,
+  onEquipItem,
 }) {
   const [browseMode, setBrowseMode] = useState('all');
   const [filter, setFilter] = useState('all');
   const [ascFilter, setAscFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [selectedGame, setSelectedGame] = useState(null);
-  const [selectedItemId, setSelectedItemId] = useState(null);
-  const [pinnedPreviewId, setPinnedPreviewId] = useState(null);
 
   const items = useMemo(() => (inventory || []).map(normalizeItem), [inventory]);
 
@@ -184,7 +182,6 @@ export default function LunaSplitInventory({
   }, [categoryFilteredItems, selectedGame]);
 
   const visibleItems = selectedGame ? gameItems : allItems;
-  const pinnedPreviewItem = visibleItems.find((item) => itemIdOf(item) === pinnedPreviewId) || null;
   const selectedGameMeta = selectedGame
     ? games.find((game) => game.title === selectedGame)
       || { title: selectedGame, ...(gameMeta.get(selectedGame.toLowerCase()) || {}) }
@@ -202,39 +199,18 @@ export default function LunaSplitInventory({
     if (selectedGame && !games.some((game) => game.title === selectedGame)) setSelectedGame(null);
   }, [games, selectedGame]);
 
-  useEffect(() => {
-    if (pinnedPreviewId && !visibleItems.some((item) => itemIdOf(item) === pinnedPreviewId)) {
-      setPinnedPreviewId(null);
-      setSelectedItemId(null);
-      onPreviewItem?.(null);
-    }
-  }, [visibleItems, pinnedPreviewId, onPreviewItem]);
-
   const resetGameBrowse = () => {
     setSelectedGame(null);
-    setSelectedItemId(null);
-    setPinnedPreviewId(null);
-    onPreviewItem?.(null);
   };
-
-  const pinItemPreview = (item) => {
-    const id = itemIdOf(item);
-    setSelectedItemId(id);
-    setPinnedPreviewId(id);
-    onPreviewItem?.(item);
-  };
-
-  const hoverItem = (item) => onPreviewItem?.(item);
-  const restorePinnedPreview = () => onPreviewItem?.(pinnedPreviewItem);
 
   return (
     <div
       className="relative h-full w-full overflow-hidden px-5 pb-5 pt-4"
       style={{
-        background: 'linear-gradient(90deg, rgba(6,12,20,.18), rgba(18,27,40,.10) 18%, rgba(18,27,40,.08) 82%, rgba(5,10,18,.18))',
-        backdropFilter: 'blur(16px) saturate(130%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(130%)',
-        boxShadow: 'inset 18px 0 36px -30px rgba(180,220,255,.16), inset -18px 0 36px -30px rgba(180,220,255,.12)',
+        background: 'linear-gradient(180deg, rgba(3,6,11,.94), rgba(6,10,17,.90))',
+        backdropFilter: 'blur(14px) saturate(115%)',
+        WebkitBackdropFilter: 'blur(14px) saturate(115%)',
+        boxShadow: 'inset 1px 0 0 rgba(255,255,255,.035), inset -1px 0 0 rgba(255,255,255,.025)',
       }}
     >
       <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/14 to-transparent" />
@@ -246,20 +222,20 @@ export default function LunaSplitInventory({
         <header className="flex items-start justify-between gap-3 border-b border-white/[0.045] pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <Layers3 className="h-3.5 w-3.5 text-cyan-100/48" />
-              <span className="text-[8px] font-black uppercase tracking-[0.24em] text-cyan-100/32">Inventory</span>
+              <Layers3 className="h-3.5 w-3.5 text-white/80" />
+              <span className="text-[8px] font-black uppercase tracking-[0.24em] text-white/75">Inventory</span>
             </div>
-            <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-white/82">
+            <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-white">
               {selectedGame || 'Collection'}
             </h2>
-            <p className="mt-0.5 text-[8px] text-white/22">
+            <p className="mt-0.5 text-[8px] text-white/60">
               {selectedGame ? `${gameItems.length} items from this game` : `${items.length} owned items`}
             </p>
           </div>
 
           <div className="border border-white/[0.055] bg-black/10 px-2.5 py-1.5 text-right">
-            <p className="text-[6px] font-black uppercase tracking-[0.16em] text-white/18">Target</p>
-            <p className={`mt-0.5 max-w-28 truncate text-[8px] font-semibold ${selectedSlotId ? 'text-cyan-100/62' : 'text-white/28'}`}>
+            <p className="text-[6px] font-black uppercase tracking-[0.16em] text-white/55">Target</p>
+            <p className={`mt-0.5 max-w-28 truncate text-[8px] font-semibold ${selectedSlotId ? 'text-cyan-100/62' : 'text-white/65'}`}>
               {targetLabel}
             </p>
           </div>
@@ -271,7 +247,7 @@ export default function LunaSplitInventory({
               <button
                 type="button"
                 onClick={() => { setBrowseMode('all'); resetGameBrowse(); setQuery(''); }}
-                className={`text-[7px] font-bold uppercase tracking-[0.1em] transition-all ${browseMode === 'all' ? 'bg-white/[0.065] text-white/68' : 'text-white/25 hover:text-white/48'}`}
+                className={`text-[7px] font-bold uppercase tracking-[0.1em] transition-all ${browseMode === 'all' ? 'bg-white/[0.065] text-white/68' : 'text-white/65 hover:text-white/85'}`}
               >
                 All Items
               </button>
@@ -290,7 +266,7 @@ export default function LunaSplitInventory({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={browseMode === 'game' ? 'Search games' : 'Search items'}
-                className="h-8 w-full border border-white/[0.05] bg-black/10 pl-8 pr-2 text-[9px] text-white/70 outline-none placeholder:text-white/18 focus:border-cyan-200/15"
+                className="h-8 w-full border border-white/[0.05] bg-black/10 pl-8 pr-2 text-[9px] text-white/90 outline-none placeholder:text-white/18 focus:border-cyan-200/15"
               />
             </div>
 
@@ -314,7 +290,7 @@ export default function LunaSplitInventory({
                 onClick={() => { setFilter(id); if (id !== 'asc') setAscFilter('all'); }}
                 className={`flex h-7 shrink-0 items-center gap-1 border px-2 text-[7px] font-bold transition-all ${filter === id
                   ? 'border-cyan-200/16 bg-cyan-200/[0.055] text-cyan-100/65'
-                  : 'border-white/[0.045] bg-white/[0.012] text-white/24 hover:bg-white/[0.035] hover:text-white/48'}`}
+                  : 'border-white/[0.045] bg-white/[0.012] text-white/60 hover:bg-white/[0.035] hover:text-white/48'}`}
               >
                 <Icon className="h-2.5 w-2.5" />
                 {label}
@@ -395,48 +371,50 @@ export default function LunaSplitInventory({
                 >
                   {visibleItems.map((item) => {
                     const id = itemIdOf(item);
-                    const selected = id === selectedItemId;
                     const rarity = rarityClass[item.rarity] || rarityClass.Common;
-                    const compatibleWithTarget = !selectedSlotId || itemFitsSlot(item, selectedSlotId);
+                    const compatibleWithTarget = Boolean(selectedSlotId && itemFitsSlot(item, selectedSlotId));
+                    const canEquip = compatibleWithTarget && typeof onEquipItem === 'function';
 
                     return (
-                      <motion.button
+                      <div
                         key={id}
-                        type="button"
-                        whileHover={{ y: -1 }}
-                        whileTap={{ scale: 0.985 }}
-                        onMouseEnter={() => hoverItem(item)}
-                        onMouseLeave={restorePinnedPreview}
-                        onFocus={() => hoverItem(item)}
-                        onBlur={restorePinnedPreview}
-                        onClick={() => pinItemPreview(item)}
-                        className={`group relative h-[88px] overflow-hidden border p-1.5 text-left transition-all ${selected
-                          ? 'border-cyan-200/24 bg-cyan-200/[0.055]'
-                          : 'border-white/[0.05] bg-black/[0.08] hover:border-white/[0.10] hover:bg-white/[0.025]'} ${compatibleWithTarget ? '' : 'opacity-40'}`}
+                        className={`relative h-[104px] overflow-hidden border p-1.5 text-left ${compatibleWithTarget
+                          ? 'border-white/[0.12] bg-black/35'
+                          : 'border-white/[0.07] bg-black/30'}`}
                         title={item.name}
                       >
-                        <div className="relative flex h-[48px] items-center justify-center border border-white/[0.035] bg-black/[0.08]">
+                        <div className="relative flex h-[45px] items-center justify-center border border-white/[0.06] bg-black/35">
                           {item.icon_url || item.icon ? (
                             <img src={item.icon_url || item.icon} alt={item.name} className="h-8 w-8 object-contain" />
                           ) : (
-                            <Package className="h-4 w-4 text-white/18" />
+                            <Package className="h-4 w-4 text-white/55" />
                           )}
                           {item.quantity != null && (
-                            <span className="absolute bottom-0.5 right-0.5 bg-black/55 px-1 text-[5px] font-mono text-white/44">x{item.quantity}</span>
+                            <span className="absolute bottom-0.5 right-0.5 bg-black/75 px-1 text-[5px] font-mono text-white">x{item.quantity}</span>
                           )}
                           {!compatibleWithTarget && selectedSlotId && (
-                            <span className="absolute left-0.5 top-0.5 flex h-4 w-4 items-center justify-center bg-black/55 text-white/30">
+                            <span className="absolute left-0.5 top-0.5 flex h-4 w-4 items-center justify-center bg-black/75 text-white/70">
                               <Lock className="h-2 w-2" />
                             </span>
                           )}
                         </div>
 
-                        <p className="mt-1.5 truncate text-[7px] font-semibold text-white/58">{item.name}</p>
-                        <div className="mt-1 flex items-center justify-between gap-1">
+                        <p className="mt-1 truncate text-[7px] font-semibold text-white">{item.name}</p>
+                        <div className="mt-0.5 flex items-center justify-between gap-1">
                           <span className={`truncate border px-1 py-0.5 text-[4.5px] font-black uppercase tracking-[.07em] ${rarity}`}>{item.rarity || 'Common'}</span>
-                          <span className="text-[5px] uppercase text-white/16">{item.inventoryCategory === 'asc' ? 'A.S.C.' : item.inventoryCategory}</span>
+                          <span className="text-[5px] uppercase text-white/70">{item.inventoryCategory === 'asc' ? 'A.S.C.' : item.inventoryCategory}</span>
                         </div>
-                      </motion.button>
+
+                        <button
+                          type="button"
+                          disabled={!canEquip}
+                          onClick={() => canEquip && onEquipItem(item)}
+                          className="mt-1 flex h-[18px] w-full items-center justify-center border border-white/[0.10] bg-white/[0.06] text-[5.5px] font-black uppercase tracking-[0.10em] text-white transition-colors hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:border-white/[0.04] disabled:bg-white/[0.02] disabled:text-white/30"
+                          title={!selectedSlotId ? 'Choose a loadout slot first' : compatibleWithTarget ? `Equip ${item.name}` : 'Item does not fit selected slot'}
+                        >
+                          Equip
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
