@@ -1,0 +1,57 @@
+{
+  "name": "AIBattleTurn",
+  "type": "object",
+  "properties": {
+    "encounter_id": {
+      "type": "string"
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "expected_revision": {
+      "type": "integer"
+    },
+    "command": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "received_at": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "encounter_id",
+    "actor_id",
+    "request_id",
+    "expected_revision",
+    "command",
+    "received_at"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
