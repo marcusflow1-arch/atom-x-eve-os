@@ -10,6 +10,7 @@ import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
+import LunaFriendsProfileOverlay from './LunaFriendsProfileOverlay';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
@@ -89,6 +90,7 @@ export default function DashboardAvatarOverview() {
   const [cardsMode, setCardsMode] = useState(false);
   const [leaderboardMode, setLeaderboardMode] = useState(false);
   const [messagesMode, setMessagesMode] = useState(false);
+  const [friendsMode, setFriendsMode] = useState(false);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
@@ -119,6 +121,7 @@ export default function DashboardAvatarOverview() {
       setCardsMode(false);
       setLeaderboardMode(false);
       setMessagesMode(false);
+      setFriendsMode(false);
     }
   }, [surface]);
 
@@ -133,6 +136,7 @@ export default function DashboardAvatarOverview() {
         setCardsMode(false);
         setLeaderboardMode(false);
         setMessagesMode(false);
+        setFriendsMode(false);
         setAttributeMenuOpen(false);
         setInteractionDimmed(false);
       }
@@ -177,6 +181,7 @@ export default function DashboardAvatarOverview() {
         if (cardsMode) setCardsMode(false);
         if (leaderboardMode) setLeaderboardMode(false);
         if (messagesMode) setMessagesMode(false);
+        if (friendsMode) setFriendsMode(false);
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -189,7 +194,7 @@ export default function DashboardAvatarOverview() {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode, messagesMode]);
+  }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode, messagesMode, friendsMode]);
 
   useEffect(() => {
     const toggleInventory = () => {
@@ -199,6 +204,7 @@ export default function DashboardAvatarOverview() {
       setCardsMode(false);
       setLeaderboardMode(false);
       setMessagesMode(false);
+      setFriendsMode(false);
       setInventoryMode((current) => !current);
     };
 
@@ -267,6 +273,7 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setCardsMode(false);
       setLeaderboardMode(false);
+      setFriendsMode(false);
       setMessagesMode(true);
     };
     const clearForPresenceMenu = () => {
@@ -315,6 +322,7 @@ export default function DashboardAvatarOverview() {
       setCardsMode(false);
       setLeaderboardMode(false);
       setMessagesMode(false);
+      setFriendsMode(false);
       setInventoryMode((current) => !current);
       return;
     }
@@ -325,6 +333,7 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setLeaderboardMode(false);
       setMessagesMode(false);
+      setFriendsMode(false);
       setCardsMode((current) => !current);
       return;
     }
@@ -335,6 +344,7 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setCardsMode(false);
       setMessagesMode(false);
+      setFriendsMode(false);
       setLeaderboardMode((current) => !current);
       return;
     }
@@ -345,7 +355,19 @@ export default function DashboardAvatarOverview() {
       setInventorySlot(null);
       setCardsMode(false);
       setLeaderboardMode(false);
+      setFriendsMode(false);
       setMessagesMode((current) => !current);
+      return;
+    }
+    if (item.id === 'friends') {
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setCardsMode(false);
+      setLeaderboardMode(false);
+      setMessagesMode(false);
+      setFriendsMode((current) => !current);
       return;
     }
     setInventoryMode(false);
@@ -353,6 +375,7 @@ export default function DashboardAvatarOverview() {
     setCardsMode(false);
     setLeaderboardMode(false);
     setMessagesMode(false);
+    setFriendsMode(false);
     setActiveQuickPanel(current => current === item.id ? null : item.id);
   };
 
@@ -372,7 +395,7 @@ export default function DashboardAvatarOverview() {
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
       style={{ left: embeddedUtilityMode ? '330px' : '390px' }}
     >
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && !messagesMode && activeQuickPanel && (
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && !messagesMode && !friendsMode && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
@@ -448,7 +471,11 @@ export default function DashboardAvatarOverview() {
         </div>
       )}
 
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !messagesMode && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !messagesMode && !friendsMode && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && friendsMode && (
+        <LunaFriendsProfileOverlay onClose={() => setFriendsMode(false)} />
+      )}
+
       {!avatarFocusMode && surface === 'dashboard' && messagesMode && (
         <div
           data-dashboard-utility-workspace
@@ -552,7 +579,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
+                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'friends' ? friendsMode : item.id === 'messages' ? messagesMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
