@@ -270,6 +270,7 @@ export default function DashboardAvatarOverview() {
       return;
     }
     equipItem(inventorySlot, item);
+    setInventorySlot(null);
   };
 
   const handleQuickAction = (item) => {
@@ -284,7 +285,6 @@ export default function DashboardAvatarOverview() {
     }
     setInventoryMode(false);
     setInventorySlot(null);
-    setInventoryPreviewItem(null);
     setActiveQuickPanel(current => current === item.id ? null : item.id);
   };
 
@@ -339,32 +339,30 @@ export default function DashboardAvatarOverview() {
             maskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
           }}
         >
-          <div className="relative grid h-full min-h-0 grid-cols-2">
-            <section className="relative min-h-0 min-w-0 overflow-hidden">
-              <InventoryGrid
-                equippedItems={equippedItems}
-                handleBoxClick={handleInventorySlot}
-                compact
-                selectedSlotId={inventorySlot}
-              />
-            </section>
-
-            <section className="relative min-h-0 min-w-0 overflow-hidden">
-              <LunaSplitInventory
-                inventory={inventoryData}
-                selectedSlotId={inventorySlot}
-                onEquipItem={handleInventoryEquip}
-              />
-            </section>
-
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-1/2 z-50 h-[74%] w-px -translate-x-1/2 -translate-y-1/2"
+          <div className="relative h-full min-h-0">
+            <section
+              className="absolute bottom-0 right-0 top-0 min-h-0 w-full max-w-[560px] overflow-hidden"
               style={{
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.05) 16%, rgba(255,255,255,.14) 50%, rgba(255,255,255,.05) 84%, transparent 100%)',
-                boxShadow: '0 0 14px rgba(103,232,249,.035)',
+                background: 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
               }}
-            />
+            >
+              {inventorySlot ? (
+                <LunaSplitInventory
+                  inventory={inventoryData}
+                  selectedSlotId={inventorySlot}
+                  onEquipItem={handleInventoryEquip}
+                  onBackToLoadout={() => setInventorySlot(null)}
+                  compactSlotMode
+                />
+              ) : (
+                <InventoryGrid
+                  equippedItems={equippedItems}
+                  handleBoxClick={handleInventorySlot}
+                  compact
+                  selectedSlotId={null}
+                />
+              )}
+            </section>
           </div>
         </div>
       )}
