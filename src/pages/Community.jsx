@@ -174,7 +174,7 @@ export default function CommunityPage() {
       try {
         let list;
         try { list = await base44.entities.Game.list('-original_year', 1000); }
-        catch (_) { list = await base44.entities.Game.list('-original_year', 250); }
+        catch { list = await base44.entities.Game.list('-original_year', 250); }
         if (!cancelled) setGames(list || []);
       } catch (error) { if (!cancelled) setGamesError(true); console.error('Failed to load forum games', error); }
       finally { if (!cancelled) setGamesLoading(false); }
@@ -289,7 +289,7 @@ export default function CommunityPage() {
 
   const selectPost = async (post) => {
     setSelectedPost(post);
-    try { await invoke('view_post', { post_id: post.id }); } catch (_) {}
+    try { await invoke('view_post', { post_id: post.id }); } catch {}
   };
 
   const deletePost = async (post) => {

@@ -94,7 +94,7 @@ const compiled = await build({
       if (key === 'useChannelHomeData') contents = 'export default function useData(){return {data:globalThis.uiFixtures.homeData,isPending:false,isError:false,refetch:()=>{}}}';
       if (key === 'useCreatorEditMode') contents = "import {useState} from 'react';export default function useEdit(){const [editing,setEditing]=useState(false);return {activeProfile:globalThis.uiFixtures.profile,activeLayout:globalThis.uiFixtures.homeData.layouts[0],activeSponsors:[],isEditMode:editing,saving:false,enterEditMode:()=>setEditing(true),cancelEdit:()=>setEditing(false),saveEdit:()=>setEditing(false),updateEditProfile:(key,value)=>globalThis.uiFixtures.calls.push({action:'edit_profile',key,value}),updateEditLayout:()=>{},addEditSponsor:()=>{},removeEditSponsor:()=>{},updateEditSponsor:()=>{}}}";
       assert.ok(contents, 'Missing mock for ' + key);
-      return { loader: 'jsx', contents };
+      return { loader: 'jsx', contents, resolveDir: process.cwd() };
     });
   } }],
 });

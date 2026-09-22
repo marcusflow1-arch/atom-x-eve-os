@@ -149,7 +149,6 @@
 .forum-directory-game > div:last-child { padding: 15px; }
 .forum-directory-game strong { display: block; font-size: 13px; color: #e2edf6; font-weight: 600; line-height: 1.5; }
 .forum-directory-game small { display: block; color: #94adc3; font-size: 11px; margin-top: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.forum-directory-game > div > span:last-child:not(:first-child) { }
 .forum-directory-game > div:last-child > span { display: flex; align-items: center; gap: 6px; color: #a9dee6; font-size: 11px; margin-top: 17px; }
 .forum-directory-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 240px; color: #adc6d8; text-align: center; font-size: 13px; }
 .forum-directory-state h3 { font-size: 18px; color: #e3f0fa; }
