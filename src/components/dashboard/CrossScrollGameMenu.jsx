@@ -106,10 +106,16 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
                   )}
                 </div>
 
-                {/* Title + genre (middle) */}
-                <div className="flex-1 min-w-0">
-                  <button aria-label={`View ${g.title}`} onClick={e => { e.stopPropagation(); handleRowClick(g); }} className="text-white text-[10px] font-semibold leading-tight truncate max-w-full text-left" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.85)' }}>{g.title}</button>
-                  <p className="text-white/45 text-[8px] truncate mt-0.5" style={{ textShadow: '0 1px 5px rgba(0,0,0,0.85)' }}>{g.genre}</p>
+                {/* Game title only — genre removed to give the name more room. */}
+                <div className="flex-1 min-w-0 flex items-center">
+                  <button
+                    aria-label={`View ${g.title}`}
+                    onClick={e => { e.stopPropagation(); handleRowClick(g); }}
+                    className="text-white text-[12px] font-semibold leading-tight truncate max-w-full text-left"
+                    style={{ textShadow: '0 1px 6px rgba(0,0,0,0.85)' }}
+                  >
+                    {g.title}
+                  </button>
                 </div>
 
                 {/* Steam-style compact action cluster: favorite, launch, options stay side-by-side. */}
