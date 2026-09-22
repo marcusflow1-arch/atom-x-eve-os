@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronRight, X, BookOpen, CheckCircle2, Clock3,
   Eye, Flag, Flame, Gamepad2, Home, Lock, MessageSquare, Plus, Search, Shield,

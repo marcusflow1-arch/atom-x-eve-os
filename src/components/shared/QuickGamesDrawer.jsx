@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import ForumDirectoryOverlay from '@/components/community/ForumDirectoryOverlay';
 import { motion, AnimatePresence } from 'framer-motion';

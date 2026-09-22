@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Radio } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Radio } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav';
@@ -19,10 +19,12 @@ import GallerySection from '../creator/GallerySection';
 import ScheduleSection from '../creator/ScheduleSection';
 import GamesSection from '../creator/GamesSection';
 import useChannelHomeData from '../channel/useChannelHomeData';
+import ChannelOverview from '../channel/ChannelOverview';
 import ChannelHomeContent from '../channel/ChannelHomeContent';
 import ChannelCommunityChat from '../channel/ChannelCommunityChat';
 import './consoleHub.css';
 import '../channel/channelHome.css';
+import '../channel/channelRefresh.css';
 
 export default function ChannelProfilePage({ streamerId, streamId, source }) {
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
@@ -78,14 +80,32 @@ export default function ChannelProfilePage({ streamerId, streamId, source }) {
     const close = (event) => { if (event.key === 'Escape' && !event.defaultPrevented && !['gallery', 'cards'].includes(activeTab)) setActiveTab(null); };
     window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close);
   }, [activeTab]);
-  return <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}><SideAccessMenu /><div className="console-page-host"><main className="console-hub console-profile-page channel-home-page channel-public-page"><header><Link className="console-text-button" to={stream ? `/streaming?${new URLSearchParams({ gameId: stream.gameId })}` : '/streaming'}><ArrowLeft size={17} />Back to Streamers</Link></header>{query.isPending ? <div className="console-empty" role="status">Opening channel…</div> : query.isError && !stream ? <div className="console-empty" role="alert"><p>This channel could not load.</p><button type="button" onClick={() => query.refetch()}>Try again</button></div> : <>
-    <div className="channel-stage-grid grid grid-cols-12 gap-4"><div className="channel-stage-player col-span-12 lg:col-span-9 xl:col-span-10"><div className="channel-stage-caption"><span>{stream ? `LIVE · ${formatCount(stream.viewers)} watching` : 'CHANNEL OFFLINE'}</span><strong>{stream?.title || profile?.tagline || 'The next stream is on its way.'}</strong></div><div data-stream-player-box="true" className="channel-public-player">{stream ? <StreamMedia key={stream.id} url={stream.url} poster={stream.thumbnail} title={stream.title} active={!activeTab} /> : <div className="channel-offline-stage"><Artwork key={profile?.avatar_url} src={profile?.avatar_url} avatar className="console-avatar" /><Radio size={24} /><h1>{profile?.display_name || 'Channel unavailable'}</h1><p>This channel is offline. Explore the channel below, or open Gallery and Schedule.</p></div>}</div></div><div className="channel-stage-chat col-span-12 lg:col-span-3 xl:col-span-2"><ChannelCommunityChat key={activeRecord?.id || 'offline'} streamId={activeRecord?.id} isLive={Boolean(stream)} user={user} /></div></div>
-    <div ref={anchorRef}><ProfileInfoBar activeProfile={profile || { display_name: stream?.name || 'Channel', avatar_url: stream?.avatar, follower_count: stream?.followers }} isEditMode={false} isLive={Boolean(stream)} activeTab={activeTab} setActiveTab={openTab} /></div>
-    {profile?.bio && <p className="channel-about-copy">{profile.bio}</p>}
-    <ChannelHomeContent sponsors={homeQuery.data?.sponsors || []} allowEditing={false} />
-    {activeTab === 'cards' && createPortal(<PlayerAchievementCollection user={user?.id === owner ? user : { id: owner }} publicView={user?.id !== owner} onClose={closeTab} />, document.body)}
-    {activeTab === 'gallery' && createPortal(<GallerySection isEditMode={false} galleryImages={layout.gallery_images || []} onClose={closeTab} user={user} channelId={owner} anchorRef={anchorRef} />, document.body)}
-    {activeTab === 'schedule' && <ScheduleSection isEditMode={false} scheduleData={layout.schedule_data || {}} scheduledStreams={homeQuery.data?.schedules} initialDate={scheduleDate} onClose={closeTab} />}
-    {activeTab === 'games' && <GamesSection isEditMode={false} pinnedGames={layout.pinned_games || []} onClose={closeTab} />}
-  </>}</main></div></GlassPageFrame>;
+  return <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
+    <SideAccessMenu />
+    <div className="console-page-host"><main className="console-hub console-profile-page channel-home-page channel-public-page channel-refresh">
+      <div className="channel-page-content">
+        <header className="channel-page-intro"><div><strong>AURA</strong><span>{profile?.display_name || stream?.name || 'Channel'}</span></div><Link to={stream?.gameId ? `/streaming?${new URLSearchParams({ gameId: stream.gameId })}` : '/streaming'}><ArrowLeft size={14} />Browse streams</Link></header>
+        {query.isPending ? <div className="console-empty" role="status">Opening channel…</div>
+          : query.isError && !stream ? <div className="console-empty" role="alert"><p>This channel could not load.</p><button type="button" onClick={() => query.refetch()}>Try again</button></div>
+          : !profile && !stream ? <div className="console-empty"><Radio size={28} /><h1>Channel unavailable</h1><p>This channel hasn’t been set up yet.</p><Link to="/Streaming">Explore other streams</Link></div>
+          : <>
+            <div className="channel-stage-grid">
+              <div className="channel-stage-player"><div className="channel-stage-caption"><div><small>{stream ? 'Live on this channel' : 'Between streams'}</small><strong>{stream?.title || profile?.tagline || 'The next chapter is on its way'}</strong></div>{stream && <span>{formatCount(stream.viewers)} watching</span>}</div>
+                <div data-stream-player-box="true" className="channel-public-player">{stream ? <StreamMedia key={stream.id} url={stream.url} poster={stream.thumbnail} title={stream.title} active={!activeTab} />
+                  : <div className="channel-offline-stage"><Artwork key={profile?.avatar_url} src={profile?.avatar_url} avatar className="console-avatar" /><span className="channel-small-label">CURRENTLY OFFLINE</span><h2>Stay for the good company.</h2><p>There’s more to explore while the stream is offline. Catch the next session or revisit a favorite moment.</p><button type="button" onClick={() => openTab('schedule')}><CalendarDays size={16} />See the schedule</button></div>}
+                </div>
+              </div>
+              <div className="channel-stage-chat"><ChannelCommunityChat key={activeRecord?.id || 'offline'} streamId={activeRecord?.id} isLive={Boolean(stream)} user={user} /></div>
+            </div>
+            <div ref={anchorRef}><ProfileInfoBar activeProfile={profile || { display_name: stream?.name || 'Channel', avatar_url: stream?.avatar, follower_count: stream?.followers }} isEditMode={false} isLive={Boolean(stream)} activeTab={activeTab} setActiveTab={openTab} /></div>
+            <ChannelOverview profile={profile} schedules={homeQuery.data?.schedules} loading={homeQuery.isPending} error={homeQuery.isError || homeQuery.data?.failures?.includes('schedules')} onRetry={() => homeQuery.refetch()} onOpenSchedule={openTab} />
+            <ChannelHomeContent sponsors={homeQuery.data?.sponsors || []} allowEditing={false} />
+            {activeTab === 'cards' && createPortal(<PlayerAchievementCollection user={user?.id === owner ? user : { id: owner }} publicView={user?.id !== owner} onClose={closeTab} />, document.body)}
+            {activeTab === 'gallery' && createPortal(<GallerySection isEditMode={false} galleryImages={layout.gallery_images || []} onClose={closeTab} user={user} channelId={owner} anchorRef={anchorRef} />, document.body)}
+            {activeTab === 'schedule' && <ScheduleSection isEditMode={false} scheduleData={layout.schedule_data || {}} scheduledStreams={homeQuery.data?.schedules} initialDate={scheduleDate} onClose={closeTab} />}
+            {activeTab === 'games' && <GamesSection isEditMode={false} pinnedGames={layout.pinned_games || []} onClose={closeTab} />}
+          </>}
+      </div>
+    </main></div>
+  </GlassPageFrame>;
 }

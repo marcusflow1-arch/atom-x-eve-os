@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import './forumRefresh.css';
 import { BookOpen, Gamepad2, ImagePlus, Tag, X } from 'lucide-react';

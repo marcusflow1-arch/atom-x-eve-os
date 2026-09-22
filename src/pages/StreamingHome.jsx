@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ChannelProfilePage from '@/components/streaming/hub/ChannelProfilePage';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Sparkles, X } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/AuthContext';
 import useCreatorEditMode from '@/components/streaming/hooks/useCreatorEditMode';
@@ -19,10 +19,12 @@ import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import { useSidebarVisible } from '../hooks/useSidebarVisible';
 import useChannelHomeData from '@/components/streaming/channel/useChannelHomeData';
+import ChannelOverview from '@/components/streaming/channel/ChannelOverview';
 import ChannelHomeContent from '@/components/streaming/channel/ChannelHomeContent';
 import ChannelCommunityChat from '@/components/streaming/channel/ChannelCommunityChat';
 import '@/components/streaming/channel/channelHome.css';
 import '@/components/streaming/aura/auraSharedGlassTheme.css';
+import '@/components/streaming/channel/channelRefresh.css';
 
 const CARD_GAMES = [
   { id: 'elder-scrolls', name: 'The Elder Scrolls', genre: 'Fantasy', color: 'from-indigo-700/70 to-cyan-700/50', image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/306130/header.jpg' },
@@ -158,7 +160,7 @@ function OwnChannelHome() {
       transition={{ type: 'spring', stiffness: 280, damping: 30 }}
       role="dialog"
       aria-label={`${streamingGame.name} game achievement cards`}
-      className="absolute left-0 top-0 z-50 flex h-1/2 w-1/4 flex-col overflow-hidden border border-blue-300/25 bg-slate-950/70 shadow-[0_24px_80px_rgba(0,0,0,.55)] backdrop-blur-xl"
+      className="absolute left-0 top-0 z-50 flex h-[min(100%,340px)] w-full md:w-[min(100%,560px)] flex-col overflow-hidden border border-blue-300/25 bg-slate-950/70 shadow-[0_24px_80px_rgba(0,0,0,.55)] backdrop-blur-xl"
     >
       <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-1 px-8 pt-3">
         {ACHIEVEMENT_TYPES.map((type) => (
@@ -195,7 +197,26 @@ function OwnChannelHome() {
 
   return <GlassPageFrame sidebarVisible={sidebarVisible} onSidebarToggle={toggleSidebar} bottomContent={<AuraBottomNav />}>
     <SideAccessMenu />
-    <div className="channel-home-page h-screen w-full flex relative overflow-hidden"><div className="channel-home-scroll flex-1 relative h-full overflow-y-auto"><div className="channel-home-inner w-full min-h-full pt-20 pb-24 px-4 md:px-8 relative"><div className="mx-auto max-w-none w-full flex flex-col gap-8 relative z-20"><div className="channel-stage-grid grid grid-cols-12 gap-4"><div className="channel-stage-player col-span-12 lg:col-span-9 xl:col-span-10 flex flex-col min-h-0"><div className="h-14 shrink-0 flex items-center gap-3 px-1 md:px-2"><div className="w-12 h-12 shrink-0 overflow-hidden border border-white/15 bg-slate-900/70 shadow-lg"><img src={streamingGame.image} alt={`${streamingGame.name} game`} className="w-full h-full object-cover" /></div><div className="min-w-0 flex items-center gap-4"><div className="min-w-0"><div className="text-[9px] uppercase tracking-[0.25em] text-white/35">Now Streaming</div><div className="text-base md:text-lg font-bold text-white truncate">{streamingGame.name}</div></div><button type="button" onClick={() => setShowGameAchievements((value) => !value)} className="text-sm md:text-base font-semibold underline underline-offset-4 decoration-cyan-300/60 text-white hover:text-cyan-200 whitespace-nowrap">Game Achievements, Cards</button></div></div><div className="relative flex-1 min-h-0"><StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={isPlaying} onTogglePlay={() => setIsPlaying(!isPlaying)} volume={volume} onVolumeChange={setVolume} /><AnimatePresence>{showGameAchievements && renderGameAchievementOverlay()}</AnimatePresence></div></div><div className="channel-stage-chat col-span-12 lg:col-span-3 xl:col-span-2 h-full"><ChannelCommunityChat key={liveRecord?.id || 'offline'} streamId={liveRecord?.id} isLive={Boolean(liveRecord)} user={user} /></div></div><div ref={galleryAnchorRef}><ProfileInfoBar activeProfile={activeProfile || { display_name: user?.full_name || user?.username || 'My Channel' }} isEditMode={isEditMode} isLive={isLive} updateEditProfile={updateEditProfile} activeTab={activeTab} setActiveTab={openTab} onEnterEdit={enterEditMode} /></div><ChannelHomeContent sponsors={activeSponsors} isEditMode={isEditMode} allowEditing onAddSponsor={addEditSponsor} onRemoveSponsor={removeEditSponsor} onUpdateSponsor={updateEditSponsor} /></div></div></div><EditModeToolbar isEditMode={isEditMode} saving={saving} onSave={saveEdit} onCancel={cancelEdit} onEnterEdit={enterEditMode} /></div>
+    <div className="channel-home-page channel-refresh h-screen w-full flex relative overflow-hidden">
+      <div className="channel-home-scroll flex-1 relative h-full overflow-y-auto">
+        <div className="channel-home-inner w-full min-h-full relative">
+          <div className="channel-page-content">
+            <header className="channel-page-intro"><div><strong>AURA</strong><span>Your channel</span></div><Link to="/Streaming"><ArrowLeft size={14} />Browse streams</Link></header>
+            <div className="channel-stage-grid">
+              <div className="channel-stage-player">
+                <div className="channel-stage-caption"><div><small>{liveRecord ? 'Live on your channel' : 'Channel preview'}</small><strong>{liveRecord?.title || activeProfile?.tagline || 'Make yourself at home'}</strong></div><button type="button" aria-expanded={showGameAchievements} onClick={() => setShowGameAchievements((value) => !value)}><Sparkles size={14} />Game cards</button></div>
+                <div className="channel-stage-media"><StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={isPlaying} onTogglePlay={() => setIsPlaying(!isPlaying)} volume={volume} onVolumeChange={setVolume} /><AnimatePresence>{showGameAchievements && renderGameAchievementOverlay()}</AnimatePresence></div>
+              </div>
+              <div className="channel-stage-chat"><ChannelCommunityChat key={liveRecord?.id || 'offline'} streamId={liveRecord?.id} isLive={Boolean(liveRecord)} user={user} /></div>
+            </div>
+            <div ref={galleryAnchorRef}><ProfileInfoBar activeProfile={activeProfile || { display_name: user?.full_name || user?.username || 'My Channel' }} isEditMode={isEditMode} isLive={Boolean(liveRecord)} updateEditProfile={updateEditProfile} activeTab={activeTab} setActiveTab={openTab} onEnterEdit={enterEditMode} /></div>
+            <ChannelOverview profile={activeProfile} schedules={homeQuery.data?.schedules} loading={homeQuery.isPending && Boolean(user?.id)} error={homeQuery.isError || homeQuery.data?.failures?.includes('schedules')} onRetry={() => homeQuery.refetch()} onOpenSchedule={openTab} isEditMode={isEditMode} onUpdateProfile={updateEditProfile} />
+            <ChannelHomeContent sponsors={activeSponsors} isEditMode={isEditMode} allowEditing onAddSponsor={addEditSponsor} onRemoveSponsor={removeEditSponsor} onUpdateSponsor={updateEditSponsor} />
+          </div>
+        </div>
+      </div>
+      <EditModeToolbar isEditMode={isEditMode} saving={saving} onSave={saveEdit} onCancel={cancelEdit} onEnterEdit={enterEditMode} />
+    </div>
     {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
         {activeTab === 'gallery' && <GallerySection
