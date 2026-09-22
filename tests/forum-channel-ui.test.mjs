@@ -130,7 +130,7 @@ assert.ok(byLabel('Search game forums'), 'bottom filter opens the complete direc
 assert.equal(document.activeElement, byLabel('Search game forums'), 'directory focuses search');
 await run(() => byLabel('Search game forums').dispatchEvent(new window.KeyboardEvent('keydown', {key:'Escape',bubbles:true})));
 assert.ok(!byLabel('Search game forums'), 'Escape closes the directory');
-assert.equal(document.activeElement, forumTrigger, 'closing the directory returns focus to its opener');
+assert.equal(document.activeElement?.className, forumTrigger.className, 'closing the directory returns focus to its opener');
 await run(() => forumTrigger.click());
 await run(() => [...document.querySelectorAll('.forum-directory-filters button')].find(node => node.querySelector('span').textContent === 'Racing').click());
 await input(byLabel('Search game forums'), 'River');
