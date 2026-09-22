@@ -6,6 +6,7 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
+import { ensureRuntimeHumanoidRig } from '@/components/onboarding/runtimeHumanoidRig';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -55,7 +56,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
-  let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false, runtimeBoneCount = 0;
+  let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false, runtimeBoneCount = 0, runtimeRigGenerated = false;
 
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
   const fbx = new FBXLoader(), gltf = new GLTFLoader(), clock = new THREE.Clock();
@@ -358,6 +359,12 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const asset = /\.fbx(?:\?|$)/i.test(url) ? await fbx.loadAsync(url) : await gltf.loadAsync(url);
       model = asset.scene || asset;
       if (disposed) { disposeModel(model); return; }
+
+      if (options.autoRigSingleMesh) {
+        const rigResult = ensureRuntimeHumanoidRig(model);
+        runtimeRigGenerated = Boolean(rigResult?.generated);
+      }
+
       model.traverse((node) => {
         preserveAppearance ||= node.userData?.avatarRig === 'luna-hi3d-v1';
         atomxeRuntimeRig ||= node.userData?.avatarRig === 'atomxe-mixamo-v1';
@@ -422,7 +429,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
 
-      onReady({ hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, boneCount: runtimeBoneCount, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
+      onReady({ hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
       
     } catch (error) {
       console.error('Avatar model failed:', error);
