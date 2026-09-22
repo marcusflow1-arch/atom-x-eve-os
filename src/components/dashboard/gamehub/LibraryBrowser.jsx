@@ -6,7 +6,7 @@ import CrossScrollGameMenu from '@/components/dashboard/CrossScrollGameMenu';
 import LibraryVoiceSearch from '@/components/dashboard/gamehub/LibraryVoiceSearch';
 import { libraryCatalog } from '@/components/dashboard/gamehub/libraryCatalog';
 
-export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPressGame, fullView, onToggleFullView }) {
+export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPressGame, onOptionsGame, fullView, onToggleFullView }) {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [collection, setCollection] = useState('all');
@@ -35,6 +35,6 @@ export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPress
       {(error || isError) && <p role="status" className="text-xs">{error || 'Owned games could not load; showing the demo catalog.'}</p>}
       {isLoading && user && <p className="text-xs">Loading owned games…</p>}
     </div>
-    <div className="flex-1 min-h-0"><CrossScrollGameMenu games={filtered} selectedGame={selectedGame} onSelectGame={onSelectGame} onLongPressGame={onLongPressGame} favorites={favorites} onToggleFavorite={toggleFavorite} browsing /></div>
+    <div className="flex-1 min-h-0"><CrossScrollGameMenu games={filtered} selectedGame={selectedGame} onSelectGame={onSelectGame} onLongPressGame={onLongPressGame} onOptionsGame={onOptionsGame} favorites={favorites} onToggleFavorite={toggleFavorite} browsing /></div>
   </section>;
 }
