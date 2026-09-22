@@ -29,7 +29,7 @@ export default function GamePlayButton({ game, compact = false }) {
   };
 
   return <div className="relative shrink-0">
-    <button type="button" aria-label={`Play ${game.title}`} onClick={play} className={compact ? 'p-2 rounded-lg border border-current/30' : 'flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-3 text-xs font-bold'}><Play className="h-3.5 w-3.5 fill-current" />{!compact && 'PLAY'}</button>
+    <button type="button" aria-label={`Play ${game.title}`} onClick={play} className={compact ? 'w-6 h-6 p-0 rounded-md border border-current/30 flex items-center justify-center' : 'flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-3 text-xs font-bold'}><Play className={compact ? 'h-3 w-3 fill-current' : 'h-3.5 w-3.5 fill-current'} />{!compact && 'PLAY'}</button>
     {message && <div role="status" onClick={e => e.stopPropagation()} className="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg bg-popover text-popover-foreground p-3 text-xs shadow-lg"><p>{message}</p><button className="mt-2 underline" onClick={() => setMessage('')}>Dismiss</button></div>}
   </div>;
 }
