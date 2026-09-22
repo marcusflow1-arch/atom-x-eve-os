@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const TTL = 20000;
 const MAX_PLAYERS = 5;
 const MODEL = '/models/luna-hi3d/warrior.glb';
-const FEMALE_MODEL = '/models/atomxe-greco-girl.glb';
+const FEMALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 const APPEARANCE = ['name','gender','female_model_variant','model_url','base_body_gender','base_body_model_url','appearance_version','style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled','complexion','facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color','tattoo_opacity','hair_style','hair_length','hair_volume','face_shape','height_scale','body_proportions','material_colors','morph_targets','eyelash_style','hood_enabled','weapon_visible'];
 const live = (p: any) => p.status !== 'offline' && Number(p.last_update) > Date.now() - TTL;
 const publicPlayer = (p: any) => Object.fromEntries(['player_id','display_name','avatar_url','model_url','appearance','channel_id','last_update','dashboard_joined_at','x','y','z','yaw','anim','status'].map(k => [k,p[k]]));
@@ -50,7 +50,7 @@ Deno.serve(async req => {
     if (Number(avatar.appearance_version) < 3) {
       const legacyGender = avatar.gender === 'female' ? 'female' : 'male';
       Object.assign(appearance, legacyGender === 'female'
-        ? {gender:'female',female_model_variant:'greco_girl',model_url:FEMALE_MODEL,base_body_gender:'female',base_body_model_url:FEMALE_MODEL}
+        ? {gender:'female',female_model_variant:'artemis_archer',model_url:FEMALE_MODEL,base_body_gender:'female',base_body_model_url:FEMALE_MODEL}
         : {gender:'male',female_model_variant:'',model_url:MODEL,base_body_gender:'male',base_body_model_url:MODEL});
     }
     const row = {
