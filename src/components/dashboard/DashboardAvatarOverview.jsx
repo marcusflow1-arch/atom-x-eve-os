@@ -325,7 +325,11 @@ export default function DashboardAvatarOverview() {
       <div
         className={`absolute top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
         style={inventoryMode
-          ? { left: '0px', width: '300px', right: 'auto' }
+          ? {
+              left: 'auto',
+              right: 'calc(338px + min(560px, calc(100% - 638px)))',
+              width: '300px',
+            }
           : { left: '0px', right: '0px', width: 'auto' }}
       >
         <DashboardAvatarScene focusMode={avatarFocusMode} />
