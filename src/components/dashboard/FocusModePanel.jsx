@@ -1924,7 +1924,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame, longPressGame, onCloseLongPress }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame, optionsGame, onCloseOptionsGame, longPressGame, onCloseLongPress }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [activeFriend, setActiveFriend] = useState(null);
@@ -2079,12 +2079,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
 
-      {/* Three-dot menu: same right-side workspace as clicking a game,
-          but intentionally renders a blank canvas instead of GamePageView. */}
+      {/* Exact ⋯ button behavior: use the same right-side workspace as a normal
+          game click, but render an intentionally empty body. */}
       <AnimatePresence mode="wait">
-        {longPressGame && (
+        {optionsGame && (
           <motion.div
-            key={`options-${longPressGame.id || longPressGame.title || 'game'}`}
+            key={`options-${optionsGame.id || optionsGame.title || 'game'}`}
             initial={{ opacity: 0, x: 28 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 28 }}
@@ -2097,7 +2097,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               boxShadow: '-18px 0 45px rgba(0,0,0,0.28)'
             }}
           >
-            <BlankGameUI onClose={onCloseLongPress} />
+            <BlankGameUI onClose={onCloseOptionsGame} />
           </motion.div>
         )}
       </AnimatePresence>
