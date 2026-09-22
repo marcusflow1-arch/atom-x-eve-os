@@ -382,8 +382,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       model.position.set(-center.x, -box.min.y, -center.z);
       if (Number.isFinite(options.initialYaw)) model.rotation.y = options.initialYaw;
       basePosition = model.position.clone();
+      const framingOffsetY = Number(options.framingOffsetY || 0);
       camera.position.set(0, options.portrait ? 1.64 : 1.08, options.portrait ? 1.15 : 3.75);
-      controls.target.set(0, options.portrait ? 1.62 : .96, 0);
+      controls.target.set(0, (options.portrait ? 1.62 : .96) + framingOffsetY, 0);
       controls.update();
 
       const materials = [], morphs = [];
