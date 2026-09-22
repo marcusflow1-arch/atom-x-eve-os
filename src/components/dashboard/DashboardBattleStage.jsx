@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Crown, Shield, Skull, Swords, Users, Zap } from 'lucide-react';
+import { Crown, Shield, Skull, Swords, Target, Users, Zap } from 'lucide-react';
 import useBattleArena from '@/components/battle/useBattleArena';
 import { useAuth } from '@/components/auth/AuthContext';
 import { BattleAvatar, RiftEnemy } from '@/components/battle/BattleAvatar';
@@ -30,9 +30,12 @@ function HealthPlate({ fighter, enemy = false, active = false, worldBoss = false
         </div>
       </div>
 
-      <div className="mt-1 flex min-h-[10px] items-center justify-between">
+      <div className="mt-1 flex min-h-[10px] items-center justify-between gap-2">
         <span className="text-[5px] uppercase tracking-[0.08em] text-white/20">{worldBoss ? 'WORLD BOSS' : active ? 'ACTIVE TURN' : ''}</span>
-        {Number(fighter?.shield || 0) > 0 && <span className="flex items-center gap-1 text-[6px] text-cyan-100/46"><Shield className="h-2.5 w-2.5" />{fighter.shield}</span>}
+        <div className="flex items-center gap-2">
+          {active && fighter?.ap != null && <span className="flex items-center gap-1 text-[6px] text-amber-100/46"><Zap className="h-2.5 w-2.5" />{fighter.ap}/5 AP</span>}
+          {Number(fighter?.shield || 0) > 0 && <span className="flex items-center gap-1 text-[6px] text-cyan-100/46"><Shield className="h-2.5 w-2.5" />{fighter.shield}</span>}
+        </div>
       </div>
     </div>
   );
@@ -146,6 +149,13 @@ export default function DashboardBattleStage({ encounterId }) {
               ? <HealthPlate fighter={enemy} enemy worldBoss={worldBoss} />
               : null}
         </div>
+      </div>
+
+      <div className="absolute left-1/2 top-[6.3%] z-30 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap border border-white/[0.055] bg-black/24 px-3 py-1 backdrop-blur-xl">
+        <Target className="h-2.5 w-2.5 text-cyan-100/34" />
+        <span className="text-[5.5px] font-black uppercase tracking-[0.1em] text-white/30">Objective</span>
+        <span className="max-w-[430px] truncate text-[6px] text-white/46">{encounter.route?.objective || encounter.route?.description}</span>
+        {encounter.source_field && <span className="border-l border-white/[0.07] pl-2 text-[5.5px] uppercase tracking-[0.08em] text-amber-100/38">Field · {encounter.source_field.title} · {Math.round(Number(encounter.source_field.distance_m || 0))}m</span>}
       </div>
 
       <div className="absolute left-1/2 top-[12%] z-30 -translate-x-1/2 text-center">
