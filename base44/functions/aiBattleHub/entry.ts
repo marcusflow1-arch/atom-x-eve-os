@@ -263,8 +263,24 @@ async function applyRewards(base44: any, user: AnyObj, session: AnyObj, activity
 
   for (const card of snapshot) {
     const rows = await svc.CardProgression.filter({ user_card_id: card.user_card_id }, '-updated_date', 1);
-    const progress = rows?.[0];
-    if (!progress) continue;
+    let progress = rows?.[0];
+    if (!progress) {
+      progress = await svc.CardProgression.create({
+        user_id: user.id,
+        user_card_id: card.user_card_id,
+        card_name: card.name || 'Card',
+        game_name: card.game_name || '',
+        level: 1,
+        xp: 0,
+        xp_to_next: 120,
+        max_level: 10,
+        skill_points: 1,
+        power_score: safeNumber(card.power),
+        last_action: 'ai_battle_initialized',
+        last_action_at: nowIso(),
+        revision: 1,
+      });
+    }
     let xp = safeNumber(progress.xp) + cardXp;
     let level = safeNumber(progress.level, 1);
     let xpToNext = Math.max(1, safeNumber(progress.xp_to_next, 120));
