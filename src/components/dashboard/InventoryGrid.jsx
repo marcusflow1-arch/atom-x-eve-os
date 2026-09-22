@@ -57,17 +57,17 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
         aria-label={`Select ${label}`}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        {sideMarker && <span className="absolute right-1 top-1 z-20 text-[6px] font-black text-white/22">{sideMarker}</span>}
-        {!equippedItem && <Icon className="relative z-10 h-5 w-5 text-white/22 transition-colors group-hover:text-white/42" strokeWidth={1.35} />}
+        {sideMarker && <span className="absolute right-1 top-1 z-20 text-[6px] font-black text-white/70">{sideMarker}</span>}
+        {!equippedItem && <Icon className="relative z-10 h-5 w-5 text-white/55 transition-colors group-hover:text-white" strokeWidth={1.35} />}
         {equippedItem && (
           <>
             <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="relative z-10 h-full w-full object-contain p-2" />
             <div className="absolute left-1 top-1 z-20 flex h-4 w-4 items-center justify-center border border-white/[0.08] bg-black/45">
-              <Icon className="h-2.5 w-2.5 text-white/38" strokeWidth={1.5} />
+              <Icon className="h-2.5 w-2.5 text-white/75" strokeWidth={1.5} />
             </div>
           </>
         )}
-        <span className="pointer-events-none absolute inset-x-1 bottom-1 z-20 truncate text-center text-[5px] font-bold uppercase tracking-[0.08em] text-white/18 opacity-0 transition-opacity group-hover:opacity-100">
+        <span className="pointer-events-none absolute inset-x-1 bottom-1 z-20 truncate text-center text-[5px] font-bold uppercase tracking-[0.08em] text-white/80 opacity-0 transition-opacity group-hover:opacity-100">
           {label}
         </span>
       </button>
@@ -76,7 +76,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
 
   const CompactHeader = ({ children, width = 'w-40' }) => (
     <div className="flex flex-col items-center gap-2">
-      <h2 className="text-[9px] font-light uppercase tracking-[0.3em] text-[#9A9A9A]">{children}</h2>
+      <h2 className="text-[9px] font-semibold uppercase tracking-[0.3em] text-white/85">{children}</h2>
       <div className={`relative h-3 ${width}`}>
         <div className="absolute left-0 right-0 top-1.5 h-px bg-white/10" />
         <div className="absolute left-1/2 top-0.5 h-px w-12 -translate-x-1/2 bg-white/10" />
@@ -98,10 +98,10 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
         <div className="mx-auto min-h-full w-full max-w-[640px] px-5 py-5">
           <div className="mb-4 flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div>
-              <p className="text-[8px] font-black uppercase tracking-[0.22em] text-cyan-100/40">Loadout</p>
-              <p className="mt-1 text-[10px] text-white/30">Choose a slot, then equip from the inventory.</p>
+              <p className="text-[8px] font-black uppercase tracking-[0.22em] text-white">Loadout</p>
+              <p className="mt-1 text-[10px] text-white/70">Choose a slot, then equip from the inventory.</p>
             </div>
-            {selectedSlotId && <span className="rounded-full border border-cyan-200/15 bg-cyan-200/[0.06] px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] text-cyan-100/65">{selectedSlotId}</span>}
+            {selectedSlotId && <span className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] text-white">{selectedSlotId}</span>}
           </div>
 
           {/* Narrow 30% loadout rail. Keep each slot family intact and stack
