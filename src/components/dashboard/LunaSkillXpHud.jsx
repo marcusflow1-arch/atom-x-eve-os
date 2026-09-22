@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Sparkles, Zap } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
-import { useSkills } from '@/components/luna/hooks/useSkills';
 
 const slotPosition = [
   { left: 38, top: 3, key: '1' },
@@ -50,7 +49,34 @@ export default function LunaSkillXpHud({
   nextXp = 1000,
   level = 1,
 }) {
-  const { activeSkills, triggerSkill } = useSkills();
+  const [activeSkills, setActiveSkills] = useState([false, false, false, false]);
+  const storeTriggerSkill = useLunaStore((state) => state.triggerSkill);
+  const isOnCooldown = useLunaStore((state) => state.isOnCooldown);
+  const setCooldown = useLunaStore((state) => state.setCooldown);
+  const getHotbarItem = useLunaStore((state) => state.getHotbarItem);
+
+  const triggerSkill = (index) => {
+    const assigned = getHotbarItem(index);
+    const derived = assigned?.type === 'ability' ? 'kick_ability' : 'kick_ability';
+    if (!assigned && index !== 0) return;
+    if (isOnCooldown(derived)) return;
+
+    storeTriggerSkill(derived);
+    setCooldown(derived, Date.now() + 3000);
+    setActiveSkills((current) => {
+      const next = [...current];
+      next[index] = true;
+      return next;
+    });
+    window.setTimeout(() => {
+      setActiveSkills((current) => {
+        const next = [...current];
+        next[index] = false;
+        return next;
+      });
+    }, 800);
+  };
+
   const progress = useMemo(
     () => Math.max(0, Math.min(100, (Number(currentXp || 0) / Math.max(1, Number(nextXp || 1))) * 100)),
     [currentXp, nextXp]
