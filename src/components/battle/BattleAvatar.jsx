@@ -4,10 +4,11 @@ import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 
 // Uses the same saved appearance and canonical model loader as the dashboard.
 // Motion effects move the presentation frame; they never deform the skeleton.
-export const BattleAvatar=memo(function BattleAvatar({player,active,event}){
-  return <div className={'ab-avatar '+(active?'is-active ':'')+(player.hp<=0?'is-down':'')} data-battle-player={player.id}>
+export const BattleAvatar=memo(function BattleAvatar({player,active,event,facing='front'}){
+  const initialYaw=facing==='right'?Math.PI/4:facing==='left'?-Math.PI/4:0;
+  return <div className={'ab-avatar '+(active?'is-active ':'')+(player.hp<=0?'is-down':'')} data-battle-player={player.id} data-facing={facing}>
     <div key={event?.actor===player.id?event.id:'idle'} className={'ab-avatar-model '+(event?.actor===player.id?'ab-cast':'')}>
-      <GenesisModelPreview config={player.appearance} compact controls="none" idleOnly/>
+      <GenesisModelPreview config={player.appearance} compact controls="none" idleOnly initialYaw={initialYaw}/>
     </div>
     <div className="ab-avatar-caption"><span>{player.name}</span>{active&&<small>YOUR MOVE</small>}</div>
   </div>;
