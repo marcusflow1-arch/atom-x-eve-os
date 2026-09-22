@@ -302,3 +302,69 @@
 .gd-rewards{scroll-margin-top:85px}
 
 .gd-reward-card summary>span:nth-child(2){min-width:0;flex:1}.gd-reward-chevron{flex-shrink:0;color:hsl(var(--gd-muted));transition:transform .15s}.gd-reward-card[open] .gd-reward-chevron{transform:rotate(180deg)}
+
+
+/* Restored long-form Store game landing content. */
+.gd-restored-section{margin-top:30px;padding-top:30px;border-top:1px solid hsl(var(--gd-line)/.68);scroll-margin-top:82px}
+.gd-fact-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;padding-top:0;border-top:0;background:hsl(var(--gd-line)/.45);overflow:hidden;border-radius:7px}
+.gd-fact-strip>div{min-width:0;padding:15px 17px;background:hsl(var(--gd-surface)/.72)}
+.gd-fact-strip span{display:block;color:hsl(var(--gd-muted));font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.gd-fact-strip strong{display:block;margin-top:7px;font-size:12px;font-weight:500;line-height:1.45;overflow-wrap:anywhere;text-transform:capitalize}
+
+.gd-screenshot-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.gd-screenshot-grid button{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:6px;background:hsl(var(--gd-surface));border:1px solid hsl(var(--gd-line)/.65)}
+.gd-screenshot-grid button:hover{border-color:hsl(var(--gd-accent)/.45)}
+.gd-screenshot-grid img,.gd-screenshot-grid .gd-image-fallback{width:100%;height:100%;object-fit:cover;transition:transform .2s ease}
+.gd-screenshot-grid button:hover img{transform:scale(1.025)}
+.gd-screenshot-modal{position:fixed;inset:64px 0 48px;z-index:10020;display:grid;place-items:center;padding:32px;background:hsl(var(--gd-background)/.92);backdrop-filter:blur(18px)}
+.gd-screenshot-modal>img,.gd-screenshot-modal>.gd-image-fallback{max-width:min(1500px,94vw);max-height:calc(100dvh - 180px);object-fit:contain}
+.gd-screenshot-close{position:absolute;right:26px;top:22px;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:hsl(var(--gd-surface)/.9);border:1px solid hsl(var(--gd-line));color:hsl(var(--gd-foreground))}
+
+.gd-announcement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.gd-announcement-grid article{min-width:0;padding:18px;border:1px solid hsl(var(--gd-line)/.68);border-radius:7px;background:hsl(var(--gd-surface)/.38)}
+.gd-announcement-meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px;color:hsl(var(--gd-muted));font-size:9px;text-transform:uppercase;letter-spacing:.09em}
+.gd-announcement-meta span{color:hsl(var(--gd-accent))}
+.gd-announcement-grid h3{font-size:14px;line-height:1.45}
+.gd-announcement-grid p{margin-top:10px;color:hsl(var(--gd-muted));font-size:12px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.gd-announcement-grid small{display:block;margin-top:14px;color:hsl(var(--gd-muted));font-size:10px}
+
+.gd-about-restored-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:48px}
+.gd-about-restored-grid aside{padding-left:28px;border-left:1px solid hsl(var(--gd-line)/.65)}
+.gd-about-restored-grid aside .gd-description{margin-top:12px}
+.gd-about-restored-grid blockquote{margin-top:22px;padding:15px 17px;border-left:2px solid hsl(var(--gd-accent)/.55);background:hsl(var(--gd-accent)/.035);color:hsl(var(--gd-foreground)/.78);font-size:12px;line-height:1.7}
+.gd-about-restored-grid .gd-feature-list li{color:hsl(var(--gd-foreground)/.8)}
+
+.gd-developer-card-section{margin-top:28px;padding-top:24px;border-top:1px solid hsl(var(--gd-line)/.55)}
+.gd-section-heading-compact{margin-bottom:14px}
+.gd-section-heading-compact h3{margin-top:7px;font-size:15px}
+
+.gd-comment-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-bottom:20px}
+.gd-comment-form textarea{width:100%;resize:vertical;min-height:76px;padding:12px 13px;border:1px solid hsl(var(--gd-line));border-radius:7px;background:hsl(var(--gd-surface)/.62);color:hsl(var(--gd-foreground));font-size:12px;line-height:1.6}
+.gd-comment-list{display:grid;gap:1px;background:hsl(var(--gd-line)/.45);border-radius:7px;overflow:hidden}
+.gd-comment-list article{padding:15px 17px;background:hsl(var(--gd-surface)/.55)}
+.gd-comment-list article>div{display:flex;align-items:center;gap:10px}
+.gd-comment-list strong{font-size:11px;font-weight:600}
+.gd-comment-list time{color:hsl(var(--gd-muted));font-size:9px}
+.gd-comment-list p{margin-top:8px;color:hsl(var(--gd-muted));font-size:12px;line-height:1.6;white-space:pre-wrap}
+
+#game-dlc-cards .gd-extras-grid{margin-top:0}
+#game-reviews .gd-reviews{padding-top:0}
+
+@media(max-width:1150px){
+ .gd-screenshot-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .gd-announcement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .gd-fact-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:850px){
+ .gd-about-restored-grid{grid-template-columns:minmax(0,1fr);gap:28px}
+ .gd-about-restored-grid aside{padding-left:0;padding-top:24px;border-left:0;border-top:1px solid hsl(var(--gd-line)/.55)}
+ .gd-screenshot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ .gd-restored-section{margin-top:24px;padding-top:24px}
+ .gd-fact-strip{grid-template-columns:minmax(0,1fr)}
+ .gd-screenshot-grid,.gd-announcement-grid{grid-template-columns:minmax(0,1fr)}
+ .gd-comment-form{grid-template-columns:minmax(0,1fr)}
+ .gd-comment-form .gd-button-fit{width:100%}
+ .gd-screenshot-modal{inset:64px 0 48px;padding:16px}
+}
