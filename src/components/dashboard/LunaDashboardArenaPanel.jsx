@@ -191,6 +191,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
   const [routeId, setRouteId] = useState('');
   const [invites, setInvites] = useState([]);
   const [creating, setCreating] = useState(false);
+  const [preparedField, setPreparedField] = useState(null);
 
   const hub = arena.hub;
   const routes = useMemo(() => {
@@ -218,6 +219,14 @@ export default function LunaDashboardArenaPanel({ mode }) {
       const nextRouteId = String(detail.route_id || '');
       if (nextWorldId && (hub?.worlds || []).some((item) => String(item.id) === nextWorldId)) setWorldId(nextWorldId);
       if (nextRouteId && routes.some((item) => item.id === nextRouteId)) setRouteId(nextRouteId);
+      setPreparedField(detail.field_node_id ? {
+        id: String(detail.field_node_id),
+        cell_lat: detail.field_cell_lat,
+        cell_lng: detail.field_cell_lng,
+        title: detail.field_title || 'Field discovery',
+        type: detail.field_type || '',
+        distance_m: Number(detail.field_distance_m || 0),
+      } : null);
       setInvites([]);
     };
     window.addEventListener('prepareAIBattleFieldNode', prepareFieldNode);
@@ -240,9 +249,19 @@ export default function LunaDashboardArenaPanel({ mode }) {
     if (!route || !world || creating) return;
     setCreating(true);
     try {
-      const response = await arena.create({ world_id: world.id, route_id: route.id, invited_ids: invites });
+      const response = await arena.create({
+        world_id: world.id,
+        route_id: route.id,
+        invited_ids: invites,
+        ...(preparedField ? {
+          field_node_id: preparedField.id,
+          field_cell_lat: preparedField.cell_lat,
+          field_cell_lng: preparedField.cell_lng,
+        } : {}),
+      });
       if (response?.encounter?.id) {
         arenaPresentation.setEncounter(response.encounter.id);
+        setPreparedField(null);
         showSuccess('Dashboard battle lobby created.');
       }
     } catch (error) {
@@ -275,17 +294,23 @@ export default function LunaDashboardArenaPanel({ mode }) {
           <div className="mt-2 flex gap-2">
             {routes.map((item) => {
               const Icon = routeIcon[item.id] || Swords;
-              return <button key={item.id} type="button" onClick={() => { setRouteId(item.id); setInvites([]); }} className={'min-w-[130px] flex-1 border px-3 py-2 text-left ' + (route?.id === item.id ? 'border-cyan-100/16 bg-cyan-100/[0.05]' : 'border-white/[0.05] bg-white/[0.012]')}><div className="flex items-center gap-2"><Icon className="h-3.5 w-3.5 text-white/38" /><strong className="text-[8px] text-white/62">{item.title}</strong></div><span className="mt-1 block text-[5.5px] text-white/25">{item.min === item.max ? item.min : item.min + '–' + item.max} players · {item.xp} XP</span></button>;
+              return <button key={item.id} type="button" onClick={() => { setRouteId(item.id); setPreparedField(null); setInvites([]); }} className={'min-w-[130px] flex-1 border px-3 py-2 text-left ' + (route?.id === item.id ? 'border-cyan-100/16 bg-cyan-100/[0.05]' : 'border-white/[0.05] bg-white/[0.012]')}><div className="flex items-center gap-2"><Icon className="h-3.5 w-3.5 text-white/38" /><strong className="text-[8px] text-white/62">{item.title}</strong></div><span className="mt-1 block text-[5.5px] text-white/25">{item.min === item.max ? item.min : item.min + '–' + item.max} players · {item.xp} XP</span></button>;
             })}
           </div>
         </div>
 
         <div>
           <p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">Game World</p>
-          <select value={world?.id || ''} onChange={(event) => setWorldId(event.target.value)} className="mt-2 h-[46px] w-full border border-white/[0.06] bg-[#071019] px-3 text-[8px] text-white/55 outline-none">
+          <select value={world?.id || ''} onChange={(event) => { setWorldId(event.target.value); setPreparedField(null); }} className="mt-2 h-[46px] w-full border border-white/[0.06] bg-[#071019] px-3 text-[8px] text-white/55 outline-none">
             {(hub?.worlds || []).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
           </select>
           <p className="mt-1 text-[5.5px] text-white/22">Cards from this world gain resonance.</p>
+          {preparedField && (
+            <div className="mt-1.5 border border-amber-100/10 bg-amber-100/[0.025] px-2 py-1.5">
+              <span className="block truncate text-[5.5px] font-black uppercase tracking-[0.08em] text-amber-100/44">Field discovery prepared</span>
+              <strong className="mt-0.5 block truncate text-[6.5px] text-white/48">{preparedField.title} · {Math.round(preparedField.distance_m)} m</strong>
+            </div>
+          )}
         </div>
 
         <div>
