@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2, ArrowLeftRight, Code, Radio } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2, ArrowLeftRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -247,7 +247,6 @@ export default function LibrarySidebar() {
   const quickNavFarmGames = recentFarmGames.length > 0 ? recentFarmGames : defaultQuickNavGames;
   
   const isGenreMastery = pathname.includes('/genremastery');
-  const isGameDetail = pathname.includes('/gamedetail');
 
   // Friends, Library, Rewards, and Entertainment are available on every app page.
   const shouldShow = !overlayActive;
@@ -404,29 +403,6 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`${positionClass} ${railLeftClass} top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10`}
           >
-            {(isGameDetail || pathname.includes('/game/')) && (
-              <>
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('showDevZone'))}
-                  className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-violet-500/20 hover:border-violet-400/40 hover:text-violet-400 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50"
-                >
-                  <Code className="w-4 h-4" />
-                  <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
-                </button>
-                <button
-                  onClick={() => setLivestreamOpen(true)}
-                  className={`w-12 h-12 rounded-2xl border backdrop-blur-lg shadow-lg transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 ${
-                    livestreamOpen
-                      ? 'bg-red-500/20 border-red-400/40 text-red-400'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10'
-                  }`}
-                >
-                  <Radio className="w-4 h-4" />
-                  <span className="text-[7px] font-bold uppercase tracking-wider">Livestream</span>
-                </button>
-              </>
-            )}
-
             {/* Launch + bottom panel toggles now live in the shared SidebarBottomSection at the bottom of the rail */}
 
           </motion.div>}
