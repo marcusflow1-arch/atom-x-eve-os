@@ -127,6 +127,11 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     const dt = Math.min(clock.getDelta(), .05);
     if (!visible || document.hidden) return;
     mixer?.update(dt);
+    // Female Artemis must stay anchored to the character-creation platform.
+    // External FBX root motion is never allowed to move the loaded model itself.
+    if (options.lockModelPosition && model && basePosition) {
+      model.position.copy(basePosition);
+    }
     secondaryMixer?.update(dt);
     secondaryMotionMixer?.update(dt);
 
@@ -331,14 +336,26 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       } else {
         clip = retargetClipToModel(sourceClip.clone());
       }
-      clip.tracks.forEach((track) => {
-        if (/Hips\.position$/i.test(track.name) || /mixamorig:Hips\.position$/i.test(track.name)) {
-          for (let index = 0; index < track.values.length; index += 3) {
-            track.values[index] = track.values[0];
-            track.values[index + 2] = track.values[2];
+      if (options.lockRootTranslation) {
+        // Artemis starts in the correct centered bind position. The source Idle
+        // FBX contains root/Hips translation that can pull the generated rig
+        // upward as soon as the action fades in. Remove that translation track
+        // entirely so the Hips stay at their bound local position while all
+        // rotation tracks continue to animate normally.
+        clip.tracks = clip.tracks.filter((track) =>
+          !/(?:^|[:/])Hips\.position$/i.test(track.name)
+          && !/^Hips\.position$/i.test(track.name)
+        );
+      } else {
+        clip.tracks.forEach((track) => {
+          if (/Hips\.position$/i.test(track.name) || /mixamorig:Hips\.position$/i.test(track.name)) {
+            for (let index = 0; index < track.values.length; index += 3) {
+              track.values[index] = track.values[0];
+              track.values[index + 2] = track.values[2];
+            }
           }
-        }
-      });
+        });
+      }
       const next = mixer.clipAction(clip);
       if (motion.loop === false) { next.setLoop(THREE.LoopOnce, 1); next.clampWhenFinished = true; }
       else next.setLoop(THREE.LoopRepeat, Infinity);
