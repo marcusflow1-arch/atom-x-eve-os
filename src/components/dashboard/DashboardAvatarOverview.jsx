@@ -8,7 +8,6 @@ import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityC
 import { useQuery } from '@tanstack/react-query';
 import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
-import LunaInventoryItemPreview from './LunaInventoryItemPreview';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
 import { inventoryData } from '../profile/mockData';
 import { useEquipment } from '../luna/hooks/useEquipment';
@@ -83,7 +82,6 @@ export default function DashboardAvatarOverview() {
   const [progression, setProgression] = useState(null);
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
-  const [inventoryPreviewItem, setInventoryPreviewItem] = useState(null);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
@@ -111,7 +109,6 @@ export default function DashboardAvatarOverview() {
       setActiveQuickPanel(null);
       setInventoryMode(false);
       setInventorySlot(null);
-      setInventoryPreviewItem(null);
     }
   }, [surface]);
 
@@ -123,8 +120,7 @@ export default function DashboardAvatarOverview() {
         setActiveQuickPanel(null);
         setInventoryMode(false);
         setInventorySlot(null);
-        setInventoryPreviewItem(null);
-        setAttributeMenuOpen(false);
+          setAttributeMenuOpen(false);
         setInteractionDimmed(false);
       }
     };
@@ -158,8 +154,7 @@ export default function DashboardAvatarOverview() {
         if (inventoryMode) {
           setInventoryMode(false);
           setInventorySlot(null);
-          setInventoryPreviewItem(null);
-        }
+            }
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -178,7 +173,6 @@ export default function DashboardAvatarOverview() {
     const toggleInventory = () => {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
-      setInventoryPreviewItem(null);
       setInventoryMode((current) => {
         if (current) setInventorySlot(null);
         return !current;
@@ -267,7 +261,6 @@ export default function DashboardAvatarOverview() {
   ];
   const handleInventorySlot = (slotId) => {
     setInventorySlot(slotId);
-    setInventoryPreviewItem(null);
   };
 
   const handleInventoryEquip = (item) => {
@@ -283,7 +276,6 @@ export default function DashboardAvatarOverview() {
     if (item.id === 'inventory') {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
-      setInventoryPreviewItem(null);
       setInventoryMode((current) => {
         if (current) setInventorySlot(null);
         return !current;
@@ -343,7 +335,7 @@ export default function DashboardAvatarOverview() {
           className="absolute left-[300px] right-[338px] top-[26px] bottom-0 z-40 pointer-events-auto overflow-hidden"
         >
           <div className="relative grid h-full min-h-0 grid-cols-2">
-            <section className="relative min-h-0 min-w-0 overflow-hidden border-r border-white/[0.08]">
+            <section className="relative min-h-0 min-w-0 overflow-hidden border-r border-white/[0.08] bg-[#05080d]/90">
               <InventoryGrid
                 equippedItems={equippedItems}
                 handleBoxClick={handleInventorySlot}
@@ -352,21 +344,12 @@ export default function DashboardAvatarOverview() {
               />
             </section>
 
-            <section className="relative min-h-0 min-w-0 overflow-hidden">
+            <section className="relative min-h-0 min-w-0 overflow-hidden bg-[#05080d]/90">
               <LunaSplitInventory
                 inventory={inventoryData}
                 selectedSlotId={inventorySlot}
-                onPreviewItem={setInventoryPreviewItem}
+                onEquipItem={handleInventoryEquip}
               />
-              {inventoryPreviewItem && (
-                <LunaInventoryItemPreview
-                  item={inventoryPreviewItem}
-                  selectedSlotId={inventorySlot}
-                  onEquip={handleInventoryEquip}
-                  showUpgrade={false}
-                  onClose={() => setInventoryPreviewItem(null)}
-                />
-              )}
             </section>
 
             <div
