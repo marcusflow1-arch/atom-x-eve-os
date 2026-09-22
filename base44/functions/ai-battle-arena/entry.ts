@@ -21,22 +21,95 @@ const accessible = (room: Row, uid: string) => room.host_id === uid || (room.inv
 const live = (p: Row) => p.status !== 'offline' && num(p.last_update) > Date.now() - 20000;
 const label = (u: Row) => u.username || u.full_name || u.display_name || 'Player';
 
+const normalize = (value: any) => String(value || '').trim().toLowerCase();
+const textBlob = (...parts: any[]) => parts.flat(Infinity).filter(Boolean).map(String).join(' ').toLowerCase();
+
+function inferElement(progress: Row | undefined, achievement: Row | undefined) {
+  const enchantments = Array.isArray(progress?.enchantments) ? progress.enchantments : [];
+  const explicit = enchantments.find((item: Row) => item?.element)?.element;
+  if (explicit) return String(explicit).toLowerCase();
+  const blob = textBlob(achievement?.reward?.abilities, achievement?.reward?.description, achievement?.description);
+  for (const element of ['fire','ice','frost','lightning','shock','arc','void','holy','shadow','poison','earth','wind','water']) {
+    if (blob.includes(element)) return element === 'frost' ? 'ice' : element === 'shock' ? 'lightning' : element;
+  }
+  return '';
+}
+
+function inferCombatIdentity(card: Row, progress: Row | undefined, achievement: Row | undefined, power: number) {
+  const blob = textBlob(
+    card.card_name,
+    achievement?.reward?.type,
+    achievement?.reward?.description,
+    achievement?.reward?.abilities,
+    achievement?.description,
+    progress?.active_perks,
+    progress?.enhanced_stats
+  );
+
+  let effect = card.card_type === 'Equipment' ? 'shield' : card.card_type === 'Companion' ? 'heal' : 'strike';
+  if (/\b(heal|restore|regenerat|revive|mend|lifesteal|life steal)\b/.test(blob)) effect = 'heal';
+  else if (/\b(shield|barrier|guard|armor|ward|mitigat)\b/.test(blob)) effect = 'shield';
+
+  const level = Math.max(1, num(progress?.level, 1));
+  const stage = Math.max(1, num(progress?.stage, 1));
+  const ascension = Math.max(0, num(progress?.ascension, 0));
+  const overEnchant = Math.max(0, num(progress?.over_enchant_rank, 0));
+  const stats = { ...(progress?.base_stats || {}), ...(progress?.enhanced_stats || {}) };
+  const statTotal = Object.values(stats).reduce((sum: number, value: any) => sum + Math.max(0, num(value)), 0);
+  const perkCount = Array.isArray(progress?.active_perks) ? progress.active_perks.length : 0;
+
+  const base = Math.round(16 + power * .19 + level * .8 + (stage - 1) * 3 + ascension * 4 + overEnchant * 2 + Math.min(24, statTotal * .04));
+  const value = effect === 'heal' ? Math.round(base * .82) : effect === 'shield' ? Math.round(base * .92) : base;
+  const stagger = Math.round(18 + level * 1.7 + ascension * 4 + perkCount * 2 + (/\b(stagger|break|stun|knock|impact)\b/.test(blob) ? 20 : 0));
+  const criticalBonus = /\b(crit|critical|execute|weak point|headshot)\b/.test(blob) ? 12 : 0;
+  const cost = Math.max(1, Math.min(3, effect === 'strike' && power >= 160 ? 3 : effect === 'strike' ? 2 : 1));
+  const cooldown = Math.max(1, Math.min(4, effect === 'heal' ? 3 : effect === 'shield' ? 2 : power >= 180 ? 3 : 1));
+
+  return {
+    effect,
+    value,
+    stagger,
+    critical_bonus_pct: criticalBonus,
+    cost,
+    cooldown,
+    element: inferElement(progress, achievement),
+    abilities: Array.isArray(achievement?.reward?.abilities) ? achievement.reward.abilities.slice(0, 6) : [],
+    active_perks: Array.isArray(progress?.active_perks) ? progress.active_perks.slice(0, 6) : [],
+    stage,
+    ascension,
+    over_enchant_rank: overEnchant,
+    description: achievement?.reward?.description || achievement?.description || '',
+  };
+}
+
 async function snapshot(svc: any, user: Row) {
-  const [loadouts, cards, progress, avatars, levels] = await Promise.all([
+  const [loadouts, cards, progress, avatars, levels, achievements] = await Promise.all([
     svc.Loadout.filter({user_id:user.id,loadout_type:'skills'},'-updated_date',20),
     svc.UserCard.filter({user_id:user.id},'-created_date',1000),
     svc.CardProgression.filter({user_id:user.id},'-updated_date',1000),
     svc.Avatar.filter({user_id:user.id},'-updated_date',1),
     svc.AvatarProgression.filter({user_id:user.id},'-updated_date',1),
+    svc.Achievement.list('-created_date',1500).catch(()=>[]),
   ]);
   const loadout = loadouts.find((r: Row) => r.is_active) || loadouts[0];
   const ids = [...new Set(Object.values(loadout?.skill_slots || {}).slice(0,4).map(String))];
   const rarity: Row = {Common:5,Uncommon:10,Rare:20,Epic:35,Legendary:55,Mythic:80,Unique:100};
   const deck = ids.map(id => cards.find((c: Row) => String(c.id) === id && c.trade_status !== 'locked_in_trade')).filter(Boolean).map((c: Row) => {
     const p = progress.find((r: Row) => r.user_card_id === c.id);
-    const power = Math.max(15, Math.min(240,num(p?.power_score,12*num(p?.level,1)+(rarity[c.card_rarity]||5))));
-    const effect = c.card_type === 'Equipment' ? 'shield' : c.card_type === 'Companion' ? 'heal' : 'strike';
-    return {id:c.id,name:c.card_name,type:c.card_type,image:c.card_image||'',rarity:c.card_rarity||'Common',game_name:c.game_name||'',game_id:c.game_id||'',origin:c.acquisition_method||'unlocked',level:num(p?.level,1),effect,cost:effect==='strike'?2:1,value:Math.round(18+power*.2),cooldown:effect==='strike'?1:2};
+    const power = Math.max(15, Math.min(300,num(p?.power_score,12*num(p?.level,1)+(rarity[c.card_rarity]||5))));
+    const achievement = achievements.find((a: Row) => {
+      if (p?.achievement_id && String(a.id) === String(p.achievement_id)) return true;
+      const rewardName = normalize(a?.reward?.name || a?.title);
+      const sameName = rewardName && rewardName === normalize(c.card_name);
+      const sameGame = !a?.game || !c.game_name || normalize(a.game) === normalize(c.game_name);
+      return sameName && sameGame;
+    });
+    const combat = inferCombatIdentity(c,p,achievement,power);
+    return {
+      id:c.id,name:c.card_name,type:c.card_type,image:c.card_image||'',rarity:c.card_rarity||'Common',
+      game_name:c.game_name||'',game_id:c.game_id||'',origin:c.acquisition_method||'unlocked',
+      level:num(p?.level,1),power,...combat
+    };
   });
   const saved = avatars[0] || {};
   const appearance = Object.fromEntries(APPEARANCE.filter(k=>saved[k]!==undefined).map(k=>[k,saved[k]]));
@@ -194,10 +267,27 @@ function reduce(room: Row, previous: Row, event: Row) {
           if(current.ap<card.cost||current.cooldowns[card.id]>0)fail('This card is not ready.');
           current.ap-=card.cost;current.cooldowns[card.id]=card.cooldown+1;
           const resonance=card.game_id===room.world.id||card.game_name===room.world.title;
-          const value=card.value+(resonance?5:0);
-          if(card.effect==='heal'){const before=current.hp;current.hp=Math.min(current.max_hp,current.hp+value);say(s,current.name+' used '+card.name+': restored '+(current.hp-before)+' HP.','heal',current.id);}
-          else if(card.effect==='shield'){current.shield+=value;say(s,current.name+' used '+card.name+': +'+value+' shield.','defense',current.id);}
-          else {const hit=Math.max(0,value-target.shield);target.shield=Math.max(0,target.shield-value);target.hp=Math.max(0,target.hp-hit);const bonus=staggerHit(s,target,24+Math.min(16,num(card.level,1)*2),current.name);current.damage+=hit+bonus;say(s,current.name+' used '+card.name+': '+hit+' damage'+(resonance?' · world resonance.':'.'),'hit',current.id);}
+          const resonanceBonus=resonance?Math.max(5,Math.round(num(card.value)*.12)+num(card.ascension)*2):0;
+          const value=Math.max(1,num(card.value)+resonanceBonus);
+          const element=card.element?' · '+String(card.element).toUpperCase():'';
+          if(card.effect==='heal'){
+            const before=current.hp;current.hp=Math.min(current.max_hp,current.hp+value);
+            say(s,current.name+' used '+card.name+element+': restored '+(current.hp-before)+' HP'+(resonance?' · world resonance.':'.'),'heal',current.id);
+          }
+          else if(card.effect==='shield'){
+            current.shield+=value;
+            say(s,current.name+' used '+card.name+element+': +'+value+' shield'+(resonance?' · world resonance.':'.'),'defense',current.id);
+          }
+          else {
+            const critChance=Math.max(0,Math.min(35,num(card.critical_bonus_pct)));
+            const critical=critChance>0&&((seedHash(event.request_id+'|'+card.id+'|'+s.revision)%100)<critChance);
+            const raw=critical?Math.round(value*1.5):value;
+            const hit=Math.max(0,raw-target.shield);
+            target.shield=Math.max(0,target.shield-raw);target.hp=Math.max(0,target.hp-hit);
+            const bonus=staggerHit(s,target,Math.max(12,num(card.stagger,24)),current.name);
+            current.damage+=hit+bonus;
+            say(s,current.name+' used '+card.name+element+': '+hit+' damage'+(critical?' · CRITICAL':'')+(resonance?' · world resonance.':'.'),'hit',current.id);
+          }
         }else fail('Choose a card, strike, or guard.',400);
         current.actions++;advance(room,s,current,at);
       }else fail('This action is unavailable.');
