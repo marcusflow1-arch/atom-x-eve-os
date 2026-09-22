@@ -438,6 +438,82 @@ Deno.serve(async req=>{
         server_time:Date.now()
       });
     }
+    if(action==='queueStatus'){
+      const rows=await svc.AIBattleQueue.filter({user_id:user.id},'-created_date',20);
+      const queue=rows.find((q: Row)=>q.status==='waiting'||q.status==='matched')||null;
+      if(queue?.status==='matched'&&queue.matched_encounter_id){
+        const room=await svc.AIBattleEncounter.get(queue.matched_encounter_id).catch(()=>null);
+        if(room&&accessible(room,user.id))return Response.json({queue,matched:true,encounter:publicRoom(room,(await replay(svc,room)).state),server_time:Date.now()});
+      }
+      return Response.json({queue,matched:false,server_time:Date.now()});
+    }
+    if(action==='cancelQueue'){
+      const rows=await svc.AIBattleQueue.filter({user_id:user.id,status:'waiting'},'-created_date',20);
+      const now=new Date().toISOString();
+      for(const row of rows)await svc.AIBattleQueue.update(row.id,{status:'cancelled',cancelled_at:now});
+      return Response.json({queue:null,cancelled:true,server_time:Date.now()});
+    }
+    if(action==='queue'){
+      const route=routeFor('duel')!;
+      const availableWorlds=await worlds(svc,user);
+      const world=availableWorlds.find(w=>String(w.id)===String(data.world_id));
+      if(!world)fail('Choose a game world from your collection before queueing.',403);
+      const player=await snapshot(svc,user);
+      if(!player.cards.length)fail('Equip at least one card in the active Jawan before queueing.');
+      const requestId=String(data.request_id||'').slice(0,100);
+      if(!requestId)fail('A request identifier is required.',400);
+
+      const ownRooms=await svc.AIBattleEncounter.filter({$or:[{host_id:user.id},{invited_ids:{$in:[user.id]}}]},'-created_date',20);
+      for(const existingRoom of ownRooms){
+        const existingState=(await replay(svc,existingRoom)).state;
+        if(['lobby','active'].includes(existingState.status))return Response.json({matched:true,encounter:publicRoom(existingRoom,existingState),server_time:Date.now()});
+      }
+
+      const ownQueues=await svc.AIBattleQueue.filter({user_id:user.id},'-created_date',20);
+      const matched=ownQueues.find((q: Row)=>q.status==='matched'&&q.matched_encounter_id);
+      if(matched){
+        const room=await svc.AIBattleEncounter.get(matched.matched_encounter_id).catch(()=>null);
+        if(room){
+          const state=(await replay(svc,room)).state;
+          if(['lobby','active'].includes(state.status))return Response.json({queue:matched,matched:true,encounter:publicRoom(room,state),server_time:Date.now()});
+        }
+      }
+      const waiting=ownQueues.find((q: Row)=>q.status==='waiting');
+      if(waiting&&String(waiting.world_id)===String(world.id))return Response.json({queue:waiting,matched:false,server_time:Date.now()});
+      if(waiting)await svc.AIBattleQueue.update(waiting.id,{status:'cancelled',cancelled_at:new Date().toISOString()});
+
+      const candidates=await svc.AIBattleQueue.filter({status:'waiting',route_id:'duel',world_id:String(world.id)},'created_date',60);
+      const cutoff=Date.now()-10*60*1000;
+      const opponent=candidates.find((q: Row)=>String(q.user_id)!==String(user.id)&&new Date(q.queued_at||q.created_date||0).getTime()>=cutoff);
+      const mine=await svc.AIBattleQueue.create({
+        user_id:user.id,status:'waiting',route_id:'duel',world_id:String(world.id),world,
+        player_snapshot:player,request_id:requestId,queued_at:new Date().toISOString()
+      });
+      if(!opponent)return Response.json({queue:mine,matched:false,server_time:Date.now()});
+
+      const freshOpponent=await svc.AIBattleQueue.get(opponent.id).catch(()=>null);
+      if(!freshOpponent||freshOpponent.status!=='waiting')return Response.json({queue:mine,matched:false,server_time:Date.now()});
+      const matchRequest=('match-'+String(freshOpponent.id)+'-'+String(mine.id)).slice(0,100);
+      const room=await svc.AIBattleEncounter.create({
+        host_id:freshOpponent.user_id,
+        host_name:freshOpponent.player_snapshot?.name||'Player',
+        host_snapshot:freshOpponent.player_snapshot,
+        guest_snapshot:player,
+        invited_ids:[user.id],
+        world,
+        route_id:route.id,
+        request_id:matchRequest,
+        matchmaking:true,
+        queue_ids:[freshOpponent.id,mine.id]
+      });
+      const matchedAt=new Date().toISOString();
+      await Promise.all([
+        svc.AIBattleQueue.update(freshOpponent.id,{status:'matched',matched_encounter_id:room.id,matched_user_id:user.id,matched_at:matchedAt}),
+        svc.AIBattleQueue.update(mine.id,{status:'matched',matched_encounter_id:room.id,matched_user_id:freshOpponent.user_id,matched_at:matchedAt})
+      ]);
+      const mineMatched={...mine,status:'matched',matched_encounter_id:room.id,matched_user_id:freshOpponent.user_id,matched_at:matchedAt};
+      return Response.json({queue:mineMatched,matched:true,encounter:publicRoom(room,initial(room)),server_time:Date.now()});
+    }
     if(action==='create'){
       const route=routeFor(String(data.route_id));
       if(!route)fail('Choose an expedition route.',400);
