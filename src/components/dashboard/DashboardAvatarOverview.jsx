@@ -499,7 +499,7 @@ export default function DashboardAvatarOverview() {
 
       {!avatarFocusMode
         && surface === 'dashboard'
-        && !embeddedUtilityMode
+        && !inventoryMode
         && !messagesMode
         && !friendsMode
         && !seasonMode
@@ -510,6 +510,7 @@ export default function DashboardAvatarOverview() {
             currentXp={stats.currentXP}
             nextXp={stats.nextXP}
             level={stats.level}
+            showcaseEditing={cardsMode}
           />
         )}
 
