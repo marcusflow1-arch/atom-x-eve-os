@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Activity, ArrowDown, ArrowLeft, ArrowUp, BookOpen, CheckCircle2, Clock3,
+  Activity, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronRight, X, BookOpen, CheckCircle2, Clock3,
   Eye, Flag, Flame, Gamepad2, Home, Lock, MessageSquare, Plus, Search, Shield,
   Sparkles, Trophy, UserRoundCog, Wheat,
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import CommentSection from '@/components/community/CommentSection';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
 import ForumDirectoryOverlay from '@/components/community/ForumDirectoryOverlay';
 import '@/components/community/forumHub.css';
+import '@/components/community/forumRefresh.css';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -42,9 +43,9 @@ const timeAgo = (value) => {
 };
 
 const FEED_MODES = [
-  { id: 'home', label: 'Home', hint: 'For you', icon: Home },
+  { id: 'home', label: 'All discussions', hint: 'Latest activity', icon: Home },
   { id: 'popular', label: 'Popular', hint: 'Most active', icon: Flame },
-  { id: 'new', label: 'New', hint: 'Latest posts', icon: Clock3 },
+  { id: 'new', label: 'Newest', hint: 'Latest posts', icon: Clock3 },
   { id: 'guides', label: 'Guides', hint: 'Player knowledge', icon: BookOpen },
   { id: 'achievements', label: 'Achievements', hint: 'Hunts & unlocks', icon: Trophy },
 ];
@@ -63,14 +64,14 @@ function ForumPostRow({ item, currentUser, isModerator, onOpen, onVote, onReport
         type="button"
         className={myVote === '👍' ? 'is-active' : ''}
         onClick={() => onVote(post, '👍')}
-        aria-label="Upvote"
+        aria-label="Upvote" aria-pressed={myVote === '👍'}
       ><ArrowUp size={17} /></button>
       <strong className={item.score < 0 ? 'is-negative' : ''}>{item.score}</strong>
       <button
         type="button"
         className={myVote === '👎' ? 'is-down-active' : ''}
         onClick={() => onVote(post, '👎')}
-        aria-label="Downvote"
+        aria-label="Downvote" aria-pressed={myVote === '👎'}
       ><ArrowDown size={17} /></button>
     </div>
 
@@ -115,6 +116,7 @@ function FeedModeStrip({ value, onChange }) {
       return <button
         type="button"
         key={mode.id}
+        aria-pressed={value === mode.id}
         className={value === mode.id ? 'is-active' : ''}
         onClick={() => onChange(mode.id)}
       >
@@ -131,6 +133,11 @@ export default function CommunityPage() {
   const location = useLocation();
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
   const [games, setGames] = useState([]);
+  const [gamesLoading, setGamesLoading] = useState(true);
+  const [gamesError, setGamesError] = useState(false);
+  const [gamesRetry, setGamesRetry] = useState(0);
+  const [feedError, setFeedError] = useState(false);
+  const feedRequest = useRef(0);
   const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null);
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState([]);
@@ -163,23 +170,27 @@ export default function CommunityPage() {
 
   useEffect(() => {
     let cancelled = false;
+    setGamesLoading(true); setGamesError(false);
     (async () => {
       try {
         let list;
         try { list = await base44.entities.Game.list('-original_year', 1000); }
         catch (_) { list = await base44.entities.Game.list('-original_year', 250); }
         if (!cancelled) setGames(list || []);
-      } catch (error) { console.error('Failed to load forum games', error); }
+      } catch (error) { if (!cancelled) setGamesError(true); console.error('Failed to load forum games', error); }
+      finally { if (!cancelled) setGamesLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [gamesRetry]);
 
   useEffect(() => {
     const gameTitle = new URLSearchParams(location.search).get('game');
-    if (!gameTitle || !games.length) return;
-    const match = games.find((game) => String(game.title).toLowerCase() === gameTitle.toLowerCase());
-    if (match) setActiveGame(match);
-  }, [games, location.search]);
+    const fallback = location.state?.selectedGame || null;
+    const match = gameTitle ? games.find((game) => String(game.title).toLowerCase() === gameTitle.toLowerCase()) : null;
+    setActiveGame(gameTitle ? match || { title: gameTitle } : fallback);
+    setSelectedPost(null);
+    setFeedQuery('');
+  }, [games, location.search, location.state?.selectedGame]);
 
   useEffect(() => {
     if (!activeGame) return;
@@ -192,7 +203,8 @@ export default function CommunityPage() {
   }, [activeGame]);
 
   const loadFeed = useCallback(async () => {
-    setLoading(true);
+    const request = ++feedRequest.current;
+    setLoading(true); setFeedError(false);
     try {
       const filter = { is_farm_hub: { $ne: true } };
       if (activeGame?.title) filter.game_title = activeGame.title;
@@ -201,14 +213,15 @@ export default function CommunityPage() {
         base44.entities.ForumReaction.list('-created_date', 1800).catch(() => []),
         base44.entities.Comment.filter({ target_type: 'post' }, '-created_date', 1800).catch(() => []),
       ]);
+      if (request !== feedRequest.current) return;
       setPosts((postRows || []).filter((post) => post.status !== 'removed'));
       setReactions(reactionRows || []);
       setComments(commentRows || []);
-    } catch (error) { showError(error, 'Load Forum'); }
-    finally { setLoading(false); }
+    } catch (error) { if (request === feedRequest.current) { setFeedError(true); setPosts([]); showError(error, 'Load Forum'); } }
+    finally { if (request === feedRequest.current) setLoading(false); }
   }, [activeGame?.title]);
 
-  useEffect(() => { loadFeed(); }, [loadFeed]);
+  useEffect(() => { loadFeed(); return () => { feedRequest.current += 1; }; }, [loadFeed]);
 
   const gameMap = useMemo(() => new Map(games.map((game) => [String(game.title || '').toLowerCase(), game])), [games]);
   const enriched = useMemo(() => posts.map((post) => {
@@ -272,7 +285,7 @@ export default function CommunityPage() {
   const createPost = async (data) => {
     if (!requireAuth()) return;
     try { await invoke('create_post', data); setComposerOpen(false); await loadFeed(); showSuccess('Published to the Forum.'); }
-    catch (error) { showError(error, 'Publish Post'); }
+    catch (error) { showError(error, 'Publish Post'); throw error; }
   };
 
   const selectPost = async (post) => {
@@ -345,7 +358,11 @@ export default function CommunityPage() {
   };
 
   const selectForum = (game) => {
+    const params = new URLSearchParams(location.search);
+    if (game?.title) params.set('game', game.title); else params.delete('game');
+    navigate({ pathname: location.pathname, search: params.toString() ? '?' + params : '' }, { state: null });
     setActiveGame(game || null);
+    setFeedQuery('');
     setSelectedPost(null);
     setDirectoryOpen(false);
     setFeedMode('home');
@@ -355,7 +372,7 @@ export default function CommunityPage() {
   const changeFeedMode = (mode) => {
     setFeedMode(mode);
     setBottomTab(mode === 'new' ? 'recent' : mode === 'popular' ? 'heated' : 'home');
-    document.querySelector('.forum-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('forum-discussions')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   };
 
   const handleBottomTab = (tab) => {
@@ -369,130 +386,99 @@ export default function CommunityPage() {
       onSidebarToggle={toggleSidebar}
       bottomContent={<ForumBottomNav activeTab={bottomTab} onBrowseForums={() => setDirectoryOpen(true)} onTabSelect={handleBottomTab} />}
     >
-      <div className={`forum-hub forum-mode-${feedMode} relative h-screen w-full overflow-hidden text-white`}>
+      <div className={`forum-hub forum-refresh forum-mode-${feedMode} relative h-screen w-full overflow-hidden text-white`}>
         <div className="forum-ambient" aria-hidden="true" />
         <div className="forum-shell">
+
           <header className="forum-header">
-            <div className="forum-brand-block">
-              <div className="forum-mark"><MessageSquare size={16} /></div>
-              <div>
-                <div className="forum-eyebrow">Atom X Eve Community</div>
-                <h1>{activeGame?.title || 'Forum'}</h1>
-              </div>
-            </div>
-
-            <label className="forum-top-search">
-              <Search size={15} />
-              <input value={feedQuery} onChange={(event) => setFeedQuery(event.target.value)} placeholder="Search this feed" />
+            <button type="button" className="forum-brand-block" onClick={() => selectForum(null)} aria-label="Forum home">
+              <div className="forum-mark"><MessageSquare size={19} /></div>
+              <div><div className="forum-eyebrow">Atom X Eve</div><strong>Community</strong></div>
+            </button>
+            <label className="forum-top-search"><Search size={17} />
+              <input aria-label="Search discussions" value={feedQuery} onChange={(event) => { setFeedQuery(event.target.value); setSelectedPost(null); }} placeholder={activeGame ? `Search ${activeGame.title} discussions` : 'Search discussions, guides, or players'} />
+              {feedQuery && <button type="button" aria-label="Clear discussion search" onClick={() => setFeedQuery('')}><X size={15} /></button>}
             </label>
-
             <div className="forum-header-actions">
-              {session.isModerator && <button type="button" className="forum-icon-action" onClick={() => setModerationOpen((value) => !value)} title="Moderation"><Shield size={16} /></button>}
-              <button type="button" className="forum-new-post" onClick={() => requireAuth() && setComposerOpen(true)}><Plus size={16} />Create</button>
+              <button type="button" className="forum-browse-button" onClick={() => setDirectoryOpen(true)}><Gamepad2 size={17} /><span>Browse forums</span></button>
+              {session.isModerator && <button type="button" className="forum-icon-action" onClick={() => setModerationOpen((value) => !value)} aria-label="Moderation"><Shield size={17} /></button>}
+              <button type="button" className="forum-new-post" onClick={() => requireAuth() && setComposerOpen(true)}><Plus size={17} /><span>New post</span></button>
             </div>
           </header>
 
           {selectedPost ? <main className="forum-content forum-detail">
             <div className="forum-detail-toolbar">
-              <button type="button" className="forum-detail-back" onClick={() => setSelectedPost(null)}><ArrowLeft size={14} />Back to feed</button>
+              <button type="button" className="forum-detail-back" onClick={() => setSelectedPost(null)}><ArrowLeft size={16} />Back to {activeGame?.title || 'discussions'}</button>
               {session.isModerator && <button onClick={muteSelectedAuthor} className="forum-muted-action">Mute author 24h</button>}
             </div>
-            <PostCard
-              post={selectedPost}
-              isDetailView
-              currentUser={user}
-              isModerator={session.isModerator}
-              reactions={selectedPostReactions}
-              commentCount={selectedComments.length}
-              onReact={(post, emoji) => react('post', post.id, emoji)}
-              onDelete={deletePost}
-              onReport={report}
-              onModerate={moderatePost}
-            />
+            <div className="forum-thread-heading"><span className="forum-eyebrow">{selectedPost.game_title || 'General community'} / {postLabel(selectedPost)}</span><p>Join the conversation. Share something useful, and keep it respectful.</p></div>
+            <PostCard post={selectedPost} isDetailView currentUser={user} isModerator={session.isModerator} reactions={selectedPostReactions} commentCount={selectedComments.length} onReact={(post, emoji) => react('post', post.id, emoji)} onDelete={deletePost} onReport={report} onModerate={moderatePost} />
             <div className="forum-comments-wrap"><CommentSection post={selectedPost} comments={selectedComments} reactions={reactions} currentUser={user} isModerator={session.isModerator} onAddComment={addComment} onDelete={deleteComment} onReact={react} onReport={report} /></div>
           </main> : <main className="forum-content">
-            <FeedModeStrip value={feedMode} onChange={changeFeedMode} />
+            <section className={`forum-welcome ${activeGame ? 'is-game-forum' : ''}`} aria-labelledby="forum-page-title">
+              {activeGame && artFor(activeGame) && <img className="forum-welcome-art" src={artFor(activeGame)} alt="" />}
+              <div className="forum-welcome-copy">
+                {activeGame ? <button type="button" className="forum-breadcrumb" onClick={() => selectForum(null)}><ArrowLeft size={14} />All forums</button> : <div className="forum-eyebrow">THE COMMUNITY, IN PLAY</div>}
+                <h1 id="forum-page-title">{activeGame?.title || <>Good games.<br /><span>Better conversations.</span></>}</h1>
+                <p>{activeGame ? 'Your place for questions, player guides, achievement hunts, and everything in between.' : 'Find your game. Ask a question. Share what you know. There’s a place for every kind of player.'}</p>
+                <div className="forum-welcome-actions">
+                  <button type="button" className="forum-primary-button" onClick={() => activeGame ? requireAuth() && setComposerOpen(true) : setDirectoryOpen(true)}>{activeGame ? <Plus size={17} /> : <Gamepad2 size={17} />}{activeGame ? 'Start a discussion' : 'Find your game'}<ArrowRight size={16} /></button>
+                  <button type="button" className="forum-text-button" onClick={() => { changeFeedMode('guides'); requestAnimationFrame(() => document.getElementById('forum-discussions')?.scrollIntoView({ block: 'start', behavior: 'smooth' })); }}>Explore player guides <BookOpen size={16} /></button>
+                </div>
+              </div>
+              {!activeGame && <div className="forum-welcome-guide">
+                <span className="forum-eyebrow">MAKE YOURSELF AT HOME</span>
+                <button type="button" onClick={() => setDirectoryOpen(true)}><span>01</span><div><strong>Choose your community</strong><small>Browse game forums and find your people.</small></div><ChevronRight size={16} /></button>
+                <button type="button" onClick={() => { changeFeedMode('new'); document.getElementById('forum-discussions')?.scrollIntoView({ behavior: 'smooth' }); }}><span>02</span><div><strong>See what’s happening</strong><small>Catch up on the latest player conversations.</small></div><ChevronRight size={16} /></button>
+                <button type="button" onClick={() => requireAuth() && setComposerOpen(true)}><span>03</span><div><strong>Add your voice</strong><small>Ask, help, or share a discovery.</small></div><ChevronRight size={16} /></button>
+              </div>}
+            </section>
 
-            {activeGame && <div className="forum-context">
-              <div><Gamepad2 size={14} /><span>Viewing <strong>{activeGame.title}</strong></span></div>
-              <button type="button" onClick={() => selectForum(null)}>All communities</button>
-            </div>}
+            {!activeGame && <section className="forum-discover" aria-labelledby="forum-discover-title">
+              <div className="forum-section-heading"><div><span className="forum-eyebrow">FIND YOUR PEOPLE</span><h2 id="forum-discover-title">{communityStats.some((item) => item.game) ? 'Games in the conversation' : 'Explore game communities'}</h2></div><button type="button" className="forum-text-button" onClick={() => setDirectoryOpen(true)}>All game forums <ArrowRight size={15} /></button></div>
+              <div className="forum-game-rail">
+                {(communityStats.some((item) => item.game) ? communityStats.filter((item) => item.game).map((item) => ({ ...item.game, recentPosts: item.posts })) : games.slice(0, 6)).map((game) => <button type="button" key={game.id} onClick={() => selectForum(game)} className="forum-game-tile">
+                  <div className="forum-game-tile-art"><Gamepad2 size={25} />{artFor(game) && <img src={artFor(game)} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} />}</div>
+                  <div><strong>{game.title}</strong><small>{game.recentPosts ? `${game.recentPosts} recent ${game.recentPosts === 1 ? 'discussion' : 'discussions'}` : game.genre || 'Game community'}</small></div><ChevronRight size={15} />
+                </button>)}
+                {!games.length && <button type="button" className="forum-directory-prompt" onClick={() => setDirectoryOpen(true)}><Gamepad2 size={23} /><span>Browse the game directory</span><ArrowRight size={16} /></button>}
+              </div>
+            </section>}
 
-            <div className="forum-main-grid">
+            <div className="forum-main-grid" id="forum-discussions">
               <section className="forum-feed-column" aria-label="Forum feed">
-                <div className="forum-compose-bar">
-                  <div className="forum-avatar-dot">{String(user?.username || user?.display_name || user?.email || 'P').charAt(0).toUpperCase()}</div>
-                  <button type="button" onClick={() => requireAuth() && setComposerOpen(true)}>Share something with {activeGame?.title || 'the community'}…</button>
-                  <button type="button" className="forum-compose-plus" onClick={() => requireAuth() && setComposerOpen(true)}><Plus size={17} /></button>
-                </div>
-
-                <div className="forum-feed-head">
-                  <div>
-                    <strong>{FEED_MODES.find((mode) => mode.id === feedMode)?.label || 'Home'} feed</strong>
-                    <span>{feedRows.length} {feedRows.length === 1 ? 'post' : 'posts'}</span>
-                  </div>
-                  {session.restriction && <span className="forum-restriction">{session.restriction.type} active</span>}
-                </div>
-
-                {loading ? <div className="forum-feed-loading">
-                  <Activity size={22} />
-                  <span>Loading community activity…</span>
-                </div> : feedRows.length ? <div className="forum-feed-list">
-                  {feedRows.map((item) => <ForumPostRow
-                    key={item.post.id}
-                    item={item}
-                    currentUser={user}
-                    isModerator={session.isModerator}
-                    onOpen={selectPost}
-                    onVote={(post, emoji) => react('post', post.id, emoji)}
-                    onReport={report}
-                    onDelete={deletePost}
-                    onModerate={moderatePost}
-                  />)}
-                </div> : <div className="forum-empty">
-                  <MessageSquare size={25} />
-                  <h3>Nothing in this feed yet</h3>
-                  <p>{feedQuery ? 'Try a different search or feed type.' : 'Start the first conversation here.'}</p>
-                  {!feedQuery && <button type="button" onClick={() => requireAuth() && setComposerOpen(true)}>Create a post</button>}
-                </div>}
+                <div className="forum-section-heading"><div><span className="forum-eyebrow">{activeGame ? 'GAME COMMUNITY' : 'FROM THE COMMUNITY'}</span><h2>Join the conversation</h2></div><span className="forum-results-count" role="status">{loading ? 'Loading…' : `${feedRows.length} recent posts`}</span></div>
+                <FeedModeStrip value={feedMode} onChange={changeFeedMode} />
+                {feedQuery && <div className="forum-search-summary">Results for <strong>“{feedQuery}”</strong><button type="button" onClick={() => setFeedQuery('')}>Clear search</button></div>}
+                {session.restriction && <p className="forum-restriction">{session.restriction.type} active</p>}
+                {loading ? <div className="forum-feed-loading" role="status"><Activity size={24} /><span>Loading community activity…</span></div>
+                  : feedError ? <div className="forum-empty" role="alert"><MessageSquare size={28} /><h3>Discussions couldn’t load</h3><p>Your community is still here. Try loading the feed again.</p><button type="button" onClick={loadFeed}>Try again</button></div>
+                  : feedRows.length ? <div className="forum-feed-list">{feedRows.map((item) => <ForumPostRow key={item.post.id} item={item} currentUser={user} isModerator={session.isModerator} onOpen={selectPost} onVote={(post, emoji) => react('post', post.id, emoji)} onReport={report} onDelete={deletePost} onModerate={moderatePost} />)}</div>
+                  : <div className="forum-empty"><MessageSquare size={30} /><h3>{feedQuery ? 'No matching conversations' : 'Be the first to start something'}</h3><p>{feedQuery ? 'Try a different keyword, or clear your filters to see more posts.' : 'Ask a question, share a guide, or tell the community what you’re playing.'}</p>{feedQuery || feedMode !== 'home' ? <button type="button" onClick={() => { setFeedQuery(''); changeFeedMode('home'); }}>Reset filters</button> : <button type="button" onClick={() => requireAuth() && setComposerOpen(true)}>Start a discussion</button>}</div>}
               </section>
 
               <aside className="forum-side-column">
-                <section className="forum-side-card forum-about-card">
-                  <div className="forum-side-card-head"><span>Community</span><Gamepad2 size={14} /></div>
-                  <h2>{activeGame?.title || 'Atom X Eve Forum'}</h2>
-                  <p>{activeGame ? `Discuss builds, achievements, guides and player discoveries for ${activeGame.title}.` : 'One place for game discussion, guides, achievement hunts and player knowledge across Atom X Eve.'}</p>
-                  <div className="forum-side-stats">
-                    <div><strong>{posts.length}</strong><span>Posts</span></div>
-                    <div><strong>{comments.length}</strong><span>Replies</span></div>
-                    <div><strong>{reactions.length}</strong><span>Reactions</span></div>
-                  </div>
-                  <button type="button" className="forum-side-primary" onClick={() => requireAuth() && setComposerOpen(true)}>Create post</button>
+                <section className="forum-side-card forum-get-started">
+                  <div className="forum-side-card-head"><MessageSquare size={19} /><h2>{activeGame ? 'About this forum' : 'A place to play together'}</h2></div>
+                  <p>{activeGame ? `Talk all things ${activeGame.title}. Find strategies, compare builds, and help another player get past the hard part.` : 'Questions, discoveries, and the guides you wish you’d had. Built by players, for players.'}</p>
+                  <button type="button" className="forum-side-primary" onClick={() => requireAuth() && setComposerOpen(true)}><Plus size={16} />Write a post</button>
                 </section>
-
-                <section className="forum-side-card">
-                  <div className="forum-side-card-head"><span>Active communities</span><Sparkles size={14} /></div>
-                  <div className="forum-community-list">
-                    {communityStats.map((community, index) => <button key={community.name} type="button" onClick={() => community.game ? selectForum(community.game) : selectForum(null)}>
-                      <span className="forum-community-rank">{index + 1}</span>
-                      <span className="forum-community-art">{artFor(community.game) ? <img src={artFor(community.game)} alt="" /> : <Gamepad2 size={15} />}</span>
-                      <span className="forum-community-copy"><strong>{community.name}</strong><small>{community.posts} posts · {community.activity} interactions</small></span>
-                    </button>)}
-                    {!communityStats.length && <p className="forum-side-empty">Communities will appear as conversations become active.</p>}
-                  </div>
-                  <button type="button" className="forum-side-link" onClick={() => setDirectoryOpen(true)}>Browse all forums</button>
+                <section className="forum-side-card forum-rules">
+                  <div className="forum-side-card-head"><Shield size={17} /><h2>A better conversation</h2></div>
+                  <ol><li><strong>Keep it welcoming.</strong><span>Respect the person behind the player.</span></li><li><strong>Make it useful.</strong><span>Choose a clear title and the right game.</span></li><li><strong>Give others a heads-up.</strong><span>Mark spoilers and credit your sources.</span></li></ol>
                 </section>
-
                 <section className="forum-side-card forum-utility-card">
-                  <button type="button" onClick={() => navigate(createPageUrl('Farm'))}><Wheat size={15} /><span><strong>Farm Hub</strong><small>Farming routes, drops and resource discussion</small></span></button>
-                  {session.isModerator && <button type="button" onClick={() => setModerationOpen(true)}><Shield size={15} /><span><strong>Moderation</strong><small>Review reports and community actions</small></span></button>}
+                  <button type="button" onClick={() => navigate(createPageUrl('Farm'))}><Wheat size={19} /><span><strong>Looking for drops?</strong><small>Explore farming routes in Farm Hub</small></span><ArrowRight size={15} /></button>
+                  {session.isModerator && <button type="button" onClick={() => setModerationOpen(true)}><Shield size={18} /><span><strong>Moderation</strong><small>Review reports and community actions</small></span></button>}
                 </section>
+                <p className="forum-feed-note">Activity reflects the recent posts loaded in this feed.</p>
               </aside>
             </div>
           </main>}
+
         </div>
 
-        <ForumDirectoryOverlay open={directoryOpen} games={games} activeGame={activeGame} onClose={() => setDirectoryOpen(false)} onSelectGame={selectForum} />
+        <ForumDirectoryOverlay open={directoryOpen} games={games} loading={gamesLoading} error={gamesError} onRetry={() => setGamesRetry((value) => value + 1)} activeGame={activeGame} onClose={() => setDirectoryOpen(false)} onSelectGame={selectForum} />
 
         {moderationOpen && session.isModerator && <div className="forum-moderation-panel">
           <div className="forum-moderation-head"><div><div className="forum-eyebrow">Operations</div><h3>Moderation queue</h3></div><button onClick={() => setModerationOpen(false)}>Close</button></div>
