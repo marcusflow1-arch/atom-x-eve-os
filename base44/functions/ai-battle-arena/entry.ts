@@ -280,6 +280,43 @@ async function requireDashboard(svc: any, hostId: string, ids: string[]) {
   const players=await svc.PlayerState.filter({channel_id:'dashboard_'+hostId});
   if(ids.some(id=>!players.some((p: Row)=>p.player_id===id&&live(p))))fail('Everyone must join the host’s Luna dashboard before battle begins.');
 }
+function seedHash(value: string) {
+  let hash = 2166136261;
+  for (let i=0;i<value.length;i++){hash^=value.charCodeAt(i);hash=Math.imul(hash,16777619);}
+  return hash>>>0;
+}
+function seeded(seed: number) {
+  let state=seed>>>0;
+  return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
+}
+function fieldNodes(availableWorlds: Row[], cellLat: number, cellLng: number) {
+  const day=new Date().toISOString().slice(0,10);
+  const rand=seeded(seedHash(day+'|'+cellLat.toFixed(2)+'|'+cellLng.toFixed(2)));
+  const kinds=[
+    {type:'cache',route_id:'patrol',title:'Hidden Field Cache',detail:'Track a short signal trail and secure a field chest.'},
+    {type:'quest',route_id:'patrol',title:'Rift Signal',detail:'A game-world anomaly is bleeding into the local field layer.'},
+    {type:'dungeon',route_id:'vault',title:'Dungeon Breach',detail:'A temporary dungeon entrance is open nearby.'},
+    {type:'world_boss',route_id:'colossus',title:'World Boss Signal',detail:'A high-threat encounter is visible to nearby expedition players.'},
+  ];
+  const worldsPool=availableWorlds.length?availableWorlds:[{id:'luna',title:'Luna frontier',image:''}];
+  return Array.from({length:6},(_,index)=>{
+    const kind=kinds[index%kinds.length];
+    const world=worldsPool[Math.floor(rand()*worldsPool.length)]||worldsPool[0];
+    const distance=Math.round(90+rand()*1350);
+    const bearing=Math.round(rand()*359);
+    return {
+      id:'field-'+seedHash(day+'|'+index+'|'+world.id+'|'+cellLat+'|'+cellLng).toString(36),
+      type:kind.type,
+      route_id:kind.route_id,
+      title:kind.title,
+      description:kind.detail,
+      world:{id:world.id,title:world.title,image:world.image||''},
+      distance_m:distance,
+      bearing_deg:bearing,
+      expires_at:new Date(Date.now()+6*60*60*1000).toISOString(),
+    };
+  }).sort((a,b)=>a.distance_m-b.distance_m);
+}
 Deno.serve(async req=>{
   try{
     const client=createClientFromRequest(req),user=await client.auth.me();
@@ -293,6 +330,18 @@ Deno.serve(async req=>{
       ]);
       const encounters=await Promise.all(rooms.filter((r: Row)=>accessible(r,user.id)).map(async(r: Row)=>publicRoom(r,(await replay(svc,r)).state)));
       return Response.json({worlds:availableWorlds,contacts:peers,player,routes:ROUTES,encounters,server_time:Date.now()});
+    }
+    if(action==='field'){
+      const cellLat=Math.round(num(data.cell_lat)*100)/100;
+      const cellLng=Math.round(num(data.cell_lng)*100)/100;
+      if(cellLat < -90 || cellLat > 90 || cellLng < -180 || cellLng > 180)fail('Field location is invalid.',400);
+      const availableWorlds=await worlds(svc,user);
+      return Response.json({
+        nodes:fieldNodes(availableWorlds,cellLat,cellLng),
+        precision:'coarse_0.01_degree',
+        generated_at:new Date().toISOString(),
+        server_time:Date.now()
+      });
     }
     if(action==='create'){
       const route=routeFor(String(data.route_id));
