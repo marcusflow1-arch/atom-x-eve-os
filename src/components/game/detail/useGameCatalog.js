@@ -13,4 +13,4 @@ export async function loadCatalog(){
  }
  return all;
 }
-export function useStoreCatalog(){return useQuery({queryKey:['store-catalog'],queryFn:loadCatalog,staleTime:60000});}
+export function useGameCatalog(){return useQuery({queryKey:['store-catalog'],queryFn:loadCatalog,staleTime:60000});}

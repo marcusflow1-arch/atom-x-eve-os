@@ -240,7 +240,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
                 top: '-48px',
               }}
             >
-              <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Explore this game</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">{onGameViewChange?'Explore this game':'Dev Info'}</span>
             </div>
             <div
               className="absolute left-1/2 -translate-x-1/2 flex overflow-hidden pointer-events-auto"

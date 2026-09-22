@@ -42,7 +42,7 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store', 
   return <main className="gd-page" aria-label={game.title + ' game page'}>
     <div className="gd-backdrop" aria-hidden="true"><GameImage src={gameArtwork(game)} fallback={game.cover_image} alt="" /><div /></div>
     <div className="gd-shell">
-      <nav className="gd-store-links" aria-label="Store discovery"><button onClick={()=>navigate('/Store')}>Discover</button><button onClick={()=>navigate('/Store?section=all')}>Browse games</button><button onClick={()=>navigate('/Store?section=you')}>Recommended for you</button><button onClick={()=>navigate('/Store?section=new')}>New releases</button></nav>
+      <nav className="gd-store-links" aria-label="Explore this game"><button onClick={()=>navigate('/Store')}>Browse store</button><button onClick={()=>{setView('overview');requestAnimationFrame(()=>document.getElementById('game-avatar-rewards')?.scrollIntoView({block:'start'}));}}>Achievements &amp; rewards</button><button onClick={()=>{setView('overview');setSection('extras');requestAnimationFrame(()=>content.current?.scrollIntoView({block:'start'}));}}>Luna extras</button></nav>
       <nav className="gd-breadcrumb" aria-label="Breadcrumb">
         <button onClick={onClose}><ArrowLeft size={16} />{returnLabel}</button>
         <ChevronRight size={12} /><span>{label(game.genre) || 'Game'}</span>

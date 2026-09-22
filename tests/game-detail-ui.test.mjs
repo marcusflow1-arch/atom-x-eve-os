@@ -89,10 +89,10 @@ assert.ok(body().includes('Dawnstrike'),'published avatar reward is visible on t
 const subpage=name=>[...document.querySelectorAll('.gd-game-nav button')].find(button=>button.textContent===name);
 await run(()=>subpage('Games').click());await run();
 assert.ok(body().includes('Glass Origins'));
-assert.equal(document.querySelectorAll('.sf-game-card').length,2);
+assert.equal(document.querySelectorAll('.gd-catalog-card').length,2);
 await run(()=>subpage('Studio').click());await run();
 assert.ok(body().includes('Frontier Beyond'));
-assert.ok(!document.querySelector('.sf-game-card'),'Studio focuses on the studio and projects, not a duplicate catalog');
+assert.ok(!document.querySelector('.gd-catalog-card'),'Studio focuses on the studio and projects, not a duplicate catalog');
 await run(()=>subpage('Stream').click());await run();
 assert.ok(body().includes('No live streams right now.'));
 assert.equal(document.querySelectorAll('iframe').length,0,'a trailer must not masquerade as a live stream');

@@ -3,15 +3,6 @@ import Stripe from 'npm:stripe@16.12.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
-
-// Use the same catalog sale price shown on Store and GameDetail. Never trust client prices.
-function catalogGamePrice(game: Record<string, unknown>): number {
-  const value=(input: unknown)=>input!==null&&input!==undefined&&input!==''&&Number.isFinite(Number(input))&&Number(input)>=0?Number(input):NaN;
-  if(game.free_to_play===true||game.isFree===true)return 0;
-  const regular=value(game.price),sale=value(game.sale_price);
-  return Number.isFinite(regular)&&Number.isFinite(sale)&&sale<regular?sale:regular;
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -31,7 +22,7 @@ Deno.serve(async (req) => {
       if (item.type === 'game') {
         const game = await base44.entities.Game.get(item.id);
         if (!game) return Response.json({ error: `Game ${item.id} not found` }, { status: 404 });
-        const price = catalogGamePrice(game);
+        const price = Number(game.price);
         if (!Number.isFinite(price) || price <= 0) return Response.json({ error: `Game ${item.id} has an invalid checkout price` }, { status: 400 });
         if (user.purchased_items?.includes(game.id)) return Response.json({ error: `You already own ${game.title}` }, { status: 409 });
         catalogItems.push({ id: game.id, type: 'game', title: game.title, description: game.description, image: game.cover_image, price });

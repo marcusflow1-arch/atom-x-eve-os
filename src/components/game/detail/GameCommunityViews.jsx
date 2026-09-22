@@ -3,8 +3,8 @@ import {useQuery} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {ArrowUpRight,Building2,Radio,Play,Gamepad2} from 'lucide-react';
 import {base44} from '@/api/base44Client';
-import {useStoreCatalog} from '@/components/store/redesign/useStoreCatalog';
-import {GameCard} from '@/components/store/redesign/StoreSections';
+import {useGameCatalog} from './useGameCatalog';
+import StudioGameCard from './StudioGameCard';
 import {comingSoon,normalize,uniqueCatalog} from '@/components/store/redesign/discovery';
 import {mediaUrl} from './gameDetailData';
 import StreamMedia,{resolveMedia} from '@/components/streaming/hub/StreamMedia';
@@ -23,7 +23,7 @@ function LoadState({loading,error,retry,children}){
  return children;
 }
 export function StudioGameViews({game,view}){
- const profile=usePublishedStudio(game),catalog=useStoreCatalog(),navigate=useNavigate();
+ const profile=usePublishedStudio(game),catalog=useGameCatalog(),navigate=useNavigate();
  const studio=profile.data,developer=studio?.developer_name||game.developer||game.studio;
  const names=new Set((studio?.notable_games||[]).map(g=>normalize(g.title)));
  const releases=uniqueCatalog((catalog.data||[]).filter(g=>g.id===game.id||developer&&normalize(g.developer||g.studio)===normalize(developer)||names.has(normalize(g.title))));
@@ -37,7 +37,7 @@ export function StudioGameViews({game,view}){
   <LoadState loading={profile.isLoading||catalog.isLoading} error={profile.error||catalog.error} retry={()=>{profile.refetch();catalog.refetch();}}>
    {view==='games'?<>
     {!developer&&!names.size&&<p className="gd-muted gd-published-note">The studio hasn't been linked yet. Currently showing this game.</p>}
-    <div className="sf-card-grid">{releases.map(g=><GameCard key={g.id} game={g} onSelect={open}/>)}</div>
+    <div className="gd-catalog-grid">{releases.map(g=><StudioGameCard key={g.id} game={g} onSelect={open}/>)}</div>
     {!!missingTitles.length&&<div className="gd-studio-other"><h3>More from the studio</h3><p className="gd-muted">Listed in the studio profile; not currently available in this store.</p>{missingTitles.map((title,index)=><div key={title.title+index}><Gamepad2 size={17}/><strong>{title.title}</strong>{title.year&&<span>{title.year}</span>}</div>)}</div>}
    </>:<>
     <div className="gd-studio-summary"><div>{studio?.logo_url&&<GameImage src={studio.logo_url} alt={developer+' logo'} className="gd-studio-logo"/>}<p className="gd-description">{studio?.description||'The studio has not published its overview yet.'}</p>{mediaUrl(studio?.website)&&<a className="gd-text-button" href={mediaUrl(studio.website)} target="_blank" rel="noopener noreferrer">Visit studio website<ArrowUpRight size={14}/></a>}</div><dl>{[['Founded',studio?.founded_year],['Headquarters',studio?.headquarters],['Team',studio?.employees],['Parent company',studio?.parent_company]].filter(([,value])=>value).map(([name,value])=><div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl></div>

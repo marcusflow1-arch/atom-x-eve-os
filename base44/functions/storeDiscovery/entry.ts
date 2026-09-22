@@ -12,10 +12,7 @@ Deno.serve(async req=>{
     const rows=await svc.Order.filter({status:'completed'},'-created_date',500,offset);
     for(const order of rows){
      if(Date.parse(order.created_date)<since){complete=true;break;}
-     for(const item of order.items||[]){
-      const id=item.type==='game'?(item.id||item.game_id):!item.type&&item.game_id?item.game_id:null;
-      if(id)counts.set(id,(counts.get(id)||0)+Math.max(1,Number(item.quantity)||1));
-     }
+     for(const item of order.items||[])if(item.game_id)counts.set(item.game_id,(counts.get(item.game_id)||0)+Math.max(1,Number(item.quantity)||1));
     }
     offset+=rows.length;
     if(complete||rows.length<500){complete=true;break;}
