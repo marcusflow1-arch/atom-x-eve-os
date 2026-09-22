@@ -4,10 +4,10 @@ type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 const normalize = (value: any) => String(value || '').trim().toLowerCase();
 
-const DEFAULT_JAWANS = [
-  { id: 'jawan-1', name: 'Jawan I', role: 'Balanced' },
-  { id: 'jawan-2', name: 'Jawan II', role: 'Assault' },
-  { id: 'jawan-3', name: 'Jawan III', role: 'Guard' },
+const DEFAULT_SKILL_SETS = [
+  { id: 'skill-set-1', name: 'Genre I', genre: '', order: 0 },
+  { id: 'skill-set-2', name: 'Genre II', genre: '', order: 1 },
+  { id: 'skill-set-3', name: 'Genre III', genre: '', order: 2 },
 ];
 
 const snapshotCard = (card: AnyObj | null) => card ? ({
@@ -27,62 +27,78 @@ const snapshotCard = (card: AnyObj | null) => card ? ({
   showcaseOnly: true,
 }) : null;
 
-async function ensureJawans(base44: any, userId: string) {
+async function ensureSkillSets(base44: any, userId: string) {
   const svc = base44.asServiceRole.entities;
   let rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
 
   if (!rows.length) {
-    const first = DEFAULT_JAWANS[0];
+    const first = DEFAULT_SKILL_SETS[0];
     rows = [await svc.Loadout.create({
       user_id: userId,
       name: first.name,
-      description: 'Persistent four-slot Luna Skill Book and AI Battle Jawan loadout.',
+      description: 'Persistent four-slot Luna Skill Book genre row.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
       equipped_items: {},
       skill_slots: {},
-      jawan_id: first.id,
-      jawan_name: first.name,
-      jawan_role: first.role,
+      skill_set_id: first.id,
+      skill_set_name: first.name,
+      skill_set_genre: first.genre,
+      skill_set_order: first.order,
+      jawan_id: 'jawan-1',
+      jawan_name: 'Jawan I',
+      jawan_role: 'Balanced',
       is_active: true,
-      tags: ['Luna', 'Skill Book', 'Jawan'],
+      tags: ['Luna', 'Skill Book', 'Genre Set'],
     })];
   }
 
   const ordered = [...rows].sort((a: AnyObj, b: AnyObj) => String(a.created_date || '').localeCompare(String(b.created_date || '')));
-  for (let i = 0; i < ordered.length; i += 1) {
+  for (let i = 0; i < Math.min(ordered.length, DEFAULT_SKILL_SETS.length); i += 1) {
     const row = ordered[i];
-    const fallback = DEFAULT_JAWANS[i] || { id: 'jawan-' + (i + 1), name: 'Jawan ' + (i + 1), role: 'Balanced' };
+    const fallback = DEFAULT_SKILL_SETS[i];
     const patch: AnyObj = {};
-    if (!row.jawan_id) patch.jawan_id = fallback.id;
-    if (!row.jawan_name) patch.jawan_name = row.name || fallback.name;
-    if (!row.jawan_role) patch.jawan_role = fallback.role;
+    if (!row.skill_set_id) patch.skill_set_id = fallback.id;
+    if (!row.skill_set_name) patch.skill_set_name = fallback.name;
+    if (row.skill_set_genre === undefined || row.skill_set_genre === null) patch.skill_set_genre = row.genre || fallback.genre;
+    if (!Number.isFinite(Number(row.skill_set_order))) patch.skill_set_order = fallback.order;
+    if (!row.jawan_id) patch.jawan_id = 'jawan-' + (i + 1);
+    if (!row.jawan_name) patch.jawan_name = 'Jawan ' + ['I', 'II', 'III'][i];
+    if (!row.jawan_role) patch.jawan_role = ['Balanced', 'Assault', 'Guard'][i];
     if (Object.keys(patch).length) await svc.Loadout.update(row.id, patch);
   }
 
   rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
-  const existingIds = new Set(rows.map((r: AnyObj) => String(r.jawan_id || '')));
-  for (const preset of DEFAULT_JAWANS) {
+  const existingIds = new Set(rows.map((r: AnyObj) => String(r.skill_set_id || '')));
+  for (const preset of DEFAULT_SKILL_SETS) {
     if (existingIds.has(preset.id)) continue;
+    const index = preset.order;
     rows.push(await svc.Loadout.create({
       user_id: userId,
       name: preset.name,
-      description: 'Persistent four-slot Luna Skill Book and AI Battle Jawan loadout.',
+      description: 'Persistent four-slot Luna Skill Book genre row.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
       equipped_items: {},
       skill_slots: {},
-      jawan_id: preset.id,
-      jawan_name: preset.name,
-      jawan_role: preset.role,
+      skill_set_id: preset.id,
+      skill_set_name: preset.name,
+      skill_set_genre: preset.genre,
+      skill_set_order: preset.order,
+      jawan_id: 'jawan-' + (index + 1),
+      jawan_name: 'Jawan ' + ['I', 'II', 'III'][index],
+      jawan_role: ['Balanced', 'Assault', 'Guard'][index],
       is_active: false,
-      tags: ['Luna', 'Skill Book', 'Jawan'],
+      tags: ['Luna', 'Skill Book', 'Genre Set'],
     }));
   }
 
   rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
+  rows = rows
+    .filter((row: AnyObj) => DEFAULT_SKILL_SETS.some((set) => set.id === row.skill_set_id))
+    .sort((a: AnyObj, b: AnyObj) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0));
   let active = rows.find((r: AnyObj) => r.is_active);
   if (!active) {
     active = rows[0];
