@@ -20,7 +20,7 @@ const { createRoot } = await import('react-dom/client');
 const require = createRequire(import.meta.url);
 const {QueryClient,QueryClientProvider}=require('@tanstack/react-query');
 const queryClient=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}});
-const game = { id: 'game-one', title: 'The Glass Frontier', developer:'Glassworks Studio', genre: 'rpg', description: 'Explore a fractured world.\n\nChoose your own path.', price: 29.99, status: 'available', original_year: 2025, cover_image: 'https://example.com/cover.jpg', screenshots: ['https://example.com/one.jpg', 'https://example.com/two.jpg', 'https://example.com/one.jpg'], video_urls: ['https://www.youtube.com/watch?v=abcdefghijk', 'https://www.youtube.com/watch?v=trailer1'], trailer_url: 'https://youtu.be/abcdefghijk', system_requirements: { memory: '8 GB RAM' } };
+const game = { id: 'game-one', title: 'The Glass Frontier', developer:'Glassworks Studio', publisher:'Glassworks Publishing', genre: 'rpg', description: 'Explore a fractured world.\n\nChoose your own path.', about_game:'A developer-authored overview of the frontier.', development_history:'Built as a long-running exploration project.', developer_message:'Welcome to our world.', price: 29.99, status: 'available', original_year: 2025, cover_image: 'https://example.com/cover.jpg', screenshots: ['https://example.com/one.jpg', 'https://example.com/two.jpg', 'https://example.com/one.jpg'], video_urls: ['https://www.youtube.com/watch?v=abcdefghijk', 'https://www.youtube.com/watch?v=trailer1'], trailer_url: 'https://youtu.be/abcdefghijk', system_requirements: { memory: '8 GB RAM' } };
 const calls = { get: 0, cart: [], wishlist: [], reviews: [], login: 0 };
 const session = { authenticated: true, owned: false };
 let storedWishlist = [], storedReviews = [], failGet = false, failWishlist = false;
@@ -28,6 +28,7 @@ const SDK = { entities: {
   Achievement:{filter:async()=>[{id:'reward-1',game:game.title,title:'First Light',description:'Complete the opening chapter.',category:'ability',rarity:'Rare',points:100,reward:{name:'Dawnstrike',description:'A radiant ability for your avatar.'}}]},
   StudioProfile:{filter:async()=>[{developer_name:'Glassworks Studio',description:'A studio focused on hand-crafted worlds.',upcoming_projects:[{title:'Frontier Beyond',description:'The next adventure.'}],notable_games:[{title:'Glass Origins',year:2023}]}]},
   Stream:{filter:async()=>[]},AuraStream:{filter:async()=>[]},
+  GameAnnouncement:{filter:async()=>[{id:'announce-one',game_id:game.id,title:'Frontier Festival',body:'A new in-game event is live.',announcement_type:'event',published:true,created_date:'2026-09-20T10:00:00Z'}]},
   Game: { list:async()=>[game,{...game,id:'other-title',title:'Glass Origins'}],get: async id => { calls.get++; if (failGet) throw new Error('offline'); return { ...game, id }; } },
   Wishlist: {
     filter: async () => storedWishlist,
@@ -86,17 +87,27 @@ assert.ok(document.querySelector('h1').textContent === game.title);
 assert.equal(document.querySelectorAll('iframe').length, 0, 'no trailer autoplay on entry');
 
 assert.ok(body().includes('Dawnstrike'),'published avatar reward is visible on the overview');
-const subpage=name=>[...document.querySelectorAll('.gd-game-nav button')].find(button=>button.textContent===name);
-await run(()=>subpage('Games').click());await run();
+assert.equal(document.querySelector('.gd-game-nav'), null, 'Games/Studio/Stream controls are footer-owned, not duplicated above the media');
+assert.ok(body().includes('Glassworks Publishing'));
+assert.ok(body().includes('Screenshots'));
+assert.ok(body().includes('Frontier Festival'));
+assert.ok(body().includes('About this game'));
+assert.ok(body().includes('A developer-authored overview of the frontier.'));
+assert.ok(body().includes('Built as a long-running exploration project.'));
+assert.ok(body().includes('System requirements'));
+assert.ok(body().includes('Comments'));
+assert.ok(body().includes('Player reviews'));
+
+await render({ gameId: game.id, view: 'games', onViewChange: () => {}, onClose: () => calls.closed = true });await run();
 assert.ok(body().includes('Glass Origins'));
 assert.equal(document.querySelectorAll('.gd-catalog-card').length,2);
-await run(()=>subpage('Studio').click());await run();
+await render({ gameId: game.id, view: 'studio', onViewChange: () => {}, onClose: () => calls.closed = true });await run();
 assert.ok(body().includes('Frontier Beyond'));
 assert.ok(!document.querySelector('.gd-catalog-card'),'Studio focuses on the studio and projects, not a duplicate catalog');
-await run(()=>subpage('Stream').click());await run();
+await render({ gameId: game.id, view: 'stream', onViewChange: () => {}, onClose: () => calls.closed = true });await run();
 assert.ok(body().includes('No live streams right now.'));
 assert.equal(document.querySelectorAll('iframe').length,0,'a trailer must not masquerade as a live stream');
-await run(()=>subpage('Overview').click());await run();
+await render({ gameId: game.id, view: 'overview', onViewChange: () => {}, onClose: () => calls.closed = true });await run();
 await run(() => labelButton('Show Screenshot 2').click());
 assert.equal(labelButton('Show Screenshot 2').getAttribute('aria-pressed'), 'true');
 await run(() => labelButton('Expand media').click());
@@ -122,10 +133,8 @@ failWishlist = false;
 await run(() => button('Add to wishlist').click());
 assert.equal(button('On your wishlist').getAttribute('aria-pressed'), 'true');
 assert.equal(calls.wishlist[0].game_id, game.id);
-await run(() => button('System requirements').click());
 assert.ok(body().includes('8 GB RAM'));
 assert.ok(!body().includes('RTX 4080'));
-await run(() => button('Reviews').click());
 assert.ok(body().includes('No player reviews'));
 assert.ok(!body().includes('Very Positive'));
 await run(() => button('Write a review').click());
@@ -139,15 +148,12 @@ assert.equal(calls.reviews.length, 1);
 assert.equal(calls.reviews[0].user_id, 'player-one');
 assert.equal(calls.reviews[0].game_title, game.title);
 assert.ok(body().includes('A memorable adventure.'));
-await run(() => button('Luna extras').click());
 assert.ok(body().includes('Northern Reach'));
 assert.ok(body().includes('Stoneguard'));
 assert.ok(!body().includes('Neural Expansion Pack'));
 await run(() => button('Add expansion to cart').click());
 assert.equal(calls.cart[1].id, 'expansion');
 assert.equal(calls.cart[1].gameId, game.id);
-await run(() => button('Luna extras').dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Home', bubbles: true })));
-assert.equal(button('Overview').getAttribute('aria-selected'), 'true');
 await run(() => button('Store').click());
 assert.equal(calls.closed, true);
 session.owned = true;
@@ -163,7 +169,6 @@ assert.equal(button('Coming soon').disabled, true);
 await render({ game: { ...game, id: 'unknown', price: undefined, screenshots: [], video_urls: [], trailer_url: null, system_requirements: null } });
 assert.equal(button('Not available yet').disabled, true);
 assert.equal(document.querySelectorAll('.gd-thumbnail').length, 0, 'single artwork is not repeated as fake screenshots');
-await run(() => button('System requirements').click());
 assert.ok(body().includes("haven't been published"));
 failGet = true;
 await render({ gameId: 'broken', onClose: () => {} });
@@ -173,4 +178,4 @@ await run(() => button('Try again').click());
 assert.ok(document.querySelector('h1').textContent === game.title);
 await run(() => root.unmount());
 queryClient.clear();dom.window.close();
-console.log('PASS: gallery/theater and keyboard controls, no autoplay, cart/sign-in/owned/upcoming states, wishlist failures + persistence, published requirements, saved reviews, real DLC/cards, route loading + recovery.');
+console.log('PASS: restored scrolling game landing content, footer-owned subpages, gallery/theater controls, real metadata/screenshots/cards/DLC/events/about/requirements/comments/reviews, cart/auth states, and route recovery.');
