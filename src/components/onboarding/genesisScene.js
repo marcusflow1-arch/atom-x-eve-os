@@ -55,7 +55,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
-  let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false;
+  let embeddedController = null, preserveAppearance = false, atomxeRuntimeRig = false, runtimeBoneCount = 0;
 
   let outline = new OutlineEffect(renderer, { defaultThickness: .0022, defaultColor: [0.025, 0.035, 0.055], defaultAlpha: .75, defaultKeepAlive: true });
   const fbx = new FBXLoader(), gltf = new GLTFLoader(), clock = new THREE.Clock();
@@ -317,7 +317,19 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const sourceClip = availableClips.find((candidate) => String(candidate?.name || '').trim().toLowerCase() === requestedClip)
         || availableClips.find((candidate) => String(candidate?.name || '').trim().toLowerCase().includes(requestedClip))
         || availableClips[0];
-      const clip = retargetClipToModel(sourceClip.clone());
+      let clip = sourceClip.clone();
+      if (model && runtimeBoneCount > 0) {
+        try {
+          // Retarget from the source animation skeleton into the actual loaded
+          // Artemis/Admin skeleton using each rig's rest pose.
+          clip = retargetAvatarClip(animationRoot, model, sourceClip);
+        } catch (error) {
+          console.warn('Avatar skeleton retarget fallback:', error);
+          clip = retargetClipToModel(sourceClip.clone());
+        }
+      } else {
+        clip = retargetClipToModel(sourceClip.clone());
+      }
       clip.tracks.forEach((track) => {
         if (/Hips\.position$/i.test(track.name) || /mixamorig:Hips\.position$/i.test(track.name)) {
           for (let index = 0; index < track.values.length; index += 3) {
@@ -349,7 +361,12 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       model.traverse((node) => {
         preserveAppearance ||= node.userData?.avatarRig === 'luna-hi3d-v1';
         atomxeRuntimeRig ||= node.userData?.avatarRig === 'atomxe-mixamo-v1';
+        if (node.isBone) runtimeBoneCount += 1;
+        if (node.isSkinnedMesh) atomxeRuntimeRig = true;
       });
+      // Admin-uploaded Artemis is a raw GLB and may not contain Atom XE userData.
+      // A real bone hierarchy is sufficient to treat it as an animatable runtime rig.
+      if (runtimeBoneCount > 0) atomxeRuntimeRig = true;
       let box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
       model.scale.setScalar(1.8 / (size.y || 1));
@@ -369,7 +386,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         node.castShadow = true;
         node.receiveShadow = true;
         // Poses extend beyond the bind-pose bounds (wave, sitting, lean back).
-        if (preserveAppearance && node.isSkinnedMesh) node.frustumCulled = false;
+        if ((preserveAppearance || atomxeRuntimeRig) && node.isSkinnedMesh) node.frustumCulled = false;
         const signature = `${node.name || ''} ${(Array.isArray(node.material) ? node.material : [node.material]).map((item) => item?.name || '').join(' ')}`.toLowerCase();
         hood ||= /hood|cowl/.test(signature);
         weapon ||= /bow|quiver|arrow|sword|weapon/.test(signature);
@@ -405,7 +422,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
 
-      onReady({ hi3d: preserveAppearance, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
+      onReady({ hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, boneCount: runtimeBoneCount, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
       
     } catch (error) {
       console.error('Avatar model failed:', error);
