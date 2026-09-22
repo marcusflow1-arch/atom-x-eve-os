@@ -50,7 +50,7 @@ export default function ProfileInfoBar({ activeProfile, isEditMode, isLive, upda
     </div>
     {uploadError && <p className="channel-upload-error" role="alert">{uploadError}</p>}
     <nav className="channel-section-nav" aria-label="Streamer profile sections">
-      {SECTIONS.map(({ id, label, hint, icon: Icon }) => <button key={id} type="button" aria-pressed={activeTab === id} aria-expanded={activeTab === id} aria-controls={id === 'cards' && activeTab === id ? 'player-achievement-collection' : undefined} onClick={() => setActiveTab(activeTab === id ? null : id)}><Icon size={18} /><span><strong>{label}</strong><small>{hint}</small></span><span className="channel-nav-indicator" aria-hidden="true">↗</span></button>)}
+      {SECTIONS.map(({ id, label, hint, icon: Icon }) => <button key={id} type="button" aria-pressed={activeTab === id} aria-expanded={id === 'schedule' ? undefined : activeTab === id} aria-controls={id === 'schedule' ? 'channel-page-schedule' : id === 'cards' && activeTab === id ? 'player-achievement-collection' : undefined} onClick={() => setActiveTab(activeTab === id ? null : id)}><Icon size={18} /><span><strong>{label}</strong><small>{hint}</small></span><span className="channel-nav-indicator" aria-hidden="true">↗</span></button>)}
     </nav>
   </section>;
 }
