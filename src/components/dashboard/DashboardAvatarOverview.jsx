@@ -151,10 +151,16 @@ export default function DashboardAvatarOverview() {
 
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
+        if (inventoryMode && inventorySlot) {
+          setInventorySlot(null);
+          setInteractionDimmed(false);
+          lastInteractiveRef.current = null;
+          return;
+        }
         if (inventoryMode) {
           setInventoryMode(false);
           setInventorySlot(null);
-            }
+        }
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -167,16 +173,14 @@ export default function DashboardAvatarOverview() {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [inventoryMode]);
+  }, [inventoryMode, inventorySlot]);
 
   useEffect(() => {
     const toggleInventory = () => {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
-      setInventoryMode((current) => {
-        if (current) setInventorySlot(null);
-        return !current;
-      });
+      setInventorySlot(null);
+      setInventoryMode((current) => !current);
     };
 
     window.addEventListener('openLunaInventoryWorkspace', toggleInventory);
@@ -277,10 +281,8 @@ export default function DashboardAvatarOverview() {
     if (item.id === 'inventory') {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
-      setInventoryMode((current) => {
-        if (current) setInventorySlot(null);
-        return !current;
-      });
+      setInventorySlot(null);
+      setInventoryMode((current) => !current);
       return;
     }
     setInventoryMode(false);
