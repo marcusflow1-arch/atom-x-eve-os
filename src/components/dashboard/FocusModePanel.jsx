@@ -2079,8 +2079,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
 
-      {/* Library options / three-dot workspace — same footprint as the selected-game
-          overlay, but one layer higher so it always comes to the front. */}
+      {/* Three-dot menu: same right-side workspace as clicking a game,
+          but intentionally renders a blank canvas instead of GamePageView. */}
       <AnimatePresence mode="wait">
         {longPressGame && (
           <motion.div
@@ -2088,19 +2088,16 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
             initial={{ opacity: 0, x: 28 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 28 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
+            transition={{ duration: 0.26, ease: 'easeOut' }}
             className="absolute inset-0 z-[110] pointer-events-auto overflow-hidden"
             style={{
               background: 'rgba(8,12,18,0.96)',
               backdropFilter: 'blur(30px)',
               WebkitBackdropFilter: 'blur(30px)',
-              boxShadow: '-18px 0 45px rgba(0,0,0,0.32)'
+              boxShadow: '-18px 0 45px rgba(0,0,0,0.28)'
             }}
           >
-            <BlankGameUI
-              game={longPressGame}
-              onClose={onCloseLongPress}
-            />
+            <BlankGameUI onClose={onCloseLongPress} />
           </motion.div>
         )}
       </AnimatePresence>
