@@ -1,6 +1,6 @@
 import PartyPortraitRail from './PartyPortraitRail';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
+import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
 import { inventoryData } from '../profile/mockData';
 import { useEquipment } from '../luna/hooks/useEquipment';
@@ -84,6 +85,7 @@ export default function DashboardAvatarOverview() {
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
+  const [leaderboardMode, setLeaderboardMode] = useState(false);
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
@@ -112,6 +114,7 @@ export default function DashboardAvatarOverview() {
       setInventoryMode(false);
       setInventorySlot(null);
       setCardsMode(false);
+      setLeaderboardMode(false);
     }
   }, [surface]);
 
@@ -124,6 +127,7 @@ export default function DashboardAvatarOverview() {
         setInventoryMode(false);
         setInventorySlot(null);
         setCardsMode(false);
+        setLeaderboardMode(false);
         setAttributeMenuOpen(false);
         setInteractionDimmed(false);
       }
@@ -166,6 +170,7 @@ export default function DashboardAvatarOverview() {
           setInventorySlot(null);
         }
         if (cardsMode) setCardsMode(false);
+        if (leaderboardMode) setLeaderboardMode(false);
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
@@ -178,7 +183,7 @@ export default function DashboardAvatarOverview() {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [inventoryMode, inventorySlot, cardsMode]);
+  }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode]);
 
   useEffect(() => {
     const toggleInventory = () => {
@@ -186,6 +191,7 @@ export default function DashboardAvatarOverview() {
       setInteractionDimmed(false);
       setInventorySlot(null);
       setCardsMode(false);
+      setLeaderboardMode(false);
       setInventoryMode((current) => !current);
     };
 
@@ -268,7 +274,8 @@ export default function DashboardAvatarOverview() {
     { id: 'cards', icon: Trophy, label: 'Cards' },
     { id: 'ai-story', icon: Sparkles, label: 'AI Story' },
     { id: 'ai-battle', icon: Shield, label: 'AI Battle' },
-    { id: 'season', icon: Crown, label: 'Season' }
+    { id: 'season', icon: Crown, label: 'Season' },
+    { id: 'leaderboard', icon: Medal, label: 'Leaderboard' }
   ];
   const handleInventorySlot = (slotId) => {
     setInventorySlot(slotId);
@@ -290,6 +297,7 @@ export default function DashboardAvatarOverview() {
       setInteractionDimmed(false);
       setInventorySlot(null);
       setCardsMode(false);
+      setLeaderboardMode(false);
       setInventoryMode((current) => !current);
       return;
     }
@@ -298,12 +306,23 @@ export default function DashboardAvatarOverview() {
       setInteractionDimmed(false);
       setInventoryMode(false);
       setInventorySlot(null);
+      setLeaderboardMode(false);
       setCardsMode((current) => !current);
+      return;
+    }
+    if (item.id === 'leaderboard') {
+      setActiveQuickPanel(null);
+      setInteractionDimmed(false);
+      setInventoryMode(false);
+      setInventorySlot(null);
+      setCardsMode(false);
+      setLeaderboardMode((current) => !current);
       return;
     }
     setInventoryMode(false);
     setInventorySlot(null);
     setCardsMode(false);
+    setLeaderboardMode(false);
     setActiveQuickPanel(current => current === item.id ? null : item.id);
   };
 
@@ -323,7 +342,7 @@ export default function DashboardAvatarOverview() {
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
       style={{ left: embeddedUtilityMode ? '330px' : '390px' }}
     >
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && activeQuickPanel && (
+      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && activeQuickPanel && (
         <div
           aria-label={`${activeQuickPanel} workspace`}
           className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
@@ -400,6 +419,10 @@ export default function DashboardAvatarOverview() {
       )}
 
       {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && <PartyPortraitRail />}
+      {!avatarFocusMode && surface === 'dashboard' && leaderboardMode && (
+        <LunaLeaderboardOverlay onClose={() => setLeaderboardMode(false)} />
+      )}
+
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
@@ -470,7 +493,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : activeQuickPanel === item.id}
+                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
