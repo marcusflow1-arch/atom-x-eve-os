@@ -1,12 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
 
 /**
- * Blank UI shown when a game is long-pressed (>1.5s).
- * Intentionally empty — a clean canvas in place of the default game menu.
+ * Blank workspace used by the Library three-dot action.
+ * It deliberately mirrors the game overlay footprint while keeping the body empty.
  */
-export default function BlankGameUI({ game, onClose }) {
+export default function BlankGameUI() {
   return (
     <motion.div
       key={'blank-' + (game?.id || 'none')}
@@ -21,18 +20,7 @@ export default function BlankGameUI({ game, onClose }) {
         WebkitBackdropFilter: 'blur(30px)',
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-        <span className="text-white/40 text-xs font-semibold uppercase tracking-widest">
-          {game?.title ? `${game.title} — Blank` : 'Blank UI'}
-        </span>
-        <button
-          onClick={onClose}
-          className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
-      {/* Intentionally blank body */}
+      {/* Intentionally blank body — controls/content will be added later. */}
       <div className="flex-1" />
     </motion.div>
   );
