@@ -5,7 +5,6 @@ import { useAuth } from '@/components/auth/AuthContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import FriendsListContent from '@/components/dashboard/FriendsListContent';
-import MessengerHub from '@/components/friends/MessengerHub';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 import { base44 } from '@/api/base44Client';
@@ -23,7 +22,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
   const { user } = useAuth();
   const session = useDashboardSession();
   const [friendsWorkspace, setFriendsWorkspace] = useState(null);
-  const [messagesWorkspace, setMessagesWorkspace] = useState(null);
   const [creatorChild, setCreatorChild] = useState(null);
 
   // The Friends quick-control workspace is owned by DashboardAvatarOverview.
@@ -33,9 +31,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     if (typeof document === 'undefined') return undefined;
     const resolveWorkspace = () => {
       const node = document.querySelector('[aria-label="friends workspace"]');
-      const messageNode = document.querySelector('[aria-label="messages workspace"]');
       setFriendsWorkspace((current) => current === node ? current : node);
-      setMessagesWorkspace((current) => current === messageNode ? current : messageNode);
     };
     resolveWorkspace();
     const observer = new MutationObserver(resolveWorkspace);
@@ -121,12 +117,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
           <FriendsListContent />
         </div>,
         friendsWorkspace
-      )}
-      {messagesWorkspace && createPortal(
-        <div className="relative z-10 h-full w-full overflow-hidden">
-          <MessengerHub />
-        </div>,
-        messagesWorkspace
       )}
       <EnvironmentHubWorkspace />
     </>
