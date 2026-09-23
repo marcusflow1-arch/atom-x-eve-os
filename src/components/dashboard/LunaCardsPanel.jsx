@@ -213,7 +213,7 @@ export default function LunaCardsPanel() {
               </div>
               <p className="mt-1 text-[7px] text-white/36">
                 {selectedGame
-                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to the four Luna slots`
+                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill slots 1–5`
                   : 'Choose a game chapter to browse its complete ability library.'}
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function LunaCardsPanel() {
             <div className="text-right">
               <p className="text-[6px] font-black uppercase tracking-[0.12em] text-white/30">Loadout</p>
               <p className="mt-1 text-[9px] font-semibold text-white/70">
-                {(slots || []).filter((slot) => slot.card).length} / 4 equipped
+                {(slots || []).filter((slot) => slot.card).length} / 5 equipped
               </p>
             </div>
           </div>
@@ -519,8 +519,8 @@ export default function LunaCardsPanel() {
                       </div>
 
                       {selectedSkill.owned ? (
-                        <div className="mt-2 grid grid-cols-4 gap-1.5">
-                          {[0, 1, 2, 3].map((slotIndex) => {
+                        <div className="mt-2 grid grid-cols-5 gap-1.5">
+                          {[0, 1, 2, 3, 4].map((slotIndex) => {
                             const slot = slots.find((entry) => Number(entry.index) === slotIndex);
                             const occupiedBySelected = String(slot?.card?.user_card_id || '') === String(selectedSkill.user_card_id || '');
                             return (
@@ -558,7 +558,7 @@ export default function LunaCardsPanel() {
                     {selectedSkill.owned && (
                       <div className="mt-3 border border-cyan-100/[0.07] bg-cyan-100/[0.02] px-3 py-2">
                         <p className="text-[6px] leading-3 text-cyan-50/45">
-                          You can also drag this owned skill directly onto one of the four diamond slots.
+                          You can also drag this owned skill directly onto one of the five Luna skill slots.
                         </p>
                       </div>
                     )}
