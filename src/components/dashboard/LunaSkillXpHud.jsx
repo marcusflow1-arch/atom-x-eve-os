@@ -17,7 +17,7 @@ const skillStackLayers = [
   { left: 22, top: 0, opacity: 0.24, scale: 0.97, zIndex: 10 },
 ];
 
-function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
+function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combatMode = false }) {
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const image = assigned?.image || assigned?.card_image || assigned?.icon_url || assigned?.icon || '';
   const title = assigned?.title || assigned?.name || assigned?.card_name || `Showcase slot ${index + 1}`;
@@ -25,6 +25,7 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
 
   const handleDrop = (event) => {
     event.preventDefault();
+    if (combatMode) return;
     try {
       const raw = event.dataTransfer?.getData('application/json');
       const payload = raw ? JSON.parse(raw) : null;
@@ -37,6 +38,12 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
   };
 
   const handleClick = () => {
+    if (combatMode) {
+      if (assigned) window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
+        detail: { slotIndex: index, card: assigned, source: 'dashboard_click' },
+      }));
+      return;
+    }
     if (pendingCard) {
       onAssign(index, pendingCard);
       return;
@@ -54,7 +61,7 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect }) {
       }}
       onDrop={handleDrop}
       aria-label={assigned ? `Showcase ${title}` : `Showcase slot ${index + 1}`}
-      title={pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
+      title={combatMode ? (assigned ? `Activate ${title}` : `Skill Slot ${index + 1} is empty`) : pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
       className={`absolute z-30 h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
         ? 'border-cyan-100/70 bg-cyan-200/[0.18] shadow-[0_0_18px_rgba(103,232,249,.28)]'
         : pendingCard
@@ -85,6 +92,7 @@ export default function LunaSkillXpHud({
   nextXp = 1000,
   level = 1,
   showcaseEditing = false,
+  combatMode = false,
 }) {
   const { equip, isSaving, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
@@ -154,7 +162,7 @@ export default function LunaSkillXpHud({
   return (
     <div
       data-luna-skill-xp-hud
-      className="absolute bottom-[10px] left-[34px] right-[338px] z-[44] h-[122px] pointer-events-none"
+      className={`absolute bottom-[10px] left-[34px] right-[338px] h-[122px] pointer-events-none ${combatMode ? 'z-[170]' : 'z-[44]'}`}
     >
       <div className="absolute left-0 bottom-0 h-[118px] w-[118px] pointer-events-auto">
         <div className="pointer-events-none absolute left-[29px] top-[-18px] z-40 flex max-w-[112px] items-center gap-1.5 whitespace-nowrap text-[7px] font-medium italic tracking-[0.03em] text-cyan-50/62">
@@ -211,6 +219,7 @@ export default function LunaSkillXpHud({
             pendingCard={pendingCard}
             onAssign={assignShowcaseCard}
             onSelect={selectShowcaseCard}
+            combatMode={combatMode}
           />
         ))}
       </div>
@@ -226,6 +235,12 @@ export default function LunaSkillXpHud({
 
       {!showcaseEditing && (
         <>
+      {combatMode && (
+        <div className="pointer-events-none absolute left-[132px] top-[12px] border border-cyan-100/[0.12] bg-slate-950/72 px-3 py-1.5 backdrop-blur-xl">
+          <span className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/70">Combat Loadout Locked</span>
+          <span className="ml-2 text-[7px] text-white/55">Use the four dashboard skill slots to cast.</span>
+        </div>
+      )}
       {/* Continuous seam: top point -> upper-right diamond edge -> right tip -> AI HQ. */}
       <div
         aria-hidden="true"

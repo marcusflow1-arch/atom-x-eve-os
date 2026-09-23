@@ -12,7 +12,7 @@ import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import LunaAIBattleOverlay from './LunaAIBattleOverlay';
 import DashboardBattleNotice from '@/components/battle/DashboardBattleNotice';
-import { arenaPresentation } from '@/components/battle/arenaPresentation';
+import { arenaPresentation, useArenaPresentation } from '@/components/battle/arenaPresentation';
 import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
@@ -89,7 +89,9 @@ export default function DashboardAvatarOverview() {
   const { user } = useAuth();
   const companion = useCompanionIdentity();
   const { equipItem, equippedItems } = useEquipment();
+  const battlePresentation = useArenaPresentation();
   const [progression, setProgression] = useState(null);
+  const [battlePlayer, setBattlePlayer] = useState(null);
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
@@ -230,37 +232,62 @@ export default function DashboardAvatarOverview() {
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
-    (async () => {
+    const load = async () => {
       try {
         const items = await base44.entities.AvatarProgression.filter({ user_id: user.id });
         if (!cancelled) setProgression(items?.[0] || null);
       } catch (e) {
         console.error('Failed to load avatar progression:', e);
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    load();
+    const refresh = () => load();
+    window.addEventListener('lunaProgressionChanged', refresh);
+    window.addEventListener('syncPlayerStats', refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('lunaProgressionChanged', refresh);
+      window.removeEventListener('syncPlayerStats', refresh);
+    };
   }, [user?.id]);
 
-  const stats = useMemo(() => ({
-    power: Number(progression?.power || 0),
-    hp: Number(progression?.hp || 100),
-    rank: user?.rank || 'Recruit',
-    level: Number(progression?.global_level || user?.level || 1),
-    gamerScore: Number(user?.gamer_score || 0),
-    aiPoints: Number(user?.ai_achievement_points || 0),
-    gamesPlayed: Number(user?.games_played || 0),
-    currentXP: Number(progression?.current_xp || 0),
-    nextXP: Math.max(1, Number(progression?.next_xp || progression?.xp_to_next_level || 1000)),
-    availablePoints: Number(progression?.available_points || progression?.unspent_points || 0),
-    strength: Number(progression?.strength || 10),
-    intelligence: Number(progression?.intelligence || 10),
-    willpower: Number(progression?.willpower || 10),
-    tenacity: Number(progression?.tenacity || 10),
-    defense: Number(progression?.defense || progression?.armor || 0),
-    agility: Number(progression?.agility || 10),
-    endurance: Number(progression?.endurance || 10),
-    luck: Number(progression?.luck || 10)
-  }), [progression, user]);
+  useEffect(() => {
+    const syncBattle = (event) => {
+      const encounter = event?.detail?.encounter || null;
+      const player = encounter?.players?.find((entry) => String(entry.id) === String(user?.id)) || null;
+      setBattlePlayer(player);
+    };
+    window.addEventListener('lunaBattleStateChanged', syncBattle);
+    return () => window.removeEventListener('lunaBattleStateChanged', syncBattle);
+  }, [user?.id]);
+
+  const stats = useMemo(() => {
+    const core = progression?.stats || {};
+    const level = Number(progression?.global_level || user?.level || 1);
+    const nextXP = Math.round(100 * Math.pow(Math.max(1, level), 1.35));
+    return {
+      power: Number(battlePlayer?.power || progression?.power_score || progression?.power || 0),
+      hp: Number(battlePlayer?.hp ?? core.hp ?? 100),
+      maxHp: Number(battlePlayer?.max_hp ?? core.hp ?? 100),
+      ap: battlePlayer?.ap,
+      rank: user?.rank || 'Recruit',
+      level,
+      gamerScore: Number(user?.gamer_score || 0),
+      aiPoints: Number(user?.ai_achievement_points || 0),
+      gamesPlayed: Number(user?.games_played || 0),
+      currentXP: Number(progression?.global_xp || 0),
+      nextXP: Math.max(1, nextXP),
+      availablePoints: Number(progression?.available_stat_points || progression?.available_points || progression?.unspent_points || 0),
+      strength: Number(core.strength ?? 10),
+      intelligence: Number(core.intelligence ?? 10),
+      willpower: Number(core.will ?? core.willpower ?? 10),
+      tenacity: Number(core.tenacity ?? 10),
+      defense: Number(battlePlayer?.defense ?? core.defense ?? core.armor ?? core.tenacity ?? 0),
+      agility: Number(core.agility ?? 10),
+      endurance: Number(core.endurance ?? 10),
+      luck: Number(core.luck ?? 10),
+    };
+  }, [progression, user, battlePlayer]);
 
   const { data: socialInbox = {} } = useQuery({
     queryKey: ['luna-social-inbox-summary', user?.id],
@@ -552,7 +579,7 @@ export default function DashboardAvatarOverview() {
         && !friendsMode
         && !seasonMode
         && !leaderboardMode
-        && !battleMode
+        && (!battleMode || Boolean(battlePresentation.encounterId))
         && !activeQuickPanel
         && (
           <LunaSkillXpHud
@@ -560,6 +587,7 @@ export default function DashboardAvatarOverview() {
             nextXp={stats.nextXP}
             level={stats.level}
             showcaseEditing={cardsMode}
+            combatMode={Boolean(battleMode && battlePresentation.encounterId)}
           />
         )}
 
@@ -650,7 +678,8 @@ export default function DashboardAvatarOverview() {
             <div className="relative min-h-0 flex-1 px-5 py-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {attributeView === 'overview' && <>
                 <StatRow icon={<Zap className="w-3 h-3" />} label="Power" value={stats.power} />
-                <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} />
+                <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={battlePlayer ? `${Math.ceil(stats.hp)} / ${Math.ceil(stats.maxHp)}` : stats.hp} />
+                {battlePlayer?.ap != null && <StatRow icon={<Zap className="w-3 h-3" />} label="Combat AP" value={`${battlePlayer.ap} / 5`} />}
                 <StatRow icon={<Shield className="w-3 h-3" />} label="Rank" value={stats.rank} />
                 <StatRow icon={<Star className="w-3 h-3" />} label="Global Level" value={stats.level} />
                 <StatRow icon={<BarChart3 className="w-3 h-3" />} label="Global XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />
