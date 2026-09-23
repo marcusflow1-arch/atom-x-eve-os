@@ -42,9 +42,10 @@ export function useSkills() {
       const cardName = String(assigned.card_name || assigned.title || assigned.name || '').toLowerCase();
       const isGetsuga = cardName.includes('getsuga tensh') || (cardName.includes('ichigo') && cardName.includes('getsuga'));
 
-      // Skill Slot 1 owns the uploaded Getsuga Tensho proc. Keep this card-driven
-      // so changing the card in slot 1 also changes what the number key does.
-      if (slotIndex === 0 && isGetsuga) {
+      // Getsuga Tensho is card-driven, not slot-driven. If the card is equipped
+      // in any skill slot, pressing that slot's number key plays the packaged
+      // character animation + VFX.
+      if (isGetsuga) {
         const skillId = 'getsuga_tensho';
         if (!isOnCooldown(skillId)) {
           storeSkill(skillId);
