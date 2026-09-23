@@ -43,8 +43,8 @@ export function useSkills() {
       const isGetsuga = cardName.includes('getsuga tensh') || (cardName.includes('ichigo') && cardName.includes('getsuga'));
 
       // Getsuga Tensho is intentionally locked to Skill Slot 1 for the Luna dashboard.
-      // The packaged animation/VFX only fires when the Getsuga card is equipped in
-      // slot 1 and the player presses the 1 key.
+      // Temporary test mapping: the packaged animation/VFX only fires when the
+      // Getsuga card is equipped in Slot 1 and the player presses keyboard key 4.
       if (slotIndex === 0 && isGetsuga) {
         const skillId = 'getsuga_tensho';
         if (!isOnCooldown(skillId)) {
@@ -87,15 +87,26 @@ export function useSkills() {
   };
 
   /**
-   * Keyboard listener for skill activation (1-5 keys)
+   * Keyboard listener for skill activation.
+   * Temporary dashboard test mapping: key 4 triggers Skill Slot 1.
+   * Key 1 is intentionally disabled for Slot 1 during this test.
    */
   useEffect(() => {
     const handleSkillKey = (e) => {
       const key = e.key;
-      if (['1', '2', '3', '4', '5'].includes(key)) {
-        const index = parseInt(key) - 1;
-        triggerSkill(index);
+
+      if (key === '4') {
+        triggerSkill(0);
+        return;
       }
+
+      const remainingMap = {
+        '2': 1,
+        '3': 2,
+        '5': 4,
+      };
+      const index = remainingMap[key];
+      if (Number.isInteger(index)) triggerSkill(index);
     };
 
     window.addEventListener('keydown', handleSkillKey);
