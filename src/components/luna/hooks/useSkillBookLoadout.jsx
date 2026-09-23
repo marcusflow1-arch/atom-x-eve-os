@@ -37,7 +37,7 @@ export function useSkillBookLoadout() {
     setActiveSkillRow(Math.max(0, Math.min(2, rowIndex)));
     if (!Array.isArray(slots)) return;
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       const card = slots.find((slot) => Number(slot.index) === index)?.card || null;
       if (card) assignToHotbar(index, card);
       else clearHotbarSlot(index);
