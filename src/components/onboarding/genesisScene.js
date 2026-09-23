@@ -54,7 +54,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
-  const getsuga = options.skillEffects ? new GetsugaAbilityRuntime({
+  const getsuga = (options.skillEffects || options.getsugaMale) ? new GetsugaAbilityRuntime({
     scene,
     camera,
     getPlayer: () => model,
@@ -68,7 +68,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const onGetsugaProc = () => {
     if (!disposed && model && getsuga) getsuga.play();
   };
-  if (getsuga && typeof window !== 'undefined') window.addEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+  if (getsuga && options.skillEffects && typeof window !== 'undefined') window.addEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
   let primaryMotionRoot = null, primaryMotionMixer = null, primaryMotionAction = null, primaryMotionBridge = null;
@@ -602,7 +602,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     dispose: () => {
       disposed = true;
       cancelAnimationFrame(frame);
-      if (getsuga && typeof window !== 'undefined') window.removeEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+      if (getsuga && options.skillEffects && typeof window !== 'undefined') window.removeEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
       getsuga?.dispose();
       observer.disconnect();
       visibility?.disconnect();
