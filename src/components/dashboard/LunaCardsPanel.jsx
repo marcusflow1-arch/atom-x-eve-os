@@ -313,6 +313,8 @@ export default function LunaCardsPanel() {
           )}
         </div>
 
+        <CombatPrefabManager />
+
         {!selectedGame && (
           <section className="mt-3 shrink-0">
             <div className="mb-2 flex items-center justify-between">
