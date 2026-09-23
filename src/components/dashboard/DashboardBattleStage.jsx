@@ -74,7 +74,7 @@ function TurnRail({ encounter, allies, opponent, enemy, activeId }) {
   );
 }
 
-function PartyFormation({ players, activeId, lastEvent, duel = false }) {
+function PartyFormation({ players, activeId, lastEvent, duel = false, localUserId = '' }) {
   const count = Math.max(1, players.length);
   return (
     <div className="relative h-full w-full">
@@ -89,7 +89,7 @@ function PartyFormation({ players, activeId, lastEvent, duel = false }) {
             className="absolute bottom-[5%] top-[1%] w-[44%] -translate-x-1/2 transition-all duration-500"
             style={{ left: String(x) + '%', transform: 'translateX(-50%) translateY(' + String(y) + '%) scale(' + String(scale) + ')', zIndex: 20 - Math.abs(spread) }}
           >
-            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} facing={duel ? 'right' : 'front'} skillEffects={duel} />
+            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} facing={duel ? 'right' : 'front'} skillEffects={String(player.id) === String(localUserId)} />
           </div>
         );
       })}
@@ -204,7 +204,7 @@ export default function DashboardBattleStage({ encounterId }) {
 
       <div className="absolute inset-x-[2%] bottom-[9%] top-[18%] z-10 grid grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)] items-end">
         <div className="relative h-full">
-          <PartyFormation players={model.allies} activeId={activeId} lastEvent={model.last} duel={model.duel} />
+          <PartyFormation players={model.allies} activeId={activeId} lastEvent={model.last} duel={model.duel} localUserId={user?.id} />
         </div>
 
         <div className="self-center text-center">
