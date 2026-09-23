@@ -1,126 +1,110 @@
 import { useState, useEffect } from 'react';
 import useLunaStore from '../useLunaStore';
 
+const DEFAULT_EFFECT_COOLDOWN_MS = 3000;
+const DEFAULT_EFFECT_DURATION_MS = 800;
+
 /**
- * Hook for managing skills and ability hotbar with Zustand store
- * @returns {Object} Skill state and handlers
+ * Hook for managing the five Luna / AI Battle skill-card slots.
+ *
+ * Cards are the source of truth. A slot only triggers an animation/VFX package
+ * when the equipped card carries animation_effect metadata. The keyboard never
+ * owns an effect directly: Digit1..Digit5 resolve the card in that logical slot,
+ * then the card resolves the effect.
  */
 export function useSkills() {
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const { triggerSkill: storeSkill, isOnCooldown, setCooldown, getHotbarItem } = useLunaStore();
 
-  /**
-   * Activate a skill slot
-   * @param {number} index - Skill slot index (0-4)
-   * @param {number} duration - Duration to keep skill active (ms)
-   */
-  const activateSkill = (index, duration = 800) => {
+  const activateSkill = (index, duration = DEFAULT_EFFECT_DURATION_MS) => {
     setActiveSkills((prev) => {
       const next = [...prev];
       next[index] = true;
-      
-      setTimeout(() => {
-        setActiveSkills((p) => {
-          const n = [...p];
-          n[index] = false;
-          return n;
+
+      window.setTimeout(() => {
+        setActiveSkills((current) => {
+          const updated = [...current];
+          updated[index] = false;
+          return updated;
         });
-      }, duration);
-      
+      }, Math.max(100, Number(duration) || DEFAULT_EFFECT_DURATION_MS));
+
       return next;
     });
   };
 
   /**
-   * Trigger skill from hotbar or mapping
-   * @param {number} slotIndex - Slot index (0-4)
+   * Resolve a logical skill slot to its equipped card and cast it.
+   * The generic lunaCardAnimationEffectProc event is consumed by the player
+   * character runtime; individual effects can add adapters without changing the
+   * hotbar or key mapping.
    */
   const triggerSkill = (slotIndex, source = 'luna_skill_bar') => {
     const assigned = getHotbarItem(slotIndex);
-    
-    if (assigned) {
-      // One event connects the existing dashboard hotbar to AI Battle. The battle
-      // layer still validates turn/AP/cooldown and the locked server snapshot.
-      window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
-        detail: { slotIndex, card: assigned, source },
-      }));
+    if (!assigned) return false;
 
-      const cardName = String(assigned.card_name || assigned.title || assigned.name || '').toLowerCase();
-      const isGetsuga = cardName.includes('getsuga tensh') || (cardName.includes('ichigo') && cardName.includes('getsuga'));
+    window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
+      detail: { slotIndex, card: assigned, source },
+    }));
 
-      // Getsuga Tensho stays visually bound to logical Skill Slot 1. During the
-      // current test, keyboard 4 can trigger Slot 1; the slot identity never changes.
-      if (slotIndex === 0 && isGetsuga) {
-        const skillId = 'getsuga_tensho';
-        if (!isOnCooldown(skillId)) {
-          storeSkill(skillId);
-          activateSkill(slotIndex, 7000);
-          setCooldown(skillId, Date.now() + 8000);
-          window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoProc', {
-            detail: { slotIndex, card: assigned, source },
-          }));
-        }
-        return;
+    const effect = assigned.animation_effect || assigned.animationEffect || null;
+    const effectId = String(effect?.id || '').trim();
+
+    if (effectId) {
+      if (isOnCooldown(effectId)) return false;
+
+      const durationMs = Math.max(100, Number(effect?.duration_ms) || DEFAULT_EFFECT_DURATION_MS);
+      const cooldownMs = Math.max(durationMs, Number(effect?.cooldown_ms) || DEFAULT_EFFECT_COOLDOWN_MS);
+
+      storeSkill(effectId);
+      activateSkill(slotIndex, durationMs);
+      setCooldown(effectId, Date.now() + cooldownMs);
+
+      const detail = { slotIndex, card: assigned, effect, source };
+      window.dispatchEvent(new CustomEvent('lunaCardAnimationEffectProc', { detail }));
+
+      // Compatibility bridge while older Getsuga listeners are phased out.
+      if (effectId === 'getsuga_tensho') {
+        window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoProc', { detail }));
       }
-
-      const skillFromCardType = { ability: 'kick_ability' };
-      const derived = skillFromCardType[String(assigned.type || assigned.card_type || '').toLowerCase()] || 'kick_ability';
-      
-      if (!isOnCooldown(derived)) {
-        storeSkill(derived);
-        activateSkill(slotIndex);
-        setCooldown(derived, Date.now() + 3000);
-      }
-      return;
+      return true;
     }
 
-    // Fallback to static mapping
-    const skillMap = {
-      0: 'kick_ability',
-      1: null,
-      2: null,
-      3: null,
-      4: null
-    };
-    
-    const skillId = skillMap[slotIndex];
-    if (skillId && !isOnCooldown(skillId)) {
-      storeSkill(skillId);
-      activateSkill(slotIndex);
-      setCooldown(skillId, Date.now() + 3000);
-    }
+    // Cards without a bound VFX can still use the existing gameplay action
+    // mapping, but they do not invent or borrow an animation effect.
+    const skillFromCardType = { ability: 'kick_ability' };
+    const derived = skillFromCardType[String(assigned.type || assigned.card_type || '').toLowerCase()] || 'kick_ability';
+    if (isOnCooldown(derived)) return false;
+
+    storeSkill(derived);
+    activateSkill(slotIndex);
+    setCooldown(derived, Date.now() + DEFAULT_EFFECT_COOLDOWN_MS);
+    return true;
   };
 
   /**
-   * Keyboard listener for the four dashboard skill slots.
-   * Temporary Getsuga test rule: when Getsuga occupies Slot 1, key 4 fires that
-   * logical slot and key 1 is suppressed. Otherwise normal 1→1 ... 4→4 applies.
+   * AI Battle / dashboard skill-card keys are a direct 1→1 ... 5→5 mapping.
+   * No effect may remap its card to another number: slot identity is persistent.
    */
   useEffect(() => {
-    const handleSkillKey = (e) => {
-      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
-      const target = e.target;
+    const handleSkillKey = (event) => {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
       if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
-      const key = e.key;
-      if (!['1','2','3','4'].includes(key)) return;
+      if (target instanceof HTMLElement && target.isContentEditable) return;
 
-      const slotOne = getHotbarItem(0);
-      const slotOneName = String(slotOne?.card_name || slotOne?.title || slotOne?.name || '').toLowerCase();
-      const getsugaInSlotOne = slotOneName.includes('getsuga tensh') || (slotOneName.includes('ichigo') && slotOneName.includes('getsuga'));
-      if (getsugaInSlotOne) {
-        if (key === '1') return;
-        if (key === '4') {
-          triggerSkill(0, 'keyboard_4_test');
-          return;
-        }
-      }
+      const key = String(event.key || '');
+      if (!['1', '2', '3', '4', '5'].includes(key)) return;
 
-      triggerSkill(Number(key) - 1, 'keyboard');
+      const slotIndex = Number(key) - 1;
+      if (!getHotbarItem(slotIndex)) return;
+      event.preventDefault();
+      triggerSkill(slotIndex, 'keyboard');
     };
 
     const handleRequestedSlot = (event) => {
       const slotIndex = Number(event?.detail?.slotIndex);
-      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 3) return;
+      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 4) return;
       triggerSkill(slotIndex, event?.detail?.source || 'dashboard_click');
     };
 
@@ -135,6 +119,6 @@ export function useSkills() {
   return {
     activeSkills,
     activateSkill,
-    triggerSkill
+    triggerSkill,
   };
 }
