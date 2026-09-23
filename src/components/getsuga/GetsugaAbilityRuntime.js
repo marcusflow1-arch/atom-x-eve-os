@@ -224,6 +224,87 @@ export class GetsugaAbilityRuntime {
     this.up = new THREE.Vector3(0, 1, 0);
     this.bones = {};
     this.rest = new Map();
+    this.ready = false;
+    this.pendingPlay = false;
+    this.packageGltf = null;
+    this.mixer = null;
+    this.attackClip = null;
+    this.attackAction = null;
+    this.idleAction = null;
+    this.packageEnergyBlade = null;
+    this.loadError = null;
+    this.initializeCharacter();
+  }
+
+  async initializeCharacter() {
+    try {
+      const gltf = await loadPackagedCharacter();
+      if (this.disposed) return;
+      const original = this.getPlayer?.();
+      if (!original?.parent) throw new Error('Luna player scene is not ready for the Getsuga character.');
+
+      this.packageGltf = gltf;
+      this.original = original;
+      this.proxy = gltf.scene;
+      this.proxy.name = 'Getsuga_PackageCharacter';
+      this.proxy.traverse((node) => {
+        if (node.isMesh) {
+          node.frustumCulled = false;
+          node.castShadow = true;
+          node.receiveShadow = true;
+        }
+        if (node.name === 'SK_EnergyBlade') this.packageEnergyBlade = node;
+      });
+
+      original.updateMatrixWorld(true);
+      this.proxy.position.copy(original.position);
+      this.proxy.quaternion.copy(original.quaternion);
+      this.proxy.scale.set(1, 1, 1);
+      original.parent.add(this.proxy);
+      this.proxy.updateMatrixWorld(true);
+
+      const originalBox = new THREE.Box3().setFromObject(original);
+      const packageBox = new THREE.Box3().setFromObject(this.proxy);
+      const originalSize = originalBox.getSize(new THREE.Vector3());
+      const packageSize = packageBox.getSize(new THREE.Vector3());
+      const scale = packageSize.y > .0001 ? originalSize.y / packageSize.y : 1;
+      this.proxy.scale.multiplyScalar(scale);
+      this.proxy.updateMatrixWorld(true);
+
+      const scaledBox = new THREE.Box3().setFromObject(this.proxy);
+      const originalCenter = originalBox.getCenter(new THREE.Vector3());
+      const packageCenter = scaledBox.getCenter(new THREE.Vector3());
+      this.proxy.position.x += originalCenter.x - packageCenter.x;
+      this.proxy.position.y += originalBox.min.y - scaledBox.min.y;
+      this.proxy.position.z += originalCenter.z - packageCenter.z;
+      this.proxy.updateMatrixWorld(true);
+
+      this.attackClip = gltf.animations.find((clip) => clip.name === 'GetsugaTensho') || gltf.animations[0];
+      if (!this.attackClip) throw new Error('GetsugaTensho animation was not found in the packaged character.');
+      this.mixer = new THREE.AnimationMixer(this.proxy);
+      this.attackAction = this.mixer.clipAction(this.attackClip);
+      this.attackAction.setLoop(THREE.LoopOnce, 1);
+      this.attackAction.clampWhenFinished = true;
+
+      const idleClip = createIdleClip(this.attackClip);
+      this.idleAction = this.mixer.clipAction(idleClip);
+      this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
+      this.idleAction.reset().setEffectiveWeight(1).play();
+      if (this.packageEnergyBlade) this.packageEnergyBlade.visible = false;
+
+      this.captureBones();
+      original.visible = false;
+      this.ready = true;
+      this.emit('idle');
+      if (this.pendingPlay) {
+        this.pendingPlay = false;
+        this.play();
+      }
+    } catch (error) {
+      this.loadError = error;
+      console.error('[Getsuga] Exact packaged character failed to load:', error);
+      this.emit('loadError');
+    }
   }
 
   isPlaying() {
@@ -236,21 +317,11 @@ export class GetsugaAbilityRuntime {
 
   play() {
     if (this.disposed || !this.scene) return false;
-    if (this.active) this.finish(false);
-    const player = this.getPlayer?.();
-    if (!player) return false;
-
-    this.original = player;
-    this.proxy = cloneSkeleton(player);
-    this.proxy.name = 'Getsuga_PlayerCastProxy';
-    this.proxy.traverse((node) => {
-      if (node.isMesh) {
-        node.frustumCulled = false;
-        node.castShadow = true;
-      }
-    });
-    player.parent?.add(this.proxy);
-    player.visible = false;
+    if (!this.ready) {
+      this.pendingPlay = true;
+      return true;
+    }
+    if (this.active) return false;
 
     this.localFx = new THREE.Group();
     this.localFx.name = 'Getsuga_LocalFX';
@@ -258,13 +329,16 @@ export class GetsugaAbilityRuntime {
     this.worldFx.name = 'Getsuga_WorldFX';
     this.scene.add(this.localFx, this.worldFx);
 
-    this.captureBones();
     this.setupEffects();
     this.time = 0;
     this.lastFrame = -1;
     this.released = false;
     this.impacted = false;
     this.active = true;
+    if (this.packageEnergyBlade) this.packageEnergyBlade.visible = true;
+    this.attackAction.enabled = true;
+    this.attackAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1);
+    this.attackAction.crossFadeFrom(this.idleAction, .18, true).play();
     this.syncLocalFrame();
     this.emit('castStart');
     return true;
