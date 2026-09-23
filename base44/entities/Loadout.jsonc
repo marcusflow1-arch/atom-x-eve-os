@@ -38,7 +38,12 @@
     },
     "skill_rows": {
       "type": "array",
-      "items": { "type": "array", "items": { "type": "string" } },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
       "description": "Three four-slot Skill Prefab rows containing references to owned UserCard IDs."
     },
     "linked_skill_prefab_id": {
@@ -60,7 +65,7 @@
     "skill_slots": {
       "type": "object",
       "default": {},
-      "description": "Persistent four-slot Luna Skill Book mapping. Keys 0-3 map to owned UserCard IDs."
+      "description": "Persistent five-slot Luna Skill Book mapping. Keys 0-4 map to owned UserCard IDs."
     },
     "skill_set_id": {
       "type": "string",
