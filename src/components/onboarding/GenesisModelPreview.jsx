@@ -232,9 +232,9 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, []);
 
   const syncMovementAnimation = useCallback(() => {
-    if (fixedFemaleIdle) {
+    if (fixedFemaleIdle || canonicalGetsugaMale) {
       activeMovement.current = '';
-      playIdle();
+      if (!movementForKeys()) playIdle();
       return;
     }
     const move = movementForKeys();
@@ -250,7 +250,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
     if (activeMovement.current === key) return;
     activeMovement.current = key;
     playMotion(motionSetRef.current[running ? 'run' : 'walk']?.[move.direction]);
-  }, [fixedFemaleIdle, movementForKeys, playIdle, playMotion]);
+  }, [fixedFemaleIdle, canonicalGetsugaMale, movementForKeys, playIdle, playMotion]);
 
   useEffect(() => {
     if (!interactive || !controlArmed) {
@@ -311,7 +311,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, [interactive, ready]);
 
   const friendlyInteraction = useCallback(() => {
-    if (!interactive || !ready || fixedFemaleIdle) return;
+    if (!interactive || !ready || fixedFemaleIdle || canonicalGetsugaMale) return;
     setControlArmed(true);
     if (interactionActive.current) {
       const nextPaused = scene.current?.togglePaused?.() ?? false;
@@ -330,7 +330,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       setPaused(false);
       playIdle();
     }, 3600);
-  }, [interactive, ready, fixedFemaleIdle, playMotion, playIdle]);
+  }, [interactive, ready, fixedFemaleIdle, canonicalGetsugaMale, playMotion, playIdle]);
 
   const handleClick = useCallback((event) => {
     if (!interactive) return;
