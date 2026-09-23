@@ -22,7 +22,6 @@ import EntertainmentRow from './EntertainmentRow';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
-import { arenaPresentation } from '@/components/battle/arenaPresentation';
 
 import StatsPopupOverlay from '@/components/dashboard/StatsPopupOverlay';
 import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
@@ -1309,7 +1308,6 @@ export function LibraryBannerSection({
   const { user } = useAuth();
   const [invitedUsers, setInvitedUsers] = useState({});
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
-  const [duelUsers, setDuelUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
   const [joiningUsers, setJoiningUsers] = useState({});
   const [tradeFriend, setTradeFriend] = useState(null);
@@ -1470,34 +1468,12 @@ export function LibraryBannerSection({
     }
   };
 
-  const handleDuel = async (u) => {
-    if (!user?.id || !u?.id || duelUsers[u.id] === 'sending') return;
-    setDuelUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
-    try {
-      const hubResponse = await base44.functions.invoke('ai-battle-arena', { action: 'hub', data: {} });
-      const hubBody = hubResponse?.data ?? hubResponse ?? {};
-      if (hubBody?.error) throw new Error(hubBody.error);
-      const world = hubBody.worlds?.[0];
-      if (!world?.id) throw new Error('No AI Battle world is available.');
-      const requestId = globalThis.crypto?.randomUUID?.() || `duel-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const response = await base44.functions.invoke('ai-battle-arena', {
-        action: 'create',
-        data: { world_id: world.id, route_id: 'duel', invited_ids: [String(u.id)], request_id: requestId },
-      });
-      const body = response?.data ?? response ?? {};
-      if (body?.error) throw new Error(body.error);
-      const encounterId = body.encounter?.id;
-      if (!encounterId) throw new Error('Duel invitation could not be created.');
-      setDuelUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
-      onActiveFriendChange(null);
-      arenaPresentation.setEncounter(encounterId);
-      window.dispatchEvent(new CustomEvent('openAIBattle', { detail: { encounterId } }));
-      showSuccess(`Duel invitation sent to ${u.name || 'player'}.`);
-    } catch (error) {
-      console.error('[Luna Presence] duel failed', error);
-      setDuelUsers((prev) => ({ ...prev, [u.id]: 'error' }));
-      showError(error, 'Duel');
-    }
+  const handleDuel = (u) => {
+    if (!u?.id) return;
+    onActiveFriendChange(null);
+    window.__lunaAIBattlePreferredMode = 'pvp';
+    window.dispatchEvent(new CustomEvent('openAIBattle', { detail: { mode: 'pvp' } }));
+    showSuccess(`PvP queue opened for ${u.name || 'player'}.`);
   };
 
   const friendTargetFor = (u) => ({
@@ -1616,7 +1592,6 @@ export function LibraryBannerSection({
                     requestState={friendRequestUsers[friend.id]}
                     dashboardInviteState={invitedUsers[friend.id]}
                     partyInviteState={partyInviteUsers[friend.id]}
-                    duelState={duelUsers[friend.id]}
                     joining={!!joiningUsers[friend.id]}
                     onClick={handleFriendClick}
                     onAddFriend={handleAddFriend}

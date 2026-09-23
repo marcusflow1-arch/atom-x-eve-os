@@ -11,8 +11,6 @@ import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import LunaAIBattleOverlay from './LunaAIBattleOverlay';
-import DashboardBattleNotice from '@/components/battle/DashboardBattleNotice';
-import { arenaPresentation, useArenaPresentation } from '@/components/battle/arenaPresentation';
 import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
@@ -89,9 +87,7 @@ export default function DashboardAvatarOverview() {
   const { user } = useAuth();
   const companion = useCompanionIdentity();
   const { equipItem, equippedItems } = useEquipment();
-  const battlePresentation = useArenaPresentation();
   const [progression, setProgression] = useState(null);
-  const [battlePlayer, setBattlePlayer] = useState(null);
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
@@ -251,25 +247,14 @@ export default function DashboardAvatarOverview() {
     };
   }, [user?.id]);
 
-  useEffect(() => {
-    const syncBattle = (event) => {
-      const encounter = event?.detail?.encounter || null;
-      const player = encounter?.players?.find((entry) => String(entry.id) === String(user?.id)) || null;
-      setBattlePlayer(player);
-    };
-    window.addEventListener('lunaBattleStateChanged', syncBattle);
-    return () => window.removeEventListener('lunaBattleStateChanged', syncBattle);
-  }, [user?.id]);
-
   const stats = useMemo(() => {
     const core = progression?.stats || {};
     const level = Number(progression?.global_level || user?.level || 1);
     const nextXP = Math.round(100 * Math.pow(Math.max(1, level), 1.35));
     return {
-      power: Number(battlePlayer?.power || progression?.power_score || progression?.power || 0),
-      hp: Number(battlePlayer?.hp ?? core.hp ?? 100),
-      maxHp: Number(battlePlayer?.max_hp ?? core.hp ?? 100),
-      ap: battlePlayer?.ap,
+      power: Number(progression?.power_score || progression?.power || 0),
+      hp: Number(core.hp ?? 100),
+      maxHp: Number(core.hp ?? 100),
       rank: user?.rank || 'Recruit',
       level,
       gamerScore: Number(user?.gamer_score || 0),
@@ -282,12 +267,12 @@ export default function DashboardAvatarOverview() {
       intelligence: Number(core.intelligence ?? 10),
       willpower: Number(core.will ?? core.willpower ?? 10),
       tenacity: Number(core.tenacity ?? 10),
-      defense: Number(battlePlayer?.defense ?? core.defense ?? core.armor ?? core.tenacity ?? 0),
+      defense: Number(core.defense ?? core.armor ?? core.tenacity ?? 0),
       agility: Number(core.agility ?? 10),
       endurance: Number(core.endurance ?? 10),
       luck: Number(core.luck ?? 10),
     };
-  }, [progression, user, battlePlayer]);
+  }, [progression, user]);
 
   const { data: socialInbox = {} } = useQuery({
     queryKey: ['luna-social-inbox-summary', user?.id],
@@ -304,9 +289,15 @@ export default function DashboardAvatarOverview() {
   });
 
   useEffect(() => {
+    if (sessionStorage.getItem('luna_open_ai_battle') !== '1') return;
+    sessionStorage.removeItem('luna_open_ai_battle');
+    setBattleMode(true);
+  }, []);
+
+  useEffect(() => {
     const openBattle = (event) => {
-      const encounterId = event?.detail?.encounterId || null;
-      if (encounterId) arenaPresentation.setEncounter(encounterId);
+      const requestedMode = event?.detail?.mode;
+      if (requestedMode) window.__lunaAIBattlePreferredMode = requestedMode;
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
       setInventoryMode(false);
@@ -579,7 +570,7 @@ export default function DashboardAvatarOverview() {
         && !friendsMode
         && !seasonMode
         && !leaderboardMode
-        && (!battleMode || Boolean(battlePresentation.encounterId))
+        && !battleMode
         && !activeQuickPanel
         && (
           <LunaSkillXpHud
@@ -587,7 +578,7 @@ export default function DashboardAvatarOverview() {
             nextXp={stats.nextXP}
             level={stats.level}
             showcaseEditing={cardsMode}
-            combatMode={Boolean(battleMode && battlePresentation.encounterId)}
+            combatMode={false}
           />
         )}
 
@@ -640,10 +631,6 @@ export default function DashboardAvatarOverview() {
         <LunaSeasonPassOverlay onClose={() => setSeasonMode(false)} />
       )}
 
-      {!avatarFocusMode && surface === 'dashboard' && !battleMode && (
-        <DashboardBattleNotice />
-      )}
-
       {!avatarFocusMode && surface === 'dashboard' && battleMode && (
         <LunaAIBattleOverlay onClose={() => setBattleMode(false)} />
       )}
@@ -678,8 +665,7 @@ export default function DashboardAvatarOverview() {
             <div className="relative min-h-0 flex-1 px-5 py-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {attributeView === 'overview' && <>
                 <StatRow icon={<Zap className="w-3 h-3" />} label="Power" value={stats.power} />
-                <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={battlePlayer ? `${Math.ceil(stats.hp)} / ${Math.ceil(stats.maxHp)}` : stats.hp} />
-                {battlePlayer?.ap != null && <StatRow icon={<Zap className="w-3 h-3" />} label="Combat AP" value={`${battlePlayer.ap} / 5`} />}
+                <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} />
                 <StatRow icon={<Shield className="w-3 h-3" />} label="Rank" value={stats.rank} />
                 <StatRow icon={<Star className="w-3 h-3" />} label="Global Level" value={stats.level} />
                 <StatRow icon={<BarChart3 className="w-3 h-3" />} label="Global XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />

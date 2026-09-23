@@ -6,8 +6,6 @@ import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 import { base44 } from '@/api/base44Client';
-import DashboardBattleStage from './DashboardBattleStage';
-import { useArenaPresentation } from '@/components/battle/arenaPresentation';
 import {
   CREATOR_PARENTING_PREVIEW,
   canUseCreatorParentingPreview,
@@ -21,7 +19,6 @@ const CREATOR_CHILD = CREATOR_PARENTING_PREVIEW.children[0];
 export default function DashboardAvatarScene({ focusMode: _focusMode = false }) {
   const { user } = useAuth();
   const session = useDashboardSession();
-  const battlePresentation = useArenaPresentation();
   const [creatorChild, setCreatorChild] = useState(null);
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
@@ -88,20 +85,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       </div>)}
     </div>
   ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />;
-
-  if (battlePresentation.visible && battlePresentation.encounterId) {
-    return (
-      <>
-        {/* Battle is a state of the existing Luna dashboard, not a replacement arena. */}
-        <EnvironmentHubStageLayer />
-        <EnvironmentHubWorkspace />
-        <DashboardBattleStage encounterId={battlePresentation.encounterId} />
-        {(session.status === 'connecting' || session.error) && <div role="status" className="absolute left-4 top-4 z-50 max-w-xs rounded-xl bg-slate-950/85 p-3 text-xs text-white/80">
-          {session.error || 'Connecting to dashboard…'}
-        </div>}
-      </>
-    );
-  }
 
   return (
     <>

@@ -1,0 +1,32 @@
+{
+  "name": "AIBattleQueueEntry",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "player_name": { "type": "string" },
+    "avatar_url": { "type": "string" },
+    "mode": {
+      "type": "string",
+      "enum": ["pvp", "pve", "world_boss"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["waiting", "matched", "cancelled"],
+      "default": "waiting"
+    },
+    "request_id": { "type": "string" },
+    "queued_at": { "type": "string", "format": "date-time" },
+    "last_seen_at": { "type": "string", "format": "date-time" },
+    "matched_at": { "type": "string", "format": "date-time" },
+    "match_id": { "type": "string" },
+    "host_id": { "type": "string" },
+    "opponent_id": { "type": "string" }
+  },
+  "required": ["user_id", "mode", "status", "queued_at", "last_seen_at"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

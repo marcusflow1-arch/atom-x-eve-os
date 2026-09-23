@@ -1,0 +1,36 @@
+{
+  "name": "AIBattleMatch",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["pvp", "pve", "world_boss"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["matched", "ready", "ended"],
+      "default": "matched"
+    },
+    "host_id": { "type": "string" },
+    "host_name": { "type": "string" },
+    "dashboard_channel": { "type": "string" },
+    "pair_key": { "type": "string" },
+    "player_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "players": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "ready_at": { "type": "string", "format": "date-time" },
+    "ended_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["mode", "status", "host_id", "dashboard_channel", "pair_key", "player_ids"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
