@@ -24,6 +24,41 @@ function findClip(clips = [], name, fallbackIndex = 0) {
     || null;
 }
 
+function cleanEffectRendering(root) {
+  root?.traverse((node) => {
+    if (!node?.isMesh) return;
+
+    const materials = (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean);
+    const signature = `${node.name || ''} ${materials.map((material) => material?.name || '').join(' ')}`.toLowerCase();
+    const isSwordOrEffect = /sword|blade|energy|\bfx[_-]?|aura|spark|shockwave|slash|wave|impact|trench|crack|rock/.test(signature);
+
+    if (!isSwordOrEffect) return;
+
+    // The dashboard scene uses OutlineEffect for the normal avatar presentation.
+    // Applying that black outline pass to transparent sword/VFX geometry creates
+    // the dark "shader" / black veil that can sit over the sword.  Weapon and FX
+    // materials opt out of that pass so only their authored sword + VFX remain.
+    node.castShadow = false;
+    node.receiveShadow = false;
+
+    materials.forEach((material) => {
+      material.userData = material.userData || {};
+      material.userData.outlineParameters = {
+        ...(material.userData.outlineParameters || {}),
+        visible: false,
+      };
+
+      // Transparent GLB VFX must not write invisible pixels into the depth buffer;
+      // doing so can leave a dark slab/veil in front of the sword and projectile.
+      if (material.transparent || /^m_fx_/i.test(material.name || '')) {
+        material.transparent = true;
+        material.depthWrite = false;
+        material.needsUpdate = true;
+      }
+    });
+  });
+}
+
 export function createGetsugaIdleClip(attackClip) {
   if (!attackClip?.tracks?.length) return null;
   const duration = 2.8;
@@ -74,6 +109,8 @@ export class GetsugaDashboardRuntime {
     this.attackAction = null;
     this.attackClip = null;
     this.activeTarget = null;
+    this.defaultFacingYaw = 0;
+    this.lockedFacingYaw = 0;
     this.ready = false;
     this.playing = false;
     this.paused = false;
@@ -92,8 +129,20 @@ export class GetsugaDashboardRuntime {
 
     this.root = gltf.scene;
     this.attackClip = attackClip;
+
+    // createGenesisScene applies the dashboard/battle facing to the loaded GLB
+    // before it reaches this runtime. Move that yaw to our wrapper and neutralize
+    // the GLB root. Previously both the GLB root and wrapper were rotated, which
+    // doubled the yaw and made the wave fire away from the locked opponent.
+    this.defaultFacingYaw = Number.isFinite(Number(this.root.rotation?.y)) ? Number(this.root.rotation.y) : 0;
+    this.lockedFacingYaw = this.defaultFacingYaw;
+    this.root.rotation.y = 0;
+
+    cleanEffectRendering(this.root);
+
     this.group = new THREE.Group();
     this.group.name = 'LunaCardEffectPlayer';
+    this.group.rotation.y = this.defaultFacingYaw;
     this.group.add(this.root);
     this.scene?.add(this.group);
 
@@ -112,7 +161,13 @@ export class GetsugaDashboardRuntime {
       if (event.action !== this.attackAction) return;
       const target = this.activeTarget;
       this.playing = false;
-      this.onEvent('end', { time: this.attackAction?.time || attackClip.duration, frame: 1, target });
+      this.onEvent('end', {
+        time: this.attackAction?.time || attackClip.duration,
+        frame: 1,
+        target,
+        damage: Number(target?.damage) || 50,
+        autoHit: target?.autoHit !== false,
+      });
       this.playIdle({ emit: true, blend: true });
       this.activeTarget = null;
     };
@@ -129,11 +184,13 @@ export class GetsugaDashboardRuntime {
     const globalTarget = typeof window !== 'undefined' ? window.__lunaAIBattleTarget : null;
     this.activeTarget = target || globalTarget || null;
 
-    // The authored character/projectile faces +Z. AI Battle supplies a yaw for
-    // the selected opponent, so the entire character + embedded VFX package is
-    // rotated as one unit toward that target before the cast begins.
-    const facingYaw = Number(this.activeTarget?.facingYaw);
-    if (this.group && Number.isFinite(facingYaw)) this.group.rotation.y = facingYaw;
+    // AI Battle is target-locked. Resolve the opponent once at cast start and
+    // keep the same facing + target through the entire animation. The character
+    // does not turn again at release/impact, so the cast cannot flip away from
+    // the opponent mid-swing.
+    const targetYaw = Number(this.activeTarget?.facingYaw);
+    this.lockedFacingYaw = Number.isFinite(targetYaw) ? targetYaw : this.defaultFacingYaw;
+    if (this.group) this.group.rotation.y = this.lockedFacingYaw;
 
     this.playing = true;
     this.fired.clear();
@@ -147,13 +204,23 @@ export class GetsugaDashboardRuntime {
     if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
     else this.idleAction?.stop();
 
-    this.onEvent('castStart', { time: 0, frame: 1, target: this.activeTarget });
+    this.onEvent('castStart', {
+      time: 0,
+      frame: 1,
+      target: this.activeTarget,
+      damage: Number(this.activeTarget?.damage) || 50,
+      autoHit: this.activeTarget?.autoHit !== false,
+    });
     return true;
   }
 
   playIdle({ emit = true, blend = true } = {}) {
     if (!this.ready || this.disposed || !this.idleAction) return false;
     this.playing = false;
+
+    // Stay facing the locked battle opponent after a cast. Do not snap back to
+    // the model's authored forward direction when the attack blends to idle.
+    if (this.group) this.group.rotation.y = this.lockedFacingYaw;
 
     this.idleAction.enabled = true;
     this.idleAction.reset();
@@ -174,11 +241,23 @@ export class GetsugaDashboardRuntime {
     this.mixer.update(step);
 
     if (!this.playing || !this.attackAction) return;
+
+    // Keep facing hard-locked while the authored clip runs. Animation tracks can
+    // move bones, but they are never allowed to rotate the battle wrapper away
+    // from the selected opponent.
+    if (this.group) this.group.rotation.y = this.lockedFacingYaw;
+
     const time = this.attackAction.time;
     for (const [name, marker] of Object.entries(GETSUGA_EVENTS)) {
       if (name === 'end' || this.fired.has(name) || time < marker) continue;
       this.fired.add(name);
-      this.onEvent(name, { time, frame: 1, target: this.activeTarget });
+      this.onEvent(name, {
+        time,
+        frame: 1,
+        target: this.activeTarget,
+        damage: Number(this.activeTarget?.damage) || 50,
+        autoHit: this.activeTarget?.autoHit !== false,
+      });
     }
   }
 
@@ -216,6 +295,8 @@ export class GetsugaDashboardRuntime {
     this.attackAction = null;
     this.attackClip = null;
     this.activeTarget = null;
+    this.defaultFacingYaw = 0;
+    this.lockedFacingYaw = 0;
     this.ready = false;
     this.playing = false;
     this.finishedHandler = null;
