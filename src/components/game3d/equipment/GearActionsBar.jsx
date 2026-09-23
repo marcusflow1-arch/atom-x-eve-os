@@ -1,4 +1,5 @@
 import React from 'react';
+import EquipmentPrefabManager from './EquipmentPrefabManager';
 
 /**
  * Bottom action bar — left: Return / Filter / Obtain More
@@ -6,7 +7,9 @@ import React from 'react';
  */
 export default function GearActionsBar() {
   return (
-    <div className="absolute bottom-5 left-6 right-6 flex items-center justify-between text-sm text-white/70 pointer-events-auto">
+    <div className="absolute bottom-5 left-6 right-6 text-sm text-white/70 pointer-events-auto">
+      <EquipmentPrefabManager />
+      <div className="mt-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
         <Action keyHint="Esc" label="Return" />
         <Action keyHint="△" label="Filter" />
@@ -16,7 +19,7 @@ export default function GearActionsBar() {
         <Action keyHint="◯" label="Enhance" />
         <Action keyHint="△" label="Repair" />
         <Action keyHint="✕" label="Replace" accent />
-      </div>
+        </div>
     </div>
   );
 }
