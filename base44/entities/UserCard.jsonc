@@ -96,6 +96,45 @@
     "last_trade_id": {
       "type": "string",
       "description": "Last TradeSession involving this card"
+    },
+    "animation_effect": {
+      "type": "object",
+      "description": "Optional animation/VFX package this card triggers when cast from a skill slot.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable runtime effect identifier, for example getsuga_tensho."
+        },
+        "clip_name": {
+          "type": "string",
+          "description": "Embedded animation clip to play on the player-control character."
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "embedded",
+            "runtime",
+            "external"
+          ],
+          "default": "embedded"
+        },
+        "model_id": {
+          "type": "string",
+          "description": "Optional Admin Model3D fallback model id if the active player rig cannot run this effect."
+        },
+        "model_url": {
+          "type": "string",
+          "description": "Optional fallback GLB/GLTF URL paired with model_id."
+        },
+        "duration_ms": {
+          "type": "number",
+          "description": "Approximate visible cast duration used by the HUD."
+        },
+        "cooldown_ms": {
+          "type": "number",
+          "description": "Client-side visual cooldown for this card effect."
+        }
+      }
     }
   },
   "required": [
