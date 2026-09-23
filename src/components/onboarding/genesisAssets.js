@@ -5,7 +5,9 @@ import {isHi3DAvatar,applyFaceGeometry,applyAvatarSurface} from './modelAppearan
 const root = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
 
-export const GLOBAL_AVATAR_MODEL_URL = '/models/luna-hi3d/warrior.glb';
+// Canonical male Luna body supplied for the dashboard/game runtime.
+// This GLB includes the skeleton, sword/energy blade and embedded GetsugaTensho clip.
+export const GLOBAL_AVATAR_MODEL_URL = '/getsuga/Getsuga_Character.glb';
 // Admin > 3D Models > "artemis" (Model3D id: 6aa956f030a57c7e90bbc7e6).
 // This is the only female base body used by Genesis.
 export const FEMALE_ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
