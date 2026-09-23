@@ -30,19 +30,21 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, file_url: cached.file_url, model_id: cached.id, cached: true });
     }
 
-    const download = await svc.connectors.callApi('googledrive', {
-      method: 'GET',
-      host: 'www.googleapis.com',
-      path: `/drive/v3/files/${DRIVE_FILE_ID}`,
-      query: { alt: 'media' },
-      headers: { Accept: 'application/octet-stream' },
-    });
+    const { accessToken } = await svc.connectors.getConnection('googledrive');
+    if (!accessToken) throw new Error('Google Drive connector did not return an access token.');
 
-    if (!download?.success || !download?.dataBase64) {
-      throw new Error(`Google Drive connector did not return the GLB bytes (status ${download?.status ?? 'unknown'}).`);
+    const driveResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${DRIVE_FILE_ID}?alt=media`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/octet-stream',
+      },
+    });
+    if (!driveResponse.ok) {
+      const body = await driveResponse.text().catch(() => '');
+      throw new Error(`Google Drive download failed (${driveResponse.status}): ${body.slice(0, 500)}`);
     }
 
-    const bytes = decodeBase64(download.dataBase64);
+    const bytes = new Uint8Array(await driveResponse.arrayBuffer());
     if (bytes.byteLength !== EXPECTED_SIZE) {
       throw new Error(`Getsuga GLB size mismatch: got ${bytes.byteLength}, expected ${EXPECTED_SIZE}.`);
     }
