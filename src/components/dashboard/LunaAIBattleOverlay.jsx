@@ -9,23 +9,25 @@ const MODES = [
   { id: 'world_boss', label: 'World Boss', sub: 'Two players vs boss', icon: Crown },
 ];
 
+const isRateLimitError = (error) => /rate limit|too many requests|too many attempts/i.test(String(error?.message || error || ''));
+
 export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
   const battle = useAIBattleQueue();
   const active = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
   const waiting = battle.queue?.status === 'waiting';
-  const matched = battle.match && battle.match.status !== 'ended';
+  const connecting = battle.match?.status === 'matched';
   const ready = battle.match?.status === 'ready';
 
   const enterQueue = useCallback(async () => {
-    if (battle.busy || waiting || matched) return;
+    if (battle.busy || waiting || connecting) return;
     try {
       await battle.join(mode);
     } catch (error) {
-      showError(error, 'AI Battle Queue');
+      if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
     }
-  }, [battle, mode, waiting, matched]);
+  }, [battle, mode, waiting, connecting]);
 
   useEffect(() => {
     const onKey = (event) => {
@@ -39,18 +41,12 @@ export default function LunaAIBattleOverlay({ onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [enterQueue]);
 
-  useEffect(() => {
-    if (!ready) return undefined;
-    const timer = window.setTimeout(() => onClose?.(), 900);
-    return () => window.clearTimeout(timer);
-  }, [ready, onClose]);
-
-  const statusText = ready
-    ? 'Both players connected. Battle dashboard ready.'
-    : matched
-      ? `Match found. Connecting both players to ${battle.match.host_name || 'the host'}'s dashboard…`
-      : waiting
-        ? 'Waiting for the next player in this queue…'
+  const statusText = connecting
+    ? `Match found. Connecting both players to ${battle.match.host_name || 'the host'}'s dashboard…`
+    : waiting
+      ? 'Waiting for the next player in this queue…'
+      : ready
+        ? 'Dashboard ready. Choose a mode and press Enter Queue when you want a new match.'
         : 'Choose a mode, then press Q or Enter Queue.';
 
   return (
@@ -67,7 +63,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
         <div className="grid grid-cols-3 border-b border-white/[0.07]">
           {MODES.map(({ id, label, sub, icon: Icon }) => (
-            <button key={id} type="button" disabled={waiting || matched} onClick={() => setMode(id)} className={`min-h-[72px] border-r border-white/[0.055] px-3 text-left last:border-r-0 ${mode === id ? 'bg-cyan-100/[0.075]' : 'hover:bg-white/[0.03]'} disabled:cursor-default`}>
+            <button key={id} type="button" disabled={waiting || connecting} onClick={() => setMode(id)} className={`min-h-[72px] border-r border-white/[0.055] px-3 text-left last:border-r-0 ${mode === id ? 'bg-cyan-100/[0.075]' : 'hover:bg-white/[0.03]'} disabled:cursor-default`}>
               <Icon className={`mb-2 h-4 w-4 ${mode === id ? 'text-cyan-100' : 'text-white/35'}`} />
               <strong className="block text-[10px] text-white/90">{label}</strong>
               <small className="mt-0.5 block text-[7px] text-white/35">{sub}</small>
@@ -77,7 +73,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
         <div className="p-4">
           <div className="flex min-h-[58px] items-center border border-white/[0.07] bg-white/[0.025] px-4">
-            {(battle.busy || matched) && !ready && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
+            {(battle.busy || connecting) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
             <div>
               <p className="text-[10px] font-semibold text-white/80">{active.label}</p>
               <p className="mt-1 text-[8px] text-white/42">{statusText}</p>
@@ -86,11 +82,11 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
           <div className="mt-3 flex gap-2">
             {waiting ? (
-              <button type="button" disabled={battle.busy} onClick={() => battle.cancel().catch((error) => showError(error, 'Cancel Queue'))} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05]">Cancel Queue</button>
-            ) : !matched ? (
-              <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : 'Enter Queue · Q'}</button>
+              <button type="button" disabled={battle.busy} onClick={() => battle.cancel().catch((error) => { if (!isRateLimitError(error)) showError(error, 'Cancel Queue'); })} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05]">Cancel Queue</button>
+            ) : connecting ? (
+              <div className="flex h-10 flex-1 items-center justify-center border border-cyan-100/[0.12] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/75">Connecting…</div>
             ) : (
-              <div className="flex h-10 flex-1 items-center justify-center border border-cyan-100/[0.12] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/75">{ready ? 'Dashboard Ready' : 'Connecting…'}</div>
+              <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : ready ? 'Enter New Queue · Q' : 'Enter Queue · Q'}</button>
             )}
           </div>
         </div>
