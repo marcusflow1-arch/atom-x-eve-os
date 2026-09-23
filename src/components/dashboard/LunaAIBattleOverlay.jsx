@@ -116,7 +116,7 @@ function FieldMode({ battle }) {
         <div>
           <p className="text-[12px] font-black uppercase tracking-[0.15em] text-amber-100/84">Field Mode / Real-World Layer</p>
           <h3 className="mt-1 text-[11px] font-semibold text-white/96">Your surroundings become a discovery surface.</h3>
-          <p className="mt-1 max-w-xl text-[10px] leading-4 text-white/96">Location is opt-in. The browser rounds it to a coarse cell before generating nearby game-world quests, caches, dungeon b[...]
+          <p className="mt-1 max-w-xl text-[10px] leading-4 text-white/96">Location is opt-in. The browser rounds it to a coarse cell before generating nearby game-world quests, caches, and dungeon encounters.</p>
         </div>
         <button type="button" onClick={locate} disabled={locating} className="flex h-9 shrink-0 items-center gap-2 border border-amber-100/12 bg-amber-100/[0.04] px-3 text-[10px] font-black uppercase tracking-[0.11em] text-amber-100/92 transition hover:bg-amber-100/[0.06] disabled:cursor-not-allowed disabled:opacity-60">
           {locating ? <Compass className="h-3.5 w-3.5 animate-spin" /> : <Map className="h-3.5 w-3.5" />}
