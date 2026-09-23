@@ -32,7 +32,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     queryKey: ['ai-battle-matchmaking', user?.id],
     enabled: !!user?.id,
     queryFn: async () => unwrapBattleStatus(await base44.functions.invoke('aiBattleMatchmaker', { action: 'status', data: {} })),
-    refetchInterval: 3000,
+    refetchInterval: (query) => query.state.data?.match?.status === 'matched' ? 2000 : 10000,
     refetchOnWindowFocus: true,
     retry: false,
     staleTime: 1000,
