@@ -78,7 +78,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     rows = [await svc.Loadout.create({
       user_id: userId,
       name: first.name,
-      description: 'Persistent four-slot Luna Skill Book genre row.',
+      description: 'Persistent five-slot Luna Skill Book genre row.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
@@ -119,7 +119,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     rows.push(await svc.Loadout.create({
       user_id: userId,
       name: preset.name,
-      description: 'Persistent four-slot Luna Skill Book genre row.',
+      description: 'Persistent five-slot Luna Skill Book genre row.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
