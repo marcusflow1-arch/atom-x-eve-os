@@ -92,7 +92,9 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
   if (battlePresentation.visible && battlePresentation.encounterId) {
     return (
       <>
+        {/* Battle is a state of the existing Luna dashboard, not a replacement arena. */}
         <EnvironmentHubStageLayer />
+        <EnvironmentHubWorkspace />
         <DashboardBattleStage encounterId={battlePresentation.encounterId} />
         {(session.status === 'connecting' || session.error) && <div role="status" className="absolute left-4 top-4 z-50 max-w-xs rounded-xl bg-slate-950/85 p-3 text-xs text-white/80">
           {session.error || 'Connecting to dashboard…'}
