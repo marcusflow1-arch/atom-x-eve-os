@@ -20,6 +20,7 @@ export default function GearActionsBar() {
         <Action keyHint="△" label="Repair" />
         <Action keyHint="✕" label="Replace" accent />
         </div>
+      </div>
     </div>
   );
 }
