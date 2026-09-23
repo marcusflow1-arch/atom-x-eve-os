@@ -5,9 +5,11 @@ import {isHi3DAvatar,applyFaceGeometry,applyAvatarSurface} from './modelAppearan
 const root = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/';
 const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/';
 
-// Canonical male Luna body supplied for the dashboard/game runtime.
-// This GLB includes the skeleton, sword/energy blade and embedded GetsugaTensho clip.
-export const GLOBAL_AVATAR_MODEL_URL = '/getsuga/Getsuga_Character.glb';
+// Canonical male Luna body supplied through Admin > 3D Models > "male".
+// Model3D id: 6ab3bf0728d93c06fcff4c05. This is the user's Getsuga_Tensho_Character.glb
+// and contains the Idle + GetsugaTensho animation/effect package used by card casts.
+export const GLOBAL_AVATAR_MODEL_ID = '6ab3bf0728d93c06fcff4c05';
+export const GLOBAL_AVATAR_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
 // Admin > 3D Models > "artemis" (Model3D id: 6aa956f030a57c7e90bbc7e6).
 // This is the only female base body used by Genesis.
 export const FEMALE_ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
@@ -88,12 +90,11 @@ export function companionModel(avatar) {
   const gender = avatar?.gender === 'female' ? 'female' : 'male';
   if (gender === 'female') return FEMALE_ARTEMIS_MODEL_URL;
 
-  const requested = String(avatar?.model_url || '').trim();
-  const maleBase = GLOBAL_AVATAR_MODEL_URL;
-  const legacyDefault = /(?:608211a0f_YBot1\.fbx|Xbot\.glb|\/models\/(?:artemis\.gltf|ybot\.fbx|eve\.glb)|base_humanoid\.glb)/i.test(requested);
-  if (!requested || requested === maleBase || legacyDefault) return maleBase;
-  if (/^(https?:\/\/|\/)/i.test(requested)) return requested;
-  return maleBase;
+  // Male Luna is intentionally pinned to the Admin "male" GLB so card-bound
+  // animation effects always target the same controllable rig that owns the
+  // embedded effect clips. This avoids a card cast being sent to an unrelated
+  // dashboard body that cannot play the effect package.
+  return GLOBAL_AVATAR_MODEL_URL;
 }
 
 function rememberMaterialBase(material) {

@@ -1,0 +1,92 @@
+{
+  "name": "AIBattleEncounter",
+  "type": "object",
+  "properties": {
+    "host_id": {
+      "type": "string"
+    },
+    "host_name": {
+      "type": "string"
+    },
+    "host_snapshot": {
+      "type": "object"
+    },
+    "invited_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "world": {
+      "type": "object"
+    },
+    "route_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "source_field": {
+      "type": "object",
+      "description": "Validated coarse Field Mode discovery that launched this encounter"
+    },
+    "guest_snapshot": {
+      "type": "object",
+      "description": "Server-authored opponent snapshot used for automatic PvP matchmaking."
+    },
+    "matchmaking": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when this duel was created by the public PvP queue."
+    },
+    "queue_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Queue records consumed to create this matchmaking duel."
+    },
+    "queue_type": {
+      "type": "string",
+      "enum": [
+        "casual",
+        "ranked",
+        "duel",
+        "coop",
+        "coop_ranked"
+      ],
+      "default": "casual",
+      "description": "Matchmaking pool that produced this duel."
+    }
+  },
+  "required": [
+    "host_id",
+    "host_snapshot",
+    "world",
+    "route_id",
+    "request_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
