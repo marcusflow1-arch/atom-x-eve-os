@@ -44,7 +44,7 @@
           "type": "string"
         }
       },
-      "description": "Three four-slot Skill Prefab rows containing references to owned UserCard IDs."
+      "description": "Three five-slot Skill Prefab rows containing references to owned UserCard IDs."
     },
     "linked_skill_prefab_id": {
       "type": "string",
