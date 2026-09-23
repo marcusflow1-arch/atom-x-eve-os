@@ -1,375 +1,256 @@
-import { useMemo, useState } from 'react';
-import {
-  BellRing, Compass, Crown, Gamepad2, Layers, Map, Shield,
-  Skull, Swords, Trophy, Users, X, Zap
-} from 'lucide-react';
-import LunaDashboardArenaPanel from './LunaDashboardArenaPanel';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Bot, Crown, Loader2, Map, Package, Shield, Skull, Swords, Users, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import useBattleArena from '@/components/battle/useBattleArena';
+import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { arenaPresentation, useArenaPresentation } from '@/components/battle/arenaPresentation';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 const MODES = [
-  {
-    id: 'pvp',
-    label: 'PvP',
-    full: 'Player vs Player',
-    icon: Swords,
-    tone: 'text-rose-100',
-    title: 'Challenge another avatar.',
-    copy: 'Two players enter the same Luna dashboard, lock four achievement cards, trade turns, manage AP, and use active defense to outplay one another.',
-    routeIds: ['duel'],
-  },
-  {
-    id: 'pve',
-    label: 'PvE',
-    full: 'Player vs Environment',
-    icon: Shield,
-    tone: 'text-cyan-100',
-    title: 'Push through dungeons.',
-    copy: 'Run linked combat rooms solo or with a party. Health carries forward, camps restore part of the team, and the final room pays out a field chest.',
-    routeIds: ['vault'],
-  },
-  {
-    id: 'pvwe',
-    label: 'PvWE',
-    full: 'Player vs World Environment',
-    icon: Crown,
-    tone: 'text-amber-100',
-    title: 'Explore the connected frontier.',
-    copy: 'Enter the worlds represented by the games and cards you own. Take quests, hunt guardians, rally against world bosses, and bring rewards back to Luna.',
-    routeIds: ['patrol', 'vault', 'colossus'],
-  },
+  { id: 'pvp', label: 'PvP', sub: 'Player vs Player', routeId: 'duel', icon: Swords },
+  { id: 'pve', label: 'PvE', sub: 'Player vs Environment', routeId: 'patrol', icon: Shield },
+  { id: 'dungeon', label: 'Dungeon', sub: 'Multi-room PvE', routeId: 'vault', icon: Map },
+  { id: 'boss', label: 'Boss', sub: 'World Boss', routeId: 'colossus', icon: Skull },
 ];
 
-const routeIcon = {
-  pvp: Swords,
-  duel: Swords,
-  dungeon: Skull,
-  vault: Shield,
-  quest: Map,
-  patrol: Map,
-  world_boss: Crown,
-  colossus: Crown,
-};
-
-function FieldMode({ battle }) {
-  const [nodes, setNodes] = useState([]);
-  const [locating, setLocating] = useState(false);
-  const [error, setError] = useState('');
-  const [prepared, setPrepared] = useState('');
-  const [fieldCell, setFieldCell] = useState(null);
-
-  const locate = async () => {
-    if (!navigator.geolocation || locating) {
-      if (!navigator.geolocation) setError('Location services are unavailable in this browser.');
-      return;
-    }
-
-    if (!battle?.field) {
-      setError('Field mode is unavailable right now.');
-      return;
-    }
-
-    setLocating(true);
-    setError('');
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const cellLat = Math.round(position.coords.latitude * 100) / 100;
-          const cellLng = Math.round(position.coords.longitude * 100) / 100;
-          const response = await battle.field({ cell_lat: cellLat, cell_lng: cellLng });
-          setFieldCell({ lat: cellLat, lng: cellLng });
-          setPrepared('');
-          setNodes(response?.nodes || []);
-        } catch (err) {
-          setError(err?.message || 'Field signals could not be generated.');
-        } finally {
-          setLocating(false);
-        }
-      },
-      () => {
-        setError('Location permission is required only while you use Field Mode.');
-        setLocating(false);
-      },
-      { enableHighAccuracy: false, maximumAge: 300000, timeout: 12000 }
-    );
-  };
-
-  const prepare = (node) => {
-    setPrepared(node.id);
-    window.dispatchEvent(new CustomEvent('prepareAIBattleFieldNode', {
-      detail: {
-        world_id: node.world?.id,
-        route_id: node.route_id,
-        field_node_id: node.id,
-        field_cell_lat: fieldCell?.lat,
-        field_cell_lng: fieldCell?.lng,
-        field_title: node.title,
-        field_type: node.type,
-        field_distance_m: node.distance_m,
-      },
-    }));
-  };
-
-  return (
-    <section className="mt-5 border border-amber-100/[0.08] bg-amber-100/[0.018] p-3.5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-amber-100/84">Field Mode / Real-World Layer</p>
-          <h3 className="mt-1 text-[11px] font-semibold text-white/96">Your surroundings become a discovery surface.</h3>
-          <p className="mt-1 max-w-xl text-[10px] leading-4 text-white/96">Location is opt-in. The browser rounds it to a coarse cell before generating nearby game-world quests, caches, and dungeon encounters.</p>
-        </div>
-        <button type="button" onClick={locate} disabled={locating} className="flex h-9 shrink-0 items-center gap-2 border border-amber-100/12 bg-amber-100/[0.04] px-3 text-[10px] font-black uppercase tracking-[0.11em] text-amber-100/92 transition hover:bg-amber-100/[0.06] disabled:cursor-not-allowed disabled:opacity-60">
-          {locating ? <Compass className="h-3.5 w-3.5 animate-spin" /> : <Map className="h-3.5 w-3.5" />}
-          {nodes.length ? 'Refresh Field' : 'Locate Field'}
-        </button>
-      </div>
-
-      {error && <p className="mt-2 text-[10px] text-rose-100/52">{error}</p>}
-
-      {nodes.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {nodes.slice(0, 4).map((node) => (
-            <article key={node.id} className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-2 border border-white/[0.12] bg-slate-900/50 p-2.5">
-              <div className="grid h-8 w-8 place-items-center border border-white/[0.14] bg-white/[0.04]">
-                <Compass className="h-3.5 w-3.5 text-amber-100/84" style={{ transform: 'rotate(' + String(node.bearing_deg || 0) + 'deg)' }} />
-              </div>
-              <div className="min-w-0">
-                <strong className="block truncate text-[11px] text-white/94">{node.title}</strong>
-                <span className="mt-0.5 block truncate text-[11px] uppercase tracking-[0.06em] text-white/94">{node.world?.title} · {Math.round(Number(node.distance_m || 0))} m · {String(node.type || 'route')}</span>
-              </div>
-              <button type="button" onClick={() => prepare(node)} className={'border px-2 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] ' + (prepared === node.id ? 'border-emerald-100/25 bg-emerald-100/10 text-emerald-100/90' : 'border-white/[0.12] bg-white/[0.04] text-white/92 hover:bg-white/[0.08]')}>
-                {prepared === node.id ? 'Prepared' : 'Prepare'}
-              </button>
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function ConnectedWorlds({ hub, selectedMode, battle }) {
-  const worlds = hub?.worlds || [];
-  const routes = (hub?.routes || []).filter((route) => selectedMode.routeIds.includes(route.id));
-  return (
-    <section className="min-h-0 border-r border-white/[0.13] bg-slate-950/48 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[12px] font-black uppercase tracking-[0.17em] text-cyan-100/72">Connected Worlds</p>
-          <h2 className="mt-1 text-[16px] font-semibold text-white/98">{selectedMode.title}</h2>
-          <p className="mt-2 max-w-2xl text-[11px] leading-4 text-white/97">{selectedMode.copy}</p>
-        </div>
-        <Compass className="h-6 w-6 shrink-0 text-white/60" />
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-2">
-        {worlds.slice(0, 8).map((world) => (
-          <article key={world.id} className="relative min-h-[104px] overflow-hidden border border-white/[0.13] bg-white/[0.04] p-3">
-            {world.image ? <img src={world.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" /> : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#071019] via-[#071019]/82 to-transparent" />
-            <div className="relative z-10 flex h-full flex-col justify-end">
-              <span className="text-[11px] font-black uppercase tracking-[0.12em] text-cyan-100/72">{world.id === 'luna' ? 'Universal frontier' : 'Game world'}</span>
-              <strong className="mt-1 truncate text-[12px] text-white/95">{world.title}</strong>
-              <small className="mt-1 text-[12px] text-white/96">{world.id === 'luna' ? 'Open to every player' : String(world.cards || 0) + ' owned cards · ' + String(world.earned || 0) + ' earned this cycle'}</small>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="mt-5">
-        <div className="flex items-center justify-between">
-          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/94">Available Encounter Types</p>
-          <span className="text-[12px] text-white/60">{routes.length} route{routes.length === 1 ? '' : 's'}</span>
-        </div>
-        <div className="mt-2 space-y-2">
-          {routes.map((route) => {
-            const Icon = routeIcon[route.type] || Gamepad2;
-            return (
-              <div key={route.id} className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 border border-white/[0.12] bg-white/[0.035] p-3">
-                <div className="grid h-9 w-9 place-items-center border border-white/[0.14] bg-white/[0.045]"><Icon className="h-4 w-4 text-white/97" /></div>
-                <div className="min-w-0">
-                  <strong className="block text-[12px] text-white/95">{route.title}</strong>
-                  <p className="mt-1 line-clamp-2 text-[10px] leading-3.5 text-white/96">{route.description}</p>
-                </div>
-                <div className="text-right">
-                  <span className="block text-[10px] font-semibold text-amber-100/88">{route.xp} XP</span>
-                  <small className="mt-1 block text-[11px] uppercase tracking-[0.08em] text-white/60">{route.min === route.max ? route.min : route.min + '–' + route.max} players</small>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      {selectedMode.id === 'pvwe' && <FieldMode battle={battle} />}
-    </section>
-  );
-}
-
-function Arsenal({ hub }) {
-  const cards = hub?.player?.cards || [];
-  return (
-    <aside className="min-h-0 bg-slate-900/54 p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/94">Achievement Arsenal</p>
-          <h3 className="mt-1 text-[12px] font-semibold text-white/96">{hub?.player?.jawan?.name || 'Active Jawan'} · four battle cards</h3>
-          <p className="mt-1 text-[12px] uppercase tracking-[0.09em] text-cyan-100/72">{hub?.player?.jawan?.role || 'Balanced'} combat profile</p>
-        </div>
-        <Layers className="h-5 w-5 text-cyan-100/72" />
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        {[0, 1, 2, 3].map((index) => {
-          const card = cards[index];
-          return (
-            <div key={index} className="relative min-h-[124px] overflow-hidden border border-white/[0.13] bg-white/[0.04]">
-              {card?.image ? <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-28" /> : null}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#071019] via-[#071019]/84 to-transparent" />
-              <div className="relative z-10 flex min-h-[124px] flex-col justify-end p-2.5">
-                <span className="text-[11px] font-black uppercase tracking-[0.12em] text-white/94">Slot {index + 1}</span>
-                <strong className="mt-1 line-clamp-2 text-[11px] leading-3 text-white/96">{card?.name || 'Empty slot'}</strong>
-                {card && (
-                  <>
-                    <small className="mt-1 text-[11px] uppercase tracking-[0.07em] text-cyan-100/76">{card.rarity} · {card.type}</small>
-                    <div className="mt-2 flex items-center justify-between text-[11px]">
-                      <span className="text-white/95">{card.effect} {card.value}</span>
-                      <span className="font-bold text-cyan-100/84">{card.cost} AP</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-5 border-t border-white/[0.13] pt-4">
-        <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.13em] text-amber-100/82"><Trophy className="h-3.5 w-3.5" />Achievement → Ability</div>
-        <p className="mt-2 text-[10px] leading-4 text-white/96">
-          Cards earned from game achievements are locked into the encounter when you deploy. Ability cards attack, Equipment cards shield, Companions heal, and cards from the selected game world become your tactical layer.
-        </p>
-      </div>
-    </aside>
-  );
-}
-
-function CurrentExpeditions({ hub, onResume }) {
-  const active = (hub?.encounters || []).filter((encounter) => ['lobby', 'active'].includes(encounter.status));
-  if (!active.length) return null;
-  return (
-    <section className="border-t border-white/[0.13] bg-slate-950/42 px-5 py-3">
-      <div className="flex items-center gap-2 overflow-x-auto">
-        <span className="shrink-0 text-[12px] font-black uppercase tracking-[0.14em] text-white/64">Current</span>
-        {active.slice(0, 6).map((encounter) => (
-          <button key={encounter.id} type="button" onClick={() => onResume(encounter.id)} className="flex min-w-[205px] items-center gap-2 border border-cyan-100/08 bg-cyan-100/[0.025] px-3 py-2 text-left transition hover:bg-cyan-100/[0.05]">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-cyan-200/55" />
-            <span className="min-w-0">
-              <strong className="block truncate text-[10px] text-white/90">{encounter.route?.title || 'Expedition'}</strong>
-              <small className="mt-0.5 block truncate text-[11px] uppercase tracking-[0.07em] text-white/94">{encounter.world?.title} · {encounter.status}</small>
-            </span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
+const unwrap = (response) => response?.data ?? response ?? {};
 
 export default function LunaAIBattleOverlay({ onClose }) {
-  const [mode, setMode] = useState('pvp');
   const presentation = useArenaPresentation();
-  const arenaStage = Boolean(presentation.encounterId);
   const battle = useBattleArena();
-  const selectedMode = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
-  const ActiveModeIcon = selectedMode.icon;
+  const skillBook = useSkillBookLoadout();
+  const [mode, setMode] = useState('pvp');
+  const [worldId, setWorldId] = useState('');
+  const [opponentType, setOpponentType] = useState('players');
+  const [prefabId, setPrefabId] = useState('');
+  const [skillPrefabs, setSkillPrefabs] = useState([]);
+  const [equipmentPrefabs, setEquipmentPrefabs] = useState([]);
+  const [busy, setBusy] = useState(false);
 
-  const closeOverlay = () => {
-    if (arenaStage && arenaPresentation?.clear) arenaPresentation.clear();
-    onClose?.();
-  };
+  const activeMode = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
+  const worlds = battle.hub?.worlds || [];
+  const queue = battle.hub?.queue || null;
+  const queueWaiting = queue?.status === 'waiting';
+  const contacts = battle.hub?.contacts || [];
+
+  useEffect(() => {
+    if (!worldId && worlds[0]?.id) setWorldId(worlds[0].id);
+  }, [worldId, worlds]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await base44.functions.invoke('combatLoadoutPrefabs', { action: 'list', data: {} });
+        const body = unwrap(response);
+        if (body?.error) throw new Error(body.error);
+        if (!cancelled) {
+          setSkillPrefabs(body.skill_prefabs || []);
+          setEquipmentPrefabs(body.equipment_prefabs || []);
+        }
+      } catch (error) {
+        if (!cancelled) console.warn('AI Battle prefab list unavailable', error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const matchedId = queue?.status === 'matched' ? String(queue.matched_encounter_id || '') : '';
+    if (matchedId && !presentation.encounterId) {
+      arenaPresentation.setEncounter(matchedId);
+      showSuccess('Opponent found. Entering dashboard battle.');
+    }
+  }, [queue?.status, queue?.matched_encounter_id, presentation.encounterId]);
+
+  const prefabOptions = useMemo(() => [
+    ...skillPrefabs.map((prefab) => ({ ...prefab, optionKind: 'skill' })),
+    ...equipmentPrefabs.map((prefab) => ({ ...prefab, optionKind: 'equipment' })),
+  ], [skillPrefabs, equipmentPrefabs]);
+
+  const applyPrefab = useCallback(async () => {
+    if (!prefabId) return;
+    const prefab = prefabOptions.find((item) => String(item.id) === String(prefabId));
+    if (!prefab) return;
+
+    if (prefab.optionKind === 'skill') {
+      const response = await base44.functions.invoke('combatLoadoutPrefabs', {
+        action: 'loadSkillPrefab',
+        data: { prefab_id: prefab.id },
+      });
+      const body = unwrap(response);
+      if (body?.error) throw new Error(body.error);
+    } else {
+      if (prefab.linked_skill_prefab_id) {
+        const response = await base44.functions.invoke('combatLoadoutPrefabs', {
+          action: 'loadSkillPrefab',
+          data: { prefab_id: prefab.linked_skill_prefab_id },
+        });
+        const body = unwrap(response);
+        if (body?.error) throw new Error(body.error);
+      }
+
+      const cleared = unwrap(await base44.functions.invoke('equipmentLoadout', { action: 'clear', data: {} }));
+      if (cleared?.error) throw new Error(cleared.error);
+      for (const [slot, item] of Object.entries(prefab.equipped_items || {})) {
+        const equipped = unwrap(await base44.functions.invoke('equipmentLoadout', {
+          action: 'equip',
+          data: { slot, item },
+        }));
+        if (equipped?.error) throw new Error(equipped.error);
+      }
+      window.dispatchEvent(new CustomEvent('lunaEquipmentChanged', { detail: { prefab_id: prefab.id } }));
+    }
+
+    await skillBook.refetch();
+    window.dispatchEvent(new Event('syncPlayerStats'));
+  }, [prefabId, prefabOptions, skillBook]);
+
+  const enterEncounter = useCallback((response) => {
+    const encounterId = response?.encounter?.id || response?.matched_encounter_id || null;
+    if (encounterId) arenaPresentation.setEncounter(encounterId);
+    return encounterId;
+  }, []);
+
+  const queuePvp = useCallback(async () => {
+    if (!worldId || busy || queueWaiting) return;
+    setBusy(true);
+    try {
+      await applyPrefab();
+      if (opponentType === 'bot') {
+        const response = await battle.demoBot({ world_id: worldId });
+        enterEncounter(response);
+      } else {
+        const response = await battle.queue({ world_id: worldId, queue_type: 'casual' });
+        if (!enterEncounter(response)) showSuccess('Searching for the next player…');
+      }
+    } catch (error) {
+      showError(error, 'AI Battle');
+    } finally {
+      setBusy(false);
+    }
+  }, [applyPrefab, battle, busy, enterEncounter, opponentType, queueWaiting, worldId]);
+
+  const deploy = useCallback(async () => {
+    if (!worldId || busy) return;
+    setBusy(true);
+    try {
+      const route = (battle.hub?.routes || []).find((item) => item.id === activeMode.routeId);
+      const maxGuests = Math.max(0, Number(route?.max || 1) - 1);
+      const invitedIds = mode === 'boss'
+        ? contacts.filter((contact) => contact.in_dashboard).slice(0, maxGuests).map((contact) => contact.id)
+        : [];
+      const response = await battle.create({
+        world_id: worldId,
+        route_id: activeMode.routeId,
+        invited_ids: invitedIds,
+      });
+      enterEncounter(response);
+    } catch (error) {
+      showError(error, activeMode.label);
+    } finally {
+      setBusy(false);
+    }
+  }, [activeMode, battle, busy, contacts, enterEncounter, mode, worldId]);
+
+  useEffect(() => {
+    const onKey = (event) => {
+      if (mode !== 'pvp' || event.key.toLowerCase() !== 'q' || event.repeat) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest('input,textarea,select,[contenteditable=true]')) return;
+      event.preventDefault();
+      queuePvp();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mode, queuePvp]);
+
+  if (presentation.encounterId) return null;
+
+  const selectedWorld = worlds.find((item) => String(item.id) === String(worldId)) || worlds[0] || null;
+  const ActiveIcon = activeMode.icon;
 
   return (
-    <div
-      data-dashboard-utility-workspace
-      aria-label="AI Battle workspace"
-      className="fixed left-[330px] right-0 top-[64px] bottom-[32px] z-[130] pointer-events-auto overflow-hidden"
-      style={{
-        background: arenaStage
-          ? 'linear-gradient(180deg, rgba(11,20,30,.16), rgba(11,20,30,.04) 30%, rgba(11,20,30,.02) 70%, rgba(11,20,30,.10))'
-          : 'linear-gradient(135deg, rgba(18,29,42,.97), rgba(25,43,58,.95) 46%, rgba(14,25,38,.98))',
-        backdropFilter: arenaStage ? 'none' : 'blur(26px) saturate(132%)',
-        WebkitBackdropFilter: arenaStage ? 'none' : 'blur(26px) saturate(132%)',
-        boxShadow: arenaStage ? 'none' : 'inset 1px 0 0 rgba(255,255,255,.12), inset 0 1px 0 rgba(255,255,255,.08)',
-      }}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(244,63,94,.055),transparent_30%),radial-gradient(circle_at_64%_18%,rgba(103,232,249,.05),transparent_32%),radial-gradient(circle_at_28%_76%,rgba(168,85,247,.06),transparent_30%)]" />
-
-      <div className="relative z-10 flex h-full min-h-0 flex-col">
-        <header className="flex shrink-0 items-center justify-between gap-5 border-b border-white/[0.15] px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rotate-45 border border-white/[0.10] bg-white/[0.055]"><ActiveModeIcon className={'h-4 w-4 -rotate-45 ' + selectedMode.tone} /></div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/96">Luna Combat Network</p>
-              <h1 className="mt-0.5 text-[24px] font-semibold tracking-tight text-white">AI Battle</h1>
-              <p className="mt-0.5 text-[12px] text-white/90">Your dashboard becomes the arena. Your achievements become your moves.</p>
-            </div>
+    <div className="fixed left-[390px] right-[338px] top-[205px] z-[130] flex justify-center pointer-events-none" data-dashboard-utility-workspace>
+      <section
+        aria-label="AI Battle"
+        className="pointer-events-auto w-[min(610px,94%)] overflow-hidden border border-white/[0.11] bg-slate-950/76 text-white shadow-[0_24px_70px_rgba(0,0,0,.30)] backdrop-blur-2xl"
+      >
+        <header className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3">
+          <div className="grid h-9 w-9 place-items-center border border-cyan-100/[0.12] bg-cyan-100/[0.04]"><ActiveIcon className="h-4 w-4 text-cyan-100/75" /></div>
+          <div>
+            <p className="text-[7px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Luna</p>
+            <h2 className="text-[15px] font-semibold">AI Battle</h2>
           </div>
-          <div className="flex items-center gap-3">
-            {!arenaStage && (
-              <>
-                <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.09em] text-white/94"><Layers className="h-3 w-3" />{battle.hub?.player?.cards?.length || 0}/4 cards</span>
-                <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.09em] text-white/94"><Users className="h-3 w-3" />{battle.hub?.contacts?.length || 0} connected players</span>
-              </>
-            )}
-            <button type="button" onClick={closeOverlay} aria-label="Close AI Battle" className="grid h-9 w-9 place-items-center border border-white/[0.15] bg-black/25 text-white/99 backdrop-blur-md transition hover:bg-white/[0.06]">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <button type="button" onClick={onClose} className="ml-auto grid h-8 w-8 place-items-center border border-white/[0.07] text-white/50 hover:bg-white/[0.06] hover:text-white" aria-label="Close AI Battle"><X className="h-3.5 w-3.5" /></button>
         </header>
 
-        {!arenaStage && (
-          <div className="flex shrink-0 items-center border-b border-white/[0.13] px-6">
-            {MODES.map(({ id, label, full, icon: Icon, tone }) => (
-              <button key={id} type="button" onClick={() => setMode(id)} className={'relative flex min-w-[205px] items-center gap-2.5 px-4 py-3 text-left transition-colors ' + (mode === id ? 'bg-white/[0.04]' : 'bg-transparent hover:bg-white/[0.02]')}>
-                <Icon className={'h-3.5 w-3.5 ' + (mode === id ? tone : 'text-white/95')} />
-                <span>
-                  <strong className={mode === id ? 'text-[12px] text-white/98' : 'text-[12px] text-white/98'}>{label}</strong>
-                  <small className="mt-0.5 block text-[11px] uppercase tracking-[0.08em] text-white/94">{full}</small>
-                </span>
-                {mode === id && <i className="absolute inset-x-3 bottom-0 h-px bg-cyan-100/38" />}
-              </button>
-            ))}
-            <div className="ml-auto flex items-center gap-2 text-[12px] uppercase tracking-[0.1em] text-emerald-100/78"><BellRing className="h-3 w-3" />Server-authoritative combat</div>
-          </div>
-        )}
+        <div className="grid grid-cols-4 border-b border-white/[0.07]">
+          {MODES.map(({ id, label, sub, icon: Icon }) => (
+            <button key={id} type="button" onClick={() => setMode(id)} className={`flex min-h-[62px] items-center gap-2 border-r border-white/[0.055] px-3 text-left last:border-r-0 ${mode === id ? 'bg-cyan-100/[0.07]' : 'bg-transparent hover:bg-white/[0.03]'}`}>
+              <Icon className={`h-3.5 w-3.5 ${mode === id ? 'text-cyan-100' : 'text-white/38'}`} />
+              <span><strong className="block text-[9px] text-white/90">{label}</strong><small className="mt-0.5 block text-[6px] uppercase tracking-[0.08em] text-white/30">{sub}</small></span>
+            </button>
+          ))}
+        </div>
 
-        <main className="min-h-0 flex-1">
-          {arenaStage ? (
-            <LunaDashboardArenaPanel mode={mode} />
-          ) : battle.isLoading ? (
-            <div className="grid h-full place-items-center text-[11px] uppercase tracking-[0.14em] text-white/96">Preparing expedition network…</div>
-          ) : battle.error ? (
-            <div className="grid h-full place-items-center text-center">
-              <div><Shield className="mx-auto h-7 w-7 text-rose-100/30" /><p className="mt-3 text-[12px] text-white/98">AI Battle could not connect.</p><button type="button" onClick={() => battle.refetch?.()} className="mt-3 border border-white/[0.15] bg-white/[0.04] px-3 py-2 text-[11px] uppercase tracking-[0.1em] text-white/96">Retry connection</button></div>
+        <div className="p-4">
+          <div className="grid grid-cols-[1fr_1fr] gap-3">
+            <label className="block">
+              <span className="text-[6px] font-black uppercase tracking-[0.14em] text-white/35">Game World</span>
+              <select value={selectedWorld?.id || ''} onChange={(event) => setWorldId(event.target.value)} className="mt-1.5 h-9 w-full border border-white/[0.08] bg-slate-950 px-2.5 text-[8px] text-white outline-none">
+                {worlds.map((world) => <option key={world.id} value={world.id}>{world.title}</option>)}
+              </select>
+            </label>
+
+            {mode === 'pvp' ? (
+              <label className="block">
+                <span className="flex items-center gap-1.5 text-[6px] font-black uppercase tracking-[0.14em] text-white/35"><Package className="h-3 w-3" />Prefab</span>
+                <select value={prefabId} onChange={(event) => setPrefabId(event.target.value)} className="mt-1.5 h-9 w-full border border-white/[0.08] bg-slate-950 px-2.5 text-[8px] text-white outline-none">
+                  <option value="">Current Loadout</option>
+                  {skillPrefabs.length > 0 && <optgroup label="Skill Prefabs">{skillPrefabs.map((prefab) => <option key={prefab.id} value={prefab.id}>{prefab.name}</option>)}</optgroup>}
+                  {equipmentPrefabs.length > 0 && <optgroup label="Equipment Prefabs">{equipmentPrefabs.map((prefab) => <option key={prefab.id} value={prefab.id}>{prefab.name}</option>)}</optgroup>}
+                </select>
+              </label>
+            ) : (
+              <div>
+                <span className="text-[6px] font-black uppercase tracking-[0.14em] text-white/35">Mode</span>
+                <div className="mt-1.5 flex h-9 items-center border border-white/[0.07] px-3 text-[8px] text-white/60">{activeMode.sub}</div>
+              </div>
+            )}
+          </div>
+
+          {mode === 'pvp' ? (
+            <div className="mt-4">
+              <p className="text-[6px] font-black uppercase tracking-[0.14em] text-white/35">Opponent</p>
+              <div className="mt-1.5 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setOpponentType('bot')} className={`flex h-11 items-center justify-center gap-2 border text-[8px] font-semibold ${opponentType === 'bot' ? 'border-cyan-100/20 bg-cyan-100/[0.08] text-white' : 'border-white/[0.07] text-white/45 hover:bg-white/[0.03]'}`}><Bot className="h-3.5 w-3.5" />Bot</button>
+                <button type="button" onClick={() => setOpponentType('players')} className={`flex h-11 items-center justify-center gap-2 border text-[8px] font-semibold ${opponentType === 'players' ? 'border-cyan-100/20 bg-cyan-100/[0.08] text-white' : 'border-white/[0.07] text-white/45 hover:bg-white/[0.03]'}`}><Users className="h-3.5 w-3.5" />Players</button>
+              </div>
+
+              <button type="button" disabled={busy || queueWaiting || !worldId} onClick={queuePvp} className="mt-3 flex h-12 w-full items-center justify-center gap-3 border border-cyan-100/18 bg-cyan-100/[0.09] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-50 disabled:opacity-35">
+                {busy || queueWaiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
+                {queueWaiting ? 'Searching for Player…' : `Q · Queue ${opponentType === 'bot' ? 'Bot' : 'Players'}`}
+              </button>
+
+              {queueWaiting && (
+                <div className="mt-2 flex items-center justify-between text-[7px] text-white/38">
+                  <span>Waiting for the next player who enters this queue.</span>
+                  <button type="button" onClick={() => battle.cancelQueue().catch((error) => showError(error, 'Queue'))} className="text-rose-100/65 hover:text-rose-100">Cancel</button>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex h-full min-h-0 flex-col">
-              <LunaDashboardArenaPanel mode={mode} />
-              <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.45fr)_320px]">
-                <ConnectedWorlds hub={battle.hub} selectedMode={selectedMode} battle={battle} />
-                <Arsenal hub={battle.hub} />
-              </div>
-              <CurrentExpeditions hub={battle.hub} onResume={(id) => arenaPresentation.setEncounter(id)} />
+            <div className="mt-4">
+              <button type="button" disabled={busy || !worldId} onClick={deploy} className="flex h-12 w-full items-center justify-center gap-3 border border-cyan-100/18 bg-cyan-100/[0.09] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-50 disabled:opacity-35">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === 'boss' ? <Crown className="h-4 w-4" /> : <ActiveIcon className="h-4 w-4" />}
+                Enter {activeMode.label}
+              </button>
+              {mode === 'boss' && <p className="mt-2 text-center text-[7px] text-white/35">Boss battles use players already present on your dashboard. At least two combatants are required.</p>}
             </div>
           )}
-        </main>
-
-        {!arenaStage && (
-          <footer className="flex shrink-0 items-center justify-between border-t border-white/[0.13] px-6 py-2 text-[12px] uppercase tracking-[0.11em] text-white/94">
-            <span>Play → earn achievement cards → equip → enter a game world → fight</span>
-            <span className="flex items-center gap-1.5"><Zap className="h-3 w-3" />PvP · Dungeons · Quests · World Bosses</span>
-          </footer>
-        )}
-      </div>
+        </div>
+      </section>
     </div>
   );
 }
