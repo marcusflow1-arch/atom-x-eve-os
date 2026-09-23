@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Crown, Shield, Skull, Swords, Target, Users, Zap } from 'lucide-react';
+import { Crown, Map, Shield, Skull, Swords, Target, Users, Zap } from 'lucide-react';
 import useBattleArena from '@/components/battle/useBattleArena';
 import { useAuth } from '@/components/auth/AuthContext';
 import { BattleAvatar, RiftEnemy } from '@/components/battle/BattleAvatar';

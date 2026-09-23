@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // Exact character/animation runtime from the uploaded Getsuga Tensho package.
 // The packaged GLB is stored as gzip+base64 public chunks so Base44 can serve it
@@ -225,6 +224,91 @@ export class GetsugaAbilityRuntime {
     this.up = new THREE.Vector3(0, 1, 0);
     this.bones = {};
     this.rest = new Map();
+    this.ready = false;
+    this.pendingPlay = false;
+    this.packageGltf = null;
+    this.mixer = null;
+    this.attackClip = null;
+    this.attackAction = null;
+    this.idleAction = null;
+    this.packageEnergyBlade = null;
+    this.followOffset = new THREE.Vector3();
+    this.followRotation = new THREE.Quaternion();
+    this.loadError = null;
+    this.initializeCharacter();
+  }
+
+  async initializeCharacter() {
+    try {
+      const gltf = await loadPackagedCharacter();
+      if (this.disposed) return;
+      const original = this.getPlayer?.();
+      if (!original?.parent) throw new Error('Luna player scene is not ready for the Getsuga character.');
+
+      this.packageGltf = gltf;
+      this.original = original;
+      this.proxy = gltf.scene;
+      this.proxy.name = 'Getsuga_PackageCharacter';
+      this.proxy.traverse((node) => {
+        if (node.isMesh) {
+          node.frustumCulled = false;
+          node.castShadow = true;
+          node.receiveShadow = true;
+        }
+        if (node.name === 'SK_EnergyBlade') this.packageEnergyBlade = node;
+      });
+
+      original.updateMatrixWorld(true);
+      this.proxy.position.copy(original.position);
+      this.proxy.quaternion.copy(original.quaternion);
+      this.proxy.scale.set(1, 1, 1);
+      original.parent.add(this.proxy);
+      this.proxy.updateMatrixWorld(true);
+
+      const originalBox = new THREE.Box3().setFromObject(original);
+      const packageBox = new THREE.Box3().setFromObject(this.proxy);
+      const originalSize = originalBox.getSize(new THREE.Vector3());
+      const packageSize = packageBox.getSize(new THREE.Vector3());
+      const scale = packageSize.y > .0001 ? originalSize.y / packageSize.y : 1;
+      this.proxy.scale.multiplyScalar(scale);
+      this.proxy.updateMatrixWorld(true);
+
+      const scaledBox = new THREE.Box3().setFromObject(this.proxy);
+      const originalCenter = originalBox.getCenter(new THREE.Vector3());
+      const packageCenter = scaledBox.getCenter(new THREE.Vector3());
+      this.proxy.position.x += originalCenter.x - packageCenter.x;
+      this.proxy.position.y += originalBox.min.y - scaledBox.min.y;
+      this.proxy.position.z += originalCenter.z - packageCenter.z;
+      this.proxy.updateMatrixWorld(true);
+      this.followOffset.copy(this.proxy.position).sub(original.position);
+      this.followRotation.copy(original.quaternion).invert().multiply(this.proxy.quaternion);
+
+      this.attackClip = gltf.animations.find((clip) => clip.name === 'GetsugaTensho') || gltf.animations[0];
+      if (!this.attackClip) throw new Error('GetsugaTensho animation was not found in the packaged character.');
+      this.mixer = new THREE.AnimationMixer(this.proxy);
+      this.attackAction = this.mixer.clipAction(this.attackClip);
+      this.attackAction.setLoop(THREE.LoopOnce, 1);
+      this.attackAction.clampWhenFinished = true;
+
+      const idleClip = createIdleClip(this.attackClip);
+      this.idleAction = this.mixer.clipAction(idleClip);
+      this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
+      this.idleAction.reset().setEffectiveWeight(1).play();
+      if (this.packageEnergyBlade) this.packageEnergyBlade.visible = false;
+
+      this.captureBones();
+      original.visible = false;
+      this.ready = true;
+      this.emit('idle');
+      if (this.pendingPlay) {
+        this.pendingPlay = false;
+        this.play();
+      }
+    } catch (error) {
+      this.loadError = error;
+      console.error('[Getsuga] Exact packaged character failed to load:', error);
+      this.emit('loadError');
+    }
   }
 
   isPlaying() {
@@ -237,21 +321,11 @@ export class GetsugaAbilityRuntime {
 
   play() {
     if (this.disposed || !this.scene) return false;
-    if (this.active) this.finish(false);
-    const player = this.getPlayer?.();
-    if (!player) return false;
-
-    this.original = player;
-    this.proxy = cloneSkeleton(player);
-    this.proxy.name = 'Getsuga_PlayerCastProxy';
-    this.proxy.traverse((node) => {
-      if (node.isMesh) {
-        node.frustumCulled = false;
-        node.castShadow = true;
-      }
-    });
-    player.parent?.add(this.proxy);
-    player.visible = false;
+    if (!this.ready) {
+      this.pendingPlay = true;
+      return true;
+    }
+    if (this.active) return false;
 
     this.localFx = new THREE.Group();
     this.localFx.name = 'Getsuga_LocalFX';
@@ -259,13 +333,16 @@ export class GetsugaAbilityRuntime {
     this.worldFx.name = 'Getsuga_WorldFX';
     this.scene.add(this.localFx, this.worldFx);
 
-    this.captureBones();
     this.setupEffects();
     this.time = 0;
     this.lastFrame = -1;
     this.released = false;
     this.impacted = false;
     this.active = true;
+    if (this.packageEnergyBlade) this.packageEnergyBlade.visible = true;
+    this.attackAction.enabled = true;
+    this.attackAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1);
+    this.attackAction.crossFadeFrom(this.idleAction, .18, true).play();
     this.syncLocalFrame();
     this.emit('castStart');
     return true;
@@ -692,15 +769,11 @@ export class GetsugaAbilityRuntime {
   }
 
   update(dt) {
-    if (this.disposed) return;
-    const step = Math.min(.05, Math.max(0, dt));
-    this.mixer?.update(step);
-    if (!this.active) return;
-    this.time += step;
+    if (!this.active || this.disposed) return;
+    this.time += Math.min(.05, Math.max(0, dt));
     const frame = this.time * FPS + 1;
 
-    // The package's embedded GetsugaTensho clip owns the skeleton pose. The VFX
-    // timeline only follows it; no procedural replacement pose is applied here.
+    this.applyPose(frame);
     this.syncLocalFrame();
     this.updateBlade(frame);
     this.updateAura(frame);
@@ -722,52 +795,28 @@ export class GetsugaAbilityRuntime {
   }
 
   finish(emitEnd = true) {
-    if (!this.active && !this.localFx && !this.worldFx) return;
-    if (this.idleAction && this.attackAction) {
-      this.idleAction.enabled = true;
-      this.idleAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
-      this.idleAction.crossFadeFrom(this.attackAction, .24, true);
-    }
-    if (this.packageEnergyBlade) this.packageEnergyBlade.visible = false;
+    if (!this.active && !this.proxy && !this.localFx && !this.worldFx) return;
+    if (this.original) this.original.visible = true;
+    if (this.proxy?.parent) this.proxy.parent.remove(this.proxy);
     if (this.localFx) this.scene?.remove(this.localFx);
     if (this.worldFx) this.scene?.remove(this.worldFx);
+    this.proxy = null;
     this.localFx = null;
     this.worldFx = null;
+    this.original = null;
+    this.rest.clear();
+    this.bones = {};
     for (const geometry of this.geometries) geometry?.dispose?.();
     for (const material of this.materials) material?.dispose?.();
     this.geometries = [];
     this.materials = [];
     this.active = false;
-    this.time = 0;
-    this.lastFrame = -1;
-    this.released = false;
-    this.impacted = false;
-    if (emitEnd) {
-      this.emit('end');
-      this.emit('idle');
-    }
+    if (emitEnd) this.emit('end');
   }
 
   dispose() {
-    this.pendingPlay = false;
     this.finish(false);
     this.disposed = true;
-    this.mixer?.stopAllAction();
-    if (this.original) this.original.visible = true;
-    if (this.proxy?.parent) this.proxy.parent.remove(this.proxy);
-    this.proxy?.traverse((node) => {
-      node.geometry?.dispose?.();
-      const materials = Array.isArray(node.material) ? node.material : [node.material];
-      materials.filter(Boolean).forEach((material) => material.dispose?.());
-    });
-    this.proxy = null;
-    this.original = null;
-    this.packageGltf = null;
-    this.mixer = null;
-    this.attackAction = null;
-    this.idleAction = null;
-    this.rest.clear();
-    this.bones = {};
   }
 }
 
