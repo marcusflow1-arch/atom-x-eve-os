@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
+import CombatPrefabManager from './CombatPrefabManager';
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
 
