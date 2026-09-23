@@ -37,6 +37,11 @@ export default function LunaCardsPanel() {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
+  const demoAbility = useMemo(
+    () => (skills || []).find((skill) => normalize(skill.title) === normalize('Ichigo Kurosaki - Getsuga Tenshō')) || null,
+    [skills]
+  );
+
   const genres = useMemo(
     () => [...new Set((games || []).map((game) => game.genre).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
     [games]
@@ -179,8 +184,6 @@ export default function LunaCardsPanel() {
         WebkitBackdropFilter: 'blur(12px) saturate(120%)',
       }}
     >
-      <div className="pointer-events-none absolute inset-y-5 left-1/2 w-px bg-gradient-to-b from-transparent via-white/[0.08] to-transparent" />
-
       <div className="relative z-10 flex h-full min-h-0 flex-col px-5 pb-5 pt-4">
         <header className="shrink-0 border-b border-white/[0.07] pb-3">
           <div className="flex items-end justify-between gap-4">
@@ -308,6 +311,52 @@ export default function LunaCardsPanel() {
             </div>
           )}
         </div>
+
+        {!selectedGame && (
+          <section className="mt-3 shrink-0">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Collectible Cards</p>
+                <p className="mt-0.5 text-[7px] text-white/38">Your card row · empty spaces fill as abilities are added.</p>
+              </div>
+              <span className="text-[7px] font-mono text-white/28">1 / 6</span>
+            </div>
+            <div className="grid grid-cols-6 gap-2">
+              {[0, 1, 2, 3, 4, 5].map((index) => {
+                const card = index === 0 ? demoAbility : null;
+                return card ? (
+                  <button
+                    key={index}
+                    type="button"
+                    draggable={Boolean(card.owned)}
+                    onDragStart={(event) => dragSkill(event, card)}
+                    onClick={() => {
+                      const game = (games || []).find((entry) => normalize(entry.title) === normalize(card.game_name));
+                      if (game) setSelectedGameKey(game.key);
+                      setSelectedSkillId(card.id);
+                    }}
+                    className="group relative h-[104px] overflow-hidden border border-cyan-100/24 bg-cyan-100/[0.025] shadow-[0_0_18px_rgba(103,232,249,.06)] transition hover:border-cyan-100/45 hover:bg-cyan-100/[0.05]"
+                    title="Ichigo Kurosaki - Getsuga Tenshō"
+                  >
+                    {card.image ? <img src={card.image} alt="Ichigo Kurosaki - Getsuga Tenshō" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : null}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
+                    <div className="absolute inset-x-1.5 bottom-1.5 text-left">
+                      <p className="truncate text-[7px] font-semibold text-white">Getsuga Tenshō</p>
+                      <p className="mt-0.5 text-[5px] font-black uppercase tracking-[0.08em] text-cyan-100/58">Ability · Unique</p>
+                    </div>
+                  </button>
+                ) : (
+                  <div key={index} className="grid h-[104px] place-items-center border border-white/[0.065] bg-white/[0.012] text-center">
+                    <div>
+                      <span className="mx-auto grid h-7 w-7 place-items-center border border-white/[0.08] text-[16px] font-light text-white/22">+</span>
+                      <p className="mt-2 text-[5px] font-black uppercase tracking-[0.12em] text-white/20">Empty Card</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <div className="min-h-0 flex-1 pt-4">
           {isLoading ? (
