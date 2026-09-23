@@ -96,7 +96,11 @@ export function useSkills() {
       const key = e.key;
 
       if (!['1','2','3','4'].includes(key)) return;
-      const index = Number(key) - 1;
+
+      // During the Luna Getsuga test, key 4 intentionally fires Skill Slot 1.
+      // Keep key 1 disabled for that slot so the test mapping is unambiguous.
+      if (key === '1') return;
+      const index = key === '4' ? 0 : Number(key) - 1;
       triggerSkill(index);
     };
 
