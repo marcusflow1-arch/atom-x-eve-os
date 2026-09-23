@@ -618,7 +618,15 @@ Deno.serve(async req=>{
       }
       const peers=await contacts(svc,user);
       const ids=[...new Set((Array.isArray(data.invited_ids)?data.invited_ids:[]).map(String))];
-      if(ids.length>route.max-1||ids.some(id=>!peers.some(p=>p.id===id)))fail('Invite friends, party members, or players on your dashboard.',403);
+      if(ids.length>route.max-1||ids.some(id=>id===String(user.id)))fail('Choose a valid opponent or party member.',403);
+      if(route.id==='duel'&&ids.length){
+        for(const id of ids){
+          const rows=await svc.PlayerState.filter({player_id:id},'-last_update',5);
+          if(!rows.some(live))fail('That player is no longer online.',409);
+        }
+      }else if(ids.some(id=>!peers.some(p=>p.id===id))){
+        fail('Invite friends, party members, or players on your dashboard.',403);
+      }
       if(ids.length+1<route.min)fail('This route requires another player.');
       const player=await snapshot(svc,user);
       if(!player.cards.length)fail('Equip at least one card in the Skill Book before starting.');

@@ -487,11 +487,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     };
 
     renderer.domElement.style.pointerEvents = 'auto';
-    window.addEventListener('mousedown', onMouseDown);
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('mousemove', onMouseMove);
     renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('contextmenu', onContextMenu);
+    renderer.domElement.addEventListener('contextmenu', onContextMenu);
 
     const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     swapEnvironment(initialEnvUrl);
@@ -1863,11 +1863,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('keydown', onSwitchCharacter);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('mousemove', onMouseMove);
       renderer.domElement.removeEventListener('wheel', onWheel);
-      window.removeEventListener('contextmenu', onContextMenu);
+      renderer.domElement.removeEventListener('contextmenu', onContextMenu);
       document.body.style.cursor = 'default';
       window.removeEventListener('multiplayerPlayersUpdate', handleMultiplayerUpdate);
       if (c1ModelRef.current?.userData?._weaponCleanup) c1ModelRef.current.userData._weaponCleanup();
@@ -1950,7 +1950,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   }, [equippedWeaponUrl, isModelLoaded]);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative" tabIndex="0" onContextMenu={(e) => e.preventDefault()}>
+    <div ref={containerRef} className="w-full h-full relative" tabIndex="0">
       {/* Player HUD */}
       <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-1.5 w-48"
         style={{

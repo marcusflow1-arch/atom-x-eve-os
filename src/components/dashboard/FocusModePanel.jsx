@@ -22,6 +22,7 @@ import EntertainmentRow from './EntertainmentRow';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
+import { arenaPresentation } from '@/components/battle/arenaPresentation';
 
 import StatsPopupOverlay from '@/components/dashboard/StatsPopupOverlay';
 import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
@@ -1111,7 +1112,7 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
 }
 
 // Friend Reference - clickable friends that show join/invite options
-function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite, onTrade }) {
+function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, duelState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite, onDuel, onTrade }) {
   const anchorRef = useRef(null);
   const menuRef = useRef(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -1119,7 +1120,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
   const placeMenu = (x, y) => {
     if (typeof window === 'undefined') return { top: 0, left: 0 };
     const width = 208;
-    const height = 230;
+    const height = 288;
     return {
       left: Math.max(8, Math.min(window.innerWidth - width - 8, x)),
       top: Math.max(8, Math.min(window.innerHeight - height - 8, y)),
@@ -1132,8 +1133,9 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
     const rect = anchorRef.current?.getBoundingClientRect?.();
     // Keep this as a small anchored popover. It should never replace, dim, or
     // cover the Luna dashboard itself.
-    const x = rect ? rect.left : 24;
-    const y = rect ? rect.bottom + 6 : 80;
+    const fromPointer = Number.isFinite(event?.clientX) && Number.isFinite(event?.clientY) && event?.type !== 'click';
+    const x = fromPointer ? event.clientX : (rect ? rect.left : 24);
+    const y = fromPointer ? event.clientY : (rect ? rect.bottom + 6 : 80);
     setMenuPosition(placeMenu(x, y));
     window.dispatchEvent(new Event('lunaPresenceMenuOpened'));
     onClick(friend);
@@ -1156,6 +1158,11 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
       document.removeEventListener('mousedown', closeOnOutsideClick);
     };
   }, [isActive, onClick]);
+
+  const captureRightClick = (event) => {
+    if (event.button !== 2) return;
+    openMenu(event);
+  };
 
   const actionHandlers = (action) => ({
     onPointerDown: (event) => {
@@ -1197,17 +1204,20 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
           <p className="mt-0.5 text-[7px] uppercase tracking-[.16em] text-white/34">{isFriend ? 'Friend · online dashboard' : 'Online player'}</p>
         </div>
 
+        <button type="button" disabled={joining} {...actionHandlers(onJoin)} className={menuButton} data-social-action="join-dashboard">
+          {joining ? 'Joining Dashboard…' : 'Join Dashboard'}
+        </button>
         <button type="button" disabled={partyInviteState === 'sending' || partyInviteState === 'sent'} {...actionHandlers(onPartyInvite)} className={menuButton} data-social-action="invite-party">
           {partyInviteState === 'sending' ? 'Inviting to Party…' : partyInviteState === 'sent' ? 'Party Invite Sent' : partyInviteState === 'error' ? 'Party Invite Failed · Retry' : 'Invite to Party'}
         </button>
+        <button type="button" {...actionHandlers(onMessage)} className={menuButton} data-social-action="message-player">
+          Message
+        </button>
+        <button type="button" disabled={duelState === 'sending'} {...actionHandlers(onDuel)} className={menuButton} data-social-action="duel-player">
+          {duelState === 'sending' ? 'Sending Duel…' : duelState === 'error' ? 'Duel Failed · Retry' : 'Duel'}
+        </button>
         <button type="button" disabled={dashboardInviteState === 'sending' || dashboardInviteState === 'sent'} {...actionHandlers(onInvite)} className={menuButton} data-social-action="invite-dashboard">
           {dashboardInviteState === 'sending' ? 'Sending Invite…' : dashboardInviteState === 'sent' ? 'Dashboard Invite Sent' : dashboardInviteState === 'error' ? 'Invite Failed · Retry' : 'Invite to Dashboard'}
-        </button>
-        <button type="button" disabled={joining} {...actionHandlers(onJoin)} className={menuButton} data-social-action="join-dashboard">
-          {joining ? 'Joining Dashboard…' : 'Join Dashboard as Friend'}
-        </button>
-        <button type="button" {...actionHandlers(onMessage)} className={menuButton} data-social-action="message-player">
-          Whisper
         </button>
 
         {!isFriend && (
@@ -1231,13 +1241,18 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
 
   return (
     <>
-      <div ref={anchorRef} className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`} onContextMenu={openMenu}>
+      <div
+        ref={anchorRef}
+        className={`relative pointer-events-auto ${isActive ? 'z-[10000]' : 'z-20'}`}
+        onMouseDownCapture={captureRightClick}
+        onContextMenuCapture={openMenu}
+        onContextMenu={openMenu}
+      >
         <motion.button
           type="button"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.985 }}
           onClick={openMenu}
-          onContextMenu={openMenu}
           title="Open player social options"
           aria-label={`Open social actions for ${friend.name}`}
           aria-haspopup="menu"
@@ -1294,6 +1309,7 @@ export function LibraryBannerSection({
   const { user } = useAuth();
   const [invitedUsers, setInvitedUsers] = useState({});
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
+  const [duelUsers, setDuelUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
   const [joiningUsers, setJoiningUsers] = useState({});
   const [tradeFriend, setTradeFriend] = useState(null);
@@ -1454,6 +1470,36 @@ export function LibraryBannerSection({
     }
   };
 
+  const handleDuel = async (u) => {
+    if (!user?.id || !u?.id || duelUsers[u.id] === 'sending') return;
+    setDuelUsers((prev) => ({ ...prev, [u.id]: 'sending' }));
+    try {
+      const hubResponse = await base44.functions.invoke('ai-battle-arena', { action: 'hub', data: {} });
+      const hubBody = hubResponse?.data ?? hubResponse ?? {};
+      if (hubBody?.error) throw new Error(hubBody.error);
+      const world = hubBody.worlds?.[0];
+      if (!world?.id) throw new Error('No AI Battle world is available.');
+      const requestId = globalThis.crypto?.randomUUID?.() || `duel-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const response = await base44.functions.invoke('ai-battle-arena', {
+        action: 'create',
+        data: { world_id: world.id, route_id: 'duel', invited_ids: [String(u.id)], request_id: requestId },
+      });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) throw new Error(body.error);
+      const encounterId = body.encounter?.id;
+      if (!encounterId) throw new Error('Duel invitation could not be created.');
+      setDuelUsers((prev) => ({ ...prev, [u.id]: 'sent' }));
+      onActiveFriendChange(null);
+      arenaPresentation.setEncounter(encounterId);
+      window.dispatchEvent(new CustomEvent('openAIBattle', { detail: { encounterId } }));
+      showSuccess(`Duel invitation sent to ${u.name || 'player'}.`);
+    } catch (error) {
+      console.error('[Luna Presence] duel failed', error);
+      setDuelUsers((prev) => ({ ...prev, [u.id]: 'error' }));
+      showError(error, 'Duel');
+    }
+  };
+
   const friendTargetFor = (u) => ({
     id: u.id,
     friend_id: u.id,
@@ -1570,6 +1616,7 @@ export function LibraryBannerSection({
                     requestState={friendRequestUsers[friend.id]}
                     dashboardInviteState={invitedUsers[friend.id]}
                     partyInviteState={partyInviteUsers[friend.id]}
+                    duelState={duelUsers[friend.id]}
                     joining={!!joiningUsers[friend.id]}
                     onClick={handleFriendClick}
                     onAddFriend={handleAddFriend}
@@ -1577,6 +1624,7 @@ export function LibraryBannerSection({
                     onJoin={handleJoin}
                     onInvite={handleInvite}
                     onPartyInvite={handlePartyInvite}
+                    onDuel={handleDuel}
                     onTrade={handleTrade}
                     isActive={activeFriend?.id === friend.id}
                   />
