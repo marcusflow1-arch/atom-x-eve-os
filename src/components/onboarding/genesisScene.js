@@ -57,13 +57,19 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let getsuga = null;
   const emitGetsugaEvent = (name, detail = {}) => {
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoEvent', { detail: { name, ...detail } }));
+      const payload = { effectId: 'getsuga_tensho', name, ...detail };
+      window.dispatchEvent(new CustomEvent('lunaCardAnimationEffectEvent', { detail: payload }));
+      window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoEvent', { detail: payload }));
     }
   };
-  const onGetsugaProc = () => {
+  const onCardAnimationEffectProc = (event) => {
+    const effectId = String(event?.detail?.effect?.id || '').trim().toLowerCase();
+    if (effectId !== 'getsuga_tensho') return;
     if (!disposed && model && getsuga) getsuga.play();
   };
-  if (options.skillEffects && typeof window !== 'undefined') window.addEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+  if (options.skillEffects && typeof window !== 'undefined') {
+    window.addEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
+  }
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
   let primaryMotionRoot = null, primaryMotionMixer = null, primaryMotionAction = null, primaryMotionBridge = null;
@@ -627,7 +633,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     dispose: () => {
       disposed = true;
       cancelAnimationFrame(frame);
-      if (options.skillEffects && typeof window !== 'undefined') window.removeEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+      if (options.skillEffects && typeof window !== 'undefined') {
+        window.removeEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
+      }
       getsuga?.dispose();
       observer.disconnect();
       visibility?.disconnect();
