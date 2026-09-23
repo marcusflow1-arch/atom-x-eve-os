@@ -268,13 +268,11 @@ export default function LunaDashboardArenaPanel({ mode }) {
     if (!world || creating) return;
     setCreating(true);
     try {
-      const response = await arena.queue({ world_id: world.id });
+      const response = await arena.demoBot({ world_id: world.id });
       if (response?.encounter?.id) {
         openedMatchRef.current = String(response.encounter.id);
         arenaPresentation.setEncounter(response.encounter.id);
-        showSuccess('PvP match found. Jawan loadouts locked.');
-      } else {
-        showSuccess(`Queued with ${hub?.player?.jawan?.name || 'active Jawan'}. Searching for an opponent…`);
+        showSuccess('Luna Sparring Bot joined your dashboard.');
       }
     } catch (error) {
       showError(error, 'PvP Matchmaking');
@@ -366,7 +364,14 @@ export default function LunaDashboardArenaPanel({ mode }) {
 
         <div>
           <div className="flex items-center justify-between"><p className="text-[6px] font-black uppercase tracking-[0.15em] text-white/24">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[5.5px] text-white/22">{queueWaiting ? `${queue?.player_snapshot?.jawan?.name || 'Jawan'} locked` : (hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`)}</span></div>
-          <div className="mt-2 flex max-h-[46px] gap-1.5 overflow-x-auto">
+          <div className="mt-2 flex max-h-[56px] gap-1.5 overflow-x-auto">
+            {mode === 'pvp' && (
+              <div className="flex min-w-[156px] items-center gap-2 border border-cyan-100/22 bg-cyan-100/[0.055] px-2.5 py-1.5 text-left shadow-[0_0_18px_rgba(103,232,249,.05)]">
+                <div className="grid h-8 w-8 shrink-0 place-items-center border border-cyan-100/14 bg-cyan-100/[0.04]"><UserRound className="h-4 w-4 text-cyan-100/70" /></div>
+                <span className="min-w-0"><strong className="block truncate text-[10px] font-semibold text-white">Luna Sparring Bot</strong><small className="mt-0.5 block truncate text-[8px] uppercase tracking-[0.07em] text-cyan-100/60">Demo opponent · Ready</small></span>
+                <Check className="ml-auto h-3.5 w-3.5 text-cyan-100/70" />
+              </div>
+            )}
             {contacts.length ? contacts.map((contact) => {
               const chosen = invites.includes(contact.id);
               return <button key={contact.id} type="button" onClick={() => toggleInvite(contact.id)} className={'flex min-w-[110px] items-center gap-2 border px-2 py-1.5 text-left ' + (chosen ? 'border-cyan-100/15 bg-cyan-100/[0.05]' : 'border-white/[0.05] bg-white/[0.012]')}><div className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden border border-white/[0.05]">{contact.portrait ? <img src={contact.portrait} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-3.5 w-3.5 text-white/28" />}</div><span className="min-w-0"><strong className="block truncate text-[7px] text-white/52">{contact.name}</strong><small className="block truncate text-[5px] text-white/22">{contact.in_dashboard ? 'On dashboard' : contact.kind}</small></span>{chosen && <Check className="ml-auto h-3 w-3 text-cyan-100/45" />}</button>;
@@ -381,7 +386,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
           className={`mt-[18px] flex h-[46px] min-w-[130px] items-center justify-center gap-2 border px-4 text-[7px] font-black uppercase tracking-[0.1em] disabled:opacity-30 ${queueWaiting ? 'border-amber-100/16 bg-amber-100/[0.05] text-amber-50/65' : 'border-cyan-100/16 bg-cyan-100/[0.065] text-cyan-50/68'}`}
         >
           {creating || queueWaiting ? <Loader2 className={`h-3.5 w-3.5 ${creating || queueWaiting ? 'animate-spin' : ''}`} /> : <Swords className="h-3.5 w-3.5" />}
-          {mode === 'pvp' && invites.length === 0 ? (queueWaiting ? 'Cancel Queue' : 'Queue PvP') : mode === 'pvp' ? 'Challenge' : 'Deploy'}
+          {mode === 'pvp' && invites.length === 0 ? (queueWaiting ? 'Cancel Queue' : 'Queue Bot') : mode === 'pvp' ? 'Challenge' : 'Deploy'}
         </button>
       </div>
     </section>
