@@ -39,8 +39,8 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combat
 
   const handleClick = () => {
     if (combatMode) {
-      if (assigned) window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
-        detail: { slotIndex: index, card: assigned, source: 'dashboard_click' },
+      if (assigned) window.dispatchEvent(new CustomEvent('lunaRequestSkillSlotActivation', {
+        detail: { slotIndex: index, source: 'dashboard_click' },
       }));
       return;
     }

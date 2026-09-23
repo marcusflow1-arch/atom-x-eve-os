@@ -99,6 +99,19 @@ function CombatHUD({ arena, onExitStage }) {
     arena.command('timeout').catch(() => { timed.current = ''; });
   }, [e?.id, e?.revision, e?.deadline, e?.status, remaining, arena.busy]);
 
+  useEffect(() => {
+    const activate = async (event) => {
+      const slotIndex = Number(event?.detail?.slotIndex);
+      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 3) return;
+      if (!e || e.status !== 'active' || e.phase !== 'turn' || !mine || arena.busy || !me) return;
+      const card = (me.cards || []).find((entry) => Number(entry.slot) === slotIndex);
+      if (!card) return;
+      await run(() => arena.command('card', { card_id: card.id }));
+    };
+    window.addEventListener('lunaSkillSlotActivated', activate);
+    return () => window.removeEventListener('lunaSkillSlotActivated', activate);
+  }, [e?.id, e?.revision, e?.status, e?.phase, mine, arena.busy, me]);
+
   if (!e) return null;
 
   const accept = async () => {
@@ -174,11 +187,13 @@ function CombatHUD({ arena, onExitStage }) {
           </div>
         ) : (
           <div className="grid grid-cols-[1fr_190px] gap-3 p-4">
-            <div>
-              <div className="mb-2 flex items-center justify-between"><div><p className="text-[12px] font-black uppercase tracking-[0.13em] text-white/95">Round {e.round}</p><h4 className="mt-1 text-[11px] font-semibold text-white/95">{mine ? 'Your move. Choose a card or recover AP.' : (target?.name || 'Player') + ' is choosing.'}</h4></div><span className="flex items-center gap-1 text-[11px] text-cyan-100/88"><Zap className="h-3.5 w-3.5" />{me?.ap || 0} / 5 AP</span></div>
-              <div className="grid grid-cols-4 gap-2">
-                {[0, 1, 2, 3].map((index) => <CardButton key={index} card={me?.cards?.[index]} player={me} disabled={!mine || arena.busy || e.phase !== 'turn'} world={e.world} onPlay={(cardId) => run(() => arena.command('card', { card_id: cardId }))} />)}
+            <div className="flex min-w-0 items-center justify-between gap-5 border border-cyan-100/[0.09] bg-cyan-100/[0.025] px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-[12px] font-black uppercase tracking-[0.13em] text-white/95">Round {e.round} · Dashboard Skill Slots Live</p>
+                <h4 className="mt-1 text-[11px] font-semibold text-white/95">{mine ? 'Use the four diamond skill slots on your dashboard to cast your locked cards.' : (target?.name || 'Player') + ' is choosing.'}</h4>
+                <p className="mt-1 text-[11px] text-white/58">The Skill Book row that was active at deployment is locked for this encounter. No second combat deck is created.</p>
               </div>
+              <span className="flex shrink-0 items-center gap-1 text-[11px] text-cyan-100/88"><Zap className="h-3.5 w-3.5" />{me?.ap || 0} / 5 AP</span>
             </div>
             <div className="grid grid-rows-2 gap-2">
               <button type="button" disabled={!mine || arena.busy || e.phase !== 'turn'} onClick={() => run(() => arena.command('strike'))} className="flex items-center justify-center gap-2 border border-rose-100/12 bg-rose-100/[0.04] text-[10px] font-black uppercase tracking-[0.08em] text-rose-50/60 disabled:opacity-30"><Swords className="h-3.5 w-3.5" />Strike<span className="text-[11px] font-normal text-white/95">+1 AP</span></button>

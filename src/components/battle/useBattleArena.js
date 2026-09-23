@@ -24,12 +24,22 @@ export default function useBattleArena(encounterId){
   const fight=useQuery({queryKey:fightKey,enabled:!!user?.id&&!!encounterId,queryFn:()=>invoke('state',{encounter_id:encounterId}),refetchInterval:1500,refetchOnWindowFocus:true});
   const body=fight.data;
   useEffect(()=>{if(body?.server_time)offset.current=body.server_time-Date.now();},[body?.server_time]);
+  useEffect(()=>{
+    const encounter=body?.encounter || hub.data?.encounters?.find(r=>r.id===encounterId) || null;
+    window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter,userId:user?.id||null}}));
+    return()=>{if(encounterId)window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter:null,userId:user?.id||null}}));};
+  },[body?.encounter,hub.data?.encounters,encounterId,user?.id]);
   const mutation=useMutation({
     mutationFn:async({action,data})=>invoke(action,{...data,request_id:requestId()}),
     onSuccess:body=>{
       if(body.encounter)client.setQueryData(['battle-encounter',user?.id,body.encounter.id],body);
       if(body.server_time)offset.current=body.server_time-Date.now();
       client.invalidateQueries({queryKey:key});
+      if(body.reward){
+        client.invalidateQueries({queryKey:['luna-skill-book',user?.id]});
+        client.invalidateQueries({queryKey:['luna-equipment-loadout',user?.id]});
+        window.dispatchEvent(new CustomEvent('lunaProgressionChanged',{detail:{reward:body.reward}}));
+      }
     },
     onError:error=>{
       if(error.state?.encounter)client.setQueryData(['battle-encounter',user?.id,error.state.encounter.id],error.state);

@@ -118,8 +118,18 @@ export function useSkills() {
       triggerSkill(Number(key) - 1, 'keyboard');
     };
 
+    const handleRequestedSlot = (event) => {
+      const slotIndex = Number(event?.detail?.slotIndex);
+      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 3) return;
+      triggerSkill(slotIndex, event?.detail?.source || 'dashboard_click');
+    };
+
     window.addEventListener('keydown', handleSkillKey);
-    return () => window.removeEventListener('keydown', handleSkillKey);
+    window.addEventListener('lunaRequestSkillSlotActivation', handleRequestedSlot);
+    return () => {
+      window.removeEventListener('keydown', handleSkillKey);
+      window.removeEventListener('lunaRequestSkillSlotActivation', handleRequestedSlot);
+    };
   }, []);
 
   return {
