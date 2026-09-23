@@ -95,18 +95,9 @@ export function useSkills() {
     const handleSkillKey = (e) => {
       const key = e.key;
 
-      if (key === '4') {
-        triggerSkill(0);
-        return;
-      }
-
-      const remainingMap = {
-        '2': 1,
-        '3': 2,
-        '5': 4,
-      };
-      const index = remainingMap[key];
-      if (Number.isInteger(index)) triggerSkill(index);
+      if (!['1','2','3','4'].includes(key)) return;
+      const index = Number(key) - 1;
+      triggerSkill(index);
     };
 
     window.addEventListener('keydown', handleSkillKey);

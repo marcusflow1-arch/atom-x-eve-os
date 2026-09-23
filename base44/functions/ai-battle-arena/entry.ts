@@ -507,6 +507,7 @@ Deno.serve(async req=>{
       const player=await snapshot(svc,user);
       if(!player.cards.length)fail('Equip at least one card in the active Jawan before queueing.');
       const requestId=String(data.request_id||'').slice(0,100);
+      const queueType=['casual','ranked','duel','coop','coop_ranked'].includes(String(data.queue_type)) ? String(data.queue_type) : 'casual';
       if(!requestId)fail('A request identifier is required.',400);
 
       const ownRooms=await svc.AIBattleEncounter.filter({$or:[{host_id:user.id},{invited_ids:{$in:[user.id]}}]},'-created_date',20);
@@ -528,12 +529,12 @@ Deno.serve(async req=>{
       if(waiting&&String(waiting.world_id)===String(world.id))return Response.json({queue:waiting,matched:false,server_time:Date.now()});
       if(waiting)await svc.AIBattleQueue.update(waiting.id,{status:'cancelled',cancelled_at:new Date().toISOString()});
 
-      const candidates=await svc.AIBattleQueue.filter({status:'waiting',route_id:'duel',world_id:String(world.id)},'created_date',60);
+      const candidates=await svc.AIBattleQueue.filter({status:'waiting',route_id:'duel',world_id:String(world.id),queue_type:queueType},'created_date',60);
       const cutoff=Date.now()-10*60*1000;
       const opponent=candidates.find((q: Row)=>String(q.user_id)!==String(user.id)&&new Date(q.queued_at||q.created_date||0).getTime()>=cutoff);
       const mine=await svc.AIBattleQueue.create({
         user_id:user.id,status:'waiting',route_id:'duel',world_id:String(world.id),world,
-        player_snapshot:player,request_id:requestId,queued_at:new Date().toISOString()
+        player_snapshot:player,request_id:requestId,queue_type:queueType,queued_at:new Date().toISOString()
       });
       if(!opponent)return Response.json({queue:mine,matched:false,server_time:Date.now()});
 
@@ -550,14 +551,14 @@ Deno.serve(async req=>{
         route_id:route.id,
         request_id:matchRequest,
         matchmaking:true,
-        queue_ids:[freshOpponent.id,mine.id]
+        queue_ids:[freshOpponent.id,mine.id],queue_type:queueType
       });
       const matchedAt=new Date().toISOString();
       await Promise.all([
-        svc.AIBattleQueue.update(freshOpponent.id,{status:'matched',matched_encounter_id:room.id,matched_user_id:user.id,matched_at:matchedAt}),
+        svc.AIBattleQueue.update(freshOpponent.id,{status:'matched',matched_encounter_id:room.id,matched_user_id:user.id,matched_at:matchedAt,queue_type:queueType}),
         svc.AIBattleQueue.update(mine.id,{status:'matched',matched_encounter_id:room.id,matched_user_id:freshOpponent.user_id,matched_at:matchedAt})
       ]);
-      const mineMatched={...mine,status:'matched',matched_encounter_id:room.id,matched_user_id:freshOpponent.user_id,matched_at:matchedAt};
+      const mineMatched={...mine,status:'matched',matched_encounter_id:room.id,matched_user_id:freshOpponent.user_id,matched_at:matchedAt,queue_type:queueType};
       return Response.json({queue:mineMatched,matched:true,encounter:publicRoom(room,initial(room)),server_time:Date.now()});
     }
     if(action==='create'){

@@ -11,6 +11,7 @@ export function useSkillBookLoadout() {
   const queryClient = useQueryClient();
   const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
   const clearHotbarSlot = useLunaStore((state) => state.clearHotbarSlot);
+  const setActiveSkillRow = useLunaStore((state) => state.setActiveSkillRow);
 
   const queryKey = ['luna-skill-book', user?.id];
 
@@ -32,6 +33,8 @@ export function useSkillBookLoadout() {
 
   useEffect(() => {
     const slots = stateQuery.data?.loadout?.slots;
+    const rowIndex = Number(stateQuery.data?.loadout?.skill_set_order || 0);
+    setActiveSkillRow(Math.max(0, Math.min(2, rowIndex)));
     if (!Array.isArray(slots)) return;
 
     for (let index = 0; index < 4; index += 1) {

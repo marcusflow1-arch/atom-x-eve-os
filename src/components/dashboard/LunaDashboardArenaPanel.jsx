@@ -199,6 +199,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
   const [routeId, setRouteId] = useState('');
   const [invites, setInvites] = useState([]);
   const [creating, setCreating] = useState(false);
+  const [queueType, setQueueType] = useState('casual');
   const [preparedField, setPreparedField] = useState(null);
   const openedMatchRef = useRef('');
 
@@ -248,6 +249,13 @@ export default function LunaDashboardArenaPanel({ mode }) {
   const pending = (hub?.encounters || []).filter((encounter) => ['lobby', 'active'].includes(encounter.status) && !encounter.declined?.includes(arena.user?.id));
   const queue = hub?.queue || null;
   const queueWaiting = mode === 'pvp' && queue?.status === 'waiting';
+  const queueModes = [
+    ['casual', 'Casual'],
+    ['ranked', 'Ranked'],
+    ['duel', 'Duel'],
+    ['coop', 'Co-op'],
+    ['coop_ranked', 'Co-op Ranked'],
+  ];
 
   useEffect(() => {
     const matchedId = queue?.status === 'matched' ? String(queue.matched_encounter_id || '') : '';
@@ -268,11 +276,11 @@ export default function LunaDashboardArenaPanel({ mode }) {
     if (!world || creating) return;
     setCreating(true);
     try {
-      const response = await arena.demoBot({ world_id: world.id });
+      const response = await arena.queue({ world_id: world.id, queue_type: queueType });
       if (response?.encounter?.id) {
         openedMatchRef.current = String(response.encounter.id);
         arenaPresentation.setEncounter(response.encounter.id);
-        showSuccess('Luna Sparring Bot joined your dashboard.');
+        showSuccess('Opponent found. Competitive loadout locked.');
       }
     } catch (error) {
       showError(error, 'PvP Matchmaking');
@@ -364,6 +372,9 @@ export default function LunaDashboardArenaPanel({ mode }) {
 
         <div>
           <div className="flex items-center justify-between"><p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/65">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[11px] text-white/94">{queueWaiting ? `${queue?.player_snapshot?.jawan?.name || 'Jawan'} locked` : (hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`)}</span></div>
+          {mode === 'pvp' && !queueWaiting && <div className="mb-1.5 flex gap-1">
+            {queueModes.map(([id, label]) => <button key={id} type="button" onClick={() => setQueueType(id)} className={'border px-2 py-1 text-[6px] font-black uppercase tracking-[0.08em] ' + (queueType === id ? 'border-cyan-100/16 bg-cyan-100/[0.05] text-cyan-50/70' : 'border-white/[0.05] text-white/35')}>{label}</button>)}
+          </div>}
           <div className="mt-2 flex max-h-[56px] gap-1.5 overflow-x-auto">
             {mode === 'pvp' && (
               <div className="flex min-w-[156px] items-center gap-2 border border-cyan-100/22 bg-cyan-100/[0.055] px-2.5 py-1.5 text-left shadow-[0_0_18px_rgba(103,232,249,.05)]">
@@ -386,7 +397,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
           className={`mt-[18px] flex h-[46px] min-w-[130px] items-center justify-center gap-2 border px-4 text-[10px] font-black uppercase tracking-[0.1em] disabled:opacity-30 ${queueWaiting ? 'border-amber-100/16 bg-amber-100/[0.05] text-amber-50/65' : 'border-cyan-100/16 bg-cyan-100/[0.065] text-cyan-50/68'}`}
         >
           {creating || queueWaiting ? <Loader2 className={`h-3.5 w-3.5 ${creating || queueWaiting ? 'animate-spin' : ''}`} /> : <Swords className="h-3.5 w-3.5" />}
-          {mode === 'pvp' && invites.length === 0 ? (queueWaiting ? 'Cancel Queue' : 'Queue Bot') : mode === 'pvp' ? 'Challenge' : 'Deploy'}
+          {mode === 'pvp' && invites.length === 0 ? (queueWaiting ? 'Cancel Queue' : 'Queue Search') : mode === 'pvp' ? 'Challenge' : 'Deploy'}
         </button>
       </div>
     </section>

@@ -23,6 +23,28 @@
       "default": "equipment",
       "description": "Whether this is a gear loadout or the Luna Skill Book hotbar"
     },
+    "prefab_kind": {
+      "type": "string",
+      "enum": [
+        "dashboard_row",
+        "skill_prefab",
+        "equipment_prefab"
+      ],
+      "description": "Distinguishes persistent dashboard rows from reusable Skill and Equipment Prefabs."
+    },
+    "prefab_id": {
+      "type": "string",
+      "description": "Stable identifier for a reusable prefab."
+    },
+    "skill_rows": {
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "string" } },
+      "description": "Three four-slot Skill Prefab rows containing references to owned UserCard IDs."
+    },
+    "linked_skill_prefab_id": {
+      "type": "string",
+      "description": "Optional convenience link from an Equipment Prefab to an independent Skill Prefab."
+    },
     "game_id": {
       "type": "string",
       "description": "Optional game this loadout is for"
