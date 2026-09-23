@@ -2,6 +2,8 @@ import {useEffect,useRef,useState} from 'react';
 import {base44} from '@/api/base44Client';
 import {dashboardSession,unwrap} from './dashboardSession';
 
+const isTransientThrottle=(message)=>/rate limit|too many requests|too many attempts/i.test(String(message||''));
+
 export function useDashboardRoom(channel,user,envUrl){
  const [participants,setParticipants]=useState([]);
  const env=useRef(envUrl);env.current=envUrl;
@@ -29,8 +31,6 @@ export function useDashboardRoom(channel,user,envUrl){
    }catch(error){
     if(disposed)return;
     failures+=1;
-    // Do not erase the roster on a single slow or rate-limited request. Keep
-    // the last known players visible while reconnecting and retry quickly.
     retryDelay=Math.min(30000,5000*failures);
     const previous=dashboardSession.getSnapshot();
     const message=error.response?.data?.error||error.message||'Dashboard connection interrupted.';
@@ -39,7 +39,7 @@ export function useDashboardRoom(channel,user,envUrl){
      channel_id:channel,
      host_id:hostId,
      status:'reconnecting',
-     error:failures>=3?message:'',
+     error:failures>=3&&!isTransientThrottle(message)?message:'',
     });
    }finally{if(!disposed)timer=setTimeout(tick,retryDelay);}
   };
@@ -47,7 +47,6 @@ export function useDashboardRoom(channel,user,envUrl){
   return()=>{
    disposed=true;clearTimeout(timer);
    dashboardSession.publish({});
-   // Expire only the room being left; backend checks the current channel.
    base44.functions.invoke('dashboardSession',{action:'leave',data:{channel_id:channel}}).catch(()=>{});
   };
  },[channel,user?.id]);
