@@ -18,6 +18,7 @@ import {
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 const CREATOR_CHILD = CREATOR_PARENTING_PREVIEW.children[0];
 const DEFAULT_BATTLE_HP = 1000;
+const GETSUGA_DAMAGE = 50;
 
 const unwrapBattleStatus = (response) => {
   const body = response?.data ?? response ?? {};
@@ -34,6 +35,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
   const { user } = useAuth();
   const session = useDashboardSession();
   const [creatorChild, setCreatorChild] = useState(null);
+  const [battleOpponentHp, setBattleOpponentHp] = useState(DEFAULT_BATTLE_HP);
 
   const { data: battleStatus } = useQuery({
     queryKey: ['ai-battle-matchmaking', user?.id],
@@ -114,6 +116,26 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     return local && opponent ? { local, opponent } : null;
   }, [battleMatch?.id, battleMatch?.status, battleMatch?.dashboard_channel, battleMatch?.player_ids, session.channel_id, session.players, user?.id]);
 
+  const opponentMaxHp = finitePositive(
+    battlePair?.opponent?.max_hp ?? battlePair?.opponent?.maxHp ?? battleMatch?.opponent_max_hp,
+    DEFAULT_BATTLE_HP,
+  );
+  const opponentStartingHp = Math.min(
+    opponentMaxHp,
+    Math.max(0, Number(battlePair?.opponent?.hp ?? battleMatch?.opponent_hp ?? opponentMaxHp) || opponentMaxHp),
+  );
+
+  useEffect(() => {
+    if (!battlePair?.opponent) {
+      setBattleOpponentHp(DEFAULT_BATTLE_HP);
+      return;
+    }
+    setBattleOpponentHp(opponentStartingHp);
+    // Reset the prototype combat HP only when the match/opponent changes. Do not
+    // let matchmaking polling refill HP after the local player lands a hit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battleMatch?.id, battlePair?.opponent?.player_id, opponentMaxHp]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     if (!battlePair?.opponent) {
@@ -125,11 +147,14 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       type: 'player',
       playerId: String(battlePair.opponent.player_id),
       displayName: battlePair.opponent.display_name || 'Opponent',
-      // The user-supplied Getsuga character faces +Z. A +90° yaw makes the
-      // local character and the embedded projectile travel screen-right toward
-      // the opponent in the dashboard battle composition.
+      // The Getsuga package travels along its authored +Z axis. With the battle
+      // camera looking down -Z, +90° yaw sends the cast screen-right from the
+      // local player directly toward the opponent staging area.
       facingYaw: Math.PI / 2,
       screenAnchor: { x: 0.69, y: 0.46 },
+      autoLock: true,
+      autoHit: true,
+      damage: GETSUGA_DAMAGE,
     };
     window.__lunaAIBattleTarget = target;
     window.dispatchEvent(new CustomEvent('lunaAIBattleTargetChanged', { detail: target }));
@@ -138,6 +163,41 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       if (window.__lunaAIBattleTarget?.playerId === target.playerId) delete window.__lunaAIBattleTarget;
     };
   }, [battlePair?.opponent?.player_id, battlePair?.opponent?.display_name]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !battlePair?.opponent?.player_id) return undefined;
+    const opponentId = String(battlePair.opponent.player_id);
+
+    const applyLockedHit = (event) => {
+      const detail = event?.detail || {};
+      if (String(detail.effectId || '').toLowerCase() !== 'getsuga_tensho') return;
+      if (detail.name !== 'impact' || detail.autoHit === false) return;
+
+      // The target is captured when the card is cast. A Final Fantasy / Pokemon
+      // style locked attack does not miss because the visual wave drifted a few
+      // pixels; the impact marker resolves against that locked combat target.
+      const targetId = String(detail.target?.playerId || window.__lunaAIBattleTarget?.playerId || '');
+      if (targetId !== opponentId) return;
+
+      const requestedDamage = Number(detail.damage ?? detail.target?.damage ?? GETSUGA_DAMAGE);
+      const damage = Number.isFinite(requestedDamage) && requestedDamage > 0 ? requestedDamage : GETSUGA_DAMAGE;
+      setBattleOpponentHp((current) => Math.max(0, Number(current || 0) - damage));
+
+      window.dispatchEvent(new CustomEvent('lunaAIBattleDamageApplied', {
+        detail: {
+          effectId: 'getsuga_tensho',
+          sourcePlayerId: String(user?.id || ''),
+          targetPlayerId: opponentId,
+          damage,
+          autoHit: true,
+          matchId: battleMatch?.id || null,
+        },
+      }));
+    };
+
+    window.addEventListener('lunaCardAnimationEffectEvent', applyLockedHit);
+    return () => window.removeEventListener('lunaCardAnimationEffectEvent', applyLockedHit);
+  }, [battleMatch?.id, battlePair?.opponent?.player_id, user?.id]);
 
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const socialAvatarStage = roster.length > 1 ? (
@@ -151,14 +211,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     </div>
   ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />;
 
-  const opponentMaxHp = finitePositive(
-    battlePair?.opponent?.max_hp ?? battlePair?.opponent?.maxHp ?? battleMatch?.opponent_max_hp,
-    DEFAULT_BATTLE_HP,
-  );
-  const opponentHp = Math.min(
-    opponentMaxHp,
-    Math.max(0, Number(battlePair?.opponent?.hp ?? battleMatch?.opponent_hp ?? opponentMaxHp) || opponentMaxHp),
-  );
+  const opponentHp = Math.min(opponentMaxHp, Math.max(0, Number(battleOpponentHp) || 0));
   const opponentHpPct = opponentMaxHp > 0 ? (opponentHp / opponentMaxHp) * 100 : 0;
 
   const battleAvatarStage = battlePair ? (
