@@ -43,8 +43,19 @@ export function useSkills() {
     const assigned = getHotbarItem(slotIndex);
     if (!assigned) return false;
 
+    // DashboardAvatarScene owns the live target selection while an AI Battle is
+    // active. Keep that target attached to the card cast so VFX, impact events
+    // and the later damage pass all resolve the same opponent.
+    const target = typeof window !== 'undefined' ? (window.__lunaAIBattleTarget || null) : null;
+
     window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
-      detail: { slotIndex, card: assigned, source },
+      detail: {
+        slotIndex,
+        card: assigned,
+        source,
+        caster: { type: 'local_player' },
+        target,
+      },
     }));
 
     const effect = assigned.animation_effect || assigned.animationEffect || null;
@@ -60,7 +71,15 @@ export function useSkills() {
       activateSkill(slotIndex, durationMs);
       setCooldown(effectId, Date.now() + cooldownMs);
 
-      const detail = { slotIndex, card: assigned, effect, source };
+      const detail = {
+        slotIndex,
+        card: assigned,
+        effect,
+        source,
+        caster: { type: 'local_player' },
+        target,
+      };
+      window.dispatchEvent(new CustomEvent('lunaCardAbilityTargeted', { detail }));
       window.dispatchEvent(new CustomEvent('lunaCardAnimationEffectProc', { detail }));
 
       // Compatibility bridge while older Getsuga listeners are phased out.
