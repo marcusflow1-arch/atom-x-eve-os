@@ -1,6 +1,7 @@
 import {base44} from '@/api/base44Client';
 import {useSyncExternalStore} from 'react';
 
+const PRESENCE_TTL_MS=60000;
 const empty={channel_id:null,host_id:null,players:[],status:'offline',error:''};
 let snapshot=empty;
 const listeners=new Set();
@@ -43,5 +44,5 @@ export function openPlayerMessage(target){
  window.dispatchEvent(new CustomEvent('openLunaMessages',{detail:{target}}));
 }
 export function isLivePlayer(p,now=Date.now()){
- return !!p?.player_id&&p.status!=='offline'&&Number(p.last_update)>now-20000;
+ return !!p?.player_id&&p.status!=='offline'&&Number(p.last_update)>now-PRESENCE_TTL_MS;
 }
