@@ -33,10 +33,10 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     queryKey: ['ai-battle-matchmaking', user?.id],
     enabled: !!user?.id,
     queryFn: async () => unwrapBattleStatus(await base44.functions.invoke('aiBattleMatchmaker', { action: 'status', data: {} })),
-    refetchInterval: (query) => query.state.data?.match?.status === 'matched' ? 2000 : 10000,
+    refetchInterval: (query) => query.state.data?.match?.status === 'matched' ? 5000 : 30000,
     refetchOnWindowFocus: true,
     retry: false,
-    staleTime: 1000,
+    staleTime: 2000,
   });
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
@@ -108,8 +108,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     return local && opponent ? { local, opponent } : null;
   }, [battleMatch?.id, battleMatch?.status, battleMatch?.dashboard_channel, battleMatch?.player_ids, session.channel_id, session.players, user?.id]);
 
-  // Normal social dashboard layout. AI Battle replaces only this avatar staging,
-  // never the Environment Hub or the surrounding Luna dashboard.
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const socialAvatarStage = roster.length > 1 ? (
     <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{ right: 'min(410px, 36vw)' }} aria-label="Shared dashboard">
@@ -122,11 +120,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     </div>
   ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />;
 
-  // Battle staging is intentionally presentation-only for this milestone.
-  // Every client renders itself in the Cloud-style foreground lane with its back
-  // toward the camera, while the other matched player is framed farther away and
-  // rotated back toward the local player. Because "local" is resolved per client,
-  // the perspective automatically mirrors correctly on the opponent's screen.
   const battleAvatarStage = battlePair ? (
     <div
       className="pointer-events-none absolute inset-y-0 left-0 overflow-visible"
