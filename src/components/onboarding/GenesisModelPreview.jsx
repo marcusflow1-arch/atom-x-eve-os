@@ -4,7 +4,6 @@ import { RotateCcw, RotateCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { COMPANION_MODELS, COMPANION_MOTIONS, companionModel } from '@/components/onboarding/genesisAssets';
 import { createGenesisScene } from '@/components/onboarding/genesisScene';
-import { resolveGetsugaMaleAsset } from '@/components/getsuga/getsugaMaleAsset';
 
 let animationCatalogPromise = null;
 
@@ -103,33 +102,12 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   const [controlArmed, setControlArmed] = useState(false);
   const [paused, setPaused] = useState(false);
   const [previewMotions, setPreviewMotions] = useState(COMPANION_MOTIONS);
-  const [maleModelUrl, setMaleModelUrl] = useState('');
-  const [maleAssetError, setMaleAssetError] = useState('');
 
   callback.current = onCapabilities;
   controlArmedRef.current = controlArmed;
   const fixedFemaleIdle = config?.gender === 'female';
   const canonicalGetsugaMale = !fixedFemaleIdle;
-  const url = fixedFemaleIdle ? companionModel(config) : maleModelUrl;
-
-  useEffect(() => {
-    if (!canonicalGetsugaMale) {
-      setMaleModelUrl('');
-      setMaleAssetError('');
-      return undefined;
-    }
-    let cancelled = false;
-    setMaleAssetError('');
-    resolveGetsugaMaleAsset()
-      .then((resolvedUrl) => {
-        if (!cancelled) setMaleModelUrl(resolvedUrl);
-      })
-      .catch((error) => {
-        console.error('[Luna] Getsuga male model resolution failed:', error);
-        if (!cancelled) setMaleAssetError(error?.message || 'Male avatar asset unavailable');
-      });
-    return () => { cancelled = true; };
-  }, [canonicalGetsugaMale]);
+  const url = companionModel(config);
 
   const playMotion = useCallback((nextMotion) => {
     if (!nextMotion?.url || !scene.current) return;
@@ -179,7 +157,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
 
   useEffect(() => {
     setReady(false);
-    setStatus(maleAssetError ? 'error' : 'loading');
+    setStatus('loading');
     setMotion('Idle');
     if (!url) return undefined;
     try {
@@ -224,7 +202,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       scene.current?.dispose();
       scene.current = null;
     };
-  }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, maleAssetError, initialYaw, skillEffects, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
+  }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, initialYaw, skillEffects, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
