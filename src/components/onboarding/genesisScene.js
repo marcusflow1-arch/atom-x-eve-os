@@ -473,7 +473,6 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const center = box.getCenter(new THREE.Vector3());
       model.position.set(-center.x, -box.min.y, -center.z);
       if (Number.isFinite(options.initialYaw)) model.rotation.y = options.initialYaw;
-      basePosition = model.position.clone();
       const framingOffsetY = Number(options.framingOffsetY || 0);
       camera.position.set(0, options.portrait ? 1.64 : 1.08, options.portrait ? 1.15 : 3.75);
       controls.target.set(0, (options.portrait ? 1.62 : .96) + framingOffsetY, 0);
@@ -500,31 +499,61 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         if (node.morphTargetDictionary) Object.keys(node.morphTargetDictionary).forEach((name) => morphs.push({ key: `${node.name}:${name}`, label: name }));
       });
 
-      model.visible = preserveAppearance || atomxeRuntimeRig || options.safeRigidIdle;
-      scene.add(model);
-      mixer = new THREE.AnimationMixer(model);
+      const avatarRoot = model;
+      avatarRoot.visible = preserveAppearance || atomxeRuntimeRig || options.safeRigidIdle || options.getsugaMale;
       applyStyle(appearance);
-      if (!options.getsugaMale) applyCompanionAppearance(model, appearance);
+
       if (options.getsugaMale) {
-        // The canonical male Luna body is the exact Getsuga package character.
-        // Bind the skill runtime to THIS visible model and its embedded clip;
-        // do not retarget onto it and do not spawn a duplicate proxy character.
-        const bound = getsuga?.bindCharacter(model, asset.animations || [], mixer);
-        if (bound) onStatus('ready', 'GetsugaIdle');
-        else onStatus('animation-error', 'GetsugaTensho');
-      } else if (preserveAppearance) {
-        embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
-      } else if (atomxeRuntimeRig) {
-        // Both selectable female bodies ship with an embedded Idle fallback and
-        // standard Mixamo bone names. Start the fallback immediately so the
-        // avatar never appears frozen while an external motion clip is loading.
-        const idleClip = (asset.animations || []).find((clip) => /^idle$/i.test(clip.name || '')) || asset.animations?.[0];
-        if (idleClip) {
-          action = mixer.clipAction(idleClip);
-          action.setLoop(THREE.LoopRepeat, Infinity).play();
-          onStatus('ready', idleClip.name || 'Idle');
+        // Male Luna now uses the exact user-supplied Getsuga_Character.glb.
+        // On the dashboard, the package's own GetsugaTensho engine owns BOTH
+        // the embedded animation and every synchronized effect. Other male
+        // previews use the same model with a lightweight idle and no VFX cost.
+        if (options.skillEffects) {
+          getsuga = new GetsugaDashboardRuntime({
+            scene,
+            camera,
+            impactDistance: 7.2,
+            onEvent: emitGetsugaEvent,
+          });
+          const bound = getsuga.attach(asset);
+          if (!bound) throw new Error('Unable to bind Getsuga dashboard runtime.');
+          model = getsuga.group;
+          mixer = null;
+          onStatus('ready', 'GetsugaIdle');
+        } else {
+          scene.add(avatarRoot);
+          model = avatarRoot;
+          mixer = new THREE.AnimationMixer(model);
+          const attackClip = (asset.animations || []).find((clip) => clip?.name === 'GetsugaTensho') || asset.animations?.[0];
+          const idleClip = createGetsugaIdleClip(attackClip);
+          if (idleClip) {
+            action = mixer.clipAction(idleClip);
+            action.setLoop(THREE.LoopRepeat, Infinity).play();
+          }
+          onStatus('ready', 'GetsugaIdle');
+        }
+      } else {
+        scene.add(avatarRoot);
+        model = avatarRoot;
+        mixer = new THREE.AnimationMixer(model);
+        applyCompanionAppearance(model, appearance);
+
+        if (preserveAppearance) {
+          embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
+        } else if (atomxeRuntimeRig) {
+          // Both selectable female bodies ship with an embedded Idle fallback and
+          // standard Mixamo bone names. Start the fallback immediately so the
+          // avatar never appears frozen while an external motion clip is loading.
+          const idleClip = (asset.animations || []).find((clip) => /^idle$/i.test(clip.name || '')) || asset.animations?.[0];
+          if (idleClip) {
+            action = mixer.clipAction(idleClip);
+            action.setLoop(THREE.LoopRepeat, Infinity).play();
+            onStatus('ready', idleClip.name || 'Idle');
+          }
         }
       }
+
+      basePosition = model.position.clone();
       if (options.secondaryCharacter?.modelUrl) {
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
