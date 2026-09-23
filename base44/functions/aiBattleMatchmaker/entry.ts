@@ -2,12 +2,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 type Row = Record<string, any>;
 const MODES = new Set(['pvp', 'pve', 'world_boss']);
-const QUEUE_LIVE_MS = 15000;
+const QUEUE_LIVE_MS = 45000;
+const QUEUE_HEARTBEAT_MS = 15000;
 const DASHBOARD_LIVE_MS = 60000;
 
 const nowIso = () => new Date().toISOString();
 const playerName = (user: Row) => user.full_name || user.username || user.display_name || 'Player';
-const isQueueLive = (row: Row) => row?.status === 'waiting' && Date.parse(row.last_seen_at || row.queued_at || 0) > Date.now() - QUEUE_LIVE_MS;
+const queueHeartbeatAt = (row: Row) => Date.parse(row?.last_seen_at || row?.queued_at || 0);
+const isQueueLive = (row: Row) => row?.status === 'waiting' && queueHeartbeatAt(row) > Date.now() - QUEUE_LIVE_MS;
 const isDashboardLive = (row: Row) => row?.status !== 'offline' && Number(row?.last_update || 0) > Date.now() - DASHBOARD_LIVE_MS;
 const json = (body: any, status = 200) => Response.json(body, { status });
 
@@ -53,6 +55,26 @@ async function cancelOtherWaiting(svc: any, userId: string, exceptId = '') {
   await Promise.all(rows.filter((row: Row) => String(row.id) !== String(exceptId)).map((row: Row) => svc.AIBattleQueueEntry.update(row.id, { status: 'cancelled' })));
 }
 
+async function retireCurrentMatch(svc: any, userId: string) {
+  const queue = await latestQueueForUser(svc, userId);
+  if (!queue) return;
+
+  if (queue.status === 'waiting') {
+    await svc.AIBattleQueueEntry.update(queue.id, { status: 'cancelled' });
+    return;
+  }
+
+  if (queue.status === 'matched') {
+    await svc.AIBattleQueueEntry.update(queue.id, { status: 'cancelled' });
+    if (queue.match_id) {
+      const match = await getMatch(svc, String(queue.match_id));
+      if (match && match.status !== 'ended') {
+        await svc.AIBattleMatch.update(match.id, { status: 'ended', ended_at: nowIso() });
+      }
+    }
+  }
+}
+
 async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Row) {
   const ids = [String(first.user_id), String(second.user_id)];
   const pairKey = `${mode}:${[...ids].sort().join(':')}`;
@@ -74,8 +96,6 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
       ],
     });
 
-    // If two workers created the same pair at nearly the same time, keep the
-    // oldest record as the canonical match and retire the duplicate.
     matches = await svc.AIBattleMatch.filter({ pair_key: pairKey }, 'created_date', 20);
     const active = matches.filter((row: Row) => row.status === 'matched' || row.status === 'ready');
     if (active.length > 1) {
@@ -120,7 +140,13 @@ async function statusFor(svc: any, userId: string) {
       await svc.AIBattleQueueEntry.update(queue.id, { status: 'cancelled' });
       return { queue: null, match: null };
     }
-    await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso() });
+
+    // Status reads are frequent. Only persist a queue heartbeat occasionally so
+    // polling cannot turn into a database-write storm and trip Base44 limits.
+    if (queueHeartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS) {
+      queue = await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso() });
+    }
+
     const paired = await tryPairMode(svc, queue.mode);
     queue = await svc.AIBattleQueueEntry.get(queue.id).catch(() => queue);
     if (paired && (paired.player_ids || []).map(String).includes(String(userId))) return { queue, match: paired };
@@ -163,13 +189,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      const existing = await latestQueueForUser(svc, String(user.id));
-      if (existing?.status === 'matched' && existing.match_id) {
-        const match = await getMatch(svc, String(existing.match_id));
-        if (match && match.status !== 'ended') return json({ queue: publicQueue(existing), match: publicMatch(match), server_time: Date.now() });
-      }
-
+      // Enter Queue is always an explicit fresh matchmaking request. A previous
+      // ready/matched dashboard must never trap the user out of the queue button.
+      await retireCurrentMatch(svc, String(user.id));
       await cancelOtherWaiting(svc, String(user.id));
+
       const created = await svc.AIBattleQueueEntry.create({
         user_id: String(user.id),
         player_name: playerName(user),
@@ -185,9 +209,8 @@ Deno.serve(async (req) => {
       return json({ queue: publicQueue(queue), match: publicMatch(match && (match.player_ids || []).map(String).includes(String(user.id)) ? match : null), server_time: Date.now() });
     }
 
-    if (action === 'cancel') {
-      const queue = await latestQueueForUser(svc, String(user.id));
-      if (queue?.status === 'waiting') await svc.AIBattleQueueEntry.update(queue.id, { status: 'cancelled' });
+    if (action === 'cancel' || action === 'reset') {
+      await retireCurrentMatch(svc, String(user.id));
       return json({ queue: null, match: null, server_time: Date.now() });
     }
 
