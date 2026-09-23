@@ -6,7 +6,7 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
-import { GetsugaAbilityRuntime } from '@/components/getsuga/GetsugaAbilityRuntime';
+import { GetsugaDashboardRuntime, createGetsugaIdleClip } from '@/components/getsuga/GetsugaDashboardRuntime';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -54,21 +54,16 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
-  const getsuga = (options.skillEffects || options.getsugaMale) ? new GetsugaAbilityRuntime({
-    scene,
-    camera,
-    getPlayer: () => model,
-    impactDistance: 7.2,
-    onEvent: (name, detail) => {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoEvent', { detail: { name, ...detail } }));
-      }
-    },
-  }) : null;
+  let getsuga = null;
+  const emitGetsugaEvent = (name, detail = {}) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoEvent', { detail: { name, ...detail } }));
+    }
+  };
   const onGetsugaProc = () => {
     if (!disposed && model && getsuga) getsuga.play();
   };
-  if (getsuga && options.skillEffects && typeof window !== 'undefined') window.addEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+  if (options.skillEffects && typeof window !== 'undefined') window.addEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
   let primaryMotionRoot = null, primaryMotionMixer = null, primaryMotionAction = null, primaryMotionBridge = null;
