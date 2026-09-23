@@ -117,6 +117,25 @@ async function snapshot(svc: any, user: Row) {
   const maxHp = Math.max(100,Math.min(400,num(levels[0]?.stats?.hp,100) + num(levels[0]?.global_level,1)*8));
   return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,cards:deck,cooldowns:{},damage:0,actions:0,jawan:{id:loadout?.jawan_id||'jawan-1',name:loadout?.jawan_name||loadout?.name||'Jawan I',role:loadout?.jawan_role||'Balanced',loadout_id:loadout?.id||''}};
 }
+function demoBotSnapshot(player: Row) {
+  const maxHp = Math.max(120, Math.round(num(player?.max_hp, 140) * .92));
+  const botCards = [
+    { id:'bot-pulse-slash', name:'Pulse Slash', type:'Ability', image:'', rarity:'Rare', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:12, power:86, effect:'strike', value:30, stagger:34, critical_bonus_pct:8, cost:2, cooldown:1, element:'arc', abilities:[], active_perks:[], stage:2, ascension:0, over_enchant_rank:0, description:'A fast arc slash used by the Luna sparring AI.' },
+    { id:'bot-guard-matrix', name:'Guard Matrix', type:'Equipment', image:'', rarity:'Epic', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:10, power:78, effect:'shield', value:26, stagger:12, critical_bonus_pct:0, cost:1, cooldown:2, element:'', abilities:[], active_perks:[], stage:2, ascension:0, over_enchant_rank:0, description:'Projects a short defensive barrier.' },
+    { id:'bot-rift-burst', name:'Rift Burst', type:'Ability', image:'', rarity:'Epic', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:14, power:104, effect:'strike', value:38, stagger:46, critical_bonus_pct:10, cost:3, cooldown:3, element:'void', abilities:[], active_perks:[], stage:3, ascension:0, over_enchant_rank:0, description:'A heavier void burst built to pressure the break gauge.' },
+    { id:'bot-repair-cycle', name:'Repair Cycle', type:'Companion', image:'', rarity:'Rare', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:9, power:70, effect:'heal', value:22, stagger:0, critical_bonus_pct:0, cost:1, cooldown:3, element:'', abilities:[], active_perks:[], stage:1, ascension:0, over_enchant_rank:0, description:'Restores a small amount of combat integrity.' },
+  ];
+  return {
+    id:'luna-demo-bot',
+    name:'Luna Sparring Bot',
+    portrait:'',
+    appearance:{ name:'Luna Sparring Bot', gender:'male', model_url:MODEL, appearance_version:3, style_preset:'heroic_fantasy', skin_tone:'#8e9eaa', eye_color:'#67e8f9', hair_color:'#111827' },
+    hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,
+    cards:botCards,cooldowns:{},damage:0,actions:0,
+    jawan:{id:'demo-bot',name:'Combat Bot',role:'Balanced',loadout_id:'demo-bot'}
+  };
+}
+
 async function contacts(svc: any, user: Row) {
   const [memberships, friends, own] = await Promise.all([
     svc.PartyMember.filter({user_id:user.id}),svc.Friend.filter({user_id:user.id},'-created_date',100),
@@ -437,6 +456,33 @@ Deno.serve(async req=>{
         generated_at:new Date().toISOString(),
         server_time:Date.now()
       });
+    }
+    if(action==='demoBot'){
+      const route=routeFor('duel')!;
+      const availableWorlds=await worlds(svc,user);
+      const world=availableWorlds.find(w=>String(w.id)===String(data.world_id))||availableWorlds[0];
+      if(!world)fail('No battle world is available.',403);
+      const player=await snapshot(svc,user);
+      if(!player.cards.length)fail('Equip at least one card in the active skill set before queueing.');
+      const recent=await svc.AIBattleEncounter.filter({host_id:user.id},'-created_date',20);
+      for(const existing of recent){
+        const state=(await replay(svc,existing)).state;
+        if(['lobby','active'].includes(state.status)){
+          if(existing.request_id==='demo-bot-match')return Response.json({matched:true,demo:true,encounter:publicRoom(existing,state),server_time:Date.now()});
+          fail('Finish or leave your current expedition first.');
+        }
+      }
+      const bot=demoBotSnapshot(player);
+      const room=await svc.AIBattleEncounter.create({
+        host_id:user.id,host_name:label(user),host_snapshot:player,guest_snapshot:bot,
+        invited_ids:[],world,route_id:route.id,request_id:'demo-bot-match',matchmaking:true,queue_ids:[]
+      });
+      await svc.AIBattleTurn.create({
+        encounter_id:room.id,actor_id:user.id,request_id:'demo-start-'+room.id,
+        expected_revision:0,command:'start',payload:{},received_at:Date.now()
+      });
+      const state=(await replay(svc,room)).state;
+      return Response.json({matched:true,demo:true,encounter:publicRoom(room,state),server_time:Date.now()});
     }
     if(action==='queueStatus'){
       const rows=await svc.AIBattleQueue.filter({user_id:user.id},'-created_date',20);
