@@ -2,26 +2,52 @@ import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+
 const requestId=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+
+function errorMessage(error){
+  const body=error?.response?.data??error?.data??null;
+  return body?.error||body?.message||error?.message||'AI Battle request failed.';
+}
+
 async function invoke(action,data={}){
   try{
     const response=await base44.functions.invoke('ai-battle-arena',{action,data});
     const body=response?.data??response;
-    if(body?.error)throw new Error(body.error);
+    if(body?.error)throw Object.assign(new Error(body.error),{state:body});
     return body;
   }catch(error){
-    const body=error?.response?.data;
+    const body=error?.response?.data??error?.data;
     if(body?.error)throw Object.assign(new Error(body.error),{state:body});
-    throw error;
+    if(error?.message)throw error;
+    throw new Error(errorMessage(error));
   }
 }
+
 export default function useBattleArena(encounterId){
   const {user}=useAuth(),client=useQueryClient();
   const offset=useRef(0);
   const key=['battle-expeditions',user?.id];
-  const hub=useQuery({queryKey:key,enabled:!!user?.id,queryFn:()=>invoke('hub'),staleTime:2500,refetchInterval:4000,refetchOnWindowFocus:true});
+  // The hub is a discovery/menu query, not a realtime combat stream. Keep it
+  // deliberately slower so opening AI Battle cannot create a retry/poll storm.
+  const hub=useQuery({
+    queryKey:key,
+    enabled:!!user?.id,
+    queryFn:()=>invoke('hub'),
+    staleTime:8000,
+    refetchInterval:10000,
+    refetchOnWindowFocus:false,
+    retry:false,
+  });
   const fightKey=['battle-encounter',user?.id,encounterId];
-  const fight=useQuery({queryKey:fightKey,enabled:!!user?.id&&!!encounterId,queryFn:()=>invoke('state',{encounter_id:encounterId}),refetchInterval:1500,refetchOnWindowFocus:true});
+  const fight=useQuery({
+    queryKey:fightKey,
+    enabled:!!user?.id&&!!encounterId,
+    queryFn:()=>invoke('state',{encounter_id:encounterId}),
+    refetchInterval:2000,
+    refetchOnWindowFocus:false,
+    retry:false,
+  });
   const body=fight.data;
   useEffect(()=>{if(body?.server_time)offset.current=body.server_time-Date.now();},[body?.server_time]);
   useEffect(()=>{
@@ -32,6 +58,7 @@ export default function useBattleArena(encounterId){
   },[body?.encounter,hub.data?.encounters,encounterId,user?.id]);
   const mutation=useMutation({
     mutationFn:async({action,data})=>invoke(action,{...data,request_id:requestId()}),
+    retry:false,
     onSuccess:body=>{
       if(body.encounter)client.setQueryData(['battle-encounter',user?.id,body.encounter.id],body);
       if(body.server_time)offset.current=body.server_time-Date.now();
@@ -45,7 +72,7 @@ export default function useBattleArena(encounterId){
     },
     onError:error=>{
       if(error.state?.encounter)client.setQueryData(['battle-encounter',user?.id,error.state.encounter.id],error.state);
-      client.invalidateQueries({queryKey:fightKey});
+      if(encounterId)client.invalidateQueries({queryKey:fightKey});
     }
   });
   const encounter=body?.encounter || hub.data?.encounters?.find(r=>r.id===encounterId);
