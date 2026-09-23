@@ -40,6 +40,7 @@ export default function useBattleArena(encounterId){
         client.invalidateQueries({queryKey:['luna-skill-book',user?.id]});
         client.invalidateQueries({queryKey:['luna-equipment-loadout',user?.id]});
         window.dispatchEvent(new CustomEvent('lunaProgressionChanged',{detail:{reward:body.reward}}));
+        window.dispatchEvent(new CustomEvent('syncPlayerStats',{detail:{source:'ai_battle_reward',reward:body.reward}}));
       }
     },
     onError:error=>{
