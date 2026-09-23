@@ -56,7 +56,7 @@ function PartyFormation({ players, activeId, lastEvent, duel = false }) {
             className="absolute bottom-[5%] top-[1%] w-[42%] -translate-x-1/2 transition-all duration-500"
             style={{ left: String(x) + '%', transform: 'translateX(-50%) translateY(' + String(y) + '%) scale(' + String(scale) + ')', zIndex: 20 - Math.abs(spread) }}
           >
-            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} facing={duel ? 'right' : 'front'} />
+            <BattleAvatar player={player} active={activeId === player.id} event={lastEvent} facing={duel ? 'right' : 'front'} skillEffects={duel} />
           </div>
         );
       })}
