@@ -25,9 +25,10 @@ export default function useBattleArena(encounterId){
   const body=fight.data;
   useEffect(()=>{if(body?.server_time)offset.current=body.server_time-Date.now();},[body?.server_time]);
   useEffect(()=>{
+    if(!encounterId)return undefined;
     const encounter=body?.encounter || hub.data?.encounters?.find(r=>r.id===encounterId) || null;
     window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter,userId:user?.id||null}}));
-    return()=>{if(encounterId)window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter:null,userId:user?.id||null}}));};
+    return()=>window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter:null,userId:user?.id||null}}));
   },[body?.encounter,hub.data?.encounters,encounterId,user?.id]);
   const mutation=useMutation({
     mutationFn:async({action,data})=>invoke(action,{...data,request_id:requestId()}),

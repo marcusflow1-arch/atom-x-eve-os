@@ -385,12 +385,25 @@ async function applyClaimReward(svc: any, user: Row, room: Row, state: Row, requ
 
   const avatarRows = await svc.AvatarProgression.filter({user_id:user.id},'-updated_date',1);
   const avatar = avatarRows[0];
+  const avatarThreshold = (level: number) => Math.round(100 * Math.pow(Math.max(1, level || 1), 1.35));
   if (avatar) {
-    const nextXp = num(avatar.global_xp) + avatarXp;
-    const nextLevel = Math.max(num(avatar.global_level,1),1+Math.floor(nextXp/1000));
-    await svc.AvatarProgression.update(avatar.id,{global_xp:nextXp,global_level:nextLevel});
+    let nextXp = num(avatar.global_xp) + avatarXp;
+    let nextLevel = Math.max(1,num(avatar.global_level,1));
+    let levelsGained = 0;
+    while(nextXp >= avatarThreshold(nextLevel) && nextLevel < 200 && levelsGained < 50){
+      nextXp -= avatarThreshold(nextLevel);
+      nextLevel++;
+      levelsGained++;
+    }
+    await svc.AvatarProgression.update(avatar.id,{
+      global_xp:nextXp,
+      global_level:nextLevel,
+      available_stat_points:num(avatar.available_stat_points)+levelsGained,
+    });
   } else {
-    await svc.AvatarProgression.create({user_id:user.id,global_xp:avatarXp,global_level:1+Math.floor(avatarXp/1000)});
+    let nextXp=avatarXp,nextLevel=1,levelsGained=0;
+    while(nextXp >= avatarThreshold(nextLevel) && nextLevel < 200 && levelsGained < 50){nextXp-=avatarThreshold(nextLevel);nextLevel++;levelsGained++;}
+    await svc.AvatarProgression.create({user_id:user.id,global_xp:nextXp,global_level:nextLevel,available_stat_points:levelsGained,stats:{hp:100,strength:10,intelligence:10,will:10,tenacity:10}});
   }
 
   for (const card of player.cards || []) {

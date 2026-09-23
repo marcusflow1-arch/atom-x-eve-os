@@ -18,38 +18,6 @@ const routeIcon = { duel: Swords, vault: Map, patrol: Map, colossus: Crown };
 
 const pct = (value, max) => Math.max(0, Math.min(100, 100 * Number(value || 0) / Math.max(1, Number(max || 1))));
 
-function CardButton({ card, player, disabled, onPlay, world }) {
-  if (!card) {
-    return <div className="min-h-[92px] border border-white/[0.12] bg-white/[0.035] p-2 text-center text-[10px] text-white/94"><Layers className="mx-auto mt-4 h-4 w-4" /><span className="mt-2 block">Empty</span></div>;
-  }
-  const cooldown = player?.cooldowns?.[card.id] || 0;
-  const resonance = world && (card.game_id === world.id || card.game_name === world.title);
-  const blocked = disabled || cooldown > 0 || Number(player?.ap || 0) < Number(card.cost || 0);
-  return (
-    <button type="button" disabled={blocked} onClick={() => onPlay(card.id)} className="relative min-h-[92px] overflow-hidden border border-white/[0.15] bg-white/[0.045] p-2 text-left disabled:opacity-35">
-      {card.image ? <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-24" /> : null}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#071019] via-[#071019]/84 to-transparent" />
-      <div className="relative z-10 flex min-h-[76px] flex-col justify-end">
-        <span className="text-[11px] font-black uppercase tracking-[0.09em] text-cyan-100/76">
-          {card.rarity} · {card.type}{card.element ? ' · ' + String(card.element).toUpperCase() : ''}
-        </span>
-        <strong className="mt-1 line-clamp-1 text-[11px] text-white/98">{card.name}</strong>
-        <div className="mt-1 flex items-center justify-between text-[12px]">
-          <span className="text-white/96">{card.effect} {Number(card.value || 0) + (resonance ? Math.max(5, Math.round(Number(card.value || 0) * .12) + Number(card.ascension || 0) * 2) : 0)}</span>
-          <span className="font-bold text-cyan-100/89">{card.cost} AP</span>
-        </div>
-        <div className="mt-1 flex items-center justify-between text-[11px] text-white/94">
-          <span>Lv {card.level || 1} · Stage {card.stage || 1}</span>
-          <span>BRK {card.stagger || 0}</span>
-        </div>
-        {Array.isArray(card.active_perks) && card.active_perks.length > 0 && <span className="mt-1 line-clamp-1 text-[11px] text-violet-100/40">{card.active_perks.slice(0, 2).map((perk) => String(perk).replaceAll('_', ' ')).join(' · ')}</span>}
-        {resonance && <span className="mt-1 text-[11px] font-black uppercase tracking-[0.08em] text-emerald-100/48">World Resonance Active</span>}
-        {cooldown > 0 && <span className="mt-1 text-[11px] text-amber-100/44">Ready in {cooldown}</span>}
-      </div>
-    </button>
-  );
-}
-
 function CombatHUD({ arena, onExitStage }) {
   const e = arena.encounter;
   const me = e?.players?.find((player) => player.id === arena.user?.id);
