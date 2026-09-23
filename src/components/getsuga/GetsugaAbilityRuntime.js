@@ -718,28 +718,52 @@ export class GetsugaAbilityRuntime {
   }
 
   finish(emitEnd = true) {
-    if (!this.active && !this.proxy && !this.localFx && !this.worldFx) return;
-    if (this.original) this.original.visible = true;
-    if (this.proxy?.parent) this.proxy.parent.remove(this.proxy);
+    if (!this.active && !this.localFx && !this.worldFx) return;
+    if (this.idleAction && this.attackAction) {
+      this.idleAction.enabled = true;
+      this.idleAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+      this.idleAction.crossFadeFrom(this.attackAction, .24, true);
+    }
+    if (this.packageEnergyBlade) this.packageEnergyBlade.visible = false;
     if (this.localFx) this.scene?.remove(this.localFx);
     if (this.worldFx) this.scene?.remove(this.worldFx);
-    this.proxy = null;
     this.localFx = null;
     this.worldFx = null;
-    this.original = null;
-    this.rest.clear();
-    this.bones = {};
     for (const geometry of this.geometries) geometry?.dispose?.();
     for (const material of this.materials) material?.dispose?.();
     this.geometries = [];
     this.materials = [];
     this.active = false;
-    if (emitEnd) this.emit('end');
+    this.time = 0;
+    this.lastFrame = -1;
+    this.released = false;
+    this.impacted = false;
+    if (emitEnd) {
+      this.emit('end');
+      this.emit('idle');
+    }
   }
 
   dispose() {
+    this.pendingPlay = false;
     this.finish(false);
     this.disposed = true;
+    this.mixer?.stopAllAction();
+    if (this.original) this.original.visible = true;
+    if (this.proxy?.parent) this.proxy.parent.remove(this.proxy);
+    this.proxy?.traverse((node) => {
+      node.geometry?.dispose?.();
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      materials.filter(Boolean).forEach((material) => material.dispose?.());
+    });
+    this.proxy = null;
+    this.original = null;
+    this.packageGltf = null;
+    this.mixer = null;
+    this.attackAction = null;
+    this.idleAction = null;
+    this.rest.clear();
+    this.bones = {};
   }
 }
 
