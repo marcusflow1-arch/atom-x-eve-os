@@ -599,6 +599,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const setPaused = (value) => {
     paused = Boolean(value);
     if (mixer) mixer.timeScale = paused ? 0 : 1;
+    getsuga?.setPaused?.(paused);
     if (primaryMotionMixer) primaryMotionMixer.timeScale = paused ? 0 : 1;
     if (secondaryMixer) secondaryMixer.timeScale = paused ? 0 : 1;
     if (secondaryMotionMixer) secondaryMotionMixer.timeScale = paused ? 0 : 1;
@@ -626,7 +627,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     dispose: () => {
       disposed = true;
       cancelAnimationFrame(frame);
-      if (getsuga && options.skillEffects && typeof window !== 'undefined') window.removeEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+      if (options.skillEffects && typeof window !== 'undefined') window.removeEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
       getsuga?.dispose();
       observer.disconnect();
       visibility?.disconnect();
@@ -650,7 +651,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       secondaryMotionAction = null;
       secondaryMotionBridge = null;
 
-      disposeModel(model);
+      if (!getsuga) disposeModel(model);
       shadowPlane.geometry.dispose();
       shadowMaterial.dispose();
       renderer.dispose();
