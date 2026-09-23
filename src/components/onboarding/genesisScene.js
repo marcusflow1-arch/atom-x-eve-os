@@ -509,8 +509,15 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       scene.add(model);
       mixer = new THREE.AnimationMixer(model);
       applyStyle(appearance);
-      applyCompanionAppearance(model, appearance);
-      if (preserveAppearance) {
+      if (!options.getsugaMale) applyCompanionAppearance(model, appearance);
+      if (options.getsugaMale) {
+        // The canonical male Luna body is the exact Getsuga package character.
+        // Bind the skill runtime to THIS visible model and its embedded clip;
+        // do not retarget onto it and do not spawn a duplicate proxy character.
+        const bound = getsuga?.bindCharacter(model, asset.animations || [], mixer);
+        if (bound) onStatus('ready', 'GetsugaIdle');
+        else onStatus('animation-error', 'GetsugaTensho');
+      } else if (preserveAppearance) {
         embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
       } else if (atomxeRuntimeRig) {
         // Both selectable female bodies ship with an embedded Idle fallback and
@@ -576,9 +583,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const togglePaused = () => setPaused(!paused);
 
   return {
-    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model) applyCompanionAppearance(model, appearance);  },
+    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model && !options.getsugaMale) applyCompanionAppearance(model, appearance);  },
     play,
-    command: (value) => { setPaused(false); embeddedController?.command(value); },
+    command: (value) => { setPaused(false); if (options.getsugaMale && value === 'idle') getsuga?.playIdle?.(); else embeddedController?.command(value); },
+    getsugaIdle: () => getsuga?.playIdle?.(),
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
     animationState: () => embeddedController?.snapshot(),
     move,
