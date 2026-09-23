@@ -43,6 +43,7 @@ export default function useBattleArena(encounterId){
     create:data=>mutation.mutateAsync({action:'create',data}),
     field:data=>mutation.mutateAsync({action:'field',data}),
     queue:data=>mutation.mutateAsync({action:'queue',data}),
+    demoBot:data=>mutation.mutateAsync({action:'demoBot',data}),
     queueStatus:()=>mutation.mutateAsync({action:'queueStatus',data:{}}),
     cancelQueue:()=>mutation.mutateAsync({action:'cancelQueue',data:{}}),
     command:(command,data={})=>mutation.mutateAsync({action:'command',data:{encounter_id:encounterId,expected_revision:encounter?.revision,command,...data}})};
