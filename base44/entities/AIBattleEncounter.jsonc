@@ -46,6 +46,18 @@
       },
       "default": [],
       "description": "Queue records consumed to create this matchmaking duel."
+    },
+    "queue_type": {
+      "type": "string",
+      "enum": [
+        "casual",
+        "ranked",
+        "duel",
+        "coop",
+        "coop_ranked"
+      ],
+      "default": "casual",
+      "description": "Matchmaking pool that produced this duel."
     }
   },
   "required": [
