@@ -25,6 +25,17 @@
     "world": {
       "type": "object"
     },
+    "queue_type": {
+      "type": "string",
+      "enum": [
+        "casual",
+        "ranked",
+        "duel",
+        "coop",
+        "coop_ranked"
+      ],
+      "default": "casual"
+    },
     "player_snapshot": {
       "type": "object",
       "description": "Server-authored immutable player/Jawan/card snapshot captured when queueing."
