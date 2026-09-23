@@ -42,11 +42,14 @@ const MODES = [
 
 const routeIcon = {
   pvp: Swords,
+  duel: Swords,
   dungeon: Skull,
+  vault: Shield,
   quest: Map,
+  patrol: Map,
   world_boss: Crown,
+  colossus: Crown,
 };
-
 
 function FieldMode({ battle }) {
   const [nodes, setNodes] = useState([]);
@@ -55,11 +58,17 @@ function FieldMode({ battle }) {
   const [prepared, setPrepared] = useState('');
   const [fieldCell, setFieldCell] = useState(null);
 
-  const locate = () => {
+  const locate = async () => {
     if (!navigator.geolocation || locating) {
       if (!navigator.geolocation) setError('Location services are unavailable in this browser.');
       return;
     }
+
+    if (!battle?.field) {
+      setError('Field mode is unavailable right now.');
+      return;
+    }
+
     setLocating(true);
     setError('');
     navigator.geolocation.getCurrentPosition(
@@ -107,9 +116,9 @@ function FieldMode({ battle }) {
         <div>
           <p className="text-[12px] font-black uppercase tracking-[0.15em] text-amber-100/84">Field Mode / Real-World Layer</p>
           <h3 className="mt-1 text-[11px] font-semibold text-white/96">Your surroundings become a discovery surface.</h3>
-          <p className="mt-1 max-w-xl text-[10px] leading-4 text-white/96">Location is opt-in. The browser rounds it to a coarse cell before generating nearby game-world quests, caches, dungeon breaches and boss signals.</p>
+          <p className="mt-1 max-w-xl text-[10px] leading-4 text-white/96">Location is opt-in. The browser rounds it to a coarse cell before generating nearby game-world quests, caches, dungeon b[...]
         </div>
-        <button type="button" onClick={locate} disabled={locating} className="flex h-9 shrink-0 items-center gap-2 border border-amber-100/12 bg-amber-100/[0.04] px-3 text-[10px] font-black uppercase tracking-[0.09em] text-amber-50/58 disabled:opacity-40">
+        <button type="button" onClick={locate} disabled={locating} className="flex h-9 shrink-0 items-center gap-2 border border-amber-100/12 bg-amber-100/[0.04] px-3 text-[10px] font-black uppercase tracking-[0.11em] text-amber-100/92 transition hover:bg-amber-100/[0.06] disabled:cursor-not-allowed disabled:opacity-60">
           {locating ? <Compass className="h-3.5 w-3.5 animate-spin" /> : <Map className="h-3.5 w-3.5" />}
           {nodes.length ? 'Refresh Field' : 'Locate Field'}
         </button>
@@ -126,9 +135,9 @@ function FieldMode({ battle }) {
               </div>
               <div className="min-w-0">
                 <strong className="block truncate text-[11px] text-white/94">{node.title}</strong>
-                <span className="mt-0.5 block truncate text-[11px] uppercase tracking-[0.06em] text-white/94">{node.world?.title} · {Math.round(Number(node.distance_m || 0))} m · {String(node.type || '').replaceAll('_', ' ')}</span>
+                <span className="mt-0.5 block truncate text-[11px] uppercase tracking-[0.06em] text-white/94">{node.world?.title} · {Math.round(Number(node.distance_m || 0))} m · {String(node.type || 'route')}</span>
               </div>
-              <button type="button" onClick={() => prepare(node)} className={'border px-2 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] ' + (prepared === node.id ? 'border-emerald-100/12 bg-emerald-100/[0.04] text-emerald-100/91' : 'border-white/[0.14] text-white/97 hover:text-white/60')}>
+              <button type="button" onClick={() => prepare(node)} className={'border px-2 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] ' + (prepared === node.id ? 'border-emerald-100/25 bg-emerald-100/10 text-emerald-100/90' : 'border-white/[0.12] bg-white/[0.04] text-white/92 hover:bg-white/[0.08]')}>
                 {prepared === node.id ? 'Prepared' : 'Prepare'}
               </button>
             </article>
@@ -161,7 +170,7 @@ function ConnectedWorlds({ hub, selectedMode, battle }) {
             <div className="relative z-10 flex h-full flex-col justify-end">
               <span className="text-[11px] font-black uppercase tracking-[0.12em] text-cyan-100/72">{world.id === 'luna' ? 'Universal frontier' : 'Game world'}</span>
               <strong className="mt-1 truncate text-[12px] text-white/95">{world.title}</strong>
-              <small className="mt-1 text-[12px] text-white/96">{world.id === 'luna' ? 'Open to every player' : String(world.cards || 0) + ' owned cards · ' + String(world.earned || 0) + ' earned'}</small>
+              <small className="mt-1 text-[12px] text-white/96">{world.id === 'luna' ? 'Open to every player' : String(world.cards || 0) + ' owned cards · ' + String(world.earned || 0) + ' earned this cycle'}</small>
             </div>
           </article>
         ))}
@@ -237,7 +246,7 @@ function Arsenal({ hub }) {
       <div className="mt-5 border-t border-white/[0.13] pt-4">
         <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.13em] text-amber-100/82"><Trophy className="h-3.5 w-3.5" />Achievement → Ability</div>
         <p className="mt-2 text-[10px] leading-4 text-white/96">
-          Cards earned from game achievements are locked into the encounter when you deploy. Ability cards attack, Equipment cards shield, Companions heal, and cards from the selected game world gain resonance.
+          Cards earned from game achievements are locked into the encounter when you deploy. Ability cards attack, Equipment cards shield, Companions heal, and cards from the selected game world become your tactical layer.
         </p>
       </div>
     </aside>
@@ -252,7 +261,7 @@ function CurrentExpeditions({ hub, onResume }) {
       <div className="flex items-center gap-2 overflow-x-auto">
         <span className="shrink-0 text-[12px] font-black uppercase tracking-[0.14em] text-white/64">Current</span>
         {active.slice(0, 6).map((encounter) => (
-          <button key={encounter.id} type="button" onClick={() => onResume(encounter.id)} className="flex min-w-[205px] items-center gap-2 border border-cyan-100/08 bg-cyan-100/[0.025] px-3 py-2 text-left">
+          <button key={encounter.id} type="button" onClick={() => onResume(encounter.id)} className="flex min-w-[205px] items-center gap-2 border border-cyan-100/08 bg-cyan-100/[0.025] px-3 py-2 text-left transition hover:bg-cyan-100/[0.05]">
             <span className="h-2 w-2 shrink-0 rounded-full bg-cyan-200/55" />
             <span className="min-w-0">
               <strong className="block truncate text-[10px] text-white/90">{encounter.route?.title || 'Expedition'}</strong>
@@ -274,7 +283,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const ActiveModeIcon = selectedMode.icon;
 
   const closeOverlay = () => {
-    if (arenaStage) arenaPresentation.clear();
+    if (arenaStage && arenaPresentation?.clear) arenaPresentation.clear();
     onClose?.();
   };
 
@@ -292,7 +301,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
         boxShadow: arenaStage ? 'none' : 'inset 1px 0 0 rgba(255,255,255,.12), inset 0 1px 0 rgba(255,255,255,.08)',
       }}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(244,63,94,.055),transparent_30%),radial-gradient(circle_at_64%_18%,rgba(103,232,249,.05),transparent_34%),radial-gradient(circle_at_88%_88%,rgba(251,191,36,.04),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(244,63,94,.055),transparent_30%),radial-gradient(circle_at_64%_18%,rgba(103,232,249,.05),transparent_32%),radial-gradient(circle_at_28%_76%,rgba(168,85,247,.06),transparent_30%)]" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col">
         <header className="flex shrink-0 items-center justify-between gap-5 border-b border-white/[0.15] px-6 py-4">
@@ -311,14 +320,16 @@ export default function LunaAIBattleOverlay({ onClose }) {
                 <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.09em] text-white/94"><Users className="h-3 w-3" />{battle.hub?.contacts?.length || 0} connected players</span>
               </>
             )}
-            <button type="button" onClick={closeOverlay} aria-label="Close AI Battle" className="grid h-9 w-9 place-items-center border border-white/[0.15] bg-black/25 text-white/99 backdrop-blur-lg hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={closeOverlay} aria-label="Close AI Battle" className="grid h-9 w-9 place-items-center border border-white/[0.15] bg-black/25 text-white/99 backdrop-blur-md transition hover:bg-white/[0.06]">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </header>
 
         {!arenaStage && (
           <div className="flex shrink-0 items-center border-b border-white/[0.13] px-6">
             {MODES.map(({ id, label, full, icon: Icon, tone }) => (
-              <button key={id} type="button" onClick={() => setMode(id)} className={'relative flex min-w-[205px] items-center gap-2.5 px-4 py-3 text-left transition-colors ' + (mode === id ? 'bg-white/[0.06]' : 'hover:bg-white/[0.045]')}>
+              <button key={id} type="button" onClick={() => setMode(id)} className={'relative flex min-w-[205px] items-center gap-2.5 px-4 py-3 text-left transition-colors ' + (mode === id ? 'bg-white/[0.04]' : 'bg-transparent hover:bg-white/[0.02]')}>
                 <Icon className={'h-3.5 w-3.5 ' + (mode === id ? tone : 'text-white/95')} />
                 <span>
                   <strong className={mode === id ? 'text-[12px] text-white/98' : 'text-[12px] text-white/98'}>{label}</strong>
@@ -338,7 +349,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
             <div className="grid h-full place-items-center text-[11px] uppercase tracking-[0.14em] text-white/96">Preparing expedition network…</div>
           ) : battle.error ? (
             <div className="grid h-full place-items-center text-center">
-              <div><Shield className="mx-auto h-7 w-7 text-rose-100/30" /><p className="mt-3 text-[12px] text-white/98">AI Battle could not connect.</p><button type="button" onClick={() => battle.refresh()} className="mt-3 border border-white/[0.15] px-4 py-2 text-[10px] text-white/86">Reconnect</button></div>
+              <div><Shield className="mx-auto h-7 w-7 text-rose-100/30" /><p className="mt-3 text-[12px] text-white/98">AI Battle could not connect.</p><button type="button" onClick={() => battle.refetch?.()} className="mt-3 border border-white/[0.15] bg-white/[0.04] px-3 py-2 text-[11px] uppercase tracking-[0.1em] text-white/96">Retry connection</button></div>
             </div>
           ) : (
             <div className="flex h-full min-h-0 flex-col">
