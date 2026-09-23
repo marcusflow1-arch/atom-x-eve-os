@@ -24,10 +24,14 @@ export default function useAIBattleQueue() {
     queryKey: key,
     enabled: !!user?.id,
     queryFn: () => invoke('status'),
-    refetchInterval: (query) => query.state.data?.queue?.status === 'waiting' || query.state.data?.match?.status === 'matched' ? 2000 : 5000,
+    refetchInterval: (query) => {
+      const status = query.state.data;
+      if (status?.queue?.status === 'waiting' || status?.match?.status === 'matched') return 5000;
+      return 15000;
+    },
     refetchOnWindowFocus: true,
     retry: false,
-    staleTime: 1000,
+    staleTime: 2000,
   });
 
   const mutation = useMutation({
@@ -70,7 +74,7 @@ export default function useAIBattleQueue() {
       .then((body) => queryClient.setQueryData(key, (prev = {}) => ({ ...prev, match: body.match || prev.match })))
       .catch((error) => {
         console.warn('[AI Battle] ready check will retry', error);
-        window.setTimeout(() => { readyAttempt.current = ''; }, 1200);
+        window.setTimeout(() => { readyAttempt.current = ''; }, 3000);
       });
   }, [match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.players, queryClient, key]);
 
@@ -83,5 +87,6 @@ export default function useAIBattleQueue() {
     refresh: () => state.refetch(),
     join: (mode) => mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } }),
     cancel: () => mutation.mutateAsync({ action: 'cancel', data: {} }),
+    reset: () => mutation.mutateAsync({ action: 'reset', data: {} }),
   };
 }
