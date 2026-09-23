@@ -39,8 +39,26 @@ export function useSkills() {
     const assigned = getHotbarItem(slotIndex);
     
     if (assigned) {
+      const cardName = String(assigned.card_name || assigned.title || assigned.name || '').toLowerCase();
+      const isGetsuga = cardName.includes('getsuga tensh') || (cardName.includes('ichigo') && cardName.includes('getsuga'));
+
+      // Skill Slot 1 owns the uploaded Getsuga Tensho proc. Keep this card-driven
+      // so changing the card in slot 1 also changes what the number key does.
+      if (slotIndex === 0 && isGetsuga) {
+        const skillId = 'getsuga_tensho';
+        if (!isOnCooldown(skillId)) {
+          storeSkill(skillId);
+          activateSkill(slotIndex, 7000);
+          setCooldown(skillId, Date.now() + 8000);
+          window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoProc', {
+            detail: { slotIndex, card: assigned, source: 'luna_skill_bar' },
+          }));
+        }
+        return;
+      }
+
       const skillFromCardType = { ability: 'kick_ability' };
-      const derived = skillFromCardType[assigned.type] || 'kick_ability';
+      const derived = skillFromCardType[String(assigned.type || assigned.card_type || '').toLowerCase()] || 'kick_ability';
       
       if (!isOnCooldown(derived)) {
         storeSkill(derived);
