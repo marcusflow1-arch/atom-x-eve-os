@@ -7,7 +7,7 @@ import useLunaStore from '../useLunaStore';
  */
 export function useSkills() {
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
-  const { triggerSkill: storeSkill, isOnCooldown, setCooldown, getHotbarItem } = useLunaStore();
+  const { triggerSkill: storeSkill, isOnCooldown, setCooldown, getHotbarItem, activeSkillRow } = useLunaStore();
 
   /**
    * Activate a skill slot
@@ -95,23 +95,17 @@ export function useSkills() {
     const handleSkillKey = (e) => {
       const key = e.key;
 
-      if (key === '4') {
-        triggerSkill(0);
-        return;
-      }
-
-      const remainingMap = {
-        '2': 1,
-        '3': 2,
-        '5': 4,
-      };
+      if (!['1','2','3','4'].includes(key)) return;
+      const index = Number(key) - 1;
+      const offset = Math.max(0, Math.min(2, Number(activeSkillRow) || 0)) * 4;
+      triggerSkill(index + offset);
       const index = remainingMap[key];
       if (Number.isInteger(index)) triggerSkill(index);
     };
 
     window.addEventListener('keydown', handleSkillKey);
     return () => window.removeEventListener('keydown', handleSkillKey);
-  }, []);
+  }, [activeSkillRow, triggerSkill]);
 
   return {
     activeSkills,
