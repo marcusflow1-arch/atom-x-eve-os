@@ -82,12 +82,12 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{right:'min(410px, 36vw)'}} aria-label="Shared dashboard">
       {roster.map(player => <div key={player.player_id} data-dashboard-player={player.player_id} className="relative h-full min-w-0 flex-1" style={{maxWidth:190}}>
         {player.player_id === user?.id
-          ? <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} />
+          ? <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />
           : <GenesisModelPreview config={player.appearance || FALLBACK_AVATAR} compact controls="none" idleOnly />}
         <div className="pointer-events-none absolute bottom-[12%] inset-x-0 text-center text-[10px] text-white/80 truncate">{player.player_id === user?.id ? 'You' : player.display_name}</div>
       </div>)}
     </div>
-  ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} />;
+  ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />;
 
   if (battlePresentation.visible && battlePresentation.encounterId) {
     return (
