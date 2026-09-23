@@ -8,7 +8,7 @@ export function useDashboardRoom(channel,user,envUrl){
  useEffect(()=>{
   setParticipants([]);
   if(!user?.id||!channel?.startsWith('dashboard_')){dashboardSession.publish({});return;}
-  let disposed=false,timer;
+  let disposed=false,timer,failures=0;
   const hostId=channel.slice(10);
   dashboardSession.publish({channel_id:channel,host_id:hostId,status:'connecting'});
   const tick=async()=>{
@@ -16,7 +16,8 @@ export function useDashboardRoom(channel,user,envUrl){
    try{
     const state=unwrap(await base44.functions.invoke('dashboardSession',{action:'heartbeat',data:{host_id:hostId,env_url:env.current}}));
     if(disposed)return;
-    dashboardSession.publish({...state,status:'connected'});
+    failures=0;
+    dashboardSession.publish({...state,status:'connected',error:''});
     const others=state.players.filter(p=>p.player_id!==user.id);
     setParticipants(previous=>{
      const next=others.map(p=>p.player_id).sort();
@@ -27,11 +28,19 @@ export function useDashboardRoom(channel,user,envUrl){
       window.dispatchEvent(new CustomEvent('changeEnvironment',{detail:{envUrl:state.env_url}}));
    }catch(error){
     if(disposed)return;
-    retryDelay=60000;
+    failures+=1;
+    // Do not erase the roster on a single slow or rate-limited request. Keep
+    // the last known players visible while reconnecting and retry quickly.
+    retryDelay=Math.min(30000,5000*failures);
+    const previous=dashboardSession.getSnapshot();
     const message=error.response?.data?.error||error.message||'Dashboard connection interrupted.';
-    dashboardSession.publish({channel_id:channel,host_id:hostId,status:'error',error:message});
-    setParticipants([]);
-    window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate',{detail:{players:[],channelId:channel}}));
+    dashboardSession.publish({
+     ...previous,
+     channel_id:channel,
+     host_id:hostId,
+     status:'reconnecting',
+     error:failures>=3?message:'',
+    });
    }finally{if(!disposed)timer=setTimeout(tick,retryDelay);}
   };
   tick();
