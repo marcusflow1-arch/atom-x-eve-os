@@ -340,7 +340,7 @@ Deno.serve(async (req) => {
     if (action === 'equip') {
       const slot = Number(data.slot);
       const userCardId = String(data.user_card_id || '').trim();
-      if (!Number.isInteger(slot) || slot < 0 || slot > 3) return json({ error: 'Skill slot must be between 0 and 3' }, 400);
+      if (!Number.isInteger(slot) || slot < 0 || slot > 4) return json({ error: 'Skill slot must be between 0 and 4' }, 400);
       if (!userCardId) return json({ error: 'Owned skill card is required' }, 400);
       const card = await svc.UserCard.get(userCardId).catch(() => null);
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
@@ -366,7 +366,7 @@ Deno.serve(async (req) => {
 
     if (action === 'unequip') {
       const slot = Number(data.slot);
-      if (!Number.isInteger(slot) || slot < 0 || slot > 3) return json({ error: 'Skill slot must be between 0 and 3' }, 400);
+      if (!Number.isInteger(slot) || slot < 0 || slot > 4) return json({ error: 'Skill slot must be between 0 and 4' }, 400);
       const next = { ...(loadout.skill_slots || {}) };
       const oldCardId = next[String(slot)] || null;
       delete next[String(slot)];
