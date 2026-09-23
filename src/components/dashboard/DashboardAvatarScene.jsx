@@ -147,8 +147,8 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       </div>
 
       <div
-        className="absolute bottom-[13%] right-0 z-20 h-[72%] w-[41%] overflow-visible"
-        style={{ transform: 'translate3d(4%, -1%, 0)', transformOrigin: '50% 100%' }}
+        className="absolute bottom-[16%] right-[13%] z-20 h-[68%] w-[41%] overflow-visible"
+        style={{ transform: 'translate3d(0, -1%, 0) scale(0.95)', transformOrigin: '50% 100%' }}
         data-ai-battle-player="opponent"
       >
         <GenesisModelPreview
