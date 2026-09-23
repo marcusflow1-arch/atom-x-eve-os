@@ -109,7 +109,7 @@ export default function LunaSkillXpHud({
   }, []);
 
   const assignShowcaseCard = async (index, card, explicitUserCardId) => {
-    if (!card || isSaving) return;
+    if (combatMode || !card || isSaving) return;
     const userCardId = explicitUserCardId || card.user_card_id || card.id;
     if (!userCardId) return;
     try {
@@ -142,7 +142,7 @@ export default function LunaSkillXpHud({
   const activeSkillSetIndex = Math.max(0, orderedSkillSets.findIndex((set) => String(set.skill_set_id) === String(activeSkillSet?.skill_set_id)));
 
   const rotateSkillSet = async () => {
-    if (isSaving || orderedSkillSets.length < 2) return;
+    if (combatMode || isSaving || orderedSkillSets.length < 2) return;
     const next = orderedSkillSets[(activeSkillSetIndex + 1) % orderedSkillSets.length];
     if (!next?.skill_set_id) return;
     try {
@@ -172,9 +172,9 @@ export default function LunaSkillXpHud({
         <button
           type="button"
           onClick={rotateSkillSet}
-          disabled={isSaving || orderedSkillSets.length < 2}
-          aria-label="Switch skill genre"
-          title="Switch Genre"
+          disabled={combatMode || isSaving || orderedSkillSets.length < 2}
+          aria-label={combatMode ? 'Skill loadout locked during combat' : 'Switch skill genre'}
+          title={combatMode ? 'Combat loadout is locked' : 'Switch Genre'}
           className="absolute left-[-30px] top-[40px] z-50 flex h-[34px] w-[58px] items-center gap-1.5 border border-cyan-100/[0.14] bg-slate-950/92 px-2 text-left text-cyan-50/58 shadow-[0_0_16px_rgba(103,232,249,.05)] transition hover:border-cyan-100/30 hover:bg-cyan-100/[0.08] hover:text-white disabled:opacity-25"
         >
           <RefreshCw className={`h-3 w-3 shrink-0 ${isSaving ? 'animate-spin' : ''}`} />
