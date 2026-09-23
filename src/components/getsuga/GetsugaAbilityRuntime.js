@@ -755,9 +755,9 @@ export class GetsugaAbilityRuntime {
   update(dt) {
     if (this.disposed) return;
     const step = Math.min(.05, Math.max(0, dt));
-    this.mixer?.update(step);
+    if (!this.mixerOwnedExternally) this.mixer?.update(step);
 
-    if (!this.active && this.original && this.proxy) {
+    if (!this.active && this.original && this.proxy && this.proxy !== this.original) {
       const offset = this.followOffset.clone().applyQuaternion(this.original.quaternion);
       this.proxy.position.copy(this.original.position).add(offset);
       this.proxy.quaternion.copy(this.original.quaternion).multiply(this.followRotation);
@@ -820,18 +820,14 @@ export class GetsugaAbilityRuntime {
     this.pendingPlay = false;
     this.finish(false);
     this.disposed = true;
-    this.mixer?.stopAllAction();
-    if (this.original) this.original.visible = true;
-    if (this.proxy?.parent) this.proxy.parent.remove(this.proxy);
-    this.proxy?.traverse((node) => {
-      node.geometry?.dispose?.();
-      const materials = Array.isArray(node.material) ? node.material : [node.material];
-      materials.filter(Boolean).forEach((material) => material.dispose?.());
-    });
+    if (!this.mixerOwnedExternally) this.mixer?.stopAllAction();
+    // The Getsuga runtime is bound to the dashboard's actual character model.
+    // Scene ownership stays with genesisScene; never remove/dispose that model here.
     this.proxy = null;
     this.original = null;
     this.packageGltf = null;
     this.mixer = null;
+    this.mixerOwnedExternally = false;
     this.attackAction = null;
     this.idleAction = null;
     this.rest.clear();
