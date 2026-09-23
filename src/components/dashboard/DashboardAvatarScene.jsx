@@ -17,11 +17,17 @@ import {
 
 const FALLBACK_AVATAR = { gender: 'male', name: 'Player' };
 const CREATOR_CHILD = CREATOR_PARENTING_PREVIEW.children[0];
+const DEFAULT_BATTLE_HP = 1000;
 
 const unwrapBattleStatus = (response) => {
   const body = response?.data ?? response ?? {};
   if (body?.error) throw new Error(body.error);
   return body;
+};
+
+const finitePositive = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
 export default function DashboardAvatarScene({ focusMode: _focusMode = false }) {
@@ -108,6 +114,31 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     return local && opponent ? { local, opponent } : null;
   }, [battleMatch?.id, battleMatch?.status, battleMatch?.dashboard_channel, battleMatch?.player_ids, session.channel_id, session.players, user?.id]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (!battlePair?.opponent) {
+      delete window.__lunaAIBattleTarget;
+      return undefined;
+    }
+
+    const target = {
+      type: 'player',
+      playerId: String(battlePair.opponent.player_id),
+      displayName: battlePair.opponent.display_name || 'Opponent',
+      // The user-supplied Getsuga character faces +Z. A +90° yaw makes the
+      // local character and the embedded projectile travel screen-right toward
+      // the opponent in the dashboard battle composition.
+      facingYaw: Math.PI / 2,
+      screenAnchor: { x: 0.69, y: 0.46 },
+    };
+    window.__lunaAIBattleTarget = target;
+    window.dispatchEvent(new CustomEvent('lunaAIBattleTargetChanged', { detail: target }));
+
+    return () => {
+      if (window.__lunaAIBattleTarget?.playerId === target.playerId) delete window.__lunaAIBattleTarget;
+    };
+  }, [battlePair?.opponent?.player_id, battlePair?.opponent?.display_name]);
+
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const socialAvatarStage = roster.length > 1 ? (
     <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{ right: 'min(410px, 36vw)' }} aria-label="Shared dashboard">
@@ -120,6 +151,16 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     </div>
   ) : <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />;
 
+  const opponentMaxHp = finitePositive(
+    battlePair?.opponent?.max_hp ?? battlePair?.opponent?.maxHp ?? battleMatch?.opponent_max_hp,
+    DEFAULT_BATTLE_HP,
+  );
+  const opponentHp = Math.min(
+    opponentMaxHp,
+    Math.max(0, Number(battlePair?.opponent?.hp ?? battleMatch?.opponent_hp ?? opponentMaxHp) || opponentMaxHp),
+  );
+  const opponentHpPct = opponentMaxHp > 0 ? (opponentHp / opponentMaxHp) * 100 : 0;
+
   const battleAvatarStage = battlePair ? (
     <div
       className="pointer-events-none absolute inset-y-0 left-0 overflow-visible"
@@ -127,32 +168,59 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       aria-label="AI Battle third-person staging"
       data-ai-battle-staging="third-person"
     >
+      <style>{`[data-ai-battle-effect-surface] canvas{background:transparent!important}`}</style>
       <BattleSkillRail />
 
+      {/*
+        This is intentionally one oversized transparent battle/effect surface.
+        The model is visually staged on the left, while the canvas continues
+        almost to the far edge of the battle area so sword/projectile VFX do not
+        get clipped into a small rectangular "viewer" box.
+      */}
       <div
-        className="absolute bottom-[-5%] left-0 z-30 h-[105%] w-[52%] overflow-visible"
-        style={{ transform: 'translate3d(-6%, 7%, 0)', transformOrigin: '42% 100%' }}
+        className="absolute bottom-[-5%] left-0 z-30 h-[105%] w-[132%] overflow-visible bg-transparent"
+        style={{ transform: 'translate3d(-24%, 7%, 0)', transformOrigin: '50% 100%' }}
         data-ai-battle-player="local"
+        data-ai-battle-effect-surface="true"
       >
         <PlayerAvatarPreview
           controls="none"
           idleOnly
           skillEffects
-          initialYaw={Math.PI}
+          initialYaw={Math.PI / 2}
         />
       </div>
 
       <div
-        className="absolute bottom-[16%] right-[13%] z-20 h-[68%] w-[41%] overflow-visible"
+        className="absolute bottom-[16%] right-[13%] z-20 h-[68%] w-[41%] overflow-visible bg-transparent"
         style={{ transform: 'translate3d(0, -1%, 0) scale(0.95)', transformOrigin: '50% 100%' }}
         data-ai-battle-player="opponent"
       >
+        <div
+          className="absolute left-1/2 top-[1%] z-50 w-[220px] -translate-x-1/2 text-center"
+          data-ai-battle-enemy-hp="true"
+          aria-label={`${battlePair.opponent.display_name || 'Opponent'} health ${Math.round(opponentHp)} of ${Math.round(opponentMaxHp)}`}
+        >
+          <div className="mb-1 truncate text-[9px] font-black uppercase tracking-[0.12em] text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,.8)]">
+            {battlePair.opponent.display_name || 'Opponent'}
+          </div>
+          <div className="h-[13px] overflow-hidden rounded-full border border-white/15 bg-slate-950/80 p-[2px] shadow-[0_6px_20px_rgba(0,0,0,.45)] backdrop-blur-md">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-rose-500 via-red-400 to-orange-300 transition-[width] duration-300"
+              style={{ width: `${opponentHpPct}%` }}
+            />
+          </div>
+          <div className="mt-1 text-[9px] font-semibold tabular-nums text-white/85 drop-shadow-[0_2px_8px_rgba(0,0,0,.8)]">
+            {Math.round(opponentHp)} / {Math.round(opponentMaxHp)} HP
+          </div>
+        </div>
+
         <GenesisModelPreview
           config={battlePair.opponent.appearance || FALLBACK_AVATAR}
           compact
           controls="none"
           idleOnly
-          initialYaw={0}
+          initialYaw={-Math.PI / 2}
         />
       </div>
     </div>
