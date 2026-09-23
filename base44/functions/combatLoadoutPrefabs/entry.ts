@@ -9,7 +9,7 @@ function normalizeRows(rows: any[]) {
   return Array.from({ length: 3 }, (_, rowIndex) => {
     const row = rows?.[rowIndex];
     const slots = row?.skill_slots || row?.slots || {};
-    return Array.from({ length: 4 }, (_, slotIndex) => clean(slots[String(slotIndex)] || row?.[slotIndex] || ''));
+    return Array.from({ length: 5 }, (_, slotIndex) => clean(slots[String(slotIndex)] || row?.[slotIndex] || ''));
   });
 }
 
