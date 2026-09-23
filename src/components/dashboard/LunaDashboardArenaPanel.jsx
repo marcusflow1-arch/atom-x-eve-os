@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Check, ChevronRight, Crown, Gem, Layers, Loader2, Map, Shield,
+  Check, ChevronRight, Crown, Gem, Loader2, Map, Shield,
   Swords, Trophy, UserRound, Users, X, Zap
 } from 'lucide-react';
 import useBattleArena from '@/components/battle/useBattleArena';
