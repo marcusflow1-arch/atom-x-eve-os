@@ -20,23 +20,23 @@ const pct = (value, max) => Math.max(0, Math.min(100, 100 * Number(value || 0) /
 
 function CardButton({ card, player, disabled, onPlay, world }) {
   if (!card) {
-    return <div className="min-h-[92px] border border-white/[0.05] bg-white/[0.012] p-2 text-center text-[10px] text-white/94"><Layers className="mx-auto mt-4 h-4 w-4" /><span className="mt-2 block">Empty</span></div>;
+    return <div className="min-h-[92px] border border-white/[0.12] bg-white/[0.035] p-2 text-center text-[10px] text-white/94"><Layers className="mx-auto mt-4 h-4 w-4" /><span className="mt-2 block">Empty</span></div>;
   }
   const cooldown = player?.cooldowns?.[card.id] || 0;
   const resonance = world && (card.game_id === world.id || card.game_name === world.title);
   const blocked = disabled || cooldown > 0 || Number(player?.ap || 0) < Number(card.cost || 0);
   return (
-    <button type="button" disabled={blocked} onClick={() => onPlay(card.id)} className="relative min-h-[92px] overflow-hidden border border-white/[0.07] bg-white/[0.018] p-2 text-left disabled:opacity-35">
+    <button type="button" disabled={blocked} onClick={() => onPlay(card.id)} className="relative min-h-[92px] overflow-hidden border border-white/[0.15] bg-white/[0.045] p-2 text-left disabled:opacity-35">
       {card.image ? <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-24" /> : null}
       <div className="absolute inset-0 bg-gradient-to-t from-[#071019] via-[#071019]/84 to-transparent" />
       <div className="relative z-10 flex min-h-[76px] flex-col justify-end">
-        <span className="text-[11px] font-black uppercase tracking-[0.09em] text-cyan-100/32">
+        <span className="text-[11px] font-black uppercase tracking-[0.09em] text-cyan-100/76">
           {card.rarity} · {card.type}{card.element ? ' · ' + String(card.element).toUpperCase() : ''}
         </span>
-        <strong className="mt-1 line-clamp-1 text-[11px] text-white/76">{card.name}</strong>
+        <strong className="mt-1 line-clamp-1 text-[11px] text-white/98">{card.name}</strong>
         <div className="mt-1 flex items-center justify-between text-[12px]">
           <span className="text-white/96">{card.effect} {Number(card.value || 0) + (resonance ? Math.max(5, Math.round(Number(card.value || 0) * .12) + Number(card.ascension || 0) * 2) : 0)}</span>
-          <span className="font-bold text-cyan-100/52">{card.cost} AP</span>
+          <span className="font-bold text-cyan-100/89">{card.cost} AP</span>
         </div>
         <div className="mt-1 flex items-center justify-between text-[11px] text-white/94">
           <span>Lv {card.level || 1} · Stage {card.stage || 1}</span>
@@ -109,14 +109,14 @@ function CombatHUD({ arena, onExitStage }) {
   return (
     <div className="pointer-events-none flex h-full items-end justify-center p-5">
       <section className="pointer-events-auto w-full max-w-[1040px] overflow-hidden border border-white/[0.09] bg-[#071019]/88 shadow-[0_30px_90px_rgba(0,0,0,.48)] backdrop-blur-2xl">
-        <header className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-4 py-2.5">
+        <header className="flex items-center justify-between gap-4 border-b border-white/[0.13] px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-3">
             <div className="grid h-8 w-8 shrink-0 place-items-center rotate-45 border border-cyan-100/12 bg-cyan-100/[0.035]"><Swords className="h-3.5 w-3.5 -rotate-45 text-cyan-100/55" /></div>
-            <div className="min-w-0"><p className="text-[11px] font-black uppercase tracking-[0.15em] text-cyan-100/28">{e.world?.title} · {e.route?.type?.replaceAll('_', ' ')}</p><h3 className="truncate text-[11px] font-semibold text-white/74">{e.route?.title}</h3></div>
+            <div className="min-w-0"><p className="text-[11px] font-black uppercase tracking-[0.15em] text-cyan-100/72">{e.world?.title} · {e.route?.type?.replaceAll('_', ' ')}</p><h3 className="truncate text-[11px] font-semibold text-white/97">{e.route?.title}</h3></div>
           </div>
           <div className="flex items-center gap-3">
             {e.deadline > 0 && <span className="text-[11px] tabular-nums text-amber-100/48">{Math.ceil(remaining)}s</span>}
-            <button type="button" onClick={onExitStage} className="grid h-7 w-7 place-items-center border border-white/[0.06] text-white/75 hover:text-white" aria-label="Minimize battle HUD"><X className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={onExitStage} className="grid h-7 w-7 place-items-center border border-white/[0.13] text-white/97 hover:text-white" aria-label="Minimize battle HUD"><X className="h-3.5 w-3.5" /></button>
           </div>
         </header>
 
@@ -128,21 +128,21 @@ function CombatHUD({ arena, onExitStage }) {
               <p className="text-[12px] font-black uppercase tracking-[0.13em] text-white/95">Dashboard Battle Lobby</p>
               <h4 className="mt-1 text-[13px] font-semibold text-white/96">{duel ? 'Both players must accept before the duel begins.' : 'Assemble the expedition on the host dashboard.'}</h4>
               <div className="mt-3 flex flex-wrap gap-2">
-                {(e.players || []).map((player) => <span key={player.id} className="flex items-center gap-2 border border-emerald-100/10 bg-emerald-100/[0.025] px-2.5 py-1.5 text-[10px] text-white/88"><Check className="h-3 w-3 text-emerald-200/45" />{player.name} · {player.cards?.length || 0} cards</span>)}
-                {(e.invited_ids || []).filter((id) => !(e.players || []).some((player) => player.id === id)).map((id) => <span key={id} className="flex items-center gap-2 border border-white/[0.06] px-2.5 py-1.5 text-[10px] text-white/96"><Users className="h-3 w-3" />Waiting for player</span>)}
+                {(e.players || []).map((player) => <span key={player.id} className="flex items-center gap-2 border border-emerald-100/10 bg-emerald-100/[0.025] px-2.5 py-1.5 text-[10px] text-white"><Check className="h-3 w-3 text-emerald-200/45" />{player.name} · {player.cards?.length || 0} cards</span>)}
+                {(e.invited_ids || []).filter((id) => !(e.players || []).some((player) => player.id === id)).map((id) => <span key={id} className="flex items-center gap-2 border border-white/[0.13] px-2.5 py-1.5 text-[10px] text-white/96"><Users className="h-3 w-3" />Waiting for player</span>)}
               </div>
             </div>
             <div className="flex items-center gap-2">
               {!joined ? (
                 <>
-                  <button type="button" disabled={arena.busy} onClick={() => run(accept, 'Joined battle lobby.')} className="h-10 border border-cyan-100/14 bg-cyan-100/[0.06] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-50/70">Accept & Join Dashboard</button>
-                  <button type="button" disabled={arena.busy} onClick={() => run(() => arena.command('decline'))} className="h-10 border border-white/[0.06] px-3 text-[10px] text-white/75">Decline</button>
+                  <button type="button" disabled={arena.busy} onClick={() => run(accept, 'Joined battle lobby.')} className="h-10 border border-cyan-100/14 bg-cyan-100/[0.12] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-50/70">Accept & Join Dashboard</button>
+                  <button type="button" disabled={arena.busy} onClick={() => run(() => arena.command('decline'))} className="h-10 border border-white/[0.13] px-3 text-[10px] text-white/97">Decline</button>
                 </>
               ) : isHost ? (
-                <button type="button" disabled={arena.busy || !ready} onClick={() => run(() => arena.command('start'), 'Battle started.')} className="h-10 border border-cyan-100/14 bg-cyan-100/[0.06] px-5 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-50/70 disabled:opacity-35">{ready ? 'Enter Battle' : 'Waiting for Players'}</button>
+                <button type="button" disabled={arena.busy || !ready} onClick={() => run(() => arena.command('start'), 'Battle started.')} className="h-10 border border-cyan-100/14 bg-cyan-100/[0.12] px-5 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-50/70 disabled:opacity-35">{ready ? 'Enter Battle' : 'Waiting for Players'}</button>
               ) : (
                 <div className="flex items-center gap-2">
-                  {!inHostDashboard && <button type="button" onClick={() => run(() => joinDashboard({ id: e.host_id, name: e.host_name }))} className="h-10 border border-white/[0.07] px-4 text-[10px] text-white/84">Join Host Dashboard</button>}
+                  {!inHostDashboard && <button type="button" onClick={() => run(() => joinDashboard({ id: e.host_id, name: e.host_name }))} className="h-10 border border-white/[0.15] px-4 text-[10px] text-white/99">Join Host Dashboard</button>}
                   <span className="text-[10px] text-white/96">Waiting for {e.host_name} to start.</span>
                 </div>
               )}
@@ -150,13 +150,13 @@ function CombatHUD({ arena, onExitStage }) {
           </div>
         ) : finished ? (
           <div className="flex items-center justify-between gap-5 p-4">
-            <div className="flex items-center gap-3"><Trophy className="h-6 w-6 text-amber-100/48" /><div><p className="text-[12px] font-black uppercase tracking-[0.14em] text-white/95">Encounter Complete</p><h4 className="mt-1 text-[14px] font-semibold text-white/96">{e.status === 'victory' ? (duel ? (e.winner_id === me?.id ? 'Victory' : 'Defeat') : 'Route secured') : 'Expedition ended'}</h4><p className="mt-1 text-[10px] text-white/75">{canClaim ? (claimed ? 'Field chest opened.' : 'Your field chest is ready.') : 'Your avatar is ready for the next encounter.'}</p></div></div>
-            {canClaim && !claimed ? <button type="button" disabled={arena.busy} onClick={() => run(() => arena.command('claim'), 'Field chest opened.')} className="flex h-10 items-center gap-2 border border-amber-100/14 bg-amber-100/[0.05] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-amber-50/68"><Gem className="h-3.5 w-3.5" />Open Chest · {e.route?.xp} XP</button> : <button type="button" onClick={() => { arenaPresentation.clear(); onExitStage(); }} className="h-10 border border-white/[0.06] px-4 text-[10px] text-white/80">Return to AI Battle</button>}
+            <div className="flex items-center gap-3"><Trophy className="h-6 w-6 text-amber-100/48" /><div><p className="text-[12px] font-black uppercase tracking-[0.14em] text-white/95">Encounter Complete</p><h4 className="mt-1 text-[14px] font-semibold text-white/96">{e.status === 'victory' ? (duel ? (e.winner_id === me?.id ? 'Victory' : 'Defeat') : 'Route secured') : 'Expedition ended'}</h4><p className="mt-1 text-[10px] text-white/97">{canClaim ? (claimed ? 'Field chest opened.' : 'Your field chest is ready.') : 'Your avatar is ready for the next encounter.'}</p></div></div>
+            {canClaim && !claimed ? <button type="button" disabled={arena.busy} onClick={() => run(() => arena.command('claim'), 'Field chest opened.')} className="flex h-10 items-center gap-2 border border-amber-100/14 bg-amber-100/[0.05] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-amber-50/68"><Gem className="h-3.5 w-3.5" />Open Chest · {e.route?.xp} XP</button> : <button type="button" onClick={() => { arenaPresentation.clear(); onExitStage(); }} className="h-10 border border-white/[0.13] px-4 text-[10px] text-white/98">Return to AI Battle</button>}
           </div>
         ) : e.phase === 'camp' ? (
           <div className="flex items-center justify-between gap-5 p-4">
-            <div><p className="text-[12px] font-black uppercase tracking-[0.13em] text-cyan-100/28">Dungeon Camp</p><h4 className="mt-1 text-[13px] font-semibold text-white/96">Room cleared. Catch your breath.</h4><p className="mt-1 text-[10px] text-white/75">Continuing restores 20% HP and refreshes action points.</p></div>
-            <button type="button" disabled={!isHost || arena.busy} onClick={() => run(() => arena.command('continue'))} className="flex h-10 items-center gap-2 border border-cyan-100/14 bg-cyan-100/[0.06] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-50/70 disabled:opacity-35">{isHost ? 'Enter Next Room' : 'Waiting for Host'}<ChevronRight className="h-3.5 w-3.5" /></button>
+            <div><p className="text-[12px] font-black uppercase tracking-[0.13em] text-cyan-100/72">Dungeon Camp</p><h4 className="mt-1 text-[13px] font-semibold text-white/96">Room cleared. Catch your breath.</h4><p className="mt-1 text-[10px] text-white/97">Continuing restores 20% HP and refreshes action points.</p></div>
+            <button type="button" disabled={!isHost || arena.busy} onClick={() => run(() => arena.command('continue'))} className="flex h-10 items-center gap-2 border border-cyan-100/14 bg-cyan-100/[0.12] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-50/70 disabled:opacity-35">{isHost ? 'Enter Next Room' : 'Waiting for Host'}<ChevronRight className="h-3.5 w-3.5" /></button>
           </div>
         ) : defending ? (
           <div className="p-4">
@@ -167,22 +167,22 @@ function CombatHUD({ arena, onExitStage }) {
               <i className="absolute bottom-[-3px] top-[-3px] w-px bg-white/80 shadow-[0_0_8px_rgba(255,255,255,.5)]" style={{ left: String(progress) + '%' }} />
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2">
-              <button type="button" disabled={!mine || arena.busy} onClick={() => run(() => arena.command('brace'))} className="border border-white/[0.07] bg-white/[0.02] py-2.5 text-[10px] text-white/90 disabled:opacity-30"><Shield className="mx-auto mb-1 h-3.5 w-3.5" />Brace<span className="mt-0.5 block text-[11px] text-white/65">60% less damage</span></button>
-              <button type="button" disabled={!mine || arena.busy} onClick={() => run(() => arena.command('evade'))} className="border border-cyan-100/10 bg-cyan-100/[0.025] py-2.5 text-[10px] text-cyan-50/58 disabled:opacity-30">Evade<span className="mt-0.5 block text-[11px] text-white/65">Blue window</span></button>
-              <button type="button" disabled={!mine || arena.busy} onClick={() => run(() => arena.command('parry'))} className="border border-amber-100/12 bg-amber-100/[0.035] py-2.5 text-[10px] text-amber-50/62 disabled:opacity-30">Parry<span className="mt-0.5 block text-[11px] text-white/65">Gold · counter</span></button>
+              <button type="button" disabled={!mine || arena.busy} onClick={() => run(() => arena.command('brace'))} className="border border-white/[0.15] bg-white/[0.05] py-2.5 text-[10px] text-white disabled:opacity-30"><Shield className="mx-auto mb-1 h-3.5 w-3.5" />Brace<span className="mt-0.5 block text-[11px] text-white/95">60% less damage</span></button>
+              <button type="button" disabled={!mine || arena.busy} onClick={() => run(() => arena.command('evade'))} className="border border-cyan-100/10 bg-cyan-100/[0.025] py-2.5 text-[10px] text-cyan-50/58 disabled:opacity-30">Evade<span className="mt-0.5 block text-[11px] text-white/95">Blue window</span></button>
+              <button type="button" disabled={!mine || arena.busy} onClick={() => run(() => arena.command('parry'))} className="border border-amber-100/12 bg-amber-100/[0.035] py-2.5 text-[10px] text-amber-50/62 disabled:opacity-30">Parry<span className="mt-0.5 block text-[11px] text-white/95">Gold · counter</span></button>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-[1fr_190px] gap-3 p-4">
             <div>
-              <div className="mb-2 flex items-center justify-between"><div><p className="text-[12px] font-black uppercase tracking-[0.13em] text-white/95">Round {e.round}</p><h4 className="mt-1 text-[11px] font-semibold text-white/95">{mine ? 'Your move. Choose a card or recover AP.' : (target?.name || 'Player') + ' is choosing.'}</h4></div><span className="flex items-center gap-1 text-[11px] text-cyan-100/50"><Zap className="h-3.5 w-3.5" />{me?.ap || 0} / 5 AP</span></div>
+              <div className="mb-2 flex items-center justify-between"><div><p className="text-[12px] font-black uppercase tracking-[0.13em] text-white/95">Round {e.round}</p><h4 className="mt-1 text-[11px] font-semibold text-white/95">{mine ? 'Your move. Choose a card or recover AP.' : (target?.name || 'Player') + ' is choosing.'}</h4></div><span className="flex items-center gap-1 text-[11px] text-cyan-100/88"><Zap className="h-3.5 w-3.5" />{me?.ap || 0} / 5 AP</span></div>
               <div className="grid grid-cols-4 gap-2">
                 {[0, 1, 2, 3].map((index) => <CardButton key={index} card={me?.cards?.[index]} player={me} disabled={!mine || arena.busy || e.phase !== 'turn'} world={e.world} onPlay={(cardId) => run(() => arena.command('card', { card_id: cardId }))} />)}
               </div>
             </div>
             <div className="grid grid-rows-2 gap-2">
-              <button type="button" disabled={!mine || arena.busy || e.phase !== 'turn'} onClick={() => run(() => arena.command('strike'))} className="flex items-center justify-center gap-2 border border-rose-100/12 bg-rose-100/[0.04] text-[10px] font-black uppercase tracking-[0.08em] text-rose-50/60 disabled:opacity-30"><Swords className="h-3.5 w-3.5" />Strike<span className="text-[11px] font-normal text-white/65">+1 AP</span></button>
-              <button type="button" disabled={!mine || arena.busy || e.phase !== 'turn'} onClick={() => run(() => arena.command('guard'))} className="flex items-center justify-center gap-2 border border-cyan-100/10 bg-cyan-100/[0.03] text-[10px] font-black uppercase tracking-[0.08em] text-cyan-50/56 disabled:opacity-30"><Shield className="h-3.5 w-3.5" />Guard<span className="text-[11px] font-normal text-white/65">+18 shield</span></button>
+              <button type="button" disabled={!mine || arena.busy || e.phase !== 'turn'} onClick={() => run(() => arena.command('strike'))} className="flex items-center justify-center gap-2 border border-rose-100/12 bg-rose-100/[0.04] text-[10px] font-black uppercase tracking-[0.08em] text-rose-50/60 disabled:opacity-30"><Swords className="h-3.5 w-3.5" />Strike<span className="text-[11px] font-normal text-white/95">+1 AP</span></button>
+              <button type="button" disabled={!mine || arena.busy || e.phase !== 'turn'} onClick={() => run(() => arena.command('guard'))} className="flex items-center justify-center gap-2 border border-cyan-100/10 bg-cyan-100/[0.075] text-[10px] font-black uppercase tracking-[0.08em] text-cyan-50/56 disabled:opacity-30"><Shield className="h-3.5 w-3.5" />Guard<span className="text-[11px] font-normal text-white/95">+18 shield</span></button>
             </div>
           </div>
         )}
@@ -333,13 +333,13 @@ export default function LunaDashboardArenaPanel({ mode }) {
   }
 
   return (
-    <section className="shrink-0 border-b border-white/[0.06] bg-black/[0.10] px-5 py-3">
+    <section className="shrink-0 border-b border-white/[0.13] bg-slate-950/58 px-5 py-3">
       {pending.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {pending.slice(0, 3).map((encounter) => (
-            <button key={encounter.id} type="button" onClick={() => arenaPresentation.setEncounter(encounter.id)} className="flex items-center gap-2 border border-cyan-100/10 bg-cyan-100/[0.03] px-3 py-2 text-left">
+            <button key={encounter.id} type="button" onClick={() => arenaPresentation.setEncounter(encounter.id)} className="flex items-center gap-2 border border-cyan-100/10 bg-cyan-100/[0.075] px-3 py-2 text-left">
               <span className="h-2 w-2 rounded-full bg-cyan-200/60" />
-              <span><strong className="block text-[10px] text-white/92">{encounter.players?.some((player) => player.id === arena.user?.id) ? 'Resume ' + encounter.route.title : encounter.host_name + ' invited you'}</strong><small className="mt-0.5 block text-[11px] uppercase tracking-[0.07em] text-white/65">{encounter.world?.title} · {encounter.status}</small></span>
+              <span><strong className="block text-[10px] text-white/92">{encounter.players?.some((player) => player.id === arena.user?.id) ? 'Resume ' + encounter.route.title : encounter.host_name + ' invited you'}</strong><small className="mt-0.5 block text-[11px] uppercase tracking-[0.07em] text-white/95">{encounter.world?.title} · {encounter.status}</small></span>
             </button>
           ))}
         </div>
@@ -347,46 +347,46 @@ export default function LunaDashboardArenaPanel({ mode }) {
 
       <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(220px,.55fr)_minmax(260px,.75fr)_auto] gap-3">
         <div>
-          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-cyan-100/28">Dashboard Battle Stage</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-cyan-100/72">Dashboard Battle Stage</p>
           <div className="mt-2 flex gap-2">
             {routes.map((item) => {
               const Icon = routeIcon[item.id] || Swords;
-              return <button key={item.id} type="button" onClick={() => { setRouteId(item.id); setPreparedField(null); setInvites([]); }} className={'min-w-[130px] flex-1 border px-3 py-2 text-left ' + (route?.id === item.id ? 'border-cyan-100/16 bg-cyan-100/[0.05]' : 'border-white/[0.05] bg-white/[0.012]')}><div className="flex items-center gap-2"><Icon className="h-3.5 w-3.5 text-white/78" /><strong className="text-[11px] text-white/94">{item.title}</strong></div><span className="mt-1 block text-[11px] text-white/66">{item.min === item.max ? item.min : item.min + '–' + item.max} players · {item.xp} XP</span></button>;
+              return <button key={item.id} type="button" onClick={() => { setRouteId(item.id); setPreparedField(null); setInvites([]); }} className={'min-w-[130px] flex-1 border px-3 py-2 text-left ' + (route?.id === item.id ? 'border-cyan-100/16 bg-cyan-100/[0.10]' : 'border-white/[0.12] bg-white/[0.035]')}><div className="flex items-center gap-2"><Icon className="h-3.5 w-3.5 text-white/98" /><strong className="text-[11px] text-white/94">{item.title}</strong></div><span className="mt-1 block text-[11px] text-white/95">{item.min === item.max ? item.min : item.min + '–' + item.max} players · {item.xp} XP</span></button>;
             })}
           </div>
         </div>
 
         <div>
-          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/65">Game World</p>
-          <select value={world?.id || ''} onChange={(event) => { setWorldId(event.target.value); setPreparedField(null); }} className="mt-2 h-[46px] w-full border border-white/[0.06] bg-[#071019] px-3 text-[11px] text-white/90 outline-none">
+          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/95">Game World</p>
+          <select value={world?.id || ''} onChange={(event) => { setWorldId(event.target.value); setPreparedField(null); }} className="mt-2 h-[46px] w-full border border-white/[0.13] bg-[#071019] px-3 text-[11px] text-white outline-none">
             {(hub?.worlds || []).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
           </select>
           <p className="mt-1 text-[11px] text-white/94">Cards from this world gain resonance.</p>
           {preparedField && (
             <div className="mt-1.5 border border-amber-100/10 bg-amber-100/[0.025] px-2 py-1.5">
               <span className="block truncate text-[11px] font-black uppercase tracking-[0.08em] text-amber-100/44">Field discovery prepared</span>
-              <strong className="mt-0.5 block truncate text-[12px] text-white/86">{preparedField.title} · {Math.round(preparedField.distance_m)} m</strong>
+              <strong className="mt-0.5 block truncate text-[12px] text-white/99">{preparedField.title} · {Math.round(preparedField.distance_m)} m</strong>
             </div>
           )}
         </div>
 
         <div>
-          <div className="flex items-center justify-between"><p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/65">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[11px] text-white/94">{queueWaiting ? `${queue?.player_snapshot?.jawan?.name || 'Jawan'} locked` : (hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`)}</span></div>
+          <div className="flex items-center justify-between"><p className="text-[12px] font-black uppercase tracking-[0.15em] text-white/95">{mode === 'pvp' ? 'Matchmaking / Opponent' : 'Party / Opponent'}</p><span className="text-[11px] text-white/94">{queueWaiting ? `${queue?.player_snapshot?.jawan?.name || 'Jawan'} locked` : (hub?.player?.jawan?.name || `${invites.length + 1}/${route?.max || 1}`)}</span></div>
           {mode === 'pvp' && !queueWaiting && <div className="mb-1.5 flex gap-1">
-            {queueModes.map(([id, label]) => <button key={id} type="button" onClick={() => setQueueType(id)} className={'border px-2 py-1 text-[6px] font-black uppercase tracking-[0.08em] ' + (queueType === id ? 'border-cyan-100/16 bg-cyan-100/[0.05] text-cyan-50/70' : 'border-white/[0.05] text-white/35')}>{label}</button>)}
+            {queueModes.map(([id, label]) => <button key={id} type="button" onClick={() => setQueueType(id)} className={'border px-2 py-1 text-[6px] font-black uppercase tracking-[0.08em] ' + (queueType === id ? 'border-cyan-100/16 bg-cyan-100/[0.10] text-cyan-50/70' : 'border-white/[0.12] text-white/97')}>{label}</button>)}
           </div>}
           <div className="mt-2 flex max-h-[56px] gap-1.5 overflow-x-auto">
             {mode === 'pvp' && (
-              <div className="flex min-w-[156px] items-center gap-2 border border-cyan-100/22 bg-cyan-100/[0.055] px-2.5 py-1.5 text-left shadow-[0_0_18px_rgba(103,232,249,.05)]">
-                <div className="grid h-8 w-8 shrink-0 place-items-center border border-cyan-100/14 bg-cyan-100/[0.04]"><UserRound className="h-4 w-4 text-cyan-100/70" /></div>
-                <span className="min-w-0"><strong className="block truncate text-[10px] font-semibold text-white">Luna Sparring Bot</strong><small className="mt-0.5 block truncate text-[11px] uppercase tracking-[0.07em] text-cyan-100/60">Demo opponent · Ready</small></span>
-                <Check className="ml-auto h-3.5 w-3.5 text-cyan-100/70" />
+              <div className="flex min-w-[156px] items-center gap-2 border border-cyan-100/22 bg-cyan-100/[0.11] px-2.5 py-1.5 text-left shadow-[0_0_18px_rgba(103,232,249,.05)]">
+                <div className="grid h-8 w-8 shrink-0 place-items-center border border-cyan-100/14 bg-cyan-100/[0.09]"><UserRound className="h-4 w-4 text-cyan-100/97" /></div>
+                <span className="min-w-0"><strong className="block truncate text-[10px] font-semibold text-white">Luna Sparring Bot</strong><small className="mt-0.5 block truncate text-[11px] uppercase tracking-[0.07em] text-cyan-100/93">Demo opponent · Ready</small></span>
+                <Check className="ml-auto h-3.5 w-3.5 text-cyan-100/97" />
               </div>
             )}
             {contacts.length ? contacts.map((contact) => {
               const chosen = invites.includes(contact.id);
-              return <button key={contact.id} type="button" onClick={() => toggleInvite(contact.id)} className={'flex min-w-[110px] items-center gap-2 border px-2 py-1.5 text-left ' + (chosen ? 'border-cyan-100/15 bg-cyan-100/[0.05]' : 'border-white/[0.05] bg-white/[0.012]')}><div className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden border border-white/[0.05]">{contact.portrait ? <img src={contact.portrait} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-3.5 w-3.5 text-white/96" />}</div><span className="min-w-0"><strong className="block truncate text-[10px] text-white/88">{contact.name}</strong><small className="block truncate text-[11px] text-white/94">{contact.in_dashboard ? 'On dashboard' : contact.kind}</small></span>{chosen && <Check className="ml-auto h-3 w-3 text-cyan-100/45" />}</button>;
-            }) : <div className="flex h-[46px] items-center px-3 text-[10px] text-white/66">Friends and dashboard visitors appear here.</div>}
+              return <button key={contact.id} type="button" onClick={() => toggleInvite(contact.id)} className={'flex min-w-[110px] items-center gap-2 border px-2 py-1.5 text-left ' + (chosen ? 'border-cyan-100/15 bg-cyan-100/[0.10]' : 'border-white/[0.12] bg-white/[0.035]')}><div className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden border border-white/[0.12]">{contact.portrait ? <img src={contact.portrait} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-3.5 w-3.5 text-white/96" />}</div><span className="min-w-0"><strong className="block truncate text-[10px] text-white">{contact.name}</strong><small className="block truncate text-[11px] text-white/94">{contact.in_dashboard ? 'On dashboard' : contact.kind}</small></span>{chosen && <Check className="ml-auto h-3 w-3 text-cyan-100/84" />}</button>;
+            }) : <div className="flex h-[46px] items-center px-3 text-[10px] text-white/95">Friends and dashboard visitors appear here.</div>}
           </div>
         </div>
 
@@ -394,7 +394,7 @@ export default function LunaDashboardArenaPanel({ mode }) {
           type="button"
           onClick={mode === 'pvp' && invites.length === 0 ? (queueWaiting ? cancelPvpQueue : queuePvp) : create}
           disabled={creating || !hub?.player?.cards?.length || !route || !world || (mode !== 'pvp' && invites.length + 1 < Number(route?.min || 1))}
-          className={`mt-[18px] flex h-[46px] min-w-[130px] items-center justify-center gap-2 border px-4 text-[10px] font-black uppercase tracking-[0.1em] disabled:opacity-30 ${queueWaiting ? 'border-amber-100/16 bg-amber-100/[0.05] text-amber-50/65' : 'border-cyan-100/16 bg-cyan-100/[0.065] text-cyan-50/68'}`}
+          className={`mt-[18px] flex h-[46px] min-w-[130px] items-center justify-center gap-2 border px-4 text-[10px] font-black uppercase tracking-[0.1em] disabled:opacity-30 ${queueWaiting ? 'border-amber-100/16 bg-amber-100/[0.05] text-amber-50/65' : 'border-cyan-100/16 bg-cyan-100/[0.13] text-cyan-50/68'}`}
         >
           {creating || queueWaiting ? <Loader2 className={`h-3.5 w-3.5 ${creating || queueWaiting ? 'animate-spin' : ''}`} /> : <Swords className="h-3.5 w-3.5" />}
           {mode === 'pvp' && invites.length === 0 ? (queueWaiting ? 'Cancel Queue' : 'Queue Search') : mode === 'pvp' ? 'Challenge' : 'Deploy'}
