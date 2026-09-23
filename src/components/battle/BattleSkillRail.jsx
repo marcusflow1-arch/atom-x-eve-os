@@ -54,26 +54,14 @@ function BattleCard({ card, index }) {
 }
 
 export default function BattleSkillRail() {
-  const { slots, skills } = useSkillBookLoadout();
+  const { slots } = useSkillBookLoadout();
 
-  const cards = useMemo(() => {
-    const equipped = [...(slots || [])]
-      .sort((a, b) => Number(a?.index || 0) - Number(b?.index || 0))
-      .map((slot) => slot?.card)
-      .filter(Boolean);
-
-    const used = new Set(equipped.map(cardId).filter(Boolean));
-    const ownedFallback = (skills || [])
-      .filter((skill) => skill?.owned !== false)
-      .filter((skill) => {
-        const id = cardId(skill);
-        return !id || !used.has(id);
-      });
-
-    return [...equipped, ...ownedFallback].slice(0, 5);
-  }, [slots, skills]);
-
-  if (!cards.length) return null;
+  // Preserve the logical slot index. AI Battle never fills empty slots with
+  // unrelated owned cards because the number key must represent the card the
+  // player explicitly equipped to that same slot.
+  const cards = useMemo(() => Array.from({ length: 5 }, (_, index) => (
+    (slots || []).find((slot) => Number(slot?.index) === index)?.card || null
+  )), [slots]);
 
   return (
     <div
@@ -89,14 +77,22 @@ export default function BattleSkillRail() {
         <div className="mt-[2px] h-px w-full bg-gradient-to-r from-transparent via-cyan-100/34 to-transparent" />
 
         <div className="mt-[8px] flex w-full items-start justify-between gap-3 px-[2%]">
-          {cards.map((card, index) => <BattleCard key={`${cardId(card) || cardTitle(card)}-${index}`} card={card} index={index} />)}
-          {Array.from({ length: Math.max(0, 5 - cards.length) }, (_, offset) => (
+          {cards.map((card, index) => card ? (
+            <BattleCard key={`${cardId(card) || cardTitle(card)}-${index}`} card={card} index={index} />
+          ) : (
             <div
-              key={`empty-${offset}`}
+              key={`empty-${index}`}
               className="relative h-[112px] w-[74px] shrink-0 border border-white/[0.07] bg-slate-950/[0.08]"
-              aria-hidden="true"
+              data-ai-battle-skill-card={index + 1}
+              aria-label={`Skill Slot ${index + 1} empty`}
             >
               <div className="absolute inset-[3px] border border-white/[0.025]" />
+              <span className="absolute left-[5px] top-[5px] border border-white/[0.08] bg-slate-950/55 px-1.5 py-0.5 text-[5px] font-black text-white/32">
+                {index + 1}
+              </span>
+              <span className="absolute inset-x-0 bottom-3 text-center text-[5px] font-black uppercase tracking-[0.12em] text-white/20">
+                Empty
+              </span>
             </div>
           ))}
         </div>
