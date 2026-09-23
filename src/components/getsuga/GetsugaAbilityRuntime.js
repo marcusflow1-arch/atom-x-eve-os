@@ -769,11 +769,22 @@ export class GetsugaAbilityRuntime {
   }
 
   update(dt) {
-    if (!this.active || this.disposed) return;
-    this.time += Math.min(.05, Math.max(0, dt));
+    if (this.disposed) return;
+    const step = Math.min(.05, Math.max(0, dt));
+    this.mixer?.update(step);
+
+    if (!this.active && this.original && this.proxy) {
+      const offset = this.followOffset.clone().applyQuaternion(this.original.quaternion);
+      this.proxy.position.copy(this.original.position).add(offset);
+      this.proxy.quaternion.copy(this.original.quaternion).multiply(this.followRotation);
+      this.proxy.updateMatrixWorld(true);
+    }
+    if (!this.active) return;
+
+    this.time += step;
     const frame = this.time * FPS + 1;
 
-    this.applyPose(frame);
+    // Exact GLB animation owns the skeleton pose; effects only follow its timeline.
     this.syncLocalFrame();
     this.updateBlade(frame);
     this.updateAura(frame);
