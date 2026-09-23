@@ -1,14 +1,76 @@
 import * as THREE from 'three';
-import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Adapted from the uploaded Getsuga Tensho Three.js package. The source package
-// runs at 24 fps with the crescent releasing on frame 84. Luna keeps that timing
-// while binding the effect to the player's current avatar instead of the demo rig.
+// Exact character/animation runtime from the uploaded Getsuga Tensho package.
+// The packaged GLB is stored as gzip+base64 public chunks so Base44 can serve it
+// without altering the binary rig. Skill Slot 1 uses its embedded GetsugaTensho
+// clip and this same character remains on-screen in a generated idle between casts.
 const FPS = 24;
 const RELEASE_FRAME = 84;
 const DURATION = 7;
 const IMPACT_TIME = 5.02;
 const RELEASE_TIME = (RELEASE_FRAME - 1) / FPS;
+const MODEL_PARTS = [
+  '/getsuga/runtime/part-00.txt',
+  '/getsuga/runtime/part-01.txt',
+  '/getsuga/runtime/part-02.txt',
+  '/getsuga/runtime/part-03.txt',
+  '/getsuga/runtime/part-04.txt',
+  '/getsuga/runtime/part-05.txt',
+  '/getsuga/runtime/part-06.txt',
+  '/getsuga/runtime/tail/tail-00.txt',
+];
+let packagedModelBytesPromise = null;
+
+async function packagedModelBytes() {
+  if (!packagedModelBytesPromise) {
+    packagedModelBytesPromise = (async () => {
+      const encoded = (await Promise.all(MODEL_PARTS.map(async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Getsuga model segment failed: ${url}`);
+        return response.text();
+      }))).join('').replace(/\s+/g, '');
+      const compressed = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
+      if (typeof DecompressionStream === 'undefined') {
+        throw new Error('This browser does not support the Getsuga model decompressor.');
+      }
+      return new Response(
+        new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip')),
+      ).arrayBuffer();
+    })();
+  }
+  return packagedModelBytesPromise;
+}
+
+async function loadPackagedCharacter() {
+  const bytes = await packagedModelBytes();
+  return new GLTFLoader().parseAsync(bytes, '');
+}
+
+function createIdleClip(attackClip) {
+  const duration = 2.8;
+  const times = [0, duration * .5, duration];
+  const tracks = attackClip.tracks.map((source) => {
+    const interpolant = source.createInterpolant();
+    const base = Array.from(interpolant.evaluate(0));
+    const middle = [...base];
+    const name = String(source.name || '').toLowerCase();
+
+    if (source instanceof THREE.VectorKeyframeTrack && /pelvis.*position/.test(name) && middle.length >= 3) {
+      middle[1] += .008;
+    }
+    if (source instanceof THREE.QuaternionKeyframeTrack && /(spine_01|spine_02|neck_01).*quaternion/.test(name) && middle.length >= 4) {
+      const q = new THREE.Quaternion(...middle);
+      const amount = name.includes('neck_01') ? .006 : .012;
+      q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(amount, 0, 0)));
+      middle.splice(0, 4, q.x, q.y, q.z, q.w);
+    }
+
+    const values = [...base, ...middle, ...base];
+    return new source.constructor(source.name, times, values);
+  });
+  return new THREE.AnimationClip('GetsugaIdle', duration, tracks);
+}
 
 const FX_CURVES = {
   bladeGlow: [[1, 0], [12, 0], [26, 1], [128, 1], [158, 0]],
