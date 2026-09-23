@@ -47,9 +47,9 @@ function PartyFormation({ players, activeId, lastEvent, duel = false }) {
     <div className="relative h-full w-full">
       {players.map((player, index) => {
         const spread = count === 1 ? 0 : (index - (count - 1) / 2);
-        const x = (duel ? 58 : 50) + spread * Math.min(21, 52 / count);
-        const y = (duel ? 1 : 5) + Math.abs(spread) * 3.5;
-        const scale = Math.max(.7, 1 - Math.abs(spread) * .07);
+        const x = (duel ? 67 : 50) + spread * Math.min(21, 52 / count);
+        const y = (duel ? 9 : 5) + Math.abs(spread) * 3.5;
+        const scale = duel ? 1.08 : Math.max(.7, 1 - Math.abs(spread) * .07);
         return (
           <div
             key={player.id}
@@ -98,7 +98,7 @@ function EnemyFormation({ encounter, opponent, enemy, activeId, lastEvent }) {
   const worldBoss = encounter.route?.type === 'world_boss';
   if (duel && opponent) {
     return (
-      <div className="absolute inset-[0%_4%_4%_18%]">
+      <div className="absolute inset-[8%_14%_13%_0%] scale-[0.84] origin-bottom-left transition-all duration-500">
         <BattleAvatar player={opponent} active={activeId === opponent.id} event={lastEvent} facing="left" />
       </div>
     );
