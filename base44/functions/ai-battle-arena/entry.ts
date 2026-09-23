@@ -7,7 +7,7 @@ type Row = Record<string, any>;
 const num = (v: any, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
 const copy = (v: any) => JSON.parse(JSON.stringify(v));
 const fail = (message: string, status = 409) => { throw Object.assign(new Error(message), { status }); };
-const MODEL = '/models/luna-hi3d/warrior.glb';
+const MODEL = '/getsuga/Getsuga_Character.glb';
 const FEMALE = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 const APPEARANCE = ['name','gender','model_url','base_body_model_url','appearance_version','style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled','complexion','facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color','tattoo_opacity','hair_style','face_shape','height_scale','body_proportions','material_colors','morph_targets','eyelash_style','hood_enabled','weapon_visible'];
 const ROUTES = [
@@ -83,8 +83,9 @@ function inferCombatIdentity(card: Row, progress: Row | undefined, achievement: 
 }
 
 async function snapshot(svc: any, user: Row) {
-  const [loadouts, cards, progress, avatars, levels, achievements] = await Promise.all([
+  const [loadouts, equipmentLoadouts, cards, progress, avatars, levels, achievements] = await Promise.all([
     svc.Loadout.filter({user_id:user.id,loadout_type:'skills'},'-updated_date',20),
+    svc.Loadout.filter({user_id:user.id,loadout_type:'equipment'},'-updated_date',20),
     svc.UserCard.filter({user_id:user.id},'-created_date',1000),
     svc.CardProgression.filter({user_id:user.id},'-updated_date',1000),
     svc.Avatar.filter({user_id:user.id},'-updated_date',1),
@@ -92,9 +93,10 @@ async function snapshot(svc: any, user: Row) {
     svc.Achievement.list('-created_date',1500).catch(()=>[]),
   ]);
   const loadout = loadouts.find((r: Row) => r.is_active) || loadouts[0];
-  const ids = [...new Set(Object.values(loadout?.skill_slots || {}).slice(0,4).map(String))];
+  const equipmentLoadout = equipmentLoadouts.find((r: Row) => r.is_active) || equipmentLoadouts[0];
+  const slotEntries = Array.from({length:4},(_,slot)=>({slot,id:String(loadout?.skill_slots?.[String(slot)] || '')})).filter(entry=>entry.id);
   const rarity: Row = {Common:5,Uncommon:10,Rare:20,Epic:35,Legendary:55,Mythic:80,Unique:100};
-  const deck = ids.map(id => cards.find((c: Row) => String(c.id) === id && c.trade_status !== 'locked_in_trade')).filter(Boolean).map((c: Row) => {
+  const deck = slotEntries.map(({slot,id}) => ({slot,card:cards.find((c: Row) => String(c.id) === id && c.trade_status !== 'locked_in_trade')})).filter(entry=>entry.card).map(({slot,card:c}: Row) => {
     const p = progress.find((r: Row) => r.user_card_id === c.id);
     const power = Math.max(15, Math.min(300,num(p?.power_score,12*num(p?.level,1)+(rarity[c.card_rarity]||5))));
     const achievement = achievements.find((a: Row) => {
@@ -106,24 +108,46 @@ async function snapshot(svc: any, user: Row) {
     });
     const combat = inferCombatIdentity(c,p,achievement,power);
     return {
-      id:c.id,name:c.card_name,type:c.card_type,image:c.card_image||'',rarity:c.card_rarity||'Common',
+      id:c.id,slot,name:c.card_name,type:c.card_type,image:c.card_image||'',rarity:c.card_rarity||'Common',
       game_name:c.game_name||'',game_id:c.game_id||'',origin:c.acquisition_method||'unlocked',
       level:num(p?.level,1),power,...combat
     };
   });
   const saved = avatars[0] || {};
   const appearance = Object.fromEntries(APPEARANCE.filter(k=>saved[k]!==undefined).map(k=>[k,saved[k]]));
-  if (num(saved.appearance_version)<3) appearance.model_url = saved.gender === 'female' ? FEMALE : MODEL;
-  const maxHp = Math.max(100,Math.min(400,num(levels[0]?.stats?.hp,100) + num(levels[0]?.global_level,1)*8));
-  return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,cards:deck,cooldowns:{},damage:0,actions:0,jawan:{id:loadout?.jawan_id||'jawan-1',name:loadout?.jawan_name||loadout?.name||'Jawan I',role:loadout?.jawan_role||'Balanced',loadout_id:loadout?.id||''}};
+  if (saved.gender !== 'female') appearance.model_url = MODEL;
+  else if (num(saved.appearance_version)<3) appearance.model_url = FEMALE;
+
+  const equipped = equipmentLoadout?.equipped_items || {};
+  const rarityPower: Row = {Common:2,Uncommon:4,Rare:7,Epic:11,Legendary:16,Mythic:23,Unique:28};
+  const gear = Object.entries(equipped).reduce((acc: Row,[slot,item]: any) => {
+    const values = item?.stats && typeof item.stats === 'object' ? item.stats : {};
+    const text = (key: string) => Object.entries(values).find(([name])=>normalize(name).includes(key))?.[1];
+    const parsed = (value: any) => { const match=String(value??'').replaceAll(',','').match(/-?\d+(?:\.\d+)?/); return match?num(match[0]):0; };
+    const rarity = rarityPower[item?.rarity] || 0;
+    acc.power += rarity;
+    acc.hp += parsed(text('hp')) + (/armor|helmet|pants|boots|gloves/.test(slot) ? rarity*2 : 0);
+    acc.attack += parsed(text('attack')) + (/weapon/.test(slot) ? rarity : 0);
+    acc.defense += parsed(text('defense')) + (/armor|helmet|pants|boots|gloves|ring|earring/.test(slot) ? rarity : 0);
+    acc.speed += parsed(text('speed'));
+    acc.crit += parsed(text('crit'));
+    return acc;
+  },{power:0,hp:0,attack:0,defense:0,speed:0,crit:0});
+  const progressionStats = levels[0]?.stats || {};
+  const level = Math.max(1,num(levels[0]?.global_level,1));
+  const maxHp = Math.max(100,Math.min(600,num(progressionStats.hp,100) + level*8 + num(gear.hp)));
+  const attack = Math.max(10,num(progressionStats.strength,10)*2 + num(gear.attack));
+  const defense = Math.max(0,num(progressionStats.defense,num(progressionStats.tenacity,10)) + num(gear.defense));
+  const power = Math.round(deck.reduce((sum: number,card: Row)=>sum+num(card.power),0) + num(gear.power));
+  return {id:user.id,name:label(user),portrait:user.avatar_url||user.profile_image||'',appearance,hp:maxHp,max_hp:maxHp,ap:3,shield:0,stagger:0,max_stagger:100,cards:deck,cooldowns:{},damage:0,actions:0,attack,defense,power,equipment:equipped,gear_bonus:gear,jawan:{id:loadout?.jawan_id||'jawan-1',name:loadout?.jawan_name||loadout?.name||'Jawan I',role:loadout?.jawan_role||'Balanced',loadout_id:loadout?.id||'',equipment_loadout_id:equipmentLoadout?.id||''}};
 }
 function demoBotSnapshot(player: Row) {
   const maxHp = Math.max(120, Math.round(num(player?.max_hp, 140) * .92));
   const botCards = [
-    { id:'bot-pulse-slash', name:'Pulse Slash', type:'Ability', image:'', rarity:'Rare', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:12, power:86, effect:'strike', value:30, stagger:34, critical_bonus_pct:8, cost:2, cooldown:1, element:'arc', abilities:[], active_perks:[], stage:2, ascension:0, over_enchant_rank:0, description:'A fast arc slash used by the Luna sparring AI.' },
-    { id:'bot-guard-matrix', name:'Guard Matrix', type:'Equipment', image:'', rarity:'Epic', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:10, power:78, effect:'shield', value:26, stagger:12, critical_bonus_pct:0, cost:1, cooldown:2, element:'', abilities:[], active_perks:[], stage:2, ascension:0, over_enchant_rank:0, description:'Projects a short defensive barrier.' },
-    { id:'bot-rift-burst', name:'Rift Burst', type:'Ability', image:'', rarity:'Epic', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:14, power:104, effect:'strike', value:38, stagger:46, critical_bonus_pct:10, cost:3, cooldown:3, element:'void', abilities:[], active_perks:[], stage:3, ascension:0, over_enchant_rank:0, description:'A heavier void burst built to pressure the break gauge.' },
-    { id:'bot-repair-cycle', name:'Repair Cycle', type:'Companion', image:'', rarity:'Rare', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:9, power:70, effect:'heal', value:22, stagger:0, critical_bonus_pct:0, cost:1, cooldown:3, element:'', abilities:[], active_perks:[], stage:1, ascension:0, over_enchant_rank:0, description:'Restores a small amount of combat integrity.' },
+    { id:'bot-pulse-slash', slot:0, name:'Pulse Slash', type:'Ability', image:'', rarity:'Rare', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:12, power:86, effect:'strike', value:30, stagger:34, critical_bonus_pct:8, cost:2, cooldown:1, element:'arc', abilities:[], active_perks:[], stage:2, ascension:0, over_enchant_rank:0, description:'A fast arc slash used by the Luna sparring AI.' },
+    { id:'bot-guard-matrix', slot:1, name:'Guard Matrix', type:'Equipment', image:'', rarity:'Epic', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:10, power:78, effect:'shield', value:26, stagger:12, critical_bonus_pct:0, cost:1, cooldown:2, element:'', abilities:[], active_perks:[], stage:2, ascension:0, over_enchant_rank:0, description:'Projects a short defensive barrier.' },
+    { id:'bot-rift-burst', slot:2, name:'Rift Burst', type:'Ability', image:'', rarity:'Epic', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:14, power:104, effect:'strike', value:38, stagger:46, critical_bonus_pct:10, cost:3, cooldown:3, element:'void', abilities:[], active_perks:[], stage:3, ascension:0, over_enchant_rank:0, description:'A heavier void burst built to pressure the break gauge.' },
+    { id:'bot-repair-cycle', slot:3, name:'Repair Cycle', type:'Companion', image:'', rarity:'Rare', game_name:'Luna frontier', game_id:'luna', origin:'demo', level:9, power:70, effect:'heal', value:22, stagger:0, critical_bonus_pct:0, cost:1, cooldown:3, element:'', abilities:[], active_perks:[], stage:1, ascension:0, over_enchant_rank:0, description:'Restores a small amount of combat integrity.' },
   ];
   return {
     id:'luna-demo-bot',
@@ -271,7 +295,9 @@ function reduce(room: Row, previous: Row, event: Row) {
         const elapsed=at-s.defense_started_at;
         const success=cmd==='evade'?elapsed>=2600&&elapsed<=4600:cmd==='parry'?elapsed>=3400&&elapsed<=4100:false;
         const scale=success?0:cmd==='brace'?.4:1;
-        const raw=Math.round(s.enemy.attack*(s.round%3===0?1.6:1)*scale);
+        const incoming=Math.round(s.enemy.attack*(s.round%3===0?1.6:1)*scale);
+        const mitigation=Math.max(0,Math.min(.45,num(current.defense)/300));
+        const raw=Math.round(incoming*(1-mitigation));
         const hit=Math.max(0,raw-current.shield);current.shield=Math.max(0,current.shield-raw);current.hp=Math.max(0,current.hp-hit);
         if(success&&cmd==='parry'){s.enemy.hp=Math.max(0,s.enemy.hp-20);const bonus=staggerHit(s,s.enemy,38,current.name);current.damage+=20+bonus;current.ap=Math.min(5,current.ap+1);}
         say(s,success?current.name+' '+(cmd==='parry'?'parried and countered.':'evaded the strike.'):current.name+' took '+hit+' damage'+(cmd==='brace'?' while bracing.':'.'),success?'defense':'hit',current.id);
@@ -279,7 +305,7 @@ function reduce(room: Row, previous: Row, event: Row) {
       }else if(s.phase==='turn'){
         let target=room.route_id==='duel'?s.players.find((p: Row)=>p.id!==current.id):s.enemy;
         if(cmd==='guard'||cmd==='timeout'){current.shield+=18;current.ap=Math.min(5,current.ap+1);say(s,current.name+' guarded: +18 shield, +1 AP.','defense',current.id);}
-        else if(cmd==='strike'){const hit=Math.max(0,16-target.shield);target.shield=Math.max(0,target.shield-16);target.hp=Math.max(0,target.hp-hit);const bonus=staggerHit(s,target,18,current.name);current.damage+=hit+bonus;current.ap=Math.min(5,current.ap+1);say(s,current.name+' struck for '+hit+' damage.','hit',current.id);}
+        else if(cmd==='strike'){const strike=Math.round(16+num(current.attack)*.25);const hit=Math.max(0,strike-target.shield);target.shield=Math.max(0,target.shield-strike);target.hp=Math.max(0,target.hp-hit);const bonus=staggerHit(s,target,18,current.name);current.damage+=hit+bonus;current.ap=Math.min(5,current.ap+1);say(s,current.name+' struck for '+hit+' damage.','hit',current.id);}
         else if(cmd==='card'){
           const card=current.cards.find((c: Row)=>c.id===data.card_id);
           if(!card)fail('That card is not in your locked loadout.',403);
