@@ -73,6 +73,7 @@ export class GetsugaDashboardRuntime {
     this.idleAction = null;
     this.attackAction = null;
     this.attackClip = null;
+    this.activeTarget = null;
     this.ready = false;
     this.playing = false;
     this.paused = false;
@@ -109,9 +110,11 @@ export class GetsugaDashboardRuntime {
 
     this.finishedHandler = (event) => {
       if (event.action !== this.attackAction) return;
+      const target = this.activeTarget;
       this.playing = false;
-      this.onEvent('end', { time: this.attackAction?.time || attackClip.duration, frame: 1 });
+      this.onEvent('end', { time: this.attackAction?.time || attackClip.duration, frame: 1, target });
       this.playIdle({ emit: true, blend: true });
+      this.activeTarget = null;
     };
     this.mixer.addEventListener('finished', this.finishedHandler);
 
@@ -120,8 +123,18 @@ export class GetsugaDashboardRuntime {
     return true;
   }
 
-  play() {
+  play(target = null) {
     if (!this.ready || this.disposed || this.paused || !this.attackAction || this.playing) return false;
+
+    const globalTarget = typeof window !== 'undefined' ? window.__lunaAIBattleTarget : null;
+    this.activeTarget = target || globalTarget || null;
+
+    // The authored character/projectile faces +Z. AI Battle supplies a yaw for
+    // the selected opponent, so the entire character + embedded VFX package is
+    // rotated as one unit toward that target before the cast begins.
+    const facingYaw = Number(this.activeTarget?.facingYaw);
+    if (this.group && Number.isFinite(facingYaw)) this.group.rotation.y = facingYaw;
+
     this.playing = true;
     this.fired.clear();
 
@@ -134,7 +147,7 @@ export class GetsugaDashboardRuntime {
     if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
     else this.idleAction?.stop();
 
-    this.onEvent('castStart', { time: 0, frame: 1 });
+    this.onEvent('castStart', { time: 0, frame: 1, target: this.activeTarget });
     return true;
   }
 
@@ -165,7 +178,7 @@ export class GetsugaDashboardRuntime {
     for (const [name, marker] of Object.entries(GETSUGA_EVENTS)) {
       if (name === 'end' || this.fired.has(name) || time < marker) continue;
       this.fired.add(name);
-      this.onEvent(name, { time, frame: 1 });
+      this.onEvent(name, { time, frame: 1, target: this.activeTarget });
     }
   }
 
@@ -202,6 +215,7 @@ export class GetsugaDashboardRuntime {
     this.idleAction = null;
     this.attackAction = null;
     this.attackClip = null;
+    this.activeTarget = null;
     this.ready = false;
     this.playing = false;
     this.finishedHandler = null;
