@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+
 const requestId=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 const QUEUE_COOLDOWN_MS=5000;
 
@@ -22,11 +23,10 @@ export default function useBattleArena(encounterId){
   const {user}=useAuth(),client=useQueryClient();
   const offset=useRef(0);
   const queueLock=useRef(false);
-  const botTurnLock=useRef('');
   const key=['battle-expeditions',user?.id];
-  const hub=useQuery({queryKey:key,enabled:!!user?.id,queryFn:()=>invoke('hub'),staleTime:8000,refetchInterval:10000,refetchOnWindowFocus:false,retry:false});
+  const hub=useQuery({queryKey:key,enabled:!!user?.id,queryFn:()=>invoke('hub'),staleTime:6000,refetchInterval:6000,refetchOnWindowFocus:false,retry:false});
   const fightKey=['battle-encounter',user?.id,encounterId];
-  const fight=useQuery({queryKey:fightKey,enabled:!!user?.id&&!!encounterId,queryFn:()=>invoke('state',{encounter_id:encounterId}),refetchInterval:2000,refetchOnWindowFocus:false,retry:false});
+  const fight=useQuery({queryKey:fightKey,enabled:!!user?.id&&!!encounterId,queryFn:()=>invoke('state',{encounter_id:encounterId}),refetchInterval:1500,refetchOnWindowFocus:false,retry:false});
   const body=fight.data;
   useEffect(()=>{if(body?.server_time)offset.current=body.server_time-Date.now();},[body?.server_time]);
   useEffect(()=>{
@@ -35,32 +35,6 @@ export default function useBattleArena(encounterId){
     window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter,userId:user?.id||null}}));
     return()=>window.dispatchEvent(new CustomEvent('lunaBattleStateChanged',{detail:{encounter:null,userId:user?.id||null}}));
   },[body?.encounter,hub.data?.encounters,encounterId,user?.id]);
-
-  // Demo PvP uses a real second combatant in the same authoritative reducer.
-  // When that combatant owns the turn, ask the server to append exactly one
-  // bot command for the current revision, then refresh the encounter.
-  useEffect(()=>{
-    const encounter=body?.encounter;
-    if(!encounterId||!encounter||encounter.status!=='active'||String(encounter.turn)!=='luna-demo-bot')return;
-    const turnKey=String(encounter.id)+':'+String(encounter.revision);
-    if(botTurnLock.current===turnKey)return;
-    botTurnLock.current=turnKey;
-    let cancelled=false;
-    base44.functions.invoke('ai-battle-bot-turn',{
-      encounter_id:encounter.id,
-      expected_revision:encounter.revision,
-    }).then(()=>{
-      if(!cancelled)fight.refetch();
-    }).catch(error=>{
-      console.warn('[AI Battle] bot turn retry',error);
-      window.setTimeout(()=>{
-        if(botTurnLock.current===turnKey)botTurnLock.current='';
-        if(!cancelled)fight.refetch();
-      },1500);
-    });
-    return()=>{cancelled=true;};
-  },[encounterId,body?.encounter?.id,body?.encounter?.revision,body?.encounter?.status,body?.encounter?.turn]);
-
   const mutation=useMutation({
     mutationFn:async({action,data})=>invoke(action,{...data,request_id:requestId()}),retry:false,
     onSuccess:body=>{
