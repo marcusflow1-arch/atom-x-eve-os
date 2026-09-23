@@ -35,16 +35,21 @@ export function useSkills() {
    * Trigger skill from hotbar or mapping
    * @param {number} slotIndex - Slot index (0-4)
    */
-  const triggerSkill = (slotIndex) => {
+  const triggerSkill = (slotIndex, source = 'luna_skill_bar') => {
     const assigned = getHotbarItem(slotIndex);
     
     if (assigned) {
+      // One event connects the existing dashboard hotbar to AI Battle. The battle
+      // layer still validates turn/AP/cooldown and the locked server snapshot.
+      window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
+        detail: { slotIndex, card: assigned, source },
+      }));
+
       const cardName = String(assigned.card_name || assigned.title || assigned.name || '').toLowerCase();
       const isGetsuga = cardName.includes('getsuga tensh') || (cardName.includes('ichigo') && cardName.includes('getsuga'));
 
-      // Getsuga Tensho is intentionally locked to Skill Slot 1 for the Luna dashboard.
-      // Temporary test mapping: the packaged animation/VFX only fires when the
-      // Getsuga card is equipped in Slot 1 and the player presses keyboard key 4.
+      // Getsuga Tensho stays visually bound to logical Skill Slot 1. During the
+      // current test, keyboard 4 can trigger Slot 1; the slot identity never changes.
       if (slotIndex === 0 && isGetsuga) {
         const skillId = 'getsuga_tensho';
         if (!isOnCooldown(skillId)) {
@@ -52,7 +57,7 @@ export function useSkills() {
           activateSkill(slotIndex, 7000);
           setCooldown(skillId, Date.now() + 8000);
           window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoProc', {
-            detail: { slotIndex, card: assigned, source: 'luna_skill_bar' },
+            detail: { slotIndex, card: assigned, source },
           }));
         }
         return;
@@ -87,21 +92,30 @@ export function useSkills() {
   };
 
   /**
-   * Keyboard listener for skill activation.
-   * Temporary dashboard test mapping: key 4 triggers Skill Slot 1.
-   * Key 1 is intentionally disabled for Slot 1 during this test.
+   * Keyboard listener for the four dashboard skill slots.
+   * Temporary Getsuga test rule: when Getsuga occupies Slot 1, key 4 fires that
+   * logical slot and key 1 is suppressed. Otherwise normal 1→1 ... 4→4 applies.
    */
   useEffect(() => {
     const handleSkillKey = (e) => {
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target;
+      if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       const key = e.key;
-
       if (!['1','2','3','4'].includes(key)) return;
 
-      // During the Luna Getsuga test, key 4 intentionally fires Skill Slot 1.
-      // Keep key 1 disabled for that slot so the test mapping is unambiguous.
-      if (key === '1') return;
-      const index = key === '4' ? 0 : Number(key) - 1;
-      triggerSkill(index);
+      const slotOne = getHotbarItem(0);
+      const slotOneName = String(slotOne?.card_name || slotOne?.title || slotOne?.name || '').toLowerCase();
+      const getsugaInSlotOne = slotOneName.includes('getsuga tensh') || (slotOneName.includes('ichigo') && slotOneName.includes('getsuga'));
+      if (getsugaInSlotOne) {
+        if (key === '1') return;
+        if (key === '4') {
+          triggerSkill(0, 'keyboard_4_test');
+          return;
+        }
+      }
+
+      triggerSkill(Number(key) - 1, 'keyboard');
     };
 
     window.addEventListener('keydown', handleSkillKey);
