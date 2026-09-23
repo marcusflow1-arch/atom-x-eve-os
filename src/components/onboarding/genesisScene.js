@@ -6,6 +6,7 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
+import { GetsugaAbilityRuntime } from '@/components/getsuga/GetsugaAbilityRuntime';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -53,6 +54,21 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   scene.add(shadowPlane);
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
+  const getsuga = options.skillEffects ? new GetsugaAbilityRuntime({
+    scene,
+    camera,
+    getPlayer: () => model,
+    impactDistance: 7.2,
+    onEvent: (name, detail) => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoEvent', { detail: { name, ...detail } }));
+      }
+    },
+  }) : null;
+  const onGetsugaProc = () => {
+    if (!disposed && model && getsuga) getsuga.play();
+  };
+  if (getsuga && typeof window !== 'undefined') window.addEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
   let primaryMotionRoot = null, primaryMotionMixer = null, primaryMotionAction = null, primaryMotionBridge = null;
@@ -157,6 +173,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
 
     secondaryMixer?.update(dt);
     secondaryMotionMixer?.update(dt);
+    getsuga?.update(dt);
 
     if (secondaryMotionBridge && secondaryModel) {
       const { hips, spine, restHipsPosition, restHipsQuaternion, restSpineQuaternion, basePosition: childBasePosition, baseQuaternion } = secondaryMotionBridge;
@@ -519,7 +536,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   })();
 
   const move = (x = 0, z = 0, distance = .05) => {
-    if (!model || !basePosition) return;
+    if (!model || !basePosition || getsuga?.isPlaying()) return;
     if (paused || (embeddedController && !embeddedController.canMove())) return;
 
     const previous = model.position.clone();
@@ -538,6 +555,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     }
   };
   const resetPosition = () => {
+    if (getsuga?.isPlaying()) return;
     if (model && basePosition) {
       model.position.copy(basePosition);
       model.rotation.y = 0;
@@ -569,12 +587,15 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     togglePaused,
     isPaused: () => paused,
     rotate: (amount) => {
+      if (getsuga?.isPlaying()) return;
       if (model) model.rotation.y += amount;
       if (secondaryRoot) secondaryRoot.rotation.y += amount;
     },
     dispose: () => {
       disposed = true;
       cancelAnimationFrame(frame);
+      if (getsuga && typeof window !== 'undefined') window.removeEventListener('lunaGetsugaTenshoProc', onGetsugaProc);
+      getsuga?.dispose();
       observer.disconnect();
       visibility?.disconnect();
       controls.dispose();
