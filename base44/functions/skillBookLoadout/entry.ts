@@ -132,8 +132,19 @@ async function ensureSkillSets(base44: any, userId: string) {
 
 async function buildState(base44: any, user: AnyObj) {
   const svc = base44.asServiceRole.entities;
-  await ensureDemoAbility(svc, user.id);
+  const demoAbility = await ensureDemoAbility(svc, user.id);
   const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
+
+  // Make the uploaded demo immediately testable without overwriting a player's
+  // existing setup: Getsuga occupies Skill Slot 1 only when that slot is empty.
+  if (active && demoAbility && !(active.skill_slots || {})['0']) {
+    const nextSlots = { ...(active.skill_slots || {}), '0': demoAbility.id };
+    await Promise.all([
+      svc.Loadout.update(active.id, { skill_slots: nextSlots }),
+      svc.UserCard.update(demoAbility.id, { is_equipped: true }),
+    ]);
+    active.skill_slots = nextSlots;
+  }
   const [ownedCards, achievements, games, progressions] = await Promise.all([
     svc.UserCard.filter({ user_id: user.id }, '-created_date', 1000),
     svc.Achievement.list('-created_date', 1500),
