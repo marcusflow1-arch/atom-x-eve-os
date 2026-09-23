@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, BookOpen, Check, ChevronDown, Gamepad2, Lock, Search,
-  Sparkles, Star, Volume2, Zap
+  Sparkles, Volume2, Zap
 } from 'lucide-react';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
