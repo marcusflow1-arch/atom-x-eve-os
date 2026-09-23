@@ -6,6 +6,7 @@ import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
+import BattleSkillRail from '@/components/battle/BattleSkillRail';
 import { base44 } from '@/api/base44Client';
 import {
   CREATOR_PARENTING_PREVIEW,
@@ -133,6 +134,8 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       aria-label="AI Battle third-person staging"
       data-ai-battle-staging="third-person"
     >
+      <BattleSkillRail />
+
       <div
         className="absolute bottom-[-5%] left-0 z-30 h-[105%] w-[52%] overflow-visible"
         style={{ transform: 'translate3d(-6%, 7%, 0)', transformOrigin: '42% 100%' }}
