@@ -5,6 +5,7 @@ const MODES = new Set(['pvp', 'pve', 'world_boss']);
 const QUEUE_LIVE_MS = 30000;
 const QUEUE_HEARTBEAT_MS = 8000;
 const DASHBOARD_LIVE_MS = 60000;
+const DEFAULT_BATTLE_HP = 1000;
 const MALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
 const FEMALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 const APPEARANCE_KEYS = [
@@ -21,6 +22,10 @@ const queueHeartbeatAt = (row: Row) => Date.parse(row?.last_seen_at || row?.queu
 const isQueueLive = (row: Row) => ['waiting', 'matched'].includes(String(row?.status || '')) && queueHeartbeatAt(row) > Date.now() - QUEUE_LIVE_MS;
 const isDashboardLive = (row: Row) => row?.status !== 'offline' && Number(row?.last_update || 0) > Date.now() - DASHBOARD_LIVE_MS;
 const json = (body: any, status = 200) => Response.json(body, { status });
+const finiteHp = (value: any, fallback = DEFAULT_BATTLE_HP) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
 
 function publicQueue(row: Row | null) {
   if (!row) return null;
@@ -50,13 +55,12 @@ function publicMatch(row: Row | null) {
     current_turn_id: row.current_turn_id || row.host_id || null,
     turn_revision: Number(row.turn_revision || 0),
     turn_started_at: row.turn_started_at || row.ready_at || null,
+    attack_revision: Number(row.attack_revision || 0),
+    last_attack: row.last_attack && typeof row.last_attack === 'object' ? row.last_attack : null,
   };
 }
 
 async function getAvatarSnapshot(svc: any, userId: string) {
-  // Avatar selection is rendering metadata only. It must never decide whether a
-  // player is allowed to enter matchmaking. Female Artemis and male Luna use the
-  // exact same queue/match path.
   try {
     const rows = await svc.Avatar.filter({ user_id: userId }, '-updated_date', 1);
     const avatar = rows?.[0] || {};
@@ -83,12 +87,18 @@ async function getAvatarSnapshot(svc: any, userId: string) {
     return {
       avatar_gender: 'male',
       avatar_model_url: MALE_MODEL,
-      avatar_appearance: { gender: 'male', model_url: MALE_MODEL, base_body_gender: 'male', base_body_model_url: MALE_MODEL, appearance_version: 3 },
+      avatar_appearance: {
+        gender: 'male',
+        model_url: MALE_MODEL,
+        base_body_gender: 'male',
+        base_body_model_url: MALE_MODEL,
+        appearance_version: 3,
+      },
     };
   }
 }
 
-function matchPlayerFromQueue(row: Row) {
+function matchPlayerFromQueue(row: Row, previous: Row | null = null) {
   const gender = row.avatar_gender === 'female' ? 'female' : 'male';
   const fallbackModel = gender === 'female' ? FEMALE_MODEL : MALE_MODEL;
   const appearance = row.avatar_appearance && typeof row.avatar_appearance === 'object'
@@ -99,13 +109,19 @@ function matchPlayerFromQueue(row: Row) {
   appearance.base_body_model_url = String(appearance.base_body_model_url || appearance.model_url || fallbackModel);
   if (gender === 'female') appearance.female_model_variant = appearance.female_model_variant || 'artemis_archer';
 
+  const maxHp = Math.max(1, finiteHp(previous?.max_hp ?? previous?.maxHp, DEFAULT_BATTLE_HP));
+  const hp = Math.min(maxHp, finiteHp(previous?.hp, maxHp));
+
   return {
+    ...(previous || {}),
     id: String(row.user_id),
-    name: row.player_name || 'Player',
-    avatar_url: row.avatar_url || '',
+    name: row.player_name || previous?.name || 'Player',
+    avatar_url: row.avatar_url || previous?.avatar_url || '',
     gender,
     model_url: appearance.model_url,
     appearance,
+    hp,
+    max_hp: maxHp,
   };
 }
 
@@ -134,9 +150,7 @@ async function cancelMatchForAll(svc: any, match: Row | null) {
   const playerIds = (match.player_ids || []).map(String).filter(Boolean);
   const linkedQueues = await Promise.all(playerIds.map((id: string) => queueForUserAndMatch(svc, id, String(match.id))));
   await Promise.all(linkedQueues.filter(Boolean).map((row: Row) => cancelQueueRow(svc, row)));
-  if (match.status !== 'ended') {
-    await svc.AIBattleMatch.update(match.id, { status: 'ended', ended_at: nowIso() });
-  }
+  if (match.status !== 'ended') await svc.AIBattleMatch.update(match.id, { status: 'ended', ended_at: nowIso() });
 }
 
 async function cancelOtherWaiting(svc: any, userId: string, exceptId = '') {
@@ -150,7 +164,6 @@ async function retireQueueAndLinkedMatch(svc: any, queue: Row | null) {
     await cancelQueueRow(svc, queue);
     return;
   }
-
   if (queue.status === 'matched') {
     const match = queue.match_id ? await getMatch(svc, String(queue.match_id)) : null;
     if (match) await cancelMatchForAll(svc, match);
@@ -159,24 +172,20 @@ async function retireQueueAndLinkedMatch(svc: any, queue: Row | null) {
 }
 
 async function retireCurrentMatch(svc: any, userId: string) {
-  const queue = await latestQueueForUser(svc, userId);
-  await retireQueueAndLinkedMatch(svc, queue);
+  await retireQueueAndLinkedMatch(svc, await latestQueueForUser(svc, userId));
 }
 
 async function syncQueueAvatarSnapshot(svc: any, queue: Row, snapshot: Row) {
   if (!queue?.id) return queue;
   const updated = await svc.AIBattleQueueEntry.update(queue.id, snapshot);
 
-  // If the user changed/selects their avatar while already matched, refresh the
-  // match roster too. This prevents a female player from being represented by a
-  // male fallback in editor/live battle staging.
   if (queue.status === 'matched' && queue.match_id) {
     const match = await getMatch(svc, String(queue.match_id));
     if (match && match.status !== 'ended') {
       const refreshedQueue = { ...queue, ...snapshot };
       const players = (Array.isArray(match.players) ? match.players : []).map((player: Row) =>
         String(player.id || player.player_id || '') === String(queue.user_id)
-          ? matchPlayerFromQueue(refreshedQueue)
+          ? matchPlayerFromQueue(refreshedQueue, player)
           : player
       );
       await svc.AIBattleMatch.update(match.id, { players });
@@ -206,6 +215,8 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
       current_turn_id: String(first.user_id),
       turn_revision: 0,
       turn_started_at: nowIso(),
+      attack_revision: 0,
+      last_attack: null,
     });
 
     matches = await svc.AIBattleMatch.filter({ pair_key: pairKey }, 'created_date', 20);
@@ -222,20 +233,12 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
   const matchedAt = nowIso();
   await Promise.all([
     svc.AIBattleQueueEntry.update(first.id, {
-      status: 'matched',
-      match_id: match.id,
-      host_id: match.host_id,
-      opponent_id: second.user_id,
-      matched_at: matchedAt,
-      last_seen_at: matchedAt,
+      status: 'matched', match_id: match.id, host_id: match.host_id,
+      opponent_id: second.user_id, matched_at: matchedAt, last_seen_at: matchedAt,
     }),
     svc.AIBattleQueueEntry.update(second.id, {
-      status: 'matched',
-      match_id: match.id,
-      host_id: match.host_id,
-      opponent_id: first.user_id,
-      matched_at: matchedAt,
-      last_seen_at: matchedAt,
+      status: 'matched', match_id: match.id, host_id: match.host_id,
+      opponent_id: first.user_id, matched_at: matchedAt, last_seen_at: matchedAt,
     }),
   ]);
   return match;
@@ -247,9 +250,6 @@ async function tryPairMode(svc: any, mode: string) {
     .filter(isQueueLive)
     .sort((a: Row, b: Row) => String(a.created_date).localeCompare(String(b.created_date)) || String(a.id).localeCompare(String(b.id)));
 
-  // Matchmaking intentionally considers only queue mode + account identity.
-  // Avatar gender/model is never a filter, so male↔female, female↔female and
-  // male↔male matches all use the same pool.
   const unique: Row[] = [];
   const seen = new Set<string>();
   for (const row of liveRows) {
@@ -259,7 +259,6 @@ async function tryPairMode(svc: any, mode: string) {
     unique.push(row);
     if (unique.length === 2) break;
   }
-
   if (unique.length < 2) return null;
   return await canonicalPairMatch(svc, mode, unique[0], unique[1]);
 }
@@ -271,12 +270,6 @@ async function validateMatchedPair(svc: any, match: Row) {
   return queues.length === 2 && queues.every((row: Row | null) => row && isQueueLive(row));
 }
 
-/**
- * Queue state belongs to the authenticated account, not to a specific browser
- * origin or Base44 surface. Editor preview and published/live may both poll the
- * same queue and match. A client_session_id is accepted only as diagnostics and
- * never invalidates another surface for the same user.
- */
 async function statusFor(svc: any, userId: string, clientSessionId = '') {
   let queue = await latestQueueForUser(svc, userId);
   if (!queue) return { queue: null, match: null };
@@ -305,13 +298,10 @@ async function statusFor(svc: any, userId: string, clientSessionId = '') {
       await cancelQueueRow(svc, queue);
       return { queue: null, match: null };
     }
-
-    const pairAlive = await validateMatchedPair(svc, match);
-    if (!pairAlive) {
+    if (!(await validateMatchedPair(svc, match))) {
       await cancelMatchForAll(svc, match);
       return { queue: null, match: null };
     }
-
     return { queue, match };
   }
 
@@ -341,16 +331,11 @@ Deno.serve(async (req) => {
       const requestId = String(data.request_id || '').slice(0, 100);
       const avatarSnapshot = await getAvatarSnapshot(svc, String(user.id));
 
-      // Existing queue state is reused across editor/live, but always refresh its
-      // selected avatar snapshot. Selecting a female character must never cancel,
-      // reject or fork matchmaking.
       const existing = await latestQueueForUser(svc, String(user.id));
       if (existing) {
         await syncQueueAvatarSnapshot(svc, existing, avatarSnapshot);
         const current = await statusFor(svc, String(user.id), clientSessionId);
-        if (current.queue) {
-          return json({ queue: publicQueue(current.queue), match: publicMatch(current.match), server_time: Date.now() });
-        }
+        if (current.queue) return json({ queue: publicQueue(current.queue), match: publicMatch(current.match), server_time: Date.now() });
       }
 
       if (requestId) {
@@ -364,7 +349,6 @@ Deno.serve(async (req) => {
       }
 
       await cancelOtherWaiting(svc, String(user.id));
-
       const created = await svc.AIBattleQueueEntry.create({
         user_id: String(user.id),
         player_name: playerName(user),
@@ -423,7 +407,8 @@ Deno.serve(async (req) => {
 
     if (action === 'end_turn') {
       const match = await getMatch(svc, String(data.match_id || ''));
-      if (!match || !(match.player_ids || []).map(String).includes(String(user.id))) return json({ error: 'Match not found.' }, 404);
+      const userId = String(user.id);
+      if (!match || !(match.player_ids || []).map(String).includes(userId)) return json({ error: 'Match not found.' }, 404);
       if (match.status === 'ended') return json({ error: 'This match has ended.' }, 409);
       if (String(match.mode || '') !== 'pvp') return json({ error: 'Turn passing is only enabled for PvP.' }, 409);
       if (!(await validateMatchedPair(svc, match))) {
@@ -433,7 +418,7 @@ Deno.serve(async (req) => {
 
       const ids = (match.player_ids || []).map(String);
       const actorId = String(match.current_turn_id || match.host_id || ids[0] || '');
-      if (actorId !== String(user.id)) {
+      if (actorId !== userId) {
         return json({ error: 'It is not your turn.', match: publicMatch(match), server_time: Date.now() }, 409);
       }
 
@@ -446,16 +431,67 @@ Deno.serve(async (req) => {
       const nextId = ids.find((id: string) => id !== actorId);
       if (!nextId) return json({ error: 'Opponent not found.' }, 409);
 
+      // Damage and turn ownership are committed in the SAME server write. This
+      // is the authoritative online path: actor hits opponent -> opponent HP is
+      // reduced -> current_turn_id becomes that opponent. Clients never have to
+      // independently guess whether the hit or turn happened first.
+      const requestedTargetId = String(data.target_player_id || '');
+      const rawDamage = Number(data.damage || 0);
+      const damage = Number.isFinite(rawDamage) ? Math.max(0, Math.min(100000, rawDamage)) : 0;
+      const hasAttack = damage > 0;
+      if (hasAttack && requestedTargetId && requestedTargetId !== nextId) {
+        return json({ error: 'PvP attack target does not match the active opponent.' }, 409);
+      }
+
+      let players = Array.isArray(match.players) ? match.players.map((player: Row) => ({ ...player })) : [];
+      let lastAttack = match.last_attack || null;
+      let attackRevision = Number(match.attack_revision || 0);
+
+      if (hasAttack) {
+        const targetId = nextId;
+        let foundTarget = false;
+        players = players.map((player: Row) => {
+          const playerId = String(player.id || player.player_id || '');
+          if (playerId !== targetId) return player;
+          foundTarget = true;
+          const maxHp = Math.max(1, finiteHp(player.max_hp ?? player.maxHp, DEFAULT_BATTLE_HP));
+          const before = Math.min(maxHp, finiteHp(player.hp, maxHp));
+          return { ...player, hp: Math.max(0, before - damage), max_hp: maxHp };
+        });
+
+        if (!foundTarget) {
+          players.push({ id: targetId, name: 'Opponent', hp: Math.max(0, DEFAULT_BATTLE_HP - damage), max_hp: DEFAULT_BATTLE_HP });
+        }
+
+        const target = players.find((player: Row) => String(player.id || player.player_id || '') === targetId) || {};
+        attackRevision += 1;
+        lastAttack = {
+          revision: attackRevision,
+          turn_revision: revision + 1,
+          source_player_id: actorId,
+          target_player_id: targetId,
+          damage,
+          hp_after: finiteHp(target.hp, 0),
+          max_hp: Math.max(1, finiteHp(target.max_hp ?? target.maxHp, DEFAULT_BATTLE_HP)),
+          effect_id: String(data.effect_id || ''),
+          resolved_at: nowIso(),
+        };
+      }
+
       const updated = await svc.AIBattleMatch.update(match.id, {
+        players,
         current_turn_id: nextId,
         turn_revision: revision + 1,
         turn_started_at: nowIso(),
+        attack_revision: attackRevision,
+        last_attack: lastAttack,
       });
 
       return json({
         match: publicMatch(updated),
         previous_turn_id: actorId,
         current_turn_id: nextId,
+        attack: hasAttack ? lastAttack : null,
         server_time: Date.now(),
       });
     }
