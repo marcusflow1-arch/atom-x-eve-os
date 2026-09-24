@@ -5,6 +5,19 @@
     "user_id": { "type": "string" },
     "player_name": { "type": "string" },
     "avatar_url": { "type": "string" },
+    "avatar_gender": {
+      "type": "string",
+      "enum": ["male", "female"],
+      "description": "The player's selected Luna body. Matchmaking is gender-agnostic; this is rendering metadata only."
+    },
+    "avatar_model_url": {
+      "type": "string",
+      "description": "Selected 3D avatar model used when the PvP battle scene is constructed."
+    },
+    "avatar_appearance": {
+      "type": "object",
+      "description": "Sanitized appearance snapshot for the selected male or female Luna character."
+    },
     "mode": {
       "type": "string",
       "enum": ["pvp", "pve", "world_boss"]
