@@ -5,6 +5,15 @@ const MODES = new Set(['pvp', 'pve', 'world_boss']);
 const QUEUE_LIVE_MS = 30000;
 const QUEUE_HEARTBEAT_MS = 8000;
 const DASHBOARD_LIVE_MS = 60000;
+const MALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
+const FEMALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
+const APPEARANCE_KEYS = [
+  'name','gender','female_model_variant','model_url','base_body_gender','base_body_model_url','appearance_version',
+  'style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled',
+  'complexion','facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color','tattoo_opacity',
+  'hair_style','hair_length','hair_volume','face_shape','height_scale','body_proportions','material_colors','morph_targets',
+  'eyelash_style','hood_enabled','weapon_visible'
+];
 
 const nowIso = () => new Date().toISOString();
 const playerName = (user: Row) => user.full_name || user.username || user.display_name || 'Player';
@@ -23,6 +32,7 @@ function publicQueue(row: Row | null) {
     match_id: row.match_id || null,
     host_id: row.host_id || null,
     opponent_id: row.opponent_id || null,
+    avatar_gender: row.avatar_gender === 'female' ? 'female' : 'male',
   };
 }
 
@@ -40,6 +50,62 @@ function publicMatch(row: Row | null) {
     current_turn_id: row.current_turn_id || row.host_id || null,
     turn_revision: Number(row.turn_revision || 0),
     turn_started_at: row.turn_started_at || row.ready_at || null,
+  };
+}
+
+async function getAvatarSnapshot(svc: any, userId: string) {
+  // Avatar selection is rendering metadata only. It must never decide whether a
+  // player is allowed to enter matchmaking. Female Artemis and male Luna use the
+  // exact same queue/match path.
+  try {
+    const rows = await svc.Avatar.filter({ user_id: userId }, '-updated_date', 1);
+    const avatar = rows?.[0] || {};
+    const gender = avatar.gender === 'female' ? 'female' : 'male';
+    const fallbackModel = gender === 'female' ? FEMALE_MODEL : MALE_MODEL;
+    const appearance = Object.fromEntries(
+      APPEARANCE_KEYS.filter((key) => avatar[key] !== undefined).map((key) => [key, avatar[key]])
+    );
+
+    appearance.gender = gender;
+    appearance.model_url = String(avatar.model_url || fallbackModel);
+    appearance.base_body_gender = gender;
+    appearance.base_body_model_url = String(avatar.base_body_model_url || appearance.model_url || fallbackModel);
+    appearance.appearance_version = Math.max(3, Number(avatar.appearance_version || 3));
+    if (gender === 'female') appearance.female_model_variant = avatar.female_model_variant || 'artemis_archer';
+
+    return {
+      avatar_gender: gender,
+      avatar_model_url: appearance.model_url,
+      avatar_appearance: appearance,
+    };
+  } catch (error) {
+    console.warn('[aiBattleMatchmaker] avatar snapshot unavailable; queue remains open', error);
+    return {
+      avatar_gender: 'male',
+      avatar_model_url: MALE_MODEL,
+      avatar_appearance: { gender: 'male', model_url: MALE_MODEL, base_body_gender: 'male', base_body_model_url: MALE_MODEL, appearance_version: 3 },
+    };
+  }
+}
+
+function matchPlayerFromQueue(row: Row) {
+  const gender = row.avatar_gender === 'female' ? 'female' : 'male';
+  const fallbackModel = gender === 'female' ? FEMALE_MODEL : MALE_MODEL;
+  const appearance = row.avatar_appearance && typeof row.avatar_appearance === 'object'
+    ? { ...row.avatar_appearance, gender }
+    : { gender, appearance_version: 3 };
+  appearance.model_url = String(appearance.model_url || row.avatar_model_url || fallbackModel);
+  appearance.base_body_gender = gender;
+  appearance.base_body_model_url = String(appearance.base_body_model_url || appearance.model_url || fallbackModel);
+  if (gender === 'female') appearance.female_model_variant = appearance.female_model_variant || 'artemis_archer';
+
+  return {
+    id: String(row.user_id),
+    name: row.player_name || 'Player',
+    avatar_url: row.avatar_url || '',
+    gender,
+    model_url: appearance.model_url,
+    appearance,
   };
 }
 
@@ -97,6 +163,29 @@ async function retireCurrentMatch(svc: any, userId: string) {
   await retireQueueAndLinkedMatch(svc, queue);
 }
 
+async function syncQueueAvatarSnapshot(svc: any, queue: Row, snapshot: Row) {
+  if (!queue?.id) return queue;
+  const updated = await svc.AIBattleQueueEntry.update(queue.id, snapshot);
+
+  // If the user changed/selects their avatar while already matched, refresh the
+  // match roster too. This prevents a female player from being represented by a
+  // male fallback in editor/live battle staging.
+  if (queue.status === 'matched' && queue.match_id) {
+    const match = await getMatch(svc, String(queue.match_id));
+    if (match && match.status !== 'ended') {
+      const refreshedQueue = { ...queue, ...snapshot };
+      const players = (Array.isArray(match.players) ? match.players : []).map((player: Row) =>
+        String(player.id || player.player_id || '') === String(queue.user_id)
+          ? matchPlayerFromQueue(refreshedQueue)
+          : player
+      );
+      await svc.AIBattleMatch.update(match.id, { players });
+    }
+  }
+
+  return updated;
+}
+
 async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Row) {
   const ids = [String(first.user_id), String(second.user_id)];
   const queueIds = [String(first.id), String(second.id)].sort();
@@ -113,10 +202,7 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
       dashboard_channel: `dashboard_${first.user_id}`,
       pair_key: pairKey,
       player_ids: ids,
-      players: [
-        { id: String(first.user_id), name: first.player_name || 'Player', avatar_url: first.avatar_url || '' },
-        { id: String(second.user_id), name: second.player_name || 'Player', avatar_url: second.avatar_url || '' },
-      ],
+      players: [matchPlayerFromQueue(first), matchPlayerFromQueue(second)],
       current_turn_id: String(first.user_id),
       turn_revision: 0,
       turn_started_at: nowIso(),
@@ -161,6 +247,9 @@ async function tryPairMode(svc: any, mode: string) {
     .filter(isQueueLive)
     .sort((a: Row, b: Row) => String(a.created_date).localeCompare(String(b.created_date)) || String(a.id).localeCompare(String(b.id)));
 
+  // Matchmaking intentionally considers only queue mode + account identity.
+  // Avatar gender/model is never a filter, so male↔female, female↔female and
+  // male↔male matches all use the same pool.
   const unique: Row[] = [];
   const seen = new Set<string>();
   for (const row of liveRows) {
@@ -197,9 +286,6 @@ async function statusFor(svc: any, userId: string, clientSessionId = '') {
     return { queue: null, match: null };
   }
 
-  // Any authenticated surface for this user can keep the same explicitly-created
-  // queue alive. Reading status never creates a queue and therefore cannot put a
-  // user into matchmaking by itself.
   if (queueHeartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS) {
     const patch: Row = { last_seen_at: nowIso() };
     if (clientSessionId) patch.client_session_id = String(clientSessionId).slice(0, 160);
@@ -220,10 +306,6 @@ async function statusFor(svc: any, userId: string, clientSessionId = '') {
       return { queue: null, match: null };
     }
 
-    // Both player accounts must still have a live matched queue. It does not
-    // matter whether each player is using editor preview, published/live, or has
-    // both open at once. If an account disappears entirely past the TTL, both
-    // sides are released and must explicitly queue again.
     const pairAlive = await validateMatchedPair(svc, match);
     if (!pairAlive) {
       await cancelMatchForAll(svc, match);
@@ -257,12 +339,14 @@ Deno.serve(async (req) => {
       const mode = String(data.mode || '').toLowerCase();
       if (!MODES.has(mode)) return json({ error: 'Choose PvP, PvE, or World Boss.' }, 400);
       const requestId = String(data.request_id || '').slice(0, 100);
+      const avatarSnapshot = await getAvatarSnapshot(svc, String(user.id));
 
-      // If this account is already waiting or matched, another surface must join
-      // that same state rather than destroy/recreate it. This is what lets editor
-      // preview and published/live show the same PvP match simultaneously.
+      // Existing queue state is reused across editor/live, but always refresh its
+      // selected avatar snapshot. Selecting a female character must never cancel,
+      // reject or fork matchmaking.
       const existing = await latestQueueForUser(svc, String(user.id));
       if (existing) {
+        await syncQueueAvatarSnapshot(svc, existing, avatarSnapshot);
         const current = await statusFor(svc, String(user.id), clientSessionId);
         if (current.queue) {
           return json({ queue: publicQueue(current.queue), match: publicMatch(current.match), server_time: Date.now() });
@@ -273,20 +357,19 @@ Deno.serve(async (req) => {
         const prior = await svc.AIBattleQueueEntry.filter({ user_id: user.id, request_id: requestId }, '-created_date', 5);
         const activePrior = prior.find((row: Row) => row.status === 'waiting' || row.status === 'matched');
         if (activePrior) {
+          await syncQueueAvatarSnapshot(svc, activePrior, avatarSnapshot);
           const current = await statusFor(svc, String(user.id), clientSessionId);
           return json({ queue: publicQueue(current.queue), match: publicMatch(current.match), server_time: Date.now() });
         }
       }
 
-      // A brand-new queue row is ONLY created by explicit Enter Queue. Status,
-      // opening AI Battle, opening the editor, or opening the published app never
-      // creates matchmaking state.
       await cancelOtherWaiting(svc, String(user.id));
 
       const created = await svc.AIBattleQueueEntry.create({
         user_id: String(user.id),
         player_name: playerName(user),
         avatar_url: user.avatar_url || user.profile_image || '',
+        ...avatarSnapshot,
         mode,
         status: 'waiting',
         request_id: requestId,
@@ -305,8 +388,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'cancel' || action === 'reset') {
-      // Cancel is account-wide and intentionally tears down a linked match for
-      // both players. The remaining player never stays trapped on Connecting.
       await retireCurrentMatch(svc, String(user.id));
       return json({ queue: null, match: null, server_time: Date.now() });
     }
