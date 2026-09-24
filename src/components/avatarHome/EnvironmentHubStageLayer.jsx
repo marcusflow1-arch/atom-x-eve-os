@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
-import { touchAIBattleQueueSession } from '@/components/battle/useAIBattleQueue';
+import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
 import {
   DEFAULT_ENVIRONMENT_CONFIG,
   configStorageKey,
@@ -29,21 +29,15 @@ export default function EnvironmentHubStageLayer() {
   const { user } = useAuth();
   const [config, setConfig] = useState(() => readConfig(user?.id));
 
+  // This hook is intentionally mounted with the dashboard itself rather than
+  // only inside the AI Battle popup. It is the editor/live PvP session bridge:
+  // status polling, queue heartbeat, dashboard-channel join and ready checks all
+  // continue after the menu closes and run identically in preview and published
+  // surfaces. Merely mounting it never creates a queue; only Enter Queue does.
+  useAIBattleQueue();
+
   useEffect(() => {
     setConfig(readConfig(user?.id));
-  }, [user?.id]);
-
-  // Queue state survives closing/reopening the AI Battle menu because its
-  // heartbeat belongs to the dashboard page, not the overlay. Conversely, a
-  // full reload gets a new page-session id and invalidates the previous queue so
-  // neither PvP client can remain stuck on a stale Connecting state.
-  useEffect(() => {
-    if (!user?.id) return undefined;
-    let cancelled = false;
-    touchAIBattleQueueSession().catch((error) => {
-      if (!cancelled) console.warn('[AI Battle] dashboard queue session check failed', error);
-    });
-    return () => { cancelled = true; };
   }, [user?.id]);
 
   useEffect(() => {
