@@ -5,9 +5,6 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { dashboardSession, joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 
 const requestId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-// This id identifies one browser surface for diagnostics only. Queue ownership is
-// account-level, so editor preview and published/live surfaces for the same user
-// are allowed to observe and keep the same queue/match alive.
 const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-surface-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let heartbeatTimer = null;
 let heartbeatBusy = false;
@@ -20,6 +17,10 @@ const unwrap = (response) => {
 const invoke = async (action, data = {}) => unwrap(await base44.functions.invoke('aiBattleMatchmaker', { action, data }));
 const sessionData = (extra = {}) => ({ client_session_id: PAGE_QUEUE_SESSION_ID, ...extra });
 const isActiveQueue = (body) => ['waiting', 'matched'].includes(String(body?.queue?.status || ''));
+const numericHp = (value, fallback = 1000) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
 
 export const getAIBattleClientSessionId = () => PAGE_QUEUE_SESSION_ID;
 
@@ -50,12 +51,6 @@ export function startAIBattleQueueHeartbeat() {
   }, 10000);
 }
 
-/**
- * Always-mounted dashboard surfaces call this as a status touch only. It never
- * creates a queue. Reopening, reloading, editor preview and published/live can
- * all recover the same account-level queue/match until the user explicitly
- * cancels or every active surface disappears long enough for the server TTL.
- */
 export async function touchAIBattleQueueSession() {
   const body = await invoke('status', sessionData());
   if (isActiveQueue(body)) startAIBattleQueueHeartbeat();
@@ -69,6 +64,8 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
   const queryClient = useQueryClient();
   const readyAttempt = useRef('');
   const joinAttempt = useRef('');
+  const resolveAttempt = useRef('');
+  const serverHpRef = useRef({ matchId: '', hp: null });
   const key = ['ai-battle-matchmaking', user?.id];
 
   const state = useQuery({
@@ -77,13 +74,13 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     queryFn: () => invoke('status', sessionData()),
     refetchInterval: (query) => {
       const status = query.state.data;
-      if (status?.queue?.status === 'waiting' || status?.match?.status === 'matched') return 5000;
-      if (status?.match?.status === 'ready') return 3000;
+      if (status?.queue?.status === 'waiting' || status?.match?.status === 'matched') return 3000;
+      if (status?.match?.status === 'ready') return 1000;
       return 15000;
     },
     refetchOnWindowFocus: true,
     retry: false,
-    staleTime: 1500,
+    staleTime: 500,
   });
 
   const mutation = useMutation({
@@ -100,17 +97,6 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
   }, [queue?.status, match?.status]);
 
-  // Match joining is deliberately part of the always-mounted bridge instead of
-  // the AI Battle menu. Any dashboard surface therefore enters the exact same
-  // PvP room even when the menu is closed, including Base44 editor preview.
-  //
-  // Important: DashboardAvatarScene used to require the dashboard room heartbeat
-  // to finish before it would render the PvP staging. In editor preview the match
-  // could already be READY while that room snapshot was still the user's default
-  // dashboard, so the editor showed the home screen even though the popup said
-  // "Match connected". Publish the server-authored match roster provisionally so
-  // the battle stage appears immediately, then let the real dashboard heartbeat
-  // replace it with authoritative PlayerState/appearance data.
   useEffect(() => {
     if (!sessionBridge || !match?.id || !user?.id || match.status === 'ended') return undefined;
 
@@ -124,7 +110,6 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     const channelMatches = String(session.channel_id || '') === channelId;
     const hasWholePair = requiredIds.length === 2 && requiredIds.every((id) => currentById.has(id));
 
-    // If the real dashboard heartbeat already owns the full room, leave it alone.
     if (channelMatches && hasWholePair && session.status === 'connected') {
       joinAttempt.current = token;
       return undefined;
@@ -138,9 +123,6 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
       matchId: String(match.id),
     };
 
-    // Keep a durable hand-off for Base44 editor preview. If MultiplayerSystem has
-    // not installed its event listener yet, it consumes this pending join when it
-    // mounts instead of falling back to dashboard_<local user>.
     window.__lunaPendingDashboardJoin = joinDetail;
 
     if (joinAttempt.current !== token || !channelMatches) {
@@ -163,16 +145,25 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     if (!channelMatches || !hasWholePair) {
       const provisionalPlayers = requiredIds.map((id, index) => {
         const existing = currentById.get(id);
-        if (existing) return { ...existing, channel_id: channelId };
-
         const meta = matchById.get(id) || {};
+        if (existing) {
+          return {
+            ...existing,
+            channel_id: channelId,
+            hp: numericHp(meta.hp, existing.hp ?? 1000),
+            max_hp: numericHp(meta.max_hp ?? meta.maxHp, existing.max_hp ?? existing.maxHp ?? 1000),
+          };
+        }
+
         const isLocal = id === String(user.id);
         return {
           player_id: id,
           display_name: meta.name || meta.display_name || (isLocal ? (user.full_name || user.username || 'You') : 'Opponent'),
           avatar_url: meta.avatar_url || '',
           model_url: meta.model_url || '',
-          appearance: meta.appearance || { gender: 'male', name: meta.name || meta.display_name || (isLocal ? 'Player' : 'Opponent') },
+          appearance: meta.appearance || { gender: meta.gender || 'male', name: meta.name || meta.display_name || (isLocal ? 'Player' : 'Opponent') },
+          hp: numericHp(meta.hp, 1000),
+          max_hp: numericHp(meta.max_hp ?? meta.maxHp, 1000),
           channel_id: channelId,
           last_update: Date.now(),
           dashboard_joined_at: Date.now() + index,
@@ -236,43 +227,116 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     return undefined;
   }, [sessionBridge, match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.status, session.players, queryClient, key]);
 
-  // Relay confirmed local damage to the other dashboard peer. DashboardAvatarScene
-  // remains the place that computes the current prototype damage amount; this
-  // layer only mirrors the result so editor and published/live see the same hit.
+  // The server is authoritative for turn ownership. Every time the shared match
+  // changes, announce that same actor locally so both clients render opposite
+  // states: one sees "Your turn" while the other sees "Your opponent's turn".
   useEffect(() => {
-    if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
+    if (!sessionBridge || typeof window === 'undefined' || !match?.id || match.status !== 'ready' || !match.current_turn_id) return undefined;
+    window.dispatchEvent(new CustomEvent('lunaAIBattleTurnChanged', {
+      detail: {
+        matchId: String(match.id),
+        actorId: String(match.current_turn_id),
+        revision: Number(match.turn_revision || 0),
+        authoritative: true,
+      },
+    }));
+    return undefined;
+  }, [sessionBridge, match?.id, match?.status, match?.current_turn_id, match?.turn_revision]);
+
+  // A local confirmed hit is resolved through the matchmaking function instead
+  // of WebRTC. Damage and the turn pass are one atomic server update, so there is
+  // no state where both clients believe they are waiting on the other player.
+  useEffect(() => {
+    if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id || match.status !== 'ready') return undefined;
     const localId = String(user.id);
     const matchId = String(match.id);
 
-    const relayDamage = (event) => {
+    const resolveLocalHit = async (event) => {
       const detail = event?.detail || {};
-      if (detail.network === true) return;
+      if (detail.network === true || detail.authoritative === true) return;
       if (String(detail.matchId || '') !== matchId) return;
       if (String(detail.sourcePlayerId || '') !== localId) return;
+      if (String(match.current_turn_id || '') !== localId) return;
+
       const targetPlayerId = String(detail.targetPlayerId || '');
       const damage = Math.max(0, Number(detail.damage) || 0);
       if (!targetPlayerId || !damage) return;
 
-      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', {
-        detail: {
-          kind: 'ai_battle_damage',
-          matchId,
-          effectId: detail.effectId || '',
-          sourcePlayerId: localId,
-          targetPlayerId,
+      const attemptKey = `${matchId}:${Number(match.turn_revision || 0)}:${detail.effectId || 'attack'}:${targetPlayerId}`;
+      if (resolveAttempt.current === attemptKey) return;
+      resolveAttempt.current = attemptKey;
+
+      try {
+        const body = await invoke('end_turn', sessionData({
+          match_id: matchId,
+          expected_revision: Number(match.turn_revision || 0),
+          target_player_id: targetPlayerId,
           damage,
-          autoHit: detail.autoHit !== false,
-        },
-      }));
+          effect_id: detail.effectId || '',
+        }));
+
+        queryClient.setQueryData(key, (prev = {}) => ({ ...prev, match: body.match || prev.match }));
+        const actorId = String(body?.match?.current_turn_id || body?.current_turn_id || '');
+        if (actorId) {
+          window.dispatchEvent(new CustomEvent('lunaAIBattleTurnChanged', {
+            detail: {
+              matchId,
+              actorId,
+              revision: Number(body?.match?.turn_revision || 0),
+              authoritative: true,
+            },
+          }));
+        }
+      } catch (error) {
+        console.warn('[AI Battle] server hit resolution will reconcile from status', error);
+        queryClient.invalidateQueries({ queryKey: key });
+      }
     };
 
-    window.addEventListener('lunaAIBattleDamageApplied', relayDamage);
-    return () => window.removeEventListener('lunaAIBattleDamageApplied', relayDamage);
-  }, [sessionBridge, match?.id, user?.id]);
+    window.addEventListener('lunaAIBattleDamageApplied', resolveLocalHit);
+    return () => window.removeEventListener('lunaAIBattleDamageApplied', resolveLocalHit);
+  }, [sessionBridge, match?.id, match?.status, match?.current_turn_id, match?.turn_revision, user?.id, queryClient, key]);
 
-  // Consume PvP actions arriving from the WebRTC dashboard channel. This is what
-  // makes an editor player and a published/live player behave as two peers in
-  // the same match rather than two unrelated UI previews.
+  // Reconcile this client's own HP from the server roster. This replaces the old
+  // peer-only damage path, so editor/live, live/live and delayed WebRTC sessions
+  // all receive the same damage. On reload, the difference from max HP restores
+  // cumulative damage instead of visually healing the player back to 1000.
+  useEffect(() => {
+    if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
+    const localId = String(user.id);
+    const localPlayer = (match.players || []).find((player) => String(player.id || player.player_id || '') === localId);
+    if (!localPlayer) return undefined;
+
+    const maxHp = Math.max(1, numericHp(localPlayer.max_hp ?? localPlayer.maxHp, 1000));
+    const serverHp = Math.min(maxHp, numericHp(localPlayer.hp, maxHp));
+    const previous = serverHpRef.current.matchId === String(match.id)
+      ? serverHpRef.current.hp
+      : maxHp;
+
+    if (previous !== null && serverHp < previous) {
+      window.dispatchEvent(new CustomEvent('lunaAIBattleDamageApplied', {
+        detail: {
+          effectId: match.last_attack?.effect_id || '',
+          sourcePlayerId: String(match.last_attack?.source_player_id || ''),
+          targetPlayerId: localId,
+          damage: previous - serverHp,
+          hpAfter: serverHp,
+          maxHp,
+          autoHit: true,
+          matchId: String(match.id),
+          network: true,
+          authoritative: true,
+          attackRevision: Number(match.attack_revision || 0),
+        },
+      }));
+    }
+
+    serverHpRef.current = { matchId: String(match.id), hp: serverHp };
+    return undefined;
+  }, [sessionBridge, match?.id, match?.players, match?.attack_revision, match?.last_attack, user?.id]);
+
+  // WebRTC remains useful for showing the remote card cast/animation quickly,
+  // but it no longer owns damage or turns. Those are server authoritative above.
   useEffect(() => {
     if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
     const localId = String(user.id);
@@ -284,41 +348,29 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
       const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
       if (!sourcePlayerId || sourcePlayerId === localId || !matchIds.has(sourcePlayerId)) return;
       if (String(detail.matchId || '') !== matchId) return;
+      if (detail.kind !== 'ai_battle_card_cast') return;
+      if (String(detail.targetPlayerId || '') !== localId) return;
 
-      if (detail.kind === 'ai_battle_card_cast') {
-        if (String(detail.targetPlayerId || '') !== localId) return;
-        window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', {
-          detail: {
-            ...detail,
-            sourcePlayerId,
-            targetPlayerId: localId,
-            network: true,
-          },
-        }));
-        return;
-      }
-
-      if (detail.kind === 'ai_battle_damage') {
-        if (String(detail.targetPlayerId || '') !== localId) return;
-        const damage = Math.max(0, Number(detail.damage) || 0);
-        if (!damage) return;
-        window.dispatchEvent(new CustomEvent('lunaAIBattleDamageApplied', {
-          detail: {
-            effectId: detail.effectId || '',
-            sourcePlayerId,
-            targetPlayerId: localId,
-            damage,
-            autoHit: detail.autoHit !== false,
-            matchId,
-            network: true,
-          },
-        }));
-      }
+      window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', {
+        detail: {
+          ...detail,
+          sourcePlayerId,
+          targetPlayerId: localId,
+          network: true,
+        },
+      }));
     };
 
     window.addEventListener('webrtcRemoteAction', receiveRemoteAction);
     return () => window.removeEventListener('webrtcRemoteAction', receiveRemoteAction);
   }, [sessionBridge, match?.id, match?.player_ids, user?.id]);
+
+  useEffect(() => {
+    if (!match?.id) {
+      resolveAttempt.current = '';
+      serverHpRef.current = { matchId: '', hp: null };
+    }
+  }, [match?.id]);
 
   const join = async (mode) => {
     const body = await mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } });
@@ -331,6 +383,8 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     stopAIBattleQueueHeartbeat();
     readyAttempt.current = '';
     joinAttempt.current = '';
+    resolveAttempt.current = '';
+    serverHpRef.current = { matchId: '', hp: null };
     return body;
   };
 
@@ -339,6 +393,8 @@ export default function useAIBattleQueue({ sessionBridge = true } = {}) {
     stopAIBattleQueueHeartbeat();
     readyAttempt.current = '';
     joinAttempt.current = '';
+    resolveAttempt.current = '';
+    serverHpRef.current = { matchId: '', hp: null };
     return body;
   };
 
