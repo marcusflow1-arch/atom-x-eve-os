@@ -63,7 +63,7 @@ export async function touchAIBattleQueueSession() {
   return body;
 }
 
-export default function useAIBattleQueue() {
+export default function useAIBattleQueue({ sessionBridge = true } = {}) {
   const { user } = useAuth();
   const session = useDashboardSession();
   const queryClient = useQueryClient();
@@ -100,13 +100,13 @@ export default function useAIBattleQueue() {
     else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
   }, [queue?.status, match?.status]);
 
-  // Match joining is deliberately part of the hook instead of the AI Battle
-  // menu. Any dashboard surface using the hook therefore enters the exact same
+  // Match joining is deliberately part of the always-mounted bridge instead of
+  // the AI Battle menu. Any dashboard surface therefore enters the exact same
   // PvP room even when the menu is closed, including Base44 editor preview.
   useEffect(() => {
-    if (!match?.id || !user?.id || match.status === 'ended') return;
+    if (!sessionBridge || !match?.id || !user?.id || match.status === 'ended') return undefined;
     const token = `${match.id}:${match.host_id}`;
-    if (joinAttempt.current === token && String(session.channel_id || '') === String(match.dashboard_channel || '')) return;
+    if (joinAttempt.current === token && String(session.channel_id || '') === String(match.dashboard_channel || '')) return undefined;
     joinAttempt.current = token;
 
     if (String(user.id) === String(match.host_id)) {
@@ -122,9 +122,6 @@ export default function useAIBattleQueue() {
         }));
       }
     } else if (String(session.channel_id || '') !== String(match.dashboard_channel || '')) {
-      // Preserve the exact server-authored battle channel. joinDashboard performs
-      // the social preflight, then this explicit event guarantees editor/live do
-      // not drift onto different dashboard channels.
       joinDashboard({ id: match.host_id, name: match.host_name || 'Player' })
         .then(() => {
           window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
@@ -142,14 +139,15 @@ export default function useAIBattleQueue() {
           joinAttempt.current = '';
         });
     }
-  }, [match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, session.channel_id, user?.id]);
+    return undefined;
+  }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, session.channel_id, user?.id]);
 
   useEffect(() => {
-    if (!match?.id || match.status === 'ready') return;
-    if (String(session.channel_id || '') !== String(match.dashboard_channel || '')) return;
+    if (!sessionBridge || !match?.id || match.status === 'ready') return undefined;
+    if (String(session.channel_id || '') !== String(match.dashboard_channel || '')) return undefined;
     const present = new Set((session.players || []).map((player) => String(player.player_id)));
-    if (!(match.player_ids || []).every((id) => present.has(String(id)))) return;
-    if (readyAttempt.current === match.id) return;
+    if (!(match.player_ids || []).every((id) => present.has(String(id)))) return undefined;
+    if (readyAttempt.current === match.id) return undefined;
     readyAttempt.current = match.id;
     invoke('ready', sessionData({ match_id: match.id }))
       .then((body) => queryClient.setQueryData(key, (prev = {}) => ({ ...prev, match: body.match || prev.match })))
@@ -157,13 +155,14 @@ export default function useAIBattleQueue() {
         console.warn('[AI Battle] ready check will retry', error);
         window.setTimeout(() => { readyAttempt.current = ''; }, 3000);
       });
-  }, [match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.players, queryClient, key]);
+    return undefined;
+  }, [sessionBridge, match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.players, queryClient, key]);
 
   // Relay confirmed local damage to the other dashboard peer. DashboardAvatarScene
   // remains the place that computes the current prototype damage amount; this
   // layer only mirrors the result so editor and published/live see the same hit.
   useEffect(() => {
-    if (typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
+    if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
     const localId = String(user.id);
     const matchId = String(match.id);
 
@@ -191,13 +190,13 @@ export default function useAIBattleQueue() {
 
     window.addEventListener('lunaAIBattleDamageApplied', relayDamage);
     return () => window.removeEventListener('lunaAIBattleDamageApplied', relayDamage);
-  }, [match?.id, user?.id]);
+  }, [sessionBridge, match?.id, user?.id]);
 
   // Consume PvP actions arriving from the WebRTC dashboard channel. This is what
   // makes an editor player and a published/live player behave as two peers in
   // the same match rather than two unrelated UI previews.
   useEffect(() => {
-    if (typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
+    if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
     const localId = String(user.id);
     const matchId = String(match.id);
     const matchIds = new Set((match.player_ids || []).map(String));
@@ -241,7 +240,7 @@ export default function useAIBattleQueue() {
 
     window.addEventListener('webrtcRemoteAction', receiveRemoteAction);
     return () => window.removeEventListener('webrtcRemoteAction', receiveRemoteAction);
-  }, [match?.id, match?.player_ids, user?.id]);
+  }, [sessionBridge, match?.id, match?.player_ids, user?.id]);
 
   const join = async (mode) => {
     const body = await mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } });
