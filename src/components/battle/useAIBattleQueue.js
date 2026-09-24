@@ -5,7 +5,10 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 
 const requestId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+// This id identifies one browser surface for diagnostics only. Queue ownership is
+// account-level, so editor preview and published/live surfaces for the same user
+// are allowed to observe and keep the same queue/match alive.
+const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-surface-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let heartbeatTimer = null;
 let heartbeatBusy = false;
 
@@ -48,9 +51,10 @@ export function startAIBattleQueueHeartbeat() {
 }
 
 /**
- * Called by the always-mounted dashboard stage. This is deliberately a status
- * touch, never a join: opening/reloading the dashboard cannot put the user into
- * matchmaking. A new page session invalidates a queue created by the old page.
+ * Always-mounted dashboard surfaces call this as a status touch only. It never
+ * creates a queue. Reopening, reloading, editor preview and published/live can
+ * all recover the same account-level queue/match until the user explicitly
+ * cancels or every active surface disappears long enough for the server TTL.
  */
 export async function touchAIBattleQueueSession() {
   const body = await invoke('status', sessionData());
@@ -96,25 +100,49 @@ export default function useAIBattleQueue() {
     else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
   }, [queue?.status, match?.status]);
 
+  // Match joining is deliberately part of the hook instead of the AI Battle
+  // menu. Any dashboard surface using the hook therefore enters the exact same
+  // PvP room even when the menu is closed, including Base44 editor preview.
   useEffect(() => {
     if (!match?.id || !user?.id || match.status === 'ended') return;
     const token = `${match.id}:${match.host_id}`;
-    if (joinAttempt.current === token && session.host_id === match.host_id) return;
+    if (joinAttempt.current === token && String(session.channel_id || '') === String(match.dashboard_channel || '')) return;
     joinAttempt.current = token;
 
     if (String(user.id) === String(match.host_id)) {
-      if (String(session.host_id || '') !== String(match.host_id)) {
+      if (String(session.channel_id || '') !== String(match.dashboard_channel || '')) {
         window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-          detail: { channelId: match.dashboard_channel, hostId: match.host_id, hostName: match.host_name || 'My', aiBattle: true },
+          detail: {
+            channelId: match.dashboard_channel,
+            hostId: match.host_id,
+            hostName: match.host_name || 'My',
+            aiBattle: true,
+            matchId: match.id,
+          },
         }));
       }
-    } else if (String(session.host_id || '') !== String(match.host_id)) {
-      joinDashboard({ id: match.host_id, name: match.host_name || 'Player' }).catch((error) => {
-        console.warn('[AI Battle] dashboard join is retrying', error);
-        joinAttempt.current = '';
-      });
+    } else if (String(session.channel_id || '') !== String(match.dashboard_channel || '')) {
+      // Preserve the exact server-authored battle channel. joinDashboard performs
+      // the social preflight, then this explicit event guarantees editor/live do
+      // not drift onto different dashboard channels.
+      joinDashboard({ id: match.host_id, name: match.host_name || 'Player' })
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+            detail: {
+              channelId: match.dashboard_channel,
+              hostId: match.host_id,
+              hostName: match.host_name || 'Player',
+              aiBattle: true,
+              matchId: match.id,
+            },
+          }));
+        })
+        .catch((error) => {
+          console.warn('[AI Battle] dashboard join is retrying', error);
+          joinAttempt.current = '';
+        });
     }
-  }, [match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, session.host_id, user?.id]);
+  }, [match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, session.channel_id, user?.id]);
 
   useEffect(() => {
     if (!match?.id || match.status === 'ready') return;
