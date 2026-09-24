@@ -93,6 +93,28 @@ export function useSkills() {
       window.dispatchEvent(new CustomEvent('lunaCardAbilityTargeted', { detail }));
       window.dispatchEvent(new CustomEvent('lunaCardAnimationEffectProc', { detail }));
 
+      // The dashboard multiplayer layer carries the same committed card to the
+      // opponent regardless of whether either player is using editor preview or
+      // published/live. This does not create a second cast locally; it is only a
+      // peer notification for the remote PvP presentation/combat bridge.
+      if (battleTurn?.matchId && target?.playerId) {
+        window.dispatchEvent(new CustomEvent('multiplayerLocalAction', {
+          detail: {
+            kind: 'ai_battle_card_cast',
+            matchId: String(battleTurn.matchId),
+            turnRevision: Number(battleTurn.revision || 0),
+            slotIndex,
+            effectId,
+            effect: {
+              id: effectId,
+              clip_name: effect?.clip_name || effect?.clipName || '',
+              duration_ms: durationMs,
+            },
+            targetPlayerId: String(target.playerId),
+          },
+        }));
+      }
+
       // Compatibility bridge while older Getsuga listeners are phased out.
       if (effectId === 'getsuga_tensho') {
         window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoProc', { detail }));
