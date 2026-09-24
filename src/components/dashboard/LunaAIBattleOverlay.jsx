@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
 import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
 import { showError } from '@/components/error/ErrorToast';
@@ -14,6 +14,7 @@ const isRateLimitError = (error) => /rate limit|too many requests|too many attem
 export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
+  const wasReadyRef = useRef(false);
   // The always-mounted dashboard stage owns room joining, ready checks and peer
   // relays. This popup is UI/control only so opening it cannot duplicate attacks
   // or damage broadcasts.
@@ -29,6 +30,25 @@ export default function LunaAIBattleOverlay({ onClose }) {
   useEffect(() => {
     if (queuedMode && MODES.some((item) => item.id === queuedMode)) setMode(queuedMode);
   }, [queuedMode]);
+
+  // When a queue that was visible in this popup actually becomes READY, treat it
+  // as a game-state transition and reveal the battle stage automatically. If the
+  // user opens AI Battle later while already in a match, keep the popup open so
+  // Leave Match remains accessible.
+  useEffect(() => {
+    const becameReady = ready && !wasReadyRef.current;
+    wasReadyRef.current = ready;
+    if (!becameReady) return undefined;
+
+    const timer = window.setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
+        detail: { matchId: battle.match?.id || null, mode: battle.match?.mode || mode },
+      }));
+      onClose?.();
+    }, 220);
+
+    return () => window.clearTimeout(timer);
+  }, [ready, battle.match?.id, battle.match?.mode, mode, onClose]);
 
   const leaveQueue = useCallback(async () => {
     if (battle.busy) return;
@@ -78,7 +98,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
     : waiting
       ? 'You are in the queue. Closing this menu will not remove you. Cancel or unselect this mode to leave.'
       : ready
-        ? 'Match connected. Leaving here ends the match for both players; otherwise close this menu and continue the battle.'
+        ? 'Match connected. Entering the PvP battle stage…'
         : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
 
   return (
@@ -119,7 +139,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
         <div className="p-4">
           <div className="flex min-h-[58px] items-center border border-white/[0.07] bg-white/[0.025] px-4">
-            {(battle.busy || connecting) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
+            {(battle.busy || connecting || ready) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
             <div>
               <p className="text-[10px] font-semibold text-white/80">{active.label}</p>
               <p className="mt-1 text-[8px] text-white/42">{statusText}</p>
@@ -132,7 +152,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
             ) : connecting ? (
               <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 hover:bg-cyan-100/[0.08] disabled:opacity-50">{battle.busy ? 'Leaving Match…' : 'Cancel Match · Q'}</button>
             ) : ready ? (
-              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05] disabled:opacity-50">{battle.busy ? 'Leaving Match…' : 'Leave Match · Q'}</button>
+              <button type="button" disabled className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 opacity-80">Entering Match…</button>
             ) : (
               <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : 'Enter Queue · Q'}</button>
             )}
