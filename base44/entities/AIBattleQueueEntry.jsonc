@@ -15,6 +15,10 @@
       "default": "waiting"
     },
     "request_id": { "type": "string" },
+    "client_session_id": {
+      "type": "string",
+      "description": "Ephemeral browser-page session that explicitly entered this queue. A reload creates a new session and invalidates the old queue instead of silently restoring it."
+    },
     "queued_at": { "type": "string", "format": "date-time" },
     "last_seen_at": { "type": "string", "format": "date-time" },
     "matched_at": { "type": "string", "format": "date-time" },
