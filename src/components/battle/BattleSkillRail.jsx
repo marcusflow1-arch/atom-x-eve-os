@@ -137,7 +137,7 @@ export default function BattleSkillRail({
           <span className={`${hand ? 'text-[8px]' : 'text-[7px]'} font-black uppercase tracking-[0.30em] text-cyan-50/72`}>Skills</span>
         </div>
         <div className={`${hand ? 'w-[52%]' : 'w-1/2'} mx-auto h-px bg-gradient-to-r from-transparent via-cyan-100/56 to-transparent`} />
-        <div className={`${hand ? 'w-full' : 'w-full'} mt-[2px] h-px bg-gradient-to-r from-transparent via-cyan-100/38 to-transparent`} />
+        <div className="mt-[2px] h-px w-full bg-gradient-to-r from-transparent via-cyan-100/38 to-transparent" />
 
         <div className={`${hand ? 'mt-[10px]' : 'mt-[7px]'} flex items-start justify-center gap-[2px]`}>
           {cards.map((card, index) => card ? (
@@ -154,32 +154,24 @@ export default function BattleSkillRail({
           ))}
         </div>
 
-        {!hand && (
-          <div
-            className="mx-auto mt-[7px] w-[72%] text-center"
-            data-ai-battle-player-hp="true"
-            aria-label={`${playerName} health ${Math.round(safeHp)} of ${Math.round(safeMaxHp)}, ${Math.round(hpPct)} percent`}
-          >
-            <div className="mb-1 truncate text-[7px] font-black uppercase tracking-[0.12em] text-white/68">
-              {playerName}
-            </div>
-            <div className="h-[11px] overflow-hidden rounded-full border border-white/15 bg-slate-950/78 p-[2px] shadow-[0_5px_18px_rgba(0,0,0,.38)] backdrop-blur-md">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-cyan-300 to-sky-100 transition-[width] duration-300"
-                style={{ width: `${hpPct}%` }}
-              />
-            </div>
-            <div className="mt-1 text-[7px] font-semibold tabular-nums text-white/76">
-              {Math.round(safeHp)} / {Math.round(safeMaxHp)} HP · {Math.round(hpPct)}%
-            </div>
+        <div
+          className={`mx-auto mt-[7px] ${hand ? 'w-[68%]' : 'w-[72%]'} text-center`}
+          data-ai-battle-player-hp="true"
+          aria-label={`${playerName} health ${Math.round(safeHp)} of ${Math.round(safeMaxHp)}, ${Math.round(hpPct)} percent`}
+        >
+          <div className={`mb-1 truncate ${hand ? 'text-[8px]' : 'text-[7px]'} font-black uppercase tracking-[0.12em] text-white/72`}>
+            {playerName}
           </div>
-        )}
-
-        {hand && (
-          <div className="mt-2 text-center text-[7px] font-black uppercase tracking-[0.18em] text-cyan-50/55">
-            Choose your card
+          <div className={`${hand ? 'h-[12px]' : 'h-[11px]'} overflow-hidden rounded-full border border-white/15 bg-slate-950/78 p-[2px] shadow-[0_5px_18px_rgba(0,0,0,.38)] backdrop-blur-md`}>
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-cyan-300 to-sky-100 transition-[width] duration-300"
+              style={{ width: `${hpPct}%` }}
+            />
           </div>
-        )}
+          <div className={`mt-1 ${hand ? 'text-[8px]' : 'text-[7px]'} font-semibold tabular-nums text-white/80`}>
+            {Math.round(safeHp)} / {Math.round(safeMaxHp)} HP · {Math.round(hpPct)}%
+          </div>
+        </div>
       </div>
     </div>
   );
