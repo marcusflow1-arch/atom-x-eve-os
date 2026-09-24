@@ -37,6 +37,9 @@ function publicMatch(row: Row | null) {
     dashboard_channel: row.dashboard_channel,
     player_ids: Array.isArray(row.player_ids) ? row.player_ids : [],
     players: Array.isArray(row.players) ? row.players : [],
+    current_turn_id: row.current_turn_id || row.host_id || null,
+    turn_revision: Number(row.turn_revision || 0),
+    turn_started_at: row.turn_started_at || row.ready_at || null,
   };
 }
 
@@ -94,6 +97,9 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
         { id: String(first.user_id), name: first.player_name || 'Player', avatar_url: first.avatar_url || '' },
         { id: String(second.user_id), name: second.player_name || 'Player', avatar_url: second.avatar_url || '' },
       ],
+      current_turn_id: String(first.user_id),
+      turn_revision: 0,
+      turn_started_at: nowIso(),
     });
 
     matches = await svc.AIBattleMatch.filter({ pair_key: pairKey }, 'created_date', 20);
@@ -222,10 +228,56 @@ Deno.serve(async (req) => {
       const room = await svc.PlayerState.filter({ channel_id: match.dashboard_channel });
       const liveIds = new Set(room.filter(isDashboardLive).map((row: Row) => String(row.player_id)));
       const ready = (match.player_ids || []).every((id: string) => liveIds.has(String(id)));
-      const updated = ready && match.status !== 'ready'
-        ? await svc.AIBattleMatch.update(match.id, { status: 'ready', ready_at: nowIso() })
-        : match;
+      let updated = match;
+      if (ready && (match.status !== 'ready' || !match.current_turn_id)) {
+        const patch: Row = {};
+        if (match.status !== 'ready') {
+          patch.status = 'ready';
+          patch.ready_at = nowIso();
+        }
+        if (!match.current_turn_id) {
+          patch.current_turn_id = String(match.host_id || match.player_ids?.[0] || '');
+          patch.turn_revision = Number(match.turn_revision || 0);
+          patch.turn_started_at = nowIso();
+        }
+        updated = await svc.AIBattleMatch.update(match.id, patch);
+      }
       return json({ match: publicMatch(updated), ready, server_time: Date.now() });
+    }
+
+    if (action === 'end_turn') {
+      const match = await getMatch(svc, String(data.match_id || ''));
+      if (!match || !(match.player_ids || []).map(String).includes(String(user.id))) return json({ error: 'Match not found.' }, 404);
+      if (match.status === 'ended') return json({ error: 'This match has ended.' }, 409);
+      if (String(match.mode || '') !== 'pvp') return json({ error: 'Turn passing is only enabled for PvP.' }, 409);
+
+      const ids = (match.player_ids || []).map(String);
+      const actorId = String(match.current_turn_id || match.host_id || ids[0] || '');
+      if (actorId !== String(user.id)) {
+        return json({ error: 'It is not your turn.', match: publicMatch(match), server_time: Date.now() }, 409);
+      }
+
+      const revision = Number(match.turn_revision || 0);
+      const expected = Number(data.expected_revision);
+      if (Number.isFinite(expected) && expected !== revision) {
+        return json({ error: 'Turn state changed. Refreshing match.', match: publicMatch(match), server_time: Date.now() }, 409);
+      }
+
+      const nextId = ids.find((id: string) => id !== actorId);
+      if (!nextId) return json({ error: 'Opponent not found.' }, 409);
+
+      const updated = await svc.AIBattleMatch.update(match.id, {
+        current_turn_id: nextId,
+        turn_revision: revision + 1,
+        turn_started_at: nowIso(),
+      });
+
+      return json({
+        match: publicMatch(updated),
+        previous_turn_id: actorId,
+        current_turn_id: nextId,
+        server_time: Date.now(),
+      });
     }
 
     return json({ error: 'Unknown AI Battle action.' }, 400);
