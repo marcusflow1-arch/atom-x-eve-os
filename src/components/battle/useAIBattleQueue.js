@@ -5,12 +5,59 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 
 const requestId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+let heartbeatTimer = null;
+let heartbeatBusy = false;
+
 const unwrap = (response) => {
   const body = response?.data ?? response ?? {};
   if (body?.error) throw new Error(body.error);
   return body;
 };
 const invoke = async (action, data = {}) => unwrap(await base44.functions.invoke('aiBattleMatchmaker', { action, data }));
+const sessionData = (extra = {}) => ({ client_session_id: PAGE_QUEUE_SESSION_ID, ...extra });
+const isActiveQueue = (body) => ['waiting', 'matched'].includes(String(body?.queue?.status || ''));
+
+export const getAIBattleClientSessionId = () => PAGE_QUEUE_SESSION_ID;
+
+export function stopAIBattleQueueHeartbeat() {
+  if (heartbeatTimer && typeof window !== 'undefined') window.clearInterval(heartbeatTimer);
+  heartbeatTimer = null;
+  heartbeatBusy = false;
+}
+
+async function heartbeatOnce() {
+  if (heartbeatBusy) return null;
+  heartbeatBusy = true;
+  try {
+    const body = await invoke('status', sessionData());
+    if (!isActiveQueue(body)) stopAIBattleQueueHeartbeat();
+    return body;
+  } finally {
+    heartbeatBusy = false;
+  }
+}
+
+export function startAIBattleQueueHeartbeat() {
+  if (typeof window === 'undefined' || heartbeatTimer) return;
+  heartbeatTimer = window.setInterval(() => {
+    heartbeatOnce().catch((error) => {
+      console.warn('[AI Battle] queue heartbeat will retry', error);
+    });
+  }, 10000);
+}
+
+/**
+ * Called by the always-mounted dashboard stage. This is deliberately a status
+ * touch, never a join: opening/reloading the dashboard cannot put the user into
+ * matchmaking. A new page session invalidates a queue created by the old page.
+ */
+export async function touchAIBattleQueueSession() {
+  const body = await invoke('status', sessionData());
+  if (isActiveQueue(body)) startAIBattleQueueHeartbeat();
+  else stopAIBattleQueueHeartbeat();
+  return body;
+}
 
 export default function useAIBattleQueue() {
   const { user } = useAuth();
@@ -23,25 +70,31 @@ export default function useAIBattleQueue() {
   const state = useQuery({
     queryKey: key,
     enabled: !!user?.id,
-    queryFn: () => invoke('status'),
+    queryFn: () => invoke('status', sessionData()),
     refetchInterval: (query) => {
       const status = query.state.data;
       if (status?.queue?.status === 'waiting' || status?.match?.status === 'matched') return 5000;
+      if (status?.match?.status === 'ready') return 3000;
       return 15000;
     },
     refetchOnWindowFocus: true,
     retry: false,
-    staleTime: 2000,
+    staleTime: 1500,
   });
 
   const mutation = useMutation({
-    mutationFn: ({ action, data }) => invoke(action, data),
+    mutationFn: ({ action, data }) => invoke(action, sessionData(data)),
     retry: false,
     onSuccess: (body) => queryClient.setQueryData(key, (prev = {}) => ({ ...prev, ...body })),
   });
 
   const match = state.data?.match || null;
   const queue = state.data?.queue || null;
+
+  useEffect(() => {
+    if (queue?.status === 'waiting' || queue?.status === 'matched') startAIBattleQueueHeartbeat();
+    else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
+  }, [queue?.status, match?.status]);
 
   useEffect(() => {
     if (!match?.id || !user?.id || match.status === 'ended') return;
@@ -70,13 +123,35 @@ export default function useAIBattleQueue() {
     if (!(match.player_ids || []).every((id) => present.has(String(id)))) return;
     if (readyAttempt.current === match.id) return;
     readyAttempt.current = match.id;
-    invoke('ready', { match_id: match.id })
+    invoke('ready', sessionData({ match_id: match.id }))
       .then((body) => queryClient.setQueryData(key, (prev = {}) => ({ ...prev, match: body.match || prev.match })))
       .catch((error) => {
         console.warn('[AI Battle] ready check will retry', error);
         window.setTimeout(() => { readyAttempt.current = ''; }, 3000);
       });
   }, [match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.players, queryClient, key]);
+
+  const join = async (mode) => {
+    const body = await mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } });
+    if (isActiveQueue(body)) startAIBattleQueueHeartbeat();
+    return body;
+  };
+
+  const cancel = async () => {
+    const body = await mutation.mutateAsync({ action: 'cancel', data: {} });
+    stopAIBattleQueueHeartbeat();
+    readyAttempt.current = '';
+    joinAttempt.current = '';
+    return body;
+  };
+
+  const reset = async () => {
+    const body = await mutation.mutateAsync({ action: 'reset', data: {} });
+    stopAIBattleQueueHeartbeat();
+    readyAttempt.current = '';
+    joinAttempt.current = '';
+    return body;
+  };
 
   return {
     queue,
@@ -85,8 +160,8 @@ export default function useAIBattleQueue() {
     error: state.error || mutation.error,
     busy: mutation.isPending,
     refresh: () => state.refetch(),
-    join: (mode) => mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } }),
-    cancel: () => mutation.mutateAsync({ action: 'cancel', data: {} }),
-    reset: () => mutation.mutateAsync({ action: 'reset', data: {} }),
+    join,
+    cancel,
+    reset,
   };
 }
