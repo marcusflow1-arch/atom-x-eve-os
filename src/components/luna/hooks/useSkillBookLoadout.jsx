@@ -5,6 +5,78 @@ import { useAuth } from '@/components/auth/AuthContext';
 import useLunaStore from '@/components/luna/useLunaStore';
 
 const unwrap = (response) => response?.data ?? response ?? {};
+const normalize = (value) => String(value || '').trim().toLowerCase();
+const ICHIGO_SKILL_NAME = 'Ichigo Kurosaki - Getsuga Tenshō';
+
+const hasIchigoSkill = (skills = []) => skills.some((skill) => {
+  const effectId = String(skill?.animation_effect?.id || skill?.card?.animation_effect?.id || '').trim();
+  return normalize(skill?.title || skill?.card_name) === normalize(ICHIGO_SKILL_NAME)
+    || effectId === 'getsuga_tensho';
+});
+
+const restoredSkillFromCard = (card) => ({
+  id: card.id,
+  user_card_id: card.id,
+  title: card.card_name || ICHIGO_SKILL_NAME,
+  description: card.description || 'Ichigo Kurosaki\'s Getsuga Tenshō ability.',
+  rarity: card.card_rarity || card.rarity || 'Unique',
+  image: card.card_image || card.image || '',
+  game_name: card.game_name || 'Bleach',
+  game_id: card.game_id || 'bleach',
+  genre: card.genre || 'Action',
+  unlock_condition: card.unlock_condition || 'Owned',
+  owned: true,
+  animation_effect: card.animation_effect || null,
+  card: {
+    ...card,
+    id: card.id,
+    user_card_id: card.id,
+    card_name: card.card_name || ICHIGO_SKILL_NAME,
+    card_type: card.card_type || 'Ability',
+    card_rarity: card.card_rarity || card.rarity || 'Unique',
+    card_image: card.card_image || card.image || '',
+    game_name: card.game_name || 'Bleach',
+  },
+});
+
+async function restoreIchigoIntoState(body, userId) {
+  if (!body || hasIchigoSkill(body.skills || [])) return body;
+
+  // skillBookLoadout.getState normally creates/repairs this card server-side.
+  // If the response ever omits it, recover the owned UserCard directly so the
+  // Skill Book cannot silently lose the working Getsuga ability again.
+  const rows = await base44.entities.UserCard.filter({
+    user_id: userId,
+    card_name: ICHIGO_SKILL_NAME,
+  }, '-created_date', 5).catch(() => []);
+
+  const card = rows?.[0];
+  if (!card) return body;
+
+  const restoredSkill = restoredSkillFromCard(card);
+  const skills = [...(body.skills || []), restoredSkill];
+  const games = [...(body.games || [])];
+  const bleachIndex = games.findIndex((game) => normalize(game.title) === 'bleach');
+
+  if (bleachIndex >= 0) {
+    games[bleachIndex] = {
+      ...games[bleachIndex],
+      total_skills: Math.max(Number(games[bleachIndex].total_skills || 0), 1),
+      owned_skills: Math.max(Number(games[bleachIndex].owned_skills || 0), 1),
+    };
+  } else {
+    games.push({
+      key: 'bleach',
+      id: 'bleach',
+      title: 'Bleach',
+      genre: restoredSkill.genre || 'Action',
+      total_skills: 1,
+      owned_skills: 1,
+    });
+  }
+
+  return { ...body, skills, games };
+}
 
 export function useSkillBookLoadout() {
   const { user } = useAuth();
@@ -24,7 +96,7 @@ export function useSkillBookLoadout() {
       });
       const body = unwrap(response);
       if (body?.error) throw new Error(body.error);
-      return body;
+      return restoreIchigoIntoState(body, user.id);
     },
     enabled: Boolean(user?.id),
     staleTime: 15000,
@@ -46,14 +118,14 @@ export function useSkillBookLoadout() {
     window.dispatchEvent(new CustomEvent('lunaSkillBookState', {
       detail: { state: stateQuery.data },
     }));
-  }, [stateQuery.data, assignToHotbar, clearHotbarSlot]);
+  }, [stateQuery.data, assignToHotbar, clearHotbarSlot, setActiveSkillRow]);
 
   const mutation = useMutation({
     mutationFn: async ({ action, data }) => {
       const response = await base44.functions.invoke('skillBookLoadout', { action, data });
       const body = unwrap(response);
       if (body?.error) throw new Error(body.error);
-      return body;
+      return restoreIchigoIntoState(body, user.id);
     },
     onSuccess: (next) => {
       queryClient.setQueryData(queryKey, next);
