@@ -23,6 +23,19 @@
       "type": "array",
       "items": { "type": "object" }
     },
+    "current_turn_id": {
+      "type": "string",
+      "description": "Player ID that currently owns the PvP card-selection turn."
+    },
+    "turn_revision": {
+      "type": "integer",
+      "default": 0,
+      "description": "Monotonic turn counter used to keep both PvP clients synchronized."
+    },
+    "turn_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "ready_at": { "type": "string", "format": "date-time" },
     "ended_at": { "type": "string", "format": "date-time" }
   },
