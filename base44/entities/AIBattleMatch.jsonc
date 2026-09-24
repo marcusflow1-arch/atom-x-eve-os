@@ -36,6 +36,15 @@
       "type": "string",
       "format": "date-time"
     },
+    "attack_revision": {
+      "type": "integer",
+      "default": 0,
+      "description": "Monotonic server-side PvP hit counter."
+    },
+    "last_attack": {
+      "type": "object",
+      "description": "Last server-authoritative PvP hit. Carries source, target, damage and resulting HP so both clients reconcile the same combat result."
+    },
     "ready_at": { "type": "string", "format": "date-time" },
     "ended_at": { "type": "string", "format": "date-time" }
   },
