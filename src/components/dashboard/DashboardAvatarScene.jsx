@@ -44,10 +44,15 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     queryKey: ['ai-battle-matchmaking', user?.id],
     enabled: !!user?.id,
     queryFn: async () => unwrapBattleStatus(await base44.functions.invoke('aiBattleMatchmaker', { action: 'status', data: {} })),
-    refetchInterval: (query) => query.state.data?.match?.status === 'matched' ? 5000 : 30000,
+    refetchInterval: (query) => {
+      const status = query.state.data?.match?.status;
+      if (status === 'ready') return 3000;
+      if (status === 'matched') return 5000;
+      return 30000;
+    },
     refetchOnWindowFocus: true,
     retry: false,
-    staleTime: 2000,
+    staleTime: 1500,
   });
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
@@ -203,6 +208,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       window.__lunaAIBattleTurn = {
         matchId: String(battleMatch.id),
         actorId: isLocal ? localId : owner === 'opponent' ? opponentId : null,
+        revision: Number(battleMatch.turn_revision || 0),
         phase: phase || (isLocal ? 'select' : owner === 'opponent' ? 'wait' : 'resolve'),
         canLocalAct: isLocal,
       };
@@ -211,11 +217,11 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       }));
     };
 
-    // Deterministic first-turn fallback until the authoritative turn service is
-    // wired to the matchmaking record: the dashboard host acts first. Both
-    // clients derive the same result from the shared match.
-    const hostActsFirst = String(battleMatch.host_id || '') === localId;
-    setTurn(hostActsFirst ? 'local' : 'opponent', hostActsFirst ? 'select' : 'wait');
+    // The backend now persists the turn owner. Host-first remains a compatibility
+    // fallback for older in-flight matches created before current_turn_id existed.
+    const authoritativeActorId = String(battleMatch.current_turn_id || battleMatch.host_id || '');
+    const localOwnsTurn = authoritativeActorId === localId;
+    setTurn(localOwnsTurn ? 'local' : 'opponent', localOwnsTurn ? 'select' : 'wait');
 
     const onTurnChanged = (event) => {
       const detail = event?.detail || {};
@@ -232,20 +238,47 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       setTurn('resolving', 'resolve');
     };
 
+    const advanceTurn = async () => {
+      try {
+        const body = unwrapBattleStatus(await base44.functions.invoke('aiBattleMatchmaker', {
+          action: 'end_turn',
+          data: {
+            match_id: battleMatch.id,
+            expected_revision: Number(battleMatch.turn_revision || 0),
+          },
+        }));
+        const nextActorId = String(body?.match?.current_turn_id || body?.current_turn_id || '');
+        if (nextActorId) {
+          window.dispatchEvent(new CustomEvent('lunaAIBattleTurnChanged', {
+            detail: {
+              matchId: String(battleMatch.id),
+              actorId: nextActorId,
+              revision: Number(body?.match?.turn_revision || 0),
+            },
+          }));
+        }
+      } catch (error) {
+        // A stale revision simply means the server already advanced the turn.
+        // Polling will reconcile the visual camera with the authoritative match.
+        console.warn('[AI Battle] turn advance will reconcile from match status', error);
+      }
+    };
+
     const onEffectEvent = (event) => {
       const detail = event?.detail || {};
       if (detail.name !== 'end') return;
       const targetId = String(detail.target?.playerId || '');
 
-      // Local attack ended: remain in the wide two-character camera while the
-      // opponent owns the next turn.
+      // Local attack ended: cut stays wide while the turn is atomically passed
+      // to the opponent on the shared matchmaking record.
       if (targetId === opponentId) {
         setTurn('opponent', 'wait');
+        advanceTurn();
         return;
       }
 
-      // When the remote player's synced effect finishes against us, their turn
-      // has ended and the cinematic card-selection camera returns automatically.
+      // Synced remote effects can return the camera immediately. If the remote
+      // visual is not streamed, the 3-second match poll performs the same switch.
       if (targetId === localId) setTurn('local', 'select');
     };
 
@@ -258,7 +291,15 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       window.removeEventListener('lunaCardAnimationEffectEvent', onEffectEvent);
       if (window.__lunaAIBattleTurn?.matchId === String(battleMatch.id)) delete window.__lunaAIBattleTurn;
     };
-  }, [battleMatch?.id, battleMatch?.mode, battleMatch?.host_id, battlePair?.opponent?.player_id, user?.id]);
+  }, [
+    battleMatch?.id,
+    battleMatch?.mode,
+    battleMatch?.host_id,
+    battleMatch?.current_turn_id,
+    battleMatch?.turn_revision,
+    battlePair?.opponent?.player_id,
+    user?.id,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !battlePair?.opponent?.player_id) return undefined;
@@ -389,7 +430,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
               />
             </div>
             <div className="mt-1 text-[9px] font-semibold tabular-nums text-white/85 drop-shadow-[0_2px_8px_rgba(0,0,0,.8)]">
-              {Math.round(opponentHp)} / {Math.round(opponentMaxHp)} HP
+              {Math.round(opponentHp)} / {Math.round(opponentMaxHp)} HP · {Math.round(opponentHpPct)}%
             </div>
           </div>
 
@@ -442,7 +483,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
               />
             </div>
             <div className="mt-1 text-[9px] font-semibold tabular-nums text-white/85 drop-shadow-[0_2px_8px_rgba(0,0,0,.8)]">
-              {Math.round(opponentHp)} / {Math.round(opponentMaxHp)} HP
+              {Math.round(opponentHp)} / {Math.round(opponentMaxHp)} HP · {Math.round(opponentHpPct)}%
             </div>
           </div>
 
