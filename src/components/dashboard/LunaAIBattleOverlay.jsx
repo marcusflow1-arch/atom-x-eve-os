@@ -14,7 +14,10 @@ const isRateLimitError = (error) => /rate limit|too many requests|too many attem
 export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
-  const battle = useAIBattleQueue();
+  // The always-mounted dashboard stage owns room joining, ready checks and peer
+  // relays. This popup is UI/control only so opening it cannot duplicate attacks
+  // or damage broadcasts.
+  const battle = useAIBattleQueue({ sessionBridge: false });
   const waiting = battle.queue?.status === 'waiting';
   const connecting = battle.match?.status === 'matched';
   const ready = battle.match?.status === 'ready';
