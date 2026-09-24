@@ -43,9 +43,20 @@ export function useSkills() {
     const assigned = getHotbarItem(slotIndex);
     if (!assigned) return false;
 
+    // In a live AI Battle, the cinematic turn controller is authoritative for
+    // whether the local player may commit a card. This prevents keyboard input
+    // or the clickable hand from attacking while the opponent is taking a turn.
+    const battleTurn = typeof window !== 'undefined' ? window.__lunaAIBattleTurn : null;
+    if (battleTurn?.matchId && battleTurn.canLocalAct === false) {
+      window.dispatchEvent(new CustomEvent('lunaAIBattleSkillBlocked', {
+        detail: { slotIndex, card: assigned, source, reason: 'not_local_turn', turn: battleTurn },
+      }));
+      return false;
+    }
+
     // DashboardAvatarScene owns the live target selection while an AI Battle is
     // active. Keep that target attached to the card cast so VFX, impact events
-    // and the later damage pass all resolve the same opponent.
+    // and damage all resolve the same opponent.
     const target = typeof window !== 'undefined' ? (window.__lunaAIBattleTarget || null) : null;
 
     window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
