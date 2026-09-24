@@ -15,19 +15,47 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
   const battle = useAIBattleQueue();
-  const active = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
   const waiting = battle.queue?.status === 'waiting';
   const connecting = battle.match?.status === 'matched';
   const ready = battle.match?.status === 'ready';
+  const queuedMode = battle.match?.mode || battle.queue?.mode || null;
+  const active = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
+
+  // Reopening the menu reflects the queue/match that already exists. This only
+  // updates the selected tile; it never creates a queue or calls join().
+  useEffect(() => {
+    if (queuedMode && MODES.some((item) => item.id === queuedMode)) setMode(queuedMode);
+  }, [queuedMode]);
+
+  const leaveQueue = useCallback(async () => {
+    if (battle.busy) return;
+    try {
+      await battle.cancel();
+    } catch (error) {
+      if (!isRateLimitError(error)) showError(error, 'Leave AI Battle Queue');
+    }
+  }, [battle]);
 
   const enterQueue = useCallback(async () => {
-    if (battle.busy || waiting || connecting) return;
+    if (battle.busy || waiting || connecting || ready) return;
     try {
       await battle.join(mode);
     } catch (error) {
       if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
     }
-  }, [battle, mode, waiting, connecting]);
+  }, [battle, mode, waiting, connecting, ready]);
+
+  const chooseMode = useCallback((nextMode) => {
+    // While waiting, clicking the currently selected queue tile again means
+    // "unselect/leave". Switching to a different pool requires leaving first so
+    // there is never an implicit cancel-and-requeue operation.
+    if (waiting) {
+      if (nextMode === queuedMode) leaveQueue();
+      return;
+    }
+    if (connecting || ready || battle.busy) return;
+    setMode(nextMode);
+  }, [waiting, queuedMode, connecting, ready, battle.busy, leaveQueue]);
 
   useEffect(() => {
     const onKey = (event) => {
@@ -35,19 +63,20 @@ export default function LunaAIBattleOverlay({ onClose }) {
       const target = event.target;
       if (target instanceof HTMLElement && target.closest('input,textarea,select,[contenteditable=true]')) return;
       event.preventDefault();
-      enterQueue();
+      if (waiting || connecting || ready) leaveQueue();
+      else enterQueue();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [enterQueue]);
+  }, [enterQueue, leaveQueue, waiting, connecting, ready]);
 
   const statusText = connecting
-    ? `Match found. Connecting both players to ${battle.match.host_name || 'the host'}'s dashboard…`
+    ? `Match found. Connecting both active players to ${battle.match.host_name || 'the host'}'s dashboard…`
     : waiting
-      ? 'Waiting for the next player in this queue…'
+      ? 'You are in the queue. Closing this menu will not remove you. Cancel or unselect this mode to leave.'
       : ready
-        ? 'Dashboard ready. Choose a mode and press Enter Queue when you want a new match.'
-        : 'Choose a mode, then press Q or Enter Queue.';
+        ? 'Match connected. Leaving here ends the match for both players; otherwise close this menu and continue the battle.'
+        : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
 
   return (
     <div className="fixed left-[390px] right-[338px] top-[205px] z-[130] flex justify-center pointer-events-none" data-dashboard-utility-workspace>
@@ -62,13 +91,27 @@ export default function LunaAIBattleOverlay({ onClose }) {
         </header>
 
         <div className="grid grid-cols-3 border-b border-white/[0.07]">
-          {MODES.map(({ id, label, sub, icon: Icon }) => (
-            <button key={id} type="button" disabled={waiting || connecting} onClick={() => setMode(id)} className={`min-h-[72px] border-r border-white/[0.055] px-3 text-left last:border-r-0 ${mode === id ? 'bg-cyan-100/[0.075]' : 'hover:bg-white/[0.03]'} disabled:cursor-default`}>
-              <Icon className={`mb-2 h-4 w-4 ${mode === id ? 'text-cyan-100' : 'text-white/35'}`} />
-              <strong className="block text-[10px] text-white/90">{label}</strong>
-              <small className="mt-0.5 block text-[7px] text-white/35">{sub}</small>
-            </button>
-          ))}
+          {MODES.map(({ id, label, sub, icon: Icon }) => {
+            const selected = mode === id;
+            const activeQueueTile = queuedMode === id && (waiting || connecting || ready);
+            const disabled = battle.busy || ((connecting || ready) && !activeQueueTile) || (waiting && !activeQueueTile);
+            return (
+              <button
+                key={id}
+                type="button"
+                disabled={disabled}
+                onClick={() => chooseMode(id)}
+                aria-pressed={selected}
+                className={`min-h-[72px] border-r border-white/[0.055] px-3 text-left last:border-r-0 ${selected ? 'bg-cyan-100/[0.075]' : 'hover:bg-white/[0.03]'} ${disabled ? 'cursor-default opacity-45' : ''}`}
+              >
+                <Icon className={`mb-2 h-4 w-4 ${selected ? 'text-cyan-100' : 'text-white/35'}`} />
+                <strong className="block text-[10px] text-white/90">{label}</strong>
+                <small className="mt-0.5 block text-[7px] text-white/35">
+                  {waiting && activeQueueTile ? 'Queued · click again to leave' : sub}
+                </small>
+              </button>
+            );
+          })}
         </div>
 
         <div className="p-4">
@@ -82,11 +125,13 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
           <div className="mt-3 flex gap-2">
             {waiting ? (
-              <button type="button" disabled={battle.busy} onClick={() => battle.cancel().catch((error) => { if (!isRateLimitError(error)) showError(error, 'Cancel Queue'); })} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05]">Cancel Queue</button>
+              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05] disabled:opacity-50">{battle.busy ? 'Leaving Queue…' : 'Cancel Queue · Q'}</button>
             ) : connecting ? (
-              <div className="flex h-10 flex-1 items-center justify-center border border-cyan-100/[0.12] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/75">Connecting…</div>
+              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 hover:bg-cyan-100/[0.08] disabled:opacity-50">{battle.busy ? 'Leaving Match…' : 'Cancel Match · Q'}</button>
+            ) : ready ? (
+              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05] disabled:opacity-50">{battle.busy ? 'Leaving Match…' : 'Leave Match · Q'}</button>
             ) : (
-              <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : ready ? 'Enter New Queue · Q' : 'Enter Queue · Q'}</button>
+              <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : 'Enter Queue · Q'}</button>
             )}
           </div>
         </div>
