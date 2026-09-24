@@ -159,6 +159,90 @@ export default function useAIBattleQueue() {
       });
   }, [match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.players, queryClient, key]);
 
+  // Relay confirmed local damage to the other dashboard peer. DashboardAvatarScene
+  // remains the place that computes the current prototype damage amount; this
+  // layer only mirrors the result so editor and published/live see the same hit.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
+    const localId = String(user.id);
+    const matchId = String(match.id);
+
+    const relayDamage = (event) => {
+      const detail = event?.detail || {};
+      if (detail.network === true) return;
+      if (String(detail.matchId || '') !== matchId) return;
+      if (String(detail.sourcePlayerId || '') !== localId) return;
+      const targetPlayerId = String(detail.targetPlayerId || '');
+      const damage = Math.max(0, Number(detail.damage) || 0);
+      if (!targetPlayerId || !damage) return;
+
+      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', {
+        detail: {
+          kind: 'ai_battle_damage',
+          matchId,
+          effectId: detail.effectId || '',
+          sourcePlayerId: localId,
+          targetPlayerId,
+          damage,
+          autoHit: detail.autoHit !== false,
+        },
+      }));
+    };
+
+    window.addEventListener('lunaAIBattleDamageApplied', relayDamage);
+    return () => window.removeEventListener('lunaAIBattleDamageApplied', relayDamage);
+  }, [match?.id, user?.id]);
+
+  // Consume PvP actions arriving from the WebRTC dashboard channel. This is what
+  // makes an editor player and a published/live player behave as two peers in
+  // the same match rather than two unrelated UI previews.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
+    const localId = String(user.id);
+    const matchId = String(match.id);
+    const matchIds = new Set((match.player_ids || []).map(String));
+
+    const receiveRemoteAction = (event) => {
+      const detail = event?.detail || {};
+      const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
+      if (!sourcePlayerId || sourcePlayerId === localId || !matchIds.has(sourcePlayerId)) return;
+      if (String(detail.matchId || '') !== matchId) return;
+
+      if (detail.kind === 'ai_battle_card_cast') {
+        if (String(detail.targetPlayerId || '') !== localId) return;
+        window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', {
+          detail: {
+            ...detail,
+            sourcePlayerId,
+            targetPlayerId: localId,
+            network: true,
+          },
+        }));
+        return;
+      }
+
+      if (detail.kind === 'ai_battle_damage') {
+        if (String(detail.targetPlayerId || '') !== localId) return;
+        const damage = Math.max(0, Number(detail.damage) || 0);
+        if (!damage) return;
+        window.dispatchEvent(new CustomEvent('lunaAIBattleDamageApplied', {
+          detail: {
+            effectId: detail.effectId || '',
+            sourcePlayerId,
+            targetPlayerId: localId,
+            damage,
+            autoHit: detail.autoHit !== false,
+            matchId,
+            network: true,
+          },
+        }));
+      }
+    };
+
+    window.addEventListener('webrtcRemoteAction', receiveRemoteAction);
+    return () => window.removeEventListener('webrtcRemoteAction', receiveRemoteAction);
+  }, [match?.id, match?.player_ids, user?.id]);
+
   const join = async (mode) => {
     const body = await mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } });
     if (isActiveQueue(body)) startAIBattleQueueHeartbeat();
