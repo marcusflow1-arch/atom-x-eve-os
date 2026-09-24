@@ -99,8 +99,6 @@ async function retireCurrentMatch(svc: any, userId: string) {
 
 async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Row) {
   const ids = [String(first.user_id), String(second.user_id)];
-  // Queue entry ids are part of the pair key so a newly re-queued pair can never
-  // accidentally reattach to an old/stale active match between the same users.
   const queueIds = [String(first.id), String(second.id)].sort();
   const pairKey = `${mode}:${[...ids].sort().join(':')}:${queueIds.join(':')}`;
   let matches = await svc.AIBattleMatch.filter({ pair_key: pairKey }, 'created_date', 20);
@@ -159,73 +157,73 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
 
 async function tryPairMode(svc: any, mode: string) {
   const rows = await svc.AIBattleQueueEntry.filter({ mode, status: 'waiting' }, 'created_date', 100);
-  const liveRows = rows.filter(isQueueLive).sort((a: Row, b: Row) => String(a.created_date).localeCompare(String(b.created_date)) || String(a.id).localeCompare(String(b.id)));
+  const liveRows = rows
+    .filter(isQueueLive)
+    .sort((a: Row, b: Row) => String(a.created_date).localeCompare(String(b.created_date)) || String(a.id).localeCompare(String(b.id)));
+
   const unique: Row[] = [];
   const seen = new Set<string>();
   for (const row of liveRows) {
-    const id = String(row.user_id);
+    const id = String(row.user_id || '');
     if (!id || seen.has(id)) continue;
     seen.add(id);
     unique.push(row);
     if (unique.length === 2) break;
   }
+
   if (unique.length < 2) return null;
   return await canonicalPairMatch(svc, mode, unique[0], unique[1]);
 }
 
 async function validateMatchedPair(svc: any, match: Row) {
   const ids = (match.player_ids || []).map(String).filter(Boolean);
-  if (ids.length !== 2) return false;
+  if (ids.length !== 2 || new Set(ids).size !== 2) return false;
   const queues = await Promise.all(ids.map((id: string) => queueForUserAndMatch(svc, id, String(match.id))));
   return queues.length === 2 && queues.every((row: Row | null) => row && isQueueLive(row));
 }
 
+/**
+ * Queue state belongs to the authenticated account, not to a specific browser
+ * origin or Base44 surface. Editor preview and published/live may both poll the
+ * same queue and match. A client_session_id is accepted only as diagnostics and
+ * never invalidates another surface for the same user.
+ */
 async function statusFor(svc: any, userId: string, clientSessionId = '') {
   let queue = await latestQueueForUser(svc, userId);
   if (!queue) return { queue: null, match: null };
 
-  const suppliedSession = String(clientSessionId || '').trim();
-  const queueSession = String(queue.client_session_id || '').trim();
-
-  // A full page reload creates a new browser session. Never silently restore the
-  // old queue into the new page: invalidate it (and both sides of a found match)
-  // so the user must explicitly press Enter Queue again.
-  if (suppliedSession && queueSession !== suppliedSession) {
+  if (!isQueueLive(queue)) {
     await retireQueueAndLinkedMatch(svc, queue);
     return { queue: null, match: null };
   }
 
+  // Any authenticated surface for this user can keep the same explicitly-created
+  // queue alive. Reading status never creates a queue and therefore cannot put a
+  // user into matchmaking by itself.
+  if (queueHeartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS) {
+    const patch: Row = { last_seen_at: nowIso() };
+    if (clientSessionId) patch.client_session_id = String(clientSessionId).slice(0, 160);
+    queue = await svc.AIBattleQueueEntry.update(queue.id, patch);
+  }
+
   if (queue.status === 'waiting') {
-    if (!isQueueLive(queue)) {
-      await cancelQueueRow(svc, queue);
-      return { queue: null, match: null };
-    }
-
-    // Only the browser session that explicitly entered the queue can keep it
-    // alive. Passive status readers may inspect state but cannot revive it.
-    if (suppliedSession && queueSession === suppliedSession && queueHeartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS) {
-      queue = await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso() });
-    }
-
     const paired = await tryPairMode(svc, queue.mode);
     queue = await svc.AIBattleQueueEntry.get(queue.id).catch(() => queue);
     if (paired && (paired.player_ids || []).map(String).includes(String(userId))) return { queue, match: paired };
+    return { queue, match: null };
   }
 
   if (queue.status === 'matched' && queue.match_id) {
-    if (suppliedSession && queueSession === suppliedSession && queueHeartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS) {
-      queue = await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso() });
-    }
-
     const match = await getMatch(svc, String(queue.match_id));
     if (!match || match.status === 'ended') {
       await cancelQueueRow(svc, queue);
       return { queue: null, match: null };
     }
 
-    // A match only exists while BOTH explicit queue sessions remain alive. If
-    // either player cancels, reloads, closes the page, or stops heartbeating,
-    // tear down the match for both so neither side can remain stuck on Connecting.
+    // Both player accounts must still have a live matched queue. It does not
+    // matter whether each player is using editor preview, published/live, or has
+    // both open at once. If an account disappears entirely past the TTL, both
+    // sides are released and must explicitly queue again.
     const pairAlive = await validateMatchedPair(svc, match);
     if (!pairAlive) {
       await cancelMatchForAll(svc, match);
@@ -258,20 +256,31 @@ Deno.serve(async (req) => {
     if (action === 'join') {
       const mode = String(data.mode || '').toLowerCase();
       if (!MODES.has(mode)) return json({ error: 'Choose PvP, PvE, or World Boss.' }, 400);
-      if (!clientSessionId) return json({ error: 'Queue session is missing. Reopen AI Battle and try again.' }, 400);
       const requestId = String(data.request_id || '').slice(0, 100);
 
-      if (requestId) {
-        const prior = await svc.AIBattleQueueEntry.filter({ user_id: user.id, request_id: requestId }, '-created_date', 5);
-        if (prior[0] && String(prior[0].client_session_id || '') === clientSessionId) {
-          const match = prior[0].match_id ? await getMatch(svc, String(prior[0].match_id)) : null;
-          return json({ queue: publicQueue(prior[0]), match: publicMatch(match), server_time: Date.now() });
+      // If this account is already waiting or matched, another surface must join
+      // that same state rather than destroy/recreate it. This is what lets editor
+      // preview and published/live show the same PvP match simultaneously.
+      const existing = await latestQueueForUser(svc, String(user.id));
+      if (existing) {
+        const current = await statusFor(svc, String(user.id), clientSessionId);
+        if (current.queue) {
+          return json({ queue: publicQueue(current.queue), match: publicMatch(current.match), server_time: Date.now() });
         }
       }
 
-      // Queue entry is ONLY created by this explicit join action. Opening AI
-      // Battle, closing/reopening the menu, or reading status never re-queues.
-      await retireCurrentMatch(svc, String(user.id));
+      if (requestId) {
+        const prior = await svc.AIBattleQueueEntry.filter({ user_id: user.id, request_id: requestId }, '-created_date', 5);
+        const activePrior = prior.find((row: Row) => row.status === 'waiting' || row.status === 'matched');
+        if (activePrior) {
+          const current = await statusFor(svc, String(user.id), clientSessionId);
+          return json({ queue: publicQueue(current.queue), match: publicMatch(current.match), server_time: Date.now() });
+        }
+      }
+
+      // A brand-new queue row is ONLY created by explicit Enter Queue. Status,
+      // opening AI Battle, opening the editor, or opening the published app never
+      // creates matchmaking state.
       await cancelOtherWaiting(svc, String(user.id));
 
       const created = await svc.AIBattleQueueEntry.create({
@@ -281,16 +290,23 @@ Deno.serve(async (req) => {
         mode,
         status: 'waiting',
         request_id: requestId,
-        client_session_id: clientSessionId,
+        client_session_id: clientSessionId || '',
         queued_at: nowIso(),
         last_seen_at: nowIso(),
       });
+
       const match = await tryPairMode(svc, mode);
       const queue = await svc.AIBattleQueueEntry.get(created.id).catch(() => created);
-      return json({ queue: publicQueue(queue), match: publicMatch(match && (match.player_ids || []).map(String).includes(String(user.id)) ? match : null), server_time: Date.now() });
+      return json({
+        queue: publicQueue(queue),
+        match: publicMatch(match && (match.player_ids || []).map(String).includes(String(user.id)) ? match : null),
+        server_time: Date.now(),
+      });
     }
 
     if (action === 'cancel' || action === 'reset') {
+      // Cancel is account-wide and intentionally tears down a linked match for
+      // both players. The remaining player never stays trapped on Connecting.
       await retireCurrentMatch(svc, String(user.id));
       return json({ queue: null, match: null, server_time: Date.now() });
     }
@@ -329,6 +345,10 @@ Deno.serve(async (req) => {
       if (!match || !(match.player_ids || []).map(String).includes(String(user.id))) return json({ error: 'Match not found.' }, 404);
       if (match.status === 'ended') return json({ error: 'This match has ended.' }, 409);
       if (String(match.mode || '') !== 'pvp') return json({ error: 'Turn passing is only enabled for PvP.' }, 409);
+      if (!(await validateMatchedPair(svc, match))) {
+        await cancelMatchForAll(svc, match);
+        return json({ error: 'The other player disconnected. Both players must re-queue.' }, 409);
+      }
 
       const ids = (match.player_ids || []).map(String);
       const actorId = String(match.current_turn_id || match.host_id || ids[0] || '');
