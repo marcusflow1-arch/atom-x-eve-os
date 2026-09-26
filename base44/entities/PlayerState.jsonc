@@ -47,6 +47,9 @@
     },
     "dashboard_joined_at": {
       "type": "number"
+    },
+    "active_match_id": {
+      "type": "string"
     }
   },
   "required": [
