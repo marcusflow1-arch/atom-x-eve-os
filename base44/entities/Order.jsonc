@@ -3,17 +3,14 @@
   "type": "object",
   "properties": {
     "user_id": {
-      "type": "string",
-      "description": "ID of the user who placed the order"
+      "type": "string"
     },
     "total_amount": {
-      "type": "number",
-      "description": "Total cost of the order"
+      "type": "number"
     },
     "currency": {
       "type": "string",
-      "default": "AGP",
-      "description": "Currency used"
+      "default": "USD"
     },
     "status": {
       "type": "string",
@@ -23,17 +20,25 @@
         "failed",
         "refunded"
       ],
-      "default": "pending",
-      "description": "Current status of the order"
+      "default": "pending"
     },
     "items": {
       "type": "array",
-      "description": "List of items in the order",
       "items": {
         "type": "object",
         "properties": {
           "game_id": {
             "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "item_type": {
+            "type": "string",
+            "enum": [
+              "game",
+              "dlc"
+            ]
           },
           "title": {
             "type": "string"
@@ -50,30 +55,8 @@
         }
       }
     },
-    "shipping_info": {
-      "type": "object",
-      "description": "Shipping and contact details",
-      "properties": {
-        "email": {
-          "type": "string"
-        },
-        "address": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
-        },
-        "zip": {
-          "type": "string"
-        },
-        "country": {
-          "type": "string"
-        }
-      }
-    },
     "transaction_id": {
-      "type": "string",
-      "description": "Payment gateway transaction ID"
+      "type": "string"
     }
   },
   "required": [
@@ -81,5 +64,34 @@
     "total_amount",
     "items",
     "status"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
