@@ -255,18 +255,7 @@ async function ensureSkillSets(base44: any, userId: string) {
 
 async function buildState(base44: any, user: AnyObj) {
   const svc = base44.asServiceRole.entities;
-  const { rows: loadouts, active, created } = await ensureSkillSets(base44, user.id);
-
-  // Only a brand-new Skill Book gets the demo card in slot 1. Once a player
-  // empties that slot, a normal read never refills it.
-  if (created && active && !(active.skill_slots || {})['0']) {
-    const demoAbility = (await svc.UserCard.filter({ user_id: user.id, card_name: 'Ichigo Kurosaki - Getsuga Tenshō' }, '-created_date', 1))?.[0];
-    if (demoAbility) {
-      const nextSlots = { ...(active.skill_slots || {}), '0': demoAbility.id };
-      await svc.Loadout.update(active.id, { skill_slots: nextSlots });
-      active.skill_slots = nextSlots;
-    }
-  }
+  const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
   const [ownedCards, achievements, games, progressions, gender] = await Promise.all([
     svc.UserCard.filter({ user_id: user.id }, '-created_date', 1000),
     svc.Achievement.filter({ category: 'ability' }, '-created_date', 500),
@@ -277,7 +266,7 @@ async function buildState(base44: any, user: AnyObj) {
 
   // Artemis cards remain visible in the shared Skill Book for both male and female
   // avatars. Their embedded casts are accepted only by the Artemis female rig.
-  const ownedSkills = (ownedCards || []).filter((card: AnyObj) => card.card_type === 'Ability');
+  const ownedSkills = (ownedCards || []).filter((card: AnyObj) => normalize(card.card_type) === 'ability');
   const abilityAchievements = (achievements || []).filter((achievement: AnyObj) => achievement.category === 'ability');
   const progressByUserCard = new Map<string, AnyObj>();
   for (const p of progressions || []) if (p.user_card_id) progressByUserCard.set(String(p.user_card_id), p);
@@ -423,12 +412,15 @@ async function activeLoadout(base44: any, userId: string) {
 }
 
 async function hasLivePvpMatch(svc: any, userId: string) {
-  // Filter before limiting: unrelated players' matches must not hide this player's match.
-  const rows = await svc.AIBattleMatch.filter({
-    player_ids: { $in: [String(userId)] },
-    status: { $in: ['matched', 'countdown', 'fighting'] },
-  }, '-created_date', 1);
-  return rows.length > 0;
+  const states = await svc.PlayerState.filter({ player_id: String(userId) }, '-updated_date', 1).catch(() => []);
+  const matchId = String(states?.[0]?.active_match_id || '');
+  if (!matchId) return false;
+  const match = await svc.AIBattleMatch.get(matchId).catch(() => null);
+  if (!match || !['matched', 'countdown', 'fighting'].includes(String(match.status || ''))) {
+    if (states[0]) await svc.PlayerState.update(states[0].id, { active_match_id: '' }).catch(() => null);
+    return false;
+  }
+  return true;
 }
 
 Deno.serve(async (req) => {
@@ -442,7 +434,8 @@ Deno.serve(async (req) => {
     const svc = base44.asServiceRole.entities;
 
     if (action === 'bootstrap') {
-      await Promise.all([ensureDemoAbility(svc, user.id), ensureArtemisAbilities(svc, user.id)]);
+      // Bootstrap initializes loadout containers only. Cards now come from the
+      // reward engine, quests, verified purchases/trades, or admin grants.
       return json(await buildState(base44, user));
     }
     if (action === 'getState') return json(await buildState(base44, user));
@@ -483,7 +476,7 @@ Deno.serve(async (req) => {
       if (!userCardId) return json({ error: 'Owned skill card is required' }, 400);
       const card = await svc.UserCard.get(userCardId).catch(() => null);
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
-      if (card.card_type !== 'Ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
+      if (normalize(card.card_type) !== 'ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
       if (card.trade_status === 'locked_in_trade') return json({ error: 'That skill card is locked in a trade' }, 409);
       const compatibilityError = avatarSkillError(card, await avatarGender(svc, user.id));
       if (compatibilityError) return json({ error: compatibilityError }, 409);
@@ -493,13 +486,13 @@ Deno.serve(async (req) => {
       for (const [key, value] of Object.entries(previous)) if (String(value) === userCardId) delete previous[key];
       previous[String(slot)] = userCardId;
       await svc.Loadout.update(loadout.id, { skill_slots: previous, is_active: true });
-      await svc.UserCard.update(card.id, { is_equipped: true });
+      await svc.UserCard.update(card.id, { is_equipped: true, equipped_to: 'skill_book' });
       if (oldCardId && String(oldCardId) !== userCardId) {
         const usedElsewhere = (await svc.Loadout.filter({ user_id: user.id, loadout_type: 'skills' }, '-created_date', 20))
           .some((r: AnyObj) => Object.values(r.skill_slots || {}).some((v: any) => String(v) === String(oldCardId)));
         if (!usedElsewhere) {
           const oldCard = await svc.UserCard.get(String(oldCardId)).catch(() => null);
-          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false });
+          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false, equipped_to: 'none' });
         }
       }
       return json(await buildState(base44, user));
@@ -517,7 +510,7 @@ Deno.serve(async (req) => {
           .some((r: AnyObj) => Object.values(r.skill_slots || {}).some((v: any) => String(v) === String(oldCardId)));
         if (!usedElsewhere) {
           const oldCard = await svc.UserCard.get(String(oldCardId)).catch(() => null);
-          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false });
+          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false, equipped_to: 'none' });
         }
       }
       return json(await buildState(base44, user));
@@ -532,7 +525,7 @@ Deno.serve(async (req) => {
         const usedElsewhere = otherLoadouts.some((row: AnyObj) => Object.values(row.skill_slots || {}).some((value: any) => String(value) === oldCardId));
         if (!usedElsewhere) {
           const oldCard = await svc.UserCard.get(oldCardId).catch(() => null);
-          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false });
+          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false, equipped_to: 'none' });
         }
       }
       return json(await buildState(base44, user));
