@@ -80,7 +80,7 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
@@ -187,6 +187,11 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
           framingOffsetY: fixedFemaleIdle ? 0.16 : 0,
           initialYaw,
           skillEffects,
+          remoteSkillPlayerId,
+          remoteFacingYaw,
+          combatMovement,
+          movementRadius,
+          combatCamera,
           getsugaMale: canonicalGetsugaMale,
           artemisFemale: fixedFemaleIdle,
           lockRootTranslation: false,
@@ -205,7 +210,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       scene.current?.dispose();
       scene.current = null;
     };
-  }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, initialYaw, skillEffects, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
+  }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, initialYaw, skillEffects, remoteSkillPlayerId, remoteFacingYaw, combatMovement, movementRadius, combatCamera, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
@@ -235,11 +240,6 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, []);
 
   const syncMovementAnimation = useCallback(() => {
-    if (fixedFemaleIdle || canonicalGetsugaMale) {
-      activeMovement.current = '';
-      if (!movementForKeys()) playIdle();
-      return;
-    }
     const move = movementForKeys();
     if (!move) {
       if (activeMovement.current) {
@@ -248,15 +248,15 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       }
       return;
     }
-    const running = keyState.current.shift;
+    const running = combatMovement || keyState.current.shift;
     const key = `${running ? 'run' : 'walk'}:${move.direction}`;
     if (activeMovement.current === key) return;
     activeMovement.current = key;
     playMotion(motionSetRef.current[running ? 'run' : 'walk']?.[move.direction]);
-  }, [fixedFemaleIdle, canonicalGetsugaMale, movementForKeys, playIdle, playMotion]);
+  }, [combatMovement, movementForKeys, playIdle, playMotion]);
 
   useEffect(() => {
-    if (!interactive || !controlArmed) {
+    if (!(combatMovement || (interactive && controlArmed))) {
       keyState.current = { w: false, a: false, s: false, d: false, shift: false };
       activeMovement.current = '';
       cancelAnimationFrame(movementFrame.current);
@@ -284,7 +284,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
     const tick = () => {
       const move = movementForKeys();
       if (move && scene.current) {
-        const distance = keyState.current.shift ? 0.075 : 0.04;
+        const distance = combatMovement || keyState.current.shift ? 0.075 : 0.04;
         scene.current.move?.(move.x, move.z, distance);
       }
       movementFrame.current = requestAnimationFrame(tick);
@@ -298,7 +298,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       window.removeEventListener('keyup', onKeyUp, true);
       cancelAnimationFrame(movementFrame.current);
     };
-  }, [interactive, controlArmed, movementForKeys, syncMovementAnimation]);
+  }, [interactive, controlArmed, combatMovement, movementForKeys, syncMovementAnimation]);
 
   useEffect(() => {
     if (interactive) return;
