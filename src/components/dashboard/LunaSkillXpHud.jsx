@@ -66,7 +66,7 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combat
       }}
       onDrop={handleDrop}
       aria-label={assigned ? `Showcase ${title}` : `Showcase slot ${index + 1}`}
-      title={!showcaseEditing ? (assigned ? `Cast ${title}` : `Skill Slot ${index + 1} is empty`) : pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
+      title={combatMode ? (assigned ? `Activate ${title}` : `Skill Slot ${index + 1} is empty`) : pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
       className={`absolute z-30 h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
         ? 'border-cyan-100/70 bg-cyan-200/[0.18] shadow-[0_0_18px_rgba(103,232,249,.28)]'
         : pendingCard
