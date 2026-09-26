@@ -10,11 +10,11 @@ const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/m
 // and contains the Idle + GetsugaTensho animation/effect package used by card casts.
 export const GLOBAL_AVATAR_MODEL_ID = '6ab3bf0728d93c06fcff4c05';
 export const GLOBAL_AVATAR_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
-// Admin > 3D Models > "artemis" (Model3D id: 6aa956f030a57c7e90bbc7e6).
-// This is the only female base body used by Genesis. The canonical Artemis package
-// owns her skeleton, bow, Idle/Combat_Idle transitions and embedded ability clips.
-// Keep this URL isolated so replacing the uploaded GLB updates every female viewer.
-export const FEMALE_ARTEMIS_MODEL_URL = '/models/atomxe-artemis-archer.glb';
+// Admin > 3D Models > "Artemis_Character" (Model3D id: 6ab7dfade57a36adf2a81e7d).
+// This exact uploaded 7.53 MB GLB is the only female base body used by Genesis,
+// Luna Dashboard and AI Battle. It owns the skeleton, bow and embedded skill clips.
+export const FEMALE_ARTEMIS_MODEL_ID = '6ab7dfade57a36adf2a81e7d';
+export const FEMALE_ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/96bb872db_Artemis_Character.glb';
 export const GLOBAL_AVATAR_NAME = 'Luna AI';
 
 // Female creation intentionally exposes one canonical body only.
