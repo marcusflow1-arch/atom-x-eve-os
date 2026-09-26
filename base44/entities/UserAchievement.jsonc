@@ -3,34 +3,80 @@
   "type": "object",
   "properties": {
     "user_id": {
-      "type": "string",
-      "description": "The ID of the user."
+      "type": "string"
     },
     "achievement_id": {
-      "type": "string",
-      "description": "The ID of the achievement."
+      "type": "string"
     },
     "status": {
       "type": "string",
       "enum": [
         "locked",
         "in_progress",
+        "pending_review",
         "unlocked"
       ],
       "default": "locked"
     },
     "progress": {
-      "type": "object",
-      "description": "JSON object for progress tracking (e.g., {\"current\": 5, \"total\": 10})."
+      "type": "object"
     },
     "proof_media_url": {
+      "type": "string"
+    },
+    "source": {
       "type": "string",
-      "description": "URL to a screenshot or video as proof of unlock."
+      "enum": [
+        "game_event",
+        "quest",
+        "proof",
+        "platform",
+        "admin",
+        "migration"
+      ]
+    },
+    "unlocked_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
     "user_id",
     "achievement_id",
     "status"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$and": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.status": "pending_review"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
