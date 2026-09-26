@@ -721,6 +721,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     },
     getsugaIdle: () => getsuga?.playIdle?.(),
     artemisIdle: () => artemis?.playIdle?.(),
+    previewEffect: (effect) => playBoundEffect({ effect, accepted: false, source: 'preview' }, false),
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
     animationState: () => embeddedController?.snapshot(),
     move,
