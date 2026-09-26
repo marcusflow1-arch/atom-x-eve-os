@@ -118,6 +118,9 @@ export class ArtemisDashboardRuntime {
   }
 
   playIdle(immediate = false) {
+    // Movement/key-up handlers may ask the avatar to return to Idle while an
+    // authored card animation is still running. Never let that interrupt a cast.
+    if (!immediate && this.isPlaying()) return false;
     this.busy = false;
     this.queued = null;
     this.cast = null;
