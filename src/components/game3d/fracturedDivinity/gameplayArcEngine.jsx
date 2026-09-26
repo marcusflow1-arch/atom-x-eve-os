@@ -4,8 +4,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
-  GameState, advanceArc, setFlag, getFlag, modifyControl,
-  setCopyState, setArtemisState, unlockAbility, recordHistory, notify,
+  GameState, setFlag, getFlag, modifyControl,
+  setCopyState, setArtemisState, unlockAbility, recordHistory,
 } from './gameplayState';
 
 // ── Loop Mechanic (Arc 7) ─────────────────────────────────────────────────────
