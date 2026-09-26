@@ -151,71 +151,69 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Check for existing session on app load
+    // Mirror the root authentication provider instead of performing a second
+    // independent auth.me() check. This keeps every route on one user/session
+    // source while this provider remains responsible for avatar/profile helpers.
     useEffect(() => {
-        const checkSession = async () => {
+        let cancelled = false;
+        if (rootLoading) {
             setLoading(true);
-            try {
-                const currentUser = await base44.auth.me();
-                if (currentUser) {
-                    setUser(currentUser);
+            return () => { cancelled = true; };
+        }
 
-                    if (!currentUser.username) {
-                        setShowSignUp(true);
-                        setAvatar(null);
-                        setIsLoginFlow(true);
-                    } else {
-                        const userAvatars = await base44.entities.Avatar.filter({ user_id: currentUser.id });
-                        if (userAvatars.length > 0) {
-                            setAvatar(userAvatars[0]);
-                        } else {
-                            setAvatar(null);
-                        }
-                        setIsLoginFlow(false);
-                    }
-
-                    await base44.auth.updateMe({
-                        last_login: new Date().toISOString()
-                    });
-
-                    // Attempt state recovery once per session (guarded to prevent rate-limit on re-renders)
-                    const recoveryKey = `state_recovered_${currentUser.id}`;
-                    if (!sessionStorage.getItem(recoveryKey)) {
-                        sessionStorage.setItem(recoveryKey, '1');
-                        try {
-                            const recovery = await base44.functions.invoke('recoverState');
-                            if (recovery.data?.restored && recovery.data?.activity) {
-                                console.log('State recovered:', recovery.data.changes);
-                                setUser(prev => ({ ...prev, current_activity: recovery.data.activity }));
-                            }
-                        } catch (err) {
-                            console.warn('State recovery failed (non-critical):', err);
-                        }
-                    }
-
-                    if (!currentUser.unlocked_achievements?.includes('first_login')) {
-                        console.log("Granting First Login Achievement");
-                        const updatedAchievements = [...(currentUser.unlocked_achievements || []), 'first_login'];
-                        await base44.auth.updateMe({ unlocked_achievements: updatedAchievements });
-                    }
-                } else {
-                    setUser(null);
-                    setAvatar(null);
-                    setShowSignUp(false);
-                    setIsLoginFlow(false);
-                }
-            } catch (error) {
-                console.log('No authenticated user found or session check failed:', error);
+        const syncRootUser = async () => {
+            const currentUser = rootUser;
+            if (!currentUser) {
                 setUser(null);
                 setAvatar(null);
                 setShowSignUp(false);
                 setIsLoginFlow(false);
+                setLoading(false);
+                return;
             }
-            setLoading(false);
+
+            setLoading(true);
+            try {
+                setUser(currentUser);
+                if (!currentUser.username) {
+                    setShowSignUp(true);
+                    setAvatar(null);
+                    setIsLoginFlow(true);
+                } else {
+                    const userAvatars = await base44.entities.Avatar.filter({ user_id: currentUser.id });
+                    if (cancelled) return;
+                    setAvatar(userAvatars?.[0] || null);
+                    setShowSignUp(false);
+                    setIsLoginFlow(false);
+                }
+
+                const recoveryKey = `state_recovered_${currentUser.id}`;
+                if (!sessionStorage.getItem(recoveryKey)) {
+                    sessionStorage.setItem(recoveryKey, '1');
+                    try {
+                        const recovery = await base44.functions.invoke('recoverState');
+                        if (!cancelled && recovery.data?.restored && recovery.data?.activity) {
+                            setUser(prev => ({ ...prev, current_activity: recovery.data.activity }));
+                        }
+                    } catch (err) {
+                        console.warn('State recovery failed (non-critical):', err);
+                    }
+                }
+
+                if (!currentUser.unlocked_achievements?.includes('first_login')) {
+                    const updatedAchievements = [...(currentUser.unlocked_achievements || []), 'first_login'];
+                    await base44.auth.updateMe({ unlocked_achievements: updatedAchievements });
+                }
+            } catch (error) {
+                console.error('Failed to sync root auth user:', error);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
         };
 
-        checkSession();
-    }, []);
+        syncRootUser();
+        return () => { cancelled = true; };
+    }, [rootUser?.id, rootUser?.username, rootLoading]);
 
     const login = async () => {
         try {
