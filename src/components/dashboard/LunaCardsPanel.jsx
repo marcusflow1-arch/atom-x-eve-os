@@ -221,7 +221,7 @@ export default function LunaCardsPanel() {
               </div>
               <p className="mt-1 text-[7px] text-white/36">
                 {selectedGame
-                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill slots 1–5`
+                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill slots 1–4`
                   : 'Choose a game chapter to browse its complete ability library.'}
               </p>
             </div>
@@ -566,7 +566,7 @@ export default function LunaCardsPanel() {
                     {selectedSkill.owned && (
                       <div className="mt-3 border border-cyan-100/[0.07] bg-cyan-100/[0.02] px-3 py-2">
                         <p className="text-[6px] leading-3 text-cyan-50/45">
-                          You can also drag this owned skill directly onto one of the five Luna skill slots.
+                          You can also drag this owned skill directly onto one of the four Luna skill slots.
                         </p>
                       </div>
                     )}
