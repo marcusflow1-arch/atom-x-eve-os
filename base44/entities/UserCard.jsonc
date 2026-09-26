@@ -3,28 +3,34 @@
   "type": "object",
   "properties": {
     "user_id": {
-      "type": "string",
-      "description": "ID of the user who owns this card"
+      "type": "string"
     },
     "trading_card_id": {
-      "type": "string",
-      "description": "ID of the master TradingCard record for this owned card"
+      "type": "string"
     },
     "card_type": {
       "type": "string",
       "enum": [
+        "ability",
+        "equipment",
+        "companion",
+        "pet",
+        "mount",
+        "teacher",
+        "material",
+        "home_item",
+        "environment",
+        "collectible",
         "Equipment",
         "Ability",
         "Companion",
         "Environment",
         "Teacher",
         "Achievement"
-      ],
-      "description": "Type of card"
+      ]
     },
     "card_name": {
-      "type": "string",
-      "description": "Name of the card/item"
+      "type": "string"
     },
     "card_rarity": {
       "type": "string",
@@ -36,24 +42,19 @@
         "Legendary",
         "Mythic",
         "Unique"
-      ],
-      "description": "Rarity tier"
+      ]
     },
     "card_image": {
-      "type": "string",
-      "description": "Image URL for the card"
+      "type": "string"
     },
     "game_name": {
-      "type": "string",
-      "description": "Game this card is from"
+      "type": "string"
     },
     "game_id": {
-      "type": "string",
-      "description": "Game entity ID this card belongs to"
+      "type": "string"
     },
     "genre": {
-      "type": "string",
-      "description": "Genre/category"
+      "type": "string"
     },
     "acquisition_method": {
       "type": "string",
@@ -63,26 +64,21 @@
         "traded",
         "gifted"
       ],
-      "default": "unlocked",
-      "description": "How the card was acquired"
+      "default": "unlocked"
     },
     "purchased_from": {
-      "type": "string",
-      "description": "User ID of seller if purchased"
+      "type": "string"
     },
     "purchase_price": {
-      "type": "number",
-      "description": "Price paid if purchased"
+      "type": "number"
     },
     "unlocked_date": {
       "type": "string",
-      "format": "date-time",
-      "description": "When the card was unlocked in-game"
+      "format": "date-time"
     },
     "is_equipped": {
       "type": "boolean",
-      "default": false,
-      "description": "Whether card is currently equipped"
+      "default": false
     },
     "trade_status": {
       "type": "string",
@@ -90,51 +86,47 @@
         "available",
         "locked_in_trade"
       ],
-      "default": "available",
-      "description": "Whether the card is currently reserved in a live trade"
+      "default": "available"
     },
     "last_trade_id": {
-      "type": "string",
-      "description": "Last TradeSession involving this card"
+      "type": "string"
     },
     "animation_effect": {
-      "type": "object",
-      "description": "Optional animation/VFX package this card triggers when cast from a skill slot.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Stable runtime effect identifier, for example getsuga_tensho."
-        },
-        "clip_name": {
-          "type": "string",
-          "description": "Embedded animation clip to play on the player-control character."
-        },
-        "mode": {
-          "type": "string",
-          "enum": [
-            "embedded",
-            "runtime",
-            "external"
-          ],
-          "default": "embedded"
-        },
-        "model_id": {
-          "type": "string",
-          "description": "Optional Admin Model3D fallback model id if the active player rig cannot run this effect."
-        },
-        "model_url": {
-          "type": "string",
-          "description": "Optional fallback GLB/GLTF URL paired with model_id."
-        },
-        "duration_ms": {
-          "type": "number",
-          "description": "Approximate visible cast duration used by the HUD."
-        },
-        "cooldown_ms": {
-          "type": "number",
-          "description": "Client-side visual cooldown for this card effect."
-        }
-      }
+      "type": "object"
+    },
+    "achievement_id": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "achievement",
+        "quest",
+        "purchase",
+        "trade",
+        "admin",
+        "starter",
+        "migration"
+      ]
+    },
+    "equipped_to": {
+      "type": "string",
+      "enum": [
+        "none",
+        "skill_book",
+        "loadout",
+        "companion",
+        "home"
+      ],
+      "default": "none"
+    },
+    "acquired_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
