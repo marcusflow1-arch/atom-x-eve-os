@@ -24,5 +24,5 @@ export function useStorePreferences(){
    setPreference(next);return true;
   }catch(e){setError(e.response?.data?.error||e.message);return false;}finally{setSaving(false);}
  };
- return {preference,save,saving,error:error||(query.error?'Saved preferences could not load.':''),playedIds:query.data?.played_game_ids||[],ownedIds:query.data?.owned_game_ids||user?.purchased_items||[]};
+ return {preference,save,saving,error:error||(query.error?'Saved preferences could not load.':''),playedIds:query.data?.played_game_ids||[],ownedIds:query.data?.owned_game_ids||[]};
 }
