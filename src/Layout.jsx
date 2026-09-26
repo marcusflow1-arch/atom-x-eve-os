@@ -350,24 +350,18 @@ function LayoutContent({ children, currentPageName }) {
   }, [isAuthenticated, user?.id]);
 
   const [navOrder, setNavOrder] = useState(() => {
+    const defaults = ['home', 'store', 'cards', 'clan', 'forum', 'aura'];
     try {
-      const saved = localStorage.getItem('nav_order');
-      if (saved) {
-        let parsed = JSON.parse(saved);
-        parsed = parsed.filter(id => id !== 'entertainment' && id !== 'settings' && id !== 'library');
-        // Ensure 'cards' is included (may be missing from older saved orders)
-        if (!parsed.includes('cards')) {
-          const forumIdx = parsed.indexOf('forum');
-          if (forumIdx !== -1) {
-            parsed.splice(forumIdx + 1, 0, 'cards');
-          } else {
-            parsed.push('cards');
-          }
-        }
-        return parsed;
-      }
-    } catch(e) {}
-    return ['home', 'clan', 'forum', 'cards', 'aura'];
+      const saved = JSON.parse(localStorage.getItem('nav_order') || '[]');
+      const known = new Set(defaults);
+      const fixed = Array.isArray(saved) ? saved.filter((id) => known.has(id)) : [];
+      for (const id of defaults) if (!fixed.includes(id)) fixed.push(id);
+      localStorage.setItem('nav_order', JSON.stringify(fixed));
+      return fixed;
+    } catch {
+      localStorage.setItem('nav_order', JSON.stringify(defaults));
+      return defaults;
+    }
   });
 
   const onNavDragEnd = (result) => {
@@ -387,26 +381,27 @@ function LayoutContent({ children, currentPageName }) {
     }`;
 
     switch (id) {
-      case 'home':
+      case 'home': {
         const isHomePage = location.pathname.toLowerCase().includes('/lunatemplate');
         return (
+          <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className={btnClass(isHomePage)}>
+            Home
+          </button>
+        );
+      }
+      case 'store':
+        return (
           <button
-            onClick={() => {
-              if (isHomePage) {
-                navigate(createPageUrl('Store'));
-              } else {
-                navigate(createPageUrl('LunaTemplate'));
-              }
-            }}
-            className={btnClass(isHomePage)}
+            onClick={() => navigate(createPageUrl('Store'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/store'))}
           >
-            {isHomePage ? 'Store' : 'Home'}
+            Store
           </button>
         );
       case 'clan':
         return (
           <button
-            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+            onClick={() => navigate(createPageUrl('Clan'))}
             className={btnClass(location.pathname.toLowerCase().includes('/clan'))}
           >
             Clan
@@ -415,7 +410,7 @@ function LayoutContent({ children, currentPageName }) {
       case 'forum':
         return (
           <button
-            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
+            onClick={() => navigate(createPageUrl('Community'))}
             className={btnClass(location.pathname.toLowerCase().includes('/community'))}
           >
             Forum
@@ -915,7 +910,7 @@ function LayoutContent({ children, currentPageName }) {
         ];
 
         const DOCK_ITEMS_RIGHT = [
-          { id: 'marketplace', label: 'Market', icon: Target, route: 'Store?mode=marketplace' },
+          { id: 'trading', label: 'Trading Post', icon: ArrowLeftRight, route: 'Store?mode=trading' },
           { id: 'social', label: 'Social Hub', icon: TrendingUp, action: () => setSocialHubOpen(true) },
         ];
 
@@ -1297,7 +1292,7 @@ export default function Layout({ children, currentPageName }) {
     setTimeout(() => {
       setShowIntro(false);
       sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
-      navigate(createPageUrl('Store'));
+      navigate(createPageUrl('LunaTemplate'));
     }, 400);
   };
 
