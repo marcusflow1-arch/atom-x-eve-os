@@ -20,10 +20,10 @@ export default function LunaAIBattleOverlay({ onClose }) {
   // The always-mounted dashboard stage owns room joining, ready checks and peer
   // relays. This popup is UI/control only so opening it cannot duplicate attacks
   // or damage broadcasts.
-  const battle = useAIBattleQueue({ sessionBridge: false });
+  const battle = useAIBattleQueue({ sessionBridge: false, polling: false });
   const waiting = battle.queue?.status === 'waiting';
   const connecting = battle.match?.status === 'matched';
-  const ready = battle.match?.status === 'ready';
+  const ready = ['countdown', 'fighting'].includes(String(battle.match?.status || ''));
   const queuedMode = battle.match?.mode || battle.queue?.mode || null;
   const active = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
 
@@ -100,7 +100,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
     : waiting
       ? 'You are in the queue. Closing this menu will not remove you. Cancel or unselect this mode to leave.'
       : ready
-        ? 'Match connected. Entering the PvP battle stage…'
+        ? (battle.match?.status === 'countdown' ? 'Both fighters loaded. Countdown starting…' : 'Match connected. Fight in progress.')
         : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
 
   return (
