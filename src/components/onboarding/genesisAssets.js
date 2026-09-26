@@ -14,7 +14,7 @@ export const GLOBAL_AVATAR_MODEL_URL = 'https://base44.app/api/apps/6876751a6021
 // This is the only female base body used by Genesis. The canonical Artemis package
 // owns her skeleton, bow, Idle/Combat_Idle transitions and embedded ability clips.
 // Keep this URL isolated so replacing the uploaded GLB updates every female viewer.
-export const FEMALE_ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
+export const FEMALE_ARTEMIS_MODEL_URL = '/models/atomxe-artemis-archer.glb';
 export const GLOBAL_AVATAR_NAME = 'Luna AI';
 
 // Female creation intentionally exposes one canonical body only.
