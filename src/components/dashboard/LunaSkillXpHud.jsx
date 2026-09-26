@@ -9,7 +9,6 @@ const slotPosition = [
   { left: 73, top: 38, key: '2' },
   { left: 38, top: 73, key: '3' },
   { left: 3, top: 38, key: '4' },
-  { left: 38, top: 38, key: '5' },
 ];
 
 const skillStackLayers = [
@@ -252,7 +251,7 @@ export default function LunaSkillXpHud({
       {combatMode && (
         <div className="pointer-events-none absolute left-[132px] top-[12px] border border-cyan-100/[0.12] bg-slate-950/72 px-3 py-1.5 backdrop-blur-xl">
           <span className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/70">Combat Loadout Locked</span>
-          <span className="ml-2 text-[7px] text-white/55">Use skill slots 1–5 to cast equipped cards.</span>
+          <span className="ml-2 text-[7px] text-white/55">Use skill slots 1–4 to cast equipped cards.</span>
         </div>
       )}
       {/* Continuous seam: top point -> upper-right diamond edge -> right tip -> AI HQ. */}
