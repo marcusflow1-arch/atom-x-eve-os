@@ -7,7 +7,7 @@ const QUEUE_HEARTBEAT_MS = 8000;
 const DASHBOARD_LIVE_MS = 60000;
 const DEFAULT_BATTLE_HP = 1000;
 const MALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
-const FEMALE_MODEL = '/models/atomxe-artemis-archer.glb';
+const FEMALE_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/96bb872db_Artemis_Character.glb';
 const APPEARANCE_KEYS = [
   'name','gender','female_model_variant','model_url','base_body_gender','base_body_model_url','appearance_version',
   'style_preset','skin_tone','eye_color','hair_color','skin_tint_enabled','eye_tint_enabled','hair_tint_enabled',
