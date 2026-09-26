@@ -352,7 +352,15 @@ async function buildState(base44: any, user: AnyObj) {
     const slotIds = loadout?.skill_slots || {};
     const slots = Array.from({ length: 5 }, (_, index) => {
       const cardId = slotIds[String(index)] || slotIds[index];
-      return { index, user_card_id: cardId || null, card: cardId ? snapshotCard(ownedById.get(String(cardId)) || null) : null };
+      const availableCard = cardId ? ownedById.get(String(cardId)) || null : null;
+      // A female-only Artemis card may remain saved in the user's loadout so it
+      // is restored when they return to the female avatar, but it must not be
+      // exposed as an active/castable slot while a male avatar is selected.
+      return {
+        index,
+        user_card_id: availableCard ? cardId : null,
+        card: availableCard ? snapshotCard(availableCard) : null,
+      };
     });
     return {
       id: loadout.id,
