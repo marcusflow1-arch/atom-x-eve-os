@@ -108,8 +108,16 @@ export default function LunaSkillXpHud({
       const card = event?.detail?.card || null;
       setPendingCard(card);
     };
+    const handleCastRejected = (event) => {
+      const reason = event?.detail?.reason || 'The active avatar could not play this skill animation.';
+      showError(new Error(reason), 'Cast Skill');
+    };
     window.addEventListener('lunaShowcaseCardSelected', handleSelected);
-    return () => window.removeEventListener('lunaShowcaseCardSelected', handleSelected);
+    window.addEventListener('lunaSkillCastRejected', handleCastRejected);
+    return () => {
+      window.removeEventListener('lunaShowcaseCardSelected', handleSelected);
+      window.removeEventListener('lunaSkillCastRejected', handleCastRejected);
+    };
   }, []);
 
   const assignShowcaseCard = async (index, card, explicitUserCardId) => {
