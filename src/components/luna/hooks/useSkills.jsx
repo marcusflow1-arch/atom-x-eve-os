@@ -5,15 +5,15 @@ const DEFAULT_EFFECT_COOLDOWN_MS = 3000;
 const DEFAULT_EFFECT_DURATION_MS = 800;
 
 /**
- * Hook for managing the five Luna / AI Battle skill-card slots.
+ * Hook for managing the four Luna / AI Battle skill-card slots.
  *
  * Cards are the source of truth. A slot only triggers an animation/VFX package
  * when the equipped card carries animation_effect metadata. The keyboard never
- * owns an effect directly: Digit1..Digit5 resolve the card in that logical slot,
+ * owns an effect directly: Digit1..Digit4 resolve the card in that logical slot,
  * then the card resolves the effect.
  */
 export function useSkills() {
-  const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
+  const [activeSkills, setActiveSkills] = useState([false, false, false, false]);
   const { triggerSkill: storeSkill, isOnCooldown, setCooldown, getHotbarItem } = useLunaStore();
 
   const activateSkill = (index, duration = DEFAULT_EFFECT_DURATION_MS) => {
@@ -154,7 +154,7 @@ export function useSkills() {
   };
 
   /**
-   * AI Battle / dashboard skill-card keys are a direct 1→1 ... 5→5 mapping.
+   * AI Battle / dashboard skill-card keys are a direct 1→1 ... 4→4 mapping.
    * No effect may remap its card to another number: slot identity is persistent.
    */
   useEffect(() => {
@@ -167,9 +167,9 @@ export function useSkills() {
       // Use physical Digit1..Digit5 as the primary mapping so skills still cast
       // while WASD movement/gameplay handlers are active or on non-US layouts.
       // Fall back to event.key for accessibility/on-screen keyboard input.
-      const codeMatch = /^Digit([1-5])$/.exec(String(event.code || ''));
+      const codeMatch = /^Digit([1-4])$/.exec(String(event.code || ''));
       const key = codeMatch?.[1] || String(event.key || '');
-      if (!['1', '2', '3', '4', '5'].includes(key)) return;
+      if (!['1', '2', '3', '4'].includes(key)) return;
 
       const slotIndex = Number(key) - 1;
       if (!getHotbarItem(slotIndex)) return;
@@ -179,7 +179,7 @@ export function useSkills() {
 
     const handleRequestedSlot = (event) => {
       const slotIndex = Number(event?.detail?.slotIndex);
-      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 4) return;
+      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 3) return;
       triggerSkill(slotIndex, event?.detail?.source || 'dashboard_click');
     };
 
