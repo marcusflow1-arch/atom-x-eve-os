@@ -16,6 +16,17 @@ Deno.serve(async req => {
     if (!user) return Response.json({error:'Sign in to join a dashboard.'},{status:401});
     const {action='heartbeat',data={}} = await req.json();
     const svc = client.asServiceRole.entities;
+    if (action === 'online_summary') {
+      const [presence, queue, matches] = await Promise.all([
+        svc.PlayerState.filter({}),
+        svc.AIBattleQueueEntry.filter({ status: 'waiting' }, '-created_date', 500),
+        svc.AIBattleMatch.filter({}, '-created_date', 500),
+      ]);
+      const online = new Set((presence || []).filter(live).map((row:any) => String(row.player_id))).size;
+      const in_queue = new Set((queue || []).filter((row:any) => Date.parse(row.last_seen_at || row.queued_at || 0) > Date.now() - 30000).map((row:any) => String(row.user_id))).size;
+      const matches_live = (matches || []).filter((row:any) => ['countdown','fighting','ready'].includes(String(row.status || ''))).length;
+      return Response.json({ online, in_queue, matches_live, server_time: Date.now() });
+    }
     const ownRows = latest(await svc.PlayerState.filter({player_id:user.id}));
     const own = ownRows[0];
     if (action === 'leave') {
