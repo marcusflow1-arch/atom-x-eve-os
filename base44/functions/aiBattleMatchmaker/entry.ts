@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 import { ATB_START, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
+import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
 
 type Row = Record<string, any>;
 const MODES = new Set(['pvp', 'pve', 'world_boss']);
@@ -72,7 +73,7 @@ async function getAvatarSnapshot(svc: any, userId: string) {
   return { avatar_gender: gender, avatar_model_url: appearance.model_url, avatar_appearance: appearance };
 }
 
-async function freezeSkills(svc: any, userId: string) {
+async function freezeSkills(svc: any, userId: string, gender: string) {
   const loadouts = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills', is_active: true }, '-updated_date', 10).catch(() => []);
   const loadout = loadouts?.[0];
   const slots = loadout?.skill_slots || {};
@@ -81,7 +82,7 @@ async function freezeSkills(svc: any, userId: string) {
     const cardId = slots[String(slot)] || slots[slot];
     if (!cardId) continue;
     const card = await svc.UserCard.get(String(cardId)).catch(() => null);
-    if (!card || String(card.user_id) !== String(userId)) continue;
+    if (!card || String(card.user_id) !== String(userId) || !skillEquipStatus(card, gender).can_equip) continue;
     const progressionRows = await svc.CardProgression.filter({ user_id: userId, user_card_id: String(card.id) }, '-updated_date', 1).catch(() => []);
     const level = Math.max(1, Number(progressionRows?.[0]?.level || 1));
     const effect = card.animation_effect || {};
@@ -105,7 +106,7 @@ async function playerFromQueue(svc: any, row: Row) {
   appearance.base_body_gender = gender;
   appearance.base_body_model_url = String(appearance.base_body_model_url || appearance.model_url || fallbackModel);
   if (gender === 'female') appearance.female_model_variant = appearance.female_model_variant || 'artemis_archer';
-  return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp: DEFAULT_BATTLE_HP, max_hp: DEFAULT_BATTLE_HP, skills: await freezeSkills(svc, String(row.user_id)) };
+  return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp: DEFAULT_BATTLE_HP, max_hp: DEFAULT_BATTLE_HP, skills: await freezeSkills(svc, String(row.user_id), gender) };
 }
 
 async function getMatch(svc: any, id: string) { return id ? await svc.AIBattleMatch.get(id).catch(() => null) : null; }
@@ -255,7 +256,7 @@ Deno.serve(async (req) => {
       return json({queue:publicQueue(queue),match:publicMatch(paired&&(paired.player_ids||[]).map(String).includes(userId)?paired:null),server_time:Date.now()});
     }
     if (action === 'cancel' || action === 'reset') {
-      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
+      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
     }
     if (action === 'ready') {
       let match=await settleMatch(svc,await getMatch(svc,String(data.match_id||''))); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
@@ -288,7 +289,11 @@ Deno.serve(async (req) => {
       let match=await settleMatch(svc,await getMatch(svc,String(data.match_id||''))); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId); const slot=Number(data.slot);
+      if(!Number.isInteger(slot)||slot<0||slot>=SKILL_SLOT_COUNT) return json({error:'Invalid skill slot.'},400);
       const skill=(me?.skills||[]).find((s:Row)=>Number(s.slot)===slot); if(!skill) return json({error:'That skill is not equipped.'},409);
+      // Recheck legacy frozen loadouts against the avatar captured for this match.
+      const compatibilityError=avatarSkillError(skill,me?.gender);
+      if(compatibilityError) return json({error:compatibilityError},409);
       const now=Date.now(); const myCooldowns=match.cooldowns?.[userId]||{}; if(Date.parse(myCooldowns[String(slot)]||0)>now) return json({error:'On cooldown.'},409);
       if(now-Number(myCooldowns._last_cast_at||0)<400) return json({error:'Casting too quickly.'},409);
       const currentAtb=atbNow(match.atb?.[userId],now); if(currentAtb<Number(skill.atb_cost||0)) return json({error:'Not enough ATB.'},409);
