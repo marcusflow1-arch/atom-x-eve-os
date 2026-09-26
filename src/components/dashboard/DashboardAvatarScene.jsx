@@ -7,6 +7,7 @@ import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 import BattleSkillRail from '@/components/battle/BattleSkillRail';
+import PvPArenaStage from '@/components/battle/PvPArenaStage';
 import { base44 } from '@/api/base44Client';
 import {
   CREATOR_PARENTING_PREVIEW,
@@ -42,17 +43,12 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   const { data: battleStatus } = useQuery({
     queryKey: ['ai-battle-matchmaking', user?.id],
-    enabled: !!user?.id,
+    enabled: false,
     queryFn: async () => unwrapBattleStatus(await base44.functions.invoke('aiBattleMatchmaker', { action: 'status', data: {} })),
-    refetchInterval: (query) => {
-      const status = query.state.data?.match?.status;
-      if (status === 'ready') return 3000;
-      if (status === 'matched') return 5000;
-      return 30000;
-    },
-    refetchOnWindowFocus: true,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
     retry: false,
-    staleTime: 1500,
+    staleTime: Infinity,
   });
 
   const visitors = session.players.filter(p => p.player_id !== session.host_id);
@@ -109,7 +105,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   const battleMatch = battleStatus?.match || null;
   const battlePair = useMemo(() => {
-    if (!battleMatch?.id || !['matched', 'ready'].includes(battleMatch.status) || !user?.id) return null;
+    if (!battleMatch?.id || !['matched', 'countdown', 'fighting', 'ended'].includes(battleMatch.status) || !user?.id) return null;
     if (String(session.channel_id || '') !== String(battleMatch.dashboard_channel || '')) return null;
 
     const matchIds = (battleMatch.player_ids || []).map(String);
