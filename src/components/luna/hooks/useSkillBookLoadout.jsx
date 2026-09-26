@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import useLunaStore from '@/components/luna/useLunaStore';
+import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 
 const unwrap = (response) => response?.data ?? response ?? {};
 const normalize = (value) => String(value || '').trim().toLowerCase();
@@ -94,8 +95,15 @@ export function useSkillBookLoadout() {
         action: 'getState',
         data: {},
       });
-      const body = unwrap(response);
+      let body = unwrap(response);
       if (body?.error) throw new Error(body.error);
+      const effects = new Set((body.skills || []).map((skill) => String(skill?.card?.animation_effect?.id || skill?.animation_effect?.id || '')));
+      const required = ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam'];
+      if (required.some((id) => !effects.has(id))) {
+        const bootstrap = await base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} });
+        body = unwrap(bootstrap);
+        if (body?.error) throw new Error(body.error);
+      }
       return restoreIchigoIntoState(body, user.id);
     },
     enabled: Boolean(user?.id),
@@ -109,15 +117,11 @@ export function useSkillBookLoadout() {
     setActiveSkillRow(Math.max(0, Math.min(2, rowIndex)));
     if (!Array.isArray(slots)) return;
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < SKILL_SLOT_COUNT; index += 1) {
       const card = slots.find((slot) => Number(slot.index) === index)?.card || null;
       if (card) assignToHotbar(index, card);
       else clearHotbarSlot(index);
     }
-    // Slot 5 existed in an earlier five-slot prototype. Clear its local mirror so
-    // only the four authored Luna skill hotkeys (1–4) can ever cast.
-    clearHotbarSlot(4);
-
     window.dispatchEvent(new CustomEvent('lunaSkillBookState', {
       detail: { state: stateQuery.data },
     }));
