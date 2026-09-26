@@ -121,11 +121,10 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
       scene.current?.getsugaIdle?.();
       return;
     }
-    // The female Luna dashboard/avatar previews are intentionally locked to the
-    // known-good base Idle clip for now. Do not cycle admin idles/showcase clips
-    // here; one of those retargets was causing Erika to repeatedly jump.
+    // Artemis now owns an authored embedded idle/combat state machine. Female
+    // previews use that package directly instead of retargeting an Admin FBX.
     if (fixedFemaleIdle) {
-      playMotion(COMPANION_MOTIONS[0]);
+      scene.current?.artemisIdle?.();
       return;
     }
     const idles = motionSetRef.current.idles || [];
@@ -168,7 +167,8 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
           callback.current?.(caps);
           setReady(true);
           if (canonicalGetsugaMale) scene.current?.getsugaIdle?.();
-          else playMotion(fixedFemaleIdle ? COMPANION_MOTIONS[0] : (motionSetRef.current.idles?.[0] || COMPANION_MOTIONS[0]));
+          else if (fixedFemaleIdle) scene.current?.artemisIdle?.();
+          else playMotion(motionSetRef.current.idles?.[0] || COMPANION_MOTIONS[0]);
         },
         (value, name) => {
           setStatus(value);
@@ -176,16 +176,15 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
         },
         {
           secondaryCharacter,
-          // Artemis is an unskinned single-mesh Admin GLB. Do not generate
-          // runtime skin weights—the approximation tears hands, clothing and
-          // accessories apart. Keep the original mesh intact and use the Idle
-          // FBX only as a safe whole-body motion reference.
+          // Female Artemis ships as one skinned GLB with its own idle, bow
+          // transitions, combat idle and three authored skill animations.
           safeRigidIdle: fixedFemaleIdle,
           retargetExternalMotions: false,
           framingOffsetY: fixedFemaleIdle ? 0.16 : 0,
           initialYaw,
           skillEffects,
           getsugaMale: canonicalGetsugaMale,
+          artemisFemale: fixedFemaleIdle,
           lockRootTranslation: false,
           lockModelPosition: fixedFemaleIdle,
         },
