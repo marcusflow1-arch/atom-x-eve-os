@@ -98,6 +98,42 @@ Deno.serve(async (req) => {
       }
     };
 
+    if (action === 'list_friends') {
+      const rows = await svc.Friend.filter({ user_id: user.id }, 'friend_name', 1000);
+      const friends = [];
+      for (const row of rows || []) {
+        const profile = await svc.User.get(String(row.friend_id || '')).catch(() => null);
+        friends.push({
+          ...row,
+          friend_name: row.friend_name || nameOf(profile),
+          friend_avatar: row.friend_avatar || avatarOf(profile),
+          presence_status: profile?.presence_status || row.status || 'offline',
+          current_activity: profile?.current_activity || null,
+          current_game: profile?.current_activity?.gameTitle || profile?.current_activity?.game || row.current_game || '',
+          last_seen: profile?.last_seen || null,
+        });
+      }
+      return json({ success:true, friends });
+    }
+
+    if (action === 'remove_friend') {
+      const friendId = String(data.friend_user_id || '').trim();
+      if (!friendId || friendId === String(user.id)) return json({ error:'A valid friend is required' }, 400);
+      const [mine, theirs, forward, reverse] = await Promise.all([
+        svc.Friend.filter({ user_id:user.id, friend_id:friendId }, '-created_date', 100),
+        svc.Friend.filter({ user_id:friendId, friend_id:user.id }, '-created_date', 100),
+        svc.SocialFriendship.filter({ user_a_id:user.id, user_b_id:friendId }, '-created_date', 100).catch(() => []),
+        svc.SocialFriendship.filter({ user_a_id:friendId, user_b_id:user.id }, '-created_date', 100).catch(() => []),
+      ]);
+      await Promise.all([
+        ...(mine || []).map((row:any) => svc.Friend.delete(row.id)),
+        ...(theirs || []).map((row:any) => svc.Friend.delete(row.id)),
+        ...(forward || []).map((row:any) => svc.SocialFriendship.delete(row.id)),
+        ...(reverse || []).map((row:any) => svc.SocialFriendship.delete(row.id)),
+      ]);
+      return json({ success:true, friend_user_id:friendId });
+    }
+
     if (action === 'send_friend_request') {
       const targetId = String(data.target_user_id || '').trim();
       if (!targetId) return json({ error: 'Target user is required' }, 400);
