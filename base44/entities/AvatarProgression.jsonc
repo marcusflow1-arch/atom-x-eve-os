@@ -3,8 +3,7 @@
   "type": "object",
   "properties": {
     "user_id": {
-      "type": "string",
-      "description": "Owner user ID"
+      "type": "string"
     },
     "global_level": {
       "type": "number",
@@ -58,6 +57,9 @@
           "name": {
             "type": "string"
           },
+          "id": {
+            "type": "string"
+          },
           "level": {
             "type": "number",
             "default": 1
@@ -66,91 +68,70 @@
             "type": "number",
             "default": 0
           }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "default": [
-        {
-          "name": "RPG",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "FPS",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "Strategy",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "Action",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "MMO",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "Puzzle",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "Simulation",
-          "level": 1,
-          "xp": 0
-        },
-        {
-          "name": "Sports",
-          "level": 1,
-          "xp": 0
         }
-      ]
+      },
+      "default": []
     },
     "knowledge_level": {
       "type": "number",
-      "default": 1,
-      "description": "AI avatar knowledge progression level from 1 to 300"
+      "default": 1
     },
     "knowledge_xp": {
       "type": "number",
-      "default": 0,
-      "description": "XP toward the next AI knowledge level"
+      "default": 0
     },
     "available_skill_points": {
       "type": "number",
-      "default": 0,
-      "description": "Unspent AI skill-tree points"
+      "default": 0
     },
     "skill_allocations": {
-      "type": "object",
-      "description": "Persisted ranks for AI skill-tree categories and nodes"
+      "type": "object"
     },
     "claimed_stat_rewards": {
       "type": "array",
       "items": {
         "type": "number"
       },
-      "default": [],
-      "description": "Avatar level reward milestones already claimed"
+      "default": []
     },
     "claimed_knowledge_rewards": {
       "type": "array",
       "items": {
         "type": "number"
       },
-      "default": [],
-      "description": "Knowledge level reward milestones already claimed"
+      "default": []
     }
   },
   "required": [
     "user_id"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
