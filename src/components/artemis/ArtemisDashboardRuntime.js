@@ -6,7 +6,7 @@ const ABILITY_EVENTS = {
   Lunar_Beam: { impact: 3.1, end: 3.6 },
 };
 
-const LOOP_CLIPS = new Set(['Idle', 'Combat_Idle']);
+const LOOP_CLIPS = new Set(['Idle', 'Combat_Idle', 'Run']);
 
 /**
  * Runtime adapter for the authored Artemis GLB.
@@ -77,6 +77,24 @@ export class ArtemisDashboardRuntime {
     return [...this.clips.keys()];
   }
 
+  setRunClip(clip) {
+    if (!clip) return false;
+    const runClip = clip.clone?.() || clip;
+    runClip.name = 'Run';
+    this.clips.set('Run', runClip);
+    const old = this.actions.get('Run');
+    old?.stop?.();
+    this.actions.delete('Run');
+    return true;
+  }
+
+  playRun() {
+    if (this.disposed || this.isPlaying() || !this.hasClip('Run')) return false;
+    this.home = 'Idle';
+    this.calmFor = 0;
+    return this._crossFade('Run', 0.14);
+  }
+
   _actionFor(name) {
     const clip = this.clips.get(name);
     if (!clip) return null;
@@ -129,7 +147,7 @@ export class ArtemisDashboardRuntime {
     this.firedImpact = false;
     this.home = 'Idle';
     this.calmFor = 0;
-    return this._crossFade('Idle', immediate ? 0 : 0.24);
+    return this._crossFade('Idle', immediate ? 0 : 0.18);
   }
 
   playCombatIdle() {
