@@ -527,7 +527,7 @@ export default function LunaCardsPanel() {
                       </div>
 
                       {selectedSkill.owned ? (
-                        <div className="mt-2 grid grid-cols-5 gap-1.5">
+                        <div className="mt-2 grid grid-cols-4 gap-1.5">
                           {[0, 1, 2, 3].map((slotIndex) => {
                             const slot = slots.find((entry) => Number(entry.index) === slotIndex);
                             const occupiedBySelected = String(slot?.card?.user_card_id || '') === String(selectedSkill.user_card_id || '');
