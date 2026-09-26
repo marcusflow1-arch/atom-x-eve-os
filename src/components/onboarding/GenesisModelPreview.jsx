@@ -6,18 +6,6 @@ import { COMPANION_MODELS, COMPANION_MOTIONS, companionModel } from '@/component
 import { createGenesisScene } from '@/components/onboarding/genesisScene';
 
 let animationCatalogPromise = null;
-let latestArtemisModelPromise = null;
-
-function loadLatestArtemisModel() {
-  if (!latestArtemisModelPromise) {
-    latestArtemisModelPromise = base44.entities.Model3D.list('-created_date', 100)
-      .then((rows) => (rows || []).find((row) =>
-        /artemis/i.test(String(row?.name || '')) && /\.gl(?:b|tf)(?:\?|$)/i.test(String(row?.file_url || ''))
-      ) || null)
-      .catch(() => null);
-  }
-  return latestArtemisModelPromise;
-}
 
 function normalized(value = '') {
   return String(value).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -114,26 +102,16 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   const [controlArmed, setControlArmed] = useState(false);
   const [paused, setPaused] = useState(false);
   const [previewMotions, setPreviewMotions] = useState(COMPANION_MOTIONS);
-  const [latestFemaleModelUrl, setLatestFemaleModelUrl] = useState('');
 
   callback.current = onCapabilities;
   controlArmedRef.current = controlArmed;
   const fixedFemaleIdle = config?.gender === 'female';
   const canonicalGetsugaMale = !fixedFemaleIdle;
-  const canonicalUrl = companionModel(config);
-  const url = fixedFemaleIdle && latestFemaleModelUrl ? latestFemaleModelUrl : canonicalUrl;
-
-  useEffect(() => {
-    if (!fixedFemaleIdle) {
-      setLatestFemaleModelUrl('');
-      return undefined;
-    }
-    let cancelled = false;
-    loadLatestArtemisModel().then((model) => {
-      if (!cancelled && model?.file_url) setLatestFemaleModelUrl(model.file_url);
-    });
-    return () => { cancelled = true; };
-  }, [fixedFemaleIdle]);
+  // Female Artemis is intentionally pinned to one canonical asset path. Do not
+  // silently replace it with the newest Admin Model3D record: an older static
+  // upload named "artemis" can otherwise override the authored animated GLB and
+  // make every Skill Book card appear equipped while none of its clips exist.
+  const url = companionModel(config);
 
   const playMotion = useCallback((nextMotion) => {
     if (!nextMotion?.url || !scene.current) return;
