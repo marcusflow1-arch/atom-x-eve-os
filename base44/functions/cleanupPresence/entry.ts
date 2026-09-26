@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
     try {
@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
         // Note: Filter might need pagination if many users, keeping simple for now
         const onlineUsers = await base44.asServiceRole.entities.User.filter({
             presence_status: 'online'
-        }, 100);
+        }, '-last_seen', 500);
 
         const now = new Date();
         const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
