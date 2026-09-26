@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
 import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
 import { showError } from '@/components/error/ErrorToast';
+import useOnlineSummary from '@/components/social/useOnlineSummary';
 
 const MODES = [
   { id: 'pvp', label: 'PvP', sub: 'Player vs Player', icon: Swords },
@@ -13,6 +14,7 @@ const isRateLimitError = (error) => /rate limit|too many requests|too many attem
 
 export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
+  const { data: onlineSummary } = useOnlineSummary();
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
   const wasReadyRef = useRef(false);
   // The always-mounted dashboard stage owns room joining, ready checks and peer
@@ -138,6 +140,9 @@ export default function LunaAIBattleOverlay({ onClose }) {
         </div>
 
         <div className="p-4">
+          <div className="mb-3 text-[11px] font-semibold text-white/58">
+            Online now: {onlineSummary?.online ?? 0} · In queue: {onlineSummary?.in_queue ?? 0} · Live matches: {onlineSummary?.matches_live ?? 0}
+          </div>
           <div className="flex min-h-[58px] items-center border border-white/[0.07] bg-white/[0.025] px-4">
             {(battle.busy || connecting || ready) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
             <div>
