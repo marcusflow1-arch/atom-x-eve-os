@@ -4,6 +4,7 @@ import {
   Sparkles, Volume2, Zap
 } from 'lucide-react';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
+import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import CombatPrefabManager from './CombatPrefabManager';
 
@@ -142,6 +143,10 @@ export default function LunaCardsPanel() {
 
   const equipSkill = async (slot, skill) => {
     if (!skill?.owned || !skill?.user_card_id) return;
+    if (skill.can_equip === false) {
+      showError(new Error(skill.equip_error || 'This skill is unavailable for your current avatar.'), 'Equip Skill');
+      return;
+    }
     try {
       await equip(slot, skill.user_card_id);
       showSuccess(`${skill.title} equipped to Skill Slot ${slot + 1}.`);
@@ -151,7 +156,10 @@ export default function LunaCardsPanel() {
   };
 
   const dragSkill = (event, skill) => {
-    if (!skill?.owned || !skill?.user_card_id || !event.dataTransfer) return;
+    if (!skill?.owned || !skill?.user_card_id || skill.can_equip === false || !event.dataTransfer) {
+      event.preventDefault();
+      return;
+    }
     const payload = {
       ...(skill.card || {}),
       id: skill.user_card_id,
@@ -221,7 +229,7 @@ export default function LunaCardsPanel() {
               </div>
               <p className="mt-1 text-[7px] text-white/36">
                 {selectedGame
-                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill slots 1–4`
+                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill slots 1–${SKILL_SLOT_COUNT}`
                   : 'Choose a game chapter to browse its complete ability library.'}
               </p>
             </div>
@@ -229,7 +237,7 @@ export default function LunaCardsPanel() {
             <div className="text-right">
               <p className="text-[6px] font-black uppercase tracking-[0.12em] text-white/30">Loadout</p>
               <p className="mt-1 text-[9px] font-semibold text-white/70">
-                {(slots || []).filter((slot) => slot.card).length} / 5 equipped
+                {(slots || []).filter((slot) => slot.card).length} / {SKILL_SLOT_COUNT} equipped
               </p>
             </div>
           </div>
@@ -339,7 +347,7 @@ export default function LunaCardsPanel() {
                   <button
                     key={index}
                     type="button"
-                    draggable={Boolean(card.owned)}
+                    draggable={Boolean(card.owned && card.can_equip !== false)}
                     onDragStart={(event) => dragSkill(event, card)}
                     onClick={() => {
                       const game = (games || []).find((entry) => normalize(entry.title) === normalize(card.game_name));
@@ -429,7 +437,7 @@ export default function LunaCardsPanel() {
                       <button
                         key={skill.id}
                         type="button"
-                        draggable={Boolean(skill.owned)}
+                        draggable={Boolean(skill.owned && skill.can_equip !== false)}
                         onDragStart={(event) => dragSkill(event, skill)}
                         onClick={() => setSelectedSkillId(skill.id)}
                         className={`mb-1 flex w-full items-center gap-2.5 border px-2.5 py-2 text-left transition-all ${active
@@ -526,16 +534,23 @@ export default function LunaCardsPanel() {
                         </div>
                       </div>
 
+                      {selectedSkill.owned && selectedSkill.can_equip === false && (
+                        <p id="skill-equip-reason" role="status" className="mt-2 text-[10px] leading-4 text-amber-100/80">
+                          {selectedSkill.equip_error || 'This skill is unavailable for your current avatar.'}
+                        </p>
+                      )}
+
                       {selectedSkill.owned ? (
                         <div className="mt-2 grid grid-cols-4 gap-1.5">
-                          {[0, 1, 2, 3].map((slotIndex) => {
+                          {Array.from({ length: SKILL_SLOT_COUNT }, (_, slotIndex) => {
                             const slot = slots.find((entry) => Number(entry.index) === slotIndex);
                             const occupiedBySelected = String(slot?.card?.user_card_id || '') === String(selectedSkill.user_card_id || '');
                             return (
                               <button
                                 key={slotIndex}
                                 type="button"
-                                disabled={isSaving}
+                                disabled={isSaving || selectedSkill.can_equip === false}
+                                aria-describedby={selectedSkill.can_equip === false ? 'skill-equip-reason' : undefined}
                                 onClick={() => equipSkill(slotIndex, selectedSkill)}
                                 className={`min-h-[52px] border px-1.5 py-2 text-center transition-colors disabled:opacity-40 ${occupiedBySelected
                                   ? 'border-cyan-100/28 bg-cyan-100/[0.09] text-white'
@@ -563,10 +578,10 @@ export default function LunaCardsPanel() {
                       )}
                     </div>
 
-                    {selectedSkill.owned && (
+                    {selectedSkill.owned && selectedSkill.can_equip !== false && (
                       <div className="mt-3 border border-cyan-100/[0.07] bg-cyan-100/[0.02] px-3 py-2">
                         <p className="text-[6px] leading-3 text-cyan-50/45">
-                          You can also drag this owned skill directly onto one of the four Luna skill slots.
+                          You can also drag this owned skill directly onto one of the {SKILL_SLOT_COUNT} Luna skill slots.
                         </p>
                       </div>
                     )}
