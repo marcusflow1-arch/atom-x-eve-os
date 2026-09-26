@@ -1,102 +1,137 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { isEquipmentSlot, itemFitsSlot } from '../../shared/equipmentSlots.ts';
 
 type Row = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
-const SLOT_IDS = new Set([
-  'helmet','armor','pants','boots','gloves','ring-left','ring-right','earring-left','earring-right',
-  'weapon-1','weapon-2','weapon-3','aspect-1','aspect-2','aspect-3','genre-1','genre-2','genre-3','genre-4',
-  'artifact-1','artifact-2','artifact-3','artifact-4','artifact-5',
-]);
-const cleanText = (value: any, max = 240) => String(value || '').slice(0, max);
-
-function sanitizeItem(input: Row = {}) {
-  const stats = input.stats && typeof input.stats === 'object' && !Array.isArray(input.stats)
-    ? Object.fromEntries(Object.entries(input.stats).slice(0, 24).map(([key, value]) => [cleanText(key, 60), typeof value === 'number' ? value : cleanText(value, 80)]))
-    : {};
-  return {
-    id: cleanText(input.id || input.itemId || input.user_card_id, 120),
-    itemId: cleanText(input.itemId || input.id, 120),
-    name: cleanText(input.name || input.title, 160),
-    type: cleanText(input.type || input.itemType || input.inventoryCategory, 80),
-    subtype: cleanText(input.subtype || input.slot || input.equip_slot, 80),
-    rarity: cleanText(input.rarity || input.card_rarity, 60),
-    icon_url: cleanText(input.icon_url || input.icon || input.image, 1200),
-    model_url: cleanText(input.model_url || input.modelUrl, 1200),
-    genre: cleanText(input.genre, 100),
-    genreCompatibility: Array.isArray(input.genreCompatibility) ? input.genreCompatibility.slice(0, 12).map((value: any) => cleanText(value, 80)) : [],
-    levelRequirement: Number(input.levelRequirement || input.level_requirement || 0) || 0,
-    stats,
-  };
-}
+const lower = (value:any) => String(value || '').trim().toLowerCase();
 
 async function ensureLoadout(svc: any, userId: string) {
   const rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'equipment' }, '-updated_date', 20);
   let active = rows.find((row: Row) => row.is_active) || rows[0] || null;
-  if (!active) {
-    active = await svc.Loadout.create({
-      user_id: userId,
-      name: 'Dashboard Equipment',
-      description: 'Canonical Luna dashboard equipment used by AI Battle and the 3D avatar.',
-      loadout_type: 'equipment',
-      prefab_kind: 'dashboard_row',
-      equipped_items: {},
-      skill_slots: {},
-      is_active: true,
-      tags: ['Luna', 'Dashboard', 'Combat'],
-    });
-  } else if (!active.is_active) {
-    active = await svc.Loadout.update(active.id, { is_active: true });
-  }
+  if (!active) active = await svc.Loadout.create({ user_id:userId, name:'Dashboard Equipment', description:'Canonical Luna dashboard equipment used by AI Battle and the 3D avatar.', loadout_type:'equipment', prefab_kind:'dashboard_row', equipped_items:{}, skill_slots:{}, is_active:true, tags:['Luna','Dashboard','Combat'] });
+  else if (!active.is_active) active = await svc.Loadout.update(active.id, { is_active:true });
   return active;
 }
 
-function serialize(loadout: Row | null) {
+async function hasLivePvpMatch(svc:any, userId:string) {
+  const states = await svc.PlayerState.filter({ player_id:String(userId) }, '-updated_date', 1).catch(() => []);
+  const matchId = String(states?.[0]?.active_match_id || '');
+  if (!matchId) return false;
+  const match = await svc.AIBattleMatch.get(matchId).catch(() => null);
+  if (!match || !['matched','countdown','fighting'].includes(String(match.status || ''))) {
+    if (states[0]) await svc.PlayerState.update(states[0].id, { active_match_id:'' }).catch(() => null);
+    return false;
+  }
+  return true;
+}
+
+async function snapshotOwnedEquipment(svc:any, userId:string, userCardId:string) {
+  const owned = await svc.UserCard.get(String(userCardId || '')).catch(() => null);
+  if (!owned || String(owned.user_id || '') !== String(userId)) throw Object.assign(new Error('Equipment card is not owned by this user'), { status:404 });
+  if (!owned.trading_card_id) throw Object.assign(new Error('This legacy item has not been migrated to the card catalog yet'), { status:409 });
+  if (owned.trade_status === 'locked_in_trade') throw Object.assign(new Error('That equipment card is locked in a trade'), { status:409 });
+  const card = await svc.TradingCard.get(String(owned.trading_card_id)).catch(() => null);
+  if (!card || lower(card.card_type) !== 'equipment') throw Object.assign(new Error('Only equipment cards can be equipped'), { status:400 });
+  const progressionRows = await svc.CardProgression.filter({ user_id:userId, user_card_id:owned.id }, '-updated_date', 1).catch(() => []);
+  const progression = progressionRows[0] || null;
+  const stats = { ...(card.stats || {}), ...(progression?.enhanced_stats || {}) };
   return {
-    id: loadout?.id || '',
-    name: loadout?.name || 'Dashboard Equipment',
-    equipped_items: loadout?.equipped_items || {},
-    is_active: Boolean(loadout?.is_active),
+    owned, card, progression,
+    item: {
+      user_card_id: owned.id,
+      trading_card_id: card.id,
+      name: card.name || owned.card_name || 'Equipment',
+      image: card.image_url || owned.card_image || '',
+      icon_url: card.image_url || owned.card_image || '',
+      rarity: card.rarity || owned.card_rarity || 'Common',
+      equip_slot: card.equip_slot || '',
+      stats,
+      level: Number(progression?.level || 1),
+      model_url: card.model_url || '',
+      card_type: 'equipment',
+      game_id: card.game_id || owned.game_id || '',
+    },
   };
 }
+
+async function cleanState(svc:any, userId:string, loadout:Row) {
+  const current = loadout.equipped_items || {};
+  const next:Row = {};
+  const retainedCardIds = new Set<string>();
+  let changed = false;
+  for (const [slot, item] of Object.entries(current)) {
+    const userCardId = String((item as Row)?.user_card_id || '');
+    if (!userCardId || !isEquipmentSlot(slot)) { changed = true; continue; }
+    try {
+      const canonical = await snapshotOwnedEquipment(svc, userId, userCardId);
+      if (!itemFitsSlot(canonical.card, slot)) { changed = true; continue; }
+      next[slot] = canonical.item;
+      retainedCardIds.add(userCardId);
+      if (JSON.stringify(canonical.item) !== JSON.stringify(item)) changed = true;
+    } catch { changed = true; }
+  }
+  if (changed) loadout = await svc.Loadout.update(loadout.id, { equipped_items:next, is_active:true });
+  const ownedEquipped = await svc.UserCard.filter({ user_id:userId, equipped_to:'loadout' }, '-updated_date', 500).catch(() => []);
+  for (const row of ownedEquipped) if (!retainedCardIds.has(String(row.id))) await svc.UserCard.update(row.id, { equipped_to:'none', is_equipped:false }).catch(() => null);
+  return loadout;
+}
+
+const serialize = (loadout:Row|null) => ({ id:loadout?.id || '', name:loadout?.name || 'Dashboard Equipment', equipped_items:loadout?.equipped_items || {}, is_active:Boolean(loadout?.is_active) });
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return json({ error: 'Unauthorized' }, 401);
-    const { action = 'getState', data = {} } = await req.json().catch(() => ({}));
+    if (!user) return json({ error:'Unauthorized' }, 401);
+    const { action='getState', data={} } = await req.json().catch(() => ({}));
     const svc = base44.asServiceRole.entities;
-    const loadout = await ensureLoadout(svc, user.id);
+    let loadout = await ensureLoadout(svc, user.id);
 
-    if (action === 'getState') return json({ success: true, loadout: serialize(loadout) });
+    if (action === 'getState') {
+      loadout = await cleanState(svc, user.id, loadout);
+      return json({ success:true, loadout:serialize(loadout) });
+    }
+
+    if (['equip','unequip','clear'].includes(action) && await hasLivePvpMatch(svc, user.id)) return json({ error:'Finish your match first' }, 409);
 
     if (action === 'equip') {
-      const slot = cleanText(data.slot, 80);
-      if (!SLOT_IDS.has(slot)) return json({ error: 'Unknown equipment slot' }, 400);
-      const item = sanitizeItem(data.item || {});
-      if (!item.id || !item.name) return json({ error: 'A valid inventory item is required' }, 400);
-      const next = { ...(loadout.equipped_items || {}), [slot]: item };
-      const updated = await svc.Loadout.update(loadout.id, { equipped_items: next, is_active: true });
-      return json({ success: true, loadout: serialize(updated) });
+      const slot = String(data.slot || '');
+      const userCardId = String(data.user_card_id || '');
+      if (!isEquipmentSlot(slot)) return json({ error:'Unknown equipment slot' }, 400);
+      if (!userCardId) return json({ error:'user_card_id is required' }, 400);
+      const canonical = await snapshotOwnedEquipment(svc, user.id, userCardId);
+      if (!itemFitsSlot(canonical.card, slot)) return json({ error:`${canonical.item.name} does not fit ${slot}` }, 400);
+      const current = { ...(loadout.equipped_items || {}) };
+      for (const [existingSlot, item] of Object.entries(current)) if (String((item as Row)?.user_card_id || '') === userCardId) delete current[existingSlot];
+      const oldItem = current[slot] as Row | undefined;
+      current[slot] = canonical.item;
+      loadout = await svc.Loadout.update(loadout.id, { equipped_items:current, is_active:true });
+      await svc.UserCard.update(canonical.owned.id, { equipped_to:'loadout', is_equipped:true });
+      if (oldItem?.user_card_id && oldItem.user_card_id !== userCardId) await svc.UserCard.update(String(oldItem.user_card_id), { equipped_to:'none', is_equipped:false }).catch(() => null);
+      return json({ success:true, loadout:serialize(loadout) });
     }
 
     if (action === 'unequip') {
-      const slot = cleanText(data.slot, 80);
-      if (!SLOT_IDS.has(slot)) return json({ error: 'Unknown equipment slot' }, 400);
-      const next = { ...(loadout.equipped_items || {}) };
-      delete next[slot];
-      const updated = await svc.Loadout.update(loadout.id, { equipped_items: next, is_active: true });
-      return json({ success: true, loadout: serialize(updated) });
+      const slot = String(data.slot || '');
+      if (!isEquipmentSlot(slot)) return json({ error:'Unknown equipment slot' }, 400);
+      const current = { ...(loadout.equipped_items || {}) };
+      const old = current[slot] as Row | undefined;
+      delete current[slot];
+      loadout = await svc.Loadout.update(loadout.id, { equipped_items:current, is_active:true });
+      if (old?.user_card_id) await svc.UserCard.update(String(old.user_card_id), { equipped_to:'none', is_equipped:false }).catch(() => null);
+      return json({ success:true, loadout:serialize(loadout) });
     }
 
     if (action === 'clear') {
-      const updated = await svc.Loadout.update(loadout.id, { equipped_items: {}, is_active: true });
-      return json({ success: true, loadout: serialize(updated) });
+      const olds = Object.values(loadout.equipped_items || {}) as Row[];
+      loadout = await svc.Loadout.update(loadout.id, { equipped_items:{}, is_active:true });
+      await Promise.all(olds.map(item => item?.user_card_id ? svc.UserCard.update(String(item.user_card_id), { equipped_to:'none', is_equipped:false }).catch(() => null) : null));
+      return json({ success:true, loadout:serialize(loadout) });
     }
 
-    return json({ error: 'Unknown equipment action' }, 400);
-  } catch (error) {
+    return json({ error:'Unknown equipment action' }, 400);
+  } catch (error:any) {
     console.error('equipmentLoadout failed', error);
-    return json({ error: error instanceof Error ? error.message : 'Equipment request failed' }, 500);
+    return json({ error:error instanceof Error ? error.message : 'Equipment request failed' }, Number(error?.status || 500));
   }
 });
