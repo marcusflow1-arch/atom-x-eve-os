@@ -789,7 +789,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-60 p-4 rounded-2xl max-w-md"
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] p-4 rounded-2xl max-w-md"
               style={{
                 background: 'rgba(30, 41, 59, 0.95)',
                 backdropFilter: 'blur(20px)',
