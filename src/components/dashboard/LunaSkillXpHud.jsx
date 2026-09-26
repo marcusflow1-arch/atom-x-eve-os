@@ -39,13 +39,14 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combat
   };
 
   const handleClick = () => {
-    // Outside Skill Book editing, an equipped diamond is a live skill button.
-    // This makes dashboard clicks follow the exact same cast path as keys 1–5.
-    if (assigned && !showcaseEditing) {
-      window.dispatchEvent(new CustomEvent('lunaRequestSkillSlotActivation', {
-        detail: { slotIndex: index, source: combatMode ? 'combat_click' : 'dashboard_click' },
+    // Skill Book/dashboard editing owns slot assignment. Never turn an ordinary
+    // dashboard click into a cast because that makes it impossible to select or
+    // replace an equipped card. Actual casts are keyboard-driven (1–5), except
+    // inside the dedicated combat presentation where clicking a slot is allowed.
+    if (combatMode) {
+      if (assigned) window.dispatchEvent(new CustomEvent('lunaRequestSkillSlotActivation', {
+        detail: { slotIndex: index, source: 'combat_click' },
       }));
-      onSelect?.(index, assigned);
       return;
     }
     if (pendingCard) {
