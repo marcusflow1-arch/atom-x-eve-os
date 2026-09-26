@@ -105,7 +105,7 @@ export default function BattleSkillRail({
   // Preserve the logical slot index. AI Battle never fills empty slots with
   // unrelated owned cards because the number key must represent the card the
   // player explicitly equipped to that same slot.
-  const cards = useMemo(() => Array.from({ length: 5 }, (_, index) => (
+  const cards = useMemo(() => Array.from({ length: 4 }, (_, index) => (
     (slots || []).find((slot) => Number(slot?.index) === index)?.card || null
   )), [slots]);
 
@@ -115,13 +115,13 @@ export default function BattleSkillRail({
   const hpPct = (safeHp / safeMaxHp) * 100;
   const wrapperClass = hand
     ? 'pointer-events-auto absolute left-1/2 top-[52%] z-[80] -translate-x-1/2'
-    : 'pointer-events-none absolute left-[1.5%] top-[2.5%] z-50 w-[53%]';
+    : `${selectable ? 'pointer-events-auto' : 'pointer-events-none'} absolute left-[1.5%] top-[2.5%] z-50 w-[53%]`;
 
   const selectCard = (index, card) => {
     if (!selectable || !card) return;
     if (onSelect) onSelect(index, card);
     window.dispatchEvent(new CustomEvent('lunaRequestSkillSlotActivation', {
-      detail: { slotIndex: index, source: 'ai_battle_card_hand' },
+      detail: { slotIndex: index, source: hand ? 'ai_battle_card_hand' : 'ai_battle_overhead_card' },
     }));
   };
 
@@ -145,7 +145,7 @@ export default function BattleSkillRail({
               key={`${cardId(card) || cardTitle(card)}-${index}`}
               card={card}
               index={index}
-              selectable={selectable && hand}
+              selectable={selectable}
               presentation={presentation}
               onSelect={selectCard}
             />
