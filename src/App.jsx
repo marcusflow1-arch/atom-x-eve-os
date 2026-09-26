@@ -9,6 +9,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { AuthProvider as AppAuthProvider } from '@/components/auth/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import DepsArt from './pages/DepsArt';
 import GameHub from './pages/GameHub';
@@ -98,17 +99,19 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AIReflectionBridge />
-          <CalendarReminderBridge />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-        <VisualEditAgent />
-        <GameWorldEditorGate />
-      </QueryClientProvider>
+      <AppAuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AIReflectionBridge />
+            <CalendarReminderBridge />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+          <VisualEditAgent />
+          <GameWorldEditorGate />
+        </QueryClientProvider>
+      </AppAuthProvider>
     </AuthProvider>
   );
 }
