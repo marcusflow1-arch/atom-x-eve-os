@@ -70,23 +70,40 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       detail: { name, ...detail },
     }));
   };
-  const onCardAnimationEffectProc = (event) => {
-    const detail = event?.detail || {};
+  const playBoundEffect = (detail = {}, remote = false) => {
     const effect = detail.effect || {};
     const effectId = String(effect?.id || '').trim().toLowerCase();
+    const remoteTarget = remote ? {
+      type: 'player',
+      playerId: String(detail.targetPlayerId || ''),
+      facingYaw: Number.isFinite(Number(options.remoteFacingYaw)) ? Number(options.remoteFacingYaw) : -Math.PI / 2,
+      autoLock: true,
+      autoHit: true,
+      damage: Number(detail.damage || 50),
+    } : null;
+    const enriched = remote ? { ...detail, target: remoteTarget } : detail;
     if (effectId === 'getsuga_tensho') {
-      const accepted = Boolean(!disposed && model && getsuga && getsuga.play());
+      const accepted = Boolean(!disposed && model && getsuga && getsuga.play(enriched.target || null));
       if (accepted) detail.accepted = true;
-      return;
+      return accepted;
     }
     if (effectId.startsWith('artemis_') && options.artemisFemale && !disposed && model && artemis) {
-      const accepted = Boolean(artemis.playEffect(effect, detail));
+      const accepted = Boolean(artemis.playEffect(effect, enriched));
       if (accepted) detail.accepted = true;
       else if (!detail.rejectionReason) detail.rejectionReason = `Artemis clip unavailable: ${effect.clip_name || effect.clipName || 'unknown'}`;
+      return accepted;
     }
+    return false;
+  };
+  const onCardAnimationEffectProc = (event) => playBoundEffect(event?.detail || {}, false);
+  const onRemoteCardCast = (event) => {
+    const detail = event?.detail || {};
+    if (!options.remoteSkillPlayerId || String(detail.sourcePlayerId || detail.player_id || '') !== String(options.remoteSkillPlayerId)) return;
+    playBoundEffect(detail, true);
   };
   if (options.skillEffects && typeof window !== 'undefined') {
-    window.addEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
+    if (options.remoteSkillPlayerId) window.addEventListener('lunaAIBattleRemoteCardCast', onRemoteCardCast);
+    else window.addEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
   }
   let secondaryRoot = null, secondaryModel = null, secondaryMixer = null, secondaryAction = null, secondaryBasePosition = null;
   let secondaryMotionRoot = null, secondaryMotionMixer = null, secondaryMotionAction = null, secondaryMotionBridge = null;
@@ -684,7 +701,8 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       disposed = true;
       cancelAnimationFrame(frame);
       if (options.skillEffects && typeof window !== 'undefined') {
-        window.removeEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
+        if (options.remoteSkillPlayerId) window.removeEventListener('lunaAIBattleRemoteCardCast', onRemoteCardCast);
+        else window.removeEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
       }
       getsuga?.dispose();
       artemis?.dispose();
