@@ -102,7 +102,7 @@ export default function CombatPrefabManager() {
                     <span className="text-[6px] text-white/28">{row.skill_set_name || 'Row ' + (index + 1)}</span>
                   </div>
                   <div className="mt-1.5 grid grid-cols-5 gap-1">
-                    {[0, 1, 2, 3, 4].map((slot) => {
+                    {[0, 1, 2, 3].map((slot) => {
                       const card = row?.slots?.find((entry) => Number(entry.index) === slot)?.card;
                       return <div key={slot} className="min-w-0 border border-white/[0.05] bg-white/[0.018] px-1 py-1.5 text-center">
                         <span className="block text-[5px] text-white/25">{slot + 1}</span>
