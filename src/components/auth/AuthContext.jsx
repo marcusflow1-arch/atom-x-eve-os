@@ -162,7 +162,10 @@ export const AuthProvider = ({ children }) => {
         }
 
         const syncRootUser = async () => {
-            const currentUser = rootUser;
+            // Production always supplies the root provider from App.jsx. The
+            // fallback keeps isolated tests/storybook mounts functional without
+            // reintroducing a second auth request in the real application.
+            const currentUser = rootAuth ? rootUser : await base44.auth.me().catch(() => null);
             if (!currentUser) {
                 setUser(null);
                 setAvatar(null);
@@ -213,7 +216,7 @@ export const AuthProvider = ({ children }) => {
 
         syncRootUser();
         return () => { cancelled = true; };
-    }, [rootUser?.id, rootUser?.username, rootLoading]);
+    }, [rootAuth, rootUser?.id, rootUser?.username, rootLoading]);
 
     const login = async () => {
         try {
