@@ -57,16 +57,8 @@ export function useEquipment() {
   });
 
   const equipItem = (slotId, item) => {
-    if (!itemFitsSlot(item, slotId) || !item) return false;
-    const previous = queryClient.getQueryData(queryKey) || { success: true, loadout: { equipped_items: {} } };
-    queryClient.setQueryData(queryKey, {
-      ...previous,
-      loadout: {
-        ...(previous.loadout || {}),
-        equipped_items: { ...(previous.loadout?.equipped_items || {}), [slotId]: item },
-      },
-    });
-    mutation.mutate({ action: 'equip', data: { slot: slotId, item } });
+    if (!itemFitsSlot(item, slotId) || !item?.user_card_id) return false;
+    mutation.mutate({ action: 'equip', data: { slot: slotId, user_card_id: item.user_card_id } });
     return true;
   };
 
