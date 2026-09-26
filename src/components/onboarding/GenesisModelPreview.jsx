@@ -42,6 +42,7 @@ function buildMotionSet(rows, gender) {
   const fallbackIdle = COMPANION_MOTIONS[0];
   const fallbackLook = COMPANION_MOTIONS[1] || fallbackIdle;
   const fallbackWalk = COMPANION_MOTIONS[2] || fallbackIdle;
+  const fallbackRun = COMPANION_MOTIONS[3] || fallbackWalk;
 
   return {
     idles: [
@@ -61,10 +62,10 @@ function buildMotionSet(rows, gender) {
       right: asMotion(pick('standing walk right'), fallbackWalk, { name: 'Walk Right', loop: true }),
     },
     run: {
-      forward: asMotion(pick('standing run forward', 'run forward', 'running'), fallbackWalk, { name: 'Run Forward', loop: true }),
-      back: asMotion(pick('standing run back', 'running backward'), fallbackWalk, { name: 'Run Back', loop: true }),
-      left: asMotion(pick('standing run left'), fallbackWalk, { name: 'Run Left', loop: true }),
-      right: asMotion(pick('standing run right'), fallbackWalk, { name: 'Run Right', loop: true }),
+      forward: asMotion(pick('standing run forward', 'run forward', 'running'), fallbackRun, { name: 'Run Forward', loop: true }),
+      back: asMotion(pick('standing run back', 'running backward'), fallbackRun, { name: 'Run Back', loop: true }),
+      left: asMotion(pick('standing run left'), fallbackRun, { name: 'Run Left', loop: true }),
+      right: asMotion(pick('standing run right'), fallbackRun, { name: 'Run Right', loop: true }),
     },
     showcase: [
       asMotion(pick('equip weapon bow', 'equip bow'), fallbackLook, { name: 'Equip Bow', loop: false }),
