@@ -230,7 +230,11 @@ async function ensureSkillSets(base44: any, userId: string) {
 
 async function buildState(base44: any, user: AnyObj) {
   const svc = base44.asServiceRole.entities;
-  const demoAbility = await ensureDemoAbility(svc, user.id);
+  const femaleAvatar = await femaleAvatarEnabled(svc, user.id);
+  const [demoAbility] = await Promise.all([
+    ensureDemoAbility(svc, user.id),
+    ensureArtemisAbilities(svc, user.id, femaleAvatar),
+  ]);
   const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
 
   // Make the uploaded demo immediately testable without overwriting a player's
@@ -250,7 +254,12 @@ async function buildState(base44: any, user: AnyObj) {
     svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500).catch(() => []),
   ]);
 
-  const ownedSkills = (ownedCards || []).filter((card: AnyObj) => card.card_type === 'Ability');
+  // Artemis' embedded abilities belong to the female body rig. Keep the owned
+  // records persistent, but expose them to Skill Book only while this user is
+  // actively using a female avatar. Switching back to female restores them.
+  const ownedSkills = (ownedCards || []).filter((card: AnyObj) =>
+    card.card_type === 'Ability' && (femaleAvatar || !isArtemisCard(card))
+  );
   const abilityAchievements = (achievements || []).filter((achievement: AnyObj) => achievement.category === 'ability');
   const progressByUserCard = new Map<string, AnyObj>();
   for (const p of progressions || []) if (p.user_card_id) progressByUserCard.set(String(p.user_card_id), p);
@@ -424,6 +433,9 @@ Deno.serve(async (req) => {
       const card = await svc.UserCard.get(userCardId).catch(() => null);
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
       if (card.card_type !== 'Ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
+      if (isArtemisCard(card) && !(await femaleAvatarEnabled(svc, user.id))) {
+        return json({ error: 'Artemis ability cards are available only to the female Artemis avatar.' }, 403);
+      }
       if (card.trade_status === 'locked_in_trade') return json({ error: 'That skill card is locked in a trade' }, 409);
 
       const previous = { ...(loadout.skill_slots || {}) };
