@@ -254,8 +254,10 @@ export function triggerEnding(onDialogue) {
 export function onArcAdvance(newArc, onDialogue) {
   switch (newArc) {
     case 4:  unlockAbility('split_action');  break;
-    case 3:  unlockAbility('anchor');        break;
-    case 3:  unlockAbility('see_through');   break;
+    case 3:
+      unlockAbility('anchor');
+      unlockAbility('see_through');
+      break;
     case 5:  unlockAbility('override');      break;
     case 6:  triggerFakeKingdom(onDialogue); break;
     case 7:  startLoopMechanic(onDialogue);  break;
