@@ -4,7 +4,7 @@ import { validateGenesis } from '../../shared/validateGenesis.ts';
 
 type AnyObj = Record<string, any>;
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
-const FEMALE_ARTEMIS_MODEL = '/models/atomxe-artemis-archer.glb';
+const FEMALE_ARTEMIS_MODEL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/96bb872db_Artemis_Character.glb';
 const LEGACY_DEFAULT_MODELS = new Set([
     '/models/artemis.gltf',
     '/models/ybot.fbx',
