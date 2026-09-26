@@ -21,7 +21,7 @@ const rarityStyles = {
 
 export default function TradeItemModal({ item, isOpen, onClose }) {
   const navigate = useNavigate();
-  const [listingType, setListingType] = useState('marketplace'); // 'marketplace' or 'trading_post'
+  const [listingType] = useState('trading_post');
   const [saleType, setSaleType] = useState('sale'); // 'sale', 'trade', 'bid'
   const [price, setPrice] = useState('');
   const [minBid, setMinBid] = useState('');
@@ -59,7 +59,7 @@ export default function TradeItemModal({ item, isOpen, onClose }) {
       };
 
       // Navigate to the appropriate page with listing data
-      const targetPage = listingType === 'marketplace' ? 'Store?mode=marketplace' : 'Store?mode=trading';
+      const targetPage = saleType === 'bid' ? 'Store?mode=trading&view=blackmarket' : 'Store?mode=trading';
       
       // Store in session storage for the target page to pick up
       sessionStorage.setItem('pending_listing', JSON.stringify(listingData));
@@ -100,34 +100,10 @@ export default function TradeItemModal({ item, isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Listing Platform Selection */}
-          <div>
-            <label className="text-sm font-semibold text-white mb-3 block">Select Platform</label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setListingType('marketplace')}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  listingType === 'marketplace'
-                    ? 'border-blue-500 bg-blue-500/20'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
-                }`}
-              >
-                <ShoppingBag className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                <div className="text-sm font-bold text-white">Black Market</div>
-                <div className="text-xs text-white/50 mt-1">Quick sales, instant currency</div>
-              </button>
-              <button
-                onClick={() => setListingType('trading_post')}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  listingType === 'trading_post'
-                    ? 'border-purple-500 bg-purple-500/20'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
-                }`}
-              >
-                <ArrowLeftRight className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                <div className="text-sm font-bold text-white">Galactic Exchange</div>
-                <div className="text-xs text-white/50 mt-1">Player trades, item swaps</div>
-              </button>
+          <div className="rounded-xl border border-purple-400/20 bg-purple-500/10 p-4">
+            <div className="flex items-center gap-3">
+              <ArrowLeftRight className="w-5 h-5 text-purple-300" />
+              <div><div className="text-sm font-bold text-white">Trading Post</div><div className="text-xs text-white/50">Fixed-price sales, trades, and Black Market auctions now use one protected market.</div></div>
             </div>
           </div>
 
@@ -299,14 +275,10 @@ export default function TradeItemModal({ item, isOpen, onClose }) {
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || (saleType === 'sale' && !price) || (saleType === 'bid' && !minBid)}
-            className={`flex-1 font-bold ${
-              listingType === 'marketplace' 
-                ? 'bg-blue-600 hover:bg-blue-700' 
-                : 'bg-purple-600 hover:bg-purple-700'
-            }`}
+            className="flex-1 font-bold bg-purple-600 hover:bg-purple-700"
           >
             <Send className="w-4 h-4 mr-2" />
-            {isSubmitting ? 'Listing...' : `List on ${listingType === 'marketplace' ? 'Black Market' : 'Galactic Exchange'}`}
+            {isSubmitting ? 'Listing...' : (saleType === 'bid' ? 'Open in Black Market' : 'Open in Trading Post')}
           </Button>
         </div>
       </DialogContent>
