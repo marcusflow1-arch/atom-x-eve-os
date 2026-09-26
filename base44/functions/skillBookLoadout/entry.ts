@@ -419,6 +419,11 @@ async function activeLoadout(base44: any, userId: string) {
   return active || rows[0];
 }
 
+async function hasLivePvpMatch(svc: any, userId: string) {
+  const rows = await svc.AIBattleMatch.filter({}, '-created_date', 100).catch(() => []);
+  return rows.some((match: AnyObj) => ['matched', 'countdown', 'fighting'].includes(String(match.status || '')) && (match.player_ids || []).map(String).includes(String(userId)));
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -434,6 +439,10 @@ Deno.serve(async (req) => {
       return json(await buildState(base44, user));
     }
     if (action === 'getState') return json(await buildState(base44, user));
+
+    if (['selectSkillSet','selectJawan','equip','unequip','clear'].includes(action) && await hasLivePvpMatch(svc, user.id)) {
+      return json({ error: 'Finish your match first' }, 409);
+    }
 
     if (action === 'selectSkillSet' || action === 'selectJawan') {
       const skillSetId = String(data.skill_set_id || '');
