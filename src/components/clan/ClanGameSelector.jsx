@@ -6,10 +6,11 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { allMockGames } from '../store/mockData';
+import useOwnedGames from '@/components/store/useOwnedGames';
 
 export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
     const { user } = useAuth();
+    const ownership = useOwnedGames();
     const [filters, setFilters] = useState([]); // Array of active filters
     const [search, setSearch] = useState('');
 
@@ -25,8 +26,8 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
     const { data: games, isLoading } = useQuery({
         queryKey: ['clanGamesSelector', clanId, user?.id],
         queryFn: async () => {
-            // 1. Fetch User Data for Owned Games
-            const ownedIds = user?.purchased_items || [];
+            // 1. Ownership is authoritative through Entitlement rows.
+            const ownedIds = ownership.gameIds || [];
 
             // 2. Fetch Assignments for this user (or all)
             // We fetch assignments to know which games are "Assigned"
@@ -41,8 +42,8 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
             );
             const assignedGameIds = myAssignments.map(a => a.targetId);
 
-            // 3. Use All Mock Games from Store
-            const allStoreGames = Object.values(allMockGames);
+            // 3. Use the published Game catalog, never the mock store list.
+            const allStoreGames = await base44.entities.Game.list('title', 5000);
 
             // 4. Merge and Map
             const relevantGames = allStoreGames.map(g => {
@@ -70,7 +71,7 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
                 return a.title.localeCompare(b.title);
             });
         },
-        enabled: !!user && !!clanId
+        enabled: !!user && !!clanId && !ownership.isLoading
     });
 
     // Separate Owned Games and Directory Games
