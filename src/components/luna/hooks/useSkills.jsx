@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import useLunaStore from '../useLunaStore';
+import { SKILL_KEYS, SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 
 const DEFAULT_EFFECT_COOLDOWN_MS = 3000;
 const DEFAULT_EFFECT_DURATION_MS = 800;
@@ -13,7 +14,7 @@ const DEFAULT_EFFECT_DURATION_MS = 800;
  * then the card resolves the effect.
  */
 export function useSkills() {
-  const [activeSkills, setActiveSkills] = useState([false, false, false, false]);
+  const [activeSkills, setActiveSkills] = useState(() => Array(SKILL_SLOT_COUNT).fill(false));
   const { triggerSkill: storeSkill, isOnCooldown, setCooldown, getHotbarItem } = useLunaStore();
 
   const activateSkill = (index, duration = DEFAULT_EFFECT_DURATION_MS) => {
@@ -43,20 +44,15 @@ export function useSkills() {
     const assigned = getHotbarItem(slotIndex);
     if (!assigned) return false;
 
-    // In a live AI Battle, the cinematic turn controller is authoritative for
-    // whether the local player may commit a card. This prevents keyboard input
-    // or the clickable hand from attacking while the opponent is taking a turn.
-    const battleTurn = typeof window !== 'undefined' ? window.__lunaAIBattleTurn : null;
-    if (battleTurn?.matchId && battleTurn.canLocalAct === false) {
-      window.dispatchEvent(new CustomEvent('lunaAIBattleSkillBlocked', {
-        detail: { slotIndex, card: assigned, source, reason: 'not_local_turn', turn: battleTurn },
-      }));
-      return false;
+    // Real-time PvP owns validation, ATB, cooldown, range and server damage.
+    // Delegate the logical slot before any legacy dashboard VFX/cooldown code so
+    // one key press can never create a second client-authoritative cast.
+    const pvp = typeof window !== 'undefined' ? window.__lunaPvPCombat : null;
+    if (pvp?.active && typeof pvp.requestSkill === 'function') {
+      pvp.requestSkill(slotIndex, assigned, source);
+      return true;
     }
 
-    // DashboardAvatarScene owns the live target selection while an AI Battle is
-    // active. Keep that target attached to the card cast so VFX, impact events
-    // and damage all resolve the same opponent.
     const target = typeof window !== 'undefined' ? (window.__lunaAIBattleTarget || null) : null;
 
     window.dispatchEvent(new CustomEvent('lunaSkillSlotActivated', {
@@ -116,24 +112,6 @@ export function useSkills() {
       // opponent regardless of whether either player is using editor preview or
       // published/live. This does not create a second cast locally; it is only a
       // peer notification for the remote PvP presentation/combat bridge.
-      if (battleTurn?.matchId && target?.playerId) {
-        window.dispatchEvent(new CustomEvent('multiplayerLocalAction', {
-          detail: {
-            kind: 'ai_battle_card_cast',
-            matchId: String(battleTurn.matchId),
-            turnRevision: Number(battleTurn.revision || 0),
-            slotIndex,
-            effectId,
-            effect: {
-              id: effectId,
-              clip_name: effect?.clip_name || effect?.clipName || '',
-              duration_ms: durationMs,
-            },
-            targetPlayerId: String(target.playerId),
-          },
-        }));
-      }
-
       // Compatibility bridge while older Getsuga listeners are phased out.
       if (effectId === 'getsuga_tensho') {
         window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoProc', { detail }));
@@ -167,9 +145,9 @@ export function useSkills() {
       // Use physical Digit1..Digit4 as the primary mapping so skills still cast
       // while WASD movement/gameplay handlers are active or on non-US layouts.
       // Fall back to event.key for accessibility/on-screen keyboard input.
-      const codeMatch = /^Digit([1-4])$/.exec(String(event.code || ''));
+      const codeMatch = new RegExp(`^Digit([1-${SKILL_SLOT_COUNT}])$`).exec(String(event.code || ''));
       const key = codeMatch?.[1] || String(event.key || '');
-      if (!['1', '2', '3', '4'].includes(key)) return;
+      if (!SKILL_KEYS.includes(key)) return;
 
       const slotIndex = Number(key) - 1;
       if (!getHotbarItem(slotIndex)) return;
@@ -179,7 +157,7 @@ export function useSkills() {
 
     const handleRequestedSlot = (event) => {
       const slotIndex = Number(event?.detail?.slotIndex);
-      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 3) return;
+      if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= SKILL_SLOT_COUNT) return;
       triggerSkill(slotIndex, event?.detail?.source || 'dashboard_click');
     };
 
