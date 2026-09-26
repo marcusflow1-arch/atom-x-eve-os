@@ -1,0 +1,155 @@
+{
+  "name": "Quest",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "season",
+        "game",
+        "genre",
+        "clan",
+        "onboarding"
+      ]
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "genre_id": {
+      "type": "string"
+    },
+    "clan_id": {
+      "type": "string"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "event_key": {
+            "type": "string"
+          },
+          "target": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_key",
+          "target",
+          "label"
+        ]
+      }
+    },
+    "rewards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "card",
+              "material",
+              "genre_xp",
+              "avatar_xp"
+            ]
+          },
+          "trading_card_id": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "genre_id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      }
+    },
+    "repeatable": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "live",
+        "retired"
+      ],
+      "default": "draft"
+    }
+  },
+  "required": [
+    "key",
+    "title",
+    "description",
+    "scope",
+    "objectives",
+    "rewards",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
