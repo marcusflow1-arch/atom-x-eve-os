@@ -1,4 +1,4 @@
-const prefix='https://base44.app/api/apps/6876751a602125f45f1861b9/files/',male='/models/luna-hi3d/warrior.glb',artemis=prefix+'mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
+const male='/models/luna-hi3d/warrior.glb',artemis='/models/atomxe-artemis-archer.glb';
 const styles=['heroic_fantasy','graphic_ink','grounded_rpg','anime','watercolor','noir','neon'];
 const faceKeys=['face_width','jaw_width','face_height','eye_spacing','nose_width','nose_length','mouth_width'];
 const bound=(v,min,max,f=1)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):f;
