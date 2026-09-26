@@ -107,6 +107,7 @@ export class GetsugaDashboardRuntime {
     this.mixer = null;
     this.idleAction = null;
     this.attackAction = null;
+    this.runAction = null;
     this.attackClip = null;
     this.activeTarget = null;
     this.defaultFacingYaw = 0;
@@ -178,6 +179,22 @@ export class GetsugaDashboardRuntime {
     return true;
   }
 
+  setRunClip(clip) {
+    if (!this.ready || this.disposed || !this.mixer || !clip) return false;
+    this.runAction?.stop?.();
+    this.runAction = this.mixer.clipAction(clip);
+    this.runAction.setLoop(THREE.LoopRepeat, Infinity);
+    return true;
+  }
+
+  playRun() {
+    if (!this.ready || this.disposed || this.paused || this.playing || !this.runAction) return false;
+    this.runAction.enabled = true;
+    this.runAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+    this.idleAction?.crossFadeTo?.(this.runAction, 0.14, false);
+    return true;
+  }
+
   play(target = null) {
     if (!this.ready || this.disposed || this.paused || !this.attackAction || this.playing) return false;
 
@@ -201,7 +218,8 @@ export class GetsugaDashboardRuntime {
     this.attackAction.setEffectiveWeight(1);
     this.attackAction.play();
 
-    if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
+    if (this.runAction?.isRunning()) this.runAction.crossFadeTo(this.attackAction, 0.16, false);
+    else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
     else this.idleAction?.stop();
 
     this.onEvent('castStart', {
@@ -228,6 +246,7 @@ export class GetsugaDashboardRuntime {
     this.idleAction.setEffectiveWeight(1);
     this.idleAction.play();
 
+    if (this.runAction?.isRunning()) this.runAction.crossFadeTo(this.idleAction, 0.16, false);
     if (blend && this.attackAction) this.attackAction.crossFadeTo(this.idleAction, 0.35, false);
     else this.attackAction?.stop();
 
@@ -293,6 +312,7 @@ export class GetsugaDashboardRuntime {
     this.mixer = null;
     this.idleAction = null;
     this.attackAction = null;
+    this.runAction = null;
     this.attackClip = null;
     this.activeTarget = null;
     this.defaultFacingYaw = 0;
