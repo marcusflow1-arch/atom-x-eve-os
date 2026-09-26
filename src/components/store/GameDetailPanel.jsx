@@ -542,8 +542,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const handleTransactionConfirm = async () => {
     setUnlocking(true);
     try {
-        await base44.functions.invoke('unlockGameSystem', { gameId });
-        // Cart context will handle ownership state
+        await base44.functions.invoke('claimFreeGame', { game_id: gameId });
+        // Legacy panel is kept temporarily during migration; paid games are refused by the server.
     } catch (err) {
         console.error("Unlock failed", err);
     } finally {
