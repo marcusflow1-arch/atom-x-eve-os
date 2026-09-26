@@ -139,19 +139,17 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, [canonicalGetsugaMale, fixedFemaleIdle, playMotion]);
 
   useEffect(() => {
-    if (canonicalGetsugaMale) {
-      setPreviewMotions([]);
-      return undefined;
-    }
     let cancelled = false;
     loadAdminAnimations().then((rows) => {
       if (cancelled) return;
       motionSetRef.current = buildMotionSet(rows, config?.gender);
       const set = motionSetRef.current;
       setPreviewMotions(
-        config?.gender === 'female'
-          ? [COMPANION_MOTIONS[0]]
-          : [...(set.idles || []).slice(0, 3), ...(set.showcase || [])].filter((item, index, items) => item?.url && items.findIndex((candidate) => candidate.name === item.name) === index)
+        canonicalGetsugaMale
+          ? []
+          : config?.gender === 'female'
+            ? [COMPANION_MOTIONS[0]]
+            : [...(set.idles || []).slice(0, 3), ...(set.showcase || [])].filter((item, index, items) => item?.url && items.findIndex((candidate) => candidate.name === item.name) === index)
       );
       if (ready && !controlArmedRef.current) playIdle();
     });
