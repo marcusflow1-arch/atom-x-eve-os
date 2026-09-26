@@ -9,7 +9,6 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { lunarDashboardInvite } from '@/functions/lunarDashboardInvite';
 import FriendMessenger from '../components/friends/FriendMessenger';
 import FriendProfileOverlay from '../components/streaming/FriendProfileOverlay';
 import FriendTradePanel from '../components/streaming/FriendTradePanel';
@@ -170,38 +169,19 @@ export default function FriendsPage() {
   const [activePanel, setActivePanel] = useState(null); // 'messenger', 'profile', 'trade', etc.
   const [incomingTrade, setIncomingTrade] = useState(null);
   
-  // Refs
-  const seededRef = useRef(false);
-
   // Load Data
   useEffect(() => {
     const loadData = async () => {
       if (!user?.id) return;
       try {
-        let friendsList = await base44.entities.Friend.filter({ user_id: user.id });
-        
-        // Seeding logic preserved from original
-        if (friendsList.length === 0 && !seededRef.current) {
-          await base44.entities.Friend.bulkCreate([
-            { user_id: user.id, friend_id: 'temp_logan', friend_name: 'Logan_X', friend_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', status: 'online', current_game: 'Cyberpunk 2077' },
-            { user_id: user.id, friend_id: 'temp_ariana', friend_name: 'Ariana_V', friend_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', status: 'away', current_game: 'Starfield' },
-            { user_id: user.id, friend_id: 'temp_kai', friend_name: 'Kai_Zero', friend_avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150', status: 'online', current_game: 'Apex Legends' },
-            { user_id: user.id, friend_id: 'temp_nova', friend_name: 'Nova_Prime', friend_avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', status: 'offline' },
-          ]);
-          seededRef.current = true;
-          friendsList = await base44.entities.Friend.filter({ user_id: user.id });
-        }
-        
-        // Enhance with mock console-like data
+        const response = await base44.functions.invoke('socialActions', { action: 'list_friends', data: {} });
+        const body = response?.data || response || {};
+        const friendsList = body.friends || [];
         const enhancedFriends = friendsList.map(f => ({
           ...f,
-          ai_compatibility: Math.floor(Math.random() * 40) + 60, // 60-100%
-          shared_achievements: Math.floor(Math.random() * 50),
-          rivalry_score: Math.floor(Math.random() * 100),
-          last_active: '2h ago',
-          bg_image: f.current_game === 'Cyberpunk 2077' ? 'https://images.unsplash.com/photo-1533972724312-6eafa2708b28?w=1200' :
-                   f.current_game === 'Starfield' ? 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200' :
-                   'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200'
+          status: f.presence_status || f.status || 'offline',
+          last_active: f.last_seen ? new Date(f.last_seen).toLocaleString() : '',
+          bg_image: f.current_activity?.banner_image || f.current_activity?.cover_image || ''
         }));
 
         setFriends(enhancedFriends);
@@ -252,11 +232,9 @@ export default function FriendsPage() {
   const handleInviteToLunar = async () => {
     if (!selectedFriend) return;
     try {
-      const response = await lunarDashboardInvite({
-        action: 'invite',
-        friend_id: selectedFriend.friend_id
-      });
-      if (response.data.success) {
+      const response = await base44.functions.invoke('socialActions', { action: 'send_dashboard_invite', data: { target_user_id: selectedFriend.friend_id } });
+      const body = response?.data || response || {};
+      if (body.success) {
         alert('Invite sent to ' + selectedFriend.friend_name + '. They will see a yes/no popup.');
       }
     } catch (err) {
@@ -307,12 +285,11 @@ export default function FriendsPage() {
   const handleJoinLunar = async () => {
     if (!selectedFriend) return;
     try {
-      const response = await lunarDashboardInvite({
-        action: 'join',
-        friend_id: selectedFriend.friend_id
-      });
-      if (response.data.success) {
-        alert('Join request sent. They will see a yes/no popup.');
+      const response = await base44.functions.invoke('socialActions', { action: 'get_dashboard_join', data: { target_user_id: selectedFriend.friend_id } });
+      const body = response?.data || response || {};
+      if (body.success) {
+        window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: body.channel_id, hostId: selectedFriend.friend_id, hostName: selectedFriend.friend_name } }));
+        navigate(createPageUrl('LunaTemplate'));
       }
     } catch (err) {
       console.error('Join failed:', err);
