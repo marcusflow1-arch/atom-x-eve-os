@@ -18,6 +18,7 @@ import GameStreamerAffiliateTab from '@/components/library/GameStreamerAffiliate
 import GameSupportTab from '@/components/library/GameSupportTab';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import useOwnedGames from '@/components/store/useOwnedGames';
 
 // Vertical Game List Item for the sidebar
 const LibrarySidebarItem = ({ game, isSelected, onSelect, onPlay }) => (
@@ -70,6 +71,7 @@ const LibrarySidebarItem = ({ game, isSelected, onSelect, onPlay }) => (
 export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const ownership = useOwnedGames();
 
   // Escape key to exit back to Luna Dashboard
   useEffect(() => {
@@ -123,46 +125,22 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   };
 
   useEffect(() => {
-    const fetchOwnedGames = async () => {
-      const isDev = import.meta.env.DEV;
-      const useMock = isDev && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
-      let userGames = [];
-
-      if (isAuthenticated) {
-        try {
-          const allGamesFromDb = await base44.entities.Game.filter({}, '-created_date', 100);
-          const ownedIds = user?.purchased_items || [];
-          userGames = allGamesFromDb.filter(g => ownedIds.includes(g.id));
-
-          // Fallback to mock data in dev if user has no games
-          if (userGames.length === 0 && useMock) {
-            const { allMockGames } = await import('../components/store/mockData');
-            const mockGamesArray = Object.values(allMockGames).slice(0, 5);
-            userGames = mockGamesArray;
-          }
-        } catch (error) {
-          console.error('Failed to fetch games:', error);
-          if (useMock) {
-            const { allMockGames } = await import('../components/store/mockData');
-            userGames = Object.values(allMockGames).slice(0, 5);
-          }
-        }
-      } else if (useMock) {
-        // Not authenticated but in dev mode
-        const { allMockGames } = await import('../components/store/mockData');
-        userGames = Object.values(allMockGames).slice(0, 3);
-      }
-      
-      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
-      if (userGames.length > 0) setSelectedGame(userGames[0]);
+    if (!isAuthenticated) {
+      setOwnedGames([]);
+      setSelectedGame(null);
       setLoading(false);
-    };
-
-    fetchOwnedGames();
+      return undefined;
+    }
+    setLoading(ownership.isLoading);
+    if (!ownership.isLoading) {
+      const userGames = ownership.games || [];
+      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+      setSelectedGame(current => current && userGames.some(game => game.id === current.id) ? current : (userGames[0] || null));
+    }
     const handleStorageChange = () => setStreamingGameId(localStorage.getItem('streaming_game_id'));
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [user, isAuthenticated]);
+  }, [isAuthenticated, ownership.isLoading, ownership.games]);
 
   const filteredGames = React.useMemo(() => {
     if (!searchTerm) return ownedGames;
