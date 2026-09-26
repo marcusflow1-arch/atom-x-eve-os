@@ -21,6 +21,9 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
     const initiateCallRef = useRef(null);
     const pendingCandidates = useRef({});
     const processedSignals = useRef(new Set()); // de-dupe signal subscribe events
+    const iceServersRef = useRef([{ urls: 'stun:stun.l.google.com:19302' }]);
+
+    useEffect(() => { getIceServers().then((servers) => { iceServersRef.current = servers; }); }, []);
 
     // Expose a method to broadcast data to all peers
     useEffect(() => {
@@ -113,7 +116,9 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         };
 
         function setupDataChannel(channel, peerId) {
-            dataChannelsRef.current[peerId] = channel;
+            if (!['gameData', 'gameReliable'].includes(channel.label)) return;
+            if (!dataChannelsRef.current[peerId]) dataChannelsRef.current[peerId] = {};
+            dataChannelsRef.current[peerId][channel.label] = channel;
             channel.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -158,24 +163,25 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 }
             };
             channel.onclose = () => {
-                if (dataChannelsRef.current[peerId] === channel) delete dataChannelsRef.current[peerId];
-            };
+                if (dataChannelsRef.current[peerId]?.[channel.label] === channel) delete dataChannelsRef.current[peerId][channel.label];
+                if (!Object.keys(dataChannelsRef.current[peerId] || {}).length) delete dataChannelsRef.current[peerId];
+            }; 
         }
 
         function createPeerConnection(peerId) {
             if (peersRef.current[peerId]) return peersRef.current[peerId];
 
-            const pc = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-            });
+            const pc = new RTCPeerConnection({ iceServers: iceServersRef.current });
             peersRef.current[peerId] = pc;
 
             // Create Data Channel for this peer
             const dataChannel = dataEnabled && user.id > peerId && pc.createDataChannel('gameData', {
-                ordered: false, // UDP-like, fast
+                ordered: false,
                 maxRetransmits: 0
             });
+            const reliableChannel = dataEnabled && user.id > peerId && pc.createDataChannel('gameReliable', { ordered: true });
             if (dataChannel) setupDataChannel(dataChannel, peerId);
+            if (reliableChannel) setupDataChannel(reliableChannel, peerId);
 
             pc.ondatachannel = (event) => {
                 setupDataChannel(event.channel, peerId);
