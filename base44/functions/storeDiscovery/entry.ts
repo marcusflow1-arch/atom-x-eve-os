@@ -1,4 +1,5 @@
 import {createClientFromRequest} from 'npm:@base44/sdk@0.8.23';
+import { ownedItemIds } from '../../shared/entitlements.ts';
 Deno.serve(async req=>{
  try{
   const client=createClientFromRequest(req),svc=client.asServiceRole.entities;
@@ -37,8 +38,11 @@ Deno.serve(async req=>{
    return Response.json({success:true});
   }
   if(action!=='context')return Response.json({error:'Unknown store action'},{status:400});
-  const history=await svc.StorePlayHistory.filter({user_id:user.id},'-last_played',100);
-  return Response.json({preference:rows[0]||{genres:[],played_game_ids:[],use_play_history:true},played_game_ids:history.map(h=>h.game_id),owned_game_ids:user.purchased_items||[]});
+  const [history,ownedGameIds]=await Promise.all([
+   svc.StorePlayHistory.filter({user_id:user.id},'-last_played',100),
+   ownedItemIds(svc,user.id,'game')
+  ]);
+  return Response.json({preference:rows[0]||{genres:[],played_game_ids:[],use_play_history:true},played_game_ids:history.map(h=>h.game_id),owned_game_ids:ownedGameIds});
  }catch(error){return Response.json({error:error.message||'Store preferences unavailable.'},{status:500});}
 });
 
