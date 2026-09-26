@@ -203,10 +203,6 @@ export const AuthProvider = ({ children }) => {
                     }
                 }
 
-                if (!currentUser.unlocked_achievements?.includes('first_login')) {
-                    const updatedAchievements = [...(currentUser.unlocked_achievements || []), 'first_login'];
-                    await base44.auth.updateMe({ unlocked_achievements: updatedAchievements });
-                }
             } catch (error) {
                 console.error('Failed to sync root auth user:', error);
             } finally {
