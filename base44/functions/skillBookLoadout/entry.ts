@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
+import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -16,7 +17,6 @@ const GETSUGA_EFFECT = {
   cooldown_ms: 8000,
 };
 
-const ARTEMIS_CARD_PREFIX = 'artemis_';
 // Exact Admin > 3D Models upload that owns every Artemis embedded ability clip.
 const ARTEMIS_MODEL_ID = '6ab7dfade57a36adf2a81e7d';
 const ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/96bb872db_Artemis_Character.glb';
@@ -51,11 +51,9 @@ const ARTEMIS_ABILITIES = [
   },
 ] as const;
 
-const isArtemisCard = (card: AnyObj | null | undefined) => String(card?.animation_effect?.id || '').toLowerCase().startsWith(ARTEMIS_CARD_PREFIX);
-
-async function femaleAvatarEnabled(svc: any, userId: string) {
-  const avatars = await svc.Avatar.filter({ user_id: userId }, '-updated_date', 5).catch(() => []);
-  return String(avatars?.[0]?.gender || '').toLowerCase() === 'female';
+async function avatarGender(svc: any, userId: string) {
+  const avatars = await svc.Avatar.filter({ user_id: userId }, '-updated_date', 1);
+  return String(avatars?.[0]?.gender || '').trim().toLowerCase();
 }
 
 async function ensureArtemisAbilities(svc: any, userId: string) {
@@ -269,11 +267,12 @@ async function buildState(base44: any, user: AnyObj) {
       active.skill_slots = nextSlots;
     }
   }
-  const [ownedCards, achievements, games, progressions] = await Promise.all([
+  const [ownedCards, achievements, games, progressions, gender] = await Promise.all([
     svc.UserCard.filter({ user_id: user.id }, '-created_date', 1000),
     svc.Achievement.filter({ category: 'ability' }, '-created_date', 500),
     svc.Game.list('-created_date', 250),
     svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500).catch(() => []),
+    avatarGender(svc, user.id),
   ]);
 
   // Artemis cards remain visible in the shared Skill Book for both male and female
@@ -310,6 +309,7 @@ async function buildState(base44: any, user: AnyObj) {
       icon: achievement.icon || '',
       unlock_condition: achievement.unlock_condition || '',
       owned: Boolean(owned),
+      ...skillEquipStatus(owned, gender),
       user_card_id: owned?.id || null,
       card: owned ? snapshotCard(owned) : null,
       progression: progression ? {
@@ -337,6 +337,7 @@ async function buildState(base44: any, user: AnyObj) {
       icon: '',
       unlock_condition: '',
       owned: true,
+      ...skillEquipStatus(owned, gender),
       user_card_id: owned.id,
       card: snapshotCard(owned),
       progression: progression ? {
@@ -371,7 +372,8 @@ async function buildState(base44: any, user: AnyObj) {
     const slotIds = loadout?.skill_slots || {};
     const slots = Array.from({ length: SKILL_SLOT_COUNT }, (_, index) => {
       const cardId = slotIds[String(index)] || slotIds[index];
-      const availableCard = cardId ? ownedById.get(String(cardId)) || null : null;
+      const ownedCard = cardId ? ownedById.get(String(cardId)) || null : null;
+      const availableCard = skillEquipStatus(ownedCard, gender).can_equip ? ownedCard : null;
       return {
         index,
         user_card_id: availableCard ? cardId : null,
@@ -389,7 +391,8 @@ async function buildState(base44: any, user: AnyObj) {
       jawan_name: loadout.jawan_name || 'Jawan',
       jawan_role: loadout.jawan_role || 'Balanced',
       is_active: Boolean(loadout.is_active),
-      skill_slots: loadout.skill_slots || {},
+      // Keep saved selections intact, but never publish an unusable card to the hotbar.
+      skill_slots: Object.fromEntries(slots.filter((slot) => slot.user_card_id).map((slot) => [String(slot.index), slot.user_card_id])),
       slots,
     };
   };
@@ -420,8 +423,12 @@ async function activeLoadout(base44: any, userId: string) {
 }
 
 async function hasLivePvpMatch(svc: any, userId: string) {
-  const rows = await svc.AIBattleMatch.filter({}, '-created_date', 100).catch(() => []);
-  return rows.some((match: AnyObj) => ['matched', 'countdown', 'fighting'].includes(String(match.status || '')) && (match.player_ids || []).map(String).includes(String(userId)));
+  // Filter before limiting: unrelated players' matches must not hide this player's match.
+  const rows = await svc.AIBattleMatch.filter({
+    player_ids: { $in: [String(userId)] },
+    status: { $in: ['matched', 'countdown', 'fighting'] },
+  }, '-created_date', 1);
+  return rows.length > 0;
 }
 
 Deno.serve(async (req) => {
@@ -440,8 +447,15 @@ Deno.serve(async (req) => {
     }
     if (action === 'getState') return json(await buildState(base44, user));
 
-    if (['selectSkillSet','selectJawan','equip','unequip','clear'].includes(action) && await hasLivePvpMatch(svc, user.id)) {
-      return json({ error: 'Finish your match first' }, 409);
+    if (['selectSkillSet','selectJawan','equip','unequip','clear'].includes(action)) {
+      let liveMatch: boolean;
+      try {
+        liveMatch = await hasLivePvpMatch(svc, user.id);
+      } catch (error) {
+        console.error('Could not verify Skill Book match lock', error);
+        return json({ error: 'Unable to verify your match status. Please try again.' }, 503);
+      }
+      if (liveMatch) return json({ error: 'Finish your match first' }, 409);
     }
 
     if (action === 'selectSkillSet' || action === 'selectJawan') {
@@ -471,6 +485,8 @@ Deno.serve(async (req) => {
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
       if (card.card_type !== 'Ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
       if (card.trade_status === 'locked_in_trade') return json({ error: 'That skill card is locked in a trade' }, 409);
+      const compatibilityError = avatarSkillError(card, await avatarGender(svc, user.id));
+      if (compatibilityError) return json({ error: compatibilityError }, 409);
 
       const previous = { ...(loadout.skill_slots || {}) };
       const oldCardId = previous[String(slot)] || null;
@@ -483,7 +499,7 @@ Deno.serve(async (req) => {
           .some((r: AnyObj) => Object.values(r.skill_slots || {}).some((v: any) => String(v) === String(oldCardId)));
         if (!usedElsewhere) {
           const oldCard = await svc.UserCard.get(String(oldCardId)).catch(() => null);
-          if (oldCard) await svc.UserCard.update(oldCard.id, { is_equipped: false });
+          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false });
         }
       }
       return json(await buildState(base44, user));
@@ -501,7 +517,7 @@ Deno.serve(async (req) => {
           .some((r: AnyObj) => Object.values(r.skill_slots || {}).some((v: any) => String(v) === String(oldCardId)));
         if (!usedElsewhere) {
           const oldCard = await svc.UserCard.get(String(oldCardId)).catch(() => null);
-          if (oldCard) await svc.UserCard.update(oldCard.id, { is_equipped: false });
+          if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false });
         }
       }
       return json(await buildState(base44, user));
