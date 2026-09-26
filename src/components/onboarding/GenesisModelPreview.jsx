@@ -81,7 +81,7 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, previewEffect = null, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
@@ -185,7 +185,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
           retargetExternalMotions: false,
           framingOffsetY: fixedFemaleIdle ? 0.16 : 0,
           initialYaw,
-          skillEffects,
+          skillEffects: skillEffects || Boolean(previewEffect),
           remoteSkillPlayerId,
           remoteFacingYaw,
           combatMovement,
@@ -212,6 +212,11 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
   }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, initialYaw, skillEffects, remoteSkillPlayerId, remoteFacingYaw, combatMovement, movementRadius, combatCamera, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
+
+  useEffect(() => {
+    if (!ready || !previewEffect || !scene.current?.previewEffect) return;
+    scene.current.previewEffect(previewEffect);
+  }, [ready, previewEffect]);
 
   useEffect(() => {
     if (idleOnly || !compact || !ready || controlArmed) {
