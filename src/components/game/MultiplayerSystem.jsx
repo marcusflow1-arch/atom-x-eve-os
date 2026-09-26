@@ -9,7 +9,7 @@ import { getCompanionState } from '@/components/game3d/companionStore';
 import { getCompanionProgression } from '@/components/game3d/companionProgressionStore';
 
 export default function MultiplayerSystem({ envUrl }) {
-  const { user } = useAuth();
+  const { user, avatar } = useAuth();
   const [currentChannel, setCurrentChannel] = useState(null);
   const party = usePartySession();
   const [voiceScope,setVoiceScope] = useState('dashboard');
@@ -169,9 +169,7 @@ export default function MultiplayerSystem({ envUrl }) {
               last_update: Date.now(),
               display_name: user.full_name || user.username || 'Player',
               avatar_url: user.avatar_url || '',
-              model_url: localStorage.getItem('luna_active_character') === 'c1'
-                ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
-                : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx'
+              model_url: avatar?.model_url || avatar?.base_body_model_url || ''
             }
           });
 
@@ -379,9 +377,7 @@ export default function MultiplayerSystem({ envUrl }) {
             lastPushTime = now;
             lastPushState = { ...state, envUrl: envUrlCurrent };
 
-            const myModelUrl = localStorage.getItem('luna_active_character') === 'c1' 
-              ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
-              : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+            const myModelUrl = avatar?.model_url || avatar?.base_body_model_url || '';
 
             const updateData = {
               player_id: user.id,
@@ -435,9 +431,7 @@ export default function MultiplayerSystem({ envUrl }) {
                         // Include basic info so peers know who this is
                         display_name: user.full_name || user.username || 'Player',
                         avatar_url: user.avatar_url || '',
-                        model_url: localStorage.getItem('luna_active_character') === 'c1' 
-                            ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
-                            : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx'
+                        model_url: avatar?.model_url || avatar?.base_body_model_url || ''
                     }
                 });
             }
