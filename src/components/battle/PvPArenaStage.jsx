@@ -121,6 +121,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [loaded, setLoaded] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
   const [lastCastSlot, setLastCastSlot] = useState({ local: null, opponent: null });
+  const lastCastSlotRef = useRef(lastCastSlot);
   const [error, setError] = useState('');
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
@@ -128,6 +129,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   matchRef.current = match;
   serverOffsetRef.current = serverOffsetMs;
+  lastCastSlotRef.current = lastCastSlot;
 
   const local = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) === String(user?.id)), [match?.players, user?.id]);
   const opponent = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) !== String(user?.id)), [match?.players, user?.id]);
@@ -239,14 +241,15 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       const skill=(currentOpponent?.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (currentOpponent?.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
       const a=positions.current.opponent,b=positions.current.local; playSkill(runtimes.current.opponent,skill,user.id,Math.atan2(b.x-a.x,b.z-a.z),d); setLastCastSlot((s)=>({...s,opponent:Number(skill.slot)}));
     };
-    window.addEventListener('webrtcRemoteAction',remoteMove); window.addEventListener('lunaAIBattleRemoteCardCast',remoteCast);
+    window.addEventListener('webrtcMovementUpdate',remoteMove); window.addEventListener('lunaAIBattleRemoteCardCast',remoteCast);
 
     const renderBars = () => {
       const currentMatch=matchRef.current; const currentLocal=localRef.current; const currentOpponent=opponentRef.current; const offset=serverOffsetRef.current;
       for(const entry of barObjects){
         const p=entry.isLocal?currentLocal:currentOpponent; if(!p)continue; const id=String(p.id); const cooldowns=currentMatch?.cooldowns?.[id]||{};
         const skills=(p.skills||[]).map((skill)=>({...skill,cooldownEndsAt:cooldowns[String(skill.slot)]||null,cooldownMs:skill.cooldown_ms,atbCost:skill.atb_cost}));
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} serverOffsetMs={offset} lastCastSlot={entry.isLocal?lastCastSlot.local:lastCastSlot.opponent} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
+        const castSlot=lastCastSlotRef.current;
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();
@@ -264,13 +267,13 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         lf.root.position.x=lp.x;lf.root.position.z=lp.z;if(!lf.runtime.isPlaying?.())lf.root.rotation.y=lf.yaw;of.root.position.x=op.x;of.root.position.z=op.z;if(!of.runtime.isPlaying?.())of.root.rotation.y=of.yaw;
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
-        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;let anim='forward';if(Math.abs(dx)>Math.abs(dz))anim=dx>0?'right':'left';else if(dz)anim=((dz*(localSide==='host'?-1:1))>0)?'forward':'back';window.dispatchEvent(new CustomEvent('multiplayerLocalAction',{detail:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim,running:!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}}));}
+        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;let anim='forward';if(Math.abs(dx)>Math.abs(dz))anim=dx>0?'right':'left';else if(dz)anim=((dz*(localSide==='host'?-1:1))>0)?'forward':'back';window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim,running:!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         const away=new THREE.Vector3(lp.x-op.x,0,lp.z-op.z).normalize();const sideVec=new THREE.Vector3(-away.z,0,away.x);const targetShoulder=Math.abs(lp.x)>2?(lp.x>0?-1:1):shoulder;shoulder=THREE.MathUtils.lerp(shoulder,targetShoulder,1-Math.exp(-dt/0.4));const separation=lp.distanceTo(op);cameraDistance=THREE.MathUtils.lerp(cameraDistance,Math.min(9,Math.max(6.2,6.2+(separation-10)*.25)),1-Math.exp(-4*dt));const desired=new THREE.Vector3(lp.x,2.4,lp.z).addScaledVector(away,cameraDistance).addScaledVector(sideVec,2*shoulder);const look=new THREE.Vector3().lerpVectors(lp,op,.6);look.y=1.1;const factor=1-Math.exp(-6*dt);camera.position.lerp(desired,factor);camera.lookAt(look);
       }
       renderer.render(scene,camera);cssRenderer.render(scene,camera);
     }; frame=requestAnimationFrame(animate);
 
-    return()=>{disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.clearInterval(barTimer);window.removeEventListener('webrtcRemoteAction',remoteMove);window.removeEventListener('lunaAIBattleRemoteCardCast',remoteCast);barRoots.forEach((r)=>r.unmount());runtimes.current.local?.runtime?.dispose?.();runtimes.current.opponent?.runtime?.dispose?.();renderer.dispose();cssRenderer.domElement.remove();renderer.domElement.remove();delete window.__lunaPvPPosition;};
+    return()=>{disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.clearInterval(barTimer);window.removeEventListener('webrtcMovementUpdate',remoteMove);window.removeEventListener('lunaAIBattleRemoteCardCast',remoteCast);barRoots.forEach((r)=>r.unmount());runtimes.current.local?.runtime?.dispose?.();runtimes.current.opponent?.runtime?.dispose?.();renderer.dispose();cssRenderer.domElement.remove();renderer.domElement.remove();delete window.__lunaPvPPosition;};
   // Arena is recreated only for a new match; live match state is read by refs/cache overlays.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.id, local?.id, opponent?.id]);
