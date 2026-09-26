@@ -1,7 +1,7 @@
 import {normalizeAvatarAppearance} from './normalizeAvatarAppearance.ts';
 const APP_FILE_PREFIX = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/';
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
-const FEMALE_ARTEMIS_MODEL = APP_FILE_PREFIX + 'mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
+const FEMALE_ARTEMIS_MODEL = '/models/atomxe-artemis-archer.glb';
 const STYLE_PRESETS = new Set(['heroic_fantasy', 'graphic_ink', 'grounded_rpg']);
 const LASH_STYLES = new Set(['soft', 'natural', 'bold']);
 
