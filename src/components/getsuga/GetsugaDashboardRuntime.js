@@ -328,6 +328,9 @@ export class GetsugaDashboardRuntime {
     this.idleAction = null;
     this.attackAction = null;
     this.runAction = null;
+    this.locomotionActions?.clear?.();
+    this.locomotionActions = new Map();
+    this.currentLocomotion = null;
     this.attackClip = null;
     this.activeTarget = null;
     this.defaultFacingYaw = 0;
