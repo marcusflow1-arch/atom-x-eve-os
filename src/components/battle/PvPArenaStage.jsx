@@ -122,9 +122,19 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [clockNow, setClockNow] = useState(() => Date.now());
   const [lastCastSlot, setLastCastSlot] = useState({ local: null, opponent: null });
   const [error, setError] = useState('');
+  const matchRef = useRef(match);
+  const serverOffsetRef = useRef(serverOffsetMs);
+  const requestSkillRef = useRef(null);
+
+  matchRef.current = match;
+  serverOffsetRef.current = serverOffsetMs;
 
   const local = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) === String(user?.id)), [match?.players, user?.id]);
   const opponent = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) !== String(user?.id)), [match?.players, user?.id]);
+  const localRef = useRef(local);
+  const opponentRef = useRef(opponent);
+  localRef.current = local;
+  opponentRef.current = opponent;
   const localSide = String(user?.id) === String(match?.host_id) ? 'host' : 'guest';
   const opponentSide = localSide === 'host' ? 'guest' : 'host';
   const active = match?.status === 'fighting' && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
@@ -168,6 +178,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       return true;
     } catch (e) { setError(e.message || 'Skill rejected.'); runtimes.current.local?.runtime?.playIdle?.(); return false; }
   };
+
+  requestSkillRef.current = requestSkill;
 
   const requestDodge = async () => {
     if (!active) return;
@@ -222,17 +234,19 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       const last=remoteSamples.current.at(-1); if(last&&Number(d.seq)<=Number(last.seq))return; remoteSamples.current.push({...d,receivedAt:Date.now()}); if(remoteSamples.current.length>90)remoteSamples.current.splice(0,remoteSamples.current.length-90);
     };
     const remoteCast = (event) => {
-      const d=event.detail||{}; if(String(d.matchId||'')!==String(match.id)||String(d.sourcePlayerId||d.player_id||'')!==String(opponent.id))return;
-      const skill=(opponent.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (opponent.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
+      const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
+      if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
+      const skill=(currentOpponent?.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (currentOpponent?.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
       const a=positions.current.opponent,b=positions.current.local; playSkill(runtimes.current.opponent,skill,user.id,Math.atan2(b.x-a.x,b.z-a.z),d); setLastCastSlot((s)=>({...s,opponent:Number(skill.slot)}));
     };
     window.addEventListener('webrtcRemoteAction',remoteMove); window.addEventListener('lunaAIBattleRemoteCardCast',remoteCast);
 
     const renderBars = () => {
+      const currentMatch=matchRef.current; const currentLocal=localRef.current; const currentOpponent=opponentRef.current; const offset=serverOffsetRef.current;
       for(const entry of barObjects){
-        const p=entry.isLocal?local:opponent; const id=String(p.id); const cooldowns=match.cooldowns?.[id]||{};
+        const p=entry.isLocal?currentLocal:currentOpponent; if(!p)continue; const id=String(p.id); const cooldowns=currentMatch?.cooldowns?.[id]||{};
         const skills=(p.skills||[]).map((skill)=>({...skill,cooldownEndsAt:cooldowns[String(skill.slot)]||null,cooldownMs:skill.cooldown_ms,atbCost:skill.atb_cost}));
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(match.atb?.[id],serverOffsetMs)} skills={skills} local={entry.isLocal} serverOffsetMs={serverOffsetMs} lastCastSlot={entry.isLocal?lastCastSlot.local:lastCastSlot.opponent} onSkill={entry.isLocal?requestSkill:undefined}/>);
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} serverOffsetMs={offset} lastCastSlot={entry.isLocal?lastCastSlot.local:lastCastSlot.opponent} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();
@@ -241,15 +255,16 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       frame=requestAnimationFrame(animate); const dt=Math.min(.05,Math.max(0,(now-previous)/1000)); previous=now;
       const lf=runtimes.current.local,of=runtimes.current.opponent;
       if(lf&&of){
+        const currentMatch=matchRef.current; const offset=serverOffsetRef.current; const currentOpponent=opponentRef.current;
         const lp=positions.current.local,op=positions.current.opponent;
-        const canMove=match.status==='fighting' && Date.now()+serverOffsetMs>=Date.parse(match.fight_starts_at||0);
+        const canMove=currentMatch?.status==='fighting' && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
         let dx=0,dz=0; if(canMove){dx=Number(held.current.has('KeyD'))-Number(held.current.has('KeyA')); const toward=localSide==='host'?-1:1; dz=(Number(held.current.has('KeyW'))-Number(held.current.has('KeyS')))*toward; const len=Math.hypot(dx,dz);if(len){dx/=len;dz/=len;const walking=held.current.has('ShiftLeft')||held.current.has('ShiftRight');const speed=walking?WALK_SPEED:RUN_SPEED;const box=boxFor(localSide);const next=clampPos({x:lp.x+dx*speed*dt,z:lp.z+dz*speed*dt},box);lp.x=next.x;lp.z=next.z;const faceDx=op.x-lp.x,faceDz=op.z-lp.z;const forwardX=Math.sin(lf.yaw),forwardZ=Math.cos(lf.yaw);const rightX=forwardZ,rightZ=-forwardX;const f=dx*forwardX+dz*forwardZ,r=dx*rightX+dz*rightZ;const dir=Math.abs(r)>Math.abs(f)?(r>0?'right':'left'):(f>=0?'forward':'back');lf.runtime.playLocomotion?.(`${walking?'walk':'run'}_${dir}`);}else lf.runtime.playIdle?.();}
-        const renderTime=Date.now()+serverOffsetMs-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=match.positions?.[opponent.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
+        const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
         lf.root.position.x=lp.x;lf.root.position.z=lp.z;if(!lf.runtime.isPlaying?.())lf.root.rotation.y=lf.yaw;of.root.position.x=op.x;of.root.position.z=op.z;if(!of.runtime.isPlaying?.())of.root.rotation.y=of.yaw;
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
-        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;const moving=dx||dz;let anim='forward';if(Math.abs(dx)>Math.abs(dz))anim=dx>0?'right':'left';else if(dz)anim=((dz*(localSide==='host'?-1:1))>0)?'forward':'back';window.dispatchEvent(new CustomEvent('multiplayerLocalAction',{detail:{kind:'pvp_move',matchId:match.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim,running:!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+serverOffsetMs}}));}
+        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;let anim='forward';if(Math.abs(dx)>Math.abs(dz))anim=dx>0?'right':'left';else if(dz)anim=((dz*(localSide==='host'?-1:1))>0)?'forward':'back';window.dispatchEvent(new CustomEvent('multiplayerLocalAction',{detail:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim,running:!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}}));}
         const away=new THREE.Vector3(lp.x-op.x,0,lp.z-op.z).normalize();const sideVec=new THREE.Vector3(-away.z,0,away.x);const targetShoulder=Math.abs(lp.x)>2?(lp.x>0?-1:1):shoulder;shoulder=THREE.MathUtils.lerp(shoulder,targetShoulder,1-Math.exp(-dt/0.4));const separation=lp.distanceTo(op);cameraDistance=THREE.MathUtils.lerp(cameraDistance,Math.min(9,Math.max(6.2,6.2+(separation-10)*.25)),1-Math.exp(-4*dt));const desired=new THREE.Vector3(lp.x,2.4,lp.z).addScaledVector(away,cameraDistance).addScaledVector(sideVec,2*shoulder);const look=new THREE.Vector3().lerpVectors(lp,op,.6);look.y=1.1;const factor=1-Math.exp(-6*dt);camera.position.lerp(desired,factor);camera.lookAt(look);
       }
       renderer.render(scene,camera);cssRenderer.render(scene,camera);
