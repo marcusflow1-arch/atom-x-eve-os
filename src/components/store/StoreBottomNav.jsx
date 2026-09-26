@@ -88,7 +88,7 @@ export default function StoreBottomNav({ activeTab, onTabChange }) {
               isDevCardActive ? 'text-amber-300' : 'text-amber-500/50 hover:text-amber-300'
             }`}
           >
-            Dev Cards
+            Dev
             {isDevCardActive && (
               <motion.div
                 layoutId="store-tab-underline"
