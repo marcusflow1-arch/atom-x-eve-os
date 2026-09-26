@@ -23,8 +23,7 @@ export const NAV_HIERARCHY = [
         subPages: [
             { name: 'Games', icon: Gamepad2, path: `${storeUrl}?mode=store&subview=games` },
             { name: 'Trading Post', icon: ArrowLeftRight, path: `${storeUrl}?mode=trading` },
-            { name: 'Dev Cards', icon: Hammer, path: `${storeUrl}?mode=devcards` },
-            { name: 'Marketplace', icon: ShoppingBag, path: `${storeUrl}?mode=marketplace` },
+            { name: 'Dev', icon: Hammer, path: `${storeUrl}?mode=devcards` },
         ]
     },
     {
@@ -34,6 +33,8 @@ export const NAV_HIERARCHY = [
             { name: 'Skill Tree', icon: Layers, path: `${createPageUrl('GenreMastery')}?mode=skilltree` },
         ]
     },
+    { name: 'Clan', icon: Users, path: createPageUrl('Clan'), subPages: [] },
+    { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community'), subPages: [] },
     {
         name: 'Aura', icon: Radio, path: createPageUrl('Aura'),
         subPages: [
@@ -49,6 +50,8 @@ export const ALL_NAV_ITEMS = [
     { name: 'Luna Dashboard', icon: Home, path: createPageUrl('LunaTemplate') },
     { name: 'Store', icon: ShoppingBag, path: storeUrl },
     { name: 'Cards', icon: Trophy, path: createPageUrl('GenreMastery') },
+    { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
+    { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
 ];
 
