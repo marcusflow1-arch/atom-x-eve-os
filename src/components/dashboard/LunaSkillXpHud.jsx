@@ -18,7 +18,7 @@ const skillStackLayers = [
   { left: 22, top: 0, opacity: 0.24, scale: 0.97, zIndex: 10 },
 ];
 
-function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combatMode = false }) {
+function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combatMode = false, showcaseEditing = false }) {
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const image = assigned?.image || assigned?.card_image || assigned?.icon_url || assigned?.icon || '';
   const title = assigned?.title || assigned?.name || assigned?.card_name || `Showcase slot ${index + 1}`;
@@ -39,10 +39,13 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combat
   };
 
   const handleClick = () => {
-    if (combatMode) {
-      if (assigned) window.dispatchEvent(new CustomEvent('lunaRequestSkillSlotActivation', {
-        detail: { slotIndex: index, source: 'dashboard_click' },
+    // Outside Skill Book editing, an equipped diamond is a live skill button.
+    // This makes dashboard clicks follow the exact same cast path as keys 1–5.
+    if (assigned && !showcaseEditing) {
+      window.dispatchEvent(new CustomEvent('lunaRequestSkillSlotActivation', {
+        detail: { slotIndex: index, source: combatMode ? 'combat_click' : 'dashboard_click' },
       }));
+      onSelect?.(index, assigned);
       return;
     }
     if (pendingCard) {
@@ -62,7 +65,7 @@ function DiamondSkill({ index, selected, pendingCard, onAssign, onSelect, combat
       }}
       onDrop={handleDrop}
       aria-label={assigned ? `Showcase ${title}` : `Showcase slot ${index + 1}`}
-      title={combatMode ? (assigned ? `Activate ${title}` : `Skill Slot ${index + 1} is empty`) : pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
+      title={!showcaseEditing ? (assigned ? `Cast ${title}` : `Skill Slot ${index + 1} is empty`) : pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${index + 1}` : assigned ? title : `Drop an owned skill into slot ${index + 1}`}
       className={`absolute z-30 h-[38px] w-[38px] rotate-45 overflow-hidden border transition-all duration-200 ${selected
         ? 'border-cyan-100/70 bg-cyan-200/[0.18] shadow-[0_0_18px_rgba(103,232,249,.28)]'
         : pendingCard
@@ -221,6 +224,7 @@ export default function LunaSkillXpHud({
             onAssign={assignShowcaseCard}
             onSelect={selectShowcaseCard}
             combatMode={combatMode}
+            showcaseEditing={showcaseEditing}
           />
         ))}
       </div>
