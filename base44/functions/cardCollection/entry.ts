@@ -13,8 +13,7 @@ function canonicalType(value: any) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return json({ error: 'Unauthorized' }, 401);
+    const user = await base44.auth.me().catch(() => null);
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action || 'list');
     const data = body?.data || {};
@@ -31,8 +30,15 @@ Deno.serve(async (req) => {
     if (data.game_id) catalog = catalog.filter((row: AnyObj) => String(row.game_id || '') === String(data.game_id));
     if (data.card_type) catalog = catalog.filter((row: AnyObj) => canonicalType(row.card_type) === canonicalType(data.card_type));
 
-    const owned = await svc.UserCard.filter({ user_id: user.id }, '-acquired_at', 5000);
-    const progression = await svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 5000).catch(() => []);
+    const owned = user ? await svc.UserCard.filter({ user_id: user.id }, '-acquired_at', 5000) : [];
+    const progression = user ? await svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 5000).catch(() => []) : [];
+    const gameIds = [...new Set(catalog.map((card: AnyObj) => String(card.game_id || '')).filter(Boolean))];
+    const games: AnyObj[] = [];
+    for (const id of gameIds) {
+      const game = await svc.Game.get(id).catch(() => null);
+      if (game) games.push(game);
+    }
+    const gameById = new Map(games.map((game: AnyObj) => [String(game.id), game]));
     const ownedByTrading = new Map<string, AnyObj[]>();
     for (const row of owned) {
       const key = String(row.trading_card_id || '');
@@ -57,6 +63,8 @@ Deno.serve(async (req) => {
         rarity: card.rarity || 'Common',
         card_type: canonicalType(card.card_type || 'collectible'),
         game_id: card.game_id || '',
+        game_title: gameById.get(String(card.game_id || ''))?.title || '',
+        genre: gameById.get(String(card.game_id || ''))?.genre || '',
         achievement_id: card.achievement_id || '',
         equip_slot: card.equip_slot || '',
         stats: card.stats || {},
@@ -83,7 +91,7 @@ Deno.serve(async (req) => {
       id: `legacy:${row.id}`, trading_card_id: '', name: row.card_name || 'Card', description: '', image: row.card_image || '', image_url: row.card_image || '', rarity: row.card_rarity || 'Common', card_type: canonicalType(row.card_type), game_id: row.game_id || '', achievement_id: row.achievement_id || '', equip_slot: '', stats: {}, animation_effect: row.animation_effect || null, model_url: row.animation_effect?.model_url || '', home_item_key: '', stackable: false, tradable: row.trade_status !== 'locked_in_trade', max_level: 50, owned: true, quantity: Math.max(1, Number(row.quantity || 1)), user_card_id: row.id, equipped_to: row.equipped_to || (row.is_equipped ? 'skill_book' : 'none'), trade_status: row.trade_status || 'available', progression: progressByUserCard.get(String(row.id)) || null, legacy: true,
     }));
 
-    return json({ success: true, cards: [...cards, ...legacyOwned], owned_count: owned.length });
+    return json({ success: true, cards: [...cards, ...legacyOwned], owned_count: owned.length, authenticated: Boolean(user) });
   } catch (error) {
     console.error('cardCollection failed', error);
     return json({ error: error instanceof Error ? error.message : 'Card collection unavailable' }, 500);
