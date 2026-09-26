@@ -108,6 +108,8 @@ export class GetsugaDashboardRuntime {
     this.idleAction = null;
     this.attackAction = null;
     this.runAction = null;
+    this.locomotionActions = new Map();
+    this.currentLocomotion = null;
     this.attackClip = null;
     this.activeTarget = null;
     this.defaultFacingYaw = 0;
@@ -179,19 +181,31 @@ export class GetsugaDashboardRuntime {
     return true;
   }
 
-  setRunClip(clip) {
+  setRunClip(clip) { return this.setLocomotionClip('run_forward', clip); }
+
+  setLocomotionClip(key, clip) {
     if (!this.ready || this.disposed || !this.mixer || !clip) return false;
-    this.runAction?.stop?.();
-    this.runAction = this.mixer.clipAction(clip);
-    this.runAction.setLoop(THREE.LoopRepeat, Infinity);
+    this.locomotionActions.get(key)?.stop?.();
+    const action = this.mixer.clipAction(clip);
+    action.setLoop(THREE.LoopRepeat, Infinity);
+    this.locomotionActions.set(key, action);
+    if (key === 'run_forward') this.runAction = action;
     return true;
   }
 
-  playRun() {
-    if (!this.ready || this.disposed || this.paused || this.playing || !this.runAction) return false;
-    this.runAction.enabled = true;
-    this.runAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
-    this.idleAction?.crossFadeTo?.(this.runAction, 0.14, false);
+  playRun() { return this.playLocomotion('run_forward'); }
+
+  playLocomotion(key) {
+    if (!this.ready || this.disposed || this.paused || this.playing) return false;
+    const next = this.locomotionActions.get(key);
+    if (!next) return false;
+    if (this.currentLocomotion === next && next.isRunning()) return true;
+    const previous = this.currentLocomotion;
+    next.enabled = true;
+    next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+    if (previous?.isRunning()) previous.crossFadeTo(next, 0.12, false);
+    else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(next, 0.14, false);
+    this.currentLocomotion = next;
     return true;
   }
 
@@ -218,7 +232,7 @@ export class GetsugaDashboardRuntime {
     this.attackAction.setEffectiveWeight(1);
     this.attackAction.play();
 
-    if (this.runAction?.isRunning()) this.runAction.crossFadeTo(this.attackAction, 0.16, false);
+    if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(this.attackAction, 0.16, false);
     else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
     else this.idleAction?.stop();
 
@@ -246,7 +260,8 @@ export class GetsugaDashboardRuntime {
     this.idleAction.setEffectiveWeight(1);
     this.idleAction.play();
 
-    if (this.runAction?.isRunning()) this.runAction.crossFadeTo(this.idleAction, 0.16, false);
+    if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(this.idleAction, 0.16, false);
+    this.currentLocomotion = null;
     if (blend && this.attackAction) this.attackAction.crossFadeTo(this.idleAction, 0.35, false);
     else this.attackAction?.stop();
 
