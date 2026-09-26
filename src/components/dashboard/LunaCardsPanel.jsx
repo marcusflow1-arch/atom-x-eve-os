@@ -38,8 +38,16 @@ export default function LunaCardsPanel() {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
-  const demoAbility = useMemo(
-    () => (skills || []).find((skill) => normalize(skill.title) === normalize('Ichigo Kurosaki - Getsuga Tenshō')) || null,
+  const collectibleCards = useMemo(
+    () => (skills || [])
+      .filter((skill) => skill?.owned && skill?.user_card_id)
+      .sort((a, b) => {
+        const aArtemis = normalize(a?.card?.animation_effect?.id).startsWith('artemis_');
+        const bArtemis = normalize(b?.card?.animation_effect?.id).startsWith('artemis_');
+        if (aArtemis !== bArtemis) return aArtemis ? -1 : 1;
+        return String(a.title || '').localeCompare(String(b.title || ''));
+      })
+      .slice(0, 6),
     [skills]
   );
 
@@ -322,11 +330,11 @@ export default function LunaCardsPanel() {
                 <p className="text-[7px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Collectible Cards</p>
                 <p className="mt-0.5 text-[7px] text-white/38">Your card row · empty spaces fill as abilities are added.</p>
               </div>
-              <span className="text-[7px] font-mono text-white/28">1 / 6</span>
+              <span className="text-[7px] font-mono text-white/28">{collectibleCards.length} / 6</span>
             </div>
             <div className="grid grid-cols-6 gap-2">
               {[0, 1, 2, 3, 4, 5].map((index) => {
-                const card = index === 0 ? demoAbility : null;
+                const card = collectibleCards[index] || null;
                 return card ? (
                   <button
                     key={index}
@@ -339,13 +347,13 @@ export default function LunaCardsPanel() {
                       setSelectedSkillId(card.id);
                     }}
                     className="group relative h-[104px] overflow-hidden border border-cyan-100/24 bg-cyan-100/[0.025] shadow-[0_0_18px_rgba(103,232,249,.06)] transition hover:border-cyan-100/45 hover:bg-cyan-100/[0.05]"
-                    title="Ichigo Kurosaki - Getsuga Tenshō"
+                    title={card.title}
                   >
-                    {card.image ? <img src={card.image} alt="Ichigo Kurosaki - Getsuga Tenshō" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : null}
+                    {card.image ? <img src={card.image} alt={card.title} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : null}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
                     <div className="absolute inset-x-1.5 bottom-1.5 text-left">
-                      <p className="truncate text-[7px] font-semibold text-white">Getsuga Tenshō</p>
-                      <p className="mt-0.5 text-[5px] font-black uppercase tracking-[0.08em] text-cyan-100/58">Ability · Unique</p>
+                      <p className="truncate text-[7px] font-semibold text-white">{card.title}</p>
+                      <p className="mt-0.5 text-[5px] font-black uppercase tracking-[0.08em] text-cyan-100/58">Ability · {card.rarity || 'Unique'}</p>
                     </div>
                   </button>
                 ) : (
