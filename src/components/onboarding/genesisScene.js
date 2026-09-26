@@ -490,6 +490,17 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       // A real bone hierarchy is sufficient to treat it as an animatable runtime rig.
       if (runtimeBoneCount > 0) atomxeRuntimeRig = true;
 
+      if (options.artemisFemale) {
+        // Artemis cards are authored against the exact user-supplied GLB. Never
+        // silently render an older/static/generated female mesh under this role.
+        const clipNames = new Set((asset.animations || []).map((clip) => String(clip?.name || '')));
+        const required = ['Idle', 'Call_Of_The_Husky', 'Rain_Of_Arrows', 'Lunar_Beam'];
+        const missing = required.filter((name) => !clipNames.has(name));
+        if (runtimeBoneCount < 1 || missing.length) {
+          throw new Error(`Incorrect Artemis model package. Missing rig/clip(s): ${missing.join(', ') || 'skeleton'}`);
+        }
+      }
+
       if (options.lockRootTranslation) {
         model.traverse((node) => {
           if (node.isBone) lockedBonePositions.set(node, node.position.clone());
