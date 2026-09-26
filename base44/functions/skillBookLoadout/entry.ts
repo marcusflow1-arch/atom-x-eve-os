@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -152,9 +153,11 @@ const snapshotCard = (card: AnyObj | null) => card ? ({
 
 async function ensureSkillSets(base44: any, userId: string) {
   const svc = base44.asServiceRole.entities;
-  let rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
+  let rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 50);
+  let created = false;
 
   if (!rows.length) {
+    created = true;
     const first = DEFAULT_SKILL_SETS[0];
     rows = [await svc.Loadout.create({
       user_id: userId,
@@ -218,6 +221,28 @@ async function ensureSkillSets(base44: any, userId: string) {
     }));
   }
 
+  rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 50);
+
+  // De-duplicate racing bootstrap calls. Keep the oldest row for each logical
+  // skill set, merge only missing slots into it, and archive the extras.
+  const grouped = new Map<string, AnyObj[]>();
+  for (const row of rows) {
+    const key = String(row.skill_set_id || '');
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(row);
+  }
+  for (const [key, duplicates] of grouped) {
+    if (!key || duplicates.length < 2) continue;
+    duplicates.sort((a, b) => String(a.created_date || '').localeCompare(String(b.created_date || '')));
+    const keeper = duplicates[0];
+    const merged = { ...(keeper.skill_slots || {}) };
+    for (const duplicate of duplicates.slice(1)) {
+      for (const [slot, cardId] of Object.entries(duplicate.skill_slots || {})) if (!merged[slot] && cardId) merged[slot] = cardId;
+      await svc.Loadout.update(duplicate.id, { loadout_type: 'skills_archived', is_active: false });
+    }
+    if (JSON.stringify(merged) !== JSON.stringify(keeper.skill_slots || {})) await svc.Loadout.update(keeper.id, { skill_slots: merged });
+  }
+
   rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
   rows = rows
     .filter((row: AnyObj) => DEFAULT_SKILL_SETS.some((set) => set.id === row.skill_set_id))
@@ -227,7 +252,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     active = rows[0];
     if (active) await svc.Loadout.update(active.id, { is_active: true });
   }
-  return { rows, active: active || rows[0] || null };
+  return { rows, active: active || rows[0] || null, created };
 }
 
 async function buildState(base44: any, user: AnyObj) {
