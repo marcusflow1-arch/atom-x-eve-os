@@ -27,7 +27,7 @@ const artemisCardImage = (label: string, glyph: string, glow: string) => `data:i
   <text x="256" y="350" text-anchor="middle" font-size="150" font-family="system-ui,sans-serif" fill="#f3fbff">${glyph}</text>
   <text x="256" y="570" text-anchor="middle" font-size="28" font-weight="700" font-family="system-ui,sans-serif" fill="#f3fbff">${label}</text>
   <text x="256" y="604" text-anchor="middle" font-size="16" letter-spacing="4" font-family="system-ui,sans-serif" fill="#9bdff5">ARTEMIS · FEMALE</text>
-</svg>`)} `;
+</svg>`)}`;
 
 const ARTEMIS_ABILITIES = [
   {
