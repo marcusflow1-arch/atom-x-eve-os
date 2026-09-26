@@ -16,9 +16,9 @@ const GETSUGA_EFFECT = {
 };
 
 const ARTEMIS_CARD_PREFIX = 'artemis_';
-// Exact user-supplied Artemis package. Like the working male Getsuga card, every
-// Artemis ability card records the model package that owns its embedded clip.
-const ARTEMIS_MODEL_URL = '/models/atomxe-artemis-archer.glb';
+// Exact Admin > 3D Models upload that owns every Artemis embedded ability clip.
+const ARTEMIS_MODEL_ID = '6ab7dfade57a36adf2a81e7d';
+const ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/96bb872db_Artemis_Character.glb';
 const artemisCardImage = (label: string, glyph: string, glow: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 720">
   <defs>
@@ -36,17 +36,17 @@ const ARTEMIS_ABILITIES = [
   {
     card_name: 'Artemis — Call of the Husky',
     card_image: artemisCardImage('CALL OF THE HUSKY', '✦', '#65d9ff'),
-    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', model_url: ARTEMIS_MODEL_URL, duration_ms: 2000, cooldown_ms: 7000 },
+    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 2000, cooldown_ms: 7000 },
   },
   {
     card_name: 'Artemis — Rain of Arrows',
     card_image: artemisCardImage('RAIN OF ARROWS', '⌁', '#91a7ff'),
-    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', model_url: ARTEMIS_MODEL_URL, duration_ms: 3000, cooldown_ms: 8500 },
+    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 3000, cooldown_ms: 8500 },
   },
   {
     card_name: 'Artemis — Lunar Beam',
     card_image: artemisCardImage('LUNAR BEAM', '☾', '#d19cff'),
-    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', model_url: ARTEMIS_MODEL_URL, duration_ms: 3600, cooldown_ms: 10000 },
+    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 3600, cooldown_ms: 10000 },
   },
 ] as const;
 
@@ -57,8 +57,7 @@ async function femaleAvatarEnabled(svc: any, userId: string) {
   return String(avatars?.[0]?.gender || '').toLowerCase() === 'female';
 }
 
-async function ensureArtemisAbilities(svc: any, userId: string, enabled: boolean) {
-  if (!enabled) return [];
+async function ensureArtemisAbilities(svc: any, userId: string) {
   const created: AnyObj[] = [];
   for (const def of ARTEMIS_ABILITIES) {
     const rows = await svc.UserCard.filter({ user_id: userId, card_name: def.card_name }, '-created_date', 5);
@@ -236,7 +235,9 @@ async function buildState(base44: any, user: AnyObj) {
   const femaleAvatar = await femaleAvatarEnabled(svc, user.id);
   const [demoAbility] = await Promise.all([
     ensureDemoAbility(svc, user.id),
-    ensureArtemisAbilities(svc, user.id, femaleAvatar),
+    // Artemis cards are part of the shared Skill Book catalog for every player.
+    // Runtime activation remains locked to the Artemis female model itself.
+    ensureArtemisAbilities(svc, user.id),
   ]);
   const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
 
@@ -257,12 +258,9 @@ async function buildState(base44: any, user: AnyObj) {
     svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500).catch(() => []),
   ]);
 
-  // Artemis' embedded abilities belong to the female body rig. Keep the owned
-  // records persistent, but expose them to Skill Book only while this user is
-  // actively using a female avatar. Switching back to female restores them.
-  const ownedSkills = (ownedCards || []).filter((card: AnyObj) =>
-    card.card_type === 'Ability' && (femaleAvatar || !isArtemisCard(card))
-  );
+  // Artemis cards remain visible in the shared Skill Book for both male and female
+  // avatars. Their embedded casts are accepted only by the Artemis female rig.
+  const ownedSkills = (ownedCards || []).filter((card: AnyObj) => card.card_type === 'Ability');
   const abilityAchievements = (achievements || []).filter((achievement: AnyObj) => achievement.category === 'ability');
   const progressByUserCard = new Map<string, AnyObj>();
   for (const p of progressions || []) if (p.user_card_id) progressByUserCard.set(String(p.user_card_id), p);
@@ -356,9 +354,6 @@ async function buildState(base44: any, user: AnyObj) {
     const slots = Array.from({ length: 4 }, (_, index) => {
       const cardId = slotIds[String(index)] || slotIds[index];
       const availableCard = cardId ? ownedById.get(String(cardId)) || null : null;
-      // A female-only Artemis card may remain saved in the user's loadout so it
-      // is restored when they return to the female avatar, but it must not be
-      // exposed as an active/castable slot while a male avatar is selected.
       return {
         index,
         user_card_id: availableCard ? cardId : null,
