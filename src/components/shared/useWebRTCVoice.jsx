@@ -1,6 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
+let iceServersPromise = null;
+const getIceServers = async () => {
+    if (!iceServersPromise) {
+        iceServersPromise = base44.functions.invoke('getIceServers', {}).then((response) => response?.data?.iceServers || response?.iceServers || [{ urls: 'stun:stun.l.google.com:19302' }]).catch(() => [{ urls: 'stun:stun.l.google.com:19302' }]);
+    }
+    return iceServersPromise;
+};
+
 export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds = [], options = {}) {
     const dataEnabled = options.data !== false;
     const participantsRef = useRef(participantIds); participantsRef.current = participantIds;
@@ -8,7 +16,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
     const deafenedRef = useRef(isDeafened); deafenedRef.current = isDeafened;
     const localStreamRef = useRef(null);
     const peersRef = useRef({});
-    const dataChannelsRef = useRef({});
+    const dataChannelsRef = useRef({}); // peerId -> { gameData, gameReliable }
     const audioRefs = useRef({});
     const initiateCallRef = useRef(null);
     const pendingCandidates = useRef({});
@@ -19,10 +27,12 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         if (!dataEnabled) return;
         window.webrtcBroadcast = (data) => {
             const msg = JSON.stringify(data);
-            Object.values(dataChannelsRef.current).forEach(dc => {
-                if (dc.readyState === 'open') {
-                    dc.send(msg);
-                }
+            const reliable = ['action', 'dm', 'companion'].includes(String(data?.type || ''));
+            Object.values(dataChannelsRef.current).forEach(channels => {
+                const preferred = reliable ? channels?.gameReliable : channels?.gameData;
+                const fallback = reliable ? channels?.gameData : channels?.gameReliable;
+                const dc = preferred?.readyState === 'open' ? preferred : (fallback?.readyState === 'open' ? fallback : null);
+                if (dc) dc.send(msg);
             });
         };
         return () => {
