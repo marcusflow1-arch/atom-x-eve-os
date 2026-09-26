@@ -78,21 +78,29 @@ export class ArtemisDashboardRuntime {
   }
 
   setRunClip(clip) {
+    return this.setLocomotionClip('run_forward', clip);
+  }
+
+  setLocomotionClip(key, clip) {
     if (!clip) return false;
-    const runClip = clip.clone?.() || clip;
-    runClip.name = 'Run';
-    this.clips.set('Run', runClip);
-    const old = this.actions.get('Run');
-    old?.stop?.();
-    this.actions.delete('Run');
+    const name = `Move_${key}`;
+    const nextClip = clip.clone?.() || clip;
+    nextClip.name = name;
+    this.clips.set(name, nextClip);
+    LOOP_CLIPS.add(name);
+    this.actions.get(name)?.stop?.();
+    this.actions.delete(name);
     return true;
   }
 
-  playRun() {
-    if (this.disposed || this.isPlaying() || !this.hasClip('Run')) return false;
+  playRun() { return this.playLocomotion('run_forward'); }
+
+  playLocomotion(key) {
+    const name = `Move_${key}`;
+    if (this.disposed || this.isPlaying() || !this.hasClip(name)) return false;
     this.home = 'Idle';
     this.calmFor = 0;
-    return this._crossFade('Run', 0.14);
+    return this._crossFade(name, 0.14);
   }
 
   _actionFor(name) {
