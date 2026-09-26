@@ -10,7 +10,7 @@ import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import { CartProvider } from './components/CartContext';
-import { AuthProvider, useAuth } from './components/auth/AuthContext';
+import { useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import EnvStatus from './components/env/EnvStatus';
 
@@ -1307,19 +1307,17 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <DashboardModeProvider>
-          <ViewModeProvider>
-            <CartProvider>
-              <Suspense fallback={<LoadingFallback />}>
-                <AIPresenceProvider>
-                  <LayoutContent children={children} currentPageName={currentPageName} />
-                </AIPresenceProvider>
-              </Suspense>
-            </CartProvider>
-          </ViewModeProvider>
-        </DashboardModeProvider>
-      </AuthProvider>
+      <DashboardModeProvider>
+        <ViewModeProvider>
+          <CartProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <AIPresenceProvider>
+                <LayoutContent children={children} currentPageName={currentPageName} />
+              </AIPresenceProvider>
+            </Suspense>
+          </CartProvider>
+        </ViewModeProvider>
+      </DashboardModeProvider>
     </ErrorBoundary>
   );
 }
