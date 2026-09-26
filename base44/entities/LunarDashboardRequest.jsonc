@@ -11,20 +11,16 @@
       "description": "Whether this is an invite to visit a dashboard or a request to join one"
     },
     "requester_id": {
-      "type": "string",
-      "description": "User who started the request"
+      "type": "string"
     },
     "requester_name": {
-      "type": "string",
-      "description": "Name shown in the popup"
+      "type": "string"
     },
     "target_user_id": {
-      "type": "string",
-      "description": "User who must approve or reject the request"
+      "type": "string"
     },
     "host_user_id": {
-      "type": "string",
-      "description": "Dashboard owner to join after approval"
+      "type": "string"
     },
     "status": {
       "type": "string",
@@ -33,8 +29,7 @@
         "accepted",
         "declined"
       ],
-      "default": "pending",
-      "description": "Approval status"
+      "default": "pending"
     }
   },
   "required": [
@@ -43,5 +38,40 @@
     "requester_name",
     "target_user_id",
     "host_user_id"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.requester_id": "{{user.id}}"
+        },
+        {
+          "data.target_user_id": "{{user.id}}"
+        },
+        {
+          "data.host_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
