@@ -1,3 +1,4 @@
+const prefix='https://base44.app/api/apps/6876751a602125f45f1861b9/files/';
 const male='/models/luna-hi3d/warrior.glb',artemis='https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/96bb872db_Artemis_Character.glb';
 const styles=['heroic_fantasy','graphic_ink','grounded_rpg','anime','watercolor','noir','neon'];
 const faceKeys=['face_width','jaw_width','face_height','eye_spacing','nose_width','nose_length','mouth_width'];
