@@ -112,6 +112,17 @@ export function useSkillBookLoadout() {
   });
 
   useEffect(() => {
+    if (!user?.id) return;
+    const refreshEligibility = (event) => {
+      const avatarUserId = event.detail?.avatar?.user_id;
+      if (avatarUserId && String(avatarUserId) !== String(user.id)) return;
+      void queryClient.invalidateQueries({ queryKey: ['luna-skill-book', user.id] }, { cancelRefetch: false });
+    };
+    window.addEventListener('avatarAppearanceSaved', refreshEligibility);
+    return () => window.removeEventListener('avatarAppearanceSaved', refreshEligibility);
+  }, [queryClient, user?.id]);
+
+  useEffect(() => {
     const slots = stateQuery.data?.loadout?.slots;
     const rowIndex = Number(stateQuery.data?.loadout?.skill_set_order || 0);
     setActiveSkillRow(Math.max(0, Math.min(2, rowIndex)));
