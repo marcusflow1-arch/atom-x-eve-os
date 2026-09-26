@@ -33,17 +33,17 @@ const ARTEMIS_ABILITIES = [
   {
     card_name: 'Artemis — Call of the Husky',
     card_image: artemisCardImage('CALL OF THE HUSKY', '✦', '#65d9ff'),
-    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', female_only: true, model_role: 'female_artemis', duration_ms: 2000, cooldown_ms: 7000 },
+    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', duration_ms: 2000, cooldown_ms: 7000 },
   },
   {
     card_name: 'Artemis — Rain of Arrows',
     card_image: artemisCardImage('RAIN OF ARROWS', '⌁', '#91a7ff'),
-    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', female_only: true, model_role: 'female_artemis', duration_ms: 3000, cooldown_ms: 8500 },
+    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', duration_ms: 3000, cooldown_ms: 8500 },
   },
   {
     card_name: 'Artemis — Lunar Beam',
     card_image: artemisCardImage('LUNAR BEAM', '☾', '#d19cff'),
-    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', female_only: true, model_role: 'female_artemis', duration_ms: 3600, cooldown_ms: 10000 },
+    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', duration_ms: 3600, cooldown_ms: 10000 },
   },
 ] as const;
 
@@ -145,7 +145,7 @@ const snapshotCard = (card: AnyObj | null) => card ? ({
   game_id: card.game_id || '',
   genre: card.genre || '',
   animation_effect: card.animation_effect || null,
-  showcaseOnly: true,
+  showcaseOnly: false,
 }) : null;
 
 async function ensureSkillSets(base44: any, userId: string) {
