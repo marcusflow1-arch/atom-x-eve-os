@@ -3,16 +3,19 @@
   "type": "object",
   "properties": {
     "title": {
-      "type": "string",
-      "description": "The official name of the achievement."
+      "type": "string"
     },
     "description": {
-      "type": "string",
-      "description": "How to unlock the achievement and its lore."
+      "type": "string"
     },
     "game": {
-      "type": "string",
-      "description": "The name of the game this achievement belongs to (e.g., 'Cyberpunk 2088')."
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "card_id": {
+      "type": "string"
     },
     "category": {
       "type": "string",
@@ -26,8 +29,7 @@
         "environment",
         "teacher",
         "hidden"
-      ],
-      "description": "The type of achievement, determining the reward category."
+      ]
     },
     "rarity": {
       "type": "string",
@@ -40,75 +42,33 @@
         "Mythical",
         "Unique",
         "Limitless"
-      ],
-      "description": "The rarity tier of the achievement, from Common to Limitless."
+      ]
     },
     "points": {
-      "type": "number",
-      "description": "The amount of Gamer Score or XP awarded upon unlock."
+      "type": "number"
     },
     "icon": {
-      "type": "string",
-      "description": "An emoji or icon representing the achievement."
+      "type": "string"
     },
     "reward": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "The type of reward, e.g., 'Legendary Sword', 'Fireball Spell', 'Environment Map'."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the unlocked item or ability."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the reward."
-        },
-        "stats": {
-          "type": "object",
-          "description": "For equipment: stats like Attack, Defense. (e.g., {\"Attack\": 50, \"Speed\": 10})."
-        },
-        "abilities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "For abilities: a list of special effects or moves."
-        },
-        "environment_id": {
-          "type": "string",
-          "description": "For environment achievements: the ID of the environment/map unlocked."
-        },
-        "environment_thumbnail": {
-          "type": "string",
-          "description": "For environment achievements: thumbnail image of the environment."
-        }
-      },
-      "description": "The tangible reward unlocked by the achievement."
+      "type": "object"
     },
     "showcase": {
-      "type": "object",
-      "description": "Public skill/item media used by the channel Cards showcase",
-      "properties": {
-        "model_url": {
-          "type": "string",
-          "description": "HTTPS URL for the GLB, GLTF, or FBX skill/item model"
-        },
-        "animation_clip": {
-          "type": "string",
-          "description": "Optional animation name to play from the model"
-        },
-        "video_url": {
-          "type": "string",
-          "description": "HTTPS gameplay demonstration video URL"
-        }
-      }
+      "type": "object"
     },
     "unlock_condition": {
-      "type": "string",
-      "description": "The condition the player must meet to unlock this achievement"
+      "type": "string"
+    },
+    "event_rule": {
+      "type": "object",
+      "properties": {
+        "event_key": {
+          "type": "string"
+        },
+        "threshold": {
+          "type": "number"
+        }
+      }
     }
   },
   "required": [
