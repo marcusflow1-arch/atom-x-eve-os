@@ -77,10 +77,8 @@ export function useSkills() {
 
       const durationMs = Math.max(100, Number(effect?.duration_ms) || DEFAULT_EFFECT_DURATION_MS);
       const cooldownMs = Math.max(durationMs, Number(effect?.cooldown_ms) || DEFAULT_EFFECT_COOLDOWN_MS);
-
-      storeSkill(effectId);
-      activateSkill(slotIndex, durationMs);
-      setCooldown(effectId, Date.now() + cooldownMs);
+      const requiresRuntimeAcceptance = effect?.mode === 'embedded'
+        && (effectId === 'getsuga_tensho' || effectId.startsWith('artemis_'));
 
       const detail = {
         slotIndex,
@@ -89,9 +87,30 @@ export function useSkills() {
         source,
         caster: { type: 'local_player' },
         target,
+        accepted: requiresRuntimeAcceptance ? false : undefined,
+        rejectionReason: '',
       };
       window.dispatchEvent(new CustomEvent('lunaCardAbilityTargeted', { detail }));
+      // CustomEvent listeners are synchronous. The mounted avatar runtime marks
+      // embedded casts accepted only when it actually found and started the clip.
       window.dispatchEvent(new CustomEvent('lunaCardAnimationEffectProc', { detail }));
+
+      if (requiresRuntimeAcceptance && detail.accepted !== true) {
+        window.dispatchEvent(new CustomEvent('lunaSkillCastRejected', {
+          detail: {
+            slotIndex,
+            card: assigned,
+            effect,
+            source,
+            reason: detail.rejectionReason || 'The active avatar does not contain this embedded skill animation.',
+          },
+        }));
+        return false;
+      }
+
+      storeSkill(effectId);
+      activateSkill(slotIndex, durationMs);
+      setCooldown(effectId, Date.now() + cooldownMs);
 
       // The dashboard multiplayer layer carries the same committed card to the
       // opponent regardless of whether either player is using editor preview or
