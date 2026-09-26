@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
+import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 
 const RARITY_TONE = {
   mythic: 'border-red-200/28 text-red-100',
@@ -105,7 +106,7 @@ export default function BattleSkillRail({
   // Preserve the logical slot index. AI Battle never fills empty slots with
   // unrelated owned cards because the number key must represent the card the
   // player explicitly equipped to that same slot.
-  const cards = useMemo(() => Array.from({ length: 4 }, (_, index) => (
+  const cards = useMemo(() => Array.from({ length: SKILL_SLOT_COUNT }, (_, index) => (
     (slots || []).find((slot) => Number(slot?.index) === index)?.card || null
   )), [slots]);
 
