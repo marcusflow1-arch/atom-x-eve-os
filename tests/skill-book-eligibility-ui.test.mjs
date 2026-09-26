@@ -43,7 +43,7 @@ const code = await build({
 });
 const module = new Module(process.cwd() + '/tests/__skill_book_ui_bundle.cjs');
 module.paths = Module._nodeModulePaths(process.cwd());
-module._compile(code.outputFiles[0].text, module.filename);
+module._compile(code.outputFiles[0].text, process.cwd() + '/tests/__skill_book_ui_bundle.cjs');
 const Panel = module.exports.default;
 const root = createRoot(document.getElementById('root'));
 const render = () => act(async () => { root.render(React.createElement(Panel)); });
