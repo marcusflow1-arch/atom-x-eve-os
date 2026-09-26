@@ -259,7 +259,8 @@ Deno.serve(async (req) => {
       const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
     }
     if (action === 'ready') {
-      let match=await settleMatch(svc,await getMatch(svc,String(data.match_id||''))); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      match=await settleMatch(svc,match);
       if(match.status==='ended') return json({error:'This match has ended.',match:publicMatch(match)},409);
       const room=await svc.PlayerState.filter({channel_id:match.dashboard_channel}); const liveIds=new Set(room.filter(dashboardLive).map((r:Row)=>String(r.player_id)));
       const ready=(match.player_ids||[]).every((id:string)=>liveIds.has(String(id)));
@@ -276,7 +277,8 @@ Deno.serve(async (req) => {
       return json({match:publicMatch(match),server_time:Date.now()});
     }
     if (action === 'dodge') {
-      let match=await settleMatch(svc,await getMatch(svc,String(data.match_id||''))); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      match=await settleMatch(svc,match);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       const now=Date.now(); const currentAtb=atbNow(match.atb?.[userId],now); const cd=Date.parse(match.cooldowns?.[userId]?._dodge||0);
       if(cd>now) return json({error:'Dodge is on cooldown.'},409); if(currentAtb<DODGE.atb_cost) return json({error:'Not enough ATB.'},409);
@@ -286,7 +288,8 @@ Deno.serve(async (req) => {
       match=await svc.AIBattleMatch.update(match.id,{atb,cooldowns,dodges}); return json({match:publicMatch(match),server_time:now});
     }
     if (action === 'use_skill') {
-      let match=await settleMatch(svc,await getMatch(svc,String(data.match_id||''))); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      match=await settleMatch(svc,match);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId); const slot=Number(data.slot);
       if(!Number.isInteger(slot)||slot<0||slot>=SKILL_SLOT_COUNT) return json({error:'Invalid skill slot.'},400);
