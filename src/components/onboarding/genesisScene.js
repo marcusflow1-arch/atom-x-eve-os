@@ -476,6 +476,23 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
           }
         });
       }
+      const movementName = String(motion?.name || motion?.command || '').toLowerCase();
+      if (/run/.test(movementName) && getsuga) {
+        getsuga.setRunClip?.(clip);
+        getsuga.playRun?.();
+        model.visible = true;
+        onStatus('ready', motion.name || 'Run');
+        if (animationRoot !== model) disposeModel(animationRoot);
+        return;
+      }
+      if (/run/.test(movementName) && artemis) {
+        artemis.setRunClip?.(clip);
+        artemis.playRun?.();
+        model.visible = true;
+        onStatus('ready', motion.name || 'Run');
+        if (animationRoot !== model) disposeModel(animationRoot);
+        return;
+      }
       const next = mixer.clipAction(clip);
       if (motion.loop === false) { next.setLoop(THREE.LoopOnce, 1); next.clampWhenFinished = true; }
       else next.setLoop(THREE.LoopRepeat, Infinity);
@@ -638,8 +655,15 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     if (paused || (embeddedController && !embeddedController.canMove())) return;
 
     const previous = model.position.clone();
-    model.position.x = THREE.MathUtils.clamp(model.position.x + (x * distance), basePosition.x - 1.65, basePosition.x + 1.65);
-    model.position.z = THREE.MathUtils.clamp(model.position.z + (z * distance), basePosition.z - 1.05, basePosition.z + 1.05);
+    const radius = Math.max(0.5, Number(options.movementRadius || 1.65));
+    const nextX = model.position.x + (x * distance);
+    const nextZ = model.position.z + (z * distance);
+    const dx = nextX - basePosition.x;
+    const dz = nextZ - basePosition.z;
+    const length = Math.hypot(dx, dz);
+    const scale = length > radius ? radius / length : 1;
+    model.position.x = basePosition.x + dx * scale;
+    model.position.z = basePosition.z + dz * scale;
 
     if (secondaryRoot) {
       secondaryRoot.position.x += model.position.x - previous.x;
@@ -647,9 +671,21 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     }
 
     if (x || z) {
-      const yaw = Math.atan2(x, z);
-      model.rotation.y = yaw;
-      if (secondaryRoot) secondaryRoot.rotation.y = yaw;
+      // In combat the fighter strafes/runs while staying target-locked. Outside
+      // combat, movement direction still controls facing as before.
+      if (!options.combatMovement) {
+        const yaw = Math.atan2(x, z);
+        model.rotation.y = yaw;
+        if (secondaryRoot) secondaryRoot.rotation.y = yaw;
+      }
+    }
+
+    if (options.combatCamera) {
+      const targetY = (options.portrait ? 1.62 : .96) + Number(options.framingOffsetY || 0);
+      controls.target.lerp(new THREE.Vector3(model.position.x, targetY, model.position.z), 0.18);
+      const desiredDistance = 4.4;
+      const desired = new THREE.Vector3(model.position.x, targetY + 0.5, model.position.z + desiredDistance);
+      camera.position.lerp(desired, 0.12);
     }
   };
   const resetPosition = () => {
