@@ -251,6 +251,15 @@ test('legacy extra slots cannot cast, and unowned matches cannot be accessed', a
   assert.equal(writes.length, 0);
 });
 
+for (const action of ['ready', 'dodge']) {
+  test(action + ' rejects non-members before any match settlement', async () => {
+    fightingMatch();
+    rows('AIBattleMatch')[0].player_ids = ['b', 'other'];
+    await battle(action, { match_id: 'fight' }, 'a', 404);
+    assert.equal(writes.length, 0);
+  });
+}
+
 for (const action of ['cancel', 'reset']) {
   test(action + ' before combat ends the match and releases both players loadout locks', async () => {
     await battle('join', { mode: 'pvp' }, 'b');
