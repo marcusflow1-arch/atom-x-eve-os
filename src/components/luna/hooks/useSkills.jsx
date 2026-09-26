@@ -164,7 +164,11 @@ export function useSkills() {
       if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target instanceof HTMLElement && target.isContentEditable) return;
 
-      const key = String(event.key || '');
+      // Use physical Digit1..Digit5 as the primary mapping so skills still cast
+      // while WASD movement/gameplay handlers are active or on non-US layouts.
+      // Fall back to event.key for accessibility/on-screen keyboard input.
+      const codeMatch = /^Digit([1-5])$/.exec(String(event.code || ''));
+      const key = codeMatch?.[1] || String(event.key || '');
       if (!['1', '2', '3', '4', '5'].includes(key)) return;
 
       const slotIndex = Number(key) - 1;
@@ -179,10 +183,13 @@ export function useSkills() {
       triggerSkill(slotIndex, event?.detail?.source || 'dashboard_click');
     };
 
-    window.addEventListener('keydown', handleSkillKey);
+    // Capture phase is intentional: 3D movement/game controls may consume key
+    // events later in the bubble phase. Skill slots must remain usable while the
+    // avatar is walking and inside PvP.
+    window.addEventListener('keydown', handleSkillKey, true);
     window.addEventListener('lunaRequestSkillSlotActivation', handleRequestedSlot);
     return () => {
-      window.removeEventListener('keydown', handleSkillKey);
+      window.removeEventListener('keydown', handleSkillKey, true);
       window.removeEventListener('lunaRequestSkillSlotActivation', handleRequestedSlot);
     };
   }, []);
