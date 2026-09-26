@@ -3,21 +3,17 @@
   "type": "object",
   "properties": {
     "title": {
-      "type": "string",
-      "description": "Game title"
+      "type": "string"
     },
     "description": {
-      "type": "string",
-      "description": "Detailed game description"
+      "type": "string"
     },
     "original_year": {
-      "type": "number",
-      "description": "Original release year"
+      "type": "number"
     },
     "release_date": {
       "type": "string",
-      "format": "date",
-      "description": "Confirmed release date (YYYY-MM-DD), used for Aura's release discovery lane"
+      "format": "date"
     },
     "genre": {
       "type": "string",
@@ -42,8 +38,7 @@
         "open_world",
         "sandbox",
         "other"
-      ],
-      "description": "Primary genre of the game"
+      ]
     },
     "status": {
       "type": "string",
@@ -56,65 +51,47 @@
       "default": "available"
     },
     "cover_image": {
-      "type": "string",
-      "description": "URL for the game's primary cover image"
+      "type": "string"
     },
     "banner_image": {
-      "type": "string",
-      "description": "URL for the game's wide banner/background image"
+      "type": "string"
     },
     "screenshots": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "List of URLs for game screenshots"
+      }
     },
     "video_urls": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "List of URLs for game videos/trailers (YouTube, etc.)"
+      }
     },
     "trailer_url": {
-      "type": "string",
-      "description": "URL for the game's main trailer (Legacy)"
+      "type": "string"
     },
     "price": {
-      "type": "number",
-      "description": "Price of the game in USD"
+      "type": "number"
     },
     "play_link": {
-      "type": "string",
-      "description": "URL or command to launch the game"
+      "type": "string"
     },
     "system_requirements": {
-      "type": "object",
-      "properties": {
-        "os": {
-          "type": "string"
-        },
-        "processor": {
-          "type": "string"
-        },
-        "memory": {
-          "type": "string"
-        },
-        "graphics": {
-          "type": "string"
-        },
-        "storage": {
-          "type": "string"
-        }
-      }
+      "type": "object"
     },
     "tags": {
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "starter_card_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
       },
-      "description": "Additional tags for categorization"
+      "default": []
     }
   },
   "required": [
