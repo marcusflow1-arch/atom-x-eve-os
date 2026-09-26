@@ -16,6 +16,9 @@ const GETSUGA_EFFECT = {
 };
 
 const ARTEMIS_CARD_PREFIX = 'artemis_';
+// Exact user-supplied Artemis package. Like the working male Getsuga card, every
+// Artemis ability card records the model package that owns its embedded clip.
+const ARTEMIS_MODEL_URL = '/models/atomxe-artemis-archer.glb';
 const artemisCardImage = (label: string, glyph: string, glow: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 720">
   <defs>
@@ -33,17 +36,17 @@ const ARTEMIS_ABILITIES = [
   {
     card_name: 'Artemis — Call of the Husky',
     card_image: artemisCardImage('CALL OF THE HUSKY', '✦', '#65d9ff'),
-    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', duration_ms: 2000, cooldown_ms: 7000 },
+    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', model_url: ARTEMIS_MODEL_URL, duration_ms: 2000, cooldown_ms: 7000 },
   },
   {
     card_name: 'Artemis — Rain of Arrows',
     card_image: artemisCardImage('RAIN OF ARROWS', '⌁', '#91a7ff'),
-    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', duration_ms: 3000, cooldown_ms: 8500 },
+    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', model_url: ARTEMIS_MODEL_URL, duration_ms: 3000, cooldown_ms: 8500 },
   },
   {
     card_name: 'Artemis — Lunar Beam',
     card_image: artemisCardImage('LUNAR BEAM', '☾', '#d19cff'),
-    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', duration_ms: 3600, cooldown_ms: 10000 },
+    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', model_url: ARTEMIS_MODEL_URL, duration_ms: 3600, cooldown_ms: 10000 },
   },
 ] as const;
 
@@ -157,7 +160,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     rows = [await svc.Loadout.create({
       user_id: userId,
       name: first.name,
-      description: 'Persistent five-slot Luna Skill Book genre row.',
+      description: 'Persistent four-slot Luna Skill Book genre row.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
@@ -198,7 +201,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     rows.push(await svc.Loadout.create({
       user_id: userId,
       name: preset.name,
-      description: 'Persistent five-slot Luna Skill Book genre row.',
+      description: 'Persistent four-slot Luna Skill Book genre row.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
