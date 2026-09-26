@@ -71,14 +71,18 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     }));
   };
   const onCardAnimationEffectProc = (event) => {
-    const effect = event?.detail?.effect || {};
+    const detail = event?.detail || {};
+    const effect = detail.effect || {};
     const effectId = String(effect?.id || '').trim().toLowerCase();
     if (effectId === 'getsuga_tensho') {
-      if (!disposed && model && getsuga) getsuga.play();
+      const accepted = Boolean(!disposed && model && getsuga && getsuga.play());
+      if (accepted) detail.accepted = true;
       return;
     }
     if (effectId.startsWith('artemis_') && options.artemisFemale && !disposed && model && artemis) {
-      artemis.playEffect(effect, event?.detail || {});
+      const accepted = Boolean(artemis.playEffect(effect, detail));
+      if (accepted) detail.accepted = true;
+      else if (!detail.rejectionReason) detail.rejectionReason = `Artemis clip unavailable: ${effect.clip_name || effect.clipName || 'unknown'}`;
     }
   };
   if (options.skillEffects && typeof window !== 'undefined') {
