@@ -11,13 +11,15 @@ const motionRoot = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/m
 export const GLOBAL_AVATAR_MODEL_ID = '6ab3bf0728d93c06fcff4c05';
 export const GLOBAL_AVATAR_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
 // Admin > 3D Models > "artemis" (Model3D id: 6aa956f030a57c7e90bbc7e6).
-// This is the only female base body used by Genesis.
+// This is the only female base body used by Genesis. The canonical Artemis package
+// owns her skeleton, bow, Idle/Combat_Idle transitions and embedded ability clips.
+// Keep this URL isolated so replacing the uploaded GLB updates every female viewer.
 export const FEMALE_ARTEMIS_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/9c8e45258_Hi3D_Cel-ShadedGreekMythicArcherArtemis3DModel_allparts_20260915_100610.glb';
 export const GLOBAL_AVATAR_NAME = 'Luna AI';
 
 // Female creation intentionally exposes one canonical body only.
 export const FEMALE_MODEL_VARIANTS = {
-  artemis_archer: { id: 'artemis_archer', name: 'Artemis', url: FEMALE_ARTEMIS_MODEL_URL, idleOnly: true, isDefault: true },
+  artemis_archer: { id: 'artemis_archer', name: 'Artemis', url: FEMALE_ARTEMIS_MODEL_URL, idleOnly: false, embeddedAbilities: true, isDefault: true },
 };
 
 export const COMPANION_MODELS = {
