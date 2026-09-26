@@ -44,10 +44,20 @@ export function useDashboardRoom(channel,user,envUrl){
    }finally{if(!disposed)timer=setTimeout(tick,retryDelay);}
   };
   tick();
+  const leaveNow=()=>{
+   base44.functions.fetch('/dashboardSession',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'leave',data:{channel_id:channel}}),
+    keepalive:true,
+   }).catch(()=>{});
+  };
+  window.addEventListener('pagehide',leaveNow);
   return()=>{
    disposed=true;clearTimeout(timer);
+   window.removeEventListener('pagehide',leaveNow);
    dashboardSession.publish({});
-   base44.functions.invoke('dashboardSession',{action:'leave',data:{channel_id:channel}}).catch(()=>{});
+   leaveNow();
   };
  },[channel,user?.id]);
  return participants;
