@@ -665,7 +665,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     togglePaused,
     isPaused: () => paused,
     rotate: (amount) => {
-      if (getsuga?.isPlaying()) return;
+      if (getsuga?.isPlaying() || artemis?.isPlaying()) return;
       if (model) model.rotation.y += amount;
       if (secondaryRoot) secondaryRoot.rotation.y += amount;
     },
