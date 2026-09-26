@@ -10,21 +10,22 @@ export default function FriendInteractionPanel({ friend, onClose, currentUserId 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [partyMessage, setPartyMessage] = useState('');
-  const conversationId = [currentUserId, friend.friend_id].sort().join('-');
+  const conversationId = [currentUserId, friend.friend_id].sort().join('::');
 
   useEffect(() => { if (activeTab === 'messages') loadMessages(); }, [activeTab]);
 
   const loadMessages = async () => {
     try {
-      const msgs = await base44.entities.DirectMessage.filter({ conversation_id: conversationId });
-      setMessages(msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
+      const response = await base44.functions.invoke('socialActions', { action: 'get_thread', data: { target_user_id: friend.friend_id } });
+      const body = response?.data || response || {};
+      setMessages((body.messages || []).sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
     } catch (error) { console.error('Failed to load messages:', error); }
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
     try {
-      await base44.entities.DirectMessage.create({ sender_id: currentUserId, receiver_id: friend.friend_id, content: newMessage, conversation_id: conversationId });
+      await base44.functions.invoke('socialActions', { action: 'send_message', data: { target_user_id: friend.friend_id, content: newMessage } });
       setNewMessage('');
       loadMessages();
     } catch (error) { console.error('Failed to send message:', error); }
@@ -45,7 +46,7 @@ export default function FriendInteractionPanel({ friend, onClose, currentUserId 
 
   const removeFriend = async () => {
     if (!confirm(`Remove ${friend.friend_name} from friends?`)) return;
-    try { await base44.entities.Friend.delete(friend.id); onClose(); }
+    try { await base44.functions.invoke('socialActions', { action: 'remove_friend', data: { friend_user_id: friend.friend_id } }); onClose(); }
     catch (error) { console.error('Failed to remove friend:', error); }
   };
 
