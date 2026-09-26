@@ -7,6 +7,7 @@ import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onb
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
 import { GetsugaDashboardRuntime, createGetsugaIdleClip } from '@/components/getsuga/GetsugaDashboardRuntime';
+import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -55,6 +56,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let getsuga = null;
+  let artemis = null;
   const emitGetsugaEvent = (name, detail = {}) => {
     if (typeof window !== 'undefined') {
       const payload = { effectId: 'getsuga_tensho', name, ...detail };
@@ -62,10 +64,22 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       window.dispatchEvent(new CustomEvent('lunaGetsugaTenshoEvent', { detail: payload }));
     }
   };
+  const emitArtemisEvent = (name, detail = {}) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('lunaCardAnimationEffectEvent', {
+      detail: { name, ...detail },
+    }));
+  };
   const onCardAnimationEffectProc = (event) => {
-    const effectId = String(event?.detail?.effect?.id || '').trim().toLowerCase();
-    if (effectId !== 'getsuga_tensho') return;
-    if (!disposed && model && getsuga) getsuga.play();
+    const effect = event?.detail?.effect || {};
+    const effectId = String(effect?.id || '').trim().toLowerCase();
+    if (effectId === 'getsuga_tensho') {
+      if (!disposed && model && getsuga) getsuga.play();
+      return;
+    }
+    if (effectId.startsWith('artemis_') && options.artemisFemale && !disposed && model && artemis) {
+      artemis.playEffect(effect, event?.detail || {});
+    }
   };
   if (options.skillEffects && typeof window !== 'undefined') {
     window.addEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
@@ -175,6 +189,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     secondaryMixer?.update(dt);
     secondaryMotionMixer?.update(dt);
     getsuga?.update(dt);
+    artemis?.update(dt);
 
     if (secondaryMotionBridge && secondaryModel) {
       const { hips, spine, restHipsPosition, restHipsQuaternion, restSpineQuaternion, basePosition: childBasePosition, baseQuaternion } = secondaryMotionBridge;
@@ -356,6 +371,11 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   }
 
   async function play(motion) {
+    if (artemis && /idle/i.test(String(motion?.name || motion?.command || ''))) {
+      artemis.playIdle();
+      onStatus('ready', 'Idle');
+      return;
+    }
     if (embeddedController) { embeddedController.command(motion?.command || 'idle'); return; }
     if (!motion?.url) return;
     const version = ++animationVersion;
@@ -544,12 +564,21 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         mixer = new THREE.AnimationMixer(model);
         applyCompanionAppearance(model, appearance);
 
-        if (preserveAppearance) {
+        if (options.artemisFemale && atomxeRuntimeRig) {
+          // The authored Artemis package owns its skeleton, bow, transitions,
+          // combat idles and ability clips. Never retarget these attacks onto a
+          // different rig: Skill Book cards call their embedded clips directly.
+          artemis = new ArtemisDashboardRuntime({
+            root: model,
+            mixer,
+            animations: asset.animations || [],
+            onEvent: emitArtemisEvent,
+            relaxAfter: 6,
+          });
+          onStatus('ready', 'Idle');
+        } else if (preserveAppearance) {
           embeddedController = createEmbeddedAvatarController(model, asset.animations || [], mixer, (state) => onStatus('ready', state.clip));
         } else if (atomxeRuntimeRig) {
-          // Both selectable female bodies ship with an embedded Idle fallback and
-          // standard Mixamo bone names. Start the fallback immediately so the
-          // avatar never appears frozen while an external motion clip is loading.
           const idleClip = (asset.animations || []).find((clip) => /^idle$/i.test(clip.name || '')) || asset.animations?.[0];
           if (idleClip) {
             action = mixer.clipAction(idleClip);
@@ -573,7 +602,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   })();
 
   const move = (x = 0, z = 0, distance = .05) => {
-    if (!model || !basePosition || getsuga?.isPlaying()) return;
+    if (!model || !basePosition || getsuga?.isPlaying() || artemis?.isPlaying()) return;
     if (paused || (embeddedController && !embeddedController.canMove())) return;
 
     const previous = model.position.clone();
@@ -592,7 +621,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     }
   };
   const resetPosition = () => {
-    if (getsuga?.isPlaying()) return;
+    if (getsuga?.isPlaying() || artemis?.isPlaying()) return;
     if (model && basePosition) {
       model.position.copy(basePosition);
       model.rotation.y = 0;
@@ -616,8 +645,14 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   return {
     appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model && !options.getsugaMale) applyCompanionAppearance(model, appearance);  },
     play,
-    command: (value) => { setPaused(false); if (options.getsugaMale && value === 'idle') getsuga?.playIdle?.(); else embeddedController?.command(value); },
+    command: (value) => {
+      setPaused(false);
+      if (options.getsugaMale && value === 'idle') getsuga?.playIdle?.();
+      else if (options.artemisFemale && value === 'idle') artemis?.playIdle?.();
+      else embeddedController?.command(value);
+    },
     getsugaIdle: () => getsuga?.playIdle?.(),
+    artemisIdle: () => artemis?.playIdle?.(),
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
     animationState: () => embeddedController?.snapshot(),
     move,
@@ -637,6 +672,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         window.removeEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
       }
       getsuga?.dispose();
+      artemis?.dispose();
       observer.disconnect();
       visibility?.disconnect();
       controls.dispose();
