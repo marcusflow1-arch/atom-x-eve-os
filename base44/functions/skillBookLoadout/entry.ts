@@ -257,29 +257,22 @@ async function ensureSkillSets(base44: any, userId: string) {
 
 async function buildState(base44: any, user: AnyObj) {
   const svc = base44.asServiceRole.entities;
-  const femaleAvatar = await femaleAvatarEnabled(svc, user.id);
-  const [demoAbility] = await Promise.all([
-    ensureDemoAbility(svc, user.id),
-    // Artemis cards are part of the shared Skill Book catalog for every player.
-    // Runtime activation remains locked to the Artemis female model itself.
-    ensureArtemisAbilities(svc, user.id),
-  ]);
-  const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
+  const { rows: loadouts, active, created } = await ensureSkillSets(base44, user.id);
 
-  // Make the uploaded demo immediately testable without overwriting a player's
-  // existing setup: Getsuga occupies Skill Slot 1 only when that slot is empty.
-  if (active && demoAbility && !(active.skill_slots || {})['0']) {
-    const nextSlots = { ...(active.skill_slots || {}), '0': demoAbility.id };
-    await Promise.all([
-      svc.Loadout.update(active.id, { skill_slots: nextSlots }),
-      svc.UserCard.update(demoAbility.id, { is_equipped: true }),
-    ]);
-    active.skill_slots = nextSlots;
+  // Only a brand-new Skill Book gets the demo card in slot 1. Once a player
+  // empties that slot, a normal read never refills it.
+  if (created && active && !(active.skill_slots || {})['0']) {
+    const demoAbility = (await svc.UserCard.filter({ user_id: user.id, card_name: 'Ichigo Kurosaki - Getsuga Tenshō' }, '-created_date', 1))?.[0];
+    if (demoAbility) {
+      const nextSlots = { ...(active.skill_slots || {}), '0': demoAbility.id };
+      await svc.Loadout.update(active.id, { skill_slots: nextSlots });
+      active.skill_slots = nextSlots;
+    }
   }
   const [ownedCards, achievements, games, progressions] = await Promise.all([
     svc.UserCard.filter({ user_id: user.id }, '-created_date', 1000),
-    svc.Achievement.list('-created_date', 1500),
-    svc.Game.list('-created_date', 750),
+    svc.Achievement.filter({ category: 'ability' }, '-created_date', 500),
+    svc.Game.list('-created_date', 250),
     svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500).catch(() => []),
   ]);
 
@@ -376,7 +369,7 @@ async function buildState(base44: any, user: AnyObj) {
   const ownedById = new Map(ownedSkills.map((card: AnyObj) => [String(card.id), card]));
   const serializeLoadout = (loadout: AnyObj) => {
     const slotIds = loadout?.skill_slots || {};
-    const slots = Array.from({ length: 4 }, (_, index) => {
+    const slots = Array.from({ length: SKILL_SLOT_COUNT }, (_, index) => {
       const cardId = slotIds[String(index)] || slotIds[index];
       const availableCard = cardId ? ownedById.get(String(cardId)) || null : null;
       return {
@@ -436,6 +429,10 @@ Deno.serve(async (req) => {
     const data = body?.data || {};
     const svc = base44.asServiceRole.entities;
 
+    if (action === 'bootstrap') {
+      await Promise.all([ensureDemoAbility(svc, user.id), ensureArtemisAbilities(svc, user.id)]);
+      return json(await buildState(base44, user));
+    }
     if (action === 'getState') return json(await buildState(base44, user));
 
     if (action === 'selectSkillSet' || action === 'selectJawan') {
@@ -459,14 +456,11 @@ Deno.serve(async (req) => {
     if (action === 'equip') {
       const slot = Number(data.slot);
       const userCardId = String(data.user_card_id || '').trim();
-      if (!Number.isInteger(slot) || slot < 0 || slot > 3) return json({ error: 'Skill slot must be between 0 and 3' }, 400);
+      if (!Number.isInteger(slot) || slot < 0 || slot >= SKILL_SLOT_COUNT) return json({ error: `Skill slot must be between 0 and ${SKILL_SLOT_COUNT - 1}` }, 400);
       if (!userCardId) return json({ error: 'Owned skill card is required' }, 400);
       const card = await svc.UserCard.get(userCardId).catch(() => null);
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
       if (card.card_type !== 'Ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
-      if (isArtemisCard(card) && !(await femaleAvatarEnabled(svc, user.id))) {
-        return json({ error: 'Artemis ability cards are available only to the female Artemis avatar.' }, 403);
-      }
       if (card.trade_status === 'locked_in_trade') return json({ error: 'That skill card is locked in a trade' }, 409);
 
       const previous = { ...(loadout.skill_slots || {}) };
@@ -488,7 +482,7 @@ Deno.serve(async (req) => {
 
     if (action === 'unequip') {
       const slot = Number(data.slot);
-      if (!Number.isInteger(slot) || slot < 0 || slot > 3) return json({ error: 'Skill slot must be between 0 and 3' }, 400);
+      if (!Number.isInteger(slot) || slot < 0 || slot >= SKILL_SLOT_COUNT) return json({ error: `Skill slot must be between 0 and ${SKILL_SLOT_COUNT - 1}` }, 400);
       const next = { ...(loadout.skill_slots || {}) };
       const oldCardId = next[String(slot)] || null;
       delete next[String(slot)];
