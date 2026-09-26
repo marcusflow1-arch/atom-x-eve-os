@@ -56,21 +56,9 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "data.player_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "data.player_id": {
-            "$ne": ""
-          }
-        }
-      ]
+      "user_condition": {
+        "id": "{{user.id}}"
+      }
     },
     "create": {
       "$or": [
