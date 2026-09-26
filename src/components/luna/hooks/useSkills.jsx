@@ -164,7 +164,7 @@ export function useSkills() {
       if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target instanceof HTMLElement && target.isContentEditable) return;
 
-      // Use physical Digit1..Digit5 as the primary mapping so skills still cast
+      // Use physical Digit1..Digit4 as the primary mapping so skills still cast
       // while WASD movement/gameplay handlers are active or on non-US layouts.
       // Fall back to event.key for accessibility/on-screen keyboard input.
       const codeMatch = /^Digit([1-4])$/.exec(String(event.code || ''));
