@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './auth/AuthContext';
 import { toast } from 'sonner';
+import useOwnedGames from '@/components/store/useOwnedGames';
 
 const CartContext = createContext(null);
 
@@ -27,6 +28,7 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user } = useAuth();
+  const ownership = useOwnedGames();
 
   useEffect(() => {
     try {
@@ -77,10 +79,7 @@ export const CartProvider = ({ children }) => {
 
   const getCartCount = () => cart.length;
 
-  const isPurchased = (gameId) => {
-    if (!user || !user.purchased_items) return false;
-    return user.purchased_items.includes(gameId);
-  };
+  const isPurchased = (gameId) => Boolean(user && ownership.gameIds.includes(gameId));
 
   const value = {
     cart,
