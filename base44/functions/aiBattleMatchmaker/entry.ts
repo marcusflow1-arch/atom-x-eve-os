@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 import { ATB_START, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
+import { grantAchievement } from '../../shared/rewardEngine.ts';
 
 type Row = Record<string, any>;
 const MODES = new Set(['pvp', 'pve', 'world_boss']);
@@ -128,6 +129,13 @@ function winnerByHp(match: Row) {
   return String(score(players[0]) > score(players[1]) ? players[0].id : players[1].id);
 }
 
+async function finalizeMatchRewards(svc: any, match: Row | null) {
+  if (!match || match.status !== 'ended' || match.mode !== 'pvp' || !match.winner_id) return;
+  const achievements = await svc.Achievement.list('title', 5000).catch(() => []);
+  const matches = achievements.filter((row:Row) => row.event_rule?.event_key === 'platform.first_pvp_win');
+  for (const achievement of matches) await grantAchievement(svc, String(match.winner_id), achievement.id, 'platform', { progress: { event_key: 'platform.first_pvp_win', match_id: match.id } });
+}
+
 async function settleMatch(svc: any, input: Row | null) {
   if (!input || input.status === 'ended') return input;
   let match = { ...input, players: (input.players || []).map((p: Row) => ({ ...p })), pending_hits: [...(input.pending_hits || [])], hit_log: [...(input.hit_log || [])] };
@@ -183,7 +191,10 @@ async function settleMatch(svc: any, input: Row | null) {
     status: match.status, players: match.players, pending_hits: match.pending_hits, hit_log: match.hit_log,
     attack_revision: match.attack_revision, last_attack: match.last_attack, winner_id: match.winner_id || '', ended_reason: match.ended_reason || '', ended_at: match.ended_at || undefined,
   });
-  if (match.status === 'ended') await clearMatchForPlayers(svc, match);
+  if (match.status === 'ended') {
+    await finalizeMatchRewards(svc, match);
+    await clearMatchForPlayers(svc, match);
+  }
   return match;
 }
 
@@ -275,7 +286,7 @@ Deno.serve(async (req) => {
       return json({queue:publicQueue(queue),match:publicMatch(paired&&(paired.player_ids||[]).map(String).includes(userId)?paired:null),server_time:Date.now()});
     }
     if (action === 'cancel' || action === 'reset') {
-      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);const ended=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});await clearMatchForPlayers(svc,ended);}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
+      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);const ended=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});await finalizeMatchRewards(svc,ended);await clearMatchForPlayers(svc,ended);}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
     }
     if (action === 'ready') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
@@ -293,6 +304,7 @@ Deno.serve(async (req) => {
     if (action === 'forfeit') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       const winner=(match.player_ids||[]).map(String).find((id:string)=>id!==userId)||''; match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:winner,ended_reason:'forfeit',ended_at:nowIso()});
+      await finalizeMatchRewards(svc,match);
       await clearMatchForPlayers(svc,match);
       return json({match:publicMatch(match),server_time:Date.now()});
     }
