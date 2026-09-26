@@ -394,6 +394,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
           hp={localHp}
           maxHp={localMaxHp}
           playerName={battlePair.local.display_name || 'You'}
+          selectable={battleTurnOwner === 'local'}
         />
 
         <div
@@ -453,7 +454,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
       {/*
         Cinematic card-selection camera. This does NOT move either gameplay
         character. It is a straight-on visual copy of the opponent so the local
-        player sees their face directly, with the five cards floating tightly at
+        player sees their face directly, with the four cards floating tightly at
         chest/hand height like a first-person Duel Monsters hand.
       */}
       {battleCameraMode === 'selection' && battleTurnOwner === 'local' && (
