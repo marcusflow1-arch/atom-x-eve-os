@@ -30,6 +30,8 @@ export class ArtemisDashboardRuntime {
     this.busy = false;
     this.queued = null;
     this.cast = null;
+    this.activeTarget = null;
+    this.lockedFacingYaw = Number(root?.rotation?.y || 0);
     this.firedImpact = false;
     this.calmFor = 0;
     this.disposed = false;
@@ -166,7 +168,13 @@ export class ArtemisDashboardRuntime {
       return false;
     }
 
-    const request = { effectId, clipName, effect, detail };
+    const target = detail?.target || (typeof window !== 'undefined' ? window.__lunaAIBattleTarget : null) || null;
+    const targetYaw = Number(target?.facingYaw);
+    this.activeTarget = target;
+    this.lockedFacingYaw = Number.isFinite(targetYaw) ? targetYaw : this.lockedFacingYaw;
+    if (this.root) this.root.rotation.y = this.lockedFacingYaw;
+
+    const request = { effectId, clipName, effect, detail: { ...detail, target } };
     if (this.home === 'Idle' && this.hasClip('Bow_Draw')) {
       this.busy = true;
       this.queued = request;
@@ -208,6 +216,7 @@ export class ArtemisDashboardRuntime {
 
   update(dt) {
     if (this.disposed) return;
+    if (this.root && (this.busy || this.cast)) this.root.rotation.y = this.lockedFacingYaw;
     if (this.cast && this.action) {
       const event = ABILITY_EVENTS[this.cast.clipName];
       if (event && !this.firedImpact && this.action.time >= event.impact) {
@@ -237,6 +246,7 @@ export class ArtemisDashboardRuntime {
     this.actions.forEach((action) => action.stop());
     this.actions.clear();
     this.cast = null;
+    this.activeTarget = null;
     this.queued = null;
   }
 }
