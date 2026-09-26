@@ -12,7 +12,6 @@ import SkillTreeContent from '@/components/genremastery/CardsSkillTree';
 import AchievementsContent from '@/components/genremastery/AchievementsContent';
 import GenreBottomNav from '@/components/genremastery/GenreBottomNav';
 import CardsHome from '@/components/genremastery/CardsHome';
-import CardsExchange from '@/components/genremastery/CardsExchange';
 import { CardArtwork } from '@/components/genremastery/CollectibleCard';
 import useCardsCatalog from '@/components/genremastery/useCardsCatalog';
 import { gameMatchesGenre, readCardPages } from '@/components/genremastery/cardsCatalog';
@@ -57,14 +56,22 @@ export default function GenreMastery({ onClose }) {
   const genreCards = useMemo(() => { const ids = new Set(genreGames.map((game) => game.id)); return catalog.cards.filter((card) => ids.has(card.gameId)); }, [catalog.cards, genreGames]);
   const cards = useMemo(() => selectedGame ? genreCards.filter((card) => card.gameId === selectedGame.id) : genreCards, [genreCards, selectedGame]);
   const selectView = (view) => {
-    if (view === 'blackmarket' || view === 'tradingpost') setMarketView(view);
-    else { setMarketView('cards'); setRightPanel(view); }
+    if (view === 'blackmarket') {
+      navigate(`${createPageUrl('Store')}?mode=trading&view=blackmarket`);
+      return;
+    }
+    if (view === 'tradingpost') {
+      navigate(`${createPageUrl('Store')}?mode=trading`);
+      return;
+    }
+    setMarketView('cards');
+    setRightPanel(view);
     setMobileGames(false);
   };
   const selectGame = (game) => { setSelectedGame(game); setMobileGames(false); if (rightPanel === 'skilltree') setRightPanel('games'); };
   useEffect(() => {
     const mode = new URLSearchParams(location.search).get('mode');
-    setMarketView(mode === 'blackmarket' || mode === 'tradingpost' ? mode : 'cards');
+    setMarketView('cards');
     setRightPanel(mode === 'achievements' || mode === 'skilltree' ? mode : 'games');
   }, [location.search]);
   useEffect(() => {
@@ -84,7 +91,7 @@ export default function GenreMastery({ onClose }) {
       <div className="cc-workspace">
         <aside id="cc-game-library" className="cc-library" data-mobile-open={mobileGames} aria-label="Game library"><div className="cc-library-heading"><span className="cc-eyebrow">Game library</span><span>{genreGames.length}</span></div><label className="cc-search"><Search size={14} /><input aria-label="Search games" placeholder="Search games" value={gameSearch} onChange={(event) => setGameSearch(event.target.value)} />{gameSearch && <button onClick={() => setGameSearch('')} aria-label="Clear game search"><X size={13} /></button>}</label><div className="cc-game-list"><button className="cc-all-games" aria-pressed={!selectedGame} onClick={() => selectGame(null)}><Layers size={16} /><span>All {selectedGenre.name} games</span></button>{gamesQuery.isLoading ? <p role="status" className="cc-library-note">Loading games…</p> : visibleGames.map((game) => <button key={game.id} className="cc-game-link" aria-pressed={selectedGame?.id === game.id} onClick={() => selectGame(game)}><CardArtwork src={game.cover_image || game.cover} /><span><strong>{game.title}</strong><small>{genreCards.filter((card) => card.gameId === game.id).length} cards</small></span></button>)}{!gamesQuery.isLoading && !visibleGames.length && <p className="cc-library-note">{gameSearch ? 'No games match your search.' : 'No games in this genre yet.'}</p>}{gamesQuery.isError && <button className="cc-button" onClick={() => gamesQuery.refetch()}>Retry games</button>}</div><div className="cc-library-footer"><selectedGenre.icon size={19} /><div><strong>{selectedGenre.name} mastery</strong><span>Account-wide genre perks</span></div></div></aside>
         <div className="cc-content">
-          {marketView !== 'cards' ? <CardsExchange key={`${marketView}:${selectedGenre.id}:${selectedGame?.id || 'all'}`} mode={marketView} selectedGame={selectedGame} games={genreGames} cards={cards} user={catalog.user} /> : rightPanel === 'achievements' ? <AchievementsContent genre={selectedGenre} selectedGame={selectedGame} cards={cards} isLoading={catalog.isLoading} isError={catalog.isError} onRetry={catalog.retry} /> : rightPanel === 'skilltree' ? <SkillTreeContent key={selectedGenre.id} genre={selectedGenre} /> : selectedGame ? <div className="cc-game-detail"><GenreGameDetail game={selectedGame} genre={selectedGenre} onClose={() => setSelectedGame(null)} /></div> : <CardsHome genre={selectedGenre} games={genreGames} cards={genreCards} onGameSelect={selectGame} onViewSelect={selectView} isLoading={gamesQuery.isLoading} isError={gamesQuery.isError} onRetry={() => gamesQuery.refetch()} />}
+          {rightPanel === 'achievements' ? <AchievementsContent genre={selectedGenre} selectedGame={selectedGame} cards={cards} isLoading={catalog.isLoading} isError={catalog.isError} onRetry={catalog.retry} /> : rightPanel === 'skilltree' ? <SkillTreeContent key={selectedGenre.id} genre={selectedGenre} /> : selectedGame ? <div className="cc-game-detail"><GenreGameDetail game={selectedGame} genre={selectedGenre} onClose={() => setSelectedGame(null)} /></div> : <CardsHome genre={selectedGenre} games={genreGames} cards={genreCards} onGameSelect={selectGame} onViewSelect={selectView} isLoading={gamesQuery.isLoading} isError={gamesQuery.isError} onRetry={() => gamesQuery.refetch()} />}
         </div>
       </div>
       <SidebarOverlays className="absolute top-0 left-0 right-0 bottom-0 z-[80]" />
