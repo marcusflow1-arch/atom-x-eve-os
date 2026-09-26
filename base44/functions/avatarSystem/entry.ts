@@ -1,6 +1,7 @@
 import {normalizeAvatarAppearance} from '../../shared/normalizeAvatarAppearance.ts';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
+import { grantAchievement } from '../../shared/rewardEngine.ts';
 
 type AnyObj = Record<string, any>;
 const GLOBAL_AVATAR_MODEL = '/models/luna-hi3d/warrior.glb';
@@ -133,6 +134,13 @@ export default async function(req) {
     }
 }
 
+async function grantPlatformEvent(base44, userId, eventKey) {
+    const svc = base44.asServiceRole.entities;
+    const achievements = await svc.Achievement.list('title', 5000).catch(() => []);
+    const matches = achievements.filter((row:any) => row.event_rule?.event_key === eventKey);
+    for (const achievement of matches) await grantAchievement(svc, userId, achievement.id, 'platform', { progress: { event_key: eventKey } });
+}
+
 async function initializeAvatar(base44, user, requestBody) {
     const gender = requestBody.gender === 'female' ? 'female' : 'male';
     const femaleVariant = gender === 'female' ? 'artemis_archer' : '';
@@ -236,6 +244,7 @@ async function initializeAvatar(base44, user, requestBody) {
         avatar_id: avatar.id,
         avatar_archetype: gender === 'female' ? 'eve' : 'atum'
     });
+    await grantPlatformEvent(base44, user.id, 'platform.first_login');
 
     return { success: true, avatar, home, behaviorState, mindSeed };
 }
