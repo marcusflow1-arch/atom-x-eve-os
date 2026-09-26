@@ -23,7 +23,7 @@ export default function ActiveVoiceControls({ room, onLeave }) {
     }, []);
 
     const participantIds = room?.participants?.map(p => p.id) || [];
-    useWebRTCVoice(room?.id, user, isMuted, isDeafened, participantIds);
+    useWebRTCVoice(room?.id, user, isMuted, isDeafened, participantIds, { data: false });
 
     // Simulate speaking indicator
     useEffect(() => {
