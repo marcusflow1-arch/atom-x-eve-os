@@ -405,8 +405,11 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
         >
           <PlayerAvatarPreview
             controls="none"
-            idleOnly
+            idleOnly={false}
             skillEffects
+            combatMovement
+            combatCamera
+            movementRadius={10}
             initialYaw={Math.PI / 2}
           />
         </div>
@@ -440,6 +443,9 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
             compact
             controls="none"
             idleOnly
+            skillEffects
+            remoteSkillPlayerId={String(battlePair.opponent.player_id)}
+            remoteFacingYaw={-Math.PI / 2}
             initialYaw={-Math.PI / 2}
           />
         </div>
