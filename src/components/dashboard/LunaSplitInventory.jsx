@@ -14,7 +14,6 @@ import {
   UserRound,
   Wrench,
 } from 'lucide-react';
-import { libraryGames } from '@/components/dashboard/gamehub/mockLibraryData';
 import { getEquipmentSlotLabel, itemFitsSlot } from './equipmentSlotRules';
 
 const FILTERS = [
@@ -32,25 +31,6 @@ const ASC_FILTERS = [
   { id: 'materials', label: 'Materials' },
 ];
 
-const FALLBACK_GAME_META = {
-  'Elder Scrolls: Reborn': {
-    image: 'https://cdn.cloudflare.steamstatic.com/steam/apps/306130/header.jpg',
-    genre: 'RPG / Fantasy',
-  },
-  'Atom X Eve': {
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=900&h=500&fit=crop',
-    genre: 'Action RPG',
-  },
-  'Vanguard Ops': {
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=900&h=500&fit=crop',
-    genre: 'Shooter',
-  },
-  'Cyberpunk 2088': {
-    image: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=900&h=500&fit=crop',
-    genre: 'Sci-Fi',
-  },
-};
-
 const rarityClass = {
   Mythic: 'border-red-300/20 text-red-200/70',
   Mythical: 'border-red-300/20 text-red-200/70',
@@ -63,14 +43,7 @@ const rarityClass = {
 
 const itemIdOf = (item) => item?.id || item?.itemId || item?.name;
 
-const normalizeGame = (item) => {
-  if (item?.game) return item.game;
-  const compatibility = item?.genreCompatibility || [];
-  if (compatibility.some((genre) => /mmo|fantasy|rpg/i.test(genre))) return 'Elder Scrolls: Reborn';
-  if (compatibility.some((genre) => /shooter/i.test(genre))) return 'Vanguard Ops';
-  if (compatibility.some((genre) => /sci-fi|scifi/i.test(genre))) return 'Cyberpunk 2088';
-  return 'Atom X Eve';
-};
+const normalizeGame = (item) => item?.game_title || item?.game || item?.game_name || 'Unassigned Game';
 
 const normalizeCategory = (item) => {
   const type = String(item?.inventoryCategory || item?.itemType || item?.type || '').toLowerCase();
@@ -117,22 +90,18 @@ export default function LunaSplitInventory({
 
   const gameMeta = useMemo(() => {
     const map = new Map();
-    (libraryGames || []).forEach((game) => {
-      const title = gameTitleOf(game);
-      if (!title) return;
-      map.set(title.toLowerCase(), {
+    for (const item of items) {
+      const title = item.game || item.game_title || item.game_name;
+      if (!title) continue;
+      const key = String(title).toLowerCase();
+      if (!map.has(key)) map.set(key, {
         title,
-        image: gameImageOf(game),
-        genre: gameGenreOf(game),
+        image: item.game_image || item.banner_image || item.cover_image || '',
+        genre: item.genre || '',
       });
-    });
-
-    Object.entries(FALLBACK_GAME_META).forEach(([title, meta]) => {
-      const key = title.toLowerCase();
-      if (!map.has(key)) map.set(key, { title, ...meta });
-    });
+    }
     return map;
-  }, []);
+  }, [items]);
 
   const categoryFilteredItems = useMemo(() => items.filter((item) => {
     if (filter !== 'all' && item.inventoryCategory !== filter) return false;
