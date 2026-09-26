@@ -4,55 +4,137 @@
   "properties": {
     "mode": {
       "type": "string",
-      "enum": ["pvp", "pve", "world_boss"]
+      "enum": [
+        "pvp",
+        "pve",
+        "world_boss"
+      ]
     },
     "status": {
       "type": "string",
-      "enum": ["matched", "ready", "ended"],
+      "enum": [
+        "matched",
+        "countdown",
+        "fighting",
+        "ended"
+      ],
       "default": "matched"
     },
-    "host_id": { "type": "string" },
-    "host_name": { "type": "string" },
-    "dashboard_channel": { "type": "string" },
-    "pair_key": { "type": "string" },
+    "host_id": {
+      "type": "string"
+    },
+    "host_name": {
+      "type": "string"
+    },
+    "dashboard_channel": {
+      "type": "string"
+    },
+    "pair_key": {
+      "type": "string"
+    },
     "player_ids": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "players": {
       "type": "array",
-      "items": { "type": "object" }
+      "items": {
+        "type": "object"
+      }
     },
-    "current_turn_id": {
+    "arena": {
+      "type": "object"
+    },
+    "positions": {
+      "type": "object"
+    },
+    "atb": {
+      "type": "object"
+    },
+    "cooldowns": {
+      "type": "object"
+    },
+    "dodges": {
+      "type": "object"
+    },
+    "pending_hits": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "hit_log": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "fight_starts_at": {
       "type": "string",
-      "description": "Player ID that currently owns the PvP card-selection turn."
+      "format": "date-time"
     },
-    "turn_revision": {
-      "type": "integer",
-      "default": 0,
-      "description": "Monotonic turn counter used to keep both PvP clients synchronized."
+    "fight_ends_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "turn_started_at": {
+    "winner_id": {
+      "type": "string"
+    },
+    "ended_reason": {
+      "type": "string",
+      "enum": [
+        "ko",
+        "timeout",
+        "forfeit",
+        "disconnect"
+      ]
+    },
+    "ready_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
       "type": "string",
       "format": "date-time"
     },
     "attack_revision": {
       "type": "integer",
-      "default": 0,
-      "description": "Monotonic server-side PvP hit counter."
+      "default": 0
     },
     "last_attack": {
-      "type": "object",
-      "description": "Last server-authoritative PvP hit. Carries source, target, damage and resulting HP so both clients reconcile the same combat result."
-    },
-    "ready_at": { "type": "string", "format": "date-time" },
-    "ended_at": { "type": "string", "format": "date-time" }
+      "type": "object"
+    }
   },
-  "required": ["mode", "status", "host_id", "dashboard_channel", "pair_key", "player_ids"],
+  "required": [
+    "mode",
+    "status",
+    "host_id",
+    "dashboard_channel",
+    "pair_key",
+    "player_ids"
+  ],
   "rls": {
-    "read": { "user_condition": { "role": "admin" } },
-    "create": { "user_condition": { "role": "admin" } },
-    "update": { "user_condition": { "role": "admin" } },
-    "delete": { "user_condition": { "role": "admin" } }
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
   }
 }
