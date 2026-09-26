@@ -307,7 +307,9 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
     const applyLockedHit = (event) => {
       const detail = event?.detail || {};
-      if (String(detail.effectId || '').toLowerCase() !== 'getsuga_tensho') return;
+      const effectId = String(detail.effectId || '').toLowerCase();
+      const isBoundPlayerAttack = effectId === 'getsuga_tensho' || effectId.startsWith('artemis_');
+      if (!isBoundPlayerAttack) return;
       if (detail.name !== 'impact' || detail.autoHit === false) return;
 
       // The target is captured when the card is cast. A Final Fantasy / Pokemon
@@ -322,7 +324,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
       window.dispatchEvent(new CustomEvent('lunaAIBattleDamageApplied', {
         detail: {
-          effectId: 'getsuga_tensho',
+          effectId,
           sourcePlayerId: String(user?.id || ''),
           targetPlayerId: opponentId,
           damage,
