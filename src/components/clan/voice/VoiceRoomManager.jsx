@@ -58,7 +58,7 @@ export default function VoiceRoomManager({ clanId, gameId }) {
 
     const activeRoom = rooms.find(r => r.id === activeRoomId);
     const participantIds = activeRoom?.participants?.map(p => p.id) || [];
-    useWebRTCVoice(activeRoomId, user, isMuted, isDeafened, participantIds);
+    useWebRTCVoice(activeRoomId, user, isMuted, isDeafened, participantIds, { data: false });
     
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newRoomTopic, setNewRoomTopic] = useState('');
