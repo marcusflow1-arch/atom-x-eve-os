@@ -183,7 +183,24 @@ async function settleMatch(svc: any, input: Row | null) {
     status: match.status, players: match.players, pending_hits: match.pending_hits, hit_log: match.hit_log,
     attack_revision: match.attack_revision, last_attack: match.last_attack, winner_id: match.winner_id || '', ended_reason: match.ended_reason || '', ended_at: match.ended_at || undefined,
   });
+  if (match.status === 'ended') await clearMatchForPlayers(svc, match);
   return match;
+}
+
+async function setPlayerActiveMatch(svc: any, userId: string, matchId: string, channelId = '') {
+  const rows = await svc.PlayerState.filter({ player_id: String(userId) }, '-updated_date', 20).catch(() => []);
+  if (rows.length) {
+    await Promise.all(rows.map((row: Row) => svc.PlayerState.update(row.id, { active_match_id: matchId }).catch(() => null)));
+    return;
+  }
+  if (matchId) {
+    await svc.PlayerState.create({ player_id: String(userId), channel_id: channelId || `dashboard_${userId}`, last_update: Date.now(), status: 'online', active_match_id: matchId }).catch(() => null);
+  }
+}
+
+async function clearMatchForPlayers(svc: any, match: Row | null) {
+  if (!match) return;
+  await Promise.all((match.player_ids || []).map((id: string) => setPlayerActiveMatch(svc, String(id), '', String(match.dashboard_channel || ''))));
 }
 
 async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Row) {
@@ -203,6 +220,8 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
   await Promise.all([
     svc.AIBattleQueueEntry.update(first.id, { status:'matched', match_id:match.id, host_id:match.host_id, opponent_id:second.user_id, matched_at:stamp, last_seen_at:stamp }),
     svc.AIBattleQueueEntry.update(second.id, { status:'matched', match_id:match.id, host_id:match.host_id, opponent_id:first.user_id, matched_at:stamp, last_seen_at:stamp }),
+    setPlayerActiveMatch(svc, ids[0], String(match.id), String(match.dashboard_channel || '')),
+    setPlayerActiveMatch(svc, ids[1], String(match.id), String(match.dashboard_channel || '')),
   ]);
   return match;
 }
@@ -256,7 +275,7 @@ Deno.serve(async (req) => {
       return json({queue:publicQueue(queue),match:publicMatch(paired&&(paired.player_ids||[]).map(String).includes(userId)?paired:null),server_time:Date.now()});
     }
     if (action === 'cancel' || action === 'reset') {
-      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
+      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);const ended=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});await clearMatchForPlayers(svc,ended);}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
     }
     if (action === 'ready') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
@@ -274,6 +293,7 @@ Deno.serve(async (req) => {
     if (action === 'forfeit') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       const winner=(match.player_ids||[]).map(String).find((id:string)=>id!==userId)||''; match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:winner,ended_reason:'forfeit',ended_at:nowIso()});
+      await clearMatchForPlayers(svc,match);
       return json({match:publicMatch(match),server_time:Date.now()});
     }
     if (action === 'dodge') {
