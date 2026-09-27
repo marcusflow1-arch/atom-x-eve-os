@@ -147,6 +147,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const opponentSide = localSide === 'host' ? 'guest' : 'host';
   const reconnectPaused = Object.keys(match?.disconnects || {}).length > 0;
   const active = match?.status === 'fighting' && !reconnectPaused && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
+  const ended = match?.status === 'ended';
+  const won = ended && String(match.winner_id) === String(user?.id);
 
   const invoke = async (action, data) => {
     const response = await base44.functions.invoke('aiBattleMatchmaker', { action, data });
@@ -349,7 +351,6 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   useEffect(()=>{const timer=window.setInterval(()=>setClockNow(Date.now()),100);return()=>window.clearInterval(timer);},[]);
   const start=Date.parse(match?.fight_starts_at||0);const countdown=start?Math.max(0,start-(clockNow+serverOffsetMs)):0;const count=countdown>0?Math.ceil(countdown/1000):0;
-  const ended=match?.status==='ended';const won=ended&&String(match.winner_id)===String(user?.id);
   const opponentDisconnect = opponent?.id ? match?.disconnects?.[String(opponent.id)] : null;
   const reconnectLeftMs = opponentDisconnect ? Math.max(0, Date.parse(opponentDisconnect.reconnect_deadline || 0) - (clockNow + serverOffsetMs)) : 0;
   const reconnectSeconds = Math.max(0, Math.ceil(reconnectLeftMs / 1000));
