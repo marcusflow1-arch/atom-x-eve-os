@@ -1,6 +1,6 @@
 import test, { beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
 import { buildSync } from 'esbuild';
@@ -11,7 +11,11 @@ const users = { a: { id: 'a', role: 'user', unlocked_achievements: ['earned'] },
 const copy = (value) => structuredClone(value);
 const rows = (name) => { if (!tables.has(name)) tables.set(name, []); return tables.get(name); };
 function schema(name) {
-  if (!schemas.has(name)) schemas.set(name, JSON.parse(readFileSync('base44/entities/' + name + '.jsonc', 'utf8')));
+  if (!schemas.has(name)) {
+    const original = 'base44/entities/' + name + '.jsonc';
+    const kebab = 'base44/entities/' + name.replace(/[A-Z]/g, (c, i) => (i ? '-' : '') + c.toLowerCase()) + '.jsonc';
+    schemas.set(name, JSON.parse(readFileSync(existsSync(original) ? original : kebab, 'utf8')));
+  }
   return schemas.get(name);
 }
 function allowed(rule, actor, data) {
@@ -37,7 +41,13 @@ function validate(name, data) {
 }
 function matches(row, query) {
   return Object.entries(query).every(([key, value]) => {
-    if (value && typeof value === 'object' && '$in' in value) return (Array.isArray(row[key]) ? row[key] : [row[key]]).some((v) => value.$in.includes(v));
+    if (value && typeof value === 'object') {
+      const values = Array.isArray(row[key]) ? row[key] : [row[key]];
+      if ('$in' in value) return values.some((v) => value.$in.includes(v));
+      if ('$nin' in value) return values.every((v) => !value.$nin.includes(v));
+      if ('$exists' in value) return (row[key] !== undefined) === value.$exists;
+      if ('$ne' in value) return !values.includes(value.$ne);
+    }
     return row[key] === value;
   });
 }
@@ -68,6 +78,38 @@ function entities(actor) {
         const row = rows(name).find((row) => row.id === id); assert.ok(row, name + ' ' + id);
         check(name, 'update', actor, row); validate(name, { ...row, ...data });
         Object.assign(row, copy(data)); writes.push({ name, op: 'update', id, data: copy(data) }); return copy(row);
+      },
+      upsert: async (records, { key }) => {
+        const keys = Array.isArray(key) ? key : [key], written = [];
+        let created = 0, updated = 0;
+        for (const input of records) {
+          const found = rows(name).find((row) => keys.every((field) => row[field] === input[field]));
+          if (found) {
+            check(name, 'update', actor, found); Object.assign(found, copy(input)); written.push(copy(found)); updated++;
+          } else {
+            const defaults = Object.fromEntries(Object.entries(schema(name).properties || {}).filter(([, prop]) => prop.default !== undefined).map(([field, prop]) => [field, copy(prop.default)]));
+            const row = { ...defaults, ...copy(input), id: name + '-' + (++serial), created_date: new Date().toISOString() };
+            check(name, 'create', actor, row); validate(name, row); rows(name).push(row); written.push(copy(row)); created++;
+          }
+          writes.push({ name, op: 'upsert', data: copy(input) });
+        }
+        return { created, updated, records: written };
+      },
+      updateMany: async (query, changes) => {
+        let updated = 0;
+        for (const row of rows(name).filter((row) => matches(row, query))) {
+          check(name, 'update', actor, row);
+          for (const [op, values] of Object.entries(changes)) for (const [field, value] of Object.entries(values)) {
+            if (op === '$set') row[field] = copy(value);
+            else if (op === '$inc') row[field] = (row[field] ?? 0) + value;
+            else if (op === '$max') row[field] = Math.max(row[field] ?? -Infinity, value);
+            else if (op === '$addToSet') row[field] = [...new Set([...(row[field] || []), value])];
+            else throw new Error('Unknown update operator ' + op);
+          }
+          validate(name, row); updated++;
+          writes.push({ name, op: 'updateMany', id: row.id, data: copy(changes) });
+        }
+        return { success: true, updated, has_more: false };
       },
       delete: async (id) => {
         const row = rows(name).find((row) => row.id === id); assert.ok(row);
@@ -272,7 +314,8 @@ test('proof submission uses the authenticated owner and service-role writes; onl
   assert.equal(rows('UserAchievement')[0].status, 'unlocked');
   assert.equal(rows('UserCard').length, 1);
   assert.equal(rows('UserCard')[0].user_id, 'a');
-  await call('achievementSystem', { action: 'review_proof', user_achievement_id: id, approve: true }, 404, 'admin');
+  const repeatedApproval = await call('achievementSystem', { action: 'review_proof', user_achievement_id: id, approve: true }, 200, 'admin');
+  assert.equal(repeatedApproval.alreadyUnlocked, true);
   assert.equal(rows('UserCard').length, 1);
 });
 
