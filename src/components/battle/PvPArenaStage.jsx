@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Flag, Play, X } from 'lucide-react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -124,6 +125,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const lastCastSlotRef = useRef(lastCastSlot);
   const [error, setError] = useState('');
   const [resultCountdown, setResultCountdown] = useState(3);
+  const [escapeMenuOpen, setEscapeMenuOpen] = useState(false);
+  const [surrenderConfirm, setSurrenderConfirm] = useState(false);
+  const [surrendering, setSurrendering] = useState(false);
   const returningRef = useRef(false);
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
@@ -178,7 +182,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   };
 
   const requestSkill = async (slot) => {
-    if (!active) return false;
+    if (!active || escapeMenuOpen || surrendering) return false;
     const skill = (local?.skills || []).find((s) => Number(s.slot) === Number(slot));
     if (!skill) { setError('That skill is not equipped.'); return false; }
     const atb = serverAtb(match.atb?.[user.id], serverOffsetMs);
@@ -203,7 +207,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   requestSkillRef.current = requestSkill;
 
   const requestDodge = async () => {
-    if (!active) return;
+    if (!active || escapeMenuOpen || surrendering) return;
     try {
       await invoke('dodge', { match_id: match.id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_dodge', matchId: match.id } }));
@@ -309,7 +313,39 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // Arena is recreated only for a new match; live match state is read by refs/cache overlays.
   }, [match?.id, local?.id, opponent?.id]);
 
-  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};});
+  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
+
+  useEffect(() => {
+    const onEscape = (event) => {
+      if (event.key !== 'Escape' || ended) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      held.current.clear();
+      if (surrenderConfirm) {
+        setSurrenderConfirm(false);
+        return;
+      }
+      setEscapeMenuOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onEscape, true);
+    return () => window.removeEventListener('keydown', onEscape, true);
+  }, [ended, surrenderConfirm]);
+
+  const surrenderMatch = useCallback(async () => {
+    if (surrendering || ended || !matchRef.current?.id) return;
+    setSurrendering(true);
+    setError('');
+    try {
+      await invoke('forfeit', { match_id: matchRef.current.id });
+      setSurrenderConfirm(false);
+      setEscapeMenuOpen(false);
+    } catch (e) {
+      setError(e?.message || 'Could not surrender the match.');
+    } finally {
+      setSurrendering(false);
+    }
+  }, [ended, surrendering]);
 
   useEffect(()=>{const timer=window.setInterval(()=>setClockNow(Date.now()),100);return()=>window.clearInterval(timer);},[]);
   const start=Date.parse(match?.fight_starts_at||0);const countdown=start?Math.max(0,start-(clockNow+serverOffsetMs)):0;const count=countdown>0?Math.ceil(countdown/1000):0;
