@@ -339,37 +339,71 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
       mode, status: 'matched', host_id: host, host_name: first.player_name || 'Player', dashboard_channel: `dashboard_${host}`,
       pair_key: pairKey, player_ids: ids, players: [await playerFromQueue(svc, first), await playerFromQueue(svc, second)], arena: ARENA,
       positions: { [host]: { x: 0, z: 5 }, [guest]: { x: 0, z: -5 } }, atb: {}, cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], attack_revision: 0, last_attack: null,
-      disconnects: {}, pause_started_at: '', prestige_awards: {}, rewards_finalized: false,
+      connected_at: '', disconnects: {}, pause_started_at: '', prestige_awards: {}, rewards_finalized: false,
     });
   }
   const stamp = nowIso();
   await Promise.all([
-    svc.AIBattleQueueEntry.update(first.id, { status:'matched', match_id:match.id, host_id:match.host_id, opponent_id:second.user_id, matched_at:stamp, last_seen_at:stamp }),
-    svc.AIBattleQueueEntry.update(second.id, { status:'matched', match_id:match.id, host_id:match.host_id, opponent_id:first.user_id, matched_at:stamp, last_seen_at:stamp }),
-    setPlayerActiveMatch(svc, ids[0], String(match.id), String(match.dashboard_channel || '')),
-    setPlayerActiveMatch(svc, ids[1], String(match.id), String(match.dashboard_channel || '')),
+    svc.AIBattleQueueEntry.update(first.id, { status:'matched', match_id:match.id, host_id:match.host_id, opponent_id:second.user_id, matched_at:stamp, last_seen_at:stamp, connected_at:'', connected_session_id:'', ready_at:'' }),
+    svc.AIBattleQueueEntry.update(second.id, { status:'matched', match_id:match.id, host_id:match.host_id, opponent_id:first.user_id, matched_at:stamp, last_seen_at:stamp, connected_at:'', connected_session_id:'', ready_at:'' }),
   ]);
   return match;
 }
-async function tryPair(svc: any, mode: string) {
-  const rows = (await svc.AIBattleQueueEntry.filter({ mode, status:'waiting' }, 'created_date', 100)).filter(waitingLive);
-  const unique: Row[] = []; const seen = new Set<string>();
-  for (const row of rows) { const id=String(row.user_id||''); if(id&&!seen.has(id)){seen.add(id);unique.push(row);} if(unique.length===2) break; }
-  return unique.length===2 ? await canonicalPairMatch(svc, mode, unique[0], unique[1]) : null;
+async function tryPair(svc: any, mode: string, callerQueueId = '') {
+  const liveRows = (await svc.AIBattleQueueEntry.filter({ mode, status:'waiting' }, '-created_date', 100).catch(() => [])).filter(waitingLive);
+  const freshestByUser = new Map<string, Row>();
+  for (const row of liveRows) {
+    const userId = String(row.user_id || '');
+    if (!userId) continue;
+    const prior = freshestByUser.get(userId);
+    if (!prior || heartbeatAt(row) > heartbeatAt(prior)) freshestByUser.set(userId, row);
+  }
+  const unique = [...freshestByUser.values()].sort((a: Row, b: Row) => Date.parse(a.queued_at || a.created_date || 0) - Date.parse(b.queued_at || b.created_date || 0)).slice(0, 2);
+  if (unique.length !== 2) return null;
+
+  // Only one deterministic queue entry is allowed to create the pair. This
+  // removes the race where both clients see the same two waiters and create two
+  // matches at once. The newer/second waiter owns creation; the older player will
+  // observe the same match on the next status poll.
+  const creator = unique[1];
+  if (callerQueueId && String(creator.id) !== String(callerQueueId)) return null;
+
+  const fresh = await Promise.all(unique.map((row: Row) => svc.AIBattleQueueEntry.get(row.id).catch(() => null)));
+  if (fresh.some((row: Row | null) => !row || !waitingLive(row) || row.status !== 'waiting')) return null;
+  return canonicalPairMatch(svc, mode, fresh[0], fresh[1]);
+}
+
+async function startMatchIfBothConnected(svc: any, input: Row | null) {
+  if (!input || input.status !== 'matched') return { match: input, connected: ['connecting','countdown','fighting'].includes(String(input?.status || '')) };
+  const ids = (input.player_ids || []).map(String).filter(Boolean);
+  if (ids.length !== 2) return { match: input, connected: false };
+  const queues = await Promise.all(ids.map((id: string) => queueForMatch(svc, id, String(input.id))));
+  const connected = queues.length === 2 && queues.every((row: Row | null) => Boolean(
+    row
+    && matchedLive(row)
+    && row.connected_at
+    && row.connected_session_id
+    && String(row.connected_session_id) === String(row.client_session_id || '')
+  ));
+  if (!connected) return { match: input, connected: false };
+
+  const connectedAt = nowIso();
+  const match = await svc.AIBattleMatch.update(input.id, { status: 'connecting', connected_at: connectedAt });
+  await Promise.all(ids.map((id: string) => setPlayerActiveMatch(svc, id, String(match.id), String(match.dashboard_channel || ''))));
+  return { match, connected: true };
 }
 
 async function startMatchIfBothArenaReady(svc: any, input: Row | null) {
-  if (!input || input.status !== 'matched') return { match: input, ready: input?.status === 'countdown' || input?.status === 'fighting' };
+  if (!input || input.status !== 'connecting') return { match: input, ready: input?.status === 'countdown' || input?.status === 'fighting' };
   const ids = (input.player_ids || []).map(String).filter(Boolean);
   if (ids.length !== 2) return { match: input, ready: false };
   const queues = await Promise.all(ids.map((id: string) => queueForMatch(svc, id, String(input.id))));
-  const ready = queues.length === 2 && queues.every((row: Row | null) => Boolean(row && matchedLive(row) && row.ready_at));
+  const ready = queues.length === 2 && queues.every((row: Row | null) => Boolean(row && matchedLive(row) && row.connected_at && row.ready_at));
   if (!ready) return { match: input, ready: false };
 
-  // Both PvP clients have confirmed that their arena fighters are loaded and
-  // both queue heartbeats are live. Start the match immediately from this
-  // server-owned check so a missed/raced ready response cannot leave the arena
-  // visible while combat remains stuck in `matched`.
+  // Arena entry is a second handshake: the pair was already acknowledged by
+  // both browser clients before `connecting`, and now both 3D fighters have
+  // finished loading. Only then may the server begin the shared countdown.
   let match = await syncFrozenSkillsForMatch(svc, input);
   const start = Date.now() + 3500;
   const atb = turnAtb(match, String(match.host_id || ids[0] || ''), start);
