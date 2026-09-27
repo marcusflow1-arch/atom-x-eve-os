@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
     if (action === 'forfeit') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       const winner=(match.player_ids||[]).map(String).find((id:string)=>id!==userId)||''; match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:winner,ended_reason:'forfeit',ended_at:nowIso()});
-      await finalizeMatchRewards(svc,match);
+      match = await finalizeMatchRewards(svc,match) || match;
       await clearMatchForPlayers(svc,match);
       return json({match:publicMatch(match),server_time:Date.now()});
     }
