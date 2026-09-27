@@ -86,6 +86,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const session = useDashboardSession();
   const queryClient = useQueryClient();
   const joinAttempt = useRef('');
+  const acknowledgedMatch = useRef('');
   const key = ['ai-battle-matchmaking', user?.id];
 
   const state = useQuery({
@@ -99,7 +100,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       // frequently so resolved skill hits and HP changes appear on both clients
       // close to their actual hit frame instead of waiting up to 1.5 seconds.
       if (status === 'fighting') return 500;
-      if (['matched', 'countdown'].includes(status)) return 1000;
+      if (['matched', 'connecting', 'countdown'].includes(status)) return 750;
       if (body?.queue?.status === 'waiting') return 1000;
       return 15000;
     } : false,
@@ -120,13 +121,37 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const serverOffsetMs = serverTime - Date.now();
 
   useEffect(() => {
-    if (queue?.status === 'waiting' || queue?.status === 'matched' || ['countdown','fighting'].includes(String(match?.status || ''))) startAIBattleQueueHeartbeat();
+    if (queue?.status === 'waiting' || queue?.status === 'matched' || ['connecting','countdown','fighting'].includes(String(match?.status || ''))) startAIBattleQueueHeartbeat();
     else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
   }, [queue?.status, match?.status]);
 
-  // The always-mounted dashboard bridge joins both users into the host dashboard.
+  // Phase 1 handshake: receiving a reserved `matched` record is NOT permission
+  // to enter the arena. Each live browser must acknowledge the exact same match.
+  // The server unlocks `connecting` only after both acknowledgements are present.
   useEffect(() => {
-    if (!sessionBridge || !match?.id || !user?.id || match.status === 'ended') return undefined;
+    if (!sessionBridge || !user?.id || queue?.status !== 'matched' || match?.status !== 'matched' || !match?.id) return undefined;
+    const token = `${match.id}:${PAGE_QUEUE_SESSION_ID}`;
+    if (acknowledgedMatch.current === token) return undefined;
+    acknowledgedMatch.current = token;
+    let cancelled = false;
+    invoke('ack_match', sessionData({ match_id: match.id }))
+      .then((body) => {
+        if (cancelled) return;
+        queryClient.setQueryData(key, (prev = {}) => ({ ...prev, ...body }));
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          acknowledgedMatch.current = '';
+          console.warn('[AI Battle] match acknowledgement retry', error);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [sessionBridge, user?.id, queue?.status, match?.id, match?.status, queryClient]);
+
+  // The always-mounted dashboard bridge joins both users into the host dashboard
+  // only after BOTH browser clients acknowledged the reserved match.
+  useEffect(() => {
+    if (!sessionBridge || !match?.id || !user?.id || !['connecting','countdown','fighting'].includes(String(match.status || ''))) return undefined;
     const channelId = String(match.dashboard_channel || `dashboard_${match.host_id}`);
     const hostId = String(match.host_id || '');
     const token = `${match.id}:${hostId}`;
