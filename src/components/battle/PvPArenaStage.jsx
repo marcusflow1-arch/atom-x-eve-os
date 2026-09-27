@@ -16,6 +16,7 @@ import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
 import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
 import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
 import CombatFx, { effectColor } from '@/components/battle/combatFx';
+import { createChidoriFx } from '@/components/battle/chidoriFx';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { dismissAIBattleResult } from '@/components/battle/useAIBattleQueue';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
@@ -59,6 +60,42 @@ function findHead(root) {
   let head = null;
   root?.traverse?.((node) => { if (!head && node.isBone && /head/i.test(node.name || '')) head = node; });
   return head;
+}
+function findBone(root, name) {
+  const wanted = normalizedName(name);
+  let match = root?.getObjectByName?.(name) || null;
+  root?.traverse?.((node) => {
+    if (!match && node?.isBone && normalizedName(node.name) === wanted) match = node;
+  });
+  return match;
+}
+function boneWorld(fighter, name) {
+  const bone = findBone(fighter?.model, name);
+  if (bone) return bone.getWorldPosition(new THREE.Vector3());
+  const root = fighter?.model || fighter?.root;
+  const fallback = root?.getWorldPosition?.(new THREE.Vector3()) || new THREE.Vector3();
+  if (/head|spine|neck/i.test(name)) fallback.y += 1.1;
+  else if (/hand|arm|finger/i.test(name)) fallback.y += 0.95;
+  else if (/foot|ball|calf|thigh/i.test(name)) fallback.y += 0.2;
+  return fallback;
+}
+function fighterForward(fighter) {
+  const root = fighter?.root || fighter?.model;
+  const q = root?.getWorldQuaternion?.(new THREE.Quaternion()) || new THREE.Quaternion();
+  return new THREE.Vector3(0, 0, 1).applyQuaternion(q).normalize();
+}
+function sampleChidoriPath(samples, time, fallback) {
+  if (!samples?.length) return { palm: fallback.palm.clone(), tip: fallback.tip.clone() };
+  if (time <= samples[0].t) return { palm: samples[0].palm.clone(), tip: samples[0].tip.clone() };
+  const last = samples[samples.length - 1];
+  if (time >= last.t) return { palm: last.palm.clone(), tip: last.tip.clone() };
+  for (let i = 0; i < samples.length - 1; i += 1) {
+    const a = samples[i], b = samples[i + 1];
+    if (time < a.t || time > b.t) continue;
+    const u = THREE.MathUtils.clamp((time - a.t) / Math.max(0.0001, b.t - a.t), 0, 1);
+    return { palm: a.palm.clone().lerp(b.palm, u), tip: a.tip.clone().lerp(b.tip, u) };
+  }
+  return { palm: fallback.palm.clone(), tip: fallback.tip.clone() };
 }
 function scaleToHeight(root, height = 1.8) {
   root.updateMatrixWorld(true);
@@ -230,6 +267,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const requestMeleeRef = useRef(null);
   const requestDodgeRef = useRef(null);
   const fxRef = useRef(null);
+  const chidoriRef = useRef({ fx: null, cast: null });
   // Every visual is keyed by the server cast_id so the same action is never
   // shown twice, whichever path (local click, peer relay, server poll) arrives
   // first.
@@ -337,13 +375,26 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!started && caster) caster.lunge = { start: performance.now() };
     if (skill) setLastCastSlot((state) => ({ ...state, [casterKey]: Number(skill.slot) }));
     const effectId = cast.effect_id || skill?.effect_id || '';
-    const arriveAt = Math.max(performance.now() + 150, toPerfTime(cast.resolves_at));
-    fxRef.current?.tracer(chestOf(casterKey), chestOf(targetKey), {
-      color: effectColor(effectId),
-      arriveAt,
-      travelMs: Math.min(450, Math.max(150, arriveAt - performance.now())),
-      impactScale: 1.25,
-    });
+    const chidoriUltimate = String(skill?.clip_name || skill?.animation_effect?.clip_name || '') === 'Chidori_Ultimate'
+      || String(effectId).includes('chidori_ultimate');
+    if (chidoriUltimate && chidoriRef.current?.fx) {
+      chidoriRef.current.fx.group.visible = true;
+      chidoriRef.current.cast = {
+        castId,
+        casterKey,
+        targetKey,
+        startedAt: performance.now(),
+        samples: [],
+      };
+    } else {
+      const arriveAt = Math.max(performance.now() + 150, toPerfTime(cast.resolves_at));
+      fxRef.current?.tracer(chestOf(casterKey), chestOf(targetKey), {
+        color: effectColor(effectId),
+        arriveAt,
+        travelMs: Math.min(450, Math.max(150, arriveAt - performance.now())),
+        impactScale: 1.25,
+      });
+    }
   };
 
   // Melee: the attacker lunges and a slash line cuts across the target.
@@ -534,6 +585,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     arenaVisualRef.current = { scene, camera };
     const fx = new CombatFx(scene, camera);
     fxRef.current = fx;
+    const chidoriFx = createChidoriFx(THREE, scene, { lights: true });
+    chidoriFx.group.visible = false;
+    chidoriRef.current = { fx: chidoriFx, cast: null };
     setLoaded(0);
     setGraphicsError(false);
     const renderer = arenaRenderer();
@@ -677,6 +731,53 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         lf.mixer?.update(dt);of.mixer?.update(dt);
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
         lf.root.rotation.y=lf.yaw;of.root.rotation.y=of.yaw;
+
+        // The supplied Chidori FX is world-space and follows the authored hand
+        // bones. We retain a short path history so its ground scar / dash trail
+        // use the actual fighter motion, while the strike tip eases onto the
+        // authoritative opposing avatar at impact instead of firing into space.
+        const chidori = chidoriRef.current;
+        if (chidori?.fx && chidori.cast) {
+          const castState = chidori.cast;
+          const attacker = runtimes.current[castState.casterKey];
+          const victim = runtimes.current[castState.targetKey];
+          const ta = (now - castState.startedAt) / 1000;
+          if (attacker && victim && ta <= 5.0) {
+            const hand = boneWorld(attacker, 'hand_r');
+            const fingers = boneWorld(attacker, 'fingers_r');
+            const palm = hand.clone().lerp(fingers, 0.55);
+            const forward = fighterForward(attacker);
+            const victimChest = boneWorld(victim, 'spine_02');
+            const contact = THREE.MathUtils.smoothstep(ta, 1.62, 2.0);
+            const tip = palm.clone().addScaledVector(forward, 0.34).lerp(victimChest, contact);
+            const samples = castState.samples;
+            const previousSample = samples.at(-1);
+            if (!previousSample || ta - previousSample.t >= 1 / 90) {
+              samples.push({ t: ta, palm: palm.clone(), tip: tip.clone() });
+              if (samples.length > 420) samples.splice(0, samples.length - 420);
+            }
+            const pathAt = (t) => sampleChidoriPath(samples, t, { palm, tip });
+            const bow = attacker.female ? findBone(attacker.model, 'bow') : null;
+            chidori.fx.update({
+              ta,
+              tv: ta >= 2 ? ta - 2 : -1,
+              camera,
+              att: {
+                bone: (name) => boneWorld(attacker, name),
+                fwd: forward,
+                pathAt,
+                ...(bow ? { bowPos: bow.getWorldPosition(new THREE.Vector3()) } : {}),
+              },
+              vic: {
+                bone: (name) => boneWorld(victim, name),
+                root: victim.model || victim.root,
+              },
+            });
+          } else {
+            chidori.fx.group.visible = false;
+            chidori.cast = null;
+          }
+        }
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
         if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         if(currentMatch?.status==='ended'){
@@ -711,6 +812,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       queueMicrotask(() => barRoots.forEach((root) => root.unmount()));
       fx.dispose();
       if (fxRef.current === fx) fxRef.current = null;
+      chidoriFx.dispose();
+      if (chidoriRef.current?.fx === chidoriFx) chidoriRef.current = { fx: null, cast: null };
       disposeArenaObjects(scene);
       runtimes.current.local?.runtime?.dispose?.();
       runtimes.current.opponent?.runtime?.dispose?.();
