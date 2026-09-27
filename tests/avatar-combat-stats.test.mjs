@@ -12,7 +12,7 @@ const math=Object.create(Math);math.random=()=>0.99;
 function bundle(path,extra={}){
  const module={exports:{}};
  vm.runInNewContext(buildSync({entryPoints:[path],bundle:true,write:false,platform:'node',format:'cjs',external:['npm:*']}).outputFiles[0].text,{
-  module,exports:module.exports,Response,Request,Date:Clock,crypto:webcrypto,Math:math,console:{error(){},warn(){}},...extra,
+  module,exports:module.exports,Response,Request,Date:Clock,crypto:webcrypto,Math:math,console:{error(...args){if(process.env.AVATAR_TEST_DEBUG)console.error(...args);},warn(){}},...extra,
  });
  return module.exports;
 }
@@ -192,7 +192,7 @@ test('live PvP locks allocation using real membership and heartbeat',async()=>{
 test('PvP basic attacks use frozen stats, defense and server rolls; forged damage is ignored',async()=>{
  const a=rules.deriveCombatStats({global_level:10,stat_schema_version:1,stat_allocations:{strength:20}});
  const b=rules.deriveCombatStats({global_level:10,stat_schema_version:1,stat_allocations:{defense:20}});
- db.rows('AIBattleMatch').push({id:'match',mode:'pvp',player_ids:['a','b'],host_id:'a',status:'fighting',
+ db.rows('AIBattleMatch').push({id:'match',dashboard_channel:'test-arena',mode:'pvp',player_ids:['a','b'],host_id:'a',status:'fighting',
   players:[{id:'a',gender:'male',hp:a.max_hp,max_hp:a.max_hp,combat_stats:plain(a),skills:[]},{id:'b',gender:'male',hp:b.max_hp,max_hp:b.max_hp,combat_stats:plain(b),skills:[]}],
   atb:{a:{value:100,turn:true,at:iso()},b:{value:0,turn:false,at:iso()}},positions:{a:{x:0,z:-5},b:{x:0,z:5}},
   pending_hits:[],hit_log:[],disconnects:{},cooldowns:{},created_date:iso(),fight_starts_at:iso(-1000),fight_ends_at:iso(180000),
