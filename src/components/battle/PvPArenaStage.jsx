@@ -23,6 +23,7 @@ const lerpAngle = (a, b, maxStep) => {
 const clampPos = (pos, box) => ({ x: THREE.MathUtils.clamp(pos.x, box.minX, box.maxX), z: THREE.MathUtils.clamp(pos.z, box.minZ, box.maxZ) });
 const serverAtb = (row, offset = 0) => {
   if (!row) return 50;
+  if (typeof row.turn === 'boolean') return Math.min(100, Math.max(0, Number(row.value || 0)));
   const at = Date.parse(row.at || 0) || Date.now();
   return Math.min(100, Math.max(0, Number(row.value || 0) + ((Date.now() + offset - at) / 1000) * 25));
 };
@@ -148,6 +149,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const opponentSide = localSide === 'host' ? 'guest' : 'host';
   const reconnectPaused = Object.keys(match?.disconnects || {}).length > 0;
   const active = match?.status === 'fighting' && !reconnectPaused && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
+  const turnPlayerId = String(match?.turn_player_id || match?.host_id || '');
+  const isMyTurn = active && turnPlayerId === String(user?.id);
   const ended = match?.status === 'ended';
   const won = ended && String(match.winner_id) === String(user?.id);
 
@@ -178,14 +181,16 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const playSkill = (fighter, skill, targetId, facingYaw, detail = {}) => {
     if (!fighter?.runtime || !skill) return false;
     const effect = effectFromSkill(skill);
-    const target = { type: 'player', playerId: String(targetId), facingYaw, autoLock: true, autoHit: true };
+    const target = { type: 'player', playerId: String(targetId), facingYaw, autoLock: true, autoHit: true, damage: Number(detail?.damage || 0) }; 
     if (fighter.female) return fighter.runtime.playEffect(effect, { ...detail, effect, card: skill, target });
     if (String(effect.id || '') === 'getsuga_tensho') return fighter.runtime.play(target);
     return false;
   };
 
   const requestSkill = async (slot) => {
-    if (!active || escapeMenuOpen || surrendering) return false;
+    if (!active) { setError('The fight is not ready yet.'); return false; }
+    if (!isMyTurn) { setError("Wait for your turn."); return false; }
+    if (escapeMenuOpen || surrendering) return false;
     const skill = (local?.skills || []).find((s) => Number(s.slot) === Number(slot));
     if (!skill) { setError('That skill is not equipped.'); return false; }
     const atb = serverAtb(match.atb?.[user.id], serverOffsetMs);
@@ -197,11 +202,12 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     setError('');
     const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
-    playSkill(runtimes.current.local, skill, opponent?.id, facingYaw, { castId });
-    setLastCastSlot((s) => ({ ...s, local: Number(slot) }));
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
+      const visualStarted = playSkill(runtimes.current.local, skill, opponent?.id, facingYaw, { castId, damage: cast.damage });
+      setLastCastSlot((s) => ({ ...s, local: Number(slot) }));
+      if (!visualStarted) console.warn('[PvP] skill accepted by server but local animation runtime did not start', skill?.effect_id || skill?.name);
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id } }));
       return true;
     } catch (e) { setError(e.message || 'Skill rejected.'); runtimes.current.local?.runtime?.playIdle?.(); return false; }
