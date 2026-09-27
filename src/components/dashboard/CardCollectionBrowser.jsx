@@ -88,6 +88,7 @@ const CardUI = ({ card, small, onOpen }) => {
     Rare: { border: 'border-blue-500/50', text: 'text-blue-300', glow: 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' },
     Epic: { border: 'border-purple-500/50', text: 'text-purple-300', glow: 'shadow-[0_0_12px_rgba(168,85,247,0.3)]' },
     Legendary: { border: 'border-amber-500/50', text: 'text-amber-300', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.4)]' },
+    Unique: { border: 'border-fuchsia-400/55', text: 'text-fuchsia-200', glow: 'shadow-[0_0_15px_rgba(217,70,239,0.25)]' },
   };
   const rs = RARITY_STYLES[card.rarity] || RARITY_STYLES.Common;
   
@@ -368,6 +369,7 @@ export default function CardCollectionBrowser() {
                   <motion.div
                     key={card.id}
                     whileHover={{ scale: 1.06, y: -3 }}
+                    onClick={() => card.detail && card.owned && setDetailCard(card.detail)}
                     className={`aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border border-slate-500/40 transition-shadow relative group`}
                     style={{ background: 'linear-gradient(135deg, rgba(30,40,55,0.95), rgba(15,23,42,0.98))' }}
                   >
@@ -452,7 +454,7 @@ export default function CardCollectionBrowser() {
                         onMouseLeave={() => setGamesHovered(false)}
                       >
                         {MOCK_GAMES_BY_GENRE[genre].map(game => {
-                          const cards = GENRE_CARDS[genre] || [];
+                          const cards = genre === 'Adam XE' ? adamXeCards : (GENRE_CARDS[genre] || []);
                           const gameCard = cards.find(c => c.game === game);
                           const image = gameCard ? gameCard.image : 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200';
 
@@ -496,7 +498,7 @@ export default function CardCollectionBrowser() {
                            {...provided.dragHandleProps}
                            className="aspect-[2.5/3.5] w-full"
                         >
-                           <CardUI card={card} />
+                           <CardUI card={card} onOpen={card.detail && card.owned ? () => setDetailCard(card.detail) : undefined} />
                         </div>
                      )}
                    </Draggable>
