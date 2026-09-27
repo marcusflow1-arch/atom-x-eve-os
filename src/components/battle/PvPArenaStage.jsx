@@ -62,6 +62,76 @@ function scaleToHeight(root, height = 1.8) {
   root.position.y -= next.min.y;
 }
 
+function spawnBasicSlash(scene, camera, targetRoot) {
+  if (!scene || !camera || !targetRoot) return;
+  targetRoot.updateMatrixWorld?.(true);
+  const target = new THREE.Vector3();
+  targetRoot.getWorldPosition(target);
+  target.y += 1.05;
+
+  const group = new THREE.Group();
+  group.position.copy(target);
+  group.quaternion.copy(camera.quaternion);
+  group.scale.setScalar(0.72);
+
+  const materials = [];
+  const slashes = [
+    { y: 0.22, rotation: -0.72, length: 1.65 },
+    { y: 0.00, rotation: -0.58, length: 1.9 },
+    { y: -0.22, rotation: -0.44, length: 1.55 },
+  ];
+  for (const slash of slashes) {
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xcff8ff,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(slash.length, 0.045), material);
+    mesh.position.y = slash.y;
+    mesh.rotation.z = slash.rotation;
+    group.add(mesh);
+    materials.push(material);
+  }
+
+  const flashMaterial = new THREE.MeshBasicMaterial({
+    color: 0x6deaff,
+    transparent: true,
+    opacity: 0.34,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const flash = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), flashMaterial);
+  flash.position.z = -0.01;
+  group.add(flash);
+  materials.push(flashMaterial);
+  scene.add(group);
+
+  const started = performance.now();
+  const duration = 380;
+  const animateSlash = (now) => {
+    const t = Math.min(1, (now - started) / duration);
+    group.scale.setScalar(0.72 + t * 0.55);
+    group.position.y = target.y + t * 0.08;
+    materials.forEach((material, index) => {
+      material.opacity = (index === materials.length - 1 ? 0.34 : 0.95) * (1 - t);
+    });
+    if (t < 1) {
+      requestAnimationFrame(animateSlash);
+      return;
+    }
+    scene.remove(group);
+    group.traverse((node) => {
+      node.geometry?.dispose?.();
+      node.material?.dispose?.();
+    });
+  };
+  requestAnimationFrame(animateSlash);
+}
+
 async function loadFighter({ scene, camera, player, side, onEffect }) {
   const gltf = await new GLTFLoader().loadAsync(player.model_url || player.appearance?.model_url);
   const assetRoot = gltf.scene;
@@ -134,6 +204,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [surrenderConfirm, setSurrenderConfirm] = useState(false);
   const [surrendering, setSurrendering] = useState(false);
   const returningRef = useRef(false);
+  const arenaVisualRef = useRef({ scene: null, camera: null });
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
   const requestSkillRef = useRef(null);
@@ -232,7 +303,6 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!isMyTurn) { setError('Wait for your turn.'); return false; }
     if (escapeMenuOpen || surrendering) return false;
     const a = positions.current.local, b = positions.current.opponent;
-    if (a.distanceTo(b) > 4.25) { setError('Move closer to use the melee attack.'); return false; }
     const currentAtb = serverAtb(match.atb?.[user.id], serverOffsetMs);
     if (currentAtb < 50) { setError('Not enough ATB for a melee attack.'); return false; }
     const cooldownEnd = Date.parse(match.cooldowns?.[user.id]?._melee || 0);
@@ -242,7 +312,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     try {
       const body = await invoke('basic_attack', { match_id: match.id, cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
-      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_melee', matchId: match.id, cast_id: cast.cast_id || castId, effect_id: 'basic_melee', resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id } }));
+      spawnBasicSlash(arenaVisualRef.current.scene, arenaVisualRef.current.camera, runtimes.current.opponent?.root);
+      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_melee', matchId: match.id, cast_id: cast.cast_id || castId, effect_id: 'basic_melee', resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id, lock_on: true } }));
       return true;
     } catch (e) {
       setError(e?.message || 'Melee attack rejected.');
@@ -293,6 +364,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x07101b, .025);
     const camera = new THREE.PerspectiveCamera(50, 1, .05, 100);
+    arenaVisualRef.current = { scene, camera };
     setLoaded(0);
     setGraphicsError(false);
     const renderer = arenaRenderer();
@@ -354,6 +426,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
       if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {
+        spawnBasicSlash(arenaVisualRef.current.scene, arenaVisualRef.current.camera, runtimes.current.local?.root);
         return;
       }
       const skill=(currentOpponent?.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (currentOpponent?.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
@@ -425,6 +498,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       runtimes.current = { local: null, opponent: null };
       remoteSamples.current = [];
       held.current.clear();
+      if (arenaVisualRef.current.scene === scene) arenaVisualRef.current = { scene: null, camera: null };
       renderer.dispose();
       renderer.forceContextLoss();
       cssRenderer.domElement.remove();
