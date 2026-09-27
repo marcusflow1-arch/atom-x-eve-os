@@ -105,6 +105,25 @@
     },
     "last_attack": {
       "type": "object"
+    },
+    "disconnects": {
+      "type": "object",
+      "default": {},
+      "description": "Per-player reconnect grace state keyed by player id."
+    },
+    "pause_started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the current reconnect pause began."
+    },
+    "prestige_awards": {
+      "type": "object",
+      "default": {},
+      "description": "Per-player prestige earned for this completed PvP match."
+    },
+    "rewards_finalized": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
