@@ -30,7 +30,8 @@ Deno.serve(async (req) => {
     if (action === 'review_proof') {
       if (user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
       const userAchievementId = String(body.user_achievement_id || '');
-      const approve = Boolean(body.approve);
+      if (typeof body.approve !== 'boolean') return json({ error: 'approve must be true or false' }, 400);
+      const approve = body.approve;
       const record = await svc.UserAchievement.get(userAchievementId).catch(() => null);
       if (!record || record.status !== 'pending_review') return json({ error: 'Pending proof not found' }, 404);
       if (!approve) {
