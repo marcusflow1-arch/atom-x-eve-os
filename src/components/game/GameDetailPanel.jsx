@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Zap, Shield, Cpu, ChevronRight, ChevronDown, 
+  Zap, Shield, Cpu, ChevronRight, 
   Unlock, Database, AlertCircle,
-  Download, Play, CreditCard, Check, X, Star, MessageSquare, Radio, Trophy, Users,
+  Download, Play, Check, X, Star, MessageSquare, Radio, Trophy, Users,
   Package, ArrowUpCircle, Bug, Sparkles
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
