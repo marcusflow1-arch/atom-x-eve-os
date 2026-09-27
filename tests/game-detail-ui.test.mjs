@@ -41,6 +41,14 @@ const SDK = { entities: {
   DLC: { filter: async () => [{ id: 'expansion', game_id: game.id, name: 'Northern Reach', description: 'A new region.', status: 'active', price: 5 }] },
   CardTemplate: { filter: async () => [{ id: 'card-one', name: 'Stoneguard', source_game_id: game.id, type: 'Equipment', base_rarity: 'Rare', description: 'An ancient shield.' }] }
 } };
+SDK.functions = { invoke: async (name) => {
+  if (name === 'claimFreeGame') return { data: { success: true, owned: session.owned, rewards_pending: false } };
+  if (name === 'cardCollection') return { data: { cards: [
+    { id: 'reward-1', name: 'Dawnstrike', card_type: 'ability', game_id: game.id, description: 'A radiant ability for your avatar.', rarity: 'Rare', achievement_id: 'first-light' },
+    { id: 'card-one', name: 'Stoneguard', card_type: 'equipment', game_id: game.id, description: 'An ancient shield.', rarity: 'Rare' },
+  ] } };
+  throw new Error('Unexpected function: ' + name);
+} };
 const built = await build({
   stdin: { contents: "export { default as Hub } from './src/components/game/GameHubTabs.jsx'; export * from './src/components/game/detail/gameDetailData.js';", resolveDir: process.cwd(), loader: 'jsx' },
   bundle: true, write: false, format: 'cjs', platform: 'node', packages: 'external', jsx: 'automatic',

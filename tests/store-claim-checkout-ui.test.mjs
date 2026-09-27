@@ -49,7 +49,7 @@ const built = await build({
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
   plugins:[{name:'isolated-services',setup(b){
     b.onResolve({filter:/base44Client|AuthContext|CartContext|WishlistContext|react-router-dom/},args=>({path:args.path,namespace:'fixture'}));
-    b.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',contents:
+    b.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',resolveDir:process.cwd(),contents:
       args.path.includes('base44Client') ? 'export const base44=globalThis.fixture.SDK;' :
       args.path.includes('AuthContext') ? 'export const useAuth=()=>({user:globalThis.fixture.user,isAuthenticated:globalThis.fixture.authenticated,login:()=>globalThis.fixture.login++});' :
       args.path.includes('CartContext') ? 'export const useCart=()=>({cart:globalThis.fixture.cart,isPurchased:()=>globalThis.fixture.owned,removeFromCart:(id,type)=>globalThis.fixture.removed.push([id,type]),addToCart:item=>globalThis.fixture.cart.push(item),openCart:()=>{}});' :
