@@ -37,6 +37,15 @@
     "revoked": {
       "type": "boolean",
       "default": false
+    },
+    "starter_reward_version": {
+      "type": "number"
+    },
+    "starter_card_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

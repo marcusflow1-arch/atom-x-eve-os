@@ -30,6 +30,7 @@ export async function grantEntitlement(svc: any, userId: string, itemType: 'game
     order_id: options.order_id || '',
     granted_at: options.granted_at || now(),
     revoked: false,
+    ...(Array.isArray(options.starter_card_ids) ? { starter_reward_version: 1, starter_card_ids: options.starter_card_ids } : {}),
   });
   return { entitlement, created: true };
 }

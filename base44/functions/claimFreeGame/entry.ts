@@ -19,9 +19,11 @@ Deno.serve(async (req) => {
     if (typeof game.price !== 'number' || !Number.isFinite(game.price) || game.price < 0) return json({ error: 'Game price is unavailable; please try again later' }, 409);
     if (game.price > 0) return json({ error: 'Paid games must be purchased through checkout' }, 402);
     const alreadyOwned = await ownsItem(svc, user.id, 'game', game.id);
-    const { entitlement } = await grantEntitlement(svc, user.id, 'game', game.id, { source: 'free', game_id: game.id });
+    if (game.starter_card_ids != null && (!Array.isArray(game.starter_card_ids) || game.starter_card_ids.some((id: any) => typeof id !== 'string' || !id))) return json({ error: 'Game starter rewards are unavailable' }, 409);
+    const { entitlement } = await grantEntitlement(svc, user.id, 'game', game.id, { source: 'free', game_id: game.id, starter_card_ids: [...new Set<string>(game.starter_card_ids || [])] });
+    if (entitlement.starter_reward_version !== 1) return json({ success: true, already_owned: true, entitlement, legacy_rewards_unverified: true });
     const starterCards = [], pendingCards = [];
-    for (const cardId of [...new Set<string>(game.starter_card_ids || [])]) {
+    for (const cardId of entitlement.starter_card_ids || []) {
       try {
         const card = await grantCard(svc, user.id, cardId, { source: 'starter', grant_key: rewardKey('game-starter', user.id, game.id, cardId) });
         if (card) starterCards.push(card);

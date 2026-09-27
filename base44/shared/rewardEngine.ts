@@ -39,7 +39,7 @@ export async function grantCard(svc: any, userId: string, tradingCardId: string,
   let delivered = await findKeyedRecord(svc.UserCard, { reward_grant_keys: { $in: [key] } });
   if (!delivered) {
     const existing = await svc.UserCard.filter({ user_id: userId, trading_card_id: payload.trading_card_id }, 'created_date', 20);
-    const owned = existing.find((row: Row) => !payload.stackable || row.trade_status !== 'locked_in_trade');
+    const owned = existing.find((row: Row) => payload.stackable ? row.trade_status !== 'locked_in_trade' : Number(row.quantity ?? 1) > 0);
     if (owned) {
       const quantity = Number(owned.quantity ?? 1);
       if (!Number.isSafeInteger(quantity) || quantity < 0 || !Number.isSafeInteger(quantity + payload.quantity)) throw rewardError('Card quantity requires reconciliation');
