@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import useLunaStore from '@/components/luna/useLunaStore';
 import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 
 const unwrap = (response) => response?.data ?? response ?? {};
 const normalize = (value) => String(value || '').trim().toLowerCase();
@@ -87,19 +88,21 @@ async function restoreIchigoIntoState(body, userId) {
 
 export function useSkillBookLoadout() {
   const { user } = useAuth();
+  const companion = useCompanionIdentity();
+  const activeAvatarGender = ['female', 'male'].includes(normalize(companion?.gender)) ? normalize(companion.gender) : '';
   const queryClient = useQueryClient();
   const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
   const clearHotbarSlot = useLunaStore((state) => state.clearHotbarSlot);
   const setActiveSkillRow = useLunaStore((state) => state.setActiveSkillRow);
 
-  const queryKey = ['luna-skill-book', user?.id];
+  const queryKey = ['luna-skill-book', user?.id, activeAvatarGender || 'persisted-avatar'];
 
   const stateQuery = useQuery({
     queryKey,
     queryFn: async () => {
       const response = await base44.functions.invoke('skillBookLoadout', {
         action: 'getState',
-        data: {},
+        data: { avatar_gender: activeAvatarGender },
       });
       let body = unwrap(response);
       if (body?.error) throw new Error(body.error);
@@ -108,7 +111,7 @@ export function useSkillBookLoadout() {
         ? ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam']
         : ['getsuga_tensho'];
       if (required.some((id) => !effects.has(id))) {
-        const bootstrap = await base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} });
+        const bootstrap = await base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: { avatar_gender: activeAvatarGender } });
         body = unwrap(bootstrap);
         if (body?.error) throw new Error(body.error);
       }
@@ -148,7 +151,7 @@ export function useSkillBookLoadout() {
 
   const mutation = useMutation({
     mutationFn: async ({ action, data }) => {
-      const response = await base44.functions.invoke('skillBookLoadout', { action, data });
+      const response = await base44.functions.invoke('skillBookLoadout', { action, data: { ...(data || {}), avatar_gender: activeAvatarGender } });
       const body = unwrap(response);
       if (body?.error) throw new Error(body.error);
       return restoreIchigoIntoState(body, user.id);
