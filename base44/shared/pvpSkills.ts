@@ -5,8 +5,11 @@ export const ATB_START = 50;
 export const DODGE = { atb_cost: 20, cooldown_ms: 2000, window_ms: 350 } as const;
 export const BASIC_MELEE = {
   id: 'basic_melee',
-  kind: 'Melee attack',
-  range_m: 3.25,
+  kind: 'Lock-on basic attack',
+  // Final-Fantasy-style basic attack: selecting the sword locks onto the
+  // opponent and resolves regardless of arena spacing. `range_m` remains a
+  // presentation/telemetry value only; the server does not gate the hit by it.
+  range_m: 99,
   atb_cost: 50,
   cooldown_ms: 1000,
   hit_ms: 350,
