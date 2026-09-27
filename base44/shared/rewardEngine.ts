@@ -1,3 +1,5 @@
+import { ensureAvatarProgression } from './avatarProgressionState.ts';
+import { avatarLevel } from './combatStats.ts';
 import { conditionalUpdate, ensureGrant, ensureKeyedRecord, findKeyedRecord, ownedDeliveredCard, rewardError, rewardKey } from './rewardJournal.ts';
 
 type Row = Record<string, any>;
@@ -68,7 +70,7 @@ export async function grantCard(svc: any, userId: string, tradingCardId: string,
 
 async function grantXp(svc: any, userId: string, key: string, xp: number) {
   if (!xp) return false;
-  const record = await ensureKeyedRecord(svc.AvatarProgression, { user_id: userId });
+  const record = await ensureAvatarProgression(svc,userId);
   let credited = false, applied = false;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const current = await svc.AvatarProgression.get(record.id);
@@ -84,7 +86,7 @@ async function grantXp(svc: any, userId: string, key: string, xp: number) {
   if (!applied) throw rewardError('Avatar XP changed during delivery; retry the reward', 503);
   const saved = await svc.AvatarProgression.get(record.id);
   await conditionalUpdate(svc.AvatarProgression, { id: record.id, user_id: userId }, {
-    $max: { global_level: Math.min(50, Math.max(1, Math.floor(Number(saved.global_xp || 0) / 1000) + 1)) },
+    $max: { global_level: avatarLevel(saved) },
   });
   return credited;
 }

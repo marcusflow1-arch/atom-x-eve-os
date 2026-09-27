@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { skillStats } from '../../shared/pvpSkills.ts';
-import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
+import { effectiveCardStats, normalizedCardBaseStats } from '../../shared/cardStats.ts';
+import { loadCombatProfile } from '../../shared/combatProfile.ts';
+import { abilityOutput } from '../../shared/combatStats.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -27,13 +29,13 @@ Deno.serve(async (req) => {
     if (data.card_type) filters.card_type = canonicalType(data.card_type);
     let catalog = await svc.TradingCard.filter(filters, 'name', 5000).catch(async () => {
       const rows = await svc.TradingCard.list('name', 5000);
-      return rows.filter((row: AnyObj) => row.status !== 'retired');
+      return rows.filter((row: AnyObj) => row.status === 'live');
     });
     if (data.game_id) catalog = catalog.filter((row: AnyObj) => String(row.game_id || '') === String(data.game_id));
     if (data.card_type) catalog = catalog.filter((row: AnyObj) => canonicalType(row.card_type) === canonicalType(data.card_type));
 
     const owned = user ? await svc.UserCard.filter({ user_id: user.id }, '-acquired_at', 5000) : [];
-    const progression = user ? await svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 5000).catch(() => []) : [];
+    const progression = user ? await svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 5000) : [];
     const gameIds = [...new Set(catalog.map((card: AnyObj) => String(card.game_id || '')).filter(Boolean))];
     const games: AnyObj[] = [];
     for (const id of gameIds) {
@@ -50,14 +52,17 @@ Deno.serve(async (req) => {
     }
     const progressByUserCard = new Map(progression.map((row: AnyObj) => [String(row.user_card_id || ''), row]));
 
+    const avatarProfile=user?await loadCombatProfile(svc,user.id):null;
     const cards = catalog.map((card: AnyObj) => {
       const copies = ownedByTrading.get(String(card.id)) || [];
       const primary = copies[0] || null;
-      const quantity = copies.reduce((sum, row) => sum + Math.max(1, Number(row.quantity || 1)), 0);
+      const quantity = copies.reduce((sum, row) => sum + Math.max(0, Number(row.quantity ?? 1)), 0);
       const p = primary ? progressByUserCard.get(String(primary.id)) || null : null;
       const effect = card.animation_effect || {};
       const baseCombat = skillStats(String(effect.id || ''), card.rarity || 'Common');
-      const combat = primary ? effectiveCardDamage(Number(effect.base_damage || baseCombat.base_damage || 0), p || {}) : null;
+      const effective=effectiveCardStats(p,normalizedCardBaseStats(primary || {},{},card));
+      const output=primary && avatarProfile && canonicalType(card.card_type)==='ability'?abilityOutput(avatarProfile.combat,{...baseCombat,base_damage:Number(effect.base_damage || baseCombat.base_damage),cooldown_ms:Number(effect.cooldown_ms || baseCombat.cooldown_ms)},effective):null;
+      const combat=output?{...output,effective_damage:output.base_damage,multiplier:effective.growth_multiplier,bonus_percent:Math.round((effective.growth_multiplier-1)*100)}:null;
       return {
         id: card.id,
         trading_card_id: card.id,
@@ -73,6 +78,7 @@ Deno.serve(async (req) => {
         achievement_id: card.achievement_id || '',
         equip_slot: card.equip_slot || '',
         stats: card.stats || {},
+        effective_stats: primary?effective.stats:null,
         animation_effect: card.animation_effect || null,
         model_url: card.model_url || '',
         home_item_key: card.home_item_key || '',
@@ -84,7 +90,7 @@ Deno.serve(async (req) => {
         user_card_id: primary?.id || null,
         equipped_to: primary?.equipped_to || 'none',
         trade_status: primary?.trade_status || 'available',
-        progression: primary ? { level: Number(p?.level || 1), xp: Number(p?.xp || 0), stage: Number(p?.stage || 1), ascension: Number(p?.ascension || 0), power_score: Number(p?.power_score || 0), enhanced_stats: p?.enhanced_stats || {}, over_enchant_rank: Number(p?.over_enchant_rank || 0), combat } : null,
+        progression: primary ? { level: Number(p?.level || 1), xp: Number(p?.xp || 0), stage: Number(p?.stage || 1), ascension: Number(p?.ascension || 0), power_score: effective.power_score, enhanced_stats: p?.enhanced_stats || {}, over_enchant_rank: Number(p?.over_enchant_rank || 0), combat } : null,
       };
     });
 

@@ -430,7 +430,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       const cast = body.cast || {};
       const resolvedId = String(cast.cast_id || castId);
       // Melee resolves on the server immediately, so show the full hit now.
-      showHitResult({ cast_id: resolvedId, attacker_id: user.id, target_id: opponent?.id, effect_id: 'basic_melee', result: 'hit', damage: cast.damage, crit: cast.crit });
+      showHitResult({ cast_id: resolvedId, attacker_id: user.id, target_id: opponent?.id, effect_id: 'basic_melee', result: cast.missed ? 'miss' : 'hit', damage: cast.damage, crit: cast.crit });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_melee', matchId: match.id, cast_id: cast.cast_id || castId, effect_id: 'basic_melee', resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id, lock_on: true } }));
       return true;
     } catch (e) {
@@ -603,7 +603,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         const castSlot=lastCastSlotRef.current;
         const combatActive=currentMatch?.status==='fighting' && Object.keys(currentMatch?.disconnects || {}).length===0 && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
         const fighterTurn=String(currentMatch?.turn_player_id || currentMatch?.host_id || '')===id;
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} isTurn={fighterTurn} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={1000} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} isTurn={fighterTurn} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={Math.round(1000/Number(p.combat_stats?.attack_speed || 1))} meleeDamage={p.combat_stats?.attack ?? 10} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();

@@ -1,4 +1,7 @@
 import { genreIdFor } from './genres.ts';
+import { ensureAvatarProgression } from './avatarProgressionState.ts';
+import { avatarLevel } from './combatStats.ts';
+import { conditionalUpdate } from './rewardJournal.ts';
 
 type AnyObj = Record<string, any>;
 
@@ -10,11 +13,11 @@ async function progressionRecord(svc:any,userId:string) {
 export async function addAvatarXp(svc:any,userId:string,amount:number,source:string) {
   const delta = Math.max(0, Math.floor(Number(amount || 0)));
   if (!delta) return progressionRecord(svc,userId);
-  const record = await progressionRecord(svc,userId);
-  const xp = Number(record?.global_xp || 0) + delta;
-  const level = Math.min(50, Math.max(1, Math.floor(xp / 1000) + 1));
-  if (record) return svc.AvatarProgression.update(record.id, { global_xp:xp, global_level:level });
-  return svc.AvatarProgression.create({ user_id:userId, global_xp:xp, global_level:level, available_stat_points:0, stats:{hp:100,strength:10,intelligence:10,will:10,tenacity:10}, genres:[], skill_allocations:{}, claimed_stat_rewards:[], claimed_knowledge_rewards:[] });
+  const record = await ensureAvatarProgression(svc,userId);
+  await conditionalUpdate(svc.AvatarProgression,{id:record.id,user_id:userId},{$inc:{global_xp:delta}});
+  const saved=await svc.AvatarProgression.get(record.id);
+  await conditionalUpdate(svc.AvatarProgression,{id:record.id,user_id:userId},{$max:{global_level:avatarLevel(saved)}});
+  return svc.AvatarProgression.get(record.id);
 }
 
 export async function addGenreXp(svc:any,userId:string,genreValue:any,amount:number,source:string) {

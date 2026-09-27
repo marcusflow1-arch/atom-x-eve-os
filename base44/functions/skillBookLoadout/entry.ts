@@ -386,7 +386,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
     svc.UserCard.filter({ user_id: user.id }, '-created_date', 1000),
     svc.Achievement.filter({ category: 'ability' }, '-created_date', 500),
     svc.Game.list('-created_date', 250),
-    svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500).catch(() => []),
+    svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500),
     avatarGender(svc, user.id, requestedGender),
   ]);
 

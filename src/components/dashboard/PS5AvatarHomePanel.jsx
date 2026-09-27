@@ -41,18 +41,18 @@ const RARITY_COLORS = {
   Common:    { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', text: 'rgba(255,255,255,0.5)', glow: 'transparent' },
 };
 
-function AvatarTab({ user, progression }) {
+function AvatarTab({ user, progression, combat }) {
   const level = progression?.global_level || 1;
-  const xp = progression?.global_xp || 0;
-  const xpNeeded = level * 100;
+  const xp = Math.max(0,Number(progression?.global_xp || 0)-(level-1)*1000);
+  const xpNeeded = 1000;
   const xpPercent = Math.min(100, (xp / xpNeeded) * 100);
-  const stats = progression?.stats || {};
+  const stats = combat || {};
 
   const statItems = [
-    { label: 'HP',       value: stats.hp || 100,   icon: Heart,      color: '#f87171' },
-    { label: 'Attack',   value: stats.strength || 10, icon: Sword,   color: '#fb923c' },
-    { label: 'Defense',  value: stats.defense || 5, icon: Shield,    color: '#60a5fa' },
-    { label: 'Speed',    value: stats.speed || 1.0, icon: Zap,       color: '#34d399' },
+    { label: 'HP',       value: stats.max_hp ?? '—',   icon: Heart,      color: '#f87171' },
+    { label: 'Attack',   value: stats.attack ?? '—', icon: Sword,   color: '#fb923c' },
+    { label: 'Defense',  value: stats.defense ?? '—', icon: Shield,    color: '#60a5fa' },
+    { label: 'Speed',    value: stats.attack_speed ?? '—', icon: Zap,       color: '#34d399' },
     { label: 'Score',    value: progression?.gamer_score || 0, icon: Crown, color: '#fbbf24' },
     { label: 'Games',    value: progression?.games_played || 0, icon: Target, color: '#a78bfa' },
   ];
@@ -293,21 +293,15 @@ function FriendsTab({ onSelectEnv }) {
   );
 }
 
+import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
+
 export default function PS5AvatarHomePanel({ onSelectEnv }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('avatar');
 
-  const { data: progressionData } = useQuery({
-    queryKey: ['avatar_progression_ps5', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const rows = await base44.entities.AvatarProgression.filter({ user_id: user.id });
-      return rows[0] || null;
-    },
-    enabled: !!user?.id,
-    staleTime: 30000,
-  });
+  const {state}=useAvatarCombatStats();
+  const progressionData=state?.progression;
 
   return (
     <div
@@ -375,7 +369,7 @@ export default function PS5AvatarHomePanel({ onSelectEnv }) {
             transition={{ duration: 0.18 }}
             className="h-full"
           >
-            {activeTab === 'avatar'    && <AvatarTab user={user} progression={progressionData} />}
+            {activeTab === 'avatar'    && <AvatarTab user={user} progression={progressionData} combat={state?.combat} />}
             {activeTab === 'trophies'  && <TrophiesTab />}
             {activeTab === 'inventory' && <InventoryTab />}
             {activeTab === 'friends'   && <FriendsTab onSelectEnv={onSelectEnv} />}

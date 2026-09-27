@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Zap, Trophy, Star, Gamepad2, TrendingUp, Network } from 'lucide-react';
 import DashboardAvatarOverview from './DashboardAvatarOverview';
+import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
 
 function StatLine({ icon, label, value, color = 'text-white/70' }) {
   return <div className="flex items-center justify-between py-[3px]"><div className="flex items-center gap-2"><span className={color}>{icon}</span><span className="text-white/50 text-[11px]">{label}</span></div><span className="text-white font-semibold text-[11px] tabular-nums">{value}</span></div>;
@@ -12,25 +13,22 @@ function StatLine({ icon, label, value, color = 'text-white/70' }) {
 export default function AvatarStatCard() {
   const { user } = useAuth();
   const [avatar, setAvatar] = useState(null);
-  const [progression, setProgression] = useState(null);
+  const {state}=useAvatarCombatStats();
+  const progression=state?.progression;
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       try {
-        const [avatars, progressions] = await Promise.all([
-          base44.entities.Avatar.filter({ user_id: user.id }),
-          base44.entities.AvatarProgression.filter({ user_id: user.id }),
-        ]);
+        const avatars = await base44.entities.Avatar.filter({ user_id: user.id });
         if (avatars.length > 0) setAvatar(avatars[0]);
-        if (progressions.length > 0) setProgression(progressions[0]);
       } catch (e) { console.error('Failed to load avatar stats:', e); }
     })();
   }, [user?.id]);
 
   const displayName = avatar?.name || user?.username || user?.full_name || 'Unknown';
   const gender = avatar?.gender || '—';
-  const globalLevel = progression?.global_level || user?.level || 1;
+  const globalLevel = progression?.global_level || 1;
   const rank = user?.rank || 'Recruit';
   const gamerScore = user?.gamer_score || 0;
   const aiPoints = user?.ai_achievement_points || 0;

@@ -49,7 +49,7 @@ export async function loadCombatProfile(svc:any,userId:string,record?:Row|null) 
   }
   const points = allocationState(progression || {});
   return {
-    progression: {...(progression || {}),global_level:avatarLevel(progression || {}),available_stat_points:points.available},
+    progression: {knowledge_level:1,knowledge_xp:0,available_skill_points:0,skill_allocations:{},claimed_knowledge_rewards:[],genres:[],...(progression || {}),global_level:avatarLevel(progression || {}),available_stat_points:points.available},
     ...points, equipment:items, equipment_stats:totals, combat:deriveCombatStats(progression || {},totals),
     revision:Number(progression?.stat_revision || 0),
   };
