@@ -151,7 +151,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       const detail = event?.detail || {};
       const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
       if (!sourcePlayerId || sourcePlayerId === localId || !ids.has(sourcePlayerId) || String(detail.matchId || '') !== matchId) return;
-      if (!['pvp_cast', 'ai_battle_card_cast'].includes(String(detail.kind || ''))) return;
+      if (!['pvp_cast', 'pvp_melee', 'ai_battle_card_cast'].includes(String(detail.kind || ''))) return;
       window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
     };
     window.addEventListener('webrtcRemoteAction', receive);
