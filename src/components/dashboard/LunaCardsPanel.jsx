@@ -184,6 +184,26 @@ export default function LunaCardsPanel() {
     event.dataTransfer.setData('text/plain', skill.title);
   };
 
+  const dropSkillIntoSlot = async (event, slotIndex) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (isSaving || !event.dataTransfer) return;
+    try {
+      const raw = event.dataTransfer.getData('application/json');
+      const payload = raw ? JSON.parse(raw) : null;
+      if (!payload || !['luna-skill-book', 'luna-card'].includes(String(payload.source || ''))) return;
+      const userCardId = String(payload.user_card_id || payload.card?.user_card_id || payload.card?.id || '');
+      const skill = (skills || []).find((entry) => String(entry.user_card_id || '') === userCardId);
+      if (!skill) {
+        showError('That ability could not be found in your current Skill Book.', 'Equip Skill');
+        return;
+      }
+      await equipSkill(slotIndex, skill);
+    } catch (error) {
+      showError(error?.message || 'Unable to equip that skill.', 'Equip Skill');
+    }
+  };
+
   const openGame = (game) => {
     setSelectedGameKey(game.key);
     setSelectedSkillId(null);
@@ -549,8 +569,16 @@ export default function LunaCardsPanel() {
                               <button
                                 key={slotIndex}
                                 type="button"
-                                disabled={isSaving || selectedSkill.can_equip === false}
+                                disabled={isSaving}
                                 aria-describedby={selectedSkill.can_equip === false ? 'skill-equip-reason' : undefined}
+                                aria-disabled={selectedSkill.can_equip === false || isSaving}
+                                onDragOver={(event) => {
+                                  if (!isSaving) {
+                                    event.preventDefault();
+                                    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+                                  }
+                                }}
+                                onDrop={(event) => dropSkillIntoSlot(event, slotIndex)}
                                 onClick={() => equipSkill(slotIndex, selectedSkill)}
                                 className={`min-h-[52px] border px-1.5 py-2 text-center transition-colors disabled:opacity-40 ${occupiedBySelected
                                   ? 'border-cyan-100/28 bg-cyan-100/[0.09] text-white'
