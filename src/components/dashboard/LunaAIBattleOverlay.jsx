@@ -60,9 +60,10 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const enterQueue = useCallback(async () => {
     if (battle.busy || waiting || connecting || ready) return;
     queuedFromThisOverlayRef.current = true;
-    // Start from the user's queue-button gesture so browsers permit playback.
-    // The persistent dashboard bridge keeps this same loop alive through combat.
-    startLoopSound('bgm_boss');
+    // Start PvP music from the user's queue-button gesture so browsers permit
+    // playback. The persistent dashboard bridge keeps this same loop alive
+    // through match-found, countdown and combat without restarting it.
+    if (mode === 'pvp') startLoopSound('bgm_boss');
     try {
       const body = await battle.join(mode);
       if (body?.match && ['matched', 'countdown', 'fighting'].includes(String(body.match.status || ''))) {
@@ -74,7 +75,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
       }
     } catch (error) {
       queuedFromThisOverlayRef.current = false;
-      stopLoopSound('bgm_boss');
+      if (mode === 'pvp') stopLoopSound('bgm_boss');
       if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
     }
   }, [battle, mode, waiting, connecting, ready, onClose]);
