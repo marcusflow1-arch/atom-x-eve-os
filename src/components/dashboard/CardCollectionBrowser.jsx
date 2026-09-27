@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import useCardCollection from '@/components/cards/useCardCollection';
 import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
+import { base44 } from '@/api/base44Client';
 
 const ADAM_XE_GAME_ID = '6ab999b5fce1745ff0577551';
 const GENRES = ['Adam XE', 'Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
@@ -130,6 +131,20 @@ export default function CardCollectionBrowser() {
 
   const gamesScrollRef = useRef(null);
   const wheelCooldown = useRef(false);
+  const demoBootstrapRef = useRef(false);
+
+  useEffect(() => {
+    if (!showFullView || demoBootstrapRef.current) return;
+    demoBootstrapRef.current = true;
+    setSelectedGenre('Adam XE');
+    setSelectedGame('Adam XE');
+    base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} })
+      .then(() => collection.refetch())
+      .catch((error) => {
+        console.warn('[Cards] Adam XE demo bootstrap failed', error);
+        demoBootstrapRef.current = false;
+      });
+  }, [showFullView, collection.refetch]);
 
   const adamXeCards = useMemo(() => (collection.cards || []).map((card) => ({
     id: String(card.user_card_id || card.trading_card_id || card.id),
@@ -295,6 +310,8 @@ export default function CardCollectionBrowser() {
         <div className="w-full flex justify-center items-center gap-2 mb-3">
           <button 
             onClick={() => {
+               setSelectedGenre('Adam XE');
+               setSelectedGame('Adam XE');
                setShowFullView(true);
             }}
             className="group"
