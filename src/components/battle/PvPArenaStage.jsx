@@ -319,6 +319,13 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (cooldownEnd > Date.now() + serverOffsetMs) { setError('Melee attack is recovering.'); return false; }
     setError('');
     const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
+    const fighter = runtimes.current.local;
+    if (fighter) {
+      fighter.yaw = facingYaw;
+      fighter.runtime.lockedFacingYaw = facingYaw;
+      fighter.root.rotation.y = facingYaw;
+    }
     try {
       const body = await invoke('basic_attack', { match_id: match.id, cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
