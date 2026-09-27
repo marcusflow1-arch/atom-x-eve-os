@@ -16,6 +16,7 @@ import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
 import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
 import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
 import CombatFx, { effectColor } from '@/components/battle/combatFx';
+import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { dismissAIBattleResult } from '@/components/battle/useAIBattleQueue';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 
@@ -104,13 +105,20 @@ function motionOffset(fighter, now) {
 }
 
 async function loadFighter({ scene, camera, player, side, onEffect }) {
+  const female = player.gender === 'female' || player.appearance?.gender === 'female';
   const gltf = await new GLTFLoader().loadAsync(player.model_url || player.appearance?.model_url);
+  try {
+    gltf.animations = await mergeAdamXeInjectedClips(gltf.animations || [], female ? 'female' : 'male');
+  } catch (error) {
+    // Keep the fighter usable even if an older browser cannot decode the
+    // enhanced animation pack. The server still owns the combat result.
+    console.warn('[PvP] Adam XE enhanced animation pack unavailable', error);
+  }
   const assetRoot = gltf.scene;
   scaleToHeight(assetRoot, 1.8 * Number(player.appearance?.height_scale || 1));
   applyCompanionAppearance(assetRoot, player.appearance || { gender: player.gender });
   assetRoot.traverse((node) => { if (node.isSkinnedMesh) node.frustumCulled = false; });
 
-  const female = player.gender === 'female' || player.appearance?.gender === 'female';
   let runtime, root, mixer = null;
   if (female) {
     scene.add(assetRoot);
@@ -295,8 +303,10 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (fighter.root) fighter.root.rotation.y = facingYaw;
 
     if (fighter.female) return fighter.runtime.playEffect(effect, { ...detail, effect, card: skill, target });
-    if (String(effect.id || '') === 'getsuga_tensho') return fighter.runtime.play(target);
-    return false;
+    // Adam's runtime now owns Getsuga + Chidori active clips. Route every male
+    // Adam XE ability through the same target-locked effect entry point instead
+    // of special-casing Getsuga and silently dropping Chidori.
+    return Boolean(fighter.runtime.playEffect?.(effect, { ...detail, effect, card: skill, target }));
   };
 
   const fighterKeyFor = (playerId) => (String(playerId) === String(user?.id) ? 'local' : 'opponent');
