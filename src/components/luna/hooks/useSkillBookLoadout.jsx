@@ -92,12 +92,14 @@ export function useSkillBookLoadout() {
   const companion = useCompanionIdentity();
   const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
   useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
-  const selectedAvatar = activeCharacter && !activeCharacter.isDevTest ? activeCharacter : companion;
+  const selectedAvatar = ['female', 'male'].includes(normalize(companion?.gender))
+    ? companion
+    : activeCharacter && !activeCharacter.isDevTest
+      ? activeCharacter
+      : companion;
   const activeAvatarGender = ['female', 'male'].includes(normalize(selectedAvatar?.gender))
     ? normalize(selectedAvatar.gender)
-    : ['female', 'male'].includes(normalize(companion?.gender))
-      ? normalize(companion.gender)
-      : '';
+    : '';
   const queryClient = useQueryClient();
   const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
   const clearHotbarSlot = useLunaStore((state) => state.clearHotbarSlot);
