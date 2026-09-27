@@ -157,6 +157,8 @@ Deno.serve(async (req) => {
         byType.set(key, [...(byType.get(key) || []), stack]);
       }
       for (const [type, qty] of Object.entries(requirements)) {
+        if (!Number.isSafeInteger(qty) || qty < 1) throw new Error('Invalid material cost');
+        if ((byType.get(type) || []).some((row) => !Number.isSafeInteger(Number(row.quantity)) || Number(row.quantity) < 0)) throw new Error('Material inventory needs to be repaired before upgrading');
         const available = (byType.get(type) || []).reduce((sum, row) => sum + Number(row.quantity || 0), 0);
         if (available < qty) throw new Error(`Need ${qty} ${type.replaceAll('_', ' ')}; you have ${available}`);
       }
@@ -204,7 +206,8 @@ Deno.serve(async (req) => {
       await commit({ enhanced_stats: { ...(progression.enhanced_stats || {}), [stat]: current + gain } }, 'enhance', `${stat} enhanced by +${gain}`, { stat, gain });
     } else if (action === 'combine') {
       if (Number(progression.stage || 1) >= 5) throw new Error('This card is already at the maximum combination stage');
-      const sacrificeIds = Array.isArray(payload?.sacrificeUserCardIds) ? payload.sacrificeUserCardIds.filter(Boolean) : [];
+      const sacrificeIds = Array.isArray(payload?.sacrificeUserCardIds) ? payload.sacrificeUserCardIds.map((id: any) => String(id || '').trim()).filter(Boolean) : [];
+      if (new Set(sacrificeIds).size !== sacrificeIds.length) throw new Error('Choose different cards for each fusion slot');
       const needed = Math.min(3, Number(progression.stage || 1) + 1);
       if (sacrificeIds.length < needed && !payload?.useWildcard) throw new Error(`Stage ${Number(progression.stage || 1) + 1} requires ${needed} compatible cards or a Wildcard`);
       const consumed: string[] = [];
@@ -212,16 +215,20 @@ Deno.serve(async (req) => {
         await spend({ wildcard: 1 });
       } else {
         const targetRarity = rarityRank[userCard.card_rarity] || 0;
+        const validatedIds: string[] = [];
         for (const id of sacrificeIds.slice(0, needed)) {
           if (id === userCard.id) throw new Error('The active card cannot consume itself');
           const sacrifice = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
           if (!sacrifice || sacrifice.user_id !== user.id) throw new Error('One selected fusion card is not owned by you');
+          if (sacrifice.starter_grant_user_id) throw new Error('Avatar starter cards cannot be consumed in fusion');
           if (sacrifice.is_equipped || sacrifice.trade_status === 'locked_in_trade') throw new Error(`${sacrifice.card_name} is equipped or locked in a trade`);
           const compatible = sacrifice.card_name === userCard.card_name || (sacrifice.game_name === userCard.game_name && (rarityRank[sacrifice.card_rarity] || 0) >= Math.max(0, targetRarity - 1));
           if (!compatible) throw new Error(`${sacrifice.card_name} is not compatible with this stage fusion`);
           consumed.push(sacrifice.card_name);
-          await base44.asServiceRole.entities.UserCard.delete(id);
+          validatedIds.push(id);
         }
+        // Validate the complete selection before consuming the first owned card.
+        for (const id of validatedIds) await base44.asServiceRole.entities.UserCard.delete(id);
       }
       const newStage = Number(progression.stage || 1) + 1;
       await commit({ stage: newStage, stars: Math.min(5, Number(progression.stars || 1) + 1), skill_points: Number(progression.skill_points || 0) + 1 }, 'combine', `Card advanced to Stage ${newStage}`, { consumed, wildcard: Boolean(payload?.useWildcard) });
