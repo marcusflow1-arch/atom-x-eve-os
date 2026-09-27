@@ -7,6 +7,15 @@ import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityC
 import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
 
 const requestId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const normalize = (value) => String(value || '').trim().toLowerCase();
+const detectAvatarGender = (avatar) => {
+  const variant = normalize(avatar?.female_model_variant);
+  const model = normalize(avatar?.model_url || avatar?.base_body_model_url);
+  if (variant.includes('artemis') || model.includes('artemis')) return 'female';
+  if (model.includes('getsuga')) return 'male';
+  const gender = normalize(avatar?.gender);
+  return gender === 'female' || gender === 'male' ? gender : '';
+};
 const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-surface-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let heartbeatTimer = null;
 let heartbeatBusy = false;
@@ -21,7 +30,17 @@ const unwrap = (response) => {
   }
   return body;
 };
-const invoke = async (action, data = {}) => unwrap(await base44.functions.invoke('aiBattleMatchmaker', { action, data }));
+const invoke = async (action, data = {}) => {
+  try {
+    return unwrap(await base44.functions.invoke('aiBattleMatchmaker', { action, data }));
+  } catch (error) {
+    const body = error?.response?.data?.data ?? error?.response?.data ?? error?.body ?? null;
+    const next = new Error(body?.error || body?.message || error?.message || 'AI Battle request failed.');
+    next.status = error?.response?.status || error?.status || 500;
+    next.body = body;
+    throw next;
+  }
+};
 const sessionData = (extra = {}) => ({ client_session_id: PAGE_QUEUE_SESSION_ID, ...extra });
 const queueIsActive = (body) => ['waiting', 'matched'].includes(String(body?.queue?.status || ''));
 
@@ -55,18 +74,17 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const companion = useCompanionIdentity();
   const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
   useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
-  const companionGender = String(companion?.gender || '').toLowerCase();
-  const selectedAvatar = ['female', 'male'].includes(companionGender)
+  const companionGender = detectAvatarGender(companion);
+  const selectedAvatar = companionGender
     ? companion
     : activeCharacter && !activeCharacter.isDevTest
       ? activeCharacter
       : companion;
-  const selectedGender = String(selectedAvatar?.gender || '').toLowerCase() === 'female' ? 'female' : 'male';
+  const selectedGender = detectAvatarGender(selectedAvatar) || 'male';
   const selectedModelUrl = selectedAvatar?.model_url || selectedAvatar?.base_body_model_url || '';
   const selectedAppearance = selectedAvatar ? { ...selectedAvatar, gender: selectedGender, model_url: selectedModelUrl || selectedAvatar.model_url || '' } : { gender: selectedGender, model_url: selectedModelUrl };
   const session = useDashboardSession();
   const queryClient = useQueryClient();
-  const readyAttempt = useRef('');
   const joinAttempt = useRef('');
   const key = ['ai-battle-matchmaking', user?.id];
 
@@ -142,20 +160,6 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     }
     return undefined;
   }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username]);
-
-  // Both models must be present before the server begins the shared countdown.
-  useEffect(() => {
-    if (!sessionBridge || !match?.id || match.status !== 'matched') return undefined;
-    if (session.status !== 'connected' || String(session.channel_id || '') !== String(match.dashboard_channel || '')) return undefined;
-    const present = new Set((session.players || []).map((p) => String(p.player_id)));
-    if (!(match.player_ids || []).every((id) => present.has(String(id)))) return undefined;
-    if (readyAttempt.current === match.id) return undefined;
-    readyAttempt.current = match.id;
-    invoke('ready', sessionData({ match_id: match.id }))
-      .then((body) => queryClient.setQueryData(key, (prev = {}) => ({ ...prev, match: body.match || prev.match, server_time: body.server_time || prev.server_time })))
-      .catch((error) => { console.warn('[AI Battle] ready retry', error); window.setTimeout(() => { readyAttempt.current = ''; }, 1500); });
-    return undefined;
-  }, [sessionBridge, match?.id, match?.status, match?.dashboard_channel, match?.player_ids, session.channel_id, session.status, session.players, queryClient, key]);
 
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
