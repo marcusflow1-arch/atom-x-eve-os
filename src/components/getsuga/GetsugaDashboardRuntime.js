@@ -354,18 +354,20 @@ export class GetsugaDashboardRuntime {
     this.mixer.update(step);
     this.fxMixer?.update?.(step);
 
-    if (!this.playing || !this.attackAction) return;
+    if (!this.playing || !this.activeAction) return;
 
     // Keep facing hard-locked while the authored clip runs. Animation tracks can
     // move bones, but they are never allowed to rotate the battle wrapper away
     // from the selected opponent.
     if (this.group) this.group.rotation.y = this.lockedFacingYaw;
 
-    const time = this.attackAction.time;
-    for (const [name, marker] of Object.entries(GETSUGA_EVENTS)) {
-      if (name === 'end' || this.fired.has(name) || time < marker) continue;
+    const time = this.activeAction.time;
+    for (const [name, marker] of Object.entries(this.activeEvents || {})) {
+      if (name === 'end' || this.fired.has(name) || time < Number(marker)) continue;
       this.fired.add(name);
       this.onEvent(name, {
+        effectId: this.activeEffectId,
+        clipName: this.activeClipName,
         time,
         frame: 1,
         target: this.activeTarget,
@@ -411,6 +413,12 @@ export class GetsugaDashboardRuntime {
     this.mixer = null;
     this.idleAction = null;
     this.attackAction = null;
+    this.abilityActions?.clear?.();
+    this.abilityActions = new Map();
+    this.activeAction = null;
+    this.activeClipName = '';
+    this.activeEffectId = '';
+    this.activeEvents = GETSUGA_EVENTS;
     this.fxRoot = null;
     this.fxMixer = null;
     this.fxAttackAction = null;
