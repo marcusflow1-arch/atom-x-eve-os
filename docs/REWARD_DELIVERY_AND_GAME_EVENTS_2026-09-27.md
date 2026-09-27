@@ -1,5 +1,7 @@
 # Reward delivery and signed game events — 27 September 2026
 
+Follow-up: the paid-order recovery and visible claim/retry work listed below is implemented in [Store claims and checkout recovery](STORE_CHECKOUT_RECOVERY_2026-09-27.md). That handoff records verification and the remaining live Stripe setup.
+
 This continues the platform audit from `e5128eff71bd6249c3b14204336173defc608c8e`. The previous authorization pass remains in place. Newer combat and rig-specific eligibility changes were preserved; this pass does not claim authorship of those parallel changes.
 
 ## Delivered behavior
