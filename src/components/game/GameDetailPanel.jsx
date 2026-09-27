@@ -821,12 +821,12 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
         className="absolute inset-0 z-0"
       >
         <img 
-          src={game.cover_image} 
+          src={game.banner_image || game.cover_image} 
           alt={game.title} 
-          className="w-full h-full object-cover opacity-40 blur-sm scale-105"
+          className="w-full h-full object-cover opacity-55 blur-[1px] scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/80 to-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-transparent to-[#0d0d0d]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/68 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d]/78 via-transparent to-[#0d0d0d]/72" />
         {/* Scanlines */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
       </motion.div>
