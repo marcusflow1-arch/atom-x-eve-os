@@ -136,8 +136,8 @@ export default function LunaAIBattleOverlay({ onClose }) {
         <div className="grid grid-cols-3 border-b border-white/[0.07]">
           {MODES.map(({ id, label, sub, icon: Icon }) => {
             const selected = mode === id;
-            const activeQueueTile = queuedMode === id && (waiting || connecting || ready);
-            const disabled = battle.busy || ((connecting || ready) && !activeQueueTile) || (waiting && !activeQueueTile);
+            const activeQueueTile = queuedMode === id && (waiting || reserved || connecting || ready);
+            const disabled = battle.busy || ((reserved || connecting || ready) && !activeQueueTile) || (waiting && !activeQueueTile);
             return (
               <button
                 key={id}
@@ -150,7 +150,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
                 <Icon className={`mb-2 h-4 w-4 ${selected ? 'text-cyan-100' : 'text-white/35'}`} />
                 <strong className="block text-[10px] text-white/90">{label}</strong>
                 <small className="mt-0.5 block text-[7px] text-white/35">
-                  {waiting && activeQueueTile ? 'Queued · click again to leave' : sub}
+                  {waiting && activeQueueTile ? 'Queued · waiting for opponent' : reserved && activeQueueTile ? 'Opponent found · confirming both players' : sub}
                 </small>
               </button>
             );
@@ -162,7 +162,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
             Online now: {onlineSummary?.online ?? 0} · In queue: {onlineSummary?.in_queue ?? 0} · Live matches: {onlineSummary?.matches_live ?? 0}
           </div>
           <div className="flex min-h-[58px] items-center border border-white/[0.07] bg-white/[0.025] px-4">
-            {(battle.busy || connecting || ready) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
+            {(battle.busy || reserved || connecting || ready) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
             <div>
               <p className="text-[10px] font-semibold text-white/80">{active.label}</p>
               <p className="mt-1 text-[8px] text-white/42">{statusText}</p>
@@ -171,10 +171,10 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
           <div className="mt-3 flex gap-2">
             {waiting ? (
-              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05] disabled:opacity-50">{battle.busy ? 'Leaving Queue…' : 'Cancel Queue · Q'}</button>
-            ) : connecting ? (
-              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 hover:bg-cyan-100/[0.08] disabled:opacity-50">{battle.busy ? 'Leaving Match…' : 'Cancel Match · Q'}</button>
-            ) : ready ? (
+              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05] disabled:opacity-50">{battle.busy ? 'Leaving Queue…' : 'Cancel Queue'}</button>
+            ) : reserved ? (
+              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 hover:bg-cyan-100/[0.08] disabled:opacity-50">{battle.busy ? 'Cancelling…' : 'Cancel Match Reservation'}</button>
+            ) : connecting || ready ? (
               <button type="button" disabled className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 opacity-80">Entering Match…</button>
             ) : (
               <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : 'Enter Queue · Q'}</button>
