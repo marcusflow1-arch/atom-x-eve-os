@@ -172,6 +172,41 @@ async function queueForMatch(svc: any, userId: string, matchId: string) {
   const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
   return rows.find((r: Row) => r.status === 'matched' && String(r.match_id || '') === String(matchId)) || null;
 }
+async function anyQueueForMatch(svc: any, userId: string, matchId: string) {
+  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
+  return rows.find((r: Row) => String(r.match_id || '') === String(matchId)) || null;
+}
+async function activeMatchForUser(svc: any, userId: string) {
+  const states = await svc.PlayerState.filter({ player_id: String(userId) }, '-updated_date', 20).catch(() => []);
+  for (const state of states || []) {
+    const matchId = String(state?.active_match_id || '');
+    if (!matchId) continue;
+    const match = await getMatch(svc, matchId);
+    if (match && match.status !== 'ended' && (match.player_ids || []).map(String).includes(String(userId))) return match;
+    if (!match || match.status === 'ended') await svc.PlayerState.update(state.id, { active_match_id: '' }).catch(() => null);
+  }
+  return null;
+}
+async function recoverQueueForMatch(svc: any, userId: string, match: Row, clientSessionId = '') {
+  const stamp = nowIso();
+  const existing = await anyQueueForMatch(svc, userId, String(match.id));
+  const player = (match.players || []).find((p: Row) => String(p.id || p.player_id || '') === String(userId)) || {};
+  const opponentId = (match.player_ids || []).map(String).find((id: string) => id !== String(userId)) || '';
+  const patch: Row = {
+    status: 'matched', match_id: String(match.id), host_id: String(match.host_id || ''), opponent_id: opponentId,
+    last_seen_at: stamp, connected_at: stamp, connected_session_id: clientSessionId || existing?.client_session_id || '',
+    client_session_id: clientSessionId || existing?.client_session_id || '',
+  };
+  if (existing?.id) return await svc.AIBattleQueueEntry.update(existing.id, patch);
+  return await svc.AIBattleQueueEntry.create({
+    user_id: String(userId), player_name: player.name || 'Player', avatar_url: player.avatar_url || '',
+    avatar_gender: player.gender === 'female' ? 'female' : 'male', avatar_model_url: player.model_url || '', avatar_appearance: player.appearance || {},
+    mode: String(match.mode || 'pvp'), status: 'matched', request_id: `reconnect:${match.id}`,
+    client_session_id: clientSessionId, queued_at: stamp, last_seen_at: stamp, matched_at: stamp,
+    connected_at: stamp, connected_session_id: clientSessionId, ready_at: '', match_id: String(match.id),
+    host_id: String(match.host_id || ''), opponent_id: opponentId,
+  });
+}
 async function cancelQueue(svc: any, row: Row | null) { if (row?.id && row.status !== 'cancelled') await svc.AIBattleQueueEntry.update(row.id, { status: 'cancelled' }); }
 async function cancelAllQueuesForUser(svc: any, userId: string) {
   const rows = await activeQueuesForUser(svc, userId);
