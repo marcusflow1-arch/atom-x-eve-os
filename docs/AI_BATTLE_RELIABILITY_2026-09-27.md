@@ -79,3 +79,13 @@ Run with `node --test tests/ai-battle-matchmaking.test.mjs` (requires `npm ci`, 
 
 - Deploy the `aiBattleMatchmaker` function together with the `AIBattleMatch` entity change (new `last_cast` object field).
 - Both frontend and backend must ship together. The new client reads `notice` and `last_cast`, but tolerates their absence.
+
+## Follow-up: Queue flips back to Q (rate limit)
+
+Base44's Logs showed `aiBattleMatchmaker` returning **429 (too many requests)** many times a minute. The Queue popup treated rate-limit errors as silent, so the button spun and flipped back to Q. Other dashboard functions (`dashboardSession`, `partySystem`, `ownedGames`) were failing at the same time because the limit is shared across the whole app.
+
+- **Polling is slower per phase:** 3 s while queued, 1.5 s while connecting, 1 s during a fight, 30 s when idle, and 6 s after a 429. Before, it was 0.5–1 s in every phase.
+- **The background heartbeat skips its tick** while the dashboard poller is already active.
+- **The arena's "ready" confirmation** is resent every 4 s instead of every second.
+- **The server memoizes the caller's queue rows per request.** It also skips the PlayerState lookup for waiting rows, and only re-reads after a pair was actually created. A queued poll now costs at most 2 reads (was 4), and a fight poll costs 3 (was 4).
+- **Join, cancel and reconnect retry a 429** after 1.5 s, 3 s and 5 s. If the server is still busy, the popup says so instead of silently resetting.

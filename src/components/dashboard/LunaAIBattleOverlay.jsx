@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
-import useAIBattleQueue, { setAIBattleOverlayOpen } from '@/components/battle/useAIBattleQueue';
+import useAIBattleQueue, { isRateLimited, setAIBattleOverlayOpen } from '@/components/battle/useAIBattleQueue';
 import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
-import { showError } from '@/components/error/ErrorToast';
+import { showError, showInfo } from '@/components/error/ErrorToast';
 import useOnlineSummary from '@/components/social/useOnlineSummary';
 
 const MODES = [
@@ -11,7 +11,7 @@ const MODES = [
   { id: 'world_boss', label: 'World Boss', sub: 'Two players vs boss', icon: Crown },
 ];
 
-const isRateLimitError = (error) => /rate limit|too many requests|too many attempts/i.test(String(error?.message || error || ''));
+const BUSY_MESSAGE = 'AI Battle is busy right now. Wait a few seconds and press Queue again.';
 
 export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
@@ -62,7 +62,8 @@ export default function LunaAIBattleOverlay({ onClose }) {
     try {
       await battle.cancel();
     } catch (error) {
-      if (!isRateLimitError(error)) showError(error, 'Leave AI Battle Queue');
+      if (isRateLimited(error)) showInfo(BUSY_MESSAGE);
+      else showError(error, 'Leave AI Battle Queue');
     }
   }, [battle]);
 
@@ -89,7 +90,10 @@ export default function LunaAIBattleOverlay({ onClose }) {
     } catch (error) {
       queuedFromThisOverlayRef.current = false;
       if (mode === 'pvp') stopLoopSound('bgm_boss');
-      if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
+      // join already retried the rate limit several times. Never fail silently:
+      // that is what made the button just flip back to Q.
+      if (isRateLimited(error)) showInfo(BUSY_MESSAGE);
+      else showError(error, 'AI Battle Queue');
     } finally {
       queueRequestRef.current = false;
     }

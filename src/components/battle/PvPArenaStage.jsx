@@ -423,7 +423,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       }
     };
     reportReady();
-    const timer = window.setInterval(reportReady, 1000);
+    // One confirmation is normally enough; the status poll starts the countdown
+    // once both fighters are ready. Resend slowly only in case it was lost.
+    const timer = window.setInterval(reportReady, 4000);
     return () => { cancelled = true; window.clearInterval(timer); };
   }, [loaded, graphicsError, match?.id, match?.status, queryClient, user?.id]);
 

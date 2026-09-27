@@ -225,3 +225,26 @@ for (const action of ['cancel', 'forfeit']) {
     assert.equal(opponentView.match, null);
   });
 }
+
+// Base44 rate-limits the whole app (HTTP 429). Queue polls must stay cheap.
+test('a waiting queue poll costs at most two database reads', async () => {
+  tables.set('AIBattleQueueEntry', [queueRow('a', { status: 'waiting', match_id: '', connected_at: '', connected_session_id: '' })]);
+  let reads = 0;
+  failure = () => { reads += 1; return false; };
+  const body = await battle('status', { client_session_id: 'session-a' }, 'a');
+  assert.equal(body.queue.status, 'waiting');
+  assert.ok(reads <= 2, `waiting poll used ${reads} reads`);
+});
+
+test('a fight poll reads each queue row once', async () => {
+  prefightMatch('fighting', {
+    fight_starts_at: iso(-5000), fight_ends_at: iso(170000), positions: { a: { x: 0, z: 5 }, b: { x: 0, z: -5 } },
+    atb: {}, cooldowns: {}, pending_hits: [], hit_log: [], disconnects: {},
+  });
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+  let reads = 0;
+  failure = () => { reads += 1; return false; };
+  const body = await battle('status', { client_session_id: 'session-a', position: { x: 0, z: 5 } }, 'a');
+  assert.equal(body.match.status, 'fighting');
+  assert.ok(reads <= 3, `fight poll used ${reads} reads`);
+});

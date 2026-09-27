@@ -51,6 +51,26 @@ const invoke = async (action, data = {}) => {
   }
 };
 const sessionData = (extra = {}) => ({ client_session_id: PAGE_QUEUE_SESSION_ID, ...extra });
+
+// Base44 answers 429 when the app sends too many requests. That is a "try again
+// shortly", not a real failure: the Queue button used to give up silently on it
+// and flip back to Q.
+export const isRateLimited = (error) => Number(error?.status) === 429
+  || /rate limit|too many requests|too many attempts/i.test(String(error?.message || error || ''));
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const RETRY_DELAYS_MS = [1500, 3000, 5000];
+// Only for actions that are safe to repeat (join/cancel/reconnect converge on
+// the same server state). Combat actions are never retried automatically.
+async function invokeWithRetry(action, data) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await invoke(action, data);
+    } catch (error) {
+      if (!isRateLimited(error) || attempt >= RETRY_DELAYS_MS.length) throw error;
+      await wait(RETRY_DELAYS_MS[attempt]);
+    }
+  }
+}
 const queueIsActive = (body) => ['waiting', 'matched'].includes(String(body?.queue?.status || ''));
 const matchIsActive = (body) => ACTIVE_MATCH_STATUSES.includes(String(body?.match?.status || ''));
 
@@ -105,8 +125,15 @@ export function stopAIBattleQueueHeartbeat() {
   heartbeatTimer = null;
   heartbeatBusy = false;
 }
-async function heartbeatOnce() {
+async function heartbeatOnce({ force = false } = {}) {
   if (heartbeatBusy) return null;
+  // While the dashboard's own poller is running it already keeps the queue
+  // alive. Skipping here halves the request rate that was triggering Base44's
+  // rate limit (429).
+  if (!force && heartbeatUserId) {
+    const updatedAt = Number(queryClientInstance.getQueryState(aiBattleQueryKey(heartbeatUserId))?.dataUpdatedAt || 0);
+    if (Date.now() - updatedAt < 9000) return null;
+  }
   heartbeatBusy = true;
   try {
     const body = await fetchAIBattleStatus();
@@ -120,11 +147,11 @@ async function heartbeatOnce() {
 }
 export function startAIBattleQueueHeartbeat() {
   if (typeof window === 'undefined' || heartbeatTimer) return;
-  heartbeatTimer = window.setInterval(() => heartbeatOnce().catch((error) => console.warn('[AI Battle] heartbeat retry', error)), 8000);
+  heartbeatTimer = window.setInterval(() => heartbeatOnce().catch((error) => console.warn('[AI Battle] heartbeat retry', error)), 10000);
 }
 export async function touchAIBattleQueueSession(userId = '') {
   if (userId) heartbeatUserId = String(userId);
-  const body = await heartbeatOnce();
+  const body = await heartbeatOnce({ force: true });
   if (queueIsActive(body) || matchIsActive(body)) startAIBattleQueueHeartbeat();
   return body;
 }
@@ -205,20 +232,23 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     queryKey: key,
     enabled: Boolean(user?.id),
     queryFn: fetchAIBattleStatus,
+    // Poll only as fast as each phase needs. Every status call costs several
+    // database operations, and the previous 0.5-1 s cadence (x every open tab)
+    // pushed the app over Base44's rate limit, which is what made Queue fail.
     refetchInterval: polling ? (query) => {
+      if (isRateLimited(query.state.error)) return 6000;
       const body = query.state.data || {};
       const status = String(body?.match?.status || '');
-      // Combat damage is authoritative on the match record. Poll fighting more
-      // frequently so resolved skill hits and HP changes appear on both clients
-      // close to their actual hit frame instead of waiting up to 1.5 seconds.
-      if (status === 'fighting') return 500;
-      if (['matched', 'connecting', 'countdown'].includes(status)) return 750;
-      if (body?.queue?.status === 'waiting') return 1000;
+      // The fight is turn based; your own actions update instantly from their
+      // response, and the opponent's turn/hits arrive within a second.
+      if (status === 'fighting') return 1000;
+      if (['matched', 'connecting', 'countdown'].includes(status)) return 1500;
+      if (body?.queue?.status === 'waiting') return 3000;
       // If the arena temporarily vanished from cache during a room/network drop,
-      // keep looking for the durable server-side active match instead of waiting
-      // 15 seconds or forcing the player to press Queue again.
-      if (typeof window !== 'undefined' && sessionStorage.getItem('luna_pvp_active_match_id')) return 1000;
-      return 15000;
+      // keep looking for the durable server-side active match instead of
+      // forcing the player to press Queue again.
+      if (typeof window !== 'undefined' && sessionStorage.getItem('luna_pvp_active_match_id')) return 3000;
+      return 30000;
     } : false,
     refetchOnWindowFocus: polling,
     retry: false,
@@ -226,7 +256,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   });
 
   const mutation = useMutation({
-    mutationFn: ({ action, data }) => invoke(action, sessionData(data)),
+    mutationFn: ({ action, data }) => invokeWithRetry(action, sessionData(data)),
     retry: false,
     onSuccess: (body) => {
       announce(body);

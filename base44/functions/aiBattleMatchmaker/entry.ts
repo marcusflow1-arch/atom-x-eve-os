@@ -46,6 +46,32 @@ async function getOptional(entity: any, id: string) {
     throw error;
   }
 }
+// One status call used to read the caller's queue rows three or four times
+// (duplicate cleanup, reservation lookup, disconnect check). Base44 rate-limits
+// the app as a whole, so this per-request memo matters: it serves repeat reads
+// of "this user's queue rows" from the first result and drops the memo on any
+// queue write so later reads in the same request see the change.
+function withQueueReadCache(entities: any) {
+  const queue = entities.AIBattleQueueEntry;
+  const byUser = new Map<string, Promise<Row[]>>();
+  const cachedQueue = {
+    filter(query: Row = {}, sort?: string, limit?: number) {
+      const keys = Object.keys(query || {});
+      if (keys.length === 1 && keys[0] === 'user_id' && sort === '-created_date' && limit === 50) {
+        const key = String(query.user_id);
+        if (!byUser.has(key)) {
+          byUser.set(key, queue.filter(query, sort, limit).catch((error: any) => { byUser.delete(key); throw error; }));
+        }
+        return byUser.get(key)!.then((rows: Row[]) => (rows || []).map((row: Row) => ({ ...row })));
+      }
+      return queue.filter(query, sort, limit);
+    },
+    get: (id: string) => queue.get(id),
+    create: async (data: Row) => { byUser.clear(); try { return await queue.create(data); } finally { byUser.clear(); } },
+    update: async (id: string, data: Row) => { byUser.clear(); try { return await queue.update(id, data); } finally { byUser.clear(); } },
+  };
+  return new Proxy(entities, { get: (target: any, name: any) => (name === 'AIBattleQueueEntry' ? cachedQueue : target[name]) });
+}
 const playerName = (user: Row) => user.full_name || user.username || user.display_name || 'Player';
 const heartbeatAt = (row: Row) => Date.parse(row?.last_seen_at || row?.queued_at || 0);
 const waitingLive = (row: Row) => row?.status === 'waiting' && heartbeatAt(row) > Date.now() - WAITING_LIVE_MS;
@@ -539,8 +565,9 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
 
   // Once the server has promoted a pair into a real match, PlayerState is the
   // durable recovery pointer. Consult it only when the normal queue pointer is
-  // missing/wrong; healthy fights keep the lightweight queue -> match path.
-  if (!queue || queue.status !== 'matched' || !queue.match_id) {
+  // missing/wrong. A waiting row needs no lookup: `join` already recovers a
+  // live match before queueing, and skipping it keeps queue polls cheap.
+  if (!queue || (queue.status === 'matched' && !queue.match_id)) {
     savedMatch = await activeMatchForUser(svc, userId);
     if (savedMatch) {
       if (queue?.status === 'waiting') await cancelQueue(svc, queue).catch(() => null);
@@ -598,8 +625,10 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
   }
 
   if (queue.status === 'waiting') {
-    await tryPair(svc, queue.mode, String(queue.id));
-    queue = await svc.AIBattleQueueEntry.get(queue.id).catch(() => queue);
+    const paired = await tryPair(svc, queue.mode, String(queue.id));
+    // Re-read only when this call created the pair; otherwise nothing changed.
+    if (!paired) return { queue, match:null };
+    queue = await getOptional(svc.AIBattleQueueEntry, String(queue.id)) || queue;
     if (queue.status === 'waiting') return { queue, match:null };
   }
 
@@ -645,7 +674,7 @@ Deno.serve(async (req) => {
   try {
     const client = createClientFromRequest(req); const user = await client.auth.me();
     if (!user) return json({ error:'Sign in to use AI Battle.' },401);
-    const svc = client.asServiceRole.entities;
+    const svc = withQueueReadCache(client.asServiceRole.entities);
     const body = await req.json().catch(()=>({})); const action=String(body?.action||'status'); const data=body?.data||{}; const userId=String(user.id);
     const sessionId=String(data.client_session_id||'').slice(0,160);
 
