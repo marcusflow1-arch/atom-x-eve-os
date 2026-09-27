@@ -465,7 +465,38 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         const currentMatch=matchRef.current; const offset=serverOffsetRef.current; const currentOpponent=opponentRef.current;
         const lp=positions.current.local,op=positions.current.opponent;
         const canMove=currentMatch?.status==='fighting' && Object.keys(currentMatch?.disconnects || {}).length===0 && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
-        let dx=0,dz=0; if(canMove){dx=Number(held.current.has('KeyD'))-Number(held.current.has('KeyA')); const toward=localSide==='host'?-1:1; dz=(Number(held.current.has('KeyW'))-Number(held.current.has('KeyS')))*toward; const len=Math.hypot(dx,dz);if(len){dx/=len;dz/=len;const walking=held.current.has('ShiftLeft')||held.current.has('ShiftRight');const speed=walking?WALK_SPEED:RUN_SPEED;const box=boxFor(localSide);const next=clampPos({x:lp.x+dx*speed*dt,z:lp.z+dz*speed*dt},box);lp.x=next.x;lp.z=next.z;const forwardX=Math.sin(lf.yaw),forwardZ=Math.cos(lf.yaw);const rightX=forwardZ,rightZ=-forwardX;const f=dx*forwardX+dz*forwardZ,r=dx*rightX+dz*rightZ;const dir=Math.abs(r)>Math.abs(f)?(r>0?'right':'left'):(f>=0?'forward':'back');lf.runtime.playLocomotion?.(`${walking?'walk':'run'}_${dir}`);}else lf.runtime.playIdle?.();}
+        let dx = 0, dz = 0, moveAnim = 'forward', moving = false;
+        if (canMove) {
+          const strafe = Number(held.current.has('KeyD')) - Number(held.current.has('KeyA'));
+          const advance = Number(held.current.has('KeyW')) - Number(held.current.has('KeyS'));
+          const inputLength = Math.hypot(strafe, advance);
+          if (inputLength) {
+            // Lock-on movement is target-relative: W advances toward the opponent,
+            // S retreats while still facing them, and A/D strafe around them.
+            const targetX = op.x - lp.x;
+            const targetZ = op.z - lp.z;
+            const targetLength = Math.max(0.001, Math.hypot(targetX, targetZ));
+            const forwardX = targetX / targetLength;
+            const forwardZ = targetZ / targetLength;
+            const rightX = forwardZ;
+            const rightZ = -forwardX;
+            dx = (forwardX * advance + rightX * strafe) / inputLength;
+            dz = (forwardZ * advance + rightZ * strafe) / inputLength;
+            moving = true;
+            moveAnim = Math.abs(strafe) > Math.abs(advance)
+              ? (strafe > 0 ? 'right' : 'left')
+              : (advance >= 0 ? 'forward' : 'back');
+            const walking = held.current.has('ShiftLeft') || held.current.has('ShiftRight');
+            const speed = walking ? WALK_SPEED : RUN_SPEED;
+            const box = boxFor(localSide);
+            const next = clampPos({ x: lp.x + dx * speed * dt, z: lp.z + dz * speed * dt }, box);
+            lp.x = next.x;
+            lp.z = next.z;
+            lf.runtime.playLocomotion?.(`${walking ? 'walk' : 'run'}_${moveAnim}`);
+          } else {
+            lf.runtime.playIdle?.();
+          }
+        }
         const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
         lf.root.position.x=lp.x;lf.root.position.z=lp.z;if(!lf.runtime.isPlaying?.())lf.root.rotation.y=lf.yaw;of.root.position.x=op.x;of.root.position.z=op.z;if(!of.runtime.isPlaying?.())of.root.rotation.y=of.yaw;
