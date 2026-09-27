@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { isEquipmentSlot, itemFitsSlot } from '../../shared/equipmentSlots.ts';
+import { hasLivePvpMatch } from '../../shared/matchLock.ts';
 
 type Row = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -13,16 +14,13 @@ async function ensureLoadout(svc: any, userId: string) {
   return active;
 }
 
-async function hasLivePvpMatch(svc:any, userId:string) {
-  const states = await svc.PlayerState.filter({ player_id:String(userId) }, '-updated_date', 1).catch(() => []);
-  const matchId = String(states?.[0]?.active_match_id || '');
-  if (!matchId) return false;
-  const match = await svc.AIBattleMatch.get(matchId).catch(() => null);
-  if (!match || !['matched','countdown','fighting'].includes(String(match.status || ''))) {
-    if (states[0]) await svc.PlayerState.update(states[0].id, { active_match_id:'' }).catch(() => null);
-    return false;
+async function releaseOwnedCard(svc:any, userId:string, userCardId:string) {
+  if (!userCardId) return;
+  const card = await svc.UserCard.get(String(userCardId)).catch(() => null);
+  // A saved loadout can still reference a card that has since been transferred.
+  if (card && String(card.user_id) === String(userId)) {
+    await svc.UserCard.update(card.id, { equipped_to:'none', is_equipped:false });
   }
-  return true;
 }
 
 async function snapshotOwnedEquipment(svc:any, userId:string, userCardId:string) {
@@ -85,14 +83,21 @@ Deno.serve(async (req) => {
     if (!user) return json({ error:'Unauthorized' }, 401);
     const { action='getState', data={} } = await req.json().catch(() => ({}));
     const svc = base44.asServiceRole.entities;
+    if (!['getState','equip','unequip','clear'].includes(action)) return json({ error:'Unknown equipment action' }, 400);
+    if (['equip','unequip','clear'].includes(action)) {
+      try {
+        if (await hasLivePvpMatch(svc, user.id)) return json({ error:'Finish your match first' }, 409);
+      } catch (error) {
+        console.error('Could not verify equipment match lock', error);
+        return json({ error:'Unable to verify your match status. Please try again.' }, 503);
+      }
+    }
     let loadout = await ensureLoadout(svc, user.id);
 
     if (action === 'getState') {
       loadout = await cleanState(svc, user.id, loadout);
       return json({ success:true, loadout:serialize(loadout) });
     }
-
-    if (['equip','unequip','clear'].includes(action) && await hasLivePvpMatch(svc, user.id)) return json({ error:'Finish your match first' }, 409);
 
     if (action === 'equip') {
       const slot = String(data.slot || '');
@@ -107,7 +112,7 @@ Deno.serve(async (req) => {
       current[slot] = canonical.item;
       loadout = await svc.Loadout.update(loadout.id, { equipped_items:current, is_active:true });
       await svc.UserCard.update(canonical.owned.id, { equipped_to:'loadout', is_equipped:true });
-      if (oldItem?.user_card_id && oldItem.user_card_id !== userCardId) await svc.UserCard.update(String(oldItem.user_card_id), { equipped_to:'none', is_equipped:false }).catch(() => null);
+      if (oldItem?.user_card_id && oldItem.user_card_id !== userCardId) await releaseOwnedCard(svc, user.id, String(oldItem.user_card_id));
       return json({ success:true, loadout:serialize(loadout) });
     }
 
@@ -118,14 +123,14 @@ Deno.serve(async (req) => {
       const old = current[slot] as Row | undefined;
       delete current[slot];
       loadout = await svc.Loadout.update(loadout.id, { equipped_items:current, is_active:true });
-      if (old?.user_card_id) await svc.UserCard.update(String(old.user_card_id), { equipped_to:'none', is_equipped:false }).catch(() => null);
+      if (old?.user_card_id) await releaseOwnedCard(svc, user.id, String(old.user_card_id));
       return json({ success:true, loadout:serialize(loadout) });
     }
 
     if (action === 'clear') {
       const olds = Object.values(loadout.equipped_items || {}) as Row[];
       loadout = await svc.Loadout.update(loadout.id, { equipped_items:{}, is_active:true });
-      await Promise.all(olds.map(item => item?.user_card_id ? svc.UserCard.update(String(item.user_card_id), { equipped_to:'none', is_equipped:false }).catch(() => null) : null));
+      await Promise.all(olds.map(item => releaseOwnedCard(svc, user.id, String(item?.user_card_id || ''))));
       return json({ success:true, loadout:serialize(loadout) });
     }
 

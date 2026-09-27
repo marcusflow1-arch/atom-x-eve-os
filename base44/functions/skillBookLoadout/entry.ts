@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
+import { hasLivePvpMatch } from '../../shared/matchLock.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -433,18 +434,6 @@ async function buildState(base44: any, user: AnyObj) {
 async function activeLoadout(base44: any, userId: string) {
   const { rows, active } = await ensureSkillSets(base44, userId);
   return active || rows[0];
-}
-
-async function hasLivePvpMatch(svc: any, userId: string) {
-  const states = await svc.PlayerState.filter({ player_id: String(userId) }, '-updated_date', 1).catch(() => []);
-  const matchId = String(states?.[0]?.active_match_id || '');
-  if (!matchId) return false;
-  const match = await svc.AIBattleMatch.get(matchId).catch(() => null);
-  if (!match || !['matched', 'countdown', 'fighting'].includes(String(match.status || ''))) {
-    if (states[0]) await svc.PlayerState.update(states[0].id, { active_match_id: '' }).catch(() => null);
-    return false;
-  }
-  return true;
 }
 
 Deno.serve(async (req) => {

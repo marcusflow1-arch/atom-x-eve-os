@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity, AlertTriangle, ArrowLeft, Check, ChevronRight, Crown, Flame, Gauge,
   Gem, Hammer, History, Layers, Lock, Package, RefreshCcw, Shield, Sparkles,
-  Star, Target, TrendingUp, Wand2, Zap, Crosshair, Swords, Users, Trophy,
+  Star, Target, TrendingUp, Wand2, Zap, Crosshair, Swords, Trophy,
   Gamepad2, Brain, Plus
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
