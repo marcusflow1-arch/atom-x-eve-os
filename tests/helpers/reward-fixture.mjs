@@ -120,16 +120,17 @@ export function makeRewardFixture() {
           let updated=0;
           for(const row of rows(name).filter((row)=>matches(row,query))){
             guard(name,'update',actor,row);
+            const next=copy(row);
             for(const [op,fields] of Object.entries(changes))for(const [field,value] of Object.entries(fields)){
-              const current=getPath(row,field);
-              if(op==='$set')setPath(row,field,value);
-              else if(op==='$inc')setPath(row,field,(current??0)+value);
-              else if(op==='$max')setPath(row,field,Math.max(current??-Infinity,value));
-              else if(op==='$addToSet')setPath(row,field,[...new Set([...(current||[]),value])]);
-              else if(op==='$push')setPath(row,field,[...(current||[]),value]);
+              const current=getPath(next,field);
+              if(op==='$set')setPath(next,field,value);
+              else if(op==='$inc')setPath(next,field,(current??0)+value);
+              else if(op==='$max')setPath(next,field,Math.max(current??-Infinity,value));
+              else if(op==='$addToSet')setPath(next,field,[...new Set([...(current||[]),value])]);
+              else if(op==='$push')setPath(next,field,[...(current||[]),value]);
               else throw new Error('Unsupported fixture update '+op);
             }
-            validate(name,row);updated++;
+            validate(name,next);Object.assign(row,next);updated++;
             writes.push({name,operation:'updateMany',id:row.id,data:copy(changes)});
           }
           trip(name,'updateMany','after',changes);

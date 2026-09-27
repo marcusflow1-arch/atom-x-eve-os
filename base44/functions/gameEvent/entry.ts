@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
-import { conditionalUpdate, ensureKeyedRecord, rewardError, rewardKey } from '../../shared/rewardJournal.ts';
+import { conditionalUpdate, ensureKeyedRecord, findKeyedRecord, rewardError, rewardKey } from '../../shared/rewardJournal.ts';
 
 type Row = Record<string, any>;
 const enc = new TextEncoder();
@@ -52,7 +52,6 @@ Deno.serve(async (req) => {
     if (!validId(userId) || !validId(eventKey) || !validId(eventId) || !Number.isSafeInteger(value) || value < 1 || !Number.isFinite(occurredAt)) {
       return json({ error: 'event_id, user_id, event_key, occurred_at and a positive whole-number value are required' }, 400);
     }
-    if (Date.now() - occurredAt > 86400000) return json({ error: 'Event is older than 24 hours' }, 400);
     if (occurredAt - Date.now() > 300000) return json({ error: 'Event timestamp is too far in the future' }, 400);
 
     const svc = createClientFromRequest(req).asServiceRole.entities;
@@ -62,7 +61,11 @@ Deno.serve(async (req) => {
     if (!recipient) return json({ error: 'Player not found' }, 404);
     const payload = { user_id: userId, event_key: eventKey, value, occurred_at: new Date(occurredAt).toISOString() };
     const hash = hex(await crypto.subtle.digest('SHA-256', enc.encode(JSON.stringify([gameId, eventId, payload]))));
-    let receipt = await ensureKeyedRecord(svc.GameEventReceipt, { game_id: gameId, event_id: eventId });
+    const receiptKey = { game_id: gameId, event_id: eventId };
+    const previousReceipt = await findKeyedRecord(svc.GameEventReceipt, receiptKey);
+    // A previously accepted, identical event may finish after the ingestion window.
+    if (Date.now() - occurredAt > 86400000 && previousReceipt?.payload_hash !== hash) return json({ error: 'Event is older than 24 hours' }, 400);
+    let receipt = previousReceipt || await ensureKeyedRecord(svc.GameEventReceipt, receiptKey);
     if (!receipt.payload_hash) {
       const rules = await matchingRules(svc, gameId, eventKey);
       await conditionalUpdate(svc.GameEventReceipt, { id: receipt.id, payload_hash: { $exists: false } }, {

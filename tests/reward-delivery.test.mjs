@@ -7,9 +7,14 @@ import { makeRewardFixture } from './helpers/reward-fixture.mjs';
 
 const db=makeRewardFixture(), svc=db.entities(), handlers={};
 const quiet={error(){},warn(){}};
+let clockOffset=0;
+class ClockDate extends Date {
+  constructor(...args){super(...(args.length?args:[ClockDate.now()]));}
+  static now(){return Date.now()+clockOffset;}
+}
 function bundle(path, extra={}) {
   const module={exports:{}};
-  const context={module,exports:module.exports,Response,Request,Date,TextEncoder,crypto:webcrypto,console:quiet,...extra};
+  const context={module,exports:module.exports,Response,Request,Date:ClockDate,TextEncoder,crypto:webcrypto,console:quiet,...extra};
   vm.runInNewContext(buildSync({entryPoints:[path],bundle:true,write:false,platform:'node',format:'cjs',external:['npm:*']}).outputFiles[0].text,context);
   return module.exports;
 }
@@ -44,7 +49,7 @@ async function request(name,payload,expected=200,{actor='a',raw,signature,method
   return result;
 }
 const event=(payload,expected,options)=>request('gameEvent',payload,expected,options);
-beforeEach(()=>db.reset());
+beforeEach(()=>{db.reset();clockOffset=0;});
 
 test('a new achievement publishes only after card and XP delivery; sequential retries do not pay again',async()=>{
   seed();await grant();const repeat=await grant();
@@ -83,9 +88,9 @@ for(const [label,name,operation,phase,check]of interruptionPoints)test('interrup
 });
 
 test('stacked card increment and its receipt survive a lost response together',async()=>{
-  seed();db.rows('UserCard').push({id:'owned',user_id:'a',trading_card_id:'card',card_type:'ability',card_name:'Test Reward',quantity:5,trade_status:'available'});
+  seed();db.rows('UserCard').push({id:'owned',user_id:'a',trading_card_id:'card',card_type:'ability',card_name:'Test Reward',acquisition_method:'unlocked',quantity:5,trade_status:'available'});
   db.failOnce((op)=>op.name==='UserCard'&&op.operation==='updateMany'&&op.phase==='after'&&Boolean(op.data.$inc));
-  await assert.rejects(grant());await grant();
+  await assert.rejects(grant(),/Injected/);await grant();
   assert.equal(db.rows('UserCard').length,1);assert.equal(db.rows('UserCard')[0].quantity,7);
   assert.equal(db.rows('AvatarProgression')[0].global_xp,135);
 });
@@ -282,7 +287,7 @@ test('overlapping independent rewards preserve existing XP and stack quantities 
   seed();
   db.rows('Achievement').push({...db.rows('Achievement')[0],id:'second'});
   db.rows('AvatarProgression').push({id:'xp',user_id:'a',global_xp:1000,global_level:2,reward_grant_keys:[]});
-  db.rows('UserCard').push({id:'owned',user_id:'a',trading_card_id:'card',card_type:'ability',card_name:'Test Reward',quantity:5,trade_status:'available',reward_grant_keys:[]});
+  db.rows('UserCard').push({id:'owned',user_id:'a',trading_card_id:'card',card_type:'ability',card_name:'Test Reward',acquisition_method:'unlocked',quantity:5,trade_status:'available',reward_grant_keys:[]});
   const second=()=>engine.grantAchievement(svc,'a','second');
   const results=await Promise.allSettled([grant(),second()]);
   for(let i=0;i<results.length;i++)if(results[i].status==='rejected')await (i===0?grant():second());
@@ -301,4 +306,16 @@ test('invalid reward definitions cannot publish an unlock',async()=>{
   assert.equal(db.rows('UserCard').length,0);
   assert.equal(db.rows('AvatarProgression').length,0);
   assert.ok(db.rows('UserAchievement').every((row)=>row.status!=='unlocked'));
+});
+
+test('accepted events can resume delivery after 24 hours; fresh expired events remain rejected',async()=>{
+  seed({threshold:1});const payload=body();
+  db.failOnce((op)=>op.name==='UserCard'&&op.operation==='create'&&op.phase==='before');
+  await event(payload,503);
+  clockOffset=25*60*60*1000;
+  await event(payload);
+  const repeat=await event(payload);
+  assert.equal(repeat.duplicate,true);
+  assert.equal(db.rows('AvatarProgression')[0].global_xp,135);
+  await event({...payload,event_id:'expired-new'},400);
 });
