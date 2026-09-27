@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import Stripe from 'npm:stripe@16.12.0';
 import { grantEntitlement, ownsItem } from '../../shared/entitlements.ts';
 import { grantCard } from '../../shared/rewardEngine.ts';
+import { rewardKey } from '../../shared/rewardJournal.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
       if (item.item_type === 'game' && result.created) {
         const game = await svc.Game.get(item.item_id).catch(() => null);
         for (const cardId of game?.starter_card_ids || []) {
-          try { starterCards.push(await grantCard(svc, user.id, cardId, { source: 'starter' })); } catch (error) { console.warn('Starter card grant failed', cardId, error); }
+          try { starterCards.push(await grantCard(svc, user.id, cardId, { source: 'starter', grant_key: rewardKey('game-starter', user.id, item.item_id, cardId) })); } catch (error) { console.warn('Starter card grant failed', cardId, error); }
         }
       }
     }

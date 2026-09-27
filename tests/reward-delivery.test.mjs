@@ -319,3 +319,8 @@ test('accepted events can resume delivery after 24 hours; fresh expired events r
   assert.equal(db.rows('AvatarProgression')[0].global_xp,135);
   await event({...payload,event_id:'expired-new'},400);
 });
+
+test('older catalog definitions without a status retain their existing reward compatibility',async()=>{
+  seed();delete db.rows('TradingCard')[0].status;
+  await grant();assert.equal(db.rows('UserCard').length,1);assert.equal(db.rows('AvatarProgression')[0].global_xp,135);
+});

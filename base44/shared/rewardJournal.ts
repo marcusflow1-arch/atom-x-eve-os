@@ -10,7 +10,7 @@ export const rewardKey = (...parts: string[]) => JSON.stringify(parts.map(String
 export async function conditionalUpdate(entity: any, query: Row, changes: Row) {
   if (typeof entity.updateMany !== 'function') throw rewardError('Reward storage does not support conditional updates', 503);
   const result = await entity.updateMany(query, changes);
-  if (!result?.success || !Number.isSafeInteger(result.updated) || result.updated > 1) {
+  if (!result?.success || !Number.isSafeInteger(result.updated) || result.updated < 0 || result.updated > 1) {
     throw rewardError('Reward storage returned an unexpected update result', 503);
   }
   return result.updated === 1;

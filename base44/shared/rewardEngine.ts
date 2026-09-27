@@ -13,7 +13,7 @@ export async function grantCard(svc: any, userId: string, tradingCardId: string,
   if (grant?.status === 'completed') return ownedDeliveredCard(svc, userId, grant.user_card_id || '');
   if (!grant?.payload) {
     const card = await svc.TradingCard.get(String(tradingCardId || ''));
-    if (!card || card.status !== 'live') throw rewardError('Reward card is not available');
+    if (!card || (card.status !== undefined && card.status !== 'live')) throw rewardError('Reward card is not available');
     const quantity = Number(options.quantity ?? 1);
     if (!Number.isSafeInteger(quantity) || quantity < 1) throw rewardError('Invalid reward quantity');
     const game = card.game_id ? await svc.Game.get(card.game_id) : null;
