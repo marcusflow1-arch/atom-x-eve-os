@@ -1,11 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-import { SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
+import { SKILL_SLOT_COUNT, skillStats } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
+import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 const normalize = (value: any) => String(value || '').trim().toLowerCase();
+const ADAM_XE_GAME_TITLE = 'Adam XE';
+const ADAM_XE_GENRE = 'Adam XE';
 const GETSUGA_MALE_MODEL_ID = '6ab3bf0728d93c06fcff4c05';
 const GETSUGA_MALE_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
 const GETSUGA_EFFECT = {
