@@ -130,7 +130,6 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [surrenderConfirm, setSurrenderConfirm] = useState(false);
   const [surrendering, setSurrendering] = useState(false);
   const returningRef = useRef(false);
-  const readySentRef = useRef('');
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
   const requestSkillRef = useRef(null);
@@ -249,20 +248,29 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   requestMeleeRef.current = requestMelee;
 
-  // A PvP client is ready only after its own fighter/model has actually loaded.
-  // Once both clients report ready, the server starts the countdown and assigns
-  // the first authoritative turn.
+  // A PvP client is ready only after both fighters/models are present in its
+  // arena. While the server still reports `matched`, keep reaffirming readiness
+  // so a dropped/raced ready request cannot strand two visible players before
+  // the countdown. The server starts only after BOTH clients are live + ready.
   useEffect(() => {
     if (loaded !== 2 || !match?.id || match.status !== 'matched') return undefined;
-    if (readySentRef.current === String(match.id)) return undefined;
-    readySentRef.current = String(match.id);
-    invoke('ready', { match_id: match.id })
-      .catch((readyError) => {
+    let cancelled = false;
+    let busy = false;
+    const reportReady = async () => {
+      if (cancelled || busy || matchRef.current?.status !== 'matched') return;
+      busy = true;
+      try {
+        await invoke('ready', { match_id: match.id });
+      } catch (readyError) {
         console.warn('[PvP] fighter-ready retry', readyError);
-        readySentRef.current = '';
-        window.setTimeout(() => queryClient.invalidateQueries({ queryKey: ['ai-battle-matchmaking', user?.id] }), 800);
-      });
-    return undefined;
+        queryClient.invalidateQueries({ queryKey: ['ai-battle-matchmaking', user?.id] });
+      } finally {
+        busy = false;
+      }
+    };
+    reportReady();
+    const timer = window.setInterval(reportReady, 1000);
+    return () => { cancelled = true; window.clearInterval(timer); };
   }, [loaded, match?.id, match?.status, queryClient, user?.id]);
 
   const requestDodge = async () => {
