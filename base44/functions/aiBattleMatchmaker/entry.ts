@@ -8,6 +8,7 @@ type Row = Record<string, any>;
 const MODES = new Set(['pvp', 'pve', 'world_boss']);
 const WAITING_LIVE_MS = 30000;
 const MATCH_LIVE_MS = 15000;
+const RECONNECT_GRACE_MS = 120000;
 const QUEUE_HEARTBEAT_MS = 8000;
 const DASHBOARD_LIVE_MS = 60000;
 const DEFAULT_BATTLE_HP = 1000;
@@ -54,6 +55,8 @@ function publicMatch(row: Row | null) {
     arena: row.arena || ARENA, positions: row.positions || {}, atb: row.atb || {}, cooldowns: row.cooldowns || {}, dodges: row.dodges || {},
     fight_starts_at: row.fight_starts_at || null, fight_ends_at: row.fight_ends_at || null,
     winner_id: row.winner_id || null, ended_reason: row.ended_reason || null,
+    disconnects: row.disconnects || {}, pause_started_at: row.pause_started_at || null,
+    reconnect_grace_ms: RECONNECT_GRACE_MS, prestige_awards: row.prestige_awards || {},
     attack_revision: Number(row.attack_revision || 0), last_attack: row.last_attack || null,
     hit_log: Array.isArray(row.hit_log) ? row.hit_log.slice(-20) : [],
   };
@@ -130,19 +133,81 @@ function winnerByHp(match: Row) {
 }
 
 async function finalizeMatchRewards(svc: any, match: Row | null) {
-  if (!match || match.status !== 'ended' || match.mode !== 'pvp' || !match.winner_id) return;
+  if (!match || match.status !== 'ended' || match.mode !== 'pvp' || !match.winner_id || match.rewards_finalized) return match;
+  const ids = (match.player_ids || []).map(String);
+  const prestigeAwards = Object.fromEntries(ids.map((id: string) => [id, id === String(match.winner_id) ? 100 : 25]));
+  for (const id of ids) {
+    const rows = await svc.AvatarProgression.filter({ user_id: id }, '-updated_date', 1).catch(() => []);
+    const row = rows?.[0];
+    if (row?.id) await svc.AvatarProgression.update(row.id, { prestige_score: Number(row.prestige_score || 0) + Number(prestigeAwards[id] || 0) });
+  }
   const achievements = await svc.Achievement.list('title', 5000).catch(() => []);
   const matches = achievements.filter((row:Row) => row.event_rule?.event_key === 'platform.first_pvp_win');
   for (const achievement of matches) await grantAchievement(svc, String(match.winner_id), achievement.id, 'platform', { progress: { event_key: 'platform.first_pvp_win', match_id: match.id } });
+  return await svc.AIBattleMatch.update(match.id, { prestige_awards: prestigeAwards, rewards_finalized: true });
+}
+
+const shiftIso = (value: any, ms: number) => {
+  const stamp = Date.parse(value || 0);
+  return stamp ? new Date(stamp + ms).toISOString() : value;
+};
+function shiftPausedTimers(match: Row, pauseMs: number) {
+  if (!pauseMs) return match;
+  const shifted = { ...match };
+  if (shifted.fight_starts_at) shifted.fight_starts_at = shiftIso(shifted.fight_starts_at, pauseMs);
+  if (shifted.fight_ends_at) shifted.fight_ends_at = shiftIso(shifted.fight_ends_at, pauseMs);
+  shifted.pending_hits = (shifted.pending_hits || []).map((hit: Row) => ({ ...hit, resolves_at: shiftIso(hit.resolves_at, pauseMs) }));
+  shifted.atb = Object.fromEntries(Object.entries(shifted.atb || {}).map(([id, state]: any) => [id, { ...state, at: shiftIso(state?.at, pauseMs) }]));
+  shifted.dodges = Object.fromEntries(Object.entries(shifted.dodges || {}).map(([id, state]: any) => [id, { ...state, from: shiftIso(state?.from, pauseMs), until: shiftIso(state?.until, pauseMs) }]));
+  shifted.cooldowns = Object.fromEntries(Object.entries(shifted.cooldowns || {}).map(([id, values]: any) => [id, Object.fromEntries(Object.entries(values || {}).map(([key, value]: any) => [key, key === '_last_cast_at' && Number.isFinite(Number(value)) ? Number(value) + pauseMs : shiftIso(value, pauseMs)]))]));
+  return shifted;
 }
 
 async function settleMatch(svc: any, input: Row | null) {
   if (!input || input.status === 'ended') return input;
-  let match = { ...input, players: (input.players || []).map((p: Row) => ({ ...p })), pending_hits: [...(input.pending_hits || [])], hit_log: [...(input.hit_log || [])] };
+  let match = { ...input, players: (input.players || []).map((p: Row) => ({ ...p })), pending_hits: [...(input.pending_hits || [])], hit_log: [...(input.hit_log || [])], disconnects: { ...(input.disconnects || {}) } };
   const now = Date.now();
   let changed = false;
+  let paused = false;
 
-  const due = match.pending_hits.filter((hit: Row) => Date.parse(hit.resolves_at || 0) <= now).sort((a: Row,b:Row) => Date.parse(a.resolves_at)-Date.parse(b.resolves_at));
+  if (['countdown','fighting'].includes(match.status)) {
+    const ids = (match.player_ids || []).map(String);
+    const queues = await Promise.all(ids.map((id:string) => queueForMatch(svc, id, String(match.id))));
+    for (let index = 0; index < ids.length; index += 1) {
+      const id = ids[index];
+      const live = Boolean(queues[index] && matchedLive(queues[index]));
+      const prior = match.disconnects[id];
+      if (live && prior) {
+        delete match.disconnects[id];
+        changed = true;
+      } else if (!live && !prior) {
+        match.disconnects[id] = { disconnected_at: new Date(now).toISOString(), reconnect_deadline: new Date(now + RECONNECT_GRACE_MS).toISOString() };
+        changed = true;
+      }
+    }
+    const expiredId = ids.find((id: string) => match.disconnects[id] && Date.parse(match.disconnects[id].reconnect_deadline || 0) <= now);
+    if (expiredId) {
+      match.status = 'ended';
+      match.winner_id = ids.find((id: string) => id !== expiredId) || ids[0];
+      match.ended_reason = 'disconnect';
+      match.ended_at = nowIso();
+      match.pause_started_at = '';
+      changed = true;
+    } else {
+      paused = Object.keys(match.disconnects).length > 0;
+      if (paused && !match.pause_started_at) {
+        match.pause_started_at = new Date(now).toISOString();
+        changed = true;
+      } else if (!paused && match.pause_started_at) {
+        const pauseMs = Math.max(0, now - Date.parse(match.pause_started_at || 0));
+        match = shiftPausedTimers(match, pauseMs);
+        match.pause_started_at = '';
+        changed = true;
+      }
+    }
+  }
+
+  const due = !paused && match.status !== 'ended' ? match.pending_hits.filter((hit: Row) => Date.parse(hit.resolves_at || 0) <= now).sort((a: Row,b:Row) => Date.parse(a.resolves_at)-Date.parse(b.resolves_at)) : [];
   if (due.length) {
     const dueIds = new Set(due.map((h: Row) => String(h.cast_id)));
     match.pending_hits = match.pending_hits.filter((h: Row) => !dueIds.has(String(h.cast_id)));
@@ -173,26 +238,19 @@ async function settleMatch(svc: any, input: Row | null) {
     }
   }
 
-  if (match.status === 'countdown' && Date.parse(match.fight_starts_at || 0) <= now) { match.status = 'fighting'; changed = true; }
-  if (match.status === 'fighting' && Date.parse(match.fight_ends_at || 0) <= now) {
+  if (!paused && match.status === 'countdown' && Date.parse(match.fight_starts_at || 0) <= now) { match.status = 'fighting'; changed = true; }
+  if (!paused && match.status === 'fighting' && Date.parse(match.fight_ends_at || 0) <= now) {
     match.status = 'ended'; match.winner_id = winnerByHp(match); match.ended_reason = 'timeout'; match.ended_at = nowIso(); changed = true;
-  }
-
-  if (['countdown','fighting'].includes(match.status)) {
-    const ids = (match.player_ids || []).map(String);
-    const queues = await Promise.all(ids.map((id:string) => queueForMatch(svc, id, String(match.id))));
-    const deadIndex = queues.findIndex((row: Row | null) => !row || !matchedLive(row));
-    if (deadIndex >= 0) {
-      match.status = 'ended'; match.winner_id = ids[deadIndex === 0 ? 1 : 0] || ids[0]; match.ended_reason = 'disconnect'; match.ended_at = nowIso(); changed = true;
-    }
   }
 
   if (changed) match = await svc.AIBattleMatch.update(match.id, {
     status: match.status, players: match.players, pending_hits: match.pending_hits, hit_log: match.hit_log,
     attack_revision: match.attack_revision, last_attack: match.last_attack, winner_id: match.winner_id || '', ended_reason: match.ended_reason || '', ended_at: match.ended_at || undefined,
+    disconnects: match.disconnects || {}, pause_started_at: match.pause_started_at || '', fight_starts_at: match.fight_starts_at || undefined,
+    fight_ends_at: match.fight_ends_at || undefined, atb: match.atb || {}, cooldowns: match.cooldowns || {}, dodges: match.dodges || {},
   });
   if (match.status === 'ended') {
-    await finalizeMatchRewards(svc, match);
+    match = await finalizeMatchRewards(svc, match) || match;
     await clearMatchForPlayers(svc, match);
   }
   return match;
@@ -225,6 +283,7 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
       mode, status: 'matched', host_id: host, host_name: first.player_name || 'Player', dashboard_channel: `dashboard_${host}`,
       pair_key: pairKey, player_ids: ids, players: [await playerFromQueue(svc, first), await playerFromQueue(svc, second)], arena: ARENA,
       positions: { [host]: { x: 0, z: 5 }, [guest]: { x: 0, z: -5 } }, atb: {}, cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], attack_revision: 0, last_attack: null,
+      disconnects: {}, pause_started_at: '', prestige_awards: {}, rewards_finalized: false,
     });
   }
   const stamp = nowIso();
@@ -247,7 +306,16 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
   let queue = await latestQueue(svc, userId);
   if (!queue) return { queue:null, match:null };
   if (queue.status === 'waiting' && !waitingLive(queue)) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
-  if (heartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS) queue = await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso(), client_session_id: clientSessionId || queue.client_session_id || '' });
+  if (queue.status === 'matched' && queue.match_id) {
+    const savedMatch = await getMatch(svc, String(queue.match_id));
+    const previousSessionId = String(queue.client_session_id || '');
+    if (savedMatch?.status === 'ended' && clientSessionId && previousSessionId && clientSessionId !== previousSessionId) {
+      await cancelQueue(svc, queue);
+      await clearMatchForPlayers(svc, savedMatch);
+      return { queue:null, match:null };
+    }
+  }
+  if (heartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS || (clientSessionId && String(queue.client_session_id || '') !== clientSessionId)) queue = await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso(), client_session_id: clientSessionId || queue.client_session_id || '' });
   if (queue.status === 'waiting') {
     const paired = await tryPair(svc, queue.mode);
     queue = await svc.AIBattleQueueEntry.get(queue.id).catch(() => queue);
@@ -312,6 +380,7 @@ Deno.serve(async (req) => {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       match=await settleMatch(svc,match);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
+      if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const now=Date.now(); const currentAtb=atbNow(match.atb?.[userId],now); const cd=Date.parse(match.cooldowns?.[userId]?._dodge||0);
       if(cd>now) return json({error:'Dodge is on cooldown.'},409); if(currentAtb<DODGE.atb_cost) return json({error:'Not enough ATB.'},409);
       const atb={...(match.atb||{}),[userId]:{value:currentAtb-DODGE.atb_cost,at:new Date(now).toISOString()}};
@@ -323,6 +392,7 @@ Deno.serve(async (req) => {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       match=await settleMatch(svc,match);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
+      if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId); const slot=Number(data.slot);
       if(!Number.isInteger(slot)||slot<0||slot>=SKILL_SLOT_COUNT) return json({error:'Invalid skill slot.'},400);
       const skill=(me?.skills||[]).find((s:Row)=>Number(s.slot)===slot); if(!skill) return json({error:'That skill is not equipped.'},409);
