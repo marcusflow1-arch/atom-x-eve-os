@@ -42,6 +42,12 @@ export function useEquipment() {
     if (primary?.model_url) setWeaponModelUrl(primary.model_url);
   }, [equippedItems, setWeapon, setEquippedWeapon]);
 
+  useEffect(()=>{
+    const refresh=()=>{void queryClient.invalidateQueries({queryKey:['luna-equipment-loadout',user?.id]});};
+    window.addEventListener('cardProgressionChanged',refresh);
+    return()=>window.removeEventListener('cardProgressionChanged',refresh);
+  },[queryClient,user?.id]);
+
   const mutation = useMutation({
     mutationFn: async ({ action, data }) => {
       const response = await base44.functions.invoke('equipmentLoadout', { action, data });
@@ -52,6 +58,8 @@ export function useEquipment() {
     onSuccess: (body) => {
       queryClient.setQueryData(queryKey, body);
       queryClient.invalidateQueries({ queryKey: ['battle-expeditions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['avatar-combat-stats', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['luna-skill-book', user?.id] });
       window.dispatchEvent(new CustomEvent('lunaEquipmentChanged', { detail: { loadout: body?.loadout || null } }));
     },
   });

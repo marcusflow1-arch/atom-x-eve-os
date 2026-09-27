@@ -38,93 +38,9 @@ export default function CombatXPHandler() {
         setFloaters(prev => prev.filter(f => f.id !== id));
       }, 2500);
 
-      // Update AvatarProgression in the database
-      try {
-        const user = await base44.auth.me();
-        if (!user) return;
-
-        const rows = await base44.entities.AvatarProgression.filter({ user_id: user.id });
-        if (rows.length === 0) return;
-
-        const record = rows[0];
-        const genres = (record.genres || []).map(g => ({ ...g }));
-        const genreName = genre || 'Action';
-        let g = genres.find(x => x.name === genreName);
-
-        if (!g) {
-          g = { name: genreName, level: 1, xp: 0 };
-          genres.push(g);
-        }
-
-        // Add XP to genre
-        g.xp = (g.xp || 0) + xp;
-
-        // Add fraction to global XP
-        let globalXp = (record.global_xp || 0) + (xp * GENRE_TO_GLOBAL_RATIO);
-        let globalLevel = record.global_level || 1;
-        let statPoints = record.available_stat_points || 0;
-
-        // Level up genre
-        let safety = 0;
-        while (g.xp >= xpToNextLevel(g.level || 1) && safety < 50) {
-          g.xp -= xpToNextLevel(g.level || 1);
-          g.level = (g.level || 1) + 1;
-          statPoints += 1;
-          if ((g.level % 5) === 0) statPoints += 1; // Bonus every 5 levels
-          safety++;
-        }
-
-        // Level up global
-        let leveledUp = false;
-        safety = 0;
-        let threshold = xpToNextLevel(globalLevel);
-        while (globalXp >= threshold && safety < 100) {
-          globalXp -= threshold;
-          globalLevel += 1;
-          threshold = xpToNextLevel(globalLevel);
-          safety++;
-          leveledUp = true;
-        }
-
-        // Gameplay also teaches the AI avatar. Knowledge progression is
-        // intentionally separate from physical/avatar level and caps at 300.
-        // Skill points are claimed from the Knowledge reward timeline rather
-        // than granted here, so the progression track remains the source of truth.
-        let knowledgeLevel = Math.max(1, Number(record.knowledge_level || 1));
-        let knowledgeXp = Number(record.knowledge_xp || 0) + (xp * GAMEPLAY_TO_KNOWLEDGE_RATIO);
-        let knowledgeLeveledUp = false;
-        safety = 0;
-        let knowledgeThreshold = xpToNextKnowledgeLevel(knowledgeLevel);
-        while (knowledgeLevel < KNOWLEDGE_LEVEL_CAP && knowledgeXp >= knowledgeThreshold && safety < 100) {
-          knowledgeXp -= knowledgeThreshold;
-          knowledgeLevel += 1;
-          knowledgeThreshold = xpToNextKnowledgeLevel(knowledgeLevel);
-          safety++;
-          knowledgeLeveledUp = true;
-        }
-
-        await base44.entities.AvatarProgression.update(record.id, {
-          genres,
-          global_xp: globalXp,
-          global_level: globalLevel,
-          available_stat_points: statPoints,
-          knowledge_xp: knowledgeXp,
-          knowledge_level: knowledgeLevel,
-        });
-
-        console.log(`[CombatXP] +${xp} XP → ${genreName} (Lv${g.level}), Global Lv${globalLevel}, Knowledge Lv${knowledgeLevel}`);
-        
-        window.dispatchEvent(new CustomEvent('syncPlayerStats'));
-        
-        if (leveledUp) {
-          window.dispatchEvent(new CustomEvent('avatarLevelUp'));
-        }
-        if (knowledgeLeveledUp) {
-          window.dispatchEvent(new CustomEvent('avatarKnowledgeLevelUp', { detail: { level: knowledgeLevel } }));
-        }
-      } catch (err) {
-        console.error('[CombatXP] Failed to save XP:', err);
-      }
+      // Browser combat events are presentation only. Verified backend rewards
+      // own avatar XP; an editable CustomEvent must never grant levels or points.
+      window.dispatchEvent(new CustomEvent('syncPlayerStats'));
     };
 
     window.addEventListener('combatXPReward', handleXP);
@@ -153,7 +69,7 @@ export default function CombatXPHandler() {
             }}
           >
             <Zap className="w-5 h-5 text-green-400" />
-            <span className="text-green-300 font-bold text-lg">+{f.xp} XP</span>
+            <span className="text-green-300 font-bold text-lg">Practice +{f.xp} XP</span>
             {f.genre && <span className="text-green-400/60 text-sm font-medium ml-1">({f.genre})</span>}
             {f.source && <span className="text-white/40 text-xs ml-1">— {f.source}</span>}
           </motion.div>

@@ -153,9 +153,15 @@ export function useSkillBookLoadout() {
       if (avatarUserId && String(avatarUserId) !== String(user.id)) return;
       void queryClient.invalidateQueries({ queryKey: ['luna-skill-book', user.id] }, { cancelRefetch: false });
     };
+    window.addEventListener('cardProgressionChanged', refreshEligibility);
+    window.addEventListener('syncPlayerStats', refreshEligibility);
+    window.addEventListener('lunaEquipmentChanged', refreshEligibility);
     window.addEventListener('avatarAppearanceSaved', refreshEligibility);
     window.addEventListener('axeCharacterActivated', refreshEligibility);
     return () => {
+      window.removeEventListener('cardProgressionChanged', refreshEligibility);
+      window.removeEventListener('syncPlayerStats', refreshEligibility);
+      window.removeEventListener('lunaEquipmentChanged', refreshEligibility);
       window.removeEventListener('avatarAppearanceSaved', refreshEligibility);
       window.removeEventListener('axeCharacterActivated', refreshEligibility);
     };

@@ -21,6 +21,7 @@ import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
 import { inventoryData } from '../profile/mockData';
 import { useEquipment } from '../luna/hooks/useEquipment';
 import { showError } from '@/components/error/ErrorToast';
+import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
@@ -88,7 +89,8 @@ export default function DashboardAvatarOverview() {
   const { user } = useAuth();
   const companion = useCompanionIdentity();
   const { equipItem, equippedItems } = useEquipment();
-  const [progression, setProgression] = useState(null);
+  const {state:combatState}=useAvatarCombatStats();
+  const progression=combatState?.progression;
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
@@ -224,54 +226,18 @@ export default function DashboardAvatarOverview() {
     return () => window.removeEventListener('openLunaInventoryWorkspace', toggleInventory);
   }, []);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const items = await base44.entities.AvatarProgression.filter({ user_id: user.id });
-        if (!cancelled) setProgression(items?.[0] || null);
-      } catch (e) {
-        console.error('Failed to load avatar progression:', e);
-      }
-    };
-    load();
-    const refresh = () => load();
-    window.addEventListener('lunaProgressionChanged', refresh);
-    window.addEventListener('syncPlayerStats', refresh);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('lunaProgressionChanged', refresh);
-      window.removeEventListener('syncPlayerStats', refresh);
-    };
-  }, [user?.id]);
-
-  const stats = useMemo(() => {
-    const core = progression?.stats || {};
-    const level = Number(progression?.global_level || user?.level || 1);
-    const nextXP = Math.round(100 * Math.pow(Math.max(1, level), 1.35));
+  const stats=useMemo(()=>{
+    const core=combatState?.combat,a=combatState?.allocations||{};
+    const level=core?.level||1;
     return {
-      power: Number(progression?.power_score || progression?.power || 0),
-      hp: Number(core.hp ?? 100),
-      maxHp: Number(core.hp ?? 100),
-      rank: user?.rank || 'Recruit',
-      level,
-      gamerScore: Number(user?.gamer_score || 0),
-      aiPoints: Number(user?.ai_achievement_points || 0),
-      gamesPlayed: Number(user?.games_played || 0),
-      currentXP: Number(progression?.global_xp || 0),
-      nextXP: Math.max(1, nextXP),
-      availablePoints: Number(progression?.available_stat_points || progression?.available_points || progression?.unspent_points || 0),
-      strength: Number(core.strength ?? 10),
-      intelligence: Number(core.intelligence ?? 10),
-      willpower: Number(core.will ?? core.willpower ?? 10),
-      tenacity: Number(core.tenacity ?? 10),
-      defense: Number(core.defense ?? core.armor ?? core.tenacity ?? 0),
-      agility: Number(core.agility ?? 10),
-      endurance: Number(core.endurance ?? 10),
-      luck: Number(core.luck ?? 10),
+      power:core?.attack??'—',hp:core?.max_hp??'—',maxHp:core?.max_hp??1000,rank:user?.rank||'Recruit',level,
+      gamerScore:Number(user?.gamer_score||0),aiPoints:Number(user?.ai_achievement_points||0),gamesPlayed:Number(user?.games_played||0),
+      currentXP:Math.max(0,Number(progression?.global_xp||0)-(level-1)*1000),nextXP:1000,availablePoints:combatState?.available??'—',
+      strength:a.strength??'—',intelligence:a.intelligence??'—',wisdom:a.wisdom??'—',vitality:a.vitality??'—',defense:core?.defense??'—',
+      dodge:core?`${(core.dodge_chance*100).toFixed(1)}%`:'—',attackSpeed:core?`${core.attack_speed.toFixed(3)}×`:'—',
+      cooldown:core?`${(core.cooldown_reduction*100).toFixed(1)}%`:'—',
     };
-  }, [progression, user]);
+  },[combatState,progression,user]);
 
   const { data: socialInbox = {} } = useQuery({
     queryKey: ['luna-social-inbox-summary', user?.id],
@@ -666,16 +632,16 @@ export default function DashboardAvatarOverview() {
                 <StatRow icon={<Zap className="w-3 h-3" />} label="Power" value={stats.power} />
                 <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} />
                 <StatRow icon={<Shield className="w-3 h-3" />} label="Rank" value={stats.rank} />
-                <StatRow icon={<Star className="w-3 h-3" />} label="Global Level" value={stats.level} />
-                <StatRow icon={<BarChart3 className="w-3 h-3" />} label="Global XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />
+                <StatRow icon={<Star className="w-3 h-3" />} label="Avatar Level" value={stats.level} />
+                <StatRow icon={<BarChart3 className="w-3 h-3" />} label="Avatar XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />
                 <StatRow icon={<Trophy className="w-3 h-3" />} label="Gamer Score" value={stats.gamerScore.toLocaleString()} />
                 <StatRow icon={<Zap className="w-3 h-3" />} label="AI Points" value={stats.aiPoints.toLocaleString()} />
                 <StatRow icon={<Gamepad2 className="w-3 h-3" />} label="Games Played" value={stats.gamesPlayed} />
                 <StatRow icon={<Target className="w-3 h-3" />} label="Available Points" value={stats.availablePoints} />
                 <StatRow icon={<Shield className="w-3 h-3" />} label="Defense" value={stats.defense} />
-                <StatRow icon={<Activity className="w-3 h-3" />} label="Agility" value={stats.agility} />
-                <StatRow icon={<Heart className="w-3 h-3" />} label="Endurance" value={stats.endurance} />
-                <StatRow icon={<Star className="w-3 h-3" />} label="Luck" value={stats.luck} />
+                <StatRow icon={<Activity className="w-3 h-3" />} label="Dodge" value={stats.dodge} />
+                <StatRow icon={<Heart className="w-3 h-3" />} label="Attack Speed" value={stats.attackSpeed} />
+                <StatRow icon={<Star className="w-3 h-3" />} label="Cooldown Reduction" value={stats.cooldown} />
               </>}
 
               {attributeView.startsWith('blank-') && <div className="min-h-[300px]" />}
@@ -686,7 +652,7 @@ export default function DashboardAvatarOverview() {
               </div>
 
               <div className="mt-1 pt-1 border-t border-white/[0.08] grid grid-cols-2 gap-1">
-                {[['Strength', stats.strength], ['Intelligence', stats.intelligence], ['Willpower', stats.willpower], ['Tenacity', stats.tenacity]].map(([label, value]) => (
+                {[['Strength', stats.strength], ['Intelligence', stats.intelligence], ['Wisdom', stats.wisdom], ['Vitality', stats.vitality]].map(([label, value]) => (
                   <div key={label} className="border border-white/[0.07] bg-transparent px-2 py-1"><div className="text-white/35 text-[7px] uppercase">{label}</div><div className="text-white text-[10px] font-semibold">{value}</div></div>
                 ))}
               </div>

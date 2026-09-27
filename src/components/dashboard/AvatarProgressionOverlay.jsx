@@ -21,7 +21,8 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import AvatarCombatStatsPanel from '@/components/avatar/AvatarCombatStatsPanel';
+import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
 import { useAuth } from '@/components/auth/AuthContext';
 import { showError } from '@/components/error/ErrorToast';
 
@@ -181,9 +182,8 @@ function SkillBranch({ branch, rank, points, busy, onAllocate }) {
 export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill' }) {
   const { user } = useAuth();
   const [tab, setTab] = useState(initialTab === 'stats' ? 'stats' : 'skill');
-  const [progression, setProgression] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const {state,isLoading:loading,error,refetch,save,saving:busy}=useAvatarCombatStats();
+  const progression=state?.progression;
 
   useEffect(() => {
     setTab(initialTab === 'stats' ? 'stats' : 'skill');
@@ -195,110 +195,16 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
     return () => { document.body.style.overflow = previous; };
   }, []);
 
-  const load = useCallback(async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    try {
-      const rows = await base44.entities.AvatarProgression.filter({ user_id: user.id });
-      let record = rows?.[0];
-      if (!record) {
-        record = await base44.entities.AvatarProgression.create({
-          user_id: user.id,
-          global_level: 1,
-          global_xp: 0,
-          available_stat_points: 1,
-          stats: DEFAULT_STATS,
-          knowledge_level: 1,
-          knowledge_xp: 0,
-          available_skill_points: 1,
-          skill_allocations: {},
-          claimed_stat_rewards: [],
-          claimed_knowledge_rewards: [],
-        });
-      }
-      const normalized = {
-        ...record,
-        global_level: clamp(record.global_level || 1, 1, STAT_CAP),
-        global_xp: Number(record.global_xp || 0),
-        available_stat_points: Number(record.available_stat_points || 0),
-        stats: { ...DEFAULT_STATS, ...(record.stats || {}) },
-        knowledge_level: clamp(record.knowledge_level || record.global_level || 1, 1, KNOWLEDGE_CAP),
-        knowledge_xp: Number(record.knowledge_xp || 0),
-        available_skill_points: Number(record.available_skill_points || 0),
-        skill_allocations: record.skill_allocations || {},
-        claimed_stat_rewards: Array.isArray(record.claimed_stat_rewards) ? record.claimed_stat_rewards : [],
-        claimed_knowledge_rewards: Array.isArray(record.claimed_knowledge_rewards) ? record.claimed_knowledge_rewards : [],
-      };
-      setProgression(normalized);
-
-      if (record.knowledge_level == null || record.skill_allocations == null || record.claimed_stat_rewards == null || record.claimed_knowledge_rewards == null) {
-        await base44.entities.AvatarProgression.update(record.id, {
-          knowledge_level: normalized.knowledge_level,
-          knowledge_xp: normalized.knowledge_xp,
-          available_skill_points: normalized.available_skill_points,
-          skill_allocations: normalized.skill_allocations,
-          claimed_stat_rewards: normalized.claimed_stat_rewards,
-          claimed_knowledge_rewards: normalized.claimed_knowledge_rewards,
-        });
-      }
-    } catch (error) {
-      showError(error, 'Avatar Progression');
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const savePatch = async (patch) => {
-    if (!progression?.id || busy) return false;
-    setBusy(true);
-    try {
-      await base44.entities.AvatarProgression.update(progression.id, patch);
-      setProgression((current) => ({ ...current, ...patch }));
-      window.dispatchEvent(new CustomEvent('syncPlayerStats'));
-      return true;
-    } catch (error) {
-      showError(error, 'Avatar Progression');
-      return false;
-    } finally {
-      setBusy(false);
-    }
+  const allocateSkill = async branch => {
+    try { await save({action:'allocateKnowledge',data:{branch:branch.key}}); }
+    catch(error) { showError(error,'Avatar Progression'); }
+  };
+  const claimKnowledgeReward = async level => {
+    try { await save({action:'claimKnowledge',data:{level}}); }
+    catch(error) { showError(error,'Avatar Progression'); }
   };
 
-  const allocateStat = async (definition) => {
-    if (!progression || progression.available_stat_points <= 0) return;
-    const stats = { ...progression.stats, [definition.key]: Number(progression.stats?.[definition.key] || 0) + definition.step };
-    await savePatch({ stats, available_stat_points: progression.available_stat_points - 1 });
-  };
-
-  const claimStatReward = async (level, reward) => {
-    if (progression.claimed_stat_rewards.includes(level) || level > progression.global_level) return;
-    await savePatch({
-      available_stat_points: progression.available_stat_points + reward.points,
-      claimed_stat_rewards: [...progression.claimed_stat_rewards, level].sort((a, b) => a - b),
-    });
-  };
-
-  const allocateSkill = async (branch) => {
-    if (!progression || progression.available_skill_points <= 0) return;
-    const currentRank = Number(progression.skill_allocations?.[branch.key] || 0);
-    if (currentRank >= 5) return;
-    const skill_allocations = { ...(progression.skill_allocations || {}), [branch.key]: currentRank + 1 };
-    await savePatch({ skill_allocations, available_skill_points: progression.available_skill_points - 1 });
-  };
-
-  const claimKnowledgeReward = async (level, reward) => {
-    if (progression.claimed_knowledge_rewards.includes(level) || level > progression.knowledge_level) return;
-    await savePatch({
-      available_skill_points: progression.available_skill_points + reward.points,
-      claimed_knowledge_rewards: [...progression.claimed_knowledge_rewards, level].sort((a, b) => a - b),
-    });
-  };
-
-  const avatarThreshold = progression ? xpToNextAvatarLevel(progression.global_level) : 1;
   const knowledgeThreshold = progression ? xpToNextKnowledgeLevel(progression.knowledge_level) : 1;
-  const avatarPercent = progression ? Math.min(100, (progression.global_xp / avatarThreshold) * 100) : 0;
   const knowledgePercent = progression ? Math.min(100, (progression.knowledge_xp / knowledgeThreshold) * 100) : 0;
   const totalSkillRanks = progression ? Object.values(progression.skill_allocations || {}).reduce((sum, value) => sum + Number(value || 0), 0) : 0;
 
@@ -323,7 +229,7 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
             <div>
               <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.28em] text-cyan-200/45"><CircleDot className="h-3.5 w-3.5" /> AI Avatar Progression</div>
               <h1 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">Build the avatar, then build the mind.</h1>
-              <p className="mt-1 max-w-3xl text-xs leading-5 text-white/32">Stats shape the avatar’s physical progression through level 200. Skill Tree develops its knowledge and decision strengths through level 300.</p>
+              <p className="mt-1 max-w-3xl text-xs leading-5 text-white/32">Avatar stats connect your level, equipment, cards, and combat. The Skill Tree develops knowledge and decision strengths.</p>
             </div>
             <div className="flex items-center gap-3"><span className="rounded-full border border-white/[0.08] bg-white/[0.035] px-3 py-2 text-[8px] font-black uppercase tracking-[.18em] text-white/35">Esc · Close</span></div>
           </div>
@@ -339,26 +245,13 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
         </header>
 
         <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6 lg:px-10" style={{ scrollbarWidth: 'thin' }}>
-          {loading || !progression ? (
+          {error ? <div role="alert" className="p-6 text-rose-200">{error.message}<button onClick={()=>refetch()} className="ml-4 underline">Try again</button></div> : loading || !progression ? (
             <div className="grid min-h-[60vh] place-items-center"><div className="text-center"><div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-white/10 border-t-cyan-300" /><p className="mt-4 text-xs text-white/30">Loading avatar progression…</p></div></div>
           ) : (
             <AnimatePresence mode="wait">
               {tab === 'stats' ? (
                 <motion.section key="stats" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.18 }} className="space-y-6 pb-10">
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-                    <div className="rounded-[26px] border border-white/[0.06] bg-white/[0.025] p-5 md:p-6">
-                      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-                        <div><span className="text-[8px] font-black uppercase tracking-[.22em] text-white/28">Avatar Level</span><div className="mt-1 flex items-end gap-3"><strong className="text-5xl font-black tracking-tight text-white">{progression.global_level}</strong><span className="pb-1 text-xs text-white/25">/ {STAT_CAP}</span></div></div>
-                        <div className="text-left sm:text-right"><span className="text-[8px] font-black uppercase tracking-[.18em] text-white/28">Unspent Stat Points</span><div className="mt-1 text-3xl font-black text-cyan-200">{progression.available_stat_points}</div></div>
-                      </div>
-                      <div className="mt-5"><div className="mb-2 flex justify-between text-[8px] font-bold uppercase tracking-wider text-white/28"><span>{Math.floor(progression.global_xp)} XP</span><span>{avatarThreshold} XP to next level</span></div><div className="h-2 overflow-hidden rounded-full bg-black/35"><motion.div animate={{ width: `${avatarPercent}%` }} className="h-full bg-gradient-to-r from-cyan-400 via-sky-300 to-white" /></div></div>
-                    </div>
-                    <div className="rounded-[26px] border border-cyan-200/[0.10] bg-cyan-300/[0.035] p-5"><Trophy className="h-5 w-5 text-cyan-200/60" /><h3 className="mt-4 text-sm font-black">Seasonal Stat Track</h3><p className="mt-2 text-[10px] leading-5 text-white/32">Reach avatar levels through gameplay. Milestone rewards add spendable stat points; major checkpoints award larger progression caches.</p></div>
-                  </div>
-
-                  <div><div className="mb-3 flex items-end justify-between"><div><span className="text-[8px] font-black uppercase tracking-[.2em] text-white/25">Attribute Allocation</span><h2 className="mt-1 text-xl font-black">Core Stats</h2></div><span className="text-[9px] text-white/25">Changes save to your AvatarProgression profile</span></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{STAT_DEFS.map((definition) => <StatCard key={definition.key} definition={definition} value={progression.stats?.[definition.key] ?? DEFAULT_STATS[definition.key]} points={progression.available_stat_points} busy={busy} onAllocate={allocateStat} />)}</div></div>
-
-                  <ProgressRail cap={STAT_CAP} currentLevel={progression.global_level} claimed={progression.claimed_stat_rewards} rewardForLevel={statReward} onClaim={claimStatReward} busy={busy} typeLabel="Avatar Levels" />
+                  <AvatarCombatStatsPanel />
                 </motion.section>
               ) : (
                 <motion.section key="skill" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.18 }} className="space-y-6 pb-10">

@@ -184,7 +184,7 @@ function RecordView({ card, state }) {
   const p = state.progression || {};
   const telemetry = state.telemetry || p.telemetry || state.userCard?.telemetry || card?.telemetry || {};
   const combinedStats = useMemo(
-    () => Object.fromEntries(Object.keys(statLabels).map((key) => [key, num(p?.base_stats?.[key]) + num(p?.enhanced_stats?.[key])])),
+    () => Object.fromEntries(Object.keys(statLabels).map((key) => [key, num(p?.effective_stats?.[key],num(p?.base_stats?.[key]) + num(p?.enhanced_stats?.[key]))])),
     [p],
   );
 
@@ -426,7 +426,9 @@ export default function MysteryCardDetail({ card, onBack }) {
     try {
       const response = await invoke(action, { ...card, userCardId: state?.userCard?.id || card?.userCardId }, payload);
       const next = response?.data || response;
+      if(next?.error)throw new Error(next.error);
       setState(next);
+      window.dispatchEvent(new CustomEvent('cardProgressionChanged',{detail:{user_card_id:next?.userCard?.id}}));
       const latest = next?.events?.[0]?.summary;
       setMessage({ type: 'success', text: latest || 'Card updated.' });
     } catch (error) {

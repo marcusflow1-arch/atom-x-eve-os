@@ -2,20 +2,13 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Check } from 'lucide-react';
+import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
 
 export default function AIAttributesBox() {
-  const { data: user, isLoading: loadingUser } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
-
-  const { data: progression } = useQuery({
-    queryKey: ['avatar-progression', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const recs = await base44.entities.AvatarProgression.filter({ user_id: user.id });
-      return recs?.[0] || null;
-    },
-  });
-
-  const stats = progression?.stats || {};
+  const {state}=useAvatarCombatStats();
+  const progression=state?.progression;
+  const stats=state?.combat||{};
+  const allocations=state?.allocations||{};
   const sortedGenres = Array.isArray(progression?.genres)
     ? progression.genres.slice().sort((a, b) => (b.level ?? 1) - (a.level ?? 1))
     : [];
@@ -23,14 +16,14 @@ export default function AIAttributesBox() {
   const otherGenres = sortedGenres.slice(2);
 
   const rows = [
-    { label: 'Global Level', value: progression?.global_level },
-    { label: 'Global XP', value: progression?.global_xp },
+    { label: 'Avatar Level', value: progression?.global_level },
+    { label: 'Avatar XP', value: progression?.global_xp },
     { label: 'Available Points', value: progression?.available_stat_points },
-    { label: 'HP', value: stats.hp },
-    { label: 'Strength', value: stats.strength },
-    { label: 'Intelligence', value: stats.intelligence },
-    { label: 'Willpower', value: stats.will },
-    { label: 'Tenacity', value: stats.tenacity },
+    { label: 'HP', value: stats.max_hp },
+    { label: 'Attack', value: stats.attack },
+    { label: 'Defense', value: stats.defense },
+    { label: 'Intelligence', value: allocations.intelligence },
+    { label: 'Wisdom', value: allocations.wisdom },
   ];
 
   return (
