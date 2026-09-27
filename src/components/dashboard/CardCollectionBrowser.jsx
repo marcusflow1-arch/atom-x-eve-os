@@ -566,6 +566,13 @@ export default function CardCollectionBrowser() {
         </AnimatePresence>,
         document.body
       )}
+
+      {typeof document !== 'undefined' && detailCard && createPortal(
+        <div className="fixed z-[90] left-0 right-0 bg-[#07090D]" style={{ top: '64px', bottom: '48px' }}>
+          <MysteryCardDetail card={detailCard} onBack={() => { setDetailCard(null); collection.refetch(); }} />
+        </div>,
+        document.body
+      )}
     </>
   );
 }
