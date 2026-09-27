@@ -249,7 +249,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.shadowMap.enabled = true;
     renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; mount.appendChild(renderer.domElement);
-    const cssRenderer = new CSS2DRenderer(); cssRenderer.domElement.style.position = 'absolute'; cssRenderer.domElement.style.inset = '0'; cssRenderer.domElement.style.pointerEvents = 'none'; mount.appendChild(cssRenderer.domElement);
+    const cssRenderer = new CSS2DRenderer(); cssRenderer.domElement.style.position = 'absolute'; cssRenderer.domElement.style.inset = '0'; cssRenderer.domElement.style.pointerEvents = 'auto'; mount.appendChild(cssRenderer.domElement);
 
     scene.add(new THREE.HemisphereLight(0xd7ecff, 0x111827, 2.3));
     const sun = new THREE.DirectionalLight(0xffffff, 3.1); sun.position.set(5, 9, 4); sun.castShadow = true; scene.add(sun);
@@ -301,7 +301,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         const p=entry.isLocal?currentLocal:currentOpponent; if(!p)continue; const id=String(p.id); const cooldowns=currentMatch?.cooldowns?.[id]||{};
         const skills=(p.skills||[]).map((skill)=>({...skill,cooldownEndsAt:cooldowns[String(skill.slot)]||null,cooldownMs:skill.cooldown_ms,atbCost:skill.atb_cost}));
         const castSlot=lastCastSlotRef.current;
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={1000} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
+        const combatActive=currentMatch?.status==='fighting' && Object.keys(currentMatch?.disconnects || {}).length===0 && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={1000} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();
