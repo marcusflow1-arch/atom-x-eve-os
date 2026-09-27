@@ -55,7 +55,12 @@ function turnAtb(match: Row, activeId: string, now = Date.now()) {
 
 function publicQueue(row: Row | null) {
   if (!row) return null;
-  return { id: row.id, mode: row.mode, status: row.status, queued_at: row.queued_at, match_id: row.match_id || null, host_id: row.host_id || null, opponent_id: row.opponent_id || null, avatar_gender: row.avatar_gender === 'female' ? 'female' : 'male' };
+  return {
+    id: row.id, mode: row.mode, status: row.status, queued_at: row.queued_at,
+    match_id: row.match_id || null, host_id: row.host_id || null, opponent_id: row.opponent_id || null,
+    connected_at: row.connected_at || null, ready_at: row.ready_at || null,
+    avatar_gender: row.avatar_gender === 'female' ? 'female' : 'male',
+  };
 }
 function publicMatch(row: Row | null) {
   if (!row) return null;
@@ -63,6 +68,7 @@ function publicMatch(row: Row | null) {
     id: row.id, mode: row.mode, status: row.status, host_id: row.host_id, host_name: row.host_name || 'Player',
     dashboard_channel: row.dashboard_channel, player_ids: row.player_ids || [], players: row.players || [],
     arena: row.arena || ARENA, positions: row.positions || {}, atb: row.atb || {}, cooldowns: row.cooldowns || {}, dodges: row.dodges || {},
+    connected_at: row.connected_at || null,
     fight_starts_at: row.fight_starts_at || null, fight_ends_at: row.fight_ends_at || null,
     winner_id: row.winner_id || null, ended_reason: row.ended_reason || null,
     disconnects: row.disconnects || {}, pause_started_at: row.pause_started_at || null,
