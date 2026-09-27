@@ -48,6 +48,7 @@ const built = await build({
   stdin: { contents: "export {default as Purchase} from './src/components/game/detail/GamePurchasePanel.jsx'; export {default as Checkout} from './src/pages/Checkout.jsx'; export {default as Confirmation} from './src/pages/OrderConfirmation.jsx'; export * from './src/lib/storeCheckout.js';", resolveDir: process.cwd(), loader:'jsx' },
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
   plugins:[{name:'isolated-services',setup(b){
+    b.onResolve({filter:/^lucide-react$/},()=>({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
     b.onResolve({filter:/base44Client|AuthContext|CartContext|WishlistContext|react-router-dom/},args=>({path:args.path,namespace:'fixture'}));
     b.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',resolveDir:process.cwd(),contents:
       args.path.includes('base44Client') ? 'export const base44=globalThis.fixture.SDK;' :
