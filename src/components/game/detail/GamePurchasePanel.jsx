@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useCart } from '@/components/CartContext';
 import { useWishlist } from '@/components/store/WishlistContext';
 import { label, priceOf, priceLabel, comingSoon } from '@/components/store/redesign/discovery';
+import useGameClaim, { storeError } from '@/components/store/useGameClaim';
 import { releaseLabel } from './gameDetailData';
 
 export default function GamePurchasePanel({ game }) {
@@ -14,7 +15,8 @@ export default function GamePurchasePanel({ game }) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const owned = isPurchased(game.id);
+  const claim = useGameClaim(game.id);
+  const owned = isPurchased(game.id) || claim.data?.owned;
   const inCart = cart.some(item => item.id === game.id && item.type === 'game');
   const wishlisted = isWishlisted(game.id);
   const amount = priceOf(game);
@@ -26,6 +28,7 @@ export default function GamePurchasePanel({ game }) {
     if (owned) { navigate('/Library'); return; }
     if (!isAuthenticated) { login(); return; }
     if (unavailable) return;
+    if (amount === 0) { void claim.claim().catch(() => {}); return; }
     if (inCart) { openCart(); return; }
     addToCart({ id: game.id, type: 'game', title: game.title, price: amount, image: game.cover_image, genre: game.genre });
   };
@@ -61,14 +64,21 @@ export default function GamePurchasePanel({ game }) {
         <div><span className="gd-eyebrow">{owned ? 'Ready when you are' : 'Game price'}</span><div className="gd-price">{owned ? <><Check size={22} />Owned</> : priceLabel(game)}</div></div>
         {!owned && amount !== null && Number(game.price) > amount && <span className="gd-original-price">{priceLabel({ price: game.price })}</span>}
       </div>
-      <button className="gd-primary-button" onClick={purchase} disabled={unavailable}>
-        {owned ? <Library size={18} /> : inCart ? <Check size={18} /> : <ShoppingBag size={18} />}
-        {owned ? 'Open in library' : upcoming ? 'Coming soon' : amount === null ? 'Not available yet' : inCart ? 'View cart' : !isAuthenticated ? 'Sign in to add to cart' : 'Add to cart'}
+      <button className="gd-primary-button" onClick={purchase} disabled={unavailable || claim.busy || (amount === 0 && isAuthenticated && claim.statusLoading)}>
+        {claim.busy ? <Loader2 size={18} className="gd-spin" /> : owned ? <Library size={18} /> : inCart ? <Check size={18} /> : <ShoppingBag size={18} />}
+        {claim.busy ? 'Adding to your library…' : owned ? 'Open in library' : upcoming ? 'Coming soon' : amount === null ? 'Not available yet' : amount === 0 ? (isAuthenticated ? 'Claim free game' : 'Sign in to claim') : inCart ? 'View cart' : !isAuthenticated ? 'Sign in to add to cart' : 'Add to cart'}
       </button>
       <button className="gd-secondary-button" onClick={wishlist} aria-pressed={wishlisted} disabled={busy || (isAuthenticated && !loaded)}>
         {busy ? <Loader2 size={17} className="gd-spin" /> : <Heart size={17} fill={wishlisted ? 'currentColor' : 'none'} />}
         {wishlisted ? 'On your wishlist' : 'Add to wishlist'}
       </button>
+      {claim.data?.rewards_pending && <div className="gd-feedback" role="status">
+        <p>Your game is in your library. Starter rewards are still pending.</p>
+        <button className="gd-secondary-button" onClick={() => { void claim.claim().catch(() => {}); }} disabled={claim.busy}>Retry starter rewards</button>
+      </div>}
+      {claim.data?.legacy_rewards_unverified && <p className="gd-feedback">This older claim needs a starter-reward review.</p>}
+      {claim.error && <p className="gd-feedback" role="alert">{storeError(claim.error)}</p>}
+      {claim.statusError && (amount === 0 || owned) && <p className="gd-feedback" role="status">Reward status is unavailable. <button onClick={() => { void claim.refresh(); }}>Check again</button></p>}
       {feedback && <p className="gd-feedback" role="status">{feedback}</p>}
     </div>
   </aside>;

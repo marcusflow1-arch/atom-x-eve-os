@@ -1,105 +1,82 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useLocation, Link } from 'react-router-dom';
-import { CheckCircle, Loader2, Package, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { createPageUrl } from '@/utils';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { AlertCircle, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useCart } from '@/components/CartContext';
+import { useAuth } from '@/components/auth/AuthContext';
+import { storeError } from '@/components/store/useGameClaim';
+import { formatMoney } from '@/lib/storeCheckout';
 
 export default function OrderConfirmation() {
-    const location = useLocation();
-    const [searchParams] = useSearchParams();
-    const [order, setOrder] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [params] = useSearchParams();
+  const sessionId = params.get('session_id'), orderId = params.get('orderId');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
+  const { removeFromCart } = useCart();
+  const { user } = useAuth();
+  const client = useQueryClient();
 
-    useEffect(() => {
-        const fetchOrder = async () => {
-            const orderId = searchParams.get('orderId');
-            const sessionId = searchParams.get('session_id');
-            
-            if (sessionId) {
-                // Stripe checkout - verify session and create order
-                try {
-                    const { data } = await base44.functions.invoke('verifyStripeSession', { 
-                        sessionId 
-                    });
-                    
-                    if (data.order) {
-                        setOrder(data.order);
-                    }
-                } catch (error) {
-                    console.error("Failed to verify session:", error);
-                }
-            } else if (orderId) {
-                // Direct order ID lookup (legacy)
-                try {
-                    const fetchedOrder = await base44.entities.Order.get(orderId);
-                    setOrder(fetchedOrder);
-                } catch (e) {
-                    console.error("Failed to fetch order:", e);
-                }
-            }
-            setLoading(false);
-        };
-
-        fetchOrder();
-    }, [searchParams]);
-
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-6">
-                <Loader2 className="w-16 h-16 animate-spin text-blue-500 mb-6" />
-                <h1 className="text-3xl font-bold mb-2">Retrieving Order Details...</h1>
-            </div>
-        );
+  useEffect(() => {
+    let active = true;
+    setLoading(true); setError(''); setResult(null);
+    async function load() {
+      try {
+        let saved, id = sessionId;
+        if (!id && orderId) { saved = await base44.entities.Order.get(orderId); id = saved?.stripe_session_id; }
+        if (!id && !saved) throw new Error('No order was selected. Open a purchase from your order history.');
+        let data;
+        if (id) {
+          const response = await base44.functions.invoke('verifyStripeSession', { sessionId: id });
+          data = response?.data || response;
+          if (!data?.success || !data?.order) throw new Error(data?.error || 'Your payment could not be verified.');
+        } else {
+          if (saved.status !== 'completed') throw new Error('Payment has not been recorded for this checkout. Return to checkout or review your payment with support.');
+          data = { order: saved, legacy_rewards_unverified: true };
+        }
+        if (!active) return;
+        setResult(data);
+        if (data.order.payment_status === 'paid' || data.order.status === 'completed') {
+          data.order.items?.forEach(item => removeFromCart(item.item_id || item.game_id, item.item_type || 'game'));
+          void client.invalidateQueries({ queryKey: ['owned-games', user?.id] });
+          void client.invalidateQueries({ queryKey: ['card-collection'] });
+        }
+      } catch (failure) { if (active) setError(storeError(failure)); }
+      finally { if (active) setLoading(false); }
     }
+    void load();
+    return () => { active = false; };
+    // Cart callbacks are recreated by the provider; they must not restart fulfillment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, orderId, attempt, user?.id, client]);
+  const order = result?.order;
+  const review = Boolean(result?.legacy_rewards_unverified);
+  const terminal = order?.status === 'refunded' || order?.status === 'failed';
+  const completed = order?.status === 'completed' && !review;
+  const pending = Boolean(order && (result?.rewards_pending || (order.payment_status === 'paid' && order.status === 'pending')) && !terminal);
+  const title = loading ? 'Checking your purchase…' : error ? 'We couldn’t confirm your order' : terminal ? 'Order needs review' : pending ? 'Payment received. Delivery is pending.' : review ? 'Purchase recorded' : 'Your games are ready';
+  const Icon = loading ? Loader2 : error || review || terminal ? AlertCircle : completed ? CheckCircle : Clock;
 
-    return (
-        <div className="min-h-screen bg-transparent text-white p-6 flex items-center justify-center">
-            <div className="max-w-2xl w-full bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-8 md:p-12 text-center shadow-2xl">
-                <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-                    <CheckCircle className="w-12 h-12 text-green-400" />
-                </div>
-                
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Order Confirmed!</h1>
-                <p className="text-slate-300 text-lg mb-8">
-                    Thank you for your purchase. Your order has been processed successfully.
-                </p>
-
-                {order && (
-                    <div className="bg-slate-950/80 rounded-xl p-6 mb-8 border border-slate-800 text-left">
-                        <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-4">
-                            <span className="text-slate-500 uppercase text-xs font-bold tracking-wider">Order ID</span>
-                            <span className="font-mono text-cyan-400 font-bold">#{order.id.slice(0, 8).toUpperCase()}</span>
-                        </div>
-                        <div className="space-y-3 mb-4">
-                            {order.items.map((item, i) => (
-                                <div key={i} className="flex justify-between text-sm">
-                                    <span className="text-white">{item.title} <span className="text-slate-500">x{item.quantity}</span></span>
-                                    <span className="text-slate-300">{item.price.toLocaleString()} AGP</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-                            <span className="text-white font-bold">Total Amount</span>
-                            <span className="text-xl font-bold text-green-400">{order.total_amount.toLocaleString()} AGP</span>
-                        </div>
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button asChild className="h-14 text-lg bg-blue-600 hover:bg-blue-500">
-                        <Link to={createPageUrl('Orders')}>
-                            <FileText className="w-5 h-5 mr-2" /> View My Orders
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="h-14 text-lg border-slate-700 hover:bg-slate-800 hover:text-white">
-                        <Link to={createPageUrl('Store')}>
-                            <Package className="w-5 h-5 mr-2" /> Continue Shopping
-                        </Link>
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
+  return <main className="min-h-screen bg-slate-950 text-white p-6 flex items-center justify-center">
+    <section className="max-w-2xl w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-8 md:p-12">
+      <Icon className={'mx-auto mb-6 h-12 w-12 text-cyan-300' + (loading ? ' animate-spin' : '')} />
+      <h1 className="text-center text-3xl font-bold">{title}</h1>
+      <div className="mt-4 text-center text-slate-300" aria-live="polite">
+        {error ? <p role="alert">{error}</p> : loading ? <p>Verifying payment and delivery status.</p> : terminal ? <p>Open order history to review this purchase.</p> : <>
+          {pending && <p>Your purchase is saved. Retry delivery to finish adding your games and starter rewards. This does not charge you again.</p>}
+          {completed && <p>Your games and included starter rewards have been delivered.</p>}
+          {review && <p>Your purchase is recorded, but this older order has no complete starter-reward history. Its rewards need a support review.</p>}
+        </>}
+      </div>
+      {order && !loading && <div className="my-8 rounded-xl border border-slate-800 bg-slate-950/70 p-5">
+        <p className="mb-4 text-xs uppercase tracking-wider text-slate-400">Order #{order.id.slice(0, 8)}</p>
+        <ul className="space-y-3">{order.items?.map((item, index) => <li key={index} className="flex justify-between gap-4 text-sm"><span>{item.title}</span><span>{formatMoney(item.price, order.currency)}</span></li>)}</ul>
+        <div className="mt-5 flex justify-between border-t border-slate-800 pt-4 font-semibold"><span>Total paid</span><span>{formatMoney(order.total_amount, order.currency)}</span></div>
+      </div>}
+      {!loading && (error || pending) && (sessionId || orderId) && <button className="mt-6 w-full rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-slate-950" onClick={() => setAttempt(value => value + 1)}>{pending ? 'Retry delivery' : 'Check order status again'}</button>}
+      <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm"><Link to="/Library" className="text-cyan-300">Open library</Link><Link to="/Orders" className="text-cyan-300">Order history</Link><Link to="/Store" className="text-slate-300">Continue shopping</Link></div>
+    </section>
+  </main>;
 }
