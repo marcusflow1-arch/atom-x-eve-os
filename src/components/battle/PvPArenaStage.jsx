@@ -264,7 +264,17 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const playSkill = (fighter, skill, targetId, facingYaw, detail = {}) => {
     if (!fighter?.runtime || !skill) return false;
     const effect = effectFromSkill(skill);
-    const target = { type: 'player', playerId: String(targetId), facingYaw, autoLock: true, autoHit: true, damage: Number(detail?.damage || 0) }; 
+    const target = { type: 'player', playerId: String(targetId), facingYaw, autoLock: true, autoHit: true, damage: Number(detail?.damage || 0) };
+
+    // PvP has exactly one authoritative target: the opposing fighter. Snap the
+    // battle wrapper to that target BEFORE starting the authored clip, then give
+    // the runtime the same locked yaw/target so neither animation nor VFX can
+    // begin pointed at an old movement direction.
+    fighter.yaw = facingYaw;
+    fighter.runtime.lockedFacingYaw = facingYaw;
+    fighter.runtime.activeTarget = target;
+    if (fighter.root) fighter.root.rotation.y = facingYaw;
+
     if (fighter.female) return fighter.runtime.playEffect(effect, { ...detail, effect, card: skill, target });
     if (String(effect.id || '') === 'getsuga_tensho') return fighter.runtime.play(target);
     return false;
