@@ -66,11 +66,17 @@ Both UI tests, targeted ESLint, `git diff --check` and the production build pass
 
 These are automated source/runtime checks, not a live multiplayer or production RLS verification. A live two-account Base44 session has not been verified in this pass.
 
+## Reward recovery continuation — 27 September 2026
+
+The next pass adds recoverable reward journals, signed game-event receipts, per-achievement batch checkpoints, safe free-game price checks and resumable new free-game starter delivery. The current combined suite passes **131 backend tests** plus both UI checks and the production build. See [Reward delivery and signed game events](REWARD_DELIVERY_AND_GAME_EVENTS_2026-09-27.md) for the integration contract, evidence and remaining limits.
+
+Newer combat and male/female rig changes landed during this work and were preserved. The earlier verification counts above describe the earlier checkpoint.
+
 ## Remaining integrity work
 
-- **Retry-safe rewards and events:** the current reward engine marks an achievement unlocked before all card/XP writes complete. An interruption can leave a partial reward that a retry skips. Signed `gameEvent` requests still lack a replay receipt. Build an authenticated event journal and recoverable grants on verified conditional/atomic storage guarantees.
+- **Reward recovery follow-up:** journaled grants now finish card/XP delivery before unlock, and signed events have replay receipts. Historical grants without evidence still require reconciliation. Cross-request uniqueness and production conditional-update guarantees remain unverified; do not claim exactly-once first-time delivery.
 - **Concurrent mutations:** material spend, fusion, starter creation, entitlement creation and match updates still contain read/write races. Prevalidation prevents invalid selections from consuming cards; it does not provide rollback or transaction isolation.
-- **Catalog and entitlement follow-up:** the collection fallback can expose non-retired draft catalog entries; migration joins still need ambiguity/duplicate reporting and pagination. Free-claim price validation and reward recovery need a separate pass. No production catalog migration has been executed.
+- **Catalog and entitlement follow-up:** the collection fallback can expose non-retired draft catalog entries; migration joins still need ambiguity/duplicate reporting and pagination. Free-claim price validation and new starter recovery are implemented, but the visible store claim/retry flow and paid order fulfillment recovery remain. No production catalog migration has been executed.
 - **Lifecycle and live acceptance:** verify ordinary players through proof submission/admin review, equipment/skill changes, matchmaking, dashboard joining, combat, disconnect and rewards. Historical orphan matches and non-tradable versus trade-locked semantics remain follow-up work.
 
 This is a tested authorization slice of the platform audit, not completion of the whole audit or the full AI Battle roadmap.
