@@ -107,6 +107,10 @@
         "type": "string"
       },
       "default": []
+    },
+    "prestige_score": {
+      "type": "number",
+      "default": 0
     }
   },
   "required": [
