@@ -959,79 +959,79 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
                   <section className="space-y-5" aria-labelledby="content-for-game-title">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7a838d]">Available content</span>
-                        <h3 id="content-for-game-title" className="mt-1 text-2xl font-semibold tracking-tight text-[#252a31]">Content For This Game</h3>
-                        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b737c]">Select an expansion or add-on from the left to review exactly what it includes.</p>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Available content</span>
+                        <h3 id="content-for-game-title" className="mt-1 text-2xl font-semibold tracking-tight text-white">Content For This Game</h3>
+                        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">Select an expansion or add-on from the left to review exactly what it includes.</p>
                       </div>
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9299a1]">{dlcList.filter(dlc => dlc.id !== 'standard').length} available</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/30">{dlcList.filter(dlc => dlc.id !== 'standard').length} available</div>
                     </div>
 
                     <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.82fr)_minmax(0,1.35fr)]">
-                      <div className="overflow-hidden rounded-2xl border border-[#d7dbe0] bg-[#f8f9fa] shadow-[0_14px_40px_rgba(31,36,42,0.05)]">
-                        <div className="border-b border-[#dde1e5] px-4 py-3">
-                          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7b838c]">Game content</span>
+                      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
+                        <div className="border-b border-white/10 px-4 py-3">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Game content</span>
                         </div>
-                        <div className="divide-y divide-[#e1e4e8]">
+                        <div className="divide-y divide-white/10">
                           {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc, index) => {
                             const active = selectedDLC?.id === dlc.id;
                             return (
-                              <button key={dlc.id} type="button" onClick={() => setSelectedDLC(dlc)} className={`group flex w-full items-center gap-3 px-4 py-4 text-left transition-colors ${active ? 'bg-white' : 'hover:bg-white/70'}`} aria-pressed={active}>
-                                <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border text-xs font-black ${active ? 'border-[#31363c] bg-[#31363c] text-white' : 'border-[#d6dbe0] bg-[#eef0f2] text-[#5d6670]'}`}>{String(index + 1).padStart(2, '0')}</div>
+                              <button key={dlc.id} type="button" onClick={() => setSelectedDLC(dlc)} className={`group flex w-full items-center gap-3 px-4 py-4 text-left transition-colors ${active ? 'bg-white/[0.09]' : 'hover:bg-white/[0.05]'}`} aria-pressed={active}>
+                                <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border text-xs font-black ${active ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.04] text-white/50'}`}>{String(index + 1).padStart(2, '0')}</div>
                                 <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2"><strong className="truncate text-sm font-semibold text-[#2b3036]">{dlc.name}</strong>{active && <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-cyan-600" />}</div>
-                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#818891]">
+                                  <div className="flex items-center gap-2"><strong className="truncate text-sm font-semibold text-white">{dlc.name}</strong>{active && <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-cyan-300" />}</div>
+                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-white/40">
                                     <span>${Number(dlc.price || 0).toFixed(2)}</span>
                                     {dlc.abilities?.length > 0 && <span>{dlc.abilities.length} abilities</span>}
                                     {dlc.achievements?.length > 0 && <span>{dlc.achievements.length} rewards</span>}
                                   </div>
                                 </div>
-                                <ChevronRight className={`h-4 w-4 flex-shrink-0 transition-transform ${active ? 'translate-x-0.5 text-[#30353b]' : 'text-[#a0a6ad] group-hover:translate-x-0.5'}`} />
+                                <ChevronRight className={`h-4 w-4 flex-shrink-0 transition-transform ${active ? 'translate-x-0.5 text-cyan-200' : 'text-white/25 group-hover:translate-x-0.5 group-hover:text-white/60'}`} />
                               </button>
                             );
                           })}
                         </div>
                       </div>
 
-                      <div className="min-h-[360px] rounded-2xl border border-[#d7dbe0] bg-white p-6 shadow-[0_18px_50px_rgba(31,36,42,0.06)]">
+                      <div className="min-h-[360px] rounded-2xl border border-white/10 bg-white/[0.035] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
                         {selectedDLC ? (
                           <motion.div key={selectedDLC.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="space-y-6">
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                               <div className="min-w-0">
-                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-700">Selected content</span>
-                                <h4 className="mt-1 text-2xl font-semibold tracking-tight text-[#252a31]">{selectedDLC.name}</h4>
-                                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#666f78]">{selectedDLC.description}</p>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">Selected content</span>
+                                <h4 className="mt-1 text-2xl font-semibold tracking-tight text-white">{selectedDLC.name}</h4>
+                                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{selectedDLC.description}</p>
                               </div>
                               <div className="flex flex-shrink-0 items-center gap-3">
-                                <span className="text-xl font-semibold text-[#2c3137]">${Number(selectedDLC.price || 0).toFixed(2)}</span>
-                                <button type="button" onClick={() => handleAddDLCToCart(selectedDLC)} className="inline-flex items-center gap-2 rounded-lg bg-[#2f343a] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#1f2328]"><Download className="h-4 w-4" /> Add to Cart</button>
+                                <span className="text-xl font-semibold text-white">${Number(selectedDLC.price || 0).toFixed(2)}</span>
+                                <button type="button" onClick={() => handleAddDLCToCart(selectedDLC)} className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-bold text-black transition-colors hover:bg-cyan-100"><Download className="h-4 w-4" /> Add to Cart</button>
                               </div>
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-2">
-                              <div className="rounded-xl border border-[#e0e3e6] bg-[#f7f8f9] p-4">
-                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#717982]"><Check className="h-3.5 w-3.5 text-cyan-700" /> Included</div>
+                              <div className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/40"><Check className="h-3.5 w-3.5 text-cyan-300" /> Included</div>
                                 <div className="space-y-2">
-                                  {(selectedDLC.offers || []).map((offer, i) => <div key={i} className="flex items-start gap-2 text-xs leading-5 text-[#505861]"><span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-[#5e6770]" />{offer}</div>)}
-                                  {(!selectedDLC.offers || selectedDLC.offers.length === 0) && <p className="text-xs text-[#8a9198]">No included-content notes published yet.</p>}
+                                  {(selectedDLC.offers || []).map((offer, i) => <div key={i} className="flex items-start gap-2 text-xs leading-5 text-white/60"><span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-white/45" />{offer}</div>)}
+                                  {(!selectedDLC.offers || selectedDLC.offers.length === 0) && <p className="text-xs text-white/35">No included-content notes published yet.</p>}
                                 </div>
                               </div>
 
-                              <div className="rounded-xl border border-[#e0e3e6] bg-[#f7f8f9] p-4">
-                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#717982]"><Database className="h-3.5 w-3.5 text-cyan-700" /> Content details</div>
+                              <div className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/40"><Database className="h-3.5 w-3.5 text-cyan-300" /> Content details</div>
                                 <dl className="space-y-2">
-                                  {Object.entries(selectedDLC.stats || {}).map(([key, value]) => <div key={key} className="flex items-center justify-between gap-4 border-b border-[#e3e6e9] pb-2 text-xs last:border-0 last:pb-0"><dt className="capitalize text-[#78808a]">{key.replace(/([A-Z])/g, ' $1').trim()}</dt><dd className="font-semibold text-[#353a40]">{value}</dd></div>)}
-                                  {Object.keys(selectedDLC.stats || {}).length === 0 && <div className="text-xs text-[#8a9198]">Detailed content stats have not been published.</div>}
+                                  {Object.entries(selectedDLC.stats || {}).map(([key, value]) => <div key={key} className="flex items-center justify-between gap-4 border-b border-white/10 pb-2 text-xs last:border-0 last:pb-0"><dt className="capitalize text-white/40">{key.replace(/([A-Z])/g, ' $1').trim()}</dt><dd className="font-semibold text-white/75">{value}</dd></div>)}
+                                  {Object.keys(selectedDLC.stats || {}).length === 0 && <div className="text-xs text-white/35">Detailed content stats have not been published.</div>}
                                 </dl>
                               </div>
                             </div>
 
                             {selectedDLC.achievements?.length > 0 && (
                               <div>
-                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#717982]"><Trophy className="h-3.5 w-3.5 text-cyan-700" /> Cards & rewards</div>
+                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/40"><Trophy className="h-3.5 w-3.5 text-cyan-300" /> Cards & rewards</div>
                                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                   {selectedDLC.achievements.map((ach, i) => {
                                     const reward = typeof ach === 'string' ? { name: ach } : ach;
-                                    return <button key={i} type="button" onClick={() => typeof ach === 'object' && setSelectedAchievement(ach)} className="rounded-lg border border-[#dfe3e7] bg-[#fafbfb] p-3 text-left transition-colors hover:bg-[#f1f3f4]"><small className="text-[9px] font-bold uppercase tracking-[0.13em] text-cyan-700">{reward.type || 'Reward'}</small><strong className="mt-1 block text-xs font-semibold text-[#34393f]">{reward.name}</strong>{reward.rarity && <span className="mt-1 block text-[10px] text-[#838a92]">{reward.rarity}</span>}</button>;
+                                    return <button key={i} type="button" onClick={() => typeof ach === 'object' && setSelectedAchievement(ach)} className="rounded-lg border border-white/10 bg-white/[0.035] p-3 text-left transition-colors hover:bg-white/[0.07]"><small className="text-[9px] font-bold uppercase tracking-[0.13em] text-cyan-300">{reward.type || 'Reward'}</small><strong className="mt-1 block text-xs font-semibold text-white">{reward.name}</strong>{reward.rarity && <span className="mt-1 block text-[10px] text-white/35">{reward.rarity}</span>}</button>;
                                   })}
                                 </div>
                               </div>
@@ -1039,18 +1039,18 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
 
                             {selectedDLC.quests?.length > 0 && (
                               <div>
-                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#717982]"><Radio className="h-3.5 w-3.5 text-cyan-700" /> Included quests</div>
-                                <div className="divide-y divide-[#e4e7ea] rounded-xl border border-[#dfe3e7] bg-[#fafbfb]">
-                                  {selectedDLC.quests.map((quest, i) => <div key={i} className="flex items-center justify-between gap-4 px-4 py-3"><span className="text-xs font-medium text-[#42484f]">{quest.name}</span><span className="text-[10px] font-semibold text-[#7b838c]">{quest.type || 'Quest'}{quest.xp ? ` · +${quest.xp} XP` : ''}</span></div>)}
+                                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/40"><Radio className="h-3.5 w-3.5 text-cyan-300" /> Included quests</div>
+                                <div className="divide-y divide-white/10 rounded-xl border border-white/10 bg-white/[0.025]">
+                                  {selectedDLC.quests.map((quest, i) => <div key={i} className="flex items-center justify-between gap-4 px-4 py-3"><span className="text-xs font-medium text-white/70">{quest.name}</span><span className="text-[10px] font-semibold text-white/40">{quest.type || 'Quest'}{quest.xp ? ` · +${quest.xp} XP` : ''}</span></div>)}
                                 </div>
                               </div>
                             )}
                           </motion.div>
                         ) : (
                           <div className="flex h-full min-h-[320px] flex-col items-center justify-center px-8 text-center">
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d9dde1] bg-[#f4f5f6]"><Package className="h-5 w-5 text-[#646d76]" /></div>
-                            <h4 className="text-base font-semibold text-[#34393f]">Choose content from the left</h4>
-                            <p className="mt-2 max-w-sm text-xs leading-5 text-[#7a828b]">The selected expansion, rewards, quests, and included features will appear here without leaving the page.</p>
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]"><Package className="h-5 w-5 text-white/45" /></div>
+                            <h4 className="text-base font-semibold text-white">Choose content from the left</h4>
+                            <p className="mt-2 max-w-sm text-xs leading-5 text-white/40">The selected expansion, rewards, quests, and included features will appear here without leaving the page.</p>
                           </div>
                         )}
                       </div>
