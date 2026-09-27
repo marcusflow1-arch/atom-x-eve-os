@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { skillStats } from '../../shared/pvpSkills.ts';
+import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -53,6 +55,9 @@ Deno.serve(async (req) => {
       const primary = copies[0] || null;
       const quantity = copies.reduce((sum, row) => sum + Math.max(1, Number(row.quantity || 1)), 0);
       const p = primary ? progressByUserCard.get(String(primary.id)) || null : null;
+      const effect = card.animation_effect || {};
+      const baseCombat = skillStats(String(effect.id || ''), card.rarity || 'Common');
+      const combat = primary ? effectiveCardDamage(Number(effect.base_damage || baseCombat.base_damage || 0), p || {}) : null;
       return {
         id: card.id,
         trading_card_id: card.id,
@@ -79,7 +84,7 @@ Deno.serve(async (req) => {
         user_card_id: primary?.id || null,
         equipped_to: primary?.equipped_to || 'none',
         trade_status: primary?.trade_status || 'available',
-        progression: p ? { level: Number(p.level || 1), xp: Number(p.xp || 0), stage: Number(p.stage || 1), ascension: Number(p.ascension || 0), power_score: Number(p.power_score || 0), enhanced_stats: p.enhanced_stats || {} } : null,
+        progression: primary ? { level: Number(p?.level || 1), xp: Number(p?.xp || 0), stage: Number(p?.stage || 1), ascension: Number(p?.ascension || 0), power_score: Number(p?.power_score || 0), enhanced_stats: p?.enhanced_stats || {}, over_enchant_rank: Number(p?.over_enchant_rank || 0), combat } : null,
       };
     });
 
