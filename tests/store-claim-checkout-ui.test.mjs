@@ -73,7 +73,7 @@ const order={id:'order-123',status:'pending',payment_status:'paid',currency:'USD
 beforeEach(()=>{
   Object.assign(fixture,{user:{id:'a'},authenticated:true,params:new URLSearchParams(),cart:[],calls:[],login:0,removed:[],navigation:[],owned:false,claimStatus:{success:true,owned:false,rewards_pending:false},claimReplies:[],verifyReplies:[],checkoutReply:{},order:null});
   window.sessionStorage.clear();
-  client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false}}});
+  client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
   root=createRoot(document.getElementById('root'));
 });
 afterEach(async()=>{await act(async()=>root.unmount());client.clear();});
@@ -116,7 +116,7 @@ test('confirmation shows the verification error rather than a false success and 
   await click('Check order status again');
   assert.ok(text().includes('Your games are ready'));assert.ok(text().includes('$12.50'));assert.ok(!text().includes('AGP'));
   assert.equal(fixture.calls.filter(call=>call.name==='createCheckoutSession').length,0);
-  assert.deepEqual(fixture.removed,[['game','game']]);
+  assert.deepEqual(JSON.parse(JSON.stringify(fixture.removed)),[['game','game']]);
 });
 test('pending paid order shows its delivery state and retry action',async()=>{
   fixture.params=new URLSearchParams('session_id=cs_test_1');

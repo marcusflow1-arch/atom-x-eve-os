@@ -41,7 +41,12 @@ const SDK = { entities: {
   DLC: { filter: async () => [{ id: 'expansion', game_id: game.id, name: 'Northern Reach', description: 'A new region.', status: 'active', price: 5 }] },
   CardTemplate: { filter: async () => [{ id: 'card-one', name: 'Stoneguard', source_game_id: game.id, type: 'Equipment', base_rarity: 'Rare', description: 'An ancient shield.' }] }
 } };
-SDK.functions = { invoke: async (name) => {
+SDK.functions = { invoke: async (name, request) => {
+  if (name === 'gameReviews') {
+    if (request.action === 'list') return { data: { reviews: storedReviews, can_review: true } };
+    calls.reviews.push(request.data); const review = { ...request.data, id: 'review-one', author_name: 'Test Player', created_date: '2026-09-21T10:00:00Z' };
+    storedReviews.push(review); return { data: { review } };
+  }
   if (name === 'claimFreeGame') return { data: { success: true, owned: session.owned, rewards_pending: false } };
   if (name === 'cardCollection') return { data: { cards: [
     { id: 'reward-1', name: 'Dawnstrike', card_type: 'ability', game_id: game.id, description: 'A radiant ability for your avatar.', rarity: 'Rare', achievement_id: 'first-light' },
@@ -136,8 +141,8 @@ await run(() => {
 });
 await run(() => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
 assert.equal(calls.reviews.length, 1);
-assert.equal(calls.reviews[0].user_id, 'player-one');
-assert.equal(calls.reviews[0].game_title, game.title);
+assert.equal(calls.reviews[0].user_id, undefined, 'the server resolves the review author');
+assert.equal(calls.reviews[0].game_id, game.id);
 assert.ok(body().includes('A memorable adventure.'));
 const dlcRow = document.querySelector('.gd-dlc-row');
 assert.ok(dlcRow, 'DLC row is restored above the detail tabs');
