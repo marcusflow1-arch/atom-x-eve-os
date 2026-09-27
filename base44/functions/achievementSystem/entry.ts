@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
       if (typeof body.approve !== 'boolean') return json({ error: 'approve must be true or false' }, 400);
       const approve = body.approve;
       const record = await svc.UserAchievement.get(userAchievementId).catch(() => null);
-      if (!record || record.status !== 'pending_review') return json({ error: 'Pending proof not found' }, 404);
+      if (!record || (record.status !== 'pending_review' && !(approve && record.status === 'unlocked' && record.source === 'proof'))) return json({ error: 'Pending proof not found' }, 404);
       if (!approve) {
         const rejected = await svc.UserAchievement.update(record.id, { status: 'locked', progress: { ...(record.progress || {}), rejected_at: new Date().toISOString(), review_note: String(body.review_note || '') } });
         return json({ success: true, approved: false, achievement: rejected });
@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
     // Deliberately no public awardAchievement action. Verified game events,
     // quests, approved proof and admin tools call the shared reward engine.
     return json({ error: 'Invalid achievement action' }, 400);
-  } catch (error) {
+  } catch (error: any) {
     console.error('achievementSystem failed', error);
-    return json({ error: error instanceof Error ? error.message : 'Achievement request failed' }, 500);
+    return json({ error: error instanceof Error ? error.message : 'Achievement request failed' }, Number(error?.status || 500));
   }
 });
