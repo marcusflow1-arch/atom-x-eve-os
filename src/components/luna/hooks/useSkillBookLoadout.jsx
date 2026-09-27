@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import useLunaStore from '@/components/luna/useLunaStore';
 import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
 
 const unwrap = (response) => response?.data ?? response ?? {};
 const normalize = (value) => String(value || '').trim().toLowerCase();
@@ -89,7 +90,14 @@ async function restoreIchigoIntoState(body, userId) {
 export function useSkillBookLoadout() {
   const { user } = useAuth();
   const companion = useCompanionIdentity();
-  const activeAvatarGender = ['female', 'male'].includes(normalize(companion?.gender)) ? normalize(companion.gender) : '';
+  const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
+  useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
+  const selectedAvatar = activeCharacter && !activeCharacter.isDevTest ? activeCharacter : companion;
+  const activeAvatarGender = ['female', 'male'].includes(normalize(selectedAvatar?.gender))
+    ? normalize(selectedAvatar.gender)
+    : ['female', 'male'].includes(normalize(companion?.gender))
+      ? normalize(companion.gender)
+      : '';
   const queryClient = useQueryClient();
   const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
   const clearHotbarSlot = useLunaStore((state) => state.clearHotbarSlot);
@@ -130,7 +138,11 @@ export function useSkillBookLoadout() {
       void queryClient.invalidateQueries({ queryKey: ['luna-skill-book', user.id] }, { cancelRefetch: false });
     };
     window.addEventListener('avatarAppearanceSaved', refreshEligibility);
-    return () => window.removeEventListener('avatarAppearanceSaved', refreshEligibility);
+    window.addEventListener('axeCharacterActivated', refreshEligibility);
+    return () => {
+      window.removeEventListener('avatarAppearanceSaved', refreshEligibility);
+      window.removeEventListener('axeCharacterActivated', refreshEligibility);
+    };
   }, [queryClient, user?.id]);
 
   useEffect(() => {
