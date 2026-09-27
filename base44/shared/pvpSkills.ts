@@ -10,7 +10,7 @@ export const BASIC_MELEE = {
   atb_cost: 50,
   cooldown_ms: 1000,
   hit_ms: 350,
-  base_damage: 45,
+  base_damage: 10,
 } as const;
 
 export const SKILL_STATS: Record<string, any> = {
