@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user || user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
     const body = await req.json().catch(() => ({}));
-    const apply = Boolean(body.apply);
+    const apply = body.apply === true;
     const svc = base44.asServiceRole.entities;
     const [games, achievements, existingCards, userCards] = await Promise.all([
       svc.Game.list('title', 5000), svc.Achievement.list('title', 5000), svc.TradingCard.list('name', 5000), svc.UserCard.list('-created_date', 5000),
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
           cardsCreated += 1;
           cardsByNameGame.set(`${key(item.series)}|${key(item.name)}`, card);
         }
-        await svc.UserCard.update(item.user_card_id, { trading_card_id:card.id, card_type:item.card_type, achievement_id:item.achievement_id || card.achievement_id || '', source:item.source, acquired_at:new Date().toISOString(), quantity:1, equipped_to:'none' });
+        await svc.UserCard.update(item.user_card_id, { trading_card_id:card.id, card_type:item.card_type, achievement_id:item.achievement_id || card.achievement_id || '', source:item.source });
         userCardsLinked += 1;
       }
     }
