@@ -497,12 +497,18 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
             lf.runtime.playIdle?.();
           }
         }
-        const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
+        const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500||b.moving===false)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
-        lf.root.position.x=lp.x;lf.root.position.z=lp.z;if(!lf.runtime.isPlaying?.())lf.root.rotation.y=lf.yaw;of.root.position.x=op.x;of.root.position.z=op.z;if(!of.runtime.isPlaying?.())of.root.rotation.y=of.yaw;
+        lf.root.position.x=lp.x;lf.root.position.z=lp.z;of.root.position.x=op.x;of.root.position.z=op.z;
+        // Auto-lock owns world facing even while an authored ability clip is
+        // running. Push the continuously updated opponent yaw into both runtimes,
+        // update the mixers, then re-apply wrapper rotation after animation so a
+        // root-motion track can never turn a skill away from its target.
+        lf.runtime.lockedFacingYaw=lf.yaw;of.runtime.lockedFacingYaw=of.yaw;
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
+        lf.root.rotation.y=lf.yaw;of.root.rotation.y=of.yaw;
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
-        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;let anim='forward';if(Math.abs(dx)>Math.abs(dz))anim=dx>0?'right':'left';else if(dz)anim=((dz*(localSide==='host'?-1:1))>0)?'forward':'back';window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim,running:!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
+        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         if(currentMatch?.status==='ended'){
           of.root.visible=false;
           lf.runtime.playIdle?.();
@@ -510,7 +516,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           const desired=new THREE.Vector3(lp.x,1.75,portraitZ);
           const faceYaw=Math.atan2(desired.x-lp.x,desired.z-lp.z);
           lf.yaw=lerpAngle(lf.yaw,faceYaw,FACING_SPEED*dt*1.5);
-          if(!lf.runtime.isPlaying?.())lf.root.rotation.y=lf.yaw;
+          lf.root.rotation.y=lf.yaw;
           camera.position.lerp(desired,1-Math.exp(-7*dt));
           camera.lookAt(new THREE.Vector3(lp.x,1.05,lp.z));
         }else{
