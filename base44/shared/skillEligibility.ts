@@ -17,7 +17,7 @@ export function avatarSkillError(skill: Skill, avatarGender: unknown): string | 
 export function skillEquipStatus(card: Skill, avatarGender: unknown) {
   const equipError = !card
     ? 'Unlock this skill card before equipping it.'
-    : card.card_type !== 'Ability'
+    : String(card.card_type || '').trim().toLowerCase() !== 'ability'
       ? 'Only Ability cards can be equipped in Skill Book slots.'
       : card.trade_status === 'locked_in_trade'
         ? 'That skill card is locked in a trade.'
