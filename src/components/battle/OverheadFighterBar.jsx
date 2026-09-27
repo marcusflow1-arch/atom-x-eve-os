@@ -30,7 +30,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
   const meleeDisabled = meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
 
   return (
-    <div className="pointer-events-auto select-none text-white drop-shadow-[0_2px_7px_rgba(0,0,0,.95)]" style={{ width: 210 }}>
+    <div className="pointer-events-auto select-none text-white drop-shadow-[0_2px_7px_rgba(0,0,0,.95)]" style={{ width: 250 }}>
       <div className="mb-1 text-center text-[12px] font-black tracking-wide">{name || 'Player'}</div>
       <div className="mx-auto w-[120px]">
         <div className="h-2 overflow-hidden rounded-full bg-black/70 ring-1 ring-white/20"><div className={`h-full ${local ? 'bg-cyan-300' : 'bg-red-400'}`} style={{ width: `${hpPct}%` }} /></div>
