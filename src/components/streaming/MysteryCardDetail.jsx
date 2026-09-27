@@ -36,10 +36,11 @@ const rarityTone = {
 };
 
 function invoke(action, card, payload = {}) {
+  const userCardId = card?.userCardId || card?.user_card_id || card?.ownedCardId || undefined;
   return base44.functions.invoke('cardProgression', {
     action,
-    userCardId: card?.userCardId || card?.user_card_id || card?.ownedCardId || undefined,
-    achievementId: card?.achievementId || card?.achievement_id || card?.id,
+    userCardId,
+    achievementId: card?.achievementId || card?.achievement_id || (!userCardId && !card?.trading_card_id ? card?.id : undefined),
     payload: {
       ...payload,
       cardImage: card?.image || card?.card_image || '',
