@@ -1,4 +1,4 @@
-# Platform audit continuation — 26 September 2026
+# Platform audit continuation — 26–27 September 2026
 
 This change continues the current Atom X Eve OS implementation using the uploaded **Atom X Eve OS: Full Platform Audit and Fix Plan**. The report inspected commit `d2b4e40`; the application has continued changing since then. Verify each remaining finding against current source before implementing it.
 
@@ -15,35 +15,65 @@ The current battle entry point is `aiBattleMatchmaker`, with server-calculated A
 - Cancel/reset also ends a match in the pre-combat `matched` state, releasing both players' locks.
 - Ready, dodge and cast requests verify membership before settling any pending match updates. Removing a stale foreign card assignment never changes the other owner's card.
 
-The lock uses authoritative match membership rather than introducing a second, potentially stale `PlayerState.active_match_id` authority.
+The 27 September continuation found that later work had changed the lock to trust `PlayerState.active_match_id`. That field is owner-writable and its updates can fail independently of match creation. Both Skill Book and equipment now use the shared `base44/shared/matchLock.ts` participant/status query. Missing, stale or unrelated presence pointers cannot authorize mutations. Equipment checks run before creating or activating a loadout, and lookup failures return 503 without writes. Presence tracking in the matchmaker remains available for its existing consumers.
 
 The existing character assets and animations are preserved. No alternative battle engine, progression currency or model replacement was introduced.
 
+## Delivered: card ownership and reward authorization
+
+This pass started from `c4066789bff0d384b038a9e49a0814d2b0637f42`. The canonical card catalog, reward engine and equipment loadout already existed in that source; this pass repairs their verified integration and authorization gaps.
+
+- `cardProgression` requires an existing owned card with a positive whole-number quantity. It never mints ownership from a user profile array or a locked, pending or completed achievement record.
+- Initial progression stats and game/achievement links come from the owned card and its canonical definition. A caller cannot attach another achievement's stats. Purchased and transferred cards remain usable without requiring their new owner to have earned the original achievement.
+- Trade-locked cards can be inspected but cannot be upgraded. Unknown actions, malformed training counts, non-Boolean wildcard selections and invalid material balances are rejected.
+- Fusion validates every card that will be consumed before deleting the first one. Duplicate, foreign, equipped, trade-locked and tracked avatar starter selections are rejected. Multi-record operations remain non-transactional; see the limitations below.
+- Equipment replacement, unequip and clear verify the current card owner before changing equipment flags. A stale saved reference cannot modify a card now owned by someone else.
+- `UserAchievement` creation is restricted to admin/service-role writes. Users submit proof through the authenticated `achievementSystem` handler; only an admin can review it, with an explicit Boolean approval. A string such as `"false"` cannot approve a proof.
+- `UserMaterial` balances are readable by their owner/admin and writable only by admin/service code. Material and enchantment definitions remain readable, with admin-only writes.
+- The detail UI passes stable ownership and achievement IDs separately. Skill eligibility accepts both canonical `ability` and legacy `Ability` values.
+- Catalog migration applies only when `apply === true`. Linking a card preserves its quantity, original acquisition timestamp and equipped state. No production migration was run.
+- The obsolete `unlockGameSystem` endpoint now returns 410 after authentication and performs no writes. It previously recorded completed purchases without verifying payment. Current storefront clients use the existing free-claim or verified checkout flows.
+
 ## Policy reconciliation
 
-Existing starter-card bootstrap behavior is preserved, including the female Artemis starter abilities previously requested by the project owner. The audit's suggestion to remove all automatic starter grants conflicts with that direction. A future reward-engine migration should explicitly distinguish authorized starter grants from earned achievement rewards.
+The owner previously authorized fixed avatar starter abilities, including female Artemis abilities. Later code had disabled their bootstrap; this pass restores those specific grants. All other ownership must still come through verified rewards, purchases, trades or admin grants.
 
-Current owned cards use `card_type: 'Ability'`. The audit's proposed normalized lowercase catalog requires an adapter/migration; switching that enum independently would break existing consumers.
+New starter cards use `card_type: 'ability'`, `source: 'starter'`, and original-recipient/effect grant fields. Existing managed legacy starters can be tagged during bootstrap. Canonical or purchased cards are not relabeled or overwritten. Sequential retries do not duplicate a grant, and a tracked card transferred away does not trigger a replacement for its original recipient. Tracked starters cannot be consumed in fusion, preserving that grant record. The frontend asks for female-only starters according to the server's avatar gender.
 
-This patch does not mint new production cards through tests, migrate inventories, rewrite historical matches, change RLS, or publish a new economy policy.
+The grant lookup/create is not a unique, atomic database operation. Simultaneous first-time bootstrap requests can still race. Historic transfers without grant metadata cannot be reconstructed by this change; no inventory backfill was performed.
+
+Tests use isolated in-memory data and do not mint production cards, spend production materials, migrate inventories or rewrite historical matches. Schema authorization changes are part of this pass; actual production policy enforcement still requires a live normal-user/admin integration check.
 
 ## Verification
 
 Run from the repository root:
 
 ```sh
-node --test tests/battle-skill-eligibility.test.mjs
+node --test tests/card-ownership-security.test.mjs tests/battle-skill-eligibility.test.mjs
 node tests/skill-book-eligibility-ui.test.mjs
 node tests/skill-book-avatar-refresh.test.mjs
-npx eslint src/components/dashboard/LunaCardsPanel.jsx src/components/luna/hooks/useSkillBookLoadout.jsx
+npx eslint src/components/dashboard/LunaCardsPanel.jsx src/components/luna/hooks/useSkillBookLoadout.jsx src/components/streaming/MysteryCardDetail.jsx
 npm run build
 ```
 
-The 23 backend tests invoke the real bundled handlers against in-memory entity fixtures. Coverage includes all three Artemis abilities, male/female eligibility, foreign ownership, trade locks, stale selections, 550 newer unrelated matches, database failure, all five loadout mutation actions, queue pairing, legacy frozen casts, non-member requests, cancel/reset and repeat starter bootstrap.
+All **73 backend tests pass**: 37 ownership/reward tests and 36 battle/equipment tests. They invoke the actual bundled handlers against in-memory entity fixtures; the ownership suite also checks the authored schemas with a local policy simulator.
+
+Coverage includes unauthorized minting, trusted stats and metadata, training and fusion validation, proof review, material access, retired purchases, migration preservation, starter transfer/retry behavior, both ability enum formats, all Artemis abilities, frozen avatar eligibility, foreign ownership, stale selections, 550 newer unrelated matches, missing/stale presence pointers, database failures, all five Skill Book mutation actions, all three equipment mutation actions, queue pairing, legacy casts, non-member requests and cancel/reset.
 
 The UI tests mount the real panel and query hook in JSDOM. They exercise disabled and enabled equip/drag controls, four-slot labels, avatar-save refetching, hotbar removal/restoration, foreign-event filtering and listener cleanup.
 
-These are automated source/runtime checks. A live two-account Base44 session has not been verified in this pass. Existing historical orphan matches and concurrent match-write races are not repaired by these checks; retain them as explicit follow-up work.
+Both UI tests, targeted ESLint, `git diff --check` and the production build pass. The build retains existing browser-data freshness and ambiguous Tailwind duration warnings.
+
+These are automated source/runtime checks, not a live multiplayer or production RLS verification. A live two-account Base44 session has not been verified in this pass.
+
+## Remaining integrity work
+
+- **Retry-safe rewards and events:** the current reward engine marks an achievement unlocked before all card/XP writes complete. An interruption can leave a partial reward that a retry skips. Signed `gameEvent` requests still lack a replay receipt. Build an authenticated event journal and recoverable grants on verified conditional/atomic storage guarantees.
+- **Concurrent mutations:** material spend, fusion, starter creation, entitlement creation and match updates still contain read/write races. Prevalidation prevents invalid selections from consuming cards; it does not provide rollback or transaction isolation.
+- **Catalog and entitlement follow-up:** the collection fallback can expose non-retired draft catalog entries; migration joins still need ambiguity/duplicate reporting and pagination. Free-claim price validation and reward recovery need a separate pass. No production catalog migration has been executed.
+- **Lifecycle and live acceptance:** verify ordinary players through proof submission/admin review, equipment/skill changes, matchmaking, dashboard joining, combat, disconnect and rewards. Historical orphan matches and non-tradable versus trade-locked semantics remain follow-up work.
+
+This is a tested authorization slice of the platform audit, not completion of the whole audit or the full AI Battle roadmap.
 
 ## Revised implementation and handoff order
 
