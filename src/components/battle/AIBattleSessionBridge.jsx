@@ -7,7 +7,7 @@ export default function AIBattleSessionBridge() {
   const { queue, match } = useAIBattleQueue();
   const queuedForPvp = queue?.status === 'waiting' && queue?.mode === 'pvp';
   const activePvpMatch = match?.mode === 'pvp'
-    && ['matched', 'countdown', 'fighting'].includes(String(match?.status || ''));
+    && ['matched', 'connecting', 'countdown', 'fighting'].includes(String(match?.status || ''));
   const musicActive = queuedForPvp || activePvpMatch;
 
   useEffect(() => {
