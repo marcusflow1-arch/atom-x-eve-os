@@ -16,6 +16,7 @@ const GETSUGA_EFFECT = {
   model_url: GETSUGA_MALE_MODEL_URL,
   duration_ms: 3444,
   cooldown_ms: 8000,
+  required_avatar_gender: 'male',
 };
 
 // Exact Admin > 3D Models upload that owns every Artemis embedded ability clip.
@@ -38,17 +39,17 @@ const ARTEMIS_ABILITIES = [
   {
     card_name: 'Artemis — Call of the Husky',
     card_image: artemisCardImage('CALL OF THE HUSKY', '✦', '#65d9ff'),
-    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 2000, cooldown_ms: 7000 },
+    effect: { id: 'artemis_call_of_the_husky', clip_name: 'Call_Of_The_Husky', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 2000, cooldown_ms: 7000, required_avatar_gender: 'female' },
   },
   {
     card_name: 'Artemis — Rain of Arrows',
     card_image: artemisCardImage('RAIN OF ARROWS', '⌁', '#91a7ff'),
-    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 3000, cooldown_ms: 8500 },
+    effect: { id: 'artemis_rain_of_arrows', clip_name: 'Rain_Of_Arrows', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 3000, cooldown_ms: 8500, required_avatar_gender: 'female' },
   },
   {
     card_name: 'Artemis — Lunar Beam',
     card_image: artemisCardImage('LUNAR BEAM', '☾', '#d19cff'),
-    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 3600, cooldown_ms: 10000 },
+    effect: { id: 'artemis_lunar_beam', clip_name: 'Lunar_Beam', mode: 'embedded', model_id: ARTEMIS_MODEL_ID, model_url: ARTEMIS_MODEL_URL, duration_ms: 3600, cooldown_ms: 10000, required_avatar_gender: 'female' },
   },
 ] as const;
 
