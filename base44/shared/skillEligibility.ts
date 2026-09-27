@@ -26,9 +26,11 @@ export function skillEquipStatus(card: Skill, avatarGender: unknown) {
     ? 'Unlock this skill card before equipping it.'
     : String(card.card_type || '').trim().toLowerCase() !== 'ability'
       ? 'Only Ability cards can be equipped in Skill Book slots.'
-      : card.trade_status === 'locked_in_trade'
-        ? 'That skill card is locked in a trade.'
-        : avatarSkillError(card, avatarGender);
+      : card.animation_effect?.demo_preview_only
+        ? 'This Adam XE demo card is a pose, movement, transition, or reaction preview. It can be upgraded in Cards, but it is not an active PvP attack.'
+        : card.trade_status === 'locked_in_trade'
+          ? 'That skill card is locked in a trade.'
+          : avatarSkillError(card, avatarGender);
   return {
     can_equip: !equipError,
     equip_error: equipError,
