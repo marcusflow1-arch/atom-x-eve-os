@@ -471,7 +471,8 @@ Deno.serve(async (req) => {
       const storedA=clampPos(match,userId,match.positions?.[userId]||{}); const targetId=String(target.id); const storedT=clampPos(match,targetId,match.positions?.[targetId]||{});
       const proposedA=clampPos(match,userId,data.attacker_pos||storedA); const proposedT=clampPos(match,targetId,data.target_pos||storedT);
       const attackerPos=distance2D(proposedA,storedA)>3?storedA:proposedA; const targetPos=distance2D(proposedT,storedT)>3?storedT:proposedT;
-      if(distance2D(attackerPos,targetPos)>BASIC_MELEE.range_m+1.0) return json({error:'Move closer to use the melee attack.'},409);
+      // Basic attack is a lock-on command. Arena distance never rejects it;
+      // positions are only sanitized/stored for shared movement state.
       const damage=Number(BASIC_MELEE.base_damage);
       const castId=String(data.cast_id||crypto.randomUUID());
       const targetHpBefore=finiteHp(target.hp,DEFAULT_BATTLE_HP);
@@ -489,7 +490,7 @@ Deno.serve(async (req) => {
       const ended=targetHpAfter<=0;
       match=await svc.AIBattleMatch.update(match.id,{players,hit_log:hitLog,attack_revision:attackRevision,last_attack:{...result,revision:attackRevision},atb,cooldowns,positions,...(ended?{status:'ended',winner_id:userId,ended_reason:'ko',ended_at:resolvedAt}:{})});
       if(ended){match=await finalizeMatchRewards(svc,match)||match;await clearMatchForPlayers(svc,match);}
-      return json({match:publicMatch(match),cast:{cast_id:castId,slot:-1,effect_id:BASIC_MELEE.id,resolves_at:resolvedAt,damage,crit:false,target_id:targetId,range_m:BASIC_MELEE.range_m,atb_cost:BASIC_MELEE.atb_cost},server_time:now});
+      return json({match:publicMatch(match),cast:{cast_id:castId,slot:-1,effect_id:BASIC_MELEE.id,resolves_at:resolvedAt,damage,crit:false,target_id:targetId,range_m:BASIC_MELEE.range_m,atb_cost:BASIC_MELEE.atb_cost,lock_on:true},server_time:now});
     }
     if (action === 'use_skill') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
