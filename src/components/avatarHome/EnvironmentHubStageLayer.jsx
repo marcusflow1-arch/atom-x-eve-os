@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
 import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
+import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
 import {
   DEFAULT_ENVIRONMENT_CONFIG,
   configStorageKey,
@@ -34,7 +35,21 @@ export default function EnvironmentHubStageLayer() {
   // status polling, queue heartbeat, dashboard-channel join and ready checks all
   // continue after the menu closes and run identically in preview and published
   // surfaces. Merely mounting it never creates a queue; only Enter Queue does.
-  useAIBattleQueue();
+  const battleBridge = useAIBattleQueue();
+  const queueStatus = String(battleBridge.queue?.status || '');
+  const matchStatus = String(battleBridge.match?.status || '');
+  const pvpCombatMusicActive = queueStatus === 'waiting'
+    || ['matched', 'countdown', 'fighting'].includes(matchStatus);
+
+  // Reuse the exact GameWorld3D combat/boss BGM for PvP. The loop helper is
+  // idempotent by key, so waiting -> matched -> countdown -> fighting keeps one
+  // continuous track instead of restarting or layering duplicate audio.
+  useEffect(() => {
+    if (pvpCombatMusicActive) startLoopSound('bgm_boss');
+    else stopLoopSound('bgm_boss');
+  }, [pvpCombatMusicActive]);
+
+  useEffect(() => () => stopLoopSound('bgm_boss'), []);
 
   useEffect(() => {
     setConfig(readConfig(user?.id));
