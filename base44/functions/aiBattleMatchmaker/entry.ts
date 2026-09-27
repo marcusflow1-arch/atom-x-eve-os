@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
-import { ATB_START, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
+import { ATB_START, BASIC_MELEE, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
 
@@ -404,6 +404,32 @@ Deno.serve(async (req) => {
       const cooldowns={...(match.cooldowns||{}),[userId]:{...(match.cooldowns?.[userId]||{}),_dodge:new Date(now+DODGE.cooldown_ms).toISOString()}};
       const dodges={...(match.dodges||{}),[userId]:{from:new Date(now).toISOString(),until:new Date(now+DODGE.window_ms).toISOString()}};
       match=await svc.AIBattleMatch.update(match.id,{atb,cooldowns,dodges}); return json({match:publicMatch(match),server_time:now});
+    }
+    if (action === 'basic_attack') {
+      let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      match=await settleMatch(svc,match);
+      if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
+      if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
+      const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId);
+      if(!me||!target) return json({error:'Fighters are not ready.'},409);
+      const now=Date.now(); const myCooldowns=match.cooldowns?.[userId]||{};
+      if(Date.parse(myCooldowns._melee||0)>now) return json({error:'Melee attack is recovering.'},409);
+      if(now-Number(myCooldowns._last_cast_at||0)<400) return json({error:'Acting too quickly.'},409);
+      const currentAtb=atbNow(match.atb?.[userId],now); if(currentAtb<BASIC_MELEE.atb_cost) return json({error:'Not enough ATB for a melee attack.'},409);
+      const storedA=clampPos(match,userId,match.positions?.[userId]||{}); const targetId=String(target.id); const storedT=clampPos(match,targetId,match.positions?.[targetId]||{});
+      const proposedA=clampPos(match,userId,data.attacker_pos||storedA); const proposedT=clampPos(match,targetId,data.target_pos||storedT);
+      const attackerPos=distance2D(proposedA,storedA)>3?storedA:proposedA; const targetPos=distance2D(proposedT,storedT)>3?storedT:proposedT;
+      if(distance2D(attackerPos,targetPos)>BASIC_MELEE.range_m+1.0) return json({error:'Move closer to use the melee attack.'},409);
+      const crit=Math.random()<0.08; const variance=0.95+Math.random()*0.10; const damage=Math.round(BASIC_MELEE.base_damage*variance*(crit?1.5:1));
+      const castId=String(data.cast_id||crypto.randomUUID()); const resolvesAt=new Date(now+BASIC_MELEE.hit_ms).toISOString();
+      const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot:-1,effect_id:BASIC_MELEE.id,damage,crit,resolves_at:resolvesAt}];
+      // A default melee strike is a real turn/action, not a free extra hit. Once
+      // committed it spends the current action budget and restarts ATB from 0.
+      const atb={...(match.atb||{}),[userId]:{value:0,at:new Date(now).toISOString()}};
+      const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,_melee:new Date(now+BASIC_MELEE.cooldown_ms).toISOString(),_last_cast_at:now}};
+      const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
+      match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions});
+      return json({match:publicMatch(match),cast:{cast_id:castId,slot:-1,effect_id:BASIC_MELEE.id,resolves_at:resolvesAt,damage,crit,target_id:targetId,range_m:BASIC_MELEE.range_m,atb_cost:BASIC_MELEE.atb_cost},server_time:now});
     }
     if (action === 'use_skill') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
