@@ -283,3 +283,35 @@ test('free claim endpoint does not grant paid-order rewards', async () => {
   assert.equal(result.can_retry, false);
   await request('claimFreeGame', { game_id: 'game' }, 409);
 });
+
+test('reopening the same cart in another tab reuses its active checkout', async () => {
+  const first = await request('createCheckoutSession', cartBody());
+  const next = await request('createCheckoutSession', cartBody({ checkoutKey: 'different-attempt-0002' }));
+  assert.equal(next.sessionId, first.sessionId); assert.equal(db.rows('Order').length, 1); assert.equal(sessions.size, 1);
+});
+test('another checkout attempt recovers an overlapping paid order before charging again', async () => {
+  const id = await checkout();
+  const result = await request('createCheckoutSession', cartBody({ checkoutKey: 'different-attempt-0002' }));
+  assert.equal(result.verify, true); assert.equal(result.sessionId, id); assert.equal(providerCalls.length, 1);
+});
+test('changed overlapping carts offer the earlier payment link without a second session', async () => {
+  const first = await request('createCheckoutSession', cartBody());
+  db.rows('Game').push({ ...db.rows('Game')[0], id: 'second', starter_card_ids: [] });
+  const result = await request('createCheckoutSession', cartBody({ checkoutKey: 'different-attempt-0002', items: [{ id: 'game', type: 'game' }, { id: 'second', type: 'game' }] }), 409);
+  assert.equal(result.code, 'CHECKOUT_IN_PROGRESS');
+  assert.equal(result.resume_url, sessions.get(first.sessionId).url); assert.equal(sessions.size, 1);
+});
+test('a different attempt after a lost response retains the original provider key', async () => {
+  providerLostResponse = true; await request('createCheckoutSession', cartBody(), 500);
+  await request('createCheckoutSession', cartBody({ checkoutKey: 'different-attempt-0002' }));
+  assert.deepEqual(providerCalls[0], providerCalls[1]); assert.equal(sessions.size, 1);
+});
+test('parallel verification of an existing order shares its delivery lease', async () => {
+  const id = await checkout();
+  const responses = await Promise.all([0,1].map(() => handlers.verifyStripeSession(new Request('https://test.local/', {
+    method: 'POST', headers: { 'test-user': 'a' }, body: JSON.stringify({ sessionId: id }),
+  }))));
+  assert.ok(responses.every(response => [200,202].includes(response.status)));
+  await verify(id);
+  assert.equal(db.rows('Entitlement').length, 1); assert.equal(db.rows('UserCard').length, 1);
+});

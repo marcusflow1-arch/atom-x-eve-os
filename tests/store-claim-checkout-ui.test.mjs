@@ -170,3 +170,14 @@ test('retrying the same checkout retains its request key; an expired session res
   await click('Continue to secure checkout');
   assert.notEqual(fixture.calls.filter(call=>call.name==='createCheckoutSession')[1].args.checkoutKey,previous);
 });
+
+test('overlapping checkout offers a secure resume link without silently redirecting',async()=>{
+  fixture.cart=[{id:'game',type:'game',title:'Game',price:10}];
+  fixture.checkoutReply=Object.assign(new Error('pending'),{response:{data:{error:'Resume your earlier checkout',code:'CHECKOUT_IN_PROGRESS',resume_url:'https://checkout.stripe.com/c/pay/cs_old'}}});
+  await render(Checkout);await click('Continue to secure checkout');
+  assert.equal([...document.querySelectorAll('a')].find(link=>link.textContent==='Resume earlier checkout')?.href,'https://checkout.stripe.com/c/pay/cs_old');
+  assert.equal(fixture.navigation.length,0);
+  fixture.checkoutReply.response.data.resume_url='https://example.com/phishing';
+  await click('Continue to secure checkout');
+  assert.equal([...document.querySelectorAll('a')].find(link=>link.textContent==='Resume earlier checkout'),undefined);
+});
