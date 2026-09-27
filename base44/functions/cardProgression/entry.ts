@@ -63,6 +63,9 @@ Deno.serve(async (req) => {
     const payload = body?.payload || {};
     const actions = new Set(['getState', 'train', 'levelUp', 'enhance', 'combine', 'ascend', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk']);
     if (!actions.has(action)) return Response.json({ error: 'Invalid action' }, { status: 400 });
+    if (action === 'combine' && payload.useWildcard !== undefined && typeof payload.useWildcard !== 'boolean') {
+      return Response.json({ error: 'useWildcard must be true or false' }, { status: 400 });
+    }
     const sessions = Number(payload.sessions ?? 1);
     if (action === 'train' && (!Number.isSafeInteger(sessions) || sessions < 1 || sessions > 10)) {
       return Response.json({ error: 'Training sessions must be a whole number from 1 to 10' }, { status: 400 });

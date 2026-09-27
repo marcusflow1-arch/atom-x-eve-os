@@ -339,3 +339,19 @@ test('a client cannot request female starter grants for a male avatar', async ()
   assert.equal(rows('UserCard').length, 1);
   assert.equal(rows('UserCard')[0].animation_effect.id, 'getsuga_tensho');
 });
+
+test('starter bootstrap preserves a purchased canonical card instead of relabeling it', async () => {
+  seedCard({ card_name: 'Artemis — Lunar Beam', source: 'purchase', acquisition_method: 'purchased', quantity: 7, card_image: 'https://test.local/purchased.png' });
+  await call('skillBookLoadout', { action: 'bootstrap' });
+  const card = rows('UserCard').find((row) => row.id === 'owned');
+  assert.equal(card.source, 'purchase');
+  assert.equal(card.quantity, 7);
+  assert.equal(card.card_image, 'https://test.local/purchased.png');
+  assert.equal(card.starter_grant_user_id, undefined);
+});
+
+test('wildcard selection requires an explicit boolean before any write', async () => {
+  seedCard();
+  await progress({ action: 'combine', userCardId: 'owned', payload: { useWildcard: 'false' } }, 400);
+  assert.equal(writes.length, 0);
+});

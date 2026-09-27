@@ -56,6 +56,10 @@ async function avatarGender(svc: any, userId: string) {
   return String(avatars?.[0]?.gender || '').trim().toLowerCase();
 }
 
+function isManagedAvatarStarter(card: AnyObj) {
+  return !card.trading_card_id && card.acquisition_method === 'unlocked' && (!card.source || ['starter', 'migration'].includes(card.source));
+}
+
 async function previousStarterGrant(svc: any, userId: string, effectId: string) {
   const rows = await svc.UserCard.filter({ starter_grant_user_id: userId, starter_grant_key: effectId }, 'created_date', 1);
   return rows[0] || null;
@@ -69,6 +73,7 @@ async function ensureArtemisAbilities(svc: any, userId: string) {
     const rows = grant ? [grant] : await svc.UserCard.filter({ user_id: userId, card_name: def.card_name }, '-created_date', 5);
     if (rows.length) {
       const current = rows[0];
+      if (!isManagedAvatarStarter(current)) { created.push(current); continue; }
       const patch: AnyObj = {};
       if (!current.starter_grant_user_id && !current.starter_grant_key) Object.assign(patch, { starter_grant_user_id: userId, starter_grant_key: def.effect.id, source: current.source || 'starter' });
       if (normalize(current.card_type) !== 'ability') patch.card_type = 'ability';
@@ -113,6 +118,7 @@ async function ensureDemoAbility(svc: any, userId: string) {
   const rows = grant ? [grant] : await svc.UserCard.filter({ user_id: userId, card_name: 'Ichigo Kurosaki - Getsuga Tenshō' }, '-created_date', 5);
   if (rows.length) {
     const current = rows[0];
+    if (!isManagedAvatarStarter(current)) return current;
     const patch: AnyObj = {};
     if (!current.starter_grant_user_id && !current.starter_grant_key) Object.assign(patch, { starter_grant_user_id: userId, starter_grant_key: GETSUGA_EFFECT.id, source: current.source || 'starter' });
     if (current.card_image !== ICHIGO_CARD_IMAGE) patch.card_image = ICHIGO_CARD_IMAGE;
