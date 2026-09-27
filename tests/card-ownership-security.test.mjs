@@ -258,13 +258,17 @@ test('invalid material quantities do not produce XP or material writes', async (
   assert.equal(writes.length, 0);
 });
 
-for (const invalid of ['foreign', 'equipped', 'duplicate', 'starter']) {
+for (const invalid of ['foreign', 'equipped', 'duplicate', 'starter', 'pending_reward']) {
   test('fusion prevalidates the entire ' + invalid + ' selection before consuming cards', async () => {
     const base = seedCard();
     rows('UserCard').push({ ...base, id: 'one' }, { ...base, id: 'two' });
     if (invalid === 'foreign') rows('UserCard')[2].user_id = 'b';
     if (invalid === 'equipped') rows('UserCard')[2].is_equipped = true;
     if (invalid === 'starter') rows('UserCard')[2].starter_grant_user_id = 'a';
+    if (invalid === 'pending_reward') {
+      rows('UserCard')[2].reward_grant_keys = ['pending-card-grant'];
+      rows('RewardGrant').push({ id: 'pending', user_id: 'a', grant_key: 'pending-card-grant', status: 'pending' });
+    }
     await progress({ userCardId: 'owned' }); writes = [];
     await progress({ action: 'combine', userCardId: 'owned', payload: { sacrificeUserCardIds: invalid === 'duplicate' ? ['one', 'one'] : ['one', 'two'] } }, 400);
     assert.equal(rows('UserCard').length, 3);

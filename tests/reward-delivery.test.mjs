@@ -249,3 +249,56 @@ test('a free-claim retry keeps the original starter list after catalog changes',
   await request('claimFreeGame',{game_id:'game'});
   assert.equal(db.rows('UserCard').length,1);
 });
+
+test('completed card grant keys cannot be reused for a different card',async()=>{
+  seed();await engine.grantCard(svc,'a','card',{grant_key:'specific-grant'});
+  await assert.rejects(engine.grantCard(svc,'a','different',{grant_key:'specific-grant'}),/does not match/);
+  assert.equal(db.rows('UserCard').length,1);
+});
+
+test('interrupted multi-achievement events skip targets already checkpointed',async()=>{
+  seed({threshold:99});
+  db.rows('Achievement').push({...db.rows('Achievement')[0],id:'second'});
+  const payload=body();
+  db.failOnce((op)=>op.name==='UserAchievement'&&op.operation==='create'&&op.phase==='before'&&op.data.achievement_id==='second');
+  await event(payload,503);
+  const first=db.rows('UserAchievement').find((row)=>row.achievement_id==='earned');
+  const writesBefore=db.writes.filter((write)=>write.name==='UserAchievement'&&write.id===first.id).length;
+  assert.equal(db.rows('GameEventReceipt')[0].processed_achievement_ids.length,1);
+  const result=await event(payload);
+  assert.equal(result.matched,2);
+  assert.equal(db.writes.filter((write)=>write.name==='UserAchievement'&&write.id===first.id).length,writesBefore);
+});
+
+test('overlapping copies of an event count once on an existing progress row',async()=>{
+  seed({threshold:99});
+  db.rows('UserAchievement').push({id:'progress',user_id:'a',achievement_id:'earned',status:'in_progress',verified_event_value:0,verified_event_ids:[]});
+  const payload=body();await Promise.all([event(payload),event(payload)]);
+  assert.equal(db.rows('UserAchievement')[0].verified_event_value,1);
+  assert.equal(db.rows('GameEventReceipt')[0].results.length,1);
+});
+
+test('overlapping independent rewards preserve existing XP and stack quantities after retry',async()=>{
+  seed();
+  db.rows('Achievement').push({...db.rows('Achievement')[0],id:'second'});
+  db.rows('AvatarProgression').push({id:'xp',user_id:'a',global_xp:1000,global_level:2,reward_grant_keys:[]});
+  db.rows('UserCard').push({id:'owned',user_id:'a',trading_card_id:'card',card_type:'ability',card_name:'Test Reward',quantity:5,trade_status:'available',reward_grant_keys:[]});
+  const second=()=>engine.grantAchievement(svc,'a','second');
+  const results=await Promise.allSettled([grant(),second()]);
+  for(let i=0;i<results.length;i++)if(results[i].status==='rejected')await (i===0?grant():second());
+  assert.equal(db.rows('AvatarProgression')[0].global_xp,1270);
+  assert.equal(db.rows('UserCard')[0].quantity,9);
+});
+
+test('missing conditional/keyed SDK operations fail closed',async()=>{
+  await assert.rejects(journal.ensureKeyedRecord({filter:async()=>[]},{user_id:'a'}),/does not support keyed/);
+  await assert.rejects(journal.conditionalUpdate({}, {id:'a'}, {$set:{status:'done'}}),/does not support conditional/);
+});
+
+test('invalid reward definitions cannot publish an unlock',async()=>{
+  seed();db.rows('TradingCard')[0].status='draft';
+  await assert.rejects(grant(),/not available/);
+  assert.equal(db.rows('UserCard').length,0);
+  assert.equal(db.rows('AvatarProgression').length,0);
+  assert.ok(db.rows('UserAchievement').every((row)=>row.status!=='unlocked'));
+});

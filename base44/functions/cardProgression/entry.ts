@@ -224,6 +224,10 @@ Deno.serve(async (req) => {
           const sacrifice = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
           if (!sacrifice || sacrifice.user_id !== user.id) throw new Error('One selected fusion card is not owned by you');
           if (sacrifice.starter_grant_user_id) throw new Error('Avatar starter cards cannot be consumed in fusion');
+          if (Array.isArray(sacrifice.reward_grant_keys) && sacrifice.reward_grant_keys.length) {
+            const pending = await svc.RewardGrant.filter({ grant_key: { $in: sacrifice.reward_grant_keys }, status: { $ne: 'completed' } }, 'created_date', 1);
+            if (pending.length) throw new Error('A selected reward card is still being delivered. Retry after delivery completes');
+          }
           if (sacrifice.is_equipped || sacrifice.trade_status === 'locked_in_trade') throw new Error(`${sacrifice.card_name} is equipped or locked in a trade`);
           const compatible = sacrifice.card_name === userCard.card_name || (sacrifice.game_name === userCard.game_name && (rarityRank[sacrifice.card_rarity] || 0) >= Math.max(0, targetRarity - 1));
           if (!compatible) throw new Error(`${sacrifice.card_name} is not compatible with this stage fusion`);
