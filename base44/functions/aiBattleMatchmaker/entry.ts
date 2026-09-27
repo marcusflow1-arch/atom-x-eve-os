@@ -6,10 +6,11 @@ import { grantAchievement } from '../../shared/rewardEngine.ts';
 
 type Row = Record<string, any>;
 const MODES = new Set(['pvp', 'pve', 'world_boss']);
-const WAITING_LIVE_MS = 30000;
-const MATCH_LIVE_MS = 15000;
+const WAITING_LIVE_MS = 60000;
+const MATCH_LIVE_MS = 45000;
 const RECONNECT_GRACE_MS = 120000;
 const QUEUE_HEARTBEAT_MS = 8000;
+const QUEUE_OWNER_RECOVER_MS = 120000;
 const DEFAULT_BATTLE_HP = 1000;
 const ARENA = { width: 12, length: 16, margin_to_net: 1, spawn_distance: 10 };
 const APPEARANCE_KEYS = [
@@ -423,34 +424,47 @@ async function startMatchIfBothArenaReady(svc: any, input: Row | null) {
 async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Row | null = null) {
   let queue = await cleanupQueueDuplicates(svc, userId);
   if (!queue) return { queue:null, match:null };
-  if (queue.status === 'waiting' && !waitingLive(queue)) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
+
+  // Receiving a status request from the queue owner is itself proof that this
+  // browser is still present. Refresh first; never kick an actively polling
+  // player merely because the previous stored heartbeat crossed a timeout.
+  const priorHeartbeat = heartbeatAt(queue);
+  if (queue.status === 'waiting' && priorHeartbeat < Date.now() - QUEUE_OWNER_RECOVER_MS) {
+    await cancelQueue(svc, queue);
+    return { queue:null, match:null };
+  }
 
   let savedMatch: Row | null = null;
   const previousSessionId = String(queue.client_session_id || '');
   const sessionChanged = Boolean(clientSessionId && previousSessionId && clientSessionId !== previousSessionId);
   if (queue.status === 'matched' && queue.match_id) {
     savedMatch = await getMatch(svc, String(queue.match_id));
-    if (savedMatch?.status === 'ended' && sessionChanged) {
+    if (savedMatch?.status === 'ended') {
       await cancelQueue(svc, queue);
       await clearMatchForPlayers(svc, savedMatch);
       return { queue:null, match:null };
     }
   }
 
-  if (heartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS || (clientSessionId && previousSessionId !== clientSessionId)) {
-    const patch: Row = { last_seen_at: nowIso(), client_session_id: clientSessionId || queue.client_session_id || '' };
-    // A refreshed browser must perform the pre-arena acknowledgement again while
-    // a reservation is still only `matched`. If the arena was already unlocked,
-    // only fighter readiness is cleared so the rebuilt model has to load again.
-    if (sessionChanged && savedMatch?.status === 'matched') {
-      patch.connected_at = '';
-      patch.connected_session_id = '';
-      patch.ready_at = '';
-    } else if (sessionChanged && savedMatch?.status === 'connecting') {
-      patch.ready_at = '';
-    }
-    queue = await svc.AIBattleQueueEntry.update(queue.id, patch);
+  const patch: Row = {
+    last_seen_at: nowIso(),
+    client_session_id: clientSessionId || queue.client_session_id || '',
+  };
+
+  // Match acknowledgement is now part of the normal status heartbeat. If this
+  // client can see the reserved match, it has acknowledged it. This removes the
+  // fragile dependency on a separate React effect that was not mounted on every
+  // dashboard surface. The arena still does not open until BOTH queue rows have
+  // independently reached this point.
+  if (queue.status === 'matched' && savedMatch?.status === 'matched' && clientSessionId) {
+    patch.connected_at = nowIso();
+    patch.connected_session_id = clientSessionId;
+    patch.ready_at = '';
+  } else if (sessionChanged && savedMatch?.status === 'connecting') {
+    // A reconnecting browser must reload its fighter before countdown can begin.
+    patch.ready_at = '';
   }
+  queue = await svc.AIBattleQueueEntry.update(queue.id, patch);
 
   if (queue.status === 'waiting') {
     await tryPair(svc, queue.mode, String(queue.id));
