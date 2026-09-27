@@ -132,6 +132,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
   const requestSkillRef = useRef(null);
+  const requestMeleeRef = useRef(null);
 
   matchRef.current = match;
   serverOffsetRef.current = serverOffsetMs;
@@ -208,6 +209,29 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   requestSkillRef.current = requestSkill;
 
+  const requestMelee = async () => {
+    if (!active || escapeMenuOpen || surrendering) return false;
+    const a = positions.current.local, b = positions.current.opponent;
+    if (a.distanceTo(b) > 4.25) { setError('Move closer to use the melee attack.'); return false; }
+    const currentAtb = serverAtb(match.atb?.[user.id], serverOffsetMs);
+    if (currentAtb < 50) { setError('Not enough ATB for a melee attack.'); return false; }
+    const cooldownEnd = Date.parse(match.cooldowns?.[user.id]?._melee || 0);
+    if (cooldownEnd > Date.now() + serverOffsetMs) { setError('Melee attack is recovering.'); return false; }
+    setError('');
+    const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    try {
+      const body = await invoke('basic_attack', { match_id: match.id, cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
+      const cast = body.cast || {};
+      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_melee', matchId: match.id, cast_id: cast.cast_id || castId, effect_id: 'basic_melee', resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id } }));
+      return true;
+    } catch (e) {
+      setError(e?.message || 'Melee attack rejected.');
+      return false;
+    }
+  };
+
+  requestMeleeRef.current = requestMelee;
+
   const requestDodge = async () => {
     if (!active || escapeMenuOpen || surrendering) return;
     try {
@@ -263,6 +287,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
+      if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {
+        return;
+      }
       const skill=(currentOpponent?.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (currentOpponent?.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
       const a=positions.current.opponent,b=positions.current.local; playSkill(runtimes.current.opponent,skill,user.id,Math.atan2(b.x-a.x,b.z-a.z),d); setLastCastSlot((s)=>({...s,opponent:Number(skill.slot)}));
     };
@@ -274,7 +301,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         const p=entry.isLocal?currentLocal:currentOpponent; if(!p)continue; const id=String(p.id); const cooldowns=currentMatch?.cooldowns?.[id]||{};
         const skills=(p.skills||[]).map((skill)=>({...skill,cooldownEndsAt:cooldowns[String(skill.slot)]||null,cooldownMs:skill.cooldown_ms,atbCost:skill.atb_cost}));
         const castSlot=lastCastSlotRef.current;
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={1000} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();
@@ -315,7 +342,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // Arena is recreated only for a new match; live match state is read by refs/cache overlays.
   }, [match?.id, local?.id, opponent?.id]);
 
-  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
+  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestMelee,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
 
   useEffect(() => {
     const onEscape = (event) => {
