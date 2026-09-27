@@ -43,7 +43,7 @@ const SDK = { entities: {
 } };
 SDK.functions = { invoke: async (name, request) => {
   if (name === 'gameReviews') {
-    if (request.action === 'list') return { data: { reviews: storedReviews, can_review: true } };
+    if (request.action === 'list') return { data: { reviews: [...storedReviews], can_review: true } };
     calls.reviews.push(request.data); const review = { ...request.data, id: 'review-one', author_name: 'Test Player', created_date: '2026-09-21T10:00:00Z' };
     storedReviews.push(review); return { data: { review } };
   }
