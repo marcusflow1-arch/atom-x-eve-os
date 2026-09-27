@@ -12,7 +12,6 @@ export function createChidoriFx(THREE, scene, opts = {}) {
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const win = (t, a, b) => sstep(a, b, t);
   const bump = (t, a, m, b) => win(t, a, m) * (1 - win(t, m, b));
-  const lerp = (a, b, u) => a + (b - a) * u;
   function rng(seed) { let s = (seed >>> 0) || 1; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   const hash = (...k) => k.reduce((h, x) => Math.imul(h ^ Math.floor(x * 1000 + 7919), 2654435761) >>> 0, 2166136261);
   const COL = { core: new THREE.Color(1.0, 1.0, 1.0), mid: new THREE.Color(0.28, 0.72, 1.0), glow: new THREE.Color(0.06, 0.26, 1.0) };
@@ -332,7 +331,7 @@ export function createChidoriFx(THREE, scene, opts = {}) {
       if (recent.length > 1) {
         const r = rng(hash(f2, 51));
         for (let k = 0; k < 3; k++) {
-          const pts = recent.map((p, i) => p.clone().add(V(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.07 + 0.05 * k)));
+          const pts = recent.map((p) => p.clone().add(V(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.07 + 0.05 * k)));
           if (ta < 2.02) pts.push(palm.clone());
           strip(pts, 0.035 - k * 0.008, trailI * (1.2 - k * 0.3), camP, false);
         }
