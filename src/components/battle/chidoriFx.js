@@ -118,3 +118,123 @@ export function createChidoriFx(THREE, scene, opts = {}) {
   const pMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
     uniforms: { uScale: { value: 600 } },
+    vertexShader: `attribute float aSize; attribute float aI; varying float vI; uniform float uScale;
+      void main(){ vI = aI; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aSize * uScale / -mv.z; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `varying float vI; void main(){ vec2 d = gl_PointCoord - 0.5; float r = length(d) * 2.0; if (r > 1.0) discard;
+      float core = 1.0 - smoothstep(0.25, 0.45, r); vec3 c = mix(vec3(0.15, 0.5, 1.0) * (1.0 - r), vec3(1.8), core); gl_FragColor = vec4(c * vI, 1.0); }` });
+  const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; points.renderOrder = 6; group.add(points);
+  let np = 0;
+  function spark(p, size, inten) { if (np >= MAXP) return; pPos[np * 3] = p.x; pPos[np * 3 + 1] = p.y; pPos[np * 3 + 2] = p.z; pSize[np] = size; pI[np] = inten; np++; }
+  // analytic burst: n sparks from p0 with speed v, drag, gravity; age = t - t0
+  function burst(p0, t, t0, seed, n, speed, life, dir = null, cone = 1.0, size = 0.02, gravity = 3.0) {
+    const age = t - t0; if (age < 0 || age > life * 1.4) return;
+    const r = rng(seed);
+    for (let i = 0; i < n; i++) {
+      let d = V(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize();
+      if (dir) d = dir.clone().addScaledVector(d, cone).normalize();
+      const sp = speed * (0.35 + r() * 0.9); const lf = life * (0.5 + r() * 0.7);
+      if (age > lf) continue;
+      const k = 3.0; const s = sp * (1 - Math.exp(-k * age)) / k;
+      const p = p0.clone().addScaledVector(d, s); p.y -= 0.5 * gravity * age * age * 0.5;
+      if (p.y < 0.01) p.y = 0.01;
+      const fl = 0.6 + 0.4 * ((hash(seed, i, Math.floor(t * 30)) % 100) / 100);
+      spark(p, size * (0.6 + r() * 0.8), (1 - age / lf) * 1.6 * fl);
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------ ground disk + scorch + rings
+  const noiseGLSL = `
+    float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
+    float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ s += a * vn(p); p = p * 2.03 + 11.7; a *= 0.5; } return s; }`;
+  const diskMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+    uniforms: { uT: { value: 0 }, uI: { value: 0 }, uR: { value: 1.3 } },
+    vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uT, uI, uR; varying vec2 vP; ${noiseGLSL}
+      void main(){
+        float r = length(vP) / uR; if (r > 1.0) discard;
+        float ang = atan(vP.y, vP.x);
+        vec2 q = vP * 2.2 + vec2(fbm(vP * 1.7 + uT), fbm(vP * 1.7 - uT)) * 1.6;
+        float ridge = 1.0 - abs(fbm(q + uT * 0.5) * 2.0 - 1.0);
+        float lines = pow(ridge, 14.0) * 2.2;
+        float spokes = pow(max(0.0, 1.0 - abs(fract(ang * 3.0 / 3.14159 + fbm(vec2(r * 3.0, uT)) * 0.6) - 0.5) * 7.0), 3.0) * smoothstep(0.1, 0.5, r) * 0.6;
+        float rim = smoothstep(0.84, 0.95, r) * (1.0 - smoothstep(0.95, 1.0, r)) * 2.2;
+        float fill = (1.0 - r) * 0.35 + 0.08;
+        float fillf = fill * (1.0 - smoothstep(0.3, 1.0, r) * 0.6);
+        vec3 c = vec3(0.03, 0.16, 1.0) * fillf * 0.3 + vec3(0.25, 0.65, 1.0) * (lines + spokes) * 0.5 + vec3(0.3, 0.7, 1.0) * rim * 0.32;
+        c += vec3(0.6, 0.9, 1.0) * pow(max(0.0, 1.0 - r * 2.6), 3.0) * 0.35;
+        gl_FragColor = vec4(c * uI, 1.0);
+      }` });
+  const disk = new THREE.Mesh(new THREE.CircleGeometry(1.6, 64), diskMat); disk.rotation.x = -Math.PI / 2; disk.renderOrder = 3; group.add(disk);
+  const scorchMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, toneMapped: false,
+    uniforms: { uDark: { value: 0 }, uGlow: { value: 0 }, uR: { value: 1.2 }, uSeed: { value: 3.0 } },
+    vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uDark, uGlow, uR, uSeed; varying vec2 vP; ${noiseGLSL}
+      void main(){
+        float r = length(vP) / uR; if (r > 1.0) discard;
+        float ang = atan(vP.y, vP.x);
+        float n = fbm(vec2(ang * 2.6, r * 2.0) + uSeed);
+        float cr = 1.0 - smoothstep(0.0, 0.05, abs(fract(ang * 9.0 / 6.28318 + n * 0.9 + r * 0.35) - 0.5) - 0.44);
+        cr *= smoothstep(1.0, 0.25, r) * step(0.12, r);
+        float dark = smoothstep(1.0, 0.2, r + (fbm(vP * 4.0 + uSeed) - 0.5) * 0.4);
+        vec3 glow = vec3(0.3, 0.7, 1.0) * cr * 1.6 * uGlow;
+        float a = max(dark * 0.72 * uDark, cr * max(uGlow, uDark * 0.6));
+        vec3 base = mix(vec3(0.02, 0.02, 0.04), glow, clamp(cr * uGlow * 2.0, 0.0, 1.0));
+        gl_FragColor = vec4(base + glow, a);
+      }` });
+  const scorch = new THREE.Mesh(new THREE.CircleGeometry(1.4, 64), scorchMat); scorch.rotation.x = -Math.PI / 2; scorch.renderOrder = 2; group.add(scorch);
+  const ringMat = () => new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide,
+    uniforms: { uI: { value: 0 }, uW: { value: 0.12 } },
+    vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uI, uW; varying vec2 vP; void main(){ float r = length(vP); float d = abs(r - (1.0 - uW)) / uW;
+      float a = pow(max(0.0, 1.0 - d), 2.0); float core = 1.0 - smoothstep(0.15, 0.3, d);
+      gl_FragColor = vec4((vec3(0.2, 0.55, 1.0) * a * 0.8 + vec3(1.6) * core) * uI, 1.0); }` });
+  const mkRing = () => { const m = new THREE.Mesh(new THREE.CircleGeometry(1, 96), ringMat()); m.renderOrder = 4; group.add(m); return m; };
+  const groundRing = mkRing(), impactRing = mkRing(), impactRing2 = mkRing(), blastRing = mkRing(), fizzRing = mkRing();
+  groundRing.rotation.x = -Math.PI / 2; blastRing.rotation.x = -Math.PI / 2;
+  // victim skid marks (two dark furrows left by the feet while blasted back)
+  const skidMat = new THREE.MeshBasicMaterial({ color: 0x05060c, transparent: true, opacity: 0, depthWrite: false });
+  const skids = [0, 1].map(() => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), skidMat); m.rotation.x = -Math.PI / 2; m.renderOrder = 2; group.add(m); return m; });
+  // dash scar on the ground (a glowing furrow along the hand's path)
+  const scarMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+    uniforms: { uI: { value: 0 }, uHead: { value: 1 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uI, uHead; varying vec2 vUv; ${noiseGLSL}
+      void main(){ if (vUv.x > uHead) discard; float a = abs(vUv.y * 2.0 - 1.0);
+        float w = 0.35 + 0.35 * fbm(vec2(vUv.x * 30.0, 1.0));
+        float core = 1.0 - smoothstep(w * 0.25, w * 0.4, a); float g = pow(max(0.0, 1.0 - a / w), 2.0);
+        float fade = smoothstep(0.0, 0.25, vUv.x) * (0.4 + 0.6 * smoothstep(uHead - 0.5, uHead, vUv.x));
+        gl_FragColor = vec4((vec3(0.1, 0.4, 1.0) * g * 0.8 + vec3(1.4) * core) * uI * fade, 1.0); }` });
+  const scar = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), scarMat); scar.rotation.x = -Math.PI / 2; scar.renderOrder = 3; group.add(scar);
+  const scarDark = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, depthWrite: false }));
+  scarDark.rotation.x = -Math.PI / 2; scarDark.renderOrder = 2; group.add(scarDark);
+
+  // ------------------------------------------------------------------------------------------ lights
+  const handLight = new THREE.PointLight(0x8fd8ff, 0, 7, 1.6); group.add(handLight);
+  const burstLight = new THREE.PointLight(0xc8ecff, 0, 12, 1.4); group.add(handLight, burstLight);
+
+  // ------------------------------------------------------------------------------------------ state kept across frames
+  const victimMats = [];
+  let victimRef = null;
+
+  function electrify(vicRoot, amount) {
+    if (vicRoot !== victimRef) {
+      victimRef = vicRoot; victimMats.length = 0;
+      vicRoot?.traverse((o) => { if (o.isMesh && o.material && !/^FX/.test(o.material.name || '') && o.material.emissive) victimMats.push(o.material); });
+      victimMats.forEach((m) => { m.userData.em0 = m.emissive.clone(); m.userData.ei0 = m.emissiveIntensity; });
+    }
+    for (const m of victimMats) {
+      if (amount > 0.001) { m.emissive.setRGB(0.05, 0.3, 1.0); m.emissiveIntensity = amount; }
+      else { m.emissive.copy(m.userData.em0); m.emissiveIntensity = m.userData.ei0; }
+    }
+  }
+
+  function charge(ta) {
+    return win(ta, 0.05, 0.3) * 0.35 + win(ta, 0.3, 0.42) * 0.35 + win(ta, 0.5, 1.0) * 0.3 - win(ta, 2.35, 2.6) * 0.55 - win(ta, 2.6, 3.0) * 0.25
+      - win(ta, 3.0, 3.18) * 0.2;
+  }
