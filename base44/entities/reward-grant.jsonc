@@ -1,63 +1,36 @@
 {
-  "name": "UserAchievement",
+  "name": "RewardGrant",
   "type": "object",
   "properties": {
     "user_id": {
       "type": "string"
     },
-    "achievement_id": {
+    "grant_key": {
       "type": "string"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Server-authorized immutable reward snapshot."
     },
     "status": {
       "type": "string",
       "enum": [
-        "locked",
-        "in_progress",
-        "pending_review",
-        "unlocked"
+        "pending",
+        "completed"
       ],
-      "default": "locked"
+      "default": "pending"
     },
-    "progress": {
-      "type": "object"
-    },
-    "proof_media_url": {
+    "user_card_id": {
       "type": "string"
     },
-    "source": {
-      "type": "string",
-      "enum": [
-        "game_event",
-        "quest",
-        "proof",
-        "platform",
-        "admin",
-        "migration"
-      ]
-    },
-    "unlocked_at": {
+    "completed_at": {
       "type": "string",
       "format": "date-time"
-    },
-    "verified_event_value": {
-      "type": "number",
-      "default": 0
-    },
-    "verified_event_ids": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": []
-    },
-    "reward_grant_key": {
-      "type": "string"
     }
   },
   "required": [
     "user_id",
-    "achievement_id",
-    "status"
+    "grant_key"
   ],
   "rls": {
     "read": {

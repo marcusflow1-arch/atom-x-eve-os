@@ -135,6 +135,13 @@
     "starter_grant_key": {
       "type": "string",
       "description": "Approved avatar starter effect key. Used to prevent repeat grants after transfer."
+    },
+    "reward_grant_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
   "required": [

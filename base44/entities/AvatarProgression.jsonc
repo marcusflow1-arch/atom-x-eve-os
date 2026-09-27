@@ -100,6 +100,13 @@
         "type": "number"
       },
       "default": []
+    },
+    "reward_grant_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
   "required": [
