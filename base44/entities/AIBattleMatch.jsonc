@@ -14,6 +14,7 @@
       "type": "string",
       "enum": [
         "matched",
+        "connecting",
         "countdown",
         "fighting",
         "ended"
@@ -90,6 +91,11 @@
         "forfeit",
         "disconnect"
       ]
+    },
+    "connected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set when both reserved PvP clients have acknowledged the same match and the arena is allowed to open."
     },
     "ready_at": {
       "type": "string",
