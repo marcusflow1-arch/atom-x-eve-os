@@ -112,6 +112,10 @@
     "last_attack": {
       "type": "object"
     },
+    "last_cast": {
+      "type": "object",
+      "description": "Most recent accepted ability cast (cast_id, attacker_id, target_id, slot, effect_id, resolves_at). Lets both clients start the caster's animation without relying on the peer relay."
+    },
     "disconnects": {
       "type": "object",
       "default": {},

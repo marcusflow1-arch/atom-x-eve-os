@@ -49,7 +49,7 @@ export function useSkills() {
     // one key press can never create a second client-authoritative cast.
     const pvp = typeof window !== 'undefined' ? window.__lunaPvPCombat : null;
     if (pvp?.active && typeof pvp.requestSkill === 'function') {
-      pvp.requestSkill(slotIndex, assigned, source);
+      pvp.requestSkill(slotIndex);
       return true;
     }
 
@@ -138,6 +138,10 @@ export function useSkills() {
   useEffect(() => {
     const handleSkillKey = (event) => {
       if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+      // In a live PvP match the arena owns keys 1–4 and casts the frozen match
+      // loadout itself. Handling the key here as well used to send a second,
+      // conflicting cast for every press.
+      if (typeof window !== 'undefined' && window.__lunaPvPCombat?.active) return;
       const target = event.target;
       if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target instanceof HTMLElement && target.isContentEditable) return;

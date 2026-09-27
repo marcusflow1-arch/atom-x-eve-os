@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
-import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
+import useAIBattleQueue, { setAIBattleOverlayOpen } from '@/components/battle/useAIBattleQueue';
 import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
 import { showError } from '@/components/error/ErrorToast';
 import useOnlineSummary from '@/components/social/useOnlineSummary';
@@ -19,12 +19,16 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
   const queuedFromThisOverlayRef = useRef(false);
   const queueRequestRef = useRef(false);
-  // The popup does not own the multiplayer room bridge, but it DOES poll the
-  // shared matchmaking query. That makes queue/reservation/connection state
-  // reliable even on dashboard surfaces where the persistent environment bridge
-  // is not mounted. React Query shares the same key, so this does not create a
-  // second match or duplicate combat relays.
-  const battle = useAIBattleQueue({ sessionBridge: false, polling: true });
+  // The popup reads the shared matchmaking cache. AIBattleHost (mounted once at
+  // the page root) owns polling and the multiplayer room bridge, so opening the
+  // popup neither doubles the status request rate nor duplicates combat relays.
+  const battle = useAIBattleQueue({ sessionBridge: false, polling: false });
+
+  // While the popup is open, the compact queue indicator steps aside.
+  useEffect(() => {
+    setAIBattleOverlayOpen(true);
+    return () => setAIBattleOverlayOpen(false);
+  }, []);
   const waiting = battle.queue?.status === 'waiting';
   const reserved = battle.match?.status === 'matched';
   const connecting = battle.match?.status === 'connecting';
@@ -118,7 +122,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
     : connecting
       ? 'Both players connected. Loading the shared PvP arena for both sides…'
       : waiting
-        ? 'You are queued. If nobody else is queued, you stay here until another live player joins.'
+        ? 'You are queued. You can close this window and keep using the dashboard — you stay in the queue until another live player joins.'
         : ready
           ? (battle.match?.status === 'countdown' ? 'Both fighters loaded. Countdown starting…' : 'Match connected. Fight in progress.')
           : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';

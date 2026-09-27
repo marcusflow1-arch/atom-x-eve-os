@@ -1,0 +1,227 @@
+import test, { beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import { webcrypto } from 'node:crypto';
+import { buildSync } from 'esbuild';
+
+// In-memory Base44 entities. `failure(name, op)` can make any read fail the way
+// a rate limit or timeout would, to prove failed reads never cancel live state.
+const tables = new Map();
+let writes = [], failure = null, serial = 0;
+const clone = (value) => structuredClone(value);
+const rows = (name) => { if (!tables.has(name)) tables.set(name, []); return tables.get(name); };
+const users = { a: { id: 'a', full_name: 'Player A' }, b: { id: 'b', full_name: 'Player B' } };
+const transient = () => Object.assign(new Error('Rate limit exceeded'), { status: 429 });
+function matches(row, query) {
+  return Object.entries(query).every(([key, expected]) => {
+    if (expected && typeof expected === 'object' && '$in' in expected) {
+      return (Array.isArray(row[key]) ? row[key] : [row[key]]).some((value) => expected.$in.includes(value));
+    }
+    return row[key] === expected;
+  });
+}
+const entities = new Proxy({}, { get: (_, name) => ({
+  filter: async (query = {}, sort = '', limit = 1000) => {
+    if (failure?.(name, 'filter')) throw transient();
+    const found = rows(name).filter((row) => matches(row, query));
+    const key = sort.replace(/^-/, '');
+    if (key) found.sort((a, b) => String(a[key] || '').localeCompare(String(b[key] || '')) * (sort.startsWith('-') ? -1 : 1));
+    return clone(found.slice(0, limit));
+  },
+  list: async () => clone(rows(name)),
+  get: async (id) => {
+    if (failure?.(name, 'get')) throw transient();
+    const row = rows(name).find((item) => item.id === id);
+    if (!row) throw Object.assign(new Error('Not found'), { status: 404 });
+    return clone(row);
+  },
+  create: async (data) => {
+    const row = { ...clone(data), id: name + '-' + (++serial), created_date: new Date().toISOString() };
+    rows(name).push(row); writes.push({ name, id: row.id, data: clone(data) }); return clone(row);
+  },
+  update: async (id, data) => {
+    const row = rows(name).find((item) => item.id === id);
+    assert.ok(row, name + ' ' + id + ' must exist');
+    Object.assign(row, clone(data));
+    writes.push({ name, id, data: clone(data) }); return clone(row);
+  },
+}) });
+
+let handler;
+{
+  const { outputFiles } = buildSync({
+    entryPoints: ['base44/functions/aiBattleMatchmaker/entry.ts'],
+    bundle: true, write: false, platform: 'node', format: 'cjs', external: ['npm:*'],
+  });
+  vm.runInNewContext(outputFiles[0].text, {
+    Response, Date, crypto: webcrypto, console: { error() {}, warn() {} },
+    Deno: { serve: (fn) => { handler = fn; } },
+    require: (id) => {
+      assert.match(id, /^npm:@base44\/sdk/);
+      return { createClientFromRequest: (req) => ({
+        auth: { me: async () => users[req.headers.get('test-user')] || null },
+        asServiceRole: { entities },
+      }) };
+    },
+  });
+}
+
+async function battle(action, data = {}, user = 'a', status = 200) {
+  const response = await handler(new Request('https://test.local', {
+    method: 'POST', headers: { 'test-user': user }, body: JSON.stringify({ action, data }),
+  }));
+  const body = await response.json();
+  assert.equal(response.status, status, JSON.stringify(body));
+  return body;
+}
+
+const iso = (offsetMs = 0) => new Date(Date.now() + offsetMs).toISOString();
+const queueRow = (user, patch = {}) => ({
+  id: 'queue-' + user, user_id: user, mode: 'pvp', status: 'matched', match_id: 'm1',
+  queued_at: iso(-30000), last_seen_at: iso(), created_date: iso(-30000),
+  client_session_id: 'session-' + user, connected_session_id: 'session-' + user, connected_at: iso(-5000), ready_at: '',
+  ...patch,
+});
+function prefightMatch(status, patch = {}) {
+  tables.set('AIBattleMatch', [{
+    id: 'm1', mode: 'pvp', status, host_id: 'a', player_ids: ['a', 'b'], dashboard_channel: 'dashboard_a', pair_key: 'k',
+    players: [{ id: 'a', gender: 'male', hp: 1000, max_hp: 1000, skills: [] }, { id: 'b', gender: 'male', hp: 1000, max_hp: 1000, skills: [] }],
+    created_date: iso(-20000), connected_at: status === 'connecting' ? iso(-10000) : '', ...patch,
+  }]);
+  tables.set('PlayerState', ['a', 'b'].map((id) => ({ id: 'state-' + id, player_id: id, active_match_id: 'm1' })));
+}
+const queueOf = (user) => rows('AIBattleQueueEntry').find((row) => row.user_id === user);
+
+beforeEach(() => {
+  tables.clear(); writes = []; failure = null; serial = 0;
+  tables.set('Loadout', []);
+  tables.set('Avatar', ['a', 'b'].map((id) => ({ id: 'avatar-' + id, user_id: id, gender: 'male', updated_date: iso() })));
+});
+
+test('a failed match read keeps the reservation instead of kicking the player out', async () => {
+  prefightMatch('connecting');
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+  failure = (name, op) => name === 'AIBattleMatch' && op === 'get';
+  await battle('status', { client_session_id: 'session-a' }, 'a', 429);
+  assert.equal(queueOf('a').status, 'matched');
+  assert.equal(queueOf('a').match_id, 'm1');
+  assert.equal(writes.filter((w) => w.name === 'AIBattleQueueEntry').length, 0);
+
+  failure = null;
+  const recovered = await battle('status', { client_session_id: 'session-a' }, 'a');
+  assert.equal(recovered.match.id, 'm1');
+  assert.equal(recovered.match.status, 'connecting');
+});
+
+test('a failed queue read never looks like "no queue"', async () => {
+  tables.set('AIBattleQueueEntry', [queueRow('a', { status: 'waiting', match_id: '' })]);
+  failure = (name, op) => name === 'AIBattleQueueEntry' && op === 'filter';
+  await battle('status', { client_session_id: 'session-a' }, 'a', 429);
+  assert.equal(queueOf('a').status, 'waiting');
+  assert.equal(writes.length, 0);
+});
+
+test('when the opponent disappears before the fight, the remaining player goes back to the queue', async () => {
+  prefightMatch('connecting');
+  const originalQueuedAt = iso(-45000);
+  tables.set('AIBattleQueueEntry', [
+    queueRow('a', { queued_at: originalQueuedAt, ready_at: iso(-3000) }),
+    queueRow('b', { last_seen_at: iso(-60000) }),
+  ]);
+  const body = await battle('status', { client_session_id: 'session-a' }, 'a');
+  assert.equal(body.match, null);
+  assert.equal(body.queue.status, 'waiting');
+  assert.match(body.notice, /back in the queue/);
+  assert.equal(queueOf('a').queued_at, originalQueuedAt, 'the player keeps their original place in line');
+  assert.equal(queueOf('a').match_id, '');
+  assert.equal(queueOf('b').status, 'cancelled');
+  assert.equal(rows('AIBattleMatch')[0].status, 'ended');
+  assert.ok(rows('PlayerState').every((state) => state.active_match_id === ''));
+});
+
+test('a reserved pair that never finishes loading is cancelled; only the player who loaded is re-queued', async () => {
+  prefightMatch('connecting', { connected_at: iso(-200000) });
+  tables.set('AIBattleQueueEntry', [queueRow('a', { ready_at: iso(-190000) }), queueRow('b', { ready_at: '' })]);
+  const body = await battle('status', { client_session_id: 'session-b' }, 'b');
+  assert.equal(body.queue, null);
+  assert.equal(body.match, null);
+  assert.match(body.notice, /could not finish loading/);
+  assert.equal(queueOf('a').status, 'waiting');
+  assert.equal(queueOf('b').status, 'cancelled');
+});
+
+test('pressing Queue with a stale pointer to a dead match puts the player in the queue, not a dead arena', async () => {
+  prefightMatch('connecting');
+  tables.set('AIBattleQueueEntry', [queueRow('a', { status: 'cancelled' }), queueRow('b', { last_seen_at: iso(-60000) })]);
+  const body = await battle('join', { mode: 'pvp', client_session_id: 'session-a' }, 'a');
+  assert.equal(body.match, null);
+  assert.equal(body.queue.status, 'waiting');
+  assert.equal(body.reconnected, false);
+  assert.equal(rows('AIBattleMatch')[0].status, 'ended');
+});
+
+test('a healthy pair is never abandoned and the full handshake reaches the fight', async () => {
+  for (const id of ['a', 'b']) {
+    rows('UserCard').push({ id: 'custom-' + id, user_id: id, card_type: 'Ability', card_name: 'Custom Move', card_rarity: 'Rare',
+      trade_status: 'available', animation_effect: { id: 'custom_anim', clip_name: 'Custom' } });
+    rows('Loadout').push({ id: id + '-skills', user_id: id, loadout_type: 'skills', is_active: true, skill_set_order: 0, skill_slots: { '0': 'custom-' + id } });
+  }
+
+  await battle('join', { mode: 'pvp', client_session_id: 'session-b' }, 'b');
+  const joined = await battle('join', { mode: 'pvp', client_session_id: 'session-a' }, 'a');
+  assert.equal(joined.match.status, 'matched');
+  await battle('status', { client_session_id: 'session-b' }, 'b');
+  const connecting = await battle('status', { client_session_id: 'session-a' }, 'a');
+  assert.equal(connecting.match.status, 'connecting');
+  const matchId = connecting.match.id;
+  await battle('ready', { match_id: matchId }, 'a');
+  const countdown = await battle('ready', { match_id: matchId }, 'b');
+  assert.equal(countdown.match.status, 'countdown');
+  for (const id of ['a', 'b']) {
+    assert.equal(countdown.match.players.find((p) => p.id === id).skills[0].user_card_id, 'custom-' + id);
+  }
+
+  rows('AIBattleMatch')[0].fight_starts_at = iso(-100);
+  const fighting = await battle('status', { client_session_id: 'session-a' }, 'a');
+  assert.equal(fighting.match.status, 'fighting');
+
+  // Fighters spawn 10 m apart on opposite sides of the net. A card ability is a
+  // lock-on command, so it must not be rejected as out of range from there.
+  const caster = fighting.match.turn_player_id;
+  const opponent = caster === 'a' ? 'b' : 'a';
+  const cast = await battle('use_skill', { match_id: matchId, slot: 0, cast_id: 'cast-1', attacker_pos: { x: 0, z: 5 }, target_pos: { x: 0, z: -5 } }, caster);
+  assert.equal(cast.cast.target_id, opponent);
+  assert.equal(cast.match.last_cast.cast_id, 'cast-1');
+  assert.equal(cast.match.last_cast.attacker_id, caster);
+  const seenByOpponent = await battle('status', { client_session_id: 'session-' + opponent }, opponent);
+  assert.equal(seenByOpponent.match.last_cast.cast_id, 'cast-1');
+});
+
+test('fight polls only write positions when the fighter actually moved', async () => {
+  prefightMatch('fighting', {
+    fight_starts_at: iso(-5000), fight_ends_at: iso(170000), positions: { a: { x: 0, z: 5 }, b: { x: 0, z: -5 } },
+    atb: {}, cooldowns: {}, pending_hits: [], hit_log: [], disconnects: {},
+  });
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+  writes = [];
+  await battle('status', { client_session_id: 'session-a', position: { x: 0, z: 5 } }, 'a');
+  assert.equal(writes.filter((w) => w.name === 'AIBattleMatch').length, 0);
+  await battle('status', { client_session_id: 'session-a', position: { x: 1.2, z: 4 } }, 'a');
+  assert.deepEqual(rows('AIBattleMatch')[0].positions.a, { x: 1.2, z: 4 });
+});
+
+for (const action of ['cancel', 'forfeit']) {
+  test(action + ' during a reservation returns the other player to the queue instead of kicking them out', async () => {
+    prefightMatch('matched');
+    const originalQueuedAt = iso(-50000);
+    tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b', { queued_at: originalQueuedAt })]);
+    await battle(action, { match_id: 'm1' }, 'a');
+    assert.equal(rows('AIBattleMatch')[0].status, 'ended');
+    assert.equal(queueOf('a').status, 'cancelled');
+    assert.equal(queueOf('b').status, 'waiting');
+    assert.equal(queueOf('b').queued_at, originalQueuedAt);
+    const opponentView = await battle('status', { client_session_id: 'session-b' }, 'b');
+    assert.equal(opponentView.queue.status, 'waiting');
+    assert.equal(opponentView.match, null);
+  });
+}

@@ -11,6 +11,14 @@ const MATCH_LIVE_MS = 45000;
 const RECONNECT_GRACE_MS = 120000;
 const QUEUE_TOUCH_MS = 5000;
 const QUEUE_OWNER_RECOVER_MS = 120000;
+// A reserved pair must finish its handshakes within these windows. Without a
+// deadline, a pair whose second browser vanished stayed in `matched`/`connecting`
+// forever: the remaining player was stuck on "waiting for opponent", and every
+// later Queue press "reconnected" them into that dead match instead of queueing.
+const PREFIGHT_MATCHED_MS = 90000;
+const PREFIGHT_CONNECTING_MS = 180000;
+const PREFIGHT_STATUSES = new Set(['matched', 'connecting']);
+const POSITION_EPSILON_M = 0.05;
 const DEFAULT_BATTLE_HP = 1000;
 const ARENA = { width: 12, length: 16, margin_to_net: 1, spawn_distance: 10 };
 const APPEARANCE_KEYS = [
@@ -23,6 +31,21 @@ const APPEARANCE_KEYS = [
 
 const json = (body: any, status = 200) => Response.json(body, { status });
 const nowIso = () => new Date().toISOString();
+// A failed read (rate limit, timeout, 5xx) is NOT the same as "no row". Queue and
+// match state is only ever cancelled/cleared from rows we actually read. Failures
+// propagate to the request handler, which answers 5xx; the client keeps its last
+// known state and simply retries on the next poll instead of being kicked out.
+const isNotFound = (error: any) => Number(error?.status || error?.response?.status || 0) === 404
+  || /not[\s_-]?found/i.test(String(error?.message || ''));
+async function getOptional(entity: any, id: string) {
+  if (!id) return null;
+  try {
+    return await entity.get(id);
+  } catch (error) {
+    if (isNotFound(error)) return null;
+    throw error;
+  }
+}
 const playerName = (user: Row) => user.full_name || user.username || user.display_name || 'Player';
 const heartbeatAt = (row: Row) => Date.parse(row?.last_seen_at || row?.queued_at || 0);
 const waitingLive = (row: Row) => row?.status === 'waiting' && heartbeatAt(row) > Date.now() - WAITING_LIVE_MS;
@@ -76,6 +99,9 @@ function publicMatch(row: Row | null) {
     reconnect_grace_ms: RECONNECT_GRACE_MS, prestige_awards: row.prestige_awards || {},
     turn_player_id: turnPlayerId(row),
     attack_revision: Number(row.attack_revision || 0), last_attack: row.last_attack || null,
+    // The most recent accepted ability cast. Clients use it to start the
+    // caster's animation even when the peer-to-peer relay drops the message.
+    last_cast: row.last_cast || null,
     hit_log: Array.isArray(row.hit_log) ? row.hit_log.slice(-20) : [],
   };
 }
@@ -102,7 +128,9 @@ async function freezeSkills(svc: any, userId: string, gender: string) {
   // PvP uses the exact same persistent Skill Book loadout as the dashboard.
   // Read all skill rows and deliberately resolve the active one instead of
   // depending on a compound filter that can miss legacy/migrated rows.
-  const loadouts = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, '-updated_date', 50).catch(() => []);
+  // Read failures throw so callers can keep an earlier snapshot rather than
+  // freezing an empty hotbar for the entire match.
+  const loadouts = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, '-updated_date', 50);
   const active = loadouts.find((row: Row) => row.is_active === true)
     || [...loadouts].sort((a: Row, b: Row) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0))[0]
     || null;
@@ -111,7 +139,7 @@ async function freezeSkills(svc: any, userId: string, gender: string) {
   for (let slot = 0; slot < SKILL_SLOT_COUNT; slot += 1) {
     const cardId = slots[String(slot)] || slots[slot];
     if (!cardId) continue;
-    const card = await svc.UserCard.get(String(cardId)).catch(() => null);
+    const card = await getOptional(svc.UserCard, String(cardId));
     if (!card || String(card.user_id) !== String(userId) || !skillEquipStatus(card, gender).can_equip) continue;
     const progressionRows = await svc.CardProgression.filter({ user_id: userId, user_card_id: String(card.id) }, '-updated_date', 1).catch(() => []);
     const level = Math.max(1, Number(progressionRows?.[0]?.level || 1));
@@ -131,7 +159,14 @@ async function freezeSkills(svc: any, userId: string, gender: string) {
 async function syncFrozenSkillsForMatch(svc: any, match: Row) {
   const players = await Promise.all((match.players || []).map(async (player: Row) => {
     const gender = player.gender === 'female' ? 'female' : 'male';
-    return { ...player, skills: await freezeSkills(svc, String(player.id || player.player_id || ''), gender) };
+    try {
+      return { ...player, skills: await freezeSkills(svc, String(player.id || player.player_id || ''), gender) };
+    } catch (error) {
+      // Keep the snapshot captured at pairing instead of starting the fight with
+      // no abilities because one Skill Book read failed.
+      console.error('[aiBattleMatchmaker] skill refresh failed; keeping pairing snapshot', error);
+      return { ...player, skills: Array.isArray(player.skills) ? player.skills : [] };
+    }
   }));
   return { ...match, players };
 }
@@ -144,12 +179,14 @@ async function playerFromQueue(svc: any, row: Row) {
   appearance.base_body_gender = gender;
   appearance.base_body_model_url = String(appearance.base_body_model_url || appearance.model_url || fallbackModel);
   if (gender === 'female') appearance.female_model_variant = appearance.female_model_variant || 'artemis_archer';
-  return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp: DEFAULT_BATTLE_HP, max_hp: DEFAULT_BATTLE_HP, skills: await freezeSkills(svc, String(row.user_id), gender) };
+  // Countdown re-freezes the loadout, so a failed read here must not block pairing.
+  const skills = await freezeSkills(svc, String(row.user_id), gender).catch(() => []);
+  return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp: DEFAULT_BATTLE_HP, max_hp: DEFAULT_BATTLE_HP, skills };
 }
 
-async function getMatch(svc: any, id: string) { return id ? await svc.AIBattleMatch.get(id).catch(() => null) : null; }
+async function getMatch(svc: any, id: string) { return getOptional(svc.AIBattleMatch, id); }
 async function activeQueuesForUser(svc: any, userId: string) {
-  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
+  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50);
   return (rows || []).filter((r: Row) => ['waiting','matched'].includes(String(r.status)));
 }
 async function latestQueue(svc: any, userId: string) {
@@ -169,15 +206,15 @@ async function cleanupQueueDuplicates(svc: any, userId: string) {
   return keep;
 }
 async function queueForMatch(svc: any, userId: string, matchId: string) {
-  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
+  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50);
   return rows.find((r: Row) => r.status === 'matched' && String(r.match_id || '') === String(matchId)) || null;
 }
 async function anyQueueForMatch(svc: any, userId: string, matchId: string) {
-  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
+  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50);
   return rows.find((r: Row) => String(r.match_id || '') === String(matchId)) || null;
 }
 async function activeMatchForUser(svc: any, userId: string) {
-  const states = await svc.PlayerState.filter({ player_id: String(userId) }, '-updated_date', 20).catch(() => []);
+  const states = await svc.PlayerState.filter({ player_id: String(userId) }, '-updated_date', 20);
   for (const state of states || []) {
     const matchId = String(state?.active_match_id || '');
     if (!matchId) continue;
@@ -211,11 +248,6 @@ async function cancelQueue(svc: any, row: Row | null) { if (row?.id && row.statu
 async function cancelAllQueuesForUser(svc: any, userId: string) {
   const rows = await activeQueuesForUser(svc, userId);
   await Promise.all(rows.map((row: Row) => cancelQueue(svc, row).catch(() => null)));
-}
-async function cancelMatchQueues(svc: any, match: Row | null) {
-  if (!match?.id) return;
-  const rows = await Promise.all((match.player_ids || []).map((id: string) => queueForMatch(svc, String(id), String(match.id))));
-  await Promise.all(rows.filter(Boolean).map((row: Row) => cancelQueue(svc, row).catch(() => null)));
 }
 
 function winnerByHp(match: Row) {
@@ -257,8 +289,51 @@ function shiftPausedTimers(match: Row, pauseMs: number) {
   return shifted;
 }
 
+// Put a player whose pairing fell through back into the queue. queued_at is
+// kept, so they stay at the front of the line.
+const requeuePatch = () => ({ status: 'waiting', match_id: '', host_id: '', opponent_id: '', connected_at: '', connected_session_id: '', ready_at: '', last_seen_at: nowIso() });
+
+// When one player backs out of a reserved pair, the other player did nothing
+// wrong: return them to the queue instead of cancelling their search as well.
+async function releaseOpponentsToQueue(svc: any, match: Row, leavingUserId: string) {
+  const others = (match.player_ids || []).map(String).filter((id: string) => id && id !== String(leavingUserId));
+  const rows = await Promise.all(others.map((id: string) => queueForMatch(svc, id, String(match.id))));
+  await Promise.all(rows.map((row: Row | null) => {
+    if (!row?.id) return null;
+    return svc.AIBattleQueueEntry.update(row.id, matchedLive(row) ? requeuePatch() : { status: 'cancelled' });
+  }));
+}
+
+async function settlePrefight(svc: any, match: Row, now = Date.now()) {
+  const ids = (match.player_ids || []).map(String).filter(Boolean);
+  if (ids.length !== 2) return match;
+  const queues = await Promise.all(ids.map((id: string) => queueForMatch(svc, id, String(match.id))));
+  const live = queues.map((row: Row | null) => Boolean(row && matchedLive(row)));
+  const connecting = match.status === 'connecting';
+  const startedAt = Date.parse((connecting ? match.connected_at : '') || match.created_date || '') || 0;
+  const timedOut = startedAt > 0 && now - startedAt > (connecting ? PREFIGHT_CONNECTING_MS : PREFIGHT_MATCHED_MS);
+  if (!timedOut && live.every(Boolean)) return match;
+
+  // Anyone still present goes straight back to the queue with their original
+  // queued_at priority. On a timeout, only players who completed their own
+  // handshake are re-queued, so a browser that cannot load the arena does not
+  // drag its opponent through the same failed pairing again and again.
+  const didTheirPart = (row: Row | null) => Boolean(row && (connecting ? row.ready_at : row.connected_at));
+  const ended = await svc.AIBattleMatch.update(match.id, {
+    status: 'ended', winner_id: '', ended_reason: 'disconnect', ended_at: new Date(now).toISOString(), pause_started_at: '',
+  });
+  await Promise.all(queues.map((row: Row | null, index: number) => {
+    if (!row?.id) return null;
+    const requeue = live[index] && (!timedOut || didTheirPart(row));
+    return svc.AIBattleQueueEntry.update(row.id, requeue ? requeuePatch() : { status: 'cancelled' });
+  }));
+  await clearMatchForPlayers(svc, ended);
+  return ended;
+}
+
 async function settleMatch(svc: any, input: Row | null) {
   if (!input || input.status === 'ended') return input;
+  if (PREFIGHT_STATUSES.has(String(input.status))) return settlePrefight(svc, input);
   let match = { ...input, players: (input.players || []).map((p: Row) => ({ ...p })), pending_hits: [...(input.pending_hits || [])], hit_log: [...(input.hit_log || [])], disconnects: { ...(input.disconnects || {}) } };
   const now = Date.now();
   let changed = false;
@@ -529,8 +604,20 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
   }
 
   if (queue.status === 'matched' && queue.match_id) {
-    let match = await settleMatch(svc, savedMatch && String(savedMatch.id) === String(queue.match_id) ? savedMatch : await getMatch(svc, String(queue.match_id)));
-    if (!match) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
+    const current = savedMatch && String(savedMatch.id) === String(queue.match_id) ? savedMatch : await getMatch(svc, String(queue.match_id));
+    if (!current) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
+    const statusBeforeSettle = String(current.status || '');
+    let match = await settleMatch(svc, current);
+    if (match?.status === 'ended' && PREFIGHT_STATUSES.has(statusBeforeSettle)) {
+      // The reserved pair was abandoned before the fight began. Report where
+      // the player now stands (back in the queue, or out) instead of showing a
+      // victory/defeat screen for a fight that never happened.
+      const refreshed = await getOptional(svc.AIBattleQueueEntry, String(queue.id));
+      if (refreshed?.status === 'waiting') {
+        return { queue: refreshed, match: null, notice: 'Your opponent left before the fight started. You are back in the queue with your original place.' };
+      }
+      return { queue: null, match: null, notice: 'The match could not finish loading, so it was cancelled. Press Queue to find a new opponent.' };
+    }
     if (match.status === 'matched') {
       const connection = await startMatchIfBothConnected(svc, match);
       match = connection.match;
@@ -540,8 +627,14 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
       match = readiness.match;
     }
     if (pos && ['countdown','fighting'].includes(String(match?.status || ''))) {
-      const positions = { ...(match.positions || {}), [userId]: clampPos(match, userId, pos) };
-      match = await svc.AIBattleMatch.update(match.id, { positions });
+      const next = clampPos(match, userId, pos);
+      const stored = match.positions?.[userId];
+      // Positions ride along with every fight poll. Only write when the fighter
+      // actually moved so two clients polling twice a second do not generate a
+      // constant stream of match writes.
+      if (!stored || distance2D(stored, next) > POSITION_EPSILON_M) {
+        match = await svc.AIBattleMatch.update(match.id, { positions: { ...(match.positions || {}), [userId]: next } });
+      }
     }
     return { queue, match };
   }
@@ -558,7 +651,7 @@ Deno.serve(async (req) => {
 
     if (action === 'status') {
       const current = await statusFor(svc,userId,sessionId,data.position||null);
-      return json({ queue:publicQueue(current.queue), match:publicMatch(current.match), server_time:Date.now() });
+      return json({ queue:publicQueue(current.queue), match:publicMatch(current.match), notice:current.notice||null, server_time:Date.now() });
     }
     if (action === 'join') {
       const mode=String(data.mode||'').toLowerCase(); if(!MODES.has(mode)) return json({error:'Choose PvP, PvE, or World Boss.'},400);
@@ -566,7 +659,7 @@ Deno.serve(async (req) => {
       if(liveMatch){
         await recoverQueueForMatch(svc,userId,liveMatch,sessionId);
         const recovered=await statusFor(svc,userId,sessionId,data.position||null);
-        return json({queue:publicQueue(recovered.queue),match:publicMatch(recovered.match),reconnected:true,server_time:Date.now()});
+        return json({queue:publicQueue(recovered.queue),match:publicMatch(recovered.match),notice:recovered.notice||null,reconnected:Boolean(recovered.match),server_time:Date.now()});
       }
       let current=await cleanupQueueDuplicates(svc,userId);
       if(current){
@@ -575,14 +668,14 @@ Deno.serve(async (req) => {
           const refreshedAvatar=await getAvatarSnapshot(svc,userId,data);
           current=await svc.AIBattleQueueEntry.update(current.id,{...refreshedAvatar,last_seen_at:nowIso(),client_session_id:sessionId||current.client_session_id||''});
         }
-        const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),server_time:Date.now()});
+        const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),notice:state.notice||null,server_time:Date.now()});
       }
       const avatar=await getAvatarSnapshot(svc,userId,data);
       const created=await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
       current=await cleanupQueueDuplicates(svc,userId);
       if(current?.id&&String(current.id)===String(created.id)&&current.status==='waiting') await tryPair(svc,mode,String(current.id));
       const state=await statusFor(svc,userId,sessionId);
-      return json({queue:publicQueue(state.queue),match:publicMatch(state.match),server_time:Date.now()});
+      return json({queue:publicQueue(state.queue),match:publicMatch(state.match),notice:state.notice||null,server_time:Date.now()});
     }
     if (action === 'ack_match') {
       let match=await getMatch(svc,String(data.match_id||''));
@@ -610,7 +703,10 @@ Deno.serve(async (req) => {
       if(!match) return json({error:'There is no active PvP match to reconnect to.'},404);
       await recoverQueueForMatch(svc,userId,match,sessionId);
       const current=await statusFor(svc,userId,sessionId,data.position||null);
-      return json({queue:publicQueue(current.queue),match:publicMatch(current.match||match),reconnected:true,server_time:Date.now()});
+      // Never fall back to the pre-settle row: if the pair was abandoned while
+      // this player was away, they are back in the queue (or out) — not in a
+      // dead arena.
+      return json({queue:publicQueue(current.queue),match:publicMatch(current.match),notice:current.notice||null,reconnected:Boolean(current.match),server_time:Date.now()});
     }
     if (action === 'cancel' || action === 'reset') {
       const queue=await latestQueue(svc,userId);
@@ -619,7 +715,8 @@ Deno.serve(async (req) => {
         if(match&&['matched','connecting'].includes(String(match.status))){
           match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:'',ended_reason:'forfeit',ended_at:nowIso()});
           await clearMatchForPlayers(svc,match);
-          await cancelMatchQueues(svc,match);
+          await releaseOpponentsToQueue(svc,match,userId);
+          await cancelAllQueuesForUser(svc,userId);
           return json({queue:null,match:null,server_time:Date.now()});
         }
         if(match&&['countdown','fighting'].includes(String(match.status))){
@@ -649,8 +746,10 @@ Deno.serve(async (req) => {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       if(['matched','connecting'].includes(String(match.status))){
         match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:'',ended_reason:'forfeit',ended_at:nowIso()});
-        await clearMatchForPlayers(svc,match); await cancelMatchQueues(svc,match);
-        return json({match:publicMatch(match),server_time:Date.now()});
+        await clearMatchForPlayers(svc,match);
+        await releaseOpponentsToQueue(svc,match,userId);
+        await cancelAllQueuesForUser(svc,userId);
+        return json({queue:null,match:publicMatch(match),server_time:Date.now()});
       }
       const winner=(match.player_ids||[]).map(String).find((id:string)=>id!==userId)||''; match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:winner,ended_reason:'forfeit',ended_at:nowIso()});
       match = await finalizeMatchRewards(svc,match) || match;
@@ -732,7 +831,8 @@ Deno.serve(async (req) => {
       const atb=turnAtb(match,targetId,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,[String(slot)]:new Date(now+Number(skill.cooldown_ms||3000)).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
-      match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions});
+      const lastCast={cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',resolves_at:resolvesAt,cast_at:new Date(now).toISOString()};
+      match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions,last_cast:lastCast});
       return json({match:publicMatch(match),cast:{cast_id:castId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',animation_effect:skill.animation_effect||{},resolves_at:resolvesAt,damage,crit,target_id:targetId},server_time:now});
     }
 

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
 import { useDashboardSession } from '@/components/social/dashboardSession';
 import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
 
-// Keep matchmaking hooks independent of the environment presentation lifecycle.
-export default function AIBattleSessionBridge() {
-  const { queue, match, reconnect, busy } = useAIBattleQueue();
+// Keeps the shared dashboard room, music and manual reconnect control in sync
+// with matchmaking. It receives the single matchmaking instance owned by
+// AIBattleHost, so there is exactly one room bridge and one cast relay.
+export default function AIBattleSessionBridge({ battle }) {
+  const { queue, match, reconnect, busy } = battle;
   const session = useDashboardSession();
   const [showReconnect, setShowReconnect] = useState(false);
   const queuedForPvp = queue?.status === 'waiting' && queue?.mode === 'pvp';
@@ -51,6 +52,11 @@ export default function AIBattleSessionBridge() {
       setShowReconnect(false);
     } catch (error) {
       console.warn('[AI Battle] manual reconnect failed', error);
+      // Nothing left to reconnect to: stop offering it.
+      if (Number(error?.status) === 404) {
+        sessionStorage.removeItem('luna_pvp_active_match_id');
+        setShowReconnect(false);
+      }
     }
   };
 
@@ -60,7 +66,7 @@ export default function AIBattleSessionBridge() {
       type="button"
       onClick={handleReconnect}
       disabled={busy}
-      className="pointer-events-auto absolute left-1/2 top-2 z-[96] -translate-x-1/2 border border-cyan-100/20 bg-slate-950/88 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_10px_28px_rgba(0,0,0,.32)] backdrop-blur-xl hover:bg-cyan-950/90 disabled:opacity-50"
+      className="pointer-events-auto fixed left-1/2 top-3 z-[260] -translate-x-1/2 border border-cyan-100/20 bg-slate-950/88 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_10px_28px_rgba(0,0,0,.32)] backdrop-blur-xl hover:bg-cyan-950/90 disabled:opacity-50"
     >
       {busy ? 'Reconnecting…' : 'Reconnect to Match'}
     </button>

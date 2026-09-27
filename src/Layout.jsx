@@ -1,5 +1,6 @@
 import PartyDrawer from './components/dashboard/PartyDrawer';
 import { SocialNotificationAlerts } from './components/social/SocialNotifications';
+import AIBattleReturnBanner from './components/battle/AIBattleReturnBanner';
 import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -561,6 +562,7 @@ function LayoutContent({ children, currentPageName }) {
         <EnvStatus />
         <Toaster position="top-right" />
       <SocialNotificationAlerts />
+      <AIBattleReturnBanner currentPageName={currentPageName} />
       <PartyDrawer user={user} />
         <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
@@ -594,6 +596,7 @@ function LayoutContent({ children, currentPageName }) {
       <EnvStatus />
       <Toaster position="top-right" />
       <SocialNotificationAlerts />
+      <AIBattleReturnBanner currentPageName={currentPageName} />
       <PartyDrawer user={user} />
       <PWAManifest />
       <ServiceWorker />

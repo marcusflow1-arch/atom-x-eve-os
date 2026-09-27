@@ -1,9 +1,11 @@
 // @refresh reset
 // Remount consumers on edits: matchmaking hook additions must not reuse old hook slots.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { queryClientInstance } from '@/lib/query-client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { showInfo } from '@/components/error/ErrorToast';
 import { dashboardSession, joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
@@ -18,9 +20,14 @@ const detectAvatarGender = (avatar) => {
   return gender === 'female' || gender === 'male' ? gender : '';
 };
 const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-surface-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const ACTIVE_MATCH_STATUSES = ['connecting', 'countdown', 'fighting'];
 let heartbeatTimer = null;
 let heartbeatBusy = false;
 let joinInFlightPromise = null;
+let heartbeatUserId = '';
+let lastNoticeShown = '';
+
+export const aiBattleQueryKey = (userId) => ['ai-battle-matchmaking', userId];
 
 const unwrap = (response) => {
   const body = response?.data ?? response ?? {};
@@ -45,6 +52,52 @@ const invoke = async (action, data = {}) => {
 };
 const sessionData = (extra = {}) => ({ client_session_id: PAGE_QUEUE_SESSION_ID, ...extra });
 const queueIsActive = (body) => ['waiting', 'matched'].includes(String(body?.queue?.status || ''));
+const matchIsActive = (body) => ACTIVE_MATCH_STATUSES.includes(String(body?.match?.status || ''));
+
+// The server explains queue changes it made on the player's behalf (for example
+// "your opponent left, you are back in the queue"). Show each one once.
+export function announceAIBattleNotice(text) {
+  const notice = String(text || '');
+  if (!notice || notice === lastNoticeShown) return;
+  lastNoticeShown = notice;
+  showInfo(notice);
+  window.setTimeout(() => { if (lastNoticeShown === notice) lastNoticeShown = ''; }, 10000);
+}
+export const OPPONENT_LEFT_NOTICE = 'Your opponent left before the fight started. You are back in the queue with your original place.';
+const announce = (body) => announceAIBattleNotice(body?.notice);
+
+// Results screens the player already closed. The server keeps reporting an
+// ended match until the next poll releases its queue row; without this, that
+// late report re-opened the results screen a second time.
+const dismissedResults = new Set();
+export function dismissAIBattleResult(matchId) {
+  if (matchId) dismissedResults.add(String(matchId));
+}
+const withoutDismissed = (body) => (
+  body?.match?.status === 'ended' && dismissedResults.has(String(body.match.id)) ? { ...body, match: null } : body
+);
+
+/**
+ * The one status fetcher for the matchmaking cache. Every observer of
+ * ['ai-battle-matchmaking', userId] must use this queryFn — including passive
+ * observers that never poll. React Query keeps the options of whichever
+ * observer rendered last, so a placeholder queryFn on a passive observer used
+ * to turn any invalidate/refetch into `{}` and wipe the live match from the
+ * cache, which unmounted the arena mid-match.
+ */
+export async function fetchAIBattleStatus() {
+  const body = await invoke('status', sessionData({ position: typeof window !== 'undefined' ? window.__lunaPvPPosition || null : null }));
+  announce(body);
+  return withoutDismissed(body);
+}
+
+// Merge a server response into the shared cache. A failed request never reaches
+// this function, so a network hiccup can no longer clear the queue or match.
+function writeStatus(queryClient, userId, body) {
+  if (!userId || !body) return;
+  const next = withoutDismissed(body);
+  queryClient.setQueryData(aiBattleQueryKey(userId), (prev = {}) => ({ ...prev, ...next }));
+}
 
 export const getAIBattleClientSessionId = () => PAGE_QUEUE_SESSION_ID;
 export function stopAIBattleQueueHeartbeat() {
@@ -56,8 +109,12 @@ async function heartbeatOnce() {
   if (heartbeatBusy) return null;
   heartbeatBusy = true;
   try {
-    const body = await invoke('status', sessionData({ position: window.__lunaPvPPosition || null }));
-    if (!queueIsActive(body) && body?.match?.status !== 'fighting' && body?.match?.status !== 'countdown') stopAIBattleQueueHeartbeat();
+    const body = await fetchAIBattleStatus();
+    // The heartbeat keeps running when the dashboard is not on screen (another
+    // page, a hidden tab). Publishing its result keeps "Return to match" and the
+    // queue indicator accurate everywhere without a second poller.
+    writeStatus(queryClientInstance, heartbeatUserId, body);
+    if (!queueIsActive(body) && !matchIsActive(body)) stopAIBattleQueueHeartbeat();
     return body;
   } finally { heartbeatBusy = false; }
 }
@@ -65,10 +122,55 @@ export function startAIBattleQueueHeartbeat() {
   if (typeof window === 'undefined' || heartbeatTimer) return;
   heartbeatTimer = window.setInterval(() => heartbeatOnce().catch((error) => console.warn('[AI Battle] heartbeat retry', error)), 8000);
 }
-export async function touchAIBattleQueueSession() {
+export async function touchAIBattleQueueSession(userId = '') {
+  if (userId) heartbeatUserId = String(userId);
   const body = await heartbeatOnce();
-  if (queueIsActive(body)) startAIBattleQueueHeartbeat();
+  if (queueIsActive(body) || matchIsActive(body)) startAIBattleQueueHeartbeat();
   return body;
+}
+
+// Whether the queue popup is on screen, so the compact queue indicator can step
+// aside instead of showing the same status twice.
+let overlayOpen = false;
+const overlayListeners = new Set();
+export function setAIBattleOverlayOpen(open) {
+  overlayOpen = Boolean(open);
+  overlayListeners.forEach((listener) => listener());
+}
+export function useAIBattleOverlayOpen() {
+  return useSyncExternalStore(
+    (listener) => { overlayListeners.add(listener); return () => overlayListeners.delete(listener); },
+    () => overlayOpen,
+    () => false,
+  );
+}
+
+/**
+ * Read-only view of the shared matchmaking cache. It never polls on its own;
+ * AIBattleHost owns the polling cadence. It uses the real fetcher so a refetch
+ * triggered anywhere can never replace the cache with an empty object.
+ */
+export function useAIBattleSnapshot() {
+  const { user } = useAuth();
+  const { data } = useQuery({
+    queryKey: aiBattleQueryKey(user?.id),
+    queryFn: fetchAIBattleStatus,
+    enabled: false,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+  });
+  const match = data?.match || null;
+  const isParticipant = Boolean(match?.id && user?.id && (match.player_ids || []).map(String).includes(String(user.id)));
+  return {
+    queue: data?.queue || null,
+    match,
+    serverTime: Number(data?.server_time || 0),
+    isParticipant,
+    // `matched` is only a reservation. The arena appears once both clients have
+    // acknowledged it (`connecting`) and stays up through the results screen.
+    arenaActive: isParticipant && [...ACTIVE_MATCH_STATUSES, 'ended'].includes(String(match?.status || '')),
+  };
 }
 
 export default function useAIBattleQueue({ sessionBridge = true, polling = true } = {}) {
@@ -82,19 +184,27 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     : activeCharacter && !activeCharacter.isDevTest
       ? activeCharacter
       : companion;
-  const selectedGender = detectAvatarGender(selectedAvatar) || 'male';
+  // Leave the gender blank when the avatar has not resolved yet. The server then
+  // uses the saved Avatar row. Defaulting to "male" here used to queue female
+  // players as male, which removed their Artemis abilities from the PvP hotbar
+  // and loaded the wrong fighter.
+  const selectedGender = detectAvatarGender(selectedAvatar);
   const selectedModelUrl = selectedAvatar?.model_url || selectedAvatar?.base_body_model_url || '';
-  const selectedAppearance = selectedAvatar ? { ...selectedAvatar, gender: selectedGender, model_url: selectedModelUrl || selectedAvatar.model_url || '' } : { gender: selectedGender, model_url: selectedModelUrl };
+  const selectedAppearance = selectedAvatar
+    ? { ...selectedAvatar, gender: selectedGender, model_url: selectedModelUrl || selectedAvatar.model_url || '' }
+    : null;
   const session = useDashboardSession();
   const queryClient = useQueryClient();
   const joinAttempt = useRef('');
   const [roomRetryTick, setRoomRetryTick] = useState(0);
-  const key = ['ai-battle-matchmaking', user?.id];
+  const key = aiBattleQueryKey(user?.id);
+
+  useEffect(() => { if (user?.id) heartbeatUserId = String(user.id); }, [user?.id]);
 
   const state = useQuery({
     queryKey: key,
     enabled: Boolean(user?.id),
-    queryFn: () => invoke('status', sessionData({ position: window.__lunaPvPPosition || null })),
+    queryFn: fetchAIBattleStatus,
     refetchInterval: polling ? (query) => {
       const body = query.state.data || {};
       const status = String(body?.match?.status || '');
@@ -118,7 +228,10 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const mutation = useMutation({
     mutationFn: ({ action, data }) => invoke(action, sessionData(data)),
     retry: false,
-    onSuccess: (body) => queryClient.setQueryData(key, (prev = {}) => ({ ...prev, ...body })),
+    onSuccess: (body) => {
+      announce(body);
+      writeStatus(queryClient, user?.id, body);
+    },
   });
 
   const queue = state.data?.queue || null;
@@ -128,7 +241,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const status = String(match?.status || '');
-    if (match?.id && ['connecting','countdown','fighting'].includes(status)) {
+    if (match?.id && ACTIVE_MATCH_STATUSES.includes(status)) {
       sessionStorage.setItem('luna_pvp_active_match_id', String(match.id));
     } else if (status === 'ended' || (state.data?.server_time && !match && !queue)) {
       sessionStorage.removeItem('luna_pvp_active_match_id');
@@ -137,7 +250,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const serverOffsetMs = serverTime - Date.now();
 
   useEffect(() => {
-    if (queue?.status === 'waiting' || queue?.status === 'matched' || ['connecting','countdown','fighting'].includes(String(match?.status || ''))) startAIBattleQueueHeartbeat();
+    if (queue?.status === 'waiting' || queue?.status === 'matched' || ACTIVE_MATCH_STATUSES.includes(String(match?.status || ''))) startAIBattleQueueHeartbeat();
     else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
   }, [queue?.status, match?.status]);
 
@@ -148,9 +261,9 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   useEffect(() => {
     if (!user?.id || queue?.status !== 'matched' || match?.status !== 'matched' || !match?.id) return undefined;
     let cancelled = false;
-    invoke('status', sessionData({ position: window.__lunaPvPPosition || null }))
+    fetchAIBattleStatus()
       .then((body) => {
-        if (!cancelled) queryClient.setQueryData(key, (prev = {}) => ({ ...prev, ...body }));
+        if (!cancelled) writeStatus(queryClient, user.id, body);
       })
       .catch((error) => {
         if (!cancelled) console.warn('[AI Battle] reservation heartbeat retry', error);
@@ -158,10 +271,10 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return () => { cancelled = true; };
   }, [user?.id, queue?.status, match?.id, match?.status, queryClient]);
 
-  // The always-mounted dashboard bridge joins both users into the host dashboard
+  // The always-mounted battle host joins both users into the host dashboard
   // only after BOTH browser clients acknowledged the reserved match.
   useEffect(() => {
-    if (!sessionBridge || !match?.id || !user?.id || !['connecting','countdown','fighting'].includes(String(match.status || ''))) return undefined;
+    if (!sessionBridge || !match?.id || !user?.id || !ACTIVE_MATCH_STATUSES.includes(String(match.status || ''))) return undefined;
     const channelId = String(match.dashboard_channel || `dashboard_${match.host_id}`);
     const hostId = String(match.host_id || '');
     const token = `${match.id}:${hostId}`;
@@ -189,7 +302,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     }
 
     let retryTimer = null;
-    if (!roomHealthy && ['connecting','countdown','fighting'].includes(String(match.status || ''))) {
+    if (!roomHealthy && ACTIVE_MATCH_STATUSES.includes(String(match.status || ''))) {
       retryTimer = window.setTimeout(() => {
         joinAttempt.current = '';
         setRoomRetryTick((value) => value + 1);
@@ -227,14 +340,14 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   }, [sessionBridge, match?.id, match?.player_ids, user?.id]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (!sessionBridge || typeof window === 'undefined') return undefined;
     window.__lunaPvPMatch = match ? { ...match, serverOffsetMs } : null;
     return () => { if (window.__lunaPvPMatch?.id === match?.id) delete window.__lunaPvPMatch; };
-  }, [match, serverOffsetMs]);
+  }, [sessionBridge, match, serverOffsetMs]);
 
   const join = async (mode) => {
     // Guard at module scope, not component scope. The queue popup and persistent
-    // dashboard bridge share this module, so even a remount or duplicated key
+    // battle host share this module, so even a remount or duplicated key
     // handler cannot fire parallel join creates before React state catches up.
     if (joinInFlightPromise) return joinInFlightPromise;
     const promise = mutation.mutateAsync({
@@ -246,7 +359,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
         request_id: `${PAGE_QUEUE_SESSION_ID}:${mode}`,
         avatar_gender: selectedGender,
         avatar_model_url: selectedModelUrl,
-        avatar_appearance: selectedAppearance,
+        ...(selectedAppearance ? { avatar_appearance: selectedAppearance } : {}),
       },
     });
     joinInFlightPromise = promise;

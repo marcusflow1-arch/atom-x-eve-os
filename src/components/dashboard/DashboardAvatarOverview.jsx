@@ -11,6 +11,7 @@ import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import LunaAIBattleOverlay from './LunaAIBattleOverlay';
+import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
 import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
@@ -107,15 +108,7 @@ export default function DashboardAvatarOverview() {
   // Observe the always-mounted AI Battle query cache without starting another
   // poller. The parent dashboard owns the popup, so it also owns the final
   // matchmaking -> arena handoff and cannot be blocked by stale popup state.
-  const { data: battleTransitionState } = useQuery({
-    queryKey: ['ai-battle-matchmaking', user?.id],
-    enabled: false,
-    queryFn: async () => ({}),
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
-    staleTime: Infinity,
-  });
-  const battleTransitionMatch = battleTransitionState?.match || null;
+  const { match: battleTransitionMatch } = useAIBattleSnapshot();
   const battleTransitionStatus = String(battleTransitionMatch?.status || '');
 
   useEffect(() => {

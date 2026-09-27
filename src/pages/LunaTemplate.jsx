@@ -48,6 +48,7 @@ import EntertainmentHub from '../components/dashboard/EntertainmentHub.jsx';
 import useLunaStore from '../components/luna/useLunaStore';
 import { useEquipment } from '../components/luna/hooks/useEquipment';
 import { useSkills } from '../components/luna/hooks/useSkills';
+import AIBattleHost from '../components/battle/AIBattleHost';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
@@ -660,6 +661,10 @@ export default function LunaTemplate() {
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
+    {/* AI Battle: one matchmaking owner + PvP arena for the whole page. It lives
+        outside every panel/section/focus branch so none of them can unmount a
+        live match. */}
+    <AIBattleHost />
     <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#070a11' }}>
       {/* 5% Left Area for Global Icons */}
       {sidebarVisible && !avatarFocusMode && (

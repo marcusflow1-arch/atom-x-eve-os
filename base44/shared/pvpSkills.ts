@@ -24,7 +24,11 @@ export const SKILL_STATS: Record<string, any> = {
 };
 
 export const BASIC_BY_RARITY = {
-  range_m: 3,
+  // Card abilities lock onto the single PvP opponent, exactly like the basic
+  // attack. 18 m covers every position on the 12 x 16 m court, so a generic
+  // card can never be rejected as "out of range" just because the fighters
+  // spawn 10 m apart on opposite sides of the net.
+  range_m: 18,
   atb_cost: 25,
   cooldown_ms: 3000,
   hit_ms: 400,

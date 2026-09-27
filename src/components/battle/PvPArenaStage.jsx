@@ -15,6 +15,8 @@ import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRu
 import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
 import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
 import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
+import CombatFx, { effectColor } from '@/components/battle/combatFx';
+import { dismissAIBattleResult } from '@/components/battle/useAIBattleQueue';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 
 const lerpAngle = (a, b, maxStep) => {
@@ -62,74 +64,39 @@ function scaleToHeight(root, height = 1.8) {
   root.position.y -= next.min.y;
 }
 
-function spawnBasicSlash(scene, camera, targetRoot) {
-  if (!scene || !camera || !targetRoot) return;
-  targetRoot.updateMatrixWorld?.(true);
-  const target = new THREE.Vector3();
-  targetRoot.getWorldPosition(target);
-  target.y += 1.05;
+const CHEST_HEIGHT = 1.1;
+const MELEE_LUNGE = { distance: 0.6, duration: 260 };
+const HIT_RECOIL = { distance: 0.28, duration: 240 };
 
-  const group = new THREE.Group();
-  group.position.copy(target);
-  group.quaternion.copy(camera.quaternion);
-  group.scale.setScalar(0.72);
+/**
+ * Drive idle/locomotion only when the wanted motion changes, and never over an
+ * ability clip. The arena used to call playIdle() on every frame while a fighter
+ * stood still: that restarted the idle clip each frame (frozen pose) and, for
+ * Getsuga, cancelled an ability the instant after it started. The runtimes
+ * settle back to idle on their own when an ability finishes.
+ */
+function setMotion(fighter, desired) {
+  const runtime = fighter?.runtime;
+  if (!runtime) return;
+  if (runtime.isPlaying?.()) { fighter.motion = 'idle'; return; }
+  if (fighter.motion === desired) return;
+  const started = desired === 'idle' ? runtime.playIdle?.() : runtime.playLocomotion?.(desired);
+  if (started !== false) fighter.motion = desired;
+}
 
-  const materials = [];
-  const slashes = [
-    { y: 0.22, rotation: -0.72, length: 1.65 },
-    { y: 0.00, rotation: -0.58, length: 1.9 },
-    { y: -0.22, rotation: -0.44, length: 1.55 },
-  ];
-  for (const slash of slashes) {
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xcff8ff,
-      transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(slash.length, 0.045), material);
-    mesh.position.y = slash.y;
-    mesh.rotation.z = slash.rotation;
-    group.add(mesh);
-    materials.push(material);
+// Procedural lunge (attacker) and recoil (target) along the line between the
+// fighters. Returned as a signed distance toward the opponent.
+function motionOffset(fighter, now) {
+  let push = 0;
+  if (fighter.lunge) {
+    const t = (now - fighter.lunge.start) / MELEE_LUNGE.duration;
+    if (t >= 1 || t < 0) { if (t >= 1) fighter.lunge = null; } else push += Math.sin(t * Math.PI) * MELEE_LUNGE.distance;
   }
-
-  const flashMaterial = new THREE.MeshBasicMaterial({
-    color: 0x6deaff,
-    transparent: true,
-    opacity: 0.34,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-  const flash = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), flashMaterial);
-  flash.position.z = -0.01;
-  group.add(flash);
-  materials.push(flashMaterial);
-  scene.add(group);
-
-  const started = performance.now();
-  const duration = 380;
-  const animateSlash = (now) => {
-    const t = Math.min(1, (now - started) / duration);
-    group.scale.setScalar(0.72 + t * 0.55);
-    group.position.y = target.y + t * 0.08;
-    materials.forEach((material, index) => {
-      material.opacity = (index === materials.length - 1 ? 0.34 : 0.95) * (1 - t);
-    });
-    if (t < 1) {
-      requestAnimationFrame(animateSlash);
-      return;
-    }
-    scene.remove(group);
-    group.traverse((node) => {
-      node.geometry?.dispose?.();
-      node.material?.dispose?.();
-    });
-  };
-  requestAnimationFrame(animateSlash);
+  if (fighter.recoil) {
+    const t = (now - fighter.recoil.start) / HIT_RECOIL.duration;
+    if (t >= 1 || t < 0) { if (t >= 1) fighter.recoil = null; } else push -= Math.sin(t * Math.PI) * HIT_RECOIL.distance;
+  }
+  return push;
 }
 
 async function loadFighter({ scene, camera, player, side, onEffect }) {
@@ -140,11 +107,17 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
   assetRoot.traverse((node) => { if (node.isSkinnedMesh) node.frustumCulled = false; });
 
   const female = player.gender === 'female' || player.appearance?.gender === 'female';
-  let runtime, root;
+  let runtime, root, mixer = null;
   if (female) {
     scene.add(assetRoot);
-    const mixer = new THREE.AnimationMixer(assetRoot);
-    runtime = new ArtemisDashboardRuntime({ root: assetRoot, mixer, animations: gltf.animations || [], onEvent: onEffect, relaxAfter: 6 });
+    // The Artemis runtime does not advance its own mixer (the dashboard scene
+    // does that). The arena must, or female fighters never animate and their
+    // abilities never finish.
+    mixer = new THREE.AnimationMixer(assetRoot);
+    // relaxAfter: 0 keeps Artemis in her combat stance between turns. The
+    // sheathe animation made her "busy" for a moment, and a cast that landed in
+    // that window was accepted by the server but never animated.
+    runtime = new ArtemisDashboardRuntime({ root: assetRoot, mixer, animations: gltf.animations || [], onEvent: onEffect, relaxAfter: 0 });
     root = assetRoot;
   } else {
     runtime = new GetsugaDashboardRuntime({ scene, camera, onEvent: onEffect });
@@ -179,7 +152,7 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
     } catch (error) { console.warn('[PvP] locomotion clip failed', key, error); }
   }));
 
-  return { player, side, female, root, model: assetRoot, runtime, head: findHead(assetRoot), position: new THREE.Vector3(0,0,spawnZ), yaw: side === 'host' ? Math.PI : 0, loaded: true, lastMoveKey: '' };
+  return { player, side, female, root, model: assetRoot, runtime, mixer, head: findHead(assetRoot), position: new THREE.Vector3(0,0,spawnZ), yaw: side === 'host' ? Math.PI : 0, loaded: true, lastMoveKey: '', motion: '', lunge: null, recoil: null };
 }
 
 export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
@@ -209,6 +182,15 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const serverOffsetRef = useRef(serverOffsetMs);
   const requestSkillRef = useRef(null);
   const requestMeleeRef = useRef(null);
+  const requestDodgeRef = useRef(null);
+  const fxRef = useRef(null);
+  // Every visual is keyed by the server cast_id so the same action is never
+  // shown twice, whichever path (local click, peer relay, server poll) arrives
+  // first.
+  const playedCasts = useRef(new Set());
+  const shownSlashes = useRef(new Set());
+  const shownHits = useRef(null);
+  const menuBlockedRef = useRef(false);
 
   matchRef.current = match;
   serverOffsetRef.current = serverOffsetMs;
@@ -249,11 +231,10 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (returningRef.current) return;
     returningRef.current = true;
     setResultCountdown(0);
-    try {
-      await base44.functions.invoke('aiBattleMatchmaker', { action: 'reset', data: { match_id: matchRef.current?.id || '' } });
-    } catch (e) {
-      console.warn('[PvP] result cleanup failed; clearing local match state anyway', e);
-    }
+    // The server already closed this match and releases its queue rows on the
+    // next poll. Calling `reset` here used to also cancel any NEW queue the
+    // player had just entered from the results screen.
+    dismissAIBattleResult(matchRef.current?.id);
     queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, queue: null, match: null, server_time: Date.now() }));
     delete window.__lunaPvPMatch;
     delete window.__lunaPvPPosition;
@@ -280,6 +261,84 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     return false;
   };
 
+  const fighterKeyFor = (playerId) => (String(playerId) === String(user?.id) ? 'local' : 'opponent');
+  const chestOf = (key) => (out) => {
+    const pos = positions.current[key];
+    if (!pos) return null;
+    return out.set(pos.x, CHEST_HEIGHT, pos.z);
+  };
+  const toPerfTime = (serverIso) => {
+    const serverMs = Date.parse(serverIso || 0);
+    if (!serverMs) return performance.now();
+    return performance.now() + (serverMs - serverOffsetRef.current - Date.now());
+  };
+
+  // Ability cast: the caster's authored clip plus a projectile that locks onto
+  // the opponent and lands exactly when the server resolves the hit.
+  const showCast = (casterId, skill, cast = {}) => {
+    const castId = String(cast.cast_id || '');
+    if (castId && playedCasts.current.has(castId)) return;
+    if (castId) playedCasts.current.add(castId);
+    const casterKey = fighterKeyFor(casterId);
+    const targetKey = casterKey === 'local' ? 'opponent' : 'local';
+    const caster = runtimes.current[casterKey];
+    const a = positions.current[casterKey], b = positions.current[targetKey];
+    const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
+    const targetId = casterKey === 'local' ? opponentRef.current?.id : user?.id;
+    const started = skill ? playSkill(caster, skill, targetId, facingYaw, { castId, damage: cast.damage }) : false;
+    if (!started && caster) caster.lunge = { start: performance.now() };
+    if (skill) setLastCastSlot((state) => ({ ...state, [casterKey]: Number(skill.slot) }));
+    const effectId = cast.effect_id || skill?.effect_id || '';
+    const arriveAt = Math.max(performance.now() + 150, toPerfTime(cast.resolves_at));
+    fxRef.current?.tracer(chestOf(casterKey), chestOf(targetKey), {
+      color: effectColor(effectId),
+      arriveAt,
+      travelMs: Math.min(450, Math.max(150, arriveAt - performance.now())),
+      impactScale: 1.25,
+    });
+  };
+
+  // Melee: the attacker lunges and a slash line cuts across the target.
+  const showMeleeSlash = (attackerId, castId) => {
+    const id = String(castId || '');
+    if (id && shownSlashes.current.has(id)) return;
+    if (id) shownSlashes.current.add(id);
+    const attackerKey = fighterKeyFor(attackerId);
+    const targetKey = attackerKey === 'local' ? 'opponent' : 'local';
+    const attacker = runtimes.current[attackerKey];
+    if (attacker) attacker.lunge = { start: performance.now() };
+    const center = chestOf(targetKey)(new THREE.Vector3());
+    if (center) fxRef.current?.slash(center, { delay: 90, flip: Math.random() < 0.5 });
+  };
+
+  // Damage result from the server: flash + recoil on the target, floating number.
+  const showHitResult = (hit) => {
+    const id = String(hit?.cast_id || '');
+    if (!id || shownHits.current?.has(id)) return;
+    shownHits.current?.add(id);
+    const targetKey = fighterKeyFor(hit.target_id);
+    const target = runtimes.current[targetKey];
+    const center = chestOf(targetKey)(new THREE.Vector3());
+    if (!center) return;
+    const melee = String(hit.effect_id || '') === 'basic_melee';
+    if (melee) showMeleeSlash(hit.attacker_id, id);
+    else if (!playedCasts.current.has(id)) {
+      // The cast itself was never seen (both relays missed it). Still show
+      // where the ability landed.
+      playedCasts.current.add(id);
+      fxRef.current?.burst(center.clone(), { color: effectColor(hit.effect_id), scale: 1.25 });
+    }
+    const labelAt = center.clone().setY(center.y + 0.95);
+    if (hit.result === 'miss') {
+      fxRef.current?.damageText(labelAt, 'MISS', { miss: true });
+      return;
+    }
+    fxRef.current?.hitFlash(target?.model || target?.root);
+    if (target) target.recoil = { start: performance.now() + (melee ? 110 : 0) };
+    const damage = Math.round(Number(hit.damage || 0));
+    fxRef.current?.damageText(labelAt, `-${damage}${hit.crit ? '!' : ''}`, { crit: Boolean(hit.crit), color: targetKey === 'local' ? '#ff8a8a' : '#ffffff' });
+  };
+
   const requestSkill = async (slot) => {
     if (!active) { setError('The fight is not ready yet.'); return false; }
     if (!isMyTurn) { setError("Wait for your turn."); return false; }
@@ -294,16 +353,18 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (a.distanceTo(b) > Number(skill.range_m || 3) + 1.5) { setError('Out of range.'); return false; }
     setError('');
     const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
-    const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
-      const visualStarted = playSkill(runtimes.current.local, skill, opponent?.id, facingYaw, { castId, damage: cast.damage });
-      setLastCastSlot((s) => ({ ...s, local: Number(slot) }));
-      if (!visualStarted) console.warn('[PvP] skill accepted by server but local animation runtime did not start', skill?.effect_id || skill?.name);
+      showCast(user.id, skill, { ...cast, cast_id: cast.cast_id || castId, effect_id: cast.effect_id || skill.effect_id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id } }));
       return true;
-    } catch (e) { setError(e.message || 'Skill rejected.'); runtimes.current.local?.runtime?.playIdle?.(); return false; }
+    } catch (e) {
+      // Only report the rejection. Never force idle here: that would cut off an
+      // earlier ability that is still animating.
+      setError(e.message || 'Skill rejected.');
+      return false;
+    }
   };
 
   requestSkillRef.current = requestSkill;
@@ -329,7 +390,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     try {
       const body = await invoke('basic_attack', { match_id: match.id, cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
-      spawnBasicSlash(arenaVisualRef.current.scene, arenaVisualRef.current.camera, runtimes.current.opponent?.root);
+      const resolvedId = String(cast.cast_id || castId);
+      // Melee resolves on the server immediately, so show the full hit now.
+      showHitResult({ cast_id: resolvedId, attacker_id: user.id, target_id: opponent?.id, effect_id: 'basic_melee', result: 'hit', damage: cast.damage, crit: cast.crit });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_melee', matchId: match.id, cast_id: cast.cast_id || castId, effect_id: 'basic_melee', resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id, lock_on: true } }));
       return true;
     } catch (e) {
@@ -374,6 +437,44 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     } catch (e) { setError(e.message || 'Dodge rejected.'); }
   };
 
+  requestDodgeRef.current = requestDodge;
+  menuBlockedRef.current = escapeMenuOpen || surrendering;
+  const showCastRef = useRef(null);
+  const showMeleeSlashRef = useRef(null);
+  showCastRef.current = showCast;
+  showMeleeSlashRef.current = showMeleeSlash;
+
+  // Authoritative combat results. Both players see every hit (slash, flash,
+  // damage number) from the server's hit log, even if the peer relay drops the
+  // live message. Hits that happened before this arena mounted (e.g. after a
+  // reconnect) are not replayed.
+  useEffect(() => {
+    const log = Array.isArray(match?.hit_log) ? match.hit_log : [];
+    if (shownHits.current === null) {
+      shownHits.current = new Set(log.map((hit) => String(hit.cast_id || '')));
+      return;
+    }
+    if (loaded !== 2) return;
+    log.forEach((hit) => showHitResult(hit));
+  // showHitResult reads refs only; re-run when new hits arrive or fighters load.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match?.hit_log, loaded]);
+
+  // Start the opponent's ability animation from the server record when the
+  // peer relay did not deliver it.
+  useEffect(() => {
+    const cast = match?.last_cast;
+    if (!cast?.cast_id || loaded !== 2 || playedCasts.current.has(String(cast.cast_id))) return;
+    if (String(cast.attacker_id) === String(user?.id)) return;
+    const resolvesAt = Date.parse(cast.resolves_at || 0);
+    // Too old to animate meaningfully (reconnect, late poll): the hit log shows the result.
+    if (!resolvesAt || resolvesAt < Date.now() + serverOffsetRef.current - 300) return;
+    const skill = (opponentRef.current?.skills || []).find((row) => Number(row.slot) === Number(cast.slot))
+      || (opponentRef.current?.skills || []).find((row) => String(row.effect_id) === String(cast.effect_id));
+    showCast(cast.attacker_id, skill || null, cast);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match?.last_cast?.cast_id, loaded, user?.id]);
+
   useEffect(() => {
     if (!match?.id || !local || !opponent || !mountRef.current) return undefined;
     const mount = mountRef.current;
@@ -381,6 +482,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     scene.fog = new THREE.FogExp2(0x07101b, .025);
     const camera = new THREE.PerspectiveCamera(50, 1, .05, 100);
     arenaVisualRef.current = { scene, camera };
+    const fx = new CombatFx(scene, camera);
+    fxRef.current = fx;
     setLoaded(0);
     setGraphicsError(false);
     const renderer = arenaRenderer();
@@ -441,12 +544,14 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
+      // Peer relay is the fastest path; the server poll (hit_log / last_cast)
+      // shows the same action if this message never arrives.
       if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {
-        spawnBasicSlash(arenaVisualRef.current.scene, arenaVisualRef.current.camera, runtimes.current.local?.root);
+        showMeleeSlashRef.current?.(currentOpponent.id, d.cast_id);
         return;
       }
       const skill=(currentOpponent?.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (currentOpponent?.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
-      const a=positions.current.opponent,b=positions.current.local; playSkill(runtimes.current.opponent,skill,user.id,Math.atan2(b.x-a.x,b.z-a.z),d); setLastCastSlot((s)=>({...s,opponent:Number(skill.slot)}));
+      showCastRef.current?.(currentOpponent.id, skill, { cast_id: d.cast_id, effect_id: d.effect_id || skill.effect_id, resolves_at: d.resolves_at, damage: d.damage });
     };
     window.addEventListener('webrtcMovementUpdate',remoteMove); window.addEventListener('lunaAIBattleRemoteCardCast',remoteCast);
 
@@ -477,7 +582,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           const strafe = Number(held.current.has('KeyD')) - Number(held.current.has('KeyA'));
           const advance = Number(held.current.has('KeyW')) - Number(held.current.has('KeyS'));
           const inputLength = Math.hypot(strafe, advance);
-          if (inputLength) {
+          // Abilities root the caster until the authored clip finishes, so the
+          // body does not slide while the attack animation plays in place.
+          if (inputLength && !lf.runtime.isPlaying?.()) {
             // Lock-on movement is target-relative: W advances toward the opponent,
             // S retreats while still facing them, and A/D strafe around them.
             const targetX = op.x - lp.x;
@@ -499,26 +606,32 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
             const next = clampPos({ x: lp.x + dx * speed * dt, z: lp.z + dz * speed * dt }, box);
             lp.x = next.x;
             lp.z = next.z;
-            lf.runtime.playLocomotion?.(`${walking ? 'walk' : 'run'}_${moveAnim}`);
+            setMotion(lf, `${walking ? 'walk' : 'run'}_${moveAnim}`);
           } else {
-            lf.runtime.playIdle?.();
+            setMotion(lf, 'idle');
           }
         }
-        const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500||b.moving===false)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
+        const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;setMotion(of,(Date.now()-Number(b.receivedAt||0)>500||b.moving===false)?'idle':`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
-        lf.root.position.x=lp.x;lf.root.position.z=lp.z;of.root.position.x=op.x;of.root.position.z=op.z;
+        // Lunge/recoil offsets are presentation only; the logical positions
+        // (lp/op) that are sent to the server and the peer are unchanged.
+        const gap=Math.max(0.001,Math.hypot(op.x-lp.x,op.z-lp.z)); const towardX=(op.x-lp.x)/gap, towardZ=(op.z-lp.z)/gap;
+        const localPush=motionOffset(lf,now), opponentPush=motionOffset(of,now);
+        lf.root.position.x=lp.x+towardX*localPush;lf.root.position.z=lp.z+towardZ*localPush;
+        of.root.position.x=op.x-towardX*opponentPush;of.root.position.z=op.z-towardZ*opponentPush;
         // Auto-lock owns world facing even while an authored ability clip is
         // running. Push the continuously updated opponent yaw into both runtimes,
         // update the mixers, then re-apply wrapper rotation after animation so a
         // root-motion track can never turn a skill away from its target.
         lf.runtime.lockedFacingYaw=lf.yaw;of.runtime.lockedFacingYaw=of.yaw;
+        lf.mixer?.update(dt);of.mixer?.update(dt);
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
         lf.root.rotation.y=lf.yaw;of.root.rotation.y=of.yaw;
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
         if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         if(currentMatch?.status==='ended'){
           of.root.visible=false;
-          lf.runtime.playIdle?.();
+          setMotion(lf,'idle');
           const portraitZ=lp.z+(localSide==='host'?4.8:-4.8);
           const desired=new THREE.Vector3(lp.x,1.75,portraitZ);
           const faceYaw=Math.atan2(desired.x-lp.x,desired.z-lp.z);
@@ -531,6 +644,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           const away=new THREE.Vector3(lp.x-op.x,0,lp.z-op.z).normalize();const sideVec=new THREE.Vector3(-away.z,0,away.x);const targetShoulder=Math.abs(lp.x)>2?(lp.x>0?-1:1):shoulder;shoulder=THREE.MathUtils.lerp(shoulder,targetShoulder,1-Math.exp(-dt/0.4));const separation=lp.distanceTo(op);cameraDistance=THREE.MathUtils.lerp(cameraDistance,Math.min(9,Math.max(6.2,6.2+(separation-10)*.25)),1-Math.exp(-4*dt));const desired=new THREE.Vector3(lp.x,2.4,lp.z).addScaledVector(away,cameraDistance).addScaledVector(sideVec,2*shoulder);const look=new THREE.Vector3().lerpVectors(lp,op,.6);look.y=1.1;const factor=1-Math.exp(-6*dt);camera.position.lerp(desired,factor);camera.lookAt(look);
         }
       }
+      fx.update(now);
       renderer.render(scene,camera);cssRenderer.render(scene,camera);
     }; frame=requestAnimationFrame(animate);
 
@@ -545,6 +659,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
       barObjects.forEach(({ object }) => object.removeFromParent());
       queueMicrotask(() => barRoots.forEach((root) => root.unmount()));
+      fx.dispose();
+      if (fxRef.current === fx) fxRef.current = null;
       disposeArenaObjects(scene);
       runtimes.current.local?.runtime?.dispose?.();
       runtimes.current.opponent?.runtime?.dispose?.();
@@ -561,7 +677,54 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // Arena is recreated only for a new match; live match state is read by refs/cache overlays.
   }, [match?.id, local?.id, opponent?.id, graphicsAttempt]);
 
-  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space','Digit1','Digit2','Digit3','Digit4','Numpad1','Numpad2','Numpad3','Numpad4'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}const skillKey={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Numpad1:0,Numpad2:1,Numpad3:2,Numpad4:3}[e.code];if(skillKey!==undefined){e.preventDefault();requestSkillRef.current?.(skillKey);}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestMelee,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
+  // The arena owns the keyboard while a match is live. Keys are stopped here so
+  // dashboard shortcuts underneath (C = console, I = inventory, G, P, 0, …)
+  // cannot open panels or switch views in the middle of a fight. Registered
+  // once per match; current state is read through refs so re-renders never
+  // re-order this listener behind others.
+  useEffect(() => {
+    const MOVE_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight']);
+    const SKILL_KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3 };
+    const down = (e) => {
+      if (e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+      if (e.key === 'Escape' || matchRef.current?.status === 'ended') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation?.();
+      const skillKey = SKILL_KEYS[e.code];
+      if (menuBlockedRef.current) {
+        if (MOVE_KEYS.has(e.code) || e.code === 'Space' || skillKey !== undefined) e.preventDefault();
+        return;
+      }
+      if (MOVE_KEYS.has(e.code)) { held.current.add(e.code); e.preventDefault(); }
+      if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) requestDodgeRef.current?.(); }
+      if (skillKey !== undefined) { e.preventDefault(); if (!e.repeat) requestSkillRef.current?.(skillKey); }
+    };
+    const up = (e) => held.current.delete(e.code);
+    const clear = () => held.current.clear();
+    const visibility = () => { if (document.hidden) clear(); };
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
+    window.addEventListener('blur', clear);
+    document.addEventListener('visibilitychange', visibility);
+    // Dashboard hotbar clicks and other surfaces delegate to the arena through
+    // these wrappers. They always call the latest handlers (never a stale turn
+    // or cooldown snapshot).
+    const combat = {
+      active: true,
+      matchId: match?.id,
+      requestSkill: (slot) => requestSkillRef.current?.(Number(slot)),
+      requestMelee: () => requestMeleeRef.current?.(),
+      requestDodge: () => requestDodgeRef.current?.(),
+    };
+    window.__lunaPvPCombat = combat;
+    return () => {
+      window.removeEventListener('keydown', down, true);
+      window.removeEventListener('keyup', up, true);
+      window.removeEventListener('blur', clear);
+      document.removeEventListener('visibilitychange', visibility);
+      if (window.__lunaPvPCombat === combat) delete window.__lunaPvPCombat;
+    };
+  }, [match?.id]);
 
   useEffect(() => {
     const onEscape = (event) => {
@@ -596,6 +759,12 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   }, [ended, surrendering]);
 
   useEffect(()=>{const timer=window.setInterval(()=>setClockNow(Date.now()),100);return()=>window.clearInterval(timer);},[]);
+  // Action errors ("Wait for your turn", "On cooldown") are momentary hints.
+  useEffect(() => {
+    if (!error) return undefined;
+    const timer = window.setTimeout(() => setError(''), 2600);
+    return () => window.clearTimeout(timer);
+  }, [error]);
   const start=Date.parse(match?.fight_starts_at||0);const countdown=start?Math.max(0,start-(clockNow+serverOffsetMs)):0;const count=countdown>0?Math.ceil(countdown/1000):0;
   const opponentDisconnect = opponent?.id ? match?.disconnects?.[String(opponent.id)] : null;
   const reconnectLeftMs = opponentDisconnect ? Math.max(0, Date.parse(opponentDisconnect.reconnect_deadline || 0) - (clockNow + serverOffsetMs)) : 0;

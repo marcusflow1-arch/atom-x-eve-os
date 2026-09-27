@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useDashboardSession } from '@/components/social/dashboardSession';
 import { useAuth } from '@/components/auth/AuthContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
-import AIBattleSessionBridge from '@/components/battle/AIBattleSessionBridge';
-import PvPArenaStage from '@/components/battle/PvPArenaStage';
+import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
 import { base44 } from '@/api/base44Client';
 import { CREATOR_PARENTING_PREVIEW, canUseCreatorParentingPreview, findCreatorChildAnimation, findCreatorChildModel } from '@/components/parenting/parentingSystem';
 
@@ -19,16 +17,10 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
   const session = useDashboardSession();
   const [creatorChild, setCreatorChild] = useState(null);
 
-  // Read the exact cache owned/polled by the always-mounted AI Battle bridge.
-  // This observer never polls, so there is one status request cadence for PvP.
-  const { data: battleStatus } = useQuery({
-    queryKey: ['ai-battle-matchmaking', user?.id],
-    enabled: false,
-    queryFn: async () => ({}),
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
-    staleTime: Infinity,
-  });
+  // The PvP arena is owned by AIBattleHost at the page root so dashboard panel
+  // changes can never unmount a live match. This scene only steps aside while
+  // the arena is up, so two WebGL avatar stages do not render underneath it.
+  const { arenaActive } = useAIBattleSnapshot();
 
   const visitors = session.players.filter((p) => p.player_id !== session.host_id);
   const host = session.players.find((p) => p.player_id === session.host_id);
@@ -67,14 +59,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
     return () => { cancelled = true; };
   }, [showCreatorDaughter]);
 
-  const match = battleStatus?.match || null;
-  const isParticipant = Boolean(match?.id && user?.id && (match.player_ids || []).map(String).includes(String(user.id)));
-  // `matched` is only a reserved pair. Keep the normal dashboard visible until
-  // BOTH browser clients acknowledge the same match and the server promotes it
-  // to `connecting`; only then can either client mount the PvP arena.
-  const showArena = isParticipant && ['connecting', 'countdown', 'fighting', 'ended'].includes(String(match?.status || ''));
-  const serverOffsetMs = Number(battleStatus?.server_time || Date.now()) - Date.now();
-
   const roster = host ? [...visitors.slice().reverse(), host] : [];
   const socialAvatarStage = roster.length > 1 ? (
     <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{ right: 'min(410px, 36vw)' }} aria-label="Shared dashboard">
@@ -91,10 +75,9 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   return (
     <>
-      <AIBattleSessionBridge />
       <EnvironmentHubStageLayer />
-      {showArena ? <PvPArenaStage match={match} serverOffsetMs={serverOffsetMs} /> : socialAvatarStage}
-      {(session.status === 'connecting' || session.error) && !showArena && (
+      {arenaActive ? null : socialAvatarStage}
+      {(session.status === 'connecting' || session.error) && !arenaActive && (
         <div role="status" className="absolute left-4 top-4 z-40 max-w-xs rounded-xl bg-slate-950/85 p-3 text-xs text-white/80">
           {session.error || 'Connecting to dashboard…'}
           {session.host_id !== user?.id && <button type="button" className="mt-2 block text-cyan-200" onClick={() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user.id}`, hostId: user.id, hostName: 'My' } }))}>Return to my dashboard</button>}
