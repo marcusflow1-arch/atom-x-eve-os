@@ -203,16 +203,31 @@ export class GetsugaDashboardRuntime {
       this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
     }
 
-    this.attackAction = this.mixer.clipAction(attackClip);
-    this.attackAction.setLoop(THREE.LoopOnce, 1);
-    this.attackAction.clampWhenFinished = true;
+    const activeClipNames = new Set(['GetsugaTensho', 'Chidori_Attack_01', 'Chidori_Ultimate']);
+    for (const clip of clips) {
+      if (!activeClipNames.has(String(clip?.name || ''))) continue;
+      const abilityAction = this.mixer.clipAction(clip);
+      abilityAction.setLoop(THREE.LoopOnce, 1);
+      abilityAction.clampWhenFinished = true;
+      this.abilityActions.set(clip.name, abilityAction);
+    }
+    if (!this.abilityActions.has('GetsugaTensho')) {
+      const abilityAction = this.mixer.clipAction(attackClip);
+      abilityAction.setLoop(THREE.LoopOnce, 1);
+      abilityAction.clampWhenFinished = true;
+      this.abilityActions.set('GetsugaTensho', abilityAction);
+    }
+    this.attackAction = this.abilityActions.get('GetsugaTensho');
 
     this.finishedHandler = (event) => {
-      if (event.action !== this.attackAction) return;
+      if (event.action !== this.activeAction) return;
       const target = this.activeTarget;
+      const action = this.activeAction;
       this.playing = false;
       this.onEvent('end', {
-        time: this.attackAction?.time || attackClip.duration,
+        effectId: this.activeEffectId,
+        clipName: this.activeClipName,
+        time: action?.time || action?.getClip?.()?.duration || 0,
         frame: 1,
         target,
         damage: Number(target?.damage) || 50,
@@ -257,39 +272,44 @@ export class GetsugaDashboardRuntime {
   }
 
   play(target = null) {
-    if (!this.ready || this.disposed || this.paused || !this.attackAction || this.playing) return false;
+    return this.playEffect({ id: 'getsuga_tensho', clip_name: 'GetsugaTensho' }, { target });
+  }
+
+  playEffect(effect = {}, detail = {}) {
+    if (!this.ready || this.disposed || this.paused || this.playing) return false;
+    const clipName = String(effect?.clip_name || effect?.clipName || (String(effect?.id || '') === 'getsuga_tensho' ? 'GetsugaTensho' : ''));
+    const nextAction = this.abilityActions.get(clipName);
+    if (!nextAction) return false;
 
     const globalTarget = typeof window !== 'undefined' ? window.__lunaAIBattleTarget : null;
-    this.activeTarget = target || globalTarget || null;
-
-    // AI Battle is target-locked. Resolve the opponent once at cast start and
-    // keep the same facing + target through the entire animation. The character
-    // does not turn again at release/impact, so the cast cannot flip away from
-    // the opponent mid-swing.
+    this.activeTarget = detail?.target || globalTarget || null;
     const targetYaw = Number(this.activeTarget?.facingYaw);
     this.lockedFacingYaw = Number.isFinite(targetYaw) ? targetYaw : this.defaultFacingYaw;
     if (this.group) this.group.rotation.y = this.lockedFacingYaw;
 
     this.playing = true;
     this.fired.clear();
+    this.activeAction = nextAction;
+    this.activeClipName = clipName;
+    this.activeEffectId = String(effect?.id || '');
+    this.activeEvents = ADAM_XE_ABILITY_EVENTS[clipName] || { impact: Math.max(0, Number(effect?.hit_ms || 0) / 1000), end: nextAction.getClip?.()?.duration || 0 };
 
-    this.attackAction.enabled = true;
-    this.attackAction.reset();
-    this.attackAction.setEffectiveTimeScale(1);
-    this.attackAction.setEffectiveWeight(1);
-    this.attackAction.play();
+    nextAction.enabled = true;
+    nextAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
 
-    if (this.fxRoot && this.fxAttackAction) {
+    if (clipName === 'GetsugaTensho' && this.fxRoot && this.fxAttackAction) {
       this.fxRoot.visible = true;
       this.fxAttackAction.enabled = true;
       this.fxAttackAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
     }
 
-    if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(this.attackAction, 0.16, false);
-    else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
+    if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(nextAction, 0.16, false);
+    else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(nextAction, 0.2, false);
     else this.idleAction?.stop();
 
     this.onEvent('castStart', {
+      effectId: this.activeEffectId,
+      clipName,
       time: 0,
       frame: 1,
       target: this.activeTarget,
@@ -315,8 +335,12 @@ export class GetsugaDashboardRuntime {
 
     if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(this.idleAction, 0.16, false);
     this.currentLocomotion = null;
-    if (blend && this.attackAction) this.attackAction.crossFadeTo(this.idleAction, 0.35, false);
-    else this.attackAction?.stop();
+    if (blend && this.activeAction?.isRunning?.()) this.activeAction.crossFadeTo(this.idleAction, 0.35, false);
+    else this.activeAction?.stop?.();
+    this.activeAction = null;
+    this.activeClipName = '';
+    this.activeEffectId = '';
+    this.activeEvents = GETSUGA_EVENTS;
     this.fxAttackAction?.stop?.();
     if (this.fxRoot) this.fxRoot.visible = false;
 
