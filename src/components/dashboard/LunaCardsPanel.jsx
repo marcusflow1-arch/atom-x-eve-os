@@ -144,14 +144,14 @@ export default function LunaCardsPanel() {
   const equipSkill = async (slot, skill) => {
     if (!skill?.owned || !skill?.user_card_id) return;
     if (skill.can_equip === false) {
-      showError(new Error(skill.equip_error || 'This skill is unavailable for your current avatar.'), 'Equip Skill');
+      showError(skill.equip_error || 'This skill is unavailable for your current avatar.', 'Equip Skill');
       return;
     }
     try {
       await equip(slot, skill.user_card_id);
       showSuccess(`${skill.title} equipped to Skill Slot ${slot + 1}.`);
     } catch (error) {
-      showError(error, 'Equip Skill');
+      showError(error?.message || String(error || 'Unable to equip this skill.'), 'Equip Skill');
     }
   };
 
