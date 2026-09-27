@@ -7,21 +7,24 @@ import { Package, Clock, CheckCircle, XCircle, ChevronRight, ShoppingBag } from 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatMoney } from '@/lib/storeCheckout';
 import { motion } from 'framer-motion';
 
 export default function OrdersPage() {
     const { user } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchOrders = async () => {
             if (user) {
                 try {
-                    const userOrders = await base44.entities.Order.filter({ user_id: user.id }, { created_date: -1 });
+                    const userOrders = await base44.entities.Order.filter({ user_id: user.id }, '-created_date', 100);
                     setOrders(userOrders);
                 } catch (error) {
                     console.error("Failed to fetch orders:", error);
+                    setError("Your order history could not be loaded. Refresh this page to try again.");
                 }
             }
             setLoading(false);
@@ -75,7 +78,8 @@ export default function OrdersPage() {
                     </Button>
                 </div>
 
-                {orders.length === 0 ? (
+                {error && <p role="alert" className="mb-6 text-rose-300">{error}</p>}
+                {!error && orders.length === 0 ? (
                     <Card className="bg-slate-900 border-slate-800 text-center py-16">
                         <CardContent>
                             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -120,7 +124,7 @@ export default function OrdersPage() {
                                                 </Badge>
                                                 <div className="text-right">
                                                     <div className="text-sm text-slate-500 uppercase">Total</div>
-                                                    <div className="text-xl font-bold text-white">{order.total_amount?.toLocaleString()} AGP</div>
+                                                    <div className="text-xl font-bold text-white">{formatMoney(order.total_amount, order.currency)}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -139,11 +143,14 @@ export default function OrdersPage() {
                                                         <div className="text-sm text-slate-500">Qty: {item.quantity}</div>
                                                     </div>
                                                     <div className="text-white font-medium">
-                                                        {item.price?.toLocaleString()} AGP
+                                                        {formatMoney(item.price, order.currency)}
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
+                                        <Link to={'/OrderConfirmation?orderId=' + encodeURIComponent(order.id)} className="mt-6 inline-flex items-center gap-2 text-sm text-cyan-300">
+                                            {order.status === 'pending' ? (order.payment_status === 'paid' ? 'Resume delivery' : 'Check payment status') : 'View purchase details'}<ChevronRight size={16} />
+                                        </Link>
                                     </CardContent>
                                 </Card>
                             </motion.div>

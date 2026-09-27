@@ -62,8 +62,8 @@ export const CartProvider = ({ children }) => {
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (itemId) => {
-    setCart((prevCart) => prevCart.filter(item => item.id !== itemId));
+  const removeFromCart = (itemId, itemType) => {
+    setCart((prevCart) => prevCart.filter(item => item.id !== itemId || (itemType && item.type !== itemType)));
   };
 
   const clearCart = () => {
