@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 import { BASIC_MELEE, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
+import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
 
 type Row = Record<string, any>;
@@ -168,14 +169,18 @@ async function freezeSkills(svc: any, userId: string, gender: string) {
     const card = await getOptional(svc.UserCard, String(cardId));
     if (!card || String(card.user_id) !== String(userId) || !skillEquipStatus(card, gender).can_equip) continue;
     const progressionRows = await svc.CardProgression.filter({ user_id: userId, user_card_id: String(card.id) }, '-updated_date', 1).catch(() => []);
-    const level = Math.max(1, Number(progressionRows?.[0]?.level || 1));
+    const progression = progressionRows?.[0] || null;
     const effect = card.animation_effect || {};
     const effectId = String(effect.id || '');
     const stats = skillStats(effectId, card.card_rarity || 'Common');
+    const rawDamage = Number(effect.base_damage || stats.base_damage);
+    const combat = effectiveCardDamage(rawDamage, progression);
     out.push({
       slot, user_card_id: String(card.id), name: card.card_name || 'Ability', image: card.card_image || '', rarity: card.card_rarity || 'Common',
       effect_id: effectId, clip_name: effect.clip_name || '', duration_ms: Number(effect.duration_ms || stats.hit_ms || 400),
-      cooldown_ms: Number(stats.cooldown_ms), atb_cost: Number(stats.atb_cost), range_m: Number(stats.range_m), base_damage: Number(stats.base_damage), kind: stats.kind, hit_ms: Number(stats.hit_ms), level,
+      cooldown_ms: Number(effect.cooldown_ms || stats.cooldown_ms), atb_cost: Number(effect.atb_cost || stats.atb_cost), range_m: Number(effect.range_m || stats.range_m),
+      base_damage: rawDamage, effective_base_damage: combat.effective_damage, damage_multiplier: combat.multiplier, progression_bonus_percent: combat.bonus_percent,
+      kind: stats.kind, hit_ms: Number(effect.hit_ms || stats.hit_ms), level: combat.level, stage: combat.stage, ascension: combat.ascension, over_enchant_rank: combat.over_enchant_rank,
       animation_effect: effect,
     });
   }
@@ -854,7 +859,11 @@ Deno.serve(async (req) => {
       const proposedA=clampPos(match,userId,data.attacker_pos||storedA); const proposedT=clampPos(match,targetId,data.target_pos||storedT);
       const attackerPos=distance2D(proposedA,storedA)>3?storedA:proposedA; const targetPos=distance2D(proposedT,storedT)>3?storedT:proposedT;
       if(distance2D(attackerPos,targetPos)>Number(skill.range_m||3)+1.5) return json({error:'Out of range.'},409);
-      const crit=Math.random()<0.10; const variance=0.95+Math.random()*0.10; const damage=Math.round(Number(skill.base_damage||40)*(1+0.03*(Math.max(1,Number(skill.level||1))-1))*variance*(crit?1.5:1));
+      const crit=Math.random()<0.10; const variance=0.95+Math.random()*0.10;
+      // Card progression is frozen into effective_base_damage when the match
+      // begins. Do not re-apply a separate level multiplier here or upgraded
+      // cards would scale twice.
+      const damage=Math.round(Number(skill.effective_base_damage||skill.base_damage||40)*variance*(crit?1.5:1));
       const castId=String(data.cast_id||crypto.randomUUID()); const resolvesAt=new Date(now+Number(skill.hit_ms||400)).toISOString();
       const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',damage,crit,resolves_at:resolvesAt}];
       const atb=turnAtb(match,targetId,now);
