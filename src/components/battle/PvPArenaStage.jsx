@@ -130,6 +130,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [surrenderConfirm, setSurrenderConfirm] = useState(false);
   const [surrendering, setSurrendering] = useState(false);
   const returningRef = useRef(false);
+  const readySentRef = useRef('');
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
   const requestSkillRef = useRef(null);
@@ -155,11 +156,18 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const won = ended && String(match.winner_id) === String(user?.id);
 
   const invoke = async (action, data) => {
-    const response = await base44.functions.invoke('aiBattleMatchmaker', { action, data });
-    const body = response?.data ?? response ?? {};
-    if (body?.error) { const e = new Error(body.error); e.status = response?.status || 409; throw e; }
-    if (Object.prototype.hasOwnProperty.call(body, 'match')) queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, match: body.match || null, queue: Object.prototype.hasOwnProperty.call(body, 'queue') ? body.queue : prev.queue, server_time: body.server_time || prev.server_time }));
-    return body;
+    try {
+      const response = await base44.functions.invoke('aiBattleMatchmaker', { action, data });
+      const body = response?.data ?? response ?? {};
+      if (body?.error) { const e = new Error(body.error); e.status = response?.status || 409; throw e; }
+      if (Object.prototype.hasOwnProperty.call(body, 'match')) queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, match: body.match || null, queue: Object.prototype.hasOwnProperty.call(body, 'queue') ? body.queue : prev.queue, server_time: body.server_time || prev.server_time }));
+      return body;
+    } catch (error) {
+      const body = error?.response?.data?.data ?? error?.response?.data ?? error?.body ?? null;
+      const next = new Error(body?.error || body?.message || error?.message || 'PvP request failed.');
+      next.status = error?.response?.status || error?.status || 500;
+      throw next;
+    }
   };
 
   const returnToDashboard = useCallback(async () => {
