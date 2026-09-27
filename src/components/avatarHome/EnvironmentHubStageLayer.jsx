@@ -38,8 +38,10 @@ export default function EnvironmentHubStageLayer() {
   const battleBridge = useAIBattleQueue();
   const queueStatus = String(battleBridge.queue?.status || '');
   const matchStatus = String(battleBridge.match?.status || '');
-  const pvpCombatMusicActive = queueStatus === 'waiting'
-    || ['matched', 'countdown', 'fighting'].includes(matchStatus);
+  const queuedForPvp = queueStatus === 'waiting' && String(battleBridge.queue?.mode || '') === 'pvp';
+  const activePvpMatch = String(battleBridge.match?.mode || '') === 'pvp'
+    && ['matched', 'countdown', 'fighting'].includes(matchStatus);
+  const pvpCombatMusicActive = queuedForPvp || activePvpMatch;
 
   // Reuse the exact GameWorld3D combat/boss BGM for PvP. The loop helper is
   // idempotent by key, so waiting -> matched -> countdown -> fighting keeps one
