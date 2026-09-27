@@ -3,10 +3,14 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import useCardCollection from '@/components/cards/useCardCollection';
+import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
 
-const GENRES = ['Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
+const ADAM_XE_GAME_ID = '6ab999b5fce1745ff0577551';
+const GENRES = ['Adam XE', 'Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
 
 const MOCK_GAMES_BY_GENRE = {
+  'Adam XE': ['Adam XE'],
   'Fear': ['Resident Evil', 'Silent Hill', 'Outlast', 'Amnesia'],
   'Shooter': ['Doom', 'Halo', 'Cyberpunk', 'Apex'],
   'RPG': ['Witcher', 'Skyrim', 'Fallout', 'Persona'],
@@ -78,7 +82,7 @@ const GENRE_CARDS = {
   ],
 };
 
-const CardUI = ({ card, small }) => {
+const CardUI = ({ card, small, onOpen }) => {
   const RARITY_STYLES = {
     Common: { border: 'border-slate-500/40', text: 'text-slate-400', glow: '' },
     Rare: { border: 'border-blue-500/50', text: 'text-blue-300', glow: 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' },
@@ -89,7 +93,8 @@ const CardUI = ({ card, small }) => {
   
   return (
     <div
-      className={`w-full h-full rounded overflow-hidden border ${rs.border} ${rs.glow} relative group select-none flex flex-col items-center justify-center bg-black/60 hover:scale-105 transition-transform duration-200`}
+      onClick={onOpen}
+      className={`w-full h-full rounded overflow-hidden border ${rs.border} ${rs.glow} relative group select-none flex flex-col items-center justify-center bg-black/60 hover:scale-105 transition-transform duration-200 ${onOpen ? 'cursor-pointer' : ''}`}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <img src={card.image} alt="" className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
@@ -101,13 +106,16 @@ const CardUI = ({ card, small }) => {
           <span className={small ? 'text-2xl' : 'text-3xl'}>{card.icon}</span>
         </div>
         <p className={`text-white font-bold truncate text-center ${small ? 'text-[8px]' : 'text-[10px]'}`}>{card.name}</p>
+        {card.level ? <p className="mt-0.5 text-center text-[6px] font-bold uppercase tracking-wider text-cyan-200/65">Lv {card.level}{card.combatBonus ? ` · +${card.combatBonus}% PvP` : ''}</p> : null}
       </div>
     </div>
   );
 };
 
 export default function CardCollectionBrowser() {
+  const collection = useCardCollection({ game_id: ADAM_XE_GAME_ID });
   const [showFullView, setShowFullView] = useState(false);
+  const [detailCard, setDetailCard] = useState(null);
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedGame, setSelectedGame] = useState(null);
   const [gamesHovered, setGamesHovered] = useState(false);
@@ -122,18 +130,38 @@ export default function CardCollectionBrowser() {
   const gamesScrollRef = useRef(null);
   const wheelCooldown = useRef(false);
 
+  const adamXeCards = useMemo(() => (collection.cards || []).map((card) => ({
+    id: String(card.user_card_id || card.trading_card_id || card.id),
+    game: 'Adam XE', name: card.name, icon: card.animation_effect?.vfx === 'chidori' ? '⚡' : '✦',
+    rarity: card.rarity || 'Unique', image: card.image || card.image_url || '',
+    level: Number(card.progression?.level || 1),
+    combatBonus: Number(card.progression?.combat?.bonus_percent || 0),
+    owned: Boolean(card.owned),
+    detail: {
+      ...card,
+      id: card.id,
+      title: card.name,
+      image: card.image || card.image_url || '',
+      gameId: card.game_id,
+      genre: 'Adam XE',
+      userCardId: card.user_card_id || null,
+      trading_card_id: card.trading_card_id || card.id,
+    },
+  })), [collection.cards]);
+
   const visibleCards = useMemo(() => {
     let all = [];
     if (selectedGenre === 'All') {
+       all.push(...adamXeCards);
        Object.values(GENRE_CARDS).forEach(arr => all.push(...arr));
+    } else if (selectedGenre === 'Adam XE') {
+       all = adamXeCards;
     } else {
        all = GENRE_CARDS[selectedGenre] || [];
-       if (selectedGame) {
-          all = all.filter(c => c.game === selectedGame);
-       }
     }
+    if (selectedGame) all = all.filter(c => c.game === selectedGame);
     return all;
-  }, [selectedGenre, selectedGame]);
+  }, [selectedGenre, selectedGame, adamXeCards]);
 
   const onDragEnd = (result) => {
     const { source, destination } = result;
