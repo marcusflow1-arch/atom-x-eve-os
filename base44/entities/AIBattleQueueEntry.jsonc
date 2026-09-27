@@ -2,12 +2,21 @@
   "name": "AIBattleQueueEntry",
   "type": "object",
   "properties": {
-    "user_id": { "type": "string" },
-    "player_name": { "type": "string" },
-    "avatar_url": { "type": "string" },
+    "user_id": {
+      "type": "string"
+    },
+    "player_name": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
     "avatar_gender": {
       "type": "string",
-      "enum": ["male", "female"],
+      "enum": [
+        "male",
+        "female"
+      ],
       "description": "The player's selected Luna body. Matchmaking is gender-agnostic; this is rendering metadata only."
     },
     "avatar_model_url": {
@@ -20,30 +29,82 @@
     },
     "mode": {
       "type": "string",
-      "enum": ["pvp", "pve", "world_boss"]
+      "enum": [
+        "pvp",
+        "pve",
+        "world_boss"
+      ]
     },
     "status": {
       "type": "string",
-      "enum": ["waiting", "matched", "cancelled"],
+      "enum": [
+        "waiting",
+        "matched",
+        "cancelled"
+      ],
       "default": "waiting"
     },
-    "request_id": { "type": "string" },
+    "request_id": {
+      "type": "string"
+    },
     "client_session_id": {
       "type": "string",
       "description": "Diagnostic id for the most recent browser/editor/live surface touching this queue. Queue ownership is account-level; a different surface for the same user does not invalidate the queue or match."
     },
-    "queued_at": { "type": "string", "format": "date-time" },
-    "last_seen_at": { "type": "string", "format": "date-time" },
-    "matched_at": { "type": "string", "format": "date-time" },
-    "match_id": { "type": "string" },
-    "host_id": { "type": "string" },
-    "opponent_id": { "type": "string" }
+    "queued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "matched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ready_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set by the PvP client only after that player's arena fighter has finished loading."
+    },
+    "match_id": {
+      "type": "string"
+    },
+    "host_id": {
+      "type": "string"
+    },
+    "opponent_id": {
+      "type": "string"
+    }
   },
-  "required": ["user_id", "mode", "status", "queued_at", "last_seen_at"],
+  "required": [
+    "user_id",
+    "mode",
+    "status",
+    "queued_at",
+    "last_seen_at"
+  ],
   "rls": {
-    "read": { "user_condition": { "role": "admin" } },
-    "create": { "user_condition": { "role": "admin" } },
-    "update": { "user_condition": { "role": "admin" } },
-    "delete": { "user_condition": { "role": "admin" } }
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
   }
 }
