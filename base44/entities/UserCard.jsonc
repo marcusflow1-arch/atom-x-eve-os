@@ -127,6 +127,14 @@
     "acquired_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "starter_grant_user_id": {
+      "type": "string",
+      "description": "Original recipient of a fixed avatar starter grant; retained across transfers."
+    },
+    "starter_grant_key": {
+      "type": "string",
+      "description": "Approved avatar starter effect key. Used to prevent repeat grants after transfer."
     }
   },
   "required": [

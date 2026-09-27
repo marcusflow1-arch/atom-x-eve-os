@@ -98,7 +98,9 @@ export function useSkillBookLoadout() {
       let body = unwrap(response);
       if (body?.error) throw new Error(body.error);
       const effects = new Set((body.skills || []).map((skill) => String(skill?.card?.animation_effect?.id || skill?.animation_effect?.id || '')));
-      const required = ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam'];
+      const required = body.avatar_gender === 'female'
+        ? ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam']
+        : ['getsuga_tensho'];
       if (required.some((id) => !effects.has(id))) {
         const bootstrap = await base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} });
         body = unwrap(bootstrap);
