@@ -1058,81 +1058,58 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
                   </section>
 
                   {/* About This Game */}
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-xl font-bold text-white border-b border-white/10 pb-2">About This Game</h3>
-                    <p className="text-white/70 leading-relaxed text-sm">
-                      {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
-                    </p>
-                    <p className="text-white/70 leading-relaxed text-sm">
-                      Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
-                    </p>
-                  </div>
-
-                  {/* Content Updates & Patch Notes */}
-                  <div className="space-y-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Package className="w-5 h-5 text-cyan-400" />
-                        Content Updates
-                      </h3>
-                      <span className="text-[10px] text-white/30 uppercase tracking-wider">Recent Patch Notes</span>
+                  <section className="rounded-2xl border border-[#d7dbe0] bg-white p-6 shadow-[0_14px_40px_rgba(31,36,42,0.04)]">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7a838d]">Game overview</span>
+                    <h3 className="mt-1 text-2xl font-semibold tracking-tight text-[#252a31]">About This Game</h3>
+                    <div className="mt-4 grid gap-5 text-sm leading-7 text-[#626b74] md:grid-cols-2">
+                      <p>{game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}</p>
+                      <p>Explore unique biomes, customize your loadout with weapons, armor, and abilities, and approach the experience alone or alongside other players.</p>
                     </div>
-                    <div className="space-y-3">
+                  </section>
+
+                  {/* Content Updates — light detailed changelog */}
+                  <section className="space-y-5" aria-labelledby="content-updates-title">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7a838d]">Developer changelog</span>
+                        <h3 id="content-updates-title" className="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight text-[#252a31]"><Package className="h-5 w-5 text-cyan-700" /> Content Updates</h3>
+                        <p className="mt-1 text-sm text-[#6b737c]">Recent patches, content drops, and hotfixes in one compact timeline.</p>
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9299a1]">Recent patch notes</span>
+                    </div>
+
+                    <div className="overflow-hidden rounded-2xl border border-[#d7dbe0] bg-white shadow-[0_16px_44px_rgba(31,36,42,0.05)]">
                       {[
-                        {
-                          version: 'v2.4.1',
-                          date: 'Mar 28, 2026',
-                          type: 'patch',
-                          title: 'Stability & Balance Update',
-                          notes: ['Fixed crash on loading certain maps', 'Adjusted weapon damage scaling for PvP', 'Performance improvements for mid-range GPUs']
-                        },
-                        {
-                          version: 'v2.4.0',
-                          date: 'Mar 15, 2026',
-                          type: 'update',
-                          title: 'Season 2 Content Drop',
-                          notes: ['Added 3 new biome zones', 'Introduced ranked PvP ladder system', 'New legendary equipment tier unlocked']
-                        },
-                        {
-                          version: 'v2.3.2',
-                          date: 'Feb 20, 2026',
-                          type: 'hotfix',
-                          title: 'Hotfix — Item Duplication Bug',
-                          notes: ['Resolved item duplication exploit in Marketplace', 'Minor UI fixes for inventory overlays']
-                        },
+                        { version: 'v2.4.1', date: 'Mar 28, 2026', type: 'patch', title: 'Stability & Balance Update', notes: ['Fixed crash on loading certain maps', 'Adjusted weapon damage scaling for PvP', 'Performance improvements for mid-range GPUs'] },
+                        { version: 'v2.4.0', date: 'Mar 15, 2026', type: 'update', title: 'Season 2 Content Drop', notes: ['Added 3 new biome zones', 'Introduced ranked PvP ladder system', 'New legendary equipment tier unlocked'] },
+                        { version: 'v2.3.2', date: 'Feb 20, 2026', type: 'hotfix', title: 'Hotfix — Item Duplication Bug', notes: ['Resolved item duplication exploit in Marketplace', 'Minor UI fixes for inventory overlays'] },
                       ].map((patch, i) => {
                         const typeConfig = {
-                          patch:   { label: 'Patch',   icon: Bug,             color: 'text-yellow-400 bg-yellow-900/20 border-yellow-700/30' },
-                          update:  { label: 'Update',  icon: ArrowUpCircle,   color: 'text-cyan-400 bg-cyan-900/20 border-cyan-700/30' },
-                          hotfix:  { label: 'Hotfix',  icon: Sparkles,        color: 'text-red-400 bg-red-900/20 border-red-700/30' },
+                          patch: { label: 'Patch', icon: Bug, badge: 'border-amber-200 bg-amber-50 text-amber-700' },
+                          update: { label: 'Update', icon: ArrowUpCircle, badge: 'border-cyan-200 bg-cyan-50 text-cyan-700' },
+                          hotfix: { label: 'Hotfix', icon: Sparkles, badge: 'border-rose-200 bg-rose-50 text-rose-700' },
                         }[patch.type];
                         const TypeIcon = typeConfig.icon;
                         return (
-                          <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/[0.07] transition-colors">
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                              <div className="flex items-center gap-3">
-                                <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${typeConfig.color}`}>
-                                  <TypeIcon className="w-3 h-3" /> {typeConfig.label}
-                                </span>
-                                <span className="text-white font-bold text-sm">{patch.title}</span>
+                          <article key={i} className="grid gap-4 border-b border-[#e0e3e6] px-5 py-5 last:border-0 md:grid-cols-[125px_minmax(0,1fr)] md:px-6">
+                            <div className="md:border-r md:border-[#e1e4e7] md:pr-5">
+                              <div className="text-sm font-semibold text-[#383e44]">{patch.version}</div>
+                              <time className="mt-1 block text-[10px] uppercase tracking-[0.08em] text-[#8a9199]">{patch.date}</time>
+                            </div>
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2.5">
+                                <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${typeConfig.badge}`}><TypeIcon className="h-3 w-3" />{typeConfig.label}</span>
+                                <h4 className="text-sm font-semibold text-[#30363c]">{patch.title}</h4>
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0 text-right">
-                                <span className="text-[10px] font-mono text-white/30">{patch.version}</span>
-                                <span className="text-[10px] text-white/20">{patch.date}</span>
+                              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                {patch.notes.map((note, j) => <div key={j} className="flex items-start gap-2 rounded-lg bg-[#f6f7f8] px-3 py-2.5 text-xs leading-5 text-[#606872]"><span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-cyan-700" />{note}</div>)}
                               </div>
                             </div>
-                            <ul className="space-y-1">
-                              {patch.notes.map((note, j) => (
-                                <li key={j} className="text-xs text-white/50 flex items-start gap-2">
-                                  <span className="text-cyan-500/50 mt-0.5">•</span> {note}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                          </article>
                         );
                       })}
                     </div>
-                  </div>
+                  </section>
                 </div>
               </div>
 
