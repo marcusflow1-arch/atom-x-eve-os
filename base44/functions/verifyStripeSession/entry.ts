@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import Stripe from 'npm:stripe@16.12.0';
 import { grantEntitlement, ownsItem } from '../../shared/entitlements.ts';
 import { grantCard } from '../../shared/rewardEngine.ts';

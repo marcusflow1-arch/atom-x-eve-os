@@ -1,5 +1,5 @@
 import {normalizeAvatarAppearance} from '../../shared/normalizeAvatarAppearance.ts';
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
 
