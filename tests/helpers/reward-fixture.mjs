@@ -126,6 +126,7 @@ export function makeRewardFixture() {
               else if(op==='$inc')setPath(row,field,(current??0)+value);
               else if(op==='$max')setPath(row,field,Math.max(current??-Infinity,value));
               else if(op==='$addToSet')setPath(row,field,[...new Set([...(current||[]),value])]);
+              else if(op==='$push')setPath(row,field,[...(current||[]),value]);
               else throw new Error('Unsupported fixture update '+op);
             }
             validate(name,row);updated++;

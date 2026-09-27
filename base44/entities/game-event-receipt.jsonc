@@ -35,11 +35,19 @@
       "type": "array",
       "items": {
         "type": "object"
-      }
+      },
+      "default": []
     },
     "completed_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "processed_achievement_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
   "required": [

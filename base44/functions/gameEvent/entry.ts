@@ -77,8 +77,10 @@ Deno.serve(async (req) => {
     });
 
     const eventReceiptKey = rewardKey('game-event', gameId, eventId);
-    const results: Row[] = [];
+    const processed = new Set(receipt.processed_achievement_ids || []);
     for (const rule of receipt.achievement_rules || []) {
+      if (processed.has(rule.id)) continue;
+      let result: Row;
       let record = await ensureKeyedRecord(svc.UserAchievement, { user_id: userId, achievement_id: rule.id });
       if (record.status !== 'unlocked') {
         const previous = Number(record.verified_event_value ?? 0);
@@ -87,21 +89,30 @@ Deno.serve(async (req) => {
         // Proof metadata and the legacy progress.event_value are not authority.
         await conditionalUpdate(svc.UserAchievement, {
           id: record.id, user_id: userId, status: { $ne: 'unlocked' }, verified_event_ids: { $nin: [eventReceiptKey] },
+          $or: [{ verified_event_value: { $exists: false } }, { verified_event_value: { $lte: Number.MAX_SAFE_INTEGER - value } }],
         }, { $inc: { verified_event_value: value }, $addToSet: { verified_event_ids: eventReceiptKey } });
         record = await svc.UserAchievement.get(record.id);
+        if (record.status !== 'unlocked' && !(record.verified_event_ids || []).includes(eventReceiptKey)) throw rewardError('Event progress changed during delivery; retry the event', 503);
       }
       const current = Number(record.verified_event_value ?? 0);
       const progress = { event_key: eventKey, event_value: current, threshold: rule.threshold, occurred_at: payload.occurred_at };
       if (record.status === 'unlocked' || current >= rule.threshold) {
         const granted = await grantAchievement(svc, userId, rule.id, 'game_event', { progress, current, total: rule.threshold });
-        results.push({ achievement_id: rule.id, unlocked: true, already_unlocked: Boolean(granted.alreadyUnlocked), user_card_id: granted.userCard?.id || null });
+        result = { achievement_id: rule.id, unlocked: true, already_unlocked: Boolean(granted.alreadyUnlocked), user_card_id: granted.userCard?.id || null };
       } else {
         await conditionalUpdate(svc.UserAchievement, { id: record.id, status: { $ne: 'unlocked' }, verified_event_value: current }, {
           $set: { status: 'in_progress', source: 'game_event', progress },
         });
-        results.push({ achievement_id: rule.id, unlocked: false, current, threshold: rule.threshold });
+        result = { achievement_id: rule.id, unlocked: false, current, threshold: rule.threshold };
       }
+      // Checkpoint each completed target so a large batch resumes past prior work.
+      await conditionalUpdate(svc.GameEventReceipt, { id: receipt.id, processed_achievement_ids: { $nin: [rule.id] } }, {
+        $addToSet: { processed_achievement_ids: rule.id }, $push: { results: result },
+      });
     }
+    receipt = await svc.GameEventReceipt.get(receipt.id);
+    const results: Row[] = receipt.results || [];
+    if (!(receipt.achievement_rules || []).every((rule: Row) => (receipt.processed_achievement_ids || []).includes(rule.id))) throw rewardError('Event delivery is incomplete; retry the event', 503);
     await svc.GameEventReceipt.update(receipt.id, { status: 'completed', results, completed_at: new Date().toISOString() });
     return json({ success: true, duplicate: false, game_id: gameId, event_id: eventId, event_key: eventKey, matched: results.length, results });
   } catch (error: any) {
