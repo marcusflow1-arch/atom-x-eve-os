@@ -1,3 +1,5 @@
+// @refresh reset
+// Remount consumers on edits: matchmaking hook additions must not reuse old hook slots.
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';

@@ -6,6 +6,7 @@ import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
 import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
+import AIBattleSessionBridge from '@/components/battle/AIBattleSessionBridge';
 import PvPArenaStage from '@/components/battle/PvPArenaStage';
 import { base44 } from '@/api/base44Client';
 import { CREATOR_PARENTING_PREVIEW, canUseCreatorParentingPreview, findCreatorChildAnimation, findCreatorChildModel } from '@/components/parenting/parentingSystem';
@@ -68,11 +69,10 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   const match = battleStatus?.match || null;
   const isParticipant = Boolean(match?.id && user?.id && (match.player_ids || []).map(String).includes(String(user.id)));
-  // `matched` is only a reserved pair. Keep the normal dashboard visible until
-  // BOTH browser clients have acknowledged that same reservation and the server
-  // promotes it to `connecting`. This prevents one player entering the arena
-  // while the opponent is still outside the match.
-  const showArena = isParticipant && ['connecting', 'countdown', 'fighting', 'ended'].includes(String(match?.status || ''));
+  // Mount the PvP arena as soon as matchmaking has produced a real shared match.
+  // Previously we waited for countdown/fighting, which left the normal dashboard
+  // visible while both clients were already joining the match behind the AI Battle menu.
+  const showArena = isParticipant && ['matched', 'countdown', 'fighting', 'ended'].includes(String(match?.status || ''));
   const serverOffsetMs = Number(battleStatus?.server_time || Date.now()) - Date.now();
 
   const roster = host ? [...visitors.slice().reverse(), host] : [];
@@ -91,6 +91,7 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   return (
     <>
+      <AIBattleSessionBridge />
       <EnvironmentHubStageLayer />
       {showArena ? <PvPArenaStage match={match} serverOffsetMs={serverOffsetMs} /> : socialAvatarStage}
       {(session.status === 'connecting' || session.error) && !showArena && (

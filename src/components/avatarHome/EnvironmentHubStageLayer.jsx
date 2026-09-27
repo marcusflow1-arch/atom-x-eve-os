@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
-import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
-import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
+
 import {
   DEFAULT_ENVIRONMENT_CONFIG,
   configStorageKey,
@@ -30,28 +29,6 @@ export default function EnvironmentHubStageLayer() {
   const { user } = useAuth();
   const [config, setConfig] = useState(() => readConfig(user?.id));
 
-  // This hook is intentionally mounted with the dashboard itself rather than
-  // only inside the AI Battle popup. It is the editor/live PvP session bridge:
-  // status polling, queue heartbeat, dashboard-channel join and ready checks all
-  // continue after the menu closes and run identically in preview and published
-  // surfaces. Merely mounting it never creates a queue; only Enter Queue does.
-  const battleBridge = useAIBattleQueue();
-  const queueStatus = String(battleBridge.queue?.status || '');
-  const matchStatus = String(battleBridge.match?.status || '');
-  const queuedForPvp = queueStatus === 'waiting' && String(battleBridge.queue?.mode || '') === 'pvp';
-  const activePvpMatch = String(battleBridge.match?.mode || '') === 'pvp'
-    && ['matched', 'countdown', 'fighting'].includes(matchStatus);
-  const pvpCombatMusicActive = queuedForPvp || activePvpMatch;
-
-  // Reuse the exact GameWorld3D combat/boss BGM for PvP. The loop helper is
-  // idempotent by key, so waiting -> matched -> countdown -> fighting keeps one
-  // continuous track instead of restarting or layering duplicate audio.
-  useEffect(() => {
-    if (pvpCombatMusicActive) startLoopSound('bgm_boss');
-    else stopLoopSound('bgm_boss');
-  }, [pvpCombatMusicActive]);
-
-  useEffect(() => () => stopLoopSound('bgm_boss'), []);
 
   useEffect(() => {
     setConfig(readConfig(user?.id));

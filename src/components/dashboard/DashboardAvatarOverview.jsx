@@ -120,7 +120,10 @@ export default function DashboardAvatarOverview() {
 
   useEffect(() => {
     if (!battleMode || !battleTransitionMatch?.id) return;
-    if (!['matched', 'countdown', 'fighting'].includes(battleTransitionStatus)) return;
+    // A reserved `matched` pair is not enough to leave the queue UI. Wait until
+    // both clients have acknowledged the same reservation and the server unlocks
+    // the shared arena as `connecting`.
+    if (!['connecting', 'countdown', 'fighting'].includes(battleTransitionStatus)) return;
     setBattleMode(false);
     setActiveQuickPanel(null);
     setInteractionDimmed(false);
