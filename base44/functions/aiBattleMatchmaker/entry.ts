@@ -9,6 +9,7 @@ const MODES = new Set(['pvp', 'pve', 'world_boss']);
 const WAITING_LIVE_MS = 60000;
 const MATCH_LIVE_MS = 45000;
 const RECONNECT_GRACE_MS = 120000;
+const QUEUE_TOUCH_MS = 5000;
 const QUEUE_OWNER_RECOVER_MS = 120000;
 const DEFAULT_BATTLE_HP = 1000;
 const ARENA = { width: 12, length: 16, margin_to_net: 1, spawn_distance: 10 };
@@ -447,25 +448,33 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
     }
   }
 
-  const patch: Row = {
-    last_seen_at: nowIso(),
-    client_session_id: clientSessionId || queue.client_session_id || '',
-  };
+  const needsReservationAck = Boolean(
+    queue.status === 'matched'
+    && savedMatch?.status === 'matched'
+    && clientSessionId
+    && (!queue.connected_at || String(queue.connected_session_id || '') !== clientSessionId)
+  );
+  const needsTouch = priorHeartbeat < Date.now() - QUEUE_TOUCH_MS || sessionChanged || needsReservationAck;
+  if (needsTouch) {
+    const patch: Row = {
+      last_seen_at: nowIso(),
+      client_session_id: clientSessionId || queue.client_session_id || '',
+    };
 
-  // Match acknowledgement is now part of the normal status heartbeat. If this
-  // client can see the reserved match, it has acknowledged it. This removes the
-  // fragile dependency on a separate React effect that was not mounted on every
-  // dashboard surface. The arena still does not open until BOTH queue rows have
-  // independently reached this point.
-  if (queue.status === 'matched' && savedMatch?.status === 'matched' && clientSessionId) {
-    patch.connected_at = nowIso();
-    patch.connected_session_id = clientSessionId;
-    patch.ready_at = '';
-  } else if (sessionChanged && savedMatch?.status === 'connecting') {
-    // A reconnecting browser must reload its fighter before countdown can begin.
-    patch.ready_at = '';
+    // Match acknowledgement is part of the normal status heartbeat. If this
+    // client can see the reserved match, it has acknowledged it. This removes
+    // the fragile dependency on a separate React effect that was not mounted on
+    // every dashboard surface. The arena still waits for BOTH queue rows.
+    if (needsReservationAck) {
+      patch.connected_at = nowIso();
+      patch.connected_session_id = clientSessionId;
+      patch.ready_at = '';
+    } else if (sessionChanged && savedMatch?.status === 'connecting') {
+      // A reconnecting browser must reload its fighter before countdown begins.
+      patch.ready_at = '';
+    }
+    queue = await svc.AIBattleQueueEntry.update(queue.id, patch);
   }
-  queue = await svc.AIBattleQueueEntry.update(queue.id, patch);
 
   if (queue.status === 'waiting') {
     await tryPair(svc, queue.mode, String(queue.id));
