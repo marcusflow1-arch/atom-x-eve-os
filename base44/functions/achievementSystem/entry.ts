@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
 
 type AnyObj = Record<string, any>;
