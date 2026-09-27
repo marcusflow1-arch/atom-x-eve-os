@@ -99,7 +99,7 @@ export default function DashboardAvatarOverview() {
   const [surface, setSurface] = useState('dashboard');
   const [attributeView, setAttributeView] = useState('overview');
   const [attributeMenuOpen, setAttributeMenuOpen] = useState(false);
-  const [interactionDimmed, setInteractionDimmed] = useState(false);
+  const [, setInteractionDimmed] = useState(false);
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
