@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
-  Unlock, Database, Server, Info, AlertCircle,
-  Download, Play, CreditCard, Check, X, Loader2,
-  Maximize2, Star, ThumbsUp, MessageSquare, User, Radio, Trophy, Users,
-  Package, Tag, ArrowUpCircle, Bug, Sparkles
+  Zap, Shield, Cpu, ChevronRight, ChevronDown, 
+  Unlock, Database, AlertCircle,
+  Download, Play, CreditCard, Check, X, Star, MessageSquare, Radio, Trophy, Users,
+  Package, ArrowUpCircle, Bug, Sparkles
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -16,8 +15,6 @@ import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
 import StoreIdleViewer from '@/components/3d/StoreIdleViewer';
-import DevZoneSection from './DevZoneSection';
-import DeveloperGamesPanel from './DeveloperGamesPanel';
 import GameGallery from './detail/GameGallery';
 import GamePurchasePanel from './detail/GamePurchasePanel';
 import './detail/game-detail.css';
