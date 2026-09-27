@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -123,6 +123,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [lastCastSlot, setLastCastSlot] = useState({ local: null, opponent: null });
   const lastCastSlotRef = useRef(lastCastSlot);
   const [error, setError] = useState('');
+  const [resultCountdown, setResultCountdown] = useState(3);
+  const returningRef = useRef(false);
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
   const requestSkillRef = useRef(null);
@@ -139,15 +141,32 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   opponentRef.current = opponent;
   const localSide = String(user?.id) === String(match?.host_id) ? 'host' : 'guest';
   const opponentSide = localSide === 'host' ? 'guest' : 'host';
-  const active = match?.status === 'fighting' && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
+  const reconnectPaused = Object.keys(match?.disconnects || {}).length > 0;
+  const active = match?.status === 'fighting' && !reconnectPaused && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
 
   const invoke = async (action, data) => {
     const response = await base44.functions.invoke('aiBattleMatchmaker', { action, data });
     const body = response?.data ?? response ?? {};
     if (body?.error) { const e = new Error(body.error); e.status = response?.status || 409; throw e; }
-    if (body.match) queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, match: body.match, server_time: body.server_time || prev.server_time }));
+    if (Object.prototype.hasOwnProperty.call(body, 'match')) queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, match: body.match || null, queue: Object.prototype.hasOwnProperty.call(body, 'queue') ? body.queue : prev.queue, server_time: body.server_time || prev.server_time }));
     return body;
   };
+
+  const returnToDashboard = useCallback(async () => {
+    if (returningRef.current) return;
+    returningRef.current = true;
+    setResultCountdown(0);
+    try {
+      await base44.functions.invoke('aiBattleMatchmaker', { action: 'reset', data: { match_id: matchRef.current?.id || '' } });
+    } catch (e) {
+      console.warn('[PvP] result cleanup failed; clearing local match state anyway', e);
+    }
+    queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, queue: null, match: null, server_time: Date.now() }));
+    delete window.__lunaPvPMatch;
+    delete window.__lunaPvPPosition;
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user.id}`, hostId: user.id, hostName: 'My' } }));
+    window.dispatchEvent(new CustomEvent('lunaPvPExited'));
+  }, [queryClient, user?.id]);
 
   const playSkill = (fighter, skill, targetId, facingYaw, detail = {}) => {
     if (!fighter?.runtime || !skill) return false;
@@ -260,7 +279,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       if(lf&&of){
         const currentMatch=matchRef.current; const offset=serverOffsetRef.current; const currentOpponent=opponentRef.current;
         const lp=positions.current.local,op=positions.current.opponent;
-        const canMove=currentMatch?.status==='fighting' && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
+        const canMove=currentMatch?.status==='fighting' && Object.keys(currentMatch?.disconnects || {}).length===0 && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
         let dx=0,dz=0; if(canMove){dx=Number(held.current.has('KeyD'))-Number(held.current.has('KeyA')); const toward=localSide==='host'?-1:1; dz=(Number(held.current.has('KeyW'))-Number(held.current.has('KeyS')))*toward; const len=Math.hypot(dx,dz);if(len){dx/=len;dz/=len;const walking=held.current.has('ShiftLeft')||held.current.has('ShiftRight');const speed=walking?WALK_SPEED:RUN_SPEED;const box=boxFor(localSide);const next=clampPos({x:lp.x+dx*speed*dt,z:lp.z+dz*speed*dt},box);lp.x=next.x;lp.z=next.z;const forwardX=Math.sin(lf.yaw),forwardZ=Math.cos(lf.yaw);const rightX=forwardZ,rightZ=-forwardX;const f=dx*forwardX+dz*forwardZ,r=dx*rightX+dz*rightZ;const dir=Math.abs(r)>Math.abs(f)?(r>0?'right':'left'):(f>=0?'forward':'back');lf.runtime.playLocomotion?.(`${walking?'walk':'run'}_${dir}`);}else lf.runtime.playIdle?.();}
         const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;if(Date.now()-Number(b.receivedAt||0)>500)of.runtime.playIdle?.();else of.runtime.playLocomotion?.(`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
@@ -268,7 +287,20 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
         if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;let anim='forward';if(Math.abs(dx)>Math.abs(dz))anim=dx>0?'right':'left';else if(dz)anim=((dz*(localSide==='host'?-1:1))>0)?'forward':'back';window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim,running:!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
-        const away=new THREE.Vector3(lp.x-op.x,0,lp.z-op.z).normalize();const sideVec=new THREE.Vector3(-away.z,0,away.x);const targetShoulder=Math.abs(lp.x)>2?(lp.x>0?-1:1):shoulder;shoulder=THREE.MathUtils.lerp(shoulder,targetShoulder,1-Math.exp(-dt/0.4));const separation=lp.distanceTo(op);cameraDistance=THREE.MathUtils.lerp(cameraDistance,Math.min(9,Math.max(6.2,6.2+(separation-10)*.25)),1-Math.exp(-4*dt));const desired=new THREE.Vector3(lp.x,2.4,lp.z).addScaledVector(away,cameraDistance).addScaledVector(sideVec,2*shoulder);const look=new THREE.Vector3().lerpVectors(lp,op,.6);look.y=1.1;const factor=1-Math.exp(-6*dt);camera.position.lerp(desired,factor);camera.lookAt(look);
+        if(currentMatch?.status==='ended'){
+          of.root.visible=false;
+          lf.runtime.playIdle?.();
+          const portraitZ=lp.z+(localSide==='host'?4.8:-4.8);
+          const desired=new THREE.Vector3(lp.x,1.75,portraitZ);
+          const faceYaw=Math.atan2(desired.x-lp.x,desired.z-lp.z);
+          lf.yaw=lerpAngle(lf.yaw,faceYaw,FACING_SPEED*dt*1.5);
+          if(!lf.runtime.isPlaying?.())lf.root.rotation.y=lf.yaw;
+          camera.position.lerp(desired,1-Math.exp(-7*dt));
+          camera.lookAt(new THREE.Vector3(lp.x,1.05,lp.z));
+        }else{
+          of.root.visible=true;
+          const away=new THREE.Vector3(lp.x-op.x,0,lp.z-op.z).normalize();const sideVec=new THREE.Vector3(-away.z,0,away.x);const targetShoulder=Math.abs(lp.x)>2?(lp.x>0?-1:1):shoulder;shoulder=THREE.MathUtils.lerp(shoulder,targetShoulder,1-Math.exp(-dt/0.4));const separation=lp.distanceTo(op);cameraDistance=THREE.MathUtils.lerp(cameraDistance,Math.min(9,Math.max(6.2,6.2+(separation-10)*.25)),1-Math.exp(-4*dt));const desired=new THREE.Vector3(lp.x,2.4,lp.z).addScaledVector(away,cameraDistance).addScaledVector(sideVec,2*shoulder);const look=new THREE.Vector3().lerpVectors(lp,op,.6);look.y=1.1;const factor=1-Math.exp(-6*dt);camera.position.lerp(desired,factor);camera.lookAt(look);
+        }
       }
       renderer.render(scene,camera);cssRenderer.render(scene,camera);
     }; frame=requestAnimationFrame(animate);
@@ -282,12 +314,48 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   useEffect(()=>{const timer=window.setInterval(()=>setClockNow(Date.now()),100);return()=>window.clearInterval(timer);},[]);
   const start=Date.parse(match?.fight_starts_at||0);const countdown=start?Math.max(0,start-(clockNow+serverOffsetMs)):0;const count=countdown>0?Math.ceil(countdown/1000):0;
   const ended=match?.status==='ended';const won=ended&&String(match.winner_id)===String(user?.id);
+  const opponentDisconnect = opponent?.id ? match?.disconnects?.[String(opponent.id)] : null;
+  const reconnectLeftMs = opponentDisconnect ? Math.max(0, Date.parse(opponentDisconnect.reconnect_deadline || 0) - (clockNow + serverOffsetMs)) : 0;
+  const reconnectSeconds = Math.max(0, Math.ceil(reconnectLeftMs / 1000));
+  const myHits = (match?.hit_log || []).filter((hit) => String(hit.attacker_id) === String(user?.id) && hit.result === 'hit');
+  const damageDealt = myHits.reduce((sum, hit) => sum + Number(hit.damage || 0), 0);
+  const prestigeEarned = Number(match?.prestige_awards?.[String(user?.id)] || 0);
+
+  useEffect(() => {
+    if (!ended) { returningRef.current = false; setResultCountdown(3); return undefined; }
+    setResultCountdown(3);
+    const interval = window.setInterval(() => setResultCountdown((value) => Math.max(0, value - 1)), 1000);
+    const timer = window.setTimeout(() => returnToDashboard(), 3000);
+    return () => { window.clearInterval(interval); window.clearTimeout(timer); };
+  }, [ended, match?.id, returnToDashboard]);
 
   return <div className="pointer-events-auto absolute inset-0 z-[45] overflow-hidden bg-[#050a11]" aria-label="Shared PvP arena">
     <div ref={mountRef} className="absolute inset-0" />
     {loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
     {match?.status==='countdown'&&loaded===2&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center text-[80px] font-black text-white drop-shadow-[0_0_30px_rgba(60,220,255,.8)]">{count||'FIGHT'}</div>}
     {error&&<div className="absolute left-1/2 top-20 z-[70] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm font-bold text-red-100">{error}</div>}
-    {ended&&<div className="absolute inset-0 z-[80] grid place-items-center bg-black/72 backdrop-blur-sm"><div className="w-[min(92vw,520px)] rounded-3xl border border-white/12 bg-slate-950/92 p-8 text-center text-white shadow-2xl"><div className="text-xs font-black uppercase tracking-[.32em] text-white/40">PvP Result</div><h2 className="mt-3 text-4xl font-black">{won?'Victory':'Defeat'}</h2><p className="mt-2 text-sm text-white/55">{String(match.ended_reason||'match complete').replaceAll('_',' ')}</p><div className="mt-6 grid grid-cols-2 gap-3">{(match.players||[]).map((p)=><div key={p.id} className="rounded-2xl bg-white/[0.05] p-3"><div className="text-sm font-bold">{p.name}</div><div className="mt-2 h-2 overflow-hidden rounded bg-black/60"><div className="h-full bg-cyan-300" style={{width:`${Math.max(0,Math.min(100,Number(p.hp||0)/Math.max(1,Number(p.max_hp||1000))*100))}%`}}/></div><div className="mt-1 text-xs text-white/50">{Math.round(p.hp||0)} / {Math.round(p.max_hp||1000)}</div></div>)}</div><button type="button" onClick={()=>window.dispatchEvent(new CustomEvent('joinMultiplayerChannel',{detail:{channelId:`dashboard_${user.id}`,hostId:user.id,hostName:'My'}}))} className="mt-6 rounded-xl bg-cyan-300 px-5 py-3 font-black text-slate-950">Back to my dashboard</button></div></div>}
+    {opponentDisconnect&&!ended&&<div className="pointer-events-none absolute left-1/2 top-5 z-[72] -translate-x-1/2 rounded-xl border border-amber-200/20 bg-[#10151d]/94 px-5 py-3 text-center text-white shadow-xl"><div className="text-[10px] font-black uppercase tracking-[.24em] text-amber-200/70">Connection interrupted</div><div className="mt-1 text-sm font-bold">Opponent disconnected — waiting to reconnect</div><div className="mt-1 font-mono text-lg font-black text-cyan-200">{Math.floor(reconnectSeconds/60)}:{String(reconnectSeconds%60).padStart(2,'0')}</div></div>}
+    {ended&&<div className="absolute inset-0 z-[80] overflow-hidden text-white" style={{background:'linear-gradient(90deg, rgba(5,10,17,.08), rgba(5,10,17,.30) 55%, rgba(5,10,17,.78))'}}>
+      <div className="pointer-events-none absolute left-6 top-6 text-[11px] font-black uppercase tracking-[.38em] text-cyan-100/70">Mission Complete</div>
+      <div className="pointer-events-none absolute left-[48%] top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+        <div className={`text-[clamp(34px,5vw,70px)] font-black uppercase tracking-[.08em] ${won?'text-cyan-100':'text-white/75'}`}>{won?'Victory':'Defeat'}</div>
+        <div className="mt-2 text-[10px] font-bold uppercase tracking-[.28em] text-white/45">{String(match.ended_reason||'match complete').replaceAll('_',' ')}</div>
+      </div>
+      <section className="absolute bottom-5 right-5 top-5 flex w-[min(40%,390px)] min-w-[270px] flex-col border border-white/10 bg-[#07101b]/92 p-5 shadow-[-18px_0_50px_rgba(0,0,0,.32)]">
+        <div className="text-[11px] font-black uppercase tracking-[.32em] text-cyan-100/70">PvP Results</div>
+        <div className="mt-6 text-[10px] font-black uppercase tracking-[.24em] text-white/35">Results</div>
+        <div className="mt-3 space-y-2 text-sm">
+          <div className="flex items-center justify-between border-b border-white/[0.08] py-2"><span className="text-white/50">Outcome</span><span className="font-black uppercase">{won?'Victory':'Defeat'}</span></div>
+          <div className="flex items-center justify-between border-b border-white/[0.08] py-2"><span className="text-white/50">Final HP</span><span className="font-semibold">{Math.round(Number(local?.hp||0))} / {Math.round(Number(local?.max_hp||1000))}</span></div>
+          <div className="flex items-center justify-between border-b border-white/[0.08] py-2"><span className="text-white/50">Damage dealt</span><span className="font-semibold">{Math.round(damageDealt)}</span></div>
+          <div className="flex items-center justify-between border-b border-white/[0.08] py-2"><span className="text-white/50">Hits landed</span><span className="font-semibold">{myHits.length}</span></div>
+        </div>
+        <div className="mt-5 border border-cyan-200/15 bg-cyan-200/[0.06] p-4"><div className="text-[9px] font-black uppercase tracking-[.26em] text-cyan-100/55">Prestige Earned</div><div className="mt-1 text-3xl font-black text-cyan-100">+{prestigeEarned}</div></div>
+        <div className="mt-auto pt-5">
+          <button type="button" onClick={returnToDashboard} className="w-full border border-cyan-100/25 bg-cyan-200 px-5 py-3 text-xs font-black uppercase tracking-[.12em] text-slate-950 transition hover:bg-white">Back to my dashboard</button>
+          <div className="mt-2 text-center text-[10px] text-white/40">Returning automatically in {resultCountdown}s</div>
+        </div>
+      </section>
+    </div>}
   </div>;
 }
