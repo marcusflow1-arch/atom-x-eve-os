@@ -425,12 +425,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
       ...skillEquipStatus(owned, gender),
       user_card_id: owned?.id || null,
       card: owned ? snapshotCard(owned) : null,
-      progression: progression ? {
-        level: Number(progression.level || 1), xp: Number(progression.xp || 0),
-        xp_to_next: Number(progression.xp_to_next || 0), stage: Number(progression.stage || 1),
-        stars: Number(progression.stars || 1), ascension: Number(progression.ascension || 0),
-        power_score: Number(progression.power_score || 0), active_perks: progression.active_perks || [],
-      } : null,
+      progression: progressionView(progression, owned),
     });
   }
 
@@ -453,12 +448,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
       ...skillEquipStatus(owned, gender),
       user_card_id: owned.id,
       card: snapshotCard(owned),
-      progression: progression ? {
-        level: Number(progression.level || 1), xp: Number(progression.xp || 0),
-        xp_to_next: Number(progression.xp_to_next || 0), stage: Number(progression.stage || 1),
-        stars: Number(progression.stars || 1), ascension: Number(progression.ascension || 0),
-        power_score: Number(progression.power_score || 0), active_perks: progression.active_perks || [],
-      } : null,
+      progression: progressionView(progression, owned),
     });
   }
 
@@ -471,7 +461,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
     const game = (skill.game_id && gameById.get(String(skill.game_id))) || gameByName.get(key) || null;
     if (!grouped.has(key)) grouped.set(key, {
       key, id: game?.id || skill.game_id || '', title,
-      genre: game?.genre || skill.genre || 'Uncategorized',
+      genre: normalize(title) === normalize(ADAM_XE_GAME_TITLE) ? ADAM_XE_GENRE : (game?.genre || skill.genre || 'Uncategorized'),
       image: game?.cover_image || game?.cover || game?.banner_image || game?.image || '',
       total_skills: 0, owned_skills: 0,
     });
