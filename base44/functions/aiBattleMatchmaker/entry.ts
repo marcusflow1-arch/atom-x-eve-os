@@ -421,32 +421,55 @@ async function startMatchIfBothArenaReady(svc: any, input: Row | null) {
 }
 
 async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Row | null = null) {
-  let queue = await latestQueue(svc, userId);
+  let queue = await cleanupQueueDuplicates(svc, userId);
   if (!queue) return { queue:null, match:null };
   if (queue.status === 'waiting' && !waitingLive(queue)) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
+
+  let savedMatch: Row | null = null;
+  const previousSessionId = String(queue.client_session_id || '');
+  const sessionChanged = Boolean(clientSessionId && previousSessionId && clientSessionId !== previousSessionId);
   if (queue.status === 'matched' && queue.match_id) {
-    const savedMatch = await getMatch(svc, String(queue.match_id));
-    const previousSessionId = String(queue.client_session_id || '');
-    if (savedMatch?.status === 'ended' && clientSessionId && previousSessionId && clientSessionId !== previousSessionId) {
+    savedMatch = await getMatch(svc, String(queue.match_id));
+    if (savedMatch?.status === 'ended' && sessionChanged) {
       await cancelQueue(svc, queue);
       await clearMatchForPlayers(svc, savedMatch);
       return { queue:null, match:null };
     }
   }
-  if (heartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS || (clientSessionId && String(queue.client_session_id || '') !== clientSessionId)) queue = await svc.AIBattleQueueEntry.update(queue.id, { last_seen_at: nowIso(), client_session_id: clientSessionId || queue.client_session_id || '' });
-  if (queue.status === 'waiting') {
-    const paired = await tryPair(svc, queue.mode);
-    queue = await svc.AIBattleQueueEntry.get(queue.id).catch(() => queue);
-    return { queue, match: paired && (paired.player_ids||[]).map(String).includes(userId) ? paired : null };
+
+  if (heartbeatAt(queue) < Date.now() - QUEUE_HEARTBEAT_MS || (clientSessionId && previousSessionId !== clientSessionId)) {
+    const patch: Row = { last_seen_at: nowIso(), client_session_id: clientSessionId || queue.client_session_id || '' };
+    // A refreshed browser must perform the pre-arena acknowledgement again while
+    // a reservation is still only `matched`. If the arena was already unlocked,
+    // only fighter readiness is cleared so the rebuilt model has to load again.
+    if (sessionChanged && savedMatch?.status === 'matched') {
+      patch.connected_at = '';
+      patch.connected_session_id = '';
+      patch.ready_at = '';
+    } else if (sessionChanged && savedMatch?.status === 'connecting') {
+      patch.ready_at = '';
+    }
+    queue = await svc.AIBattleQueueEntry.update(queue.id, patch);
   }
+
+  if (queue.status === 'waiting') {
+    await tryPair(svc, queue.mode, String(queue.id));
+    queue = await svc.AIBattleQueueEntry.get(queue.id).catch(() => queue);
+    if (queue.status === 'waiting') return { queue, match:null };
+  }
+
   if (queue.status === 'matched' && queue.match_id) {
-    let match = await settleMatch(svc, await getMatch(svc, String(queue.match_id)));
+    let match = await settleMatch(svc, savedMatch && String(savedMatch.id) === String(queue.match_id) ? savedMatch : await getMatch(svc, String(queue.match_id)));
     if (!match) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
     if (match.status === 'matched') {
+      const connection = await startMatchIfBothConnected(svc, match);
+      match = connection.match;
+    }
+    if (match?.status === 'connecting') {
       const readiness = await startMatchIfBothArenaReady(svc, match);
       match = readiness.match;
     }
-    if (pos && ['countdown','fighting'].includes(match.status)) {
+    if (pos && ['countdown','fighting'].includes(String(match?.status || ''))) {
       const positions = { ...(match.positions || {}), [userId]: clampPos(match, userId, pos) };
       match = await svc.AIBattleMatch.update(match.id, { positions });
     }
