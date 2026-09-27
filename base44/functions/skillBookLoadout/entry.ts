@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { SKILL_SLOT_COUNT, skillStats } from '../../shared/pvpSkills.ts';
-import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
+import { skillEquipStatus } from '../../shared/skillEligibility.ts';
 import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
 
