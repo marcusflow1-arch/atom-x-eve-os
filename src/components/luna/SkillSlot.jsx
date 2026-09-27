@@ -1,5 +1,7 @@
 import React from 'react';
 import useLunaStore from './useLunaStore';
+import useSkillBookLoadout from './hooks/useSkillBookLoadout';
+import { showError } from '@/components/error/ErrorToast';
 
 /**
  * Skill slot component for ability hotbar
@@ -11,6 +13,7 @@ import useLunaStore from './useLunaStore';
 export default function SkillSlot({ index, isActive, onClick }) {
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
+  const { equip, isSaving } = useSkillBookLoadout();
 
   const onDragOver = (e) => {
     if (e.dataTransfer) {
@@ -19,20 +22,29 @@ export default function SkillSlot({ index, isActive, onClick }) {
     }
   };
 
-  const onDrop = (e) => {
+  const onDrop = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
     try {
       const json = e.dataTransfer.getData('application/json');
       const payload = json ? JSON.parse(json) : null;
-      
-      if (payload?.source === 'luna-card' && payload.card) {
+      const accepted = ['luna-card', 'luna-skill-book'].includes(String(payload?.source || ''));
+      if (!accepted || !payload?.card) return;
+
+      const userCardId = String(payload.user_card_id || payload.card?.user_card_id || payload.card?.id || '');
+      if (userCardId) {
+        // Persist first. PvP reads this same Loadout entity, so a drag onto the
+        // dashboard bar is no longer a local-only assignment.
+        await equip(index, userCardId);
+      } else {
+        // Legacy non-owned cards can still preview locally, but owned Ability
+        // cards always take the persistent path above.
         assignToHotbar(index, payload.card);
-        
-        // Visual feedback
-        if (onClick) onClick();
       }
+
+      if (onClick) onClick();
     } catch (error) {
-      console.error('Drop failed:', error);
+      showError(error?.message || 'Unable to equip that skill.', 'Skill Slot Drop');
     }
   };
 
