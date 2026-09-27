@@ -18,7 +18,7 @@ function useCooldownClock(skills, serverOffsetMs) {
   return now;
 }
 
-export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0, skills = [], local = false, combatActive = true, serverOffsetMs = 0, lastCastSlot = null, onSkill, onMelee, meleeCooldownEndsAt = null, meleeCooldownMs = 1000, meleeAtbCost = 50 }) {
+export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0, skills = [], local = false, combatActive = true, isTurn = false, serverOffsetMs = 0, lastCastSlot = null, onSkill, onMelee, meleeCooldownEndsAt = null, meleeCooldownMs = 1000, meleeAtbCost = 50 }) {
   const now = useCooldownClock(skills, serverOffsetMs);
   const bySlot = useMemo(() => new Map((skills || []).map((skill) => [Number(skill.slot), skill])), [skills]);
   const hpPct = Math.max(0, Math.min(100, Number(maxHp) > 0 ? Number(hp) / Number(maxHp) * 100 : 0));
@@ -27,7 +27,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
   const meleeEndsAt = Date.parse(meleeCooldownEndsAt || 0);
   const meleeRemainingMs = Math.max(0, meleeEndsAt - now);
   const meleeFraction = Math.max(0, Math.min(1, meleeRemainingMs / Math.max(1, Number(meleeCooldownMs || 1))));
-  const meleeDisabled = !combatActive || meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
+  const meleeDisabled = !combatActive || !isTurn || meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
 
   return (
     <div className="pointer-events-auto select-none text-white drop-shadow-[0_2px_7px_rgba(0,0,0,.95)]" style={{ width: 250 }}>
@@ -55,7 +55,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
           const duration = Math.max(1, Number(skill?.cooldownMs || skill?.cooldown_ms || 1));
           const fraction = Math.max(0, Math.min(1, remainingMs / duration));
           const cost = Number(skill?.atbCost || skill?.atb_cost || 0);
-          const disabled = !skill || remainingMs > 0 || atbPct < cost;
+          const disabled = !combatActive || !isTurn || !skill || remainingMs > 0 || atbPct < cost;
           return (
             <button key={slot} type="button" disabled={!local || disabled} onClick={() => onSkill?.(slot)}
               className={`relative h-11 w-11 overflow-hidden rounded border ${lastCastSlot === slot ? 'border-white shadow-[0_0_12px_rgba(255,255,255,.8)]' : 'border-white/20'} bg-slate-950/75 ${disabled ? 'opacity-45' : ''}`}>
