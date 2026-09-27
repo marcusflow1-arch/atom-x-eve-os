@@ -24,13 +24,19 @@ function findClip(clips = [], name, fallbackIndex = 0) {
     || null;
 }
 
+function isSwordOrEffectMesh(node) {
+  if (!node?.isMesh) return false;
+  const materials = (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean);
+  const signature = `${node.name || ''} ${materials.map((material) => material?.name || '').join(' ')}`.toLowerCase();
+  return /sword|blade|energy|\bfx[_-]?|aura|spark|shockwave|slash|wave|impact|trench|crack|rock/.test(signature);
+}
+
 function cleanEffectRendering(root) {
   root?.traverse((node) => {
     if (!node?.isMesh) return;
 
     const materials = (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean);
-    const signature = `${node.name || ''} ${materials.map((material) => material?.name || '').join(' ')}`.toLowerCase();
-    const isSwordOrEffect = /sword|blade|energy|\bfx[_-]?|aura|spark|shockwave|slash|wave|impact|trench|crack|rock/.test(signature);
+    const isSwordOrEffect = isSwordOrEffectMesh(node);
 
     if (!isSwordOrEffect) return;
 
@@ -57,6 +63,14 @@ function cleanEffectRendering(root) {
       }
     });
   });
+}
+
+function prepareEffectOnlyRoot(root) {
+  root?.traverse((node) => {
+    if (!node?.isMesh) return;
+    node.visible = isSwordOrEffectMesh(node);
+  });
+  cleanEffectRendering(root);
 }
 
 export function createGetsugaIdleClip(attackClip) {
@@ -107,6 +121,9 @@ export class GetsugaDashboardRuntime {
     this.mixer = null;
     this.idleAction = null;
     this.attackAction = null;
+    this.fxRoot = null;
+    this.fxMixer = null;
+    this.fxAttackAction = null;
     this.runAction = null;
     this.locomotionActions = new Map();
     this.currentLocomotion = null;
@@ -122,13 +139,13 @@ export class GetsugaDashboardRuntime {
     this.finishedHandler = null;
   }
 
-  attach(gltf) {
+  attach(gltf, { attackClip: suppliedAttackClip = null, idleClip: suppliedIdleClip = null, effectGltf = null, effectClip: suppliedEffectClip = null } = {}) {
     if (this.disposed || !gltf?.scene) return false;
 
     const clips = gltf.animations || [];
-    const embeddedIdle = findClip(clips, 'Idle', 0);
-    const attackClip = findClip(clips, 'GetsugaTensho', 1);
-    if (!attackClip) throw new Error('GetsugaTensho animation is missing from Getsuga_Tensho_Character.glb.');
+    const embeddedIdle = suppliedIdleClip || findClip(clips, 'Idle', 0);
+    const attackClip = suppliedAttackClip || findClip(clips, 'GetsugaTensho', 1);
+    if (!attackClip) throw new Error('GetsugaTensho animation is missing from the male ability source.');
 
     this.root = gltf.scene;
     this.attackClip = attackClip;
@@ -147,6 +164,22 @@ export class GetsugaDashboardRuntime {
     this.group.name = 'LunaCardEffectPlayer';
     this.group.rotation.y = this.defaultFacingYaw;
     this.group.add(this.root);
+
+    if (effectGltf?.scene) {
+      this.fxRoot = effectGltf.scene;
+      this.fxRoot.rotation.y = 0;
+      prepareEffectOnlyRoot(this.fxRoot);
+      this.fxRoot.visible = false;
+      this.group.add(this.fxRoot);
+      const effectClip = suppliedEffectClip || findClip(effectGltf.animations || [], 'GetsugaTensho', 0);
+      if (effectClip) {
+        this.fxMixer = new THREE.AnimationMixer(this.fxRoot);
+        this.fxAttackAction = this.fxMixer.clipAction(effectClip);
+        this.fxAttackAction.setLoop(THREE.LoopOnce, 1);
+        this.fxAttackAction.clampWhenFinished = true;
+      }
+    }
+
     this.scene?.add(this.group);
 
     this.mixer = new THREE.AnimationMixer(this.root);
@@ -232,6 +265,12 @@ export class GetsugaDashboardRuntime {
     this.attackAction.setEffectiveWeight(1);
     this.attackAction.play();
 
+    if (this.fxRoot && this.fxAttackAction) {
+      this.fxRoot.visible = true;
+      this.fxAttackAction.enabled = true;
+      this.fxAttackAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+    }
+
     if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(this.attackAction, 0.16, false);
     else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(this.attackAction, 0.2, false);
     else this.idleAction?.stop();
@@ -264,6 +303,8 @@ export class GetsugaDashboardRuntime {
     this.currentLocomotion = null;
     if (blend && this.attackAction) this.attackAction.crossFadeTo(this.idleAction, 0.35, false);
     else this.attackAction?.stop();
+    this.fxAttackAction?.stop?.();
+    if (this.fxRoot) this.fxRoot.visible = false;
 
     if (emit) this.onEvent('idle', { time: 0, frame: 1 });
     return true;
@@ -273,6 +314,7 @@ export class GetsugaDashboardRuntime {
     if (!this.ready || this.disposed || this.paused || !this.mixer) return;
     const step = Math.min(0.05, Math.max(0, Number(dt) || 0));
     this.mixer.update(step);
+    this.fxMixer?.update?.(step);
 
     if (!this.playing || !this.attackAction) return;
 
@@ -302,6 +344,7 @@ export class GetsugaDashboardRuntime {
   setPaused(value) {
     this.paused = Boolean(value);
     if (this.mixer) this.mixer.timeScale = this.paused ? 0 : 1;
+    if (this.fxMixer) this.fxMixer.timeScale = this.paused ? 0 : 1;
   }
 
   dispose() {
