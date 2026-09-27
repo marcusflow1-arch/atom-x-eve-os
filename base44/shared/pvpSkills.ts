@@ -3,6 +3,15 @@ export const ATB_RATE_PER_S = 25;
 export const ATB_MAX = 100;
 export const ATB_START = 50;
 export const DODGE = { atb_cost: 20, cooldown_ms: 2000, window_ms: 350 } as const;
+export const BASIC_MELEE = {
+  id: 'basic_melee',
+  kind: 'Melee attack',
+  range_m: 3.25,
+  atb_cost: 50,
+  cooldown_ms: 1000,
+  hit_ms: 350,
+  base_damage: 45,
+} as const;
 
 export const SKILL_STATS: Record<string, any> = {
   getsuga_tensho: { kind: 'Ranged wave', range_m: 18, atb_cost: 50, cooldown_ms: 8000, base_damage: 120, hit_ms: 900 },
