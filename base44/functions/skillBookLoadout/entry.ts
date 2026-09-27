@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { SKILL_SLOT_COUNT, skillStats } from '../../shared/pvpSkills.ts';
 import { skillEquipStatus } from '../../shared/skillEligibility.ts';
-import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
+import { loadCombatProfile, ownedCardStats } from '../../shared/combatProfile.ts';
+import { abilityOutput } from '../../shared/combatStats.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
 
 type AnyObj = Record<string, any>;
@@ -234,16 +235,17 @@ async function ensureAdamXeDemoCards(svc: any, userId: string) {
   return results;
 }
 
-function progressionView(progression: AnyObj | null, card: AnyObj | null) {
+function progressionView(progression: AnyObj | null, card: AnyObj | null, preview?: AnyObj) {
   if (!card) return null;
   const effect = card.animation_effect || {};
   const stats = skillStats(String(effect.id || ''), card.card_rarity || 'Common');
-  const combat = effectiveCardDamage(Number(effect.base_damage || stats.base_damage || 0), progression || {});
+  const combat = preview?.combat || null;
   return {
     level: Number(progression?.level || 1), xp: Number(progression?.xp || 0),
     xp_to_next: Number(progression?.xp_to_next || 0), stage: Number(progression?.stage || 1),
     stars: Number(progression?.stars || 1), ascension: Number(progression?.ascension || 0),
-    power_score: Number(progression?.power_score || 0), active_perks: progression?.active_perks || [],
+    power_score: Number(preview?.power_score || 0), active_perks: progression?.active_perks || [],
+    effective_stats: preview?.stats || {},
     enhanced_stats: progression?.enhanced_stats || {}, over_enchant_rank: Number(progression?.over_enchant_rank || 0),
     combat,
   };
@@ -401,6 +403,14 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
     if (!ownedByGameAndName.has(key)) ownedByGameAndName.set(key, card);
   }
 
+  const avatarProfile = await loadCombatProfile(svc,user.id);
+  const previews = new Map<string,AnyObj>();
+  await Promise.all(ownedSkills.filter((card:AnyObj)=>Number(card.quantity ?? 1)>0 && card.trade_status!=='locked_in_trade').map(async(card:AnyObj)=>{
+    const effective=await ownedCardStats(svc,user.id,card,progressByUserCard.get(String(card.id)) || null);
+    const effect=card.animation_effect || {}, base=skillStats(String(effect.id || ''),card.card_rarity || 'Common');
+    const output=abilityOutput(avatarProfile.combat,{...base,base_damage:Number(effect.base_damage || base.base_damage),cooldown_ms:Number(effect.cooldown_ms || base.cooldown_ms)},effective);
+    previews.set(String(card.id),{...effective,combat:{...output,effective_damage:output.base_damage,multiplier:effective.growth_multiplier,bonus_percent:Math.round((effective.growth_multiplier-1)*100)}});
+  }));
   const catalog: AnyObj[] = [];
   const seenOwned = new Set<string>();
   for (const achievement of abilityAchievements) {
@@ -425,7 +435,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
       ...skillEquipStatus(owned, gender),
       user_card_id: owned?.id || null,
       card: owned ? snapshotCard(owned) : null,
-      progression: progressionView(progression, owned),
+      progression: progressionView(progression, owned, previews.get(String(owned?.id))),
     });
   }
 
@@ -448,7 +458,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
       ...skillEquipStatus(owned, gender),
       user_card_id: owned.id,
       card: snapshotCard(owned),
-      progression: progressionView(progression, owned),
+      progression: progressionView(progression, owned, previews.get(String(owned?.id))),
     });
   }
 
@@ -480,7 +490,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
       return {
         index,
         user_card_id: availableCard ? cardId : null,
-        card: availableCard ? snapshotCard(availableCard) : null,
+        card: availableCard ? {...snapshotCard(availableCard),combat:previews.get(String(availableCard.id))?.combat || null} : null,
       };
     });
     return {
@@ -506,6 +516,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
   return {
     success: true,
     avatar_gender: gender,
+    combat_stats: avatarProfile.combat,
     loadout: activeLoadout,
     skill_sets: skillSets,
     active_skill_set_id: activeLoadout?.skill_set_id || '',
