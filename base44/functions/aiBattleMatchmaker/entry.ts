@@ -492,29 +492,63 @@ Deno.serve(async (req) => {
     }
     if (action === 'join') {
       const mode=String(data.mode||'').toLowerCase(); if(!MODES.has(mode)) return json({error:'Choose PvP, PvE, or World Boss.'},400);
-      const current=await latestQueue(svc,userId); if(current){
+      let current=await cleanupQueueDuplicates(svc,userId);
+      if(current){
         if(current.status==='waiting'){
+          if(String(current.mode)!==mode) return json({error:`You are already queued for ${String(current.mode).toUpperCase()}. Cancel that queue before changing modes.`},409);
           const refreshedAvatar=await getAvatarSnapshot(svc,userId,data);
-          await svc.AIBattleQueueEntry.update(current.id,{...refreshedAvatar});
+          current=await svc.AIBattleQueueEntry.update(current.id,{...refreshedAvatar,last_seen_at:nowIso(),client_session_id:sessionId||current.client_session_id||''});
         }
         const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),server_time:Date.now()});
       }
       const avatar=await getAvatarSnapshot(svc,userId,data);
-      const created=await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso() });
-      const paired=await tryPair(svc,mode); const queue=await svc.AIBattleQueueEntry.get(created.id).catch(()=>created);
-      return json({queue:publicQueue(queue),match:publicMatch(paired&&(paired.player_ids||[]).map(String).includes(userId)?paired:null),server_time:Date.now()});
+      const created=await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
+      current=await cleanupQueueDuplicates(svc,userId);
+      if(current?.id&&String(current.id)===String(created.id)&&current.status==='waiting') await tryPair(svc,mode,String(current.id));
+      const state=await statusFor(svc,userId,sessionId);
+      return json({queue:publicQueue(state.queue),match:publicMatch(state.match),server_time:Date.now()});
+    }
+    if (action === 'ack_match') {
+      let match=await getMatch(svc,String(data.match_id||''));
+      if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      if(match.status==='ended') return json({error:'This match has ended.',match:publicMatch(match)},409);
+      const mine=await queueForMatch(svc,userId,String(match.id));
+      if(!mine?.id) return json({error:'Your queue reservation is no longer active.'},409);
+      const stamp=nowIso();
+      const queue=await svc.AIBattleQueueEntry.update(mine.id,{connected_at:stamp,connected_session_id:sessionId||mine.client_session_id||'',client_session_id:sessionId||mine.client_session_id||'',last_seen_at:stamp,ready_at:''});
+      if(match.status==='matched'){
+        const connection=await startMatchIfBothConnected(svc,match);
+        match=connection.match;
+      }
+      return json({queue:publicQueue(queue),match:publicMatch(match),connected:['connecting','countdown','fighting'].includes(String(match?.status||'')),server_time:Date.now()});
     }
     if (action === 'cancel' || action === 'reset') {
-      const queue=await latestQueue(svc,userId); if(queue?.match_id){const match=await getMatch(svc,String(queue.match_id)); if(match&&['matched','countdown','fighting'].includes(match.status)){const ids=(match.player_ids||[]).map(String);const ended=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});await finalizeMatchRewards(svc,ended);await clearMatchForPlayers(svc,ended);}} await cancelQueue(svc,queue); return json({queue:null,match:null,server_time:Date.now()});
+      const queue=await latestQueue(svc,userId);
+      if(queue?.match_id){
+        let match=await getMatch(svc,String(queue.match_id));
+        if(match&&['matched','connecting'].includes(String(match.status))){
+          match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:'',ended_reason:'forfeit',ended_at:nowIso()});
+          await clearMatchForPlayers(svc,match);
+          await cancelMatchQueues(svc,match);
+          return json({queue:null,match:null,server_time:Date.now()});
+        }
+        if(match&&['countdown','fighting'].includes(String(match.status))){
+          const ids=(match.player_ids||[]).map(String);
+          const ended=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:ids.find((id:string)=>id!==userId)||'',ended_reason:'forfeit',ended_at:nowIso()});
+          await finalizeMatchRewards(svc,ended); await clearMatchForPlayers(svc,ended);
+        }
+      }
+      await cancelAllQueuesForUser(svc,userId);
+      return json({queue:null,match:null,server_time:Date.now()});
     }
     if (action === 'ready') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       match=await settleMatch(svc,match);
       if(match.status==='ended') return json({error:'This match has ended.',match:publicMatch(match)},409);
+      if(match.status==='matched') return json({error:'Waiting for both players to connect before loading the arena.',match:publicMatch(match)},409);
 
-      // Arena readiness is owned by the PvP clients themselves. Each client only
-      // sends this after its fighter/model has loaded, so combat no longer depends
-      // on the unrelated dashboard-presence bridge reaching a particular state.
+      // This is the second handshake. It is sent only after this client's two 3D
+      // fighters are loaded inside an arena that was unlocked for BOTH clients.
       const mine=await queueForMatch(svc,userId,String(match.id));
       if(mine?.id) await svc.AIBattleQueueEntry.update(mine.id,{ready_at:nowIso(),last_seen_at:nowIso()});
       const readiness=await startMatchIfBothArenaReady(svc,match);
@@ -523,6 +557,11 @@ Deno.serve(async (req) => {
     }
     if (action === 'forfeit') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
+      if(['matched','connecting'].includes(String(match.status))){
+        match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:'',ended_reason:'forfeit',ended_at:nowIso()});
+        await clearMatchForPlayers(svc,match); await cancelMatchQueues(svc,match);
+        return json({match:publicMatch(match),server_time:Date.now()});
+      }
       const winner=(match.player_ids||[]).map(String).find((id:string)=>id!==userId)||''; match=await svc.AIBattleMatch.update(match.id,{status:'ended',winner_id:winner,ended_reason:'forfeit',ended_at:nowIso()});
       match = await finalizeMatchRewards(svc,match) || match;
       await clearMatchForPlayers(svc,match);
