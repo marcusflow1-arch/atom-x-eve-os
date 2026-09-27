@@ -59,14 +59,9 @@
       ]
     },
     "create": {
-      "$and": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "data.status": "pending_review"
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "update": {
       "user_condition": {
