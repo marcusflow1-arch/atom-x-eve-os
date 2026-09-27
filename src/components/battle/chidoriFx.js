@@ -357,3 +357,123 @@ export function createChidoriFx(THREE, scene, opts = {}) {
 
     // ---------------- impact
     const P = active && ta >= 1.999 ? path(2.0).tip.clone() : null;
+    if (P) {
+      const ti = since(2.0);
+      const fl = [1.0, 0.0, 0.85, 0.3];            // flash frames: white, inverted, white, fading
+      const fi = Math.floor(ti * 30 + 1e-4);
+      if (fi >= 0 && fi < 4) { if (fi === 1) out.invert = 1; else out.flash = Math.max(out.flash, fl[fi]); }
+      out.shake += (ti < 0.4 ? 1.0 : 0) * (1 - clamp(ti / 0.5, 0, 1)) * 1.4;
+      out.lines = Math.max(out.lines, 1.0 * (1 - win(ta, 2.25, 2.45))); out.linesCenter = P.clone();
+      out.aberration = Math.max(out.aberration, 0.01 * (1 - win(ta, 2.0, 2.4)));
+      const burstI = win(ta, 1.999, 2.02) * (1 - win(ta, 2.33, 2.5));
+      if (burstI > 0.01) {
+        const r = rng(hash(f2, 61));
+        const n = Math.round(7 * burstI) + 3;
+        for (let i = 0; i < n; i++) {
+          const d = fwd.clone().add(V((r() - 0.5) * 1.8, (r() - 0.35) * 1.4, (r() - 0.5) * 1.8)).normalize();
+          const L = 0.8 + r() * 2.8 * burstI;
+          bolt(P, P.clone().addScaledVector(d, L), hash(f2, i, 67), { w: 0.026 + 0.02 * r(), inten: 1.1 * burstI, jag: 0.2, branches: 2, depth: 6, cam: camP });
+        }
+        for (let i = 0; i < 6; i++) {
+          const d = V(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize();
+          bolt(P, P.clone().addScaledVector(d, 0.4 + r() * 0.9), hash(f2, i, 71), { w: 0.02, inten: burstI, jag: 0.3, branches: 1, depth: 5, cam: camP });
+        }
+        impactGlow.visible = impactHalo.visible = true;
+        impactGlow.position.copy(P); impactHalo.position.copy(P);
+        impactGlow.scale.setScalar((0.55 + 0.35 * ((hash(f2, 5) % 100) / 100)) * burstI); impactHalo.scale.setScalar(1.6 * burstI);
+        impactGlow.material.opacity = burstI; impactHalo.material.opacity = burstI * 0.45;
+        burstLight.position.copy(P); burstLight.intensity = 22 * burstI * flick(9);
+      } else { impactGlow.visible = impactHalo.visible = false; burstLight.intensity = 0; }
+      burst(P, ta, 2.0, 1201, 150, 7.0, 0.6, fwd, 1.2, 0.024, 5.0);
+      burst(P, ta, 2.1, 1202, 60, 5.0, 0.5, null, 1.0, 0.018, 3.0);
+      // vertical impact rings facing the strike
+      for (const [ring, t0, dur, s0, s1, w] of [[impactRing, 2.0, 0.3, 0.15, 1.5, 0.08], [impactRing2, 2.08, 0.35, 0.15, 2.3, 0.05]]) {
+        const u = (ta - t0) / dur; ring.visible = u > 0 && u < 1;
+        if (ring.visible) { ring.position.copy(P); ring.lookAt(P.clone().add(fwd)); ring.scale.setScalar(s0 + (s1 - s0) * (1 - (1 - u) * (1 - u))); ring.material.uniforms.uI.value = (1 - u) * 1.8; ring.material.uniforms.uW.value = w; }
+      }
+    } else { impactGlow.visible = impactHalo.visible = impactRing.visible = impactRing2.visible = false; burstLight.intensity = 0; }
+
+    // ---------------- blast (victim thrown): radial explosion
+    const B = active && ta >= 2.349 ? path(2.35).tip.clone() : null;
+    if (B) {
+      const tb = ta - 2.35; const bI = (1 - clamp(tb / 0.4, 0, 1));
+      if (bI > 0.01) {
+        const r = rng(hash(f2, 81));
+        for (let i = 0; i < Math.round(9 * bI) + 2; i++) {
+          const d = V(r() * 2 - 1, (r() * 2 - 1) * 0.8, r() * 2 - 1).normalize();
+          bolt(B, B.clone().addScaledVector(d, 1.0 + r() * 2.8 * bI), hash(f2, i, 83), { w: 0.028 + 0.016 * r(), inten: 1.15 * bI, jag: 0.2, branches: 2, depth: 6, cam: camP });
+        }
+        burstLight.position.copy(B); burstLight.intensity = Math.max(burstLight.intensity, 30 * bI);
+        impactHalo.visible = true; impactHalo.position.copy(B); impactHalo.scale.setScalar(2.2 * bI); impactHalo.material.opacity = bI * 0.5;
+      }
+      out.flash = Math.max(out.flash, Math.max(0, 1 - Math.abs(since(2.35)) / 0.08) * 0.35);
+      out.shake += bI * 1.1;
+      burst(B, ta, 2.35, 1301, 220, 8.0, 0.7, null, 1.0, 0.03, 4.0);
+      const u = tb / 0.5; blastRing.visible = u > 0 && u < 1;
+      if (blastRing.visible) { blastRing.position.set(B.x, 0.04, B.z); blastRing.scale.setScalar(0.4 + 4.5 * Math.sqrt(u)); blastRing.material.uniforms.uI.value = (1 - u) * 1.6; blastRing.material.uniforms.uW.value = 0.06; }
+    } else blastRing.visible = false;
+
+    // ---------------- fizzle when the fist closes (finisher)
+    const tf = ta - 3.12;
+    fistGlow.visible = tf > -0.05 && tf < 0.35;
+    if (fistGlow.visible) {
+      const u = clamp((tf + 0.05) / 0.4, 0, 1); fistGlow.position.copy(palm); fistGlow.scale.setScalar(0.32 * (1 - u) + 0.04); fistGlow.material.opacity = (1 - u) * 0.85;
+      burst(palm, ta, 3.12, 1401, 60, 2.2, 0.45, null, 1.0, 0.016, 1.0);
+      const r = rng(hash(f2, 91));
+      for (let i = 0; i < 4; i++) { const d = V(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize(); bolt(palm, palm.clone().addScaledVector(d, 0.2 + r() * 0.3), hash(f2, i, 93), { w: 0.01, inten: 1 - u, jag: 0.4, branches: 0, depth: 3, cam: camP }); }
+    }
+    const uf = (ta - 3.12) / 0.35; fizzRing.visible = uf > 0 && uf < 1;
+    if (fizzRing.visible) { fizzRing.position.copy(palm); fizzRing.lookAt(camP); fizzRing.scale.setScalar(0.08 + 0.3 * uf); fizzRing.material.uniforms.uI.value = (1 - uf) * 0.8; fizzRing.material.uniforms.uW.value = 0.1; }
+
+    // ---------------- victim electrified
+    let el = 0;
+    if (tv >= 0 && S.vic) {
+      el = (tv < 0.4 ? 1.0 : 0) + (tv >= 0.4 ? Math.max(0, 1 - (tv - 0.4) / 1.4) * 0.55 : 0);
+      for (const t0 of [0.88, 1.08, 1.27, 2.42, 2.78]) el += bump(tv, t0 - 0.02, t0 + 0.02, t0 + 0.15) * 0.7;
+      const r = rng(hash(f2, 101));
+      const B_ = ['pelvis', 'spine_02', 'head', 'hand_l', 'hand_r', 'lowerarm_l', 'lowerarm_r', 'calf_l', 'calf_r', 'foot_l', 'foot_r', 'upperarm_l', 'upperarm_r', 'thigh_l', 'thigh_r'];
+      const pos = B_.map((n) => S.vic.bone(n));
+      const center = S.vic.bone('spine_01');
+      const nb = Math.round(8 * clamp(el, 0, 1.3));
+      for (let i = 0; i < nb; i++) {
+        const a = pos[Math.floor(r() * pos.length)], b = pos[Math.floor(r() * pos.length)];
+        if (a.distanceTo(b) < 0.15) continue;
+        const pa = a.clone().add(a.clone().sub(center).normalize().multiplyScalar(0.06)), pb = b.clone().add(b.clone().sub(center).normalize().multiplyScalar(0.06));
+        bolt(pa, pb, hash(f2, i, 103), { w: 0.014, inten: 0.9 * clamp(el, 0, 1.2), jag: 0.28, branches: 1, depth: 5, cam: camP });
+      }
+      for (let i = 0; i < Math.round(25 * clamp(el, 0, 1)); i++) { const a = pos[Math.floor(r() * pos.length)]; spark(a.clone().add(V(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.3)), 0.015, 1); }
+      if (S.vic.bowPos && tv < 0.4) burst(S.vic.bowPos, tv, 0.02, 1501, 80, 2.5, 0.5, null, 1.0, 0.02, 2.0);
+      // skid: sparks off the feet and dark furrows while the victim is blasted back
+      if (S.vic.rootDelta && tv > 0.34) {
+        const d = S.vic.rootDelta(0.34);
+        ['ball_l', 'ball_r'].forEach((n, k) => {
+          const p = S.vic.bone(n); const a0 = p.clone().sub(d);
+          const L = Math.hypot(d.x, d.z);
+          skids[k].visible = L > 0.05;
+          if (skids[k].visible) {
+            skids[k].position.set((a0.x + p.x) / 2, 0.006, (a0.z + p.z) / 2); skids[k].scale.set(0.09, L, 1);
+            skids[k].rotation.set(-Math.PI / 2, 0, Math.atan2(d.x, d.z) + Math.PI);
+          }
+          if (tv < 0.86) { const r = rng(hash(f2, 131, k)); for (let i = 0; i < 14; i++) spark(p.clone().add(V((r() - 0.5) * 0.2, r() * 0.25, (r() - 0.5) * 0.25 + 0.1)), 0.012 + r() * 0.012, 1.2 * (1 - (tv - 0.34) / 0.52)); }
+        });
+        skidMat.opacity = 0.55;
+      } else { skids.forEach((m) => { m.visible = false; }); }
+    }
+    electrify(S.vic?.root, S.vic ? clamp(el, 0, 1.2) * (0.4 + 0.6 * ((hash(f2, 7) % 100) / 100)) * (tv < 0.4 ? 0.35 : 0.16) : 0);
+
+    // ---------------- bow dissolve / re-form (Artemis as the attacker)
+    if (S.att.bowPos) {
+      burst(S.att.bowPos, ta, 0.0, 1601, 70, 2.0, 0.45, V(0, 1, 0), 1.2, 0.018, -1.0);
+      if (ta > 3.6 && ta < 3.95) { const r = rng(hash(f2, 111)); const u = (ta - 3.6) / 0.35; for (let i = 0; i < 40; i++) { const d = V(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize(); spark(S.att.bowPos.clone().addScaledVector(d, 0.6 * (1 - u) * r()), 0.015, 1.2 * (1 - u * 0.7)); } }
+    }
+
+    // ---------------- flush
+    rGeo.setDrawRange(0, ni);
+    for (const k of ['position', 'uv', 'aI']) rGeo.attributes[k].needsUpdate = true; rGeo.index.needsUpdate = true;
+    pGeo.setDrawRange(0, np);
+    for (const k of ['position', 'aSize', 'aI']) pGeo.attributes[k].needsUpdate = true;
+    return out;
+  }
+  function dispose() { group.removeFromParent(); electrify(victimRef, 0); }
+  return { update, dispose, group };
+}
