@@ -2,6 +2,8 @@
 type Skill = Record<string, any> | null | undefined;
 
 export function requiredAvatarGender(skill: Skill): 'female' | 'male' | null {
+  const declared = String(skill?.required_avatar_gender || skill?.animation_effect?.required_avatar_gender || '').trim().toLowerCase();
+  if (declared === 'female' || declared === 'male') return declared;
   const effectIds = [skill?.animation_effect?.id, skill?.effect_id]
     .map((id) => String(id || '').trim().toLowerCase());
   if (effectIds.some((id) => id.startsWith('artemis_'))) return 'female';
