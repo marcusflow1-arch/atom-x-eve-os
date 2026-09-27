@@ -36,9 +36,9 @@ export default function LunaAIBattleOverlay({ onClose }) {
     if (queuedMode && MODES.some((item) => item.id === queuedMode)) setMode(queuedMode);
   }, [queuedMode]);
 
-  // A match-found transition should immediately hand the center workspace over
-  // to the PvP arena. Keep this scoped to queues started from this open menu so
-  // reopening AI Battle during an existing match does not instantly close it.
+  // `matched` is only a reservation. Do not close the queue UI or reveal the
+  // arena until the server confirms BOTH browser clients acknowledged that same
+  // reservation and promotes the match to `connecting`.
   useEffect(() => {
     if (!queuedFromThisOverlayRef.current) return;
     if (!connecting && !ready) return;
@@ -52,6 +52,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const leaveQueue = useCallback(async () => {
     if (battle.busy) return;
     queuedFromThisOverlayRef.current = false;
+    queueRequestRef.current = false;
     try {
       await battle.cancel();
     } catch (error) {
@@ -60,15 +61,19 @@ export default function LunaAIBattleOverlay({ onClose }) {
   }, [battle]);
 
   const enterQueue = useCallback(async () => {
-    if (battle.busy || waiting || connecting || ready) return;
+    // A local one-shot guard closes the tiny gap before React's mutation state
+    // updates. Repeated Q presses can no longer fire parallel join requests.
+    if (queueRequestRef.current || battle.busy || waiting || reserved || connecting || ready) return;
+    queueRequestRef.current = true;
     queuedFromThisOverlayRef.current = true;
     // Start PvP music from the user's queue-button gesture so browsers permit
-    // playback. The persistent dashboard bridge keeps this same loop alive
-    // through match-found, countdown and combat without restarting it.
+    // playback. The persistent dashboard bridge keeps this same loop alive.
     if (mode === 'pvp') startLoopSound('bgm_boss');
     try {
       const body = await battle.join(mode);
-      if (body?.match && ['matched', 'countdown', 'fighting'].includes(String(body.match.status || ''))) {
+      // A returned `matched` reservation stays in the queue UI. Only a server
+      // confirmed two-client connection may transition into the arena.
+      if (body?.match && ['connecting', 'countdown', 'fighting'].includes(String(body.match.status || ''))) {
         queuedFromThisOverlayRef.current = false;
         window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
           detail: { matchId: body.match.id || null, mode: body.match.mode || mode },
@@ -79,20 +84,17 @@ export default function LunaAIBattleOverlay({ onClose }) {
       queuedFromThisOverlayRef.current = false;
       if (mode === 'pvp') stopLoopSound('bgm_boss');
       if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
+    } finally {
+      queueRequestRef.current = false;
     }
-  }, [battle, mode, waiting, connecting, ready, onClose]);
+  }, [battle, mode, waiting, reserved, connecting, ready, onClose]);
 
   const chooseMode = useCallback((nextMode) => {
-    // While waiting, clicking the currently selected queue tile again means
-    // "unselect/leave". Switching to a different pool requires leaving first so
-    // there is never an implicit cancel-and-requeue operation.
-    if (waiting) {
-      if (nextMode === queuedMode) leaveQueue();
-      return;
-    }
-    if (connecting || ready || battle.busy) return;
+    // Queue state is explicit and idempotent. A tile click never doubles as a
+    // hidden cancel; use the Cancel Queue button when you actually want to leave.
+    if (waiting || reserved || connecting || ready || battle.busy) return;
     setMode(nextMode);
-  }, [waiting, queuedMode, connecting, ready, battle.busy, leaveQueue]);
+  }, [waiting, reserved, connecting, ready, battle.busy]);
 
   useEffect(() => {
     const onKey = (event) => {
@@ -100,20 +102,24 @@ export default function LunaAIBattleOverlay({ onClose }) {
       const target = event.target;
       if (target instanceof HTMLElement && target.closest('input,textarea,select,[contenteditable=true]')) return;
       event.preventDefault();
-      if (waiting || connecting || ready) leaveQueue();
-      else enterQueue();
+      // Q is join-only. Once queued/reserved/connecting, extra presses are ignored
+      // instead of toggling cancel/join and creating ghost queue entries.
+      if (waiting || reserved || connecting || ready) return;
+      enterQueue();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [enterQueue, leaveQueue, waiting, connecting, ready]);
+  }, [enterQueue, waiting, reserved, connecting, ready]);
 
-  const statusText = connecting
-    ? `Match found. Connecting both active players to ${battle.match.host_name || 'the host'}'s dashboard…`
-    : waiting
-      ? 'You are in the queue. Closing this menu will not remove you. Cancel or unselect this mode to leave.'
-      : ready
-        ? (battle.match?.status === 'countdown' ? 'Both fighters loaded. Countdown starting…' : 'Match connected. Fight in progress.')
-        : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
+  const statusText = reserved
+    ? 'Opponent found. Waiting for both players to confirm the same match before the arena opens…'
+    : connecting
+      ? 'Both players connected. Loading the shared PvP arena for both sides…'
+      : waiting
+        ? 'You are queued. If nobody else is queued, you stay here until another live player joins.'
+        : ready
+          ? (battle.match?.status === 'countdown' ? 'Both fighters loaded. Countdown starting…' : 'Match connected. Fight in progress.')
+          : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
 
   return (
     <div className="fixed left-[390px] right-[338px] top-[205px] z-[130] flex justify-center pointer-events-none" data-dashboard-utility-workspace>
