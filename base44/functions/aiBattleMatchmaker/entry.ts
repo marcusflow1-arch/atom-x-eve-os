@@ -78,9 +78,14 @@ async function getAvatarSnapshot(svc: any, userId: string) {
 }
 
 async function freezeSkills(svc: any, userId: string, gender: string) {
-  const loadouts = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills', is_active: true }, '-updated_date', 10).catch(() => []);
-  const loadout = loadouts?.[0];
-  const slots = loadout?.skill_slots || {};
+  // PvP uses the exact same persistent Skill Book loadout as the dashboard.
+  // Read all skill rows and deliberately resolve the active one instead of
+  // depending on a compound filter that can miss legacy/migrated rows.
+  const loadouts = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, '-updated_date', 50).catch(() => []);
+  const active = loadouts.find((row: Row) => row.is_active === true)
+    || [...loadouts].sort((a: Row, b: Row) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0))[0]
+    || null;
+  const slots = active?.skill_slots || {};
   const out: Row[] = [];
   for (let slot = 0; slot < SKILL_SLOT_COUNT; slot += 1) {
     const cardId = slots[String(slot)] || slots[slot];
@@ -100,6 +105,14 @@ async function freezeSkills(svc: any, userId: string, gender: string) {
     });
   }
   return out;
+}
+
+async function syncFrozenSkillsForMatch(svc: any, match: Row) {
+  const players = await Promise.all((match.players || []).map(async (player: Row) => {
+    const gender = player.gender === 'female' ? 'female' : 'male';
+    return { ...player, skills: await freezeSkills(svc, String(player.id || player.player_id || ''), gender) };
+  }));
+  return { ...match, players };
 }
 
 async function playerFromQueue(svc: any, row: Row) {
@@ -363,6 +376,10 @@ Deno.serve(async (req) => {
       const room=await svc.PlayerState.filter({channel_id:match.dashboard_channel}); const liveIds=new Set(room.filter(dashboardLive).map((r:Row)=>String(r.player_id)));
       const ready=(match.player_ids||[]).every((id:string)=>liveIds.has(String(id)));
       if(ready&&match.status==='matched'){
+        // Re-read the active Skill Book row at the last safe moment before
+        // combat. This guarantees dashboard Skill Slots 1-4 and PvP Slots 1-4
+        // are the same loadout, even if the queue sat open for a while.
+        match = await syncFrozenSkillsForMatch(svc, match);
         const start=Date.now()+3500; const ids=(match.player_ids||[]).map(String); const atb=Object.fromEntries(ids.map((id:string)=>[id,{value:ATB_START,at:new Date(start).toISOString()}]));
         const players=(match.players||[]).map((p:Row)=>({...p,hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP),max_hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP)}));
         match=await svc.AIBattleMatch.update(match.id,{status:'countdown',ready_at:nowIso(),fight_starts_at:new Date(start).toISOString(),fight_ends_at:new Date(start+180000).toISOString(),players,atb,cooldowns:{},dodges:{},pending_hits:[],hit_log:[]});
