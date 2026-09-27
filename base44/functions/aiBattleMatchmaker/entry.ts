@@ -395,14 +395,21 @@ Deno.serve(async (req) => {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       match=await settleMatch(svc,match);
       if(match.status==='ended') return json({error:'This match has ended.',match:publicMatch(match)},409);
-      const room=await svc.PlayerState.filter({channel_id:match.dashboard_channel}); const liveIds=new Set(room.filter(dashboardLive).map((r:Row)=>String(r.player_id)));
-      const ready=(match.player_ids||[]).every((id:string)=>liveIds.has(String(id)));
+
+      // Arena readiness is owned by the PvP clients themselves. Each client only
+      // sends this after its fighter/model has loaded, so combat no longer depends
+      // on the unrelated dashboard-presence bridge reaching a particular state.
+      const mine=await queueForMatch(svc,userId,String(match.id));
+      if(mine?.id) await svc.AIBattleQueueEntry.update(mine.id,{ready_at:nowIso(),last_seen_at:nowIso()});
+      const ids=(match.player_ids||[]).map(String);
+      const queues=await Promise.all(ids.map((id:string)=>queueForMatch(svc,id,String(match.id))));
+      const ready=queues.length===ids.length && queues.every((row:Row|null)=>Boolean(row&&matchedLive(row)&&row.ready_at));
       if(ready&&match.status==='matched'){
         // Re-read the active Skill Book row at the last safe moment before
         // combat. This guarantees dashboard Skill Slots 1-4 and PvP Slots 1-4
         // are the same loadout, even if the queue sat open for a while.
         match = await syncFrozenSkillsForMatch(svc, match);
-        const start=Date.now()+3500; const ids=(match.player_ids||[]).map(String); const atb=turnAtb(match,String(match.host_id||ids[0]||''),start);
+        const start=Date.now()+3500; const atb=turnAtb(match,String(match.host_id||ids[0]||''),start);
         const players=(match.players||[]).map((p:Row)=>({...p,hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP),max_hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP)}));
         match=await svc.AIBattleMatch.update(match.id,{status:'countdown',ready_at:nowIso(),fight_starts_at:new Date(start).toISOString(),fight_ends_at:new Date(start+180000).toISOString(),players,atb,cooldowns:{},dodges:{},pending_hits:[],hit_log:[]});
       }
