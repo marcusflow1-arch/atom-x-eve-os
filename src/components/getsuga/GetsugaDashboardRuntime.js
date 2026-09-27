@@ -13,7 +13,13 @@ export const GETSUGA_EVENTS = {
   release: 1.16,
   impact: 1.612,
   swordVanish: 3.044,
-  end: 3.444,
+  end: 3.967,
+};
+
+const ADAM_XE_ABILITY_EVENTS = {
+  GetsugaTensho: GETSUGA_EVENTS,
+  Chidori_Attack_01: { impact: 1.0, end: 1.467 },
+  Chidori_Ultimate: { impact: 2.0, end: 4.2 },
 };
 
 function findClip(clips = [], name, fallbackIndex = 0) {
@@ -121,6 +127,11 @@ export class GetsugaDashboardRuntime {
     this.mixer = null;
     this.idleAction = null;
     this.attackAction = null;
+    this.abilityActions = new Map();
+    this.activeAction = null;
+    this.activeClipName = '';
+    this.activeEffectId = '';
+    this.activeEvents = GETSUGA_EVENTS;
     this.fxRoot = null;
     this.fxMixer = null;
     this.fxAttackAction = null;
