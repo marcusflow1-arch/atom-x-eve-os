@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { dashboardSession, joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
+import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
+import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
 
 const requestId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-surface-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -50,6 +52,13 @@ export async function touchAIBattleQueueSession() {
 
 export default function useAIBattleQueue({ sessionBridge = true, polling = true } = {}) {
   const { user } = useAuth();
+  const companion = useCompanionIdentity();
+  const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
+  useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
+  const selectedAvatar = activeCharacter && !activeCharacter.isDevTest ? activeCharacter : companion;
+  const selectedGender = String(selectedAvatar?.gender || companion?.gender || '').toLowerCase() === 'female' ? 'female' : 'male';
+  const selectedModelUrl = selectedAvatar?.model_url || companion?.model_url || companion?.base_body_model_url || '';
+  const selectedAppearance = selectedAvatar ? { ...selectedAvatar, gender: selectedGender, model_url: selectedModelUrl || selectedAvatar.model_url || '' } : { gender: selectedGender, model_url: selectedModelUrl };
   const session = useDashboardSession();
   const queryClient = useQueryClient();
   const readyAttempt = useRef('');
@@ -164,7 +173,16 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return () => { if (window.__lunaPvPMatch?.id === match?.id) delete window.__lunaPvPMatch; };
   }, [match, serverOffsetMs]);
 
-  const join = async (mode) => mutation.mutateAsync({ action: 'join', data: { mode, request_id: requestId() } });
+  const join = async (mode) => mutation.mutateAsync({
+    action: 'join',
+    data: {
+      mode,
+      request_id: requestId(),
+      avatar_gender: selectedGender,
+      avatar_model_url: selectedModelUrl,
+      avatar_appearance: selectedAppearance,
+    },
+  });
   const cancel = async () => mutation.mutateAsync({ action: 'cancel', data: {} });
   const reset = async () => mutation.mutateAsync({ action: 'reset', data: {} });
   const forfeit = async () => match?.id ? mutation.mutateAsync({ action: 'forfeit', data: { match_id: match.id } }) : null;
