@@ -68,7 +68,10 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
 
   const match = battleStatus?.match || null;
   const isParticipant = Boolean(match?.id && user?.id && (match.player_ids || []).map(String).includes(String(user.id)));
-  const showArena = isParticipant && ['countdown', 'fighting', 'ended'].includes(String(match?.status || ''));
+  // Mount the PvP arena as soon as matchmaking has produced a real shared match.
+  // Previously we waited for countdown/fighting, which left the normal dashboard
+  // visible while both clients were already joining the match behind the AI Battle menu.
+  const showArena = isParticipant && ['matched', 'countdown', 'fighting', 'ended'].includes(String(match?.status || ''));
   const serverOffsetMs = Number(battleStatus?.server_time || Date.now()) - Date.now();
 
   const roster = host ? [...visitors.slice().reverse(), host] : [];
