@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, Check, ChevronRight, Cpu, Sparkles } from 'lucid
 import GameGallery from './detail/GameGallery';
 import GamePurchasePanel from './detail/GamePurchasePanel';
 import GameReviews from './detail/GameReviews';
-import GameExtras from './detail/GameExtras';
 import GameDLCSection from './detail/GameDLCSection';
 import GameImage from './detail/GameImage';
 import { gameArtwork, releaseLabel, requirementGroups } from './detail/gameDetailData';
@@ -16,7 +15,6 @@ const sections = [
   { id: 'overview', label: 'Overview' },
   { id: 'requirements', label: 'System requirements' },
   { id: 'reviews', label: 'Reviews' },
-  { id: 'extras', label: 'Expansions & Cards' },
 ];
 
 export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }) {
@@ -26,8 +24,7 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
   const tabRefs = useRef([]);
   useEffect(() => {
     const showExtras = () => {
-      setSection('extras');
-      content.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      document.getElementById('game-avatar-rewards')?.scrollIntoView({ block: 'start', behavior: 'auto' });
     };
     window.addEventListener('showDevZone', showExtras);
     return () => window.removeEventListener('showDevZone', showExtras);
@@ -38,7 +35,7 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
   return <main className="gd-page" aria-label={game.title + ' game page'}>
     <div className="gd-backdrop" aria-hidden="true"><GameImage src={gameArtwork(game)} fallback={game.cover_image} alt="" /><div /></div>
     <div className="gd-shell">
-      <nav className="gd-store-links" aria-label="Explore this game"><button onClick={()=>navigate('/Store')}>Browse store</button><button onClick={()=>requestAnimationFrame(()=>document.getElementById('game-avatar-rewards')?.scrollIntoView({block:'start'}))}>Achievements &amp; rewards</button><button onClick={()=>{setSection('extras');requestAnimationFrame(()=>content.current?.scrollIntoView({block:'start'}));}}>Expansions &amp; Cards</button></nav>
+      <nav className="gd-store-links" aria-label="Explore this game"><button onClick={()=>navigate('/Store')}>Browse store</button><button onClick={()=>requestAnimationFrame(()=>document.getElementById('game-avatar-rewards')?.scrollIntoView({block:'start'}))}>Expansions &amp; Cards</button><button onClick={()=>requestAnimationFrame(()=>document.getElementById('game-dlc')?.scrollIntoView({block:'start'}))}>DLC</button></nav>
       <nav className="gd-breadcrumb" aria-label="Breadcrumb">
         <button onClick={onClose}><ArrowLeft size={16} />{returnLabel}</button>
         <ChevronRight size={12} /><span>{label(game.genre) || 'Game'}</span>
@@ -75,13 +72,13 @@ export default function GameDetailPanel({ game, onClose, returnLabel = 'Store' }
             <aside className="gd-explore">
               <span className="gd-eyebrow">Before you jump in</span>
               <button onClick={() => jump('requirements')}><Cpu size={20} /><span><strong>Check your setup</strong><small>System requirements</small></span><ArrowRight size={17} /></button>
-              <button onClick={() => jump('extras')}><Sparkles size={20} /><span><strong>Explore Expansions &amp; Cards</strong><small>Game cards and your Luna 3D viewer</small></span><ArrowRight size={17} /></button>
+              <button onClick={() => document.getElementById('game-avatar-rewards')?.scrollIntoView({ block: 'start', behavior: 'smooth' })}><Sparkles size={20} /><span><strong>Explore Expansions &amp; Cards</strong><small>Cards available for this game</small></span><ArrowRight size={17} /></button>
               <dl><div><dt>Released</dt><dd>{releaseLabel(game)}</dd></div>{game.version && <div><dt>Version</dt><dd>{game.version}</dd></div>}</dl>
             </aside>
           </div> : tab.id === 'requirements' ? <div>
             <div className="gd-section-heading"><div><span className="gd-eyebrow">Check your setup</span><h2>System requirements</h2><p>Specifications provided for this game.</p></div></div>
             {groups.length ? <div className="gd-requirements">{groups.map(group => <section key={group.title}><h3>{group.title}</h3><dl>{group.rows.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl></section>)}</div> : <div className="gd-empty"><Cpu size={28} /><h3>Requirements haven't been published yet.</h3><p>Check back for hardware and platform details from the developer.</p></div>}
-          </div> : tab.id === 'reviews' ? <GameReviews game={game} /> : <GameExtras game={game} />)}
+          </div> : tab.id === 'reviews' ? <GameReviews game={game} /> : null)}
         </section>)}
       </div>
     </div>
