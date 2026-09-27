@@ -13,6 +13,8 @@ import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
 import { GetsugaDashboardRuntime } from '@/components/getsuga/GetsugaDashboardRuntime';
 import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
 import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
+import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
+import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 
 const lerpAngle = (a, b, maxStep) => {
@@ -121,6 +123,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const seq = useRef(0);
   const lastNetworkSend = useRef(0);
   const [loaded, setLoaded] = useState(0);
+  const [graphicsError, setGraphicsError] = useState(false);
+  const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
   const [lastCastSlot, setLastCastSlot] = useState({ local: null, opponent: null });
   const lastCastSlotRef = useRef(lastCastSlot);
@@ -253,7 +257,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // so a dropped/raced ready request cannot strand two visible players before
   // the countdown. The server starts only after BOTH clients are live + ready.
   useEffect(() => {
-    if (loaded !== 2 || !match?.id || match.status !== 'matched') return undefined;
+    if (graphicsError || loaded !== 2 || !match?.id || match.status !== 'matched') return undefined;
     let cancelled = false;
     let busy = false;
     const reportReady = async () => {
@@ -271,7 +275,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     reportReady();
     const timer = window.setInterval(reportReady, 1000);
     return () => { cancelled = true; window.clearInterval(timer); };
-  }, [loaded, match?.id, match?.status, queryClient, user?.id]);
+  }, [loaded, graphicsError, match?.id, match?.status, queryClient, user?.id]);
 
   const requestDodge = async () => {
     if (!active) { setError('The fight is not ready yet.'); return; }
@@ -289,7 +293,23 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x07101b, .025);
     const camera = new THREE.PerspectiveCamera(50, 1, .05, 100);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    setLoaded(0);
+    setGraphicsError(false);
+    const renderer = arenaRenderer();
+    if (!renderer) { setGraphicsError(true); return undefined; }
+    let contextLost = false;
+    const onContextLost = (event) => {
+      event.preventDefault();
+      contextLost = true;
+      held.current.clear();
+      setGraphicsError(true);
+    };
+    const onContextRestored = () => {
+      contextLost = false;
+      setGraphicsError(false);
+    };
+    renderer.domElement.addEventListener('webglcontextlost', onContextLost);
+    renderer.domElement.addEventListener('webglcontextrestored', onContextRestored);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.shadowMap.enabled = true;
     renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; mount.appendChild(renderer.domElement);
     const cssRenderer = new CSS2DRenderer(); cssRenderer.domElement.style.position = 'absolute'; cssRenderer.domElement.style.inset = '0'; cssRenderer.domElement.style.pointerEvents = 'auto'; mount.appendChild(cssRenderer.domElement);
@@ -312,13 +332,16 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     Promise.all([
       loadFighter({ scene, camera, player: local, side: localSide, onEffect: () => {} }),
       loadFighter({ scene, camera, player: opponent, side: opponentSide, onEffect: () => {} }),
-    ]).then(([localFighter, opponentFighter]) => {
-      if (disposed) { localFighter.runtime.dispose?.(); opponentFighter.runtime.dispose?.(); return; }
+    ].map((pending) => pending.then((fighter) => {
+      if (disposed) { fighter.runtime.dispose?.(); disposeArenaObjects(fighter.root); fighter.root.removeFromParent(); }
+      return fighter;
+    }))).then(([localFighter, opponentFighter]) => {
+      if (disposed) return;
       runtimes.current = { local: localFighter, opponent: opponentFighter };
       positions.current.local.set(0,0,localSide === 'host' ? SPAWN_Z : -SPAWN_Z);
       positions.current.opponent.set(0,0,opponentSide === 'host' ? SPAWN_Z : -SPAWN_Z);
       addBar(localFighter,true); addBar(opponentFighter,false); setLoaded(2);
-    }).catch((e) => { console.error('[PvP arena] fighter load failed',e); setError('A fighter could not load.'); });
+    }).catch((e) => { if (!disposed) { console.error('[PvP arena] fighter load failed',e); setError('A fighter could not load.'); } });
 
     const resize = () => { const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);cssRenderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix(); }; resize();
     const observer = new ResizeObserver(resize); observer.observe(mount);
@@ -352,7 +375,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const barTimer=window.setInterval(renderBars,100); renderBars();
 
     const animate = (now) => {
+      if (disposed) return;
       frame=requestAnimationFrame(animate); const dt=Math.min(.05,Math.max(0,(now-previous)/1000)); previous=now;
+      if (contextLost || renderer.getContext().isContextLost()) return;
       const lf=runtimes.current.local,of=runtimes.current.opponent;
       if(lf&&of){
         const currentMatch=matchRef.current; const offset=serverOffsetRef.current; const currentOpponent=opponentRef.current;
@@ -383,9 +408,31 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       renderer.render(scene,camera);cssRenderer.render(scene,camera);
     }; frame=requestAnimationFrame(animate);
 
-    return()=>{disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.clearInterval(barTimer);window.removeEventListener('webrtcMovementUpdate',remoteMove);window.removeEventListener('lunaAIBattleRemoteCardCast',remoteCast);barRoots.forEach((r)=>r.unmount());runtimes.current.local?.runtime?.dispose?.();runtimes.current.opponent?.runtime?.dispose?.();renderer.dispose();cssRenderer.domElement.remove();renderer.domElement.remove();delete window.__lunaPvPPosition;};
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.clearInterval(barTimer);
+      window.removeEventListener('webrtcMovementUpdate', remoteMove);
+      window.removeEventListener('lunaAIBattleRemoteCardCast', remoteCast);
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
+      barObjects.forEach(({ object }) => object.removeFromParent());
+      queueMicrotask(() => barRoots.forEach((root) => root.unmount()));
+      disposeArenaObjects(scene);
+      runtimes.current.local?.runtime?.dispose?.();
+      runtimes.current.opponent?.runtime?.dispose?.();
+      runtimes.current = { local: null, opponent: null };
+      remoteSamples.current = [];
+      held.current.clear();
+      renderer.dispose();
+      renderer.forceContextLoss();
+      cssRenderer.domElement.remove();
+      renderer.domElement.remove();
+      delete window.__lunaPvPPosition;
+    };
   // Arena is recreated only for a new match; live match state is read by refs/cache overlays.
-  }, [match?.id, local?.id, opponent?.id]);
+  }, [match?.id, local?.id, opponent?.id, graphicsAttempt]);
 
   useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space','Digit1','Digit2','Digit3','Digit4','Numpad1','Numpad2','Numpad3','Numpad4'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}const skillKey={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Numpad1:0,Numpad2:1,Numpad3:2,Numpad4:3}[e.code];if(skillKey!==undefined){e.preventDefault();requestSkillRef.current?.(skillKey);}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestMelee,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
 
@@ -440,7 +487,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   return <div className="pointer-events-auto absolute inset-0 z-[45] overflow-hidden bg-[#050a11]" aria-label="Shared PvP arena">
     <div ref={mountRef} className="absolute inset-0" />
-    {loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
+    {graphicsError && <ArenaGraphicsRecovery onRetry={() => setGraphicsAttempt((attempt) => attempt + 1)} />}
+    {!graphicsError&&loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
     {match?.status==='countdown'&&loaded===2&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center text-[80px] font-black text-white drop-shadow-[0_0_30px_rgba(60,220,255,.8)]">{count||'FIGHT'}</div>}
     {loaded===2&&!ended&&['countdown','fighting'].includes(String(match?.status||''))&&!reconnectPaused&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[74] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${localOwnsTurn?'border-cyan-200/30 bg-cyan-950/92':'border-white/12 bg-[#0b111c]/92'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${localOwnsTurn?'text-cyan-100':'text-white/65'}`}>{match?.status==='countdown'?(localOwnsTurn?'You Move First':`${opponent?.name || 'Opponent'} Moves First`):(isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`)}</div><div className="mt-0.5 text-[8px] uppercase tracking-[.16em] text-white/35">{match?.status==='countdown'?'Turn order locked':'Choose one action'}</div></div>}
     {error&&<div className="absolute left-1/2 top-20 z-[70] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm font-bold text-red-100">{error}</div>}

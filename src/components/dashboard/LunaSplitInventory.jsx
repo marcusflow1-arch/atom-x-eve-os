@@ -135,7 +135,7 @@ export default function LunaSplitInventory({
     const needle = query.trim().toLowerCase();
     return [...byGame.entries()]
       .map(([title, gameItems]) => {
-        const meta = gameMeta.get(title.toLowerCase()) || FALLBACK_GAME_META[title] || {};
+        const meta = gameMeta.get(title.toLowerCase()) || {};
         return {
           title,
           image: meta.image || gameItems.find((item) => item.game_image)?.game_image || '',
