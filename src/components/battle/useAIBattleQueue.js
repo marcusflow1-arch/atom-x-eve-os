@@ -88,6 +88,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const session = useDashboardSession();
   const queryClient = useQueryClient();
   const joinAttempt = useRef('');
+  const [roomRetryTick, setRoomRetryTick] = useState(0);
   const key = ['ai-battle-matchmaking', user?.id];
 
   const state = useQuery({
@@ -103,6 +104,10 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       if (status === 'fighting') return 500;
       if (['matched', 'connecting', 'countdown'].includes(status)) return 750;
       if (body?.queue?.status === 'waiting') return 1000;
+      // If the arena temporarily vanished from cache during a room/network drop,
+      // keep looking for the durable server-side active match instead of waiting
+      // 15 seconds or forcing the player to press Queue again.
+      if (typeof window !== 'undefined' && sessionStorage.getItem('luna_pvp_active_match_id')) return 1000;
       return 15000;
     } : false,
     refetchOnWindowFocus: polling,
@@ -119,6 +124,16 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const queue = state.data?.queue || null;
   const match = state.data?.match || null;
   const serverTime = Number(state.data?.server_time || Date.now());
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const status = String(match?.status || '');
+    if (match?.id && ['connecting','countdown','fighting'].includes(status)) {
+      sessionStorage.setItem('luna_pvp_active_match_id', String(match.id));
+    } else if (status === 'ended') {
+      sessionStorage.removeItem('luna_pvp_active_match_id');
+    }
+  }, [match?.id, match?.status]);
   const serverOffsetMs = serverTime - Date.now();
 
   useEffect(() => {
@@ -157,17 +172,28 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     const channelMatches = String(session.channel_id || '') === channelId;
     const hasWholePair = requiredIds.length === 2 && requiredIds.every((id) => currentById.has(id));
 
-    if (channelMatches && hasWholePair && session.status === 'connected') joinAttempt.current = token;
+    const roomHealthy = channelMatches && hasWholePair && session.status === 'connected';
+    if (roomHealthy) joinAttempt.current = token;
     else {
       const joinDetail = { channelId, hostId, hostName: match.host_name || 'Player', aiBattle: true, matchId: String(match.id) };
       window.__lunaPendingDashboardJoin = joinDetail;
-      if (joinAttempt.current !== token || !channelMatches) {
+      // A prior successful join must not permanently suppress reconnects. If the
+      // shared room drops later, retry the exact same match/channel automatically.
+      if (joinAttempt.current !== token || !channelMatches || session.status !== 'connected' || !hasWholePair) {
         joinAttempt.current = token;
         if (String(user.id) === hostId) window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail }));
         else joinDashboard({ id: hostId, name: match.host_name || 'Player' })
           .then(() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail })))
           .catch((error) => { console.warn('[AI Battle] dashboard join retry', error); joinAttempt.current = ''; });
       }
+    }
+
+    let retryTimer = null;
+    if (!roomHealthy && ['connecting','countdown','fighting'].includes(String(match.status || ''))) {
+      retryTimer = window.setTimeout(() => {
+        joinAttempt.current = '';
+        setRoomRetryTick((value) => value + 1);
+      }, 2500);
     }
 
     if (!channelMatches || !hasWholePair) {
@@ -182,8 +208,8 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       });
       dashboardSession.publish({ channel_id: channelId, host_id: hostId, host_name: match.host_name || 'Player', players: provisionalPlayers, status: 'connecting', error: '', ai_battle_match_id: String(match.id) });
     }
-    return undefined;
-  }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username]);
+    return () => { if (retryTimer) window.clearTimeout(retryTimer); };
+  }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username, roomRetryTick]);
 
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
@@ -230,6 +256,17 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       if (joinInFlightPromise === promise) joinInFlightPromise = null;
     }
   };
+  const reconnect = async () => {
+    joinAttempt.current = '';
+    const body = await mutation.mutateAsync({ action: 'reconnect', data: { position: window.__lunaPvPPosition || null } });
+    if (body?.match?.id && typeof window !== 'undefined') {
+      sessionStorage.setItem('luna_pvp_active_match_id', String(body.match.id));
+      window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
+        detail: { matchId: body.match.id, mode: body.match.mode || 'pvp', reconnect: true },
+      }));
+    }
+    return body;
+  };
   const cancel = async () => mutation.mutateAsync({ action: 'cancel', data: {} });
   const reset = async () => mutation.mutateAsync({ action: 'reset', data: {} });
   const forfeit = async () => match?.id ? mutation.mutateAsync({ action: 'forfeit', data: { match_id: match.id } }) : null;
@@ -239,6 +276,6 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   return {
     queue, match, serverOffsetMs,
     isLoading: state.isLoading, isFetching: state.isFetching, error: state.error || mutation.error, busy: mutation.isPending,
-    refresh: () => state.refetch(), join, cancel, reset, forfeit, dodge, useSkill,
+    refresh: () => state.refetch(), join, reconnect, cancel, reset, forfeit, dodge, useSkill,
   };
 }
