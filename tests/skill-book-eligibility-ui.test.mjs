@@ -36,7 +36,7 @@ const code = await build({
       contents: args.path.includes('useSkillBookLoadout')
         ? 'export default () => globalThis.skillBookFixture;'
         : args.path.includes('ErrorToast')
-          ? 'export const showError=(e)=>globalThis.skillBookNotices.push(e.message); export const showSuccess=(m)=>globalThis.skillBookNotices.push(m);'
+          ? 'export const showError=(e)=>globalThis.skillBookNotices.push(typeof e === "string" ? e : e.message); export const showSuccess=(m)=>globalThis.skillBookNotices.push(m);'
           : 'export default () => null;',
     }));
   } }],
@@ -67,9 +67,10 @@ try {
   await act(async () => { collectible.click(); });
   assert.match(document.getElementById('skill-equip-reason').textContent, /female avatar/);
   assert.equal(slotButtons().length, 4);
-  assert.ok(slotButtons().every((button) => button.disabled && button.getAttribute('aria-describedby') === 'skill-equip-reason'));
+  assert.ok(slotButtons().every((button) => button.getAttribute('aria-disabled') === 'true' && button.getAttribute('aria-describedby') === 'skill-equip-reason'));
   await act(async () => { slotButtons()[0].click(); });
   assert.equal(calls.length, 0);
+  assert.ok(notices.some((notice) => /female avatar/.test(notice)));
 
   // The same owned card becomes usable after the server reports a compatible avatar.
   globalThis.skillBookFixture.skills = [{ ...skill, can_equip: true, equip_error: null }];
@@ -83,7 +84,7 @@ try {
   const { payload } = drag(usable);
   assert.equal(JSON.parse(payload['application/json']).user_card_id, 'artemis');
   assert.match(document.body.textContent, /one of the 4 Luna skill slots/);
-  console.log('PASS: four-slot counter; incompatible cards stay visible; explanation, disabled equip and blocked dragging; compatible avatar enables owned-card equip and dragging.');
+  console.log('PASS: four-slot counter; incompatible cards stay visible; explanation, guarded equip with feedback and blocked dragging; compatible avatar enables owned-card equip and dragging.');
 } finally {
   await act(async () => { root.unmount(); });
   dom.window.close();

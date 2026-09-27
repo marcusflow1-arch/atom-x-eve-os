@@ -277,7 +277,10 @@ test('existing female starter-card behavior remains available and repeat bootstr
   setGender('female');
   const first = await book('bootstrap');
   assert.equal(first.skills.filter((s) => effects.includes(s.card?.animation_effect?.id)).length, 3);
-  assert.ok(first.skills.every((s) => s.can_equip));
+  assert.ok(first.skills.filter((s) => effects.includes(s.card?.animation_effect?.id)).every((s) => s.can_equip));
+  const maleSkill = first.skills.find((s) => s.card?.animation_effect?.id === 'getsuga_tensho');
+  assert.equal(maleSkill.can_equip, false);
+  assert.equal(maleSkill.required_avatar_gender, 'male');
   await book('bootstrap');
   assert.equal(rows('UserCard').length, 4);
 });

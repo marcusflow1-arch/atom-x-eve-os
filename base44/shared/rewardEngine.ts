@@ -9,6 +9,7 @@ export async function grantCard(svc: any, userId: string, tradingCardId: string,
   const source = String(options.source || 'achievement');
   const key = options.grant_key || rewardKey('card', userId, source, String(options.achievement_id || ''), String(tradingCardId));
   let grant = await findKeyedRecord(svc.RewardGrant, { user_id: userId, grant_key: key });
+  if (grant?.payload && (grant.payload.kind !== 'card' || String(grant.payload.trading_card_id) !== String(tradingCardId))) throw rewardError('Reward key does not match the card');
   if (grant?.status === 'completed') return ownedDeliveredCard(svc, userId, grant.user_card_id || '');
   if (!grant?.payload) {
     const card = await svc.TradingCard.get(String(tradingCardId || ''));

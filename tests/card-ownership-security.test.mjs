@@ -356,6 +356,7 @@ test('normal users cannot apply the catalog migration', async () => {
 for (const type of ['ability', 'Ability']) {
   test(type + ' cards remain equippable and survive a Skill Book reload', async () => {
     seedCard({ card_type: type });
+    rows('Avatar')[0].gender = 'male';
     const result = await call('skillBookLoadout', { action: 'equip', data: { slot: 2, user_card_id: 'owned' } });
     assert.equal(result.loadout.slots[2].user_card_id, 'owned');
     assert.equal(result.skills.find((skill) => skill.user_card_id === 'owned').can_equip, true);
