@@ -42,6 +42,18 @@ function clampPos(match: Row, playerId: string, pos: Row = {}) {
   const box = boxFor(match, playerId);
   return { x: clamp(pos.x, box.minX, box.maxX), z: clamp(pos.z, box.minZ, box.maxZ) };
 }
+function turnPlayerId(match: Row) {
+  const ids = (match?.player_ids || []).map(String);
+  return ids.find((id: string) => match?.atb?.[id]?.turn === true) || String(match?.host_id || ids[0] || '');
+}
+function turnAtb(match: Row, activeId: string, now = Date.now()) {
+  const ids = (match?.player_ids || []).map(String);
+  return Object.fromEntries(ids.map((id: string) => [id, {
+    value: id === String(activeId) ? 100 : 0,
+    at: new Date(now).toISOString(),
+    turn: id === String(activeId),
+  }]));
+}
 
 function publicQueue(row: Row | null) {
   if (!row) return null;
@@ -57,23 +69,27 @@ function publicMatch(row: Row | null) {
     winner_id: row.winner_id || null, ended_reason: row.ended_reason || null,
     disconnects: row.disconnects || {}, pause_started_at: row.pause_started_at || null,
     reconnect_grace_ms: RECONNECT_GRACE_MS, prestige_awards: row.prestige_awards || {},
+    turn_player_id: turnPlayerId(row),
     attack_revision: Number(row.attack_revision || 0), last_attack: row.last_attack || null,
     hit_log: Array.isArray(row.hit_log) ? row.hit_log.slice(-20) : [],
   };
 }
 
-async function getAvatarSnapshot(svc: any, userId: string) {
+async function getAvatarSnapshot(svc: any, userId: string, requested: Row = {}) {
   const rows = await svc.Avatar.filter({ user_id: userId }, '-updated_date', 1).catch(() => []);
   const avatar = rows?.[0] || {};
-  const gender = avatar.gender === 'female' ? 'female' : 'male';
+  const requestedAppearance = requested.avatar_appearance && typeof requested.avatar_appearance === 'object' ? requested.avatar_appearance : {};
+  const requestedGender = String(requested.avatar_gender || requestedAppearance.gender || '').trim().toLowerCase();
+  const gender = requestedGender === 'female' ? 'female' : requestedGender === 'male' ? 'male' : avatar.gender === 'female' ? 'female' : 'male';
   const fallbackModel = gender === 'female' ? FEMALE_MODEL : MALE_MODEL;
-  const appearance = Object.fromEntries(APPEARANCE_KEYS.filter(k => avatar[k] !== undefined).map(k => [k, avatar[k]]));
+  const source = { ...avatar, ...requestedAppearance };
+  const appearance = Object.fromEntries(APPEARANCE_KEYS.filter(k => source[k] !== undefined).map(k => [k, source[k]]));
   appearance.gender = gender;
-  appearance.model_url = String(avatar.model_url || fallbackModel);
+  appearance.model_url = String(requested.avatar_model_url || requestedAppearance.model_url || avatar.model_url || fallbackModel);
   appearance.base_body_gender = gender;
-  appearance.base_body_model_url = String(avatar.base_body_model_url || appearance.model_url || fallbackModel);
-  appearance.appearance_version = Math.max(3, Number(avatar.appearance_version || 3));
-  if (gender === 'female') appearance.female_model_variant = avatar.female_model_variant || 'artemis_archer';
+  appearance.base_body_model_url = String(requestedAppearance.base_body_model_url || avatar.base_body_model_url || appearance.model_url || fallbackModel);
+  appearance.appearance_version = Math.max(3, Number(requestedAppearance.appearance_version || avatar.appearance_version || 3));
+  if (gender === 'female') appearance.female_model_variant = requestedAppearance.female_model_variant || avatar.female_model_variant || 'artemis_archer';
   return { avatar_gender: gender, avatar_model_url: appearance.model_url, avatar_appearance: appearance };
 }
 
@@ -360,8 +376,14 @@ Deno.serve(async (req) => {
     }
     if (action === 'join') {
       const mode=String(data.mode||'').toLowerCase(); if(!MODES.has(mode)) return json({error:'Choose PvP, PvE, or World Boss.'},400);
-      const current=await latestQueue(svc,userId); if(current){const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),server_time:Date.now()});}
-      const avatar=await getAvatarSnapshot(svc,userId);
+      const current=await latestQueue(svc,userId); if(current){
+        if(current.status==='waiting'){
+          const refreshedAvatar=await getAvatarSnapshot(svc,userId,data);
+          await svc.AIBattleQueueEntry.update(current.id,{...refreshedAvatar});
+        }
+        const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),server_time:Date.now()});
+      }
+      const avatar=await getAvatarSnapshot(svc,userId,data);
       const created=await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso() });
       const paired=await tryPair(svc,mode); const queue=await svc.AIBattleQueueEntry.get(created.id).catch(()=>created);
       return json({queue:publicQueue(queue),match:publicMatch(paired&&(paired.player_ids||[]).map(String).includes(userId)?paired:null),server_time:Date.now()});
@@ -380,7 +402,7 @@ Deno.serve(async (req) => {
         // combat. This guarantees dashboard Skill Slots 1-4 and PvP Slots 1-4
         // are the same loadout, even if the queue sat open for a while.
         match = await syncFrozenSkillsForMatch(svc, match);
-        const start=Date.now()+3500; const ids=(match.player_ids||[]).map(String); const atb=Object.fromEntries(ids.map((id:string)=>[id,{value:ATB_START,at:new Date(start).toISOString()}]));
+        const start=Date.now()+3500; const ids=(match.player_ids||[]).map(String); const atb=turnAtb(match,String(match.host_id||ids[0]||''),start);
         const players=(match.players||[]).map((p:Row)=>({...p,hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP),max_hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP)}));
         match=await svc.AIBattleMatch.update(match.id,{status:'countdown',ready_at:nowIso(),fight_starts_at:new Date(start).toISOString(),fight_ends_at:new Date(start+180000).toISOString(),players,atb,cooldowns:{},dodges:{},pending_hits:[],hit_log:[]});
       }
@@ -398,9 +420,11 @@ Deno.serve(async (req) => {
       match=await settleMatch(svc,match);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
+      if(turnPlayerId(match)!==userId) return json({error:'It is not your turn.'},409);
       const now=Date.now(); const currentAtb=atbNow(match.atb?.[userId],now); const cd=Date.parse(match.cooldowns?.[userId]?._dodge||0);
       if(cd>now) return json({error:'Dodge is on cooldown.'},409); if(currentAtb<DODGE.atb_cost) return json({error:'Not enough ATB.'},409);
-      const atb={...(match.atb||{}),[userId]:{value:currentAtb-DODGE.atb_cost,at:new Date(now).toISOString()}};
+      const nextPlayer=(match.player_ids||[]).map(String).find((id:string)=>id!==userId)||userId;
+      const atb=turnAtb(match,nextPlayer,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...(match.cooldowns?.[userId]||{}),_dodge:new Date(now+DODGE.cooldown_ms).toISOString()}};
       const dodges={...(match.dodges||{}),[userId]:{from:new Date(now).toISOString(),until:new Date(now+DODGE.window_ms).toISOString()}};
       match=await svc.AIBattleMatch.update(match.id,{atb,cooldowns,dodges}); return json({match:publicMatch(match),server_time:now});
@@ -412,6 +436,7 @@ Deno.serve(async (req) => {
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId);
       if(!me||!target) return json({error:'Fighters are not ready.'},409);
+      if(turnPlayerId(match)!==userId) return json({error:'It is not your turn.'},409);
       const now=Date.now(); const myCooldowns=match.cooldowns?.[userId]||{};
       if(Date.parse(myCooldowns._melee||0)>now) return json({error:'Melee attack is recovering.'},409);
       if(now-Number(myCooldowns._last_cast_at||0)<400) return json({error:'Acting too quickly.'},409);
@@ -431,7 +456,7 @@ Deno.serve(async (req) => {
       const attackRevision=Number(match.attack_revision||0)+1;
       // A default melee strike is a real turn/action, not a free extra hit. Once
       // committed it spends the current action budget and restarts ATB from 0.
-      const atb={...(match.atb||{}),[userId]:{value:0,at:new Date(now).toISOString()}};
+      const atb=turnAtb(match,targetId,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,_melee:new Date(now+BASIC_MELEE.cooldown_ms).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
       const ended=targetHpAfter<=0;
@@ -445,6 +470,7 @@ Deno.serve(async (req) => {
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId); const slot=Number(data.slot);
+      if(turnPlayerId(match)!==userId) return json({error:'It is not your turn.'},409);
       if(!Number.isInteger(slot)||slot<0||slot>=SKILL_SLOT_COUNT) return json({error:'Invalid skill slot.'},400);
       const skill=(me?.skills||[]).find((s:Row)=>Number(s.slot)===slot); if(!skill) return json({error:'That skill is not equipped.'},409);
       // Recheck legacy frozen loadouts against the avatar captured for this match.
@@ -460,7 +486,7 @@ Deno.serve(async (req) => {
       const crit=Math.random()<0.10; const variance=0.95+Math.random()*0.10; const damage=Math.round(Number(skill.base_damage||40)*(1+0.03*(Math.max(1,Number(skill.level||1))-1))*variance*(crit?1.5:1));
       const castId=String(data.cast_id||crypto.randomUUID()); const resolvesAt=new Date(now+Number(skill.hit_ms||400)).toISOString();
       const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',damage,crit,resolves_at:resolvesAt}];
-      const atb={...(match.atb||{}),[userId]:{value:currentAtb-Number(skill.atb_cost||0),at:new Date(now).toISOString()}};
+      const atb=turnAtb(match,targetId,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,[String(slot)]:new Date(now+Number(skill.cooldown_ms||3000)).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
       match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions});
