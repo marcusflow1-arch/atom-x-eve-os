@@ -238,3 +238,122 @@ export function createChidoriFx(THREE, scene, opts = {}) {
     return win(ta, 0.05, 0.3) * 0.35 + win(ta, 0.3, 0.42) * 0.35 + win(ta, 0.5, 1.0) * 0.3 - win(ta, 2.35, 2.6) * 0.55 - win(ta, 2.6, 3.0) * 0.25
       - win(ta, 3.0, 3.18) * 0.2;
   }
+  function update(S) {
+    const { ta, camera: cam } = S; const tv = S.tv ?? -1;
+    nv = 0; ni = 0; np = 0;
+    const camP = cam.getWorldPosition(V());
+    const f2 = S.seedFrame ?? Math.floor(ta * 15 + 1000);            // on twos
+    const since = S.since || ((e) => ta - e);            // video seconds since a clip time was reached (slow-mo safe)
+    const out = { flash: 0, invert: 0, lines: 0, linesCenter: null, shake: 0, aberration: 0, exposure: 0 };
+    const hand = S.att.bone('hand_r'), fing = S.att.bone('fingers_r');
+    const palm = hand.clone().lerp(fing, 0.55);
+    const fwd = S.att.fwd.clone();
+    const active = ta > -0.01 && ta < 4.3;
+    const path = S.att.pathAt;                           // (t) -> { palm, tip } world, from the precomputed clip path
+    const c = active ? clamp(charge(ta), 0, 1) : 0;
+    const flick = (k) => 0.75 + 0.25 * Math.sin(ta * 97 + k * 13.1) * Math.sin(ta * 61 + k * 5.7);
+
+    // ---------------- orb + hand arcs
+    const orbI = c * flick(1);
+    orb.visible = orbHalo.visible = orbI > 0.01;
+    if (orb.visible) {
+      orb.position.copy(palm); orbHalo.position.copy(palm);
+      const pulse = 1 + 0.12 * ((hash(f2, 3) % 100) / 100);
+      orb.scale.setScalar((0.12 + 0.16 * c) * pulse); orbHalo.scale.setScalar((0.3 + 0.4 * c) * pulse);
+      orb.material.opacity = Math.min(1, orbI * 1.1); orbHalo.material.opacity = orbI * 0.35;
+      const nArc = Math.round(3 + 8 * c);
+      const r = rng(hash(f2, 11));
+      for (let i = 0; i < nArc; i++) {
+        const d = V(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize();
+        const L = (0.08 + (0.12 + 0.3 * r()) * c);
+        bolt(palm, palm.clone().addScaledVector(d, L), hash(f2, i, 17), { w: 0.012 + 0.012 * c, inten: 0.9 + 0.6 * r(), jag: 0.35, branches: r() < 0.5 ? 1 : 0, depth: 4, cam: camP });
+      }
+      // arcs crawling up the forearm
+      const elbow = S.att.bone('lowerarm_r');
+      for (let i = 0; i < Math.round(2 + 3 * c); i++) {
+        const a = hand.clone().lerp(elbow, r() * 0.9).add(V(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.12));
+        const b = hand.clone().lerp(elbow, r()).add(V(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.12));
+        bolt(a, b, hash(f2, i, 23), { w: 0.008, inten: 0.8 * c, jag: 0.4, branches: 0, depth: 3, cam: camP });
+      }
+      for (let i = 0; i < Math.round(8 + 18 * c); i++) {
+        const d = V(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize();
+        spark(palm.clone().addScaledVector(d, 0.05 + r() * (0.15 + 0.25 * c)), 0.01 + r() * 0.016, 0.5 + 0.8 * r());
+      }
+      handLight.position.copy(palm); handLight.intensity = (0.4 + 1.8 * c) * flick(2) * (opts.lights === false ? 0 : 1);
+    } else handLight.intensity = 0;
+
+    // ---------------- ground: slam, disk, rising bolts, hand -> ground bolts, scorch
+    let g = null;
+    if (ta >= 0.28 && active) { const q = path(0.30).palm; g = V(q.x, 0.012, q.z); }
+    const diskI = g ? (win(ta, 0.28, 0.36) * 1.6 - win(ta, 0.36, 0.5) * 0.6 + bump(ta, 0.9, 1.0, 1.2) * 0.5) * (1 - win(ta, 1.35, 1.75)) : 0;
+    disk.visible = diskI > 0.01;
+    if (disk.visible) { disk.position.copy(g); diskMat.uniforms.uI.value = diskI * flick(4); diskMat.uniforms.uT.value = Math.floor(ta * 15) * 0.37; diskMat.uniforms.uR.value = 1.0 + 0.2 * win(ta, 0.3, 0.6); }
+    scorch.visible = !!g && ta > 0.3;
+    if (scorch.visible) { scorch.position.set(g.x, 0.008, g.z); scorchMat.uniforms.uDark.value = win(ta, 0.3, 0.5); scorchMat.uniforms.uGlow.value = win(ta, 0.3, 0.36) * (1 - win(ta, 1.2, 3.2)) * flick(5); }
+    const ringU = (ta - 0.3) / 0.4;
+    groundRing.visible = !!g && ringU > 0 && ringU < 1;
+    if (groundRing.visible) { groundRing.position.set(g.x, 0.03, g.z); groundRing.scale.setScalar(0.3 + 2.6 * Math.sqrt(ringU)); groundRing.material.uniforms.uI.value = (1 - ringU) * 1.4; groundRing.material.uniforms.uW.value = 0.1; }
+    if (g && ta > 0.3 && ta < 1.4) {
+      const r = rng(hash(f2, 31));
+      // palm -> ground
+      const nG = 2 + Math.floor(r() * 2);
+      for (let i = 0; i < nG; i++) {
+        const e = g.clone().add(V((r() - 0.5) * 0.7, 0, (r() - 0.5) * 0.7));
+        bolt(palm, e, hash(f2, i, 37), { w: 0.02, inten: 1.2, jag: 0.25, branches: 1, depth: 5, cam: camP });
+      }
+      // crawling along the ground
+      for (let i = 0; i < 5; i++) {
+        const a0 = r() * Math.PI * 2; const r0 = 0.1 + r() * 0.4; const r1 = 0.7 + r() * 1.0;
+        const a = g.clone().add(V(Math.cos(a0) * r0, 0.02, Math.sin(a0) * r0)); const b = g.clone().add(V(Math.cos(a0 + (r() - 0.5) * 0.6) * r1, 0.02, Math.sin(a0 + (r() - 0.5) * 0.6) * r1));
+        bolt(a, b, hash(f2, i, 41), { w: 0.014, inten: 0.9, jag: 0.3, branches: 1, depth: 4, cam: camP });
+      }
+      // rising bolts (the "pillar" of the charge): bursts right after the slam and at the glare
+      const rise = win(ta, 0.33, 0.4) * (1 - win(ta, 0.62, 0.8)) + bump(ta, 0.92, 1.0, 1.25) * 1.2 + 0.25 * win(ta, 0.4, 0.6) * (1 - win(ta, 1.2, 1.4));
+      const nR = Math.round(rise * 3.2);
+      for (let i = 0; i < nR; i++) {
+        const a0 = Math.PI * (0.62 + r() * 1.76); const r0 = 0.45 + r() * 0.8;      // sides and behind (never between the camera and the face)
+        const a = g.clone().add(V(Math.sin(a0) * r0, 0.02, Math.cos(a0) * r0 - 0.35));
+        const b = a.clone().add(V((r() - 0.5) * 1.2, 1.8 + r() * 2.6, (r() - 0.5) * 0.8 - 0.2));
+        bolt(a, b, hash(f2, i, 43), { w: 0.022 + 0.014 * r(), inten: 1.0, jag: 0.2, branches: 2, depth: 6, cam: camP });
+      }
+      burst(g.clone().setY(0.05), ta, 0.3, 991, 120, 5.5, 0.55, V(0, 1, 0), 1.1, 0.03, 4.0);
+      burst(g.clone().setY(0.05), ta, 0.95, 992, 70, 4.5, 0.5, V(0, 1, 0), 0.9, 0.025, 4.0);
+    }
+    if (g) {
+      out.flash += Math.max(0, 1 - Math.abs(since(0.30)) / 0.07) * 0.22;
+      out.shake += bump(ta, 0.29, 0.31, 0.6) * 0.6 + (ta > 0.3 && ta < 1.35 ? 0.08 : 0) + bump(ta, 0.93, 0.98, 1.2) * 0.3;
+    }
+
+    // ---------------- dash: trail + ground scar + speed lines
+    const trailI = win(ta, 1.42, 1.5) * (1 - win(ta, 2.05, 2.5));
+    if (active && ta > 1.42 && trailI > 0.01) {
+      const recent = []; const tEnd = Math.min(ta, 2.0);
+      for (let tt = Math.max(1.40, tEnd - 0.3); tt <= tEnd + 1e-6; tt += 1 / 60) recent.push(path(tt).palm);
+      if (recent.length > 1) {
+        const r = rng(hash(f2, 51));
+        for (let k = 0; k < 3; k++) {
+          const pts = recent.map((p, i) => p.clone().add(V(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.07 + 0.05 * k)));
+          if (ta < 2.02) pts.push(palm.clone());
+          strip(pts, 0.035 - k * 0.008, trailI * (1.2 - k * 0.3), camP, false);
+        }
+        // hand -> ground arcs behind
+        for (let i = 0; i < 3; i++) {
+          const s = recent[Math.floor(r() * recent.length)];
+          bolt(s, V(s.x + (r() - 0.5) * 0.3, 0.01, s.z - r() * 0.3), hash(f2, i, 53), { w: 0.014, inten: trailI, jag: 0.3, branches: 1, depth: 4, cam: camP });
+        }
+      }
+    }
+    const scarI = win(ta, 1.45, 1.55) * (1 - win(ta, 2.4, 3.6));
+    scar.visible = scarDark.visible = active && ta > 1.45 && scarI > 0.01;
+    if (scar.visible) {
+      const a = path(1.45).palm, b = path(Math.min(ta, 1.98)).palm;
+      const len = Math.max(0.1, Math.hypot(b.x - a.x, b.z - a.z));
+      scar.position.set((a.x + b.x) / 2, 0.015, (a.z + b.z) / 2); scar.scale.set(len, 0.42, 1);
+      scar.rotation.set(-Math.PI / 2, 0, Math.atan2(-(b.z - a.z), b.x - a.x)); scarMat.uniforms.uI.value = scarI * flick(7);
+      scarDark.position.copy(scar.position).setY(0.01); scarDark.scale.set(len, 0.3, 1); scarDark.rotation.copy(scar.rotation); scarDark.material.opacity = 0.55 * win(ta, 1.45, 1.6);
+      scarMat.uniforms.uHead.value = 1.0;
+    }
+    if (ta > 1.42 && ta < 2.0) { out.lines = Math.max(out.lines, 0.75 * win(ta, 1.42, 1.5)); out.aberration = 0.004; }
+
+    // ---------------- impact
+    const P = active && ta >= 1.999 ? path(2.0).tip.clone() : null;
