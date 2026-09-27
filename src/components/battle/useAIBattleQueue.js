@@ -130,10 +130,10 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     const status = String(match?.status || '');
     if (match?.id && ['connecting','countdown','fighting'].includes(status)) {
       sessionStorage.setItem('luna_pvp_active_match_id', String(match.id));
-    } else if (status === 'ended') {
+    } else if (status === 'ended' || (state.data?.server_time && !match && !queue)) {
       sessionStorage.removeItem('luna_pvp_active_match_id');
     }
-  }, [match?.id, match?.status]);
+  }, [match?.id, match?.status, queue, state.data?.server_time]);
   const serverOffsetMs = serverTime - Date.now();
 
   useEffect(() => {
