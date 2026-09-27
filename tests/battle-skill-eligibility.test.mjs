@@ -234,13 +234,22 @@ test('legacy male frozen Artemis loadouts cannot cast or spend ATB', async () =>
   assert.equal(rows('AIBattleMatch')[0].atb.a.value, 100);
 });
 
-test('female frozen Artemis skill still casts after profile edits; cooldown remains enforced', async () => {
+test('female frozen Artemis skill still casts after profile edits; turn handoff and cooldown remain enforced', async () => {
   fightingMatch('female');
   const result = await battle('use_skill', { match_id: 'fight', slot: 0, cast_id: 'cast-1' });
   assert.equal(result.cast.effect_id, effects[0]);
   assert.equal(rows('AIBattleMatch')[0].pending_hits.length, 1);
-  assert.equal(rows('AIBattleMatch')[0].atb.a.value, 50);
-  await battle('use_skill', { match_id: 'fight', slot: 0, cast_id: 'cast-2' }, 'a', 409);
+  const match = rows('AIBattleMatch')[0];
+  assert.equal(match.atb.a.value, 0);
+  assert.equal(match.atb.a.turn, false);
+  assert.equal(match.atb.b.value, 100);
+  assert.equal(match.atb.b.turn, true);
+  const offTurn = await battle('use_skill', { match_id: 'fight', slot: 0, cast_id: 'cast-2' }, 'a', 409);
+  assert.match(offTurn.error, /not your turn/);
+  match.atb.a = { ...match.atb.a, value: 100, turn: true };
+  match.atb.b = { ...match.atb.b, value: 0, turn: false };
+  const coolingDown = await battle('use_skill', { match_id: 'fight', slot: 0, cast_id: 'cast-3' }, 'a', 409);
+  assert.match(coolingDown.error, /cooldown/);
   assert.equal(rows('AIBattleMatch')[0].pending_hits.length, 1);
 });
 

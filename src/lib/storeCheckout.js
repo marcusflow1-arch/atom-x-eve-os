@@ -4,6 +4,12 @@ export function formatMoney(amount, currency = 'USD') {
   try { return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(amount)); }
   catch { return Number(amount).toFixed(2) + ' ' + currency; }
 }
+export function stripeCheckoutUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'checkout.stripe.com' && !url.username && !url.password ? url.href : null;
+  } catch { return null; }
+}
 export const checkoutCartKey = (userId, items) => 'atom-checkout:' + userId + ':' + JSON.stringify(items.map(item => [item.type, item.id]).sort());
 export function checkoutAttempt(userId, items, storage = window.sessionStorage) {
   const key = checkoutCartKey(userId, items);

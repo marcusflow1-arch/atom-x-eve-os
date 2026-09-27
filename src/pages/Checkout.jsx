@@ -6,7 +6,7 @@ import { useCart } from '@/components/CartContext';
 import { base44 } from '@/api/base44Client';
 import FreeGameClaim from '@/components/store/FreeGameClaim';
 import { storeError } from '@/components/store/useGameClaim';
-import { checkoutAttempt, forgetCheckoutAttempt, formatMoney } from '@/lib/storeCheckout';
+import { checkoutAttempt, forgetCheckoutAttempt, formatMoney, stripeCheckoutUrl } from '@/lib/storeCheckout';
 
 export default function Checkout() {
   const { user, isAuthenticated, login } = useAuth();
@@ -14,6 +14,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [resumeUrl, setResumeUrl] = useState(null);
   const running = useRef(false);
   const free = cart.filter(item => item.type === 'game' && Number(item.price) === 0);
   const paid = cart.filter(item => !free.includes(item));
@@ -23,7 +24,7 @@ export default function Checkout() {
   const purchase = async () => {
     if (!isAuthenticated) { login(); return; }
     if (running.current || !paid.length || !supported) return;
-    running.current = true; setProcessing(true); setError('');
+    running.current = true; setProcessing(true); setError(''); setResumeUrl(null);
     try {
       const checkoutKey = checkoutAttempt(user.id, paid);
       const response = await base44.functions.invoke('createCheckoutSession', {
@@ -34,13 +35,14 @@ export default function Checkout() {
       const data = response?.data || response;
       if (data?.verify && data.sessionId) { navigate('/OrderConfirmation?session_id=' + encodeURIComponent(data.sessionId)); return; }
       if (data?.error) throw { response: { data } };
-      const destination = new URL(data?.url);
-      if (destination.protocol !== 'https:' || destination.hostname !== 'checkout.stripe.com') throw new Error('The secure checkout link is unavailable. Please try again.');
-      window.location.assign(destination.href);
+      const destination = stripeCheckoutUrl(data?.url);
+      if (!destination) throw new Error('The secure checkout link is unavailable. Please try again.');
+      window.location.assign(destination);
     } catch (failure) {
       const code = failure?.response?.data?.code || failure?.data?.code;
       if (code === 'CHECKOUT_EXPIRED') forgetCheckoutAttempt(user.id, paid);
       setError(storeError(failure));
+      setResumeUrl(stripeCheckoutUrl(failure?.response?.data?.resume_url || failure?.data?.resume_url));
     } finally { running.current = false; setProcessing(false); }
   };
   return <main className="min-h-screen bg-slate-950 text-white p-6 md:p-12 page-container">
@@ -64,6 +66,7 @@ export default function Checkout() {
           <p className="mb-5 text-sm leading-relaxed text-slate-400">{paid.length ? 'Review the final catalog price and enter payment details securely on Stripe.' : 'Use Claim free game to add each game and its starter rewards to your library.'}</p>
           {!supported && <p role="alert" className="mb-4 text-sm text-amber-200">Remove unsupported items or return to their store listing before checkout.</p>}
           {error && <p role="alert" className="mb-4 text-sm text-rose-300">{error}</p>}
+          {resumeUrl && <a href={resumeUrl} className="mb-4 block rounded-xl border border-cyan-400/40 p-3 text-center font-semibold text-cyan-300">Resume earlier checkout</a>}
           {paid.length > 0 && <button onClick={purchase} disabled={processing || !supported} className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 disabled:opacity-50">
             {processing ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
             {processing ? 'Opening checkout…' : isAuthenticated ? 'Continue to secure checkout' : 'Sign in to checkout'}

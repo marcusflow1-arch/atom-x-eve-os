@@ -20,6 +20,27 @@ Deno.serve(async (req) => {
         success.searchParams.get('session_id') !== '{CHECKOUT_SESSION_ID}') throw rewardError('Checkout return URLs are invalid', 400);
     const svc = base44.asServiceRole.entities;
     let order = await findKeyedRecord(svc.Order, { user_id: user.id, checkout_key: checkoutKey });
+    if (!order) {
+      let earlier = null, earlierSession = null;
+      for (let skip = 0; ; skip += 100) {
+        const page = await svc.Order.filter({ user_id: user.id, status: 'pending' }, '-created_date', 100, skip);
+        for (const candidate of page) {
+          if (!(candidate.items || []).some((item: any) => requested.some(request => request.id === item.item_id && request.type === item.item_type))) continue;
+          const savedSession = candidate.stripe_session_id ? await stripe.checkout.sessions.retrieve(candidate.stripe_session_id) : null;
+          if (savedSession?.status === 'complete') return Response.json({ sessionId: savedSession.id, orderId: candidate.id, verify: true });
+          if (savedSession?.status === 'expired') continue;
+          if (!earlier) { earlier = candidate; earlierSession = savedSession; }
+        }
+        if (page.length < 100) break;
+      }
+      if (earlier) {
+        if (!sameCart(earlier, requested) || (!earlierSession && earlier.fulfillment_version !== CHECKOUT_VERSION)) {
+          return Response.json({ error: 'An earlier checkout contains an item in this cart. Resume that checkout or return to its original cart before starting another.',
+            code: 'CHECKOUT_IN_PROGRESS', orderId: earlier.id, resume_url: earlierSession?.url }, { status: 409 });
+        }
+        order = earlier;
+      }
+    }
     if (order) {
       if (!sameCart(order, requested)) throw rewardError('This checkout belongs to a different cart', 409);
       if (order.status === 'refunded' || order.status === 'failed') throw rewardError('This checkout requires support review');
@@ -37,7 +58,7 @@ Deno.serve(async (req) => {
     else {
       // Never reuse a Stripe key beyond its documented retention window.
       if (!Number.isFinite(Date.parse(order.created_date)) || Date.now() - Date.parse(order.created_date) > 23 * 60 * 60 * 1000) throw Object.assign(rewardError('This older checkout needs a payment status review before retrying'), { code: 'CHECKOUT_REVIEW_REQUIRED' });
-      session = await stripe.checkout.sessions.create(checkoutParams(order), { idempotencyKey: 'atom-checkout:' + user.id + ':' + checkoutKey });
+      session = await stripe.checkout.sessions.create(checkoutParams(order), { idempotencyKey: 'atom-checkout:' + user.id + ':' + order.checkout_key });
       await conditionalUpdate(svc.Order, { id: order.id, stripe_session_id: { $exists: false } }, { $set: { stripe_session_id: session.id } });
       const saved = await svc.Order.get(order.id);
       if (saved.stripe_session_id !== session.id) throw rewardError('Checkout session could not be saved', 503);
