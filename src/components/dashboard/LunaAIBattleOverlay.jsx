@@ -16,7 +16,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const { data: onlineSummary } = useOnlineSummary();
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
-  const wasReadyRef = useRef(false);
+  const queuedFromThisOverlayRef = useRef(false);
   // The always-mounted dashboard stage owns room joining, ready checks and peer
   // relays. This popup is UI/control only so opening it cannot duplicate attacks
   // or damage broadcasts.
@@ -33,27 +33,22 @@ export default function LunaAIBattleOverlay({ onClose }) {
     if (queuedMode && MODES.some((item) => item.id === queuedMode)) setMode(queuedMode);
   }, [queuedMode]);
 
-  // When a queue that was visible in this popup actually becomes READY, treat it
-  // as a game-state transition and reveal the battle stage automatically. If the
-  // user opens AI Battle later while already in a match, keep the popup open so
-  // Leave Match remains accessible.
+  // A match-found transition should immediately hand the center workspace over
+  // to the PvP arena. Keep this scoped to queues started from this open menu so
+  // reopening AI Battle during an existing match does not instantly close it.
   useEffect(() => {
-    const becameReady = ready && !wasReadyRef.current;
-    wasReadyRef.current = ready;
-    if (!becameReady) return undefined;
-
-    const timer = window.setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
-        detail: { matchId: battle.match?.id || null, mode: battle.match?.mode || mode },
-      }));
-      onClose?.();
-    }, 220);
-
-    return () => window.clearTimeout(timer);
-  }, [ready, battle.match?.id, battle.match?.mode, mode, onClose]);
+    if (!queuedFromThisOverlayRef.current) return;
+    if (!connecting && !ready) return;
+    queuedFromThisOverlayRef.current = false;
+    window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
+      detail: { matchId: battle.match?.id || null, mode: battle.match?.mode || mode },
+    }));
+    onClose?.();
+  }, [connecting, ready, battle.match?.id, battle.match?.mode, mode, onClose]);
 
   const leaveQueue = useCallback(async () => {
     if (battle.busy) return;
+    queuedFromThisOverlayRef.current = false;
     try {
       await battle.cancel();
     } catch (error) {
@@ -63,12 +58,21 @@ export default function LunaAIBattleOverlay({ onClose }) {
 
   const enterQueue = useCallback(async () => {
     if (battle.busy || waiting || connecting || ready) return;
+    queuedFromThisOverlayRef.current = true;
     try {
-      await battle.join(mode);
+      const body = await battle.join(mode);
+      if (body?.match && ['matched', 'countdown', 'fighting'].includes(String(body.match.status || ''))) {
+        queuedFromThisOverlayRef.current = false;
+        window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
+          detail: { matchId: body.match.id || null, mode: body.match.mode || mode },
+        }));
+        onClose?.();
+      }
     } catch (error) {
+      queuedFromThisOverlayRef.current = false;
       if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
     }
-  }, [battle, mode, waiting, connecting, ready]);
+  }, [battle, mode, waiting, connecting, ready, onClose]);
 
   const chooseMode = useCallback((nextMode) => {
     // While waiting, clicking the currently selected queue tile again means
