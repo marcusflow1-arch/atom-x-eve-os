@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
 import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
 import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
