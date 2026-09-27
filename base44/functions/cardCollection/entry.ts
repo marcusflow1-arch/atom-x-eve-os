@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
         card_type: canonicalType(card.card_type || 'collectible'),
         game_id: card.game_id || '',
         game_title: gameById.get(String(card.game_id || ''))?.title || '',
-        genre: gameById.get(String(card.game_id || ''))?.genre || '',
+        genre: lower(gameById.get(String(card.game_id || ''))?.title) === 'adam xe' ? 'Adam XE' : (gameById.get(String(card.game_id || ''))?.genre || ''),
         achievement_id: card.achievement_id || '',
         equip_slot: card.equip_slot || '',
         stats: card.stats || {},
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     // the migration runs. They disappear from this fallback once linked.
     const linkedIds = new Set(cards.filter((c: AnyObj) => c.user_card_id).map((c: AnyObj) => String(c.user_card_id)));
     const legacyOwned = owned.filter((row: AnyObj) => !row.trading_card_id && !linkedIds.has(String(row.id))).map((row: AnyObj) => ({
-      id: `legacy:${row.id}`, trading_card_id: '', name: row.card_name || 'Card', description: '', image: row.card_image || '', image_url: row.card_image || '', rarity: row.card_rarity || 'Common', card_type: canonicalType(row.card_type), game_id: row.game_id || '', achievement_id: row.achievement_id || '', equip_slot: '', stats: {}, animation_effect: row.animation_effect || null, model_url: row.animation_effect?.model_url || '', home_item_key: '', stackable: false, tradable: row.trade_status !== 'locked_in_trade', max_level: 50, owned: true, quantity: Math.max(1, Number(row.quantity || 1)), user_card_id: row.id, equipped_to: row.equipped_to || (row.is_equipped ? 'skill_book' : 'none'), trade_status: row.trade_status || 'available', progression: progressByUserCard.get(String(row.id)) || null, legacy: true,
+      id: `legacy:${row.id}`, trading_card_id: '', name: row.card_name || 'Card', description: '', image: row.card_image || '', image_url: row.card_image || '', rarity: row.card_rarity || 'Common', card_type: canonicalType(row.card_type), game_id: row.game_id || '', game_title: row.game_name || '', genre: lower(row.game_name) === 'adam xe' ? 'Adam XE' : (row.genre || ''), achievement_id: row.achievement_id || '', equip_slot: '', stats: {}, animation_effect: row.animation_effect || null, model_url: row.animation_effect?.model_url || '', home_item_key: '', stackable: false, tradable: row.trade_status !== 'locked_in_trade', max_level: 50, owned: true, quantity: Math.max(1, Number(row.quantity || 1)), user_card_id: row.id, equipped_to: row.equipped_to || (row.is_equipped ? 'skill_book' : 'none'), trade_status: row.trade_status || 'available', progression: progressByUserCard.get(String(row.id)) || null, legacy: true,
     }));
 
     return json({ success: true, cards: [...cards, ...legacyOwned], owned_count: owned.length, authenticated: Boolean(user) });
