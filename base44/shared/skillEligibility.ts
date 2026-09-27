@@ -1,17 +1,22 @@
 // Shared server rules for the current owned-card and frozen battle-skill shapes.
 type Skill = Record<string, any> | null | undefined;
 
-export function requiredAvatarGender(skill: Skill): 'female' | null {
-  const effectIds = [skill?.animation_effect?.id, skill?.effect_id];
-  return effectIds.some((id) => String(id || '').trim().toLowerCase().startsWith('artemis_'))
-    ? 'female'
-    : null;
+export function requiredAvatarGender(skill: Skill): 'female' | 'male' | null {
+  const effectIds = [skill?.animation_effect?.id, skill?.effect_id]
+    .map((id) => String(id || '').trim().toLowerCase());
+  if (effectIds.some((id) => id.startsWith('artemis_'))) return 'female';
+  if (effectIds.includes('getsuga_tensho')) return 'male';
+  return null;
 }
 
 export function avatarSkillError(skill: Skill, avatarGender: unknown): string | null {
-  return requiredAvatarGender(skill) === 'female' && String(avatarGender || '').trim().toLowerCase() !== 'female'
-    ? 'Artemis abilities require a female avatar. Switch to your female avatar to equip and use this skill.'
-    : null;
+  const required = requiredAvatarGender(skill);
+  const current = String(avatarGender || '').trim().toLowerCase();
+  if (!required || current === required) return null;
+  if (required === 'female') {
+    return 'This ability is bound to the female Artemis rig. Switch to your female avatar to equip and use it.';
+  }
+  return 'This ability is bound to the male combat rig. Switch to your male avatar to equip and use it.';
 }
 
 export function skillEquipStatus(card: Skill, avatarGender: unknown) {
