@@ -9,7 +9,6 @@ const MODES = new Set(['pvp', 'pve', 'world_boss']);
 const WAITING_LIVE_MS = 60000;
 const MATCH_LIVE_MS = 45000;
 const RECONNECT_GRACE_MS = 120000;
-const QUEUE_HEARTBEAT_MS = 8000;
 const QUEUE_OWNER_RECOVER_MS = 120000;
 const DEFAULT_BATTLE_HP = 1000;
 const ARENA = { width: 12, length: 16, margin_to_net: 1, spawn_distance: 10 };
@@ -159,10 +158,12 @@ async function latestQueue(svc: any, userId: string) {
 async function cleanupQueueDuplicates(svc: any, userId: string) {
   const rows = await activeQueuesForUser(svc, userId);
   if (rows.length <= 1) return rows[0] || null;
-  // A reserved match always wins over a newer accidental waiting row. Otherwise
-  // keep the newest active queue and cancel the rest so rapid Queue/Q presses can
-  // never leave ghost entries that another player can be paired against.
-  const keep = rows.find((r: Row) => r.status === 'matched') || rows[0];
+  // A reserved match always wins. For duplicate waiting rows, keep the OLDEST
+  // active request, not the newest. That gives one stable queue identity when
+  // rapid/concurrent Queue requests race before the first create becomes visible;
+  // every later duplicate converges onto the original row instead of replacing
+  // it and making the UI appear to be repeatedly kicked out and re-queued.
+  const keep = rows.find((r: Row) => r.status === 'matched') || rows[rows.length - 1];
   await Promise.all(rows.filter((r: Row) => String(r.id) !== String(keep.id)).map((r: Row) => svc.AIBattleQueueEntry.update(r.id, { status: 'cancelled' }).catch(() => null)));
   return keep;
 }
