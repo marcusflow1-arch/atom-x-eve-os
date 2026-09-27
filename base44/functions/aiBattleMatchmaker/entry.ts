@@ -329,6 +329,34 @@ async function tryPair(svc: any, mode: string) {
   return unique.length===2 ? await canonicalPairMatch(svc, mode, unique[0], unique[1]) : null;
 }
 
+async function startMatchIfBothArenaReady(svc: any, input: Row | null) {
+  if (!input || input.status !== 'matched') return { match: input, ready: input?.status === 'countdown' || input?.status === 'fighting' };
+  const ids = (input.player_ids || []).map(String).filter(Boolean);
+  if (ids.length !== 2) return { match: input, ready: false };
+  const queues = await Promise.all(ids.map((id: string) => queueForMatch(svc, id, String(input.id))));
+  const ready = queues.length === 2 && queues.every((row: Row | null) => Boolean(row && matchedLive(row) && row.ready_at));
+  if (!ready) return { match: input, ready: false };
+
+  // Both PvP clients have confirmed that their arena fighters are loaded and
+  // both queue heartbeats are live. Start the match immediately from this
+  // server-owned check so a missed/raced ready response cannot leave the arena
+  // visible while combat remains stuck in `matched`.
+  let match = await syncFrozenSkillsForMatch(svc, input);
+  const start = Date.now() + 3500;
+  const atb = turnAtb(match, String(match.host_id || ids[0] || ''), start);
+  const players = (match.players || []).map((p: Row) => ({
+    ...p,
+    hp: finiteHp(p.max_hp, DEFAULT_BATTLE_HP),
+    max_hp: finiteHp(p.max_hp, DEFAULT_BATTLE_HP),
+  }));
+  match = await svc.AIBattleMatch.update(match.id, {
+    status: 'countdown', ready_at: nowIso(), fight_starts_at: new Date(start).toISOString(),
+    fight_ends_at: new Date(start + 180000).toISOString(), players, atb,
+    cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [],
+  });
+  return { match, ready: true };
+}
+
 async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Row | null = null) {
   let queue = await latestQueue(svc, userId);
   if (!queue) return { queue:null, match:null };
@@ -351,6 +379,10 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
   if (queue.status === 'matched' && queue.match_id) {
     let match = await settleMatch(svc, await getMatch(svc, String(queue.match_id)));
     if (!match) { await cancelQueue(svc, queue); return {queue:null,match:null}; }
+    if (match.status === 'matched') {
+      const readiness = await startMatchIfBothArenaReady(svc, match);
+      match = readiness.match;
+    }
     if (pos && ['countdown','fighting'].includes(match.status)) {
       const positions = { ...(match.positions || {}), [userId]: clampPos(match, userId, pos) };
       match = await svc.AIBattleMatch.update(match.id, { positions });
@@ -399,19 +431,9 @@ Deno.serve(async (req) => {
       // on the unrelated dashboard-presence bridge reaching a particular state.
       const mine=await queueForMatch(svc,userId,String(match.id));
       if(mine?.id) await svc.AIBattleQueueEntry.update(mine.id,{ready_at:nowIso(),last_seen_at:nowIso()});
-      const ids=(match.player_ids||[]).map(String);
-      const queues=await Promise.all(ids.map((id:string)=>queueForMatch(svc,id,String(match.id))));
-      const ready=queues.length===ids.length && queues.every((row:Row|null)=>Boolean(row&&matchedLive(row)&&row.ready_at));
-      if(ready&&match.status==='matched'){
-        // Re-read the active Skill Book row at the last safe moment before
-        // combat. This guarantees dashboard Skill Slots 1-4 and PvP Slots 1-4
-        // are the same loadout, even if the queue sat open for a while.
-        match = await syncFrozenSkillsForMatch(svc, match);
-        const start=Date.now()+3500; const atb=turnAtb(match,String(match.host_id||ids[0]||''),start);
-        const players=(match.players||[]).map((p:Row)=>({...p,hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP),max_hp:finiteHp(p.max_hp,DEFAULT_BATTLE_HP)}));
-        match=await svc.AIBattleMatch.update(match.id,{status:'countdown',ready_at:nowIso(),fight_starts_at:new Date(start).toISOString(),fight_ends_at:new Date(start+180000).toISOString(),players,atb,cooldowns:{},dodges:{},pending_hits:[],hit_log:[]});
-      }
-      return json({match:publicMatch(match),ready,server_time:Date.now()});
+      const readiness=await startMatchIfBothArenaReady(svc,match);
+      match=readiness.match;
+      return json({match:publicMatch(match),ready:readiness.ready,server_time:Date.now()});
     }
     if (action === 'forfeit') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
