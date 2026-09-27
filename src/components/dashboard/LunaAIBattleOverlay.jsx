@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
 import useAIBattleQueue from '@/components/battle/useAIBattleQueue';
+import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
 import { showError } from '@/components/error/ErrorToast';
 import useOnlineSummary from '@/components/social/useOnlineSummary';
 
@@ -59,6 +60,9 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const enterQueue = useCallback(async () => {
     if (battle.busy || waiting || connecting || ready) return;
     queuedFromThisOverlayRef.current = true;
+    // Start from the user's queue-button gesture so browsers permit playback.
+    // The persistent dashboard bridge keeps this same loop alive through combat.
+    startLoopSound('bgm_boss');
     try {
       const body = await battle.join(mode);
       if (body?.match && ['matched', 'countdown', 'fighting'].includes(String(body.match.status || ''))) {
@@ -70,6 +74,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
       }
     } catch (error) {
       queuedFromThisOverlayRef.current = false;
+      stopLoopSound('bgm_boss');
       if (!isRateLimitError(error)) showError(error, 'AI Battle Queue');
     }
   }, [battle, mode, waiting, connecting, ready, onClose]);
