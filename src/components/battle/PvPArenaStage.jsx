@@ -216,7 +216,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   requestSkillRef.current = requestSkill;
 
   const requestMelee = async () => {
-    if (!active || escapeMenuOpen || surrendering) return false;
+    if (!active) { setError('The fight is not ready yet.'); return false; }
+    if (!isMyTurn) { setError('Wait for your turn.'); return false; }
+    if (escapeMenuOpen || surrendering) return false;
     const a = positions.current.local, b = positions.current.opponent;
     if (a.distanceTo(b) > 4.25) { setError('Move closer to use the melee attack.'); return false; }
     const currentAtb = serverAtb(match.atb?.[user.id], serverOffsetMs);
@@ -239,7 +241,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   requestMeleeRef.current = requestMelee;
 
   const requestDodge = async () => {
-    if (!active || escapeMenuOpen || surrendering) return;
+    if (!active) { setError('The fight is not ready yet.'); return; }
+    if (!isMyTurn) { setError('Wait for your turn.'); return; }
+    if (escapeMenuOpen || surrendering) return;
     try {
       await invoke('dodge', { match_id: match.id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_dodge', matchId: match.id } }));
@@ -308,7 +312,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         const skills=(p.skills||[]).map((skill)=>({...skill,cooldownEndsAt:cooldowns[String(skill.slot)]||null,cooldownMs:skill.cooldown_ms,atbCost:skill.atb_cost}));
         const castSlot=lastCastSlotRef.current;
         const combatActive=currentMatch?.status==='fighting' && Object.keys(currentMatch?.disconnects || {}).length===0 && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={1000} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
+        const fighterTurn=String(currentMatch?.turn_player_id || currentMatch?.host_id || '')===id;
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} isTurn={fighterTurn} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={1000} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();
@@ -404,6 +409,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     <div ref={mountRef} className="absolute inset-0" />
     {loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
     {match?.status==='countdown'&&loaded===2&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center text-[80px] font-black text-white drop-shadow-[0_0_30px_rgba(60,220,255,.8)]">{count||'FIGHT'}</div>}
+    {active&&!ended&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[71] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${isMyTurn?'border-cyan-200/30 bg-cyan-950/88':'border-white/12 bg-[#0b111c]/88'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${isMyTurn?'text-cyan-100':'text-white/55'}`}>{isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`}</div><div className="mt-0.5 text-[8px] uppercase tracking-[.16em] text-white/30">Choose one action</div></div>}
     {error&&<div className="absolute left-1/2 top-20 z-[70] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm font-bold text-red-100">{error}</div>}
     {opponentDisconnect&&!ended&&<div className="pointer-events-none absolute left-1/2 top-5 z-[72] -translate-x-1/2 rounded-xl border border-amber-200/20 bg-[#10151d]/94 px-5 py-3 text-center text-white shadow-xl"><div className="text-[10px] font-black uppercase tracking-[.24em] text-amber-200/70">Connection interrupted</div><div className="mt-1 text-sm font-bold">Opponent disconnected — waiting to reconnect</div><div className="mt-1 font-mono text-lg font-black text-cyan-200">{Math.floor(reconnectSeconds/60)}:{String(reconnectSeconds%60).padStart(2,'0')}</div></div>}
     {escapeMenuOpen&&!ended&&<div className="absolute inset-0 z-[78] flex items-center justify-center bg-black/55 text-white" aria-label="PvP escape menu">
