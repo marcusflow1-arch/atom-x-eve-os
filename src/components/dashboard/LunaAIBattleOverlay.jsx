@@ -19,10 +19,12 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
   const queuedFromThisOverlayRef = useRef(false);
   const queueRequestRef = useRef(false);
-  // The always-mounted dashboard stage owns room joining, ready checks and peer
-  // relays. This popup is UI/control only so opening it cannot duplicate attacks
-  // or damage broadcasts.
-  const battle = useAIBattleQueue({ sessionBridge: false, polling: false });
+  // The popup does not own the multiplayer room bridge, but it DOES poll the
+  // shared matchmaking query. That makes queue/reservation/connection state
+  // reliable even on dashboard surfaces where the persistent environment bridge
+  // is not mounted. React Query shares the same key, so this does not create a
+  // second match or duplicate combat relays.
+  const battle = useAIBattleQueue({ sessionBridge: false, polling: true });
   const waiting = battle.queue?.status === 'waiting';
   const reserved = battle.match?.status === 'matched';
   const connecting = battle.match?.status === 'connecting';
