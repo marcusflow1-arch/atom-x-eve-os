@@ -18,12 +18,14 @@ export default function LunaAIBattleOverlay({ onClose }) {
   const { data: onlineSummary } = useOnlineSummary();
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
   const queuedFromThisOverlayRef = useRef(false);
+  const queueRequestRef = useRef(false);
   // The always-mounted dashboard stage owns room joining, ready checks and peer
   // relays. This popup is UI/control only so opening it cannot duplicate attacks
   // or damage broadcasts.
   const battle = useAIBattleQueue({ sessionBridge: false, polling: false });
   const waiting = battle.queue?.status === 'waiting';
-  const connecting = battle.match?.status === 'matched';
+  const reserved = battle.match?.status === 'matched';
+  const connecting = battle.match?.status === 'connecting';
   const ready = ['countdown', 'fighting'].includes(String(battle.match?.status || ''));
   const queuedMode = battle.match?.mode || battle.queue?.mode || null;
   const active = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
