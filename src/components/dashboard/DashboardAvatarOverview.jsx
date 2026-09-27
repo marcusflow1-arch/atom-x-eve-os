@@ -154,27 +154,9 @@ export default function DashboardAvatarOverview() {
     return () => window.removeEventListener('lunaAvatarFocusChanged', onFocus);
   }, []);
 
-  // Any dashboard control outside the 3D viewer / attribute panel puts those
-  // two background surfaces into the same subdued state used for game/library
-  // transitions. The seven quick-dock controls are excluded because their own
-  // glass workspace supplies the blur without changing the surrounding layout.
+  // Ordinary dashboard controls must never blur the avatar/dashboard surface.
+  // Blur/dimming is reserved for explicit surface transitions only.
   useEffect(() => {
-    const handlePointerDown = event => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (target.closest('canvas') || target.closest('[aria-label="AI Attribute Box"]') || target.closest('[data-dashboard-quick-control]') || target.closest('[data-dashboard-utility-workspace]') || target.closest('[data-player-animation-controls]') || target.closest('[data-social-controls]')) return;
-
-      const interactive = target.closest('button, a, [role="button"], input, select, textarea');
-      if (!interactive) return;
-
-      if (lastInteractiveRef.current === interactive) {
-        setInteractionDimmed(prev => !prev);
-      } else {
-        lastInteractiveRef.current = interactive;
-        setInteractionDimmed(true);
-      }
-    };
-
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
         if (inventoryMode && inventorySlot) {
@@ -199,12 +181,8 @@ export default function DashboardAvatarOverview() {
       }
     };
 
-    document.addEventListener('pointerdown', handlePointerDown, true);
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown, true);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode, messagesMode, friendsMode, seasonMode, battleMode]);
 
   useEffect(() => {
@@ -342,7 +320,7 @@ export default function DashboardAvatarOverview() {
     };
   }, []);
 
-  const backgroundDimmed = !avatarFocusMode && (interactionDimmed || surface !== 'dashboard');
+  const backgroundDimmed = !avatarFocusMode && surface !== 'dashboard';
   const slotItems = [
     { id: 'inventory', icon: PackageOpen, label: 'Inventory' },
     { id: 'friends', icon: Users, label: 'Friends', alert: Number(socialInbox.friend_unread || 0) > 0, badge: Number(socialInbox.friend_unread || 0) },
@@ -506,14 +484,14 @@ export default function DashboardAvatarOverview() {
       )}
 
       <div
-        className={`absolute top-[72px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
+        className={`absolute top-[26px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
         style={embeddedUtilityMode
           ? {
               left: 'auto',
               right: 'calc(338px + min(560px, calc(100% - 638px)))',
               width: '300px',
             }
-          : { left: '0px', right: '0px', width: 'auto' }}
+          : { left: '0px', right: 'min(338px, 30vw)', width: 'auto' }}
       >
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
