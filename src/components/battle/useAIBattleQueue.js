@@ -95,7 +95,11 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     refetchInterval: polling ? (query) => {
       const body = query.state.data || {};
       const status = String(body?.match?.status || '');
-      if (['matched', 'countdown', 'fighting'].includes(status)) return 1500;
+      // Combat damage is authoritative on the match record. Poll fighting more
+      // frequently so resolved skill hits and HP changes appear on both clients
+      // close to their actual hit frame instead of waiting up to 1.5 seconds.
+      if (status === 'fighting') return 500;
+      if (['matched', 'countdown'].includes(status)) return 1000;
       if (body?.queue?.status === 'waiting') return 1000;
       return 15000;
     } : false,
