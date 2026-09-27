@@ -44,7 +44,7 @@ const entities = new Proxy({}, { get: (_, name) => ({
   },
 }) });
 const handlers = {};
-for (const name of ['skillBookLoadout', 'aiBattleMatchmaker']) {
+for (const name of ['skillBookLoadout', 'aiBattleMatchmaker', 'equipmentLoadout']) {
   const { outputFiles } = buildSync({
     entryPoints: ['base44/functions/' + name + '/entry.ts'],
     bundle: true, write: false, platform: 'node', format: 'cjs', external: ['npm:*'],
@@ -66,7 +66,7 @@ async function call(name, action, data = {}, user = 'a', status = 200) {
     method: 'POST', headers: { 'test-user': user }, body: JSON.stringify({ action, data }),
   }));
   const body = await response.json();
-  assert.equal(response.status, status, JSON.stringify(body));
+  assert.equal(response.status, status, JSON.stringify({ error: body.error, code: body.code }));
   return body;
 }
 const book = (action, data, user, status) => call('skillBookLoadout', action, data, user, status);
@@ -94,8 +94,9 @@ beforeEach(() => {
 });
 function setGender(gender) { rows('Avatar')[0].gender = gender; }
 
-test('both handlers require an authenticated player', async () => {
+test('all battle and loadout handlers require an authenticated player', async () => {
   await book('getState', {}, 'missing', 401);
+  await call('equipmentLoadout', 'getState', {}, 'missing', 401);
   await battle('join', { mode: 'pvp' }, 'missing', 401);
   assert.equal(writes.length, 0);
 });
@@ -279,4 +280,88 @@ test('existing female starter-card behavior remains available and repeat bootstr
   assert.ok(first.skills.every((s) => s.can_equip));
   await book('bootstrap');
   assert.equal(rows('UserCard').length, 4);
+});
+
+for (const pointer of ['deleted-match', 'ended-match', 'unrelated-match']) {
+  test('stale presence pointer ' + pointer + ' cannot unlock a live battle', async () => {
+    tables.set('PlayerState', [{ id: 'presence-a', player_id: 'a', active_match_id: pointer }]);
+    tables.set('AIBattleMatch', [
+      { id: 'mine', player_ids: ['a', 'b'], status: 'fighting' },
+      { id: 'ended-match', player_ids: ['a', 'b'], status: 'ended' },
+      { id: 'unrelated-match', player_ids: ['other-1', 'other-2'], status: 'fighting' },
+    ]);
+    for (const [action, data] of actions) await book(action, data, 'a', 409);
+    assert.equal(writes.length, 0);
+  });
+}
+
+test('a presence pointer to another player battle cannot lock this player', async () => {
+  tables.set('PlayerState', [{ id: 'presence-a', player_id: 'a', active_match_id: 'unrelated' }]);
+  tables.set('AIBattleMatch', [{ id: 'unrelated', player_ids: ['other-1', 'other-2'], status: 'fighting' }]);
+  ownedCard('normal');
+  await book('equip', { slot: 0, user_card_id: 'normal' });
+  assert.ok(!writes.some((write) => write.name === 'PlayerState'));
+});
+
+const equipmentActions = [
+  ['equip', { slot: 'helmet', user_card_id: 'helmet-a' }],
+  ['unequip', { slot: 'helmet' }], ['clear', {}],
+];
+for (const status of ['matched', 'countdown', 'fighting']) {
+  test(status + ': equipment locks before creating a loadout even without a presence pointer', async () => {
+    tables.set('AIBattleMatch', [
+      { id: 'mine', player_ids: ['a', 'b'], status, created_date: '2026-09-01' },
+      ...Array.from({ length: 550 }, (_, i) => ({ id: 'other-' + i, player_ids: ['other-1', 'other-2'], status: 'fighting', created_date: '2026-09-26' })),
+    ]);
+    for (const [action, data] of equipmentActions) await call('equipmentLoadout', action, data, 'a', 409);
+    assert.equal(writes.length, 0);
+    assert.ok(reads.filter((read) => read.name === 'AIBattleMatch').every((read) =>
+      read.query.player_ids?.$in?.includes('a') && read.query.status?.$in?.includes(status) && read.limit === 1));
+  });
+}
+
+test('failed match lookup blocks equipment mutations without creating a loadout', async () => {
+  failure = (name, op) => name === 'AIBattleMatch' && op === 'filter';
+  for (const [action, data] of equipmentActions) {
+    const body = await call('equipmentLoadout', action, data, 'a', 503);
+    assert.match(body.error, /verify your match status/);
+  }
+  assert.equal(writes.length, 0);
+});
+
+test('unknown equipment actions do not create or modify a loadout', async () => {
+  await call('equipmentLoadout', 'unknown', {}, 'a', 400);
+  assert.equal(writes.length, 0);
+});
+
+function ownedHelmet() {
+  ownedCard('helmet-a', '', { card_type: 'equipment', trading_card_id: 'helmet-definition' });
+  rows('TradingCard').push({ id: 'helmet-definition', name: 'Test Helmet', card_type: 'equipment', equip_slot: 'head', stats: { defense: 25 } });
+}
+
+for (const [action, data] of equipmentActions) {
+  test('equipment ' + action + ' never changes a transferred card referenced by a stale loadout', async () => {
+    ownedHelmet();
+    ownedCard('transferred', '', { user_id: 'b', card_type: 'equipment', is_equipped: true, equipped_to: 'loadout' });
+    rows('Loadout').push({ id: 'gear-a', user_id: 'a', loadout_type: 'equipment', is_active: true,
+      equipped_items: { helmet: { user_card_id: 'transferred' } } });
+    await call('equipmentLoadout', action, data);
+    const transferred = rows('UserCard').find((row) => row.id === 'transferred');
+    assert.equal(transferred.is_equipped, true);
+    assert.equal(transferred.equipped_to, 'loadout');
+    assert.ok(!writes.some((write) => write.name === 'UserCard' && write.id === 'transferred'));
+  });
+}
+
+test('owned canonical equipment equips, reloads and unequips after a battle ends', async () => {
+  tables.set('AIBattleMatch', [{ id: 'finished', player_ids: ['a', 'b'], status: 'ended' }]);
+  ownedHelmet();
+  const equipped = await call('equipmentLoadout', 'equip', { slot: 'helmet', user_card_id: 'helmet-a' });
+  assert.equal(equipped.loadout.equipped_items.helmet.stats.defense, 25);
+  const reloaded = await call('equipmentLoadout', 'getState');
+  assert.equal(reloaded.loadout.equipped_items.helmet.user_card_id, 'helmet-a');
+  await call('equipmentLoadout', 'unequip', { slot: 'helmet' });
+  const owned = rows('UserCard').find((row) => row.id === 'helmet-a');
+  assert.equal(owned.is_equipped, false);
+  assert.equal(owned.equipped_to, 'none');
 });
