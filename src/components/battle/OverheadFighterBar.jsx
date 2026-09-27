@@ -18,7 +18,7 @@ function useCooldownClock(skills, serverOffsetMs) {
   return now;
 }
 
-export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0, skills = [], local = false, serverOffsetMs = 0, lastCastSlot = null, onSkill, onMelee, meleeCooldownEndsAt = null, meleeCooldownMs = 1000, meleeAtbCost = 50 }) {
+export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0, skills = [], local = false, combatActive = true, serverOffsetMs = 0, lastCastSlot = null, onSkill, onMelee, meleeCooldownEndsAt = null, meleeCooldownMs = 1000, meleeAtbCost = 50 }) {
   const now = useCooldownClock(skills, serverOffsetMs);
   const bySlot = useMemo(() => new Map((skills || []).map((skill) => [Number(skill.slot), skill])), [skills]);
   const hpPct = Math.max(0, Math.min(100, Number(maxHp) > 0 ? Number(hp) / Number(maxHp) * 100 : 0));
@@ -27,7 +27,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
   const meleeEndsAt = Date.parse(meleeCooldownEndsAt || 0);
   const meleeRemainingMs = Math.max(0, meleeEndsAt - now);
   const meleeFraction = Math.max(0, Math.min(1, meleeRemainingMs / Math.max(1, Number(meleeCooldownMs || 1))));
-  const meleeDisabled = meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
+  const meleeDisabled = !combatActive || meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
 
   return (
     <div className="pointer-events-auto select-none text-white drop-shadow-[0_2px_7px_rgba(0,0,0,.95)]" style={{ width: 250 }}>
@@ -42,7 +42,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
       </div>
       <div className="mt-2 flex justify-center gap-1">
         <button type="button" disabled={!local || meleeDisabled} onClick={() => onMelee?.()}
-          title="Default melee attack"
+          title="Basic melee attack · 10 damage · consumes your action"
           className={`relative grid h-11 w-11 place-items-center overflow-hidden rounded border border-white/20 bg-slate-950/85 ${meleeDisabled ? 'opacity-45' : 'hover:border-cyan-100/55 hover:bg-cyan-100/[0.08]'}`}>
           <Sword className="h-5 w-5 text-white/85" />
           {meleeRemainingMs > 0 && <span className="absolute inset-0 grid place-items-center bg-[conic-gradient(rgba(0,0,0,.82)_0deg,rgba(0,0,0,.82)_var(--sweep),transparent_var(--sweep),transparent_360deg)] text-[11px] font-black" style={{ '--sweep': `${meleeFraction * 360}deg` }}>{Math.ceil(meleeRemainingMs / 1000)}</span>}
