@@ -63,6 +63,15 @@
       "type": "string",
       "format": "date-time"
     },
+    "connected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set only after this browser client has received and acknowledged its reserved match."
+    },
+    "connected_session_id": {
+      "type": "string",
+      "description": "Browser session that acknowledged the reserved match."
+    },
     "ready_at": {
       "type": "string",
       "format": "date-time",
