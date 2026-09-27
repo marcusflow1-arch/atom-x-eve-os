@@ -64,7 +64,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       const body = query.state.data || {};
       const status = String(body?.match?.status || '');
       if (['matched', 'countdown', 'fighting'].includes(status)) return 1500;
-      if (body?.queue?.status === 'waiting') return 3000;
+      if (body?.queue?.status === 'waiting') return 1000;
       return 15000;
     } : false,
     refetchOnWindowFocus: polling,
