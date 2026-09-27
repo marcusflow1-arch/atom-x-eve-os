@@ -20,8 +20,8 @@ function xpToNext(level: number, ascension = 0) {
   return Math.floor(100 + Math.pow(Math.max(1, level), 1.55) * 38 + ascension * 75);
 }
 
-function normalizedBaseStats(userCard: AnyObj, achievement: AnyObj | null) {
-  const source = achievement?.reward?.stats || {};
+function normalizedBaseStats(userCard: AnyObj, achievement: AnyObj | null, definition: AnyObj | null) {
+  const source = definition?.stats || achievement?.reward?.stats || {};
   const pick = (keys: string[], fallback: number) => {
     for (const key of keys) {
       const found = Object.entries(source).find(([k]) => k.toLowerCase() === key.toLowerCase());
@@ -61,57 +61,61 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body?.action || 'getState';
     const payload = body?.payload || {};
-    let userCardId = body?.userCardId || payload?.userCardId;
-    const achievementId = body?.achievementId || payload?.achievementId;
-
-    let achievement: AnyObj | null = null;
-    if (achievementId) {
-      achievement = await base44.asServiceRole.entities.Achievement.get(achievementId).catch(() => null);
+    const actions = new Set(['getState', 'train', 'levelUp', 'enhance', 'combine', 'ascend', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk']);
+    if (!actions.has(action)) return Response.json({ error: 'Invalid action' }, { status: 400 });
+    const sessions = Number(payload.sessions ?? 1);
+    if (action === 'train' && (!Number.isSafeInteger(sessions) || sessions < 1 || sessions > 10)) {
+      return Response.json({ error: 'Training sessions must be a whole number from 1 to 10' }, { status: 400 });
     }
-
+    const svc = base44.asServiceRole.entities;
+    const userCardId = String(body?.userCardId || payload?.userCardId || '').trim();
+    const requestedAchievementId = String(body?.achievementId || payload?.achievementId || '').trim();
     let userCard: AnyObj | null = null;
+
     if (userCardId) {
-      userCard = await base44.asServiceRole.entities.UserCard.get(userCardId).catch(() => null);
-      if (!userCard || userCard.user_id !== user.id) return Response.json({ error: 'Card not found in your inventory' }, { status: 404 });
+      userCard = await svc.UserCard.get(userCardId).catch(() => null);
+      if (!userCard || String(userCard.user_id) !== String(user.id)) return Response.json({ error: 'Card not found in your inventory' }, { status: 404 });
+    } else if (requestedAchievementId) {
+      const requested = await svc.Achievement.get(requestedAchievementId).catch(() => null);
+      if (!requested) return Response.json({ error: 'Achievement not found' }, { status: 404 });
+      const owned = await svc.UserCard.filter({ user_id: user.id, achievement_id: requested.id }, '-created_date', 1);
+      userCard = owned[0] || null;
+      if (!userCard && requested.card_id) {
+        const linked = await svc.UserCard.filter({ user_id: user.id, trading_card_id: requested.card_id }, '-created_date', 1);
+        userCard = linked[0] || null;
+      }
+    }
+    // Progression operates on ownership only. Pending proofs, profile arrays and
+    // even a completed achievement never authorize this endpoint to mint a card.
+    if (!userCard) return Response.json({ error: 'You must own this card before upgrading it. Achievement rewards must be granted through verified rewards.' }, { status: 403 });
+    const quantity = Number(userCard.quantity ?? 1);
+    if (!Number.isSafeInteger(quantity) || quantity < 1) return Response.json({ error: 'Card is no longer available in your inventory' }, { status: 409 });
+    if (action !== 'getState' && userCard.trade_status === 'locked_in_trade') {
+      return Response.json({ error: 'This card is locked in a trade and cannot be upgraded' }, { status: 409 });
     }
 
-    if (!userCard && achievement) {
-      const unlocked = (user.unlocked_achievements || []).includes(achievement.id) || (await base44.asServiceRole.entities.UserAchievement.filter({ user_id: user.id, achievement_id: achievement.id }, null, 1)).length > 0;
-      if (!unlocked) return Response.json({ error: 'Achievement must be unlocked before its card can progress' }, { status: 403 });
-      const rewardName = achievement?.reward?.name || achievement.title;
-      const existing = await base44.asServiceRole.entities.UserCard.filter({ user_id: user.id, card_name: rewardName }, '-created_date', 1);
-      userCard = existing[0] || await base44.asServiceRole.entities.UserCard.create({
-        user_id: user.id,
-        card_type: achievement.category === 'equipment' ? 'Equipment' : achievement.category === 'companion' ? 'Companion' : achievement.category === 'ability' ? 'Ability' : achievement.category === 'environment' ? 'Environment' : achievement.category === 'teacher' ? 'Teacher' : 'Achievement',
-        card_name: rewardName,
-        card_rarity: achievement.rarity === 'Mythical' ? 'Mythic' : (achievement.rarity || 'Common'),
-        card_image: payload?.cardImage || '',
-        game_name: achievement.game,
-        game_id: payload?.gameId || '',
-        genre: payload?.genre || '',
-        acquisition_method: 'unlocked',
-        unlocked_date: new Date().toISOString(),
-        is_equipped: false,
-        trade_status: 'available'
-      });
-      userCardId = userCard.id;
+    const definition = userCard.trading_card_id ? await svc.TradingCard.get(String(userCard.trading_card_id)) : null;
+    if (userCard.trading_card_id && !definition) return Response.json({ error: 'Card definition is unavailable' }, { status: 409 });
+    const achievementId = String(userCard.achievement_id || definition?.achievement_id || '');
+    if (requestedAchievementId && achievementId && requestedAchievementId !== achievementId) {
+      return Response.json({ error: 'That achievement does not belong to this owned card' }, { status: 409 });
     }
-
-    if (!userCard) return Response.json({ error: 'A valid owned card or unlocked achievement is required' }, { status: 400 });
-
-    if (!achievement && body?.achievementId) achievement = await base44.asServiceRole.entities.Achievement.get(body.achievementId).catch(() => null);
+    const achievement = achievementId ? await svc.Achievement.get(achievementId) : null;
+    if (achievement?.card_id && definition && String(achievement.card_id) !== String(definition.id)) {
+      return Response.json({ error: 'Card and achievement links need to be repaired before upgrading' }, { status: 409 });
+    }
 
     let rows = await base44.asServiceRole.entities.CardProgression.filter({ user_id: user.id, user_card_id: userCard.id }, '-created_date', 1);
     let progression: AnyObj = rows[0];
     if (!progression) {
-      const baseStats = normalizedBaseStats(userCard, achievement);
+      const baseStats = normalizedBaseStats(userCard, achievement, definition);
       progression = await base44.asServiceRole.entities.CardProgression.create({
         user_id: user.id,
         user_card_id: userCard.id,
         trading_card_id: userCard.trading_card_id || '',
         achievement_id: achievementId || '',
         card_name: userCard.card_name,
-        game_id: userCard.game_id || payload?.gameId || '',
+        game_id: userCard.game_id || definition?.game_id || achievement?.game_id || '',
         game_name: userCard.game_name || achievement?.game || '',
         level: 1,
         xp: 0,
@@ -181,7 +185,6 @@ Deno.serve(async (req) => {
     };
 
     if (action === 'train') {
-      const sessions = Math.max(1, Math.min(10, Number(payload?.sessions || 1)));
       await spend({ skill_catalyst: sessions });
       const gain = sessions * (50 + Math.max(1, progression.stage) * 10);
       await commit({ xp: Number(progression.xp || 0) + gain }, 'trained', `Training added ${gain} card XP`, { sessions, gain });
