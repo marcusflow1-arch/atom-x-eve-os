@@ -539,14 +539,14 @@ Deno.serve(async (req) => {
       ? String(data.avatar_gender).trim().toLowerCase()
       : '';
 
-    if (action === 'bootstrap') {
-      // These fixed avatar starters were explicitly approved for onboarding.
-      // All other cards come from verified rewards, purchases, trades or admin grants.
-      await ensureDemoAbility(svc, user.id);
-      if (await avatarGender(svc, user.id, requestedGender) === 'female') await ensureArtemisAbilities(svc, user.id);
+    if (action === 'bootstrap' || action === 'getState') {
+      // Adam XE is the canonical internal demo game. Its TradingCard definitions
+      // are granted once per user through durable RewardGrant rows, so every
+      // animation card appears in Skill Book without being re-minted after a
+      // player fuses/trades/consumes it later.
+      await ensureAdamXeDemoCards(svc, user.id);
       return json(await buildState(base44, user, requestedGender));
     }
-    if (action === 'getState') return json(await buildState(base44, user, requestedGender));
 
     if (['selectSkillSet','selectJawan','equip','unequip','clear'].includes(action)) {
       let liveMatch: boolean;
@@ -586,8 +586,8 @@ Deno.serve(async (req) => {
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
       if (normalize(card.card_type) !== 'ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
       if (card.trade_status === 'locked_in_trade') return json({ error: 'That skill card is locked in a trade' }, 409);
-      const compatibilityError = avatarSkillError(card, await avatarGender(svc, user.id, requestedGender));
-      if (compatibilityError) return json({ error: compatibilityError }, 409);
+      const equipStatus = skillEquipStatus(card, await avatarGender(svc, user.id, requestedGender));
+      if (!equipStatus.can_equip) return json({ error: equipStatus.equip_error || 'This card cannot be equipped.' }, 409);
 
       const previous = { ...(loadout.skill_slots || {}) };
       const oldCardId = previous[String(slot)] || null;
