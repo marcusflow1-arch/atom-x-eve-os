@@ -30,6 +30,10 @@ export const BASIC_BY_RARITY = {
 
 export function atbNow(row: any, nowMs = Date.now()) {
   if (!row) return ATB_START;
+  // PvP now supports an explicit turn owner. Turn-state ATB is intentionally
+  // frozen: the active player receives a full action meter and the waiting
+  // player remains at zero until the turn changes.
+  if (typeof row.turn === 'boolean') return Math.min(ATB_MAX, Math.max(0, Number(row.value || 0)));
   const at = Date.parse(row.at || '') || nowMs;
   return Math.min(ATB_MAX, Math.max(0, Number(row.value || 0) + ((nowMs - at) / 1000) * ATB_RATE_PER_S));
 }
