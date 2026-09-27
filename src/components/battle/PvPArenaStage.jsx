@@ -333,16 +333,15 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   requestMeleeRef.current = requestMelee;
 
-  // A PvP client is ready only after both fighters/models are present in its
-  // arena. While the server still reports `matched`, keep reaffirming readiness
-  // so a dropped/raced ready request cannot strand two visible players before
-  // the countdown. The server starts only after BOTH clients are live + ready.
+  // A PvP client is ready only after the pre-arena connection handshake has
+  // already promoted the shared match to `connecting` AND both fighter models
+  // are present locally. Both clients must report this second-stage readiness.
   useEffect(() => {
-    if (graphicsError || loaded !== 2 || !match?.id || match.status !== 'matched') return undefined;
+    if (graphicsError || loaded !== 2 || !match?.id || match.status !== 'connecting') return undefined;
     let cancelled = false;
     let busy = false;
     const reportReady = async () => {
-      if (cancelled || busy || matchRef.current?.status !== 'matched') return;
+      if (cancelled || busy || matchRef.current?.status !== 'connecting') return;
       busy = true;
       try {
         await invoke('ready', { match_id: match.id });
