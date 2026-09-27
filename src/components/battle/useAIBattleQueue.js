@@ -8,7 +8,6 @@ import { dashboardSession, joinDashboard, useDashboardSession } from '@/componen
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
 
-const requestId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const normalize = (value) => String(value || '').trim().toLowerCase();
 const detectAvatarGender = (avatar) => {
   const variant = normalize(avatar?.female_model_variant);
@@ -21,6 +20,7 @@ const detectAvatarGender = (avatar) => {
 const PAGE_QUEUE_SESSION_ID = globalThis.crypto?.randomUUID?.() || `battle-surface-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let heartbeatTimer = null;
 let heartbeatBusy = false;
+let joinInFlightPromise = null;
 
 const unwrap = (response) => {
   const body = response?.data ?? response ?? {};
@@ -88,7 +88,6 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const session = useDashboardSession();
   const queryClient = useQueryClient();
   const joinAttempt = useRef('');
-  const acknowledgedMatch = useRef('');
   const key = ['ai-battle-matchmaking', user?.id];
 
   const state = useQuery({
@@ -127,28 +126,22 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     else if (!match || match.status === 'ended') stopAIBattleQueueHeartbeat();
   }, [queue?.status, match?.status]);
 
-  // Phase 1 handshake: receiving a reserved `matched` record is NOT permission
-  // to enter the arena. Each live browser must acknowledge the exact same match.
-  // The server unlocks `connecting` only after both acknowledgements are present.
+  // A normal status heartbeat is the reservation acknowledgement now. Do an
+  // immediate refresh on `matched` for every queue surface (including the popup,
+  // which intentionally has sessionBridge=false) so both browsers can confirm
+  // the same match without waiting for the background heartbeat interval.
   useEffect(() => {
-    if (!sessionBridge || !user?.id || queue?.status !== 'matched' || match?.status !== 'matched' || !match?.id) return undefined;
-    const token = `${match.id}:${PAGE_QUEUE_SESSION_ID}`;
-    if (acknowledgedMatch.current === token) return undefined;
-    acknowledgedMatch.current = token;
+    if (!user?.id || queue?.status !== 'matched' || match?.status !== 'matched' || !match?.id) return undefined;
     let cancelled = false;
-    invoke('ack_match', sessionData({ match_id: match.id }))
+    invoke('status', sessionData({ position: window.__lunaPvPPosition || null }))
       .then((body) => {
-        if (cancelled) return;
-        queryClient.setQueryData(key, (prev = {}) => ({ ...prev, ...body }));
+        if (!cancelled) queryClient.setQueryData(key, (prev = {}) => ({ ...prev, ...body }));
       })
       .catch((error) => {
-        if (!cancelled) {
-          acknowledgedMatch.current = '';
-          console.warn('[AI Battle] match acknowledgement retry', error);
-        }
+        if (!cancelled) console.warn('[AI Battle] reservation heartbeat retry', error);
       });
     return () => { cancelled = true; };
-  }, [sessionBridge, user?.id, queue?.status, match?.id, match?.status, queryClient]);
+  }, [user?.id, queue?.status, match?.id, match?.status, queryClient]);
 
   // The always-mounted dashboard bridge joins both users into the host dashboard
   // only after BOTH browser clients acknowledged the reserved match.
@@ -213,16 +206,30 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return () => { if (window.__lunaPvPMatch?.id === match?.id) delete window.__lunaPvPMatch; };
   }, [match, serverOffsetMs]);
 
-  const join = async (mode) => mutation.mutateAsync({
-    action: 'join',
-    data: {
-      mode,
-      request_id: requestId(),
-      avatar_gender: selectedGender,
-      avatar_model_url: selectedModelUrl,
-      avatar_appearance: selectedAppearance,
-    },
-  });
+  const join = async (mode) => {
+    // Guard at module scope, not component scope. The queue popup and persistent
+    // dashboard bridge share this module, so even a remount or duplicated key
+    // handler cannot fire parallel join creates before React state catches up.
+    if (joinInFlightPromise) return joinInFlightPromise;
+    const promise = mutation.mutateAsync({
+      action: 'join',
+      data: {
+        mode,
+        // Stable for this browser session + mode. Repeated join attempts are the
+        // same intent rather than brand-new queue requests.
+        request_id: `${PAGE_QUEUE_SESSION_ID}:${mode}`,
+        avatar_gender: selectedGender,
+        avatar_model_url: selectedModelUrl,
+        avatar_appearance: selectedAppearance,
+      },
+    });
+    joinInFlightPromise = promise;
+    try {
+      return await promise;
+    } finally {
+      if (joinInFlightPromise === promise) joinInFlightPromise = null;
+    }
+  };
   const cancel = async () => mutation.mutateAsync({ action: 'cancel', data: {} });
   const reset = async () => mutation.mutateAsync({ action: 'reset', data: {} });
   const forfeit = async () => match?.id ? mutation.mutateAsync({ action: 'forfeit', data: { match_id: match.id } }) : null;
