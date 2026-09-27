@@ -540,7 +540,7 @@ export default function LunaCardsPanel() {
                           ['Power', selectedSkill.progression.power_score],
                           ['Stage', selectedSkill.progression.stage],
                           ['Stars', selectedSkill.progression.stars],
-                          ['PvP Damage', selectedSkill.progression.combat?.effective_damage || '—'],
+                          ['Damage before defense', selectedSkill.progression.combat?.effective_damage || '—'],
                           ['Card Boost', selectedSkill.progression.combat ? `+${selectedSkill.progression.combat.bonus_percent}%` : '—'],
                         ].map(([label, value]) => (
                           <div key={label} className="border border-white/[0.055] bg-white/[0.018] px-2 py-1.5">
@@ -552,9 +552,9 @@ export default function LunaCardsPanel() {
                     )}
                     {selectedSkill.progression?.combat && selectedSkill.can_equip !== false && (
                       <div className="mt-2 border border-cyan-100/[0.08] bg-cyan-100/[0.025] px-2.5 py-2">
-                        <p className="text-[5px] font-black uppercase tracking-[0.12em] text-cyan-100/38">Live PvP Scaling</p>
+                        <p className="text-[5px] font-black uppercase tracking-[0.12em] text-cyan-100/38">Avatar + Card Scaling</p>
                         <p className="mt-1 text-[7px] leading-3 text-white/45">
-                          Base {selectedSkill.progression.combat.base_damage} → <span className="font-bold text-cyan-100">{selectedSkill.progression.combat.effective_damage} damage</span>. Level, stage, ascension, forge stats, enchantments and supported card skill nodes are frozen into this value when a PvP match begins.
+                          Base {selectedSkill.progression.combat.source_base_damage} → <span className="font-bold text-cyan-100">{selectedSkill.progression.combat.effective_damage} damage</span>. Avatar level, Strength, Wisdom, equipment and card upgrades contribute to this preview. Enemy defense, dodge and critical hits determine final damage. Builds freeze when a match begins.
                         </p>
                       </div>
                     )}

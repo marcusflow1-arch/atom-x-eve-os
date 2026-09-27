@@ -22,7 +22,7 @@ export function normalizedCardBaseStats(card: Row = {}, achievement: Row = {}, d
 export function effectiveCardStats(progression: Row | null = null, base: Row = {}) {
   const p = progression || {};
   const source = p.base_stats && Object.keys(p.base_stats).length ? p.base_stats : base;
-  const multiplier = Math.min(4, 1 + (bounded(p.level ?? 1,1,60)-1)*0.055 + (bounded(p.stage ?? 1,1,5)-1)*0.12 + bounded(p.ascension,0,5)*0.18 + bounded(p.over_enchant_rank,0,5)*0.05 + ((p.unlocked_skill_nodes || []).includes('core_calibration') ? 0.03 : 0));
+  const multiplier = Math.min(6, 1 + (bounded(p.level ?? 1,1,60)-1)*0.055 + (bounded(p.stage ?? 1,1,5)-1)*0.12 + bounded(p.ascension,0,5)*0.18 + bounded(p.over_enchant_rank,0,5)*0.05 + ((p.unlocked_skill_nodes || []).includes('core_calibration') ? 0.03 : 0) + ((p.unlocked_skill_nodes || []).includes('avatar_sync') ? 0.05 : 0));
   const stats: Row = {};
   for (const key of [...CARD_STAT_KEYS, ...extraKeys]) {
     const names = aliases[key] || [key];

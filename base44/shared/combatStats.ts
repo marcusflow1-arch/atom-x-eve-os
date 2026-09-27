@@ -75,7 +75,7 @@ export function deriveCombatStats(record: StatsRow = {}, equipment: StatsRow = {
   };
 }
 export function abilityOutput(avatar: StatsRow, skill: StatsRow, card: StatsRow = {}) {
-  const factor = bounded(card.growth_multiplier ?? 1, 1, 4);
+  const factor = bounded(card.growth_multiplier ?? 1, 1, 6);
   const stats = card.stats || {};
   // Offensive card enhancements only strengthen their own cast, never the entire inventory.
   const cardOffense = finite(stats.attack) * 0.5 + finite(stats.magic);
@@ -83,6 +83,7 @@ export function abilityOutput(avatar: StatsRow, skill: StatsRow, card: StatsRow 
   const cardHaste = bounded(stats.speed, 0, 500) * 0.0005;
   const cdr = Math.min(0.40, avatar.cooldown_reduction + cardHaste);
   return {
+    source_base_damage: finite(skill.base_damage),
     base_damage: Math.max(1, Math.round(raw)),
     cooldown_ms: Math.max(400, Math.round(finite(skill.cooldown_ms, 3000) * (1 - cdr))),
     cooldown_reduction: round(cdr),
