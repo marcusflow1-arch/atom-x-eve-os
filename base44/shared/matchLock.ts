@@ -5,13 +5,15 @@ export async function hasLivePvpMatch(svc: any, userId: string): Promise<boolean
   const id = String(userId);
   const matches = await svc.AIBattleMatch.filter({
     player_ids: { $in: [id] },
-    status: { $in: ['matched', 'countdown', 'fighting'] },
+    status: { $in: ['countdown', 'fighting'] },
   }, '-created_date', 10);
   if (!matches.length) return false;
 
-  // A stale/orphaned match row must not permanently lock the Skill Book. A
-  // match is considered live only while its matching queue heartbeat is live,
-  // or while this player is inside a still-valid reconnect grace period.
+  // Loadouts remain editable while matchmaking is only `matched/loading`;
+  // aiBattleMatchmaker re-freezes them immediately before countdown. Once the
+  // countdown/fight begins, a stale/orphaned row must still not lock the Skill
+  // Book forever. Treat it as live only with a live queue heartbeat or a valid
+  // reconnect grace period.
   const queues = await svc.AIBattleQueueEntry.filter({ user_id: id }, '-created_date', 30);
   const now = Date.now();
   for (const match of matches) {
