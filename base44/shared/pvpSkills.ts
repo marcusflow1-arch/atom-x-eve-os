@@ -21,6 +21,9 @@ export const SKILL_STATS: Record<string, any> = {
   artemis_call_of_the_husky: { kind: 'Spirit charge', range_m: 18, atb_cost: 50, cooldown_ms: 7000, base_damage: 110, hit_ms: 1500 },
   artemis_rain_of_arrows: { kind: 'Area volley', range_m: 18, atb_cost: 60, cooldown_ms: 8500, base_damage: 130, hit_ms: 1970 },
   artemis_lunar_beam: { kind: 'Heavy beam', range_m: 18, atb_cost: 75, cooldown_ms: 10000, base_damage: 180, hit_ms: 3100 },
+  adam_chidori_attack_01: { kind: 'Lightning rush', range_m: 18, atb_cost: 55, cooldown_ms: 6500, base_damage: 135, hit_ms: 1000 },
+  adam_chidori_ultimate: { kind: 'Lightning ultimate', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000 },
+  artemis_chidori_ultimate: { kind: 'Lightning ultimate', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000 },
 };
 
 export const BASIC_BY_RARITY = {
