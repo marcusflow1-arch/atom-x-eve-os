@@ -15,7 +15,9 @@ const hasIchigoSkill = (skills = []) => skills.some((skill) => {
     || effectId === 'getsuga_tensho';
 });
 
-const restoredSkillFromCard = (card) => ({
+const restoredSkillFromCard = (card, avatarGender = '') => {
+  const maleCompatible = normalize(avatarGender) === 'male';
+  return {
   id: card.id,
   user_card_id: card.id,
   title: card.card_name || ICHIGO_SKILL_NAME,
@@ -27,6 +29,9 @@ const restoredSkillFromCard = (card) => ({
   genre: card.genre || 'Action',
   unlock_condition: card.unlock_condition || 'Owned',
   owned: true,
+  can_equip: maleCompatible,
+  equip_error: maleCompatible ? null : 'This ability is bound to the male combat rig. Switch to your male avatar to equip and use it.',
+  required_avatar_gender: 'male',
   animation_effect: card.animation_effect || null,
   card: {
     ...card,
@@ -38,7 +43,8 @@ const restoredSkillFromCard = (card) => ({
     card_image: card.card_image || card.image || '',
     game_name: card.game_name || 'Bleach',
   },
-});
+  };
+};
 
 async function restoreIchigoIntoState(body, userId) {
   if (!body || hasIchigoSkill(body.skills || [])) return body;
@@ -54,7 +60,7 @@ async function restoreIchigoIntoState(body, userId) {
   const card = rows?.[0];
   if (!card) return body;
 
-  const restoredSkill = restoredSkillFromCard(card);
+  const restoredSkill = restoredSkillFromCard(card, body.avatar_gender);
   const skills = [...(body.skills || []), restoredSkill];
   const games = [...(body.games || [])];
   const bleachIndex = games.findIndex((game) => normalize(game.title) === 'bleach');
