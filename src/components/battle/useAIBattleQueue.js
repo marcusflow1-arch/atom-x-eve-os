@@ -55,9 +55,14 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const companion = useCompanionIdentity();
   const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
   useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
-  const selectedAvatar = activeCharacter && !activeCharacter.isDevTest ? activeCharacter : companion;
-  const selectedGender = String(selectedAvatar?.gender || companion?.gender || '').toLowerCase() === 'female' ? 'female' : 'male';
-  const selectedModelUrl = selectedAvatar?.model_url || companion?.model_url || companion?.base_body_model_url || '';
+  const companionGender = String(companion?.gender || '').toLowerCase();
+  const selectedAvatar = ['female', 'male'].includes(companionGender)
+    ? companion
+    : activeCharacter && !activeCharacter.isDevTest
+      ? activeCharacter
+      : companion;
+  const selectedGender = String(selectedAvatar?.gender || '').toLowerCase() === 'female' ? 'female' : 'male';
+  const selectedModelUrl = selectedAvatar?.model_url || selectedAvatar?.base_body_model_url || '';
   const selectedAppearance = selectedAvatar ? { ...selectedAvatar, gender: selectedGender, model_url: selectedModelUrl || selectedAvatar.model_url || '' } : { gender: selectedGender, model_url: selectedModelUrl };
   const session = useDashboardSession();
   const queryClient = useQueryClient();
