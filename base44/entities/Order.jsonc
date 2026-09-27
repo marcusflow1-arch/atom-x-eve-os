@@ -51,6 +51,12 @@
           },
           "image": {
             "type": "string"
+          },
+          "starter_card_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
@@ -60,6 +66,45 @@
     },
     "stripe_session_id": {
       "type": "string"
+    },
+    "checkout_key": {
+      "type": "string"
+    },
+    "checkout_success_url": {
+      "type": "string"
+    },
+    "checkout_cancel_url": {
+      "type": "string"
+    },
+    "fulfillment_version": {
+      "type": "number"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "unpaid",
+        "paid"
+      ]
+    },
+    "fulfilled_item_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "fulfilled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "fulfillment_lock_token": {
+      "type": "string"
+    },
+    "fulfillment_lock_until": {
+      "type": "number"
+    },
+    "legacy_rewards_unverified": {
+      "type": "boolean"
     }
   },
   "required": [

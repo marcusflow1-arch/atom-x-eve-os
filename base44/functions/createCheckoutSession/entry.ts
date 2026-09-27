@@ -1,46 +1,52 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import Stripe from 'npm:stripe@16.12.0';
-import { ownsItem } from '../../shared/entitlements.ts';
+import { CHECKOUT_VERSION, checkoutParams, requestedItems, sameCart, snapshotCart } from '../../shared/checkoutFulfillment.ts';
+import { conditionalUpdate, findKeyedRecord, rewardError } from '../../shared/rewardJournal.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
-
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    if (req.method !== 'POST') return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    const base44 = createClientFromRequest(req), user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    const { items, successUrl, cancelUrl } = await req.json();
-    if (!Array.isArray(items) || items.length === 0) return Response.json({ error: 'Cart is empty' }, { status: 400 });
-    const requested = items.map((item:any) => ({ id: String(item?.id || ''), type: String(item?.type || 'game') })).filter((item:any) => item.id);
-    if (!requested.length || requested.some((item:any) => !['game','dlc'].includes(item.type))) return Response.json({ error: 'Unsupported catalog item type' }, { status: 400 });
-    const unique:any[] = [...new Map(requested.map((item:any) => [`${item.type}:${item.id}`, item])).values()];
+    const { items, successUrl, cancelUrl, checkoutKey } = await req.json();
+    if (typeof checkoutKey !== 'string' || !/^[a-zA-Z0-9_-]{16,80}$/.test(checkoutKey)) throw rewardError('A checkout request key is required', 400);
+    const requested = requestedItems(items);
+    let success: URL, cancel: URL;
+    try { success = new URL(successUrl); cancel = new URL(cancelUrl); } catch { throw rewardError('Checkout return URLs are invalid', 400); }
+    if (success.protocol !== 'https:' || cancel.protocol !== 'https:' || success.origin !== cancel.origin ||
+        success.username || success.password || cancel.username || cancel.password ||
+        success.pathname !== '/OrderConfirmation' || cancel.pathname !== '/Checkout' ||
+        success.searchParams.get('session_id') !== '{CHECKOUT_SESSION_ID}') throw rewardError('Checkout return URLs are invalid', 400);
     const svc = base44.asServiceRole.entities;
-    const catalogItems:any[] = [];
-
-    for (const item of unique) {
-      if (item.type === 'game') {
-        const game = await svc.Game.get(item.id).catch(() => null);
-        if (!game || game.status !== 'available') return Response.json({ error: `Game ${item.id} not found` }, { status: 404 });
-        const price = Number(game.price);
-        if (!Number.isFinite(price) || price <= 0) return Response.json({ error: price === 0 ? 'Free games use the claim action' : `Game ${item.id} has an invalid checkout price` }, { status: 400 });
-        if (await ownsItem(svc, user.id, 'game', game.id)) return Response.json({ error: `You already own ${game.title}` }, { status: 409 });
-        catalogItems.push({ id: game.id, type: 'game', title: game.title, description: game.description, image: game.cover_image, price });
-      } else {
-        const dlc = await svc.DLC.get(item.id).catch(() => null);
-        if (!dlc || dlc.status !== 'active') return Response.json({ error: `DLC ${item.id} is unavailable` }, { status: 404 });
-        const price = Number(dlc.price);
-        if (!Number.isFinite(price) || price <= 0) return Response.json({ error: `DLC ${item.id} has an invalid checkout price` }, { status: 400 });
-        if (!(await ownsItem(svc, user.id, 'game', dlc.game_id))) return Response.json({ error: 'You must own the base game before purchasing this DLC' }, { status: 409 });
-        if (await ownsItem(svc, user.id, 'dlc', dlc.id)) return Response.json({ error: `You already own ${dlc.name}` }, { status: 409 });
-        catalogItems.push({ id: dlc.id, type: 'dlc', title: dlc.name, description: dlc.description, image: dlc.cover_image, price, game_id: dlc.game_id, version: dlc.version });
-      }
+    let order = await findKeyedRecord(svc.Order, { user_id: user.id, checkout_key: checkoutKey });
+    if (order) {
+      if (!sameCart(order, requested)) throw rewardError('This checkout belongs to a different cart', 409);
+      if (order.status === 'refunded' || order.status === 'failed') throw rewardError('This checkout requires support review');
+    } else {
+      const snapshot = await snapshotCart(svc, user.id, requested);
+      order = await svc.Order.create({
+        user_id: user.id, checkout_key: checkoutKey, items: snapshot,
+        total_amount: snapshot.reduce((sum, item) => sum + Math.round(item.price * 100), 0) / 100,
+        currency: 'USD', status: 'pending', payment_status: 'unpaid',
+        fulfillment_version: CHECKOUT_VERSION, checkout_success_url: successUrl, checkout_cancel_url: cancelUrl,
+      });
     }
-
-    const lineItems = catalogItems.map((item:any) => ({ price_data: { currency: 'usd', product_data: { name: item.title, description: item.description || item.type.toUpperCase(), images: item.image ? [item.image] : [], metadata: { item_id: item.id, item_type: item.type, game_id: item.game_id || '' } }, unit_amount: Math.round(item.price * 100) }, quantity: 1 }));
-    const session = await stripe.checkout.sessions.create({ payment_method_types: ['card'], line_items: lineItems, mode: 'payment', success_url: successUrl, cancel_url: cancelUrl, client_reference_id: user.id, metadata: { user_id: user.id, user_email: user.email || '', items: JSON.stringify(catalogItems.map(({ id, type, title, price, game_id, version }:any) => ({ id, type, title, price, game_id, version }))) } });
-    return Response.json({ sessionId: session.id, url: session.url });
+    let session;
+    if (order.stripe_session_id) session = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
+    else {
+      // Never reuse a Stripe key beyond its documented retention window.
+      if (!Number.isFinite(Date.parse(order.created_date)) || Date.now() - Date.parse(order.created_date) > 23 * 60 * 60 * 1000) throw Object.assign(rewardError('This older checkout needs a payment status review before retrying'), { code: 'CHECKOUT_REVIEW_REQUIRED' });
+      session = await stripe.checkout.sessions.create(checkoutParams(order), { idempotencyKey: 'atom-checkout:' + user.id + ':' + checkoutKey });
+      await conditionalUpdate(svc.Order, { id: order.id, stripe_session_id: { $exists: false } }, { $set: { stripe_session_id: session.id } });
+      const saved = await svc.Order.get(order.id);
+      if (saved.stripe_session_id !== session.id) throw rewardError('Checkout session could not be saved', 503);
+    }
+    if (session.status === 'expired') return Response.json({ error: 'This checkout expired. Start a new checkout.', code: 'CHECKOUT_EXPIRED', orderId: order.id }, { status: 409 });
+    if (session.status === 'complete') return Response.json({ sessionId: session.id, orderId: order.id, verify: true });
+    return Response.json({ sessionId: session.id, orderId: order.id, url: session.url });
   } catch (error) {
-    console.error('Create checkout session error:', error);
-    return Response.json({ error: error?.message || 'Unable to create checkout session' }, { status: 500 });
+    console.error('Create checkout session error', error);
+    return Response.json({ error: error.message || 'Unable to create checkout session', code: error.code }, { status: error.status || 500 });
   }
 });
