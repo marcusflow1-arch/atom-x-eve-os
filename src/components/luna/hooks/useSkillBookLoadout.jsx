@@ -9,6 +9,28 @@ import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/cha
 
 const unwrap = (response) => response?.data ?? response ?? {};
 const normalize = (value) => String(value || '').trim().toLowerCase();
+const errorMessage = (error, fallback = 'Skill Book request failed.') => {
+  const body = error?.response?.data?.data ?? error?.response?.data ?? error?.body ?? null;
+  return body?.error || body?.message || error?.message || fallback;
+};
+const invokeSkillBook = async (action, data = {}) => {
+  try {
+    const response = await base44.functions.invoke('skillBookLoadout', { action, data });
+    const body = unwrap(response);
+    if (body?.error) throw new Error(body.error);
+    return body;
+  } catch (error) {
+    throw new Error(errorMessage(error));
+  }
+};
+const avatarGender = (avatar) => {
+  const variant = normalize(avatar?.female_model_variant);
+  const model = normalize(avatar?.model_url || avatar?.base_body_model_url);
+  if (variant.includes('artemis') || model.includes('artemis')) return 'female';
+  if (model.includes('getsuga')) return 'male';
+  const gender = normalize(avatar?.gender);
+  return gender === 'female' || gender === 'male' ? gender : '';
+};
 const ICHIGO_SKILL_NAME = 'Ichigo Kurosaki - Getsuga Tenshō';
 
 const hasIchigoSkill = (skills = []) => skills.some((skill) => {
@@ -92,14 +114,13 @@ export function useSkillBookLoadout() {
   const companion = useCompanionIdentity();
   const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
   useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
-  const selectedAvatar = ['female', 'male'].includes(normalize(companion?.gender))
+  const companionDetectedGender = avatarGender(companion);
+  const selectedAvatar = companionDetectedGender
     ? companion
     : activeCharacter && !activeCharacter.isDevTest
       ? activeCharacter
       : companion;
-  const activeAvatarGender = ['female', 'male'].includes(normalize(selectedAvatar?.gender))
-    ? normalize(selectedAvatar.gender)
-    : '';
+  const activeAvatarGender = avatarGender(selectedAvatar);
   const queryClient = useQueryClient();
   const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
   const clearHotbarSlot = useLunaStore((state) => state.clearHotbarSlot);
@@ -110,20 +131,13 @@ export function useSkillBookLoadout() {
   const stateQuery = useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await base44.functions.invoke('skillBookLoadout', {
-        action: 'getState',
-        data: { avatar_gender: activeAvatarGender },
-      });
-      let body = unwrap(response);
-      if (body?.error) throw new Error(body.error);
+      let body = await invokeSkillBook('getState', { avatar_gender: activeAvatarGender });
       const effects = new Set((body.skills || []).map((skill) => String(skill?.card?.animation_effect?.id || skill?.animation_effect?.id || '')));
       const required = body.avatar_gender === 'female'
         ? ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam']
         : ['getsuga_tensho'];
       if (required.some((id) => !effects.has(id))) {
-        const bootstrap = await base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: { avatar_gender: activeAvatarGender } });
-        body = unwrap(bootstrap);
-        if (body?.error) throw new Error(body.error);
+        body = await invokeSkillBook('bootstrap', { avatar_gender: activeAvatarGender });
       }
       return restoreIchigoIntoState(body, user.id);
     },
@@ -165,9 +179,7 @@ export function useSkillBookLoadout() {
 
   const mutation = useMutation({
     mutationFn: async ({ action, data }) => {
-      const response = await base44.functions.invoke('skillBookLoadout', { action, data: { ...(data || {}), avatar_gender: activeAvatarGender } });
-      const body = unwrap(response);
-      if (body?.error) throw new Error(body.error);
+      const body = await invokeSkillBook(action, { ...(data || {}), avatar_gender: activeAvatarGender });
       return restoreIchigoIntoState(body, user.id);
     },
     onSuccess: (next) => {
