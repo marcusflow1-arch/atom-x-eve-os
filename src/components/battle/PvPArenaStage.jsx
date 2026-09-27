@@ -151,7 +151,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const reconnectPaused = Object.keys(match?.disconnects || {}).length > 0;
   const active = match?.status === 'fighting' && !reconnectPaused && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
   const turnPlayerId = String(match?.turn_player_id || match?.host_id || '');
-  const isMyTurn = active && turnPlayerId === String(user?.id);
+  const localOwnsTurn = turnPlayerId === String(user?.id);
+  const isMyTurn = active && localOwnsTurn;
   const ended = match?.status === 'ended';
   const won = ended && String(match.winner_id) === String(user?.id);
 
@@ -247,6 +248,22 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   };
 
   requestMeleeRef.current = requestMelee;
+
+  // A PvP client is ready only after its own fighter/model has actually loaded.
+  // Once both clients report ready, the server starts the countdown and assigns
+  // the first authoritative turn.
+  useEffect(() => {
+    if (loaded !== 2 || !match?.id || match.status !== 'matched') return undefined;
+    if (readySentRef.current === String(match.id)) return undefined;
+    readySentRef.current = String(match.id);
+    invoke('ready', { match_id: match.id })
+      .catch((readyError) => {
+        console.warn('[PvP] fighter-ready retry', readyError);
+        readySentRef.current = '';
+        window.setTimeout(() => queryClient.invalidateQueries({ queryKey: ['ai-battle-matchmaking', user?.id] }), 800);
+      });
+    return undefined;
+  }, [loaded, match?.id, match?.status, queryClient, user?.id]);
 
   const requestDodge = async () => {
     if (!active) { setError('The fight is not ready yet.'); return; }
@@ -362,7 +379,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // Arena is recreated only for a new match; live match state is read by refs/cache overlays.
   }, [match?.id, local?.id, opponent?.id]);
 
-  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestMelee,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
+  useEffect(()=>{const down=(e)=>{if(e.target instanceof Element&&e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(escapeMenuOpen||surrendering){if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space','Digit1','Digit2','Digit3','Digit4','Numpad1','Numpad2','Numpad3','Numpad4'].includes(e.code))e.preventDefault();return;}if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){held.current.add(e.code);e.preventDefault();}if(e.code==='Space'){e.preventDefault();requestDodge();}const skillKey={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Numpad1:0,Numpad2:1,Numpad3:2,Numpad4:3}[e.code];if(skillKey!==undefined){e.preventDefault();requestSkillRef.current?.(skillKey);}};const up=(e)=>held.current.delete(e.code);const clear=()=>held.current.clear();const visibility=()=>{if(document.hidden)clear();};window.addEventListener('keydown',down,true);window.addEventListener('keyup',up,true);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',visibility);window.__lunaPvPCombat={active:true,requestSkill,requestMelee,requestDodge};return()=>{window.removeEventListener('keydown',down,true);window.removeEventListener('keyup',up,true);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',visibility);if(window.__lunaPvPCombat?.requestSkill===requestSkill)delete window.__lunaPvPCombat;};},[escapeMenuOpen,surrendering,active,match?.id]);
 
   useEffect(() => {
     const onEscape = (event) => {
@@ -417,7 +434,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     <div ref={mountRef} className="absolute inset-0" />
     {loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
     {match?.status==='countdown'&&loaded===2&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center text-[80px] font-black text-white drop-shadow-[0_0_30px_rgba(60,220,255,.8)]">{count||'FIGHT'}</div>}
-    {active&&!ended&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[71] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${isMyTurn?'border-cyan-200/30 bg-cyan-950/88':'border-white/12 bg-[#0b111c]/88'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${isMyTurn?'text-cyan-100':'text-white/55'}`}>{isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`}</div><div className="mt-0.5 text-[8px] uppercase tracking-[.16em] text-white/30">Choose one action</div></div>}
+    {loaded===2&&!ended&&['countdown','fighting'].includes(String(match?.status||''))&&!reconnectPaused&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[74] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${localOwnsTurn?'border-cyan-200/30 bg-cyan-950/92':'border-white/12 bg-[#0b111c]/92'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${localOwnsTurn?'text-cyan-100':'text-white/65'}`}>{match?.status==='countdown'?(localOwnsTurn?'You Move First':`${opponent?.name || 'Opponent'} Moves First`):(isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`)}</div><div className="mt-0.5 text-[8px] uppercase tracking-[.16em] text-white/35">{match?.status==='countdown'?'Turn order locked':'Choose one action'}</div></div>}
     {error&&<div className="absolute left-1/2 top-20 z-[70] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm font-bold text-red-100">{error}</div>}
     {opponentDisconnect&&!ended&&<div className="pointer-events-none absolute left-1/2 top-5 z-[72] -translate-x-1/2 rounded-xl border border-amber-200/20 bg-[#10151d]/94 px-5 py-3 text-center text-white shadow-xl"><div className="text-[10px] font-black uppercase tracking-[.24em] text-amber-200/70">Connection interrupted</div><div className="mt-1 text-sm font-bold">Opponent disconnected — waiting to reconnect</div><div className="mt-1 font-mono text-lg font-black text-cyan-200">{Math.floor(reconnectSeconds/60)}:{String(reconnectSeconds%60).padStart(2,'0')}</div></div>}
     {escapeMenuOpen&&!ended&&<div className="absolute inset-0 z-[78] flex items-center justify-center bg-black/55 text-white" aria-label="PvP escape menu">
