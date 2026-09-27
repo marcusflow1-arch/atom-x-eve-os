@@ -1,138 +1,69 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-
-Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { reactor_id, attacker_id, target_id, attacker_level } = await req.json();
-    if (!reactor_id) {
-      return Response.json({ error: 'reactor_id required' }, { status: 400 });
-    }
-
-    // 1. Fetch reactor config
-    const reactors = await base44.asServiceRole.entities.DamageReactor.filter({ id: reactor_id });
-    const reactor = reactors?.[0];
-    if (!reactor || !reactor.is_active) {
-      return Response.json({ error: 'Reactor not found or inactive' }, { status: 404 });
-    }
-
-    // 2. Calculate damage
-    const level = attacker_level || 1;
-    let damage = reactor.base_damage + (reactor.scaled_damage_per_level * (level - 1));
-
-    // Critical hit check
-    const isCrit = Math.random() < (reactor.critical_chance || 0);
-    if (isCrit) {
-      damage = Math.round(damage * (reactor.critical_multiplier || 2.0));
-    }
-
-    // 3. Build damage event
-    const damageEvent = {
-      reactor_id: reactor.id,
-      attacker_id: attacker_id || null,
-      target_id: target_id || null,
-      bone: reactor.bone_name,
-      animation: reactor.animation_name,
-      damage_type: reactor.damage_type,
-      damage: Math.round(damage),
-      is_critical: isCrit,
-      knockback: reactor.knockback_force || 0,
-      status_effect: reactor.status_effect !== 'none' ? reactor.status_effect : null,
-      status_duration: reactor.status_duration || 0,
-      xp_awarded: reactor.xp_reward || 0,
-      fx_id: reactor.fx_id || null,
-      timestamp: Date.now(),
-    };
-
-    // 4. Apply XP to attacker if we have a model reference
-    if (attacker_id && reactor.xp_reward > 0) {
-      try {
-        const attackerModels = await base44.asServiceRole.entities.Model3D.filter({ id: attacker_id });
-        const attackerModel = attackerModels?.[0];
-        if (attackerModel) {
-          let currentExp = (attackerModel.current_exp || 0) + reactor.xp_reward;
-          let currentLevel = attackerModel.level || 1;
-          let expToNext = attackerModel.exp_to_next_level || 100;
-
-          // Level up check
-          let leveledUp = false;
-          while (currentExp >= expToNext) {
-            currentExp -= expToNext;
-            currentLevel += 1;
-            leveledUp = true;
-            // Exponential scaling
-            expToNext = Math.round(expToNext * 1.5);
-
-            // Apply stat gains per level
-            const spl = attackerModel.stats_per_level || {};
-            const stats = { ...(attackerModel.stats || {}) };
-            stats.max_hp = (stats.max_hp || 100) + (spl.hp || 10);
-            stats.hp = stats.max_hp;
-            stats.attack = (stats.attack || 10) + (spl.attack || 2);
-            stats.defense = (stats.defense || 5) + (spl.defense || 1);
-            stats.speed = (stats.speed || 1.0) + (spl.speed || 0.05);
-            stats.stamina = (stats.stamina || 100) + (spl.stamina || 5);
-
-            await base44.asServiceRole.entities.Model3D.update(attacker_id, {
-              level: currentLevel,
-              current_exp: currentExp,
-              exp_to_next_level: expToNext,
-              stats,
-            });
-          }
-
-          if (!leveledUp) {
-            await base44.asServiceRole.entities.Model3D.update(attacker_id, {
-              current_exp: currentExp,
-            });
-          }
-
-          damageEvent.attacker_new_exp = currentExp;
-          damageEvent.attacker_new_level = currentLevel;
-          damageEvent.leveled_up = leveledUp;
-        }
-      } catch (e) {
-        // XP update failed, continue with damage event
-        damageEvent.xp_error = e.message;
+import {createClientFromRequest} from 'npm:@base44/sdk@0.8.51';
+import {deriveCombatStats,resolveCombatHit} from '../../shared/combatStats.ts';
+import {loadCombatProfile} from '../../shared/combatProfile.ts';
+import {loadCombatSkills} from '../../shared/combatSkills.ts';
+import {conditionalUpdate,ensureKeyedRecord,findKeyedRecord} from '../../shared/rewardJournal.ts';
+const json=(body:any,status=200)=>Response.json(body,{status});
+const roll=()=>({dodge:Math.random(),crit:Math.random(),variance:0.95+Math.random()*0.10});
+const publicEncounter=(row:any)=>row?Object.fromEntries(Object.entries(row).filter(([key])=>!['requests','created_by','created_by_id'].includes(key))):null;
+// This endpoint owns player encounter state. Never write HP/XP into Model3D assets.
+// Practice deliberately has no reward path; production PvE rewards require verified objectives.
+Deno.serve(async(req)=>{
+ try{
+  const client=createClientFromRequest(req),user=await client.auth.me();
+  if(!user)return json({error:'Unauthorized'},401);
+  const {action='getState',data={},reactor_id}=await req.json().catch(()=>({}));
+  if(reactor_id)return json({error:'Legacy model-asset damage is retired. Use a player encounter.'},400);
+  if(!['getState','start','attack','abandon'].includes(action))return json({error:'Unknown combat action'},400);
+  const svc=client.asServiceRole.entities;
+  let encounter=await findKeyedRecord(svc.AvatarCombatEncounter,{user_id:user.id});
+  const respond=()=>json({success:true,encounter:publicEncounter(encounter),server_time:Date.now()});
+  if(action==='getState')return respond();
+  const requestId=String(data.request_id||'');
+  if(!/^[a-zA-Z0-9:_-]{8,100}$/.test(requestId))return json({error:'A valid request ID is required'},400);
+  if(!encounter && action==='start')encounter=await ensureKeyedRecord(svc.AvatarCombatEncounter,{user_id:user.id});
+  if(!encounter)return json({error:'Start a practice encounter first'},409);
+  const signature=JSON.stringify([action,data.slot??null]);
+  const previous=(encounter.requests||[]).find((r:any)=>r.id===requestId);
+  if(previous)return previous.signature===signature?respond():json({error:'Request ID was already used'},409);
+  if(action==='start'&&encounter.status==='active')return respond();
+  if(data.expected_revision!==Number(encounter.revision||0))return json({error:'Encounter changed. Refresh before acting again.'},409);
+  const now=Date.now();let patch:any={};
+  if(action==='start'){
+    const profile=await loadCombatProfile(svc,user.id);
+    const avatars=await svc.Avatar.filter({user_id:user.id},'-updated_date',1);
+    const gender=avatars[0]?.gender==='female'?'female':'male';
+    const skills=await loadCombatSkills(svc,user.id,gender,profile.combat);
+    const n=(profile.combat.level-1)*5;
+    const enemy=deriveCombatStats({global_level:profile.combat.level,stat_schema_version:1,stat_allocations:{strength:Math.floor(n*.4),defense:Math.floor(n*.4),vitality:Math.floor(n*.2)}});
+    patch={status:'active',player:{hp:profile.combat.max_hp,stats:profile.combat},enemy:{hp:enemy.max_hp,stats:enemy},skills,cooldowns:{},next_action_at:0,log:[],started_at:new Date(now).toISOString()};
+  }else{
+    if(encounter.status!=='active')return json({error:'This encounter has ended'},409);
+    if(action==='abandon')patch={status:'abandoned'};
+    else{
+      if(now<Number(encounter.next_action_at||0))return json({error:'Your avatar is recovering. Wait before the next action.'},409);
+      const slot=data.slot;
+      if(!Number.isInteger(slot)||slot < -1||slot > 3)return json({error:'Invalid attack slot'},400);
+      const skill=slot>=0?(encounter.skills||[]).find((s:any)=>s.slot===slot):null;
+      if(slot>=0&&!skill)return json({error:'That skill is not in your frozen Skill Book'},409);
+      if(skill&&now<Number(encounter.cooldowns?.[slot]||0))return json({error:'That skill is on cooldown'},409);
+      const player={...encounter.player},enemy={...encounter.enemy};
+      const hit=resolveCombatHit(player.stats,enemy.stats,skill?skill.base_damage:player.stats.attack,roll());
+      enemy.hp=Math.max(0,enemy.hp-hit.damage);
+      const log=[...(encounter.log||[]),{actor:'player',...hit,slot}];
+      if(enemy.hp>0){
+        const counter=resolveCombatHit(enemy.stats,player.stats,enemy.stats.attack*0.70,roll());
+        player.hp=Math.max(0,player.hp-counter.damage);log.push({actor:'enemy',...counter,slot:-1});
       }
+      patch={player,enemy,status:enemy.hp<=0?'won':player.hp<=0?'lost':'active',log:log.slice(-20),
+        cooldowns:{...(encounter.cooldowns||{}),...(skill?{[slot]:now+skill.cooldown_ms}:{})},
+        next_action_at:now+Math.max(400,Math.round(1000/player.stats.attack_speed))};
     }
-
-    // 5. Apply damage to target if provided
-    if (target_id) {
-      try {
-        const targetModels = await base44.asServiceRole.entities.Model3D.filter({ id: target_id });
-        const targetModel = targetModels?.[0];
-        if (targetModel) {
-          const targetStats = { ...(targetModel.stats || { hp: 100, max_hp: 100, defense: 5 }) };
-          
-          // Apply defense reduction
-          const defenseReduction = targetStats.defense || 0;
-          let finalDamage = Math.max(1, damageEvent.damage - Math.floor(defenseReduction * 0.5));
-          
-          // True damage ignores defense
-          if (reactor.damage_type === 'true_damage') finalDamage = damageEvent.damage;
-
-          targetStats.hp = Math.max(0, (targetStats.hp || 100) - finalDamage);
-
-          await base44.asServiceRole.entities.Model3D.update(target_id, {
-            stats: targetStats,
-          });
-
-          damageEvent.final_damage = finalDamage;
-          damageEvent.target_hp_remaining = targetStats.hp;
-          damageEvent.target_defeated = targetStats.hp <= 0;
-        }
-      } catch (e) {
-        damageEvent.target_error = e.message;
-      }
-    }
-
-    return Response.json(damageEvent);
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
   }
+  const accepted=await conditionalUpdate(svc.AvatarCombatEncounter,{id:encounter.id,user_id:user.id,revision:Number(encounter.revision||0)},{
+    $set:{...patch,requests:[...(encounter.requests||[]).slice(-31),{id:requestId,signature}]},$inc:{revision:1}
+  });
+  if(!accepted)return json({error:'Another action arrived first. Refresh the encounter.'},409);
+  encounter=await svc.AvatarCombatEncounter.get(encounter.id);return respond();
+ }catch(error:any){console.error('combatDamage',error);return json({error:error?.message||'Combat unavailable'},Number(error?.status||500));}
 });

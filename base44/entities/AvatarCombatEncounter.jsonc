@@ -1,0 +1,96 @@
+{
+  "name": "AvatarCombatEncounter",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "active",
+        "won",
+        "lost",
+        "abandoned"
+      ],
+      "default": "idle"
+    },
+    "revision": {
+      "type": "integer",
+      "default": 0
+    },
+    "player": {
+      "type": "object",
+      "default": {}
+    },
+    "enemy": {
+      "type": "object",
+      "default": {}
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "default": []
+    },
+    "cooldowns": {
+      "type": "object",
+      "default": {}
+    },
+    "next_action_at": {
+      "type": "number",
+      "default": 0
+    },
+    "log": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "default": []
+    },
+    "requests": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "default": []
+    },
+    "started_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
