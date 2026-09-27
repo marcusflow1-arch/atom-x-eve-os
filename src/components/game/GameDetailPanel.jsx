@@ -607,7 +607,7 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
   }
 
   return (
-    <div className="h-full w-full relative bg-[#eef0f2] text-[#252a31] font-sans overflow-hidden flex flex-col">
+    <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
 
 
       {/* Live Stream Modal - Centered Overlay with Blurred Background */}
@@ -823,10 +823,10 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
         <img 
           src={game.cover_image} 
           alt={game.title} 
-          className="w-full h-full object-cover opacity-[0.10] blur-sm scale-105"
+          className="w-full h-full object-cover opacity-40 blur-sm scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#eef0f2] via-[#eef0f2]/94 to-white/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#eef0f2]/95 via-white/65 to-[#eef0f2]/95" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/80 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-transparent to-[#0d0d0d]" />
         {/* Scanlines */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
       </motion.div>
@@ -839,11 +839,11 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
       >
         <div className="flex items-center gap-3">
           {/* Tabs Switcher */}
-          <div className="flex p-1.5 bg-white/85 backdrop-blur-xl border border-[#cfd4da] rounded-full shadow-[0_10px_30px_rgba(31,36,42,0.08)]">
+          <div className="flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
             <button 
               onClick={() => setActiveTab('system')}
               className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-                activeTab === 'system' ? 'bg-[#2d3238] text-white shadow-sm' : 'text-[#69717a] hover:text-[#2d3238] hover:bg-[#e8eaed]'
+                activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
               }`}
             >
               System Core
@@ -851,7 +851,7 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
             <button 
               onClick={() => setActiveTab('specs')}
               className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-                activeTab === 'specs' ? 'bg-[#2d3238] text-white shadow-sm' : 'text-[#69717a] hover:text-[#2d3238] hover:bg-[#e8eaed]'
+                activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
               }`}
             >
               Tech Specs
@@ -881,7 +881,7 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
               {/* Header Section: Title & Actions */}
               <div className="flex items-center justify-between gap-6 mb-8">
                 <div className="flex items-center gap-4">
-                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#252a31] leading-none">
+                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
                     {game.title}
                   </h1>
                   {owned && (
@@ -895,7 +895,7 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
                 <div className="flex items-center gap-4">
                    {!owned ? (
                       <>
-                        <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl text-[#252a31] font-bold text-xl border border-[#d3d7dc] shadow-sm">
+                        <div className="bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
                           ${game.price?.toFixed(2) || '0.00'}
                         </div>
                         <button 
@@ -931,18 +931,18 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
 
                 {/* Left (50%): 3D Model Viewer */}
                 <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6">
-                  <h3 className="text-xl font-bold text-[#252a31] mb-2">3D Model Viewer</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
                   <div className="relative flex-1">
                     <StoreIdleViewer />
                   </div>
                 </div>
 
                 {/* Vertical Divider */}
-                <div className="w-px bg-gradient-to-b from-transparent via-[#cbd0d6] to-transparent flex-shrink-0" />
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
 
                 {/* Right (50%): Achievement Cards */}
                 <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6">
-                  <h3 className="text-xl font-bold text-[#252a31] mb-2">Developer Cards</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">Developer Cards</h3>
                   <AchievementCardStrip 
                     achievementCards={achievementCards} 
                     dlcList={dlcList}
@@ -953,7 +953,7 @@ export default function GameDetailPanel({ game: providedGame, gameId: providedGa
               </div>
 
               {/* Lower Section: Content */}
-              <div className="border-t border-[#d3d7dc] pt-10">
+              <div className="border-t border-white/10 pt-10">
                 <div className="space-y-12">
                   {/* Content For This Game — left-side selector + detailed right panel */}
                   <section className="space-y-5" aria-labelledby="content-for-game-title">
