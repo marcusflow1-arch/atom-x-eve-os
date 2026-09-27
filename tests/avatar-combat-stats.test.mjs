@@ -41,7 +41,7 @@ function seedCard(id,type='ability',owner='a',patch={}){
  db.rows('UserCard').push(owned);return owned;
 }
 function equipped(id,slot='weapon-1'){db.rows('Loadout').push({id:'gear',user_id:'a',name:'Equipment',loadout_type:'equipment',is_active:true,equipped_items:{[slot]:{user_card_id:id,stats:{attack:999999}}}});}
-function hotbar(id){db.rows('Loadout').push({id:'book',user_id:'a',name:'Skills',loadout_type:'skills',is_active:true,skill_set_id:'skill-set-1',skill_set_order:0,skill_slots:{0:id}});}
+function hotbar(id){db.rows('Loadout').push({id:'book',user_id:'a',name:'Skills',loadout_type:'skills',is_active:true,skill_set_id:'skill-set-1',skill_set_order:0,equipped_items:{},skill_slots:{0:id}});}
 const iso=(delta=0)=>new Clock(Clock.now()+delta).toISOString();
 beforeEach(()=>{db.reset();offset=0;serial=0;db.rows('Avatar').push({id:'av-a',user_id:'a',gender:'male'},{id:'av-b',user_id:'b',gender:'male'});});
 
@@ -192,7 +192,7 @@ test('live PvP locks allocation using real membership and heartbeat',async()=>{
 test('PvP basic attacks use frozen stats, defense and server rolls; forged damage is ignored',async()=>{
  const a=rules.deriveCombatStats({global_level:10,stat_schema_version:1,stat_allocations:{strength:20}});
  const b=rules.deriveCombatStats({global_level:10,stat_schema_version:1,stat_allocations:{defense:20}});
- db.rows('AIBattleMatch').push({id:'match',dashboard_channel:'test-arena',mode:'pvp',player_ids:['a','b'],host_id:'a',status:'fighting',
+ db.rows('AIBattleMatch').push({id:'match',pair_key:'a:b',dashboard_channel:'test-arena',mode:'pvp',player_ids:['a','b'],host_id:'a',status:'fighting',
   players:[{id:'a',gender:'male',hp:a.max_hp,max_hp:a.max_hp,combat_stats:plain(a),skills:[]},{id:'b',gender:'male',hp:b.max_hp,max_hp:b.max_hp,combat_stats:plain(b),skills:[]}],
   atb:{a:{value:100,turn:true,at:iso()},b:{value:0,turn:false,at:iso()}},positions:{a:{x:0,z:-5},b:{x:0,z:5}},
   pending_hits:[],hit_log:[],disconnects:{},cooldowns:{},created_date:iso(),fight_starts_at:iso(-1000),fight_ends_at:iso(180000),
