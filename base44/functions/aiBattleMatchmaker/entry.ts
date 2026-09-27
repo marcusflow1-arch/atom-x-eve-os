@@ -147,15 +147,38 @@ async function playerFromQueue(svc: any, row: Row) {
 }
 
 async function getMatch(svc: any, id: string) { return id ? await svc.AIBattleMatch.get(id).catch(() => null) : null; }
+async function activeQueuesForUser(svc: any, userId: string) {
+  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
+  return (rows || []).filter((r: Row) => ['waiting','matched'].includes(String(r.status)));
+}
 async function latestQueue(svc: any, userId: string) {
-  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 30);
-  return rows.find((r: Row) => ['waiting','matched'].includes(String(r.status))) || null;
+  const rows = await activeQueuesForUser(svc, userId);
+  return rows.find((r: Row) => r.status === 'matched') || rows[0] || null;
+}
+async function cleanupQueueDuplicates(svc: any, userId: string) {
+  const rows = await activeQueuesForUser(svc, userId);
+  if (rows.length <= 1) return rows[0] || null;
+  // A reserved match always wins over a newer accidental waiting row. Otherwise
+  // keep the newest active queue and cancel the rest so rapid Queue/Q presses can
+  // never leave ghost entries that another player can be paired against.
+  const keep = rows.find((r: Row) => r.status === 'matched') || rows[0];
+  await Promise.all(rows.filter((r: Row) => String(r.id) !== String(keep.id)).map((r: Row) => svc.AIBattleQueueEntry.update(r.id, { status: 'cancelled' }).catch(() => null)));
+  return keep;
 }
 async function queueForMatch(svc: any, userId: string, matchId: string) {
-  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 30);
+  const rows = await svc.AIBattleQueueEntry.filter({ user_id: userId }, '-created_date', 50).catch(() => []);
   return rows.find((r: Row) => r.status === 'matched' && String(r.match_id || '') === String(matchId)) || null;
 }
 async function cancelQueue(svc: any, row: Row | null) { if (row?.id && row.status !== 'cancelled') await svc.AIBattleQueueEntry.update(row.id, { status: 'cancelled' }); }
+async function cancelAllQueuesForUser(svc: any, userId: string) {
+  const rows = await activeQueuesForUser(svc, userId);
+  await Promise.all(rows.map((row: Row) => cancelQueue(svc, row).catch(() => null)));
+}
+async function cancelMatchQueues(svc: any, match: Row | null) {
+  if (!match?.id) return;
+  const rows = await Promise.all((match.player_ids || []).map((id: string) => queueForMatch(svc, String(id), String(match.id))));
+  await Promise.all(rows.filter(Boolean).map((row: Row) => cancelQueue(svc, row).catch(() => null)));
+}
 
 function winnerByHp(match: Row) {
   const players = match.players || [];
