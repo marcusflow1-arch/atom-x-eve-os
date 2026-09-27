@@ -144,7 +144,10 @@ export class GetsugaDashboardRuntime {
 
     const clips = gltf.animations || [];
     const embeddedIdle = suppliedIdleClip || findClip(clips, 'Idle', 0);
-    const attackClip = suppliedAttackClip || findClip(clips, 'GetsugaTensho', 1);
+    // Never substitute an unrelated second animation for Getsuga. Generic male
+    // avatar GLBs commonly have AFK/Wave/Walk in slot 1; PvP supplies the
+    // retargeted Getsuga clip explicitly when the visible avatar uses that rig.
+    const attackClip = suppliedAttackClip || findClip(clips, 'GetsugaTensho', -1);
     if (!attackClip) throw new Error('GetsugaTensho animation is missing from the male ability source.');
 
     this.root = gltf.scene;
@@ -353,9 +356,10 @@ export class GetsugaDashboardRuntime {
 
     if (this.finishedHandler && this.mixer) this.mixer.removeEventListener('finished', this.finishedHandler);
     this.mixer?.stopAllAction();
+    this.fxMixer?.stopAllAction?.();
     if (this.group?.parent) this.group.parent.remove(this.group);
 
-    this.root?.traverse((node) => {
+    const disposeRoot = (root) => root?.traverse((node) => {
       if (!node?.isMesh) return;
       node.geometry?.dispose?.();
       const materials = Array.isArray(node.material) ? node.material : [node.material];
@@ -364,12 +368,17 @@ export class GetsugaDashboardRuntime {
         material.dispose?.();
       });
     });
+    disposeRoot(this.root);
+    if (this.fxRoot !== this.root) disposeRoot(this.fxRoot);
 
     this.root = null;
     this.group = null;
     this.mixer = null;
     this.idleAction = null;
     this.attackAction = null;
+    this.fxRoot = null;
+    this.fxMixer = null;
+    this.fxAttackAction = null;
     this.runAction = null;
     this.locomotionActions?.clear?.();
     this.locomotionActions = new Map();
