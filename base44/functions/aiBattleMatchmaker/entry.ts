@@ -460,14 +460,17 @@ async function startMatchIfBothArenaReady(svc: any, input: Row | null) {
 
 async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Row | null = null) {
   let queue = await cleanupQueueDuplicates(svc, userId);
-  let savedMatch: Row | null = await activeMatchForUser(svc, userId);
+  let savedMatch: Row | null = null;
 
   // Once the server has promoted a pair into a real match, PlayerState is the
-  // durable recovery pointer. A missing/cancelled queue row must never make the
-  // client "fall out" of that match or require pressing Queue again.
-  if (savedMatch && (!queue || queue.status !== 'matched' || String(queue.match_id || '') !== String(savedMatch.id))) {
-    if (queue?.status === 'waiting') await cancelQueue(svc, queue).catch(() => null);
-    queue = await recoverQueueForMatch(svc, userId, savedMatch, clientSessionId);
+  // durable recovery pointer. Consult it only when the normal queue pointer is
+  // missing/wrong; healthy fights keep the lightweight queue -> match path.
+  if (!queue || queue.status !== 'matched' || !queue.match_id) {
+    savedMatch = await activeMatchForUser(svc, userId);
+    if (savedMatch) {
+      if (queue?.status === 'waiting') await cancelQueue(svc, queue).catch(() => null);
+      queue = await recoverQueueForMatch(svc, userId, savedMatch, clientSessionId);
+    }
   }
   if (!queue) return { queue:null, match:null };
 
