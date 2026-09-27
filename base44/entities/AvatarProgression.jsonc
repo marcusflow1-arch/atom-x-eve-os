@@ -111,6 +111,33 @@
     "prestige_score": {
       "type": "number",
       "default": 0
+    },
+    "stat_schema_version": {
+      "type": "integer",
+      "default": 0,
+      "description": "Version of server-owned combat allocations; legacy stats retained for audit."
+    },
+    "stat_allocations": {
+      "type": "object",
+      "default": {},
+      "description": "Spent attribute points: strength, defense, vitality, agility, intelligence, wisdom."
+    },
+    "stat_point_credit": {
+      "type": "integer",
+      "default": 0,
+      "description": "Legacy point entitlement above the new five-per-avatar-level budget."
+    },
+    "stat_revision": {
+      "type": "integer",
+      "default": 0
+    },
+    "stat_requests": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "default": [],
+      "description": "Recent idempotent stat change receipts."
     }
   },
   "required": [

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { isEquipmentSlot, itemFitsSlot } from '../../shared/equipmentSlots.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
+import { effectiveCardStats, normalizedCardBaseStats } from '../../shared/cardStats.ts';
 
 type Row = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -26,13 +27,14 @@ async function releaseOwnedCard(svc:any, userId:string, userCardId:string) {
 async function snapshotOwnedEquipment(svc:any, userId:string, userCardId:string) {
   const owned = await svc.UserCard.get(String(userCardId || '')).catch(() => null);
   if (!owned || String(owned.user_id || '') !== String(userId)) throw Object.assign(new Error('Equipment card is not owned by this user'), { status:404 });
+  if (!Number.isSafeInteger(Number(owned.quantity ?? 1)) || Number(owned.quantity ?? 1) < 1) throw Object.assign(new Error('Equipment is no longer in your inventory'),{status:409});
   if (!owned.trading_card_id) throw Object.assign(new Error('This legacy item has not been migrated to the card catalog yet'), { status:409 });
   if (owned.trade_status === 'locked_in_trade') throw Object.assign(new Error('That equipment card is locked in a trade'), { status:409 });
   const card = await svc.TradingCard.get(String(owned.trading_card_id)).catch(() => null);
   if (!card || lower(card.card_type) !== 'equipment') throw Object.assign(new Error('Only equipment cards can be equipped'), { status:400 });
   const progressionRows = await svc.CardProgression.filter({ user_id:userId, user_card_id:owned.id }, '-updated_date', 1).catch(() => []);
   const progression = progressionRows[0] || null;
-  const stats = { ...(card.stats || {}), ...(progression?.enhanced_stats || {}) };
+  const stats = effectiveCardStats(progression,normalizedCardBaseStats(owned,{},card)).stats;
   return {
     owned, card, progression,
     item: {
@@ -59,7 +61,7 @@ async function cleanState(svc:any, userId:string, loadout:Row) {
   let changed = false;
   for (const [slot, item] of Object.entries(current)) {
     const userCardId = String((item as Row)?.user_card_id || '');
-    if (!userCardId || !isEquipmentSlot(slot)) { changed = true; continue; }
+    if (!userCardId || retainedCardIds.has(userCardId) || !isEquipmentSlot(slot)) { changed = true; continue; }
     try {
       const canonical = await snapshotOwnedEquipment(svc, userId, userCardId);
       if (!itemFitsSlot(canonical.card, slot)) { changed = true; continue; }

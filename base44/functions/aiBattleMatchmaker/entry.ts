@@ -2,8 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 import { BASIC_MELEE, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
-import { effectiveCardDamage } from '../../shared/cardCombatPower.ts';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
+import { loadCombatProfile } from '../../shared/combatProfile.ts';
+import { loadCombatSkills } from '../../shared/combatSkills.ts';
+import { resolveCombatHit } from '../../shared/combatStats.ts';
 
 type Row = Record<string, any>;
 const MODES = new Set(['pvp', 'pve', 'world_boss']);
@@ -151,51 +153,23 @@ async function getAvatarSnapshot(svc: any, userId: string, requested: Row = {}) 
   return { avatar_gender: gender, avatar_model_url: appearance.model_url, avatar_appearance: appearance };
 }
 
-async function freezeSkills(svc: any, userId: string, gender: string) {
-  // PvP uses the exact same persistent Skill Book loadout as the dashboard.
-  // Read all skill rows and deliberately resolve the active one instead of
-  // depending on a compound filter that can miss legacy/migrated rows.
-  // Read failures throw so callers can keep an earlier snapshot rather than
-  // freezing an empty hotbar for the entire match.
-  const loadouts = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, '-updated_date', 50);
-  const active = loadouts.find((row: Row) => row.is_active === true)
-    || [...loadouts].sort((a: Row, b: Row) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0))[0]
-    || null;
-  const slots = active?.skill_slots || {};
-  const out: Row[] = [];
-  for (let slot = 0; slot < SKILL_SLOT_COUNT; slot += 1) {
-    const cardId = slots[String(slot)] || slots[slot];
-    if (!cardId) continue;
-    const card = await getOptional(svc.UserCard, String(cardId));
-    if (!card || String(card.user_id) !== String(userId) || !skillEquipStatus(card, gender).can_equip) continue;
-    const progressionRows = await svc.CardProgression.filter({ user_id: userId, user_card_id: String(card.id) }, '-updated_date', 1).catch(() => []);
-    const progression = progressionRows?.[0] || null;
-    const effect = card.animation_effect || {};
-    const effectId = String(effect.id || '');
-    const stats = skillStats(effectId, card.card_rarity || 'Common');
-    const rawDamage = Number(effect.base_damage || stats.base_damage);
-    const combat = effectiveCardDamage(rawDamage, progression);
-    out.push({
-      slot, user_card_id: String(card.id), name: card.card_name || 'Ability', image: card.card_image || '', rarity: card.card_rarity || 'Common',
-      effect_id: effectId, clip_name: effect.clip_name || '', duration_ms: Number(effect.duration_ms || stats.hit_ms || 400),
-      cooldown_ms: Number(effect.cooldown_ms || stats.cooldown_ms), atb_cost: Number(effect.atb_cost || stats.atb_cost), range_m: Number(effect.range_m || stats.range_m),
-      base_damage: rawDamage, effective_base_damage: combat.effective_damage, damage_multiplier: combat.multiplier, progression_bonus_percent: combat.bonus_percent,
-      kind: stats.kind, hit_ms: Number(effect.hit_ms || stats.hit_ms), level: combat.level, stage: combat.stage, ascension: combat.ascension, over_enchant_rank: combat.over_enchant_rank,
-      animation_effect: effect,
-    });
-  }
-  return out;
+async function freezeSkills(svc:any,userId:string,gender:string,combat?:Row) {
+  const stats=combat || (await loadCombatProfile(svc,userId)).combat;
+  return loadCombatSkills(svc,userId,gender,stats);
 }
 
 async function syncFrozenSkillsForMatch(svc: any, match: Row) {
   const players = await Promise.all((match.players || []).map(async (player: Row) => {
     const gender = player.gender === 'female' ? 'female' : 'male';
     try {
-      return { ...player, skills: await freezeSkills(svc, String(player.id || player.player_id || ''), gender) };
+      const userId=String(player.id || player.player_id || '');
+      const profile=await loadCombatProfile(svc,userId);
+      return {...player,combat_stats:profile.combat,hp:profile.combat.max_hp,max_hp:profile.combat.max_hp,skills:await freezeSkills(svc,userId,gender,profile.combat)};
     } catch (error) {
       // Keep the snapshot captured at pairing instead of starting the fight with
       // no abilities because one Skill Book read failed.
       console.error('[aiBattleMatchmaker] skill refresh failed; keeping pairing snapshot', error);
+      if (!player.combat_stats) throw error;
       return { ...player, skills: Array.isArray(player.skills) ? player.skills : [] };
     }
   }));
@@ -211,8 +185,9 @@ async function playerFromQueue(svc: any, row: Row) {
   appearance.base_body_model_url = String(appearance.base_body_model_url || appearance.model_url || fallbackModel);
   if (gender === 'female') appearance.female_model_variant = appearance.female_model_variant || 'artemis_archer';
   // Countdown re-freezes the loadout, so a failed read here must not block pairing.
-  const skills = await freezeSkills(svc, String(row.user_id), gender).catch(() => []);
-  return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp: DEFAULT_BATTLE_HP, max_hp: DEFAULT_BATTLE_HP, skills };
+  const profile = await loadCombatProfile(svc,String(row.user_id));
+  const skills = await freezeSkills(svc,String(row.user_id),gender,profile.combat);
+  return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp:profile.combat.max_hp,max_hp:profile.combat.max_hp,combat_stats:profile.combat,skills };
 }
 
 async function getMatch(svc: any, id: string) { return getOptional(svc.AIBattleMatch, id); }
@@ -414,7 +389,7 @@ async function settleMatch(svc: any, input: Row | null) {
     for (const hit of due) {
       const dodge = match.dodges?.[hit.target_id];
       const resolveAt = Date.parse(hit.resolves_at || 0);
-      const missed = dodge && Date.parse(dodge.from || 0) <= resolveAt && Date.parse(dodge.until || 0) >= resolveAt;
+      const missed = Boolean(hit.missed || (dodge && Date.parse(dodge.from || 0) <= resolveAt && Date.parse(dodge.until || 0) >= resolveAt));
       let hpAfter = null;
       if (!missed) {
         match.players = match.players.map((p: Row) => {
@@ -821,24 +796,27 @@ Deno.serve(async (req) => {
       const attackerPos=distance2D(proposedA,storedA)>3?storedA:proposedA; const targetPos=distance2D(proposedT,storedT)>3?storedT:proposedT;
       // Basic attack is a lock-on command. Arena distance never rejects it;
       // positions are only sanitized/stored for shared movement state.
-      const damage=Number(BASIC_MELEE.base_damage);
+      const resolved = me.combat_stats && target.combat_stats
+        ? resolveCombatHit(me.combat_stats,target.combat_stats,me.combat_stats.attack,{dodge:Math.random(),crit:Math.random(),variance:0.95+Math.random()*0.10})
+        : {damage:Number(BASIC_MELEE.base_damage),crit:false,missed:false,result:'hit'};
+      const {damage,crit,missed}=resolved;
       const castId=String(data.cast_id||crypto.randomUUID());
       const targetHpBefore=finiteHp(target.hp,DEFAULT_BATTLE_HP);
       const targetHpAfter=Math.max(0,targetHpBefore-damage);
       const players=(match.players||[]).map((p:Row)=>String(p.id)===targetId?{...p,hp:targetHpAfter}:p);
       const resolvedAt=nowIso();
-      const result={cast_id:castId,attacker_id:userId,target_id:targetId,slot:-1,effect_id:BASIC_MELEE.id,result:'hit',damage,crit:false,hp_after:targetHpAfter,resolved_at:resolvedAt};
+      const result={cast_id:castId,attacker_id:userId,target_id:targetId,slot:-1,effect_id:BASIC_MELEE.id,result:resolved.result,damage,crit,hp_after:targetHpAfter,resolved_at:resolvedAt};
       const hitLog=[...(match.hit_log||[]),result].slice(-20);
       const attackRevision=Number(match.attack_revision||0)+1;
       // A default melee strike is a real turn/action, not a free extra hit. Once
       // committed it spends the current action budget and restarts ATB from 0.
       const atb=turnAtb(match,targetId,now);
-      const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,_melee:new Date(now+BASIC_MELEE.cooldown_ms).toISOString(),_last_cast_at:now}};
+      const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,_melee:new Date(now+Math.round(BASIC_MELEE.cooldown_ms/Math.max(1,Number(me.combat_stats?.attack_speed || 1)))).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
       const ended=targetHpAfter<=0;
       match=await svc.AIBattleMatch.update(match.id,{players,hit_log:hitLog,attack_revision:attackRevision,last_attack:{...result,revision:attackRevision},atb,cooldowns,positions,...(ended?{status:'ended',winner_id:userId,ended_reason:'ko',ended_at:resolvedAt}:{})});
       if(ended){match=await finalizeMatchRewards(svc,match)||match;await clearMatchForPlayers(svc,match);}
-      return json({match:publicMatch(match),cast:{cast_id:castId,slot:-1,effect_id:BASIC_MELEE.id,resolves_at:resolvedAt,damage,crit:false,target_id:targetId,range_m:BASIC_MELEE.range_m,atb_cost:BASIC_MELEE.atb_cost,lock_on:true},server_time:now});
+      return json({match:publicMatch(match),cast:{cast_id:castId,slot:-1,effect_id:BASIC_MELEE.id,resolves_at:resolvedAt,damage,crit,missed,result:resolved.result,target_id:targetId,range_m:BASIC_MELEE.range_m,atb_cost:BASIC_MELEE.atb_cost,lock_on:true},server_time:now});
     }
     if (action === 'use_skill') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
@@ -859,19 +837,20 @@ Deno.serve(async (req) => {
       const proposedA=clampPos(match,userId,data.attacker_pos||storedA); const proposedT=clampPos(match,targetId,data.target_pos||storedT);
       const attackerPos=distance2D(proposedA,storedA)>3?storedA:proposedA; const targetPos=distance2D(proposedT,storedT)>3?storedT:proposedT;
       if(distance2D(attackerPos,targetPos)>Number(skill.range_m||3)+1.5) return json({error:'Out of range.'},409);
-      const crit=Math.random()<0.10; const variance=0.95+Math.random()*0.10;
-      // Card progression is frozen into effective_base_damage when the match
-      // begins. Do not re-apply a separate level multiplier here or upgraded
-      // cards would scale twice.
-      const damage=Math.round(Number(skill.effective_base_damage||skill.base_damage||40)*variance*(crit?1.5:1));
-      const castId=String(data.cast_id||crypto.randomUUID()); const resolvesAt=new Date(now+Number(skill.hit_ms||400)).toISOString();
-      const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',damage,crit,resolves_at:resolvesAt}];
+      let damage:number,crit:boolean,missed=false;
+      if(me.combat_stats && target?.combat_stats && skill.rules_version===1){
+        ({damage,crit,missed}=resolveCombatHit(me.combat_stats,target.combat_stats,Number(skill.base_damage),{dodge:Math.random(),crit:Math.random(),variance:0.95+Math.random()*0.10}));
+      }else{
+        crit=Math.random()<0.10;
+        damage=Math.round(Number(skill.effective_base_damage||skill.base_damage||40)*(0.95+Math.random()*0.10)*(crit?1.5:1));
+      }      const castId=String(data.cast_id||crypto.randomUUID()); const resolvesAt=new Date(now+Number(skill.hit_ms||400)).toISOString();
+      const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',damage,crit,missed,resolves_at:resolvesAt}];
       const atb=turnAtb(match,targetId,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,[String(slot)]:new Date(now+Number(skill.cooldown_ms||3000)).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
       const lastCast={cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',resolves_at:resolvesAt,cast_at:new Date(now).toISOString()};
       match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions,last_cast:lastCast});
-      return json({match:publicMatch(match),cast:{cast_id:castId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',animation_effect:skill.animation_effect||{},resolves_at:resolvesAt,damage,crit,target_id:targetId},server_time:now});
+      return json({match:publicMatch(match),cast:{cast_id:castId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',animation_effect:skill.animation_effect||{},resolves_at:resolvesAt,damage,crit,missed,target_id:targetId},server_time:now});
     }
 
     return json({error:'Unknown AI Battle action.'},400);

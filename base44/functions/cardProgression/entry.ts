@@ -1,4 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { normalizedCardBaseStats, effectiveCardStats } from '../../shared/cardStats.ts';
+import { loadCombatProfile } from '../../shared/combatProfile.ts';
+import { abilityOutput } from '../../shared/combatStats.ts';
+import { skillStats } from '../../shared/pvpSkills.ts';
+import { hasLivePvpMatch } from '../../shared/matchLock.ts';
 
 type AnyObj = Record<string, any>;
 
@@ -20,37 +25,9 @@ function xpToNext(level: number, ascension = 0) {
   return Math.floor(100 + Math.pow(Math.max(1, level), 1.55) * 38 + ascension * 75);
 }
 
-function normalizedBaseStats(userCard: AnyObj, achievement: AnyObj | null, definition: AnyObj | null) {
-  const source = definition?.stats || achievement?.reward?.stats || {};
-  const pick = (keys: string[], fallback: number) => {
-    for (const key of keys) {
-      const found = Object.entries(source).find(([k]) => k.toLowerCase() === key.toLowerCase());
-      if (found && Number.isFinite(Number(found[1]))) return Number(found[1]);
-    }
-    return fallback;
-  };
-  const rarity = rarityRank[userCard.card_rarity] || 0;
-  return {
-    attack: pick(['attack', 'strength', 'damage'], 18 + rarity * 5),
-    defense: pick(['defense', 'armor'], 14 + rarity * 4),
-    magic: pick(['magic', 'spirit', 'focus'], 12 + rarity * 4),
-    vitality: pick(['vitality', 'health', 'hp'], 16 + rarity * 4),
-    speed: pick(['speed', 'dexterity'], 10 + rarity * 3)
-  };
-}
-
-function calcPower(p: AnyObj) {
-  const base = p.base_stats || {};
-  const enhanced = p.enhanced_stats || {};
-  const statTotal = ['attack', 'defense', 'magic', 'vitality', 'speed'].reduce((sum, key) => sum + Number(base[key] || 0) + Number(enhanced[key] || 0), 0);
-  const enchantBonus = (p.enchantments || []).reduce((sum: number, e: AnyObj) => sum + Object.values(e.modifiers || {}).reduce((s: number, v: any) => s + (Number(v) || 0), 0), 0);
-  const multiplier = 1 + (Math.max(1, p.level) - 1) * 0.055 + (Math.max(1, p.stage) - 1) * 0.12 + Number(p.ascension || 0) * 0.18 + Number(p.over_enchant_rank || 0) * 0.05;
-  return Math.round((statTotal + enchantBonus) * multiplier);
-}
-
-function publicProgression(p: AnyObj) {
-  return { ...p, power_score: calcPower(p) };
-}
+const normalizedBaseStats = normalizedCardBaseStats;
+const calcPower = (p:AnyObj) => effectiveCardStats(p).power_score;
+function publicProgression(p:AnyObj) { const effective=effectiveCardStats(p); return {...p,power_score:effective.power_score,effective_stats:effective.stats,growth_multiplier:effective.growth_multiplier}; }
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -71,6 +48,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Training sessions must be a whole number from 1 to 10' }, { status: 400 });
     }
     const svc = base44.asServiceRole.entities;
+    if(action !== 'getState' && await hasLivePvpMatch(svc,user.id)) return Response.json({error:'Finish your match before upgrading cards'}, {status:409});
     const userCardId = String(body?.userCardId || payload?.userCardId || '').trim();
     const requestedAchievementId = String(body?.achievementId || payload?.achievementId || '').trim();
     let userCard: AnyObj | null = null;
@@ -306,8 +284,13 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.UserCard.filter({ user_id: user.id, game_name: userCard.game_name }, '-created_date', 100)
     ]);
 
+    const avatar = await loadCombatProfile(svc,user.id);
+    const combatPreview = String(userCard.card_type || '').toLowerCase() === 'ability'
+      ? abilityOutput(avatar.combat,skillStats(String(userCard.animation_effect?.id || ''),userCard.card_rarity),effectiveCardStats(progression)) : null;
     return Response.json({
       success: true,
+      combat_preview: combatPreview,
+      avatar_level: avatar.combat.level,
       userCard,
       progression: publicProgression(progression),
       events,
