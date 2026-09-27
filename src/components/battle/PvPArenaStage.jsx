@@ -32,6 +32,10 @@ const serverAtb = (row, offset = 0) => {
   return Math.min(100, Math.max(0, Number(row.value || 0) + ((Date.now() + offset - at) / 1000) * 25));
 };
 const effectFromSkill = (skill) => skill?.animation_effect || { id: skill?.effect_id || '', clip_name: skill?.clip_name || '', duration_ms: skill?.duration_ms || 0, cooldown_ms: skill?.cooldown_ms || 0, mode: 'embedded' };
+const exactAnimationClip = (clips = [], name = '') => {
+  const wanted = String(name || '').trim().toLowerCase();
+  return clips.find((clip) => String(clip?.name || '').trim().toLowerCase() === wanted) || null;
+};
 const normalizedName = (v = '') => String(v).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
 let movementCatalogPromise = null;
@@ -121,7 +125,41 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
     root = assetRoot;
   } else {
     runtime = new GetsugaDashboardRuntime({ scene, camera, onEvent: onEffect });
-    runtime.attach(gltf);
+
+    // The selected Luna male model and the Getsuga ability package are different
+    // rigs. Keep the player's actual male avatar visible, but source the authored
+    // GetsugaTensho clip/sword from the card package and retarget that clip onto
+    // the visible warrior skeleton. Previously the arena silently used the male
+    // GLB's second animation (usually AFK), so the skill dealt damage without the
+    // character ever performing the technique.
+    const currentGetsuga = exactAnimationClip(gltf.animations || [], 'GetsugaTensho');
+    const getsugaSkill = (player.skills || []).find((skill) => String(skill?.effect_id || skill?.animation_effect?.id || '') === 'getsuga_tensho');
+    let attackClip = currentGetsuga;
+    let effectGltf = null;
+    let effectClip = null;
+
+    if (!attackClip && getsugaSkill) {
+      const preferredUrl = getsugaSkill?.animation_effect?.model_url || '/getsuga/Getsuga_Character.glb';
+      const urls = [...new Set([preferredUrl, '/getsuga/Getsuga_Character.glb'].filter(Boolean))];
+      for (const url of urls) {
+        try {
+          effectGltf = await new GLTFLoader().loadAsync(url);
+          effectClip = exactAnimationClip(effectGltf.animations || [], getsugaSkill?.clip_name || 'GetsugaTensho')
+            || exactAnimationClip(effectGltf.animations || [], 'GetsugaTensho');
+          if (!effectClip) throw new Error('GetsugaTensho clip not found in ability package.');
+          attackClip = retargetAvatarClip(effectGltf.scene, assetRoot, effectClip);
+          scaleToHeight(effectGltf.scene, 1.8 * Number(player.appearance?.height_scale || 1));
+          break;
+        } catch (abilityError) {
+          console.warn('[PvP] Getsuga ability source failed', url, abilityError);
+          effectGltf = null;
+          effectClip = null;
+          attackClip = null;
+        }
+      }
+    }
+
+    runtime.attach(gltf, { attackClip, effectGltf, effectClip });
     root = runtime.group;
   }
 
