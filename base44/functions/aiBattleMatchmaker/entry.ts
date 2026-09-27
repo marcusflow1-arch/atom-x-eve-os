@@ -559,6 +559,12 @@ Deno.serve(async (req) => {
     }
     if (action === 'join') {
       const mode=String(data.mode||'').toLowerCase(); if(!MODES.has(mode)) return json({error:'Choose PvP, PvE, or World Boss.'},400);
+      const liveMatch=await activeMatchForUser(svc,userId);
+      if(liveMatch){
+        await recoverQueueForMatch(svc,userId,liveMatch,sessionId);
+        const recovered=await statusFor(svc,userId,sessionId,data.position||null);
+        return json({queue:publicQueue(recovered.queue),match:publicMatch(recovered.match),reconnected:true,server_time:Date.now()});
+      }
       let current=await cleanupQueueDuplicates(svc,userId);
       if(current){
         if(current.status==='waiting'){
@@ -588,6 +594,20 @@ Deno.serve(async (req) => {
         match=connection.match;
       }
       return json({queue:publicQueue(queue),match:publicMatch(match),connected:['connecting','countdown','fighting'].includes(String(match?.status||'')),server_time:Date.now()});
+    }
+    if (action === 'reconnect') {
+      let match=await activeMatchForUser(svc,userId);
+      if(!match){
+        const existingQueue=await latestQueue(svc,userId);
+        if(existingQueue?.match_id){
+          const queuedMatch=await getMatch(svc,String(existingQueue.match_id));
+          if(queuedMatch&&queuedMatch.status!=='ended'&&(queuedMatch.player_ids||[]).map(String).includes(userId)) match=queuedMatch;
+        }
+      }
+      if(!match) return json({error:'There is no active PvP match to reconnect to.'},404);
+      await recoverQueueForMatch(svc,userId,match,sessionId);
+      const current=await statusFor(svc,userId,sessionId,data.position||null);
+      return json({queue:publicQueue(current.queue),match:publicMatch(current.match||match),reconnected:true,server_time:Date.now()});
     }
     if (action === 'cancel' || action === 'reset') {
       const queue=await latestQueue(svc,userId);
