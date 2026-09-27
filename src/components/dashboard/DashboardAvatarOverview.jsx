@@ -104,6 +104,31 @@ export default function DashboardAvatarOverview() {
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
 
+  // Observe the always-mounted AI Battle query cache without starting another
+  // poller. The parent dashboard owns the popup, so it also owns the final
+  // matchmaking -> arena handoff and cannot be blocked by stale popup state.
+  const { data: battleTransitionState } = useQuery({
+    queryKey: ['ai-battle-matchmaking', user?.id],
+    enabled: false,
+    queryFn: async () => ({}),
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+  });
+  const battleTransitionMatch = battleTransitionState?.match || null;
+  const battleTransitionStatus = String(battleTransitionMatch?.status || '');
+
+  useEffect(() => {
+    if (!battleMode || !battleTransitionMatch?.id) return;
+    if (!['matched', 'countdown', 'fighting'].includes(battleTransitionStatus)) return;
+    setBattleMode(false);
+    setActiveQuickPanel(null);
+    setInteractionDimmed(false);
+    window.dispatchEvent(new CustomEvent('lunaAIBattleStageEntered', {
+      detail: { matchId: battleTransitionMatch.id, mode: battleTransitionMatch.mode || 'pvp' },
+    }));
+  }, [battleMode, battleTransitionMatch?.id, battleTransitionMatch?.mode, battleTransitionStatus]);
+
   useEffect(() => {
     const s = e => setSurface(e.detail?.mode || 'dashboard');
     const g = () => setSurface('game');
