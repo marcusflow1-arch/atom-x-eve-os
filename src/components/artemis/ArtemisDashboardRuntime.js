@@ -4,7 +4,9 @@ const ABILITY_EVENTS = {
   Call_Of_The_Husky: { impact: 1.5, end: 2.0 },
   Rain_Of_Arrows: { impact: 1.967, end: 3.0 },
   Lunar_Beam: { impact: 3.1, end: 3.6 },
+  Chidori_Ultimate: { impact: 2.0, end: 4.2 },
 };
+const BOW_ABILITIES = new Set(['Call_Of_The_Husky', 'Rain_Of_Arrows', 'Lunar_Beam']);
 
 const LOOP_CLIPS = new Set(['Idle', 'Combat_Idle', 'Run']);
 
@@ -201,7 +203,9 @@ export class ArtemisDashboardRuntime {
     if (this.root) this.root.rotation.y = this.lockedFacingYaw;
 
     const request = { effectId, clipName, effect, detail: { ...detail, target } };
-    if (this.home === 'Idle' && this.hasClip('Bow_Draw')) {
+    // Only authored bow attacks need the draw transition. Chidori is a direct
+    // hand/lightning technique and must begin immediately from the current pose.
+    if (BOW_ABILITIES.has(clipName) && this.home === 'Idle' && this.hasClip('Bow_Draw')) {
       this.busy = true;
       this.queued = request;
       this._crossFade('Bow_Draw', 0.12);
