@@ -159,6 +159,96 @@ async function ensureDemoAbility(svc: any, userId: string) {
   });
 }
 
+async function ensureAdamXeDemoCards(svc: any, userId: string) {
+  const games = await svc.Game.filter({ title: ADAM_XE_GAME_TITLE }, '-created_date', 5);
+  const game = games?.[0];
+  if (!game?.id) return [];
+  const definitions = await svc.TradingCard.filter({ game_id: game.id, status: 'live' }, 'name', 100);
+  const [ownedRows, grantRows] = await Promise.all([
+    svc.UserCard.filter({ user_id: userId }, '-created_date', 1500),
+    svc.RewardGrant.filter({ user_id: userId }, '-created_date', 1500).catch(() => []),
+  ]);
+  const owned = [...(ownedRows || [])];
+  const grants = new Map((grantRows || []).map((row: AnyObj) => [String(row.grant_key || ''), row]));
+  const results: AnyObj[] = [];
+
+  for (const definition of definitions || []) {
+    const effectId = normalize(definition.animation_effect?.id);
+    const grantKey = `adam-xe-demo:${definition.id}`;
+    let card = owned.find((row: AnyObj) => String(row.trading_card_id || '') === String(definition.id))
+      || owned.find((row: AnyObj) => effectId && normalize(row.animation_effect?.id) === effectId)
+      || null;
+
+    if (card) {
+      const patch: AnyObj = {};
+      if (String(card.trading_card_id || '') !== String(definition.id)) patch.trading_card_id = definition.id;
+      if (card.game_name !== ADAM_XE_GAME_TITLE) patch.game_name = ADAM_XE_GAME_TITLE;
+      if (String(card.game_id || '') !== String(game.id)) patch.game_id = game.id;
+      if (card.genre !== ADAM_XE_GENRE) patch.genre = ADAM_XE_GENRE;
+      if (card.card_name !== definition.name) patch.card_name = definition.name;
+      if (card.card_rarity !== definition.rarity) patch.card_rarity = definition.rarity;
+      if (card.card_image !== definition.image_url) patch.card_image = definition.image_url;
+      if (normalize(card.card_type) !== normalize(definition.card_type)) patch.card_type = definition.card_type;
+      if (JSON.stringify(card.animation_effect || {}) !== JSON.stringify(definition.animation_effect || {})) patch.animation_effect = definition.animation_effect || {};
+      if (Object.keys(patch).length) {
+        card = await svc.UserCard.update(card.id, patch);
+        const index = owned.findIndex((row: AnyObj) => String(row.id) === String(card.id));
+        if (index >= 0) owned[index] = card;
+      }
+      if (!grants.has(grantKey)) {
+        const grant = await svc.RewardGrant.create({ user_id: userId, grant_key: grantKey, payload: { kind: 'adam_xe_demo_card', trading_card_id: definition.id }, status: 'completed', user_card_id: card.id, completed_at: new Date().toISOString() });
+        grants.set(grantKey, grant);
+      }
+      results.push(card);
+      continue;
+    }
+
+    // A completed grant is the durable tombstone. If a demo card was fused,
+    // traded, or otherwise consumed, opening Skill Book must not mint it again.
+    if (grants.has(grantKey)) continue;
+    card = await svc.UserCard.create({
+      user_id: userId,
+      trading_card_id: definition.id,
+      card_type: definition.card_type || 'ability',
+      card_name: definition.name,
+      card_rarity: definition.rarity || 'Unique',
+      card_image: definition.image_url || '',
+      game_name: ADAM_XE_GAME_TITLE,
+      game_id: game.id,
+      genre: ADAM_XE_GENRE,
+      source: 'admin',
+      acquisition_method: 'unlocked',
+      unlocked_date: new Date().toISOString(),
+      acquired_at: new Date().toISOString(),
+      quantity: 1,
+      is_equipped: false,
+      equipped_to: 'none',
+      trade_status: 'available',
+      animation_effect: definition.animation_effect || {},
+    });
+    owned.push(card);
+    const grant = await svc.RewardGrant.create({ user_id: userId, grant_key: grantKey, payload: { kind: 'adam_xe_demo_card', trading_card_id: definition.id }, status: 'completed', user_card_id: card.id, completed_at: new Date().toISOString() });
+    grants.set(grantKey, grant);
+    results.push(card);
+  }
+  return results;
+}
+
+function progressionView(progression: AnyObj | null, card: AnyObj | null) {
+  if (!card) return null;
+  const effect = card.animation_effect || {};
+  const stats = skillStats(String(effect.id || ''), card.card_rarity || 'Common');
+  const combat = effectiveCardDamage(Number(effect.base_damage || stats.base_damage || 0), progression || {});
+  return {
+    level: Number(progression?.level || 1), xp: Number(progression?.xp || 0),
+    xp_to_next: Number(progression?.xp_to_next || 0), stage: Number(progression?.stage || 1),
+    stars: Number(progression?.stars || 1), ascension: Number(progression?.ascension || 0),
+    power_score: Number(progression?.power_score || 0), active_perks: progression?.active_perks || [],
+    enhanced_stats: progression?.enhanced_stats || {}, over_enchant_rank: Number(progression?.over_enchant_rank || 0),
+    combat,
+  };
+}
+
 const DEFAULT_SKILL_SETS = [
   { id: 'skill-set-1', name: 'Genre I', genre: '', order: 0 },
   { id: 'skill-set-2', name: 'Genre II', genre: '', order: 1 },
