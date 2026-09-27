@@ -53,7 +53,13 @@ const ARTEMIS_ABILITIES = [
   },
 ] as const;
 
-async function avatarGender(svc: any, userId: string) {
+async function avatarGender(svc: any, userId: string, requestedGender = '') {
+  // The dashboard may switch the currently displayed avatar before the latest
+  // Avatar row is rewritten. For rig-bound skills, prefer the explicit active
+  // avatar gender supplied by the authenticated client, then fall back to the
+  // persisted Avatar record.
+  const requested = String(requestedGender || '').trim().toLowerCase();
+  if (requested === 'female' || requested === 'male') return requested;
   const avatars = await svc.Avatar.filter({ user_id: userId }, '-updated_date', 1);
   return String(avatars?.[0]?.gender || '').trim().toLowerCase();
 }
@@ -278,7 +284,7 @@ async function ensureSkillSets(base44: any, userId: string) {
   return { rows, active: active || rows[0] || null, created };
 }
 
-async function buildState(base44: any, user: AnyObj) {
+async function buildState(base44: any, user: AnyObj, requestedGender = '') {
   const svc = base44.asServiceRole.entities;
   const { rows: loadouts, active } = await ensureSkillSets(base44, user.id);
   const [ownedCards, achievements, games, progressions, gender] = await Promise.all([
@@ -286,7 +292,7 @@ async function buildState(base44: any, user: AnyObj) {
     svc.Achievement.filter({ category: 'ability' }, '-created_date', 500),
     svc.Game.list('-created_date', 250),
     svc.CardProgression.filter({ user_id: user.id }, '-updated_date', 1500).catch(() => []),
-    avatarGender(svc, user.id),
+    avatarGender(svc, user.id, requestedGender),
   ]);
 
   // Artemis cards remain visible in the shared Skill Book for both male and female
@@ -446,15 +452,18 @@ Deno.serve(async (req) => {
     const action = String(body?.action || 'getState');
     const data = body?.data || {};
     const svc = base44.asServiceRole.entities;
+    const requestedGender = ['female', 'male'].includes(String(data.avatar_gender || '').trim().toLowerCase())
+      ? String(data.avatar_gender).trim().toLowerCase()
+      : '';
 
     if (action === 'bootstrap') {
       // These fixed avatar starters were explicitly approved for onboarding.
       // All other cards come from verified rewards, purchases, trades or admin grants.
       await ensureDemoAbility(svc, user.id);
-      if (await avatarGender(svc, user.id) === 'female') await ensureArtemisAbilities(svc, user.id);
-      return json(await buildState(base44, user));
+      if (await avatarGender(svc, user.id, requestedGender) === 'female') await ensureArtemisAbilities(svc, user.id);
+      return json(await buildState(base44, user, requestedGender));
     }
-    if (action === 'getState') return json(await buildState(base44, user));
+    if (action === 'getState') return json(await buildState(base44, user, requestedGender));
 
     if (['selectSkillSet','selectJawan','equip','unequip','clear'].includes(action)) {
       let liveMatch: boolean;
@@ -479,7 +488,7 @@ Deno.serve(async (req) => {
         const next = String(row.id) === String(selected.id);
         if (Boolean(row.is_active) !== next) await svc.Loadout.update(row.id, { is_active: next });
       }
-      return json(await buildState(base44, user));
+      return json(await buildState(base44, user, requestedGender));
     }
 
     const loadout = await activeLoadout(base44, user.id);
@@ -494,7 +503,7 @@ Deno.serve(async (req) => {
       if (!card || String(card.user_id) !== String(user.id)) return json({ error: 'Skill card is not owned by this user' }, 404);
       if (normalize(card.card_type) !== 'ability') return json({ error: 'Only Ability cards can be equipped in Skill Book slots' }, 400);
       if (card.trade_status === 'locked_in_trade') return json({ error: 'That skill card is locked in a trade' }, 409);
-      const compatibilityError = avatarSkillError(card, await avatarGender(svc, user.id));
+      const compatibilityError = avatarSkillError(card, await avatarGender(svc, user.id, requestedGender));
       if (compatibilityError) return json({ error: compatibilityError }, 409);
 
       const previous = { ...(loadout.skill_slots || {}) };
@@ -511,7 +520,7 @@ Deno.serve(async (req) => {
           if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false, equipped_to: 'none' });
         }
       }
-      return json(await buildState(base44, user));
+      return json(await buildState(base44, user, requestedGender));
     }
 
     if (action === 'unequip') {
@@ -529,7 +538,7 @@ Deno.serve(async (req) => {
           if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false, equipped_to: 'none' });
         }
       }
-      return json(await buildState(base44, user));
+      return json(await buildState(base44, user, requestedGender));
     }
 
     if (action === 'clear') {
@@ -544,7 +553,7 @@ Deno.serve(async (req) => {
           if (oldCard && String(oldCard.user_id) === String(user.id)) await svc.UserCard.update(oldCard.id, { is_equipped: false, equipped_to: 'none' });
         }
       }
-      return json(await buildState(base44, user));
+      return json(await buildState(base44, user, requestedGender));
     }
 
     return json({ error: 'Unknown Skill Book action' }, 400);
