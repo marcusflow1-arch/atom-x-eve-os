@@ -10,7 +10,6 @@ const WAITING_LIVE_MS = 30000;
 const MATCH_LIVE_MS = 15000;
 const RECONNECT_GRACE_MS = 120000;
 const QUEUE_HEARTBEAT_MS = 8000;
-const DASHBOARD_LIVE_MS = 60000;
 const DEFAULT_BATTLE_HP = 1000;
 const ARENA = { width: 12, length: 16, margin_to_net: 1, spawn_distance: 10 };
 const APPEARANCE_KEYS = [
@@ -27,7 +26,6 @@ const playerName = (user: Row) => user.full_name || user.username || user.displa
 const heartbeatAt = (row: Row) => Date.parse(row?.last_seen_at || row?.queued_at || 0);
 const waitingLive = (row: Row) => row?.status === 'waiting' && heartbeatAt(row) > Date.now() - WAITING_LIVE_MS;
 const matchedLive = (row: Row) => row?.status === 'matched' && heartbeatAt(row) > Date.now() - MATCH_LIVE_MS;
-const dashboardLive = (row: Row) => row?.status !== 'offline' && Number(row?.last_update || 0) > Date.now() - DASHBOARD_LIVE_MS;
 const finiteHp = (value: any, fallback = DEFAULT_BATTLE_HP) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
