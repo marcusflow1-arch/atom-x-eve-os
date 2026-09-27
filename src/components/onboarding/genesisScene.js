@@ -8,6 +8,7 @@ import { createEmbeddedAvatarController } from '@/components/onboarding/embedded
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
 import { GetsugaDashboardRuntime, createGetsugaIdleClip } from '@/components/getsuga/GetsugaDashboardRuntime';
 import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
+import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -82,9 +83,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       damage: Number(detail.damage || 50),
     } : null;
     const enriched = remote ? { ...detail, target: remoteTarget } : detail;
-    if (effectId === 'getsuga_tensho') {
-      const accepted = Boolean(!disposed && model && getsuga && getsuga.play(enriched.target || null));
+    if (!options.artemisFemale && !disposed && model && getsuga && (effectId === 'getsuga_tensho' || effectId.startsWith('adam_'))) {
+      const accepted = Boolean(getsuga.playEffect(effect, enriched));
       if (accepted) detail.accepted = true;
+      else if (!detail.rejectionReason) detail.rejectionReason = `Adam XE clip unavailable: ${effect.clip_name || effect.clipName || 'unknown'}`;
       return accepted;
     }
     if (effectId.startsWith('artemis_') && options.artemisFemale && !disposed && model && artemis) {
@@ -511,6 +513,13 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   (async () => {
     try {
       const asset = /\.fbx(?:\?|$)/i.test(url) ? await fbx.loadAsync(url) : await gltf.loadAsync(url);
+      if (options.getsugaMale || options.artemisFemale) {
+        try {
+          asset.animations = await mergeAdamXeInjectedClips(asset.animations || [], options.artemisFemale ? 'female' : 'male');
+        } catch (error) {
+          console.warn('Adam XE enhanced animation pack unavailable:', error);
+        }
+      }
       model = asset.scene || asset;
       if (disposed) { disposeModel(model); return; }
 
