@@ -532,14 +532,17 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   }, [loaded, graphicsError, match?.id, match?.status, queryClient, user?.id]);
 
   const requestDodge = async () => {
+    if (actionPending.current) return;
     if (!active) { setError('The fight is not ready yet.'); return; }
     if (!isMyTurn) { setError('Wait for your turn.'); return; }
     if (escapeMenuOpen || surrendering) return;
     if (localStunMs() > 0) { setError(`You are stunned (${(localStunMs() / 1000).toFixed(1)}s).`); return; }
+    actionPending.current = true;
     try {
       await invoke('dodge', { match_id: match.id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_dodge', matchId: match.id } }));
     } catch (e) { setError(e.message || 'Dodge rejected.'); }
+    finally { actionPending.current = false; }
   };
 
   requestDodgeRef.current = requestDodge;

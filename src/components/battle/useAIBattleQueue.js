@@ -75,9 +75,9 @@ const announce = (body) => announceAIBattleNotice(body?.notice);
  * to turn any invalidate/refetch into `{}` and wipe the live match from the
  * cache, which unmounted the arena mid-match.
  */
-export async function fetchAIBattleStatus(context) {
+export async function fetchAIBattleStatus(context, options) {
   const userId = context?.queryKey?.[1] || heartbeatUserId;
-  const body = await requestAIBattle(userId, 'status', sessionData({ position: typeof window !== 'undefined' ? window.__lunaPvPPosition || null : null }));
+  const body = await requestAIBattle(userId, 'status', sessionData({ position: typeof window !== 'undefined' ? window.__lunaPvPPosition || null : null }), options);
   announce(body);
   return withoutDismissed(body);
 }
@@ -261,7 +261,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     const userId = String(user.id);
     const snapshot = () => queryClient.getQueryData(aiBattleQueryKey(userId));
     const refresh = createBattleRefresh({ refresh: async () => {
-      const body = await fetchAIBattleStatus({ queryKey: aiBattleQueryKey(userId) });
+      const body = await fetchAIBattleStatus({ queryKey: aiBattleQueryKey(userId) }, { afterCurrent: true });
       writeStatus(queryClient, userId, body);
     } });
     refreshSignal.current = refresh.schedule;
@@ -296,7 +296,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     if (!polling || !user?.id || !deadline) return undefined;
     return scheduleBattleDeadline({
       match, offset: serverOffsetMs,
-      refresh: () => fetchAIBattleStatus({ queryKey: aiBattleQueryKey(user.id) }),
+      refresh: () => fetchAIBattleStatus({ queryKey: aiBattleQueryKey(user.id) }, { afterCurrent: true }),
     });
   }, [polling, user?.id, match?.id, match?.status, deadline, serverOffsetMs]);
 

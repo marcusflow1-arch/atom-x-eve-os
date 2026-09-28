@@ -36,13 +36,15 @@ export function createBattleTransport({ invoke, read, write, now = Date.now, san
     write(userId, value);
     return value;
   };
-  function request(userId, action, data = {}) {
+  function request(userId, action, data = {}, { afterCurrent = false } = {}) {
     if (!userId) return Promise.reject(new Error('Sign in to use AI Battle.'));
     const state = stateFor(userId);
     if (action === 'status') {
       // Do not send a second status from the popup/heartbeat, or read the match
       // midway through this client's own action.
-      if (state.status) return state.status;
+      if (state.status) return afterCurrent
+        ? state.status.then(() => request(userId, action, data))
+        : state.status;
       if (state.pending.size) return Promise.allSettled([...state.pending]).then(() => request(userId, action, data));
       const epoch = state.epoch, sequence = ++state.sequence, sentAt = now();
       const promise = (async () => {

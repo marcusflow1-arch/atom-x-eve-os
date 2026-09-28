@@ -157,3 +157,14 @@ test('realtime reads are limited to the queue owner and both match participants;
   await assert.rejects(b.AIBattleMatch.update(match.id,{players:[]}),/Forbidden/);
   assert.equal((await service.AIBattleMatch.get(match.id)).id,match.id);
 });
+
+test('a realtime event arriving during a poll requests one fresh read after that poll', async () => {
+  const h=harness(), before=h.request('a','status');
+  const one=h.request('a','status',{}, {afterCurrent:true});
+  const two=h.request('a','status',{}, {afterCurrent:true});
+  assert.equal(h.calls.length,1);
+  h.calls[0].resolve({match:{id:'m',hp:1000},server_time:10000});
+  await before;await flush();assert.equal(h.calls.length,2);
+  h.calls[1].resolve({match:{id:'m',hp:900},server_time:10000});
+  assert.equal((await one).match.hp,900);assert.equal((await two).match.hp,900);
+});

@@ -27,4 +27,4 @@ const transport = createBattleTransport({
     }
   },
 });
-export const requestAIBattle = (userId, action, data) => transport.request(userId, action, data);
+export const requestAIBattle = (userId, action, data, options) => transport.request(userId, action, data, options);
