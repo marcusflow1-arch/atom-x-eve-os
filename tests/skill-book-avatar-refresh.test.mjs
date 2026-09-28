@@ -10,7 +10,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const React = await import('react');
 const { act } = React, { createRoot } = await import('react-dom/client');
 const { QueryClient, QueryClientProvider } = createRequire(import.meta.url)('@tanstack/react-query');
-const effects = ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam'];
+const effects = ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam', 'chidori'];
 let gender = 'male', requests = 0;
 const hotbar = new Map();
 globalThis.skillRefreshStore = {

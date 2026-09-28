@@ -9,6 +9,8 @@ import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
 import { GetsugaDashboardRuntime, createGetsugaIdleClip } from '@/components/getsuga/GetsugaDashboardRuntime';
 import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
+import { characterBodyBounds } from '@/lib/characterModelOverrides';
+import { createChidoriCaster, isChidoriCast } from '@/components/battle/chidoriCaster';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -58,6 +60,17 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let getsuga = null;
   let artemis = null;
+  // Chidori lightning for dashboard casts (no opponent here: the strike fires
+  // into the air in front of the hand). Created on the first Chidori cast.
+  let chidoriCaster = null;
+  const startChidoriFx = () => {
+    if (disposed || !model) return;
+    chidoriCaster ||= createChidoriCaster(scene, { lights: true });
+    const attacker = options.artemisFemale
+      ? { model, root: model, female: true }
+      : { model: getsuga?.root || model, root: getsuga?.group || model, female: false };
+    chidoriCaster.start({ attacker });
+  };
   const emitGetsugaEvent = (name, detail = {}) => {
     if (typeof window !== 'undefined') {
       const payload = { effectId: 'getsuga_tensho', name, ...detail };
@@ -83,15 +96,18 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       damage: Number(detail.damage || 50),
     } : null;
     const enriched = remote ? { ...detail, target: remoteTarget } : detail;
-    if (!options.artemisFemale && !disposed && model && getsuga && (effectId === 'getsuga_tensho' || effectId.startsWith('adam_'))) {
+    const chidori = isChidoriCast(effect, effectId);
+    if (!options.artemisFemale && !disposed && model && getsuga && (effectId === 'getsuga_tensho' || effectId.startsWith('adam_') || effectId === 'chidori')) {
       const accepted = Boolean(getsuga.playEffect(effect, enriched));
       if (accepted) detail.accepted = true;
+      if (accepted && chidori) startChidoriFx();
       else if (!detail.rejectionReason) detail.rejectionReason = `Adam XE clip unavailable: ${effect.clip_name || effect.clipName || 'unknown'}`;
       return accepted;
     }
-    if (effectId.startsWith('artemis_') && options.artemisFemale && !disposed && model && artemis) {
+    if ((effectId.startsWith('artemis_') || effectId === 'chidori') && options.artemisFemale && !disposed && model && artemis) {
       const accepted = Boolean(artemis.playEffect(effect, enriched));
       if (accepted) detail.accepted = true;
+      if (accepted && chidori) startChidoriFx();
       else if (!detail.rejectionReason) detail.rejectionReason = `Artemis clip unavailable: ${effect.clip_name || effect.clipName || 'unknown'}`;
       return accepted;
     }
@@ -213,6 +229,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     secondaryMotionMixer?.update(dt);
     getsuga?.update(dt);
     artemis?.update(dt);
+    if (chidoriCaster?.active()) chidoriCaster.update(performance.now(), camera);
 
     if (secondaryMotionBridge && secondaryModel) {
       const { hips, spine, restHipsPosition, restHipsQuaternion, restSpineQuaternion, basePosition: childBasePosition, baseQuaternion } = secondaryMotionBridge;
@@ -550,10 +567,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         });
       }
 
-      let box = new THREE.Box3().setFromObject(model);
+      let box = characterBodyBounds(model);
       const size = box.getSize(new THREE.Vector3());
       model.scale.setScalar(1.8 / (size.y || 1));
-      box = new THREE.Box3().setFromObject(model);
+      box = characterBodyBounds(model);
       const center = box.getCenter(new THREE.Vector3());
       model.position.set(-center.x, -box.min.y, -center.z);
       if (Number.isFinite(options.initialYaw)) model.rotation.y = options.initialYaw;
@@ -750,6 +767,8 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         if (options.remoteSkillPlayerId) window.removeEventListener('lunaAIBattleRemoteCardCast', onRemoteCardCast);
         else window.removeEventListener('lunaCardAnimationEffectProc', onCardAnimationEffectProc);
       }
+      chidoriCaster?.dispose();
+      chidoriCaster = null;
       getsuga?.dispose();
       artemis?.dispose();
       observer.disconnect();

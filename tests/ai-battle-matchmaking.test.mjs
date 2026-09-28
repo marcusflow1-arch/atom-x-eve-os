@@ -210,6 +210,67 @@ test('fight polls only write positions when the fighter actually moved', async (
   assert.deepEqual(rows('AIBattleMatch')[0].positions.a, { x: 1.2, z: 4 });
 });
 
+test('a Chidori hit stuns the target: they lose the turn and cannot act until the stun ends', async () => {
+  const chidori = { slot: 0, user_card_id: 'card', name: 'Sasuke Uchiha - Chidori', effect_id: 'chidori', clip_name: 'Chidori_Ultimate',
+    atb_cost: 80, range_m: 18, hit_ms: 2000, cooldown_ms: 11000, base_damage: 220, stun_ms: 2800, animation_effect: { id: 'chidori', clip_name: 'Chidori_Ultimate' } };
+  prefightMatch('fighting', {
+    fight_starts_at: iso(-5000), fight_ends_at: iso(170000), positions: { a: { x: 0, z: 5 }, b: { x: 0, z: -5 } },
+    atb: { a: { value: 100, at: iso(), turn: true }, b: { value: 0, at: iso(), turn: false } },
+    cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], disconnects: {},
+    players: [{ id: 'a', gender: 'female', hp: 1000, max_hp: 1000, skills: [chidori] }, { id: 'b', gender: 'male', hp: 1000, max_hp: 1000, skills: [chidori] }],
+  });
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+
+  const cast = await battle('use_skill', { match_id: 'm1', slot: 0, cast_id: 'chidori-1', attacker_pos: { x: 0, z: 5 }, target_pos: { x: 0, z: -5 } }, 'a');
+  assert.equal(cast.cast.stun_ms, 2800);
+  assert.equal(cast.match.last_cast.clip_name, 'Chidori_Ultimate');
+  assert.equal(cast.match.last_cast.stun_ms, 2800);
+  assert.equal(cast.match.turn_player_id, 'b', 'the target may still react (e.g. dodge) before the strike lands');
+
+  // The strike lands.
+  const match = rows('AIBattleMatch')[0];
+  match.pending_hits[0].resolves_at = iso(-10);
+  const landed = await battle('status', { client_session_id: 'session-b' }, 'b');
+  const hit = landed.match.hit_log.at(-1);
+  assert.equal(hit.result, 'hit');
+  assert.equal(hit.stun_ms, 2800);
+  assert.ok(Date.parse(landed.match.stuns.b.until) > Date.now());
+  assert.equal(landed.match.turn_player_id, 'a', 'the stunned player loses their turn');
+
+  const blocked = await battle('basic_attack', { match_id: 'm1', cast_id: 'b-1' }, 'b', 409);
+  assert.match(blocked.error, /stunned/i);
+  await battle('dodge', { match_id: 'm1' }, 'b', 409);
+
+  // The attacker acts again; the turn passes back but the target is still down.
+  match.cooldowns.a._last_cast_at = Date.now() - 1000;
+  await battle('basic_attack', { match_id: 'm1', cast_id: 'a-2' }, 'a');
+  assert.equal(rows('AIBattleMatch')[0].atb.b.turn, true);
+  assert.match((await battle('basic_attack', { match_id: 'm1', cast_id: 'b-2' }, 'b', 409)).error, /stunned/i);
+
+  // Once the stun wears off the target can act on their turn.
+  rows('AIBattleMatch')[0].stuns.b.until = iso(-1);
+  await battle('basic_attack', { match_id: 'm1', cast_id: 'b-3' }, 'b');
+});
+
+test('a dodged Chidori does not stun', async () => {
+  const chidori = { slot: 0, effect_id: 'chidori', clip_name: 'Chidori_Ultimate', atb_cost: 80, range_m: 18, hit_ms: 2000, cooldown_ms: 11000, base_damage: 220, stun_ms: 2800, animation_effect: { id: 'chidori' } };
+  prefightMatch('fighting', {
+    fight_starts_at: iso(-5000), fight_ends_at: iso(170000), positions: { a: { x: 0, z: 5 }, b: { x: 0, z: -5 } },
+    atb: { a: { value: 100, at: iso(), turn: true }, b: { value: 0, at: iso(), turn: false } },
+    cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], disconnects: {},
+    players: [{ id: 'a', gender: 'male', hp: 1000, max_hp: 1000, skills: [chidori] }, { id: 'b', gender: 'male', hp: 1000, max_hp: 1000, skills: [] }],
+  });
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+  await battle('use_skill', { match_id: 'm1', slot: 0, cast_id: 'chidori-1', attacker_pos: { x: 0, z: 5 }, target_pos: { x: 0, z: -5 } }, 'a');
+  const match = rows('AIBattleMatch')[0];
+  const resolvesAt = Date.now() - 10;
+  match.pending_hits[0].resolves_at = new Date(resolvesAt).toISOString();
+  match.dodges = { b: { from: new Date(resolvesAt - 100).toISOString(), until: new Date(resolvesAt + 250).toISOString() } };
+  const settled = await battle('status', { client_session_id: 'session-b' }, 'b');
+  assert.equal(settled.match.hit_log.at(-1).result, 'miss');
+  assert.equal(settled.match.stuns.b, undefined);
+});
+
 for (const action of ['cancel', 'forfeit']) {
   test(action + ' during a reservation returns the other player to the queue instead of kicking them out', async () => {
     prefightMatch('matched');

@@ -369,14 +369,19 @@ for (const type of ['ability', 'Ability']) {
   });
 }
 
+const starterCards = () => rows('UserCard').filter((card) => card.source === 'starter');
+const chidoriCards = () => rows('UserCard').filter((card) => card.animation_effect?.id === 'chidori');
+
 test('female avatar starters are restored, tracked and not reissued after transfer', async () => {
   await call('skillBookLoadout', { action: 'bootstrap' });
-  assert.equal(rows('UserCard').length, 4);
-  assert.ok(rows('UserCard').every((card) => card.source === 'starter' && card.starter_grant_user_id === 'a'));
+  assert.equal(starterCards().length, 4);
+  assert.ok(starterCards().every((card) => card.starter_grant_user_id === 'a'));
+  assert.equal(chidoriCards().length, 1);
   const artemis = rows('UserCard').find((card) => card.starter_grant_key === 'artemis_lunar_beam');
   artemis.user_id = 'b';
   await call('skillBookLoadout', { action: 'bootstrap' });
-  assert.equal(rows('UserCard').length, 4);
+  assert.equal(starterCards().length, 4);
+  assert.equal(chidoriCards().length, 1);
   assert.equal(rows('UserCard').filter((card) => card.starter_grant_key === 'artemis_lunar_beam').length, 1);
 });
 
@@ -384,8 +389,67 @@ test('a client cannot request female starter grants for a male avatar', async ()
   rows('Avatar')[0].gender = 'male';
   const result = await call('skillBookLoadout', { action: 'bootstrap', data: { gender: 'female', user_id: 'b', card_id: 'anything' } });
   assert.equal(result.avatar_gender, 'male');
-  assert.equal(rows('UserCard').length, 1);
-  assert.equal(rows('UserCard')[0].animation_effect.id, 'getsuga_tensho');
+  assert.equal(starterCards().length, 1);
+  assert.equal(starterCards()[0].animation_effect.id, 'getsuga_tensho');
+  assert.ok(!rows('UserCard').some((card) => String(card.animation_effect?.id || '').startsWith('artemis_')));
+});
+
+for (const gender of ['female', 'male']) {
+  test(`${gender}: the Naruto demo achievement delivers one Chidori card, filed under Atom X Eve`, async () => {
+    rows('Avatar')[0].gender = gender;
+    const state = await call('skillBookLoadout', { action: 'bootstrap' });
+    assert.equal(chidoriCards().length, 1);
+    const card = chidoriCards()[0];
+    assert.equal(card.user_id, 'a');
+    assert.equal(card.card_type, 'ability');
+    assert.equal(card.game_name, 'Atom X Eve');
+    assert.equal(card.genre, 'Action RPG');
+    assert.equal(card.animation_effect.clip_name, 'Chidori_Ultimate');
+    assert.equal(card.animation_effect.required_avatar_gender, undefined);
+    const definition = rows('TradingCard').find((row) => row.id === card.trading_card_id);
+    assert.equal(definition.status, 'live');
+    const achievement = rows('Achievement').find((row) => row.card_id === definition.id);
+    assert.equal(achievement.game, 'Naruto Shippuden: Ultimate Ninja Storm 4');
+    assert.equal(achievement.category, 'ability');
+    assert.equal(rows('UserAchievement').find((row) => row.achievement_id === achievement.id)?.status, 'unlocked');
+    // Delivered through the real achievement pipeline (durable grant), not the fallback.
+    assert.ok(rows('RewardGrant').some((row) => row.status === 'completed' && row.payload?.kind === 'achievement' && row.payload?.achievement_id === achievement.id));
+
+    // Skill Book: one owned, equippable entry in the Atom X Eve group; the
+    // source game does not become a separate (empty) Skill Book game.
+    const entries = state.skills.filter((skill) => skill.card?.animation_effect?.id === 'chidori');
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].game_name, 'Atom X Eve');
+    assert.equal(entries[0].owned, true);
+    assert.equal(entries[0].can_equip, true);
+    const group = state.games.find((row) => row.title === 'Atom X Eve');
+    assert.equal(group.genre, 'Action RPG');
+    assert.ok(!state.games.some((row) => /naruto/i.test(row.title)));
+    const getsuga = state.skills.find((skill) => skill.card?.animation_effect?.id === 'getsuga_tensho');
+    assert.equal(getsuga.game_name, 'Atom X Eve');
+
+    // Repeat bootstraps never duplicate the catalog rows or the card.
+    await call('skillBookLoadout', { action: 'bootstrap' });
+    assert.equal(chidoriCards().length, 1);
+    assert.equal(rows('TradingCard').filter((row) => row.name === definition.name).length, 1);
+    assert.equal(rows('Achievement').filter((row) => row.title === achievement.title).length, 1);
+  });
+}
+
+test('a consumed Chidori card is not re-minted by later bootstraps', async () => {
+  await call('skillBookLoadout', { action: 'bootstrap' });
+  chidoriCards()[0].quantity = 0;
+  await call('skillBookLoadout', { action: 'bootstrap' });
+  assert.equal(chidoriCards().length, 1);
+  chidoriCards()[0].user_id = 'b';
+  await call('skillBookLoadout', { action: 'bootstrap' });
+  assert.equal(chidoriCards().length, 1);
+});
+
+test('getState reads the Skill Book without granting demo cards', async () => {
+  await call('skillBookLoadout', { action: 'getState' });
+  assert.equal(rows('UserCard').length, 0);
+  assert.ok(!writes.some((write) => ['UserCard', 'TradingCard', 'Achievement'].includes(write.name)));
 });
 
 test('starter bootstrap preserves a purchased canonical card instead of relabeling it', async () => {

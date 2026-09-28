@@ -1,15 +1,23 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { SKILL_SLOT_COUNT, skillStats } from '../../shared/pvpSkills.ts';
 import { skillEquipStatus } from '../../shared/skillEligibility.ts';
 import { loadCombatProfile, ownedCardStats } from '../../shared/combatProfile.ts';
 import { abilityOutput } from '../../shared/combatStats.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
+import { grantAchievement } from '../../shared/rewardEngine.ts';
+import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 
 type AnyObj = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 const normalize = (value: any) => String(value || '').trim().toLowerCase();
+// Every demo animation card lives in ONE Skill Book game: "Atom X Eve"
+// (shown with the "Action RPG" genre tag). Getsuga Tenshō, the three Artemis
+// abilities and Chidori are all grouped there.
+const DEMO_GAME_TITLE = 'Atom X Eve';
+const DEMO_GAME_GENRE = 'Action RPG';
+// Optional admin-authored demo catalog (a Game row titled "Adam XE" with live
+// TradingCards). Its cards are filed under the same Atom X Eve group.
 const ADAM_XE_GAME_TITLE = 'Adam XE';
-const ADAM_XE_GENRE = 'Adam XE';
 const GETSUGA_MALE_MODEL_ID = '6ab3bf0728d93c06fcff4c05';
 const GETSUGA_MALE_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/d646be928_Getsuga_Tensho_Character.glb';
 const GETSUGA_EFFECT = {
@@ -91,8 +99,8 @@ async function ensureArtemisAbilities(svc: any, userId: string) {
       if (normalize(current.card_type) !== 'ability') patch.card_type = 'ability';
       if (current.card_rarity !== 'Unique') patch.card_rarity = 'Unique';
       if (current.card_image !== def.card_image) patch.card_image = def.card_image;
-      if (current.game_name !== 'Atom X Eve') patch.game_name = 'Atom X Eve';
-      if (current.genre !== 'Action RPG') patch.genre = 'Action RPG';
+      if (current.game_name !== DEMO_GAME_TITLE) patch.game_name = DEMO_GAME_TITLE;
+      if (current.genre !== DEMO_GAME_GENRE) patch.genre = DEMO_GAME_GENRE;
       if (JSON.stringify(current.animation_effect || {}) !== JSON.stringify(def.effect)) patch.animation_effect = def.effect;
       if (Object.keys(patch).length) {
         await svc.UserCard.update(current.id, patch);
@@ -107,8 +115,8 @@ async function ensureArtemisAbilities(svc: any, userId: string) {
       card_name: def.card_name,
       card_rarity: 'Unique',
       card_image: def.card_image,
-      game_name: 'Atom X Eve',
-      genre: 'Action RPG',
+      game_name: DEMO_GAME_TITLE,
+      genre: DEMO_GAME_GENRE,
       source: 'starter',
       starter_grant_user_id: userId,
       starter_grant_key: def.effect.id,
@@ -134,6 +142,8 @@ async function ensureDemoAbility(svc: any, userId: string) {
     const patch: AnyObj = {};
     if (!current.starter_grant_user_id && !current.starter_grant_key) Object.assign(patch, { starter_grant_user_id: userId, starter_grant_key: GETSUGA_EFFECT.id, source: current.source || 'starter' });
     if (current.card_image !== ICHIGO_CARD_IMAGE) patch.card_image = ICHIGO_CARD_IMAGE;
+    if (current.game_name !== DEMO_GAME_TITLE) patch.game_name = DEMO_GAME_TITLE;
+    if (current.genre !== DEMO_GAME_GENRE) patch.genre = DEMO_GAME_GENRE;
     if (JSON.stringify(current.animation_effect || {}) !== JSON.stringify(GETSUGA_EFFECT)) patch.animation_effect = GETSUGA_EFFECT;
     if (Object.keys(patch).length) {
       await svc.UserCard.update(current.id, patch);
@@ -147,8 +157,8 @@ async function ensureDemoAbility(svc: any, userId: string) {
     card_name: 'Ichigo Kurosaki - Getsuga Tenshō',
     card_rarity: 'Unique',
     card_image: ICHIGO_CARD_IMAGE,
-    game_name: 'Bleach',
-    genre: 'Action RPG',
+    game_name: DEMO_GAME_TITLE,
+    genre: DEMO_GAME_GENRE,
     source: 'starter',
     starter_grant_user_id: userId,
     starter_grant_key: GETSUGA_EFFECT.id,
@@ -183,9 +193,9 @@ async function ensureAdamXeDemoCards(svc: any, userId: string) {
     if (card) {
       const patch: AnyObj = {};
       if (String(card.trading_card_id || '') !== String(definition.id)) patch.trading_card_id = definition.id;
-      if (card.game_name !== ADAM_XE_GAME_TITLE) patch.game_name = ADAM_XE_GAME_TITLE;
+      if (card.game_name !== DEMO_GAME_TITLE) patch.game_name = DEMO_GAME_TITLE;
       if (String(card.game_id || '') !== String(game.id)) patch.game_id = game.id;
-      if (card.genre !== ADAM_XE_GENRE) patch.genre = ADAM_XE_GENRE;
+      if (card.genre !== DEMO_GAME_GENRE) patch.genre = DEMO_GAME_GENRE;
       if (card.card_name !== definition.name) patch.card_name = definition.name;
       if (card.card_rarity !== definition.rarity) patch.card_rarity = definition.rarity;
       if (card.card_image !== definition.image_url) patch.card_image = definition.image_url;
@@ -214,9 +224,9 @@ async function ensureAdamXeDemoCards(svc: any, userId: string) {
       card_name: definition.name,
       card_rarity: definition.rarity || 'Unique',
       card_image: definition.image_url || '',
-      game_name: ADAM_XE_GAME_TITLE,
+      game_name: DEMO_GAME_TITLE,
       game_id: game.id,
-      genre: ADAM_XE_GENRE,
+      genre: DEMO_GAME_GENRE,
       source: 'admin',
       acquisition_method: 'unlocked',
       unlocked_date: new Date().toISOString(),
@@ -233,6 +243,217 @@ async function ensureAdamXeDemoCards(svc: any, userId: string) {
     results.push(card);
   }
   return results;
+}
+
+// ---------------------------------------------------------------------------
+// Demo achievement → Chidori ability card
+// ---------------------------------------------------------------------------
+// A demo of the real reward pipeline: the player "unlocks" an achievement from
+// Naruto Shippuden: Ultimate Ninja Storm 4, the achievement pays out a
+// TradingCard, and that card lands in the Skill Book under Atom X Eve with the
+// rest of the demo animations. The clip is authored on BOTH character bodies
+// (Chidori_Ultimate + Chidori_Hit_Stun_Fall), so the card has no gender lock.
+const CHIDORI_DEMO_KEY = 'chidori';
+const CHIDORI_SOURCE_GAME = 'Naruto Shippuden: Ultimate Ninja Storm 4';
+const CHIDORI_CARD_NAME = 'Sasuke Uchiha - Chidori';
+const CHIDORI_ACHIEVEMENT_TITLE = 'One Thousand Birds';
+const CHIDORI_EFFECT = {
+  id: 'chidori',
+  clip_name: 'Chidori_Ultimate',
+  reaction_clip: 'Chidori_Hit_Stun_Fall',
+  mode: 'embedded',
+  // Both bodies carry the clip; the runtime uses whichever avatar is active.
+  model_urls: { male: MALE_MODEL, female: FEMALE_MODEL },
+  duration_ms: 4200,
+  hit_ms: 2000,
+  stun_ms: 2800,
+  cooldown_ms: 11000,
+  dash: { start_ms: 1420, impact_ms: 2000, return_ms: 3300 },
+};
+const chidoriCardImage = () => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 720">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="72%"><stop offset="0" stop-color="#7fd4ff" stop-opacity=".7"/><stop offset=".45" stop-color="#132a52"/><stop offset="1" stop-color="#05080f"/></radialGradient>
+    <radialGradient id="o" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#bfeaff"/><stop offset="1" stop-color="#2a8cff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="512" height="720" rx="34" fill="url(#g)"/>
+  <path d="M42 98h428M42 622h428" stroke="#b7efff" stroke-opacity=".24"/>
+  <circle cx="256" cy="318" r="120" fill="url(#o)" opacity=".85"/>
+  <g fill="none" stroke="#f4fbff" stroke-width="7" stroke-linejoin="bevel" stroke-linecap="round">
+    <path d="M256 318l-58-46 18-8-64-70"/><path d="M256 318l70-30-12-14 88-40"/>
+    <path d="M256 318l-76 40 16 10-82 54"/><path d="M256 318l54 62-16 4 40 92"/>
+    <path d="M256 318l6-86 14 6 10-96"/>
+  </g>
+  <g fill="none" stroke="#6cc8ff" stroke-width="3" stroke-linecap="round" opacity=".9">
+    <path d="M256 318l-96 -8-4 16-70 -2"/><path d="M256 318l98 22-8 12 76 20"/><path d="M256 318l-20 88 14 2-12 70"/>
+  </g>
+  <text x="256" y="570" text-anchor="middle" font-size="34" font-weight="800" letter-spacing="6" font-family="system-ui,sans-serif" fill="#f3fbff">CHIDORI</text>
+  <text x="256" y="604" text-anchor="middle" font-size="15" letter-spacing="3" font-family="system-ui,sans-serif" fill="#9bdff5">ATOM X EVE · DEMO · ALL BODIES</text>
+</svg>`)}`;
+const CHIDORI_CARD_IMAGE = chidoriCardImage();
+
+async function oldestOrCreate(entity: any, query: AnyObj, create: () => AnyObj, isDemoRow: (row: AnyObj) => boolean) {
+  let rows = await entity.filter(query, 'created_date', 5);
+  if (!rows?.length) {
+    await entity.create(create());
+    rows = await entity.filter(query, 'created_date', 5);
+  }
+  const keeper = rows?.[0] || null;
+  // Two first-time Skill Book loads can race to create the catalog rows. Keep
+  // the oldest demo row and drop only duplicates this function created.
+  for (const extra of (rows || []).slice(1)) {
+    if (isDemoRow(extra)) await entity.delete(extra.id).catch(() => null);
+  }
+  return keeper;
+}
+
+async function ensureChidoriCatalog(svc: any) {
+  // The demo animations' Game row is the admin "Adam XE" game (shown to the
+  // player as Atom X Eve); fall back to a Game titled Atom X Eve if present.
+  const demoGame = (await svc.Game.filter({ title: ADAM_XE_GAME_TITLE }, 'created_date', 1).catch(() => []))?.[0]
+    || (await svc.Game.filter({ title: DEMO_GAME_TITLE }, 'created_date', 1).catch(() => []))?.[0]
+    || null;
+  const card = await oldestOrCreate(
+    svc.TradingCard,
+    { name: CHIDORI_CARD_NAME },
+    () => ({
+      name: CHIDORI_CARD_NAME,
+      description: 'Charge a thousand birds of lightning, dash across the court and drive it through your opponent. A clean hit stuns them.',
+      image_url: CHIDORI_CARD_IMAGE,
+      rarity: 'Unique',
+      card_type: 'ability',
+      series: 'Atom X Eve Demo Animations',
+      game_id: demoGame?.id || '',
+      animation_effect: CHIDORI_EFFECT,
+      stackable: false,
+      // The reward engine delivers non-tradable cards as `locked_in_trade`,
+      // which the Skill Book refuses to equip.
+      tradable: true,
+      max_level: 100,
+      status: 'live',
+      showcase: { demo_key: CHIDORI_DEMO_KEY, skill_book_game: DEMO_GAME_TITLE },
+    }),
+    (row) => row?.showcase?.demo_key === CHIDORI_DEMO_KEY,
+  );
+  if (!card) throw new Error('Chidori card definition is unavailable.');
+  const cardPatch: AnyObj = {};
+  if (card.status !== 'live') cardPatch.status = 'live';
+  if (normalize(card.card_type) !== 'ability') cardPatch.card_type = 'ability';
+  if (JSON.stringify(card.animation_effect || {}) !== JSON.stringify(CHIDORI_EFFECT)) cardPatch.animation_effect = CHIDORI_EFFECT;
+  if (card.image_url !== CHIDORI_CARD_IMAGE) cardPatch.image_url = CHIDORI_CARD_IMAGE;
+  if (demoGame?.id && !card.game_id) cardPatch.game_id = demoGame.id;
+  if (card.tradable === false) cardPatch.tradable = true;
+  if (Object.keys(cardPatch).length) Object.assign(card, await svc.TradingCard.update(card.id, cardPatch) || cardPatch);
+
+  const achievement = await oldestOrCreate(
+    svc.Achievement,
+    { title: CHIDORI_ACHIEVEMENT_TITLE, game: CHIDORI_SOURCE_GAME },
+    () => ({
+      title: CHIDORI_ACHIEVEMENT_TITLE,
+      description: `Demo achievement from ${CHIDORI_SOURCE_GAME}: land your first Chidori. Unlocks the Chidori ability card in your Skill Book.`,
+      game: CHIDORI_SOURCE_GAME,
+      card_id: card.id,
+      category: 'ability',
+      rarity: 'Unique',
+      points: 50,
+      icon: '⚡',
+      unlock_condition: 'Demo unlock — granted automatically.',
+      reward: {
+        name: CHIDORI_CARD_NAME,
+        type: 'ability_card',
+        image_url: CHIDORI_CARD_IMAGE,
+        demo_key: CHIDORI_DEMO_KEY,
+        skill_book_game: DEMO_GAME_TITLE,
+        skill_book_genre: DEMO_GAME_GENRE,
+      },
+    }),
+    (row) => row?.reward?.demo_key === CHIDORI_DEMO_KEY,
+  );
+  if (!achievement) throw new Error('Chidori achievement is unavailable.');
+  if (String(achievement.card_id || '') !== String(card.id)) {
+    Object.assign(achievement, await svc.Achievement.update(achievement.id, { card_id: card.id }) || { card_id: card.id });
+  }
+  return { card, achievement, demoGame };
+}
+
+async function fileUnderDemoGame(svc: any, userCard: AnyObj | null, extra: AnyObj = {}) {
+  if (!userCard?.id) return userCard;
+  const patch: AnyObj = {};
+  if (userCard.game_name !== DEMO_GAME_TITLE) patch.game_name = DEMO_GAME_TITLE;
+  if (userCard.genre !== DEMO_GAME_GENRE) patch.genre = DEMO_GAME_GENRE;
+  if (normalize(userCard.card_type) !== 'ability') patch.card_type = 'ability';
+  if (JSON.stringify(userCard.animation_effect || {}) !== JSON.stringify(CHIDORI_EFFECT)) patch.animation_effect = CHIDORI_EFFECT;
+  if (userCard.card_image !== CHIDORI_CARD_IMAGE) patch.card_image = CHIDORI_CARD_IMAGE;
+  for (const [key, value] of Object.entries(extra)) if (value && userCard[key] !== value) patch[key] = value;
+  if (!Object.keys(patch).length) return userCard;
+  await svc.UserCard.update(userCard.id, patch);
+  return { ...userCard, ...patch };
+}
+
+async function ensureChidoriDemoAchievement(svc: any, userId: string) {
+  const { card, achievement } = await ensureChidoriCatalog(svc);
+  const ownedRows = await svc.UserCard.filter({ user_id: userId, trading_card_id: card.id }, 'created_date', 5);
+  const owned = (ownedRows || []).find((row: AnyObj) => Number(row.quantity ?? 1) > 0) || null;
+  if (owned) return fileUnderDemoGame(svc, owned, { achievement_id: achievement.id });
+  // Durable tombstone: once delivered, a fused/consumed card is never re-minted.
+  if (await previousStarterGrant(svc, userId, CHIDORI_DEMO_KEY)) return null;
+
+  try {
+    const result = await grantAchievement(svc, userId, achievement.id, 'admin', {
+      progress: { event_key: 'demo.naruto_storm_4.chidori', demo: true },
+    });
+    if (result?.userCard) {
+      return fileUnderDemoGame(svc, result.userCard, { starter_grant_user_id: userId, starter_grant_key: CHIDORI_DEMO_KEY });
+    }
+    if (result?.alreadyUnlocked && !result?.legacyDelivery) return null;
+  } catch (error) {
+    // The demo card must still reach the Skill Book if the XP/notification
+    // side of the achievement pipeline is unavailable. Deliver it directly.
+    console.warn('[skillBookLoadout] Chidori achievement grant failed; delivering card directly', error);
+  }
+
+  const again = await svc.UserCard.filter({ user_id: userId, trading_card_id: card.id }, 'created_date', 5);
+  const delivered = (again || []).find((row: AnyObj) => Number(row.quantity ?? 1) > 0);
+  if (delivered) return fileUnderDemoGame(svc, delivered, { starter_grant_user_id: userId, starter_grant_key: CHIDORI_DEMO_KEY });
+  return svc.UserCard.create({
+    user_id: userId,
+    trading_card_id: card.id,
+    achievement_id: achievement.id,
+    card_type: 'ability',
+    card_name: CHIDORI_CARD_NAME,
+    card_rarity: 'Unique',
+    card_image: CHIDORI_CARD_IMAGE,
+    game_name: DEMO_GAME_TITLE,
+    game_id: card.game_id || '',
+    genre: DEMO_GAME_GENRE,
+    source: 'achievement',
+    starter_grant_user_id: userId,
+    starter_grant_key: CHIDORI_DEMO_KEY,
+    acquisition_method: 'unlocked',
+    unlocked_date: new Date().toISOString(),
+    acquired_at: new Date().toISOString(),
+    quantity: 1,
+    is_equipped: false,
+    equipped_to: 'none',
+    trade_status: 'available',
+    animation_effect: CHIDORI_EFFECT,
+  });
+}
+
+// Every demo animation card, grouped under Atom X Eve. Each step is isolated so
+// one failing card never hides the others. The Artemis starters stay a female
+// avatar grant (as approved for onboarding); Getsuga, Chidori and the Adam XE
+// demo catalog are granted to every player.
+async function ensureDemoAnimationCards(svc: any, userId: string, gender = '') {
+  const steps: [string, () => Promise<unknown>][] = [
+    ['getsuga', () => ensureDemoAbility(svc, userId)],
+    ['artemis', async () => { if (gender === 'female') await ensureArtemisAbilities(svc, userId); }],
+    ['chidori', () => ensureChidoriDemoAchievement(svc, userId)],
+    ['adam-xe', () => ensureAdamXeDemoCards(svc, userId)],
+  ];
+  for (const [name, step] of steps) {
+    try { await step(); } catch (error) { console.error(`[skillBookLoadout] demo card step "${name}" failed`, error); }
+  }
 }
 
 function progressionView(progression: AnyObj | null, card: AnyObj | null, preview?: AnyObj) {
@@ -398,9 +619,13 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
   for (const p of progressions || []) if (p.user_card_id) progressByUserCard.set(String(p.user_card_id), p);
 
   const ownedByGameAndName = new Map<string, AnyObj>();
+  const ownedByTradingCard = new Map<string, AnyObj>();
   for (const card of ownedSkills) {
     const key = normalize(card.game_name) + '::' + normalize(card.card_name);
     if (!ownedByGameAndName.has(key)) ownedByGameAndName.set(key, card);
+    if (card.trading_card_id && Number(card.quantity ?? 1) > 0 && !ownedByTradingCard.has(String(card.trading_card_id))) {
+      ownedByTradingCard.set(String(card.trading_card_id), card);
+    }
   }
 
   const avatarProfile = await loadCombatProfile(svc,user.id);
@@ -416,17 +641,23 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
   for (const achievement of abilityAchievements) {
     const skillName = achievement?.reward?.name || achievement.title || 'Ability';
     const key = normalize(achievement.game) + '::' + normalize(skillName);
-    const owned = ownedByGameAndName.get(key) || null;
+    // An achievement's card is matched by its TradingCard first: the achievement
+    // can come from one game (e.g. a Naruto demo unlock) while its card is filed
+    // in another Skill Book game (Atom X Eve).
+    const owned = (achievement.card_id && ownedByTradingCard.get(String(achievement.card_id))) || ownedByGameAndName.get(key) || null;
+    if (owned && seenOwned.has(String(owned.id))) continue;
     if (owned) seenOwned.add(String(owned.id));
     const progression = owned ? progressByUserCard.get(String(owned.id)) || null : null;
+    const skillBookGame = String(achievement?.reward?.skill_book_game || '').trim();
     catalog.push({
       id: achievement.id,
       achievement_id: achievement.id,
       title: skillName,
       description: achievement.description || achievement.unlock_condition || '',
-      game_name: achievement.game || owned?.game_name || '',
+      game_name: skillBookGame || achievement.game || owned?.game_name || '',
+      source_game: achievement.game || '',
       game_id: owned?.game_id || '',
-      genre: owned?.genre || '',
+      genre: owned?.genre || achievement?.reward?.skill_book_genre || '',
       rarity: achievement.rarity === 'Mythical' ? 'Mythic' : (achievement.rarity || owned?.card_rarity || 'Common'),
       image: owned?.card_image || achievement?.reward?.image_url || achievement?.reward?.image || '',
       icon: achievement.icon || '',
@@ -471,7 +702,7 @@ async function buildState(base44: any, user: AnyObj, requestedGender = '') {
     const game = (skill.game_id && gameById.get(String(skill.game_id))) || gameByName.get(key) || null;
     if (!grouped.has(key)) grouped.set(key, {
       key, id: game?.id || skill.game_id || '', title,
-      genre: normalize(title) === normalize(ADAM_XE_GAME_TITLE) ? ADAM_XE_GENRE : (game?.genre || skill.genre || 'Uncategorized'),
+      genre: normalize(title) === normalize(DEMO_GAME_TITLE) ? DEMO_GAME_GENRE : (game?.genre || skill.genre || 'Uncategorized'),
       image: game?.cover_image || game?.cover || game?.banner_image || game?.image || '',
       total_skills: 0, owned_skills: 0,
     });
@@ -550,12 +781,17 @@ Deno.serve(async (req) => {
       ? String(data.avatar_gender).trim().toLowerCase()
       : '';
 
-    if (action === 'bootstrap' || action === 'getState') {
-      // Adam XE is the canonical internal demo game. Its TradingCard definitions
-      // are granted once per user through durable RewardGrant rows, so every
-      // animation card appears in Skill Book without being re-minted after a
-      // player fuses/trades/consumes it later.
-      await ensureAdamXeDemoCards(svc, user.id);
+    if (action === 'bootstrap') {
+      // Grants/repairs every demo animation card (Getsuga Tenshō, the Artemis
+      // abilities, the Chidori achievement card and any admin Adam XE cards),
+      // all filed under Atom X Eve. Each grant has a durable tombstone, so a
+      // card the player later fuses/trades/consumes is never re-minted. The
+      // client calls this only when a demo card is missing from getState.
+      await ensureDemoAnimationCards(svc, user.id, await avatarGender(svc, user.id, requestedGender));
+      return json(await buildState(base44, user, requestedGender));
+    }
+
+    if (action === 'getState') {
       return json(await buildState(base44, user, requestedGender));
     }
 

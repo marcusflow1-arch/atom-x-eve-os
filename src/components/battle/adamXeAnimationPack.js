@@ -89,9 +89,23 @@ export async function loadAdamXeInjectedClips(gender = 'male') {
   return packs.flat();
 }
 
+const PACKED_CLIP_NAMES = {
+  male: ['Chidori_Attack_01', 'Chidori_Ultimate'],
+  female: ['Chidori_Ultimate'],
+};
+
 export async function mergeAdamXeInjectedClips(animations = [], gender = 'male') {
-  const byName = new Map((animations || []).filter(Boolean).map((clip) => [String(clip.name || ''), clip]));
-  const injected = await loadAdamXeInjectedClips(gender);
-  injected.forEach((clip) => byName.set(String(clip.name || ''), clip));
+  const list = (animations || []).filter(Boolean);
+  const byName = new Map(list.map((clip) => [String(clip.name || ''), clip]));
+  const key = String(gender).toLowerCase() === 'female' ? 'female' : 'male';
+  // The current character GLBs (public/models/characters) already contain the
+  // authored Chidori clips at full precision. The packs are only a fallback for
+  // an older body that lacks them; never replace a clip the model already has.
+  if (PACKED_CLIP_NAMES[key].every((name) => byName.has(name))) return list;
+  const injected = await loadAdamXeInjectedClips(key);
+  injected.forEach((clip) => {
+    const name = String(clip.name || '');
+    if (!byName.has(name)) byName.set(name, clip);
+  });
   return [...byName.values()];
 }

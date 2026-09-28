@@ -60,6 +60,10 @@
     "dodges": {
       "type": "object"
     },
+    "stuns": {
+      "type": "object",
+      "description": "Per-player stun windows ({ from, until, cast_id, attacker_id }) applied by abilities such as Chidori. A stunned player cannot act until `until`."
+    },
     "pending_hits": {
       "type": "array",
       "items": {

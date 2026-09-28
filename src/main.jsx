@@ -1,5 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+// Must run before any avatar loads: swaps the legacy hosted character GLBs for
+// the current bodies in public/models/characters.
+import '@/lib/characterModelOverrides'
 import App from '@/App.jsx'
 import '@/index.css'
 import '@/styles/streaming-home-achievement-cards.css'

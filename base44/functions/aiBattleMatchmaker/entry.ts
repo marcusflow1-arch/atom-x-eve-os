@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
-import { BASIC_MELEE, DODGE, atbNow, skillStats, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
+import { BASIC_MELEE, DODGE, atbNow, skillStats, skillStunMs, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
 import { loadCombatProfile } from '../../shared/combatProfile.ts';
@@ -106,6 +106,16 @@ function turnAtb(match: Row, activeId: string, now = Date.now()) {
   }]));
 }
 
+// A stunned fighter (e.g. hit by Chidori) cannot act until `until`.
+function stunRemainingMs(match: Row, playerId: string, now = Date.now()) {
+  const until = Date.parse(match?.stuns?.[String(playerId)]?.until || 0);
+  return until > now ? until - now : 0;
+}
+function stunError(match: Row, playerId: string, now = Date.now()) {
+  const left = stunRemainingMs(match, playerId, now);
+  return left > 0 ? `You are stunned (${(left / 1000).toFixed(1)}s).` : '';
+}
+
 function publicQueue(row: Row | null) {
   if (!row) return null;
   return {
@@ -131,6 +141,7 @@ function publicMatch(row: Row | null) {
     // The most recent accepted ability cast. Clients use it to start the
     // caster's animation even when the peer-to-peer relay drops the message.
     last_cast: row.last_cast || null,
+    stuns: row.stuns || {},
     hit_log: Array.isArray(row.hit_log) ? row.hit_log.slice(-20) : [],
   };
 }
@@ -291,6 +302,7 @@ function shiftPausedTimers(match: Row, pauseMs: number) {
   shifted.pending_hits = (shifted.pending_hits || []).map((hit: Row) => ({ ...hit, resolves_at: shiftIso(hit.resolves_at, pauseMs) }));
   shifted.atb = Object.fromEntries(Object.entries(shifted.atb || {}).map(([id, state]: any) => [id, { ...state, at: shiftIso(state?.at, pauseMs) }]));
   shifted.dodges = Object.fromEntries(Object.entries(shifted.dodges || {}).map(([id, state]: any) => [id, { ...state, from: shiftIso(state?.from, pauseMs), until: shiftIso(state?.until, pauseMs) }]));
+  shifted.stuns = Object.fromEntries(Object.entries(shifted.stuns || {}).map(([id, state]: any) => [id, { ...state, from: shiftIso(state?.from, pauseMs), until: shiftIso(state?.until, pauseMs) }]));
   shifted.cooldowns = Object.fromEntries(Object.entries(shifted.cooldowns || {}).map(([id, values]: any) => [id, Object.fromEntries(Object.entries(values || {}).map(([key, value]: any) => [key, key === '_last_cast_at' && Number.isFinite(Number(value)) ? Number(value) + pauseMs : shiftIso(value, pauseMs)]))]));
   return shifted;
 }
@@ -401,7 +413,14 @@ async function settleMatch(svc: any, input: Row | null) {
       } else {
         hpAfter = finiteHp(match.players.find((p:Row)=>String(p.id)===String(hit.target_id))?.hp, DEFAULT_BATTLE_HP);
       }
-      const result = { cast_id: hit.cast_id, attacker_id: hit.attacker_id, target_id: hit.target_id, slot: hit.slot, effect_id: hit.effect_id, result: missed ? 'miss' : 'hit', damage: missed ? 0 : hit.damage, crit: !!hit.crit, hp_after: hpAfter, resolved_at: hit.resolves_at };
+      const stunMs = !missed && Number(hpAfter) > 0 ? Math.max(0, Number(hit.stun_ms || 0)) : 0;
+      const result = { cast_id: hit.cast_id, attacker_id: hit.attacker_id, target_id: hit.target_id, slot: hit.slot, effect_id: hit.effect_id, result: missed ? 'miss' : 'hit', damage: missed ? 0 : hit.damage, crit: !!hit.crit, hp_after: hpAfter, resolved_at: hit.resolves_at, ...(stunMs ? { stun_ms: stunMs } : {}) };
+      if (stunMs) {
+        // The target is knocked down: they cannot act until the stun ends and
+        // lose their pending turn to the attacker.
+        match.stuns = { ...(match.stuns || {}), [String(hit.target_id)]: { from: hit.resolves_at, until: new Date(resolveAt + stunMs).toISOString(), cast_id: hit.cast_id, attacker_id: hit.attacker_id } };
+        if (turnPlayerId(match) === String(hit.target_id)) match.atb = turnAtb(match, String(hit.attacker_id), now);
+      }
       match.hit_log = [...match.hit_log, result].slice(-20);
       match.attack_revision = Number(match.attack_revision || 0) + 1;
       match.last_attack = { ...result, revision: match.attack_revision };
@@ -423,6 +442,7 @@ async function settleMatch(svc: any, input: Row | null) {
     attack_revision: match.attack_revision, last_attack: match.last_attack, winner_id: match.winner_id || '', ended_reason: match.ended_reason || '', ended_at: match.ended_at || undefined,
     disconnects: match.disconnects || {}, pause_started_at: match.pause_started_at || '', fight_starts_at: match.fight_starts_at || undefined,
     fight_ends_at: match.fight_ends_at || undefined, atb: match.atb || {}, cooldowns: match.cooldowns || {}, dodges: match.dodges || {},
+    stuns: match.stuns || {},
   });
   if (match.status === 'ended') {
     match = await finalizeMatchRewards(svc, match) || match;
@@ -457,7 +477,7 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
     match = await svc.AIBattleMatch.create({
       mode, status: 'matched', host_id: host, host_name: first.player_name || 'Player', dashboard_channel: `dashboard_${host}`,
       pair_key: pairKey, player_ids: ids, players: [await playerFromQueue(svc, first), await playerFromQueue(svc, second)], arena: ARENA,
-      positions: { [host]: { x: 0, z: 5 }, [guest]: { x: 0, z: -5 } }, atb: {}, cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], attack_revision: 0, last_attack: null,
+      positions: { [host]: { x: 0, z: 5 }, [guest]: { x: 0, z: -5 } }, atb: {}, cooldowns: {}, dodges: {}, stuns: {}, pending_hits: [], hit_log: [], attack_revision: 0, last_attack: null,
       connected_at: '', disconnects: {}, pause_started_at: '', prestige_awards: {}, rewards_finalized: false,
     });
   }
@@ -534,7 +554,7 @@ async function startMatchIfBothArenaReady(svc: any, input: Row | null) {
   match = await svc.AIBattleMatch.update(match.id, {
     status: 'countdown', ready_at: nowIso(), fight_starts_at: new Date(start).toISOString(),
     fight_ends_at: new Date(start + 180000).toISOString(), players, atb,
-    cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [],
+    cooldowns: {}, dodges: {}, stuns: {}, pending_hits: [], hit_log: [],
   });
   return { match, ready: true };
 }
@@ -770,6 +790,7 @@ Deno.serve(async (req) => {
       match=await settleMatch(svc,match);
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
+      if(stunError(match,userId)) return json({error:stunError(match,userId)},409);
       if(turnPlayerId(match)!==userId) return json({error:'It is not your turn.'},409);
       const now=Date.now(); const currentAtb=atbNow(match.atb?.[userId],now); const cd=Date.parse(match.cooldowns?.[userId]?._dodge||0);
       if(cd>now) return json({error:'Dodge is on cooldown.'},409); if(currentAtb<DODGE.atb_cost) return json({error:'Not enough ATB.'},409);
@@ -786,6 +807,7 @@ Deno.serve(async (req) => {
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId);
       if(!me||!target) return json({error:'Fighters are not ready.'},409);
+      if(stunError(match,userId)) return json({error:stunError(match,userId)},409);
       if(turnPlayerId(match)!==userId) return json({error:'It is not your turn.'},409);
       const now=Date.now(); const myCooldowns=match.cooldowns?.[userId]||{};
       if(Date.parse(myCooldowns._melee||0)>now) return json({error:'Melee attack is recovering.'},409);
@@ -824,6 +846,7 @@ Deno.serve(async (req) => {
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId); const slot=Number(data.slot);
+      if(stunError(match,userId)) return json({error:stunError(match,userId)},409);
       if(turnPlayerId(match)!==userId) return json({error:'It is not your turn.'},409);
       if(!Number.isInteger(slot)||slot<0||slot>=SKILL_SLOT_COUNT) return json({error:'Invalid skill slot.'},400);
       const skill=(me?.skills||[]).find((s:Row)=>Number(s.slot)===slot); if(!skill) return json({error:'That skill is not equipped.'},409);
@@ -844,13 +867,14 @@ Deno.serve(async (req) => {
         crit=Math.random()<0.10;
         damage=Math.round(Number(skill.effective_base_damage||skill.base_damage||40)*(0.95+Math.random()*0.10)*(crit?1.5:1));
       }      const castId=String(data.cast_id||crypto.randomUUID()); const resolvesAt=new Date(now+Number(skill.hit_ms||400)).toISOString();
-      const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',damage,crit,missed,resolves_at:resolvesAt}];
+      const stunMs=skillStunMs(String(skill.effect_id||''),skill);
+      const pending=[...(match.pending_hits||[]),{cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',damage,crit,missed,resolves_at:resolvesAt,...(stunMs?{stun_ms:stunMs}:{})}];
       const atb=turnAtb(match,targetId,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,[String(slot)]:new Date(now+Number(skill.cooldown_ms||3000)).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
-      const lastCast={cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',resolves_at:resolvesAt,cast_at:new Date(now).toISOString()};
+      const lastCast={cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',resolves_at:resolvesAt,cast_at:new Date(now).toISOString(),missed,...(stunMs?{stun_ms:stunMs}:{})};
       match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions,last_cast:lastCast});
-      return json({match:publicMatch(match),cast:{cast_id:castId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',animation_effect:skill.animation_effect||{},resolves_at:resolvesAt,damage,crit,missed,target_id:targetId},server_time:now});
+      return json({match:publicMatch(match),cast:{cast_id:castId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',animation_effect:skill.animation_effect||{},resolves_at:resolvesAt,cast_at:new Date(now).toISOString(),damage,crit,missed,target_id:targetId,...(stunMs?{stun_ms:stunMs}:{})},server_time:now});
     }
 
     return json({error:'Unknown AI Battle action.'},400);

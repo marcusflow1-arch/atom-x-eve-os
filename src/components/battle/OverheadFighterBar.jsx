@@ -2,24 +2,27 @@ import { useEffect, useMemo, useState } from 'react';
 import { Sword } from 'lucide-react';
 import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 
-function useCooldownClock(skills, serverOffsetMs) {
+function useCooldownClock(skills, serverOffsetMs, stunnedUntil = null) {
   const [now, setNow] = useState(() => Date.now() + Number(serverOffsetMs || 0));
   useEffect(() => {
     let timer = null;
     const tick = () => {
       const serverNow = Date.now() + Number(serverOffsetMs || 0);
       setNow(serverNow);
-      const active = (skills || []).some((skill) => Date.parse(skill?.cooldownEndsAt || 0) > serverNow);
+      const active = Date.parse(stunnedUntil || 0) > serverNow
+        || (skills || []).some((skill) => Date.parse(skill?.cooldownEndsAt || 0) > serverNow);
       timer = window.setTimeout(tick, active ? 100 : 500);
     };
     tick();
     return () => window.clearTimeout(timer);
-  }, [skills, serverOffsetMs]);
+  }, [skills, serverOffsetMs, stunnedUntil]);
   return now;
 }
 
-export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0, skills = [], local = false, combatActive = true, isTurn = false, serverOffsetMs = 0, lastCastSlot = null, onSkill, onMelee, meleeCooldownEndsAt = null, meleeCooldownMs = 1000, meleeAtbCost = 50, meleeDamage = null }) {
-  const now = useCooldownClock(skills, serverOffsetMs);
+export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0, skills = [], local = false, combatActive = true, isTurn = false, serverOffsetMs = 0, lastCastSlot = null, onSkill, onMelee, meleeCooldownEndsAt = null, meleeCooldownMs = 1000, meleeAtbCost = 50, meleeDamage = null, stunnedUntil = null }) {
+  const now = useCooldownClock(skills, serverOffsetMs, stunnedUntil);
+  const stunMs = Math.max(0, Date.parse(stunnedUntil || 0) - now);
+  const stunned = stunMs > 0;
   const bySlot = useMemo(() => new Map((skills || []).map((skill) => [Number(skill.slot), skill])), [skills]);
   const hpPct = Math.max(0, Math.min(100, Number(maxHp) > 0 ? Number(hp) / Number(maxHp) * 100 : 0));
   const atbPct = Math.max(0, Math.min(100, Number(atb || 0)));
@@ -27,10 +30,11 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
   const meleeEndsAt = Date.parse(meleeCooldownEndsAt || 0);
   const meleeRemainingMs = Math.max(0, meleeEndsAt - now);
   const meleeFraction = Math.max(0, Math.min(1, meleeRemainingMs / Math.max(1, Number(meleeCooldownMs || 1))));
-  const meleeDisabled = !combatActive || !isTurn || meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
+  const meleeDisabled = !combatActive || !isTurn || stunned || meleeRemainingMs > 0 || atbPct < Number(meleeAtbCost || 0);
 
   return (
     <div className="pointer-events-auto select-none text-white drop-shadow-[0_2px_7px_rgba(0,0,0,.95)]" style={{ width: 250 }}>
+      {stunned && <div className="mx-auto mb-1 w-fit rounded-full border border-sky-200/40 bg-sky-950/85 px-2 py-0.5 text-[10px] font-black uppercase tracking-[.18em] text-sky-100 shadow-[0_0_12px_rgba(90,190,255,.55)]">⚡ Stunned {(stunMs / 1000).toFixed(1)}s</div>}
       <div className="mb-1 text-center text-[12px] font-black tracking-wide">{name || 'Player'}</div>
       <div className="mx-auto w-[120px]">
         <div className="h-2 overflow-hidden rounded-full bg-black/70 ring-1 ring-white/20"><div className={`h-full ${local ? 'bg-cyan-300' : 'bg-red-400'}`} style={{ width: `${hpPct}%` }} /></div>
@@ -55,7 +59,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
           const duration = Math.max(1, Number(skill?.cooldownMs || skill?.cooldown_ms || 1));
           const fraction = Math.max(0, Math.min(1, remainingMs / duration));
           const cost = Number(skill?.atbCost || skill?.atb_cost || 0);
-          const disabled = !combatActive || !isTurn || !skill || remainingMs > 0 || atbPct < cost;
+          const disabled = !combatActive || !isTurn || stunned || !skill || remainingMs > 0 || atbPct < cost;
           return (
             <button key={slot} type="button" disabled={!local || disabled} onClick={() => onSkill?.(slot)}
               className={`relative h-11 w-11 overflow-hidden rounded border ${lastCastSlot === slot ? 'border-white shadow-[0_0_12px_rgba(255,255,255,.8)]' : 'border-white/20'} bg-slate-950/75 ${disabled ? 'opacity-45' : ''}`}>

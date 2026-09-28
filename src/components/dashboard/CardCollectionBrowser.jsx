@@ -8,10 +8,10 @@ import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
 import { base44 } from '@/api/base44Client';
 
 const ADAM_XE_GAME_ID = '6ab999b5fce1745ff0577551';
-const GENRES = ['Adam XE', 'Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
+const GENRES = ['Atom X Eve', 'Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
 
 const MOCK_GAMES_BY_GENRE = {
-  'Adam XE': ['Adam XE'],
+  'Atom X Eve': ['Atom X Eve'],
   'Fear': ['Resident Evil', 'Silent Hill', 'Outlast', 'Amnesia'],
   'Shooter': ['Doom', 'Halo', 'Cyberpunk', 'Apex'],
   'RPG': ['Witcher', 'Skyrim', 'Fallout', 'Persona'],
@@ -136,19 +136,19 @@ export default function CardCollectionBrowser() {
   useEffect(() => {
     if (!showFullView || demoBootstrapRef.current) return;
     demoBootstrapRef.current = true;
-    setSelectedGenre('Adam XE');
-    setSelectedGame('Adam XE');
+    setSelectedGenre('Atom X Eve');
+    setSelectedGame('Atom X Eve');
     base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} })
       .then(() => collection.refetch())
       .catch((error) => {
-        console.warn('[Cards] Adam XE demo bootstrap failed', error);
+        console.warn('[Cards] Atom X Eve demo bootstrap failed', error);
         demoBootstrapRef.current = false;
       });
   }, [showFullView, collection.refetch]);
 
   const adamXeCards = useMemo(() => (collection.cards || []).map((card) => ({
     id: String(card.user_card_id || card.trading_card_id || card.id),
-    game: 'Adam XE', name: card.name, icon: card.animation_effect?.vfx === 'chidori' ? '⚡' : '✦',
+    game: 'Atom X Eve', name: card.name, icon: card.animation_effect?.vfx === 'chidori' ? '⚡' : '✦',
     rarity: card.rarity || 'Unique', image: card.image || card.image_url || '',
     level: Number(card.progression?.level || 1),
     combatBonus: Number(card.progression?.combat?.bonus_percent || 0),
@@ -159,7 +159,7 @@ export default function CardCollectionBrowser() {
       title: card.name,
       image: card.image || card.image_url || '',
       gameId: card.game_id,
-      genre: 'Adam XE',
+      genre: 'Atom X Eve',
       userCardId: card.user_card_id || null,
       trading_card_id: card.trading_card_id || card.id,
     },
@@ -170,7 +170,7 @@ export default function CardCollectionBrowser() {
     if (selectedGenre === 'All') {
        all.push(...adamXeCards);
        Object.values(GENRE_CARDS).forEach(arr => all.push(...arr));
-    } else if (selectedGenre === 'Adam XE') {
+    } else if (selectedGenre === 'Atom X Eve') {
        all = adamXeCards;
     } else {
        all = GENRE_CARDS[selectedGenre] || [];
@@ -310,8 +310,8 @@ export default function CardCollectionBrowser() {
         <div className="w-full flex justify-center items-center gap-2 mb-3">
           <button 
             onClick={() => {
-               setSelectedGenre('Adam XE');
-               setSelectedGame('Adam XE');
+               setSelectedGenre('Atom X Eve');
+               setSelectedGame('Atom X Eve');
                setShowFullView(true);
             }}
             className="group"
@@ -471,7 +471,7 @@ export default function CardCollectionBrowser() {
                         onMouseLeave={() => setGamesHovered(false)}
                       >
                         {MOCK_GAMES_BY_GENRE[genre].map(game => {
-                          const cards = genre === 'Adam XE' ? adamXeCards : (GENRE_CARDS[genre] || []);
+                          const cards = genre === 'Atom X Eve' ? adamXeCards : (GENRE_CARDS[genre] || []);
                           const gameCard = cards.find(c => c.game === game);
                           const image = gameCard ? gameCard.image : 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200';
 

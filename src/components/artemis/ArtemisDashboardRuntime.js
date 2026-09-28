@@ -6,6 +6,7 @@ const ABILITY_EVENTS = {
   Lunar_Beam: { impact: 3.1, end: 3.6 },
   Chidori_Ultimate: { impact: 2.0, end: 4.2 },
 };
+const isChidoriEffectId = (id) => id === 'chidori' || /(^|_)chidori(_|$)/.test(id);
 const BOW_ABILITIES = new Set(['Call_Of_The_Husky', 'Rain_Of_Arrows', 'Lunar_Beam']);
 
 const LOOP_CLIPS = new Set(['Idle', 'Combat_Idle', 'Run']);
@@ -189,8 +190,9 @@ export class ArtemisDashboardRuntime {
   playEffect(effect, detail = {}) {
     if (this.disposed || this.busy) return false;
     const effectId = String(effect?.id || '').toLowerCase();
-    if (!effectId.startsWith('artemis_')) return false;
-    const clipName = String(effect?.clip_name || effect?.clipName || '');
+    // Artemis' own cards plus the shared Chidori card (authored on this body too).
+    if (!effectId.startsWith('artemis_') && !isChidoriEffectId(effectId)) return false;
+    const clipName = String(effect?.clip_name || effect?.clipName || (isChidoriEffectId(effectId) ? 'Chidori_Ultimate' : ''));
     if (!this.hasClip(clipName)) {
       console.warn(`[Artemis] embedded clip not found: ${clipName}`);
       return false;
@@ -214,8 +216,38 @@ export class ArtemisDashboardRuntime {
     return this._beginAbility(request);
   }
 
+  /**
+   * Hit reaction on this fighter (e.g. Chidori_Hit_Stun_Fall). A reaction always
+   * wins: it interrupts whatever the fighter was doing, and nothing else can
+   * start until it has played out.
+   */
+  playReaction(name = 'Chidori_Hit_Stun_Fall') {
+    const clipName = String(name || '');
+    if (this.disposed || !this.hasClip(clipName)) return false;
+    this.queued = null;
+    this.cast = { effectId: '', clipName, reaction: true, detail: {} };
+    this.busy = true;
+    this.firedImpact = true;
+    this.calmFor = 0;
+    return this._crossFade(clipName, 0.08);
+  }
+
+  isReacting() {
+    return Boolean(this.cast?.reaction);
+  }
+
   _finishCurrent() {
     const finished = this.actionName;
+
+    if (this.cast?.reaction && finished === this.cast.clipName) {
+      // Get back up slowly out of the knocked-down pose.
+      this.busy = false;
+      this.cast = null;
+      this.home = this.hasClip('Combat_Idle') ? 'Combat_Idle' : 'Idle';
+      this.calmFor = 0;
+      this._crossFade(this.home, 0.55);
+      return;
+    }
 
     if (finished === 'Bow_Draw' && this.queued) {
       const request = this.queued;

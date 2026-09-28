@@ -74,7 +74,7 @@ export function useSkills() {
       const durationMs = Math.max(100, Number(effect?.duration_ms) || DEFAULT_EFFECT_DURATION_MS);
       const cooldownMs = Math.max(durationMs, Number(effect?.cooldown_ms) || DEFAULT_EFFECT_COOLDOWN_MS);
       const requiresRuntimeAcceptance = effect?.mode === 'embedded'
-        && (effectId === 'getsuga_tensho' || effectId.startsWith('artemis_'));
+        && (effectId === 'getsuga_tensho' || effectId === 'chidori' || effectId.startsWith('artemis_') || effectId.startsWith('adam_'));
 
       const detail = {
         slotIndex,

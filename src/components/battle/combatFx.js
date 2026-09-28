@@ -8,6 +8,10 @@ const EFFECT_COLORS = {
   artemis_call_of_the_husky: 0x65d9ff,
   artemis_rain_of_arrows: 0x91a7ff,
   artemis_lunar_beam: 0xd19cff,
+  chidori: 0x8fd8ff,
+  adam_chidori_attack_01: 0x8fd8ff,
+  adam_chidori_ultimate: 0x8fd8ff,
+  artemis_chidori_ultimate: 0x8fd8ff,
 };
 export const effectColor = (effectId) => EFFECT_COLORS[String(effectId || '')] ?? 0xcff8ff;
 

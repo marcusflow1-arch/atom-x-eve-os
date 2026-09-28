@@ -148,6 +148,8 @@ export class GetsugaDashboardRuntime {
     this.disposed = false;
     this.fired = new Set();
     this.finishedHandler = null;
+    this.clips = [];
+    this.reacting = false;
   }
 
   attach(gltf, { attackClip: suppliedAttackClip = null, idleClip: suppliedIdleClip = null, effectGltf = null, effectClip: suppliedEffectClip = null } = {}) {
@@ -159,9 +161,12 @@ export class GetsugaDashboardRuntime {
     // avatar GLBs commonly have AFK/Wave/Walk in slot 1; PvP supplies the
     // retargeted Getsuga clip explicitly when the visible avatar uses that rig.
     const attackClip = suppliedAttackClip || findClip(clips, 'GetsugaTensho', -1);
-    if (!attackClip) throw new Error('GetsugaTensho animation is missing from the male ability source.');
+    // A body without GetsugaTensho can still idle, move and play its other
+    // authored abilities (e.g. Chidori); only the Getsuga card is unavailable.
+    if (!attackClip) console.warn('[Getsuga] GetsugaTensho clip missing; Getsuga card disabled on this body.');
 
     this.root = gltf.scene;
+    this.clips = clips;
     this.attackClip = attackClip;
 
     // createGenesisScene applies the dashboard/battle facing to the loaded GLB
@@ -197,7 +202,7 @@ export class GetsugaDashboardRuntime {
     this.scene?.add(this.group);
 
     this.mixer = new THREE.AnimationMixer(this.root);
-    const idleClip = embeddedIdle || createGetsugaIdleClip(attackClip);
+    const idleClip = embeddedIdle || createGetsugaIdleClip(attackClip) || new THREE.AnimationClip('Idle', 1, []);
     if (idleClip) {
       this.idleAction = this.mixer.clipAction(idleClip);
       this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
@@ -211,7 +216,7 @@ export class GetsugaDashboardRuntime {
       abilityAction.clampWhenFinished = true;
       this.abilityActions.set(clip.name, abilityAction);
     }
-    if (!this.abilityActions.has('GetsugaTensho')) {
+    if (!this.abilityActions.has('GetsugaTensho') && attackClip) {
       const abilityAction = this.mixer.clipAction(attackClip);
       abilityAction.setLoop(THREE.LoopOnce, 1);
       abilityAction.clampWhenFinished = true;
@@ -221,6 +226,13 @@ export class GetsugaDashboardRuntime {
 
     this.finishedHandler = (event) => {
       if (event.action !== this.activeAction) return;
+      if (this.reacting) {
+        // Hit reaction done: stand back up without emitting a cast "end".
+        this.reacting = false;
+        this.playing = false;
+        this.playIdle({ emit: true, blend: true, fade: 0.55 });
+        return;
+      }
       const target = this.activeTarget;
       const action = this.activeAction;
       this.playing = false;
@@ -277,7 +289,9 @@ export class GetsugaDashboardRuntime {
 
   playEffect(effect = {}, detail = {}) {
     if (!this.ready || this.disposed || this.paused || this.playing) return false;
-    const clipName = String(effect?.clip_name || effect?.clipName || (String(effect?.id || '') === 'getsuga_tensho' ? 'GetsugaTensho' : ''));
+    const effectId = String(effect?.id || '').toLowerCase();
+    const defaultClip = effectId === 'getsuga_tensho' ? 'GetsugaTensho' : effectId === 'chidori' ? 'Chidori_Ultimate' : '';
+    const clipName = String(effect?.clip_name || effect?.clipName || defaultClip);
     const nextAction = this.abilityActions.get(clipName);
     if (!nextAction) return false;
 
@@ -319,9 +333,47 @@ export class GetsugaDashboardRuntime {
     return true;
   }
 
-  playIdle({ emit = true, blend = true } = {}) {
+  /**
+   * Hit reaction on this fighter (e.g. Chidori_Hit_Stun_Fall). A reaction always
+   * wins: it cuts off any ability or movement in progress, and the fighter
+   * stays busy (no movement, no new casts) until the clip has played out.
+   */
+  playReaction(name = 'Chidori_Hit_Stun_Fall') {
+    if (!this.ready || this.disposed || !this.mixer) return false;
+    const wanted = String(name || '').trim().toLowerCase();
+    const clip = (this.clips || []).find((item) => String(item?.name || '').trim().toLowerCase() === wanted);
+    if (!clip) return false;
+    const action = this.mixer.clipAction(clip);
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    const previous = this.activeAction?.isRunning?.() ? this.activeAction
+      : this.currentLocomotion?.isRunning?.() ? this.currentLocomotion
+        : this.idleAction;
+    this.fired.clear();
+    this.reacting = true;
+    this.playing = true;
+    this.activeAction = action;
+    this.activeClipName = clip.name;
+    this.activeEffectId = '';
+    this.activeEvents = {};
+    this.activeTarget = null;
+    action.enabled = true;
+    action.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+    if (previous && previous !== action) previous.crossFadeTo(action, 0.08, false);
+    this.currentLocomotion = null;
+    this.fxAttackAction?.stop?.();
+    if (this.fxRoot) this.fxRoot.visible = false;
+    return true;
+  }
+
+  isReacting() {
+    return Boolean(this.reacting);
+  }
+
+  playIdle({ emit = true, blend = true, fade = 0.35 } = {}) {
     if (!this.ready || this.disposed || !this.idleAction) return false;
     this.playing = false;
+    this.reacting = false;
 
     // Stay facing the locked battle opponent after a cast. Do not snap back to
     // the model's authored forward direction when the attack blends to idle.
@@ -335,7 +387,7 @@ export class GetsugaDashboardRuntime {
 
     if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(this.idleAction, 0.16, false);
     this.currentLocomotion = null;
-    if (blend && this.activeAction?.isRunning?.()) this.activeAction.crossFadeTo(this.idleAction, 0.35, false);
+    if (blend && this.activeAction?.isRunning?.()) this.activeAction.crossFadeTo(this.idleAction, fade, false);
     else this.activeAction?.stop?.();
     this.activeAction = null;
     this.activeClipName = '';

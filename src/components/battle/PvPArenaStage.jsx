@@ -8,7 +8,7 @@ import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRe
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { applyCompanionAppearance, COMPANION_MOTIONS } from '@/components/onboarding/genesisAssets';
+import { applyCompanionAppearance, COMPANION_MOTIONS, companionModel } from '@/components/onboarding/genesisAssets';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
 import { GetsugaDashboardRuntime } from '@/components/getsuga/GetsugaDashboardRuntime';
 import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
@@ -16,9 +16,10 @@ import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
 import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
 import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
 import CombatFx, { effectColor } from '@/components/battle/combatFx';
-import { createChidoriFx } from '@/components/battle/chidoriFx';
+import { CHIDORI_REACTION_CLIP, CHIDORI_STRIKE_GAP, CHIDORI_TIMING, chidoriDashProgress, chidoriKnockback, createChidoriCaster, isChidoriCast } from '@/components/battle/chidoriCaster';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { dismissAIBattleResult } from '@/components/battle/useAIBattleQueue';
+import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 
 const lerpAngle = (a, b, maxStep) => {
@@ -61,48 +62,12 @@ function findHead(root) {
   root?.traverse?.((node) => { if (!head && node.isBone && /head/i.test(node.name || '')) head = node; });
   return head;
 }
-function findBone(root, name) {
-  const wanted = normalizedName(name);
-  let match = root?.getObjectByName?.(name) || null;
-  root?.traverse?.((node) => {
-    if (!match && node?.isBone && normalizedName(node.name) === wanted) match = node;
-  });
-  return match;
-}
-function boneWorld(fighter, name) {
-  const bone = findBone(fighter?.model, name);
-  if (bone) return bone.getWorldPosition(new THREE.Vector3());
-  const root = fighter?.model || fighter?.root;
-  const fallback = root?.getWorldPosition?.(new THREE.Vector3()) || new THREE.Vector3();
-  if (/head|spine|neck/i.test(name)) fallback.y += 1.1;
-  else if (/hand|arm|finger/i.test(name)) fallback.y += 0.95;
-  else if (/foot|ball|calf|thigh/i.test(name)) fallback.y += 0.2;
-  return fallback;
-}
-function fighterForward(fighter) {
-  const root = fighter?.root || fighter?.model;
-  const q = root?.getWorldQuaternion?.(new THREE.Quaternion()) || new THREE.Quaternion();
-  return new THREE.Vector3(0, 0, 1).applyQuaternion(q).normalize();
-}
-function sampleChidoriPath(samples, time, fallback) {
-  if (!samples?.length) return { palm: fallback.palm.clone(), tip: fallback.tip.clone() };
-  if (time <= samples[0].t) return { palm: samples[0].palm.clone(), tip: samples[0].tip.clone() };
-  const last = samples[samples.length - 1];
-  if (time >= last.t) return { palm: last.palm.clone(), tip: last.tip.clone() };
-  for (let i = 0; i < samples.length - 1; i += 1) {
-    const a = samples[i], b = samples[i + 1];
-    if (time < a.t || time > b.t) continue;
-    const u = THREE.MathUtils.clamp((time - a.t) / Math.max(0.0001, b.t - a.t), 0, 1);
-    return { palm: a.palm.clone().lerp(b.palm, u), tip: a.tip.clone().lerp(b.tip, u) };
-  }
-  return { palm: fallback.palm.clone(), tip: fallback.tip.clone() };
-}
 function scaleToHeight(root, height = 1.8) {
-  root.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(root); const size = box.getSize(new THREE.Vector3());
+  // Body-only bounds: the ability VFX meshes packed in the character GLBs
+  // must not change the fighter's size or ground height.
+  const box = characterBodyBounds(root); const size = box.getSize(new THREE.Vector3());
   if (size.y > 0) root.scale.multiplyScalar(height / size.y);
-  root.updateMatrixWorld(true);
-  const next = new THREE.Box3().setFromObject(root);
+  const next = characterBodyBounds(root);
   root.position.y -= next.min.y;
 }
 
@@ -126,10 +91,26 @@ function setMotion(fighter, desired) {
   if (started !== false) fighter.motion = desired;
 }
 
-// Procedural lunge (attacker) and recoil (target) along the line between the
-// fighters. Returned as a signed distance toward the opponent.
-function motionOffset(fighter, now) {
-  let push = 0;
+// Procedural lunge/dash (attacker) and recoil/knock-back (target) along the
+// line between the fighters. `push` is a signed distance toward the opponent,
+// `lift` a height offset (the Chidori leap back). `gap` is the logical
+// distance between the two fighters.
+function motionOffset(fighter, now, gap = 0) {
+  let push = 0, lift = 0;
+  if (fighter.chidori) {
+    const ta = (now - fighter.chidori.start) / 1000;
+    if (ta > CHIDORI_TIMING.end + 0.2) fighter.chidori = null;
+    else if (ta >= 0) {
+      const dash = chidoriDashProgress(ta);
+      push += dash.reach * Math.max(0, gap - CHIDORI_STRIKE_GAP);
+      lift += dash.lift;
+    }
+  }
+  if (fighter.knock) {
+    const tv = (now - fighter.knock.start) / 1000;
+    if (tv > 3.8) fighter.knock = null;
+    else if (tv >= 0) push -= chidoriKnockback(tv);
+  }
   if (fighter.lunge) {
     const t = (now - fighter.lunge.start) / MELEE_LUNGE.duration;
     if (t >= 1 || t < 0) { if (t >= 1) fighter.lunge = null; } else push += Math.sin(t * Math.PI) * MELEE_LUNGE.distance;
@@ -138,12 +119,16 @@ function motionOffset(fighter, now) {
     const t = (now - fighter.recoil.start) / HIT_RECOIL.duration;
     if (t >= 1 || t < 0) { if (t >= 1) fighter.recoil = null; } else push -= Math.sin(t * Math.PI) * HIT_RECOIL.distance;
   }
-  return push;
+  return { push, lift };
 }
 
 async function loadFighter({ scene, camera, player, side, onEffect }) {
   const female = player.gender === 'female' || player.appearance?.gender === 'female';
-  const gltf = await new GLTFLoader().loadAsync(player.model_url || player.appearance?.model_url);
+  // Every fighter uses the canonical body for their gender (the same GLB the
+  // dashboard shows): it owns the skeleton and every authored ability clip,
+  // including Chidori and its hit reaction. Older avatar rows may still point
+  // at a generic body that cannot play them.
+  const gltf = await new GLTFLoader().loadAsync(companionModel({ gender: female ? 'female' : 'male' }));
   try {
     gltf.animations = await mergeAdamXeInjectedClips(gltf.animations || [], female ? 'female' : 'male');
   } catch (error) {
@@ -235,7 +220,7 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
     } catch (error) { console.warn('[PvP] locomotion clip failed', key, error); }
   }));
 
-  return { player, side, female, root, model: assetRoot, runtime, mixer, head: findHead(assetRoot), position: new THREE.Vector3(0,0,spawnZ), yaw: side === 'host' ? Math.PI : 0, loaded: true, lastMoveKey: '', motion: '', lunge: null, recoil: null };
+  return { player, side, female, root, model: assetRoot, runtime, mixer, head: findHead(assetRoot), position: new THREE.Vector3(0,0,spawnZ), baseY: root.position.y, yaw: side === 'host' ? Math.PI : 0, loaded: true, lastMoveKey: '', motion: '', lunge: null, recoil: null, chidori: null, knock: null, pendingReaction: null };
 }
 
 export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
@@ -267,7 +252,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const requestMeleeRef = useRef(null);
   const requestDodgeRef = useRef(null);
   const fxRef = useRef(null);
-  const chidoriRef = useRef({ fx: null, cast: null });
+  const chidoriRef = useRef(null);
+  const flashRef = useRef(null);
   // Every visual is keyed by the server cast_id so the same action is never
   // shown twice, whichever path (local click, peer relay, server poll) arrives
   // first.
@@ -295,6 +281,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const isMyTurn = active && localOwnsTurn;
   const ended = match?.status === 'ended';
   const won = ended && String(match.winner_id) === String(user?.id);
+
+  const localStunMs = () => Math.max(0, Date.parse(matchRef.current?.stuns?.[String(user?.id)]?.until || 0) - (Date.now() + serverOffsetRef.current));
 
   const invoke = async (action, data) => {
     try {
@@ -371,21 +359,29 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const a = positions.current[casterKey], b = positions.current[targetKey];
     const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
     const targetId = casterKey === 'local' ? opponentRef.current?.id : user?.id;
-    const started = skill ? playSkill(caster, skill, targetId, facingYaw, { castId, damage: cast.damage }) : false;
-    if (!started && caster) caster.lunge = { start: performance.now() };
-    if (skill) setLastCastSlot((state) => ({ ...state, [casterKey]: Number(skill.slot) }));
     const effectId = cast.effect_id || skill?.effect_id || '';
-    const chidoriUltimate = String(skill?.clip_name || skill?.animation_effect?.clip_name || '') === 'Chidori_Ultimate'
-      || String(effectId).includes('chidori_ultimate');
-    if (chidoriUltimate && chidoriRef.current?.fx) {
-      chidoriRef.current.fx.group.visible = true;
-      chidoriRef.current.cast = {
-        castId,
-        casterKey,
-        targetKey,
-        startedAt: performance.now(),
-        samples: [],
-      };
+    const chidori = isChidoriCast(skill || { clip_name: cast.clip_name }, effectId);
+    const started = skill ? playSkill(caster, skill, targetId, facingYaw, { castId, damage: cast.damage }) : false;
+    if (!started && caster && !chidori) caster.lunge = { start: performance.now() };
+    if (skill) setLastCastSlot((state) => ({ ...state, [casterKey]: Number(skill.slot) }));
+    if (chidori) {
+      // Charge in place, dash across the net, strike, then leap back home.
+      // The target reacts at impact (knocked down + stunned) unless the strike
+      // was dodged or missed. All of it is presentation: the server owns the
+      // damage and the stun.
+      const startedAt = performance.now();
+      const target = runtimes.current[targetKey];
+      if (caster) { caster.chidori = { start: startedAt, castId }; caster.lunge = null; }
+      if (target) {
+        target.pendingReaction = {
+          castId,
+          at: startedAt + CHIDORI_TIMING.impact * 1000,
+          missed: Boolean(cast.missed),
+          resolvesAt: cast.resolves_at || null,
+          targetId: String(targetId || ''),
+        };
+      }
+      if (caster) chidoriRef.current?.start({ attacker: caster, victim: cast.missed ? null : target, startedAt });
     } else {
       const arriveAt = Math.max(performance.now() + 150, toPerfTime(cast.resolves_at));
       fxRef.current?.tracer(chestOf(casterKey), chestOf(targetKey), {
@@ -433,7 +429,14 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       return;
     }
     fxRef.current?.hitFlash(target?.model || target?.root);
-    if (target) target.recoil = { start: performance.now() + (melee ? 110 : 0) };
+    const stunHit = Number(hit.stun_ms || 0) > 0 || isChidoriCast({}, hit.effect_id);
+    if (target && stunHit) {
+      // Normally the reaction already started at the animated impact. If the
+      // cast itself was never shown, knock the target down now.
+      if (!target.knock && !target.pendingReaction && target.runtime?.playReaction?.(CHIDORI_REACTION_CLIP)) {
+        target.knock = { start: performance.now() };
+      }
+    } else if (target) target.recoil = { start: performance.now() + (melee ? 110 : 0) };
     const damage = Math.round(Number(hit.damage || 0));
     fxRef.current?.damageText(labelAt, `-${damage}${hit.crit ? '!' : ''}`, { crit: Boolean(hit.crit), color: targetKey === 'local' ? '#ff8a8a' : '#ffffff' });
   };
@@ -442,6 +445,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!active) { setError('The fight is not ready yet.'); return false; }
     if (!isMyTurn) { setError("Wait for your turn."); return false; }
     if (escapeMenuOpen || surrendering) return false;
+    if (localStunMs() > 0) { setError(`You are stunned (${(localStunMs() / 1000).toFixed(1)}s).`); return false; }
     const skill = (local?.skills || []).find((s) => Number(s.slot) === Number(slot));
     if (!skill) { setError('That skill is not equipped.'); return false; }
     const atb = serverAtb(match.atb?.[user.id], serverOffsetMs);
@@ -456,7 +460,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
       showCast(user.id, skill, { ...cast, cast_id: cast.cast_id || castId, effect_id: cast.effect_id || skill.effect_id });
-      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, targetPlayerId: opponent?.id } }));
+      window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, missed: Boolean(cast.missed), stun_ms: Number(cast.stun_ms || 0), targetPlayerId: opponent?.id } }));
       return true;
     } catch (e) {
       // Only report the rejection. Never force idle here: that would cut off an
@@ -472,6 +476,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!active) { setError('The fight is not ready yet.'); return false; }
     if (!isMyTurn) { setError('Wait for your turn.'); return false; }
     if (escapeMenuOpen || surrendering) return false;
+    if (localStunMs() > 0) { setError(`You are stunned (${(localStunMs() / 1000).toFixed(1)}s).`); return false; }
     const a = positions.current.local, b = positions.current.opponent;
     const currentAtb = serverAtb(match.atb?.[user.id], serverOffsetMs);
     if (currentAtb < 50) { setError('Not enough ATB for a melee attack.'); return false; }
@@ -532,6 +537,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!active) { setError('The fight is not ready yet.'); return; }
     if (!isMyTurn) { setError('Wait for your turn.'); return; }
     if (escapeMenuOpen || surrendering) return;
+    if (localStunMs() > 0) { setError(`You are stunned (${(localStunMs() / 1000).toFixed(1)}s).`); return; }
     try {
       await invoke('dodge', { match_id: match.id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_dodge', matchId: match.id } }));
@@ -585,9 +591,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     arenaVisualRef.current = { scene, camera };
     const fx = new CombatFx(scene, camera);
     fxRef.current = fx;
-    const chidoriFx = createChidoriFx(THREE, scene, { lights: true });
-    chidoriFx.group.visible = false;
-    chidoriRef.current = { fx: chidoriFx, cast: null };
+    const chidoriCaster = createChidoriCaster(scene, { lights: true });
+    chidoriRef.current = chidoriCaster;
     setLoaded(0);
     setGraphicsError(false);
     const renderer = arenaRenderer();
@@ -608,6 +613,13 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.shadowMap.enabled = true;
     renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; mount.appendChild(renderer.domElement);
     const cssRenderer = new CSS2DRenderer(); cssRenderer.domElement.style.position = 'absolute'; cssRenderer.domElement.style.inset = '0'; cssRenderer.domElement.style.pointerEvents = 'auto'; mount.appendChild(cssRenderer.domElement);
+    // Full-screen impact flash for the Chidori strike.
+    const flash = document.createElement('div');
+    Object.assign(flash.style, { position: 'absolute', inset: '0', pointerEvents: 'none', background: '#eef8ff', opacity: '0', mixBlendMode: 'screen' });
+    mount.appendChild(flash);
+    flashRef.current = flash;
+    const cameraJitter = new THREE.Vector3();
+    let screenFxActive = false;
 
     scene.add(new THREE.HemisphereLight(0xd7ecff, 0x111827, 2.3));
     const sun = new THREE.DirectionalLight(0xffffff, 3.1); sun.position.set(5, 9, 4); sun.castShadow = true; scene.add(sun);
@@ -655,7 +667,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         return;
       }
       const skill=(currentOpponent?.skills||[]).find((s)=>Number(s.slot)===Number(d.slot)) || (currentOpponent?.skills||[]).find((s)=>String(s.effect_id)===String(d.effect_id)); if(!skill)return;
-      showCastRef.current?.(currentOpponent.id, skill, { cast_id: d.cast_id, effect_id: d.effect_id || skill.effect_id, resolves_at: d.resolves_at, damage: d.damage });
+      showCastRef.current?.(currentOpponent.id, skill, { cast_id: d.cast_id, effect_id: d.effect_id || skill.effect_id, resolves_at: d.resolves_at, damage: d.damage, missed: Boolean(d.missed), stun_ms: Number(d.stun_ms || 0) });
     };
     window.addEventListener('webrtcMovementUpdate',remoteMove); window.addEventListener('lunaAIBattleRemoteCardCast',remoteCast);
 
@@ -667,7 +679,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         const castSlot=lastCastSlotRef.current;
         const combatActive=currentMatch?.status==='fighting' && Object.keys(currentMatch?.disconnects || {}).length===0 && Date.now()+offset>=Date.parse(currentMatch?.fight_starts_at||0);
         const fighterTurn=String(currentMatch?.turn_player_id || currentMatch?.host_id || '')===id;
-        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} isTurn={fighterTurn} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={Math.round(1000/Number(p.combat_stats?.attack_speed || 1))} meleeDamage={p.combat_stats?.attack ?? 10} meleeAtbCost={50} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
+        entry.root.render(<OverheadFighterBar name={p.name} hp={p.hp} maxHp={p.max_hp} atb={serverAtb(currentMatch?.atb?.[id],offset)} skills={skills} local={entry.isLocal} combatActive={combatActive} isTurn={fighterTurn} serverOffsetMs={offset} lastCastSlot={entry.isLocal?castSlot.local:castSlot.opponent} meleeCooldownEndsAt={cooldowns._melee||null} meleeCooldownMs={Math.round(1000/Number(p.combat_stats?.attack_speed || 1))} meleeDamage={p.combat_stats?.attack ?? 10} meleeAtbCost={50} stunnedUntil={currentMatch?.stuns?.[id]?.until||null} onMelee={entry.isLocal?(()=>requestMeleeRef.current?.()):undefined} onSkill={entry.isLocal?((slot)=>requestSkillRef.current?.(slot)):undefined}/>);
       }
     };
     const barTimer=window.setInterval(renderBars,100); renderBars();
@@ -720,9 +732,25 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         // Lunge/recoil offsets are presentation only; the logical positions
         // (lp/op) that are sent to the server and the peer are unchanged.
         const gap=Math.max(0.001,Math.hypot(op.x-lp.x,op.z-lp.z)); const towardX=(op.x-lp.x)/gap, towardZ=(op.z-lp.z)/gap;
-        const localPush=motionOffset(lf,now), opponentPush=motionOffset(of,now);
-        lf.root.position.x=lp.x+towardX*localPush;lf.root.position.z=lp.z+towardZ*localPush;
-        of.root.position.x=op.x-towardX*opponentPush;of.root.position.z=op.z-towardZ*opponentPush;
+        // Chidori impact: the struck fighter is knocked down (stun reaction)
+        // unless the server-side roll missed or they dodged in time.
+        for (const fighter of [lf, of]) {
+          const pending = fighter.pendingReaction;
+          if (!pending || now < pending.at) continue;
+          fighter.pendingReaction = null;
+          const dodge = currentMatch?.dodges?.[pending.targetId];
+          const resolvesAt = Date.parse(pending.resolvesAt || 0);
+          const dodged = Boolean(dodge && resolvesAt && Date.parse(dodge.from || 0) <= resolvesAt && Date.parse(dodge.until || 0) >= resolvesAt);
+          if (pending.missed || dodged) { chidoriRef.current?.spareVictim?.(); continue; }
+          if (fighter.runtime?.playReaction?.(CHIDORI_REACTION_CLIP)) fighter.motion = 'idle';
+          fighter.knock = { start: now };
+          fighter.recoil = null;
+          const labelAt = new THREE.Vector3(fighter.root.position.x, CHEST_HEIGHT + 1.0, fighter.root.position.z);
+          fx.damageText(labelAt, 'STUNNED', { color: '#9fdcff' });
+        }
+        const localMotion=motionOffset(lf,now,gap), opponentMotion=motionOffset(of,now,gap);
+        lf.root.position.x=lp.x+towardX*localMotion.push;lf.root.position.z=lp.z+towardZ*localMotion.push;lf.root.position.y=(lf.baseY||0)+localMotion.lift;
+        of.root.position.x=op.x-towardX*opponentMotion.push;of.root.position.z=op.z-towardZ*opponentMotion.push;of.root.position.y=(of.baseY||0)+opponentMotion.lift;
         // Auto-lock owns world facing even while an authored ability clip is
         // running. Push the continuously updated opponent yaw into both runtimes,
         // update the mixers, then re-apply wrapper rotation after animation so a
@@ -732,52 +760,6 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         lf.runtime.update?.(dt);of.runtime.update?.(dt);
         lf.root.rotation.y=lf.yaw;of.root.rotation.y=of.yaw;
 
-        // The supplied Chidori FX is world-space and follows the authored hand
-        // bones. We retain a short path history so its ground scar / dash trail
-        // use the actual fighter motion, while the strike tip eases onto the
-        // authoritative opposing avatar at impact instead of firing into space.
-        const chidori = chidoriRef.current;
-        if (chidori?.fx && chidori.cast) {
-          const castState = chidori.cast;
-          const attacker = runtimes.current[castState.casterKey];
-          const victim = runtimes.current[castState.targetKey];
-          const ta = (now - castState.startedAt) / 1000;
-          if (attacker && victim && ta <= 5.0) {
-            const hand = boneWorld(attacker, 'hand_r');
-            const fingers = boneWorld(attacker, 'fingers_r');
-            const palm = hand.clone().lerp(fingers, 0.55);
-            const forward = fighterForward(attacker);
-            const victimChest = boneWorld(victim, 'spine_02');
-            const contact = THREE.MathUtils.smoothstep(ta, 1.62, 2.0);
-            const tip = palm.clone().addScaledVector(forward, 0.34).lerp(victimChest, contact);
-            const samples = castState.samples;
-            const previousSample = samples.at(-1);
-            if (!previousSample || ta - previousSample.t >= 1 / 90) {
-              samples.push({ t: ta, palm: palm.clone(), tip: tip.clone() });
-              if (samples.length > 420) samples.splice(0, samples.length - 420);
-            }
-            const pathAt = (t) => sampleChidoriPath(samples, t, { palm, tip });
-            const bow = attacker.female ? findBone(attacker.model, 'bow') : null;
-            chidori.fx.update({
-              ta,
-              tv: ta >= 2 ? ta - 2 : -1,
-              camera,
-              att: {
-                bone: (name) => boneWorld(attacker, name),
-                fwd: forward,
-                pathAt,
-                ...(bow ? { bowPos: bow.getWorldPosition(new THREE.Vector3()) } : {}),
-              },
-              vic: {
-                bone: (name) => boneWorld(victim, name),
-                root: victim.model || victim.root,
-              },
-            });
-          } else {
-            chidori.fx.group.visible = false;
-            chidori.cast = null;
-          }
-        }
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
         if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         if(currentMatch?.status==='ended'){
@@ -796,7 +778,26 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         }
       }
       fx.update(now);
+      // Chidori lightning follows the fighters' bones (world space); its
+      // screen hints drive the impact flash/invert frames and camera shake.
+      const hints = chidoriCaster.update(now, camera);
+      cameraJitter.set(0, 0, 0);
+      if (hints) {
+        screenFxActive = true;
+        const shake = Math.min(1.6, Number(hints.shake || 0));
+        if (shake > 0.01) cameraJitter.set((Math.random() - .5) * shake * .09, (Math.random() - .5) * shake * .07, (Math.random() - .5) * shake * .05);
+        flash.style.opacity = String(Math.min(.75, Number(hints.flash || 0)));
+        renderer.domElement.style.filter = Number(hints.invert || 0) > .5 ? 'invert(1) hue-rotate(180deg)' : '';
+        renderer.toneMappingExposure = 1.05 + Number(hints.exposure || 0);
+      } else if (screenFxActive) {
+        screenFxActive = false;
+        flash.style.opacity = '0';
+        renderer.domElement.style.filter = '';
+        renderer.toneMappingExposure = 1.05;
+      }
+      camera.position.add(cameraJitter);
       renderer.render(scene,camera);cssRenderer.render(scene,camera);
+      camera.position.sub(cameraJitter);
     }; frame=requestAnimationFrame(animate);
 
     return () => {
@@ -812,8 +813,10 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       queueMicrotask(() => barRoots.forEach((root) => root.unmount()));
       fx.dispose();
       if (fxRef.current === fx) fxRef.current = null;
-      chidoriFx.dispose();
-      if (chidoriRef.current?.fx === chidoriFx) chidoriRef.current = { fx: null, cast: null };
+      chidoriCaster.dispose();
+      if (chidoriRef.current === chidoriCaster) chidoriRef.current = null;
+      flash.remove();
+      if (flashRef.current === flash) flashRef.current = null;
       disposeArenaObjects(scene);
       runtimes.current.local?.runtime?.dispose?.();
       runtimes.current.opponent?.runtime?.dispose?.();
@@ -919,6 +922,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     return () => window.clearTimeout(timer);
   }, [error]);
   const start=Date.parse(match?.fight_starts_at||0);const countdown=start?Math.max(0,start-(clockNow+serverOffsetMs)):0;const count=countdown>0?Math.ceil(countdown/1000):0;
+  const localStunned = Date.parse(match?.stuns?.[String(user?.id)]?.until || 0) > clockNow + serverOffsetMs;
   const opponentDisconnect = opponent?.id ? match?.disconnects?.[String(opponent.id)] : null;
   const reconnectLeftMs = opponentDisconnect ? Math.max(0, Date.parse(opponentDisconnect.reconnect_deadline || 0) - (clockNow + serverOffsetMs)) : 0;
   const reconnectSeconds = Math.max(0, Math.ceil(reconnectLeftMs / 1000));
@@ -939,7 +943,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     {graphicsError && <ArenaGraphicsRecovery onRetry={() => setGraphicsAttempt((attempt) => attempt + 1)} />}
     {!graphicsError&&loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
     {match?.status==='countdown'&&loaded===2&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center text-[80px] font-black text-white drop-shadow-[0_0_30px_rgba(60,220,255,.8)]">{count||'FIGHT'}</div>}
-    {loaded===2&&!ended&&['countdown','fighting'].includes(String(match?.status||''))&&!reconnectPaused&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[74] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${localOwnsTurn?'border-cyan-200/30 bg-cyan-950/92':'border-white/12 bg-[#0b111c]/92'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${localOwnsTurn?'text-cyan-100':'text-white/65'}`}>{match?.status==='countdown'?(localOwnsTurn?'You Move First':`${opponent?.name || 'Opponent'} Moves First`):(isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`)}</div><div className="mt-0.5 text-[8px] uppercase tracking-[.16em] text-white/35">{match?.status==='countdown'?'Turn order locked':'Choose one action'}</div></div>}
+    {loaded===2&&!ended&&['countdown','fighting'].includes(String(match?.status||''))&&!reconnectPaused&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[74] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${localOwnsTurn?'border-cyan-200/30 bg-cyan-950/92':'border-white/12 bg-[#0b111c]/92'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${localOwnsTurn?'text-cyan-100':'text-white/65'}`}>{match?.status==='countdown'?(localOwnsTurn?'You Move First':`${opponent?.name || 'Opponent'} Moves First`):(isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`)}</div><div className={`mt-0.5 text-[8px] uppercase tracking-[.16em] ${localStunned?'text-sky-200':'text-white/35'}`}>{match?.status==='countdown'?'Turn order locked':localStunned?'You are stunned':'Choose one action'}</div></div>}
     {error&&<div className="absolute left-1/2 top-20 z-[70] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm font-bold text-red-100">{error}</div>}
     {opponentDisconnect&&!ended&&<div className="pointer-events-none absolute left-1/2 top-5 z-[72] -translate-x-1/2 rounded-xl border border-amber-200/20 bg-[#10151d]/94 px-5 py-3 text-center text-white shadow-xl"><div className="text-[10px] font-black uppercase tracking-[.24em] text-amber-200/70">Connection interrupted</div><div className="mt-1 text-sm font-bold">Opponent disconnected — waiting to reconnect</div><div className="mt-1 font-mono text-lg font-black text-cyan-200">{Math.floor(reconnectSeconds/60)}:{String(reconnectSeconds%60).padStart(2,'0')}</div></div>}
     {escapeMenuOpen&&!ended&&<div className="absolute inset-0 z-[78] flex items-center justify-center bg-black/55 text-white" aria-label="PvP escape menu">

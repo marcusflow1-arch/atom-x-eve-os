@@ -20,7 +20,7 @@ export async function loadCombatSkills(svc:any,userId:string,gender:string,comba
     out.push({
       slot,user_card_id:String(owned.id),name:owned.card_name||'Ability',image:owned.card_image||'',rarity:owned.card_rarity||'Common',
       effect_id:effectId,clip_name:effect.clip_name||'',duration_ms:Number(effect.duration_ms||base.hit_ms||400),
-      atb_cost:Number(base.atb_cost),range_m:Number(base.range_m),kind:base.kind,hit_ms:Number(base.hit_ms),
+      atb_cost:Number(base.atb_cost),range_m:Number(base.range_m),kind:base.kind,hit_ms:Number(base.hit_ms),stun_ms:Number(base.stun_ms||0),
       level:Number(card.progression?.level||1),animation_effect:effect,card_stats:card.stats,stage:Number(card.progression?.stage||1),ascension:Number(card.progression?.ascension||0),over_enchant_rank:Number(card.progression?.over_enchant_rank||0),...output,effective_base_damage:output.base_damage,damage_multiplier:card.growth_multiplier,progression_bonus_percent:Math.round((card.growth_multiplier-1)*100),
     });
   }

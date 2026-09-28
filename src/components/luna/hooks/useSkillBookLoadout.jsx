@@ -32,6 +32,10 @@ const avatarGender = (avatar) => {
   return gender === 'female' || gender === 'male' ? gender : '';
 };
 const ICHIGO_SKILL_NAME = 'Ichigo Kurosaki - Getsuga Tenshō';
+const DEMO_GAME_TITLE = 'Atom X Eve';
+const DEMO_GAME_GENRE = 'Action RPG';
+const DEMO_ANIMATION_EFFECTS = ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam', 'chidori'];
+const bootstrappedThisSession = new Set();
 
 const hasIchigoSkill = (skills = []) => skills.some((skill) => {
   const effectId = String(skill?.animation_effect?.id || skill?.card?.animation_effect?.id || '').trim();
@@ -48,9 +52,9 @@ const restoredSkillFromCard = (card, avatarGender = '') => {
   description: card.description || 'Ichigo Kurosaki\'s Getsuga Tenshō ability.',
   rarity: card.card_rarity || card.rarity || 'Unique',
   image: card.card_image || card.image || '',
-  game_name: card.game_name || 'Bleach',
-  game_id: card.game_id || 'bleach',
-  genre: card.genre || 'Action',
+  game_name: card.game_name || DEMO_GAME_TITLE,
+  game_id: card.game_id || '',
+  genre: card.genre || DEMO_GAME_GENRE,
   unlock_condition: card.unlock_condition || 'Owned',
   owned: true,
   can_equip: maleCompatible,
@@ -65,7 +69,7 @@ const restoredSkillFromCard = (card, avatarGender = '') => {
     card_type: card.card_type || 'Ability',
     card_rarity: card.card_rarity || card.rarity || 'Unique',
     card_image: card.card_image || card.image || '',
-    game_name: card.game_name || 'Bleach',
+    game_name: card.game_name || DEMO_GAME_TITLE,
   },
   };
 };
@@ -87,20 +91,21 @@ async function restoreIchigoIntoState(body, userId) {
   const restoredSkill = restoredSkillFromCard(card, body.avatar_gender);
   const skills = [...(body.skills || []), restoredSkill];
   const games = [...(body.games || [])];
-  const bleachIndex = games.findIndex((game) => normalize(game.title) === 'bleach');
+  const groupTitle = restoredSkill.game_name || DEMO_GAME_TITLE;
+  const groupIndex = games.findIndex((game) => normalize(game.title) === normalize(groupTitle));
 
-  if (bleachIndex >= 0) {
-    games[bleachIndex] = {
-      ...games[bleachIndex],
-      total_skills: Math.max(Number(games[bleachIndex].total_skills || 0), 1),
-      owned_skills: Math.max(Number(games[bleachIndex].owned_skills || 0), 1),
+  if (groupIndex >= 0) {
+    games[groupIndex] = {
+      ...games[groupIndex],
+      total_skills: Number(games[groupIndex].total_skills || 0) + 1,
+      owned_skills: Number(games[groupIndex].owned_skills || 0) + 1,
     };
   } else {
     games.push({
-      key: 'bleach',
-      id: 'bleach',
-      title: 'Bleach',
-      genre: restoredSkill.genre || 'Action',
+      key: normalize(groupTitle),
+      id: restoredSkill.game_id || '',
+      title: groupTitle,
+      genre: restoredSkill.genre || DEMO_GAME_GENRE,
       total_skills: 1,
       owned_skills: 1,
     });
@@ -133,11 +138,21 @@ export function useSkillBookLoadout() {
     queryFn: async () => {
       let body = await invokeSkillBook('getState', { avatar_gender: activeAvatarGender });
       const effects = new Set((body.skills || []).map((skill) => String(skill?.card?.animation_effect?.id || skill?.animation_effect?.id || '')));
-      const required = body.avatar_gender === 'female'
-        ? ['getsuga_tensho', 'artemis_call_of_the_husky', 'artemis_rain_of_arrows', 'artemis_lunar_beam']
-        : ['getsuga_tensho'];
-      if (required.some((id) => !effects.has(id))) {
-        body = await invokeSkillBook('bootstrap', { avatar_gender: activeAvatarGender });
+      // Every demo animation card is filed under "Atom X Eve" for both bodies
+      // (gender-locked cards show there too, flagged as not equippable).
+      // bootstrap grants whichever are missing; its tombstones stop a card the
+      // player consumed from being re-minted.
+      const bootstrapKey = `${user.id}:${activeAvatarGender || 'persisted-avatar'}`;
+      if (DEMO_ANIMATION_EFFECTS.some((id) => !effects.has(id)) && !bootstrappedThisSession.has(bootstrapKey)) {
+        // Once per session: a card the player traded away stays missing, and
+        // re-running the grants on every refetch only adds backend load.
+        bootstrappedThisSession.add(bootstrapKey);
+        try {
+          body = await invokeSkillBook('bootstrap', { avatar_gender: activeAvatarGender });
+        } catch (error) {
+          bootstrappedThisSession.delete(bootstrapKey);
+          console.warn('[SkillBook] demo card bootstrap failed; showing current cards', error);
+        }
       }
       return restoreIchigoIntoState(body, user.id);
     },

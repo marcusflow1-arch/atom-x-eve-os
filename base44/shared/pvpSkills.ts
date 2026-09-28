@@ -22,9 +22,20 @@ export const SKILL_STATS: Record<string, any> = {
   artemis_rain_of_arrows: { kind: 'Area volley', range_m: 18, atb_cost: 60, cooldown_ms: 8500, base_damage: 130, hit_ms: 1970 },
   artemis_lunar_beam: { kind: 'Heavy beam', range_m: 18, atb_cost: 75, cooldown_ms: 10000, base_damage: 180, hit_ms: 3100 },
   adam_chidori_attack_01: { kind: 'Lightning rush', range_m: 18, atb_cost: 55, cooldown_ms: 6500, base_damage: 135, hit_ms: 1000 },
-  adam_chidori_ultimate: { kind: 'Lightning ultimate', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000 },
-  artemis_chidori_ultimate: { kind: 'Lightning ultimate', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000 },
+  adam_chidori_ultimate: { kind: 'Lightning ultimate', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000, stun_ms: 2800 },
+  artemis_chidori_ultimate: { kind: 'Lightning ultimate', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000, stun_ms: 2800 },
+  // Demo card (Naruto Shippuden: Ultimate Ninja Storm 4 achievement). One card
+  // for both bodies: the caster charges for 1.42 s, dashes across the net, and
+  // the strike lands at 2.0 s. A clean hit stuns the target (they lose their
+  // next turn and cannot act until the stun ends).
+  chidori: { kind: 'Lightning dash', range_m: 18, atb_cost: 80, cooldown_ms: 11000, base_damage: 220, hit_ms: 2000, stun_ms: 2800 },
 };
+
+export function skillStunMs(effectId: string, skill: Record<string, any> = {}) {
+  const declared = Number(skill?.stun_ms ?? skill?.animation_effect?.stun_ms);
+  if (Number.isFinite(declared) && declared > 0) return Math.min(6000, declared);
+  return Number(SKILL_STATS[String(effectId || '')]?.stun_ms || 0);
+}
 
 export const BASIC_BY_RARITY = {
   // Card abilities lock onto the single PvP opponent, exactly like the basic

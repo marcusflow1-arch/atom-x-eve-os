@@ -1,4 +1,5 @@
 import {applyCompanionAppearance} from '@/components/onboarding/genesisAssets';
+import { resolveCharacterModelUrl } from '@/lib/characterModelOverrides';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
@@ -61,7 +62,7 @@ export function createSkillPreview(canvas, { url, appearance={}, animationClip, 
   const abort = new AbortController();
   (async () => {
     try {
-      const response = await fetch(url, { signal: abort.signal });
+      const response = await fetch(resolveCharacterModelUrl(url), { signal: abort.signal });
       if (!response.ok) throw new Error('Model unavailable');
       const buffer = await response.arrayBuffer();
       if (disposed) return;
