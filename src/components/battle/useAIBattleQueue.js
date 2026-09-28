@@ -9,6 +9,10 @@ import { showInfo } from '@/components/error/ErrorToast';
 import { dashboardSession, joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
+import { requestAIBattle, withoutDismissed } from './battleClient';
+import { aiBattleQueryKey, battleDeadline, createBattleRefresh, matchSignal, mergeBattleSnapshot, queueSignal, RETRYABLE_BATTLE_ACTIONS, scheduleBattleDeadline } from './battleSync';
+export { aiBattleQueryKey } from './battleSync';
+export { dismissAIBattleResult } from './battleClient';
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
 const detectAvatarGender = (avatar) => {
@@ -27,29 +31,6 @@ let joinInFlightPromise = null;
 let heartbeatUserId = '';
 let lastNoticeShown = '';
 
-export const aiBattleQueryKey = (userId) => ['ai-battle-matchmaking', userId];
-
-const unwrap = (response) => {
-  const body = response?.data ?? response ?? {};
-  if (body?.error) {
-    const error = new Error(body.error);
-    error.status = response?.status || response?.response?.status || 400;
-    error.body = body;
-    throw error;
-  }
-  return body;
-};
-const invoke = async (action, data = {}) => {
-  try {
-    return unwrap(await base44.functions.invoke('aiBattleMatchmaker', { action, data }));
-  } catch (error) {
-    const body = error?.response?.data?.data ?? error?.response?.data ?? error?.body ?? null;
-    const next = new Error(body?.error || body?.message || error?.message || 'AI Battle request failed.');
-    next.status = error?.response?.status || error?.status || 500;
-    next.body = body;
-    throw next;
-  }
-};
 const sessionData = (extra = {}) => ({ client_session_id: PAGE_QUEUE_SESSION_ID, ...extra });
 
 // Base44 answers 429 when the app sends too many requests. That is a "try again
@@ -61,12 +42,12 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const RETRY_DELAYS_MS = [1500, 3000, 5000];
 // Only for actions that are safe to repeat (join/cancel/reconnect converge on
 // the same server state). Combat actions are never retried automatically.
-async function invokeWithRetry(action, data) {
+async function invokeWithRetry(userId, action, data) {
   for (let attempt = 0; ; attempt += 1) {
     try {
-      return await invoke(action, data);
+      return await requestAIBattle(userId, action, data);
     } catch (error) {
-      if (!isRateLimited(error) || attempt >= RETRY_DELAYS_MS.length) throw error;
+      if (!RETRYABLE_BATTLE_ACTIONS.has(action) || !isRateLimited(error) || attempt >= RETRY_DELAYS_MS.length) throw error;
       await wait(RETRY_DELAYS_MS[attempt]);
     }
   }
@@ -86,17 +67,6 @@ export function announceAIBattleNotice(text) {
 export const OPPONENT_LEFT_NOTICE = 'Your opponent left before the fight started. You are back in the queue with your original place.';
 const announce = (body) => announceAIBattleNotice(body?.notice);
 
-// Results screens the player already closed. The server keeps reporting an
-// ended match until the next poll releases its queue row; without this, that
-// late report re-opened the results screen a second time.
-const dismissedResults = new Set();
-export function dismissAIBattleResult(matchId) {
-  if (matchId) dismissedResults.add(String(matchId));
-}
-const withoutDismissed = (body) => (
-  body?.match?.status === 'ended' && dismissedResults.has(String(body.match.id)) ? { ...body, match: null } : body
-);
-
 /**
  * The one status fetcher for the matchmaking cache. Every observer of
  * ['ai-battle-matchmaking', userId] must use this queryFn — including passive
@@ -105,8 +75,9 @@ const withoutDismissed = (body) => (
  * to turn any invalidate/refetch into `{}` and wipe the live match from the
  * cache, which unmounted the arena mid-match.
  */
-export async function fetchAIBattleStatus() {
-  const body = await invoke('status', sessionData({ position: typeof window !== 'undefined' ? window.__lunaPvPPosition || null : null }));
+export async function fetchAIBattleStatus(context) {
+  const userId = context?.queryKey?.[1] || heartbeatUserId;
+  const body = await requestAIBattle(userId, 'status', sessionData({ position: typeof window !== 'undefined' ? window.__lunaPvPPosition || null : null }));
   announce(body);
   return withoutDismissed(body);
 }
@@ -116,7 +87,7 @@ export async function fetchAIBattleStatus() {
 function writeStatus(queryClient, userId, body) {
   if (!userId || !body) return;
   const next = withoutDismissed(body);
-  queryClient.setQueryData(aiBattleQueryKey(userId), (prev = {}) => ({ ...prev, ...next }));
+  queryClient.setQueryData(aiBattleQueryKey(userId), (prev) => mergeBattleSnapshot(prev, next));
 }
 
 export const getAIBattleClientSessionId = () => PAGE_QUEUE_SESSION_ID;
@@ -183,6 +154,7 @@ export function useAIBattleSnapshot() {
     queryKey: aiBattleQueryKey(user?.id),
     queryFn: fetchAIBattleStatus,
     enabled: false,
+    structuralSharing: mergeBattleSnapshot,
     refetchInterval: false,
     refetchOnWindowFocus: false,
     staleTime: Infinity,
@@ -223,6 +195,9 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   const session = useDashboardSession();
   const queryClient = useQueryClient();
   const joinAttempt = useRef('');
+  const roomJoinBusy = useRef(false);
+  const roomJoinAt = useRef(0);
+  const refreshSignal = useRef(null);
   const [roomRetryTick, setRoomRetryTick] = useState(0);
   const key = aiBattleQueryKey(user?.id);
 
@@ -232,6 +207,8 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     queryKey: key,
     enabled: Boolean(user?.id),
     queryFn: fetchAIBattleStatus,
+    structuralSharing: mergeBattleSnapshot,
+    // Realtime and hit deadlines wake this cache promptly; polling is recovery.
     // Poll only as fast as each phase needs. Every status call costs several
     // database operations, and the previous 0.5-1 s cadence (x every open tab)
     // pushed the app over Base44's rate limit, which is what made Queue fail.
@@ -256,7 +233,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   });
 
   const mutation = useMutation({
-    mutationFn: ({ action, data }) => invokeWithRetry(action, sessionData(data)),
+    mutationFn: ({ action, data }) => invokeWithRetry(user?.id, action, sessionData(data)),
     retry: false,
     onSuccess: (body) => {
       announce(body);
@@ -266,7 +243,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
 
   const queue = state.data?.queue || null;
   const match = state.data?.match || null;
-  const serverTime = Number(state.data?.server_time || Date.now());
+  const serverOffsetMs = Number(state.data?._server_offset_ms || 0);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -277,7 +254,49 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       sessionStorage.removeItem('luna_pvp_active_match_id');
     }
   }, [match?.id, match?.status, queue, state.data?.server_time]);
-  const serverOffsetMs = serverTime - Date.now();
+  // Subscribe once on the persistent host. Other queue surfaces only observe
+  // the cache. Entity RLS restricts these events to this player's queue/matches.
+  useEffect(() => {
+    if (!polling || !user?.id) return undefined;
+    const userId = String(user.id);
+    const snapshot = () => queryClient.getQueryData(aiBattleQueryKey(userId));
+    const refresh = createBattleRefresh({ refresh: async () => {
+      const body = await fetchAIBattleStatus({ queryKey: aiBattleQueryKey(userId) });
+      writeStatus(queryClient, userId, body);
+    } });
+    refreshSignal.current = refresh.schedule;
+    let lastQueue = queueSignal(snapshot()?.queue), lastMatch = matchSignal(snapshot()?.match);
+    const stops = [];
+    try {
+      stops.push(base44.entities.AIBattleQueueEntry.subscribe((event) => {
+        const row = event?.data, current = snapshot();
+        if (String(row?.user_id || '') !== userId && String(event?.id || '') !== String(current?.queue?.id || '')) return;
+        const signature = queueSignal(row);
+        if (signature !== lastQueue) { lastQueue = signature; refresh.schedule(); }
+      }));
+      stops.push(base44.entities.AIBattleMatch.subscribe((event) => {
+        const current = snapshot();
+        const matchId = current?.match?.id || current?.queue?.match_id;
+        if (!matchId || String(event?.id || event?.data?.id) !== String(matchId)) return;
+        const signature = matchSignal(event?.data);
+        if (signature !== lastMatch) { lastMatch = signature; refresh.schedule(); }
+      }));
+    } catch (error) { console.warn('[AI Battle] realtime unavailable; polling continues', error); }
+    return () => {
+      refresh.stop();
+      if (refreshSignal.current === refresh.schedule) refreshSignal.current = null;
+      stops.forEach((stop) => { if (typeof stop === 'function') stop(); });
+    };
+  }, [polling, user?.id, queryClient]);
+
+  const deadline = battleDeadline(match);
+  useEffect(() => {
+    if (!polling || !user?.id || !deadline) return undefined;
+    return scheduleBattleDeadline({
+      match, offset: serverOffsetMs,
+      refresh: () => fetchAIBattleStatus({ queryKey: aiBattleQueryKey(user.id) }),
+    });
+  }, [polling, user?.id, match?.id, match?.status, deadline, serverOffsetMs]);
 
   useEffect(() => {
     if (queue?.status === 'waiting' || queue?.status === 'matched' || ACTIVE_MATCH_STATUSES.includes(String(match?.status || ''))) startAIBattleQueueHeartbeat();
@@ -289,7 +308,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   // which intentionally has sessionBridge=false) so both browsers can confirm
   // the same match without waiting for the background heartbeat interval.
   useEffect(() => {
-    if (!user?.id || queue?.status !== 'matched' || match?.status !== 'matched' || !match?.id) return undefined;
+    if (!polling || !user?.id || queue?.status !== 'matched' || match?.status !== 'matched' || !match?.id) return undefined;
     let cancelled = false;
     fetchAIBattleStatus()
       .then((body) => {
@@ -299,7 +318,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
         if (!cancelled) console.warn('[AI Battle] reservation heartbeat retry', error);
       });
     return () => { cancelled = true; };
-  }, [user?.id, queue?.status, match?.id, match?.status, queryClient]);
+  }, [polling, user?.id, queue?.status, match?.id, match?.status, queryClient]);
 
   // The always-mounted battle host joins both users into the host dashboard
   // only after BOTH browser clients acknowledged the reserved match.
@@ -322,12 +341,17 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       window.__lunaPendingDashboardJoin = joinDetail;
       // A prior successful join must not permanently suppress reconnects. If the
       // shared room drops later, retry the exact same match/channel automatically.
-      if (joinAttempt.current !== token || !channelMatches || session.status !== 'connected' || !hasWholePair) {
+      if (!roomJoinBusy.current && Date.now() - roomJoinAt.current >= 2500 && (joinAttempt.current !== token || !channelMatches || session.status !== 'connected' || !hasWholePair)) {
+        roomJoinAt.current = Date.now();
         joinAttempt.current = token;
         if (String(user.id) === hostId) window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail }));
-        else joinDashboard({ id: hostId, name: match.host_name || 'Player' })
-          .then(() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail })))
-          .catch((error) => { console.warn('[AI Battle] dashboard join retry', error); joinAttempt.current = ''; });
+        else {
+          roomJoinBusy.current = true;
+          joinDashboard({ id: hostId, name: match.host_name || 'Player' })
+            .then(() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail })))
+            .catch((error) => { console.warn('[AI Battle] dashboard join retry', error); joinAttempt.current = ''; })
+            .finally(() => { roomJoinBusy.current = false; });
+        }
       }
     }
 
@@ -364,6 +388,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       if (!sourcePlayerId || sourcePlayerId === localId || !ids.has(sourcePlayerId) || String(detail.matchId || '') !== matchId) return;
       if (!['pvp_cast', 'pvp_melee', 'ai_battle_card_cast'].includes(String(detail.kind || ''))) return;
       window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
+      refreshSignal.current?.();
     };
     window.addEventListener('webrtcRemoteAction', receive);
     return () => window.removeEventListener('webrtcRemoteAction', receive);
