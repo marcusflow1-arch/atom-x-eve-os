@@ -141,3 +141,19 @@ test('heartbeat and position writes do not trigger a status loop; casts and dama
   assert.notEqual(matchSignal(match),matchSignal({...match,attack_revision:3}));
   assert.notEqual(matchSignal(match),matchSignal({...match,last_cast:{cast_id:'new'}}));
 });
+
+test('realtime reads are limited to the queue owner and both match participants; clients cannot write', async () => {
+  const {makeRewardFixture}=await import('./helpers/reward-fixture.mjs');
+  const f=makeRewardFixture(), service=f.entities();
+  const queue=await service.AIBattleQueueEntry.create({user_id:'a',mode:'pvp',status:'waiting',queued_at:new Date().toISOString(),last_seen_at:new Date().toISOString()});
+  const match=await service.AIBattleMatch.create({mode:'pvp',status:'matched',host_id:'a',dashboard_channel:'dashboard_a',pair_key:'a:b',player_ids:['a','b']});
+  const a=f.entities({id:'a',role:'user'}),b=f.entities({id:'b',role:'user'}),outsider=f.entities({id:'c',role:'user'});
+  assert.equal((await a.AIBattleQueueEntry.get(queue.id)).id,queue.id);
+  await assert.rejects(b.AIBattleQueueEntry.get(queue.id),/Forbidden/);
+  assert.equal((await a.AIBattleMatch.get(match.id)).id,match.id);
+  assert.equal((await b.AIBattleMatch.get(match.id)).id,match.id);
+  await assert.rejects(outsider.AIBattleMatch.get(match.id),/Forbidden/);
+  await assert.rejects(a.AIBattleQueueEntry.update(queue.id,{status:'matched'}),/Forbidden/);
+  await assert.rejects(b.AIBattleMatch.update(match.id,{players:[]}),/Forbidden/);
+  assert.equal((await service.AIBattleMatch.get(match.id)).id,match.id);
+});
