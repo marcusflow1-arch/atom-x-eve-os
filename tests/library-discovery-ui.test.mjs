@@ -110,8 +110,8 @@ try{
   await search('zeph');
   assert.deepEqual([...document.querySelectorAll('.ll-card>strong')].map(e=>e.textContent),['Zephyr']);
   await run(()=>label('Full card explorer').click());await run();
-  assert.equal(document.querySelector('[aria-label="Full card explorer"]').textContent.includes('Zephyr'),true);
-  assert.equal(document.querySelector('[aria-label="Full card explorer"]').querySelectorAll('.ll-card').length,1);
+  assert.equal(document.querySelector('section[aria-label="Full card explorer"]').textContent.includes('Zephyr'),true);
+  assert.equal(document.querySelector('section[aria-label="Full card explorer"]').querySelectorAll('.ll-card').length,1);
   await run(()=>label('Close full card explorer').click());
   await run(()=>label('View Zephyr card').click());await run();
   assert.equal(document.querySelector('[data-testid="owned-card-detail"]').textContent,'Zephyr · owned-2');
