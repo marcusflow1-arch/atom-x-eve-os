@@ -10,7 +10,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 const React=await import('react'), {act}=React;
 const {createRoot}=await import('react-dom/client');
 const {QueryClient,QueryClientProvider}=createRequire(import.meta.url)('@tanstack/react-query');
-const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}});
+const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
 const subscriptions=new Map(), calls=[];
 let attackFails=false;
 let server={queue:{id:'q',status:'waiting',match_id:null,connected_at:null,ready_at:null},match:null};
