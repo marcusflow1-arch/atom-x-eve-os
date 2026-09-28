@@ -1059,7 +1059,7 @@ function Large3DCard({ card, isActive }) {
 // Environment Hub Tile Component - now a dropdown trigger
 function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironmentActive, onToggleEnvironment }) {
   return (
-    <div 
+    <div data-luna-environment-hub 
       className="w-full h-full rounded-xl overflow-hidden relative group"
       style={{
         background: isOpen

@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
-export default function useCardCollection(filters = {}) {
+export default function useCardCollection(filters = {}, { enabled = true } = {}) {
   const gameId = filters.game_id || '';
   const cardType = filters.card_type || '';
   const query = useQuery({
+    enabled,
     queryKey: ['card-collection', gameId, cardType],
     queryFn: async () => {
       const response = await base44.functions.invoke('cardCollection', {

@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
 import useCardCollection from '@/components/cards/useCardCollection';
 
-export default function useCardsCatalog(games = []) {
+export default function useCardsCatalog(games = [], options = {}) {
   const { user } = useAuth();
-  const collection = useCardCollection();
+  const collection = useCardCollection({}, options);
   const gameById = useMemo(() => new Map((games || []).map((game) => [String(game.id), game])), [games]);
   const cards = useMemo(() => collection.cards.map((card) => {
     const game = gameById.get(String(card.game_id || '')) || null;

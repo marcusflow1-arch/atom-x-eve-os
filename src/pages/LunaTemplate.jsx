@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowLeft, Settings,
@@ -68,6 +68,7 @@ import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
+import LibraryCardExplorer from '@/components/dashboard/gamehub/LibraryCardExplorer';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
 import OwnedLibraryView from '@/components/dashboard/gamehub/OwnedLibraryView';
@@ -203,6 +204,11 @@ export default function LunaTemplate() {
   const [longPressGame, setLongPressGame] = useState(null);
   const [showLibraryLanding, setShowLibraryLanding] = useState(false);
   const [librarySelection, setLibrarySelection] = useState(null);
+  const [libraryFilters, setLibraryFilters] = useState({ view: 'library', scope: 'games', search: '', genre: 'all', gameId: null });
+  const updateLibraryFilters = useCallback((patch) => {
+    setLibraryFilters((value) => ({ ...value, ...patch }));
+    if (patch.view) { setLibrarySelection(null); setSelectedFocusGame(null); setOptionsGame(null); setLongPressGame(null); }
+  }, []);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
 
@@ -675,7 +681,7 @@ export default function LunaTemplate() {
       )}
 
       {/* 95% Main Area */}
-      <div className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
+      <div data-luna-dashboard-content className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
         {/* Dark moonlight aesthetic background */}
         <RealTimeMoonSky />
         {!avatarFocusMode && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
@@ -727,6 +733,8 @@ export default function LunaTemplate() {
               {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
               <div className="pointer-events-auto flex-1 min-h-0 relative">
                 <LibraryBrowser
+                  filters={libraryFilters}
+                  onFiltersChange={updateLibraryFilters}
                   selectedGame={selectedFocusGame}
                   fullView={showLibraryLanding}
                   onToggleFullView={() => { setLibrarySelection(null); setShowLibraryLanding(v => !v); }}
@@ -818,7 +826,9 @@ export default function LunaTemplate() {
             className="absolute z-30 pointer-events-auto overflow-hidden"
             style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
-            <OwnedLibraryView selectedGame={librarySelection} onSelectGame={game => { setLibrarySelection(game); setSelectedFocusGame(game); }} onBack={() => setLibrarySelection(null)} onClose={() => setShowLibraryLanding(false)} />
+            {libraryFilters.view === 'cards'
+              ? <LibraryCardExplorer full filters={libraryFilters} onChange={updateLibraryFilters} onClose={() => setShowLibraryLanding(false)} />
+              : <OwnedLibraryView filters={libraryFilters} onFiltersChange={updateLibraryFilters} selectedGame={librarySelection} onSelectGame={game => { setLibrarySelection(game); setSelectedFocusGame(game); }} onBack={() => setLibrarySelection(null)} onClose={() => setShowLibraryLanding(false)} />}
           </motion.div>
         }
       </AnimatePresence>
