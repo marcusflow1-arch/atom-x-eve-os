@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor, Search, Layers, Store, ArrowLeftRight, Gamepad2, X, Brain, Trophy, Navigation, Shield } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -42,12 +42,13 @@ const GENRES = [
 export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
+  const [selectedGenre, setSelectedGenre] = useState(() => GENRES.find((genre) => genre.id === 'shooter') || GENRES[0]);
   const [selectedGame, setSelectedGame] = useState(null);
   const [gameSearch, setGameSearch] = useState('');
   const [mobileGames, setMobileGames] = useState(false);
   const [rightPanel, setRightPanel] = useState('games');
   const [marketView, setMarketView] = useState('cards');
+  const adamXeBootstrapRef = useRef(false);
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
   const gamesQuery = useQuery({ queryKey: ['games-for-genre-mastery'], queryFn: () => readCardPages((limit, skip) => base44.entities.Game.list('-created_date', limit, skip)), staleTime: 60000 });
   const allGames = gamesQuery.data || [];
@@ -63,6 +64,15 @@ export default function GenreMastery({ onClose }) {
     return isAdamXe ? scoped.map((card) => ({ ...card, series: 'AdamXE', genre: 'AdamXE' })) : scoped;
   }, [catalog.cards, genreGames, isAdamXe]);
   const cards = useMemo(() => selectedGame ? genreCards.filter((card) => card.gameId === selectedGame.id) : genreCards, [genreCards, selectedGame]);
+  useEffect(() => {
+    if (!isAdamXe || adamXeBootstrapRef.current) return;
+    adamXeBootstrapRef.current = true;
+    let cancelled = false;
+    base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} })
+      .then(() => { if (!cancelled) return catalog.retry(); })
+      .catch(() => { adamXeBootstrapRef.current = false; });
+    return () => { cancelled = true; };
+  }, [isAdamXe, catalog.retry]);
   const selectView = (view) => {
     if (view === 'blackmarket') {
       navigate(`${createPageUrl('Store')}?mode=trading&view=blackmarket`);
