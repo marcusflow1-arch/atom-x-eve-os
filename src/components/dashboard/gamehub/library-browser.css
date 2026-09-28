@@ -81,10 +81,10 @@
 .ll-full-heading p { color:#92aab9; font-size:12px; margin-top:5px; }
 .ll-full-heading button { padding:8px; color:#a8c6d4; }
 .ll-full-explorer .ll-results { padding:0 0 24px; }
-.ll-full-explorer .ll-game-rail { gap:14px; grid-auto-columns:calc((100% - 56px)/5); }
+.ll-full-explorer .ll-game-rail { gap:14px; grid-auto-columns:max(64px,calc((100% - 56px)/5)); }
 .ll-full-explorer .ll-game strong { font-size:13px; min-height:36px; }
 .ll-full-explorer .ll-game-art { max-height:200px; }
-.ll-full-explorer .ll-card-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:16px; }
+.ll-full-explorer .ll-card-grid { grid-template-columns:repeat(auto-fill,minmax(min(130px,100%),1fr)); gap:16px; }
 .ll-full-explorer .ll-inline-leaf { margin-top:22px; min-height:0; max-height:none; }
 .ll-full-explorer .ll-inline-leaf .ll-scroll-paper { max-height:none; height:auto; }
 .ll-full-explorer .ll-scroll-cards { overflow:visible; }
