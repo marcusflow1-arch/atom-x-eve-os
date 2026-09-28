@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Trophy } from 'lucide-react';
 import CardEnhancementOverlay from '@/components/profile/CardEnhancementOverlay';
+import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
 import CollectibleCard from './CollectibleCard';
 
 export default function AchievementsContent({ genre, selectedGame, cards = [], isLoading, isError, onRetry }) {
@@ -38,6 +39,6 @@ export default function AchievementsContent({ genre, selectedGame, cards = [], i
       {isError && <div className="cc-notice" role="alert">Some cards could not be loaded. <button onClick={onRetry}>Try again</button></div>}
       {isLoading ? <div className="cc-empty" role="status">Loading your collection…</div> : filtered.length ? <><div className="cc-card-grid">{filtered.slice(0, visibleCount).map((card) => <CollectibleCard key={card.id} card={card} onSelect={(item) => { opener.current = document.activeElement; setSelectedCard(item); }} />)}</div>{filtered.length > visibleCount && <button className="cc-button cc-load-more" onClick={() => setVisibleCount((count) => count + 48)}>Show more cards</button>}</> : <div className="cc-empty"><Trophy /><h2>{cards.length ? 'No cards match these filters' : 'Your next achievement starts here'}</h2><p>{cards.length ? 'Try another name or rarity.' : 'Achievement cards for this game will appear here as they are added.'}</p>{cards.length > 0 && <button className="cc-button" onClick={() => { setSearch(''); setRarity('all'); setOwnership('all'); }}>Clear filters</button>}</div>}
     </div>
-    {selectedCard && <div ref={inspector} className="cc-inspector" role="dialog" aria-modal="true" aria-label={`${selectedCard.title} card details`}><CardEnhancementOverlay card={selectedCard} onClose={close} /></div>}
+    {selectedCard && <div ref={inspector} className="cc-inspector" role="dialog" aria-modal="true" aria-label={`${selectedCard.title} card details`}>{genre?.id === 'adamxe' ? <MysteryCardDetail card={selectedCard} onBack={close} /> : <CardEnhancementOverlay card={selectedCard} onClose={close} />}</div>}
   </section>;
 }
