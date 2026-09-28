@@ -1,5 +1,12 @@
 export const cardKey = (value) => String(value || '').trim().toLowerCase();
 export function gameMatchesGenre(game, genre) {
+  // AdamXE is a dedicated Cards collection lane, not a broad store genre.
+  // Match only the canonical internal Adam XE game so unrelated titles can
+  // never appear here even if they reuse an Adam/other genre label.
+  if (genre?.id === 'adamxe') {
+    const compactTitle = cardKey(game?.title).replace(/[^a-z0-9]+/g, '');
+    return compactTitle === 'adamxe';
+  }
   const words = (value) => ` ${cardKey(value).replace(/[^a-z0-9]+/g, ' ').trim()} `;
   return genre.matchGenres.some((match) => words(game.genre).includes(words(match)));
 }
