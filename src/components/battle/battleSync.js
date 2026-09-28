@@ -23,7 +23,7 @@ export function battleClockOffset(body, sentAt, receivedAt) {
 export function createBattleTransport({ invoke, read, write, now = Date.now, sanitize = (body) => body }) {
   const sessions = new Map();
   const stateFor = (id) => {
-    if (!sessions.has(id)) sessions.set(id, { sequence: 0, epoch: 0, pending: new Set(), status: null });
+    if (!sessions.has(id)) sessions.set(id, { sequence: Number(read(id)?._battle_sequence || 0), epoch: 0, pending: new Set(), status: null });
     return sessions.get(id);
   };
   const commit = (userId, body, sequence, sentAt) => {
