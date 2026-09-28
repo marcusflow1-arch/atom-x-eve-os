@@ -67,11 +67,9 @@ export default function GenreMastery({ onClose }) {
   useEffect(() => {
     if (!isAdamXe || adamXeBootstrapRef.current) return;
     adamXeBootstrapRef.current = true;
-    let cancelled = false;
     base44.functions.invoke('skillBookLoadout', { action: 'bootstrap', data: {} })
-      .then(() => { if (!cancelled) return catalog.retry(); })
+      .then(() => catalog.retry())
       .catch(() => { adamXeBootstrapRef.current = false; });
-    return () => { cancelled = true; };
   }, [isAdamXe, catalog.retry]);
   const selectView = (view) => {
     if (view === 'blackmarket') {
