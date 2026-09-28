@@ -45,6 +45,7 @@ const built=await build({
   stdin:{contents:"export {default as Browser} from './src/components/dashboard/gamehub/LibraryBrowser.jsx';export {default as Explorer} from './src/components/dashboard/gamehub/LibraryCardExplorer.jsx';export {default as Owned} from './src/components/dashboard/gamehub/OwnedLibraryView.jsx';",resolveDir:process.cwd(),loader:'jsx'},
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},
   plugins:[{name:'library-fixtures',setup(b){
+    b.onResolve({filter:/^react(?:\/|$)/},a=>({path:a.path,external:true}));
     b.onResolve({filter:/base44Client$|AuthContext$|useOwnedGames$|CrossScrollGameMenu$|MysteryCardDetail$|OwnedLibraryTile$|LibraryLandingPage$|RelatedLibraryGames$/},a=>({path:a.path,namespace:'fixture'}));
     b.onLoad({filter:/.*/,namespace:'fixture'},a=>({loader:'jsx',contents:
       a.path.endsWith('base44Client')?'export const base44=globalThis.libraryFixture.sdk;':
