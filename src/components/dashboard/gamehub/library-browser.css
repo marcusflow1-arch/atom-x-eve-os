@@ -67,11 +67,12 @@
 .ll-scroll-paper header p { font-size:10px; color:#91b4c4; margin-top:4px; }
 .ll-scroll-paper header button { padding:2px; flex:none; width:24px; height:24px; }
 .ll-scroll-cards { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#426175 transparent; padding:2px 3px 8px; }
+.ll-scroll-cards .ll-card-grid { grid-template-columns:repeat(auto-fill,minmax(min(130px,100%),1fr)); gap:16px; }
 .ll-scroll-edge { position:absolute; inset:0 0 0 auto; width:14px; pointer-events:none; }
 .ll-scroll-edge::before { content:''; position:absolute; right:1px; top:0; bottom:0; width:1px; z-index:2; background:linear-gradient(to bottom,transparent,rgba(178,239,248,.4) 25%,#c6faff 50%,rgba(178,239,248,.4) 75%,transparent); }
 .ll-scroll-edge::after { content:''; position:absolute; right:8px; top:25%; bottom:25%; width:1px; z-index:2; background:rgba(176,234,243,.48); }
 .ll-scroll-edge>i { position:absolute; width:11px; height:11px; right:4px; top:50%; transform:translateY(-50%) rotate(45deg); background:#153444; border:1px solid rgba(168,231,242,.6); }
-.ll-inline-leaf { position:relative; margin-top:16px; min-height:200px; max-height:480px; width:100%; z-index:auto; }
+.ll-inline-leaf { position:relative; margin-top:16px; min-height:0; max-height:480px; width:100%; z-index:auto; }
 .ll-inline-leaf .ll-scroll-paper { max-height:480px; }
 .ll-full-explorer { height:100%; min-height:0; display:flex; flex-direction:column; color:#eaf5ff; background:linear-gradient(150deg,rgba(12,23,38,.96),rgba(5,12,23,.96)); padding:24px; }
 .ll-full-heading { display:flex; align-items:center; gap:14px; margin-bottom:20px; flex:none; }
