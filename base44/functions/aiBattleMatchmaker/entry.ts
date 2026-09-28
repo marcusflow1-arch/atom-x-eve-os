@@ -32,7 +32,6 @@ const APPEARANCE_KEYS = [
   'eyelash_style','hood_enabled','weapon_visible'
 ];
 
-const json = (body: any, status = 200) => Response.json(body, { status });
 const nowIso = () => new Date().toISOString();
 // A failed read (rate limit, timeout, 5xx) is NOT the same as "no row". Queue and
 // match state is only ever cancelled/cleared from rows we actually read. Failures
@@ -142,6 +141,8 @@ function publicMatch(row: Row | null) {
     // caster's animation even when the peer-to-peer relay drops the message.
     last_cast: row.last_cast || null,
     stuns: row.stuns || {},
+    // Only the timing is needed to request settlement exactly at impact.
+    pending_hits: (row.pending_hits || []).map((hit: Row) => ({ cast_id: hit.cast_id, resolves_at: hit.resolves_at })),
     hit_log: Array.isArray(row.hit_log) ? row.hit_log.slice(-20) : [],
   };
 }
@@ -195,7 +196,7 @@ async function playerFromQueue(svc: any, row: Row) {
   appearance.base_body_gender = gender;
   appearance.base_body_model_url = String(appearance.base_body_model_url || appearance.model_url || fallbackModel);
   if (gender === 'female') appearance.female_model_variant = appearance.female_model_variant || 'artemis_archer';
-  // Countdown re-freezes the loadout, so a failed read here must not block pairing.
+  // Read errors propagate: never freeze a partially loaded combat profile.
   const profile = await loadCombatProfile(svc,String(row.user_id));
   const skills = await freezeSkills(svc,String(row.user_id),gender,profile.combat);
   return { id: String(row.user_id), name: row.player_name || 'Player', avatar_url: row.avatar_url || '', gender, model_url: appearance.model_url, appearance, hp:profile.combat.max_hp,max_hp:profile.combat.max_hp,combat_stats:profile.combat,skills };
@@ -476,7 +477,7 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
     const host = ids[0], guest = ids[1];
     match = await svc.AIBattleMatch.create({
       mode, status: 'matched', host_id: host, host_name: first.player_name || 'Player', dashboard_channel: `dashboard_${host}`,
-      pair_key: pairKey, player_ids: ids, players: [await playerFromQueue(svc, first), await playerFromQueue(svc, second)], arena: ARENA,
+      pair_key: pairKey, player_ids: ids, players: await Promise.all([playerFromQueue(svc, first), playerFromQueue(svc, second)]), arena: ARENA,
       positions: { [host]: { x: 0, z: 5 }, [guest]: { x: 0, z: -5 } }, atb: {}, cooldowns: {}, dodges: {}, stuns: {}, pending_hits: [], hit_log: [], attack_revision: 0, last_attack: null,
       connected_at: '', disconnects: {}, pause_started_at: '', prestige_awards: {}, rewards_finalized: false,
     });
@@ -489,7 +490,7 @@ async function canonicalPairMatch(svc: any, mode: string, first: Row, second: Ro
   return match;
 }
 async function tryPair(svc: any, mode: string, callerQueueId = '') {
-  const liveRows = (await svc.AIBattleQueueEntry.filter({ mode, status:'waiting' }, '-created_date', 100).catch(() => [])).filter(waitingLive);
+  const liveRows = (await svc.AIBattleQueueEntry.filter({ mode, status:'waiting' }, '-created_date', 100)).filter(waitingLive);
   const freshestByUser = new Map<string, Row>();
   for (const row of liveRows) {
     const userId = String(row.user_id || '');
@@ -507,7 +508,7 @@ async function tryPair(svc: any, mode: string, callerQueueId = '') {
   const creator = unique[1];
   if (callerQueueId && String(creator.id) !== String(callerQueueId)) return null;
 
-  const fresh = await Promise.all(unique.map((row: Row) => svc.AIBattleQueueEntry.get(row.id).catch(() => null)));
+  const fresh = await Promise.all(unique.map((row: Row) => getOptional(svc.AIBattleQueueEntry, row.id)));
   if (fresh.some((row: Row | null) => !row || !waitingLive(row) || row.status !== 'waiting')) return null;
   return canonicalPairMatch(svc, mode, fresh[0], fresh[1]);
 }
@@ -671,6 +672,11 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
 }
 
 Deno.serve(async (req) => {
+  const receivedAt = Date.now();
+  // Timestamp both ends of processing; clients can separate DB work from RTT.
+  const json = (body: any, status = 200) => Response.json({
+    ...body, server_received_at: receivedAt, server_time: Date.now(),
+  }, { status });
   try {
     const client = createClientFromRequest(req); const user = await client.auth.me();
     if (!user) return json({ error:'Sign in to use AI Battle.' },401);
@@ -702,7 +708,8 @@ Deno.serve(async (req) => {
       const avatar=await getAvatarSnapshot(svc,userId,data);
       const created=await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
       current=await cleanupQueueDuplicates(svc,userId);
-      if(current?.id&&String(current.id)===String(created.id)&&current.status==='waiting') await tryPair(svc,mode,String(current.id));
+      // statusFor performs the single pairing attempt and reservation handshake.
+      // A second scan here added database latency to every empty-queue join.
       const state=await statusFor(svc,userId,sessionId);
       return json({queue:publicQueue(state.queue),match:publicMatch(state.match),notice:state.notice||null,server_time:Date.now()});
     }

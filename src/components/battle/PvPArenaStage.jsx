@@ -18,7 +18,8 @@ import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
 import CombatFx, { effectColor } from '@/components/battle/combatFx';
 import { CHIDORI_REACTION_CLIP, CHIDORI_STRIKE_GAP, CHIDORI_TIMING, chidoriDashProgress, chidoriKnockback, createChidoriCaster, isChidoriCast } from '@/components/battle/chidoriCaster';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
-import { dismissAIBattleResult } from '@/components/battle/useAIBattleQueue';
+import { dismissAIBattleResult, getAIBattleClientSessionId } from '@/components/battle/useAIBattleQueue';
+import { requestAIBattle } from './battleClient';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 
@@ -245,6 +246,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const [surrenderConfirm, setSurrenderConfirm] = useState(false);
   const [surrendering, setSurrendering] = useState(false);
   const returningRef = useRef(false);
+  const actionPending = useRef(false);
   const arenaVisualRef = useRef({ scene: null, camera: null });
   const matchRef = useRef(match);
   const serverOffsetRef = useRef(serverOffsetMs);
@@ -284,20 +286,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   const localStunMs = () => Math.max(0, Date.parse(matchRef.current?.stuns?.[String(user?.id)]?.until || 0) - (Date.now() + serverOffsetRef.current));
 
-  const invoke = async (action, data) => {
-    try {
-      const response = await base44.functions.invoke('aiBattleMatchmaker', { action, data });
-      const body = response?.data ?? response ?? {};
-      if (body?.error) { const e = new Error(body.error); e.status = response?.status || 409; throw e; }
-      if (Object.prototype.hasOwnProperty.call(body, 'match')) queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, match: body.match || null, queue: Object.prototype.hasOwnProperty.call(body, 'queue') ? body.queue : prev.queue, server_time: body.server_time || prev.server_time }));
-      return body;
-    } catch (error) {
-      const body = error?.response?.data?.data ?? error?.response?.data ?? error?.body ?? null;
-      const next = new Error(body?.error || body?.message || error?.message || 'PvP request failed.');
-      next.status = error?.response?.status || error?.status || 500;
-      throw next;
-    }
-  };
+  const invoke = (action, data) => requestAIBattle(user?.id, action, {
+    ...data, client_session_id: getAIBattleClientSessionId(),
+  });
 
   const returnToDashboard = useCallback(async () => {
     if (returningRef.current) return;
@@ -369,13 +360,14 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       // The target reacts at impact (knocked down + stunned) unless the strike
       // was dodged or missed. All of it is presentation: the server owns the
       // damage and the stun.
-      const startedAt = performance.now();
+      const impactAt = cast.resolves_at ? toPerfTime(cast.resolves_at) : performance.now() + CHIDORI_TIMING.impact * 1000;
+      const startedAt = impactAt - CHIDORI_TIMING.impact * 1000;
       const target = runtimes.current[targetKey];
       if (caster) { caster.chidori = { start: startedAt, castId }; caster.lunge = null; }
       if (target) {
         target.pendingReaction = {
           castId,
-          at: startedAt + CHIDORI_TIMING.impact * 1000,
+          at: impactAt,
           missed: Boolean(cast.missed),
           resolvesAt: cast.resolves_at || null,
           targetId: String(targetId || ''),
@@ -383,11 +375,11 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       }
       if (caster) chidoriRef.current?.start({ attacker: caster, victim: cast.missed ? null : target, startedAt });
     } else {
-      const arriveAt = Math.max(performance.now() + 150, toPerfTime(cast.resolves_at));
+      const arriveAt = Math.max(performance.now() + 16, toPerfTime(cast.resolves_at));
       fxRef.current?.tracer(chestOf(casterKey), chestOf(targetKey), {
         color: effectColor(effectId),
         arriveAt,
-        travelMs: Math.min(450, Math.max(150, arriveAt - performance.now())),
+        travelMs: Math.min(450, Math.max(16, arriveAt - performance.now())),
         impactScale: 1.25,
       });
     }
@@ -442,6 +434,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   };
 
   const requestSkill = async (slot) => {
+    if (actionPending.current) return false;
     if (!active) { setError('The fight is not ready yet.'); return false; }
     if (!isMyTurn) { setError("Wait for your turn."); return false; }
     if (escapeMenuOpen || surrendering) return false;
@@ -456,6 +449,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (a.distanceTo(b) > Number(skill.range_m || 3) + 1.5) { setError('Out of range.'); return false; }
     setError('');
     const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    actionPending.current = true;
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
@@ -467,12 +461,13 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       // earlier ability that is still animating.
       setError(e.message || 'Skill rejected.');
       return false;
-    }
+    } finally { actionPending.current = false; }
   };
 
   requestSkillRef.current = requestSkill;
 
   const requestMelee = async () => {
+    if (actionPending.current) return false;
     if (!active) { setError('The fight is not ready yet.'); return false; }
     if (!isMyTurn) { setError('Wait for your turn.'); return false; }
     if (escapeMenuOpen || surrendering) return false;
@@ -491,6 +486,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       fighter.runtime.lockedFacingYaw = facingYaw;
       fighter.root.rotation.y = facingYaw;
     }
+    actionPending.current = true;
+    // Predict only the swing. HP, hit text and target reaction wait for the server.
+    showMeleeSlash(user.id, castId);
     try {
       const body = await invoke('basic_attack', { match_id: match.id, cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
@@ -502,7 +500,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     } catch (e) {
       setError(e?.message || 'Melee attack rejected.');
       return false;
-    }
+    } finally { actionPending.current = false; }
   };
 
   requestMeleeRef.current = requestMelee;
