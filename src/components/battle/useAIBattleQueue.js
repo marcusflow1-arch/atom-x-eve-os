@@ -272,14 +272,16 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
         const row = event?.data, current = snapshot();
         if (String(row?.user_id || '') !== userId && String(event?.id || '') !== String(current?.queue?.id || '')) return;
         const signature = queueSignal(row);
-        if (signature !== lastQueue) { lastQueue = signature; refresh.schedule(); }
+        if (signature !== lastQueue && signature !== queueSignal(current?.queue)) refresh.schedule();
+        lastQueue = signature;
       }));
       stops.push(base44.entities.AIBattleMatch.subscribe((event) => {
         const current = snapshot();
         const matchId = current?.match?.id || current?.queue?.match_id;
         if (!matchId || String(event?.id || event?.data?.id) !== String(matchId)) return;
         const signature = matchSignal(event?.data);
-        if (signature !== lastMatch) { lastMatch = signature; refresh.schedule(); }
+        if (signature !== lastMatch && signature !== matchSignal(current?.match)) refresh.schedule();
+        lastMatch = signature;
       }));
     } catch (error) { console.warn('[AI Battle] realtime unavailable; polling continues', error); }
     return () => {

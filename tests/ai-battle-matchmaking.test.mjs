@@ -7,7 +7,7 @@ import { buildSync } from 'esbuild';
 // In-memory Base44 entities. `failure(name, op)` can make any read fail the way
 // a rate limit or timeout would, to prove failed reads never cancel live state.
 const tables = new Map();
-let writes = [], failure = null, serial = 0;
+let writes = [], failure = null, serial = 0, readHook = null, reads = [];
 const clone = (value) => structuredClone(value);
 const rows = (name) => { if (!tables.has(name)) tables.set(name, []); return tables.get(name); };
 const users = { a: { id: 'a', full_name: 'Player A' }, b: { id: 'b', full_name: 'Player B' } };
@@ -22,7 +22,9 @@ function matches(row, query) {
 }
 const entities = new Proxy({}, { get: (_, name) => ({
   filter: async (query = {}, sort = '', limit = 1000) => {
-    if (failure?.(name, 'filter')) throw transient();
+    reads.push({ name, op: 'filter', query });
+    await readHook?.(name, 'filter', query);
+    if (failure?.(name, 'filter', query)) throw transient();
     const found = rows(name).filter((row) => matches(row, query));
     const key = sort.replace(/^-/, '');
     if (key) found.sort((a, b) => String(a[key] || '').localeCompare(String(b[key] || '')) * (sort.startsWith('-') ? -1 : 1));
@@ -93,7 +95,7 @@ function prefightMatch(status, patch = {}) {
 const queueOf = (user) => rows('AIBattleQueueEntry').find((row) => row.user_id === user);
 
 beforeEach(() => {
-  tables.clear(); writes = []; failure = null; serial = 0;
+  tables.clear(); writes = []; failure = null; serial = 0; readHook = null; reads = [];
   tables.set('Loadout', []);
   tables.set('Avatar', ['a', 'b'].map((id) => ({ id: 'avatar-' + id, user_id: id, gender: 'male', updated_date: iso() })));
 });
@@ -308,4 +310,53 @@ test('a fight poll reads each queue row once', async () => {
   const body = await battle('status', { client_session_id: 'session-a', position: { x: 0, z: 5 } }, 'a');
   assert.equal(body.match.status, 'fighting');
   assert.ok(reads <= 3, `fight poll used ${reads} reads`);
+});
+
+test('empty queue is scanned only once per join', async () => {
+  const body = await battle('join', { mode:'pvp', client_session_id:'session-a' });
+  assert.equal(body.queue.status,'waiting');
+  assert.equal(reads.filter((read) => read.name === 'AIBattleQueueEntry' && read.query?.status === 'waiting').length,1);
+});
+
+test('waiting-pool rate limit is surfaced without losing queue position', async () => {
+  tables.set('AIBattleQueueEntry',[queueRow('a',{status:'waiting',match_id:''})]);
+  failure=(name,op,query)=>name==='AIBattleQueueEntry' && op==='filter' && query?.status==='waiting';
+  await battle('status',{client_session_id:'session-a'},'a',429);
+  assert.equal(queueOf('a').status,'waiting');
+  assert.equal(rows('AIBattleMatch').length,0);
+});
+
+test('both player profiles load concurrently before a single match is reserved', async () => {
+  await battle('join',{mode:'pvp',client_session_id:'session-a'},'a');
+  const started=new Set();let release;
+  const gate=new Promise((resolve)=>{release=resolve;});
+  let timedOut=false;
+  const watchdog=setTimeout(()=>{timedOut=true;release();},1500);
+  readHook=async(name,op,query)=>{
+    if(name!=='AvatarProgression'||op!=='filter')return;
+    started.add(query.user_id);
+    if(started.size===2)release();
+    await gate;
+  };
+  try {
+    const body=await battle('join',{mode:'pvp',client_session_id:'session-b'},'b');
+    assert.equal(timedOut,false,'both profiles must begin before either finishes');
+    assert.deepEqual([...started].sort(),['a','b']);
+    assert.equal(body.match.player_ids.length,2);
+    assert.equal(rows('AIBattleMatch').length,1);
+    assert.equal(queueOf('a').match_id,queueOf('b').match_id);
+  } finally {clearTimeout(watchdog);}
+});
+
+test('status exposes impact deadlines and timestamps both ends of request processing', async () => {
+  const impact=iso(250);
+  prefightMatch('fighting',{
+    fight_starts_at:iso(-1000),fight_ends_at:iso(60000),
+    pending_hits:[{cast_id:'c',resolves_at:impact,attacker_id:'a',target_id:'b',damage:37}],
+  });
+  tables.set('AIBattleQueueEntry',[queueRow('a'),queueRow('b')]);
+  const body=await battle('status',{client_session_id:'session-a'});
+  assert.deepEqual(body.match.pending_hits,[{cast_id:'c',resolves_at:impact}]);
+  assert.ok(body.server_time>=body.server_received_at);
+  assert.equal(body.match.players.find((player)=>player.id==='b').hp,1000);
 });

@@ -49,7 +49,14 @@ export function makeRewardFixture() {
       if (key === '$or') return value.some((part) => allowed(part, actor, row));
       if (key === '$and') return value.every((part) => allowed(part, actor, row));
       if (key === 'user_condition') return Object.entries(value).every(([field, expected]) => actor?.[field] === expected);
-      return getPath(row, key.replace(/^data\./, '')) === (value === '{{user.id}}' ? actor?.id : value);
+      const expected = (item) => item === '{{user.id}}' ? actor?.id : item;
+      const field = key.replace(/^data\./, '');
+      if (key.startsWith('data.') && value && typeof value === 'object') {
+        return matches(row, { [field]: Object.fromEntries(Object.entries(value).map(([op, items]) => [
+          op, Array.isArray(items) ? items.map(expected) : expected(items),
+        ])) });
+      }
+      return getPath(row, field) === expected(value);
     });
   }
   function validate(name, row) {

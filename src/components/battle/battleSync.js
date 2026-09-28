@@ -77,11 +77,12 @@ export function createBattleTransport({ invoke, read, write, now = Date.now, san
 // Realtime events are wake-up signals, never peer-provided damage. Ignore the
 // heartbeat and movement writes that would otherwise make an endless fetch loop.
 export const queueSignal = (row) => JSON.stringify([
-  row?.id, row?.status, row?.match_id, row?.connected_at || '', row?.ready_at || '',
+  row?.id, row?.status, row?.match_id || '', row?.connected_at || '', row?.ready_at || '',
 ]);
 export const matchSignal = (row) => JSON.stringify([
   row?.id, row?.status, row?.attack_revision || 0, row?.last_cast?.cast_id,
-  row?.turn_player_id, row?.fight_starts_at, row?.fight_ends_at, row?.pause_started_at || '',
+  row?.turn_player_id || Object.entries(row?.atb || {}).find(([, value]) => value?.turn)?.[0] || row?.host_id || '',
+  row?.fight_starts_at || '', row?.fight_ends_at || '', row?.pause_started_at || '',
   row?.cooldowns || {}, row?.dodges || {}, row?.stuns || {}, row?.disconnects || {},
   (row?.pending_hits || []).map((hit) => [hit.cast_id, hit.resolves_at]),
 ]);

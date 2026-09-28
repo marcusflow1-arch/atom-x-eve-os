@@ -706,8 +706,7 @@ Deno.serve(async (req) => {
         const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),notice:state.notice||null,server_time:Date.now()});
       }
       const avatar=await getAvatarSnapshot(svc,userId,data);
-      const created=await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
-      current=await cleanupQueueDuplicates(svc,userId);
+      await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
       // statusFor performs the single pairing attempt and reservation handshake.
       // A second scan here added database latency to every empty-queue join.
       const state=await statusFor(svc,userId,sessionId);
