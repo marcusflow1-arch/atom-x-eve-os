@@ -1,4 +1,3 @@
-import React from 'react';
 import useOwnedLibrary from '@/components/dashboard/gamehub/useOwnedLibrary';
 import OwnedLibraryGrid from '@/components/dashboard/gamehub/OwnedLibraryGrid';
 import LibraryLandingPage from '@/components/dashboard/gamehub/LibraryLandingPage';

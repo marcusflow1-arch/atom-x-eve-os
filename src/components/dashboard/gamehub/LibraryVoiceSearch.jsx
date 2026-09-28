@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Mic, Search } from 'lucide-react';
 
 export default function LibraryVoiceSearch({ value, onChange, subject = 'games' }) {

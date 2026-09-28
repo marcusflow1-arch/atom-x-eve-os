@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GalleryHorizontalEnd, Library } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthContext';
 import useOwnedGames from '@/components/store/useOwnedGames';

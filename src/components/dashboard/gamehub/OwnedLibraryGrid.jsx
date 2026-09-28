@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { X, Library } from 'lucide-react';
 import OwnedLibraryTile from '@/components/dashboard/gamehub/OwnedLibraryTile';
 import { filterLibraryGames, genreOptions } from './libraryDiscovery';
