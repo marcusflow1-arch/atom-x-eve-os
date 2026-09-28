@@ -45,7 +45,7 @@ function GameRail({ games, cards, selectedId, onSelect, panelId }) {
   };
   return <>
     <div className="ll-result-heading"><span>Games · A–Z</span><nav aria-label="Game row navigation"><button disabled={edges.first} onClick={() => move(-1)} aria-label="Previous five games"><ChevronLeft size={15} /></button><button disabled={edges.last} onClick={() => move(1)} aria-label="Next five games"><ChevronRight size={15} /></button></nav></div>
-    <div ref={rail} className="ll-game-rail" aria-label="Games with card collections" data-testid="library-discovery-games" onScroll={sync}>{games.map((game) => <button key={game.id} className="ll-game" title={game.title} aria-label={`Show cards for ${game.title}`} aria-expanded={String(selectedId) === String(game.id)} aria-controls={panelId} onClick={() => onSelect(game)}>
+    <div ref={rail} className="ll-game-rail" aria-label="Games with card collections" data-testid="library-discovery-games" onScroll={sync}>{games.map((game) => <button key={game.id} className="ll-game" title={game.title} aria-label={`Show cards for ${game.title}`} aria-expanded={String(selectedId) === String(game.id)} aria-controls={panelId} onClick={(event) => onSelect(game, event.currentTarget)}>
       <span className="ll-game-art"><Artwork src={game.cover_image || game.thumb || game.banner_image} game /></span><strong>{game.title}</strong><small>{cards.filter((card) => String(card.gameId) === String(game.id)).length} cards</small>
     </button>)}</div>
   </>;
@@ -53,7 +53,7 @@ function GameRail({ games, cards, selectedId, onSelect, panelId }) {
 
 export default function LibraryCardExplorer({ filters, onChange, full = false, fullViewOpen = false, onClose }) {
   const { user } = useAuth();
-  const anchor = useRef(null), opener = useRef(null);
+  const anchor = useRef(null), opener = useRef(null), gameOpener = useRef(null);
   const panelId = useId();
   const [detail, setDetail] = useState(null);
   const gameQuery = useQuery({
@@ -71,8 +71,8 @@ export default function LibraryCardExplorer({ filters, onChange, full = false, f
   // Searching by game scopes the game row. Its opened leaf contains all of that
   // game's cards, rather than searching those cards for the game's title again.
   const gameCards = useMemo(() => selectedGame ? filterLibraryCards(cards, { genre: filters.genre, gameId: selectedGame.id }) : [], [cards, filters.genre, selectedGame]);
-  const clearGame = useCallback(() => onChange({ gameId: null }), [onChange]);
-  const selectGame = (game) => onChange({ gameId: String(filters.gameId) === String(game.id) ? null : game.id });
+  const clearGame = useCallback(() => { onChange({ gameId: null }); requestAnimationFrame(() => gameOpener.current?.focus()); }, [onChange]);
+  const selectGame = (game, element) => { gameOpener.current = element; onChange({ gameId: String(filters.gameId) === String(game.id) ? null : game.id }); };
   const inspect = (card, element) => { opener.current = element; setDetail(card); };
   const failed = gameQuery.isError || catalog.isError;
   const loading = gameQuery.isLoading || catalog.isLoading;

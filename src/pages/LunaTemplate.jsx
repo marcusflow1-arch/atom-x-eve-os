@@ -207,6 +207,7 @@ export default function LunaTemplate() {
   const [libraryFilters, setLibraryFilters] = useState({ view: 'library', scope: 'games', search: '', genre: 'all', gameId: null });
   const updateLibraryFilters = useCallback((patch) => {
     setLibraryFilters((value) => ({ ...value, ...patch }));
+    if ('search' in patch || 'genre' in patch) setLibrarySelection(null);
     if (patch.view) { setLibrarySelection(null); setSelectedFocusGame(null); setOptionsGame(null); setLongPressGame(null); }
   }, []);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'

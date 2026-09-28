@@ -3,7 +3,7 @@ export const titleOrder = (a, b) => alphabet.compare(String(a.title || a.name ||
 export const normalizedText = (value) => String(value || '').trim().toLocaleLowerCase();
 export const isAdamXe = (game) => normalizedText(game?.title).replace(/[^a-z0-9]/g, '') === 'adamxe';
 export function libraryGenres(item) {
-  if (isAdamXe(item)) return ['AdamXE'];
+  if (!Array.isArray(item?.genres) && isAdamXe(item)) return ['AdamXE'];
   const source = Array.isArray(item?.genres) ? item.genres : String(item?.genre || '').split(/\s*[/,|]\s*/);
   const names = source.map((value) => String(value).trim()).filter(Boolean);
   return names.length ? names : ['Uncategorized'];

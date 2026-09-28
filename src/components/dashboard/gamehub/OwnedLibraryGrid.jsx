@@ -1,15 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { X, Library } from 'lucide-react';
 import OwnedLibraryTile from '@/components/dashboard/gamehub/OwnedLibraryTile';
-import { genreParts } from '@/components/dashboard/gamehub/ownedLibraryData';
-import { filterLibraryGames } from './libraryDiscovery';
+import { filterLibraryGames, genreOptions } from './libraryDiscovery';
 
 export default function OwnedLibraryGrid({ games, loading, error, retry, onSelect, onClose, search = '', selectedGenre, onGenreChange }) {
   const [localGenre, setLocalGenre] = useState('all');
   const genre = selectedGenre ?? localGenre;
   const setGenre = onGenreChange || setLocalGenre;
   const [sort, setSort] = useState('title');
-  const genres = [...new Set(games.flatMap(genreParts))].sort();
+  const genres = genreOptions(games);
   const filtered = useMemo(() => filterLibraryGames(games, { genre, search }).sort((a, b) => {
     const title = a.title.localeCompare(b.title);
     if (sort === 'genre') return (a.genre || '').localeCompare(b.genre || '') || title;
