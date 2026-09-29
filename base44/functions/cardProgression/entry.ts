@@ -4,302 +4,351 @@ import { loadCombatProfile } from '../../shared/combatProfile.ts';
 import { abilityOutput } from '../../shared/combatStats.ts';
 import { skillStats } from '../../shared/pvpSkills.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
+import {
+  addStats, ASCENSION_CAP, CARD_SYSTEM_VERSION, cardMasteryState, cycleStatGain,
+  ENHANCEMENT_CAP, enhancementMaterialValue, normalizeProgression, STACK_CAP,
+} from '../../shared/cardSystem.ts';
+import {
+  appendProvenanceEvent, ensureCardPassport, publicPassport,
+  recordAscensionMilestone, recordStackMilestone,
+} from '../../shared/cardProvenance.ts';
 
 type AnyObj = Record<string, any>;
+const json = (body: unknown, status = 200) => Response.json(body, { status });
+const fail = (message: string, status = 400) => { throw Object.assign(new Error(message), { status }); };
+const now = () => new Date().toISOString();
 
-const SKILL_TREE = [
-  { id: 'core_calibration', name: 'Core Calibration', lane: 'Core', cost: 1, minLevel: 1, minStage: 1, prerequisite: null, perk: false, effect: '+3% base card power' },
-  { id: 'precision_memory', name: 'Precision Memory', lane: 'Core', cost: 1, minLevel: 2, minStage: 1, prerequisite: 'core_calibration', perk: true, effect: '+5% critical precision when equipped' },
-  { id: 'adaptive_tempo', name: 'Adaptive Tempo', lane: 'Core', cost: 2, minLevel: 4, minStage: 1, prerequisite: 'precision_memory', perk: true, effect: 'Cooldown recovery improves after repeated use' },
-  { id: 'resonant_edge', name: 'Resonant Edge', lane: 'Forge', cost: 1, minLevel: 3, minStage: 2, prerequisite: 'core_calibration', perk: false, effect: 'Enhancements gain +1 bonus stat' },
-  { id: 'enchanter_focus', name: 'Enchanter Focus', lane: 'Forge', cost: 2, minLevel: 6, minStage: 2, prerequisite: 'resonant_edge', perk: true, effect: '+8% over-enchant success chance' },
-  { id: 'fusion_echo', name: 'Fusion Echo', lane: 'Forge', cost: 2, minLevel: 8, minStage: 3, prerequisite: 'enchanter_focus', perk: true, effect: 'Staged cards retain more resonance after combination' },
-  { id: 'avatar_sync', name: 'Avatar Sync', lane: 'Avatar', cost: 1, minLevel: 5, minStage: 1, prerequisite: 'core_calibration', perk: false, effect: 'Strengthens the reward when mapped to the AI avatar' },
-  { id: 'living_reflex', name: 'Living Reflex', lane: 'Avatar', cost: 2, minLevel: 7, minStage: 2, prerequisite: 'avatar_sync', perk: true, effect: 'AI avatar receives a reactive combat modifier' },
-  { id: 'signature_expression', name: 'Signature Expression', lane: 'Avatar', cost: 3, minLevel: 10, minStage: 3, prerequisite: 'living_reflex', perk: true, effect: 'Unlocks this card’s signature expression on the avatar' }
-];
-
-const rarityRank: Record<string, number> = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Mythical: 5, Unique: 6, Limitless: 7 };
-
-function xpToNext(level: number, ascension = 0) {
-  return Math.floor(100 + Math.pow(Math.max(1, level), 1.55) * 38 + ascension * 75);
+function progressionPatch(p: AnyObj) {
+  const normalized = normalizeProgression(p);
+  return {
+    system_version: CARD_SYSTEM_VERSION,
+    enhancement_percent: normalized.enhancement_percent,
+    ascension: normalized.ascension,
+    stack_level: normalized.stack_level,
+    permanent_stats: normalized.permanent_stats,
+    current_cycle_stats: normalized.current_cycle_stats,
+    migration_power_multiplier: normalized.migration_power_multiplier,
+    mastery_visual: normalized.mastery_visual,
+    migrated_from_legacy: normalized.migrated_from_legacy,
+  };
 }
 
-const normalizedBaseStats = normalizedCardBaseStats;
-const calcPower = (p:AnyObj) => effectiveCardStats(p).power_score;
-function publicProgression(p:AnyObj) { const effective=effectiveCardStats(p); return {...p,power_score:effective.power_score,effective_stats:effective.stats,growth_multiplier:effective.growth_multiplier}; }
+function publicProgression(p: AnyObj) {
+  const normalized = normalizeProgression(p);
+  const effective = effectiveCardStats(normalized);
+  return {
+    ...normalized,
+    power_score: effective.power_score,
+    effective_stats: effective.stats,
+    growth_multiplier: effective.growth_multiplier,
+    stat_multiplier: effective.stat_multiplier,
+    mastery: cardMasteryState(normalized),
+  };
+}
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   try {
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return json({ error: 'Unauthorized' }, 401);
 
-    const body = await req.json();
-    const action = body?.action || 'getState';
+    const body = await req.json().catch(() => ({}));
+    const action = String(body?.action || 'getState');
     const payload = body?.payload || {};
-    const actions = new Set(['getState', 'train', 'levelUp', 'enhance', 'combine', 'ascend', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk']);
-    if (!actions.has(action)) return Response.json({ error: 'Invalid action' }, { status: 400 });
-    if (action === 'combine' && payload.useWildcard !== undefined && typeof payload.useWildcard !== 'boolean') {
-      return Response.json({ error: 'useWildcard must be true or false' }, { status: 400 });
-    }
-    const sessions = Number(payload.sessions ?? 1);
-    if (action === 'train' && (!Number.isSafeInteger(sessions) || sessions < 1 || sessions > 10)) {
-      return Response.json({ error: 'Training sessions must be a whole number from 1 to 10' }, { status: 400 });
-    }
+    const supported = new Set(['getState', 'enhance', 'ascend', 'stack', 'combine']);
+    const retired = new Set(['train', 'levelUp', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk']);
+    if (retired.has(action)) return json({
+      error: 'This upgrade path was retired by Card System v2. Use Enhance, Ascend, or Stack.',
+      retired_action: action,
+    }, 409);
+    if (!supported.has(action)) return json({ error: 'Invalid card progression action' }, 400);
+
     const svc = base44.asServiceRole.entities;
-    if(action !== 'getState' && await hasLivePvpMatch(svc,user.id)) return Response.json({error:'Finish your match before upgrading cards'}, {status:409});
+    if (action !== 'getState' && await hasLivePvpMatch(svc, user.id)) {
+      return json({ error: 'Finish your match before changing card progression.' }, 409);
+    }
+
     const userCardId = String(body?.userCardId || payload?.userCardId || '').trim();
     const requestedAchievementId = String(body?.achievementId || payload?.achievementId || '').trim();
     let userCard: AnyObj | null = null;
 
     if (userCardId) {
       userCard = await svc.UserCard.get(userCardId).catch(() => null);
-      if (!userCard || String(userCard.user_id) !== String(user.id)) return Response.json({ error: 'Card not found in your inventory' }, { status: 404 });
+      if (!userCard || String(userCard.user_id) !== String(user.id)) return json({ error: 'Card not found in your collection.' }, 404);
     } else if (requestedAchievementId) {
-      const requested = await svc.Achievement.get(requestedAchievementId).catch(() => null);
-      if (!requested) return Response.json({ error: 'Achievement not found' }, { status: 404 });
-      const owned = await svc.UserCard.filter({ user_id: user.id, achievement_id: requested.id }, '-created_date', 1);
-      userCard = owned[0] || null;
-      if (!userCard && requested.card_id) {
-        const linked = await svc.UserCard.filter({ user_id: user.id, trading_card_id: requested.card_id }, '-created_date', 1);
-        userCard = linked[0] || null;
+      const owned = await svc.UserCard.filter({ user_id: user.id, achievement_id: requestedAchievementId }, '-created_date', 10);
+      userCard = (owned || []).find((row: AnyObj) => Number(row.quantity ?? 1) > 0) || null;
+      if (!userCard) {
+        const achievement = await svc.Achievement.get(requestedAchievementId).catch(() => null);
+        if (achievement?.card_id) {
+          const linked = await svc.UserCard.filter({ user_id: user.id, trading_card_id: achievement.card_id }, '-created_date', 10);
+          userCard = (linked || []).find((row: AnyObj) => Number(row.quantity ?? 1) > 0) || null;
+        }
       }
     }
-    // Progression operates on ownership only. Pending proofs, profile arrays and
-    // even a completed achievement never authorize this endpoint to mint a card.
-    if (!userCard) return Response.json({ error: 'You must own this card before upgrading it. Achievement rewards must be granted through verified rewards.' }, { status: 403 });
-    const quantity = Number(userCard.quantity ?? 1);
-    if (!Number.isSafeInteger(quantity) || quantity < 1) return Response.json({ error: 'Card is no longer available in your inventory' }, { status: 409 });
-    if (action !== 'getState' && userCard.trade_status === 'locked_in_trade') {
-      return Response.json({ error: 'This card is locked in a trade and cannot be upgraded' }, { status: 409 });
-    }
+    if (!userCard) return json({ error: 'You must own this card before upgrading it.' }, 403);
+    if (Number(userCard.quantity ?? 1) < 1) return json({ error: 'This card is no longer available in your collection.' }, 409);
+    if (action !== 'getState' && userCard.trade_status === 'locked_in_trade') return json({ error: 'This card is locked in a trade.' }, 409);
 
-    const definition = userCard.trading_card_id ? await svc.TradingCard.get(String(userCard.trading_card_id)) : null;
-    if (userCard.trading_card_id && !definition) return Response.json({ error: 'Card definition is unavailable' }, { status: 409 });
-    const achievementId = String(userCard.achievement_id || definition?.achievement_id || '');
-    if (requestedAchievementId && achievementId && requestedAchievementId !== achievementId) {
-      return Response.json({ error: 'That achievement does not belong to this owned card' }, { status: 409 });
-    }
-    const achievement = achievementId ? await svc.Achievement.get(achievementId) : null;
-    if (achievement?.card_id && definition && String(achievement.card_id) !== String(definition.id)) {
-      return Response.json({ error: 'Card and achievement links need to be repaired before upgrading' }, { status: 409 });
-    }
+    const definition = userCard.trading_card_id ? await svc.TradingCard.get(String(userCard.trading_card_id)).catch(() => null) : null;
+    if (userCard.trading_card_id && !definition) return json({ error: 'Card definition is unavailable.' }, 409);
+    const achievementId = String(userCard.achievement_id || definition?.achievement_id || requestedAchievementId || '');
+    const achievement = achievementId ? await svc.Achievement.get(achievementId).catch(() => null) : null;
+    const baseStats = normalizedCardBaseStats(userCard, achievement || {}, definition);
 
-    let rows = await base44.asServiceRole.entities.CardProgression.filter({ user_id: user.id, user_card_id: userCard.id }, '-created_date', 1);
-    let progression: AnyObj = rows[0];
+    let rows = await svc.CardProgression.filter({ user_id: user.id, user_card_id: userCard.id }, '-updated_date', 2);
+    if ((rows || []).length > 1) return json({ error: 'Multiple progression records exist for this card and must be reconciled.' }, 409);
+    let progression: AnyObj = rows?.[0] || null;
+
     if (!progression) {
-      const baseStats = normalizedBaseStats(userCard, achievement, definition);
-      progression = await base44.asServiceRole.entities.CardProgression.create({
+      progression = await svc.CardProgression.create({
         user_id: user.id,
         user_card_id: userCard.id,
         trading_card_id: userCard.trading_card_id || '',
-        achievement_id: achievementId || '',
-        card_name: userCard.card_name,
+        achievement_id: achievementId,
+        card_name: userCard.card_name || definition?.name || 'Card',
         game_id: userCard.game_id || definition?.game_id || achievement?.game_id || '',
         game_name: userCard.game_name || achievement?.game || '',
+        system_version: CARD_SYSTEM_VERSION,
+        enhancement_percent: 0,
+        ascension: 0,
+        stack_level: 1,
+        permanent_stats: {},
+        current_cycle_stats: {},
+        base_stats: baseStats,
+        migration_power_multiplier: 1,
+        migrated_from_legacy: false,
+        mastery_visual: 'standard',
+        power_score: effectiveCardStats({ base_stats: baseStats, system_version: CARD_SYSTEM_VERSION }).power_score,
         level: 1,
-        xp: 0,
-        xp_to_next: xpToNext(1, 0),
         stage: 1,
         stars: 1,
-        ascension: 0,
-        max_level: 10,
-        skill_points: 1,
-        unlocked_skill_nodes: [],
-        active_perks: [],
-        enchantments: [],
-        over_enchant_rank: 0,
-        over_enchant_stability: 100,
-        enhanced_stats: {},
-        base_stats: baseStats,
-        power_score: Object.values(baseStats).reduce((s: number, v: any) => s + Number(v || 0), 0),
-        last_action: 'created',
-        last_action_at: new Date().toISOString(),
-        revision: 1
+        last_action: 'created_v2',
+        last_action_at: now(),
+        revision: 1,
       });
-      await base44.asServiceRole.entities.CardProgressionEvent.create({ user_id: user.id, user_card_id: userCard.id, progression_id: progression.id, event_type: 'created', summary: 'Card progression initialized', before: {}, after: publicProgression(progression), metadata: {} });
+      await svc.CardProgressionEvent.create({
+        user_id: user.id, user_card_id: userCard.id, progression_id: progression.id,
+        event_type: 'created_v2', summary: 'Card System v2 progression initialized', before: {}, after: publicProgression(progression), metadata: {},
+      });
+    } else if (Number(progression.system_version || 0) < CARD_SYSTEM_VERSION) {
+      const before = { ...progression };
+      const patch = progressionPatch(progression);
+      const preview = { ...progression, ...patch, base_stats: progression.base_stats && Object.keys(progression.base_stats).length ? progression.base_stats : baseStats };
+      patch.base_stats = preview.base_stats;
+      patch.power_score = effectiveCardStats(preview).power_score;
+      patch.last_action = 'migrated_to_v2';
+      patch.last_action_at = now();
+      patch.revision = Number(progression.revision || 0) + 1;
+      progression = await svc.CardProgression.update(progression.id, patch);
+      await svc.CardProgressionEvent.create({
+        user_id: user.id, user_card_id: userCard.id, progression_id: progression.id,
+        event_type: 'migrated_to_v2', summary: 'Legacy card investment preserved in Card System v2', before, after: publicProgression(progression), metadata: { legacy_preserved: true },
+      });
     }
 
-    const materialsForUser = async () => {
-      const [stacks, defs] = await Promise.all([
-        base44.asServiceRole.entities.UserMaterial.filter({ user_id: user.id }, '-updated_date', 500),
-        base44.asServiceRole.entities.Material.list('name', 500)
-      ]);
-      const defMap = new Map(defs.map((d: AnyObj) => [d.id, d]));
-      return stacks.map((stack: AnyObj) => ({ ...stack, definition: defMap.get(stack.material_id) || null }));
-    };
-
-    const spend = async (requirements: Record<string, number>) => {
-      const stacks = await base44.asServiceRole.entities.UserMaterial.filter({ user_id: user.id }, '-updated_date', 500);
-      const byType = new Map<string, AnyObj[]>();
-      for (const stack of stacks) {
-        const key = stack.material_type || '';
-        byType.set(key, [...(byType.get(key) || []), stack]);
-      }
-      for (const [type, qty] of Object.entries(requirements)) {
-        if (!Number.isSafeInteger(qty) || qty < 1) throw new Error('Invalid material cost');
-        if ((byType.get(type) || []).some((row) => !Number.isSafeInteger(Number(row.quantity)) || Number(row.quantity) < 0)) throw new Error('Material inventory needs to be repaired before upgrading');
-        const available = (byType.get(type) || []).reduce((sum, row) => sum + Number(row.quantity || 0), 0);
-        if (available < qty) throw new Error(`Need ${qty} ${type.replaceAll('_', ' ')}; you have ${available}`);
-      }
-      for (const [type, qtyValue] of Object.entries(requirements)) {
-        let remaining = Number(qtyValue);
-        for (const row of (byType.get(type) || [])) {
-          if (remaining <= 0) break;
-          const use = Math.min(remaining, Number(row.quantity || 0));
-          await base44.asServiceRole.entities.UserMaterial.update(row.id, { quantity: Math.max(0, Number(row.quantity || 0) - use) });
-          remaining -= use;
-        }
-      }
-    };
+    let passport = await ensureCardPassport(svc, userCard, { card_name: userCard.card_name || definition?.name });
+    if (String(progression.passport_id || '') !== String(passport.passport_id)) {
+      progression = await svc.CardProgression.update(progression.id, { passport_id: passport.passport_id });
+    }
+    if (String(userCard.passport_id || '') !== String(passport.passport_id)) {
+      userCard = await svc.UserCard.update(userCard.id, { passport_id: passport.passport_id });
+    }
 
     const record = async (eventType: string, before: AnyObj, after: AnyObj, summary: string, metadata: AnyObj = {}) => {
-      await base44.asServiceRole.entities.CardProgressionEvent.create({ user_id: user.id, user_card_id: userCard.id, progression_id: progression.id, event_type: eventType, summary, before, after, metadata });
+      await svc.CardProgressionEvent.create({
+        user_id: user.id, user_card_id: userCard.id, progression_id: progression.id,
+        event_type: eventType, summary, before, after, metadata,
+      });
     };
 
     const commit = async (patch: AnyObj, eventType: string, summary: string, metadata: AnyObj = {}) => {
       const before = publicProgression(progression);
-      const next = { ...progression, ...patch, last_action: eventType, last_action_at: new Date().toISOString(), revision: Number(progression.revision || 0) + 1 };
-      next.power_score = calcPower(next);
-      progression = await base44.asServiceRole.entities.CardProgression.update(progression.id, next);
+      const next = normalizeProgression({ ...progression, ...patch });
+      const calculated = effectiveCardStats(next, baseStats);
+      progression = await svc.CardProgression.update(progression.id, {
+        ...patch,
+        system_version: CARD_SYSTEM_VERSION,
+        power_score: calculated.power_score,
+        last_action: eventType,
+        last_action_at: now(),
+        revision: Number(progression.revision || 0) + 1,
+      });
       await record(eventType, before, publicProgression(progression), summary, metadata);
       return progression;
     };
 
-    if (action === 'train') {
-      await spend({ skill_catalyst: sessions });
-      const gain = sessions * (50 + Math.max(1, progression.stage) * 10);
-      await commit({ xp: Number(progression.xp || 0) + gain }, 'trained', `Training added ${gain} card XP`, { sessions, gain });
-    } else if (action === 'levelUp') {
-      if (progression.level >= progression.max_level) throw new Error('Level cap reached. Ascend the card to raise its cap.');
-      const need = Number(progression.xp_to_next || xpToNext(progression.level, progression.ascension));
-      if (Number(progression.xp || 0) < need) throw new Error(`Need ${need - Number(progression.xp || 0)} more card XP`);
-      const newLevel = Number(progression.level) + 1;
-      await commit({ level: newLevel, xp: Number(progression.xp) - need, xp_to_next: xpToNext(newLevel, progression.ascension), skill_points: Number(progression.skill_points || 0) + 1 }, 'level_up', `Card reached level ${newLevel}`, { previous_level: progression.level });
-    } else if (action === 'enhance') {
-      const stat = String(payload?.stat || 'attack').toLowerCase();
-      if (!['attack', 'defense', 'magic', 'vitality', 'speed'].includes(stat)) throw new Error('Invalid stat');
-      const current = Number(progression.enhanced_stats?.[stat] || 0);
-      const tier = Math.floor(current / 10) + 1;
-      await spend({ precision_shard: tier, combat_core: Math.max(1, Math.ceil(tier / 2)) });
-      const gain = 3 + Math.floor(Number(progression.stage || 1) / 2) + ((progression.unlocked_skill_nodes || []).includes('resonant_edge') ? 1 : 0);
-      await commit({ enhanced_stats: { ...(progression.enhanced_stats || {}), [stat]: current + gain } }, 'enhance', `${stat} enhanced by +${gain}`, { stat, gain });
-    } else if (action === 'combine') {
-      if (Number(progression.stage || 1) >= 5) throw new Error('This card is already at the maximum combination stage');
-      const sacrificeIds = Array.isArray(payload?.sacrificeUserCardIds) ? payload.sacrificeUserCardIds.map((id: any) => String(id || '').trim()).filter(Boolean) : [];
-      if (new Set(sacrificeIds).size !== sacrificeIds.length) throw new Error('Choose different cards for each fusion slot');
-      const needed = Math.min(3, Number(progression.stage || 1) + 1);
-      if (sacrificeIds.length < needed && !payload?.useWildcard) throw new Error(`Stage ${Number(progression.stage || 1) + 1} requires ${needed} compatible cards or a Wildcard`);
-      const consumed: string[] = [];
-      if (payload?.useWildcard) {
-        await spend({ wildcard: 1 });
-      } else {
-        const targetRarity = rarityRank[userCard.card_rarity] || 0;
-        const validatedIds: string[] = [];
-        for (const id of sacrificeIds.slice(0, needed)) {
-          if (id === userCard.id) throw new Error('The active card cannot consume itself');
-          const sacrifice = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
-          if (!sacrifice || sacrifice.user_id !== user.id) throw new Error('One selected fusion card is not owned by you');
-          if (sacrifice.starter_grant_user_id) throw new Error('Avatar starter cards cannot be consumed in fusion');
-          if (Array.isArray(sacrifice.reward_grant_keys) && sacrifice.reward_grant_keys.length) {
-            const pending = await svc.RewardGrant.filter({ grant_key: { $in: sacrifice.reward_grant_keys }, status: { $ne: 'completed' } }, 'created_date', 1);
-            if (pending.length) throw new Error('A selected reward card is still being delivered. Retry after delivery completes');
-          }
-          if (sacrifice.is_equipped || sacrifice.trade_status === 'locked_in_trade') throw new Error(`${sacrifice.card_name} is equipped or locked in a trade`);
-          const compatible = sacrifice.card_name === userCard.card_name || (sacrifice.game_name === userCard.game_name && (rarityRank[sacrifice.card_rarity] || 0) >= Math.max(0, targetRarity - 1));
-          if (!compatible) throw new Error(`${sacrifice.card_name} is not compatible with this stage fusion`);
-          consumed.push(sacrifice.card_name);
-          validatedIds.push(id);
-        }
-        // Validate the complete selection before consuming the first owned card.
-        for (const id of validatedIds) await base44.asServiceRole.entities.UserCard.delete(id);
-      }
-      const newStage = Number(progression.stage || 1) + 1;
-      await commit({ stage: newStage, stars: Math.min(5, Number(progression.stars || 1) + 1), skill_points: Number(progression.skill_points || 0) + 1 }, 'combine', `Card advanced to Stage ${newStage}`, { consumed, wildcard: Boolean(payload?.useWildcard) });
+    const materialState = async () => {
+      const [stacks, definitions] = await Promise.all([
+        svc.UserMaterial.filter({ user_id: user.id }, '-updated_date', 500),
+        svc.Material.list('name', 500),
+      ]);
+      const byId = new Map((definitions || []).map((row: AnyObj) => [String(row.id), row]));
+      return (stacks || []).map((stack: AnyObj) => {
+        const material = byId.get(String(stack.material_id)) || null;
+        return {
+          ...stack,
+          definition: material,
+          enhancement_value: material ? enhancementMaterialValue(material) : 0,
+          can_enhance: Boolean(material && enhancementMaterialValue(material) > 0 && Number(stack.quantity || 0) > 0),
+        };
+      });
+    };
+
+    const duplicatesState = async () => {
+      if (!userCard.trading_card_id) return [];
+      const copies = await svc.UserCard.filter({ user_id: user.id, trading_card_id: userCard.trading_card_id }, 'created_date', 100);
+      return (copies || []).filter((card: AnyObj) =>
+        String(card.id) !== String(userCard.id)
+        && Number(card.quantity ?? 1) > 0
+        && card.trade_status !== 'locked_in_trade'
+        && !card.is_equipped
+        && String(card.card_rarity || '') === String(userCard.card_rarity || ''),
+      ).map((card: AnyObj) => ({
+        id: card.id,
+        card_name: card.card_name,
+        card_rarity: card.card_rarity,
+        card_image: card.card_image || '',
+        acquired_at: card.acquired_at || card.unlocked_date || '',
+      }));
+    };
+
+    if (action === 'enhance') {
+      const state = normalizeProgression(progression);
+      if (state.ascension >= ASCENSION_CAP) fail('This card has completed all five Ascensions.', 409);
+      if (state.enhancement_percent >= ENHANCEMENT_CAP) fail('Enhancement is already at 120%. Ascend the card to continue.', 409);
+      const stackId = String(payload.userMaterialId || payload.user_material_id || '').trim();
+      if (!stackId) fail('Choose an enhancement material.');
+      const stack = await svc.UserMaterial.get(stackId).catch(() => null);
+      if (!stack || String(stack.user_id) !== String(user.id)) fail('Enhancement material not found.', 404);
+      const material = await svc.Material.get(String(stack.material_id || '')).catch(() => null);
+      if (!material) fail('Enhancement material definition is unavailable.', 409);
+      const value = enhancementMaterialValue(material);
+      if (value <= 0) fail('That material cannot enhance cards.', 409);
+      const requested = Math.max(1, Math.min(100, Math.floor(Number(payload.quantity || 1))));
+      const available = Math.max(0, Math.floor(Number(stack.quantity || 0)));
+      if (available < requested) fail(`You only have ${available} of that material.`, 409);
+      const remaining = ENHANCEMENT_CAP - state.enhancement_percent;
+      const neededCount = Math.max(1, Math.ceil(remaining / value));
+      const consume = Math.min(requested, neededCount);
+      const rawGain = consume * value;
+      const applied = Math.min(remaining, rawGain);
+      const waste = Math.max(0, rawGain - applied);
+      const cycleGain = cycleStatGain(progression.base_stats || baseStats, applied);
+      await svc.UserMaterial.update(stack.id, { quantity: available - consume });
+      progression = await commit({
+        enhancement_percent: state.enhancement_percent + applied,
+        current_cycle_stats: addStats(state.current_cycle_stats, cycleGain),
+      }, 'enhance', `Enhancement increased by ${applied}%`, {
+        user_material_id: stack.id, material_id: material.id, material_name: material.name,
+        rarity: material.rarity, quantity: consume, enhancement_value_each: value, applied_percent: applied, overflow_wasted: waste,
+      });
+      passport = await ensureCardPassport(svc, userCard);
+      await appendProvenanceEvent(svc, passport, 'enhancement', {
+        enhancement_percent: normalizeProgression(progression).enhancement_percent,
+        applied_percent: applied,
+        material_name: material.name,
+        material_rarity: material.rarity,
+      });
     } else if (action === 'ascend') {
-      if (Number(progression.level) < Number(progression.max_level)) throw new Error(`Reach level ${progression.max_level} before ascending`);
-      const nextAscension = Number(progression.ascension || 0) + 1;
-      if (nextAscension > 5) throw new Error('Maximum ascension reached');
-      await spend({ ascension_core: nextAscension });
-      const newMax = Number(progression.max_level || 10) + 10;
-      await commit({ ascension: nextAscension, max_level: newMax, xp: 0, xp_to_next: xpToNext(progression.level, nextAscension), skill_points: Number(progression.skill_points || 0) + 2 }, 'ascend', `Ascension ${nextAscension} unlocked; level cap is now ${newMax}`, { ascension: nextAscension, max_level: newMax });
-    } else if (action === 'enchant') {
-      const enchantmentId = payload?.enchantmentId;
-      if (!enchantmentId) throw new Error('Choose an enchantment');
-      const enchantment = await base44.asServiceRole.entities.Enchantment.get(enchantmentId).catch(() => null);
-      if (!enchantment) throw new Error('Enchantment not found');
-      const slots = 1 + Math.floor(Number(progression.stage || 1) / 2) + Math.min(2, Number(progression.ascension || 0));
-      if ((progression.enchantments || []).length >= slots) throw new Error(`All ${slots} enchantment slots are occupied. Stage or ascend the card for more slots.`);
-      const costs = enchantment.material_cost && Object.keys(enchantment.material_cost).length ? enchantment.material_cost : { resonance_fragment: 1 };
-      await spend(Object.fromEntries(Object.entries(costs).map(([k, v]) => [k, Math.max(1, Number(v) || 1)])));
-      const enchants = [...(progression.enchantments || []), { id: enchantment.id, name: enchantment.name, element: enchantment.element, rarity: enchantment.rarity, modifiers: enchantment.modifiers || {}, overcharged: false }];
-      await commit({ enchantments: enchants }, 'enchant', `${enchantment.name} applied`, { enchantment_id: enchantment.id, slots });
-    } else if (action === 'overEnchant') {
-      if (!(progression.enchantments || []).length) throw new Error('Apply a normal enchantment before over-enchanting');
-      const nextRank = Number(progression.over_enchant_rank || 0) + 1;
-      if (nextRank > 5) throw new Error('Maximum over-enchant rank reached');
-      await spend({ adaptive_shard: nextRank });
-      const focusBonus = (progression.unlocked_skill_nodes || []).includes('enchanter_focus') ? 8 : 0;
-      const successChance = Math.max(35, Math.min(95, 82 - Number(progression.over_enchant_rank || 0) * 12 + Number(progression.stage || 1) * 2 + focusBonus));
-      const roll = Math.random() * 100;
-      const success = roll <= successChance;
-      const stability = Math.max(0, Number(progression.over_enchant_stability ?? 100) - (success ? 5 : 15));
-      if (success) {
-        const enchants = [...progression.enchantments];
-        enchants[enchants.length - 1] = { ...enchants[enchants.length - 1], overcharged: true };
-        const enhanced = { ...(progression.enhanced_stats || {}) };
-        for (const key of ['attack', 'defense', 'magic', 'vitality', 'speed']) enhanced[key] = Number(enhanced[key] || 0) + 2 * nextRank;
-        await commit({ over_enchant_rank: nextRank, over_enchant_stability: stability, enchantments: enchants, enhanced_stats: enhanced }, 'over_enchant', `Over-enchant Rank ${nextRank} succeeded`, { success: true, success_chance: successChance, roll: Math.round(roll * 100) / 100 });
+      const state = normalizeProgression(progression);
+      if (state.ascension >= ASCENSION_CAP) fail('This card is already at Ascension 5.', 409);
+      if (state.enhancement_percent < ENHANCEMENT_CAP) fail(`Enhance this card to 120% before Ascending. Current: ${state.enhancement_percent}%.`, 409);
+      const nextAscension = state.ascension + 1;
+      progression = await commit({
+        enhancement_percent: 0,
+        ascension: nextAscension,
+        permanent_stats: addStats(state.permanent_stats, state.current_cycle_stats),
+        current_cycle_stats: {},
+        mastery_visual: nextAscension >= ASCENSION_CAP ? 'holographic_3d' : 'standard',
+      }, 'ascend', `Card reached Ascension ${nextAscension}`, {
+        ascension: nextAscension,
+        stats_preserved: true,
+        mastery_unlocked: nextAscension >= ASCENSION_CAP,
+      });
+      passport = await recordAscensionMilestone(svc, userCard, publicProgression(progression), nextAscension);
+    } else if (action === 'stack' || action === 'combine') {
+      const state = normalizeProgression(progression);
+      if (state.stack_level >= STACK_CAP) fail('This card is already at Stack Level 4.', 409);
+      const duplicateId = String(payload.duplicateUserCardId || payload.sacrificeUserCardId || (Array.isArray(payload.sacrificeUserCardIds) ? payload.sacrificeUserCardIds[0] : '') || '').trim();
+      let duplicate: AnyObj | null = null;
+      let legacyQuantity = false;
+      if (duplicateId) {
+        duplicate = await svc.UserCard.get(duplicateId).catch(() => null);
+        if (!duplicate || String(duplicate.user_id) !== String(user.id)) fail('Duplicate card not found.', 404);
+        if (String(duplicate.id) === String(userCard.id)) fail('A card cannot stack into itself.');
+        if (!userCard.trading_card_id || String(duplicate.trading_card_id || '') !== String(userCard.trading_card_id)) fail('Stacking requires an exact duplicate card.');
+        if (String(duplicate.card_rarity || '') !== String(userCard.card_rarity || '')) fail('Stacking requires the same card tier.');
+        if (duplicate.is_equipped || duplicate.equipped_to !== 'none' && duplicate.equipped_to) fail('Unequip the duplicate before stacking it.', 409);
+        if (duplicate.trade_status === 'locked_in_trade') fail('That duplicate is locked in a trade.', 409);
+        if (duplicate.starter_grant_user_id) fail('Starter cards cannot be consumed by stacking.', 409);
+      } else if (Number(userCard.quantity || 1) > 1) {
+        legacyQuantity = true;
       } else {
-        await commit({ over_enchant_stability: stability }, 'over_enchant', 'Over-enchant attempt failed; the card survived but lost stability', { success: false, success_chance: successChance, roll: Math.round(roll * 100) / 100 });
+        fail('Choose a duplicate copy of this card to Stack.');
       }
-    } else if (action === 'unlockSkill') {
-      const nodeId = payload?.nodeId;
-      const node = SKILL_TREE.find((item) => item.id === nodeId);
-      if (!node) throw new Error('Skill node not found');
-      if ((progression.unlocked_skill_nodes || []).includes(node.id)) throw new Error('Skill already unlocked');
-      if (progression.level < node.minLevel) throw new Error(`Requires card level ${node.minLevel}`);
-      if (progression.stage < node.minStage) throw new Error(`Requires Stage ${node.minStage}`);
-      if (node.prerequisite && !(progression.unlocked_skill_nodes || []).includes(node.prerequisite)) throw new Error('Unlock the previous node first');
-      if (Number(progression.skill_points || 0) < node.cost) throw new Error(`Need ${node.cost} skill point${node.cost === 1 ? '' : 's'}`);
-      await commit({ skill_points: Number(progression.skill_points || 0) - node.cost, unlocked_skill_nodes: [...(progression.unlocked_skill_nodes || []), node.id] }, 'skill_unlock', `${node.name} unlocked`, { node_id: node.id });
-    } else if (action === 'togglePerk') {
-      const nodeId = payload?.nodeId;
-      const node = SKILL_TREE.find((item) => item.id === nodeId && item.perk);
-      if (!node || !(progression.unlocked_skill_nodes || []).includes(nodeId)) throw new Error('Unlock this perk before activating it');
-      const active = [...(progression.active_perks || [])];
-      const exists = active.includes(nodeId);
-      if (!exists && active.length >= 3) throw new Error('Only 3 perks can be active at once');
-      const next = exists ? active.filter((id) => id !== nodeId) : [...active, nodeId];
-      await commit({ active_perks: next }, exists ? 'perk_deactivate' : 'perk_activate', `${node.name} ${exists ? 'deactivated' : 'activated'}`, { node_id: nodeId });
-    } else if (action !== 'getState') {
-      return Response.json({ error: 'Invalid action' }, { status: 400 });
+
+      const nextStack = state.stack_level + 1;
+      if (legacyQuantity) {
+        await svc.UserCard.update(userCard.id, { quantity: Number(userCard.quantity || 1) - 1 });
+      } else if (duplicate) {
+        passport = await recordStackMilestone(svc, userCard, { ...publicProgression(progression), stack_level: nextStack }, duplicate);
+        const duplicateProgress = await svc.CardProgression.filter({ user_card_id: duplicate.id }, '-updated_date', 10).catch(() => []);
+        for (const row of duplicateProgress || []) await svc.CardProgression.delete(row.id);
+        await svc.UserCard.delete(duplicate.id);
+      }
+      progression = await commit({
+        stack_level: nextStack,
+        stage: nextStack,
+        stars: Math.min(5, nextStack),
+      }, 'stack', `Card reached Stack Level ${nextStack}`, {
+        duplicate_user_card_id: duplicate?.id || '',
+        legacy_quantity_consumed: legacyQuantity,
+      });
+      if (legacyQuantity) {
+        passport = await ensureCardPassport(svc, userCard);
+        await appendProvenanceEvent(svc, passport, 'stack_upgrade', { stack_level: nextStack, legacy_quantity_consumed: true });
+      }
     }
 
-    const [events, materials, enchantments, duplicates] = await Promise.all([
-      base44.asServiceRole.entities.CardProgressionEvent.filter({ user_id: user.id, user_card_id: userCard.id }, '-created_date', 30),
-      materialsForUser(),
-      base44.asServiceRole.entities.Enchantment.list('name', 200),
-      base44.asServiceRole.entities.UserCard.filter({ user_id: user.id, game_name: userCard.game_name }, '-created_date', 100)
+    progression = await svc.CardProgression.get(progression.id);
+    userCard = await svc.UserCard.get(userCard.id);
+    passport = await ensureCardPassport(svc, userCard);
+    const avatar = await loadCombatProfile(svc, user.id);
+    const effective = effectiveCardStats(progression, baseStats);
+    const effect = userCard.animation_effect || definition?.animation_effect || {};
+    const skill = skillStats(String(effect.id || ''), userCard.card_rarity || definition?.rarity || 'Rare');
+    const combatPreview = String(userCard.card_type || definition?.card_type || '').toLowerCase() === 'ability'
+      ? abilityOutput(avatar.combat, { ...skill, base_damage: Number(effect.base_damage || skill.base_damage), cooldown_ms: Number(effect.cooldown_ms || skill.cooldown_ms) }, effective)
+      : null;
+    const [materials, duplicates, events, passportPublic] = await Promise.all([
+      materialState(),
+      duplicatesState(),
+      svc.CardProgressionEvent.filter({ user_card_id: userCard.id }, '-created_date', 100),
+      publicPassport(svc, userCard),
     ]);
 
-    const avatar = await loadCombatProfile(svc,user.id);
-    const combatPreview = String(userCard.card_type || '').toLowerCase() === 'ability'
-      ? abilityOutput(avatar.combat,skillStats(String(userCard.animation_effect?.id || ''),userCard.card_rarity),effectiveCardStats(progression)) : null;
-    return Response.json({
+    return json({
       success: true,
+      system_version: CARD_SYSTEM_VERSION,
+      progression: publicProgression(progression),
+      mastery: cardMasteryState(progression),
+      userCard,
+      definition,
+      achievement,
+      materials,
+      duplicates,
+      passport: passportPublic,
+      events,
       combat_preview: combatPreview,
       avatar_level: avatar.combat.level,
-      userCard,
-      progression: publicProgression(progression),
-      events,
-      materials,
-      enchantments,
-      compatibleCards: duplicates.filter((c: AnyObj) => c.id !== userCard.id && !c.is_equipped && c.trade_status !== 'locked_in_trade'),
-      skillTree: SKILL_TREE
+      retired_actions: ['train', 'levelUp', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk'],
+      compatibility: { combine_aliases_to_stack: true, legacy_power_preserved: true },
+      skill_tree: [],
+      enchantments: [],
     });
-  } catch (error) {
-    return Response.json({ error: error?.message || String(error) }, { status: 400 });
+  } catch (error: any) {
+    console.error('cardProgression failed', error);
+    return json({ error: error?.message || String(error) }, Number(error?.status || 400));
   }
 });
