@@ -22,6 +22,11 @@ function bundle(entry) {
 
 const { openCardTradeNegotiation } = bundle('./base44/shared/cardListingNegotiation.ts');
 const { finalizeCardTradeSession } = bundle('./base44/shared/cardTradeFinalizer.ts');
+const {
+  acquireCardTradePairLock,
+  releaseCardTradePairLock,
+  tradePairKey,
+} = bundle('./base44/shared/cardTradePairLock.ts');
 
 function seed(fx, suffix = 'normal') {
   const seller = `seller-${suffix}`;
@@ -75,6 +80,8 @@ function seed(fx, suffix = 'normal') {
 function row(fx, table, id) {
   return fx.rows(table).find((item) => item.id === id);
 }
+
+assert.equal(tradePairKey('beta', 'alpha'), tradePairKey('alpha', 'beta'), 'pair identity must be order-independent');
 
 {
   const fx = makeRewardFixture();
@@ -142,4 +149,21 @@ function row(fx, table, id) {
   assert.equal(row(fx, 'UserCard', ids.cardId).last_trade_id, ids.listingId);
 }
 
-console.log('PASS: Trading Post negotiations safely hand card reservations into shared trade sessions and recover on failure.');
+{
+  const fx = makeRewardFixture();
+  const ids = seed(fx, 'pair-lock');
+  const svc = fx.entities();
+  const lease = await acquireCardTradePairLock(svc, ids.buyer, ids.seller, 'test_concurrent_start');
+  try {
+    await assert.rejects(
+      () => openCardTradeNegotiation(svc, row(fx, 'CardTrade', ids.listingId), ids.buyer),
+      /trade between these players is being started somewhere else/i,
+    );
+  } finally {
+    await releaseCardTradePairLock(svc, lease);
+  }
+  const session = await openCardTradeNegotiation(svc, row(fx, 'CardTrade', ids.listingId), ids.buyer);
+  assert.equal(session.status, 'pending');
+}
+
+console.log('PASS: Trading Post negotiations safely serialize pair creation, hand card reservations into trade sessions, and recover on failure.');
