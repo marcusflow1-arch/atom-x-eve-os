@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { cardMasteryState, normalizeProgression } from '../../shared/cardSystem.ts';
 import { ensureCardPassport } from '../../shared/cardProvenance.ts';
 import { finalizeCardTradeSession } from '../../shared/cardTradeFinalizer.ts';
+import { commitTradeOfferReservationSet } from '../../shared/cardTradeOfferReservation.ts';
 import { acquireCardMutationLocks, releaseCardMutationLocks } from '../../shared/cardMutationLock.ts';
 import {
   acquireTradeSessionMutationLock,
@@ -235,26 +236,14 @@ Deno.serve(async (req) => {
           snapshots.push(await cardSnapshot(base44, card, progression, passport));
         }
 
-        for (const oldCard of reserved || []) {
-          if (!cardIds.includes(String(oldCard.id))) {
-            const live = await svc.UserCard.get(String(oldCard.id)).catch(() => null);
-            if (live?.trade_status === 'locked_in_trade' && String(live.last_trade_id || '') === String(session.id)) {
-              await svc.UserCard.update(live.id, { trade_status: 'available', last_trade_id: '' });
-            }
-          }
-        }
-        for (const id of cardIds) {
-          const card = validated.get(id);
-          if (!card) throw new Error('Trade card validation was lost');
-          if (card.trade_status !== 'locked_in_trade' || String(card.last_trade_id || '') !== String(session.id)) {
-            await svc.UserCard.update(id, { trade_status: 'locked_in_trade', last_trade_id: session.id });
-          }
-        }
-
-        const patch = isInitiator
-          ? { initiator_offer_card_ids: cardIds, initiator_offer_snapshot: snapshots, initiator_confirmed: false, recipient_confirmed: false }
-          : { recipient_offer_card_ids: cardIds, recipient_offer_snapshot: snapshots, initiator_confirmed: false, recipient_confirmed: false };
-        session = await svc.TradeSession.update(session.id, patch);
+        if (validated.size !== cardIds.length) throw new Error('Trade card validation was lost');
+        session = await commitTradeOfferReservationSet(svc, {
+          session,
+          user_id: String(user.id),
+          card_ids: cardIds,
+          snapshots,
+          is_initiator: isInitiator,
+        });
       } finally {
         if (cardLocks.length) await releaseCardMutationLocks(svc, cardLocks);
         await releaseTradeSessionMutationLock(svc, sessionLease);
