@@ -1,39 +1,36 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Activity, AlertTriangle, ArrowLeft, Check, ChevronRight, Crown, Flame, Gauge,
-  Gem, Hammer, History, Layers, Lock, Package, RefreshCcw, Shield, Sparkles,
-  Star, Target, TrendingUp, Wand2, Zap, Crosshair, Swords, Trophy,
-  Gamepad2, Brain, Plus
+  ArrowLeft, BadgeCheck, ChevronRight, Copy, Crown, Gem, History,
+  Layers3, Loader2, PackagePlus, ShieldCheck, Sparkles, Swords, TrendingUp,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const tabs = [
-  { id: 'record', label: 'THE RECORD', icon: History, hint: 'Real-time card telemetry and utility' },
-  { id: 'forge', label: 'THE FORGE', icon: Hammer, hint: 'Level, fuse, stage, enchant and over-enchant' },
-  { id: 'skills', label: 'SKILL TREE', icon: Layers, hint: 'Card abilities, teacher passives and active perks' },
+const TABS = [
+  { id: 'overview', label: 'OVERVIEW', icon: TrendingUp },
+  { id: 'enhance', label: 'ENHANCE', icon: Sparkles },
+  { id: 'stack', label: 'STACK', icon: Layers3 },
+  { id: 'passport', label: 'PASSPORT', icon: BadgeCheck },
 ];
 
-const statLabels = {
-  attack: 'Attack',
-  defense: 'Defense',
-  magic: 'Spirit',
-  vitality: 'Vitality',
-  speed: 'Dexterity',
+const STAT_LABELS = {
+  attack: 'Attack', defense: 'Defense', magic: 'Spirit', vitality: 'Vitality', speed: 'Dexterity',
+  dodge: 'Dodge', accuracy: 'Accuracy', crit_chance: 'Crit Chance', crit_damage: 'Crit Damage',
 };
 
-const rarityTone = {
-  Common: 'text-slate-300 border-slate-400/20',
-  Uncommon: 'text-emerald-300 border-emerald-400/25',
-  Rare: 'text-cyan-300 border-cyan-400/25',
-  Epic: 'text-violet-300 border-violet-400/25',
-  Legendary: 'text-amber-300 border-amber-400/25',
-  Mythic: 'text-rose-300 border-rose-400/25',
-  Mythical: 'text-rose-300 border-rose-400/25',
-  Unique: 'text-fuchsia-300 border-fuchsia-400/25',
-  Ascendant: 'text-white border-white/30',
-  Limitless: 'text-white border-white/30',
+const TIER_TONE = {
+  Rare: 'text-cyan-200 border-cyan-300/25',
+  Epic: 'text-violet-200 border-violet-300/25',
+  Legendary: 'text-amber-200 border-amber-300/25',
+  Demigod: 'text-orange-200 border-orange-300/25',
+  Mythical: 'text-fuchsia-200 border-fuchsia-300/25',
+  Mythic: 'text-fuchsia-200 border-fuchsia-300/25',
+  Deity: 'text-sky-100 border-sky-200/30',
+  Chosen: 'text-white border-white/35',
 };
+
+function unwrap(response) {
+  return response?.data || response || {};
+}
 
 function invoke(action, card, payload = {}) {
   const userCardId = card?.userCardId || card?.user_card_id || card?.ownedCardId || undefined;
@@ -41,430 +38,227 @@ function invoke(action, card, payload = {}) {
     action,
     userCardId,
     achievementId: card?.achievementId || card?.achievement_id || (!userCardId && !card?.trading_card_id ? card?.id : undefined),
-    payload: {
-      ...payload,
-      cardImage: card?.image || card?.card_image || '',
-      gameId: card?.gameId || card?.game_id || '',
-      genre: card?.genre || '',
-    },
+    payload,
   });
 }
 
-function formatDate(value) {
-  if (!value) return 'Not recorded';
-  const date = new Date(value);
-  return Number.isFinite(date.getTime())
-    ? date.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
-    : 'Not recorded';
-}
-
-function num(value, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function percent(value, fallback = null) {
-  if (value === null || value === undefined || value === '') return fallback;
+function fmt(value) {
   const n = Number(value);
-  if (!Number.isFinite(n)) return fallback;
-  return n <= 1 ? Math.round(n * 100) : Math.round(n);
+  return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0';
 }
 
-function Glass({ children, className = '' }) {
+function date(value) {
+  if (!value) return 'Not recorded';
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : 'Not recorded';
+}
+
+function Panel({ children, className = '' }) {
+  return <section className={`border border-white/[0.07] bg-[#0b111a]/96 ${className}`}>{children}</section>;
+}
+
+function Progress({ value = 0, max = 120 }) {
+  const percent = Math.max(0, Math.min(100, (Number(value || 0) / Math.max(1, max)) * 100));
   return (
-    <section className={`relative overflow-hidden bg-[#0F1115]/85 backdrop-blur-xl ${className}`}>
-      <div className="pointer-events-none absolute inset-x-[7%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-[12%] bottom-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400/10 to-transparent" />
-      {children}
-    </section>
+    <div className="h-2 overflow-hidden bg-white/[0.06]">
+      <div className="h-full bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 transition-[width] duration-300" style={{ width: `${percent}%` }} />
+    </div>
   );
 }
 
-function Meter({ value, max, label, tone = 'cyan' }) {
-  const safeMax = Math.max(1, num(max, 1));
-  const pct = Math.min(100, Math.max(0, (num(value) / safeMax) * 100));
-  const fill = tone === 'danger'
-    ? 'from-rose-500 via-orange-400 to-amber-300'
-    : 'from-cyan-300 via-blue-400 to-fuchsia-400';
+function CardFace({ card, state }) {
+  const p = state?.progression || {};
+  const userCard = state?.userCard || {};
+  const mastery = state?.mastery || {};
+  const image = card?.image || card?.card_image || userCard.card_image || state?.definition?.image_url || '';
+  const title = card?.title || card?.name || userCard.card_name || state?.definition?.name || 'Card';
+  const tier = userCard.playable_tier || state?.definition?.playable_tier || userCard.card_rarity || state?.definition?.rarity || card?.rarity || 'Rare';
+  const mastered = Boolean(mastery.holographic || p.mastery_visual === 'holographic_3d');
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-white/35">
-        <span>{label}</span>
-        <span className="font-mono text-white/65">{num(value).toLocaleString()} / {safeMax.toLocaleString()}</span>
+    <div className="space-y-3">
+      <div className={`relative aspect-[2/3] overflow-hidden border bg-[#070b11] ${TIER_TONE[tier] || 'border-white/10 text-white'} ${mastered ? 'shadow-[0_0_35px_rgba(103,232,249,.12)]' : ''}`}>
+        {image ? <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(34,211,238,.16),transparent_35%),linear-gradient(150deg,#111827,#05070c)]" />}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30" />
+        {mastered && <div className="pointer-events-none absolute inset-0 opacity-45 bg-[linear-gradient(115deg,transparent_28%,rgba(103,232,249,.18)_42%,rgba(217,70,239,.14)_52%,transparent_68%)] animate-pulse" />}
+        <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
+          <span className={`border bg-black/65 px-2 py-1 text-[9px] font-semibold uppercase tracking-[.14em] ${TIER_TONE[tier] || 'border-white/20 text-white'}`}>{tier}</span>
+          <span className="bg-black/65 px-2 py-1 text-[9px] uppercase tracking-[.14em] text-white/75">A{p.ascension || 0}/5</span>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          {mastered && <div className="mb-2 inline-flex items-center gap-1 bg-cyan-300/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[.17em] text-cyan-100"><Sparkles className="h-3 w-3" /> Holographic Mastery</div>}
+          <h2 className="text-xl font-black leading-tight text-white">{title}</h2>
+          <p className="mt-1 text-[10px] text-white/45">{userCard.game_name || card?.series || state?.definition?.series || 'Adam XE'}</p>
+        </div>
       </div>
-      <div className="h-1.5 overflow-hidden bg-white/[0.06]">
-        <motion.div initial={false} animate={{ width: `${pct}%` }} className={`h-full bg-gradient-to-r ${fill}`} />
+      <div className="grid grid-cols-3 gap-px bg-white/[0.06]">
+        <Metric label="Power" value={fmt(p.power_score)} />
+        <Metric label="Enhance" value={`${fmt(p.enhancement_percent)}%`} />
+        <Metric label="Stack" value={`${p.stack_level || 1}/4`} />
       </div>
     </div>
   );
 }
 
-function HolographicCard({ card, progression, userCard }) {
-  const ref = useRef(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const stars = Math.max(1, Math.min(5, num(progression?.stars, 1)));
-  const rarity = card?.rarity || userCard?.card_rarity || 'Common';
-  const safeEnchant = Math.min(5, num(progression?.enchant_rank ?? progression?.enchant_level, 0));
-  const overRank = num(progression?.over_enchant_rank, 0);
+function Metric({ label, value, sub }) {
+  return <div className="bg-[#090e15] p-3"><span className="block text-[8px] uppercase tracking-[.16em] text-white/30">{label}</span><strong className="mt-1 block text-sm text-white">{value}</strong>{sub && <span className="mt-1 block text-[9px] text-white/35">{sub}</span>}</div>;
+}
 
-  const onMove = (event) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const px = (event.clientX - rect.left) / rect.width - 0.5;
-    const py = (event.clientY - rect.top) / rect.height - 0.5;
-    setTilt({ x: py * -10, y: px * 12 });
+function Overview({ state }) {
+  const p = state?.progression || {};
+  const mastery = state?.mastery || {};
+  const combat = state?.combat_preview;
+  const stats = p.effective_stats || {};
+  const permanent = p.permanent_stats || {};
+  const cycle = p.current_cycle_stats || {};
+  return (
+    <div className="space-y-4">
+      <Panel className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div><p className="text-[9px] uppercase tracking-[.2em] text-cyan-200/55">Card Power</p><h3 className="mt-1 text-2xl font-black text-white">{fmt(p.power_score)}</h3></div>
+          {combat && <div className="text-right"><p className="text-[9px] uppercase tracking-[.18em] text-white/30">PvP Damage</p><strong className="mt-1 block text-xl text-amber-200">{fmt(combat.base_damage)}</strong><span className="text-[8px] text-white/30">before defense</span></div>}
+        </div>
+        <div className="mt-5"><div className="mb-2 flex justify-between text-[9px] uppercase tracking-[.16em] text-white/40"><span>Enhancement cycle</span><span>{fmt(p.enhancement_percent)} / 120%</span></div><Progress value={p.enhancement_percent} /></div>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric label="Ascension" value={`${p.ascension || 0}/5`} />
+          <Metric label="Stack Level" value={`${p.stack_level || 1}/4`} />
+          <Metric label="Mastery" value={mastery.mastered ? 'MASTERED' : 'IN PROGRESS'} />
+          <Metric label="Avatar Level" value={state?.avatar_level || 1} />
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
+        <div className="mb-3 flex items-center gap-2"><Swords className="h-4 w-4 text-cyan-200/70" /><h3 className="text-xs font-bold uppercase tracking-[.16em] text-white/80">Effective Stats</h3></div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+          {Object.entries(stats).filter(([, value]) => Number(value) !== 0).map(([key, value]) => (
+            <div key={key} className="flex items-end justify-between border-b border-white/[0.05] pb-2"><span className="text-[9px] uppercase tracking-[.12em] text-white/35">{STAT_LABELS[key] || key.replaceAll('_', ' ')}</span><strong className="text-xs text-white">{fmt(value)}</strong></div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel className="grid gap-px bg-white/[0.06] sm:grid-cols-2">
+        <div className="bg-[#0a1018] p-4"><p className="text-[9px] uppercase tracking-[.18em] text-white/35">Permanent Power</p><p className="mt-2 text-xs leading-5 text-white/55">Stats locked in by completed Ascensions. These are never removed when the 120% gauge resets.</p><div className="mt-3 text-[10px] text-cyan-100/70">{Object.keys(permanent).length ? Object.entries(permanent).map(([k,v]) => `${STAT_LABELS[k] || k} +${fmt(v)}`).join(' · ') : 'No Ascension-locked stats yet.'}</div></div>
+        <div className="bg-[#0a1018] p-4"><p className="text-[9px] uppercase tracking-[.18em] text-white/35">Current Cycle</p><p className="mt-2 text-xs leading-5 text-white/55">Power earned between 0% and 120%. Ascending moves these gains permanently into the card.</p><div className="mt-3 text-[10px] text-violet-100/70">{Object.keys(cycle).length ? Object.entries(cycle).map(([k,v]) => `${STAT_LABELS[k] || k} +${fmt(v)}`).join(' · ') : 'Feed enhancement materials to begin.'}</div></div>
+      </Panel>
+    </div>
+  );
+}
+
+function Enhance({ state, busy, onAction }) {
+  const p = state?.progression || {};
+  const mastery = state?.mastery || {};
+  const materials = useMemo(() => (state?.materials || []).filter((row) => row.can_enhance), [state?.materials]);
+  const [selected, setSelected] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  useEffect(() => { if (!selected && materials[0]) setSelected(materials[0].id); }, [selected, materials]);
+  const chosen = materials.find((row) => String(row.id) === String(selected));
+  const projected = chosen ? Math.min(120, Number(p.enhancement_percent || 0) + Number(chosen.enhancement_value || 0) * quantity) : Number(p.enhancement_percent || 0);
+  const maxQty = Math.max(1, Number(chosen?.quantity || 1));
+
+  return <div className="space-y-4">
+    <Panel className="p-4">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-[9px] uppercase tracking-[.2em] text-cyan-200/55">Enhancement</p><h3 className="mt-1 text-xl font-black text-white">{fmt(p.enhancement_percent)} / 120%</h3></div><div className="text-right"><p className="text-[8px] uppercase tracking-[.15em] text-white/30">After selected materials</p><strong className="text-sm text-cyan-100">{fmt(projected)}%</strong></div></div>
+      <div className="mt-4"><Progress value={p.enhancement_percent} /></div>
+      <p className="mt-3 text-[11px] leading-5 text-white/45">Feed enhancement materials into this exact card instance. The stats gained are immediately usable in Skill Book, PvP and PvE.</p>
+    </Panel>
+
+    <Panel className="p-4">
+      <div className="mb-3 flex items-center gap-2"><Gem className="h-4 w-4 text-violet-200/70" /><h3 className="text-xs font-bold uppercase tracking-[.16em] text-white/75">Enhancement Materials</h3></div>
+      {materials.length ? <div className="space-y-2">{materials.map((row) => {
+        const def = row.definition || {};
+        const active = String(selected) === String(row.id);
+        return <button key={row.id} type="button" onClick={() => { setSelected(row.id); setQuantity(1); }} className={`flex w-full items-center justify-between border p-3 text-left transition ${active ? 'border-cyan-300/35 bg-cyan-300/[0.06]' : 'border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.035]'}`}>
+          <div><strong className="block text-xs text-white/85">{def.name || 'Enhancement Material'}</strong><span className="mt-1 block text-[9px] uppercase tracking-[.12em] text-white/35">{def.rarity || 'Common'} · +{row.enhancement_value || 0}% each</span></div><span className="font-mono text-xs text-white/55">×{row.quantity || 0}</span>
+        </button>;
+      })}</div> : <div className="border border-dashed border-white/10 p-5 text-center text-xs text-white/35">No enhancement materials available.</div>}
+      {chosen && <div className="mt-3 flex items-center gap-2"><button type="button" onClick={() => setQuantity((n) => Math.max(1, n - 1))} className="h-9 w-9 border border-white/10 text-white/65">−</button><div className="flex h-9 min-w-16 items-center justify-center border border-white/10 bg-black/20 px-3 text-xs text-white">{quantity}</div><button type="button" onClick={() => setQuantity((n) => Math.min(maxQty, n + 1))} className="h-9 w-9 border border-white/10 text-white/65">+</button><button disabled={busy || Number(p.enhancement_percent || 0) >= 120} onClick={() => onAction('enhance', { userMaterialId: chosen.id, quantity })} className="ml-auto h-9 bg-cyan-300 px-5 text-[10px] font-black uppercase tracking-[.12em] text-slate-950 disabled:cursor-not-allowed disabled:opacity-30">Feed Material</button></div>}
+    </Panel>
+
+    <Panel className="p-4">
+      <div className="flex items-center justify-between gap-4"><div><div className="flex items-center gap-2"><Crown className="h-4 w-4 text-amber-200" /><h3 className="text-xs font-black uppercase tracking-[.16em] text-white/85">Ascension {p.ascension || 0}/5</h3></div><p className="mt-2 max-w-xl text-[11px] leading-5 text-white/45">At 120%, Ascend this card. The gauge returns to 0%, but every stat and damage increase earned during the cycle is permanently locked into the card.</p></div><button disabled={busy || !mastery.can_ascend} onClick={() => onAction('ascend')} className="h-11 shrink-0 bg-amber-300 px-5 text-[10px] font-black uppercase tracking-[.12em] text-slate-950 disabled:cursor-not-allowed disabled:opacity-25">Ascend</button></div>
+      <div className="mt-4 grid grid-cols-5 gap-2">{[1,2,3,4,5].map((step) => <div key={step} className={`border p-2 text-center ${Number(p.ascension || 0) >= step ? 'border-amber-300/30 bg-amber-300/[0.07] text-amber-100' : 'border-white/[0.06] text-white/25'}`}><span className="text-[8px] uppercase tracking-wider">A{step}</span>{step === 5 && <Sparkles className="mx-auto mt-1 h-3 w-3" />}</div>)}</div>
+      {mastery.mastered && <div className="mt-4 flex items-center gap-2 border border-cyan-300/20 bg-cyan-300/[0.05] p-3 text-[10px] uppercase tracking-[.13em] text-cyan-100"><ShieldCheck className="h-4 w-4" /> Maximum mastery · 3D holographic presentation unlocked</div>}
+    </Panel>
+  </div>;
+}
+
+function Stack({ state, busy, onAction }) {
+  const p = state?.progression || {};
+  const duplicates = state?.duplicates || [];
+  return <div className="space-y-4">
+    <Panel className="p-4"><div className="flex items-center justify-between gap-4"><div><p className="text-[9px] uppercase tracking-[.2em] text-violet-200/55">Duplicate Stacking</p><h3 className="mt-1 text-xl font-black text-white">Stack Level {p.stack_level || 1} / 4</h3><p className="mt-2 max-w-xl text-[11px] leading-5 text-white/45">Combine one exact duplicate of the same card and tier into this card. The duplicate is consumed and this card becomes stronger. You can also keep or trade duplicates instead.</p></div><PackagePlus className="h-8 w-8 text-violet-200/35" /></div></Panel>
+    <div className="space-y-2">{duplicates.length ? duplicates.map((duplicate) => <Panel key={duplicate.id} className="flex items-center gap-3 p-3"><div className="h-14 w-10 overflow-hidden bg-white/[0.04]">{duplicate.card_image && <img src={duplicate.card_image} alt="" className="h-full w-full object-cover" />}</div><div className="min-w-0 flex-1"><strong className="block truncate text-xs text-white/85">{duplicate.card_name}</strong><span className="mt-1 block text-[9px] uppercase tracking-[.12em] text-white/35">{duplicate.card_rarity} · acquired {date(duplicate.acquired_at)}</span></div><button disabled={busy || Number(p.stack_level || 1) >= 4} onClick={() => onAction('stack', { duplicateUserCardId: duplicate.id })} className="h-9 bg-violet-300 px-4 text-[9px] font-black uppercase tracking-[.12em] text-slate-950 disabled:opacity-25">Stack</button></Panel>) : <Panel className="p-6 text-center"><Layers3 className="mx-auto h-6 w-6 text-white/20" /><p className="mt-2 text-xs text-white/40">No eligible duplicate copies are available.</p><p className="mt-1 text-[10px] text-white/25">Earn another copy or keep checking trades.</p></Panel>}</div>
+  </div>;
+}
+
+function Passport({ state }) {
+  const passport = state?.passport || {};
+  const events = passport.events || [];
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (!passport.passport_id || !navigator?.clipboard) return;
+    await navigator.clipboard.writeText(passport.passport_id);
+    setCopied(true); setTimeout(() => setCopied(false), 1200);
   };
-
-  return (
-    <aside className="xl:sticky xl:top-0 self-start space-y-4">
-      <motion.div
-        ref={ref}
-        onMouseMove={onMove}
-        onMouseLeave={() => setTilt({ x: 0, y: 0 })}
-        animate={{ rotateX: tilt.x, rotateY: tilt.y }}
-        transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-        className="relative aspect-[2/3] overflow-hidden bg-[#080d15]"
-        style={{ transformStyle: 'preserve-3d', perspective: 1100 }}
-      >
-        {card?.image || userCard?.card_image ? (
-          <img src={card?.image || userCard?.card_image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(0,240,255,.20),transparent_38%),linear-gradient(160deg,#111827,#05070c)]" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#05070c] via-transparent to-black/20" />
-        <div className="absolute -inset-20 opacity-30 bg-[linear-gradient(115deg,transparent_35%,rgba(255,255,255,.18)_48%,transparent_60%)]" style={{ transform: `translateX(${tilt.y * 5}px)` }} />
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-          <span className="bg-black/45 px-2 py-1 text-[9px] uppercase tracking-[.18em] text-white/80 backdrop-blur">Lv {progression?.level || 1}</span>
-          <span className={`border bg-black/45 px-2 py-1 text-[9px] uppercase tracking-[.15em] backdrop-blur ${rarityTone[rarity] || rarityTone.Common}`}>{rarity}</span>
-        </div>
-        <div className="absolute inset-x-0 bottom-0 p-5">
-          <div className="mb-3 flex gap-1">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-3 w-3 ${i < stars ? 'fill-amber-300 text-amber-300' : 'text-white/20'}`} />)}</div>
-          <p className="text-[9px] uppercase tracking-[.22em] text-cyan-300/75">Tier {progression?.stage || 1} · Ascension {progression?.ascension || 0}</p>
-          <h2 className="mt-2 text-2xl font-black leading-none text-white">{card?.title || userCard?.card_name || 'Achievement Card'}</h2>
-          <p className="mt-2 truncate text-[11px] text-white/45">{card?.series || userCard?.game_name || 'Atom X Eve'}</p>
-          <div className="mt-4 flex gap-2 text-[9px] uppercase tracking-wider">
-            <span className="bg-cyan-400/10 px-2 py-1 text-cyan-200">Enchant +{safeEnchant}</span>
-            <span className={`${overRank > 0 ? 'bg-rose-400/10 text-rose-200' : 'bg-white/[0.05] text-white/35'} px-2 py-1`}>Over +{overRank}</span>
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-2 gap-px bg-white/[0.06]">
-        {[
-          ['Power', progression?.power_score || 0],
-          ['Skill Points', progression?.skill_points || 0],
-          ['Stability', `${progression?.over_enchant_stability ?? 100}%`],
-          ['Perk Slots', `${progression?.active_perks?.length || 0}/${progression?.perk_slots || 3}`],
-        ].map(([label, value]) => (
-          <div key={label} className="bg-[#080d15]/95 p-3">
-            <span className="block text-[8px] uppercase tracking-[.18em] text-white/30">{label}</span>
-            <strong className="mt-1 block text-sm font-semibold text-white">{value}</strong>
-          </div>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-function TelemetryCard({ icon: Icon, label, value, meta }) {
-  return (
-    <div className="group bg-white/[0.025] p-4 transition hover:bg-white/[0.045]">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[8px] uppercase tracking-[.18em] text-white/30">{label}</span>
-        <Icon className="h-3.5 w-3.5 text-cyan-200/50" />
-      </div>
-      <div className="mt-2 text-2xl font-black text-white">{value}</div>
-      {meta && <div className="mt-1 text-[9px] text-cyan-200/55">{meta}</div>}
-    </div>
-  );
-}
-
-function RecordView({ card, state }) {
-  const p = state.progression || {};
-  const telemetry = state.telemetry || p.telemetry || state.userCard?.telemetry || card?.telemetry || {};
-  const combinedStats = useMemo(
-    () => Object.fromEntries(Object.keys(statLabels).map((key) => [key, num(p?.effective_stats?.[key],num(p?.base_stats?.[key]) + num(p?.enhanced_stats?.[key]))])),
-    [p],
-  );
-
-  const kills = telemetry.total_kills ?? telemetry.kills ?? state.userCard?.total_kills;
-  const accuracy = percent(telemetry.accuracy ?? telemetry.hit_accuracy, null);
-  const winRate = percent(telemetry.win_rate ?? telemetry.winRate, null);
-  const playstyle = percent(telemetry.playstyle_match ?? telemetry.style_match, null);
-  const genreAffinity = percent(telemetry.genre_affinity ?? telemetry.genreAffinity, null);
-  const status = telemetry.status || p.status || 'SYNCED';
-  const utility = [
-    card?.reward?.name,
-    card?.reward?.environment,
-    card?.reward?.equipment,
-    card?.reward?.ability,
-    card?.reward?.teacher,
-  ].filter(Boolean);
-
-  return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-end gap-4">
-        <div>
-          <span className="text-[9px] uppercase tracking-[.28em] text-cyan-300/65">Real-Time Card Telemetry</span>
-          <h3 className="mt-2 text-3xl font-black text-white">The Record</h3>
-          <p className="mt-2 max-w-3xl text-sm text-white/40">Every achievement card is a live gameplay object. This record updates as your playstyle, progression, and forge history change.</p>
-        </div>
-        <div className="ml-auto flex items-center gap-2 bg-emerald-400/[0.05] px-3 py-2 text-[9px] font-bold uppercase tracking-[.2em] text-emerald-200/70"><Activity className="h-3.5 w-3.5" /> {status}</div>
-      </header>
-
-      <div className="grid gap-px bg-white/[0.05] sm:grid-cols-2 xl:grid-cols-5">
-        <TelemetryCard icon={Crosshair} label="Total Kills" value={kills != null ? num(kills).toLocaleString() : '—'} meta="live combat telemetry" />
-        <TelemetryCard icon={Target} label="Accuracy" value={accuracy != null ? `${accuracy}%` : '—'} meta="weapon / ability precision" />
-        <TelemetryCard icon={Trophy} label="Win Rate" value={winRate != null ? `${winRate}%` : '—'} meta="competitive outcomes" />
-        <TelemetryCard icon={Brain} label="Playstyle Match" value={playstyle != null ? `${playstyle}%` : '—'} meta={telemetry.playstyle || 'behavior profile'} />
-        <TelemetryCard icon={Gamepad2} label="Genre Affinity" value={genreAffinity != null ? `${genreAffinity}%` : '—'} meta={card?.genre || state.userCard?.genre || 'cross-game learning'} />
-      </div>
-
-      <Glass className="p-5">
-        <div className="grid gap-5 lg:grid-cols-[1.2fr_.8fr]">
-          <div>
-            <div className="mb-4 flex items-center gap-2"><Gauge className="h-4 w-4 text-cyan-300" /><h4 className="text-sm font-bold text-white">Card State</h4></div>
-            <div className="grid grid-cols-2 gap-px bg-white/[0.05] md:grid-cols-5">
-              {Object.entries(combinedStats).map(([key, value]) => (
-                <div key={key} className="bg-black/20 p-3">
-                  <span className="text-[8px] uppercase tracking-[.16em] text-white/30">{statLabels[key]}</span>
-                  <strong className="mt-1 block text-lg text-white">{value}</strong>
-                  <small className="text-[8px] text-emerald-300/60">+{num(p?.enhanced_stats?.[key])} forged</small>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4"><Meter value={p?.xp || 0} max={p?.xp_to_next || 1} label={`Level ${p?.level || 1} XP`} /></div>
-          </div>
-
-          <div>
-            <div className="mb-4 flex items-center gap-2"><Sparkles className="h-4 w-4 text-fuchsia-300" /><h4 className="text-sm font-bold text-white">Real-Time Utility</h4></div>
-            <div className="space-y-2">
-              {(utility.length ? utility : ['Achievement XP', 'Avatar progression sync']).map((item, index) => (
-                <div key={`${item}-${index}`} className="flex items-center gap-3 bg-white/[0.02] px-3 py-2.5 text-xs text-white/55">
-                  <Check className="h-3.5 w-3.5 text-cyan-300/65" /> {typeof item === 'string' ? item : item?.name || 'Unlocked utility'}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Glass>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Glass className="p-5">
-          <div className="mb-4 flex items-center gap-2"><Gem className="h-4 w-4 text-violet-300" /><h4 className="text-sm font-bold text-white">Enchantments</h4><span className="ml-auto text-[9px] uppercase tracking-wider text-white/30">{p?.enchantments?.length || 0} active</span></div>
-          {p?.enchantments?.length ? <div className="space-y-2">{p.enchantments.map((enchant, i) => <div key={`${enchant.id}-${i}`} className="flex items-center gap-3 bg-white/[0.02] p-3"><span className="grid h-8 w-8 place-items-center bg-violet-400/10 text-violet-200"><Wand2 className="h-4 w-4" /></span><div><strong className="block text-xs text-white">{enchant.name}</strong><span className="text-[9px] uppercase tracking-wider text-white/35">{enchant.element || 'Arcane'}{enchant.overcharged ? ' · Overcharged' : ''}</span></div></div>)}</div> : <p className="text-xs text-white/30">No enchantments have been applied yet.</p>}
-        </Glass>
-
-        <Glass className="p-5">
-          <div className="mb-4 flex items-center gap-2"><Shield className="h-4 w-4 text-amber-300" /><h4 className="text-sm font-bold text-white">Active Perks</h4><span className="ml-auto text-[9px] uppercase tracking-wider text-white/30">{p?.active_perks?.length || 0} / {p?.perk_slots || 3}</span></div>
-          {p?.active_perks?.length ? <div className="flex flex-wrap gap-2">{p.active_perks.map((id) => <span key={id} className="bg-amber-300/[0.07] px-3 py-2 text-[10px] text-amber-200">{String(id).replaceAll('_', ' ')}</span>)}</div> : <p className="text-xs text-white/30">Unlock perk nodes in the Skill Tree, then activate them in your loadout.</p>}
-        </Glass>
-      </div>
-
-      <Glass>
-        <div className="flex items-center gap-2 px-5 py-4"><Activity className="h-4 w-4 text-cyan-300" /><h4 className="text-sm font-bold text-white">Live Progression History</h4><span className="ml-auto text-[9px] uppercase tracking-widest text-white/25">Newest first</span></div>
-        <div className="divide-y divide-white/[0.05]">{state.events?.length ? state.events.slice(0, 12).map((event) => <div key={event.id} className="grid items-center gap-3 px-5 py-4 md:grid-cols-[140px_1fr_auto]"><span className="text-[9px] uppercase tracking-widest text-cyan-300/60">{event.event_type?.replaceAll('_', ' ')}</span><div><strong className="text-xs text-white/75">{event.summary || 'Card updated'}</strong><p className="mt-1 text-[10px] text-white/25">{formatDate(event.created_date || event.updated_date)}</p></div><ChevronRight className="h-4 w-4 text-white/15" /></div>) : <div className="p-6 text-sm text-white/30">No recorded progression events yet.</div>}</div>
-      </Glass>
-    </div>
-  );
-}
-
-function ForgeBlock({ icon: Icon, eyebrow, title, children, danger = false }) {
-  return (
-    <Glass className="p-5">
-      <div className="flex items-start gap-3">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center ${danger ? 'bg-rose-400/10 text-rose-200' : 'bg-cyan-400/[0.07] text-cyan-200'}`}><Icon className="h-4 w-4" /></div>
-        <div><span className="text-[8px] uppercase tracking-[.2em] text-white/25">{eyebrow}</span><h4 className="mt-0.5 text-sm font-bold text-white">{title}</h4></div>
-      </div>
-      <div className="mt-4">{children}</div>
-    </Glass>
-  );
-}
-
-function ForgeView({ state, act, busy }) {
-  const p = state.progression || {};
-  const [enhanceStat, setEnhanceStat] = useState('attack');
-  const [selectedEnchant, setSelectedEnchant] = useState('');
-  const [selectedSacrifices, setSelectedSacrifices] = useState([]);
-  const [stabilizer, setStabilizer] = useState(35);
-  const canLevel = num(p?.xp) >= num(p?.xp_to_next, 1) && num(p?.level, 1) < num(p?.max_level, 10);
-  const overRank = num(p?.over_enchant_rank);
-  const stability = num(p?.over_enchant_stability, 100);
-  const safeRank = Math.min(5, num(p?.enchant_rank ?? p?.enchant_level));
-  const successChance = Math.max(8, Math.min(96, 82 - overRank * 9 + Math.round(stabilizer * 0.28) + Math.round(stability * 0.08)));
-  const spike = (1.35 + (overRank + 1) * 0.17 + (100 - stabilizer) * 0.004).toFixed(2);
-  const toggleSacrifice = (id) => setSelectedSacrifices((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-
-  return (
-    <div className="space-y-5">
-      <header><span className="text-[9px] uppercase tracking-[.28em] text-fuchsia-300/65">Synthesis / Ascension Runtime</span><h3 className="mt-2 text-3xl font-black text-white">The Forge</h3><p className="mt-2 max-w-3xl text-sm text-white/40">Spend progression resources, combine owned cards, raise stage limits, and push enchantment beyond the safe threshold. Backend validation still controls every mutation.</p></header>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ForgeBlock icon={TrendingUp} eyebrow={`Level cap ${p?.max_level || 10}`} title="Level Card">
-          <Meter value={p?.xp || 0} max={p?.xp_to_next || 1} label="Essence / XP" />
-          <div className="mt-4 grid grid-cols-2 gap-2"><button disabled={busy} onClick={() => act('train', { sessions: 1 })} className="h-10 bg-white/[0.05] text-xs font-bold text-white/60 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-30">Spend Essence</button><button disabled={busy || !canLevel} onClick={() => act('levelUp')} className="h-10 bg-cyan-300 text-xs font-black text-slate-950 disabled:opacity-25">LEVEL UP</button></div>
-        </ForgeBlock>
-
-        <ForgeBlock icon={Target} eyebrow="Direct stat scaling" title="Enhance Base Stats">
-          <div className="grid grid-cols-5 gap-1">{Object.keys(statLabels).map((key) => <button key={key} onClick={() => setEnhanceStat(key)} className={`py-2 text-[8px] uppercase tracking-wider ${enhanceStat === key ? 'bg-cyan-300/10 text-cyan-200' : 'bg-white/[0.025] text-white/30'}`}>{statLabels[key]}</button>)}</div>
-          <button disabled={busy} onClick={() => act('enhance', { stat: enhanceStat })} className="mt-3 h-10 w-full bg-white/[0.055] text-xs font-bold text-white/70 hover:bg-white/[0.09] disabled:opacity-30">Enhance {statLabels[enhanceStat]}</button>
-        </ForgeBlock>
-
-        <ForgeBlock icon={Swords} eyebrow={`Current stage ${p?.stage || 1}`} title="Fusion & Stage Pedestal">
-          <div className="grid grid-cols-2 gap-2">
-            {[0, 1].map((slot) => {
-              const selected = state.compatibleCards?.find((item) => item.id === selectedSacrifices[slot]);
-              return <div key={slot} className={`min-h-24 p-3 ${selected ? 'bg-fuchsia-400/[0.06]' : 'bg-white/[0.025]'}`}><span className="text-[8px] uppercase tracking-[.18em] text-white/25">Fusion Slot {String.fromCharCode(65 + slot)}</span>{selected ? <div className="mt-3 flex items-center gap-2"><div className="h-10 w-8 overflow-hidden bg-black">{selected.card_image && <img src={selected.card_image} alt="" className="h-full w-full object-cover" />}</div><div className="min-w-0"><div className="truncate text-[10px] font-bold text-white/75">{selected.card_name}</div><div className="text-[8px] text-fuchsia-200/50">{selected.card_rarity}</div></div></div> : <div className="mt-4 flex items-center gap-2 text-[9px] text-white/20"><Plus className="h-3 w-3" /> Select a sacrifice</div>}</div>;
-            })}
-          </div>
-          <div className="mt-3 max-h-32 space-y-1 overflow-y-auto">{state.compatibleCards?.length ? state.compatibleCards.slice(0, 10).map((candidate) => <button key={candidate.id} onClick={() => toggleSacrifice(candidate.id)} className={`flex w-full items-center gap-3 p-2 text-left ${selectedSacrifices.includes(candidate.id) ? 'bg-fuchsia-400/[0.08] text-white' : 'bg-white/[0.02] text-white/45'}`}><div className="h-8 w-7 overflow-hidden bg-black">{candidate.card_image && <img src={candidate.card_image} alt="" className="h-full w-full object-cover" />}</div><div className="min-w-0 flex-1"><div className="truncate text-[10px] font-semibold">{candidate.card_name}</div><div className="text-[8px] uppercase tracking-wider text-white/25">{candidate.card_rarity} · {candidate.game_name}</div></div>{selectedSacrifices.includes(candidate.id) && <Check className="h-3 w-3 text-fuchsia-300" />}</button>) : <div className="p-3 text-xs text-white/25">No compatible spare cards are currently available.</div>}</div>
-          <button disabled={busy || !selectedSacrifices.length} onClick={() => act('combine', { sacrificeUserCardIds: selectedSacrifices })} className="mt-3 h-10 w-full bg-fuchsia-400/15 text-xs font-black text-fuchsia-100 disabled:opacity-25">STAGE CARD</button>
-        </ForgeBlock>
-
-        <ForgeBlock icon={Crown} eyebrow={`Ascension ${p?.ascension || 0}/5`} title="Break Level Cap">
-          <div className="flex items-center justify-between gap-4 bg-white/[0.02] p-3"><div><div className="text-[8px] uppercase tracking-wider text-white/25">Requirement</div><div className="mt-1 text-xs text-white/65">Reach level {p?.max_level || 10}</div></div><button disabled={busy || num(p?.level, 1) < num(p?.max_level, 10)} onClick={() => act('ascend')} className="h-10 px-5 bg-amber-300 text-xs font-black text-slate-950 disabled:opacity-25">ASCEND</button></div>
-        </ForgeBlock>
-
-        <ForgeBlock icon={Wand2} eyebrow={`Safe enchant +${safeRank}/+5`} title="Enchant — Safe Zone">
-          <div className="flex gap-2"><select value={selectedEnchant} onChange={(event) => setSelectedEnchant(event.target.value)} className="h-10 flex-1 bg-[#080d15] px-3 text-xs text-white/70 outline-none"><option value="">Choose modifier</option>{state.enchantments?.map((enchant) => <option key={enchant.id} value={enchant.id}>{enchant.name} · {enchant.rarity || 'Common'}</option>)}</select><button disabled={busy || !selectedEnchant} onClick={() => act('enchant', { enchantmentId: selectedEnchant })} className="h-10 px-5 bg-violet-400/12 text-xs font-bold text-violet-100 disabled:opacity-25">APPLY</button></div>
-          <div className="mt-3 flex gap-1">{Array.from({ length: 5 }).map((_, index) => <div key={index} className={`h-1.5 flex-1 ${index < safeRank ? 'bg-cyan-300/70' : 'bg-white/[0.06]'}`} />)}</div>
-        </ForgeBlock>
-
-        <ForgeBlock icon={Flame} eyebrow={`Danger level ${successChance < 45 ? 'CRITICAL' : successChance < 65 ? 'HIGH' : 'CONTROLLED'}`} title="Over-Enchant" danger>
-          <div className="grid grid-cols-3 gap-px bg-white/[0.05] text-center"><div className="bg-black/20 p-3"><div className="text-[8px] uppercase tracking-wider text-white/25">Current</div><div className="mt-1 text-lg font-black text-white">+{overRank}</div></div><div className="bg-black/20 p-3"><div className="text-[8px] uppercase tracking-wider text-white/25">Success</div><div className="mt-1 text-lg font-black text-cyan-200">{successChance}%</div></div><div className="bg-black/20 p-3"><div className="text-[8px] uppercase tracking-wider text-white/25">Stat Spike</div><div className="mt-1 text-lg font-black text-rose-200">×{spike}</div></div></div>
-          <div className="mt-4"><div className="mb-2 flex items-center justify-between text-[8px] uppercase tracking-[.16em] text-white/30"><span>Risk / Stabilizer Allocation</span><span>{stabilizer}% Stabilized</span></div><input type="range" min="0" max="100" value={stabilizer} onChange={(event) => setStabilizer(Number(event.target.value))} className="w-full accent-cyan-300" /></div>
-          <div className="mt-3 flex items-start gap-2 bg-rose-400/[0.045] p-3 text-[10px] leading-4 text-rose-100/55"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Above +5, failure can consume materials and reduce stability. Stabilizers improve success probability but reduce the projected multiplier spike.</div>
-          <button disabled={busy || !(p?.enchantments?.length)} onClick={() => act('overEnchant', { stabilizerPercent: stabilizer })} className="mt-3 h-10 w-full bg-gradient-to-r from-rose-400 to-orange-300 text-xs font-black text-slate-950 disabled:opacity-25">OVER-ENCHANT</button>
-        </ForgeBlock>
-      </div>
-
-      <Glass className="p-5"><div className="mb-4 flex items-center gap-2"><Package className="h-4 w-4 text-cyan-300" /><h4 className="text-sm font-bold text-white">Forge Inventory</h4></div><div className="grid gap-px bg-white/[0.05] sm:grid-cols-2 lg:grid-cols-4">{state.materials?.length ? state.materials.filter((material) => num(material.quantity) > 0).slice(0, 12).map((material) => <div key={material.id} className="bg-black/20 p-3"><span className="text-[8px] uppercase tracking-wider text-white/25">{material.material_type?.replaceAll('_', ' ') || material.definition?.name || 'Material'}</span><strong className="mt-1 block text-white">× {num(material.quantity).toLocaleString()}</strong></div>) : <div className="col-span-full bg-black/20 p-5 text-xs text-white/25">Achievement rewards and gameplay drops populate these material stacks.</div>}</div></Glass>
-    </div>
-  );
-}
-
-function SkillNode({ node, unlocked, active, eligible, busy, onUnlock, onToggle, onDragStart }) {
-  const teacher = node.teacher || node.node_type === 'teacher' || String(node.lane || '').toLowerCase().includes('teacher');
-  const activeAbility = node.active || node.node_type === 'active';
-  return (
-    <motion.div layout className={`relative min-h-28 p-3 ${unlocked ? 'bg-violet-400/[0.055]' : 'bg-white/[0.02]'}`}>
-      <div className="absolute left-1/2 -top-5 h-5 w-px -translate-x-1/2 bg-gradient-to-b from-transparent to-violet-300/25" />
-      <div className="flex items-start gap-3">
-        <motion.div animate={active ? { boxShadow: ['0 0 0 rgba(0,240,255,0)', '0 0 22px rgba(0,240,255,.35)', '0 0 0 rgba(0,240,255,0)'] } : {}} transition={{ repeat: Infinity, duration: 2.1 }} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${unlocked ? 'bg-violet-300/10 text-violet-200' : 'bg-white/[0.04] text-white/25'}`}>{unlocked ? <Zap className="h-4 w-4" /> : eligible ? <Sparkles className="h-4 w-4" /> : <Lock className="h-4 w-4" />}</motion.div>
-        <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-1.5"><strong className="text-xs text-white/85">{node.name}</strong>{teacher && <span className="bg-cyan-400/[0.07] px-1.5 py-0.5 text-[7px] uppercase tracking-wider text-cyan-200">Teacher</span>}{activeAbility && <span className="bg-fuchsia-400/[0.07] px-1.5 py-0.5 text-[7px] uppercase tracking-wider text-fuchsia-200">Active</span>}{node.perk && <span className="bg-amber-300/[0.07] px-1.5 py-0.5 text-[7px] uppercase tracking-wider text-amber-200">Perk</span>}</div><p className="mt-1 text-[9px] leading-4 text-white/30">{node.effect}</p><div className="mt-2 flex gap-3 text-[7px] uppercase tracking-wider text-white/20"><span>Lv {node.minLevel}</span><span>Stage {node.minStage}</span><span>{node.cost} SP</span></div></div>
-      </div>
-      <div className="mt-3">{!unlocked ? <button disabled={busy || !eligible} onClick={onUnlock} className="h-8 w-full bg-violet-400/[0.07] text-[8px] font-bold uppercase tracking-widest text-violet-200 disabled:opacity-20">Unlock</button> : node.perk ? <button draggable onDragStart={onDragStart} disabled={busy} onClick={onToggle} className={`h-8 w-full text-[8px] font-bold uppercase tracking-widest ${active ? 'bg-cyan-300/10 text-cyan-100' : 'bg-white/[0.035] text-white/45'}`}>{active ? 'Active — Drag to Loadout' : 'Activate / Drag to Loadout'}</button> : <div className="grid h-8 place-items-center text-[8px] uppercase tracking-widest text-emerald-300/55">Unlocked</div>}</div>
-    </motion.div>
-  );
-}
-
-function SkillsView({ state, act, busy }) {
-  const p = state.progression || {};
-  const nodesByLane = useMemo(() => state.skillTree?.reduce((acc, node) => { (acc[node.lane || 'Core'] ||= []).push(node); return acc; }, {}) || {}, [state.skillTree]);
-  const unlocked = new Set(p?.unlocked_skill_nodes || []);
-  const active = new Set(p?.active_perks || []);
-  const [draggingNode, setDraggingNode] = useState(null);
-  const perkSlots = Math.max(3, num(p?.perk_slots, 3));
-
-  const assignToSlot = (event) => {
-    event.preventDefault();
-    if (!draggingNode || active.has(draggingNode.id)) return;
-    act('togglePerk', { nodeId: draggingNode.id });
-    setDraggingNode(null);
-  };
-
-  return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-end gap-4"><div><span className="text-[9px] uppercase tracking-[.28em] text-violet-300/65">Constellation Mastery Network</span><h3 className="mt-2 text-3xl font-black text-white">The Skill Tree</h3><p className="mt-2 max-w-3xl text-sm text-white/40">Levels and achievements award Skill Points. Branch into active abilities, teacher passives, stat enhancements, and equip unlocked perks into the live card loadout.</p></div><div className="ml-auto bg-violet-400/[0.06] px-5 py-3"><span className="text-[8px] uppercase tracking-widest text-white/25">Points Available</span><strong className="block text-2xl text-violet-200">{p?.skill_points || 0}</strong></div></header>
-
-      <div className="relative overflow-hidden bg-[radial-gradient(circle_at_center,rgba(139,92,246,.08),transparent_58%)] p-5">
-        <div className="pointer-events-none absolute inset-0 opacity-25" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,.22) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-        <div className="relative grid gap-5 xl:grid-cols-3">{Object.entries(nodesByLane).map(([lane, nodes]) => <Glass key={lane} className="p-4"><div className="mb-7 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-violet-300 shadow-[0_0_14px_rgba(196,181,253,.55)]" /><h4 className="text-[10px] font-bold uppercase tracking-[.2em] text-white/60">{lane} Path</h4></div><div className="space-y-5">{nodes.map((node) => { const isUnlocked = unlocked.has(node.id); const prereqOK = !node.prerequisite || unlocked.has(node.prerequisite); const eligible = num(p?.level, 1) >= num(node.minLevel) && num(p?.stage, 1) >= num(node.minStage) && prereqOK && num(p?.skill_points) >= num(node.cost); const isActive = active.has(node.id); return <SkillNode key={node.id} node={node} unlocked={isUnlocked} active={isActive} eligible={eligible} busy={busy} onUnlock={() => act('unlockSkill', { nodeId: node.id })} onToggle={() => act('togglePerk', { nodeId: node.id })} onDragStart={(event) => { setDraggingNode(node); event.dataTransfer.effectAllowed = 'move'; }} />; })}</div></Glass>)}</div>
-      </div>
-
-      <Glass className="p-5"><div className="flex items-center gap-2"><Shield className="h-4 w-4 text-amber-300" /><h4 className="text-sm font-bold text-white">Active Perk Loadout</h4><span className="ml-auto text-[9px] uppercase tracking-widest text-white/25">Drag unlocked perk nodes into a slot</span></div><div className="mt-4 grid gap-2 sm:grid-cols-3">{Array.from({ length: perkSlots }).slice(0, 3).map((_, index) => { const id = p?.active_perks?.[index]; const node = state.skillTree?.find((item) => item.id === id); return <div key={index} onDragOver={(event) => event.preventDefault()} onDrop={assignToSlot} className={`min-h-24 p-3 transition ${draggingNode ? 'bg-cyan-300/[0.055]' : 'bg-black/20'}`}><div className="text-[8px] font-mono text-white/20">SLOT 0{index + 1}</div>{node ? <div className="mt-3"><strong className="block text-xs text-amber-200">{node.name}</strong><span className="mt-1 block text-[9px] leading-4 text-white/30">{node.effect}</span></div> : <div className="mt-5 flex items-center gap-2 text-[9px] uppercase tracking-widest text-white/18"><Plus className="h-3 w-3" /> Empty perk slot</div>}</div>; })}</div></Glass>
-    </div>
-  );
+  return <div className="space-y-4">
+    <Panel className="p-4"><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-200" /><h3 className="text-sm font-black text-white">Digital Passport</h3></div><p className="mt-2 max-w-xl text-[11px] leading-5 text-white/45">This identity belongs to this exact card instance. Its progression and ownership history stay with the card when it is traded.</p></div><span className="border border-emerald-300/20 bg-emerald-300/[0.06] px-2 py-1 text-[8px] uppercase tracking-[.13em] text-emerald-100">{String(passport.authenticity_status || 'registered_internal').replaceAll('_',' ')}</span></div><div className="mt-4 flex items-center gap-2 border border-white/[0.07] bg-black/20 p-3"><code className="min-w-0 flex-1 truncate text-[10px] text-cyan-100/80">{passport.passport_id || 'Passport pending'}</code><button type="button" onClick={copy} className="p-1 text-white/45 hover:text-white" aria-label="Copy card passport ID">{copied ? <ShieldCheck className="h-4 w-4 text-emerald-200" /> : <Copy className="h-4 w-4" />}</button></div></Panel>
+    <div className="grid gap-2 sm:grid-cols-3"><Metric label="Ledger" value={String(passport.ledger_adapter || 'internal_hash_chain_v1').replaceAll('_',' ')} /><Metric label="Events" value={passport.event_count || events.length || 0} /><Metric label="External Ledger" value={passport.external_ledger_status === 'anchored' ? 'ANCHORED' : 'NOT ANCHORED'} /></div>
+    {passport.external_ledger_status !== 'anchored' && <Panel className="border-amber-300/10 bg-amber-300/[0.025] p-3 text-[10px] leading-5 text-amber-100/55">This card currently uses Adam XE's tamper-evident internal hash-chain registry. It is not being represented as externally blockchain-anchored until that external ledger connection is actually active.</Panel>}
+    <Panel className="p-4"><div className="mb-3 flex items-center gap-2"><History className="h-4 w-4 text-cyan-200/60" /><h3 className="text-xs font-bold uppercase tracking-[.16em] text-white/70">Card History</h3></div>{events.length ? <div className="space-y-1">{[...events].reverse().map((event) => <div key={`${event.sequence}-${event.event_hash}`} className="grid grid-cols-[42px_1fr_auto] items-start gap-3 border-b border-white/[0.05] py-3 last:border-0"><span className="font-mono text-[9px] text-white/25">#{event.sequence}</span><div><strong className="block text-[10px] uppercase tracking-[.11em] text-white/65">{String(event.event_type || '').replaceAll('_',' ')}</strong><span className="mt-1 block max-w-md truncate font-mono text-[8px] text-white/20">{event.event_hash}</span></div><span className="text-[8px] text-white/25">{date(event.timestamp)}</span></div>)}</div> : <p className="text-xs text-white/35">No passport events yet.</p>}</Panel>
+  </div>;
 }
 
 export default function MysteryCardDetail({ card, onBack }) {
-  const [tab, setTab] = useState('record');
+  const [tab, setTab] = useState('overview');
   const [state, setState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await invoke('getState', card);
-      setState(response?.data || response);
-      setMessage(null);
-    } catch (error) {
-      setMessage({ type: 'error', text: error?.message || 'Card progression could not be loaded.' });
-    } finally {
-      setLoading(false);
-    }
-  }, [card]);
+    setLoading(true); setError('');
+    try { setState(unwrap(await invoke('getState', card))); }
+    catch (err) { setError(err?.message || 'Card details could not load.'); }
+    finally { setLoading(false); }
+  }, [card?.user_card_id, card?.userCardId, card?.achievement_id, card?.id]);
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    const unsubProgression = base44.entities.CardProgression?.subscribe?.((event) => {
-      if (event?.data?.user_card_id && event.data.user_card_id === state?.userCard?.id) load();
-    });
-    const unsubUserCard = base44.entities.UserCard?.subscribe?.((event) => {
-      if (event?.data?.id && event.data.id === state?.userCard?.id) load();
-    });
-    return () => { unsubProgression?.(); unsubUserCard?.(); };
-  }, [load, state?.userCard?.id]);
-
   const act = async (action, payload = {}) => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const response = await invoke(action, { ...card, userCardId: state?.userCard?.id || card?.userCardId }, payload);
-      const next = response?.data || response;
-      if(next?.error)throw new Error(next.error);
-      setState(next);
-      window.dispatchEvent(new CustomEvent('cardProgressionChanged',{detail:{user_card_id:next?.userCard?.id}}));
-      const latest = next?.events?.[0]?.summary;
-      setMessage({ type: 'success', text: latest || 'Card updated.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error?.message || 'That card action failed.' });
-    } finally {
-      setBusy(false);
-    }
+    setBusy(true); setError('');
+    try { setState(unwrap(await invoke(action, card, payload))); }
+    catch (err) { setError(err?.response?.data?.error || err?.message || 'Card action failed.'); }
+    finally { setBusy(false); }
   };
 
+  if (loading) return <div className="flex h-full min-h-[320px] items-center justify-center bg-[#080d14] text-white/55"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading card…</div>;
+  if (!state || state.error) return <div className="flex h-full min-h-[320px] flex-col items-center justify-center bg-[#080d14] p-6 text-center"><p className="text-sm text-rose-200/80">{state?.error || error || 'Card details are unavailable.'}</p><button onClick={load} className="mt-4 border border-white/10 px-4 py-2 text-xs text-white/65">Retry</button></div>;
+
   return (
-    <div className="relative h-full min-h-[620px] overflow-hidden bg-[#07090D] text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(0,240,255,.10),transparent_30%),radial-gradient(circle_at_92%_10%,rgba(255,0,85,.08),transparent_26%)]" />
-      <div className="relative flex h-full flex-col">
-        <header className="shrink-0 bg-[#0F1115]/82 px-5 py-3 backdrop-blur-xl">
-          <div className="flex items-center gap-4">
-            <button onClick={onBack} className="grid h-9 w-9 place-items-center bg-white/[0.035] text-white/40 transition hover:text-white"><ArrowLeft className="h-4 w-4" /></button>
-            <div className="min-w-0"><p className="text-[8px] uppercase tracking-[.24em] text-cyan-200/35">Achievement Card Runtime</p><h1 className="truncate text-sm font-bold text-white">{card?.title || card?.card_name || 'Card Detail'}</h1></div>
-            <div className="ml-auto hidden items-center gap-1 md:flex">{tabs.map(({ id, label, icon: Icon, hint }) => <button key={id} title={hint} onClick={() => setTab(id)} className={`flex h-9 items-center gap-2 px-3 text-[9px] font-bold uppercase tracking-[.15em] transition ${tab === id ? 'bg-cyan-300/[0.08] text-cyan-100' : 'text-white/30 hover:bg-white/[0.035] hover:text-white/65'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}<button onClick={load} disabled={loading || busy} aria-label="Refresh live card state" className="grid h-9 w-9 place-items-center text-white/25 hover:text-white disabled:opacity-30"><RefreshCcw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /></button></div>
-          </div>
-          <div className="mt-3 flex gap-1 overflow-x-auto md:hidden">{tabs.map(({ id, label }) => <button key={id} onClick={() => setTab(id)} className={`shrink-0 px-3 py-2 text-[9px] font-bold uppercase tracking-wider ${tab === id ? 'bg-cyan-300/[0.08] text-cyan-100' : 'text-white/30'}`}>{label}</button>)}</div>
-        </header>
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#080d14] text-white">
+      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-[#0a1018] px-3">
+        <button onClick={onBack} className="grid h-8 w-8 place-items-center text-white/45 hover:text-white" aria-label="Back to cards"><ArrowLeft className="h-4 w-4" /></button>
+        <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-white/85">{state?.userCard?.card_name || card?.title || card?.name || 'Card'}</p><p className="mt-0.5 text-[8px] uppercase tracking-[.16em] text-white/25">Card System v2 · one card, one progression record</p></div>
+        {busy && <Loader2 className="h-4 w-4 animate-spin text-cyan-200" />}
+      </header>
 
-        <AnimatePresence>{message && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className={`shrink-0 px-5 py-2 text-[10px] ${message.type === 'error' ? 'bg-rose-400/[0.05] text-rose-200' : 'bg-emerald-400/[0.05] text-emerald-200'}`}>{message.text}</motion.div>}</AnimatePresence>
+      {error && <div className="shrink-0 border-b border-rose-300/10 bg-rose-400/[0.05] px-4 py-2 text-[10px] text-rose-100/70">{error}</div>}
 
-        {loading && !state ? (
-          <div className="grid flex-1 place-items-center"><div className="flex items-center gap-3 text-xs text-white/30"><RefreshCcw className="h-4 w-4 animate-spin" /> Loading live card state…</div></div>
-        ) : state ? (
-          <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
-            <div className="mx-auto grid max-w-[1600px] gap-7 p-6 xl:grid-cols-[250px_minmax(0,1fr)]">
-              <HolographicCard card={card} progression={state.progression} userCard={state.userCard} />
-              <main className="min-w-0">{tab === 'record' ? <RecordView card={card} state={state} /> : tab === 'forge' ? <ForgeView state={state} act={act} busy={busy} /> : <SkillsView state={state} act={act} busy={busy} />}</main>
-            </div>
+      <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(180px,26%)_minmax(0,1fr)]">
+        <aside className="min-h-0 overflow-auto border-b border-white/[0.06] p-3 lg:border-b-0 lg:border-r">
+          <CardFace card={card} state={state} />
+        </aside>
+        <main className="flex min-h-0 flex-col">
+          <nav className="flex shrink-0 border-b border-white/[0.06] bg-[#090f17] px-2" aria-label="Card progression sections">
+            {TABS.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setTab(id)} className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-[9px] font-bold tracking-[.12em] transition ${tab === id ? 'border-cyan-300 text-cyan-100' : 'border-transparent text-white/30 hover:text-white/60'}`}><Icon className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{label}</span></button>)}
+          </nav>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 custom-scrollbar">
+            {tab === 'overview' && <Overview state={state} />}
+            {tab === 'enhance' && <Enhance state={state} busy={busy} onAction={act} />}
+            {tab === 'stack' && <Stack state={state} busy={busy} onAction={act} />}
+            {tab === 'passport' && <Passport state={state} />}
           </div>
-        ) : (
-          <div className="grid flex-1 place-items-center text-sm text-white/30">This card does not have a live progression state yet.</div>
-        )}
+        </main>
       </div>
     </div>
   );
