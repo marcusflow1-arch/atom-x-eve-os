@@ -84,6 +84,7 @@ for (const entry of [
   './base44/shared/cardProvenance.ts',
   './base44/shared/rewardEngine.ts',
   './base44/functions/cardCollection/entry.ts',
+  './base44/functions/cardSystemSkillState/entry.ts',
   './base44/functions/tradePostMarket/entry.ts',
   './base44/functions/friendCardTrade/entry.ts',
   './base44/functions/finalizeTradeSession/entry.ts',
