@@ -35,6 +35,7 @@
     "starter_grant_user_id": { "type": "string", "description": "Original recipient of a fixed avatar starter grant; retained across transfers." },
     "starter_grant_key": { "type": "string", "description": "Approved avatar starter effect key. Used to prevent repeat grants after transfer." },
     "reward_grant_keys": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "card_mutation_receipts": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Idempotency receipts for legacy quantity consumption and other per-instance Card System v2 mutations." },
     "mutation_lock_id": { "type": "string", "description": "Short-lived server mutation lease token used to serialize upgrades and transfers." },
     "mutation_lock_kind": { "type": "string", "description": "Operation currently holding the mutation lease." },
     "mutation_lock_until": { "type": "string", "format": "date-time", "description": "Lease expiry. Stale locks may be reclaimed after this instant." }
