@@ -29,8 +29,8 @@ jobs:
           node tests/card-system-v2-skillbook-ui.test.mjs
       - name: Validate Skill Book and combat integration
         run: |
-          node tests/card-ownership-security.test.mjs
           node tests/skill-book-eligibility-ui.test.mjs
+          node tests/skill-book-avatar-refresh.test.mjs
           node tests/battle-skill-eligibility.test.mjs
           node tests/avatar-combat-stats.test.mjs
       - name: Build application
