@@ -39,9 +39,11 @@ export function enrichLibraryCards(cards, games) {
 export function libraryScrollFrame(anchor, boundary, viewport) {
   if (!anchor || !anchor.width || !anchor.height) return null;
   const right = Math.min(boundary?.right || viewport.width - 16, viewport.width - 16);
-  const left = anchor.right, top = Math.max(72, anchor.top);
-  // The unfolded game-card surface continues through the open 3D/environment
-  // band and stops immediately above Luna's 48px bottom header.
+  const left = anchor.right;
+  // The unfolded game-card surface owns the vertical band directly beneath the
+  // Environment Hub. Its top is the hub's true bottom edge; its bottom stops at
+  // the Luna bottom-header line so it never overlaps dashboard navigation.
+  const top = Math.max(72, Number(boundary?.bottom || anchor.top || 72));
   const bottom = Math.max(top, viewport.height - 48);
   const height = Math.max(0, bottom - top);
   const width = Math.max(0, right - left);
