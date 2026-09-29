@@ -86,7 +86,7 @@ try {
   assert.match(text, /Avatar \+ Card System v2 Scaling/);
   assert.doesNotMatch(text, /\bLv\s*\d|\bStars\b|\bStage\s*\d|Card Boost/);
 
-  const slotOne = [...document.querySelectorAll('button')].find((button) => button.textContent.replace(/\s+/g, ' ').trim().startsWith('Slot 1'));
+  const slotOne = [...document.querySelectorAll('button')].find((button) => /^Slot\s*1(?:\s|Empty|Equipped|$)/i.test(button.textContent.replace(/\s+/g, ' ').trim()));
   assert.ok(slotOne, 'Skill Slot 1 control remains available');
   await act(async () => { slotOne.click(); });
   assert.deepEqual(equipCalls[0], { slot: 0, id: 'owned-1' });
