@@ -7,6 +7,10 @@ import {
   acquireTradeSessionMutationLock,
   releaseTradeSessionMutationLock,
 } from '../../shared/tradeSessionMutationLock.ts';
+import {
+  acquireCardTradePairLock,
+  releaseCardTradePairLock,
+} from '../../shared/cardTradePairLock.ts';
 
 type AnyObj = Record<string, any>;
 const ACTIVE = ['accepted', 'pending'];
@@ -148,19 +152,25 @@ Deno.serve(async (req) => {
     let session = await getSessionForPair(base44, user.id, partnerId);
 
     if (action === 'start') {
-      if (!session) {
-        session = await svc.TradeSession.create({
-          initiator_id: user.id,
-          recipient_id: partnerId,
-          status: 'pending',
-          initiator_offer_card_ids: [], recipient_offer_card_ids: [],
-          initiator_offer_snapshot: [], recipient_offer_snapshot: [],
-          initiator_confirmed: false, recipient_confirmed: false,
-        });
-        await svc.SocialRequest.create({
-          kind: 'trade', sender_id: user.id, sender_name: user.username || user.full_name || user.name || 'Player',
-          receiver_id: partnerId, status: 'pending', trade_id: session.id,
-        }).catch(() => null);
+      const pairLease = await acquireCardTradePairLock(svc, String(user.id), partnerId, 'friend_trade_start');
+      try {
+        session = await getSessionForPair(base44, user.id, partnerId);
+        if (!session) {
+          session = await svc.TradeSession.create({
+            initiator_id: user.id,
+            recipient_id: partnerId,
+            status: 'pending',
+            initiator_offer_card_ids: [], recipient_offer_card_ids: [],
+            initiator_offer_snapshot: [], recipient_offer_snapshot: [],
+            initiator_confirmed: false, recipient_confirmed: false,
+          });
+          await svc.SocialRequest.create({
+            kind: 'trade', sender_id: user.id, sender_name: user.username || user.full_name || user.name || 'Player',
+            receiver_id: partnerId, status: 'pending', trade_id: session.id,
+          }).catch(() => null);
+        }
+      } finally {
+        await releaseCardTradePairLock(svc, pairLease);
       }
     } else if (action === 'accept') {
       if (!session) throw new Error('No pending trade request to accept');
