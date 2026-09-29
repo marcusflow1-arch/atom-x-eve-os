@@ -1,25 +1,41 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { cardMasteryState, normalizeProgression } from '../../shared/cardSystem.ts';
+import { ensureCardPassport, recordOwnershipTransfer } from '../../shared/cardProvenance.ts';
 
 type AnyObj = Record<string, any>;
-
 const ACTIVE = ['accepted', 'pending'];
+const now = () => new Date().toISOString();
 
-function cardSnapshot(card: AnyObj, progression?: AnyObj | null) {
+async function cardSnapshot(base44: any, card: AnyObj, progression?: AnyObj | null) {
+  const p = normalizeProgression(progression);
+  const passport = await ensureCardPassport(base44.asServiceRole.entities, card);
+  if (String(card.passport_id || '') !== String(passport.passport_id)) {
+    await base44.asServiceRole.entities.UserCard.update(card.id, { passport_id: passport.passport_id });
+  }
   return {
     id: card.id,
+    user_card_id: card.id,
     trading_card_id: card.trading_card_id || '',
+    passport_id: passport.passport_id,
     card_name: card.card_name || 'Card',
-    card_type: card.card_type || 'Achievement',
-    card_rarity: card.card_rarity || 'Common',
+    card_type: card.card_type || 'collectible',
+    card_rarity: card.card_rarity || 'Rare',
+    playable_tier: card.playable_tier || card.card_rarity || 'Rare',
     card_image: card.card_image || '',
     game_name: card.game_name || 'Unknown Game',
     game_id: card.game_id || '',
     genre: card.genre || '',
     acquisition_method: card.acquisition_method || 'unlocked',
-    level: Number(progression?.level || 1),
-    stars: Number(progression?.stars || 1),
-    ascension: Number(progression?.ascension || 0),
+    acquired_at: card.acquired_at || card.unlocked_date || '',
+    enhancement_percent: p.enhancement_percent,
+    ascension: p.ascension,
+    stack_level: p.stack_level,
     power_score: Number(progression?.power_score || 0),
+    mastery_visual: p.mastery_visual,
+    mastery: cardMasteryState(p),
+    provenance_event_count: Number(passport.event_count || 0),
+    provenance_head_hash: passport.head_hash || '',
+    external_ledger_status: passport.external_ledger_status || 'not_anchored',
   };
 }
 
@@ -51,12 +67,14 @@ async function requireFriend(base44: any, userId: string, partnerId: string) {
 async function getTradeableCards(base44: any, userId: string, sessionId?: string) {
   const rows = await base44.asServiceRole.entities.UserCard.filter({ user_id: userId }, '-created_date', 500);
   const visible = (rows || []).filter((card: AnyObj) =>
-    !card.is_equipped && (card.trade_status !== 'locked_in_trade' || card.last_trade_id === sessionId)
+    !card.is_equipped
+    && (!card.equipped_to || card.equipped_to === 'none')
+    && (card.trade_status !== 'locked_in_trade' || card.last_trade_id === sessionId)
   );
   const result: AnyObj[] = [];
   for (const card of visible) {
-    const progression = (await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: card.id }, '-created_date', 1))[0] || null;
-    result.push(cardSnapshot(card, progression));
+    const progression = (await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: card.id }, '-updated_date', 1))[0] || null;
+    result.push(await cardSnapshot(base44, card, progression));
   }
   return result;
 }
@@ -75,47 +93,52 @@ async function finalize(base44: any, session: AnyObj) {
   if (session.status !== 'accepted' || !session.initiator_confirmed || !session.recipient_confirmed) {
     throw new Error('Both players must confirm before the trade can complete');
   }
-
+  const svc = base44.asServiceRole.entities;
   const transfers = [
     { ids: session.initiator_offer_card_ids || [], from: session.initiator_id, to: session.recipient_id },
     { ids: session.recipient_offer_card_ids || [], from: session.recipient_id, to: session.initiator_id },
   ];
+  const validated = new Map<string, AnyObj>();
 
   for (const group of transfers) {
     for (const id of group.ids) {
-      const card = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
+      const card = await svc.UserCard.get(id).catch(() => null);
       if (!card || card.user_id !== group.from) throw new Error('A card in this trade is no longer owned by the offering player');
-      if (card.is_equipped) throw new Error(`${card.card_name || 'A card'} is equipped and cannot be traded`);
+      if (card.is_equipped || card.equipped_to && card.equipped_to !== 'none') throw new Error(`${card.card_name || 'A card'} is equipped and cannot be traded`);
       if (card.trade_status !== 'locked_in_trade' || card.last_trade_id !== session.id) {
         throw new Error(`${card.card_name || 'A card'} is not reserved for this trade`);
       }
+      await ensureCardPassport(svc, card);
+      validated.set(String(id), card);
     }
   }
 
   for (const group of transfers) {
     for (const id of group.ids) {
-      const card = await base44.asServiceRole.entities.UserCard.get(id);
-      await base44.asServiceRole.entities.UserCard.update(id, {
+      const card = validated.get(String(id));
+      await svc.UserCard.update(id, {
         user_id: group.to,
         acquisition_method: 'traded',
+        acquired_at: now(),
         trade_status: 'available',
         last_trade_id: session.id,
       });
-      const progressions = await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: id }, '-created_date', 10);
+      const progressions = await svc.CardProgression.filter({ user_card_id: id }, '-updated_date', 10);
       for (const progression of progressions || []) {
-        await base44.asServiceRole.entities.CardProgression.update(progression.id, {
+        await svc.CardProgression.update(progression.id, {
           user_id: group.to,
           last_action: 'friend_trade_transfer',
-          last_action_at: new Date().toISOString(),
+          last_action_at: now(),
           revision: Number(progression.revision || 0) + 1,
         });
       }
+      await recordOwnershipTransfer(svc, card, group.from, group.to, 'friend_trade', session.id);
     }
   }
 
-  return await base44.asServiceRole.entities.TradeSession.update(session.id, {
+  return svc.TradeSession.update(session.id, {
     status: 'completed',
-    completed_at: new Date().toISOString(),
+    completed_at: now(),
   });
 }
 
@@ -125,7 +148,10 @@ async function responseState(base44: any, user: AnyObj, partnerId: string, sessi
   const cards = await getTradeableCards(base44, user.id, active?.id);
   return {
     userId: user.id,
-    partner: partner ? { id: partner.id, name: partner.username || partner.full_name || partner.name || 'Friend', avatar: partner.avatar_url || '' } : { id: partnerId, name: 'Friend', avatar: '' },
+    system_version: 2,
+    partner: partner
+      ? { id: partner.id, name: partner.username || partner.full_name || partner.name || 'Friend', avatar: partner.avatar_url || '' }
+      : { id: partnerId, name: 'Friend', avatar: '' },
     session: active,
     ownedCards: cards,
   };
@@ -181,15 +207,17 @@ Deno.serve(async (req) => {
 
       const snapshots: AnyObj[] = [];
       for (const id of cardIds) {
-        const card = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
+        let card = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
         if (!card || card.user_id !== user.id) throw new Error('You can only offer cards you own');
-        if (card.is_equipped) throw new Error(`${card.card_name || 'That card'} is equipped`);
+        if (card.is_equipped || card.equipped_to && card.equipped_to !== 'none') throw new Error(`${card.card_name || 'That card'} is equipped`);
         if (card.trade_status === 'locked_in_trade' && card.last_trade_id !== session.id) throw new Error(`${card.card_name || 'That card'} is already reserved elsewhere`);
         const listing = (await base44.asServiceRole.entities.CardTrade.filter({ card_id: id, status: 'active' }, '-created_date', 1))[0];
         if (listing) throw new Error(`${card.card_name || 'That card'} is currently listed in the Trading Post`);
+        const progression = (await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: id }, '-updated_date', 1))[0] || null;
+        const passport = await ensureCardPassport(base44.asServiceRole.entities, card);
+        if (String(card.passport_id || '') !== String(passport.passport_id)) card = await base44.asServiceRole.entities.UserCard.update(id, { passport_id: passport.passport_id });
         await base44.asServiceRole.entities.UserCard.update(id, { trade_status: 'locked_in_trade', last_trade_id: session.id });
-        const progression = (await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: id }, '-created_date', 1))[0] || null;
-        snapshots.push(cardSnapshot(card, progression));
+        snapshots.push(await cardSnapshot(base44, card, progression));
       }
 
       const patch = isInitiator
