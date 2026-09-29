@@ -28,17 +28,33 @@ const TIER_TONE = {
   Chosen: 'text-white border-white/35',
 };
 
+const pendingMutationRequests = new Map();
+
 function unwrap(response) {
   return response?.data || response || {};
 }
 
+function mutationRequestId() {
+  return globalThis.crypto?.randomUUID?.() || `card-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function invoke(action, card, payload = {}) {
   const userCardId = card?.userCardId || card?.user_card_id || card?.ownedCardId || undefined;
+  const achievementId = card?.achievementId || card?.achievement_id || (!userCardId && !card?.trading_card_id ? card?.id : undefined);
+  if (action === 'getState') {
+    return base44.functions.invoke('cardProgression', { action, userCardId, achievementId, payload });
+  }
+  const key = JSON.stringify([action, userCardId || achievementId || '', payload]);
+  const requestId = pendingMutationRequests.get(key) || mutationRequestId();
+  pendingMutationRequests.set(key, requestId);
   return base44.functions.invoke('cardProgression', {
     action,
     userCardId,
-    achievementId: card?.achievementId || card?.achievement_id || (!userCardId && !card?.trading_card_id ? card?.id : undefined),
-    payload,
+    achievementId,
+    payload: { ...payload, requestId },
+  }).then((response) => {
+    pendingMutationRequests.delete(key);
+    return response;
   });
 }
 
