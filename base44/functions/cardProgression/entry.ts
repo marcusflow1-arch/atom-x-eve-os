@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { normalizedCardBaseStats, effectiveCardStats } from '../../shared/cardStats.ts';
 import { loadCombatProfile } from '../../shared/combatProfile.ts';
 import { abilityOutput } from '../../shared/combatStats.ts';
@@ -12,11 +12,18 @@ import {
   appendProvenanceEvent, ensureCardPassport, publicPassport,
   recordAscensionMilestone, recordStackMilestone,
 } from '../../shared/cardProvenance.ts';
+import {
+  acquireCardMutationLock, acquireCardMutationLocks, releaseCardMutationLocks,
+} from '../../shared/cardMutationLock.ts';
+import { conditionalUpdate, rewardError } from '../../shared/rewardJournal.ts';
 
 type AnyObj = Record<string, any>;
+type Lock = { card_id: string; token: string; kind: string; expires_at: string };
+
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 const fail = (message: string, status = 400) => { throw Object.assign(new Error(message), { status }); };
 const now = () => new Date().toISOString();
+const object = (value: any) => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 
 function progressionPatch(p: AnyObj) {
   const normalized = normalizeProgression(p);
@@ -46,28 +53,42 @@ function publicProgression(p: AnyObj) {
   };
 }
 
+function mutationRequestId(body: AnyObj, payload: AnyObj, action: string) {
+  if (action === 'getState') return '';
+  const supplied = String(
+    body?.request_id || body?.requestId || payload?.request_id || payload?.requestId || '',
+  ).trim();
+  // New clients always send a request id. Keep a generated fallback so older
+  // clients remain functional, while returning it in the response for diagnosis.
+  return supplied || `server-${crypto.randomUUID()}`;
+}
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
+  let svc: any = null;
+  let heldLocks: Lock[] = [];
   try {
     const user = await base44.auth.me();
     if (!user) return json({ error: 'Unauthorized' }, 401);
 
     const body = await req.json().catch(() => ({}));
-    const action = String(body?.action || 'getState');
-    const payload = body?.payload || {};
-    const supported = new Set(['getState', 'enhance', 'ascend', 'stack', 'combine']);
+    const rawAction = String(body?.action || 'getState');
+    const action = rawAction === 'combine' ? 'stack' : rawAction;
+    const payload = object(body?.payload);
+    const supported = new Set(['getState', 'enhance', 'ascend', 'stack']);
     const retired = new Set(['train', 'levelUp', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk']);
-    if (retired.has(action)) return json({
+    if (retired.has(rawAction)) return json({
       error: 'This upgrade path was retired by Card System v2. Use Enhance, Ascend, or Stack.',
-      retired_action: action,
+      retired_action: rawAction,
     }, 409);
     if (!supported.has(action)) return json({ error: 'Invalid card progression action' }, 400);
 
-    const svc = base44.asServiceRole.entities;
+    svc = base44.asServiceRole.entities;
     if (action !== 'getState' && await hasLivePvpMatch(svc, user.id)) {
       return json({ error: 'Finish your match before changing card progression.' }, 409);
     }
 
+    const requestId = mutationRequestId(body, payload, action);
     const userCardId = String(body?.userCardId || payload?.userCardId || '').trim();
     const requestedAchievementId = String(body?.achievementId || payload?.achievementId || '').trim();
     let userCard: AnyObj | null = null;
@@ -88,6 +109,50 @@ Deno.serve(async (req) => {
     }
     if (!userCard) return json({ error: 'You must own this card before upgrading it.' }, 403);
     if (Number(userCard.quantity ?? 1) < 1) return json({ error: 'This card is no longer available in your collection.' }, 409);
+
+    const requestedDuplicateId = action === 'stack'
+      ? String(
+        payload.duplicateUserCardId || payload.sacrificeUserCardId
+        || (Array.isArray(payload.sacrificeUserCardIds) ? payload.sacrificeUserCardIds[0] : '') || '',
+      ).trim()
+      : '';
+    if (requestedDuplicateId && requestedDuplicateId === String(userCard.id)) fail('A card cannot stack into itself.');
+
+    // Card progression is allowed to initialize/migrate during getState, so even
+    // reads take a short lease. This prevents duplicate progression/passport rows.
+    if (requestedDuplicateId) {
+      const candidate = await svc.UserCard.get(requestedDuplicateId).catch(() => null);
+      if (!candidate || String(candidate.user_id) !== String(user.id)) fail('Duplicate card not found.', 404);
+      heldLocks = await acquireCardMutationLocks(svc, [
+        { id: String(userCard.id), owner_id: String(user.id) },
+        { id: requestedDuplicateId, owner_id: String(user.id) },
+      ], `progression:${action}`);
+    } else {
+      heldLocks = [await acquireCardMutationLock(
+        svc,
+        String(userCard.id),
+        String(user.id),
+        action === 'getState' ? 'progression:read-repair' : `progression:${action}`,
+      )];
+    }
+
+    const lockFor = (cardId: string) => heldLocks.find((lock) => lock.card_id === String(cardId)) || null;
+    const targetLock = lockFor(String(userCard.id));
+    if (!targetLock) throw rewardError('Card mutation lease is unavailable', 409);
+
+    const ensureExtraLock = async (cardId: string, ownerId: string, kind: string) => {
+      const existing = lockFor(cardId);
+      if (existing) return existing;
+      const lock = await acquireCardMutationLock(svc, cardId, ownerId, kind);
+      heldLocks.push(lock);
+      return lock;
+    };
+
+    // Re-read after the lease is held. A trade or Stack that won the race before
+    // us must be observed here rather than through the stale pre-lock snapshot.
+    userCard = await svc.UserCard.get(String(userCard.id)).catch(() => null);
+    if (!userCard || String(userCard.user_id) !== String(user.id)) return json({ error: 'Card ownership changed. Reload your collection.' }, 409);
+    if (Number(userCard.quantity ?? 1) < 1) return json({ error: 'This card is no longer available in your collection.' }, 409);
     if (action !== 'getState' && userCard.trade_status === 'locked_in_trade') return json({ error: 'This card is locked in a trade.' }, 409);
 
     const definition = userCard.trading_card_id ? await svc.TradingCard.get(String(userCard.trading_card_id)).catch(() => null) : null;
@@ -99,6 +164,41 @@ Deno.serve(async (req) => {
     let rows = await svc.CardProgression.filter({ user_id: user.id, user_card_id: userCard.id }, '-updated_date', 2);
     if ((rows || []).length > 1) return json({ error: 'Multiple progression records exist for this card and must be reconciled.' }, 409);
     let progression: AnyObj = rows?.[0] || null;
+
+    const findProgressionEvent = async (progressionId: string, idempotencyKey: string) => {
+      if (!idempotencyKey) return null;
+      const matches = await svc.CardProgressionEvent.filter({ progression_id: progressionId, request_id: idempotencyKey }, '-created_date', 2).catch(() => []);
+      if ((matches || []).length > 1) throw rewardError('Duplicate progression events require reconciliation', 409);
+      return matches?.[0] || null;
+    };
+
+    const recordProgressionEvent = async (
+      eventType: string,
+      before: AnyObj,
+      after: AnyObj,
+      summary: string,
+      metadata: AnyObj = {},
+      idempotencyKey = '',
+    ) => {
+      const existing = await findProgressionEvent(String(progression.id), idempotencyKey);
+      if (existing) {
+        if (String(existing.event_type || '') !== String(eventType)) {
+          throw rewardError('A progression request id was reused for a different action', 409);
+        }
+        return existing;
+      }
+      return svc.CardProgressionEvent.create({
+        user_id: user.id,
+        user_card_id: userCard.id,
+        progression_id: progression.id,
+        request_id: idempotencyKey,
+        event_type: eventType,
+        summary,
+        before,
+        after,
+        metadata,
+      });
+    };
 
     if (!progression) {
       progression = await svc.CardProgression.create({
@@ -126,28 +226,40 @@ Deno.serve(async (req) => {
         last_action: 'created_v2',
         last_action_at: now(),
         revision: 1,
+        pending_mutation: {},
+        pending_provenance: {},
       });
-      await svc.CardProgressionEvent.create({
-        user_id: user.id, user_card_id: userCard.id, progression_id: progression.id,
-        event_type: 'created_v2', summary: 'Card System v2 progression initialized', before: {}, after: publicProgression(progression), metadata: {},
-      });
+      await recordProgressionEvent(
+        'created_v2', {}, publicProgression(progression),
+        'Card System v2 progression initialized', {}, `init:${userCard.id}:v2`,
+      );
     } else if (Number(progression.system_version || 0) < CARD_SYSTEM_VERSION) {
       const before = { ...progression };
       const patch = progressionPatch(progression);
-      const preview = { ...progression, ...patch, base_stats: progression.base_stats && Object.keys(progression.base_stats).length ? progression.base_stats : baseStats };
+      const preview = {
+        ...progression,
+        ...patch,
+        base_stats: progression.base_stats && Object.keys(progression.base_stats).length ? progression.base_stats : baseStats,
+      };
       patch.base_stats = preview.base_stats;
       patch.power_score = effectiveCardStats(preview).power_score;
       patch.last_action = 'migrated_to_v2';
       patch.last_action_at = now();
       patch.revision = Number(progression.revision || 0) + 1;
+      patch.pending_mutation = {};
+      patch.pending_provenance = {};
       progression = await svc.CardProgression.update(progression.id, patch);
-      await svc.CardProgressionEvent.create({
-        user_id: user.id, user_card_id: userCard.id, progression_id: progression.id,
-        event_type: 'migrated_to_v2', summary: 'Legacy card investment preserved in Card System v2', before, after: publicProgression(progression), metadata: { legacy_preserved: true },
-      });
+      await recordProgressionEvent(
+        'migrated_to_v2', before, publicProgression(progression),
+        'Legacy card investment preserved in Card System v2',
+        { legacy_preserved: true }, `migrate:${userCard.id}:v2`,
+      );
     }
 
-    let passport = await ensureCardPassport(svc, userCard, { card_name: userCard.card_name || definition?.name });
+    let passport = await ensureCardPassport(svc, userCard, {
+      card_name: userCard.card_name || definition?.name,
+      lock_token: targetLock.token,
+    });
     if (String(progression.passport_id || '') !== String(passport.passport_id)) {
       progression = await svc.CardProgression.update(progression.id, { passport_id: passport.passport_id });
     }
@@ -155,28 +267,421 @@ Deno.serve(async (req) => {
       userCard = await svc.UserCard.update(userCard.id, { passport_id: passport.passport_id });
     }
 
-    const record = async (eventType: string, before: AnyObj, after: AnyObj, summary: string, metadata: AnyObj = {}) => {
-      await svc.CardProgressionEvent.create({
-        user_id: user.id, user_card_id: userCard.id, progression_id: progression.id,
-        event_type: eventType, summary, before, after, metadata,
-      });
+    const setPendingMutation = async (descriptor: AnyObj) => {
+      const livePending = object(progression.pending_mutation);
+      if (livePending.request_id && String(livePending.request_id) !== String(descriptor.request_id)) {
+        throw rewardError('A previous card mutation still needs recovery before another can begin', 409);
+      }
+      progression = await svc.CardProgression.update(progression.id, { pending_mutation: descriptor });
+      return progression;
     };
 
-    const commit = async (patch: AnyObj, eventType: string, summary: string, metadata: AnyObj = {}) => {
+    const debitQuantity = async (
+      entity: any,
+      query: AnyObj,
+      id: string,
+      beforeQuantity: number,
+      afterQuantity: number,
+      label: string,
+    ) => {
+      const applied = await conditionalUpdate(entity, { ...query, id, quantity: beforeQuantity }, {
+        $set: { quantity: afterQuantity },
+      });
+      if (applied) return;
+      const live = await entity.get(id).catch(() => null);
+      if (live && Number(live.quantity || 0) === Number(afterQuantity)) return;
+      throw rewardError(`${label} changed while the card action was being completed. Reload and retry.`, 409);
+    };
+
+    const provenanceEvent = async (passportId: string, eventKey: string) => {
+      if (!eventKey) return null;
+      const matches = await svc.CardProvenanceEvent.filter({ passport_id: passportId, event_key: eventKey }, '-created_date', 2).catch(() => []);
+      if ((matches || []).length > 1) throw rewardError('Duplicate provenance events require reconciliation', 409);
+      return matches?.[0] || null;
+    };
+
+    const commitPendingProgression = async (descriptor: AnyObj) => {
+      const idempotencyKey = String(descriptor.request_id || '');
+      const eventType = String(descriptor.action || '');
+      if (String(progression.last_request_id || '') === idempotencyKey) {
+        if (String(progression.last_request_action || '') !== eventType) {
+          throw rewardError('A progression request id was reused for a different action', 409);
+        }
+        return progression;
+      }
+
+      const patch = object(descriptor.progression_patch);
       const before = publicProgression(progression);
       const next = normalizeProgression({ ...progression, ...patch });
       const calculated = effectiveCardStats(next, baseStats);
-      progression = await svc.CardProgression.update(progression.id, {
-        ...patch,
-        system_version: CARD_SYSTEM_VERSION,
-        power_score: calculated.power_score,
-        last_action: eventType,
-        last_action_at: now(),
-        revision: Number(progression.revision || 0) + 1,
+      const revision = Number(progression.revision || 0);
+      const cleanup = object(descriptor.stack_cleanup);
+      const updated = await conditionalUpdate(svc.CardProgression, {
+        id: progression.id,
+        user_id: user.id,
+        revision,
+      }, {
+        $set: {
+          ...patch,
+          system_version: CARD_SYSTEM_VERSION,
+          power_score: calculated.power_score,
+          last_action: eventType,
+          last_action_at: now(),
+          revision: revision + 1,
+          last_request_id: idempotencyKey,
+          last_request_action: eventType,
+          pending_provenance: object(descriptor.provenance),
+          last_stack_consumed_card_id: cleanup.kind === 'duplicate' ? String(cleanup.duplicate_id || '') : '',
+          last_stack_cleanup_pending: eventType === 'stack',
+          last_stack_legacy_quantity: cleanup.kind === 'legacy_quantity',
+        },
       });
-      await record(eventType, before, publicProgression(progression), summary, metadata);
+      if (!updated) {
+        const live = await svc.CardProgression.get(progression.id);
+        if (String(live.last_request_id || '') !== idempotencyKey || String(live.last_request_action || '') !== eventType) {
+          throw rewardError('Card progression changed while this mutation was being committed', 409);
+        }
+        progression = live;
+      } else {
+        progression = await svc.CardProgression.get(progression.id);
+      }
+      await recordProgressionEvent(
+        eventType,
+        before,
+        publicProgression(progression),
+        String(descriptor.summary || `Card ${eventType} completed`),
+        object(descriptor.metadata),
+        idempotencyKey,
+      );
       return progression;
     };
+
+    const finishPendingProvenance = async (descriptor: AnyObj) => {
+      const pending = object(descriptor.provenance || progression.pending_provenance);
+      if (!pending.kind || !pending.event_key) return;
+      passport = await ensureCardPassport(svc, userCard, { lock_token: targetLock.token });
+      const existing = await provenanceEvent(passport.passport_id, String(pending.event_key));
+
+      if (pending.kind === 'enhancement') {
+        if (!existing) {
+          await appendProvenanceEvent(svc, passport, 'enhancement', object(pending.payload), {
+            lock_token: targetLock.token,
+            event_key: String(pending.event_key),
+          });
+        }
+      } else if (pending.kind === 'ascension') {
+        if (!existing) {
+          await recordAscensionMilestone(
+            svc,
+            userCard,
+            publicProgression(progression),
+            Number(pending.ascension || normalizeProgression(progression).ascension),
+            { lock_token: targetLock.token, event_key: String(pending.event_key) },
+          );
+        }
+      } else if (pending.kind === 'stack_legacy') {
+        if (!existing) {
+          await appendProvenanceEvent(svc, passport, 'stack_upgrade', object(pending.payload), {
+            lock_token: targetLock.token,
+            event_key: String(pending.event_key),
+          });
+        }
+      } else if (pending.kind === 'stack_duplicate') {
+        const duplicateId = String(pending.duplicate_id || '');
+        let duplicate = duplicateId ? await svc.UserCard.get(duplicateId).catch(() => null) : null;
+        const consumedPassports = duplicateId
+          ? await svc.CardPassport.filter({ user_card_id: duplicateId }, '-created_date', 2).catch(() => [])
+          : [];
+        if ((consumedPassports || []).length > 1) throw rewardError('Duplicate consumed-card passports require reconciliation', 409);
+        const consumedPassport = consumedPassports?.[0] || null;
+        const consumedEvent = consumedPassport
+          ? await provenanceEvent(consumedPassport.passport_id, `consumed:${pending.event_key}`)
+          : null;
+
+        if (!existing || !consumedEvent) {
+          if (!duplicate) {
+            throw rewardError('The Stack duplicate disappeared before its provenance was finalized', 409);
+          }
+          const duplicateLock = await ensureExtraLock(duplicateId, String(user.id), 'progression:stack-recovery');
+          duplicate = await svc.UserCard.get(duplicateId);
+          await recordStackMilestone(
+            svc,
+            userCard,
+            { ...publicProgression(progression), stack_level: Number(pending.stack_level || normalizeProgression(progression).stack_level) },
+            duplicate,
+            {
+              target_lock_token: targetLock.token,
+              consumed_lock_token: duplicateLock.token,
+              event_key: String(pending.event_key),
+            },
+          );
+        }
+      } else {
+        throw rewardError('Unknown pending Card Passport mutation requires reconciliation', 409);
+      }
+
+      progression = await svc.CardProgression.update(progression.id, { pending_provenance: {} });
+      passport = await svc.CardPassport.get(passport.id);
+    };
+
+    const finishStackCleanup = async (descriptor: AnyObj) => {
+      const cleanup = object(descriptor.stack_cleanup);
+      if (String(descriptor.action || '') !== 'stack') return;
+      if (cleanup.kind === 'duplicate') {
+        const duplicateId = String(cleanup.duplicate_id || progression.last_stack_consumed_card_id || '');
+        if (duplicateId) {
+          const duplicate = await svc.UserCard.get(duplicateId).catch(() => null);
+          if (duplicate) {
+            await ensureExtraLock(duplicateId, String(user.id), 'progression:stack-cleanup');
+            const duplicateProgress = await svc.CardProgression.filter({ user_card_id: duplicateId }, '-updated_date', 20).catch(() => []);
+            for (const row of duplicateProgress || []) await svc.CardProgression.delete(row.id);
+            await svc.UserCard.delete(duplicateId);
+          }
+        }
+      }
+      progression = await svc.CardProgression.update(progression.id, {
+        last_stack_consumed_card_id: '',
+        last_stack_cleanup_pending: false,
+        last_stack_legacy_quantity: false,
+      });
+    };
+
+    const executePendingMutation = async (descriptor: AnyObj) => {
+      const mutation = object(descriptor);
+      const pendingRequestId = String(mutation.request_id || '');
+      const pendingAction = String(mutation.action || '');
+      if (!pendingRequestId || !['enhance', 'ascend', 'stack'].includes(pendingAction)) {
+        throw rewardError('Incomplete pending card mutation requires reconciliation', 409);
+      }
+
+      const debit = object(mutation.debit);
+      if (debit.kind === 'material') {
+        await debitQuantity(
+          svc.UserMaterial,
+          { user_id: String(user.id) },
+          String(debit.id || ''),
+          Number(debit.before_quantity),
+          Number(debit.after_quantity),
+          'Enhancement material inventory',
+        );
+      } else if (debit.kind === 'legacy_quantity') {
+        await debitQuantity(
+          svc.UserCard,
+          { user_id: String(user.id), mutation_lock_id: targetLock.token },
+          String(userCard.id),
+          Number(debit.before_quantity),
+          Number(debit.after_quantity),
+          'Legacy card quantity',
+        );
+        userCard = await svc.UserCard.get(String(userCard.id));
+      }
+
+      await commitPendingProgression(mutation);
+      await finishPendingProvenance(mutation);
+      await finishStackCleanup(mutation);
+      progression = await svc.CardProgression.update(progression.id, { pending_mutation: {}, pending_provenance: {} });
+      return progression;
+    };
+
+    // Every request first heals any earlier cross-entity mutation that committed
+    // only partially. A new action never steps over unfinished material/provenance
+    // work from an older request.
+    const inheritedPending = object(progression.pending_mutation);
+    if (inheritedPending.request_id) {
+      await executePendingMutation(inheritedPending);
+      progression = await svc.CardProgression.get(progression.id);
+      userCard = await svc.UserCard.get(String(userCard.id));
+    }
+
+    let idempotentReplay = false;
+    if (action !== 'getState') {
+      if (String(progression.last_request_id || '') === requestId) {
+        if (String(progression.last_request_action || '') !== action) {
+          throw rewardError('A progression request id was reused for a different action', 409);
+        }
+        idempotentReplay = true;
+      } else if (action === 'enhance') {
+        const state = normalizeProgression(progression);
+        if (state.ascension >= ASCENSION_CAP) fail('This card has completed all five Ascensions.', 409);
+        if (state.enhancement_percent >= ENHANCEMENT_CAP) fail('Enhancement is already at 120%. Ascend the card to continue.', 409);
+        const stackId = String(payload.userMaterialId || payload.user_material_id || '').trim();
+        if (!stackId) fail('Choose an enhancement material.');
+        const stack = await svc.UserMaterial.get(stackId).catch(() => null);
+        if (!stack || String(stack.user_id) !== String(user.id)) fail('Enhancement material not found.', 404);
+        const material = await svc.Material.get(String(stack.material_id || '')).catch(() => null);
+        if (!material) fail('Enhancement material definition is unavailable.', 409);
+        const value = enhancementMaterialValue(material);
+        if (value <= 0) fail('That material cannot enhance cards.', 409);
+        const requested = Math.max(1, Math.min(100, Math.floor(Number(payload.quantity || 1))));
+        const available = Math.max(0, Math.floor(Number(stack.quantity || 0)));
+        if (available < requested) fail(`You only have ${available} of that material.`, 409);
+        const remaining = ENHANCEMENT_CAP - state.enhancement_percent;
+        const neededCount = Math.max(1, Math.ceil(remaining / value));
+        const consume = Math.min(requested, neededCount);
+        const rawGain = consume * value;
+        const applied = Math.min(remaining, rawGain);
+        const waste = Math.max(0, rawGain - applied);
+        const cycleGain = cycleStatGain(progression.base_stats || baseStats, applied);
+        const eventKey = `progression:${progression.id}:${requestId}:enhance`;
+        const descriptor = {
+          request_id: requestId,
+          action: 'enhance',
+          progression_patch: {
+            enhancement_percent: state.enhancement_percent + applied,
+            current_cycle_stats: addStats(state.current_cycle_stats, cycleGain),
+          },
+          summary: `Enhancement increased by ${applied}%`,
+          metadata: {
+            user_material_id: stack.id,
+            material_id: material.id,
+            material_name: material.name,
+            rarity: material.rarity,
+            quantity: consume,
+            enhancement_value_each: value,
+            applied_percent: applied,
+            overflow_wasted: waste,
+          },
+          debit: {
+            kind: 'material',
+            id: stack.id,
+            before_quantity: available,
+            after_quantity: available - consume,
+          },
+          provenance: {
+            kind: 'enhancement',
+            event_key: eventKey,
+            payload: {
+              enhancement_percent: state.enhancement_percent + applied,
+              applied_percent: applied,
+              material_name: material.name,
+              material_rarity: material.rarity,
+            },
+          },
+        };
+        await setPendingMutation(descriptor);
+        await executePendingMutation(descriptor);
+      } else if (action === 'ascend') {
+        const state = normalizeProgression(progression);
+        if (state.ascension >= ASCENSION_CAP) fail('This card is already at Ascension 5.', 409);
+        if (state.enhancement_percent < ENHANCEMENT_CAP) fail(`Enhance this card to 120% before Ascending. Current: ${state.enhancement_percent}%.`, 409);
+        const nextAscension = state.ascension + 1;
+        const descriptor = {
+          request_id: requestId,
+          action: 'ascend',
+          progression_patch: {
+            enhancement_percent: 0,
+            ascension: nextAscension,
+            permanent_stats: addStats(state.permanent_stats, state.current_cycle_stats),
+            current_cycle_stats: {},
+            mastery_visual: nextAscension >= ASCENSION_CAP ? 'holographic_3d' : 'standard',
+          },
+          summary: `Card reached Ascension ${nextAscension}`,
+          metadata: {
+            ascension: nextAscension,
+            stats_preserved: true,
+            mastery_unlocked: nextAscension >= ASCENSION_CAP,
+          },
+          provenance: {
+            kind: 'ascension',
+            event_key: `progression:${progression.id}:${requestId}:ascend`,
+            ascension: nextAscension,
+          },
+        };
+        await setPendingMutation(descriptor);
+        await executePendingMutation(descriptor);
+      } else if (action === 'stack') {
+        const state = normalizeProgression(progression);
+        if (state.stack_level >= STACK_CAP) fail('This card is already at Stack Level 4.', 409);
+        let duplicate: AnyObj | null = null;
+        let legacyQuantity = false;
+        const duplicateId = requestedDuplicateId;
+
+        if (duplicateId) {
+          duplicate = await svc.UserCard.get(duplicateId).catch(() => null);
+          if (!duplicate || String(duplicate.user_id) !== String(user.id)) fail('Duplicate card not found.', 404);
+          if (!userCard.trading_card_id || String(duplicate.trading_card_id || '') !== String(userCard.trading_card_id)) fail('Stacking requires an exact duplicate card.');
+          if (String(duplicate.card_rarity || '') !== String(userCard.card_rarity || '')) fail('Stacking requires the same card tier.');
+          if (duplicate.is_equipped || (duplicate.equipped_to && duplicate.equipped_to !== 'none')) fail('Unequip the duplicate before stacking it.', 409);
+          if (duplicate.trade_status === 'locked_in_trade') fail('That duplicate is locked in a trade.', 409);
+          if (duplicate.starter_grant_user_id) fail('Starter cards cannot be consumed by stacking.', 409);
+          if (Array.isArray(duplicate.reward_grant_keys) && duplicate.reward_grant_keys.length) {
+            const pendingGrants = await svc.RewardGrant.filter({
+              grant_key: { $in: duplicate.reward_grant_keys },
+              status: { $ne: 'completed' },
+            }, 'created_date', 1).catch(() => []);
+            if (pendingGrants.length) fail('That reward card is still being delivered. Retry after delivery completes.', 409);
+          }
+          const duplicateLock = lockFor(duplicateId) || await ensureExtraLock(duplicateId, String(user.id), 'progression:stack');
+          await ensureCardPassport(svc, duplicate, { lock_token: duplicateLock.token });
+        } else if (Number(userCard.quantity || 1) > 1) {
+          legacyQuantity = true;
+        } else {
+          fail('Choose a duplicate copy of this card to Stack.');
+        }
+
+        const nextStack = state.stack_level + 1;
+        const eventKey = `progression:${progression.id}:${requestId}:stack`;
+        const descriptor: AnyObj = {
+          request_id: requestId,
+          action: 'stack',
+          progression_patch: {
+            stack_level: nextStack,
+            stage: nextStack,
+            stars: Math.min(5, nextStack),
+          },
+          summary: `Card reached Stack Level ${nextStack}`,
+          metadata: {
+            duplicate_user_card_id: duplicate?.id || '',
+            legacy_quantity_consumed: legacyQuantity,
+          },
+          stack_cleanup: duplicate
+            ? { kind: 'duplicate', duplicate_id: duplicate.id }
+            : { kind: 'legacy_quantity' },
+          provenance: duplicate
+            ? {
+              kind: 'stack_duplicate',
+              event_key: eventKey,
+              duplicate_id: duplicate.id,
+              stack_level: nextStack,
+            }
+            : {
+              kind: 'stack_legacy',
+              event_key: eventKey,
+              payload: { stack_level: nextStack, legacy_quantity_consumed: true },
+            },
+        };
+        if (legacyQuantity) {
+          const beforeQuantity = Number(userCard.quantity || 1);
+          descriptor.debit = {
+            kind: 'legacy_quantity',
+            id: userCard.id,
+            before_quantity: beforeQuantity,
+            after_quantity: beforeQuantity - 1,
+          };
+        }
+        await setPendingMutation(descriptor);
+        await executePendingMutation(descriptor);
+      }
+    }
+
+    progression = await svc.CardProgression.get(progression.id);
+    userCard = await svc.UserCard.get(userCard.id);
+    passport = await ensureCardPassport(svc, userCard, { lock_token: targetLock.token });
+    const avatar = await loadCombatProfile(svc, user.id);
+    const effective = effectiveCardStats(progression, baseStats);
+    const effect = userCard.animation_effect || definition?.animation_effect || {};
+    const skill = skillStats(String(effect.id || ''), userCard.card_rarity || definition?.rarity || 'Rare');
+    const combatPreview = String(userCard.card_type || definition?.card_type || '').toLowerCase() === 'ability'
+      ? abilityOutput(
+        avatar.combat,
+        {
+          ...skill,
+          base_damage: Number(effect.base_damage || skill.base_damage),
+          cooldown_ms: Number(effect.cooldown_ms || skill.cooldown_ms),
+        },
+        effective,
+      )
+      : null;
 
     const materialState = async () => {
       const [stacks, definitions] = await Promise.all([
@@ -203,6 +708,7 @@ Deno.serve(async (req) => {
         && Number(card.quantity ?? 1) > 0
         && card.trade_status !== 'locked_in_trade'
         && !card.is_equipped
+        && (!card.equipped_to || card.equipped_to === 'none')
         && String(card.card_rarity || '') === String(userCard.card_rarity || ''),
       ).map((card: AnyObj) => ({
         id: card.id,
@@ -213,114 +719,6 @@ Deno.serve(async (req) => {
       }));
     };
 
-    if (action === 'enhance') {
-      const state = normalizeProgression(progression);
-      if (state.ascension >= ASCENSION_CAP) fail('This card has completed all five Ascensions.', 409);
-      if (state.enhancement_percent >= ENHANCEMENT_CAP) fail('Enhancement is already at 120%. Ascend the card to continue.', 409);
-      const stackId = String(payload.userMaterialId || payload.user_material_id || '').trim();
-      if (!stackId) fail('Choose an enhancement material.');
-      const stack = await svc.UserMaterial.get(stackId).catch(() => null);
-      if (!stack || String(stack.user_id) !== String(user.id)) fail('Enhancement material not found.', 404);
-      const material = await svc.Material.get(String(stack.material_id || '')).catch(() => null);
-      if (!material) fail('Enhancement material definition is unavailable.', 409);
-      const value = enhancementMaterialValue(material);
-      if (value <= 0) fail('That material cannot enhance cards.', 409);
-      const requested = Math.max(1, Math.min(100, Math.floor(Number(payload.quantity || 1))));
-      const available = Math.max(0, Math.floor(Number(stack.quantity || 0)));
-      if (available < requested) fail(`You only have ${available} of that material.`, 409);
-      const remaining = ENHANCEMENT_CAP - state.enhancement_percent;
-      const neededCount = Math.max(1, Math.ceil(remaining / value));
-      const consume = Math.min(requested, neededCount);
-      const rawGain = consume * value;
-      const applied = Math.min(remaining, rawGain);
-      const waste = Math.max(0, rawGain - applied);
-      const cycleGain = cycleStatGain(progression.base_stats || baseStats, applied);
-      await svc.UserMaterial.update(stack.id, { quantity: available - consume });
-      progression = await commit({
-        enhancement_percent: state.enhancement_percent + applied,
-        current_cycle_stats: addStats(state.current_cycle_stats, cycleGain),
-      }, 'enhance', `Enhancement increased by ${applied}%`, {
-        user_material_id: stack.id, material_id: material.id, material_name: material.name,
-        rarity: material.rarity, quantity: consume, enhancement_value_each: value, applied_percent: applied, overflow_wasted: waste,
-      });
-      passport = await ensureCardPassport(svc, userCard);
-      await appendProvenanceEvent(svc, passport, 'enhancement', {
-        enhancement_percent: normalizeProgression(progression).enhancement_percent,
-        applied_percent: applied,
-        material_name: material.name,
-        material_rarity: material.rarity,
-      });
-    } else if (action === 'ascend') {
-      const state = normalizeProgression(progression);
-      if (state.ascension >= ASCENSION_CAP) fail('This card is already at Ascension 5.', 409);
-      if (state.enhancement_percent < ENHANCEMENT_CAP) fail(`Enhance this card to 120% before Ascending. Current: ${state.enhancement_percent}%.`, 409);
-      const nextAscension = state.ascension + 1;
-      progression = await commit({
-        enhancement_percent: 0,
-        ascension: nextAscension,
-        permanent_stats: addStats(state.permanent_stats, state.current_cycle_stats),
-        current_cycle_stats: {},
-        mastery_visual: nextAscension >= ASCENSION_CAP ? 'holographic_3d' : 'standard',
-      }, 'ascend', `Card reached Ascension ${nextAscension}`, {
-        ascension: nextAscension,
-        stats_preserved: true,
-        mastery_unlocked: nextAscension >= ASCENSION_CAP,
-      });
-      passport = await recordAscensionMilestone(svc, userCard, publicProgression(progression), nextAscension);
-    } else if (action === 'stack' || action === 'combine') {
-      const state = normalizeProgression(progression);
-      if (state.stack_level >= STACK_CAP) fail('This card is already at Stack Level 4.', 409);
-      const duplicateId = String(payload.duplicateUserCardId || payload.sacrificeUserCardId || (Array.isArray(payload.sacrificeUserCardIds) ? payload.sacrificeUserCardIds[0] : '') || '').trim();
-      let duplicate: AnyObj | null = null;
-      let legacyQuantity = false;
-      if (duplicateId) {
-        duplicate = await svc.UserCard.get(duplicateId).catch(() => null);
-        if (!duplicate || String(duplicate.user_id) !== String(user.id)) fail('Duplicate card not found.', 404);
-        if (String(duplicate.id) === String(userCard.id)) fail('A card cannot stack into itself.');
-        if (!userCard.trading_card_id || String(duplicate.trading_card_id || '') !== String(userCard.trading_card_id)) fail('Stacking requires an exact duplicate card.');
-        if (String(duplicate.card_rarity || '') !== String(userCard.card_rarity || '')) fail('Stacking requires the same card tier.');
-        if (duplicate.is_equipped || duplicate.equipped_to !== 'none' && duplicate.equipped_to) fail('Unequip the duplicate before stacking it.', 409);
-        if (duplicate.trade_status === 'locked_in_trade') fail('That duplicate is locked in a trade.', 409);
-        if (duplicate.starter_grant_user_id) fail('Starter cards cannot be consumed by stacking.', 409);
-      } else if (Number(userCard.quantity || 1) > 1) {
-        legacyQuantity = true;
-      } else {
-        fail('Choose a duplicate copy of this card to Stack.');
-      }
-
-      const nextStack = state.stack_level + 1;
-      if (legacyQuantity) {
-        await svc.UserCard.update(userCard.id, { quantity: Number(userCard.quantity || 1) - 1 });
-      } else if (duplicate) {
-        passport = await recordStackMilestone(svc, userCard, { ...publicProgression(progression), stack_level: nextStack }, duplicate);
-        const duplicateProgress = await svc.CardProgression.filter({ user_card_id: duplicate.id }, '-updated_date', 10).catch(() => []);
-        for (const row of duplicateProgress || []) await svc.CardProgression.delete(row.id);
-        await svc.UserCard.delete(duplicate.id);
-      }
-      progression = await commit({
-        stack_level: nextStack,
-        stage: nextStack,
-        stars: Math.min(5, nextStack),
-      }, 'stack', `Card reached Stack Level ${nextStack}`, {
-        duplicate_user_card_id: duplicate?.id || '',
-        legacy_quantity_consumed: legacyQuantity,
-      });
-      if (legacyQuantity) {
-        passport = await ensureCardPassport(svc, userCard);
-        await appendProvenanceEvent(svc, passport, 'stack_upgrade', { stack_level: nextStack, legacy_quantity_consumed: true });
-      }
-    }
-
-    progression = await svc.CardProgression.get(progression.id);
-    userCard = await svc.UserCard.get(userCard.id);
-    passport = await ensureCardPassport(svc, userCard);
-    const avatar = await loadCombatProfile(svc, user.id);
-    const effective = effectiveCardStats(progression, baseStats);
-    const effect = userCard.animation_effect || definition?.animation_effect || {};
-    const skill = skillStats(String(effect.id || ''), userCard.card_rarity || definition?.rarity || 'Rare');
-    const combatPreview = String(userCard.card_type || definition?.card_type || '').toLowerCase() === 'ability'
-      ? abilityOutput(avatar.combat, { ...skill, base_damage: Number(effect.base_damage || skill.base_damage), cooldown_ms: Number(effect.cooldown_ms || skill.cooldown_ms) }, effective)
-      : null;
     const [materials, duplicates, events, passportPublic] = await Promise.all([
       materialState(),
       duplicatesState(),
@@ -331,6 +729,8 @@ Deno.serve(async (req) => {
     return json({
       success: true,
       system_version: CARD_SYSTEM_VERSION,
+      request_id: requestId || undefined,
+      idempotent_replay: idempotentReplay,
       progression: publicProgression(progression),
       mastery: cardMasteryState(progression),
       userCard,
@@ -343,12 +743,20 @@ Deno.serve(async (req) => {
       combat_preview: combatPreview,
       avatar_level: avatar.combat.level,
       retired_actions: ['train', 'levelUp', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk'],
-      compatibility: { combine_aliases_to_stack: true, legacy_power_preserved: true },
+      compatibility: {
+        combine_aliases_to_stack: true,
+        legacy_power_preserved: true,
+        mutation_recovery: true,
+      },
       skill_tree: [],
       enchantments: [],
     });
   } catch (error: any) {
     console.error('cardProgression failed', error);
     return json({ error: error?.message || String(error) }, Number(error?.status || 400));
+  } finally {
+    if (svc && heldLocks.length) {
+      await releaseCardMutationLocks(svc, heldLocks).catch(() => null);
+    }
   }
 });
