@@ -196,8 +196,13 @@ To avoid destroying existing player investment:
 
 - old `enhanced_stats` are moved into `permanent_stats`
 - old enchantment modifier stats are also moved into `permanent_stats`
-- old level/stage/Ascension/over-enchant/selected skill-tree power is frozen into `migration_power_multiplier`
+- old Level / Stage / Ascension / Over-Enchant / selected skill-tree power is frozen into `migration_power_multiplier`
 - old `stage` becomes the initial v2 `stack_level`, capped at 4
+- old Ascension contributes to the preserved legacy power multiplier, but **does not seed the v2 `ascension` counter**
+- every migrated v1 card therefore begins the new Card System v2 Ascension journey at **Ascension 0**, while retaining all of its old power through `migration_power_multiplier` and migrated permanent stats
+- only Ascensions completed under the canonical v2 0→120% Enhancement cycle count toward v2 mastery and the fifth-Ascension holographic/3D state
+
+This separation prevents legacy Ascension from being counted twice and prevents an old Ascension-5 card from entering v2 already mastered and unable to participate in the new Enhancement/Ascension loop.
 
 Legacy fields remain readable for compatibility but are not used as new player-facing progression paths.
 
@@ -205,7 +210,7 @@ Legacy fields remain readable for compatibility but are not used as new player-f
 
 The Card System v2 pull request runs dedicated coverage before the application build:
 
-- `tests/card-system-v2.test.mjs` — progression constants, migration, Ascension power preservation, stacking and backend bundle checks
+- `tests/card-system-v2.test.mjs` — progression constants, migration, legacy Ascension reset semantics, Ascension power preservation, stacking and backend bundle checks
 - `tests/card-system-v2-ui.test.mjs` — Forge/card-detail progression and Passport UI
 - `tests/card-system-v2-market-ui.test.mjs` — card-instance listing panel and V2 trade snapshot
 - `tests/card-system-v2-skillbook-ui.test.mjs` — Skill Book V2 labels, damage preview and equip preservation
