@@ -37,6 +37,17 @@ const finite = (value: any, fallback = 0) => {
 const clamp = (value: any, min: number, max: number) => Math.min(max, Math.max(min, finite(value, min)));
 const rounded = (value: number) => Math.round(value * 100) / 100;
 
+export function addStats(a: Row = {}, b: Row = {}) {
+  const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
+  return Object.fromEntries([...keys].map((key) => [key, rounded(finite(a?.[key]) + finite(b?.[key]))]));
+}
+
+function legacyEnchantmentStats(p: Row = {}) {
+  return (Array.isArray(p.enchantments) ? p.enchantments : []).reduce((total: Row, enchantment: Row) => {
+    return addStats(total, enchantment?.modifiers || {});
+  }, {});
+}
+
 export function legacyPowerMultiplier(p: Row = {}) {
   const level = clamp(p.level ?? 1, 1, 60);
   const stage = clamp(p.stage ?? 1, 1, 5);
@@ -57,9 +68,10 @@ export function legacyPowerMultiplier(p: Row = {}) {
 export function normalizeProgression(p: Row | null = null) {
   const source = p || {};
   const migrated = Number(source.system_version || 0) < CARD_SYSTEM_VERSION;
+  const legacyStats = addStats(source.enhanced_stats || {}, legacyEnchantmentStats(source));
   const permanentStats = source.permanent_stats && typeof source.permanent_stats === 'object'
     ? source.permanent_stats
-    : { ...(source.enhanced_stats || {}) };
+    : legacyStats;
   const currentCycleStats = source.current_cycle_stats && typeof source.current_cycle_stats === 'object'
     ? source.current_cycle_stats
     : {};
@@ -80,12 +92,14 @@ export function normalizeProgression(p: Row | null = null) {
 export function enhancementMaterialValue(material: Row = {}) {
   const explicit = finite(material.enhancement_value, 0);
   if (explicit > 0) return Math.max(1, Math.round(explicit));
+  const category = String(material.use_category || '').toLowerCase();
+  if (category && category !== 'enhancement') return 0;
   const rarity = String(material.rarity || '');
   const canonical = CARD_BALANCE.materialValueByRarity[rarity];
   if (canonical) return canonical;
-  // Compatibility for pre-v2 enhancement materials. New materials should use
-  // Common / Uncommon / Unique and can set enhancement_value explicitly.
-  if (String(material.use_category || '').toLowerCase() === 'enhancement') {
+  // Compatibility for old enhancement materials that used quality rather than
+  // the v2 Common / Uncommon / Unique enhancement classification.
+  if (category === 'enhancement') {
     return Math.max(1, Math.round(clamp(material.quality ?? 1, 1, 5) * 4));
   }
   return 0;
@@ -103,11 +117,6 @@ export function cycleStatGain(baseStats: Row = {}, percentGain: number) {
     if (n > 0) out[key] = rounded(n * ratio);
   }
   return out;
-}
-
-export function addStats(a: Row = {}, b: Row = {}) {
-  const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
-  return Object.fromEntries([...keys].map((key) => [key, rounded(finite(a?.[key]) + finite(b?.[key]))]));
 }
 
 export function cardStatMultiplier(progression: Row | null = null) {
