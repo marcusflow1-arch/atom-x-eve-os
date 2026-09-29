@@ -1,10 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { cardMasteryState, normalizeProgression } from '../../shared/cardSystem.ts';
-import { ensureCardPassport, recordOwnershipTransfer } from '../../shared/cardProvenance.ts';
+import { ensureCardPassport } from '../../shared/cardProvenance.ts';
+import { finalizeCardTradeSession } from '../../shared/cardTradeFinalizer.ts';
 
 type AnyObj = Record<string, any>;
 const ACTIVE = ['accepted', 'pending'];
-const now = () => new Date().toISOString();
 
 async function cardSnapshot(base44: any, card: AnyObj, progression?: AnyObj | null) {
   const p = normalizeProgression(progression);
@@ -90,55 +90,9 @@ async function unlockSessionCards(base44: any, session: AnyObj) {
 }
 
 async function finalize(base44: any, session: AnyObj) {
-  if (session.status !== 'accepted' || !session.initiator_confirmed || !session.recipient_confirmed) {
-    throw new Error('Both players must confirm before the trade can complete');
-  }
-  const svc = base44.asServiceRole.entities;
-  const transfers = [
-    { ids: session.initiator_offer_card_ids || [], from: session.initiator_id, to: session.recipient_id },
-    { ids: session.recipient_offer_card_ids || [], from: session.recipient_id, to: session.initiator_id },
-  ];
-  const validated = new Map<string, AnyObj>();
-
-  for (const group of transfers) {
-    for (const id of group.ids) {
-      const card = await svc.UserCard.get(id).catch(() => null);
-      if (!card || card.user_id !== group.from) throw new Error('A card in this trade is no longer owned by the offering player');
-      if (card.is_equipped || card.equipped_to && card.equipped_to !== 'none') throw new Error(`${card.card_name || 'A card'} is equipped and cannot be traded`);
-      if (card.trade_status !== 'locked_in_trade' || card.last_trade_id !== session.id) {
-        throw new Error(`${card.card_name || 'A card'} is not reserved for this trade`);
-      }
-      await ensureCardPassport(svc, card);
-      validated.set(String(id), card);
-    }
-  }
-
-  for (const group of transfers) {
-    for (const id of group.ids) {
-      const card = validated.get(String(id));
-      await svc.UserCard.update(id, {
-        user_id: group.to,
-        acquisition_method: 'traded',
-        acquired_at: now(),
-        trade_status: 'available',
-        last_trade_id: session.id,
-      });
-      const progressions = await svc.CardProgression.filter({ user_card_id: id }, '-updated_date', 10);
-      for (const progression of progressions || []) {
-        await svc.CardProgression.update(progression.id, {
-          user_id: group.to,
-          last_action: 'friend_trade_transfer',
-          last_action_at: now(),
-          revision: Number(progression.revision || 0) + 1,
-        });
-      }
-      await recordOwnershipTransfer(svc, card, group.from, group.to, 'friend_trade', session.id);
-    }
-  }
-
-  return svc.TradeSession.update(session.id, {
-    status: 'completed',
-    completed_at: now(),
+  return finalizeCardTradeSession(base44.asServiceRole.entities, session, {
+    method: 'friend_trade',
+    progression_action: 'friend_trade_transfer',
   });
 }
 
@@ -253,6 +207,6 @@ Deno.serve(async (req) => {
     const current = session?.status === 'completed' || session?.status === 'cancelled' ? session : await getSessionForPair(base44, user.id, partnerId);
     return Response.json({ success: true, ...(await responseState(base44, user, partnerId, current)) });
   } catch (error) {
-    return Response.json({ error: error?.message || String(error) }, { status: 400 });
+    return Response.json({ error: error?.message || String(error) }, { status: Number(error?.status || 400) });
   }
 });
