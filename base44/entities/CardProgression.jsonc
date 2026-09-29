@@ -26,6 +26,11 @@
     "last_action": { "type": "string" },
     "last_action_at": { "type": "string", "format": "date-time" },
     "revision": { "type": "number", "default": 1 },
+    "last_request_id": { "type": "string", "description": "Idempotency key for the latest completed or recoverable progression mutation." },
+    "last_request_action": { "type": "string" },
+    "last_stack_consumed_card_id": { "type": "string", "description": "Duplicate instance associated with the latest Stack mutation." },
+    "last_stack_cleanup_pending": { "type": "boolean", "default": false, "description": "True after Stack power commits until duplicate cleanup/provenance completes." },
+    "last_stack_legacy_quantity": { "type": "boolean", "default": false },
 
     "level": { "type": "number", "default": 1, "description": "Legacy v1 field retained for migration only" },
     "xp": { "type": "number", "default": 0, "description": "Legacy v1 field retained for migration only" },
