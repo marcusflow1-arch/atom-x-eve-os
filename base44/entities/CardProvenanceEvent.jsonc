@@ -5,6 +5,7 @@
     "passport_id": { "type": "string" },
     "user_card_id": { "type": "string" },
     "trading_card_id": { "type": "string" },
+    "event_key": { "type": "string", "description": "Stable idempotency key for one logical provenance mutation." },
     "sequence": { "type": "number" },
     "event_type": { "type": "string" },
     "owner_id": { "type": "string" },
