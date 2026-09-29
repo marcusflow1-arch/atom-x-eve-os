@@ -90,8 +90,8 @@ export default function LibraryCardExplorer({ filters, onChange, full = false, f
       </>}
       <LibraryScrollReveal game={!failed && !loading && (!fullViewOpen || full) ? selectedGame : null} count={gameCards.length} anchorRef={anchor} full={full} panelId={panelId} onClose={clearGame}><Cards cards={gameCards} onSelect={inspect} /></LibraryScrollReveal>
     </div>
-    <Dialog open={Boolean(detail)} onOpenChange={(open) => { if (!open) setDetail(null); }}>
-      {detail && <DialogContent className="ll-card-inspector" data-library-card-dialog onKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onEscapeKeyDown={(event) => event.stopPropagation()}>
+    <Dialog modal={false} open={Boolean(detail)} onOpenChange={(open) => { if (!open) setDetail(null); }}>
+      {detail && <DialogContent hideOverlay className="ll-card-inspector" data-library-card-dialog onKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onEscapeKeyDown={(event) => event.stopPropagation()}>
         <DialogTitle className={detail.isOwned && detail.user_card_id ? 'sr-only' : ''}>{detail.title}</DialogTitle>
         <DialogDescription className="sr-only">Card details, ownership and progression</DialogDescription>
         {detail.isOwned && detail.user_card_id ? <Suspense fallback={<p role="status">Loading card details…</p>}><MysteryCardDetail card={detail} onBack={() => setDetail(null)} /></Suspense> : <div className="ll-card-record">
