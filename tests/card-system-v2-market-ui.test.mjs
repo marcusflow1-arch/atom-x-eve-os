@@ -51,9 +51,9 @@ const code = await build({
       buildApi.onResolve({ filter: /components\/ui\/(badge|button)$/ }, (args) => ({ path: args.path, namespace: 'market-v2-ui' }));
       buildApi.onResolve({ filter: /\.\/MaterialSystem$/ }, () => ({ path: 'material-system', namespace: 'market-v2-ui' }));
       buildApi.onLoad({ filter: /.*/, namespace: 'market-v2-ui' }, (args) => {
-        if (args.path === 'material-system') return { loader: 'js', contents: 'export const MATERIAL_INFO={precision_shard:{name:"Precision Shard",icon:"◆"}};' };
-        if (args.path.includes('badge')) return { loader: 'jsx', contents: 'import React from "react"; export function Badge({children,...props}){return <span {...props}>{children}</span>}' };
-        return { loader: 'jsx', contents: 'import React from "react"; export function Button({children,...props}){return <button {...props}>{children}</button>}' };
+        if (args.path === 'material-system') return { loader: 'js', resolveDir: process.cwd(), contents: 'export const MATERIAL_INFO={precision_shard:{name:"Precision Shard",icon:"◆"}};' };
+        if (args.path.includes('badge')) return { loader: 'jsx', resolveDir: process.cwd(), contents: 'import React from "react"; export function Badge({children,...props}){return <span {...props}>{children}</span>}' };
+        return { loader: 'jsx', resolveDir: process.cwd(), contents: 'import React from "react"; export function Button({children,...props}){return <button {...props}>{children}</button>}' };
       });
     },
   }],
@@ -66,7 +66,7 @@ mod._compile(code.outputFiles[0].text, filename);
 const TradingPanel = mod.exports.default;
 
 const root = createRoot(document.getElementById('root'));
-const findButton = (label) => [...document.querySelectorAll('button')].find((button) => button.textContent.trim() === label);
+const findButtonContaining = (label) => [...document.querySelectorAll('button')].find((button) => button.textContent.replace(/\s+/g, ' ').trim().includes(label));
 
 try {
   await act(async () => {
@@ -88,11 +88,15 @@ try {
   assert.match(text, /Progression follows ownership/);
   assert.doesNotMatch(text, /\bLevel\b|\bStars\b|Leveled to|★ stage/);
 
-  await act(async () => { findButton('Digital Passport historyShow').click(); });
+  const historyButton = findButtonContaining('Digital Passport history');
+  assert.ok(historyButton, 'Digital Passport history control is visible');
+  await act(async () => { historyButton.click(); });
   assert.match(document.body.textContent, /created/i);
   assert.match(document.body.textContent, /hash-ascend/);
 
-  await act(async () => { findButton('List Card Instance').click(); });
+  const listButton = findButtonContaining('List Card Instance');
+  assert.ok(listButton, 'Card instance listing control is visible');
+  await act(async () => { listButton.click(); });
   assert.equal(listed.length, 1);
   const snapshot = listed[0].card_snapshot;
   assert.equal(snapshot.enhancement_percent, 76);
