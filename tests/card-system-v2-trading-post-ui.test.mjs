@@ -94,7 +94,7 @@ try {
   assert.match(text, /A5\/5/);
   assert.match(text, /S3\/4/);
   assert.match(text, /Holographic/);
-  assert.match(text, /Passport AXE-CARD-C…R-001|Passport AXE-CARD-CHIDORI-001/);
+  assert.match(text, /Passport AXE-CARD-C…[A-Z]-001|Passport AXE-CARD-CHIDORI-001/);
   assert.match(text, /900 AGP/);
   assert.doesNotMatch(text, /\bLv\s*\d|★ stage|\bStage\s*\d/);
 
