@@ -3,7 +3,7 @@
   "type": "object",
   "properties": {
     "seller_id": { "type": "string" },
-    "buyer_id": { "type": "string", "description": "Null until trade completes" },
+    "buyer_id": { "type": "string", "description": "Null until a buyer claims or completes the purchase" },
     "card_id": { "type": "string", "description": "Exact UserCard instance being traded" },
     "card_snapshot": {
       "type": "object",
@@ -41,7 +41,16 @@
       "description": "Materials requested for trade"
     },
     "market_value_score": { "type": "number", "description": "Calculated value at listing" },
-    "status": { "type": "string", "enum": ["active", "sold", "cancelled", "expired"], "default": "active" },
+    "status": { "type": "string", "enum": ["active", "processing", "sold", "cancelled", "expired"], "default": "active" },
+    "settlement_key": { "type": "string", "description": "Stable idempotency key for one fixed-price purchase settlement." },
+    "settlement_state": { "type": "string", "enum": ["processing", "completed", "needs_recovery"] },
+    "settlement_started_at": { "type": "string", "format": "date-time" },
+    "settlement_completed_at": { "type": "string", "format": "date-time" },
+    "buyer_debited": { "type": "boolean", "default": false },
+    "seller_credited": { "type": "boolean", "default": false },
+    "card_transferred": { "type": "boolean", "default": false },
+    "provenance_recorded": { "type": "boolean", "default": false },
+    "transaction_recorded": { "type": "boolean", "default": false },
     "expires_at": { "type": "string", "format": "date-time" },
     "views": { "type": "number", "default": 0 },
     "trade_cooldown_until": { "type": "string", "format": "date-time", "description": "Anti-flip protection" }
