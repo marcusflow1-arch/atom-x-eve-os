@@ -2,6 +2,10 @@
   "name": "MarketTransaction",
   "type": "object",
   "properties": {
+    "settlement_key": {
+      "type": "string",
+      "description": "Stable Trading Post settlement identity used to prevent duplicate transaction records."
+    },
     "buyer_id": {
       "type": "string",
       "description": "ID of the user who bought the item"
@@ -24,11 +28,7 @@
     },
     "transaction_type": {
       "type": "string",
-      "enum": [
-        "purchase",
-        "sale",
-        "bid_win"
-      ],
+      "enum": ["purchase", "sale", "bid_win"],
       "description": "Type of transaction"
     },
     "timestamp": {
@@ -36,11 +36,5 @@
       "format": "date-time"
     }
   },
-  "required": [
-    "buyer_id",
-    "seller_id",
-    "item_id",
-    "price",
-    "transaction_type"
-  ]
+  "required": ["buyer_id", "seller_id", "item_id", "price", "transaction_type"]
 }
