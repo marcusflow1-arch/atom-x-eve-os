@@ -26,6 +26,7 @@ jobs:
           node tests/card-market-settlement.test.mjs
           node tests/card-material-settlement.test.mjs
           node tests/card-trade-finalizer.test.mjs
+          node tests/card-trade-negotiation.test.mjs
       - name: Validate Card System v2 UI
         run: |
           node tests/card-system-v2-ui.test.mjs
