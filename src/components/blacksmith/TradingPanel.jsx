@@ -1,13 +1,66 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeftRight, Tag, Clock, Eye, AlertTriangle, 
-  Check, X, History, Shield, Star, Crown, TrendingUp
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertTriangle, ArrowLeftRight, BadgeCheck, Check, Clock, Crown, History,
+  Layers3, Shield, Sparkles, Tag, TrendingUp, X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { calculateMarketValue, calculateTradeTax, canTradeCard, ValueBreakdown } from './MarketValuation';
-import { MaterialCard, MATERIAL_INFO } from './MaterialSystem';
+import { MATERIAL_INFO } from './MaterialSystem';
+
+function number(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function progression(card = {}) {
+  const p = card.progression || {};
+  return {
+    enhancement: Math.max(0, Math.min(120, number(card.enhancement_percent ?? p.enhancement_percent))),
+    ascension: Math.max(0, Math.min(5, number(card.ascension ?? p.ascension))),
+    stack: Math.max(1, Math.min(4, number(card.stack_level ?? p.stack_level, 1))),
+    mastery: card.mastery_visual || p.mastery_visual || '',
+    passportId: card.passport_id || p.passport_id || card.passport?.passport_id || '',
+  };
+}
+
+function CardSummary({ card }) {
+  const p = progression(card);
+  const tier = card.playable_tier || card.rarity || card.card_rarity || 'Rare';
+  const mastered = p.mastery === 'holographic_3d' || p.ascension >= 5;
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="flex justify-between gap-4"><span className="text-white/50">Playable Tier</span><strong className="text-white">{tier}</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-white/50">Enhancement</span><strong className="text-cyan-200">{p.enhancement}/120%</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-white/50">Ascension</span><span className="inline-flex items-center gap-1 text-amber-200"><Crown className="h-3.5 w-3.5" />A{p.ascension}/5</span></div>
+      <div className="flex justify-between gap-4"><span className="text-white/50">Stack Level</span><span className="inline-flex items-center gap-1 text-violet-200"><Layers3 className="h-3.5 w-3.5" />{p.stack}/4</span></div>
+      <div className="flex justify-between gap-4"><span className="text-white/50">Mastery</span><span className={mastered ? 'text-cyan-100' : 'text-white/70'}>{mastered ? 'Holographic 3D' : 'In progress'}</span></div>
+      <div className="border-t border-white/[0.06] pt-2">
+        <span className="block text-[9px] uppercase tracking-[.15em] text-white/30">Digital Passport</span>
+        <code className="mt-1 block truncate text-[10px] text-emerald-100/70">{p.passportId || 'Assigned when the card instance is registered'}</code>
+      </div>
+    </div>
+  );
+}
+
+function PassportHistory({ card }) {
+  const events = useMemo(() => card.passport_events || card.passport?.events || [], [card]);
+  if (!events.length) {
+    return <div className="rounded-xl bg-black/25 p-4 text-xs leading-5 text-white/35">No passport events were supplied to this panel. The authoritative ownership and progression history remains attached to the card's Digital Passport.</div>;
+  }
+  return (
+    <div className="space-y-1 rounded-xl bg-black/25 p-3">
+      {[...events].reverse().slice(0, 8).map((entry, index) => (
+        <div key={`${entry.sequence || index}-${entry.event_hash || entry.timestamp || index}`} className="grid grid-cols-[38px_1fr_auto] gap-3 border-b border-white/[0.05] py-2 last:border-0">
+          <span className="font-mono text-[9px] text-white/25">#{entry.sequence || events.length - index}</span>
+          <div className="min-w-0"><strong className="block truncate text-[10px] uppercase tracking-[.1em] text-white/65">{String(entry.event_type || 'card event').replaceAll('_', ' ')}</strong>{entry.event_hash && <span className="mt-1 block truncate font-mono text-[8px] text-white/20">{entry.event_hash}</span>}</div>
+          <span className="text-[8px] text-white/25">{entry.timestamp ? new Date(entry.timestamp).toLocaleDateString() : ''}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function TradingPanel({ card, onClose, onListCard }) {
   const [listingType, setListingType] = useState('fixed_price');
@@ -18,272 +71,103 @@ export default function TradingPanel({ card, onClose, onListCard }) {
   const tradeCheck = canTradeCard(card, card.last_trade_date);
   const marketValue = calculateMarketValue(card);
   const tax = calculateTradeTax(card, askingPrice);
-  const netProceeds = askingPrice - tax;
-
-  // Mock card history
-  const cardHistory = [
-    { type: 'upgrade', action: 'Leveled to 15', date: '2 days ago' },
-    { type: 'enhance', action: 'Enhanced Attack +20', date: '3 days ago' },
-    { type: 'acquire', action: 'Unlocked via Achievement', date: '1 week ago', achievement: 'Dragon Slayer' },
-  ];
+  const netProceeds = Math.max(0, askingPrice - tax);
+  const p = progression(card);
 
   const handleListCard = () => {
     if (!tradeCheck.canTrade) return;
-    
     onListCard?.({
       card_id: card.id,
       listing_type: listingType,
-      asking_price: listingType === 'fixed_price' ? askingPrice : null,
+      asking_price: listingType === 'fixed_price' || listingType === 'auction' ? askingPrice : null,
       asking_materials: listingType === 'trade_offer' ? selectedMaterials : null,
       market_value_score: marketValue,
       card_snapshot: {
-        name: card.title || card.name,
-        rarity: card.rarity,
-        level: card.level,
-        stars: card.stars,
-        ascension: card.ascension,
-        enhanced_stats: card.enhanced_stats,
-        origin_game: card.series,
-        image: card.image
-      }
+        name: card.title || card.name || card.card_name,
+        rarity: card.playable_tier || card.rarity || card.card_rarity,
+        playable_tier: card.playable_tier || card.rarity || card.card_rarity,
+        enhancement_percent: p.enhancement,
+        ascension: p.ascension,
+        stack_level: p.stack,
+        mastery_visual: p.mastery,
+        passport_id: p.passportId,
+        origin_game: card.series || card.game_name,
+        image: card.image || card.card_image,
+      },
     });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-8"
-      style={{ background: 'rgba(0, 0, 0, 0.8)' }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="relative w-full max-w-4xl rounded-3xl overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(30, 40, 50, 0.95) 0%, rgba(20, 25, 35, 0.95) 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-5 md:p-8" style={{ background: 'rgba(0,0,0,.82)' }} onClick={onClose}>
+      <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} className="relative max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-[#0c1119]/98 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4 md:px-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-              <ArrowLeftRight className="w-6 h-6 text-cyan-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Trade Card</h2>
-              <p className="text-white/50 text-sm">List on the marketplace</p>
-            </div>
+            <div className="grid h-10 w-10 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06]"><ArrowLeftRight className="h-5 w-5 text-cyan-200" /></div>
+            <div><p className="text-[8px] font-black uppercase tracking-[.22em] text-cyan-200/55">Card System v2</p><h2 className="mt-1 text-lg font-black text-white">List this exact card instance</h2></div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white">
-            <X className="w-6 h-6" />
-          </button>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-white/45 hover:text-white" aria-label="Close trade panel"><X className="h-4 w-4" /></button>
         </div>
 
-        <div className="p-6 flex gap-6">
-          {/* Left: Card Preview */}
-          <div className="w-[240px] flex-shrink-0">
-            <div className="aspect-[2.5/3.5] rounded-xl overflow-hidden border-2 border-white/20 mb-4">
-              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+        <div className="grid gap-6 p-5 md:grid-cols-[240px_minmax(0,1fr)] md:p-6">
+          <aside>
+            <div className="aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-[#080d14]">
+              {(card.image || card.card_image) ? <img src={card.image || card.card_image} alt={card.title || card.name || card.card_name || 'Card'} className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[radial-gradient(circle_at_30%_10%,rgba(34,211,238,.14),transparent_35%),linear-gradient(150deg,#111827,#05070c)]" />}
             </div>
-            
-            {/* Card Stats Summary */}
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-white/60">Level</span>
-                <span className="text-white font-bold">{card.level || 1}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Stars</span>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`w-3 h-3 ${i < (card.stars || 1) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                  ))}
-                </div>
-              </div>
-              {card.ascension > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Ascension</span>
-                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                    <Crown className="w-3 h-3 mr-1" />A{card.ascension}
-                  </Badge>
-                </div>
-              )}
+            <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-4"><CardSummary card={card} /></div>
+            <div className={`mt-3 rounded-xl border p-3 ${tradeCheck.canTrade ? 'border-emerald-300/15 bg-emerald-300/[0.04]' : 'border-rose-300/15 bg-rose-300/[0.04]'}`}>
+              {tradeCheck.canTrade ? <div className="flex items-center gap-2 text-xs text-emerald-200"><Check className="h-4 w-4" /> Tradable instance</div> : <div className="flex items-center gap-2 text-xs text-rose-200"><AlertTriangle className="h-4 w-4" /> {tradeCheck.reason}</div>}
+            </div>
+          </aside>
+
+          <main className="space-y-5">
+            <div className="rounded-xl border border-cyan-300/10 bg-cyan-300/[0.025] p-4 text-xs leading-5 text-cyan-50/55">
+              <div className="mb-1 flex items-center gap-2 text-cyan-100"><BadgeCheck className="h-4 w-4" /><strong>Progression follows ownership.</strong></div>
+              A sale or player trade transfers this UserCard instance with its Enhancement, Ascension, Stack Level and Digital Passport history. The buyer does not receive a reset copy.
             </div>
 
-            {/* Tradable Status */}
-            <div className={`mt-4 p-3 rounded-xl ${tradeCheck.canTrade ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-              {tradeCheck.canTrade ? (
-                <div className="flex items-center gap-2 text-green-400 text-sm">
-                  <Check className="w-4 h-4" />
-                  <span>Tradable</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-red-400 text-sm">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>{tradeCheck.reason}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right: Trade Options */}
-          <div className="flex-1 space-y-6">
-            {/* Listing Type */}
             <div>
-              <label className="text-white/60 text-xs uppercase tracking-wider block mb-3">Listing Type</label>
-              <div className="flex gap-2">
+              <label className="mb-3 block text-[9px] font-bold uppercase tracking-[.16em] text-white/35">Listing Type</label>
+              <div className="grid gap-2 sm:grid-cols-3">
                 {[
                   { id: 'fixed_price', label: 'Fixed Price', icon: Tag },
                   { id: 'auction', label: 'Auction', icon: Clock },
-                  { id: 'trade_offer', label: 'Trade for Materials', icon: ArrowLeftRight }
-                ].map(type => (
-                  <button
-                    key={type.id}
-                    onClick={() => setListingType(type.id)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${
-                      listingType === type.id
-                        ? 'bg-cyan-500/20 border border-cyan-500/50 text-cyan-300'
-                        : 'bg-white/5 border border-white/10 text-white/60 hover:text-white'
-                    }`}
-                  >
-                    <type.icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{type.label}</span>
-                  </button>
-                ))}
+                  { id: 'trade_offer', label: 'Trade for Materials', icon: ArrowLeftRight },
+                ].map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setListingType(id)} className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs transition ${listingType === id ? 'border-cyan-300/35 bg-cyan-300/[0.07] text-cyan-100' : 'border-white/[0.07] bg-white/[0.025] text-white/45 hover:text-white'}`}><Icon className="h-4 w-4" />{label}</button>)}
               </div>
             </div>
 
-            {/* Price / Materials Selection */}
             {listingType !== 'trade_offer' ? (
               <div>
-                <label className="text-white/60 text-xs uppercase tracking-wider block mb-3">
-                  {listingType === 'auction' ? 'Starting Price' : 'Asking Price'}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={askingPrice}
-                    onChange={(e) => setAskingPrice(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg font-bold focus:outline-none focus:border-cyan-500/50"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-2xl">🪙</span>
-                </div>
-                
-                {/* Market comparison */}
-                <div className="mt-3 flex items-center gap-4 text-sm">
-                  <span className="text-white/50">Market Value:</span>
-                  <span className="text-white font-semibold">{marketValue.toLocaleString()} 🪙</span>
-                  {askingPrice > marketValue * 1.2 && (
-                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      Above Market
-                    </Badge>
-                  )}
-                </div>
+                <label className="mb-2 block text-[9px] font-bold uppercase tracking-[.16em] text-white/35">{listingType === 'auction' ? 'Starting Price' : 'Asking Price'}</label>
+                <div className="flex items-center rounded-xl border border-white/[0.07] bg-black/20 px-3"><input type="number" min="0" value={askingPrice} onChange={(event) => setAskingPrice(Math.max(0, parseInt(event.target.value, 10) || 0))} className="h-12 min-w-0 flex-1 bg-transparent text-lg font-bold text-white outline-none" /><span className="text-sm text-amber-200">AGP</span></div>
+                <div className="mt-2 flex items-center gap-3 text-xs"><span className="text-white/35">Estimated instance value</span><strong className="text-white/75">{marketValue.toLocaleString()} AGP</strong>{askingPrice > marketValue * 1.2 && <Badge className="border-amber-300/20 bg-amber-300/[0.06] text-amber-200"><TrendingUp className="mr-1 h-3 w-3" />Above estimate</Badge>}</div>
               </div>
             ) : (
               <div>
-                <label className="text-white/60 text-xs uppercase tracking-wider block mb-3">
-                  Materials Wanted
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(MATERIAL_INFO).slice(0, 6).map(([type, info]) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        if (selectedMaterials.find(m => m.type === type)) {
-                          setSelectedMaterials(prev => prev.filter(m => m.type !== type));
-                        } else {
-                          setSelectedMaterials(prev => [...prev, { type, quantity: 5 }]);
-                        }
-                      }}
-                      className={`p-3 rounded-xl transition-all ${
-                        selectedMaterials.find(m => m.type === type)
-                          ? 'bg-cyan-500/20 border border-cyan-500/50'
-                          : 'bg-white/5 border border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <span className="text-2xl block mb-1">{info.icon}</span>
-                      <span className="text-xs text-white/60">{info.name}</span>
-                    </button>
-                  ))}
-                </div>
+                <label className="mb-3 block text-[9px] font-bold uppercase tracking-[.16em] text-white/35">Materials Wanted</label>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{Object.entries(MATERIAL_INFO).slice(0, 6).map(([type, info]) => {
+                  const selected = selectedMaterials.some((material) => material.type === type);
+                  return <button key={type} type="button" onClick={() => setSelectedMaterials((previous) => selected ? previous.filter((material) => material.type !== type) : [...previous, { type, quantity: 5 }])} className={`rounded-xl border p-3 text-left transition ${selected ? 'border-cyan-300/30 bg-cyan-300/[0.06]' : 'border-white/[0.07] bg-white/[0.02]'}`}><span className="text-lg">{info.icon}</span><span className="ml-2 text-[10px] text-white/55">{info.name}</span></button>;
+                })}</div>
               </div>
             )}
 
-            {/* Fee Breakdown */}
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-white/60">Listing Price</span>
-                <span className="text-white">{askingPrice.toLocaleString()} 🪙</span>
-              </div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-white/60">Trade Tax ({(calculateTradeTax(card, 100) / 100 * 100).toFixed(0)}%)</span>
-                <span className="text-orange-400">-{tax.toLocaleString()} 🪙</span>
-              </div>
-              <div className="pt-2 mt-2 border-t border-white/10 flex justify-between">
-                <span className="text-white font-semibold">You Receive</span>
-                <span className="text-green-400 font-bold">{netProceeds.toLocaleString()} 🪙</span>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-4"><ValueBreakdown card={card} /></div>
+              <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-4">
+                <div className="flex justify-between text-sm"><span className="text-white/45">Listing Price</span><span className="text-white">{askingPrice.toLocaleString()} AGP</span></div>
+                <div className="mt-2 flex justify-between text-sm"><span className="text-white/45">Trade Tax</span><span className="text-orange-300">-{tax.toLocaleString()} AGP</span></div>
+                <div className="mt-3 flex justify-between border-t border-white/[0.07] pt-3"><strong className="text-white/75">You Receive</strong><strong className="text-emerald-200">{netProceeds.toLocaleString()} AGP</strong></div>
               </div>
             </div>
 
-            {/* Card History Toggle */}
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
-            >
-              <div className="flex items-center gap-2 text-white/60">
-                <History className="w-4 h-4" />
-                <span className="text-sm">Card History</span>
-              </div>
-              <span className="text-xs text-white/40">{showHistory ? 'Hide' : 'Show'}</span>
-            </button>
+            <button type="button" onClick={() => setShowHistory((value) => !value)} className="flex w-full items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-white/55 hover:text-white"><span className="flex items-center gap-2 text-xs"><History className="h-4 w-4" /> Digital Passport history</span><span className="text-[9px] uppercase tracking-wider text-white/30">{showHistory ? 'Hide' : 'Show'}</span></button>
+            <AnimatePresence>{showHistory && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden"><PassportHistory card={card} /></motion.div>}</AnimatePresence>
 
-            <AnimatePresence>
-              {showHistory && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-2 p-4 rounded-xl bg-black/30">
-                    {cardHistory.map((entry, i) => (
-                      <div key={i} className="flex items-center gap-3 text-sm">
-                        <div className={`w-2 h-2 rounded-full ${
-                          entry.type === 'acquire' ? 'bg-green-400' :
-                          entry.type === 'upgrade' ? 'bg-blue-400' :
-                          'bg-purple-400'
-                        }`} />
-                        <span className="text-white/80 flex-1">{entry.action}</span>
-                        <span className="text-white/40 text-xs">{entry.date}</span>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {p.ascension >= 5 && <div className="flex items-center gap-2 rounded-xl border border-cyan-300/15 bg-cyan-300/[0.04] p-3 text-[10px] uppercase tracking-[.12em] text-cyan-100"><Sparkles className="h-4 w-4" /> Holographic mastery is part of this traded instance.</div>}
 
-            {/* List Button */}
-            <Button
-              onClick={handleListCard}
-              disabled={!tradeCheck.canTrade}
-              className={`w-full py-6 text-lg font-bold ${
-                tradeCheck.canTrade
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white'
-                  : 'bg-white/10 text-white/30 cursor-not-allowed'
-              }`}
-            >
-              <Shield className="w-5 h-5 mr-2" />
-              List on Marketplace
-            </Button>
-          </div>
+            <Button onClick={handleListCard} disabled={!tradeCheck.canTrade} className={`w-full py-6 text-base font-bold ${tradeCheck.canTrade ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600' : 'cursor-not-allowed bg-white/10 text-white/30'}`}><Shield className="mr-2 h-5 w-5" />List Card Instance</Button>
+          </main>
         </div>
       </motion.div>
     </motion.div>
