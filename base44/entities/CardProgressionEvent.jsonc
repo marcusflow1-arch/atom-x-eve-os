@@ -5,6 +5,7 @@
     "user_id": { "type": "string" },
     "user_card_id": { "type": "string" },
     "progression_id": { "type": "string" },
+    "request_id": { "type": "string", "description": "Client/server idempotency key for one logical progression mutation." },
     "event_type": {
       "type": "string",
       "enum": [
