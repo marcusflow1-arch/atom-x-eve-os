@@ -117,9 +117,10 @@ export function cardStatMultiplier(progression: Row | null = null) {
 }
 
 export function cardGrowthMultiplier(progression: Row | null = null) {
-  const p = normalizeProgression(progression);
-  const enhancement = finite(p.enhancement_percent) * CARD_BALANCE.enhancementPowerPerPercent;
-  return rounded(cardStatMultiplier(p) * (1 + enhancement));
+  // Enhancement strength lives in current_cycle_stats and permanent_stats.
+  // Keeping it out of this multiplier guarantees that Ascension's 120% -> 0%
+  // gauge reset never removes damage or attributes already earned.
+  return cardStatMultiplier(progression);
 }
 
 export function cardMasteryState(progression: Row | null = null) {
