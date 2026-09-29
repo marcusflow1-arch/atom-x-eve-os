@@ -40,7 +40,10 @@ export function libraryScrollFrame(anchor, boundary, viewport) {
   if (!anchor || !anchor.width || !anchor.height) return null;
   const right = Math.min(boundary?.right || viewport.width - 16, viewport.width - 16);
   const left = anchor.right, top = Math.max(72, anchor.top);
-  const height = Math.max(0, Math.min(anchor.bottom, viewport.height - 64) - top);
+  // The unfolded game-card surface continues through the open 3D/environment
+  // band and stops immediately above Luna's 48px bottom header.
+  const bottom = Math.max(top, viewport.height - 48);
+  const height = Math.max(0, bottom - top);
   const width = Math.max(0, right - left);
   return { left, top, width, height, inline: width < 210 || height < 160 };
 }
