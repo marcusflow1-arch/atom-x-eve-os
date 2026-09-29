@@ -1,6 +1,11 @@
 import { acquireCardMutationLocks, releaseCardMutationLocks } from './cardMutationLock.ts';
 import { ensureCardPassport, recordOwnershipTransfer } from './cardProvenance.ts';
 import { rewardError } from './rewardJournal.ts';
+import {
+  acquireTradeSessionMutationLock,
+  assertTradeSessionMutationLock,
+  releaseTradeSessionMutationLock,
+} from './tradeSessionMutationLock.ts';
 
 type Row = Record<string, any>;
 
@@ -9,6 +14,7 @@ const now = () => new Date().toISOString();
 export type CardTradeFinalizeOptions = {
   method?: string;
   progression_action?: string;
+  session_lock_token?: string;
 };
 
 export async function finalizeCardTradeSession(
@@ -21,37 +27,47 @@ export async function finalizeCardTradeSession(
   const method = String(options.method || 'player_trade');
   const progressionAction = String(options.progression_action || 'trade_transfer');
 
-  let session = await svc.TradeSession.get(sessionId).catch(() => null);
-  if (!session) throw rewardError('Trade not found', 404);
-  if (session.status === 'completed') return session;
-  if (session.status !== 'accepted' || !session.initiator_confirmed || !session.recipient_confirmed) {
-    throw rewardError('Both players must confirm before the trade can complete', 409);
+  let ownedSessionLock: any = null;
+  let sessionLock: any = null;
+  if (options.session_lock_token) {
+    sessionLock = await assertTradeSessionMutationLock(svc, sessionId, options.session_lock_token, `trade_finalize:${sessionId}`);
+  } else {
+    ownedSessionLock = await acquireTradeSessionMutationLock(svc, sessionId, `trade_finalize:${sessionId}`);
+    sessionLock = ownedSessionLock;
   }
 
-  const transfers = [
-    { ids: session.initiator_offer_card_ids || [], from: String(session.initiator_id), to: String(session.recipient_id) },
-    { ids: session.recipient_offer_card_ids || [], from: String(session.recipient_id), to: String(session.initiator_id) },
-  ];
-  const seen = new Set<string>();
-  const lockTargets: Array<{ id: string; owner_id?: string | null }> = [];
-  for (const group of transfers) {
-    for (const rawId of group.ids) {
-      const id = String(rawId || '');
-      if (!id) throw rewardError('Trade contains an empty card identity', 409);
-      if (seen.has(id)) throw rewardError('The same card cannot appear twice in one trade', 409);
-      seen.add(id);
-      // Owner is intentionally not part of the lease predicate. A retry after a
-      // partial transfer must be able to lock a card that already moved to the
-      // receiving player and finish the rest of the same session.
-      lockTargets.push({ id, owner_id: null });
-    }
-  }
-  if (!lockTargets.length) throw rewardError('Trade has no cards to finalize', 409);
-
-  const locks = await acquireCardMutationLocks(svc, lockTargets, `trade:${sessionId}`);
-  const lockFor = (id: string) => locks.find((lock) => lock.card_id === String(id));
+  let cardLocks: any[] = [];
   try {
-    // Confirmations/offers may have changed while we waited for the leases.
+    let session = await svc.TradeSession.get(sessionId).catch(() => null);
+    if (!session) throw rewardError('Trade not found', 404);
+    if (session.status === 'completed') return session;
+    if (session.status !== 'accepted' || !session.initiator_confirmed || !session.recipient_confirmed) {
+      throw rewardError('Both players must confirm before the trade can complete', 409);
+    }
+
+    const transfers = [
+      { ids: session.initiator_offer_card_ids || [], from: String(session.initiator_id), to: String(session.recipient_id) },
+      { ids: session.recipient_offer_card_ids || [], from: String(session.recipient_id), to: String(session.initiator_id) },
+    ];
+    const seen = new Set<string>();
+    const lockTargets: Array<{ id: string; owner_id?: string | null }> = [];
+    for (const group of transfers) {
+      for (const rawId of group.ids) {
+        const id = String(rawId || '');
+        if (!id) throw rewardError('Trade contains an empty card identity', 409);
+        if (seen.has(id)) throw rewardError('The same card cannot appear twice in one trade', 409);
+        seen.add(id);
+        // Owner is intentionally omitted. A retry after a partial transfer must
+        // be able to re-lock a card that already moved to the receiving player.
+        lockTargets.push({ id, owner_id: null });
+      }
+    }
+    if (!lockTargets.length) throw rewardError('Trade has no cards to finalize', 409);
+
+    cardLocks = await acquireCardMutationLocks(svc, lockTargets, `trade:${sessionId}`);
+    const lockFor = (id: string) => cardLocks.find((lock) => lock.card_id === String(id));
+
+    await assertTradeSessionMutationLock(svc, sessionId, sessionLock.token, `trade_finalize:${sessionId}`);
     session = await svc.TradeSession.get(sessionId);
     if (session.status === 'completed') return session;
     if (session.status !== 'accepted' || !session.initiator_confirmed || !session.recipient_confirmed) {
@@ -135,6 +151,7 @@ export async function finalizeCardTradeSession(
       }
     }
 
+    await assertTradeSessionMutationLock(svc, sessionId, sessionLock.token, `trade_finalize:${sessionId}`);
     session = await svc.TradeSession.get(sessionId);
     if (session.status === 'completed') return session;
     return svc.TradeSession.update(sessionId, {
@@ -142,6 +159,7 @@ export async function finalizeCardTradeSession(
       completed_at: now(),
     });
   } finally {
-    await releaseCardMutationLocks(svc, locks);
+    if (cardLocks.length) await releaseCardMutationLocks(svc, cardLocks);
+    if (ownedSessionLock) await releaseTradeSessionMutationLock(svc, ownedSessionLock);
   }
 }
