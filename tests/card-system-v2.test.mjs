@@ -70,6 +70,21 @@ assert.equal(legacy.permanent_stats.magic, 5);
 assert.ok(legacy.migration_power_multiplier > 1, 'legacy level/stage/ascension investment is frozen into migration power');
 assert.equal(legacy.stack_level, 3, 'legacy stage migrates to Stack Level');
 
+// Migration must preserve the exact four-decimal multiplier used by the old
+// cardStats implementation. Rounding 1.055 to 1.06 would silently buff a card
+// simply because it crossed the V2 migration boundary.
+assert.equal(system.legacyPowerMultiplier({ level: 2, stage: 1, ascension: 0, over_enchant_rank: 0 }), 1.055);
+const exactLegacy = stats.effectiveCardStats({
+  level: 2,
+  stage: 1,
+  ascension: 0,
+  over_enchant_rank: 0,
+  base_stats: { attack: 20, defense: 8 },
+  enhanced_stats: { attack: 3 },
+  enchantments: [{ modifiers: { attack: 2 } }],
+}, { attack: 20, defense: 8 });
+assert.equal(exactLegacy.stats.attack, 26.38, 'legacy migration preserves the pre-V2 card stat exactly');
+
 const stackOne = stats.effectiveCardStats({ system_version: 2, base_stats: base, stack_level: 1 }, base);
 const stackFour = stats.effectiveCardStats({ system_version: 2, base_stats: base, stack_level: 4 }, base);
 assert.ok(stackFour.power_score > stackOne.power_score, 'Stack Level must make the card stronger');
@@ -99,4 +114,4 @@ for (const entry of [
   });
 }
 
-console.log('PASS: Card System v2 enhancement, Ascension preservation, stacking, migration, mastery and backend syntax.');
+console.log('PASS: Card System v2 enhancement, Ascension preservation, exact legacy migration, stacking, mastery and backend syntax.');
