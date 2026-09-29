@@ -68,6 +68,19 @@
       "type": "string",
       "format": "date-time",
       "description": "When the trade finished"
+    },
+    "mutation_lock_id": {
+      "type": "string",
+      "description": "Short-lived server lease token used to serialize offer edits, confirmations, cancellation, and finalization."
+    },
+    "mutation_lock_kind": {
+      "type": "string",
+      "description": "Trade-session operation currently holding the lease."
+    },
+    "mutation_lock_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Lease expiry. Stale trade-session locks may be reclaimed after this instant."
     }
   },
   "required": [
