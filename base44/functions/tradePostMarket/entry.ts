@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { cardMasteryState, normalizeProgression } from '../../shared/cardSystem.ts';
 import { ensureCardPassport } from '../../shared/cardProvenance.ts';
 import { finalizeFixedPriceCardPurchase } from '../../shared/cardMarketSettlement.ts';
+import { openCardTradeNegotiation } from '../../shared/cardListingNegotiation.ts';
 import {
   acquireCardMutationLock,
   refreshCardMutationLock,
@@ -137,7 +138,7 @@ async function cancelListing(svc: any, user: AnyObj, listingId: string) {
     if (listing.status === 'active') listing = await svc.CardTrade.update(listing.id, { status: 'cancelled' });
     const card = await svc.UserCard.get(String(listing.card_id)).catch(() => null);
     if (card && String(card.user_id || '') === String(user.id) && String(card.last_trade_id || '') === String(listing.id)) {
-      await svc.UserCard.update(card.id, { trade_status: 'available' });
+      await svc.UserCard.update(card.id, { trade_status: 'available', last_trade_id: '' });
     }
     return listing;
   } finally {
@@ -165,19 +166,9 @@ Deno.serve(async (req) => {
       if (!listing) throw rewardError('This listing is no longer available', 404);
       await finalizeFixedPriceCardPurchase(svc, listing, String(user.id));
     } else if (action === 'openTrade') {
-      const listing = await svc.CardTrade.get(payload.listingId).catch(() => null);
-      if (!listing || listing.status !== 'active' || listing.seller_id === user.id) throw new Error('Listing cannot be traded right now');
-      const session = await svc.TradeSession.create({
-        initiator_id: user.id,
-        recipient_id: listing.seller_id,
-        status: 'pending',
-        initiator_offer_card_ids: [],
-        recipient_offer_card_ids: [listing.card_id],
-        initiator_offer_snapshot: [],
-        recipient_offer_snapshot: [listing.card_snapshot],
-        initiator_confirmed: false,
-        recipient_confirmed: false,
-      });
+      const listing = await svc.CardTrade.get(String(payload.listingId || '')).catch(() => null);
+      if (!listing) throw rewardError('Listing cannot be traded right now', 404);
+      const session = await openCardTradeNegotiation(svc, listing, String(user.id));
       return Response.json({ success: true, tradeSession: session, ...(await state(base44, await svc.User.get(user.id))) });
     } else if (action !== 'getState') {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
