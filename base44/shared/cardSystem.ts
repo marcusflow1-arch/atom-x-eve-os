@@ -69,9 +69,19 @@ export function legacyPowerMultiplier(p: Row = {}) {
   ));
 }
 
+function isLegacyProgression(source: Row) {
+  const version = Number(source.system_version || 0);
+  if (version > 0) return version < CARD_SYSTEM_VERSION;
+  return [
+    'level', 'xp', 'xp_to_next', 'stage', 'stars', 'ascension', 'max_level',
+    'skill_points', 'unlocked_skill_nodes', 'active_perks', 'enchantments',
+    'over_enchant_rank', 'over_enchant_stability', 'enhanced_stats',
+  ].some((key) => source[key] !== undefined);
+}
+
 export function normalizeProgression(p: Row | null = null) {
   const source = p || {};
-  const migrated = Number(source.system_version || 0) < CARD_SYSTEM_VERSION;
+  const migrated = isLegacyProgression(source);
   const legacyStats = addStats(source.enhanced_stats || {}, legacyEnchantmentStats(source));
   const permanentStats = source.permanent_stats && typeof source.permanent_stats === 'object'
     ? source.permanent_stats
@@ -79,16 +89,25 @@ export function normalizeProgression(p: Row | null = null) {
   const currentCycleStats = source.current_cycle_stats && typeof source.current_cycle_stats === 'object'
     ? source.current_cycle_stats
     : {};
+
+  // Legacy Ascension already contributes to migration_power_multiplier. It must
+  // not also pre-complete the new V2 0->120% Ascension journey or an old A5 card
+  // would arrive mastered and unable to participate in V2 progression. Legacy
+  // Stage is the one legacy rank intentionally mapped into a V2 rank: Stack.
+  const canonicalAscension = migrated ? 0 : clamp(source.ascension ?? 0, 0, ASCENSION_CAP);
+
   return {
     ...source,
     system_version: CARD_SYSTEM_VERSION,
     enhancement_percent: clamp(source.enhancement_percent ?? 0, 0, ENHANCEMENT_CAP),
-    ascension: clamp(source.ascension ?? 0, 0, ASCENSION_CAP),
+    ascension: canonicalAscension,
     stack_level: clamp(source.stack_level ?? Math.min(STACK_CAP, Math.max(1, finite(source.stage, 1))), 1, STACK_CAP),
     permanent_stats: permanentStats,
     current_cycle_stats: currentCycleStats,
     migration_power_multiplier: Math.max(1, finite(source.migration_power_multiplier, migrated ? legacyPowerMultiplier(source) : 1)),
-    mastery_visual: source.mastery_visual || (clamp(source.ascension ?? 0, 0, ASCENSION_CAP) >= ASCENSION_CAP ? 'holographic_3d' : 'standard'),
+    mastery_visual: migrated
+      ? 'standard'
+      : (source.mastery_visual || (canonicalAscension >= ASCENSION_CAP ? 'holographic_3d' : 'standard')),
     migrated_from_legacy: Boolean(source.migrated_from_legacy || migrated),
   };
 }
