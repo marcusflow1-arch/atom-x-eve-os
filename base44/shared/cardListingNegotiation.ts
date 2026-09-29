@@ -1,19 +1,12 @@
 import { acquireCardMutationLock, releaseCardMutationLock } from './cardMutationLock.ts';
+import {
+  acquireCardTradePairLock,
+  findActiveCardTradeSessionForPair,
+  releaseCardTradePairLock,
+} from './cardTradePairLock.ts';
 import { rewardError } from './rewardJournal.ts';
 
 type Row = Record<string, any>;
-
-async function findActivePairSession(svc: any, a: string, b: string) {
-  for (const status of ['accepted', 'pending']) {
-    const rows = await svc.TradeSession.filter({ status }, '-created_date', 100).catch(() => []);
-    const found = (rows || []).find((session: Row) =>
-      (String(session.initiator_id) === a && String(session.recipient_id) === b)
-      || (String(session.initiator_id) === b && String(session.recipient_id) === a)
-    );
-    if (found) return found;
-  }
-  return null;
-}
 
 export async function openCardTradeNegotiation(svc: any, listingInput: Row, buyerId: string) {
   const listingId = String(listingInput?.id || '');
@@ -27,8 +20,13 @@ export async function openCardTradeNegotiation(svc: any, listingInput: Row, buye
   const cardId = String(listing.card_id || '');
   if (!cardId) throw rewardError('Listing is missing its card identity', 409);
 
-  const lock = await acquireCardMutationLock(svc, cardId, seller, `market_open_trade:${listingId}`);
+  const pairLock = await acquireCardTradePairLock(svc, buyer, seller, `market_open_trade_pair:${listingId}`);
+  let cardLock: any = null;
   try {
+    const existingSession = await findActiveCardTradeSessionForPair(svc, buyer, seller);
+    if (existingSession) throw rewardError('You already have an active trade with this seller', 409);
+
+    cardLock = await acquireCardMutationLock(svc, cardId, seller, `market_open_trade:${listingId}`);
     listing = await svc.CardTrade.get(listingId);
     if (listing.status !== 'active' || String(listing.seller_id || '') !== seller) {
       throw rewardError('Listing changed before trade negotiation could start', 409);
@@ -41,9 +39,6 @@ export async function openCardTradeNegotiation(svc: any, listingInput: Row, buye
     if (card.trade_status !== 'locked_in_trade' || String(card.last_trade_id || '') !== listingId) {
       throw rewardError('The listed card is no longer reserved for this listing', 409);
     }
-
-    const existingSession = await findActivePairSession(svc, buyer, seller);
-    if (existingSession) throw rewardError('You already have an active trade with this seller', 409);
 
     const session = await svc.TradeSession.create({
       initiator_id: buyer,
@@ -84,6 +79,7 @@ export async function openCardTradeNegotiation(svc: any, listingInput: Row, buye
       throw error;
     }
   } finally {
-    await releaseCardMutationLock(svc, lock);
+    if (cardLock) await releaseCardMutationLock(svc, cardLock);
+    await releaseCardTradePairLock(svc, pairLock);
   }
 }
