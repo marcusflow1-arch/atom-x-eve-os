@@ -36,6 +36,7 @@ const finite = (value: any, fallback = 0) => {
 };
 const clamp = (value: any, min: number, max: number) => Math.min(max, Math.max(min, finite(value, min)));
 const rounded = (value: number) => Math.round(value * 100) / 100;
+const roundedMultiplier = (value: number) => Math.round(value * 10000) / 10000;
 
 export function addStats(a: Row = {}, b: Row = {}) {
   const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
@@ -54,7 +55,10 @@ export function legacyPowerMultiplier(p: Row = {}) {
   const ascension = clamp(p.ascension ?? 0, 0, ASCENSION_CAP);
   const overEnchant = clamp(p.over_enchant_rank ?? 0, 0, 5);
   const skillNodes = Array.isArray(p.unlocked_skill_nodes) ? p.unlocked_skill_nodes : [];
-  return rounded(Math.min(6,
+  // Legacy cardStats kept multiplier precision to four decimals. Preserve that
+  // exact value during migration so moving a card to V2 never changes its power
+  // merely because 1.055 was rounded to 1.06 before the stat calculation.
+  return roundedMultiplier(Math.min(6,
     1
     + (level - 1) * 0.055
     + (stage - 1) * 0.12
@@ -122,7 +126,9 @@ export function cycleStatGain(baseStats: Row = {}, percentGain: number) {
 export function cardStatMultiplier(progression: Row | null = null) {
   const p = normalizeProgression(progression);
   const stack = (finite(p.stack_level, 1) - 1) * CARD_BALANCE.stackPowerPerLevel;
-  return rounded(Math.max(1, finite(p.migration_power_multiplier, 1)) * (1 + stack));
+  // Stat math also keeps four decimal places. This avoids introducing a second
+  // migration loss when legacy power is combined with a V2 Stack multiplier.
+  return roundedMultiplier(Math.max(1, finite(p.migration_power_multiplier, 1)) * (1 + stack));
 }
 
 export function cardGrowthMultiplier(progression: Row | null = null) {
