@@ -2,13 +2,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { cardMasteryState, normalizeProgression } from '../../shared/cardSystem.ts';
 import { ensureCardPassport } from '../../shared/cardProvenance.ts';
 import { finalizeCardTradeSession } from '../../shared/cardTradeFinalizer.ts';
+import { acquireCardMutationLocks, releaseCardMutationLocks } from '../../shared/cardMutationLock.ts';
+import {
+  acquireTradeSessionMutationLock,
+  releaseTradeSessionMutationLock,
+} from '../../shared/tradeSessionMutationLock.ts';
 
 type AnyObj = Record<string, any>;
 const ACTIVE = ['accepted', 'pending'];
 
-async function cardSnapshot(base44: any, card: AnyObj, progression?: AnyObj | null) {
+async function cardSnapshot(base44: any, card: AnyObj, progression?: AnyObj | null, passportInput?: AnyObj | null) {
   const p = normalizeProgression(progression);
-  const passport = await ensureCardPassport(base44.asServiceRole.entities, card);
+  const passport = passportInput || await ensureCardPassport(base44.asServiceRole.entities, card);
   if (String(card.passport_id || '') !== String(passport.passport_id)) {
     await base44.asServiceRole.entities.UserCard.update(card.id, { passport_id: passport.passport_id });
   }
@@ -80,19 +85,34 @@ async function getTradeableCards(base44: any, userId: string, sessionId?: string
 }
 
 async function unlockSessionCards(base44: any, session: AnyObj) {
-  const ids = [...(session.initiator_offer_card_ids || []), ...(session.recipient_offer_card_ids || [])];
-  for (const id of ids) {
-    const card = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
-    if (card?.last_trade_id === session.id) {
-      await base44.asServiceRole.entities.UserCard.update(id, { trade_status: 'available' });
+  const svc = base44.asServiceRole.entities;
+  const reserved = await svc.UserCard.filter({
+    last_trade_id: String(session.id),
+    trade_status: 'locked_in_trade',
+  }, '-updated_date', 500).catch(() => []);
+  if (!reserved?.length) return;
+  const locks = await acquireCardMutationLocks(
+    svc,
+    reserved.map((card: AnyObj) => ({ id: String(card.id), owner_id: null })),
+    `trade_cancel:${session.id}`,
+  );
+  try {
+    for (const card of reserved) {
+      const live = await svc.UserCard.get(String(card.id)).catch(() => null);
+      if (live?.trade_status === 'locked_in_trade' && String(live.last_trade_id || '') === String(session.id)) {
+        await svc.UserCard.update(live.id, { trade_status: 'available', last_trade_id: '' });
+      }
     }
+  } finally {
+    await releaseCardMutationLocks(svc, locks);
   }
 }
 
-async function finalize(base44: any, session: AnyObj) {
+async function finalize(base44: any, session: AnyObj, sessionLockToken?: string) {
   return finalizeCardTradeSession(base44.asServiceRole.entities, session, {
     method: 'friend_trade',
     progression_action: 'friend_trade_transfer',
+    session_lock_token: sessionLockToken,
   });
 }
 
@@ -116,8 +136,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const auth = await base44.auth.me();
     if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    const user = await base44.asServiceRole.entities.User.get(auth.id);
-    const body = await req.json();
+    const svc = base44.asServiceRole.entities;
+    const user = await svc.User.get(auth.id);
+    const body = await req.json().catch(() => ({}));
     const action = body?.action || 'getState';
     const payload = body?.payload || {};
     const partnerId = String(payload.partnerId || '');
@@ -128,7 +149,7 @@ Deno.serve(async (req) => {
 
     if (action === 'start') {
       if (!session) {
-        session = await base44.asServiceRole.entities.TradeSession.create({
+        session = await svc.TradeSession.create({
           initiator_id: user.id,
           recipient_id: partnerId,
           status: 'pending',
@@ -136,69 +157,150 @@ Deno.serve(async (req) => {
           initiator_offer_snapshot: [], recipient_offer_snapshot: [],
           initiator_confirmed: false, recipient_confirmed: false,
         });
-        await base44.asServiceRole.entities.SocialRequest.create({
+        await svc.SocialRequest.create({
           kind: 'trade', sender_id: user.id, sender_name: user.username || user.full_name || user.name || 'Player',
           receiver_id: partnerId, status: 'pending', trade_id: session.id,
         }).catch(() => null);
       }
     } else if (action === 'accept') {
-      if (!session || session.status !== 'pending' || session.recipient_id !== user.id) throw new Error('No pending trade request to accept');
-      session = await base44.asServiceRole.entities.TradeSession.update(session.id, { status: 'accepted', initiator_confirmed: false, recipient_confirmed: false });
-      const requests = await base44.asServiceRole.entities.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
-      for (const r of requests || []) await base44.asServiceRole.entities.SocialRequest.update(r.id, { status: 'accepted' }).catch(() => null);
+      if (!session) throw new Error('No pending trade request to accept');
+      const lease = await acquireTradeSessionMutationLock(svc, session.id, `trade_accept:${session.id}`);
+      try {
+        session = await svc.TradeSession.get(session.id);
+        if (session.status !== 'pending' || session.recipient_id !== user.id) throw new Error('No pending trade request to accept');
+        session = await svc.TradeSession.update(session.id, { status: 'accepted', initiator_confirmed: false, recipient_confirmed: false });
+        const requests = await svc.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
+        for (const r of requests || []) await svc.SocialRequest.update(r.id, { status: 'accepted' }).catch(() => null);
+      } finally {
+        await releaseTradeSessionMutationLock(svc, lease);
+      }
     } else if (action === 'syncOffer') {
-      if (!session || session.status !== 'accepted') throw new Error('Trade must be accepted before adding cards');
-      const cardIds = [...new Set((payload.cardIds || []).map(String))].slice(0, 8);
-      const isInitiator = session.initiator_id === user.id;
-      const oldIds = isInitiator ? (session.initiator_offer_card_ids || []) : (session.recipient_offer_card_ids || []);
+      if (!session) throw new Error('Trade must be accepted before adding cards');
+      const sessionLease = await acquireTradeSessionMutationLock(svc, session.id, `trade_offer:${session.id}:${user.id}`);
+      let cardLocks: any[] = [];
+      try {
+        session = await svc.TradeSession.get(session.id);
+        if (session.status !== 'accepted') throw new Error('Trade must be accepted before adding cards');
+        if (![session.initiator_id, session.recipient_id].includes(user.id)) throw new Error('You are not part of this trade');
 
-      for (const id of oldIds.filter((id: string) => !cardIds.includes(id))) {
-        const oldCard = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
-        if (oldCard?.user_id === user.id && oldCard.last_trade_id === session.id) {
-          await base44.asServiceRole.entities.UserCard.update(id, { trade_status: 'available' });
+        const cardIds = [...new Set((payload.cardIds || []).map(String).filter(Boolean))].slice(0, 8);
+        const isInitiator = session.initiator_id === user.id;
+        const reserved = await svc.UserCard.filter({
+          user_id: user.id,
+          last_trade_id: String(session.id),
+          trade_status: 'locked_in_trade',
+        }, '-updated_date', 100).catch(() => []);
+        const lockIds = [...new Set([...cardIds, ...(reserved || []).map((card: AnyObj) => String(card.id))])];
+        cardLocks = await acquireCardMutationLocks(
+          svc,
+          lockIds.map((id) => ({ id, owner_id: String(user.id) })),
+          `trade_offer:${session.id}:${user.id}`,
+        );
+        const lockFor = (id: string) => cardLocks.find((lock) => lock.card_id === String(id));
+
+        const snapshots: AnyObj[] = [];
+        const validated = new Map<string, AnyObj>();
+        for (const id of cardIds) {
+          const lock = lockFor(id);
+          if (!lock) throw new Error('Trade card lease is unavailable');
+          let card = await svc.UserCard.get(id).catch(() => null);
+          if (!card || String(card.user_id) !== String(user.id)) throw new Error('You can only offer cards you own');
+          if (card.is_equipped || (card.equipped_to && card.equipped_to !== 'none')) throw new Error(`${card.card_name || 'That card'} is equipped`);
+          if (card.trade_status === 'locked_in_trade' && String(card.last_trade_id || '') !== String(session.id)) {
+            throw new Error(`${card.card_name || 'That card'} is already reserved elsewhere`);
+          }
+          const listings = await svc.CardTrade.filter({
+            card_id: id,
+            status: { $in: ['active', 'processing'] },
+          }, '-created_date', 2).catch(() => []);
+          if (listings?.length) throw new Error(`${card.card_name || 'That card'} is currently listed in the Trading Post`);
+          const progressions = await svc.CardProgression.filter({ user_card_id: id }, '-updated_date', 2).catch(() => []);
+          if ((progressions || []).length > 1) throw new Error('Multiple progression records exist for this card and require reconciliation');
+          const progression = progressions?.[0] || null;
+          const passport = await ensureCardPassport(svc, card, { lock_token: lock.token });
+          if (String(card.passport_id || '') !== String(passport.passport_id)) {
+            card = await svc.UserCard.update(id, { passport_id: passport.passport_id });
+          }
+          validated.set(id, card);
+          snapshots.push(await cardSnapshot(base44, card, progression, passport));
         }
-      }
 
-      const snapshots: AnyObj[] = [];
-      for (const id of cardIds) {
-        let card = await base44.asServiceRole.entities.UserCard.get(id).catch(() => null);
-        if (!card || card.user_id !== user.id) throw new Error('You can only offer cards you own');
-        if (card.is_equipped || card.equipped_to && card.equipped_to !== 'none') throw new Error(`${card.card_name || 'That card'} is equipped`);
-        if (card.trade_status === 'locked_in_trade' && card.last_trade_id !== session.id) throw new Error(`${card.card_name || 'That card'} is already reserved elsewhere`);
-        const listing = (await base44.asServiceRole.entities.CardTrade.filter({ card_id: id, status: 'active' }, '-created_date', 1))[0];
-        if (listing) throw new Error(`${card.card_name || 'That card'} is currently listed in the Trading Post`);
-        const progression = (await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: id }, '-updated_date', 1))[0] || null;
-        const passport = await ensureCardPassport(base44.asServiceRole.entities, card);
-        if (String(card.passport_id || '') !== String(passport.passport_id)) card = await base44.asServiceRole.entities.UserCard.update(id, { passport_id: passport.passport_id });
-        await base44.asServiceRole.entities.UserCard.update(id, { trade_status: 'locked_in_trade', last_trade_id: session.id });
-        snapshots.push(await cardSnapshot(base44, card, progression));
-      }
+        for (const oldCard of reserved || []) {
+          if (!cardIds.includes(String(oldCard.id))) {
+            const live = await svc.UserCard.get(String(oldCard.id)).catch(() => null);
+            if (live?.trade_status === 'locked_in_trade' && String(live.last_trade_id || '') === String(session.id)) {
+              await svc.UserCard.update(live.id, { trade_status: 'available', last_trade_id: '' });
+            }
+          }
+        }
+        for (const id of cardIds) {
+          const card = validated.get(id);
+          if (!card) throw new Error('Trade card validation was lost');
+          if (card.trade_status !== 'locked_in_trade' || String(card.last_trade_id || '') !== String(session.id)) {
+            await svc.UserCard.update(id, { trade_status: 'locked_in_trade', last_trade_id: session.id });
+          }
+        }
 
-      const patch = isInitiator
-        ? { initiator_offer_card_ids: cardIds, initiator_offer_snapshot: snapshots, initiator_confirmed: false, recipient_confirmed: false }
-        : { recipient_offer_card_ids: cardIds, recipient_offer_snapshot: snapshots, initiator_confirmed: false, recipient_confirmed: false };
-      session = await base44.asServiceRole.entities.TradeSession.update(session.id, patch);
+        const patch = isInitiator
+          ? { initiator_offer_card_ids: cardIds, initiator_offer_snapshot: snapshots, initiator_confirmed: false, recipient_confirmed: false }
+          : { recipient_offer_card_ids: cardIds, recipient_offer_snapshot: snapshots, initiator_confirmed: false, recipient_confirmed: false };
+        session = await svc.TradeSession.update(session.id, patch);
+      } finally {
+        if (cardLocks.length) await releaseCardMutationLocks(svc, cardLocks);
+        await releaseTradeSessionMutationLock(svc, sessionLease);
+      }
     } else if (action === 'confirm') {
-      if (!session || session.status !== 'accepted') throw new Error('Trade is not active');
-      const isInitiator = session.initiator_id === user.id;
-      const myIds = isInitiator ? (session.initiator_offer_card_ids || []) : (session.recipient_offer_card_ids || []);
-      if (!myIds.length) throw new Error('Add at least one card before confirming');
-      session = await base44.asServiceRole.entities.TradeSession.update(session.id, isInitiator ? { initiator_confirmed: true } : { recipient_confirmed: true });
-      if (session.initiator_confirmed && session.recipient_confirmed) session = await finalize(base44, session);
+      if (!session) throw new Error('Trade is not active');
+      const lease = await acquireTradeSessionMutationLock(svc, session.id, `trade_confirm:${session.id}:${user.id}`);
+      try {
+        session = await svc.TradeSession.get(session.id);
+        if (session.status !== 'accepted') throw new Error('Trade is not active');
+        const isInitiator = session.initiator_id === user.id;
+        const myIds = isInitiator ? (session.initiator_offer_card_ids || []) : (session.recipient_offer_card_ids || []);
+        if (!myIds.length) throw new Error('Add at least one card before confirming');
+        session = await svc.TradeSession.update(session.id, isInitiator ? { initiator_confirmed: true } : { recipient_confirmed: true });
+        if (session.initiator_confirmed && session.recipient_confirmed) {
+          session = await finalize(base44, session, lease.token);
+        }
+      } finally {
+        await releaseTradeSessionMutationLock(svc, lease);
+      }
     } else if (action === 'unconfirm') {
-      if (!session || session.status !== 'accepted') throw new Error('Trade is not active');
-      session = await base44.asServiceRole.entities.TradeSession.update(session.id, session.initiator_id === user.id ? { initiator_confirmed: false } : { recipient_confirmed: false });
+      if (!session) throw new Error('Trade is not active');
+      const lease = await acquireTradeSessionMutationLock(svc, session.id, `trade_unconfirm:${session.id}:${user.id}`);
+      try {
+        session = await svc.TradeSession.get(session.id);
+        if (session.status !== 'accepted') throw new Error('Trade is not active');
+        session = await svc.TradeSession.update(session.id, session.initiator_id === user.id ? { initiator_confirmed: false } : { recipient_confirmed: false });
+      } finally {
+        await releaseTradeSessionMutationLock(svc, lease);
+      }
     } else if (action === 'decline') {
-      if (!session || session.status !== 'pending' || session.recipient_id !== user.id) throw new Error('No pending trade request to decline');
-      session = await base44.asServiceRole.entities.TradeSession.update(session.id, { status: 'declined', initiator_confirmed: false, recipient_confirmed: false });
-      const requests = await base44.asServiceRole.entities.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
-      for (const r of requests || []) await base44.asServiceRole.entities.SocialRequest.update(r.id, { status: 'declined' }).catch(() => null);
+      if (!session) throw new Error('No pending trade request to decline');
+      const lease = await acquireTradeSessionMutationLock(svc, session.id, `trade_decline:${session.id}`);
+      try {
+        session = await svc.TradeSession.get(session.id);
+        if (session.status !== 'pending' || session.recipient_id !== user.id) throw new Error('No pending trade request to decline');
+        session = await svc.TradeSession.update(session.id, { status: 'declined', initiator_confirmed: false, recipient_confirmed: false });
+        const requests = await svc.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
+        for (const r of requests || []) await svc.SocialRequest.update(r.id, { status: 'declined' }).catch(() => null);
+      } finally {
+        await releaseTradeSessionMutationLock(svc, lease);
+      }
     } else if (action === 'cancel') {
       if (session && ACTIVE.includes(session.status)) {
-        await unlockSessionCards(base44, session);
-        session = await base44.asServiceRole.entities.TradeSession.update(session.id, { status: 'cancelled', initiator_confirmed: false, recipient_confirmed: false });
-        const requests = await base44.asServiceRole.entities.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
-        for (const r of requests || []) await base44.asServiceRole.entities.SocialRequest.update(r.id, { status: 'cancelled' }).catch(() => null);
+        const lease = await acquireTradeSessionMutationLock(svc, session.id, `trade_cancel:${session.id}`);
+        try {
+          session = await svc.TradeSession.get(session.id);
+          if (ACTIVE.includes(session.status)) {
+            await unlockSessionCards(base44, session);
+            session = await svc.TradeSession.update(session.id, { status: 'cancelled', initiator_confirmed: false, recipient_confirmed: false });
+            const requests = await svc.SocialRequest.filter({ kind: 'trade', trade_id: session.id }, '-created_date', 20).catch(() => []);
+            for (const r of requests || []) await svc.SocialRequest.update(r.id, { status: 'cancelled' }).catch(() => null);
+          }
+        } finally {
+          await releaseTradeSessionMutationLock(svc, lease);
+        }
       }
     } else if (action !== 'getState') {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
@@ -206,7 +308,7 @@ Deno.serve(async (req) => {
 
     const current = session?.status === 'completed' || session?.status === 'cancelled' ? session : await getSessionForPair(base44, user.id, partnerId);
     return Response.json({ success: true, ...(await responseState(base44, user, partnerId, current)) });
-  } catch (error) {
+  } catch (error: any) {
     return Response.json({ error: error?.message || String(error) }, { status: Number(error?.status || 400) });
   }
 });
