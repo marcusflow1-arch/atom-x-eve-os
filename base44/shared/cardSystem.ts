@@ -110,11 +110,16 @@ export function addStats(a: Row = {}, b: Row = {}) {
   return Object.fromEntries([...keys].map((key) => [key, rounded(finite(a?.[key]) + finite(b?.[key]))]));
 }
 
+export function cardStatMultiplier(progression: Row | null = null) {
+  const p = normalizeProgression(progression);
+  const stack = (finite(p.stack_level, 1) - 1) * CARD_BALANCE.stackPowerPerLevel;
+  return rounded(Math.max(1, finite(p.migration_power_multiplier, 1)) * (1 + stack));
+}
+
 export function cardGrowthMultiplier(progression: Row | null = null) {
   const p = normalizeProgression(progression);
   const enhancement = finite(p.enhancement_percent) * CARD_BALANCE.enhancementPowerPerPercent;
-  const stack = (finite(p.stack_level, 1) - 1) * CARD_BALANCE.stackPowerPerLevel;
-  return rounded(Math.max(1, finite(p.migration_power_multiplier, 1)) * (1 + enhancement + stack));
+  return rounded(cardStatMultiplier(p) * (1 + enhancement));
 }
 
 export function cardMasteryState(progression: Row | null = null) {
