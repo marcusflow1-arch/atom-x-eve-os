@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import Module, { createRequire } from 'node:module';
+import Module from 'node:module';
 import { buildSync } from 'esbuild';
 
-function bundle(entry, stubSdk = false) {
+function bundle(entry) {
   const filename = process.cwd() + '/tests/__card_system_v2_bundle.cjs';
   const result = buildSync({
     entryPoints: [entry],
@@ -12,16 +12,6 @@ function bundle(entry, stubSdk = false) {
     platform: 'node',
     target: 'node20',
     external: ['npm:*'],
-    plugins: stubSdk ? [{
-      name: 'card-v2-sdk-stub',
-      setup(build) {
-        build.onResolve({ filter: /^npm:@base44\/sdk/ }, () => ({ path: 'sdk', namespace: 'card-v2-stub' }));
-        build.onLoad({ filter: /.*/, namespace: 'card-v2-stub' }, () => ({
-          loader: 'js',
-          contents: 'export const createClientFromRequest = () => ({})',
-        }));
-      },
-    }] : [],
   });
   const mod = new Module(filename);
   mod.paths = Module._nodeModulePaths(process.cwd());
@@ -35,8 +25,8 @@ const stats = bundle('./base44/shared/cardStats.ts');
 assert.equal(system.ENHANCEMENT_CAP, 120);
 assert.equal(system.ASCENSION_CAP, 5);
 assert.equal(system.STACK_CAP, 4);
-
 assert.deepEqual(system.PLAYABLE_TIERS, ['Rare', 'Epic', 'Legendary', 'Demigod', 'Mythical', 'Deity', 'Chosen']);
+
 assert.equal(system.enhancementMaterialValue({ rarity: 'Common', use_category: 'enhancement' }), 4);
 assert.equal(system.enhancementMaterialValue({ rarity: 'Uncommon', use_category: 'enhancement' }), 8);
 assert.equal(system.enhancementMaterialValue({ rarity: 'Unique', use_category: 'enhancement' }), 16);
@@ -87,22 +77,25 @@ assert.equal(system.cardMasteryState({ system_version: 2, ascension: 5 }).hologr
 assert.equal(system.cardMasteryState({ system_version: 2, enhancement_percent: 120, ascension: 4 }).can_ascend, true);
 assert.equal(system.cardMasteryState({ system_version: 2, enhancement_percent: 120, ascension: 5 }).can_ascend, false);
 
-// Syntax/bundle gate for the authoritative server flow and provenance service.
-buildSync({
-  entryPoints: [
-    './base44/functions/cardProgression/entry.ts',
-    './base44/shared/cardProvenance.ts',
-    './base44/shared/rewardEngine.ts',
-    './base44/functions/cardCollection/entry.ts',
-    './base44/functions/tradePostMarket/entry.ts',
-    './base44/functions/friendCardTrade/entry.ts',
-    './base44/functions/finalizeTradeSession/entry.ts',
-  ],
-  bundle: true,
-  write: false,
-  format: 'esm',
-  platform: 'neutral',
-  external: ['npm:*'],
-});
+// Syntax/bundle gate for every authoritative v2 server path. Build each entry
+// independently so esbuild can emit in-memory output without an outdir.
+for (const entry of [
+  './base44/functions/cardProgression/entry.ts',
+  './base44/shared/cardProvenance.ts',
+  './base44/shared/rewardEngine.ts',
+  './base44/functions/cardCollection/entry.ts',
+  './base44/functions/tradePostMarket/entry.ts',
+  './base44/functions/friendCardTrade/entry.ts',
+  './base44/functions/finalizeTradeSession/entry.ts',
+]) {
+  buildSync({
+    entryPoints: [entry],
+    bundle: true,
+    write: false,
+    format: 'esm',
+    platform: 'neutral',
+    external: ['npm:*'],
+  });
+}
 
 console.log('PASS: Card System v2 enhancement, Ascension preservation, stacking, migration, mastery and backend syntax.');
