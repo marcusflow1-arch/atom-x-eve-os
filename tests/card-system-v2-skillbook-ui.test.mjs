@@ -43,6 +43,9 @@ const code = await build({
   plugins: [{
     name: 'card-v2-skillbook-fixtures',
     setup(buildApi) {
+      // Force the ESM icon bundle. The package's CJS build is published under a
+      // module-typed package and Node cannot require it from this CJS test bundle.
+      buildApi.onResolve({ filter: /^lucide-react$/ }, () => ({ path: process.cwd() + '/node_modules/lucide-react/dist/esm/lucide-react.js' }));
       buildApi.onResolve({ filter: /useSkillBookLoadout$/ }, () => ({ path: 'skill-hook', namespace: 'skill-v2-fixture' }));
       buildApi.onResolve({ filter: /ErrorToast$/ }, () => ({ path: 'toasts', namespace: 'skill-v2-fixture' }));
       buildApi.onResolve({ filter: /CombatPrefabManager$/ }, () => ({ path: 'prefabs', namespace: 'skill-v2-fixture' }));
