@@ -28,6 +28,7 @@
     "revision": { "type": "number", "default": 1 },
     "last_request_id": { "type": "string", "description": "Idempotency key for the latest completed or recoverable progression mutation." },
     "last_request_action": { "type": "string" },
+    "pending_mutation": { "type": "object", "default": {}, "description": "Recoverable descriptor for a progression mutation whose cross-entity work has not fully completed." },
     "pending_provenance": { "type": "object", "default": {}, "description": "Recoverable provenance write descriptor cleared after the Passport chain is updated." },
     "last_stack_consumed_card_id": { "type": "string", "description": "Duplicate instance associated with the latest Stack mutation." },
     "last_stack_cleanup_pending": { "type": "boolean", "default": false, "description": "True after Stack power commits until duplicate cleanup/provenance completes." },
