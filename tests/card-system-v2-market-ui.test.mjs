@@ -86,7 +86,8 @@ try {
   assert.match(text, /MasteryHolographic 3D/);
   assert.match(text, /AXE-CARD-CHIDORI-001/);
   assert.match(text, /Progression follows ownership/);
-  assert.doesNotMatch(text, /\bLevel\b|\bStars\b|Leveled to|★ stage/);
+  // "Stack Level" is a v2 label; reject only the removed legacy level/star/stage presentation.
+  assert.doesNotMatch(text, /\bLv\s*\d|\bStars\b|Leveled to|★ stage|\bStage\s*\d/);
 
   const historyButton = findButtonContaining('Digital Passport history');
   assert.ok(historyButton, 'Digital Passport history control is visible');
