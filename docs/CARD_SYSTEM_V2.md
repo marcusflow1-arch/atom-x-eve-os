@@ -103,13 +103,31 @@ Stacking consumes one exact duplicate `UserCard` of the same `trading_card_id` a
 Rules:
 
 - target and duplicate must belong to the same player
-- target cannot Stack above Level 4
+- target cannot Stack above **Stack Level 4**
 - duplicate cannot be equipped
 - duplicate cannot be trade-locked
 - protected starter grants cannot be consumed
 - consumed card's passport is retained as a retired/consumed provenance record and linked to the target's stack event
 
 Players may choose to keep or trade duplicates instead of consuming them.
+
+## Skill Book integration
+
+The Skill Book keeps its existing authoritative loadout/equip endpoint and adds a single batched Card System v2 presentation read through `cardSystemSkillState`.
+
+That adapter exposes, per owned ability instance:
+
+- playable tier
+- Enhancement percentage
+- Ascension count
+- Stack Level
+- power score
+- mastery state
+- Digital Passport ID
+
+`useSkillBookLoadout` merges those fields into the same card already returned by `skillBookLoadout`. It deliberately preserves the existing authoritative combat preview instead of recalculating damage in the browser.
+
+The Skill Book UI therefore shows the same V2 progression language as Forge while preserving all existing gender eligibility, drag/drop, slot equip and prefab behavior.
 
 ## Combat integration
 
@@ -139,6 +157,8 @@ The following stay with the card:
 - provenance event chain
 
 Trade snapshots expose the upgraded instance rather than only the card template, so two copies of the same named card can have different collectible/combat value.
+
+The Trading Post now treats seller rows as **card instances**, not generic card copies. A V2 seller row exposes the card's playable tier, Enhancement, Ascension, Stack Level, holographic mastery state and shortened Passport identity. Old listings that predate V2 are labeled as legacy snapshots instead of inventing fake `Lv 1` or `1★` progression.
 
 ## Provenance and external ledger status
 
@@ -180,6 +200,19 @@ To avoid destroying existing player investment:
 - old `stage` becomes the initial v2 `stack_level`, capped at 4
 
 Legacy fields remain readable for compatibility but are not used as new player-facing progression paths.
+
+## Regression gates
+
+The Card System v2 pull request runs dedicated coverage before the application build:
+
+- `tests/card-system-v2.test.mjs` — progression constants, migration, Ascension power preservation, stacking and backend bundle checks
+- `tests/card-system-v2-ui.test.mjs` — Forge/card-detail progression and Passport UI
+- `tests/card-system-v2-market-ui.test.mjs` — card-instance listing panel and V2 trade snapshot
+- `tests/card-system-v2-skillbook-ui.test.mjs` — Skill Book V2 labels, damage preview and equip preservation
+- `tests/card-system-v2-trading-post-ui.test.mjs` — seller-instance progression and Passport presentation
+- existing Skill Book eligibility/avatar-refresh and avatar/card combat-stat tests
+
+Unrelated stale PvP queue lifecycle tests are not used as Card System v2 merge gates; they cover a separate battle-state contract and are tracked independently from this card architecture change.
 
 ## Integration rule
 
