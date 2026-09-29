@@ -2,181 +2,50 @@
   "name": "UserCard",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string"
-    },
-    "trading_card_id": {
-      "type": "string"
-    },
+    "user_id": { "type": "string" },
+    "trading_card_id": { "type": "string" },
+    "passport_id": { "type": "string", "description": "Digital Passport identity for this exact owned card instance" },
     "card_type": {
       "type": "string",
-      "enum": [
-        "ability",
-        "equipment",
-        "companion",
-        "pet",
-        "mount",
-        "teacher",
-        "material",
-        "home_item",
-        "environment",
-        "collectible",
-        "Equipment",
-        "Ability",
-        "Companion",
-        "Environment",
-        "Teacher",
-        "Achievement"
-      ]
+      "enum": ["ability", "equipment", "companion", "pet", "mount", "teacher", "material", "home_item", "environment", "collectible", "Equipment", "Ability", "Companion", "Environment", "Teacher", "Achievement"]
     },
-    "card_name": {
-      "type": "string"
-    },
+    "card_name": { "type": "string" },
     "card_rarity": {
       "type": "string",
-      "enum": [
-        "Common",
-        "Uncommon",
-        "Rare",
-        "Epic",
-        "Legendary",
-        "Mythic",
-        "Unique"
-      ]
+      "enum": ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Demigod", "Mythic", "Mythical", "Deity", "Unique", "Chosen", "Limitless"]
     },
-    "card_image": {
-      "type": "string"
-    },
-    "game_name": {
-      "type": "string"
-    },
-    "game_id": {
-      "type": "string"
-    },
-    "genre": {
-      "type": "string"
-    },
-    "acquisition_method": {
-      "type": "string",
-      "enum": [
-        "unlocked",
-        "purchased",
-        "traded",
-        "gifted"
-      ],
-      "default": "unlocked"
-    },
-    "purchased_from": {
-      "type": "string"
-    },
-    "purchase_price": {
-      "type": "number"
-    },
-    "unlocked_date": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "is_equipped": {
-      "type": "boolean",
-      "default": false
-    },
-    "trade_status": {
-      "type": "string",
-      "enum": [
-        "available",
-        "locked_in_trade"
-      ],
-      "default": "available"
-    },
-    "last_trade_id": {
-      "type": "string"
-    },
-    "animation_effect": {
-      "type": "object"
-    },
-    "achievement_id": {
-      "type": "string"
-    },
-    "quantity": {
-      "type": "number",
-      "default": 1
-    },
-    "source": {
-      "type": "string",
-      "enum": [
-        "achievement",
-        "quest",
-        "purchase",
-        "trade",
-        "admin",
-        "starter",
-        "migration"
-      ]
-    },
-    "equipped_to": {
-      "type": "string",
-      "enum": [
-        "none",
-        "skill_book",
-        "loadout",
-        "companion",
-        "home"
-      ],
-      "default": "none"
-    },
-    "acquired_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "starter_grant_user_id": {
-      "type": "string",
-      "description": "Original recipient of a fixed avatar starter grant; retained across transfers."
-    },
-    "starter_grant_key": {
-      "type": "string",
-      "description": "Approved avatar starter effect key. Used to prevent repeat grants after transfer."
-    },
-    "reward_grant_keys": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": []
-    }
+    "playable_tier": { "type": "string", "enum": ["Rare", "Epic", "Legendary", "Demigod", "Mythical", "Deity", "Chosen"] },
+    "card_image": { "type": "string" },
+    "game_name": { "type": "string" },
+    "game_id": { "type": "string" },
+    "genre": { "type": "string" },
+    "acquisition_method": { "type": "string", "enum": ["unlocked", "purchased", "traded", "gifted"], "default": "unlocked" },
+    "purchased_from": { "type": "string" },
+    "purchase_price": { "type": "number" },
+    "unlocked_date": { "type": "string", "format": "date-time" },
+    "is_equipped": { "type": "boolean", "default": false },
+    "trade_status": { "type": "string", "enum": ["available", "locked_in_trade"], "default": "available" },
+    "last_trade_id": { "type": "string" },
+    "animation_effect": { "type": "object" },
+    "achievement_id": { "type": "string" },
+    "quantity": { "type": "number", "default": 1, "description": "Legacy compatibility. Playable Card System v2 instances should remain quantity 1." },
+    "source": { "type": "string", "enum": ["achievement", "quest", "purchase", "trade", "admin", "starter", "migration"] },
+    "equipped_to": { "type": "string", "enum": ["none", "skill_book", "loadout", "companion", "home"], "default": "none" },
+    "acquired_at": { "type": "string", "format": "date-time" },
+    "starter_grant_user_id": { "type": "string", "description": "Original recipient of a fixed avatar starter grant; retained across transfers." },
+    "starter_grant_key": { "type": "string", "description": "Approved avatar starter effect key. Used to prevent repeat grants after transfer." },
+    "reward_grant_keys": { "type": "array", "items": { "type": "string" }, "default": [] }
   },
-  "required": [
-    "user_id",
-    "card_type",
-    "card_name",
-    "acquisition_method"
-  ],
+  "required": ["user_id", "card_type", "card_name", "acquisition_method"],
   "rls": {
     "read": {
       "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.user_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "update": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
   }
 }
