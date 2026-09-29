@@ -2,109 +2,39 @@
   "name": "Material",
   "type": "object",
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "Material name"
-    },
+    "name": { "type": "string", "description": "Material name" },
     "type": {
       "type": "string",
-      "enum": [
-        "precision_shard",
-        "combat_core",
-        "ascension_core",
-        "skill_catalyst",
-        "resonance_fragment",
-        "efficiency_module",
-        "discovery_relic",
-        "lore_catalyst",
-        "fusion_currency",
-        "competitive_token",
-        "wildcard",
-        "adaptive_shard"
-      ],
+      "enum": ["precision_shard", "combat_core", "ascension_core", "skill_catalyst", "resonance_fragment", "efficiency_module", "discovery_relic", "lore_catalyst", "fusion_currency", "competitive_token", "wildcard", "adaptive_shard"],
       "description": "Material type determining usage"
     },
     "genre_origin": {
       "type": "string",
-      "enum": [
-        "action",
-        "shooter",
-        "rpg",
-        "jrpg",
-        "strategy",
-        "simulation",
-        "adventure",
-        "exploration",
-        "multiplayer",
-        "competitive",
-        "indie",
-        "experimental"
-      ],
+      "enum": ["action", "shooter", "rpg", "jrpg", "strategy", "simulation", "adventure", "exploration", "multiplayer", "competitive", "indie", "experimental"],
       "description": "Game genre this material drops from"
     },
     "rarity": {
       "type": "string",
-      "enum": [
-        "Common",
-        "Uncommon",
-        "Rare",
-        "Epic",
-        "Legendary"
-      ],
-      "default": "Common"
+      "enum": ["Common", "Uncommon", "Unique", "Rare", "Epic", "Legendary"],
+      "default": "Common",
+      "description": "Card System v2 enhancement materials use Common, Uncommon, or Unique. Legacy rarities remain accepted during migration."
     },
-    "quality": {
-      "type": "number",
-      "default": 1,
-      "description": "Quality tier 1-5 based on achievement difficulty"
-    },
-    "icon": {
-      "type": "string",
-      "description": "Emoji or icon URL"
-    },
-    "description": {
-      "type": "string"
-    },
+    "enhancement_value": { "type": "number", "description": "Optional explicit amount added to a card's 0-120% enhancement gauge" },
+    "quality": { "type": "number", "default": 1, "description": "Legacy quality tier 1-5; used only as a compatibility fallback when enhancement_value is absent" },
+    "icon": { "type": "string", "description": "Emoji or icon URL" },
+    "description": { "type": "string" },
     "use_category": {
       "type": "string",
-      "enum": [
-        "enhancement",
-        "leveling",
-        "ascension",
-        "combination",
-        "passive",
-        "wildcard"
-      ],
-      "description": "Primary upgrade system this material is used for"
+      "enum": ["enhancement", "leveling", "ascension", "combination", "passive", "wildcard"],
+      "description": "Primary upgrade system this material is used for. New Card System v2 progression consumes enhancement materials only."
     },
-    "base_value": {
-      "type": "number",
-      "default": 10,
-      "description": "Base trade value"
-    }
+    "base_value": { "type": "number", "default": 10, "description": "Base trade value" }
   },
-  "required": [
-    "name",
-    "type",
-    "genre_origin",
-    "rarity"
-  ],
+  "required": ["name", "type", "genre_origin", "rarity"],
   "rls": {
     "read": true,
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "update": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
   }
 }
