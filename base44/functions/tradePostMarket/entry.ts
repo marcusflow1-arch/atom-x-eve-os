@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { cardMasteryState, normalizeProgression } from '../../shared/cardSystem.ts';
 import { ensureCardPassport, recordOwnershipTransfer } from '../../shared/cardProvenance.ts';
 
