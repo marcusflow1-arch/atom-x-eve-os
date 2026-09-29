@@ -23,7 +23,9 @@ jobs:
       - name: Validate Card System v2 invariants
         run: node tests/card-system-v2.test.mjs
       - name: Validate Card System v2 UI
-        run: node tests/card-system-v2-ui.test.mjs
+        run: |
+          node tests/card-system-v2-ui.test.mjs
+          node tests/card-system-v2-market-ui.test.mjs
       - name: Build application
         run: npm run build
       - name: Check for accidentally committed payment credentials
