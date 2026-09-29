@@ -55,7 +55,7 @@ const after = stats.effectiveCardStats({
 assert.deepEqual(after.stats, before.stats, 'Ascension must preserve every earned stat when 120% resets to 0%');
 assert.equal(after.power_score, before.power_score, 'Ascension must not reduce card power');
 
-const legacy = system.normalizeProgression({
+const legacyInput = {
   level: 10,
   stage: 3,
   ascension: 2,
@@ -63,12 +63,36 @@ const legacy = system.normalizeProgression({
   enhanced_stats: { attack: 12 },
   enchantments: [{ modifiers: { attack: 3, magic: 5 } }],
   unlocked_skill_nodes: ['core_calibration', 'avatar_sync'],
-});
+};
+const legacyMultiplier = system.legacyPowerMultiplier(legacyInput);
+const legacy = system.normalizeProgression(legacyInput);
 assert.equal(legacy.system_version, 2);
 assert.equal(legacy.permanent_stats.attack, 15, 'legacy enhancement and enchantment stats are preserved');
 assert.equal(legacy.permanent_stats.magic, 5);
-assert.ok(legacy.migration_power_multiplier > 1, 'legacy level/stage/ascension investment is frozen into migration power');
+assert.equal(legacy.migration_power_multiplier, legacyMultiplier, 'legacy level/stage/Ascension investment is frozen into migration power');
 assert.equal(legacy.stack_level, 3, 'legacy stage migrates to Stack Level');
+assert.equal(legacy.ascension, 0, 'legacy Ascension power is preserved but the new V2 Ascension journey starts at 0');
+assert.equal(system.cardMasteryState(legacy).mastered, false, 'legacy Ascension must not pre-complete V2 mastery');
+assert.equal(system.cardMasteryState({ ...legacy, enhancement_percent: 120 }).can_ascend, true, 'migrated cards can participate in the V2 0→120→Ascend loop');
+
+const legacyA5Input = {
+  level: 20,
+  stage: 4,
+  ascension: 5,
+  over_enchant_rank: 3,
+  enhanced_stats: { attack: 10 },
+  unlocked_skill_nodes: ['core_calibration'],
+};
+const migratedA5 = system.normalizeProgression(legacyA5Input);
+assert.equal(migratedA5.ascension, 0, 'old Ascension 5 does not become V2 Ascension 5');
+assert.equal(migratedA5.stack_level, 4, 'legacy Stage still seeds the V2 Stack Level');
+assert.equal(migratedA5.migration_power_multiplier, system.legacyPowerMultiplier(legacyA5Input), 'old A5 combat power remains preserved exactly once');
+assert.equal(system.cardMasteryState(migratedA5).holographic, false, 'old A5 does not incorrectly receive V2 holographic mastery');
+
+const trueV2A5 = system.normalizeProgression({ system_version: 2, ascension: 5, enhancement_percent: 0, stack_level: 1 });
+assert.equal(trueV2A5.ascension, 5, 'a true V2 Ascension 5 record remains mastered');
+assert.equal(system.cardMasteryState(trueV2A5).holographic, true);
+assert.equal(system.normalizeProgression(null).migrated_from_legacy, false, 'a blank/new progression is not reported as a legacy migration');
 
 // Migration must preserve the exact four-decimal multiplier used by the old
 // cardStats implementation. Rounding 1.055 to 1.06 would silently buff a card
