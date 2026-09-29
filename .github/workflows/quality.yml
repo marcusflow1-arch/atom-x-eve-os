@@ -27,6 +27,7 @@ jobs:
           node tests/card-system-v2-ui.test.mjs
           node tests/card-system-v2-market-ui.test.mjs
           node tests/card-system-v2-skillbook-ui.test.mjs
+          node tests/card-system-v2-trading-post-ui.test.mjs
       - name: Validate Skill Book and card-combat integration
         run: |
           node tests/skill-book-eligibility-ui.test.mjs
