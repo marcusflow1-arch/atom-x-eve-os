@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import InventoryGrid from './InventoryGrid';
 import LunaSplitInventory from './LunaSplitInventory';
 import LunaCardsPanel from './LunaCardsPanel';
+import useDashboardSkillLayout from './useDashboardSkillLayout';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
 import LunaAIBattleOverlay from './LunaAIBattleOverlay';
 import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
@@ -436,7 +437,8 @@ export default function DashboardAvatarOverview() {
   };
 
   const embeddedUtilityMode = inventoryMode || cardsMode;
-  const libraryEdgeMode = embeddedUtilityMode || friendsMode;
+  const libraryEdgeMode = inventoryMode || friendsMode;
+  const skillLayout = useDashboardSkillLayout({ active: !avatarFocusMode && surface === 'dashboard', bookOpen: cardsMode });
 
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
@@ -450,7 +452,7 @@ export default function DashboardAvatarOverview() {
     <div
       data-dashboard-avatar-overview
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
-      style={{ left: libraryEdgeMode ? '330px' : '390px' }}
+      style={{ left: libraryEdgeMode ? '330px' : '390px', zIndex: cardsMode ? 55 : undefined }}
     >
       {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && !messagesMode && !friendsMode && !seasonMode && !battleMode && activeQuickPanel && (
         <div
@@ -472,7 +474,7 @@ export default function DashboardAvatarOverview() {
 
       <div
         className={`absolute top-[26px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
-        style={embeddedUtilityMode
+        style={inventoryMode
           ? {
               left: 'auto',
               right: 'calc(338px + min(560px, calc(100% - 638px)))',
@@ -483,15 +485,19 @@ export default function DashboardAvatarOverview() {
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
-      {!avatarFocusMode && surface === 'dashboard' && embeddedUtilityMode && (
+      {!avatarFocusMode && surface === 'dashboard' && cardsMode && (
+        <div data-dashboard-utility-workspace className="luna-skill-book-workspace" style={skillLayout.workspace}>
+          <LunaCardsPanel onClose={() => setCardsMode(false)} />
+        </div>
+      )}
+
+      {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
         <div
           data-dashboard-utility-workspace
           className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
           style={{
             maxWidth: 'calc(100% - 638px)',
-            background: cardsMode
-              ? 'radial-gradient(ellipse at 52% 48%, rgba(40,58,80,.54) 0%, rgba(26,42,62,.40) 58%, rgba(18,31,48,.18) 82%, transparent 100%)'
-              : 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
+            background: 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
             WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
             maskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
           }}
@@ -500,14 +506,10 @@ export default function DashboardAvatarOverview() {
             <section
               className="absolute bottom-0 right-0 top-0 min-h-0 w-full max-w-[560px] overflow-hidden"
               style={{
-                background: cardsMode
-                  ? 'radial-gradient(ellipse at 58% 48%, rgba(48,68,94,.34) 0%, rgba(27,45,67,.24) 60%, rgba(16,29,46,.08) 84%, transparent 100%)'
-                  : 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
+                background: 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
               }}
             >
-              {cardsMode ? (
-                <LunaCardsPanel />
-              ) : inventorySlot ? (
+              {inventorySlot ? (
                 <LunaSplitInventory
                   inventory={inventoryData}
                   selectedSlotId={inventorySlot}
@@ -539,6 +541,8 @@ export default function DashboardAvatarOverview() {
         && !activeQuickPanel
         && (
           <LunaSkillXpHud
+            dockStyle={skillLayout.hud}
+            stacked={skillLayout.stacked}
             currentXp={stats.currentXP}
             nextXp={stats.nextXP}
             level={stats.level}

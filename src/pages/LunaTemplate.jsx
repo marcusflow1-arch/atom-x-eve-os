@@ -734,7 +734,7 @@ export default function LunaTemplate() {
               <div style={{ height: '12px', flexShrink: 0 }} />
 
               {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
-              <div className="pointer-events-auto flex-1 min-h-0 relative">
+              <div data-luna-library-rail className="pointer-events-auto flex-1 min-h-0 relative">
                 <LibraryBrowser
                   filters={libraryFilters}
                   onFiltersChange={updateLibraryFilters}

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
@@ -75,11 +75,12 @@ function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMo
   );
 }
 
-export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1, showcaseEditing = false, combatMode = false }) {
+export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1, showcaseEditing = false, combatMode = false, dockStyle, stacked = false }) {
   const { equip, isSaving, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [previewCard, setPreviewCard] = useState(null);
+  const assigning = useRef(false);
   useEffect(() => {
     const selected = (event) => setPendingCard(event?.detail?.card || null);
     const rejected = (event) => showError(new Error(event?.detail?.reason || 'This skill animation could not play.'), 'Cast Skill');
@@ -92,13 +93,16 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
   }, []);
   const assign = async (index, card, explicitId) => {
     const userCardId = explicitId || card?.user_card_id || card?.id;
-    if (combatMode || !userCardId || isSaving) return;
+    if (combatMode || !userCardId || isSaving || assigning.current) return;
+    if (card?.can_equip === false) { showError(new Error(card.equip_error || 'This skill is unavailable for your current avatar.'), 'Equip Skill'); return; }
+    assigning.current = true;
     try {
       await equip(index, userCardId);
       setSelectedSlot(index); setPreviewCard(card); setPendingCard(null);
       window.__lunaSelectedShowcaseCard = null;
       window.dispatchEvent(new CustomEvent('lunaShowcaseCardPlaced', { detail: { index, card } }));
     } catch (error) { showError(error, 'Equip Skill'); }
+    finally { assigning.current = false; }
   };
   const sets = useMemo(() => [...(skillSets || [])]
     .sort((a, b) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0))
@@ -116,7 +120,7 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
   const goal = Number.isFinite(Number(nextXp)) ? Math.max(1, Number(nextXp)) : 1;
   const progress = Math.max(0, Math.min(100, xp / goal * 100));
   return (
-    <section data-luna-skill-xp-hud className={`luna-hotbar ${combatMode ? 'luna-hotbar-combat' : ''}`}
+    <section data-luna-skill-xp-hud data-stacked={stacked || undefined} style={dockStyle} className={`luna-hotbar ${combatMode ? 'luna-hotbar-combat' : ''}`}
       aria-label="Luna skill hotkeys" onKeyDown={(event) => {
         if (!/^[0-9]$/.test(event.key)) event.stopPropagation();
       }}>

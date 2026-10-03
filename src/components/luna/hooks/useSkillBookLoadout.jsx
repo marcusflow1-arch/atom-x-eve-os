@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import useLunaStore from '@/components/luna/useLunaStore';
@@ -198,7 +198,10 @@ export function useSkillBookLoadout() {
     }));
   }, [stateQuery.data, assignToHotbar, clearHotbarSlot, setActiveSkillRow]);
 
+  const mutationKey = ['luna-skill-book-save', user?.id];
+  const savingCount = useIsMutating({ mutationKey });
   const mutation = useMutation({
+    mutationKey,
     mutationFn: async ({ action, data }) => {
       const body = await invokeSkillBook(action, { ...(data || {}), avatar_gender: activeAvatarGender });
       return restoreIchigoIntoState(body, user.id);
@@ -223,7 +226,7 @@ export function useSkillBookLoadout() {
     isLoading: stateQuery.isLoading,
     isFetching: stateQuery.isFetching,
     error: stateQuery.error,
-    isSaving: mutation.isPending,
+    isSaving: mutation.isPending || savingCount > 0,
     equip: (slot, userCardId) => mutation.mutateAsync({
       action: 'equip',
       data: { slot, user_card_id: userCardId },

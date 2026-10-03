@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Mic, Search } from 'lucide-react';
 
-export default function LibraryVoiceSearch({ value, onChange, subject = 'games' }) {
+export default function LibraryVoiceSearch({ value, onChange, subject = 'games', label, placeholder, VoiceIcon = Mic }) {
   const recognition = useRef(null), changeRef = useRef(onChange);
   changeRef.current = onChange;
   const [listening, setListening] = useState(false);
@@ -24,7 +24,7 @@ export default function LibraryVoiceSearch({ value, onChange, subject = 'games' 
     try { instance.start(); setListening(true); } catch { setError('Unable to start voice search. Please try again.'); }
   };
   return <div className="ll-voice-search">
-    <div className="ll-search-line"><Search aria-hidden="true" /><input type="search" aria-label={`Search library ${subject}`} value={value} onChange={(event) => onChange(event.target.value)} placeholder={`Search ${subject}`} autoComplete="off" /><button type="button" title={listening ? 'Stop voice search' : 'Voice search'} aria-label={listening ? 'Stop voice search' : `Search ${subject} by voice`} aria-pressed={listening} onClick={start}><Mic size={14} /></button></div>
+    <div className="ll-search-line"><Search aria-hidden="true" /><input type="search" aria-label={label || `Search library ${subject}`} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder || `Search ${subject}`} autoComplete="off" /><button type="button" title={listening ? 'Stop voice search' : 'Voice search'} aria-label={listening ? 'Stop voice search' : `Search ${subject} by voice`} aria-pressed={listening} onClick={start}><VoiceIcon size={14} /></button></div>
     {(error || listening) && <p role="status" className="ll-search-note">{error || 'Listening…'}</p>}
   </div>;
 }
