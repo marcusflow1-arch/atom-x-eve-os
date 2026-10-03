@@ -77,8 +77,7 @@ mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(built.outputFiles[
 const {Status,Alerts}=mod.exports;
 const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
 const root=createRoot(document.getElementById('root'));
-let checkpoint=0;
-const run=(fn=()=>{})=>{console.log('status-check',++checkpoint);return act(async()=>{fn();await new Promise(resolve=>setTimeout(resolve,40));});};
+const run=(fn=()=>{})=>act(async()=>{fn();await new Promise(resolve=>setTimeout(resolve,40));});
 const advance=ms=>run(()=>tick(ms));
 const button=label=>{const node=[...document.querySelectorAll('button')].find(n=>n.getAttribute('aria-label')===label||n.textContent.trim()===label);assert.ok(node,'Missing '+label);return node;};
 const pointer=(node,type,extra={})=>node.dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:10,clientY:10,...extra}));
@@ -163,7 +162,10 @@ try {
   await run(()=>signal('reminders'));await run();assert.equal(title(),'Tournament check-in');
   await run(()=>preview().querySelector('button').focus());await advance(9000);
   assert.equal(expanded(),true,'keyboard focus also preserves the message');
-  await run(()=>button('Notifications').focus());await advance(6000);await advance(260);
+  await run(()=>click(preview().querySelector('button')));await run();
+  assert.match(document.querySelector('[aria-label="Selected feed item"] h3').textContent,/Tournament check-in/,'the clicked reminder opens even when notifications precede it');
+  assert.ok(button('Open Calendar'));
+  await run(()=>button('Close status feed').click());
 
   // Keyboard/assistive click opens directly, even without a pointer hold.
   await run(()=>button('Notifications').click());await run();
@@ -181,8 +183,7 @@ try {
   await run(()=>button('Close status feed').click());
 
   console.log('PASS: quiet dock, arrival-only notifications/reminders/updates, no duplicate toast, six-second retract/queue, hover/focus pause, exact one-second hold/cancellation, keyboard access, selected-item slide-out, friend acceptance, retry and scoped subscriptions.');
-} catch(error) { console.error(error);throw error; } finally {
-  console.log('status-cleanup');
+} finally {
   await act(async()=>root.unmount());client.clear();
   assert.ok(Object.values(subscriptions).every(set=>set.size===0),'all live subscriptions are removed');
   assert.equal(timers.size,0,'clock, hold and preview timers are removed');

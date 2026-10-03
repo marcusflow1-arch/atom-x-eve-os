@@ -32,6 +32,13 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', initia
       <motion.div initial={{ x: reducedMotion ? 0 : '100%' }} animate={{ x: 0 }} exit={{ x: reducedMotion ? 0 : '100%' }}
         transition={{ duration: reducedMotion ? 0 : .3, ease: [.22, 1, .36, 1] }}
         onClick={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}
+        onKeyDown={event => {
+          if (event.key !== 'Tab') return;
+          const focusable = [...event.currentTarget.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), [tabindex="0"]')];
+          const first = focusable[0], last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }}
         className="absolute bottom-0 right-0 top-0 flex w-full max-w-[780px] flex-col border-l border-white/[0.06] bg-[#060a10]/98 shadow-[-30px_0_90px_rgba(0,0,0,.6)]">
         <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.06] px-6">
           <div className="flex items-center gap-3">
