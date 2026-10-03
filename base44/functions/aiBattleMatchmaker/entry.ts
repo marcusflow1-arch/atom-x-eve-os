@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 import { BASIC_MELEE, DODGE, atbNow, skillStats, skillStunMs, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
+// Freeze and validate the same ten skill slots exposed by the dashboard hotkeys.
 import { avatarSkillError, skillEquipStatus } from '../../shared/skillEligibility.ts';
 import { grantAchievement } from '../../shared/rewardEngine.ts';
 import { loadCombatProfile } from '../../shared/combatProfile.ts';
