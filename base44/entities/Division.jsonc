@@ -148,6 +148,43 @@
         }
       },
       "default": []
+    },
+    "emblemDesign": {
+      "type": "object",
+      "description": "Editable SVG clan crest configuration",
+      "properties": {
+        "shape": {
+          "type": "string",
+          "enum": [
+            "shield",
+            "diamond",
+            "round"
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "star",
+            "swords",
+            "crown",
+            "mountain"
+          ]
+        },
+        "pattern": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "split",
+            "stripes"
+          ]
+        },
+        "primary": {
+          "type": "string"
+        },
+        "accent": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { normalizeCrest, crestDataUri } from '../../shared/clanCrest.ts';
 
 export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -55,6 +56,10 @@ Deno.serve(async (req) => {
                 });
             }
 
+            if (name.trim().length < 2 || name.trim().length > 40 || (tag && !/^[A-Za-z0-9]{2,6}$/.test(tag))) {
+                return Response.json({ success: false, error: 'Use a 2–40 character name and a 2–6 letter or number tag.' }, { status: 400, headers: corsHeaders });
+            }
+            const emblemDesign = data.emblemDesign ? normalizeCrest(data.emblemDesign) : null;
             const newDivision = await base44.asServiceRole.entities.Division.create({
                 name: name.trim(),
                 tag: tag || '',
@@ -65,12 +70,13 @@ Deno.serve(async (req) => {
                 genres: genres || [],
                 gameTags: gameTags || [],
                 activities: activities || [],
-                icon: icon || '',
+                icon: emblemDesign ? crestDataUri(emblemDesign) : icon || '',
+                ...(emblemDesign ? { emblemDesign } : {}),
                 banner: banner || '',
-                primaryColor: primaryColor || '#000000',
-                secondaryColor: secondaryColor || '#000000',
+                primaryColor: emblemDesign?.primary || primaryColor || '#142a3d',
+                secondaryColor: emblemDesign?.accent || secondaryColor || '#8ce3f4',
                 recruitmentStatus: recruitmentStatus || 'Public',
-                sizeLimit: parseInt(sizeLimit) || 100,
+                sizeLimit: Math.min(250, Math.max(10, parseInt(sizeLimit) || 100)),
                 isPrivate: recruitmentStatus === 'Invite Only' || recruitmentStatus === 'Request to Join',
                 customRoles: customRoles || [],
                 searchTags: searchTags || [],
@@ -264,6 +270,8 @@ Deno.serve(async (req) => {
                 });
             }
 
+            if (Number(division.memberCount || 0) >= Number(division.sizeLimit || 100)) return Response.json({ success: false, error: 'This clan is full.' }, { status: 409, headers: corsHeaders });
+
             // Ensure membership creation completes before returning
             const membership = await base44.asServiceRole.entities.ClanMember.create({
                 clan_id: divisionId,
@@ -305,6 +313,9 @@ Deno.serve(async (req) => {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
                 });
             }
+
+            if (division.recruitmentStatus === 'Invite Only') return Response.json({ success: false, error: 'This clan requires an invitation.' }, { status: 403, headers: corsHeaders });
+            if (Number(division.memberCount || 0) >= Number(division.sizeLimit || 100)) return Response.json({ success: false, error: 'This clan is full.' }, { status: 409, headers: corsHeaders });
 
             // Check if already a member
             const existingMember = await base44.asServiceRole.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
