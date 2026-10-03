@@ -1,0 +1,17 @@
+{
+  "name": "CardTradePairLock",
+  "type": "object",
+  "properties": {
+    "pair_key": { "type": "string", "description": "Stable sorted player-pair identity used only to serialize active trade-session creation." },
+    "mutation_lock_id": { "type": "string" },
+    "mutation_lock_kind": { "type": "string" },
+    "mutation_lock_until": { "type": "string", "format": "date-time" }
+  },
+  "required": ["pair_key"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

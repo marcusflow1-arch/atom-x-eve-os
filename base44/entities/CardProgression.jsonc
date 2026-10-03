@@ -2,168 +2,62 @@
   "name": "CardProgression",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string",
-      "description": "Owner of this progression record"
-    },
-    "user_card_id": {
-      "type": "string",
-      "description": "Owned UserCard this progression belongs to"
-    },
-    "trading_card_id": {
-      "type": "string"
-    },
-    "achievement_id": {
-      "type": "string"
-    },
-    "card_name": {
-      "type": "string"
-    },
-    "game_id": {
-      "type": "string"
-    },
-    "game_name": {
-      "type": "string"
-    },
-    "level": {
-      "type": "number",
-      "default": 1
-    },
-    "xp": {
-      "type": "number",
-      "default": 0
-    },
-    "xp_to_next": {
-      "type": "number",
-      "default": 120
-    },
-    "stage": {
-      "type": "number",
-      "default": 1,
-      "description": "Combination stage / duplicate fusion tier"
-    },
-    "stars": {
-      "type": "number",
-      "default": 1
-    },
-    "ascension": {
-      "type": "number",
-      "default": 0
-    },
-    "max_level": {
-      "type": "number",
-      "default": 10
-    },
-    "skill_points": {
-      "type": "number",
-      "default": 1
-    },
-    "unlocked_skill_nodes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": []
-    },
-    "active_perks": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": []
-    },
-    "enchantments": {
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "element": {
-            "type": "string"
-          },
-          "rarity": {
-            "type": "string"
-          },
-          "modifiers": {
-            "type": "object"
-          },
-          "overcharged": {
-            "type": "boolean",
-            "default": false
-          }
-        }
-      }
-    },
-    "over_enchant_rank": {
-      "type": "number",
-      "default": 0
-    },
-    "over_enchant_stability": {
-      "type": "number",
-      "default": 100
-    },
-    "enhanced_stats": {
-      "type": "object",
-      "default": {}
-    },
-    "base_stats": {
-      "type": "object",
-      "default": {}
-    },
-    "power_score": {
-      "type": "number",
-      "default": 0
-    },
-    "last_action": {
-      "type": "string"
-    },
-    "last_action_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "revision": {
-      "type": "number",
-      "default": 1
-    }
+    "user_id": { "type": "string", "description": "Current owner of this progression record" },
+    "user_card_id": { "type": "string", "description": "Owned UserCard this progression follows across trades" },
+    "trading_card_id": { "type": "string" },
+    "achievement_id": { "type": "string" },
+    "card_name": { "type": "string" },
+    "game_id": { "type": "string" },
+    "game_name": { "type": "string" },
+
+    "system_version": { "type": "number", "default": 2 },
+    "enhancement_percent": { "type": "number", "default": 0, "description": "Current enhancement cycle gauge, 0 through 120" },
+    "ascension": { "type": "number", "default": 0, "description": "Completed enhancement cycles, maximum 5" },
+    "stack_level": { "type": "number", "default": 1, "description": "Duplicate-card stacking level, maximum 4" },
+    "permanent_stats": { "type": "object", "default": {}, "description": "Enhancement gains permanently locked by completed Ascensions" },
+    "current_cycle_stats": { "type": "object", "default": {}, "description": "Stat gains earned in the current 0-120% enhancement cycle" },
+    "base_stats": { "type": "object", "default": {} },
+    "power_score": { "type": "number", "default": 0 },
+    "migration_power_multiplier": { "type": "number", "default": 1, "description": "Frozen compatibility multiplier preserving pre-v2 card investment" },
+    "migrated_from_legacy": { "type": "boolean", "default": false },
+    "mastery_visual": { "type": "string", "enum": ["standard", "holographic_3d"], "default": "standard" },
+    "passport_id": { "type": "string" },
+
+    "last_action": { "type": "string" },
+    "last_action_at": { "type": "string", "format": "date-time" },
+    "revision": { "type": "number", "default": 1 },
+    "last_request_id": { "type": "string", "description": "Idempotency key for the latest completed or recoverable progression mutation." },
+    "last_request_action": { "type": "string" },
+    "pending_mutation": { "type": "object", "default": {}, "description": "Recoverable descriptor for a progression mutation whose cross-entity work has not fully completed." },
+    "pending_provenance": { "type": "object", "default": {}, "description": "Recoverable provenance write descriptor cleared after the Passport chain is updated." },
+    "last_stack_consumed_card_id": { "type": "string", "description": "Duplicate instance associated with the latest Stack mutation." },
+    "last_stack_cleanup_pending": { "type": "boolean", "default": false, "description": "True after Stack power commits until duplicate cleanup/provenance completes." },
+    "last_stack_legacy_quantity": { "type": "boolean", "default": false },
+
+    "level": { "type": "number", "default": 1, "description": "Legacy v1 field retained for migration only" },
+    "xp": { "type": "number", "default": 0, "description": "Legacy v1 field retained for migration only" },
+    "xp_to_next": { "type": "number", "default": 120, "description": "Legacy v1 field retained for migration only" },
+    "stage": { "type": "number", "default": 1, "description": "Legacy v1 combination stage; stack_level is canonical in v2" },
+    "stars": { "type": "number", "default": 1, "description": "Legacy presentation field" },
+    "max_level": { "type": "number", "default": 10, "description": "Legacy v1 field retained for migration only" },
+    "skill_points": { "type": "number", "default": 0, "description": "Legacy v1 field retained for migration only" },
+    "unlocked_skill_nodes": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Legacy v1 field retained for migration only" },
+    "active_perks": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Legacy v1 field retained for migration only" },
+    "enchantments": { "type": "array", "default": [], "items": { "type": "object" }, "description": "Legacy v1 field retained for migration only" },
+    "over_enchant_rank": { "type": "number", "default": 0, "description": "Legacy v1 field retained for migration only" },
+    "over_enchant_stability": { "type": "number", "default": 100, "description": "Legacy v1 field retained for migration only" },
+    "enhanced_stats": { "type": "object", "default": {}, "description": "Legacy v1 gains copied into permanent_stats during migration" }
   },
-  "required": [
-    "user_id",
-    "user_card_id",
-    "card_name"
-  ],
+  "required": ["user_id", "user_card_id", "card_name"],
   "rls": {
     "read": {
       "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.user_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "update": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
   }
 }

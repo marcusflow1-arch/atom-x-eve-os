@@ -18,6 +18,12 @@
       "type": "number",
       "default": 0
     },
+    "card_consumption_receipts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Idempotency receipts for enhancement materials consumed by Card System v2 mutations."
+    },
     "source_game": {
       "type": "string",
       "description": "Game title where material was earned"
@@ -31,38 +37,16 @@
       "default": true
     }
   },
-  "required": [
-    "user_id",
-    "material_id",
-    "quantity"
-  ],
+  "required": ["user_id", "material_id", "quantity"],
   "rls": {
     "read": {
       "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.user_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "update": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
   }
 }

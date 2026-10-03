@@ -9,9 +9,14 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 import CombatPrefabManager from './CombatPrefabManager';
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
+const cardTier = (skill) => skill?.playable_tier || skill?.card?.playable_tier || skill?.rarity || skill?.card?.card_rarity || 'Rare';
 
 const rarityTone = {
+  Chosen: 'text-white border-white/30',
+  Deity: 'text-cyan-50 border-cyan-100/30',
+  Mythical: 'text-rose-100 border-rose-200/24',
   Mythic: 'text-red-100 border-red-200/20',
+  Demigod: 'text-fuchsia-100 border-fuchsia-200/24',
   Unique: 'text-fuchsia-100 border-fuchsia-200/20',
   Legendary: 'text-amber-100 border-amber-200/20',
   Epic: 'text-violet-100 border-violet-200/20',
@@ -90,7 +95,7 @@ export default function LunaCardsPanel() {
         return [
           skill.title,
           skill.description,
-          skill.rarity,
+          cardTier(skill),
           skill.unlock_condition,
         ].some((value) => normalize(value).includes(needle));
       })
@@ -169,8 +174,11 @@ export default function LunaCardsPanel() {
       image: skill.image || skill.card?.image || '',
       card_image: skill.image || skill.card?.card_image || '',
       game_name: skill.game_name,
-      rarity: skill.rarity,
+      rarity: cardTier(skill),
       card_rarity: skill.rarity,
+      playable_tier: cardTier(skill),
+      passport_id: skill.passport_id || skill.card?.passport_id || '',
+      card_system_v2: skill.progression?.system_version === 2 ? skill.progression : skill.card?.card_system_v2 || null,
       type: 'ability',
       card_type: 'Ability',
       showcaseOnly: false,
@@ -239,7 +247,7 @@ export default function LunaCardsPanel() {
                   Game Index
                 </button>
               ) : (
-                <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-100/45">Luna Codex</p>
+                <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-100/45">Luna Codex · Card System v2</p>
               )}
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-cyan-100/70" />
@@ -381,7 +389,7 @@ export default function LunaCardsPanel() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
                     <div className="absolute inset-x-1.5 bottom-1.5 text-left">
                       <p className="truncate text-[7px] font-semibold text-white">{card.title}</p>
-                      <p className="mt-0.5 text-[5px] font-black uppercase tracking-[0.08em] text-cyan-100/58">Ability · {card.rarity || 'Unique'}</p>
+                      <p className="mt-0.5 text-[5px] font-black uppercase tracking-[0.08em] text-cyan-100/58">Ability · {cardTier(card)}</p>
                     </div>
                   </button>
                 ) : (
@@ -453,6 +461,8 @@ export default function LunaCardsPanel() {
                   {gameSkills.length ? gameSkills.map((skill) => {
                     const active = String(skill.id) === String(selectedSkill?.id);
                     const equippedSlot = skill.user_card_id ? equippedIds.get(String(skill.user_card_id)) : undefined;
+                    const p = skill.progression?.system_version === 2 ? skill.progression : null;
+                    const tier = cardTier(skill);
                     return (
                       <button
                         key={skill.id}
@@ -478,16 +488,14 @@ export default function LunaCardsPanel() {
                               </span>
                             )}
                           </div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className={`border px-1.5 py-0.5 text-[5px] font-black uppercase tracking-[0.08em] ${rarityTone[skill.rarity] || rarityTone.Common}`}>
-                              {skill.rarity || 'Common'}
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span className={`border px-1.5 py-0.5 text-[5px] font-black uppercase tracking-[0.08em] ${rarityTone[tier] || rarityTone.Rare}`}>
+                              {tier}
                             </span>
                             <span className={`text-[6px] ${skill.owned ? 'text-emerald-200/55' : 'text-white/28'}`}>
                               {skill.owned ? 'Owned' : 'Locked'}
                             </span>
-                            {skill.progression?.level ? (
-                              <span className="text-[6px] text-white/30">Lv {skill.progression.level}</span>
-                            ) : null}
+                            {p ? <span className="text-[6px] text-white/30">E {p.enhancement_percent || 0}% · A{p.ascension || 0}/5 · S{p.stack_level || 1}/4</span> : null}
                             {skill.progression?.combat?.effective_damage ? (
                               <span className="text-[6px] font-semibold text-cyan-200/55">DMG {skill.progression.combat.effective_damage}</span>
                             ) : null}
@@ -521,13 +529,13 @@ export default function LunaCardsPanel() {
                       <div className="absolute inset-x-3 bottom-2">
                         <p className="text-[11px] font-semibold text-white">{selectedSkill.title}</p>
                         <p className="mt-0.5 text-[6px] uppercase tracking-[0.12em] text-white/38">
-                          {selectedSkill.rarity || 'Common'} · {selectedGame.title}
+                          {cardTier(selectedSkill)} · {selectedGame.title}
                         </p>
                       </div>
                     </div>
 
                     <div className="mt-3">
-                      <p className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/40">Skill Record</p>
+                      <p className="text-[6px] font-black uppercase tracking-[0.14em] text-cyan-100/40">Card Combat Record</p>
                       <p className="mt-1 text-[8px] leading-4 text-white/48">
                         {selectedSkill.description || selectedSkill.unlock_condition || 'This skill is part of the game’s achievement ability set.'}
                       </p>
@@ -535,26 +543,38 @@ export default function LunaCardsPanel() {
 
                     {selectedSkill.progression && (
                       <div className="mt-3 grid grid-cols-2 gap-1.5">
-                        {[
-                          ['Level', selectedSkill.progression.level],
+                        {selectedSkill.progression.system_version === 2 ? [
+                          ['Playable Tier', cardTier(selectedSkill)],
                           ['Power', selectedSkill.progression.power_score],
-                          ['Stage', selectedSkill.progression.stage],
-                          ['Stars', selectedSkill.progression.stars],
+                          ['Enhancement', `${selectedSkill.progression.enhancement_percent || 0}/120%`],
+                          ['Ascension', `${selectedSkill.progression.ascension || 0}/5`],
+                          ['Stack Level', `${selectedSkill.progression.stack_level || 1}/4`],
                           ['Damage before defense', selectedSkill.progression.combat?.effective_damage || '—'],
-                          ['Card Boost', selectedSkill.progression.combat ? `+${selectedSkill.progression.combat.bonus_percent}%` : '—'],
                         ].map(([label, value]) => (
                           <div key={label} className="border border-white/[0.055] bg-white/[0.018] px-2 py-1.5">
                             <p className="text-[5px] font-black uppercase tracking-[0.1em] text-white/28">{label}</p>
                             <p className="mt-0.5 text-[8px] font-semibold text-white/70">{value ?? 0}</p>
                           </div>
-                        ))}
+                        )) : (
+                          <div className="col-span-2 border border-amber-200/[0.08] bg-amber-100/[0.02] px-2.5 py-2 text-[6px] leading-3 text-amber-50/45">
+                            Card progression is waiting for the Card System v2 presentation adapter. Equip and combat remain available while it reconnects.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedSkill.progression?.system_version === 2 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5 text-[5px] font-black uppercase tracking-[0.09em]">
+                        <span className="border border-white/[0.06] bg-white/[0.018] px-2 py-1 text-white/40">
+                          {selectedSkill.progression.mastery?.holographic ? 'Holographic 3D Mastery' : `Mastery A${selectedSkill.progression.ascension || 0}/5`}
+                        </span>
+                        {selectedSkill.progression.passport_id && <span className="max-w-full truncate border border-emerald-200/[0.08] bg-emerald-100/[0.02] px-2 py-1 font-mono text-emerald-50/45">Passport {selectedSkill.progression.passport_id}</span>}
                       </div>
                     )}
                     {selectedSkill.progression?.combat && selectedSkill.can_equip !== false && (
                       <div className="mt-2 border border-cyan-100/[0.08] bg-cyan-100/[0.025] px-2.5 py-2">
-                        <p className="text-[5px] font-black uppercase tracking-[0.12em] text-cyan-100/38">Avatar + Card Scaling</p>
+                        <p className="text-[5px] font-black uppercase tracking-[0.12em] text-cyan-100/38">Avatar + Card System v2 Scaling</p>
                         <p className="mt-1 text-[7px] leading-3 text-white/45">
-                          Base {selectedSkill.progression.combat.source_base_damage} → <span className="font-bold text-cyan-100">{selectedSkill.progression.combat.effective_damage} damage</span>. Avatar level, Strength, Wisdom, equipment and card upgrades contribute to this preview. Enemy defense, dodge and critical hits determine final damage. Builds freeze when a match begins.
+                          Base {selectedSkill.progression.combat.source_base_damage} → <span className="font-bold text-cyan-100">{selectedSkill.progression.combat.effective_damage} damage</span>. Avatar stats and this exact card instance’s permanent Enhancement gains and Stack Level contribute to the preview. Enemy defense, dodge and critical hits determine final damage. Builds freeze when a match begins.
                         </p>
                       </div>
                     )}

@@ -23,6 +23,66 @@ const invokeSkillBook = async (action, data = {}) => {
     throw new Error(errorMessage(error));
   }
 };
+
+// Card System v2 is deliberately read through one batch endpoint instead of
+// asking cardProgression once per skill. This keeps the Skill Book fast while
+// making every visible card use the same 0-120 / Ascension / Stack contract as
+// Forge, PvP, PvE and trading.
+const mergeCardSystemV2 = (body, cardState) => {
+  const byId = cardState?.by_user_card_id || {};
+  if (!body || !Object.keys(byId).length) return { ...body, card_system_version: 2 };
+  const mergeCard = (card) => {
+    if (!card) return card;
+    const id = String(card.user_card_id || card.id || '');
+    const v2 = byId[id];
+    return v2 ? {
+      ...card,
+      passport_id: v2.passport_id || card.passport_id || '',
+      playable_tier: v2.playable_tier || card.playable_tier || card.card_rarity || card.rarity,
+      card_system_v2: v2,
+    } : card;
+  };
+  const skills = (body.skills || []).map((skill) => {
+    const id = String(skill.user_card_id || skill.card?.user_card_id || skill.card?.id || '');
+    const v2 = byId[id];
+    if (!v2) return skill;
+    return {
+      ...skill,
+      playable_tier: v2.playable_tier || skill.rarity,
+      passport_id: v2.passport_id || '',
+      card: mergeCard(skill.card),
+      progression: {
+        ...(skill.progression || {}),
+        ...v2,
+        // Keep the already-authoritative combat preview from skillBookLoadout.
+        combat: skill.progression?.combat || null,
+      },
+    };
+  });
+  const loadout = body.loadout ? {
+    ...body.loadout,
+    slots: (body.loadout.slots || []).map((slot) => ({ ...slot, card: mergeCard(slot.card) })),
+  } : body.loadout;
+  const skillSets = (body.skill_sets || []).map((set) => ({
+    ...set,
+    slots: (set.slots || []).map((slot) => ({ ...slot, card: mergeCard(slot.card) })),
+  }));
+  return { ...body, card_system_version: 2, skills, loadout, skill_sets: skillSets };
+};
+
+const enrichCardSystemV2 = async (body) => {
+  try {
+    const response = await base44.functions.invoke('cardSystemSkillState', { action: 'getState' });
+    const cardState = unwrap(response);
+    if (cardState?.error) return body;
+    return mergeCardSystemV2(body, cardState);
+  } catch {
+    // Compatibility fallback while deployments roll forward: combat and equip
+    // remain usable even if the v2 presentation endpoint is temporarily absent.
+    return body;
+  }
+};
+
 const avatarGender = (avatar) => {
   const variant = normalize(avatar?.female_model_variant);
   const model = normalize(avatar?.model_url || avatar?.base_body_model_url);
@@ -154,7 +214,8 @@ export function useSkillBookLoadout() {
           console.warn('[SkillBook] demo card bootstrap failed; showing current cards', error);
         }
       }
-      return restoreIchigoIntoState(body, user.id);
+      body = await restoreIchigoIntoState(body, user.id);
+      return enrichCardSystemV2(body);
     },
     enabled: Boolean(user?.id),
     staleTime: 15000,
@@ -201,7 +262,8 @@ export function useSkillBookLoadout() {
   const mutation = useMutation({
     mutationFn: async ({ action, data }) => {
       const body = await invokeSkillBook(action, { ...(data || {}), avatar_gender: activeAvatarGender });
-      return restoreIchigoIntoState(body, user.id);
+      const restored = await restoreIchigoIntoState(body, user.id);
+      return enrichCardSystemV2(restored);
     },
     onSuccess: (next) => {
       queryClient.setQueryData(queryKey, next);

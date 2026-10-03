@@ -2,124 +2,49 @@
   "name": "TradingCard",
   "type": "object",
   "properties": {
-    "name": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string"
-    },
-    "image_url": {
-      "type": "string"
-    },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "image_url": { "type": "string" },
     "rarity": {
       "type": "string",
       "enum": [
-        "Common",
-        "Uncommon",
-        "Rare",
-        "Epic",
-        "Legendary",
-        "Unique"
-      ]
+        "Common", "Uncommon", "Rare", "Epic", "Legendary", "Demigod",
+        "Mythic", "Mythical", "Deity", "Unique", "Chosen", "Limitless"
+      ],
+      "description": "New playable cards use Rare, Epic, Legendary, Demigod, Mythical, Deity, or Chosen. Legacy rarities remain accepted during migration."
     },
-    "edition_size": {
-      "type": "number"
+    "card_class": { "type": "string", "enum": ["playable", "material"], "default": "playable" },
+    "playable_tier": {
+      "type": "string",
+      "enum": ["Rare", "Epic", "Legendary", "Demigod", "Mythical", "Deity", "Chosen"],
+      "description": "Canonical seven-tier playable classification for Card System v2"
     },
-    "achievement_id": {
-      "type": "string"
-    },
-    "series": {
-      "type": "string"
-    },
-    "showcase": {
-      "type": "object"
-    },
+    "edition_size": { "type": "number" },
+    "achievement_id": { "type": "string" },
+    "series": { "type": "string" },
+    "showcase": { "type": "object" },
     "card_type": {
       "type": "string",
-      "enum": [
-        "ability",
-        "equipment",
-        "companion",
-        "pet",
-        "mount",
-        "teacher",
-        "material",
-        "home_item",
-        "environment",
-        "collectible"
-      ]
+      "enum": ["ability", "equipment", "companion", "pet", "mount", "teacher", "material", "home_item", "environment", "collectible"]
     },
-    "game_id": {
-      "type": "string"
-    },
-    "stats": {
-      "type": "object"
-    },
+    "game_id": { "type": "string" },
+    "stats": { "type": "object" },
     "equip_slot": {
       "type": "string",
-      "enum": [
-        "head",
-        "chest",
-        "gloves",
-        "boots",
-        "pants",
-        "cape",
-        "weapon_main",
-        "weapon_off",
-        "artifact"
-      ]
+      "enum": ["head", "chest", "gloves", "boots", "pants", "cape", "weapon_main", "weapon_off", "artifact"]
     },
-    "animation_effect": {
-      "type": "object"
-    },
-    "model_url": {
-      "type": "string"
-    },
-    "home_item_key": {
-      "type": "string"
-    },
-    "stackable": {
-      "type": "boolean",
-      "default": false
-    },
-    "tradable": {
-      "type": "boolean",
-      "default": true
-    },
-    "max_level": {
-      "type": "number",
-      "default": 50
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "draft",
-        "live",
-        "retired"
-      ],
-      "default": "live"
-    }
+    "animation_effect": { "type": "object" },
+    "model_url": { "type": "string" },
+    "home_item_key": { "type": "string" },
+    "stackable": { "type": "boolean", "default": true, "description": "Playable duplicate copies may be consumed to raise stack_level; they remain separate owned instances until consumed" },
+    "tradable": { "type": "boolean", "default": true },
+    "max_level": { "type": "number", "default": 50, "description": "Legacy field; Card System v2 power no longer depends on card level" },
+    "status": { "type": "string", "enum": ["draft", "live", "retired"], "default": "live" }
   },
-  "required": [
-    "name",
-    "image_url",
-    "rarity"
-  ],
+  "required": ["name", "image_url", "rarity"],
   "rls": {
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "update": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
   }
 }

@@ -1,0 +1,29 @@
+{
+  "name": "CardProvenanceEvent",
+  "type": "object",
+  "properties": {
+    "passport_id": { "type": "string" },
+    "user_card_id": { "type": "string" },
+    "trading_card_id": { "type": "string" },
+    "event_key": { "type": "string", "description": "Stable idempotency key for one logical provenance mutation." },
+    "sequence": { "type": "number" },
+    "event_type": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "previous_hash": { "type": "string" },
+    "event_hash": { "type": "string" },
+    "payload": { "type": "object", "default": {} }
+  },
+  "required": ["passport_id", "sequence", "event_type", "timestamp", "previous_hash", "event_hash"],
+  "rls": {
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

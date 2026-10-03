@@ -1,32 +1,50 @@
 import { ensureAvatarProgression } from './avatarProgressionState.ts';
 import { avatarLevel } from './combatStats.ts';
+import { ensureCardPassport } from './cardProvenance.ts';
 import { conditionalUpdate, ensureGrant, ensureKeyedRecord, findKeyedRecord, ownedDeliveredCard, rewardError, rewardKey } from './rewardJournal.ts';
 
 type Row = Record<string, any>;
 const now = () => new Date().toISOString();
 const lower = (value: any) => String(value || '').trim().toLowerCase();
-const rarityMultiplier: Record<string, number> = { common: 1, uncommon: 1.15, rare: 1.35, epic: 1.7, legendary: 2.2, mythical: 3, mythic: 3, unique: 4, limitless: 6 };
+const rarityMultiplier: Record<string, number> = {
+  common: 1, uncommon: 1.15, rare: 1.35, epic: 1.7, legendary: 2.2,
+  demigod: 2.6, mythical: 3, mythic: 3, deity: 3.5, unique: 4, chosen: 4.5, limitless: 6,
+};
+
+async function passportCard(svc: any, card: Row) {
+  const passport = await ensureCardPassport(svc, card, { card_name: card.card_name });
+  if (String(card.passport_id || '') !== String(passport.passport_id)) {
+    return svc.UserCard.update(card.id, { passport_id: passport.passport_id });
+  }
+  return card;
+}
 
 export async function grantCard(svc: any, userId: string, tradingCardId: string, options: Row = {}) {
   const source = String(options.source || 'achievement');
   const key = options.grant_key || rewardKey('card', userId, source, String(options.achievement_id || ''), String(tradingCardId));
   let grant = await findKeyedRecord(svc.RewardGrant, { user_id: userId, grant_key: key });
-  if (grant?.payload && (grant.payload.kind !== 'card' || String(grant.payload.trading_card_id) !== String(tradingCardId))) throw rewardError('Reward key does not match the card');
+  if (grant?.payload && (grant.payload.kind !== 'card' || String(grant.payload.trading_card_id) !== String(tradingCardId))) {
+    throw rewardError('Reward key does not match the card');
+  }
   if (grant?.status === 'completed') return ownedDeliveredCard(svc, userId, grant.user_card_id || '');
+
   if (!grant?.payload) {
     const card = await svc.TradingCard.get(String(tradingCardId || ''));
     if (!card || (card.status !== undefined && card.status !== 'live')) throw rewardError('Reward card is not available');
     const quantity = Number(options.quantity ?? 1);
-    if (!Number.isSafeInteger(quantity) || quantity < 1) throw rewardError('Invalid reward quantity');
+    if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 100) throw rewardError('Invalid reward quantity');
     const game = card.game_id ? await svc.Game.get(card.game_id) : null;
     grant = await ensureGrant(svc, userId, key, {
-      kind: 'card', trading_card_id: card.id, quantity, stackable: Boolean(card.stackable),
+      kind: 'card', trading_card_id: card.id, quantity,
+      // Card System v2 never merges playable duplicates into a quantity stack.
+      // Every delivered copy is a distinct collectible with its own passport.
+      unique_instances: true,
       fields: {
         user_id: userId, trading_card_id: card.id,
         achievement_id: String(options.achievement_id || card.achievement_id || ''),
-        quantity, source, equipped_to: 'none', acquired_at: now(),
+        quantity: 1, source, equipped_to: 'none', acquired_at: now(),
         card_type: lower(card.card_type || 'collectible'), card_name: card.name || 'Unnamed Card',
-        card_rarity: card.rarity === 'Mythical' ? 'Mythic' : (card.rarity || 'Common'),
+        card_rarity: card.rarity || 'Rare', playable_tier: card.playable_tier || '',
         card_image: card.image_url || '', game_id: card.game_id || '', game_name: game?.title || '', genre: game?.genre || '',
         acquisition_method: source === 'purchase' ? 'purchased' : source === 'trade' ? 'traded' : 'unlocked',
         unlocked_date: now(), is_equipped: false,
@@ -35,37 +53,50 @@ export async function grantCard(svc: any, userId: string, tradingCardId: string,
       },
     });
   }
-  if (grant.payload.kind !== 'card' || String(grant.payload.trading_card_id) !== String(tradingCardId)) throw rewardError('Reward key does not match the card');
+
+  if (grant.payload.kind !== 'card' || String(grant.payload.trading_card_id) !== String(tradingCardId)) {
+    throw rewardError('Reward key does not match the card');
+  }
   const payload = grant.payload;
-  // Check the delivery marker across owners: transferring the reward does not
-  // authorize a replacement if the acknowledgement was interrupted.
-  let delivered = await findKeyedRecord(svc.UserCard, { reward_grant_keys: { $in: [key] } });
-  if (!delivered) {
-    const existing = await svc.UserCard.filter({ user_id: userId, trading_card_id: payload.trading_card_id }, 'created_date', 20);
-    const owned = existing.find((row: Row) => payload.stackable ? row.trade_status !== 'locked_in_trade' : Number(row.quantity ?? 1) > 0);
-    if (owned) {
-      const quantity = Number(owned.quantity ?? 1);
-      if (!Number.isSafeInteger(quantity) || quantity < 0 || !Number.isSafeInteger(quantity + payload.quantity)) throw rewardError('Card quantity requires reconciliation');
-      if (owned.quantity === undefined) {
-        await conditionalUpdate(svc.UserCard, { id: owned.id, user_id: userId, quantity: { $exists: false } }, { $set: { quantity: 1 } });
+  const wanted = Math.max(1, Number(payload.quantity || 1));
+  const deliveredIds: string[] = [];
+
+  // Old pre-v2 grants may already have delivered a multi-quantity UserCard. Do
+  // not split/remint that economic value automatically; the v2 Stack action can
+  // consume the legacy quantity one copy at a time.
+  const legacyDelivered = await findKeyedRecord(svc.UserCard, { reward_grant_keys: { $in: [key] } });
+  if (legacyDelivered && Number(legacyDelivered.quantity || 1) > 1) {
+    const saved = await passportCard(svc, legacyDelivered);
+    deliveredIds.push(String(saved.id));
+  } else {
+    for (let index = 0; index < wanted; index += 1) {
+      const marker = index === 0 ? key : `${key}:copy:${index + 1}`;
+      // Search across owners. A reward that was legitimately traded away must
+      // never be re-created for its original recipient during a retry.
+      let delivered = await findKeyedRecord(svc.UserCard, { reward_grant_keys: { $in: [marker] } });
+      if (!delivered) {
+        delivered = await svc.UserCard.create({
+          ...payload.fields,
+          quantity: 1,
+          acquired_at: index === 0 ? payload.fields.acquired_at : now(),
+          unlocked_date: index === 0 ? payload.fields.unlocked_date : now(),
+          reward_grant_keys: [marker],
+        });
       }
-      const changed = await conditionalUpdate(svc.UserCard, {
-        id: owned.id, user_id: userId, quantity,
-        reward_grant_keys: { $nin: [key] },
-        ...(payload.stackable ? { trade_status: { $ne: 'locked_in_trade' } } : {}),
-      }, {
-        $addToSet: { reward_grant_keys: key },
-        ...(payload.stackable ? { $inc: { quantity: payload.quantity } } : {}),
-      });
-      delivered = await findKeyedRecord(svc.UserCard, { reward_grant_keys: { $in: [key] } });
-      if (!changed && !delivered) throw rewardError('Card changed during delivery; retry the reward', 503);
-    } else {
-      delivered = await svc.UserCard.create({ ...payload.fields, reward_grant_keys: [key] });
+      delivered = await passportCard(svc, delivered);
+      deliveredIds.push(String(delivered.id));
     }
   }
-  if (!delivered) throw rewardError('Reward card delivery is incomplete', 503);
-  await svc.RewardGrant.update(grant.id, { status: 'completed', user_card_id: delivered.id, completed_at: now() });
-  return String(delivered.user_id) === String(userId) ? delivered : null;
+
+  if (!deliveredIds.length) throw rewardError('Reward card delivery is incomplete', 503);
+  await svc.RewardGrant.update(grant.id, {
+    status: 'completed',
+    user_card_id: deliveredIds[0],
+    user_card_ids: deliveredIds,
+    completed_at: now(),
+  });
+  const primary = await svc.UserCard.get(deliveredIds[0]).catch(() => null);
+  return primary && String(primary.user_id) === String(userId) ? primary : null;
 }
 
 async function grantXp(svc: any, userId: string, key: string, xp: number) {
