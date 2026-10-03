@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Check, ChevronLeft, ChevronRight, Diamond, Gamepad2, Layers, Lock, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronRight, Diamond, Gamepad2, Layers, Lock, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import useCardsCatalog from '@/components/genremastery/useCardsCatalog';
@@ -27,28 +27,10 @@ function Cards({ cards, onSelect }) {
     <strong>{card.title}</strong><small>{card.series || card.card_type || 'Achievement card'}</small>
   </button>)}</div>{cards.length > limit && <button className="ll-more" onClick={() => setLimit((count) => count + 48)}>Show more cards ({cards.length - limit})</button>}</>;
 }
-function GameRail({ games, cards, selectedId, onSelect, panelId }) {
-  const rail = useRef(null);
-  const [edges, setEdges] = useState({ first: true, last: games.length <= 5 });
-  const sync = () => {
-    const el = rail.current;
-    if (el) setEdges({ first: el.scrollLeft <= 2, last: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
-  };
-  useEffect(() => { if (rail.current) rail.current.scrollLeft = 0; sync(); }, [games]);
-  useEffect(() => {
-    if (!rail.current || typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(sync); observer.observe(rail.current); return () => observer.disconnect();
-  }, []);
-  const move = (direction) => {
-    const el = rail.current;
-    el?.scrollBy({ left: direction * (el.clientWidth + (el.closest('.ll-full-explorer') ? 14 : 8)), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  };
-  return <>
-    <div className="ll-result-heading"><span>Games · A–Z</span><nav aria-label="Game row navigation"><button disabled={edges.first} onClick={() => move(-1)} aria-label="Previous five games"><ChevronLeft size={15} /></button><button disabled={edges.last} onClick={() => move(1)} aria-label="Next five games"><ChevronRight size={15} /></button></nav></div>
-    <div ref={rail} className="ll-game-rail" aria-label="Games with card collections" data-testid="library-discovery-games" onScroll={sync}>{games.map((game) => <button key={game.id} className="ll-game" title={game.title} aria-label={`Show cards for ${game.title}`} aria-expanded={String(selectedId) === String(game.id)} aria-controls={panelId} onClick={(event) => onSelect(game, event.currentTarget)}>
-      <span className="ll-game-art"><Artwork src={game.cover_image || game.thumb || game.banner_image} game /></span><strong>{game.title}</strong><small>{cards.filter((card) => String(card.gameId) === String(game.id)).length} cards</small>
-    </button>)}</div>
-  </>;
+function GameRail({ games, selectedId, onSelect, panelId }) {
+  return <div className="ll-game-list" aria-label="Games with card collections" data-testid="library-discovery-games">{games.map(game => <button key={game.id} className="ll-game" title={game.title} aria-label={`Show cards for ${game.title}`} aria-expanded={String(selectedId) === String(game.id)} aria-controls={panelId} onClick={event => onSelect(game, event.currentTarget)}>
+    <span className="ll-game-art"><Artwork src={game.cover_image || game.thumb || game.banner_image} game /></span><strong>{game.title}</strong><ChevronRight size={15} aria-hidden="true" />
+  </button>)}</div>;
 }
 
 export default function LibraryCardExplorer({ filters, onChange, full = false, fullViewOpen = false, onClose }) {
@@ -91,7 +73,7 @@ export default function LibraryCardExplorer({ filters, onChange, full = false, f
       <LibraryScrollReveal game={!failed && !loading && (!fullViewOpen || full) ? selectedGame : null} count={gameCards.length} anchorRef={anchor} full={full} panelId={panelId} onClose={clearGame}><Cards cards={gameCards} onSelect={inspect} /></LibraryScrollReveal>
     </div>
     <Dialog modal={false} open={Boolean(detail)} onOpenChange={(open) => { if (!open) setDetail(null); }}>
-      {detail && <DialogContent hideOverlay className="ll-card-inspector" data-library-card-dialog onKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onEscapeKeyDown={(event) => event.stopPropagation()}>
+      {detail && <DialogContent hideOverlay hideClose={Boolean(detail.isOwned && detail.user_card_id)} className="ll-card-inspector" data-library-card-dialog onKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onEscapeKeyDown={(event) => event.stopPropagation()}>
         <DialogTitle className={detail.isOwned && detail.user_card_id ? 'sr-only' : ''}>{detail.title}</DialogTitle>
         <DialogDescription className="sr-only">Card details, ownership and progression</DialogDescription>
         {detail.isOwned && detail.user_card_id ? <Suspense fallback={<p role="status">Loading card details…</p>}><MysteryCardDetail card={detail} onBack={() => setDetail(null)} /></Suspense> : <div className="ll-card-record">

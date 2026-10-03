@@ -1,7 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { X } from 'lucide-react';
 import { libraryScrollFrame } from './libraryDiscovery';
 
 function useScrollFrame(anchorRef, active) {
@@ -32,14 +31,8 @@ function useScrollFrame(anchorRef, active) {
   return frame;
 }
 
-function Paper({ game, count, onClose, children, width }) {
-  return <>
-    <div className="ll-scroll-paper" style={width ? { width } : undefined}>
-      <header><div><h2>{game.title}</h2><p>{count} {count === 1 ? 'card' : 'cards'} · A–Z</p></div><button aria-label="Collapse game cards" title="Roll back" onClick={onClose}><X size={15} /></button></header>
-      <div className="ll-scroll-cards">{children}</div>
-    </div>
-    <div className="ll-scroll-edge" aria-hidden="true"><i /></div>
-  </>;
+function Paper({ children, width }) {
+  return <div className="ll-scroll-paper" style={width ? { width } : undefined}><div className="ll-scroll-cards">{children}</div></div>;
 }
 
 export default function LibraryScrollReveal({ game, count, anchorRef, onClose, children, full = false, panelId }) {

@@ -1,0 +1,19 @@
+.luna-status{container-type:inline-size;display:flex;align-items:center;gap:12px;height:100%;min-width:0;padding:10px 14px;background:linear-gradient(115deg,rgba(18,30,44,.78),rgba(14,24,36,.55));color:#e8f4ff;backdrop-filter:blur(18px);border-radius:12px}
+.luna-status-selectors{display:flex;flex-direction:column;gap:5px;flex:none}
+.luna-status-selectors button{display:grid;place-items:center;width:30px;height:28px;border-radius:5px;color:#8aa0b4;transition:background .2s,color .2s}
+.luna-status-selectors button[aria-pressed=true]{background:#78d9f31c;color:#a6eeff}
+.luna-status-feed{display:flex;align-items:center;gap:8px;flex:1;min-width:0;text-align:left;padding:8px;border-radius:6px}
+.luna-status-feed-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:6px}
+.luna-status-feed strong{font-size:12px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luna-status-feed-copy>span{font-size:10px;color:#a1b4c6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luna-status-feed>svg{flex:none;color:#799bad}
+.luna-status-divider{align-self:stretch;width:1px;flex:none;background:linear-gradient(transparent,#b0e0f03d,transparent)}
+.luna-status-quick{display:grid;place-items:center;width:32px;height:36px;flex:none;color:#9bdded;border-radius:8px}
+.luna-status-clock{display:flex;align-items:center;gap:12px;flex:none;margin-left:auto;padding:8px 2px 8px 8px;text-align:left}
+.luna-status-clock>svg{color:#accedd;flex:none}
+.luna-status-clock time{display:block;font-size:23px;font-weight:600;line-height:1.1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.luna-status-clock small{display:block;margin-top:6px;font-size:9px;color:#92a7ba;text-transform:uppercase;letter-spacing:.05em}
+.luna-status button:hover{background:#c7eaff0a;color:white}
+.luna-status button:focus-visible{outline:2px solid #a0e8ff;outline-offset:2px}
+@container (max-width:520px){.luna-status-clock{gap:7px}.luna-status-clock time{font-size:19px}.luna-status-clock small{max-width:112px;font-size:8px}.luna-status-feed-copy>span{display:none}.luna-status-quick{width:25px}}
+@container (max-width:350px){.luna-status-clock>svg{display:none}.luna-status-clock small{max-width:88px}.luna-status-feed strong{font-size:10px}}
