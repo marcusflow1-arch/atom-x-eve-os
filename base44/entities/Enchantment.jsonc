@@ -66,6 +66,16 @@
     "material_cost": {
       "type": "object",
       "description": "Materials required to apply this enchantment"
+    },
+    "socket_type": {
+      "type": "string",
+      "enum": [
+        "core",
+        "gem",
+        "rune"
+      ],
+      "default": "gem",
+      "description": "Infusion recipe category in the Essential card tab"
     }
   },
   "required": [

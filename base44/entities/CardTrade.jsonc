@@ -100,11 +100,52 @@
       "type": "string",
       "format": "date-time",
       "description": "Anti-flip protection"
+    },
+    "market": {
+      "type": "string",
+      "enum": [
+        "trading_post",
+        "black_market"
+      ],
+      "default": "trading_post",
+      "description": "Trading destination; Black Market seller identity is hidden by the market API"
     }
   },
   "required": [
     "seller_id",
     "card_id",
     "listing_type"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.seller_id": "{{user.id}}"
+        },
+        {
+          "data.buyer_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

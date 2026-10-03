@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import TradingWorkspaceTrade from '@/components/streaming/inventory/TradingWorkspaceTrade';
 
 const rarityOrder = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Mythical', 'Unique', 'Limitless'];
 const rarityTone = {
@@ -49,9 +50,6 @@ const rarityBorder = {
 
 const moonSurface = 'bg-[#d7dde5]/[0.035] hover:bg-[#d7dde5]/[0.055]';
 
-function invoke(action, payload = {}) {
-  return base44.functions.invoke('tradePostMarket', { action, payload });
-}
 
 function formatAGP(value) {
   return `${Number(value || 0).toLocaleString()} AGP`;
@@ -301,7 +299,8 @@ function SellerRow({ listing, mine, busy, onBuy, onTrade, onCancel }) {
   );
 }
 
-export default function TradingPostContent({ genreFilter, searchTerm }) {
+export default function TradingPostContent({ genreFilter, searchTerm, market = 'trading_post', offerCardId = '' }) {
+  const invoke = useCallback((action, payload = {}) => base44.functions.invoke('tradePostMarket', { action, payload: { ...payload, market } }), [market]);
   const [state, setState] = useState({ listings: [], ownedCards: [], balance: 0, userId: '' });
   const [catalogGames, setCatalogGames] = useState([]);
   const [masterCards, setMasterCards] = useState([]);
@@ -347,12 +346,13 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [invoke]);
 
   useEffect(() => {
     load();
     const unsub = base44.entities.CardTrade?.subscribe?.(() => load());
-    return () => unsub?.();
+    const refresh = window.setInterval(load, 30000);
+    return () => { unsub?.(); window.clearInterval(refresh); };
   }, [load]);
 
   const action = async (name, payload, success) => {
@@ -361,6 +361,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
     try {
       const response = await invoke(name, payload);
       const next = response?.data || response;
+      if (next?.error || !next?.success) throw new Error(next?.error || 'The market action failed.');
       if (Array.isArray(next?.listings) && Array.isArray(next?.ownedCards)) setState(next);
       else await load();
       setMessage({ type: 'success', text: success });
@@ -372,6 +373,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
   };
 
   const listings = state.listings || [];
+  const offerCard = (state.ownedCards || []).find(card => card.id === offerCardId);
 
   const achievementById = useMemo(() => {
     const map = new Map();
@@ -591,9 +593,9 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
             <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.24em] text-[#d7dde5]/55">
-                  <Gamepad2 className="h-3.5 w-3.5" /> Console Game Trading Post
+                  <Gamepad2 className="h-3.5 w-3.5" /> {market === 'black_market' ? 'Black Market' : 'Console Game Trading Post'}
                 </div>
-                <h1 className="mt-2 text-2xl font-black tracking-tight text-white md:text-3xl">Find the game. Find the card. Choose the seller.</h1>
+                <h1 className="mt-2 text-2xl font-black tracking-tight text-white md:text-3xl">{market === 'black_market' ? 'Discover the unexpected.' : 'Find the game. Find the card. Choose the seller.'}</h1>
                 <p className="mt-2 max-w-3xl text-xs leading-5 text-white/38">
                   Browse the available game catalog first, drill into that game's achievement cards, then compare the live players selling the exact card you want.
                 </p>
@@ -642,6 +644,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
             )}
           </AnimatePresence>
 
+          {offerCardId && <section className="mt-4 rounded-lg bg-cyan-200/[.04]" aria-label="Trade selected card">{offerCard ? <><h2 className="px-7 pt-6 text-lg font-semibold">{offerCard.card_name}</h2><TradingWorkspaceTrade item={{ userCardId: offerCard.id, isEquipped: offerCard.is_equipped, tradeStatus: offerCard.trade_status }} owned /></> : <p role="status" className="p-6 text-sm text-slate-300">{loading ? 'Loading your card…' : 'This card is unavailable for trading. It may be equipped or already reserved.'}</p>}</section>}
           <section className="mt-2 min-h-[520px] py-2">
             <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.055] pb-4">
               <button
@@ -851,7 +854,7 @@ export default function TradingPostContent({ genreFilter, searchTerm }) {
                             mine={listing.seller_id === state.userId}
                             busy={busy}
                             onBuy={(item) => action('buyListing', { listingId: item.id }, `Acquired ${item.card_snapshot?.name || 'card'}.`)}
-                            onTrade={(item) => action('openTrade', { listingId: item.id }, 'Direct trade request opened with this player.')}
+                            onTrade={market === 'black_market' ? undefined : (item) => action('openTrade', { listingId: item.id }, 'Direct trade request opened with this player.')}
                             onCancel={(item) => action('cancelListing', { listingId: item.id }, 'Listing removed and the card is available again.')}
                           />
                         ))}

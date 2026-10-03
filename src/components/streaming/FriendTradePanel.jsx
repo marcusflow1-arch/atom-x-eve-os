@@ -73,7 +73,7 @@ function OfferColumn({ title, cards, confirmed, mine, onRemove }) {
   );
 }
 
-export default function FriendTradePanel({ friend, onClose, currentUser: providedUser }) {
+export default function FriendTradePanel({ friend, onClose, currentUser: providedUser, initialCardId }) {
   const { user: signedInUser } = useAuth();
   const currentUser = providedUser || signedInUser;
   const partnerId = friend?.friend_id || friend?.id;
@@ -171,6 +171,7 @@ export default function FriendTradePanel({ friend, onClose, currentUser: provide
         <button onClick={onClose} className="ml-2 grid h-8 w-8 place-items-center text-white/35 transition hover:bg-white/[0.05] hover:text-white"><X className="h-4 w-4" /></button>
       </header>
 
+      {initialCardId && active && !selectedIds.includes(initialCardId) && state.ownedCards.some(card => card.id === initialCardId) && <div className="mx-5 mt-3 flex items-center justify-between gap-4 bg-cyan-200/[.05] p-3 text-xs"><span>Selected: {state.ownedCards.find(card => card.id === initialCardId)?.card_name}</span><button disabled={busy || myConfirmed} onClick={() => toggleCard({ id: initialCardId })} className="text-cyan-200 disabled:opacity-30">Add to offer</button></div>}
       {error && <div className="mx-5 mt-3 border-l border-red-300/35 bg-red-300/[0.035] px-3 py-2 text-[10px] text-red-100/75">{error}</div>}
 
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.35fr)_minmax(330px,.65fr)] gap-0">

@@ -5,10 +5,6 @@ import { AlertCircle, Bell, CalendarDays, CheckCircle, ChevronRight, Clock3, Inf
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
-const fallbackUpdates = [
-  { id: 'u1', date: 'Recent', title: 'Luna Dashboard improvements', detail: 'Dashboard interaction, overlay layering, and navigation improvements are available.' },
-  { id: 'u2', date: 'Recent', title: 'AI Avatar systems', detail: 'Avatar intelligence, progression, memory, and scheduling systems continue to expand.' },
-];
 
 function normalizeUpdate(item, index) {
   return { ...item, id: item.id || `update-${index}`, date: item.created_date ? new Date(item.created_date).toLocaleDateString() : (item.date || 'Recent'), detail: item.full_content || item.detail || item.description || item.release_notes || 'No additional details available.' };
@@ -46,7 +42,7 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', onClos
   const items = useMemo(() => mode === 'reminders' ? reminders.map((event) => {
     const start = event.occurrence_start || event.start_time;
     return { ...event, id: event.occurrence_key || event.id, date: new Date(start).toLocaleDateString(), start_time: start, detail: event.description || `${(event.event_type || 'event').replaceAll('_',' ')} · ${new Date(start).toLocaleString()}` };
-  }) : (updates.length ? updates : fallbackUpdates), [mode, reminders, updates]);
+  }) : updates, [mode, reminders, updates]);
 
   useEffect(() => { if (!items.some((item) => String(item.id) === String(selectedId))) setSelectedId(items[0]?.id || null); }, [items, selectedId]);
   useEffect(() => { const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); onClose?.(); } }; window.addEventListener('keydown', key, true); return () => window.removeEventListener('keydown', key, true); }, [onClose]);

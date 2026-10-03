@@ -46,7 +46,7 @@ export default function Store(){
  let content;
  if(subview==='library')content=<Library/>;
  else if(subview==='achievements')content=<Achievements/>;
- else if(mode==='trading')content=<TradingPostContent searchTerm={search}/>;
+ else if(mode==='trading'||mode==='blackmarket')content=<TradingPostContent key={mode} searchTerm={search} market={mode==='blackmarket'?'black_market':'trading_post'} offerCardId={params.get('offerCard')||''}/>;
  else if(mode==='marketplace')content=<MarketplaceContent/>;
  else if(mode==='devcards')content=<DevCardsContent onNavigateToGame={openGame}/>;
  else if(isLoading)content=<div role="status" className="grid h-full place-items-center bg-[#0b101a] text-sm text-slate-400">Loading the store…</div>;

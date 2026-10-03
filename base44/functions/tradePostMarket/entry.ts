@@ -2,9 +2,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 type AnyObj = Record<string, any>;
 
-async function state(base44: any, user: AnyObj) {
+async function state(base44: any, user: AnyObj, market = 'trading_post') {
   const [listings, ownedCards] = await Promise.all([
-    base44.asServiceRole.entities.CardTrade.filter({ status: 'active' }, '-created_date', 300),
+    base44.asServiceRole.entities.CardTrade.filter({ status: 'active', ...(market === 'black_market' ? { market } : { $or: [{ market: 'trading_post' }, { market: { $exists: false } }] }) }, '-created_date', 300),
     base44.asServiceRole.entities.UserCard.filter({ user_id: user.id }, '-created_date', 300)
   ]);
   const sellerIds = [...new Set(listings.map((x: AnyObj) => x.seller_id).filter(Boolean))];
@@ -17,7 +17,8 @@ async function state(base44: any, user: AnyObj) {
     const seller = sellers.get(listing.seller_id);
     return {
       ...listing,
-      seller: seller ? { id: seller.id, name: seller.username || seller.full_name || 'Player', avatar: seller.avatar_url || '' } : { id: listing.seller_id, name: 'Player', avatar: '' }
+      seller_id: listing.market === 'black_market' && listing.seller_id !== user.id ? 'anonymous-' + listing.id : listing.seller_id,
+      seller: listing.market === 'black_market' && listing.seller_id !== user.id ? { id: 'anonymous-' + listing.id, name: 'Anonymous seller', avatar: '' } : seller ? { id: seller.id, name: seller.username || seller.full_name || 'Player', avatar: seller.avatar_url || '' } : { id: listing.seller_id, name: 'Player', avatar: '' }
     };
   });
   return { userId: user.id, listings: enriched, ownedCards: ownedCards.filter((c: AnyObj) => !c.is_equipped && c.trade_status !== 'locked_in_trade'), balance: Number(user.avatar_gamer_points || 0) };
@@ -31,14 +32,17 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body?.action || 'getState';
     const payload = body?.payload || {};
+    const market = payload.market === 'black_market' ? 'black_market' : 'trading_post';
     let user = await base44.asServiceRole.entities.User.get(authed.id);
 
     if (action === 'listCard') {
       const card = await base44.asServiceRole.entities.UserCard.get(payload.userCardId).catch(() => null);
       if (!card || card.user_id !== user.id) throw new Error('You do not own that card');
+      if (card.starter_grant_user_id) throw new Error('Avatar starter cards cannot be sold');
+      if (Number(card.quantity ?? 1) < 1) throw new Error('This card is no longer available');
       if (card.is_equipped || card.trade_status === 'locked_in_trade') throw new Error('Card is equipped or already locked in a trade');
       const price = Math.floor(Number(payload.price));
-      if (!Number.isFinite(price) || price < 1) throw new Error('Enter a valid asking price');
+      if (!Number.isSafeInteger(Number(payload.price)) || price < 1 || price > 1000000000) throw new Error('Enter a valid asking price');
       const progression = (await base44.asServiceRole.entities.CardProgression.filter({ user_card_id: card.id }, '-created_date', 1))[0];
       const listing = await base44.asServiceRole.entities.CardTrade.create({
         seller_id: user.id,
@@ -55,6 +59,7 @@ Deno.serve(async (req) => {
           image: card.card_image || ''
         },
         listing_type: 'fixed_price',
+        market,
         asking_price: price,
         market_value_score: progression?.power_score || 0,
         status: 'active',
@@ -87,15 +92,15 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.MarketTransaction.create({ buyer_id: user.id, seller_id: seller.id, item_id: card.id, item_name: card.card_name, price, transaction_type: 'purchase', timestamp: new Date().toISOString() });
     } else if (action === 'openTrade') {
       const listing = await base44.asServiceRole.entities.CardTrade.get(payload.listingId).catch(() => null);
-      if (!listing || listing.status !== 'active' || listing.seller_id === user.id) throw new Error('Listing cannot be traded right now');
+      if (!listing || listing.market === 'black_market' || listing.status !== 'active' || listing.seller_id === user.id) throw new Error('Listing cannot be traded right now');
       const session = await base44.asServiceRole.entities.TradeSession.create({ initiator_id: user.id, recipient_id: listing.seller_id, status: 'pending', initiator_offer_card_ids: [], recipient_offer_card_ids: [listing.card_id], initiator_offer_snapshot: [], recipient_offer_snapshot: [listing.card_snapshot], initiator_confirmed: false, recipient_confirmed: false });
-      return Response.json({ success: true, tradeSession: session, ...(await state(base44, await base44.asServiceRole.entities.User.get(user.id))) });
+      return Response.json({ success: true, tradeSession: session, ...(await state(base44, await base44.asServiceRole.entities.User.get(user.id), market)) });
     } else if (action !== 'getState') {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
 
     const fresh = await base44.asServiceRole.entities.User.get(user.id);
-    return Response.json({ success: true, ...(await state(base44, fresh)) });
+    return Response.json({ success: true, ...(await state(base44, fresh, market)) });
   } catch (error) {
     return Response.json({ error: error?.message || String(error) }, { status: 400 });
   }

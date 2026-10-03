@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body?.action || 'getState';
     const payload = body?.payload || {};
-    const actions = new Set(['getState', 'train', 'levelUp', 'enhance', 'combine', 'ascend', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk']);
+    const actions = new Set(['getState', 'train', 'levelUp', 'enhance', 'combine', 'ascend', 'enchant', 'overEnchant', 'unlockSkill', 'togglePerk', 'allocateStat']);
     if (!actions.has(action)) return Response.json({ error: 'Invalid action' }, { status: 400 });
     if (action === 'combine' && payload.useWildcard !== undefined && typeof payload.useWildcard !== 'boolean') {
       return Response.json({ error: 'useWildcard must be true or false' }, { status: 400 });
@@ -106,6 +106,7 @@ Deno.serve(async (req) => {
         ascension: 0,
         max_level: 10,
         skill_points: 1,
+        stat_points: 0,
         unlocked_skill_nodes: [],
         active_perks: [],
         enchantments: [],
@@ -176,7 +177,13 @@ Deno.serve(async (req) => {
       const need = Number(progression.xp_to_next || xpToNext(progression.level, progression.ascension));
       if (Number(progression.xp || 0) < need) throw new Error(`Need ${need - Number(progression.xp || 0)} more card XP`);
       const newLevel = Number(progression.level) + 1;
-      await commit({ level: newLevel, xp: Number(progression.xp) - need, xp_to_next: xpToNext(newLevel, progression.ascension), skill_points: Number(progression.skill_points || 0) + 1 }, 'level_up', `Card reached level ${newLevel}`, { previous_level: progression.level });
+      await commit({ level: newLevel, xp: Number(progression.xp) - need, xp_to_next: xpToNext(newLevel, progression.ascension), skill_points: Number(progression.skill_points || 0) + 1, stat_points: Number(progression.stat_points || 0) + 1 }, 'level_up', `Card reached level ${newLevel}`, { previous_level: progression.level });
+    } else if (action === 'allocateStat') {
+      const stat = String(payload.stat || '');
+      if (!['attack', 'defense', 'magic', 'vitality', 'speed'].includes(stat)) throw new Error('Invalid stat');
+      const points = Number(progression.stat_points || 0);
+      if (!Number.isSafeInteger(points) || points < 1) throw new Error('Earn a card level to gain another stat point');
+      await commit({ stat_points: points - 1, enhanced_stats: { ...(progression.enhanced_stats || {}), [stat]: Number(progression.enhanced_stats?.[stat] || 0) + 1 } }, 'enhance', `Allocated one stat point to ${stat}`, { stat, gain: 1, source: 'level_point' });
     } else if (action === 'enhance') {
       const stat = String(payload?.stat || 'attack').toLowerCase();
       if (!['attack', 'defense', 'magic', 'vitality', 'speed'].includes(stat)) throw new Error('Invalid stat');
@@ -230,10 +237,18 @@ Deno.serve(async (req) => {
       const enchantment = await base44.asServiceRole.entities.Enchantment.get(enchantmentId).catch(() => null);
       if (!enchantment) throw new Error('Enchantment not found');
       const slots = 1 + Math.floor(Number(progression.stage || 1) / 2) + Math.min(2, Number(progression.ascension || 0));
-      if ((progression.enchantments || []).length >= slots) throw new Error(`All ${slots} enchantment slots are occupied. Stage or ascend the card for more slots.`);
+      const socketType = enchantment.socket_type || 'gem';
+      if (!['core', 'gem', 'rune'].includes(socketType) || (payload.socketType && payload.socketType !== socketType)) throw new Error('Choose a recipe for this socket type');
+      const slotCost = Number(enchantment.slot_cost ?? 1);
+      if (!Number.isSafeInteger(slotCost) || slotCost < 1) throw new Error('Invalid socket recipe');
+      const usedSlots = (progression.enchantments || []).reduce((sum: number, item: AnyObj) => sum + Math.max(1, Number(item.slot_cost || 1)), 0);
+      if (usedSlots + slotCost > slots) throw new Error(`This infusion needs ${slotCost} free sockets. Stage or ascend the card for more slots.`);
+      if ((progression.enchantments || []).some((item: AnyObj) => item.id === enchantment.id)) throw new Error('This infusion is already socketed');
+      if (Array.isArray(enchantment.allowed_item_types) && enchantment.allowed_item_types.length && !enchantment.allowed_item_types.some((type: string) => ['all', 'any', String(userCard.card_type || '').toLowerCase()].includes(type.toLowerCase()))) throw new Error('This infusion does not support this card type');
+
       const costs = enchantment.material_cost && Object.keys(enchantment.material_cost).length ? enchantment.material_cost : { resonance_fragment: 1 };
       await spend(Object.fromEntries(Object.entries(costs).map(([k, v]) => [k, Math.max(1, Number(v) || 1)])));
-      const enchants = [...(progression.enchantments || []), { id: enchantment.id, name: enchantment.name, element: enchantment.element, rarity: enchantment.rarity, modifiers: enchantment.modifiers || {}, overcharged: false }];
+      const enchants = [...(progression.enchantments || []), { id: enchantment.id, name: enchantment.name, element: enchantment.element, rarity: enchantment.rarity, modifiers: enchantment.modifiers || {}, socket_type: socketType, slot_cost: slotCost, overcharged: false }];
       await commit({ enchantments: enchants }, 'enchant', `${enchantment.name} applied`, { enchantment_id: enchantment.id, slots });
     } else if (action === 'overEnchant') {
       if (!(progression.enchantments || []).length) throw new Error('Apply a normal enchantment before over-enchanting');
@@ -296,7 +311,7 @@ Deno.serve(async (req) => {
       events,
       materials,
       enchantments,
-      compatibleCards: duplicates.filter((c: AnyObj) => c.id !== userCard.id && !c.is_equipped && c.trade_status !== 'locked_in_trade'),
+      compatibleCards: duplicates.filter((c: AnyObj) => c.id !== userCard.id && !c.starter_grant_user_id && !c.is_equipped && c.trade_status !== 'locked_in_trade'),
       skillTree: SKILL_TREE
     });
   } catch (error) {

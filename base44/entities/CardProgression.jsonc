@@ -96,6 +96,19 @@
           "overcharged": {
             "type": "boolean",
             "default": false
+          },
+          "socket_type": {
+            "type": "string",
+            "enum": [
+              "core",
+              "gem",
+              "rune"
+            ],
+            "default": "gem"
+          },
+          "slot_cost": {
+            "type": "integer",
+            "default": 1
           }
         }
       }
@@ -130,6 +143,11 @@
     "revision": {
       "type": "number",
       "default": 1
+    },
+    "stat_points": {
+      "type": "integer",
+      "default": 0,
+      "description": "Unspent attribute points earned by advancing card levels"
     }
   },
   "required": [
