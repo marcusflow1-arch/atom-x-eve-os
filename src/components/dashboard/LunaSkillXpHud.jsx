@@ -140,7 +140,7 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
               <div style={{ width: `${progress}%` }} />
             </div>
           </div>
-          {(pendingCard || previewCard || showcaseEditing) && <p className="luna-hotbar-hint" role="status">
+          {!showcaseEditing && (pendingCard || previewCard) && <p className="luna-hotbar-hint" role="status">
             {pendingCard ? `Choose a slot for ${pendingCard.title || pendingCard.card_name || 'this skill'}`
               : previewCard ? `${previewCard.title || previewCard.card_name || 'Skill'} · Press ${SKILL_KEYS[selectedSlot]} to cast`
               : 'Drag an owned skill here from the Skill Book'}
