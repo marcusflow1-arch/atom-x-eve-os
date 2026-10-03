@@ -359,7 +359,7 @@ function EssentialView({ state, act, busy }) {
   const [selected, setSelected] = useState('');
   const slots = 1 + Math.floor(num(p.stage, 1) / 2) + Math.min(2, num(p.ascension));
   const used = (p.enchantments || []).reduce((sum, item) => sum + Math.max(1, num(item.slot_cost, 1)), 0);
-  const options = (state.enchantments || []).filter(item => (item.socket_type || 'gem') === kind);
+  const options = (state.enchantments || []).filter(item => (item.socket_type || 'gem') === kind && (!item.allowed_item_types?.length || item.allowed_item_types.some(type => ['all', 'any', String(state.userCard?.card_type || '').toLowerCase()].includes(type.toLowerCase()))));
   const definition = options.find(item => item.id === selected);
   const cost = definition?.material_cost && Object.keys(definition.material_cost).length ? definition.material_cost : { resonance_fragment: 1 };
   return <div className="space-y-5">

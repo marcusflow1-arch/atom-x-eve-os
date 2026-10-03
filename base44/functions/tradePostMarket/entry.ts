@@ -16,7 +16,10 @@ async function state(base44: any, user: AnyObj, market = 'trading_post') {
   const enriched = listings.map((listing: AnyObj) => {
     const seller = sellers.get(listing.seller_id);
     return {
-      ...listing,
+      id: listing.id, card_id: listing.card_id, card_snapshot: listing.card_snapshot,
+      listing_type: listing.listing_type, asking_price: listing.asking_price, asking_materials: listing.asking_materials,
+      market: listing.market || 'trading_post', status: listing.status, market_value_score: listing.market_value_score,
+      expires_at: listing.expires_at, views: listing.views, created_date: listing.created_date,
       seller_id: listing.market === 'black_market' && listing.seller_id !== user.id ? 'anonymous-' + listing.id : listing.seller_id,
       seller: listing.market === 'black_market' && listing.seller_id !== user.id ? { id: 'anonymous-' + listing.id, name: 'Anonymous seller', avatar: '' } : seller ? { id: seller.id, name: seller.username || seller.full_name || 'Player', avatar: seller.avatar_url || '' } : { id: listing.seller_id, name: 'Player', avatar: '' }
     };

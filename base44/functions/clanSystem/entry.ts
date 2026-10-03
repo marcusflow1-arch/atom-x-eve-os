@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
                 });
             }
 
-            if (division.isPrivate) {
+            if (division.isPrivate || ['Invite Only', 'Request to Join'].includes(division.recruitmentStatus)) {
                 return new Response(JSON.stringify({ success: false, error: 'Clan is private. Please request to join.' }), { 
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
                 });

@@ -47,7 +47,7 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
   const toggle = (key, value) => setDraft(old => ({ ...old, [key]: old[key].includes(value) ? old[key].filter(item => item !== value) : [...old[key], value] }));
   const clans = useMemo(() => (clanQuery.data || []).filter(clan => {
     const matches = [clan.name, clan.tag, clan.description, ...(clan.gameTags || [])].join(' ').toLowerCase().includes(query.toLowerCase().trim());
-    return matches && (focus === 'All' || (clan.playstyles || clan.focusTags || []).includes(focus));
+    return matches && (focus === 'All' || [...(clan.playstyles || []), ...(clan.focusTags || [])].includes(focus));
   }), [clanQuery.data, query, focus]);
   const error = create.error || join.error;
   return <main className="clan-intro">
@@ -84,7 +84,7 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
           const member = (memberQuery.data || []).some(row => row.clan_id === clan.id);
           const inviteOnly = clan.recruitmentStatus === 'Invite Only';
           const full = Number(clan.memberCount || 0) >= Number(clan.sizeLimit || 100);
-          return <article key={clan.id}><img src={clan.icon || crestDataUri(clan.emblemDesign || {})} alt="" /><div><h3>{clan.name} <small>{clan.tag ? '[' + clan.tag + ']' : ''}</small></h3><p>{clan.motto || clan.description || 'A new community is taking shape.'}</p><div className="clan-intro-tags">{(clan.playstyles || clan.focusTags || []).map(value => <span key={value}>{value}</span>)}</div><small>{clan.memberCount || 1} / {clan.sizeLimit || 100} members · {clan.recruitmentStatus || 'Public'}</small></div><button type="button" disabled={!user || join.isPending || (!member && (inviteOnly || full || applied.includes(clan.id)))} onClick={() => member ? onClanJoined?.(clan.id) : join.mutate(clan)}>{member ? 'Enter clan' : applied.includes(clan.id) ? 'Application sent' : inviteOnly ? 'Invite only' : full ? 'Full' : clan.isPrivate || clan.recruitmentStatus === 'Request to Join' ? 'Apply to join' : 'Join clan'}</button></article>;
+          return <article key={clan.id}><img src={clan.icon || crestDataUri(clan.emblemDesign || {})} alt="" /><div><h3>{clan.name} <small>{clan.tag ? '[' + clan.tag + ']' : ''}</small></h3><p>{clan.motto || clan.description || 'A new community is taking shape.'}</p><div className="clan-intro-tags">{[...new Set([...(clan.playstyles || []), ...(clan.focusTags || [])])].map(value => <span key={value}>{value}</span>)}</div><small>{clan.memberCount || 1} / {clan.sizeLimit || 100} members · {clan.recruitmentStatus || 'Public'}</small></div><button type="button" disabled={!user || join.isPending || (!member && (inviteOnly || full || applied.includes(clan.id)))} onClick={() => member ? onClanJoined?.(clan.id) : join.mutate(clan)}>{member ? 'Enter clan' : applied.includes(clan.id) ? 'Application sent' : inviteOnly ? 'Invite only' : full ? 'Full' : clan.isPrivate || clan.recruitmentStatus === 'Request to Join' ? 'Apply to join' : 'Join clan'}</button></article>;
         })}</div> : <div className="clan-intro-empty"><Shield size={30} /><h3>No matching clans</h3><p>Try another focus or name, or start your own.</p><button onClick={() => { setQuery(''); setFocus('All'); }}>Clear filters</button></div>}
       </section>}
     </div>
