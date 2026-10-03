@@ -825,9 +825,6 @@ Deno.serve(async (req) => {
       return json(await buildState(base44, user, requestedGender));
     }
 
-    const loadout = await activeLoadout(base44, user.id);
-    if (!loadout) return json({ error: 'No active skill set' }, 404);
-
     if (action === 'equip') {
       const slot = Number(data.slot);
       const userCardId = String(data.user_card_id || '').trim();
@@ -840,6 +837,9 @@ Deno.serve(async (req) => {
       const equipStatus = skillEquipStatus(card, await avatarGender(svc, user.id, requestedGender));
       if (!equipStatus.can_equip) return json({ error: equipStatus.equip_error || 'This card cannot be equipped.' }, 409);
 
+      // Validate ownership/compatibility before provisioning any new prefab.
+      const loadout = await activeLoadout(base44, user.id);
+      if (!loadout) return json({ error: 'No active skill set' }, 404);
       const previous = { ...(loadout.skill_slots || {}) };
       const oldCardId = previous[String(slot)] || null;
       for (const [key, value] of Object.entries(previous)) if (String(value) === userCardId) delete previous[key];
@@ -856,6 +856,9 @@ Deno.serve(async (req) => {
       }
       return json(await buildState(base44, user, requestedGender));
     }
+
+    const loadout = await activeLoadout(base44, user.id);
+    if (!loadout) return json({ error: 'No active skill set' }, 404);
 
     if (action === 'unequip') {
       const slot = Number(data.slot);

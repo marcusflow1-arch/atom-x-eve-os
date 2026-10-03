@@ -322,7 +322,7 @@ export default function LunaTemplate() {
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
-  const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
+  const [hideUI, setHideUI] = useState(false); // Toggle with Shift+0
   const [showDevSpotlight, setShowDevSpotlight] = useState(false); // Toggle with 'P' key
   const [currentEnvId, setCurrentEnvId] = useState('default_room');
 

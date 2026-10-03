@@ -19,7 +19,7 @@ const skill = {
 };
 globalThis.skillBookFixture = {
   games: [{ key: 'atom', title: 'Atom X Eve', genre: 'Action RPG', owned_skills: 1, total_skills: 1 }],
-  skills: [skill], slots: Array.from({ length: 4 }, (_, index) => ({ index, card: null })),
+  skills: [skill], slots: Array.from({ length: 10 }, (_, index) => ({ index, card: null })),
   isLoading: false, isSaving: false,
   equip: async (slot, id) => { calls.push({ slot, id }); },
 };
@@ -57,7 +57,7 @@ function drag(node) {
 }
 try {
   await render();
-  assert.match(document.body.textContent, /0 \/ 4 equipped/);
+  assert.match(document.body.textContent, /0 \/ 10 equipped/);
   const collectible = document.querySelector('button[title="Artemis — Lunar Beam"]');
   assert.ok(collectible);
   assert.equal(collectible.draggable, false);
@@ -66,7 +66,7 @@ try {
   assert.deepEqual(blockedDrag.payload, {});
   await act(async () => { collectible.click(); });
   assert.match(document.getElementById('skill-equip-reason').textContent, /female avatar/);
-  assert.equal(slotButtons().length, 4);
+  assert.equal(slotButtons().length, 10);
   assert.ok(slotButtons().every((button) => button.getAttribute('aria-disabled') === 'true' && button.getAttribute('aria-describedby') === 'skill-equip-reason'));
   await act(async () => { slotButtons()[0].click(); });
   assert.equal(calls.length, 0);
@@ -77,14 +77,14 @@ try {
   await render();
   assert.equal(document.getElementById('skill-equip-reason'), null);
   assert.ok(slotButtons().every((button) => !button.disabled));
-  await act(async () => { slotButtons()[3].click(); });
-  assert.deepEqual(calls, [{ slot: 3, id: 'artemis' }]);
+  await act(async () => { slotButtons()[9].click(); });
+  assert.deepEqual(calls, [{ slot: 9, id: 'artemis' }]);
   const usable = document.querySelector('[draggable="true"]');
   assert.ok(usable);
   const { payload } = drag(usable);
   assert.equal(JSON.parse(payload['application/json']).user_card_id, 'artemis');
-  assert.match(document.body.textContent, /one of the 4 Luna skill slots/);
-  console.log('PASS: four-slot counter; incompatible cards stay visible; explanation, guarded equip with feedback and blocked dragging; compatible avatar enables owned-card equip and dragging.');
+  assert.match(document.body.textContent, /one of the 10 Luna skill slots/);
+  console.log('PASS: ten-slot counter; incompatible cards stay visible; explanation, guarded equip with feedback and blocked dragging; compatible avatar enables owned-card equip and dragging.');
 } finally {
   await act(async () => { root.unmount(); });
   dom.window.close();
