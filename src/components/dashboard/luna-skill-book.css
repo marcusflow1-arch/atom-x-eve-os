@@ -1,0 +1,56 @@
+/* One quiet surface, with clear space for the actual dashboard hotkeys. */
+.luna-skill-book-workspace { position:fixed; left:330px; right:338px; top:190px; bottom:48px; z-index:40; pointer-events:auto; overflow:hidden; background:linear-gradient(135deg,rgba(25,33,43,.95),rgba(12,19,29,.95)); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 1px 0 rgba(213,231,244,.08),inset -1px 0 rgba(213,231,244,.06); padding-bottom:var(--skill-book-hud-space,236px); }
+.luna-skill-book { display:flex; flex-direction:column; height:100%; min-height:0; padding:18px 22px 0; color:#edf1f5; }
+.lsb-heading { display:flex; align-items:center; gap:12px; flex:none; }
+.lsb-heading h2 { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:550; letter-spacing:-.02em; }
+.lsb-heading h2 svg { color:#a9bfc8; }
+.lsb-heading>span { margin-left:auto; color:#a6aeb8; font-size:11px; }
+.lsb-heading>button { display:grid; place-items:center; width:30px; height:30px; color:#aebdc7; }
+.lsb-controls { display:flex; align-items:flex-start; gap:24px; margin:12px 0 15px; flex:none; }
+.luna-skill-book .ll-voice-search { width:auto; flex:1; max-width:420px; min-width:0; }
+.luna-skill-book .ll-search-line { display:flex; align-items:center; gap:7px; min-height:32px; border-bottom:1px solid rgba(216,224,234,.38); }
+.luna-skill-book .ll-search-line:focus-within { border-color:#c9e9ef; }
+.luna-skill-book .ll-search-line>svg { width:14px; height:14px; flex:none; color:#abb7c2; }
+.luna-skill-book .ll-search-line input { flex:1; min-width:0; width:100%; padding:7px 0; color:#f1f5f9; background:transparent; border:0; outline:none; font-size:13px; }
+.luna-skill-book .ll-search-line input::placeholder { color:#a4adb7; opacity:.75; }
+.luna-skill-book .ll-search-line button { display:grid; place-items:center; height:30px; width:30px; flex:none; color:#becad3; }
+.luna-skill-book .ll-search-line button[aria-pressed="true"] { color:#a9f3ff; }
+.luna-skill-book .ll-search-note { font-size:11px; color:#c4dce5; padding-top:5px; }
+.lsb-genre { display:flex; align-items:center; gap:8px; margin-left:auto; min-width:0; }
+.lsb-genre>span { font-size:11px; color:#a0acb6; }
+.lsb-genre select { max-width:170px; min-width:0; background:#242c36; color:#e3e9ee; border:1px solid rgba(201,216,226,.12); border-radius:4px; padding:6px 9px; font-size:12px; }
+.lsb-path { display:flex; align-items:center; gap:8px; min-width:0; flex:none; font-size:12px; }
+.lsb-path h3 { font-weight:550; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lsb-path button { display:flex; align-items:center; gap:5px; color:#c1d6df; padding:3px 0; }
+.lsb-path>span { color:#778894; }
+.lsb-path .lsb-count { margin-left:auto; white-space:nowrap; font-size:11px; }
+.lsb-help { flex:none; color:#aebac6; font-size:11px; line-height:1.5; margin:7px 0 13px; min-height:17px; }
+.lsb-results { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#4a5661 transparent; padding:2px 4px 8px 2px; }
+.lsb-games { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr)); align-content:start; gap:6px 14px; }
+.lsb-game { display:flex; gap:12px; align-items:center; min-width:0; padding:8px; text-align:left; background:rgba(229,236,242,.035); border-radius:5px; transition:background .15s; }
+.lsb-game:hover { background:rgba(229,236,242,.08); }
+.lsb-game-art { display:grid; place-items:center; flex:none; width:37px; height:45px; background:#29323e; color:#a6c2d0; overflow:hidden; border-radius:3px; }
+.lsb-game-art img { width:100%; height:100%; object-fit:cover; }
+.lsb-game>span:nth-child(2) { min-width:0; flex:1; }
+.lsb-game strong { display:block; font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lsb-game small { display:block; color:#9fadb9; font-size:10px; margin-top:4px; }
+.lsb-game>svg { flex:none; color:#8ca6b5; }
+.lsb-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(122px,100%),1fr)); gap:15px 12px; align-content:start; }
+.lsb-card { text-align:left; min-width:0; align-self:start; cursor:grab; }
+.lsb-card[aria-disabled="true"] { cursor:default; }
+.lsb-card:disabled { opacity:.65; cursor:wait; }
+.lsb-card-art { display:grid; place-items:center; position:relative; height:clamp(86px,13vh,140px); overflow:hidden; border-radius:5px; background:linear-gradient(145deg,#343b43,#20262e); box-shadow:inset 0 0 0 1px rgba(211,224,236,.13); color:#8f9eab; }
+.lsb-card-art>img { width:100%; height:100%; object-fit:cover; }
+.lsb-card[aria-pressed="true"] .lsb-card-art { outline:2px solid #c9edf5; outline-offset:2px; }
+.lsb-card:hover .lsb-card-art { box-shadow:inset 0 0 0 1px #b9c4cf; }
+.lsb-rarity { position:absolute; top:6px; left:6px; background:rgba(14,19,26,.85); color:#d9e2e9; border-radius:3px; padding:3px 5px; font-size:9px; }
+.lsb-equipped { position:absolute; bottom:6px; left:6px; right:6px; display:flex; align-items:center; gap:3px; font-size:10px; color:#d8edf1; padding:3px 5px; background:rgba(13,23,30,.9); border-radius:3px; }
+.lsb-card>strong { display:block; font-size:12px; font-weight:550; line-height:1.4; margin:7px 0 2px; overflow-wrap:anywhere; }
+.lsb-card>small { display:block; font-size:10px; color:#aab6c1; line-height:1.5; }
+.lsb-card .lsb-blocked { margin-top:4px; color:#c3b59f; }
+.lsb-blocked svg { display:inline; margin-right:4px; }
+.lsb-empty { padding:22px 0; color:#bbc6ce; font-size:12px; line-height:1.6; }
+.lsb-empty button { display:block; margin-top:9px; text-decoration:underline; text-underline-offset:4px; color:#d1ecf3; }
+.luna-skill-book button:focus-visible,.luna-skill-book select:focus-visible { outline:2px solid #b8e9f4; outline-offset:3px; }
+@media (max-width:1100px) { .luna-skill-book { padding:12px 14px 0; } .lsb-controls { flex-wrap:wrap; gap:7px 12px; margin:8px 0; } .luna-skill-book .ll-voice-search { flex-basis:100%; max-width:none; } .lsb-genre { margin-left:0; } .lsb-help { margin:5px 0 8px; } }
+@media (prefers-reduced-motion:reduce) { .luna-skill-book * { transition:none!important; } }
