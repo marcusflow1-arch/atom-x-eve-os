@@ -22,6 +22,7 @@ globalThis.pdfFixture = {
     entities:{ PlatformUpdate:entity([{id:'u',title:'October patch',published:true}]), UserEvent:entity(), CardProgression:entity(), UserCard:entity(), ClanMember:entity(), Game:entity(), Division:entity([{id:'crew',name:'Sky Crew',playstyles:['Trading'],memberCount:3,sizeLimit:25,recruitmentStatus:'Public'}]) },
     functions:{ invoke:async(name,body)=>{
       calls.push({name,body});
+      if(name==='socialActions') return {data:{notifications:[]}};
       if(name==='calendarAgent') return {data:{occurrences:[{id:'r',title:'Guild raid',start_time:'2026-10-12T18:00:00Z',event_type:'reminder'}]}};
       if(name==='cardProgression')return {data:structuredClone(state)};
       if(name==='clanSystem')return {data:{success:true,clanId:'created-clan'}};
@@ -56,12 +57,14 @@ const setInput=(el,value)=>{const proto=el.tagName==='SELECT'?HTMLSelectElement.
 try{
   let calendars=0;
   await render(Status,{onCalendarClick:()=>calendars++});await run();
+  assert.equal(document.querySelector('.luna-status-preview').hasAttribute('data-expanded'),false);
+  await run(()=>button('System updates').dispatchEvent(new window.MouseEvent('click',{bubbles:true,detail:1})));
   assert.ok(document.querySelector('.luna-status-feed').textContent.includes('October patch'));
-  await run(()=>button('Show reminders').click());
+  await run(()=>button('Notifications').dispatchEvent(new window.MouseEvent('click',{bubbles:true,detail:1})));
   assert.ok(document.querySelector('.luna-status-feed').textContent.includes('Guild raid'));
-  assert.equal(button('Show reminders').getAttribute('aria-pressed'),'true');
+  assert.equal(button('Notifications').getAttribute('aria-expanded'),'true');
   await run(()=>button('Open calendar').click());assert.equal(calendars,1);
-  await run(()=>button('Open all system updates').click());assert.equal(document.querySelector('[data-testid="status-overlay"]').textContent,'updates');
+  await run(()=>button('System updates').click());assert.equal(document.querySelector('[data-testid="status-overlay"]').textContent,'updates');
 
   await render(Card,{card:{title:'Moonstep',user_card_id:'card'},onBack:()=>{}});await run();
   assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(el=>el.textContent),['Overview','Enhancement','Skill Tree','Combined Stage','Essential']);
