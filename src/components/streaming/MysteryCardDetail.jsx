@@ -450,7 +450,29 @@ export default function MysteryCardDetail({ card, onBack }) {
     const unsubUserCard = base44.entities.UserCard?.subscribe?.((event) => {
       if (event?.data?.id && event.data.id === state?.userCard?.id) load();
     });
-    return (
+    return () => { unsubProgression?.(); unsubUserCard?.(); };
+  }, [load, state?.userCard?.id]);
+
+  const act = async (action, payload = {}) => {
+    if (busy) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await invoke(action, { ...card, userCardId: state?.userCard?.id || card?.userCardId }, payload);
+      const next = response?.data || response;
+      if(next?.error)throw new Error(next.error);
+      setState(next);
+      window.dispatchEvent(new CustomEvent('cardProgressionChanged',{detail:{user_card_id:next?.userCard?.id}}));
+      const latest = next?.events?.[0]?.summary;
+      setMessage({ type: 'success', text: latest || 'Card updated.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error?.message || 'That card action failed.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
     <div className="card-scroll">
       <div className="card-scroll-shell">
         <header className="card-scroll-header">
