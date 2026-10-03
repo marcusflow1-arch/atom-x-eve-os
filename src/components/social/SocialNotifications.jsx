@@ -29,7 +29,7 @@ export function SocialNotificationAlerts(){
  useEffect(()=>{
   const fresh=notifications.filter(n=>n.status==='unread'&&!seen.current.has(n.id));
   notifications.forEach(n=>seen.current.add(n.id));
-  if(!fresh.length)return;
+  if(!fresh.length || document.querySelector('[data-luna-notification-dock]'))return;
   const latest=fresh[0];
   toast.custom(t=><button onClick={()=>{toast.dismiss(t.id);navigate('/Notifications');}}
     className="max-w-xs rounded-xl bg-slate-900/95 p-4 text-left text-white shadow-xl ring-1 ring-cyan-200/15">
@@ -40,8 +40,9 @@ export function SocialNotificationAlerts(){
  },[notifications,navigate]);
  return null;
 }
-export default function SocialNotifications(){
+export default function SocialNotifications({onlyId,hideHeading=false}={}){
  const {notifications,isLoading,error,refetch}=useSocialNotifications();
+ const visibleNotifications=onlyId ? notifications.filter(notice=>String(notice.id)===String(onlyId)) : notifications;
  const [busy,setBusy]=useState(''),[failure,setFailure]=useState('');
  const navigate=useNavigate(),queries=useQueryClient();
  const respond=async(notice,accept)=>{
@@ -68,9 +69,9 @@ export default function SocialNotifications(){
  };
  const openMessage=n=>{openPlayerMessage({id:n.actor_id,name:n.actor_name,avatar:n.actor_avatar});navigate('/LunaTemplate');};
  return <section aria-label="System notifications" className="space-y-3">
-  <h2 className="flex items-center gap-2 text-lg font-semibold"><Bell size={18}/>System notifications</h2>
+  {!hideHeading&&<h2 className="flex items-center gap-2 text-lg font-semibold"><Bell size={18}/>System notifications</h2>}
   {(failure||error)&&<p role="alert" className="text-sm text-rose-300">{failure||'Notifications could not load.'}<button onClick={()=>refetch()} className="ml-2 underline">Retry</button></p>}
-  {isLoading?<p role="status">Loading notifications…</p>:!notifications.length?<p className="py-10 text-sm text-white/45">You're all caught up.</p>:notifications.map(n=><article key={n.id} className="rounded-xl bg-white/[0.045] p-4">
+  {isLoading?<p role="status">Loading notifications…</p>:!visibleNotifications.length?<p className="py-10 text-sm text-white/45">You're all caught up.</p>:visibleNotifications.map(n=><article key={n.id} className="rounded-xl bg-white/[0.045] p-4">
    <div className="flex items-start gap-3">{n.actor_avatar&&<img src={n.actor_avatar} alt="" className="h-10 w-10 rounded-full object-cover"/>}
     <div className="min-w-0 flex-1"><p className="text-sm font-medium">{n.title}{n.status==='unread'&&<span className="ml-2 text-cyan-300">•</span>}</p>
     <p className="mt-1 text-sm text-white/60">{n.body}</p><time className="mt-1 block text-xs text-white/30">{n.created_date?new Date(n.created_date).toLocaleString():''}</time>
