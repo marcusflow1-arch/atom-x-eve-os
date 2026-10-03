@@ -44,7 +44,7 @@ const entities = new Proxy({}, { get: (_, name) => ({
   },
 }) });
 const handlers = {};
-for (const name of ['skillBookLoadout', 'aiBattleMatchmaker', 'equipmentLoadout']) {
+for (const name of ['skillBookLoadout', 'aiBattleMatchmaker', 'equipmentLoadout', 'combatLoadoutPrefabs']) {
   const { outputFiles } = buildSync({
     entryPoints: ['base44/functions/' + name + '/entry.ts'],
     bundle: true, write: false, platform: 'node', format: 'cjs', external: ['npm:*'],
@@ -123,7 +123,7 @@ test('collection retains incompatible cards, but effective hotbar hides stale se
   assert.equal(state.skills.length, 2);
   assert.equal(state.skills.find((s) => s.user_card_id === 'artemis').required_avatar_gender, 'female');
   assert.ok(state.skills.every((skill) => skill.owned && !skill.can_equip && skill.equip_error));
-  assert.equal(state.loadout.slots.length, 4);
+  assert.equal(state.loadout.slots.length, 10);
   assert.ok(state.loadout.slots.every((slot) => slot.card === null));
   assert.deepEqual(state.loadout.skill_slots, {});
   assert.equal(rows('Loadout')[0].skill_slots['0'], 'artemis');
@@ -185,7 +185,7 @@ test('ended matches and unrelated live matches do not lock the player', async ()
   ]);
   ownedCard('normal');
   assert.equal((await book('equip', { slot: 3, user_card_id: 'normal' })).loadout.slots[3].user_card_id, 'normal');
-  await book('equip', { slot: 4, user_card_id: 'normal' }, 'a', 400);
+  await book('equip', { slot: 10, user_card_id: 'normal' }, 'a', 400);
 });
 
 test('unavailable avatar data cannot authorize Artemis equip', async () => {
@@ -253,9 +253,9 @@ test('female frozen Artemis skill still casts after profile edits; turn handoff 
   assert.equal(rows('AIBattleMatch')[0].pending_hits.length, 1);
 });
 
-test('legacy extra slots cannot cast, and unowned matches cannot be accessed', async () => {
-  fightingMatch('female', { slot: 4 });
-  await battle('use_skill', { match_id: 'fight', slot: 4 }, 'a', 400);
+test('out-of-range slots cannot cast, and unowned matches cannot be accessed', async () => {
+  fightingMatch('female', { slot: 10 });
+  await battle('use_skill', { match_id: 'fight', slot: 10 }, 'a', 400);
   rows('AIBattleMatch')[0].player_ids = ['b', 'other'];
   await battle('use_skill', { match_id: 'fight', slot: 0 }, 'a', 404);
   assert.equal(writes.length, 0);
@@ -376,4 +376,47 @@ test('owned canonical equipment equips, reloads and unequips after a battle ends
   const owned = rows('UserCard').find((row) => row.id === 'helmet-a');
   assert.equal(owned.is_equipped, false);
   assert.equal(owned.equipped_to, 'none');
+});
+
+test('ten-slot prefabs retain existing assignments and persist the key-0 slot', async () => {
+  ownedCard('first'); ownedCard('last');
+  savedSlots({ '0': 'first' });
+  const equipped = await book('equip', { slot: 9, user_card_id: 'last' });
+  assert.equal(equipped.loadout.slots[0].user_card_id, 'first');
+  assert.equal(equipped.loadout.slots[9].user_card_id, 'last');
+  const restored = await book('getState');
+  assert.equal(restored.skill_sets.length, 4);
+  assert.equal(restored.loadout.slots[9].user_card_id, 'last');
+  await book('selectSkillSet', { skill_set_id: 'skill-set-4' });
+  assert.equal((await book('getState')).active_skill_set_id, 'skill-set-4');
+  await book('selectSkillSet', { skill_set_id: 'skill-set-1' });
+  assert.equal((await book('getState')).loadout.slots[9].user_card_id, 'last');
+});
+
+test('saving and reloading a prefab bundle includes all four ten-slot sets', async () => {
+  ownedCard('last');
+  await book('equip', { slot: 9, user_card_id: 'last' });
+  const saved = await call('combatLoadoutPrefabs', 'saveSkillPrefab', { name: 'Ten skills' });
+  assert.equal(saved.prefab.skill_rows.length, 4);
+  assert.ok(saved.prefab.skill_rows.every((row) => row.length === 10));
+  assert.equal(saved.prefab.skill_rows[0][9], 'last');
+  // A saved bundle cannot be mistaken for a dashboard set by lazy migration.
+  await book('getState');
+  assert.equal(rows('Loadout').find((row) => row.id === saved.prefab.id).prefab_kind, 'skill_prefab');
+  await book('unequip', { slot: 9 });
+  await call('combatLoadoutPrefabs', 'loadSkillPrefab', { prefab_id: saved.prefab.id });
+  assert.equal((await book('getState')).loadout.slots[9].user_card_id, 'last');
+});
+
+test('key-0 skill survives matchmaking and casts from its frozen slot', async () => {
+  ownedCard('last');
+  savedSlots({ '9': 'last' });
+  await battle('join', { mode: 'pvp' }, 'b');
+  const { match } = await battle('join', { mode: 'pvp' });
+  assert.equal(match.players.find((p) => p.id === 'a').skills[0].slot, 9);
+  tables.set('AIBattleMatch', []);
+  fightingMatch('female', { slot: 9 });
+  const cast = await battle('use_skill', { match_id: 'fight', slot: 9, cast_id: 'key-zero' });
+  assert.equal(cast.cast.slot, 9);
+  assert.equal(rows('AIBattleMatch')[0].pending_hits.length, 1);
 });

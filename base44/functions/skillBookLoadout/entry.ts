@@ -499,7 +499,10 @@ const snapshotCard = (card: AnyObj | null) => card ? ({
 
 async function ensureSkillSets(base44: any, userId: string) {
   const svc = base44.asServiceRole.entities;
-  let rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 50);
+  // Saved bundles are not editable dashboard prefabs and must never be migrated.
+  const readRows = async (limit: number) => (await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', limit))
+    .filter((row: AnyObj) => !row.prefab_kind || row.prefab_kind === 'dashboard_row');
+  let rows = await readRows(50);
   let created = false;
 
   if (!rows.length) {
@@ -541,7 +544,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     if (Object.keys(patch).length) await svc.Loadout.update(row.id, patch);
   }
 
-  rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
+  rows = await readRows(20);
   const existingIds = new Set(rows.map((r: AnyObj) => String(r.skill_set_id || '')));
   for (const preset of DEFAULT_SKILL_SETS) {
     if (existingIds.has(preset.id)) continue;
@@ -567,7 +570,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     }));
   }
 
-  rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 50);
+  rows = await readRows(50);
 
   // De-duplicate racing bootstrap calls. Keep the oldest row for each logical
   // skill set, merge only missing slots into it, and archive the extras.
@@ -589,7 +592,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     if (JSON.stringify(merged) !== JSON.stringify(keeper.skill_slots || {})) await svc.Loadout.update(keeper.id, { skill_slots: merged });
   }
 
-  rows = await svc.Loadout.filter({ user_id: userId, loadout_type: 'skills' }, 'created_date', 20);
+  rows = await readRows(20);
   rows = rows
     .filter((row: AnyObj) => DEFAULT_SKILL_SETS.some((set) => set.id === row.skill_set_id))
     .sort((a: AnyObj, b: AnyObj) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0));
