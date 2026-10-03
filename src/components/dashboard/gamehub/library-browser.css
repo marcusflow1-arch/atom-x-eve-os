@@ -94,10 +94,10 @@
  */
 .ll-card-inspector {
   position:fixed!important;
-  top:190px!important;
-  left:330px!important;
-  right:338px!important;
-  bottom:48px!important;
+  top:var(--card-workspace-top,190px)!important;
+  left:var(--card-workspace-left,330px)!important;
+  right:var(--card-workspace-right,338px)!important;
+  bottom:var(--card-workspace-bottom,48px)!important;
   width:auto!important;
   height:auto!important;
   min-width:0!important;
@@ -127,10 +127,10 @@
 
 @media (max-width:900px),(max-height:700px) {
   .ll-card-inspector {
-    top:164px!important;
-    left:16px!important;
-    right:16px!important;
-    bottom:48px!important;
+    top:var(--card-workspace-top,164px)!important;
+    left:var(--card-workspace-left,16px)!important;
+    right:var(--card-workspace-right,16px)!important;
+    bottom:var(--card-workspace-bottom,48px)!important;
   }
 
 }

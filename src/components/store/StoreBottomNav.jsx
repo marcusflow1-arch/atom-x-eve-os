@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -20,6 +19,8 @@ export default function StoreBottomNav({ activeTab, onTabChange }) {
       navigate(storeUrl);
     } else if (tabId === 'trading') {
       navigate(`${storeUrl}?mode=trading`);
+    } else if (tabId === 'blackmarket') {
+      navigate(`${storeUrl}?mode=blackmarket`);
     } else if (tabId === 'devcards') {
       navigate(`${storeUrl}?mode=devcards`);
     }
@@ -59,6 +60,7 @@ export default function StoreBottomNav({ activeTab, onTabChange }) {
 
       <div className="flex flex-1 items-center">
         <div className="flex items-center gap-4">
+          <button type="button" onClick={() => changeTab('blackmarket')} className={`px-3 py-2 text-xs font-semibold ${effectiveTab === 'blackmarket' ? 'text-cyan-200' : 'text-white/50 hover:text-white'}`}>Black Market</button>
           <motion.button
             type="button"
             onClick={() => changeTab('trading')}

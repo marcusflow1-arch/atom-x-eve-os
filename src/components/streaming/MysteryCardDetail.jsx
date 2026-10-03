@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Activity, AlertTriangle, ArrowLeft, Check, ChevronRight, Crown, Flame, Gauge,
+  Activity, ArrowLeft, Check, ChevronRight, Crown, Flame, Gauge,
   Gem, Hammer, History, Layers, Lock, Package, RefreshCcw, Shield, Sparkles,
   Star, Target, TrendingUp, Wand2, Zap, Crosshair, Swords, Trophy,
   Gamepad2, Brain, Plus

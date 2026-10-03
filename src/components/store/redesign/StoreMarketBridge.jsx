@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, BadgeDollarSign, Gem, Store, WalletCards } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
@@ -15,7 +15,7 @@ export default function StoreMarketBridge() {
         const me = await base44.auth.me();
         const [cards, listings] = await Promise.all([
           base44.entities.UserCard.filter({ user_id: me.id }, '-created_date', 500),
-          base44.entities.CardTrade.filter({ status: 'active' }, '-created_date', 500)
+          base44.functions.invoke('tradePostMarket', { action: 'getState' }).then(response => (response.data || response).listings || [])
         ]);
         if (!active) return;
         const sellable = cards.filter(c => !c.is_equipped && c.trade_status !== 'locked_in_trade');

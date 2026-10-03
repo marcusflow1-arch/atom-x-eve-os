@@ -276,6 +276,7 @@ function SellerRow({ listing, mine, busy, onBuy, onTrade, onCancel }) {
           </button>
         ) : (
           <div className="flex gap-2">
+            {onTrade && (
             <button
               type="button"
               disabled={busy}
@@ -284,6 +285,7 @@ function SellerRow({ listing, mine, busy, onBuy, onTrade, onCancel }) {
             >
               <ArrowLeftRight className="mr-1 inline h-3 w-3" /> Trade
             </button>
+            )}
             <button
               type="button"
               disabled={busy}

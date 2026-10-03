@@ -8,6 +8,7 @@ import { readCardPages, RARITY_COLORS } from '@/components/genremastery/cardsCat
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import LibraryBrowseControls from './LibraryBrowseControls';
 import LibraryScrollReveal from './LibraryScrollReveal';
+import useCardWorkspaceFrame from './useCardWorkspaceFrame';
 import { enrichLibraryCards, filterLibraryCards, filterLibraryGames, genreOptions, isAdamXe, titleOrder } from './libraryDiscovery';
 import './library-browser.css';
 
@@ -38,6 +39,7 @@ export default function LibraryCardExplorer({ filters, onChange, full = false, f
   const anchor = useRef(null), opener = useRef(null), gameOpener = useRef(null);
   const panelId = useId();
   const [detail, setDetail] = useState(null);
+  const workspaceFrame = useCardWorkspaceFrame(anchor, Boolean(detail));
   const gameQuery = useQuery({
     queryKey: ['games-for-genre-mastery'],
     queryFn: () => readCardPages((limit, skip) => base44.entities.Game.list('-created_date', limit, skip)),
@@ -73,7 +75,7 @@ export default function LibraryCardExplorer({ filters, onChange, full = false, f
       <LibraryScrollReveal game={!failed && !loading && (!fullViewOpen || full) ? selectedGame : null} count={gameCards.length} anchorRef={anchor} full={full} panelId={panelId} onClose={clearGame}><Cards cards={gameCards} onSelect={inspect} /></LibraryScrollReveal>
     </div>
     <Dialog modal={false} open={Boolean(detail)} onOpenChange={(open) => { if (!open) setDetail(null); }}>
-      {detail && <DialogContent hideOverlay hideClose={Boolean(detail.isOwned && detail.user_card_id)} className="ll-card-inspector" data-library-card-dialog onKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onEscapeKeyDown={(event) => event.stopPropagation()}>
+      {detail && <DialogContent hideOverlay hideClose={Boolean(detail.isOwned && detail.user_card_id)} className="ll-card-inspector" style={workspaceFrame} data-library-card-dialog onKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onEscapeKeyDown={(event) => event.stopPropagation()}>
         <DialogTitle className={detail.isOwned && detail.user_card_id ? 'sr-only' : ''}>{detail.title}</DialogTitle>
         <DialogDescription className="sr-only">Card details, ownership and progression</DialogDescription>
         {detail.isOwned && detail.user_card_id ? <Suspense fallback={<p role="status">Loading card details…</p>}><MysteryCardDetail card={detail} onBack={() => setDetail(null)} /></Suspense> : <div className="ll-card-record">

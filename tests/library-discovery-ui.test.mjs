@@ -54,7 +54,7 @@ const built=await build({
       a.path.endsWith('useOwnedGames')?'export default ()=>({games:globalThis.libraryFixture.games,isLoading:false,isError:false,refetch:()=>{}});':
       a.path.endsWith('CrossScrollGameMenu')?'export default function Rail({games}){return <div data-testid="owned-rail">{games.map(g=><button key={g.id}>{g.title}</button>)}</div>}':
       a.path.endsWith('OwnedLibraryTile')?'export default function Tile({game,onSelect}){return <button onClick={()=>onSelect(game)}>{game.title}</button>}':
-      a.path.endsWith('MysteryCardDetail')?'export default function Detail({card}){return <div data-testid="owned-card-detail">{card.title} · {card.user_card_id}</div>}':
+      a.path.endsWith('MysteryCardDetail')?'export default function Detail({card,onBack}){return <div data-testid="owned-card-detail">{card.title} · {card.user_card_id}<button aria-label="Close card workspace" onClick={onBack}/></div>}':
       'export default function Unused(){return null;}'
     }));
   }}],
@@ -100,6 +100,8 @@ try{
   assert.deepEqual(shownGames(),['Alpha','Bravo']);
   await run(()=>label('Show cards for Alpha').click(),100);await run();
   let leaf=document.querySelector('[data-testid="library-card-scroll"]');
+  assert.equal(leaf.querySelector('header'),null,'export has no legacy title/count/close header');
+  assert.ok(document.querySelector('.ll-game-list'),'games use the vertical library list');
   assert.ok(leaf);assert.equal(leaf.style.left,'330px');assert.equal(leaf.style.maxWidth,'270px');
   assert.deepEqual([...leaf.querySelectorAll('.ll-card>strong')].map(e=>e.textContent),['Aether','Zephyr']);
   assert.equal(label('Show cards for Alpha').getAttribute('aria-expanded'),'true');
