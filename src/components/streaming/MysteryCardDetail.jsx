@@ -7,11 +7,15 @@ import {
   Gamepad2, Brain, Plus
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import CardScrollActions from '@/components/cards/CardScrollActions';
+import '@/components/cards/forbidden-scroll.css';
 
 const tabs = [
-  { id: 'record', label: 'THE RECORD', icon: History, hint: 'Real-time card telemetry and utility' },
-  { id: 'forge', label: 'THE FORGE', icon: Hammer, hint: 'Level, fuse, stage, enchant and over-enchant' },
-  { id: 'skills', label: 'SKILL TREE', icon: Layers, hint: 'Card abilities, teacher passives and active perks' },
+  { id: 'record', label: 'Overview', icon: History, hint: 'Artwork, power, attributes and lore' },
+  { id: 'forge', label: 'Enhancement', icon: Hammer, hint: 'Level advancement and stat allocation' },
+  { id: 'skills', label: 'Skill Tree', icon: Layers, hint: 'Active abilities and passive perks' },
+  { id: 'combined', label: 'Combined Stage', icon: Swords, hint: 'Card fusion and stage evolution' },
+  { id: 'essential', label: 'Essential', icon: Gem, hint: 'Core, elemental gem and rune sockets' },
 ];
 
 const statLabels = {
@@ -207,7 +211,7 @@ function RecordView({ card, state }) {
       <header className="flex flex-wrap items-end gap-4">
         <div>
           <span className="text-[9px] uppercase tracking-[.28em] text-cyan-300/65">Real-Time Card Telemetry</span>
-          <h3 className="mt-2 text-3xl font-black text-white">The Record</h3>
+          <h3 className="mt-2 text-3xl font-black text-white">Overview</h3>
           <p className="mt-2 max-w-3xl text-sm text-white/40">Every achievement card is a live gameplay object. This record updates as your playstyle, progression, and forge history change.</p>
         </div>
         <div className="ml-auto flex items-center gap-2 bg-emerald-400/[0.05] px-3 py-2 text-[9px] font-bold uppercase tracking-[.2em] text-emerald-200/70"><Activity className="h-3.5 w-3.5" /> {status}</div>
@@ -282,66 +286,93 @@ function ForgeBlock({ icon: Icon, eyebrow, title, children, danger = false }) {
   );
 }
 
-function ForgeView({ state, act, busy }) {
+function ForgeView({ state, act, busy, section }) {
   const p = state.progression || {};
   const [enhanceStat, setEnhanceStat] = useState('attack');
-  const [selectedEnchant, setSelectedEnchant] = useState('');
   const [selectedSacrifices, setSelectedSacrifices] = useState([]);
-  const [stabilizer, setStabilizer] = useState(35);
   const canLevel = num(p?.xp) >= num(p?.xp_to_next, 1) && num(p?.level, 1) < num(p?.max_level, 10);
   const overRank = num(p?.over_enchant_rank);
   const stability = num(p?.over_enchant_stability, 100);
-  const safeRank = Math.min(5, num(p?.enchant_rank ?? p?.enchant_level));
-  const successChance = Math.max(8, Math.min(96, 82 - overRank * 9 + Math.round(stabilizer * 0.28) + Math.round(stability * 0.08)));
-  const spike = (1.35 + (overRank + 1) * 0.17 + (100 - stabilizer) * 0.004).toFixed(2);
-  const toggleSacrifice = (id) => setSelectedSacrifices((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  const successChance = Math.max(35, Math.min(95, 82 - overRank * 12 + num(p.stage, 1) * 2 + ((p.unlocked_skill_nodes || []).includes('enchanter_focus') ? 8 : 0)));
+  const needed = Math.min(3, num(p.stage, 1) + 1);
+  const toggleSacrifice = id => setSelectedSacrifices(prev => prev.includes(id) ? prev.filter(x => x !== id) : prev.length < needed ? [...prev, id] : prev);
+
 
   return (
     <div className="space-y-5">
-      <header><span className="text-[9px] uppercase tracking-[.28em] text-fuchsia-300/65">Synthesis / Ascension Runtime</span><h3 className="mt-2 text-3xl font-black text-white">The Forge</h3><p className="mt-2 max-w-3xl text-sm text-white/40">Spend progression resources, combine owned cards, raise stage limits, and push enchantment beyond the safe threshold. Backend validation still controls every mutation.</p></header>
+      <header><span className="card-scroll-eyebrow">{section === 'combined' ? 'Synthesis & evolution' : 'Card growth'}</span><h3>{section === 'combined' ? 'Combined Stage' : 'Enhancement'}</h3><p className="mt-2 text-sm text-slate-400">{section === 'combined' ? 'Combine compatible cards to advance stages, then ascend to raise the level cap. Fusion consumes the selected spare cards.' : 'Build experience, spend earned stat points and refine your primary attributes.'}</p></header>
 
       <div className="grid gap-4 xl:grid-cols-2">
+        {section === 'forge' && (
         <ForgeBlock icon={TrendingUp} eyebrow={`Level cap ${p?.max_level || 10}`} title="Level Card">
           <Meter value={p?.xp || 0} max={p?.xp_to_next || 1} label="Essence / XP" />
           <div className="mt-4 grid grid-cols-2 gap-2"><button disabled={busy} onClick={() => act('train', { sessions: 1 })} className="h-10 bg-white/[0.05] text-xs font-bold text-white/60 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-30">Spend Essence</button><button disabled={busy || !canLevel} onClick={() => act('levelUp')} className="h-10 bg-cyan-300 text-xs font-black text-slate-950 disabled:opacity-25">LEVEL UP</button></div>
         </ForgeBlock>
+        )}
 
+        {section === 'forge' && (
         <ForgeBlock icon={Target} eyebrow="Direct stat scaling" title="Enhance Base Stats">
           <div className="grid grid-cols-5 gap-1">{Object.keys(statLabels).map((key) => <button key={key} onClick={() => setEnhanceStat(key)} className={`py-2 text-[8px] uppercase tracking-wider ${enhanceStat === key ? 'bg-cyan-300/10 text-cyan-200' : 'bg-white/[0.025] text-white/30'}`}>{statLabels[key]}</button>)}</div>
           <button disabled={busy} onClick={() => act('enhance', { stat: enhanceStat })} className="mt-3 h-10 w-full bg-white/[0.055] text-xs font-bold text-white/70 hover:bg-white/[0.09] disabled:opacity-30">Enhance {statLabels[enhanceStat]}</button>
+          <div className="mt-4 border-t border-white/10 pt-4"><p className="text-xs text-slate-300">{num(p.stat_points)} stat points available</p><p className="mt-1 text-xs text-slate-400">Earn one per new card level; each point adds +1 to your chosen base attribute.</p><button disabled={busy || num(p.stat_points) < 1} onClick={() => act('allocateStat', { stat: enhanceStat })} className="mt-3 h-10 w-full bg-cyan-200 text-xs font-bold text-slate-950 disabled:opacity-30">Allocate point to {statLabels[enhanceStat]}</button></div>
         </ForgeBlock>
+        )}
 
+        {section === 'combined' && (
         <ForgeBlock icon={Swords} eyebrow={`Current stage ${p?.stage || 1}`} title="Fusion & Stage Pedestal">
           <div className="grid grid-cols-2 gap-2">
-            {[0, 1].map((slot) => {
+            {Array.from({ length: needed }, (_, slot) => slot).map((slot) => {
               const selected = state.compatibleCards?.find((item) => item.id === selectedSacrifices[slot]);
               return <div key={slot} className={`min-h-24 p-3 ${selected ? 'bg-fuchsia-400/[0.06]' : 'bg-white/[0.025]'}`}><span className="text-[8px] uppercase tracking-[.18em] text-white/25">Fusion Slot {String.fromCharCode(65 + slot)}</span>{selected ? <div className="mt-3 flex items-center gap-2"><div className="h-10 w-8 overflow-hidden bg-black">{selected.card_image && <img src={selected.card_image} alt="" className="h-full w-full object-cover" />}</div><div className="min-w-0"><div className="truncate text-[10px] font-bold text-white/75">{selected.card_name}</div><div className="text-[8px] text-fuchsia-200/50">{selected.card_rarity}</div></div></div> : <div className="mt-4 flex items-center gap-2 text-[9px] text-white/20"><Plus className="h-3 w-3" /> Select a sacrifice</div>}</div>;
             })}
           </div>
           <div className="mt-3 max-h-32 space-y-1 overflow-y-auto">{state.compatibleCards?.length ? state.compatibleCards.slice(0, 10).map((candidate) => <button key={candidate.id} onClick={() => toggleSacrifice(candidate.id)} className={`flex w-full items-center gap-3 p-2 text-left ${selectedSacrifices.includes(candidate.id) ? 'bg-fuchsia-400/[0.08] text-white' : 'bg-white/[0.02] text-white/45'}`}><div className="h-8 w-7 overflow-hidden bg-black">{candidate.card_image && <img src={candidate.card_image} alt="" className="h-full w-full object-cover" />}</div><div className="min-w-0 flex-1"><div className="truncate text-[10px] font-semibold">{candidate.card_name}</div><div className="text-[8px] uppercase tracking-wider text-white/25">{candidate.card_rarity} · {candidate.game_name}</div></div>{selectedSacrifices.includes(candidate.id) && <Check className="h-3 w-3 text-fuchsia-300" />}</button>) : <div className="p-3 text-xs text-white/25">No compatible spare cards are currently available.</div>}</div>
-          <button disabled={busy || !selectedSacrifices.length} onClick={() => act('combine', { sacrificeUserCardIds: selectedSacrifices })} className="mt-3 h-10 w-full bg-fuchsia-400/15 text-xs font-black text-fuchsia-100 disabled:opacity-25">STAGE CARD</button>
+          <button disabled={busy || selectedSacrifices.length !== needed || num(p.stage, 1) >= 5} onClick={() => act('combine', { sacrificeUserCardIds: selectedSacrifices })} className="mt-3 h-10 w-full bg-fuchsia-400/15 text-xs font-black text-fuchsia-100 disabled:opacity-25">Combine {needed} cards · advance stage</button>
         </ForgeBlock>
+        )}
 
+        {section === 'combined' && (
         <ForgeBlock icon={Crown} eyebrow={`Ascension ${p?.ascension || 0}/5`} title="Break Level Cap">
           <div className="flex items-center justify-between gap-4 bg-white/[0.02] p-3"><div><div className="text-[8px] uppercase tracking-wider text-white/25">Requirement</div><div className="mt-1 text-xs text-white/65">Reach level {p?.max_level || 10}</div></div><button disabled={busy || num(p?.level, 1) < num(p?.max_level, 10)} onClick={() => act('ascend')} className="h-10 px-5 bg-amber-300 text-xs font-black text-slate-950 disabled:opacity-25">ASCEND</button></div>
         </ForgeBlock>
+        )}
 
-        <ForgeBlock icon={Wand2} eyebrow={`Safe enchant +${safeRank}/+5`} title="Enchant — Safe Zone">
-          <div className="flex gap-2"><select value={selectedEnchant} onChange={(event) => setSelectedEnchant(event.target.value)} className="h-10 flex-1 bg-[#080d15] px-3 text-xs text-white/70 outline-none"><option value="">Choose modifier</option>{state.enchantments?.map((enchant) => <option key={enchant.id} value={enchant.id}>{enchant.name} · {enchant.rarity || 'Common'}</option>)}</select><button disabled={busy || !selectedEnchant} onClick={() => act('enchant', { enchantmentId: selectedEnchant })} className="h-10 px-5 bg-violet-400/12 text-xs font-bold text-violet-100 disabled:opacity-25">APPLY</button></div>
-          <div className="mt-3 flex gap-1">{Array.from({ length: 5 }).map((_, index) => <div key={index} className={`h-1.5 flex-1 ${index < safeRank ? 'bg-cyan-300/70' : 'bg-white/[0.06]'}`} />)}</div>
-        </ForgeBlock>
 
+
+        {section === 'forge' && (
         <ForgeBlock icon={Flame} eyebrow={`Danger level ${successChance < 45 ? 'CRITICAL' : successChance < 65 ? 'HIGH' : 'CONTROLLED'}`} title="Over-Enchant" danger>
-          <div className="grid grid-cols-3 gap-px bg-white/[0.05] text-center"><div className="bg-black/20 p-3"><div className="text-[8px] uppercase tracking-wider text-white/25">Current</div><div className="mt-1 text-lg font-black text-white">+{overRank}</div></div><div className="bg-black/20 p-3"><div className="text-[8px] uppercase tracking-wider text-white/25">Success</div><div className="mt-1 text-lg font-black text-cyan-200">{successChance}%</div></div><div className="bg-black/20 p-3"><div className="text-[8px] uppercase tracking-wider text-white/25">Stat Spike</div><div className="mt-1 text-lg font-black text-rose-200">×{spike}</div></div></div>
-          <div className="mt-4"><div className="mb-2 flex items-center justify-between text-[8px] uppercase tracking-[.16em] text-white/30"><span>Risk / Stabilizer Allocation</span><span>{stabilizer}% Stabilized</span></div><input type="range" min="0" max="100" value={stabilizer} onChange={(event) => setStabilizer(Number(event.target.value))} className="w-full accent-cyan-300" /></div>
-          <div className="mt-3 flex items-start gap-2 bg-rose-400/[0.045] p-3 text-[10px] leading-4 text-rose-100/55"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Above +5, failure can consume materials and reduce stability. Stabilizers improve success probability but reduce the projected multiplier spike.</div>
-          <button disabled={busy || !(p?.enchantments?.length)} onClick={() => act('overEnchant', { stabilizerPercent: stabilizer })} className="mt-3 h-10 w-full bg-gradient-to-r from-rose-400 to-orange-300 text-xs font-black text-slate-950 disabled:opacity-25">OVER-ENCHANT</button>
+          <p className="text-xs leading-6 text-slate-300">Rank {overRank} / 5 · Stability {stability}% · Success {successChance}%</p>
+          <p className="mt-2 text-xs leading-6 text-slate-400">Costs {overRank + 1} adaptive shards. Success adds +{2 * (overRank + 1)} to all five primary stats. Failure consumes the materials and reduces stability by 15.</p>
+          <button disabled={busy || !(p?.enchantments?.length) || overRank >= 5} onClick={() => act('overEnchant')} className="mt-3 h-10 w-full bg-rose-200 text-xs font-bold text-slate-950 disabled:opacity-25">Over-enchant</button>
         </ForgeBlock>
+        )}
       </div>
 
       <Glass className="p-5"><div className="mb-4 flex items-center gap-2"><Package className="h-4 w-4 text-cyan-300" /><h4 className="text-sm font-bold text-white">Forge Inventory</h4></div><div className="grid gap-px bg-white/[0.05] sm:grid-cols-2 lg:grid-cols-4">{state.materials?.length ? state.materials.filter((material) => num(material.quantity) > 0).slice(0, 12).map((material) => <div key={material.id} className="bg-black/20 p-3"><span className="text-[8px] uppercase tracking-wider text-white/25">{material.material_type?.replaceAll('_', ' ') || material.definition?.name || 'Material'}</span><strong className="mt-1 block text-white">× {num(material.quantity).toLocaleString()}</strong></div>) : <div className="col-span-full bg-black/20 p-5 text-xs text-white/25">Achievement rewards and gameplay drops populate these material stacks.</div>}</div></Glass>
     </div>
   );
+}
+
+function EssentialView({ state, act, busy }) {
+  const p = state.progression || {};
+  const [kind, setKind] = useState('gem');
+  const [selected, setSelected] = useState('');
+  const slots = 1 + Math.floor(num(p.stage, 1) / 2) + Math.min(2, num(p.ascension));
+  const used = (p.enchantments || []).reduce((sum, item) => sum + Math.max(1, num(item.slot_cost, 1)), 0);
+  const options = (state.enchantments || []).filter(item => (item.socket_type || 'gem') === kind);
+  const definition = options.find(item => item.id === selected);
+  const cost = definition?.material_cost && Object.keys(definition.material_cost).length ? definition.material_cost : { resonance_fragment: 1 };
+  return <div className="space-y-5">
+    <header><span className="card-scroll-eyebrow">Infusion & socketing</span><h3>Essential</h3><p className="mt-2 text-sm text-slate-400">Infuse a core, elemental gem or rune. Their modifiers contribute to this card’s effective stats.</p></header>
+    <div className="card-scroll-sockets">{[['core','Core'],['gem','Elemental gem'],['rune','Rune']].map(([id, label]) => <div key={id}><Gem size={19} className="text-cyan-200" /><strong>{label}</strong><span>{(p.enchantments || []).filter(item => (item.socket_type || 'gem') === id).map(item => item.name).join(', ') || 'No infusion'}</span></div>)}</div>
+    <Glass className="p-5"><h4 className="text-sm font-semibold">{used} / {slots} sockets used</h4><p className="mt-2 text-xs text-slate-400">Combination stages and ascension open more sockets.</p>
+      <label className="mt-4 block text-xs">Socket type<select aria-label="Socket type" value={kind} onChange={event => { setKind(event.target.value); setSelected(''); }} className="mt-2 block w-full bg-slate-950 p-3">{[['core','Core'],['gem','Elemental gem'],['rune','Rune']].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label className="mt-4 block text-xs">Infusion<select aria-label="Infusion" value={selected} onChange={event => setSelected(event.target.value)} className="mt-2 block w-full bg-slate-950 p-3"><option value="">Choose an infusion</option>{options.map(item => <option key={item.id} value={item.id}>{item.name} · {item.element}</option>)}</select></label>
+      {!options.length && <p className="mt-3 text-xs text-slate-400">No {kind} recipes have been published for this card yet.</p>}
+      {definition && <div className="mt-3 text-xs leading-6 text-slate-300"><p>{definition.description}</p><p>{Object.entries(definition.modifiers || {}).map(([key,value]) => `${key.replaceAll('_',' ')} +${value}`).join(' · ')}</p><p>Cost: {Object.entries(cost).map(([key,value]) => `${value} ${key.replaceAll('_',' ')}`).join(', ')}</p></div>}
+      <button disabled={busy || !definition || used + Math.max(1, num(definition?.slot_cost, 1)) > slots} onClick={() => act('enchant', { enchantmentId: selected, socketType: kind })} className="mt-4 h-10 w-full bg-cyan-200 text-xs font-bold text-slate-950 disabled:opacity-30">Infuse {kind}</button>
+    </Glass>
+  </div>;
 }
 
 function SkillNode({ node, unlocked, active, eligible, busy, onUnlock, onToggle, onDragStart }) {
@@ -399,7 +430,9 @@ export default function MysteryCardDetail({ card, onBack }) {
     setLoading(true);
     try {
       const response = await invoke('getState', card);
-      setState(response?.data || response);
+      const next = response?.data || response;
+      if (next?.error || !next?.progression) throw new Error(next?.error || 'Card state unavailable.');
+      setState(next);
       setMessage(null);
     } catch (error) {
       setMessage({ type: 'error', text: error?.message || 'Card progression could not be loaded.' });
@@ -417,54 +450,29 @@ export default function MysteryCardDetail({ card, onBack }) {
     const unsubUserCard = base44.entities.UserCard?.subscribe?.((event) => {
       if (event?.data?.id && event.data.id === state?.userCard?.id) load();
     });
-    return () => { unsubProgression?.(); unsubUserCard?.(); };
-  }, [load, state?.userCard?.id]);
-
-  const act = async (action, payload = {}) => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const response = await invoke(action, { ...card, userCardId: state?.userCard?.id || card?.userCardId }, payload);
-      const next = response?.data || response;
-      if(next?.error)throw new Error(next.error);
-      setState(next);
-      window.dispatchEvent(new CustomEvent('cardProgressionChanged',{detail:{user_card_id:next?.userCard?.id}}));
-      const latest = next?.events?.[0]?.summary;
-      setMessage({ type: 'success', text: latest || 'Card updated.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error?.message || 'That card action failed.' });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="relative h-full min-h-[620px] overflow-hidden bg-[#07090D] text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(0,240,255,.10),transparent_30%),radial-gradient(circle_at_92%_10%,rgba(255,0,85,.08),transparent_26%)]" />
-      <div className="relative flex h-full flex-col">
-        <header className="shrink-0 bg-[#0F1115]/82 px-5 py-3 backdrop-blur-xl">
-          <div className="flex items-center gap-4">
-            <button onClick={onBack} className="grid h-9 w-9 place-items-center bg-white/[0.035] text-white/40 transition hover:text-white"><ArrowLeft className="h-4 w-4" /></button>
-            <div className="min-w-0"><p className="text-[8px] uppercase tracking-[.24em] text-cyan-200/35">Achievement Card Runtime</p><h1 className="truncate text-sm font-bold text-white">{card?.title || card?.card_name || 'Card Detail'}</h1></div>
-            <div className="ml-auto hidden items-center gap-1 md:flex">{tabs.map(({ id, label, icon: Icon, hint }) => <button key={id} title={hint} onClick={() => setTab(id)} className={`flex h-9 items-center gap-2 px-3 text-[9px] font-bold uppercase tracking-[.15em] transition ${tab === id ? 'bg-cyan-300/[0.08] text-cyan-100' : 'text-white/30 hover:bg-white/[0.035] hover:text-white/65'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}<button onClick={load} disabled={loading || busy} aria-label="Refresh live card state" className="grid h-9 w-9 place-items-center text-white/25 hover:text-white disabled:opacity-30"><RefreshCcw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /></button></div>
+    return (
+    <div className="card-scroll">
+      <div className="card-scroll-shell">
+        <header className="card-scroll-header">
+          <div className="card-scroll-title">
+            <button type="button" onClick={onBack} aria-label="Close card workspace"><ArrowLeft size={17} /></button>
+            <div><span className="card-scroll-eyebrow">Forbidden Scroll</span><h1>{card?.title || card?.card_name || 'Card detail'}</h1></div>
+            <button type="button" onClick={load} disabled={loading || busy} aria-label="Refresh live card state"><RefreshCcw size={16} className={loading ? 'animate-spin' : ''} /></button>
           </div>
-          <div className="mt-3 flex gap-1 overflow-x-auto md:hidden">{tabs.map(({ id, label }) => <button key={id} onClick={() => setTab(id)} className={`shrink-0 px-3 py-2 text-[9px] font-bold uppercase tracking-wider ${tab === id ? 'bg-cyan-300/[0.08] text-cyan-100' : 'text-white/30'}`}>{label}</button>)}</div>
+          <nav className="card-scroll-tabs" aria-label="Card management" role="tablist">{tabs.map(({ id, label, icon: Icon, hint }) => <button key={id} type="button" role="tab" aria-selected={tab === id} aria-controls="card-scroll-panel" title={hint} onClick={() => setTab(id)}><Icon size={15} />{label}</button>)}</nav>
         </header>
-
-        <AnimatePresence>{message && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className={`shrink-0 px-5 py-2 text-[10px] ${message.type === 'error' ? 'bg-rose-400/[0.05] text-rose-200' : 'bg-emerald-400/[0.05] text-emerald-200'}`}>{message.text}</motion.div>}</AnimatePresence>
-
-        {loading && !state ? (
-          <div className="grid flex-1 place-items-center"><div className="flex items-center gap-3 text-xs text-white/30"><RefreshCcw className="h-4 w-4 animate-spin" /> Loading live card state…</div></div>
-        ) : state ? (
-          <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
-            <div className="mx-auto grid max-w-[1600px] gap-7 p-6 xl:grid-cols-[250px_minmax(0,1fr)]">
+        {message && <div className="card-scroll-notice" data-error={message.type === 'error'} role={message.type === 'error' ? 'alert' : 'status'}>{message.text}</div>}
+        {loading && !state ? <div className="grid flex-1 place-items-center" role="status">Loading card progression…</div> : state ? (
+          <div className="card-scroll-body">
+            <div className="card-scroll-grid">
               <HolographicCard card={card} progression={state.progression} userCard={state.userCard} />
-              <main className="min-w-0">{tab === 'record' ? <RecordView card={card} state={state} /> : tab === 'forge' ? <ForgeView state={state} act={act} busy={busy} /> : <SkillsView state={state} act={act} busy={busy} />}</main>
+              <main id="card-scroll-panel" role="tabpanel" aria-label={tabs.find(item => item.id === tab)?.label}>
+                {tab === 'record' ? <RecordView card={card} state={state} /> : tab === 'skills' ? <SkillsView state={state} act={act} busy={busy} /> : tab === 'essential' ? <EssentialView state={state} act={act} busy={busy} /> : <ForgeView key={tab} section={tab} state={state} act={act} busy={busy} />}
+              </main>
+              <CardScrollActions userCard={state.userCard} disabled={busy || loading} onChanged={load} />
             </div>
           </div>
-        ) : (
-          <div className="grid flex-1 place-items-center text-sm text-white/30">This card does not have a live progression state yet.</div>
-        )}
+        ) : <div className="grid flex-1 place-content-center gap-4 p-6 text-sm"><p>Card progression is unavailable.</p><button onClick={load} className="text-cyan-200">Try again</button></div>}
       </div>
     </div>
   );
