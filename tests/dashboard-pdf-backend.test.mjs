@@ -27,7 +27,7 @@ beforeEach(() => {
   f.reset();
   f.rows('User').push(...Object.values(users).map(user => ({ ...user })));
   f.rows('Avatar').push({ id: 'avatar', user_id: 'a', gender: 'male', level: 1 });
-  f.rows('UserCard').push({ id: 'card', user_id: 'a', card_name: 'Moonstep', card_rarity: 'Rare', card_type: 'ability', game_name: 'Atom XE', quantity: 1, trade_status: 'available' });
+  f.rows('UserCard').push({ id: 'card', user_id: 'a', card_name: 'Moonstep', card_rarity: 'Rare', card_type: 'ability', game_name: 'Atom XE', acquisition_method: 'unlocked', quantity: 1, trade_status: 'available' });
 });
 test('a card level grants one spendable stat point and allocation survives reload', async () => {
   await progress('getState');
