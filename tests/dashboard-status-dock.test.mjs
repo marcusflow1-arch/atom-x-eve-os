@@ -120,7 +120,7 @@ try {
   await run(()=>{pointer(updatesButton,'pointerup');click(updatesButton);});
   assert.equal(title(),'Existing update');assert.equal(document.querySelector('[role="dialog"]'),null);
   await advance(1000);assert.equal(document.querySelector('[role="dialog"]'),null);
-  for(const [cancel,extra] of [['pointerleave',{}],['pointercancel',{}],['pointermove',{clientX:30}]]){
+  for(const [cancel,extra] of [['pointerout',{}],['pointercancel',{}],['pointermove',{clientX:30}]]){
     await run(()=>pointer(updatesButton,'pointerdown'));await advance(700);
     await run(()=>pointer(updatesButton,cancel,extra));await advance(400);
     assert.equal(document.querySelector('[role="dialog"]'),null,cancel+' cancels the hold');
@@ -181,7 +181,8 @@ try {
   await run(()=>button('Close status feed').click());
 
   console.log('PASS: quiet dock, arrival-only notifications/reminders/updates, no duplicate toast, six-second retract/queue, hover/focus pause, exact one-second hold/cancellation, keyboard access, selected-item slide-out, friend acceptance, retry and scoped subscriptions.');
-} finally {
+} catch(error) { console.error(error);throw error; } finally {
+  console.log('status-cleanup');
   await act(async()=>root.unmount());client.clear();
   assert.ok(Object.values(subscriptions).every(set=>set.size===0),'all live subscriptions are removed');
   assert.equal(timers.size,0,'clock, hold and preview timers are removed');
