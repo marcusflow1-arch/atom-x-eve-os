@@ -20,6 +20,7 @@ import { CHIDORI_REACTION_CLIP, CHIDORI_STRIKE_GAP, CHIDORI_TIMING, chidoriDashP
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { dismissAIBattleResult, getAIBattleClientSessionId } from '@/components/battle/useAIBattleQueue';
 import { requestAIBattle } from './battleClient';
+import { skillSlotFromKey } from '@/components/luna/skillSlots';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 
@@ -841,20 +842,19 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // re-order this listener behind others.
   useEffect(() => {
     const MOVE_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight']);
-    const SKILL_KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3 };
     const down = (e) => {
       if (e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable="true"]')) return;
       if (e.key === 'Escape' || matchRef.current?.status === 'ended') return;
       e.stopPropagation();
       e.stopImmediatePropagation?.();
-      const skillKey = SKILL_KEYS[e.code];
+      const skillKey = skillSlotFromKey(e);
       if (menuBlockedRef.current) {
-        if (MOVE_KEYS.has(e.code) || e.code === 'Space' || skillKey !== undefined) e.preventDefault();
+        if (MOVE_KEYS.has(e.code) || e.code === 'Space' || skillKey >= 0) e.preventDefault();
         return;
       }
       if (MOVE_KEYS.has(e.code)) { held.current.add(e.code); e.preventDefault(); }
       if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) requestDodgeRef.current?.(); }
-      if (skillKey !== undefined) { e.preventDefault(); if (!e.repeat) requestSkillRef.current?.(skillKey); }
+      if (skillKey >= 0) { e.preventDefault(); if (!e.repeat) requestSkillRef.current?.(skillKey); }
     };
     const up = (e) => held.current.delete(e.code);
     const clear = () => held.current.clear();

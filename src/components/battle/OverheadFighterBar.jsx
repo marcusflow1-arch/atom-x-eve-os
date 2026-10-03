@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sword } from 'lucide-react';
-import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
+import { SKILL_SLOT_COUNT, SKILL_KEYS } from '@/components/luna/skillSlots';
 
 function useCooldownClock(skills, serverOffsetMs, stunnedUntil = null) {
   const [now, setNow] = useState(() => Date.now() + Number(serverOffsetMs || 0));
@@ -44,7 +44,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
           {costs.map((cost) => <span key={cost} className="absolute top-[-2px] h-2 w-px bg-white/70" style={{ left: `${cost}%` }} />)}
         </div>
       </div>
-      <div className="mt-2 flex justify-center gap-1">
+      <div className="mt-2 flex items-center justify-center gap-1">
         <button type="button" disabled={!local || meleeDisabled} onClick={() => onMelee?.()}
           title={`Basic melee attack${meleeDamage==null?'':` · ${meleeDamage} before defense`} · consumes your action`}
           className={`relative grid h-11 w-11 place-items-center overflow-hidden rounded border border-white/20 bg-slate-950/85 ${meleeDisabled ? 'opacity-45' : 'hover:border-cyan-100/55 hover:bg-cyan-100/[0.08]'}`}>
@@ -52,6 +52,7 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
           {meleeRemainingMs > 0 && <span className="absolute inset-0 grid place-items-center bg-[conic-gradient(rgba(0,0,0,.82)_0deg,rgba(0,0,0,.82)_var(--sweep),transparent_var(--sweep),transparent_360deg)] text-[11px] font-black" style={{ '--sweep': `${meleeFraction * 360}deg` }}>{Math.ceil(meleeRemainingMs / 1000)}</span>}
           {local && <span className="absolute bottom-0 right-0 rounded-tl bg-black/80 px-1 text-[7px] font-black">MELEE</span>}
         </button>
+        <div className="grid grid-cols-5 gap-1">
         {Array.from({ length: SKILL_SLOT_COUNT }, (_, slot) => {
           const skill = bySlot.get(slot);
           const endsAt = Date.parse(skill?.cooldownEndsAt || 0);
@@ -62,13 +63,15 @@ export default function OverheadFighterBar({ name, hp = 0, maxHp = 1000, atb = 0
           const disabled = !combatActive || !isTurn || stunned || !skill || remainingMs > 0 || atbPct < cost;
           return (
             <button key={slot} type="button" disabled={!local || disabled} onClick={() => onSkill?.(slot)}
-              className={`relative h-11 w-11 overflow-hidden rounded border ${lastCastSlot === slot ? 'border-white shadow-[0_0_12px_rgba(255,255,255,.8)]' : 'border-white/20'} bg-slate-950/75 ${disabled ? 'opacity-45' : ''}`}>
+              aria-label={`Skill ${SKILL_KEYS[slot]}: ${skill?.name || 'Empty'}`}
+              className={`relative h-9 w-9 overflow-hidden rounded border ${lastCastSlot === slot ? 'border-white shadow-[0_0_12px_rgba(255,255,255,.8)]' : 'border-white/20'} bg-slate-950/75 ${disabled ? 'opacity-45' : ''}`}>
               {skill?.image ? <img src={skill.image} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-white/[0.03]" />}
               {remainingMs > 0 && <span className="absolute inset-0 grid place-items-center bg-[conic-gradient(rgba(0,0,0,.82)_0deg,rgba(0,0,0,.82)_var(--sweep),transparent_var(--sweep),transparent_360deg)] text-[11px] font-black" style={{ '--sweep': `${fraction * 360}deg` }}>{Math.ceil(remainingMs / 1000)}</span>}
-              {local && <span className="absolute bottom-0 right-0 rounded-tl bg-black/80 px-1 text-[9px] font-black">{slot + 1}</span>}
+              {local && <span className="absolute bottom-0 right-0 rounded-tl bg-black/80 px-1 text-[9px] font-black">{SKILL_KEYS[slot]}</span>}
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

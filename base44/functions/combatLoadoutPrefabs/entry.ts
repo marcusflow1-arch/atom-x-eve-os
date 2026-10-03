@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { SKILL_SLOT_COUNT, SKILL_SET_COUNT } from '../../shared/pvpSkills.ts';
 
 type Row = Record<string, any>;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -6,10 +7,10 @@ const clean = (v: any) => String(v || '').trim();
 const now = () => new Date().toISOString();
 
 function normalizeRows(rows: any[]) {
-  return Array.from({ length: 3 }, (_, rowIndex) => {
+  return Array.from({ length: SKILL_SET_COUNT }, (_, rowIndex) => {
     const row = rows?.[rowIndex];
     const slots = row?.skill_slots || row?.slots || {};
-    return Array.from({ length: 5 }, (_, slotIndex) => clean(slots[String(slotIndex)] || row?.[slotIndex] || ''));
+    return Array.from({ length: SKILL_SLOT_COUNT }, (_, slotIndex) => clean(slots[String(slotIndex)] || row?.[slotIndex] || ''));
   });
 }
 
@@ -18,7 +19,7 @@ async function skillRowsForUser(svc: any, userId: string) {
   return rows
     .filter((r: Row) => !r.prefab_kind || r.prefab_kind === 'dashboard_row')
     .sort((a: Row, b: Row) => Number(a.skill_set_order || 0) - Number(b.skill_set_order || 0))
-    .slice(0, 3);
+    .slice(0, SKILL_SET_COUNT);
 }
 
 async function listState(svc: any, userId: string) {
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
       const row = await svc.Loadout.create({
         user_id: user.id,
         name,
-        description: clean(data.description) || 'Three-row Skill Book combat prefab.',
+        description: clean(data.description) || 'Four ten-slot Skill Book loadouts.',
         loadout_type: 'skills',
         prefab_kind: 'skill_prefab',
         prefab_id: 'skill-prefab-' + crypto.randomUUID(),
@@ -73,28 +74,28 @@ Deno.serve(async (req) => {
       const prefab = await requireOwnedPrefab(svc, user.id, clean(data.prefab_id), 'skill_prefab');
       const rows = await skillRowsForUser(svc, user.id);
       const skillRows = normalizeRows(prefab.skill_rows);
-      while (rows.length < 3) {
+      while (rows.length < SKILL_SET_COUNT) {
         const idx = rows.length;
         rows.push(await svc.Loadout.create({
           user_id: user.id,
-          name: ['Genre I', 'Genre II', 'Genre III'][idx],
+          name: ['Genre I', 'Genre II', 'Genre III', 'Genre IV'][idx],
           description: 'Persistent Luna Skill Book dashboard row.',
           loadout_type: 'skills',
           prefab_kind: 'dashboard_row',
           equipped_items: {},
           skill_slots: {},
           skill_set_id: 'skill-set-' + (idx + 1),
-          skill_set_name: ['Genre I', 'Genre II', 'Genre III'][idx],
+          skill_set_name: ['Genre I', 'Genre II', 'Genre III', 'Genre IV'][idx],
           skill_set_genre: '',
           skill_set_order: idx,
           jawan_id: 'jawan-' + (idx + 1),
-          jawan_name: 'Jawan ' + ['I', 'II', 'III'][idx],
-          jawan_role: ['Balanced', 'Assault', 'Guard'][idx],
+          jawan_name: 'Jawan ' + ['I', 'II', 'III', 'IV'][idx],
+          jawan_role: ['Balanced', 'Assault', 'Guard', 'Adaptive'][idx],
           is_active: idx === 0,
           tags: ['Luna', 'Skill Book', 'Dashboard Row'],
         }));
       }
-      for (let i = 0; i < 3; i += 1) {
+      for (let i = 0; i < SKILL_SET_COUNT; i += 1) {
         await svc.Loadout.update(rows[i].id, {
           skill_slots: Object.fromEntries(skillRows[i].map((id, j) => [String(j), id]).filter(([, id]) => id)),
           skill_rows: [skillRows[i]],

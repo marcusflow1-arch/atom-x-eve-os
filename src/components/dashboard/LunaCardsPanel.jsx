@@ -4,7 +4,7 @@ import {
   Sparkles, Volume2, Zap
 } from 'lucide-react';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
-import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
+import { SKILL_SLOT_COUNT, SKILL_KEYS } from '@/components/luna/skillSlots';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import CombatPrefabManager from './CombatPrefabManager';
 
@@ -149,7 +149,7 @@ export default function LunaCardsPanel() {
     }
     try {
       await equip(slot, skill.user_card_id);
-      showSuccess(`${skill.title} equipped to Skill Slot ${slot + 1}.`);
+      showSuccess(`${skill.title} equipped to Skill Key ${SKILL_KEYS[slot]}.`);
     } catch (error) {
       showError(error?.message || String(error || 'Unable to equip this skill.'), 'Equip Skill');
     }
@@ -249,7 +249,7 @@ export default function LunaCardsPanel() {
               </div>
               <p className="mt-1 text-[7px] text-white/36">
                 {selectedGame
-                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill slots 1–${SKILL_SLOT_COUNT}`
+                  ? `${selectedGame.owned_skills} of ${selectedGame.total_skills} skills owned · equip directly to Luna skill keys 1–9 and 0`
                   : 'Choose a game chapter to browse its complete ability library.'}
               </p>
             </div>
@@ -574,7 +574,7 @@ export default function LunaCardsPanel() {
                       )}
 
                       {selectedSkill.owned ? (
-                        <div className="mt-2 grid grid-cols-4 gap-1.5">
+                        <div className="mt-2 grid grid-cols-5 gap-1.5">
                           {Array.from({ length: SKILL_SLOT_COUNT }, (_, slotIndex) => {
                             const slot = slots.find((entry) => Number(entry.index) === slotIndex);
                             const occupiedBySelected = String(slot?.card?.user_card_id || '') === String(selectedSkill.user_card_id || '');
@@ -598,7 +598,7 @@ export default function LunaCardsPanel() {
                                   : 'border-white/[0.065] bg-white/[0.018] text-white/48 hover:border-cyan-100/16 hover:bg-cyan-100/[0.045] hover:text-white'}`}
                               >
                                 <span className="block text-[5px] font-black uppercase tracking-[0.1em]">Slot</span>
-                                <span className="mt-0.5 block text-[10px] font-semibold">{slotIndex + 1}</span>
+                                <span className="mt-0.5 block text-[10px] font-semibold">{SKILL_KEYS[slotIndex]}</span>
                                 <span className="mt-1 block truncate text-[4.5px] text-white/28">
                                   {occupiedBySelected ? 'Equipped' : slot?.card?.card_name || 'Empty'}
                                 </span>

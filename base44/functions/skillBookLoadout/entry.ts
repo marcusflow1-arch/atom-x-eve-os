@@ -476,6 +476,7 @@ const DEFAULT_SKILL_SETS = [
   { id: 'skill-set-1', name: 'Genre I', genre: '', order: 0 },
   { id: 'skill-set-2', name: 'Genre II', genre: '', order: 1 },
   { id: 'skill-set-3', name: 'Genre III', genre: '', order: 2 },
+  { id: 'skill-set-4', name: 'Genre IV', genre: '', order: 3 },
 ];
 
 const snapshotCard = (card: AnyObj | null) => card ? ({
@@ -507,7 +508,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     rows = [await svc.Loadout.create({
       user_id: userId,
       name: first.name,
-      description: 'Persistent four-slot Luna Skill Book genre row.',
+      description: 'Persistent ten-slot Luna Skill Book prefab.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
@@ -535,8 +536,8 @@ async function ensureSkillSets(base44: any, userId: string) {
     if (row.skill_set_genre === undefined || row.skill_set_genre === null) patch.skill_set_genre = row.genre || fallback.genre;
     if (!Number.isFinite(Number(row.skill_set_order))) patch.skill_set_order = fallback.order;
     if (!row.jawan_id) patch.jawan_id = 'jawan-' + (i + 1);
-    if (!row.jawan_name) patch.jawan_name = 'Jawan ' + ['I', 'II', 'III'][i];
-    if (!row.jawan_role) patch.jawan_role = ['Balanced', 'Assault', 'Guard'][i];
+    if (!row.jawan_name) patch.jawan_name = 'Jawan ' + ['I', 'II', 'III', 'IV'][i];
+    if (!row.jawan_role) patch.jawan_role = ['Balanced', 'Assault', 'Guard', 'Adaptive'][i];
     if (Object.keys(patch).length) await svc.Loadout.update(row.id, patch);
   }
 
@@ -548,7 +549,7 @@ async function ensureSkillSets(base44: any, userId: string) {
     rows.push(await svc.Loadout.create({
       user_id: userId,
       name: preset.name,
-      description: 'Persistent four-slot Luna Skill Book genre row.',
+      description: 'Persistent ten-slot Luna Skill Book prefab.',
       loadout_type: 'skills',
       game_id: '',
       genre: '',
@@ -559,8 +560,8 @@ async function ensureSkillSets(base44: any, userId: string) {
       skill_set_genre: preset.genre,
       skill_set_order: preset.order,
       jawan_id: 'jawan-' + (index + 1),
-      jawan_name: 'Jawan ' + ['I', 'II', 'III'][index],
-      jawan_role: ['Balanced', 'Assault', 'Guard'][index],
+      jawan_name: 'Jawan ' + ['I', 'II', 'III', 'IV'][index],
+      jawan_role: ['Balanced', 'Assault', 'Guard', 'Adaptive'][index],
       is_active: false,
       tags: ['Luna', 'Skill Book', 'Genre Set'],
     }));

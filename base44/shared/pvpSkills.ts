@@ -1,4 +1,5 @@
-export const SKILL_SLOT_COUNT = 4;
+export const SKILL_SLOT_COUNT = 10;
+export const SKILL_SET_COUNT = 4;
 export const ATB_RATE_PER_S = 25;
 export const ATB_MAX = 100;
 export const ATB_START = 50;

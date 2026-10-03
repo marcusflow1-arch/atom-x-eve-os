@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
-import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
+import { SKILL_SLOT_COUNT, SKILL_KEYS } from '@/components/luna/skillSlots';
 
 const RARITY_TONE = {
   mythic: 'border-red-200/28 text-red-100',
@@ -47,7 +47,7 @@ function BattleCard({ card, index, selectable = false, presentation = 'overhead'
         <p className={`${hand ? 'text-[8px]' : 'text-[6.5px]'} truncate font-black leading-tight text-white/92`}>{cardTitle(card)}</p>
         <div className="mt-1 flex items-center justify-between gap-1">
           <span className={`border px-1.5 py-[1px] text-[4.5px] font-black uppercase tracking-[0.10em] ${tone}`}>{rarity}</span>
-          <span className="text-[5px] font-black text-white/42">{index + 1}</span>
+          <span className="text-[5px] font-black text-white/42">{SKILL_KEYS[index]}</span>
         </div>
       </div>
     </>
@@ -58,9 +58,9 @@ function BattleCard({ card, index, selectable = false, presentation = 'overhead'
       <button
         type="button"
         className={`${shell} pointer-events-auto origin-bottom transition duration-150 hover:-translate-y-2 hover:scale-[1.04] hover:border-cyan-100/60 focus-visible:-translate-y-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-100/70`}
-        data-ai-battle-skill-card={index + 1}
+        data-ai-battle-skill-card={SKILL_KEYS[index]}
         onClick={() => onSelect?.(index, card)}
-        aria-label={`Use ${cardTitle(card)} in skill slot ${index + 1}`}
+        aria-label={`Use ${cardTitle(card)} in skill slot ${SKILL_KEYS[index]}`}
       >
         {content}
       </button>
@@ -68,7 +68,7 @@ function BattleCard({ card, index, selectable = false, presentation = 'overhead'
   }
 
   return (
-    <div className={shell} data-ai-battle-skill-card={index + 1}>
+    <div className={shell} data-ai-battle-skill-card={SKILL_KEYS[index]}>
       {content}
     </div>
   );
@@ -79,12 +79,12 @@ function EmptyCard({ index, presentation = 'overhead' }) {
   return (
     <div
       className={`relative ${hand ? 'h-[126px] w-[84px]' : 'h-[96px] w-[64px]'} shrink-0 border border-white/[0.07] bg-slate-950/[0.08]`}
-      data-ai-battle-skill-card={index + 1}
-      aria-label={`Skill Slot ${index + 1} empty`}
+      data-ai-battle-skill-card={SKILL_KEYS[index]}
+      aria-label={`Skill Slot ${SKILL_KEYS[index]} empty`}
     >
       <div className="absolute inset-[3px] border border-white/[0.025]" />
       <span className="absolute left-[5px] top-[5px] border border-white/[0.08] bg-slate-950/55 px-1.5 py-0.5 text-[5px] font-black text-white/32">
-        {index + 1}
+        {SKILL_KEYS[index]}
       </span>
       <span className="absolute inset-x-0 bottom-3 text-center text-[5px] font-black uppercase tracking-[0.12em] text-white/20">
         Empty
@@ -140,7 +140,7 @@ export default function BattleSkillRail({
         <div className={`${hand ? 'w-[52%]' : 'w-1/2'} mx-auto h-px bg-gradient-to-r from-transparent via-cyan-100/56 to-transparent`} />
         <div className="mt-[2px] h-px w-full bg-gradient-to-r from-transparent via-cyan-100/38 to-transparent" />
 
-        <div className={`${hand ? 'mt-[10px]' : 'mt-[7px]'} flex items-start justify-center gap-[2px]`}>
+        <div className={`${hand ? 'mt-[10px]' : 'mt-[7px]'} grid grid-cols-5 items-start justify-center gap-[2px]`}>
           {cards.map((card, index) => card ? (
             <BattleCard
               key={`${cardId(card) || cardTitle(card)}-${index}`}

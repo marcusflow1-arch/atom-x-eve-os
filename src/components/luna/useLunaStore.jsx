@@ -55,12 +55,11 @@ const useLunaStore = create((set, get) => ({
     }
   })),
 
-  // Hotbar (Skill Assignments) — one compact foreground row at a time.
-  // The three persistent rows live in the Skill Book service; the dashboard
-  // store only mirrors the currently active row for rendering/keyboard input.
+  // The four persistent prefabs live in the Skill Book service; the dashboard
+  // mirrors the active ten-slot prefab for rendering and keyboard input.
   hotbar: {},
   activeSkillRow: 0,
-  setActiveSkillRow: (row) => set({ activeSkillRow: Math.max(0, Math.min(2, Number(row) || 0)) }),
+  setActiveSkillRow: (row) => set({ activeSkillRow: Math.max(0, Math.min(3, Number(row) || 0)) }),
   assignToHotbar: (slotIndex, card) => set((state) => ({
     hotbar: { ...state.hotbar, [slotIndex]: card }
   })),

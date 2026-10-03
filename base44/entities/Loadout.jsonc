@@ -44,7 +44,7 @@
           "type": "string"
         }
       },
-      "description": "Three five-slot Skill Prefab rows containing references to owned UserCard IDs."
+      "description": "Four ten-slot Skill Prefab loadouts containing references to owned UserCard IDs."
     },
     "linked_skill_prefab_id": {
       "type": "string",
@@ -65,11 +65,11 @@
     "skill_slots": {
       "type": "object",
       "default": {},
-      "description": "Persistent five-slot Luna Skill Book mapping. Keys 0-4 map to owned UserCard IDs."
+      "description": "Persistent ten-slot Luna Skill Book mapping. Keys 0-9 map to owned UserCard IDs; keyboard keys are 1-9 then 0."
     },
     "skill_set_id": {
       "type": "string",
-      "description": "Stable identifier for one of the three Luna dashboard skill/genre rows."
+      "description": "Stable identifier for one of the four Luna dashboard skill prefabs."
     },
     "skill_set_name": {
       "type": "string",
@@ -81,7 +81,7 @@
     },
     "skill_set_order": {
       "type": "number",
-      "description": "Display order for the three stacked Luna skill rows."
+      "description": "Display order for the four Luna skill prefabs."
     },
     "jawan_id": {
       "type": "string",

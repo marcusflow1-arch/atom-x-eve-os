@@ -2,6 +2,7 @@ import {createClientFromRequest} from 'npm:@base44/sdk@0.8.51';
 import {deriveCombatStats,resolveCombatHit} from '../../shared/combatStats.ts';
 import {loadCombatProfile} from '../../shared/combatProfile.ts';
 import {loadCombatSkills} from '../../shared/combatSkills.ts';
+import {SKILL_SLOT_COUNT} from '../../shared/pvpSkills.ts';
 import {conditionalUpdate,ensureKeyedRecord,findKeyedRecord} from '../../shared/rewardJournal.ts';
 const json=(body:any,status=200)=>Response.json(body,{status});
 const roll=()=>({dodge:Math.random(),crit:Math.random(),variance:0.95+Math.random()*0.10});
@@ -43,7 +44,7 @@ Deno.serve(async(req)=>{
     else{
       if(now<Number(encounter.next_action_at||0))return json({error:'Your avatar is recovering. Wait before the next action.'},409);
       const slot=data.slot;
-      if(!Number.isInteger(slot)||slot < -1||slot > 3)return json({error:'Invalid attack slot'},400);
+      if(!Number.isInteger(slot)||slot < -1||slot >= SKILL_SLOT_COUNT)return json({error:'Invalid attack slot'},400);
       const skill=slot>=0?(encounter.skills||[]).find((s:any)=>s.slot===slot):null;
       if(slot>=0&&!skill)return json({error:'That skill is not in your frozen Skill Book'},409);
       if(skill&&now<Number(encounter.cooldowns?.[slot]||0))return json({error:'That skill is on cooldown'},409);

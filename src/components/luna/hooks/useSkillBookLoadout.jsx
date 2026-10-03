@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import useLunaStore from '@/components/luna/useLunaStore';
-import { SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
+import { SKILL_SLOT_COUNT, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
 
@@ -185,7 +185,7 @@ export function useSkillBookLoadout() {
   useEffect(() => {
     const slots = stateQuery.data?.loadout?.slots;
     const rowIndex = Number(stateQuery.data?.loadout?.skill_set_order || 0);
-    setActiveSkillRow(Math.max(0, Math.min(2, rowIndex)));
+    setActiveSkillRow(Math.max(0, Math.min(SKILL_SET_COUNT - 1, rowIndex)));
     if (!Array.isArray(slots)) return;
 
     for (let index = 0; index < SKILL_SLOT_COUNT; index += 1) {

@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import useLunaStore from '../useLunaStore';
-import { SKILL_KEYS, SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
+import { skillSlotFromKey, SKILL_SLOT_COUNT } from '@/components/luna/skillSlots';
 
 const DEFAULT_EFFECT_COOLDOWN_MS = 3000;
 const DEFAULT_EFFECT_DURATION_MS = 800;
 
 /**
- * Hook for managing the four Luna / AI Battle skill-card slots.
+ * Hook for managing the ten Luna / AI Battle skill-card slots.
  *
  * Cards are the source of truth. A slot only triggers an animation/VFX package
  * when the equipped card carries animation_effect metadata. The keyboard never
- * owns an effect directly: Digit1..Digit4 resolve the card in that logical slot,
+ * owns an effect directly: Digit1..Digit0 resolve the card in that logical slot,
  * then the card resolves the effect.
  */
 export function useSkills() {
@@ -138,7 +138,7 @@ export function useSkills() {
   useEffect(() => {
     const handleSkillKey = (event) => {
       if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
-      // In a live PvP match the arena owns keys 1–4 and casts the frozen match
+      // In a live PvP match the arena owns keys 1–0 and casts the frozen match
       // loadout itself. Handling the key here as well used to send a second,
       // conflicting cast for every press.
       if (typeof window !== 'undefined' && window.__lunaPvPCombat?.active) return;
@@ -146,14 +146,9 @@ export function useSkills() {
       if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target instanceof HTMLElement && target.isContentEditable) return;
 
-      // Use physical Digit1..Digit4 as the primary mapping so skills still cast
-      // while WASD movement/gameplay handlers are active or on non-US layouts.
-      // Fall back to event.key for accessibility/on-screen keyboard input.
-      const codeMatch = new RegExp(`^Digit([1-${SKILL_SLOT_COUNT}])$`).exec(String(event.code || ''));
-      const key = codeMatch?.[1] || String(event.key || '');
-      if (!SKILL_KEYS.includes(key)) return;
-
-      const slotIndex = Number(key) - 1;
+      // Physical number keys, numpad and on-screen keys share one 1–0 mapping.
+      const slotIndex = skillSlotFromKey(event);
+      if (slotIndex < 0) return;
       if (!getHotbarItem(slotIndex)) return;
       event.preventDefault();
       triggerSkill(slotIndex, 'keyboard');

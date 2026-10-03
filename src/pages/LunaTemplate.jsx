@@ -546,6 +546,7 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const onKey = async (e) => {
+      if (e.defaultPrevented) return;
       if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
       const key = (e.key || '').toLowerCase();
       if (key === 'i') {
@@ -563,7 +564,8 @@ export default function LunaTemplate() {
       if (key === 'p') {
         setShowDevSpotlight((v) => !v);
       }
-      if (key === '0') {
+      // Plain 0 belongs to the tenth skill. Shift+0 toggles dashboard chrome.
+      if (e.shiftKey && (e.code === 'Digit0' || key === ')')) {
         setHideUI((v) => !v);
       }
       if (key === '\\') {
