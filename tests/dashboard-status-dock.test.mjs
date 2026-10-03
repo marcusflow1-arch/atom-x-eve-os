@@ -21,8 +21,9 @@ window.setInterval = (fn, delay) => { const id=nextTimer++;timers.set(id,{fn,at:
 window.clearInterval = window.clearTimeout;
 function tick(ms) {
   const end = now + ms;
-  let next;
+  let next, iterations=0;
   while ((next = [...timers].filter(([,timer])=>timer.at<=end).sort((a,b)=>a[1].at-b[1].at)[0])) {
+    if(++iterations>2000)throw new Error('UI timer loop: '+String(next[1].fn));
     const [id,timer]=next;now=timer.at;
     if(timer.interval)timer.at+=timer.interval;else timers.delete(id);
     timer.fn();
@@ -76,7 +77,8 @@ mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(built.outputFiles[
 const {Status,Alerts}=mod.exports;
 const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
 const root=createRoot(document.getElementById('root'));
-const run=(fn=()=>{})=>act(async()=>{fn();await new Promise(resolve=>setTimeout(resolve,40));});
+let checkpoint=0;
+const run=(fn=()=>{})=>{console.log('status-check',++checkpoint);return act(async()=>{fn();await new Promise(resolve=>setTimeout(resolve,40));});};
 const advance=ms=>run(()=>tick(ms));
 const button=label=>{const node=[...document.querySelectorAll('button')].find(n=>n.getAttribute('aria-label')===label||n.textContent.trim()===label);assert.ok(node,'Missing '+label);return node;};
 const pointer=(node,type,extra={})=>node.dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:10,clientY:10,...extra}));
