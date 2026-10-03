@@ -47,7 +47,7 @@ const built = await build({
 });
 const file=process.cwd()+'/tests/__pdf_ui.cjs',mod=new Module(file);mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(built.outputFiles[0].text,file);
 const { Status, Card, Clan }=mod.exports;
-const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false}}});
+const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
 const root=createRoot(document.getElementById('root'));
 const run=(fn=()=>{})=>act(async()=>{await fn();await new Promise(resolve=>setTimeout(resolve,50));});
 const render=(Component,props={})=>run(()=>root.render(React.createElement(QueryClientProvider,{client},React.createElement(Component,props))));
