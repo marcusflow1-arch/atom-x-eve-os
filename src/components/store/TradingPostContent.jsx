@@ -622,7 +622,7 @@ export default function TradingPostContent({ genreFilter, searchTerm, market = '
               {[
                 [Gamepad2, 'Available Games', marketMetrics.games.toLocaleString()],
                 [Layers3, 'Tradeable Cards', marketMetrics.cards.toLocaleString()],
-                [Users, 'Live Sellers', marketMetrics.sellers.toLocaleString()],
+                [Users, market === 'black_market' ? 'Live Listings' : 'Live Sellers', (market === 'black_market' ? listings.length : marketMetrics.sellers).toLocaleString()],
                 [Gem, 'Market Floor', marketMetrics.floor ? formatAGP(marketMetrics.floor) : '—'],
               ].map(([Icon, label, value]) => (
                 <div key={label} className="border-l border-white/[0.06] bg-[#d7dde5]/[0.012] px-4 py-3 first:border-l-0">

@@ -34,6 +34,7 @@ const built = await build({
   stdin:{ contents:"export {default as Status} from './src/components/dashboard/DateTimeTile.jsx';export {default as Card} from './src/components/streaming/MysteryCardDetail.jsx';export {default as Clan} from './src/components/clan/ClanIntro.jsx';", resolveDir:process.cwd(), loader:'jsx' },
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},
   plugins:[{name:'fixtures',setup(b){
+    b.onResolve({filter:/^react(?:\/|$)/},a=>({path:a.path,external:true}));
     b.onResolve({filter:/^lucide-react$/},()=>({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
     b.onResolve({filter:/base44Client$|AuthContext$|SystemUpdatesRemindersOverlay$|^react-router-dom$/}, a=>({path:a.path,namespace:'fixture'}));
     b.onLoad({filter:/.*/,namespace:'fixture'},a=>({loader:'jsx',contents:
