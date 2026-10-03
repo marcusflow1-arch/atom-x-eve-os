@@ -1,73 +1,89 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Bell, Calendar as CalendarIcon, ChevronRight, RefreshCw, Settings } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/components/auth/AuthContext';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Bell, Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 import SystemUpdatesRemindersOverlay from './SystemUpdatesRemindersOverlay';
+import useDashboardStatusFeeds from './useDashboardStatusFeeds';
+import useStatusPreview from './useStatusPreview';
+import StatusFeedButton from './StatusFeedButton';
 import './dashboard-status.css';
 
 export default function DateTimeTile({ onCalendarClick = () => {} }) {
-  const { user } = useAuth();
   const [time, setTime] = useState(new Date());
-  const [feeds, setFeeds] = useState({ updates: [], reminders: [] });
-  const [feed, setFeed] = useState('updates');
-  const [index, setIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [overlayMode, setOverlayMode] = useState(null);
-
-  const load = useCallback(async () => {
-    if (!user?.id) { setFeeds({ updates: [], reminders: [] }); return; }
-    setLoading(true);
-    const now = new Date();
-    const [schedule, updates] = await Promise.allSettled([
-      base44.functions.invoke('calendarAgent', { action: 'getState', payload: { range_start: now.toISOString(), range_end: new Date(now.getTime() + 90 * 86400000).toISOString() } }),
-      base44.entities.PlatformUpdate.filter({ published: true }, '-created_date', 12),
-    ]);
-    const data = schedule.status === 'fulfilled' ? (schedule.value?.data || schedule.value || {}) : {};
-    setFeeds({
-      updates: updates.status === 'fulfilled' && Array.isArray(updates.value) ? updates.value : [],
-      reminders: (Array.isArray(data.occurrences) ? data.occurrences : [])
-        .filter(event => event.status !== 'cancelled' && ((event.reminders || []).length || event.event_type === 'reminder'))
-        .sort((a, b) => new Date(a.occurrence_start || a.start_time) - new Date(b.occurrence_start || b.start_time)),
-    });
-    setErrors({ updates: updates.status === 'rejected', reminders: schedule.status === 'rejected' || Boolean(data.error) });
-    setLoading(false);
-  }, [user?.id]);
-
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => {
-    const refresh = () => load();
-    window.addEventListener('atom:calendar-data-changed', refresh);
-    const calendar = base44.entities.UserEvent?.subscribe?.(refresh);
-    const updates = base44.entities.PlatformUpdate?.subscribe?.(refresh);
-    return () => { window.removeEventListener('atom:calendar-data-changed', refresh); calendar?.(); updates?.(); };
-  }, [load]);
+  const [overlay, setOverlay] = useState(null);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [hidden, setHidden] = useState(() => document.hidden);
+  const dock = useRef(null);
+  const returnFocus = useRef(null);
+  const helpId = useId();
+  const data = useDashboardStatusFeeds();
+  const preview = useStatusPreview({
+    sources: data.sources, identity: data.identity,
+    paused: hovered || focused || hidden || Boolean(overlay),
+  });
   useEffect(() => {
     const clock = window.setInterval(() => setTime(new Date()), 1000);
-    const rotate = window.setInterval(() => setIndex(i => i + 1), 8000);
-    return () => { window.clearInterval(clock); window.clearInterval(rotate); };
+    const visibility = () => setHidden(document.hidden);
+    document.addEventListener('visibilitychange', visibility);
+    return () => { window.clearInterval(clock); document.removeEventListener('visibilitychange', visibility); };
   }, []);
-  const items = feeds[feed];
-  const item = items[index % (items.length || 1)];
-  const label = item?.title || item?.version || (loading ? 'Loading…' : errors[feed] ? 'Feed unavailable · retry' : !user?.id ? 'Sign in for your updates' : feed === 'updates' ? 'No new system updates' : 'No reminders scheduled');
-  const detail = feed === 'reminders' && item ? new Date(item.occurrence_start || item.start_time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : item?.description || item?.summary || (feed === 'updates' ? 'Platform news and releases' : 'Your upcoming calendar reminders');
-  const openFeed = () => errors[feed] ? load() : setOverlayMode(feed);
+  const open = (mode, item) => {
+    returnFocus.current = document.activeElement;
+    preview.dismiss(); setHovered(false); setFocused(false);
+    setOverlay({ mode, itemId: item?.id || null });
+  };
+  const peek = kind => {
+    const items = data.feeds[kind];
+    const item = items.find(entry => entry.announce) || items[0] || {
+      id: 'empty:' + kind, kind,
+      title: !data.signedIn ? 'Sign in for your notifications' : data.loading[kind] ? 'Loading…'
+        : data.errors[kind] ? 'Feed unavailable' : kind === 'updates' ? 'No new system updates' : 'You’re all caught up',
+      detail: data.errors[kind] ? 'Open this feed to retry.' : kind === 'updates' ? 'Platform news and releases' : 'Notifications and calendar reminders',
+    };
+    preview.peek(item);
+  };
+  const close = () => {
+    setOverlay(null);
+    const previous = returnFocus.current;
+    if (previous?.isConnected && !previous.closest('.luna-status-preview')) previous.focus?.();
+    else dock.current?.querySelector('[aria-label="Notifications"]')?.focus();
+  };
 
   return <>
-    <section className="luna-status" aria-label="Dashboard status">
-      <div className="luna-status-selectors" role="group" aria-label="Choose status feed">
-        <button type="button" aria-label="Show system updates" aria-pressed={feed === 'updates'} title="System updates" onClick={() => { setFeed('updates'); setIndex(0); }}><RefreshCw size={15} /></button>
-        <button type="button" aria-label="Show reminders" aria-pressed={feed === 'reminders'} title="Reminders" onClick={() => { setFeed('reminders'); setIndex(0); }}><Bell size={15} /></button>
+    <section ref={dock} className="luna-status" aria-label="Dashboard status" data-luna-notification-dock>
+      <div className="luna-status-announcements">
+        <div className="luna-status-preview" data-expanded={preview.expanded || undefined}
+          aria-hidden={!preview.expanded} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+          onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
+          <button type="button" className="luna-status-feed" tabIndex={preview.expanded ? 0 : -1}
+            aria-label={preview.current ? 'Open ' + preview.current.title : 'Open notification'}
+            onClick={() => preview.current && open(preview.current.kind, preview.current)}>
+            <span className="luna-status-feed-copy">
+              <small>{preview.current?.kind === 'updates' ? 'System update' : preview.current?.type === 'reminder' ? 'Reminder' : 'Notification'}</small>
+              <strong>{preview.current?.title}</strong><span>{preview.current?.detail}</span>
+            </span>
+          </button>
+        </div>
+        <div className="luna-status-selectors" role="group" aria-label="Updates and notifications">
+          <StatusFeedButton label="System updates" onPreview={() => peek('updates')} onOpen={() => open('updates')}
+            expanded={overlay?.mode === 'updates' || (preview.expanded && preview.current?.kind === 'updates')} helpId={helpId}>
+            <RefreshCw size={15} />
+          </StatusFeedButton>
+          <StatusFeedButton label="Notifications" onPreview={() => peek('notifications')} onOpen={() => open('notifications')}
+            expanded={overlay?.mode === 'notifications' || (preview.expanded && preview.current?.kind === 'notifications')} unread={data.unread > 0} helpId={helpId}>
+            <Bell size={15} />
+          </StatusFeedButton>
+        </div>
+        <span className="luna-status-underline" aria-hidden="true" />
       </div>
-      <button type="button" className="luna-status-feed" aria-label={`Open ${feed === 'updates' ? 'system updates' : 'reminders'} feed`} onClick={openFeed}>
-        <span className="luna-status-feed-copy"><strong>{label}</strong><span>{detail}</span></span><ChevronRight size={14} />
-      </button>
       <span className="luna-status-divider" aria-hidden="true" />
-      <button type="button" className="luna-status-quick" aria-label="Open all system updates" title="All system updates" onClick={() => setOverlayMode('updates')}><Settings size={18} /></button>
-      <button type="button" className="luna-status-clock" aria-label="Open calendar" onClick={onCalendarClick}>
-        <CalendarIcon size={21} /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small>{time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</small></span>
-      </button>
+      <div className="luna-status-calendar-side">
+        <button type="button" className="luna-status-clock" aria-label="Open calendar" onClick={onCalendarClick}>
+          <CalendarIcon size={21} /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small>{time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</small></span>
+        </button>
+      </div>
+      <span id={helpId} className="sr-only">Click for a brief preview. Hold for one second to open the full feed, or press Enter or Space.</span>
+      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{preview.expanded ? [preview.current?.title, preview.current?.detail].filter(Boolean).join('. ') : ''}</span>
     </section>
-    {overlayMode && <SystemUpdatesRemindersOverlay mode={overlayMode} onClose={() => setOverlayMode(null)} />}
+    {overlay && <SystemUpdatesRemindersOverlay mode={overlay.mode} initialItemId={overlay.itemId} onClose={close} />}
   </>;
 }
