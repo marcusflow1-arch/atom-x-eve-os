@@ -22,7 +22,9 @@ const QUEUE_OWNER_RECOVER_MS = 120000;
 const PREFIGHT_MATCHED_MS = 90000;
 const PREFIGHT_CONNECTING_MS = 180000;
 const PREFIGHT_STATUSES = new Set(['matched', 'connecting']);
-const POSITION_EPSILON_M = 0.05;
+// Positions are sent with every poll; only store real moves (fewer match writes
+// under Base44's rate limits). Range checks cover the whole court anyway.
+const POSITION_EPSILON_M = 0.5;
 const DEFAULT_BATTLE_HP = 1000;
 const ARENA = { width: 12, length: 16, margin_to_net: 1, spawn_distance: 10 };
 const APPEARANCE_KEYS = [
@@ -810,6 +812,10 @@ Deno.serve(async (req) => {
     if (action === 'basic_attack') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       match=await settleMatch(svc,match);
+      // A retried request (e.g. after a rate-limit error) returns the original
+      // result instead of attacking twice or failing on the turn that passed.
+      const repeat=data.cast_id?(match.hit_log||[]).find((h:Row)=>String(h.cast_id)===String(data.cast_id)&&String(h.attacker_id)===userId):null;
+      if(repeat) return json({match:publicMatch(match),cast:{cast_id:repeat.cast_id,slot:-1,effect_id:BASIC_MELEE.id,resolves_at:repeat.resolved_at,damage:repeat.damage,crit:!!repeat.crit,missed:repeat.result==='miss',result:repeat.result,target_id:repeat.target_id,range_m:BASIC_MELEE.range_m,atb_cost:BASIC_MELEE.atb_cost,lock_on:true,repeat:true},server_time:Date.now()});
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId);
@@ -850,6 +856,12 @@ Deno.serve(async (req) => {
     if (action === 'use_skill') {
       let match=await getMatch(svc,String(data.match_id||'')); if(!match||(match.player_ids||[]).map(String).includes(userId)===false) return json({error:'Match not found.'},404);
       match=await settleMatch(svc,match);
+      // Same cast retried after a rate-limit error: return it, never cast twice.
+      const repeatCast=data.cast_id&&match.last_cast&&String(match.last_cast.cast_id)===String(data.cast_id)&&String(match.last_cast.attacker_id)===userId?match.last_cast:null;
+      if(repeatCast){
+        const castSkill=(((match.players||[]).find((p:Row)=>String(p.id)===userId)?.skills)||[]).find((s:Row)=>Number(s.slot)===Number(repeatCast.slot))||{};
+        return json({match:publicMatch(match),cast:{...repeatCast,animation_effect:castSkill.animation_effect||{},repeat:true},server_time:Date.now()});
+      }
       if(match.status!=='fighting') return json({error:'Fight has not started.'},409);
       if(Object.keys(match.disconnects || {}).length) return json({error:'Match paused while a player reconnects.'},409);
       const me=(match.players||[]).find((p:Row)=>String(p.id)===userId); const target=(match.players||[]).find((p:Row)=>String(p.id)!==userId); const slot=Number(data.slot);
@@ -879,7 +891,7 @@ Deno.serve(async (req) => {
       const atb=turnAtb(match,targetId,now);
       const cooldowns={...(match.cooldowns||{}),[userId]:{...myCooldowns,[String(slot)]:new Date(now+Number(skill.cooldown_ms||3000)).toISOString(),_last_cast_at:now}};
       const positions={...(match.positions||{}),[userId]:attackerPos,[targetId]:targetPos};
-      const lastCast={cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',resolves_at:resolvesAt,cast_at:new Date(now).toISOString(),missed,...(stunMs?{stun_ms:stunMs}:{})};
+      const lastCast={cast_id:castId,attacker_id:userId,target_id:targetId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',resolves_at:resolvesAt,cast_at:new Date(now).toISOString(),missed,damage,crit,...(stunMs?{stun_ms:stunMs}:{})};
       match=await svc.AIBattleMatch.update(match.id,{pending_hits:pending,atb,cooldowns,positions,last_cast:lastCast});
       return json({match:publicMatch(match),cast:{cast_id:castId,slot,effect_id:skill.effect_id||'',clip_name:skill.clip_name||'',animation_effect:skill.animation_effect||{},resolves_at:resolvesAt,cast_at:new Date(now).toISOString(),damage,crit,missed,target_id:targetId,...(stunMs?{stun_ms:stunMs}:{})},server_time:now});
     }

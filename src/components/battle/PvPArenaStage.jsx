@@ -16,9 +16,10 @@ import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
 import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
 import ArenaGraphicsRecovery from '@/components/battle/ArenaGraphicsRecovery';
 import CombatFx, { effectColor } from '@/components/battle/combatFx';
-import { CHIDORI_REACTION_CLIP, CHIDORI_STRIKE_GAP, CHIDORI_TIMING, chidoriDashProgress, chidoriKnockback, createChidoriCaster, isChidoriCast } from '@/components/battle/chidoriCaster';
+import { CHIDORI_REACTION_CLIP, isChidoriCast } from '@/components/battle/chidoriCaster';
+import { ARENA_CHIDORI, captureRestPose, chidoriAttackerPush, chidoriVictimKnock, createChidoriArenaPresenter } from '@/components/battle/chidoriArenaPresenter';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
-import { dismissAIBattleResult, getAIBattleClientSessionId } from '@/components/battle/useAIBattleQueue';
+import { dismissAIBattleResult, getAIBattleClientSessionId, isRateLimited } from '@/components/battle/useAIBattleQueue';
 import { requestAIBattle } from './battleClient';
 import { skillSlotFromKey } from '@/components/luna/skillSlots';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
@@ -76,6 +77,10 @@ function scaleToHeight(root, height = 1.8) {
 const CHEST_HEIGHT = 1.1;
 const MELEE_LUNGE = { distance: 0.6, duration: 260 };
 const HIT_RECOIL = { distance: 0.28, duration: 240 };
+// Waits before re-sending a skill or melee strike that hit Base44's rate limit.
+// The server answers a repeated cast_id with the original result.
+const COMBAT_RETRY_MS = [700, 1600, 3000];
+const RETRY_SAFE_ACTIONS = new Set(['use_skill', 'basic_attack']);
 
 /**
  * Drive idle/locomotion only when the wanted motion changes, and never over an
@@ -100,18 +105,17 @@ function setMotion(fighter, desired) {
 function motionOffset(fighter, now, gap = 0) {
   let push = 0, lift = 0;
   if (fighter.chidori) {
+    // Charge in place, dash across the net to the target, strike, then the
+    // flash step puts the caster back on their own side (push returns to 0).
     const ta = (now - fighter.chidori.start) / 1000;
-    if (ta > CHIDORI_TIMING.end + 0.2) fighter.chidori = null;
-    else if (ta >= 0) {
-      const dash = chidoriDashProgress(ta);
-      push += dash.reach * Math.max(0, gap - CHIDORI_STRIKE_GAP);
-      lift += dash.lift;
-    }
+    if (ta > ARENA_CHIDORI.home + 0.1) fighter.chidori = null;
+    else if (ta >= 0) push += chidoriAttackerPush(ta, gap);
   }
   if (fighter.knock) {
+    // Thrown back, down for the stun, then back up and home.
     const tv = (now - fighter.knock.start) / 1000;
-    if (tv > 3.8) fighter.knock = null;
-    else if (tv >= 0) push -= chidoriKnockback(tv);
+    if (tv > ARENA_CHIDORI.victimEnd + 0.1) fighter.knock = null;
+    else if (tv >= 0) push -= chidoriVictimKnock(tv);
   }
   if (fighter.lunge) {
     const t = (now - fighter.lunge.start) / MELEE_LUNGE.duration;
@@ -131,6 +135,8 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
   // including Chidori and its hit reaction. Older avatar rows may still point
   // at a generic body that cannot play them.
   const gltf = await new GLTFLoader().loadAsync(companionModel({ gender: female ? 'female' : 'male' }));
+  // Chidori poses the skeleton procedurally; it measures limbs from the rest pose.
+  captureRestPose(gltf.scene);
   try {
     gltf.animations = await mergeAdamXeInjectedClips(gltf.animations || [], female ? 'female' : 'male');
   } catch (error) {
@@ -287,9 +293,21 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   const localStunMs = () => Math.max(0, Date.parse(matchRef.current?.stuns?.[String(user?.id)]?.until || 0) - (Date.now() + serverOffsetRef.current));
 
-  const invoke = (action, data) => requestAIBattle(user?.id, action, {
-    ...data, client_session_id: getAIBattleClientSessionId(),
-  });
+  const invoke = async (action, data) => {
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await requestAIBattle(user?.id, action, { ...data, client_session_id: getAIBattleClientSessionId() });
+      } catch (error) {
+        // A skill or strike that got "Rate limit exceeded" is re-sent with the
+        // same cast_id (never cast twice) instead of losing the turn.
+        if (!RETRY_SAFE_ACTIONS.has(action) || !data?.cast_id || !isRateLimited(error) || attempt >= COMBAT_RETRY_MS.length || matchRef.current?.status !== 'fighting') {
+          if (isRateLimited(error)) error.message = 'The server is busy. Try that again in a moment.';
+          throw error;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, COMBAT_RETRY_MS[attempt]));
+      }
+    }
+  };
 
   const returnToDashboard = useCallback(async () => {
     if (returningRef.current) return;
@@ -357,12 +375,14 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!started && caster && !chidori) caster.lunge = { start: performance.now() };
     if (skill) setLastCastSlot((state) => ({ ...state, [casterKey]: Number(skill.slot) }));
     if (chidori) {
-      // Charge in place, dash across the net, strike, then leap back home.
-      // The target reacts at impact (knocked down + stunned) unless the strike
-      // was dodged or missed. All of it is presentation: the server owns the
+      // Charge, cross the net, palm strike, then flash-step back home. The
+      // target reacts at impact (thrown down + stunned) unless the strike was
+      // dodged or missed. All of it is presentation: the server owns the
       // damage and the stun.
-      const impactAt = cast.resolves_at ? toPerfTime(cast.resolves_at) : performance.now() + CHIDORI_TIMING.impact * 1000;
-      const startedAt = impactAt - CHIDORI_TIMING.impact * 1000;
+      // Line the palm strike up with the server's hit time (resolves_at), so the
+      // HP drop and the stun arrive at the visible impact on both screens.
+      const impactAt = cast.resolves_at ? toPerfTime(cast.resolves_at) : performance.now() + ARENA_CHIDORI.impact * 1000;
+      const startedAt = impactAt - ARENA_CHIDORI.impact * 1000;
       const target = runtimes.current[targetKey];
       if (caster) { caster.chidori = { start: startedAt, castId }; caster.lunge = null; }
       if (target) {
@@ -593,7 +613,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     arenaVisualRef.current = { scene, camera };
     const fx = new CombatFx(scene, camera);
     fxRef.current = fx;
-    const chidoriCaster = createChidoriCaster(scene, { lights: true });
+    const chidoriCaster = createChidoriArenaPresenter(scene);
     chidoriRef.current = chidoriCaster;
     setLoaded(0);
     setGraphicsError(false);
@@ -702,7 +722,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           const inputLength = Math.hypot(strafe, advance);
           // Abilities root the caster until the authored clip finishes, so the
           // body does not slide while the attack animation plays in place.
-          if (inputLength && !lf.runtime.isPlaying?.()) {
+          if (inputLength && !lf.runtime.isPlaying?.() && !chidoriRef.current?.controls?.(lf)) {
             // Lock-on movement is target-relative: W advances toward the opponent,
             // S retreats while still facing them, and A/D strafe around them.
             const targetX = op.x - lp.x;
@@ -744,6 +764,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           const resolvesAt = Date.parse(pending.resolvesAt || 0);
           const dodged = Boolean(dodge && resolvesAt && Date.parse(dodge.from || 0) <= resolvesAt && Date.parse(dodge.until || 0) >= resolvesAt);
           if (pending.missed || dodged) { chidoriRef.current?.spareVictim?.(); continue; }
+          chidoriRef.current?.strike?.(true);
           if (fighter.runtime?.playReaction?.(CHIDORI_REACTION_CLIP)) fighter.motion = 'idle';
           fighter.knock = { start: now };
           fighter.recoil = null;

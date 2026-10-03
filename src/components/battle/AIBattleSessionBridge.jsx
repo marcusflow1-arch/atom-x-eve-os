@@ -21,7 +21,8 @@ export default function AIBattleSessionBridge({ battle }) {
   const roomHealthy = Boolean(
     activePvpMatch
     && String(session.channel_id || '') === expectedChannel
-    && session.status === 'connected'
+    // A missed heartbeat ('reconnecting') is not a lost room.
+    && ['connected', 'reconnecting'].includes(session.status)
     && requiredIds.length === 2
     && requiredIds.every((id) => sessionIds.has(id))
   );
@@ -42,7 +43,7 @@ export default function AIBattleSessionBridge({ battle }) {
       setShowReconnect(false);
       return undefined;
     }
-    const timer = window.setTimeout(() => setShowReconnect(true), 1400);
+    const timer = window.setTimeout(() => setShowReconnect(true), 6000);
     return () => window.clearTimeout(timer);
   }, [reconnectable, match?.id, session.status, session.channel_id]);
 
@@ -66,7 +67,8 @@ export default function AIBattleSessionBridge({ battle }) {
       type="button"
       onClick={handleReconnect}
       disabled={busy}
-      className="pointer-events-auto fixed left-1/2 top-3 z-[260] -translate-x-1/2 border border-cyan-100/20 bg-slate-950/88 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_10px_28px_rgba(0,0,0,.32)] backdrop-blur-xl hover:bg-cyan-950/90 disabled:opacity-50"
+      // Top-right, clear of the arena's turn banner (top centre).
+      className="pointer-events-auto fixed right-4 top-3 z-[260] border border-cyan-100/20 bg-slate-950/88 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_10px_28px_rgba(0,0,0,.32)] backdrop-blur-xl hover:bg-cyan-950/90 disabled:opacity-50"
     >
       {busy ? 'Reconnecting…' : 'Reconnect to Match'}
     </button>

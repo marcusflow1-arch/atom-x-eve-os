@@ -216,9 +216,11 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       if (isRateLimited(query.state.error)) return 6000;
       const body = query.state.data || {};
       const status = String(body?.match?.status || '');
-      // The fight is turn based; your own actions update instantly from their
-      // response, and the opponent's turn/hits arrive within a second.
-      if (status === 'fighting') return 1000;
+      // The fight is turn based. Your own actions update from their response;
+      // realtime, the hit deadline and the opponent's relayed action wake the
+      // cache right away, so this poll is only recovery. 1 s polling from two
+      // clients hit Base44's rate limit ("Rate limit exceeded" in matches).
+      if (status === 'fighting') return 2000;
       if (['matched', 'connecting', 'countdown'].includes(status)) return 1500;
       if (body?.queue?.status === 'waiting') return 3000;
       // If the arena temporarily vanished from cache during a room/network drop,
@@ -336,7 +338,9 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     const channelMatches = String(session.channel_id || '') === channelId;
     const hasWholePair = requiredIds.length === 2 && requiredIds.every((id) => currentById.has(id));
 
-    const roomHealthy = channelMatches && hasWholePair && session.status === 'connected';
+    // 'reconnecting' is a missed heartbeat (often a rate limit) while presence is
+    // still valid; rejoining the room then only adds more requests.
+    const roomHealthy = channelMatches && hasWholePair && ['connected', 'reconnecting'].includes(session.status);
     if (roomHealthy) joinAttempt.current = token;
     else {
       const joinDetail = { channelId, hostId, hostName: match.host_name || 'Player', aiBattle: true, matchId: String(match.id) };
@@ -388,6 +392,8 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       const detail = event?.detail || {};
       const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
       if (!sourcePlayerId || sourcePlayerId === localId || !ids.has(sourcePlayerId) || String(detail.matchId || '') !== matchId) return;
+      // A dodge ends the opponent's turn: fetch the new turn right away.
+      if (String(detail.kind || '') === 'pvp_dodge') { refreshSignal.current?.(); return; }
       if (!['pvp_cast', 'pvp_melee', 'ai_battle_card_cast'].includes(String(detail.kind || ''))) return;
       window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
       refreshSignal.current?.();

@@ -208,6 +208,9 @@ test('fight polls only write positions when the fighter actually moved', async (
   writes = [];
   await battle('status', { client_session_id: 'session-a', position: { x: 0, z: 5 } }, 'a');
   assert.equal(writes.filter((w) => w.name === 'AIBattleMatch').length, 0);
+  // Shuffling in place is not worth a write under Base44's rate limit.
+  await battle('status', { client_session_id: 'session-a', position: { x: 0.3, z: 4.8 } }, 'a');
+  assert.equal(writes.filter((w) => w.name === 'AIBattleMatch').length, 0);
   await battle('status', { client_session_id: 'session-a', position: { x: 1.2, z: 4 } }, 'a');
   assert.deepEqual(rows('AIBattleMatch')[0].positions.a, { x: 1.2, z: 4 });
 });
@@ -288,6 +291,44 @@ for (const action of ['cancel', 'forfeit']) {
     assert.equal(opponentView.match, null);
   });
 }
+
+// The arena re-sends a skill or melee that got "Rate limit exceeded". The same
+// cast_id must return the first result, never act twice or fail as out of turn.
+test('a combat action retried with the same cast_id is applied once', async () => {
+  const bolt = { slot: 0, effect_id: 'bolt', clip_name: 'Bolt', atb_cost: 40, range_m: 18, hit_ms: 400, cooldown_ms: 3000, base_damage: 60, animation_effect: { id: 'bolt' } };
+  prefightMatch('fighting', {
+    fight_starts_at: iso(-5000), fight_ends_at: iso(170000), positions: { a: { x: 0, z: 5 }, b: { x: 0, z: -5 } },
+    atb: { a: { value: 100, at: iso(), turn: true }, b: { value: 0, at: iso(), turn: false } },
+    cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], disconnects: {},
+    players: [{ id: 'a', gender: 'male', hp: 1000, max_hp: 1000, skills: [bolt] }, { id: 'b', gender: 'male', hp: 1000, max_hp: 1000, skills: [] }],
+  });
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+  const request = { match_id: 'm1', slot: 0, cast_id: 'bolt-1', attacker_pos: { x: 0, z: 5 }, target_pos: { x: 0, z: -5 } };
+
+  const first = await battle('use_skill', request, 'a');
+  assert.equal(first.match.last_cast.damage, first.cast.damage);
+  writes = [];
+  const again = await battle('use_skill', request, 'a');
+  assert.equal(again.cast.repeat, true);
+  assert.equal(again.cast.cast_id, 'bolt-1');
+  assert.equal(again.cast.damage, first.cast.damage);
+  assert.equal(again.cast.resolves_at, first.cast.resolves_at);
+  assert.deepEqual(again.cast.animation_effect, { id: 'bolt' });
+  assert.equal(rows('AIBattleMatch')[0].pending_hits.length, 1, 'cast once');
+  assert.equal(writes.filter((w) => w.name === 'AIBattleMatch').length, 0);
+
+  // Now it is b's turn: a melee strike, retried.
+  const melee = await battle('basic_attack', { match_id: 'm1', cast_id: 'melee-1' }, 'b');
+  const hpAfter = rows('AIBattleMatch')[0].players.find((p) => p.id === 'a').hp;
+  const meleeAgain = await battle('basic_attack', { match_id: 'm1', cast_id: 'melee-1' }, 'b');
+  assert.equal(meleeAgain.cast.repeat, true);
+  assert.equal(meleeAgain.cast.damage, melee.cast.damage);
+  assert.equal(rows('AIBattleMatch')[0].players.find((p) => p.id === 'a').hp, hpAfter, 'damage applied once');
+  assert.equal(rows('AIBattleMatch')[0].hit_log.filter((h) => h.cast_id === 'melee-1').length, 1);
+
+  // A new cast_id is a new action and still follows the turn rules.
+  await battle('basic_attack', { match_id: 'm1', cast_id: 'melee-2' }, 'b', 409);
+});
 
 // Base44 rate-limits the whole app (HTTP 429). Queue polls must stay cheap.
 test('a waiting queue poll costs at most two database reads', async () => {
