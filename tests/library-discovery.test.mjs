@@ -30,7 +30,7 @@ test('card search spans games, uses the parent genre, and keeps owned/locked car
 test('the unfolding leaf stops at the actual Environment Hub right edge and above the footer',()=>{
   const frame=libraryScrollFrame({right:330,top:390,bottom:900,width:330,height:510},{right:577},{width:1400,height:900});
   assert.equal(frame.left+frame.width,577);
-  assert.equal(frame.top+frame.height,836);
+  assert.equal(frame.top+frame.height,900-48);
   assert.equal(frame.inline,false);
 });
 test('a narrow viewport uses an inline leaf instead of extending beyond the screen',()=>{

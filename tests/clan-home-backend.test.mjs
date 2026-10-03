@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { transformSync } from 'esbuild';
+import { buildSync } from 'esbuild';
 import vm from 'node:vm';
 
 const tables = {
@@ -31,10 +30,10 @@ const entities=new Proxy({}, { get:(_,name)=>({
 const handlers={};
 for(const name of ['clanOperations','clanSystem']){
   let handler;const module={exports:{}};
-  const source=readFileSync('base44/functions/'+name+'/entry.ts','utf8').replace(/^import .*;\n/,'');
-  vm.runInNewContext(transformSync(source,{loader:'ts',format:'cjs'}).code,{
+  const source=buildSync({entryPoints:['base44/functions/'+name+'/entry.ts'],bundle:true,write:false,format:'cjs',platform:'node',external:['npm:*']}).outputFiles[0].text;
+  vm.runInNewContext(source,{
     module,exports:module.exports,Response,Date,console:{warn(){},error(){},log(){}},Deno:{serve:value=>handler=value},
-    createClientFromRequest:req=>({auth:{me:async()=>users[req.headers.get('test-user')] || null},entities,asServiceRole:{entities}}),
+    require:()=>({createClientFromRequest:req=>({auth:{me:async()=>users[req.headers.get('test-user')] || null},entities,asServiceRole:{entities}})}),
   });
   handlers[name]=handler;
 }
