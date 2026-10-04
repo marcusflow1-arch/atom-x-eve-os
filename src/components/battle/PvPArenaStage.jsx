@@ -706,12 +706,23 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     ].map((pending) => pending.then((fighter) => {
       if (disposed) { fighter.runtime.dispose?.(); disposeArenaObjects(fighter.root); fighter.root.removeFromParent(); }
       return fighter;
-    }))).then(([localFighter, opponentFighter]) => {
+    }))).then(async ([localFighter, opponentFighter]) => {
       if (disposed) return;
       runtimes.current = { local: localFighter, opponent: opponentFighter };
       positions.current.local.set(0,0,localSide === 'host' ? SPAWN_Z : -SPAWN_Z);
       positions.current.opponent.set(0,0,opponentSide === 'host' ? SPAWN_Z : -SPAWN_Z);
-      addBar(localFighter,true); addBar(opponentFighter,false); setLoaded(2);
+      addBar(localFighter,true); addBar(opponentFighter,false);
+      // Do the expensive material/program compilation while the arena still says
+      // "Loading fighters". WebGL can otherwise compile a material on its first
+      // visible use and create a one-time hitch. This does not replace network
+      // prediction; it removes the separate first-render shader hitch.
+      try {
+        if (typeof renderer.compileAsync === 'function') await renderer.compileAsync(scene, camera);
+        else renderer.compile(scene, camera);
+      } catch (compileError) {
+        console.warn('[PvP arena] shader prewarm skipped', compileError);
+      }
+      if (!disposed) setLoaded(2);
     }).catch((e) => { if (!disposed) { console.error('[PvP arena] fighter load failed',e); setError('A fighter could not load.'); } });
 
     const resize = () => { const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);cssRenderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix(); }; resize();
