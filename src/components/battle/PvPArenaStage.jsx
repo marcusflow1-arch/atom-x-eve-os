@@ -1,3 +1,4 @@
+import {AvatarCustomizationRuntime} from '@/components/onboarding/customizationRuntime';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Flag, Play, X } from 'lucide-react';
@@ -145,8 +146,10 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
     console.warn('[PvP] Adam XE enhanced animation pack unavailable', error);
   }
   const assetRoot = gltf.scene;
-  scaleToHeight(assetRoot, 1.8 * Number(player.appearance?.height_scale || 1));
+  scaleToHeight(assetRoot, 1.8);
   applyCompanionAppearance(assetRoot, player.appearance || { gender: player.gender });
+  const customization = new AvatarCustomizationRuntime(assetRoot,{gender:female?'female':'male'});
+  await customization.update(player.appearance || {});
   assetRoot.traverse((node) => { if (node.isSkinnedMesh) node.frustumCulled = false; });
 
   let runtime, root, mixer = null;
@@ -232,6 +235,8 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
     } catch (error) { console.warn('[PvP] locomotion clip failed', key, error); }
   }));
 
+  const disposeRuntime = runtime.dispose.bind(runtime);
+  runtime.dispose = () => {customization.dispose();disposeRuntime();};
   return { player, side, female, root, model: assetRoot, runtime, mixer, head: findHead(assetRoot), position: new THREE.Vector3(0,0,spawnZ), baseY: root.position.y, yaw: side === 'host' ? Math.PI : 0, loaded: true, lastMoveKey: '', motion: '', lunge: null, recoil: null, chidori: null, knock: null, pendingReaction: null };
 }
 

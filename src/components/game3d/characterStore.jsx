@@ -107,7 +107,7 @@ export function createCharacter({ name, appearance, avatarConfig = {}, factionId
   if (!nameCheck.ok) throw new Error(`Invalid character name: ${nameCheck.reason}`);
   const id = `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const character = {
-    ...Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatarConfig[k]!==undefined).map(k=>[k,avatarConfig[k]])), appearance_version:3,
+    ...Object.fromEntries([...Object.keys(DEFAULT_AVATAR_APPEARANCE),'gender','female_model_variant','model_url'].filter(k=>avatarConfig[k]!==undefined).map(k=>[k,avatarConfig[k]])), appearance_version:4,
     id,
     name: nameCheck.value,
     ...makeAXECharacterEntryFields({ factionId, startingWeaponStyleId }),
