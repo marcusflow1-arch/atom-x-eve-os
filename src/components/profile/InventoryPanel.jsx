@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Grid, Globe, Sword, Shield, Zap, Sparkles, ScrollText, Hammer, Database, 
@@ -32,6 +32,35 @@ const RarityBadge = ({ rarity }) => {
 
 const SwordsIcon = ({ className }) => <Sword className={className} />;
 
+function InventoryFrameLine({ bottom = false }) {
+    const id = useId();
+    return (
+        <svg
+            className={`h-[30px] w-full ${bottom ? 'rotate-180' : ''}`}
+            viewBox="0 0 400 30"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+        >
+            <defs>
+                <linearGradient id={`${id}-upper`} x1="100" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stopColor="#b9f3ff" stopOpacity="0" />
+                    <stop offset=".36" stopColor="#b9f3ff" stopOpacity=".65" />
+                    <stop offset=".5" stopColor="#ecfbff" stopOpacity=".95" />
+                    <stop offset=".64" stopColor="#b9f3ff" stopOpacity=".65" />
+                    <stop offset="1" stopColor="#b9f3ff" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id={`${id}-base`}>
+                    <stop offset="0" stopColor="#b9dce7" stopOpacity=".22" />
+                    <stop offset=".5" stopColor="#d4f6ff" stopOpacity=".75" />
+                    <stop offset="1" stopColor="#b9dce7" stopOpacity=".22" />
+                </linearGradient>
+            </defs>
+            <path d="M0 16 H184 L187 13 L200 27 L213 13 L216 16 H400" fill="none" stroke={`url(#${id}-base)`} strokeWidth="1" vectorEffect="non-scaling-stroke" />
+            <path d="M100 12 H186 L187 13 L200 1 L213 13 L214 12 H300" fill="none" stroke={`url(#${id}-upper)`} strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        </svg>
+    );
+}
+
 // Helper to ensure we have game and genre data
 const augmentItem = (item) => {
     const details = item.itemId ? (itemData[item.itemId] || item) : item;
@@ -54,7 +83,7 @@ const augmentItem = (item) => {
     return { ...details, ...item, game, genre };
 };
 
-export default function InventoryPanel({ inventory = [], capacity, profile, onClose, onEquip, compact = false, embedded = false }) {
+export default function InventoryPanel({ inventory = [], capacity, profile, onClose, onEquip, compact = false, embedded = false, dashboardDocked = false }) {
     const [subTabGenre, setSubTabGenre] = useState(null);
     const [subTabGame, setSubTabGame] = useState(null);
     const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
@@ -99,16 +128,22 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
     }, [processedInventory]);
 
     return (
-        <div className={`w-full h-full flex items-center justify-center relative ${compact ? 'p-2' : 'p-8'}`}>
+        <div className={`w-full h-full flex items-center justify-center relative ${dashboardDocked ? 'p-0' : compact ? 'p-2' : 'p-8'}`}>
             {/* Main Container - Liquid Glass */}
-            <div className={`w-full h-full max-w-[1600px] flex border border-white/10 shadow-2xl relative overflow-hidden ${compact ? 'gap-3 p-3 rounded-2xl' : 'gap-8 p-8 rounded-3xl'}`}
+            <div className={`w-full h-full flex shadow-2xl relative overflow-hidden ${dashboardDocked ? 'max-w-none gap-5 px-5 py-4 rounded-none border-x border-white/10' : compact ? 'max-w-[1600px] gap-3 p-3 rounded-2xl border border-white/10' : 'max-w-[1600px] gap-8 p-8 rounded-3xl border border-white/10'}`}
                 style={{
-                    background: 'rgba(15, 23, 42, 0.6)', 
+                    background: dashboardDocked ? 'rgba(10, 16, 28, 0.54)' : 'rgba(15, 23, 42, 0.6)', 
                     backdropFilter: 'blur(40px) saturate(180%)',
                     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                    boxShadow: dashboardDocked ? 'inset 0 0 28px rgba(145,220,255,0.025)' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
                 }}
             >
+                {dashboardDocked && (
+                    <>
+                        <div className="pointer-events-none absolute left-0 right-0 top-0 z-30"><InventoryFrameLine /></div>
+                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-30"><InventoryFrameLine bottom /></div>
+                    </>
+                )}
                 {/* Close Button - positioned absolutely within the glass container */}
                 {!embedded && (
                   <button
