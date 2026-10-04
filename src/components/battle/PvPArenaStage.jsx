@@ -277,6 +277,11 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // shown twice, whichever path (local click, peer relay, server poll) arrives
   // first.
   const playedCasts = useRef(new Set());
+  // Local ability input is predicted visually before the server round-trip.
+  // The server still owns HP, cooldowns, ATB, turn order and whether the hit is
+  // accepted; this set only prevents the accepted response from restarting the
+  // exact same animation a second time.
+  const predictedLocalCasts = useRef(new Set());
   const shownSlashes = useRef(new Set());
   const shownHits = useRef(null);
   const menuBlockedRef = useRef(false);
@@ -392,7 +397,10 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const targetId = casterKey === 'local' ? opponentRef.current?.id : user?.id;
     const effectId = cast.effect_id || skill?.effect_id || '';
     const chidori = isChidoriCast(skill || { clip_name: cast.clip_name }, effectId);
-    const started = skill ? playSkill(caster, skill, targetId, facingYaw, { castId, damage: cast.damage }) : false;
+    const wasPredictedLocally = casterKey === 'local' && castId && predictedLocalCasts.current.delete(castId);
+    const started = wasPredictedLocally
+      ? true
+      : (skill ? playSkill(caster, skill, targetId, facingYaw, { castId, damage: cast.damage }) : false);
     if (!started && caster && !chidori) caster.lunge = { start: performance.now() };
     if (skill) setLastCastSlot((state) => ({ ...state, [casterKey]: Number(skill.slot) }));
     if (chidori) {
@@ -491,6 +499,17 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (a.distanceTo(b) > Number(skill.range_m || 3) + 1.5) { setError('Out of range.'); return false; }
     setError('');
     const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
+    const localFighter = runtimes.current.local;
+    // Start the authored attack on the input frame. Previously the client
+    // awaited `use_skill` before calling showCast(), so every ability inherited
+    // the full browser -> Base44 -> database -> browser round-trip. That is the
+    // large delay visible in the PvP recording and is unrelated to shader
+    // compilation. No damage is predicted here.
+    if (localFighter && playSkill(localFighter, skill, opponent?.id, facingYaw, { castId, predicted: true })) {
+      predictedLocalCasts.current.add(String(castId));
+      setLastCastSlot((state) => ({ ...state, local: Number(skill.slot) }));
+    }
     actionPending.current = true;
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
@@ -499,8 +518,10 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, missed: Boolean(cast.missed), stun_ms: Number(cast.stun_ms || 0), targetPlayerId: opponent?.id } }));
       return true;
     } catch (e) {
-      // Only report the rejection. Never force idle here: that would cut off an
-      // earlier ability that is still animating.
+      predictedLocalCasts.current.delete(String(castId));
+      // A rare server rejection can leave the predicted cosmetic animation
+      // finishing, but HP/ATB/cooldowns never change unless the server accepts.
+      // This is preferable to adding network latency to every valid input.
       setError(e.message || 'Skill rejected.');
       return false;
     } finally { actionPending.current = false; }
