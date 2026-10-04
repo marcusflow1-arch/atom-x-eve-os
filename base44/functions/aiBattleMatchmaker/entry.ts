@@ -123,6 +123,7 @@ function publicQueue(row: Row | null) {
   return {
     id: row.id, mode: row.mode, status: row.status, queued_at: row.queued_at,
     match_id: row.match_id || null, host_id: row.host_id || null, opponent_id: row.opponent_id || null,
+    preferred_opponent_id: row.preferred_opponent_id || null,
     connected_at: row.connected_at || null, ready_at: row.ready_at || null,
     avatar_gender: row.avatar_gender === 'female' ? 'female' : 'male',
   };
@@ -252,6 +253,7 @@ async function recoverQueueForMatch(svc: any, userId: string, match: Row, client
   const opponentId = (match.player_ids || []).map(String).find((id: string) => id !== String(userId)) || '';
   const patch: Row = {
     status: 'matched', match_id: String(match.id), host_id: String(match.host_id || ''), opponent_id: opponentId,
+    preferred_opponent_id: existing?.preferred_opponent_id || '',
     last_seen_at: stamp, connected_at: stamp, connected_session_id: clientSessionId || existing?.client_session_id || '',
     client_session_id: clientSessionId || existing?.client_session_id || '',
   };
