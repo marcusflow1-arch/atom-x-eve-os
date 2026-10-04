@@ -46,7 +46,7 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child{
   position:absolute!important;
-  top:9px!important;
+  top:52px!important;
   bottom:auto!important;
   left:34px!important;
   right:auto!important;
@@ -58,6 +58,7 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   text-shadow:none!important;
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child h4{
+  position:relative!important;
   width:24px!important;
   height:24px!important;
   margin:0!important;
@@ -66,6 +67,23 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   font-size:0!important;
   line-height:0!important;
   color:transparent!important;
+}
+[data-luna-environment-hub] > button:first-of-type > div:last-child h4::before{
+  content:"ENVIRONMENT HUB";
+  position:absolute;
+  left:50%;
+  bottom:29px;
+  width:88px;
+  transform:translateX(-50%);
+  color:rgba(232,244,249,.48);
+  font-size:7px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:.13em;
+  text-align:center;
+  white-space:nowrap;
+  text-transform:uppercase;
+  pointer-events:none;
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child h4 svg{
   width:16px!important;
@@ -78,15 +96,16 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   display:none!important;
 }
 
-/* The existing Memories control remains the real clickable control. Move it
-   back over the Environment rail so it sits to the RIGHT of the short line. */
+/* The existing Memories control remains the real clickable control. It sits to
+   the RIGHT of the short upper line and uses the same icon/label baseline as
+   Environment Hub. */
 div:has(> [data-luna-environment-hub]) + div{
   position:relative!important;
 }
 div:has(> [data-luna-environment-hub]) + div > button:first-child{
   position:absolute!important;
   left:-56px!important;
-  top:8px!important;
+  top:50px!important;
   z-index:35!important;
   width:26px!important;
   height:26px!important;
@@ -105,7 +124,21 @@ div:has(> [data-luna-environment-hub]) + div > button:first-child > span:first-c
   opacity:.72;
 }
 div:has(> [data-luna-environment-hub]) + div > button:first-child > span:last-child{
-  display:none!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  bottom:30px!important;
+  width:62px!important;
+  transform:translateX(-50%)!important;
+  color:rgba(232,244,249,.48)!important;
+  font-size:7px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  letter-spacing:.13em!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  text-transform:uppercase!important;
+  pointer-events:none!important;
 }
 
 .luna-environment-rollout{
