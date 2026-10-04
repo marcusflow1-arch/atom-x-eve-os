@@ -157,11 +157,9 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId }) {
     const closeOnOutside = (event) => {
       const trigger = document.querySelector('[data-luna-environment-hub]');
       if (panelRef.current?.contains(event.target)) return;
-      if (trigger?.contains(event.target)) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation?.();
-      }
+      // The trigger owns its own toggle. Do not pre-close it on pointer-down,
+      // otherwise its following click immediately opens the rollout again.
+      if (trigger?.contains(event.target)) return;
       onClose?.();
     };
 
