@@ -1,281 +1,464 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
   Brain,
-  ChevronRight,
-  CircleDot,
+  Compass,
   Crown,
   Eye,
+  Feather,
   Heart,
   Lightbulb,
   Lock,
+  Minus,
   Network,
   Plus,
+  RotateCcw,
   Shield,
   Sparkles,
   Swords,
   Target,
-  Trophy,
   Users,
+  Wind,
   Zap,
 } from 'lucide-react';
-import AvatarCombatStatsPanel from '@/components/avatar/AvatarCombatStatsPanel';
 import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
-import { useAuth } from '@/components/auth/AuthContext';
 import { showError } from '@/components/error/ErrorToast';
+import './avatar-progression-fantasy.css';
 
-const STAT_CAP = 200;
 const KNOWLEDGE_CAP = 300;
+const EMPTY_DRAFT = Object.freeze({ strength: 0, defense: 0, vitality: 0, agility: 0, intelligence: 0, wisdom: 0 });
 
-const DEFAULT_STATS = { hp: 100, strength: 10, intelligence: 10, will: 10, tenacity: 10 };
-
-const STAT_DEFS = [
-  { key: 'hp', label: 'HP', icon: Heart, step: 10, accent: 'text-rose-300', description: 'Raises total avatar health and survival ceiling.' },
-  { key: 'strength', label: 'Strength', icon: Swords, step: 1, accent: 'text-orange-300', description: 'Improves physical power and close-range output.' },
-  { key: 'intelligence', label: 'Intelligence', icon: Brain, step: 1, accent: 'text-violet-300', description: 'Improves reasoning, ability scaling and learned behavior.' },
-  { key: 'will', label: 'Will', icon: Zap, step: 1, accent: 'text-cyan-300', description: 'Improves resilience, resource control and recovery.' },
-  { key: 'tenacity', label: 'Tenacity', icon: Shield, step: 1, accent: 'text-amber-300', description: 'Improves resistance to control, stagger and pressure.' },
+const ATTRIBUTES = [
+  {
+    key: 'strength', label: 'Strength', icon: Swords, color: '#ff827d', glow: 'rgba(255,93,89,.22)',
+    description: 'Increases attack power and weapon effectiveness.',
+    effects: ['Attack Power', 'Weapon Scaling', 'Physical Damage'],
+    recommended: 'Ideal for direct, high-damage playstyles.',
+  },
+  {
+    key: 'defense', label: 'Defense', icon: Shield, color: '#79cfff', glow: 'rgba(64,169,255,.22)',
+    description: 'Increases armor and reduces incoming damage.',
+    effects: ['Armor Rating', 'Damage Reduction', 'Survivability'],
+    recommended: 'Recommended for tank and front-line roles.',
+  },
+  {
+    key: 'vitality', label: 'Vitality', icon: Heart, color: '#70edaa', glow: 'rgba(61,230,142,.22)',
+    description: 'Increases maximum HP and overall survivability.',
+    effects: ['Maximum HP', 'HP Reserve', 'Status Endurance'],
+    recommended: 'Ideal for longer fights and sustained combat.',
+  },
+  {
+    key: 'agility', label: 'Agility', icon: Feather, color: '#e7c46d', glow: 'rgba(231,186,87,.22)',
+    description: 'Increases dodge rating and attack speed.',
+    effects: ['Dodge Rating', 'Attack Speed', 'Movement Readiness'],
+    recommended: 'Recommended for fast, evasive playstyles.',
+  },
+  {
+    key: 'intelligence', label: 'Intelligence', icon: Eye, color: '#cf88ff', glow: 'rgba(170,83,255,.22)',
+    description: 'Reduces cooldowns and improves skill efficiency.',
+    effects: ['Cooldown Reduction', 'Skill Efficiency', 'Resource Control'],
+    recommended: 'Ideal for skill-focused and caster playstyles.',
+  },
+  {
+    key: 'wisdom', label: 'Wisdom', icon: Sparkles, color: '#8ddfff', glow: 'rgba(89,202,255,.22)',
+    description: 'Increases ability damage and effect strength.',
+    effects: ['Ability Damage', 'Effect Strength', 'Control Presence'],
+    recommended: 'Recommended for support and control roles.',
+  },
 ];
 
 const SKILL_BRANCHES = [
-  { key: 'combat_reasoning', title: 'Combat Reasoning', icon: Swords, tint: 'from-rose-400/20 to-orange-300/5', effect: 'Target analysis, timing, counter logic and threat prioritization.' },
-  { key: 'tactical_planning', title: 'Tactical Planning', icon: Target, tint: 'from-cyan-400/20 to-blue-300/5', effect: 'Positioning, party decisions, resource planning and objective logic.' },
-  { key: 'social_intelligence', title: 'Social Intelligence', icon: Users, tint: 'from-pink-400/20 to-violet-300/5', effect: 'Dialogue awareness, teamwork, player preference and social memory.' },
-  { key: 'exploration', title: 'Exploration', icon: Eye, tint: 'from-emerald-400/20 to-teal-300/5', effect: 'Discovery behavior, environmental awareness and hidden-path curiosity.' },
-  { key: 'memory_recall', title: 'Memory & Recall', icon: Network, tint: 'from-violet-400/20 to-indigo-300/5', effect: 'Long-term pattern recall, cross-game memory and learned context.' },
-  { key: 'creative_synthesis', title: 'Creative Synthesis', icon: Lightbulb, tint: 'from-amber-300/20 to-yellow-200/5', effect: 'Combines learned concepts into new strategies and novel responses.' },
+  {
+    key: 'combat_reasoning', title: 'Combat Reasoning', verbs: 'Analyze · Adapt · Overcome', icon: Swords,
+    color: '#ff8079', glow: 'rgba(255,91,87,.20)',
+    description: 'Develop combat analysis, risk assessment, counter logic and adaptive decision-making.',
+  },
+  {
+    key: 'tactical_planning', title: 'Tactical Planning', verbs: 'Plan · Coordinate · Execute', icon: Shield,
+    color: '#78cfff', glow: 'rgba(64,169,255,.20)',
+    description: 'Improve strategic thinking, positioning, resource management and long-term planning.',
+  },
+  {
+    key: 'social_intelligence', title: 'Social Intelligence', verbs: 'Understand · Connect · Influence', icon: Users,
+    color: '#77e7a7', glow: 'rgba(61,230,142,.20)',
+    description: 'Enhance communication, empathy, persuasion, teamwork and relationship awareness.',
+  },
+  {
+    key: 'exploration', title: 'Exploration', verbs: 'Discover · Learn · Adapt', icon: Compass,
+    color: '#e8c46d', glow: 'rgba(231,186,87,.20)',
+    description: 'Expand curiosity, pattern recognition, environmental awareness and hidden-path discovery.',
+  },
+  {
+    key: 'memory_recall', title: 'Memory & Recall', verbs: 'Remember · Organize · Apply', icon: Brain,
+    color: '#ca87ff', glow: 'rgba(170,83,255,.20)',
+    description: 'Increase long-term pattern recall, cross-game memory, information retrieval and learned context.',
+  },
+  {
+    key: 'creative_synthesis', title: 'Creative Synthesis', verbs: 'Combine · Imagine · Create', icon: Lightbulb,
+    color: '#8adfff', glow: 'rgba(89,202,255,.20)',
+    description: 'Combine learned concepts into new strategies, novel connections and original problem-solving.',
+  },
 ];
 
-function xpToNextAvatarLevel(level) {
-  return Math.round(100 * Math.pow(Math.max(1, Number(level) || 1), 1.35));
-}
+const KNOWLEDGE_MILESTONES = [
+  { level: 1, label: 'Foundation', detail: 'Neural seed' },
+  { level: 5, label: 'Avatar Options', detail: 'Knowledge reward' },
+  { level: 10, label: 'New Capabilities', detail: 'Neural cache' },
+  { level: 25, label: 'Knowledge Cache', detail: 'Advanced reward' },
+  { level: 50, label: 'Cognition Core', detail: 'Major reward' },
+  { level: 100, label: 'Advanced Nodes', detail: 'Mastery depth' },
+  { level: 300, label: 'Mastery Path', detail: 'Knowledge cap' },
+];
 
 function xpToNextKnowledgeLevel(level) {
   return Math.round(140 * Math.pow(Math.max(1, Number(level) || 1), 1.18));
 }
 
-function statReward(level) {
-  if (level === 1) return { points: 1, label: '1 Stat Point', bonus: 'Starter Core' };
-  if (level % 50 === 0) return { points: 4, label: '4 Stat Points', bonus: 'Ascendant Core Cache' };
-  if (level % 25 === 0) return { points: 3, label: '3 Stat Points', bonus: 'Avatar Core Cache' };
-  if (level % 10 === 0) return { points: 2, label: '2 Stat Points', bonus: 'Progression Cache' };
-  if (level % 5 === 0) return { points: 1, label: '1 Stat Point', bonus: 'Season Reward' };
-  return null;
-}
-
 function knowledgeReward(level) {
-  if (level === 1) return { points: 1, label: '1 Skill Point', bonus: 'Neural Seed' };
-  if (level % 50 === 0) return { points: 4, label: '4 Skill Points', bonus: 'Cognition Core' };
-  if (level % 25 === 0) return { points: 3, label: '3 Skill Points', bonus: 'Knowledge Cache' };
-  if (level % 10 === 0) return { points: 2, label: '2 Skill Points', bonus: 'Neural Cache' };
-  if (level % 5 === 0) return { points: 1, label: '1 Skill Point', bonus: 'Knowledge Reward' };
-  return null;
+  if (level === 1) return 1;
+  if (level % 50 === 0) return 4;
+  if (level % 25 === 0) return 3;
+  if (level % 10 === 0) return 2;
+  if (level % 5 === 0) return 1;
+  return 0;
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, Number(value) || min));
-}
+const pct = value => `${(Number(value || 0) * 100).toFixed(1)}%`;
+const num = value => Number(value || 0).toLocaleString();
 
-function ProgressRail({ cap, currentLevel, claimed = [], rewardForLevel, onClaim, busy, typeLabel }) {
-  const levels = useMemo(() => Array.from({ length: cap }, (_, index) => index + 1), [cap]);
+function LevelRing({ level }) {
   return (
-    <div className="relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-white/[0.025]">
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.055] px-5 py-4">
-        <div>
-          <p className="text-[8px] font-black uppercase tracking-[.22em] text-white/30">Seasonal Progression Timeline</p>
-          <h3 className="mt-1 text-sm font-bold text-white/85">{typeLabel} 1–{cap}</h3>
-        </div>
-        <div className="text-right"><span className="text-[8px] uppercase tracking-wider text-white/25">Current</span><div className="text-lg font-black text-white">Lv {currentLevel}</div></div>
-      </div>
-      <div className="overflow-x-auto px-5 py-5" style={{ scrollbarWidth: 'thin' }}>
-        <div className="relative flex min-w-max items-start gap-2 pb-2">
-          <div className="absolute left-8 right-8 top-[24px] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-          {levels.map((level) => {
-            const reward = rewardForLevel(level);
-            const reached = level <= currentLevel;
-            const wasClaimed = claimed.includes(level);
-            const major = Boolean(reward);
-            return (
-              <div key={level} className={`relative z-10 flex w-[68px] shrink-0 flex-col items-center ${major ? 'min-h-[148px]' : 'min-h-[82px]'}`}>
-                <div className={`grid h-12 w-12 place-items-center rounded-full border text-[10px] font-black transition ${reached ? 'border-cyan-200/30 bg-cyan-300/[0.10] text-white shadow-[0_0_24px_rgba(103,232,249,.08)]' : 'border-white/[0.06] bg-[#080b11] text-white/20'}`}>
-                  {reached ? level : <Lock className="h-3 w-3" />}
-                </div>
-                {major ? (
-                  <div className="mt-2 w-full text-center">
-                    <div className="text-[7px] font-black uppercase tracking-[.08em] text-white/55">{reward.label}</div>
-                    <div className="mt-0.5 text-[7px] leading-3 text-white/25">{reward.bonus}</div>
-                    {reached && (
-                      <button
-                        type="button"
-                        disabled={busy || wasClaimed}
-                        onClick={() => onClaim(level, reward)}
-                        className={`mt-2 rounded-full px-2 py-1 text-[7px] font-black uppercase tracking-wider transition ${wasClaimed ? 'bg-emerald-300/[0.08] text-emerald-200/45' : 'bg-white text-black hover:bg-cyan-50'} disabled:cursor-default`}
-                      >
-                        {wasClaimed ? 'Claimed' : 'Claim'}
-                      </button>
-                    )}
-                  </div>
-                ) : <span className="mt-2 text-[7px] text-white/18">Level</span>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    <div className="axe-level-ring" aria-label={`Level ${level}`}>
+      <span><small>Lv</small><strong>{level}</strong></span>
     </div>
   );
 }
 
-function StatCard({ definition, value, points, busy, onAllocate }) {
-  const Icon = definition.icon;
+function ResultRow({ icon: Icon, value, label }) {
   return (
-    <div className="group rounded-[20px] border border-white/[0.055] bg-white/[0.025] p-4 transition hover:bg-white/[0.04]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.045] ${definition.accent}`}><Icon className="h-4 w-4" /></div>
-          <div className="min-w-0"><h4 className="text-sm font-black text-white">{definition.label}</h4><p className="mt-1 text-[10px] leading-4 text-white/30">{definition.description}</p></div>
-        </div>
-        <div className="text-right"><span className="text-[8px] uppercase tracking-wider text-white/25">Current</span><div className="text-xl font-black tabular-nums text-white">{value}</div></div>
-      </div>
-      <button
-        type="button"
-        disabled={busy || points <= 0}
-        onClick={() => onAllocate(definition)}
-        className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-white/[0.055] text-[8px] font-black uppercase tracking-[.14em] text-white/55 transition hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-25"
-      >
-        <Plus className="h-3 w-3" /> +{definition.step} {definition.label} · 1 Point
-      </button>
+    <div className="axe-result">
+      <Icon size={20} aria-hidden="true" />
+      <div><strong>{value}</strong><small>{label}</small></div>
     </div>
+  );
+}
+
+function AttributeCard({ definition, current, pending, available, locked, onChange }) {
+  const Icon = definition.icon;
+  const displayValue = current + pending;
+  return (
+    <article
+      className="axe-attribute-card"
+      style={{ '--attr-color': definition.color, '--attr-glow': definition.glow }}
+    >
+      <div className="axe-attribute-icon"><Icon size={30} aria-hidden="true" /></div>
+      <h3>{definition.label}</h3>
+      <div className="axe-attribute-value">{displayValue}</div>
+      <div className="axe-attribute-base">Saved {current}</div>
+      <div className="axe-attribute-stepper" aria-label={`${definition.label} allocation`}>
+        <button type="button" aria-label={`Remove pending ${definition.label} point`} disabled={locked || pending <= 0} onClick={() => onChange(definition.key, -1)}><Minus size={14} /></button>
+        <span>{displayValue}</span>
+        <button type="button" aria-label={`Add ${definition.label} point`} disabled={locked || available <= 0} onClick={() => onChange(definition.key, 1)}><Plus size={14} /></button>
+      </div>
+      <p className="axe-attribute-desc">{definition.description}</p>
+      <div className="axe-attribute-effects">
+        <b>Key effects</b>
+        {definition.effects.map(effect => <span key={effect}>{effect}</span>)}
+      </div>
+      <div className="axe-attribute-rec"><b>Recommended</b>{definition.recommended}</div>
+    </article>
   );
 }
 
 function SkillBranch({ branch, rank, points, busy, onAllocate }) {
   const Icon = branch.icon;
-  const maxRank = 5;
+  const nodes = [1, 2, 3, 4, 5];
   return (
-    <div className={`relative overflow-hidden rounded-[22px] border border-white/[0.06] bg-gradient-to-br ${branch.tint} p-4`}>
-      <div className="absolute inset-0 bg-[#080b12]/78" />
-      <div className="relative">
-        <div className="flex items-start gap-3"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.05]"><Icon className="h-4 w-4 text-white/75" /></div><div><h4 className="text-sm font-black text-white">{branch.title}</h4><p className="mt-1 text-[10px] leading-4 text-white/32">{branch.effect}</p></div></div>
-        <div className="mt-4 flex items-center gap-2">
-          {Array.from({ length: maxRank }, (_, index) => index + 1).map((node) => (
-            <div key={node} className={`relative grid h-9 w-9 place-items-center rotate-45 border transition ${node <= rank ? 'border-cyan-200/45 bg-cyan-300/[0.14] shadow-[0_0_18px_rgba(103,232,249,.12)]' : node === rank + 1 ? 'border-white/20 bg-white/[0.055]' : 'border-white/[0.055] bg-black/20'}`}>
-              <span className="-rotate-45 text-[8px] font-black text-white/65">{node}</span>
-            </div>
-          ))}
-          <div className="ml-auto text-right"><span className="text-[7px] uppercase tracking-wider text-white/25">Rank</span><div className="text-sm font-black text-white">{rank}/{maxRank}</div></div>
-        </div>
-        <button
-          type="button"
-          disabled={busy || points <= 0 || rank >= maxRank}
-          onClick={() => onAllocate(branch)}
-          className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-white/[0.055] text-[8px] font-black uppercase tracking-[.14em] text-white/55 transition hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-25"
-        >
-          <Plus className="h-3 w-3" /> {rank >= maxRank ? 'Branch Mastered' : 'Unlock Next Node · 1 Skill Point'}
-        </button>
+    <article className="axe-branch" style={{ '--branch-color': branch.color, '--branch-glow': branch.glow }}>
+      <div className="axe-branch-icon"><Icon size={31} aria-hidden="true" /></div>
+      <h3>{branch.title}</h3>
+      <div className="axe-branch__verbs">{branch.verbs}</div>
+      <div className="axe-node-tree" aria-label={`${branch.title} nodes`}>
+        {nodes.map(node => {
+          const unlocked = node <= rank;
+          const next = node === rank + 1;
+          return (
+            <button
+              key={node}
+              type="button"
+              className={`axe-node ${unlocked ? 'is-unlocked' : ''} ${next ? 'is-next' : ''}`}
+              disabled={busy || unlocked || !next || points <= 0}
+              onClick={() => next && onAllocate(branch)}
+              aria-label={unlocked ? `${branch.title} node ${node} unlocked` : next ? `Unlock ${branch.title} node ${node}` : `${branch.title} node ${node} locked`}
+            >
+              {unlocked ? <Sparkles size={15} /> : next && points > 0 ? <Plus size={15} /> : <Lock size={14} />}
+            </button>
+          );
+        })}
       </div>
-    </div>
+      <div className="axe-branch__rank">Rank {rank}/5</div>
+      <p className="axe-branch__desc">{branch.description}</p>
+    </article>
+  );
+}
+
+function KnowledgeRail({ level, claimed, busy, onClaim }) {
+  return (
+    <section className="axe-knowledge-rail" aria-label="Knowledge level progression">
+      <div className="axe-knowledge-rail__title">
+        <h3>Knowledge Level Progression</h3>
+        <span>Current · Lv {level}</span>
+      </div>
+      <div className="axe-milestones">
+        {KNOWLEDGE_MILESTONES.map(milestone => {
+          const reached = level >= milestone.level;
+          const current = level === milestone.level || (level > milestone.level && !KNOWLEDGE_MILESTONES.some(other => other.level > milestone.level && other.level <= level));
+          const reward = knowledgeReward(milestone.level);
+          const wasClaimed = claimed.includes(milestone.level);
+          const claimable = reached && reward > 0 && !wasClaimed;
+          return (
+            <div key={milestone.level} className={`axe-milestone ${reached ? 'is-reached' : ''} ${current ? 'is-current' : ''}`}>
+              <div className="axe-milestone__orb">{reached ? milestone.level : <Lock size={13} />}</div>
+              <strong>{milestone.label}</strong>
+              <small>{milestone.detail}</small>
+              {reward > 0 && reached && (
+                <button type="button" disabled={busy || wasClaimed} onClick={() => claimable && onClaim(milestone.level)}>{wasClaimed ? 'Claimed' : `Claim +${reward}`}</button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
 export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill' }) {
-  const { user } = useAuth();
   const [tab, setTab] = useState(initialTab === 'stats' ? 'stats' : 'skill');
-  const {state,isLoading:loading,error,refetch,save,saving:busy}=useAvatarCombatStats();
-  const progression=state?.progression;
+  const [draft, setDraft] = useState({ ...EMPTY_DRAFT });
+  const [savedMessage, setSavedMessage] = useState('');
+  const { state, isLoading: loading, error, refetch, save, saving: busy } = useAvatarCombatStats();
+  const progression = state?.progression;
+  const combat = state?.combat;
 
-  useEffect(() => {
-    setTab(initialTab === 'stats' ? 'stats' : 'skill');
-  }, [initialTab]);
-
+  useEffect(() => setTab(initialTab === 'stats' ? 'stats' : 'skill'), [initialTab]);
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = previous; };
-  }, []);
+    const key = event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose?.();
+      }
+    };
+    window.addEventListener('keydown', key, true);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', key, true);
+    };
+  }, [onClose]);
+  useEffect(() => {
+    setDraft({ ...EMPTY_DRAFT });
+  }, [state?.revision]);
+
+  const pendingTotal = useMemo(() => Object.values(draft).reduce((sum, value) => sum + Number(value || 0), 0), [draft]);
+  const availableAfterDraft = Math.max(0, Number(state?.available || 0) - pendingTotal);
+  const allocations = state?.allocations || EMPTY_DRAFT;
+
+  const preview = useMemo(() => {
+    if (!combat) return null;
+    return {
+      maxHp: Number(combat.max_hp || 0) + draft.vitality * 25,
+      armor: Number(combat.defense || 0) + draft.defense * 8,
+      attack: Number(combat.attack || 0) + draft.strength * 7,
+      attackSpeed: Number(combat.attack_speed || 1) + draft.agility * 0.002,
+      cooldown: Math.min(.4, Number(combat.cooldown_reduction || 0) + draft.intelligence * 0.001),
+      ability: Number(combat.ability_damage_bonus || 0) + draft.wisdom * 0.002,
+      dodgeRatingGain: draft.agility * 3,
+    };
+  }, [combat, draft]);
+
+  const adjustDraft = (key, delta) => {
+    setSavedMessage('');
+    setDraft(current => {
+      const currentValue = Number(current[key] || 0);
+      if (delta > 0) {
+        const used = Object.values(current).reduce((sum, value) => sum + Number(value || 0), 0);
+        if (used >= Number(state?.available || 0)) return current;
+      }
+      return { ...current, [key]: Math.max(0, currentValue + delta) };
+    });
+  };
+
+  const resetDraft = () => {
+    setDraft({ ...EMPTY_DRAFT });
+    setSavedMessage('');
+  };
+
+  const confirmDraft = async () => {
+    if (!pendingTotal) return;
+    try {
+      await save({ action: 'allocateBatch', data: { allocations: draft } });
+      setDraft({ ...EMPTY_DRAFT });
+      setSavedMessage('Attribute changes confirmed.');
+    } catch (err) {
+      showError(err, 'Avatar Progression');
+    }
+  };
 
   const allocateSkill = async branch => {
-    try { await save({action:'allocateKnowledge',data:{branch:branch.key}}); }
-    catch(error) { showError(error,'Avatar Progression'); }
-  };
-  const claimKnowledgeReward = async level => {
-    try { await save({action:'claimKnowledge',data:{level}}); }
-    catch(error) { showError(error,'Avatar Progression'); }
+    try {
+      await save({ action: 'allocateKnowledge', data: { branch: branch.key } });
+      setSavedMessage(`${branch.title} advanced.`);
+    } catch (err) {
+      showError(err, 'Avatar Progression');
+    }
   };
 
-  const knowledgeThreshold = progression ? xpToNextKnowledgeLevel(progression.knowledge_level) : 1;
-  const knowledgePercent = progression ? Math.min(100, (progression.knowledge_xp / knowledgeThreshold) * 100) : 0;
-  const totalSkillRanks = progression ? Object.values(progression.skill_allocations || {}).reduce((sum, value) => sum + Number(value || 0), 0) : 0;
+  const claimKnowledgeReward = async level => {
+    try {
+      await save({ action: 'claimKnowledge', data: { level } });
+      setSavedMessage(`Knowledge level ${level} reward claimed.`);
+    } catch (err) {
+      showError(err, 'Avatar Progression');
+    }
+  };
 
   const overlay = (
     <motion.div
       data-avatar-progression-overlay="true"
       role="dialog"
       aria-modal="true"
-      aria-label="Avatar progression"
+      aria-label="AI Avatar Progression"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[12000] h-[100dvh] w-screen overflow-hidden bg-[#03060b] text-white"
+      transition={{ duration: .2 }}
+      className="axe-progression"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(56,189,248,.10),transparent_28%),radial-gradient(circle_at_80%_14%,rgba(139,92,246,.08),transparent_24%),linear-gradient(145deg,#070b12_0%,#03060b_48%,#07090f_100%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.014)_1px,transparent_1px)] [background-size:48px_48px]" />
-
-      <div className="relative z-10 flex h-full min-h-0 flex-col">
-        <header className="shrink-0 border-b border-white/[0.055] px-6 py-5 lg:px-10">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.28em] text-cyan-200/45"><CircleDot className="h-3.5 w-3.5" /> AI Avatar Progression</div>
-              <h1 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">Build the avatar, then build the mind.</h1>
-              <p className="mt-1 max-w-3xl text-xs leading-5 text-white/32">Avatar stats connect your level, equipment, cards, and combat. The Skill Tree develops knowledge and decision strengths.</p>
-            </div>
-            <div className="flex items-center gap-3"><span className="rounded-full border border-white/[0.08] bg-white/[0.035] px-3 py-2 text-[8px] font-black uppercase tracking-[.18em] text-white/35">Esc · Close</span></div>
+      <div className="axe-progression__veil" />
+      <div className="axe-progression__shell">
+        <header className="axe-progression__topbar">
+          <div className="axe-progression__brand"><span className="axe-progression__brand-mark" aria-hidden="true" />Atom X Eve</div>
+          <div className="axe-progression__center-nav">
+            <div className="axe-progression__eyebrow">AI Avatar Progression</div>
+            <div className="axe-progression__nav-line" />
+            <nav className="axe-progression__tabs" aria-label="Avatar progression sections">
+              <button type="button" className={`axe-progression__tab ${tab === 'stats' ? 'is-active' : ''}`} onClick={() => setTab('stats')}><Activity size={15} />Stats</button>
+              <button type="button" className={`axe-progression__tab ${tab === 'skill' ? 'is-active' : ''}`} onClick={() => setTab('skill')}><Network size={15} />Skill Tree</button>
+            </nav>
           </div>
-
-          <nav className="mt-5 flex items-center gap-1 border-t border-white/[0.045] pt-3" aria-label="Avatar progression sections">
-            {[['stats', 'Stats', Activity], ['skill', 'Skill Tree', Network]].map(([id, label, Icon]) => (
-              <button key={id} type="button" onClick={() => setTab(id)} className={`relative flex items-center gap-2 px-5 py-2.5 text-[9px] font-black uppercase tracking-[.16em] transition ${tab === id ? 'text-white' : 'text-white/30 hover:text-white/65'}`}>
-                <Icon className="h-3.5 w-3.5" /> {label}
-                <span className={`absolute inset-x-3 -bottom-[13px] h-px bg-gradient-to-r from-transparent via-cyan-200 to-transparent transition-opacity ${tab === id ? 'opacity-100' : 'opacity-0'}`} />
-              </button>
-            ))}
-          </nav>
+          <div className="axe-progression__motto">Build the avatar,<br />then build the mind.<br /><button type="button" onClick={onClose}>Esc · Close</button></div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6 lg:px-10" style={{ scrollbarWidth: 'thin' }}>
-          {error ? <div role="alert" className="p-6 text-rose-200">{error.message}<button onClick={()=>refetch()} className="ml-4 underline">Try again</button></div> : loading || !progression ? (
-            <div className="grid min-h-[60vh] place-items-center"><div className="text-center"><div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-white/10 border-t-cyan-300" /><p className="mt-4 text-xs text-white/30">Loading avatar progression…</p></div></div>
+        <main className="axe-progression__body">
+          {error ? (
+            <div className="axe-error" role="alert">{error.message}<button type="button" className="axe-action" onClick={() => refetch()}>Try again</button></div>
+          ) : loading || !progression || !combat || !preview ? (
+            <div className="axe-loading"><div><span /><p>Loading avatar progression…</p></div></div>
           ) : (
             <AnimatePresence mode="wait">
               {tab === 'stats' ? (
-                <motion.section key="stats" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.18 }} className="space-y-6 pb-10">
-                  <AvatarCombatStatsPanel />
+                <motion.section key="stats" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: .18 }}>
+                  <div className="axe-progression__hero">
+                    <div className="axe-progression__hero-kicker">Attribute Build</div>
+                    <h1>Shape Your Avatar</h1>
+                    <p>Allocate attribute points to define your avatar’s strengths, adapt to your strategy, and shape how it performs in combat and beyond.</p>
+                    <div className="axe-progression__divider"><i /></div>
+                  </div>
+
+                  <div className="axe-stats-layout">
+                    <aside className="axe-avatar-summary axe-panel">
+                      <div className="axe-avatar-summary__title">Your Avatar</div>
+                      <LevelRing level={combat.level} />
+                      <div className="axe-xp-copy">{num(Math.max(0, Number(progression.global_xp || 0) - (combat.level - 1) * Number(state.rules?.xp_per_level || 1000)))} / {num(state.rules?.xp_per_level || 1000)} XP</div>
+                      <div className="axe-xp-track"><span style={{ width: `${combat.level >= Number(state.rules?.level_cap || 50) ? 100 : Math.min(100, Math.max(0, (Number(progression.global_xp || 0) - (combat.level - 1) * Number(state.rules?.xp_per_level || 1000)) / Number(state.rules?.xp_per_level || 1000) * 100))}%` }} /></div>
+                      <div className="axe-xp-next">{combat.level >= Number(state.rules?.level_cap || 50) ? 'Maximum avatar level' : `${num(Math.max(0, Number(state.rules?.xp_per_level || 1000) - Math.max(0, Number(progression.global_xp || 0) - (combat.level - 1) * Number(state.rules?.xp_per_level || 1000))))} XP to next level`}</div>
+                      <div className="axe-summary-sep" />
+                      <div className="axe-points"><div className="axe-points__rune"><Sparkles size={21} /></div><div className="axe-points__copy"><span>Available Points</span><strong data-testid="available-stat-points">{availableAfterDraft}</strong></div></div>
+                      <p className="axe-summary-note">Allocate points to shape your avatar’s combat style. Pending changes are only saved when you confirm them.</p>
+                      <div className="axe-summary-sep" />
+                      <div className="axe-results-title">Key Combat Results</div>
+                      <ResultRow icon={Heart} value={num(preview.maxHp)} label="HP" />
+                      <ResultRow icon={Swords} value={num(preview.attack)} label="Attack" />
+                      <ResultRow icon={Shield} value={num(preview.armor)} label="Defense" />
+                      <ResultRow icon={Sparkles} value={pct(combat.crit_chance)} label="Crit Chance" />
+                      <ResultRow icon={Wind} value={`${preview.attackSpeed.toFixed(3)}×`} label="Attack Speed" />
+                      <ResultRow icon={Zap} value={pct(preview.cooldown)} label="Cooldown Red." />
+                    </aside>
+
+                    <div className="axe-stats-main">
+                      <div className="axe-attribute-grid">
+                        {ATTRIBUTES.map(definition => (
+                          <AttributeCard
+                            key={definition.key}
+                            definition={definition}
+                            current={Number(allocations[definition.key] || 0)}
+                            pending={Number(draft[definition.key] || 0)}
+                            available={availableAfterDraft}
+                            locked={busy || state.allocation_locked}
+                            onChange={adjustDraft}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="axe-preview-bar" aria-label="Expected stat changes">
+                        <div><h4>Expected Stat Changes</h4><p>Preview how pending allocation affects your key combat results before confirming.</p></div>
+                        <div><h4>HP</h4><div className="axe-preview-stat">{num(combat.max_hp)} → <em>{num(preview.maxHp)}</em></div></div>
+                        <div><h4>Armor</h4><div className="axe-preview-stat">{num(combat.defense)} → <em>{num(preview.armor)}</em></div></div>
+                        <div><h4>Attack</h4><div className="axe-preview-stat">{num(combat.attack)} → <em>{num(preview.attack)}</em></div></div>
+                        <div><h4>Attack Speed</h4><div className="axe-preview-stat">{Number(combat.attack_speed || 1).toFixed(3)}× → <em>{preview.attackSpeed.toFixed(3)}×</em></div></div>
+                        <div><h4>Cooldown Red.</h4><div className="axe-preview-stat">{pct(combat.cooldown_reduction)} → <em>{pct(preview.cooldown)}</em></div></div>
+                      </div>
+
+                      {draft.agility > 0 && <p className="axe-save-note">Agility also adds +{preview.dodgeRatingGain} pending dodge rating.</p>}
+                      {draft.wisdom > 0 && <p className="axe-save-note">Wisdom previews ability bonus at {pct(preview.ability)}.</p>}
+                      {state.allocation_locked && <p className="axe-lock-note">Your combat build is locked until the active PvP match ends.</p>}
+                      <div className="axe-stats-actions">
+                        <button type="button" className="axe-action" disabled={busy || pendingTotal === 0} onClick={resetDraft}><RotateCcw size={13} /> Reset Pending</button>
+                        <button type="button" className="axe-action axe-action--primary" disabled={busy || pendingTotal === 0 || state.allocation_locked} onClick={confirmDraft}><Crown size={14} /> {busy ? 'Saving…' : `Confirm Changes${pendingTotal ? ` · ${pendingTotal}` : ''}`}</button>
+                      </div>
+                    </div>
+                  </div>
                 </motion.section>
               ) : (
-                <motion.section key="skill" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.18 }} className="space-y-6 pb-10">
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-                    <div className="rounded-[26px] border border-white/[0.06] bg-white/[0.025] p-5 md:p-6">
-                      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><span className="text-[8px] font-black uppercase tracking-[.22em] text-white/28">Knowledge Level</span><div className="mt-1 flex items-end gap-3"><strong className="text-5xl font-black tracking-tight text-white">{progression.knowledge_level}</strong><span className="pb-1 text-xs text-white/25">/ {KNOWLEDGE_CAP}</span></div></div><div className="grid grid-cols-2 gap-6 text-right"><div><span className="text-[8px] font-black uppercase tracking-[.18em] text-white/28">Skill Points</span><div className="mt-1 text-3xl font-black text-violet-200">{progression.available_skill_points}</div></div><div><span className="text-[8px] font-black uppercase tracking-[.18em] text-white/28">Nodes</span><div className="mt-1 text-3xl font-black text-white">{totalSkillRanks}<span className="text-sm text-white/25">/30</span></div></div></div></div>
-                      <div className="mt-5"><div className="mb-2 flex justify-between text-[8px] font-bold uppercase tracking-wider text-white/28"><span>{Math.floor(progression.knowledge_xp)} Knowledge XP</span><span>{knowledgeThreshold} XP to next level</span></div><div className="h-2 overflow-hidden rounded-full bg-black/35"><motion.div animate={{ width: `${knowledgePercent}%` }} className="h-full bg-gradient-to-r from-violet-400 via-cyan-300 to-white" /></div></div>
+                <motion.section key="skill" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: .18 }}>
+                  <div className="axe-skill-header">
+                    <LevelRing level={progression.knowledge_level} />
+                    <div className="axe-knowledge-copy">
+                      <span className="label">Knowledge Level</span>
+                      <div className="xp">{num(progression.knowledge_xp)} / {num(xpToNextKnowledgeLevel(progression.knowledge_level))} XP</div>
+                      <div className="axe-xp-track"><span style={{ width: `${Math.min(100, Number(progression.knowledge_xp || 0) / Math.max(1, xpToNextKnowledgeLevel(progression.knowledge_level)) * 100)}%` }} /></div>
+                      <span className="next">{num(Math.max(0, xpToNextKnowledgeLevel(progression.knowledge_level) - Number(progression.knowledge_xp || 0)))} XP to next level</span>
                     </div>
-                    <div className="rounded-[26px] border border-violet-200/[0.10] bg-violet-300/[0.035] p-5"><Brain className="h-5 w-5 text-violet-200/65" /><h3 className="mt-4 text-sm font-black">Neural Growth</h3><p className="mt-2 text-[10px] leading-5 text-white/32">Knowledge levels create skill points. Spend them in the categories you want the AI avatar to become stronger at instead of forcing one universal build.</p></div>
+                    <div className="axe-skill-counter"><span>Skill Points</span><strong>{progression.available_skill_points}</strong><p>Earn through experience to unlock new knowledge nodes.</p></div>
+                    <div className="axe-skill-counter"><span>Nodes Unlocked</span><strong>{Object.values(progression.skill_allocations || {}).reduce((sum, value) => sum + Number(value || 0), 0)}</strong><p>Across all six AI knowledge branches.</p></div>
                   </div>
 
-                  <div className="relative overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#070a10]/80 p-5 md:p-7">
-                    <div className="pointer-events-none absolute left-1/2 top-[88px] h-[calc(100%-120px)] w-px -translate-x-1/2 bg-gradient-to-b from-cyan-300/30 via-white/[0.05] to-transparent" />
-                    <div className="relative mx-auto mb-6 flex w-fit items-center gap-3 rounded-full border border-cyan-200/15 bg-cyan-300/[0.06] px-5 py-3 shadow-[0_0_50px_rgba(103,232,249,.08)]"><Crown className="h-4 w-4 text-cyan-200" /><div><span className="block text-[7px] font-black uppercase tracking-[.2em] text-white/30">AI Core</span><strong className="text-xs text-white">Choose how the avatar thinks</strong></div></div>
-                    <div className="relative grid gap-3 md:grid-cols-2 xl:grid-cols-3">{SKILL_BRANCHES.map((branch) => <SkillBranch key={branch.key} branch={branch} rank={Number(progression.skill_allocations?.[branch.key] || 0)} points={progression.available_skill_points} busy={busy} onAllocate={allocateSkill} />)}</div>
+                  <div className="axe-skill-scroll">
+                    <div className="axe-skill-grid">
+                      {SKILL_BRANCHES.map(branch => (
+                        <SkillBranch
+                          key={branch.key}
+                          branch={branch}
+                          rank={Number(progression.skill_allocations?.[branch.key] || 0)}
+                          points={Number(progression.available_skill_points || 0)}
+                          busy={busy}
+                          onAllocate={allocateSkill}
+                        />
+                      ))}
+                    </div>
                   </div>
 
-                  <ProgressRail cap={KNOWLEDGE_CAP} currentLevel={progression.knowledge_level} claimed={progression.claimed_knowledge_rewards} rewardForLevel={knowledgeReward} onClaim={claimKnowledgeReward} busy={busy} typeLabel="Knowledge Levels" />
+                  <KnowledgeRail level={Number(progression.knowledge_level || 1)} claimed={progression.claimed_knowledge_rewards || []} busy={busy} onClaim={claimKnowledgeReward} />
                 </motion.section>
               )}
             </AnimatePresence>
           )}
         </main>
       </div>
+      {savedMessage && <div className="axe-progress-toast" role="status" aria-live="polite">{savedMessage}</div>}
     </motion.div>
   );
 
