@@ -119,7 +119,7 @@ export class AvatarCustomizationRuntime {
  async update(appearance={}) {
   this.appearance=appearance;
   const assets=(appearance.customization_assets||[]).filter(a=>appearance.selected_assets?.[a.slot]===a.id);
-  const key=JSON.stringify(assets.map(a=>[a.id,a.file_url,a.binding,a.hide_meshes,a.target_meshes]));
+  const key=JSON.stringify(assets.map(a=>[a.id,a.file_url,a.binding,a.hide_meshes,a.target_meshes,a.attach_bone,a.tint_materials]));
   if(key===this.key){this.apply();return;}
   this.key=key;const revision=++this.revision;this.onState({loading:true,error:''});
   const created=[];
