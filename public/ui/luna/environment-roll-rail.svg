@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 30" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="upper" x1="100" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b9f3ff" stop-opacity="0"/>
+      <stop offset=".36" stop-color="#b9f3ff" stop-opacity=".65"/>
+      <stop offset=".5" stop-color="#ecfbff" stop-opacity=".95"/>
+      <stop offset=".64" stop-color="#b9f3ff" stop-opacity=".65"/>
+      <stop offset="1" stop-color="#b9f3ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="400" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b9dce7" stop-opacity=".22"/>
+      <stop offset=".5" stop-color="#d4f6ff" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#b9dce7" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 16 H184 L187 13 L200 27 L213 13 L216 16 H400" fill="none" stroke="url(#base)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+  <path d="M100 12 H186 L187 13 L200 1 L213 13 L214 12 H300" fill="none" stroke="url(#upper)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+</svg>
