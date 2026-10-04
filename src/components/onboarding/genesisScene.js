@@ -1,3 +1,4 @@
+import {AvatarCustomizationRuntime,inspectCustomization} from './customizationRuntime';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -61,6 +62,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let getsuga = null;
   let artemis = null;
+  let customization = null, appearanceRoot = null, readyCapabilities = null;
   // Male previews without the card runtime: the GLB's own looping Idle plus
   // its one-shot idle variants (stretch, look around…) at random moments.
   let maleIdleAction = null;
@@ -623,6 +625,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       });
 
       const avatarRoot = model;
+      appearanceRoot = avatarRoot;
+      customization = new AvatarCustomizationRuntime(avatarRoot, {gender: options.artemisFemale ? 'female' : 'male', onChange: (value) => {if(readyCapabilities&&!disposed)onReady({...readyCapabilities,customization:value});}, onState: options.onCustomizationState});
+      applyCompanionAppearance(avatarRoot, appearance);
       avatarRoot.visible = preserveAppearance || atomxeRuntimeRig || options.safeRigidIdle || options.getsugaMale;
       applyStyle(appearance);
 
@@ -707,7 +712,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
 
-      onReady({ hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] });
+      readyCapabilities = { customization: inspectCustomization(avatarRoot), hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
+      onReady(readyCapabilities);
+      customization.update(appearance);
       
     } catch (error) {
       console.error('Avatar model failed:', error);
@@ -776,7 +783,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const togglePaused = () => setPaused(!paused);
 
   return {
-    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (model && !options.getsugaMale) applyCompanionAppearance(model, appearance);  },
+    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (appearanceRoot) applyCompanionAppearance(appearanceRoot, appearance); customization?.update(appearance); },
     play,
     command: (value) => {
       setPaused(false);
@@ -801,6 +808,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     },
     dispose: () => {
       disposed = true;
+      customization?.dispose();
       cancelAnimationFrame(frame);
       if (options.skillEffects && typeof window !== 'undefined') {
         if (options.remoteSkillPlayerId) window.removeEventListener('lunaAIBattleRemoteCardCast', onRemoteCardCast);

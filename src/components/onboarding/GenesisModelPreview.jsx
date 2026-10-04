@@ -81,10 +81,12 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, previewEffect = null, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationState, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, previewEffect = null, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
+  const customizationCallback = useRef(onCustomizationState);
+  customizationCallback.current = onCustomizationState;
   const keyState = useRef({ w: false, a: false, s: false, d: false, shift: false });
   const movementFrame = useRef(null);
   const clickTimer = useRef(null);
@@ -179,6 +181,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, compact = false, in
         },
         {
           secondaryCharacter,
+          onCustomizationState: (state) => customizationCallback.current?.(state),
           // Female Artemis ships as one skinned GLB with its own idle, bow
           // transitions, combat idle and three authored skill animations.
           safeRigidIdle: fixedFemaleIdle,

@@ -1,3 +1,4 @@
+import {resolveCustomizationAssets} from '../../shared/avatarCustomization.ts';
 import {normalizeAvatarAppearance} from '../../shared/normalizeAvatarAppearance.ts';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
 import { validateGenesis } from '../../shared/validateGenesis.ts';
@@ -37,7 +38,8 @@ export default async function(req) {
                 if (requestBody.preview && user.role !== 'admin') return Response.json({error:'Admin access required'}, {status:403});
                 let validated;
                 try { validated = validateGenesis(requestBody); } catch(error) { return Response.json({success:false,error:error.message}, {status:400}); }
-                const {profile,companion} = validated;
+                const profile = validated.profile;
+                const companion = await resolveCustomizationAssets(base44.asServiceRole.entities, validated.companion);
                 const environment = requestBody.preview ? 'preview' : 'live';
 
                 // A legacy Avatar row is not proof that onboarding was completed.
@@ -251,8 +253,9 @@ async function initializeAvatar(base44, user, requestBody) {
 
 async function saveAvatarAppearance(base44, userId, appearance = {}) {
     const avatars = await base44.entities.Avatar.filter({ user_id: userId });
-    const normalized=normalizeAvatarAppearance(appearance);
-    const gender = appearance.gender === 'female' || avatars[0]?.gender === 'female' ? 'female' : 'male';
+    // An explicit male selection must win over a previously saved female body.
+    const gender = ['male','female'].includes(appearance.gender) ? appearance.gender : (avatars[0]?.gender || 'male');
+    const normalized = await resolveCustomizationAssets(base44.asServiceRole.entities, normalizeAvatarAppearance({...appearance,gender}));
 
     if (gender === 'female') {
         normalized.gender = 'female';

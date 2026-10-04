@@ -280,6 +280,41 @@
     "height_scale": {
       "type": "number",
       "default": 1
+    },
+    "customization_version": {
+      "type": "number"
+    },
+    "selected_assets": {
+      "type": "object"
+    },
+    "customization_assets": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "shape_controls": {
+      "type": "object"
+    },
+    "skin_finish": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "skin_finish_enabled": {
+      "type": "boolean"
+    },
+    "skin_highlight_color": {
+      "type": "string"
+    },
+    "skin_highlight_enabled": {
+      "type": "boolean"
+    },
+    "layer_colors": {
+      "type": "object"
+    },
+    "layer_opacity": {
+      "type": "object"
     }
   },
   "required": [

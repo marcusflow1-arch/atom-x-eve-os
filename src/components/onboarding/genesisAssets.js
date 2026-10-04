@@ -1,3 +1,5 @@
+import {normalizeCustomization} from '../../../base44/shared/avatarCustomization.ts';
+import {applyCustomizationAppearance} from './customizationRuntime';
 import * as THREE from 'three';
 import {FIT_DEFAULTS,normalizeFaceShape} from './avatarAppearanceData';
 import {isHi3DAvatar,applyFaceGeometry,applyAvatarSurface} from './modelAppearance';
@@ -54,6 +56,8 @@ export const PERSONALITIES = [
 
 export const DEFAULT_AVATAR_APPEARANCE = {
   ...FIT_DEFAULTS,
+  ...normalizeCustomization(),
+  customization_assets: [],
   style_preset: 'heroic_fantasy',
   skin_tone: '#b97855',
   eye_color: '#5ca9c9',
@@ -73,6 +77,7 @@ export function withAppearanceDefaults(value = {}) {
   return {
     ...DEFAULT_AVATAR_APPEARANCE,
     ...value,
+    ...normalizeCustomization(value),
     face_shape: normalizeFaceShape(value.face_shape),
     body_proportions: { ...DEFAULT_AVATAR_APPEARANCE.body_proportions, ...(value.body_proportions || {}) },
     material_colors: value.material_colors || {},
@@ -183,8 +188,10 @@ export function applyCompanionAppearance(model, rawAppearance = {}) {
 
     if (node.morphTargetDictionary) {
       Object.entries(node.morphTargetDictionary).forEach(([name, index]) => {
-        node.morphTargetInfluences[index] = appearance.morph_targets?.[`${node.name}:${name}`] || 0;
+        // Expression keys belong to the AnimationMixer, never creator sliders.
+        if (name.startsWith('CC_')) node.morphTargetInfluences[index] = appearance.morph_targets?.[`${node.name}:${name}`] || 0;
       });
     }
   });
+  applyCustomizationAppearance(model, appearance);
 }
