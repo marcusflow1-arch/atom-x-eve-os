@@ -39,7 +39,7 @@ export default function SystemUpdatesRemindersOverlay({ mode = 'updates', initia
           if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }}
-        className="absolute bottom-0 right-0 top-0 flex w-full max-w-[780px] flex-col border-l border-white/[0.06] bg-[#060a10]/98 shadow-[-30px_0_90px_rgba(0,0,0,.6)]">
+        className={`absolute bottom-0 right-0 top-0 flex w-full max-w-[780px] flex-col ${mode === 'updates' ? 'border-l border-white/[0.025] bg-transparent shadow-none' : 'border-l border-white/[0.06] bg-[#060a10]/98 shadow-[-30px_0_90px_rgba(0,0,0,.6)]'}`}>
         <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.06] px-6">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-cyan-100/60">{mode === 'updates' ? <Settings className="h-4 w-4" /> : <Bell className="h-4 w-4" />}</div>
