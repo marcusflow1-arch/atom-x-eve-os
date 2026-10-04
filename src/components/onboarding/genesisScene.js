@@ -309,6 +309,11 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       secondaryRoot.rotation.y = Number(config.yaw || 0);
       secondaryRoot.add(secondaryModel);
 
+      // Secondary dashboard fighters share the same appearance contract as the
+      // primary Luna avatar. This keeps a PvP face-off in one Three.js scene
+      // without falling back to an uncustomized duplicate viewer.
+      if (config.appearance) applyCompanionAppearance(secondaryModel, config.appearance);
+
       secondaryModel.traverse((node) => {
         if (!node.isMesh) return;
         node.castShadow = true;
