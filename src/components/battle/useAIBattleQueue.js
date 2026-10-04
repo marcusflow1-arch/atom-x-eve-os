@@ -418,7 +418,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return () => { if (window.__lunaPvPMatch?.id === match?.id) delete window.__lunaPvPMatch; };
   }, [sessionBridge, match, serverOffsetMs]);
 
-  const join = async (mode) => {
+  const join = async (mode, options = {}) => {
     // Guard at module scope, not component scope. The queue popup and persistent
     // battle host share this module, so even a remount or duplicated key
     // handler cannot fire parallel join creates before React state catches up.
@@ -427,9 +427,10 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       action: 'join',
       data: {
         mode,
-        // Stable for this browser session + mode. Repeated join attempts are the
-        // same intent rather than brand-new queue requests.
-        request_id: `${PAGE_QUEUE_SESSION_ID}:${mode}`,
+        // Stable for this browser session + queue intent. A targeted rematch is
+        // intentionally a different intent from the open PvP queue.
+        request_id: `${PAGE_QUEUE_SESSION_ID}:${mode}:${String(options.preferredOpponentId || '')}`,
+        preferred_opponent_id: String(options.preferredOpponentId || ''),
         avatar_gender: selectedGender,
         avatar_model_url: selectedModelUrl,
         ...(selectedAppearance ? { avatar_appearance: selectedAppearance } : {}),
