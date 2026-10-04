@@ -8,7 +8,6 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { showInfo } from '@/components/error/ErrorToast';
 import { dashboardSession, joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
-import { getActiveCharacter, subscribeCharacters } from '@/components/game3d/characterStore';
 import { requestAIBattle, withoutDismissed } from './battleClient';
 import { aiBattleQueryKey, battleDeadline, createBattleRefresh, matchSignal, mergeBattleSnapshot, queueSignal, RETRYABLE_BATTLE_ACTIONS, scheduleBattleDeadline } from './battleSync';
 export { aiBattleQueryKey } from './battleSync';
@@ -173,16 +172,18 @@ export function useAIBattleSnapshot() {
 }
 
 export default function useAIBattleQueue({ sessionBridge = true, polling = true } = {}) {
-  const { user } = useAuth();
+  const { user, avatar } = useAuth();
   const companion = useCompanionIdentity();
-  const [activeCharacter, setActiveCharacter] = useState(() => getActiveCharacter());
-  useEffect(() => subscribeCharacters(() => setActiveCharacter(getActiveCharacter())), []);
   const companionGender = detectAvatarGender(companion);
+  const savedAvatarGender = detectAvatarGender(avatar);
+  // AI Battle belongs to the Luna/dashboard avatar runtime. Never fall back to
+  // Game 3D's active character store: the Game Viewer character and the Luna
+  // AI avatar are separate surfaces and must not silently replace each other.
   const selectedAvatar = companionGender
     ? companion
-    : activeCharacter && !activeCharacter.isDevTest
-      ? activeCharacter
-      : companion;
+    : savedAvatarGender
+      ? avatar
+      : (companion || avatar || null);
   // Leave the gender blank when the avatar has not resolved yet. The server then
   // uses the saved Avatar row. Defaulting to "male" here used to queue female
   // players as male, which removed their Artemis abilities from the PvP hotbar
@@ -350,11 +351,11 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       if (!roomJoinBusy.current && Date.now() - roomJoinAt.current >= 2500 && (joinAttempt.current !== token || !channelMatches || session.status !== 'connected' || !hasWholePair)) {
         roomJoinAt.current = Date.now();
         joinAttempt.current = token;
-        if (String(user.id) === hostId) window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail }));
+        if (String(user.id) === hostId) window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { ...joinDetail, surface: 'dashboard' } }));
         else {
           roomJoinBusy.current = true;
           joinDashboard({ id: hostId, name: match.host_name || 'Player' })
-            .then(() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: joinDetail })))
+            .then(() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { ...joinDetail, surface: 'dashboard' } })))
             .catch((error) => { console.warn('[AI Battle] dashboard join retry', error); joinAttempt.current = ''; })
             .finally(() => { roomJoinBusy.current = false; });
         }
