@@ -20,6 +20,7 @@ export async function joinDashboard(target){
   hostId:id,
   hostName:target.friend_name||target.name||target.display_name||'Friend',
   socialJoin:true,
+  surface:'dashboard',
  };
  // Joining is a UI/session action first. Never make the button wait on a
  // presence preflight: immediately move Luna into the requested dashboard
