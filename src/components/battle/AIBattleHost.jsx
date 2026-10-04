@@ -6,7 +6,7 @@ import AIBattleSessionBridge from '@/components/battle/AIBattleSessionBridge';
 import AIBattleQueueStatus from '@/components/battle/AIBattleQueueStatus';
 import PvPArenaStage from '@/components/battle/PvPArenaStage';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { setAIBattleDashboardMode, setAIBattleParticipants, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
+import { clearAIBattlePostMatch, setAIBattleDashboardMode, setAIBattleParticipants, setAIBattlePostMatch, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
 const ARENA_STATUSES = ['connecting', 'countdown', 'fighting', 'ended'];
 
@@ -68,6 +68,47 @@ export default function AIBattleHost() {
     const timer = window.setTimeout(() => setAIBattleParticipants([]), 20000);
     return () => window.clearTimeout(timer);
   }, [match?.id, match?.player_ids]);
+
+  useEffect(() => {
+    if (match?.id && matchStatus === 'ended' && (match.players || []).length === 2) {
+      setAIBattlePostMatch({
+        matchId: String(match.id),
+        winnerId: String(match.winner_id || ''),
+        endedReason: String(match.ended_reason || ''),
+        hostId: String(match.host_id || ''),
+        playerIds: (match.player_ids || []).map(String),
+        players: (match.players || []).map((player) => ({ ...player })),
+        finishedAt: Date.now(),
+      });
+    } else if (match?.id && ['matched', 'connecting', 'countdown', 'fighting'].includes(matchStatus)) {
+      clearAIBattlePostMatch();
+    }
+  }, [match?.id, matchStatus, match?.winner_id, match?.ended_reason, match?.host_id, match?.player_ids, match?.players]);
+
+  useEffect(() => {
+    const requestRematch = async (event) => {
+      const opponentId = String(event?.detail?.opponentId || '');
+      if (!opponentId || !user?.id) return;
+      try {
+        clearAIBattlePostMatch();
+        await battle.join('pvp', { preferredOpponentId: opponentId });
+      } catch (error) {
+        console.warn('[AI Battle] rematch queue failed', error);
+        // Restore the post-match view if queueing failed so the player does not
+        // lose the opponent card/actions because of a transient request error.
+        if (match?.status === 'ended' && (match.players || []).length === 2) {
+          setAIBattlePostMatch({ matchId: String(match.id), winnerId: String(match.winner_id || ''), endedReason: String(match.ended_reason || ''), hostId: String(match.host_id || ''), playerIds: (match.player_ids || []).map(String), players: (match.players || []).map((player) => ({ ...player })), finishedAt: Date.now() });
+        }
+      }
+    };
+    const dismissPostMatch = () => clearAIBattlePostMatch();
+    window.addEventListener('lunaAIBattleRematchRequest', requestRematch);
+    window.addEventListener('lunaAIBattlePostMatchDismiss', dismissPostMatch);
+    return () => {
+      window.removeEventListener('lunaAIBattleRematchRequest', requestRematch);
+      window.removeEventListener('lunaAIBattlePostMatchDismiss', dismissPostMatch);
+    };
+  }, [battle.join, match, user?.id]);
 
   if (!user?.id || typeof document === 'undefined') return null;
   return createPortal(
