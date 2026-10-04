@@ -46,7 +46,7 @@ export default function GameWorldServerManager() {
     // delivery regardless of mount order.
     const fireJoin = () => {
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: WORLD_CHANNEL, hostId: WORLD_CHANNEL },
+        detail: { channelId: WORLD_CHANNEL, hostId: WORLD_CHANNEL, surface: 'game-world' },
       }));
     };
     Promise.resolve().then(fireJoin);                       // microtask: same tick, after current effects
