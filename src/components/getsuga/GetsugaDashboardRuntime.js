@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { IdleVariantDirector, fadeOutFromCurrentWeight } from './idleVariants';
 
 // Timing authored with the user-supplied Getsuga_Tensho_Character.glb.
 // These markers let combat logic react to the embedded animation without
@@ -71,6 +72,26 @@ function cleanEffectRendering(root) {
   });
 }
 
+// Eyes and the mouth interior sit just behind the face surface. The toon
+// outline pass would draw their silhouettes through the skin as dark rings, so
+// these small face meshes opt out of it.
+export function isFaceDetailMesh(node) {
+  if (!node?.isMesh) return false;
+  return /^(eye|mouth)_/i.test(node.name || '');
+}
+
+export function prepareFaceDetailMeshes(root) {
+  root?.traverse((node) => {
+    if (!isFaceDetailMesh(node)) return;
+    const materials = (Array.isArray(node.material) ? node.material : [node.material]).filter(Boolean);
+    materials.forEach((material) => {
+      material.userData = material.userData || {};
+      material.userData.outlineParameters = { ...(material.userData.outlineParameters || {}), visible: false };
+    });
+    node.castShadow = false;
+  });
+}
+
 function prepareEffectOnlyRoot(root) {
   root?.traverse((node) => {
     if (!node?.isMesh) return;
@@ -117,8 +138,12 @@ export function createGetsugaIdleClip(attackClip) {
  * - When it finishes, the same player character blends back to Idle.
  */
 export class GetsugaDashboardRuntime {
-  constructor({ scene, camera = null, impactDistance = 7.2, onEvent = null } = {}) {
+  constructor({ scene, camera = null, impactDistance = 7.2, onEvent = null, idleVariants = true } = {}) {
     this.scene = scene;
+    // Random one-shot idle variants (stretch, look around…) between casts.
+    // Combat arenas turn them off: a yawn mid-fight reads as a bug.
+    this.idleVariantsEnabled = idleVariants !== false;
+    this.idleVariants = null;
     this.camera = camera;
     this.impactDistance = impactDistance;
     this.onEvent = onEvent || (() => {});
@@ -178,6 +203,7 @@ export class GetsugaDashboardRuntime {
     this.root.rotation.y = 0;
 
     cleanEffectRendering(this.root);
+    prepareFaceDetailMeshes(this.root);
 
     this.group = new THREE.Group();
     this.group.name = 'LunaCardEffectPlayer';
@@ -206,6 +232,18 @@ export class GetsugaDashboardRuntime {
     if (idleClip) {
       this.idleAction = this.mixer.clipAction(idleClip);
       this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
+    }
+    if (this.idleVariantsEnabled && this.idleAction) {
+      this.idleVariants = new IdleVariantDirector({
+        mixer: this.mixer,
+        clips,
+        idleAction: this.idleAction,
+        canPlay: () => this.canPlayIdleVariant(),
+      });
+      if (!this.idleVariants.size) {
+        this.idleVariants.dispose();
+        this.idleVariants = null;
+      }
     }
 
     const activeClipNames = new Set(['GetsugaTensho', 'Chidori_Attack_01', 'Chidori_Ultimate']);
@@ -277,7 +315,12 @@ export class GetsugaDashboardRuntime {
     const previous = this.currentLocomotion;
     next.enabled = true;
     next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
-    if (previous?.isRunning()) previous.crossFadeTo(next, 0.12, false);
+    const variant = this.idleVariants?.interrupt();
+    if (variant) {
+      fadeOutFromCurrentWeight(variant, 0.14);
+      fadeOutFromCurrentWeight(this.idleAction, 0.14);
+      next.fadeIn(0.14);
+    } else if (previous?.isRunning()) previous.crossFadeTo(next, 0.12, false);
     else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(next, 0.14, false);
     this.currentLocomotion = next;
     return true;
@@ -317,7 +360,12 @@ export class GetsugaDashboardRuntime {
       this.fxAttackAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
     }
 
-    if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(nextAction, 0.16, false);
+    const variant = this.idleVariants?.interrupt();
+    if (variant) {
+      fadeOutFromCurrentWeight(variant, 0.2);
+      fadeOutFromCurrentWeight(this.idleAction, 0.2);
+      nextAction.fadeIn(0.2);
+    } else if (this.currentLocomotion?.isRunning()) this.currentLocomotion.crossFadeTo(nextAction, 0.16, false);
     else if (this.idleAction?.isRunning()) this.idleAction.crossFadeTo(nextAction, 0.2, false);
     else this.idleAction?.stop();
 
@@ -346,9 +394,14 @@ export class GetsugaDashboardRuntime {
     const action = this.mixer.clipAction(clip);
     action.setLoop(THREE.LoopOnce, 1);
     action.clampWhenFinished = true;
+    const variant = this.idleVariants?.interrupt();
+    if (variant) {
+      fadeOutFromCurrentWeight(variant, 0.08);
+      if (this.idleAction !== action) fadeOutFromCurrentWeight(this.idleAction, 0.08);
+    }
     const previous = this.activeAction?.isRunning?.() ? this.activeAction
       : this.currentLocomotion?.isRunning?.() ? this.currentLocomotion
-        : this.idleAction;
+        : variant ? null : this.idleAction;
     this.fired.clear();
     this.reacting = true;
     this.playing = true;
@@ -360,6 +413,7 @@ export class GetsugaDashboardRuntime {
     action.enabled = true;
     action.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
     if (previous && previous !== action) previous.crossFadeTo(action, 0.08, false);
+    else if (variant) action.fadeIn(0.08);
     this.currentLocomotion = null;
     this.fxAttackAction?.stop?.();
     if (this.fxRoot) this.fxRoot.visible = false;
@@ -372,8 +426,18 @@ export class GetsugaDashboardRuntime {
 
   playIdle({ emit = true, blend = true, fade = 0.35 } = {}) {
     if (!this.ready || this.disposed || !this.idleAction) return false;
+    // Already standing idle (or in one of the idle variants): keep the loop
+    // where it is. Restarting it here made previews snap back to frame 0 and
+    // cut a stretch off halfway through.
+    if (!this.playing && !this.reacting && !this.activeAction && !this.currentLocomotion
+      && (this.idleAction.isRunning() || this.idleVariants?.isActive())) {
+      if (emit) this.onEvent('idle', { time: 0, frame: 1 });
+      return true;
+    }
     this.playing = false;
     this.reacting = false;
+    const variant = this.idleVariants?.interrupt();
+    if (variant) fadeOutFromCurrentWeight(variant, fade);
 
     // Stay facing the locked battle opponent after a cast. Do not snap back to
     // the model's authored forward direction when the attack blends to idle.
@@ -403,6 +467,7 @@ export class GetsugaDashboardRuntime {
   update(dt) {
     if (!this.ready || this.disposed || this.paused || !this.mixer) return;
     const step = Math.min(0.05, Math.max(0, Number(dt) || 0));
+    this.idleVariants?.update(step);
     this.mixer.update(step);
     this.fxMixer?.update?.(step);
 
@@ -433,6 +498,25 @@ export class GetsugaDashboardRuntime {
     return Boolean(this.playing);
   }
 
+  canPlayIdleVariant() {
+    return Boolean(this.ready && !this.disposed && !this.paused && !this.playing && !this.reacting
+      && !this.activeAction && !this.currentLocomotion && this.idleAction?.isRunning());
+  }
+
+  /** Name of the idle variant playing right now ('' when on the plain loop). */
+  idleVariantName() {
+    return this.idleVariants?.activeName() || '';
+  }
+
+  /** Play a specific (or a random) idle variant now, if the body is idle. */
+  playIdleVariant(name) {
+    return Boolean(this.idleVariants?.play(name || undefined));
+  }
+
+  setIdleVariantsEnabled(value) {
+    this.idleVariants?.setEnabled(value);
+  }
+
   setPaused(value) {
     this.paused = Boolean(value);
     if (this.mixer) this.mixer.timeScale = this.paused ? 0 : 1;
@@ -444,6 +528,8 @@ export class GetsugaDashboardRuntime {
     this.disposed = true;
 
     if (this.finishedHandler && this.mixer) this.mixer.removeEventListener('finished', this.finishedHandler);
+    this.idleVariants?.dispose();
+    this.idleVariants = null;
     this.mixer?.stopAllAction();
     this.fxMixer?.stopAllAction?.();
     if (this.group?.parent) this.group.parent.remove(this.group);

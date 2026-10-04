@@ -162,7 +162,9 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
     runtime = new ArtemisDashboardRuntime({ root: assetRoot, mixer, animations: gltf.animations || [], onEvent: onEffect, relaxAfter: 0 });
     root = assetRoot;
   } else {
-    runtime = new GetsugaDashboardRuntime({ scene, camera, onEvent: onEffect });
+    // No random idle variants (stretch, yawn…) in a fight: the fighter holds
+    // a steady idle between turns.
+    runtime = new GetsugaDashboardRuntime({ scene, camera, onEvent: onEffect, idleVariants: false });
 
     // The selected Luna male model and the Getsuga ability package are different
     // rigs. Keep the player's actual male avatar visible, but source the authored

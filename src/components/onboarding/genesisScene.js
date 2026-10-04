@@ -6,7 +6,8 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect';
 import { applyCompanionAppearance, getAvatarStylePreset } from '@/components/onboarding/genesisAssets';
 import { createEmbeddedAvatarController } from '@/components/onboarding/embeddedAvatarController';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
-import { GetsugaDashboardRuntime, createGetsugaIdleClip } from '@/components/getsuga/GetsugaDashboardRuntime';
+import { GetsugaDashboardRuntime, createGetsugaIdleClip, prepareFaceDetailMeshes } from '@/components/getsuga/GetsugaDashboardRuntime';
+import { IdleVariantDirector, fadeOutFromCurrentWeight } from '@/components/getsuga/idleVariants';
 import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
@@ -60,6 +61,22 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let disposed = false, model, mixer, action, frame, appearance = {}, animationVersion = 0, basePosition = null, paused = false;
   let getsuga = null;
   let artemis = null;
+  // Male previews without the card runtime: the GLB's own looping Idle plus
+  // its one-shot idle variants (stretch, look around…) at random moments.
+  let maleIdleAction = null;
+  let maleIdleVariants = null;
+  const restoreMaleIdle = () => {
+    if (!maleIdleAction || disposed) return false;
+    if (action === maleIdleAction && (maleIdleAction.isRunning() || maleIdleVariants?.isActive())) return true;
+    const previous = action;
+    maleIdleAction.enabled = true;
+    maleIdleAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(.28).play();
+    if (previous && previous !== maleIdleAction) fadeOutFromCurrentWeight(previous, .22);
+    action = maleIdleAction;
+    maleIdleVariants?.rest();
+    onStatus('ready', 'Idle');
+    return true;
+  };
   // Chidori lightning for dashboard casts (no opponent here: the strike fires
   // into the air in front of the hand). Created on the first Chidori cast.
   let chidoriCaster = null;
@@ -197,6 +214,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     frame = requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), .05);
     if (!visible || document.hidden) return;
+    if (!paused) maleIdleVariants?.update(dt);
     mixer?.update(dt);
     if (options.lockModelPosition && model && basePosition) {
       model.position.copy(basePosition);
@@ -515,7 +533,11 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const next = mixer.clipAction(clip);
       if (motion.loop === false) { next.setLoop(THREE.LoopOnce, 1); next.clampWhenFinished = true; }
       else next.setLoop(THREE.LoopRepeat, Infinity);
-      action?.fadeOut(.22);
+      const idleVariant = maleIdleVariants?.interrupt();
+      if (idleVariant) {
+        fadeOutFromCurrentWeight(idleVariant, .22);
+        fadeOutFromCurrentWeight(action, .22);
+      } else action?.fadeOut(.22);
       next.reset().fadeIn(.28).play();
       action = next;
       model.visible = true;
@@ -624,12 +646,26 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         } else {
           scene.add(avatarRoot);
           model = avatarRoot;
+          prepareFaceDetailMeshes(model);
           mixer = new THREE.AnimationMixer(model);
-          const attackClip = (asset.animations || []).find((clip) => clip?.name === 'GetsugaTensho') || asset.animations?.[0];
-          const idleClip = createGetsugaIdleClip(attackClip);
+          const clips = asset.animations || [];
+          const attackClip = clips.find((clip) => clip?.name === 'GetsugaTensho') || clips[0];
+          // The male GLB carries its own living idle (breathing, blinks, eye
+          // movement, facial expression). Older bodies without one fall back
+          // to the light idle derived from the attack clip.
+          const idleClip = clips.find((clip) => clip?.name === 'Idle') || createGetsugaIdleClip(attackClip);
           if (idleClip) {
             action = mixer.clipAction(idleClip);
             action.setLoop(THREE.LoopRepeat, Infinity).play();
+            maleIdleAction = action;
+            const director = new IdleVariantDirector({
+              mixer,
+              clips,
+              idleAction: action,
+              canPlay: () => !paused && action === maleIdleAction && maleIdleAction.isRunning(),
+            });
+            if (director.size) maleIdleVariants = director;
+            else director.dispose();
           }
           onStatus('ready', 'GetsugaIdle');
         }
@@ -741,11 +777,11 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     play,
     command: (value) => {
       setPaused(false);
-      if (options.getsugaMale && value === 'idle') getsuga?.playIdle?.();
+      if (options.getsugaMale && value === 'idle') { if (getsuga) getsuga.playIdle?.(); else restoreMaleIdle(); }
       else if (options.artemisFemale && value === 'idle') artemis?.playIdle?.();
       else embeddedController?.command(value);
     },
-    getsugaIdle: () => getsuga?.playIdle?.(),
+    getsugaIdle: () => (getsuga ? getsuga.playIdle?.() : restoreMaleIdle()),
     artemisIdle: () => artemis?.playIdle?.(),
     previewEffect: (effect) => playBoundEffect({ effect, accepted: false, source: 'preview' }, false),
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
@@ -770,6 +806,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       chidoriCaster?.dispose();
       chidoriCaster = null;
       getsuga?.dispose();
+      maleIdleVariants?.dispose();
+      maleIdleVariants = null;
+      maleIdleAction = null;
       artemis?.dispose();
       observer.disconnect();
       visibility?.disconnect();
