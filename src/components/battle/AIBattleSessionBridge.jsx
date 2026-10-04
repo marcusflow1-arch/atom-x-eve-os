@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDashboardSession } from '@/components/social/dashboardSession';
 import { startAIBattleMusic, stopAIBattleMusic } from '@/components/battle/aiBattleAudio';
+import { useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
 // Keeps the shared dashboard room, music and manual reconnect control in sync
 // with matchmaking. It receives the single matchmaking instance owned by
@@ -8,6 +9,7 @@ import { startAIBattleMusic, stopAIBattleMusic } from '@/components/battle/aiBat
 export default function AIBattleSessionBridge({ battle }) {
   const { queue, match, reconnect, busy } = battle;
   const session = useDashboardSession();
+  const battleSurface = useAIBattleSurfaceState();
   const [showReconnect, setShowReconnect] = useState(false);
   const queuedForPvp = queue?.status === 'waiting' && queue?.mode === 'pvp';
   const matchStatus = String(match?.status || '');
@@ -27,7 +29,12 @@ export default function AIBattleSessionBridge({ battle }) {
     && requiredIds.every((id) => sessionIds.has(id))
   );
   const rememberedMatch = typeof window !== 'undefined' ? sessionStorage.getItem('luna_pvp_active_match_id') : '';
-  const reconnectable = Boolean((['connecting','countdown','fighting'].includes(matchStatus) && !roomHealthy) || (!match && rememberedMatch));
+  const deliberatelyOnDashboard = Boolean(
+    activePvpMatch
+    && battleSurface.dashboardMode
+    && String(battleSurface.matchId || '') === String(match?.id || '')
+  );
+  const reconnectable = Boolean(!deliberatelyOnDashboard && ((['connecting','countdown','fighting'].includes(matchStatus) && !roomHealthy) || (!match && rememberedMatch)));
 
   useEffect(() => {
     if (musicActive) startAIBattleMusic();
@@ -45,7 +52,7 @@ export default function AIBattleSessionBridge({ battle }) {
     }
     const timer = window.setTimeout(() => setShowReconnect(true), 6000);
     return () => window.clearTimeout(timer);
-  }, [reconnectable, match?.id, session.status, session.channel_id]);
+  }, [reconnectable, match?.id, session.status, session.channel_id, deliberatelyOnDashboard]);
 
   const handleReconnect = async () => {
     try {
