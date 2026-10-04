@@ -343,7 +343,7 @@ export default function GameView() {
       <GameHUD />
       <RogueBossHPTank />
       <BossWaypoint />
-      <MultiplayerSystem envUrl="game_world_lowpoly" />
+      <MultiplayerSystem envUrl="game_world_lowpoly" surface="game-world" />
       <GameWorldServerManager />
       {/* Equipped weapon is the canonical source for mastery/class/role identity. */}
       <AXEWeaponIdentityMount />
