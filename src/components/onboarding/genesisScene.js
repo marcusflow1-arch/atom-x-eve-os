@@ -712,7 +712,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
 
-      readyCapabilities = { customization: inspectCustomization(avatarRoot), hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: true, materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
+      readyCapabilities = { customization: inspectCustomization(avatarRoot), hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: preserveAppearance || Boolean(avatarRoot.getObjectByName('mixamorigHeadTop_End') || avatarRoot.getObjectByName('HeadTop_End')), materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
       onReady(readyCapabilities);
       customization.update(appearance);
       

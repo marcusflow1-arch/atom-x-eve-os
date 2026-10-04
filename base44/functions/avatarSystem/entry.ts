@@ -256,6 +256,7 @@ async function saveAvatarAppearance(base44, userId, appearance = {}) {
     // An explicit male selection must win over a previously saved female body.
     const gender = ['male','female'].includes(appearance.gender) ? appearance.gender : (avatars[0]?.gender || 'male');
     const normalized = await resolveCustomizationAssets(base44.asServiceRole.entities, normalizeAvatarAppearance({...appearance,gender}));
+    if (typeof appearance.name === 'string' && appearance.name.trim()) normalized.name = appearance.name.trim().slice(0,40);
 
     if (gender === 'female') {
         normalized.gender = 'female';

@@ -59,7 +59,7 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
       <form className="genesis-editor" onSubmit={submit}><fieldset disabled={busy}><AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:reduced?0:.18}}>
         {step === 0 && <GenesisCompanionFields config={config} setConfig={setConfig}/>} 
         {step === 3 && <GenesisProfileFields profile={profile} setProfile={setProfile} email={user?.email} config={config} setConfig={setConfig}/>}
-        {step === 1 && <GenesisFaceScan config={config} setConfig={setConfig}/>}
+        {step === 1 && <GenesisFaceScan config={config} setConfig={setConfig} capabilities={capabilities}/>}
         {step === 2 && <GenesisAppearanceFields config={config} setConfig={setConfig} capabilities={capabilities}/>}
         {step === 4 && <GenesisVoiceFields config={config} setConfig={setConfig}/>}
         {step === 5 && <GenesisReview profile={profile} config={config} preview={preview}/>}
