@@ -73,13 +73,13 @@ export default function DateTimeTile({ onCalendarClick = () => {} }) {
             <Bell size={15} />
           </StatusFeedButton>
         </div>
+        <span className="luna-status-underline" aria-hidden="true" />
       </div>
       <span className="luna-status-divider" aria-hidden="true" />
       <div className="luna-status-calendar-side">
         <button type="button" className="luna-status-clock" aria-label="Open calendar" onClick={onCalendarClick}>
           <CalendarIcon size={21} /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small>{time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</small></span>
         </button>
-        <span className="luna-status-calendar-underline" aria-hidden="true" />
       </div>
       <span id={helpId} className="sr-only">Click for a brief preview. Hold for one second to open the full feed, or press Enter or Space.</span>
       <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{preview.expanded ? [preview.current?.title, preview.current?.detail].filter(Boolean).join('. ') : ''}</span>
