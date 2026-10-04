@@ -1,4 +1,12 @@
-# Male body v2: face rig + living idle (2026-10-03)
+# Male body: face rig + living idle (2026-10-03)
+
+**Current file: `Getsuga_Tensho_Character_v3.glb`.** v3 goes back to the first
+take of the idle: one continuous 48 s `Idle` loop with the stretch (12.3 s),
+neck roll (20.4 s), yawn (28.4 s) and look-around (37.2 s) built in. It ships no
+separate `Idle_*` variant clips, so the random idle director finds nothing to
+play and stays off. Everything else below (face rig, unchanged combat clips,
+redirects) is the same as v2. v2 notes follow.
+
 
 `public/models/characters/Getsuga_Tensho_Character_v2.glb` replaces
 `Getsuga_Tensho_Character.glb`. Every legacy URL (the hosted
