@@ -85,6 +85,10 @@
     },
     "opponent_id": {
       "type": "string"
+    },
+    "preferred_opponent_id": {
+      "type": "string",
+      "description": "Optional targeted PvP opponent. When set, matchmaking waits for this user instead of pairing the entry with an unrelated player. Used by post-match rematch."
     }
   },
   "required": [
