@@ -692,7 +692,7 @@ export default function LunaTemplate() {
             {currentHostName.toLowerCase() === 'my' ? 'My' : currentHostName}
           </div>
         )}
-        {!avatarFocusMode && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
+        {!avatarFocusMode && !clickedSlot && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
 
         {/* Home Section Switcher — left arrow + bottom arrow, only on default dashboard view */}
          {!avatarFocusMode && !showConsoleMode && !showAchievements && !uiVisible && !activeSubTab && !clickedSlot &&
