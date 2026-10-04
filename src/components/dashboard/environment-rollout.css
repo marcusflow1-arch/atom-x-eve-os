@@ -31,8 +31,8 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   filter:drop-shadow(0 0 6px rgba(185,243,255,.16));
 }
 
-/* Strip the old image/card treatment. The Environment control becomes an icon
-   sitting to the LEFT of the shorter upper line. */
+/* Environment Hub occupies the left half of the long lower rail.
+   Icon sits directly above its label; the label rides the long line. */
 [data-luna-environment-hub] > button:first-of-type{
   z-index:5;
   overflow:visible!important;
@@ -48,7 +48,7 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   position:absolute!important;
   top:52px!important;
   bottom:auto!important;
-  left:34px!important;
+  left:50px!important;
   right:auto!important;
   width:24px!important;
   height:24px!important;
@@ -68,21 +68,22 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   line-height:0!important;
   color:transparent!important;
 }
-[data-luna-environment-hub] > button:first-of-type > div:last-child h4::before{
+[data-luna-environment-hub] > button:first-of-type > div:last-child h4::after{
   content:"ENVIRONMENT HUB";
   position:absolute;
   left:50%;
-  bottom:29px;
-  width:88px;
+  top:25px;
+  width:104px;
   transform:translateX(-50%);
-  color:rgba(232,244,249,.48);
+  color:rgba(232,244,249,.56);
   font-size:7px;
-  line-height:1;
+  line-height:1.1;
   font-weight:700;
   letter-spacing:.13em;
   text-align:center;
   white-space:nowrap;
   text-transform:uppercase;
+  text-shadow:0 0 7px rgba(2,7,12,.98),0 0 3px rgba(2,7,12,.98);
   pointer-events:none;
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child h4 svg{
@@ -96,15 +97,14 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   display:none!important;
 }
 
-/* The existing Memories control remains the real clickable control. It sits to
-   the RIGHT of the short upper line and uses the same icon/label baseline as
-   Environment Hub. */
+/* Memories occupies the right half of the same long lower rail. The real
+   Memories button stays interactive; only its visual placement changes. */
 div:has(> [data-luna-environment-hub]) + div{
   position:relative!important;
 }
 div:has(> [data-luna-environment-hub]) + div > button:first-child{
   position:absolute!important;
-  left:-56px!important;
+  left:-90px!important;
   top:50px!important;
   z-index:35!important;
   width:26px!important;
@@ -127,17 +127,19 @@ div:has(> [data-luna-environment-hub]) + div > button:first-child > span:last-ch
   display:block!important;
   position:absolute!important;
   left:50%!important;
-  bottom:30px!important;
-  width:62px!important;
+  top:26px!important;
+  bottom:auto!important;
+  width:70px!important;
   transform:translateX(-50%)!important;
-  color:rgba(232,244,249,.48)!important;
+  color:rgba(232,244,249,.56)!important;
   font-size:7px!important;
-  line-height:1!important;
+  line-height:1.1!important;
   font-weight:700!important;
   letter-spacing:.13em!important;
   text-align:center!important;
   white-space:nowrap!important;
   text-transform:uppercase!important;
+  text-shadow:0 0 7px rgba(2,7,12,.98),0 0 3px rgba(2,7,12,.98)!important;
   pointer-events:none!important;
 }
 
@@ -323,8 +325,8 @@ div:has(> [data-luna-environment-hub]) + div > button:first-child > span:last-ch
 .luna-environment-rollout__loading svg{width:13px;height:13px}
 
 @media(max-width:900px){
-  [data-luna-environment-hub] > button:first-of-type > div:last-child{left:24px!important}
-  div:has(> [data-luna-environment-hub]) + div > button:first-child{left:-46px!important}
+  [data-luna-environment-hub] > button:first-of-type > div:last-child{left:42px!important}
+  div:has(> [data-luna-environment-hub]) + div > button:first-child{left:-76px!important}
   .luna-environment-rollout__scroller{grid-auto-columns:minmax(118px,42vw)}
 }
 
