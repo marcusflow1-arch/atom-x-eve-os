@@ -15,4 +15,4 @@ export async function loadAvatarModel(config={},height=1.8){
  return model;
 }
 export function disposeAvatarModel(model){customizations.get(model)?.dispose();customizations.delete(model);const textures=new Set(),materials=new Set(),geometries=new Set();model?.traverse(n=>{if(n.geometry)geometries.add(n.geometry);if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>materials.add(m));n.skeleton?.dispose();});for(const m of materials){Object.values(m).forEach(t=>{if(t?.isTexture)textures.add(t);});m.dispose();}textures.forEach(t=>t.dispose());geometries.forEach(g=>g.dispose());}
-export {applyCompanionAppearance as applyPlayerAppearance};
+export function applyPlayerAppearance(model,appearance){applyCompanionAppearance(model,appearance);customizations.get(model)?.update(appearance);}

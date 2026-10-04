@@ -36,7 +36,7 @@ export default function AvatarAppearanceDialog({onClose,onSaved,create=false,ini
  const onCapabilities=value=>{loadedGender.current=config.gender;setCaps(value);};
  const save=async()=>{
   if(busy||layers.loading||layers.error)return;
-  if(create){const check=validateAXECharacterName(name);if(!check.ok){setError(check.reason);return;}}
+  if(create){const check=validateAXECharacterName(name);if(!check.ok){setError(check.reason==='invalid-characters'?"Use letters, numbers, spaces, apostrophes or hyphens.":'Choose a name between 2 and 24 characters.');return;}}
   setBusy(true);setError('');
   try{
    const avatar=await saveAppearance({...config,...(create?{name:name.trim()}: {})},{broadcast:!create});

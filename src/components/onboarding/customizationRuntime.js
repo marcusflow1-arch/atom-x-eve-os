@@ -44,7 +44,7 @@ export function applyCustomizationAppearance(root,appearance={}) {
   const next=list.map(material=>{
    const channel=materialChannel(mesh,material);
    if(!channel)return material;
-   if(!material.userData.creatorOriginal)material.userData.creatorOriginal={color:material.color?.clone(),roughness:material.roughness,metalness:material.metalness};
+   if(!material.userData.creatorOriginal)material.userData.creatorOriginal={color:(material.userData.genesisBase?.color||material.color)?.clone(),roughness:material.roughness,metalness:material.metalness};
    const original=material.userData.creatorOriginal;
    const enabled=channel==='skin'?appearance.skin_tint_enabled:channel==='iris'?appearance.eye_tint_enabled:appearance.hair_tint_enabled;
    const tint=channel==='skin'?appearance.skin_tone:channel==='iris'?appearance.eye_color:appearance.hair_color;
@@ -89,6 +89,7 @@ export function bindCustomizationLayer(baseRoot,layer,asset) {
  }else {
   let count=0;
   layer.traverse(mesh=>{
+   if(mesh.isMesh&&!mesh.isSkinnedMesh)throw Error('Every mesh in a skinned layer must use the selected body rig. Use a bone attachment for rigid accessories.');
    if(!mesh.isSkinnedMesh)return;
    count++;
    const source=mesh.skeleton;
