@@ -3,12 +3,11 @@ import * as THREE from 'three';
 // The user's current character bodies. Both GLBs keep the same skeletons as
 // the originals, so every older card animation still plays on them, and they
 // add the authored Chidori clips:
-//   male   (Getsuga_Tensho_Character_v2.glb, Oct 2026): Idle (12 s living loop
-//          with facial animation), Combat_Idle, Dodge_Left/Right, GetsugaTensho,
-//          Chidori_Attack_01, Chidori_Ultimate, Chidori_Hit_Stun_Fall, and the
-//          one-shot idle variants Idle_Stretch, Idle_LookAround, Idle_NeckRoll,
-//          Idle_Yawn (played at random by the idle director). Adds eye, mouth
-//          and jaw rigs plus 31 facial shape keys on SK_Character.
+//   male   (Getsuga_Tensho_Character_v3.glb, Oct 2026): Idle (48 s living loop
+//          with facial animation; the stretch, neck roll, yawn and look-around
+//          are part of the loop), Combat_Idle, Dodge_Left/Right, GetsugaTensho,
+//          Chidori_Attack_01, Chidori_Ultimate, Chidori_Hit_Stun_Fall. Adds eye,
+//          mouth and jaw rigs plus 31 facial shape keys on SK_Character.
 //   female (Artemis_Character.glb): Idle, Combat_Idle, Bow_Draw/Sheathe,
 //          Call_Of_The_Husky, Rain_Of_Arrows, Lunar_Beam, Chidori_Ultimate,
 //          Chidori_Hit_Stun_Fall
@@ -16,7 +15,7 @@ import * as THREE from 'three';
 // to update them — no re-upload through the Base44 editor.
 // Versioned file name: a new body must never be served from a cached copy of
 // the previous one.
-export const MALE_CHARACTER_MODEL_URL = '/models/characters/Getsuga_Tensho_Character_v2.glb';
+export const MALE_CHARACTER_MODEL_URL = '/models/characters/Getsuga_Tensho_Character_v3.glb';
 export const FEMALE_CHARACTER_MODEL_URL = '/models/characters/Artemis_Character.glb';
 
 // Avatar records, Skill Book cards and backend defaults still store the old
@@ -26,8 +25,8 @@ const LEGACY_MODEL_FILES = [
   { pattern: /d646be928_Getsuga_Tensho_Character\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
   { pattern: /96bb872db_Artemis_Character\.glb(?:[?#].*)?$/i, url: FEMALE_CHARACTER_MODEL_URL },
   { pattern: /^(?:https?:\/\/[^/]+)?\/getsuga\/Getsuga_Character\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
-  // The previous in-app male body (Sep 2026), still referenced by saved data.
-  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Getsuga_Tensho_Character\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
+  // Previous in-app male bodies (Sep / early Oct 2026).
+  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Getsuga_Tensho_Character(?:_v2)?\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
 ];
 
 export function resolveCharacterModelUrl(url) {
