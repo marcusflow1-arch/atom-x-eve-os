@@ -477,7 +477,7 @@ export default function DashboardAvatarOverview() {
         style={inventoryMode
           ? {
               left: 'auto',
-              right: 'calc(338px + min(560px, calc(100% - 638px)))',
+              right: 'calc(338px + min(680px, calc(100% - 638px)))',
               width: '300px',
             }
           : { left: '0px', right: 'min(338px, 30vw)', width: 'auto' }}
@@ -494,7 +494,7 @@ export default function DashboardAvatarOverview() {
       {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
         <div
           data-dashboard-utility-workspace
-          className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
+          className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[680px] pointer-events-auto overflow-hidden"
           style={{
             maxWidth: 'calc(100% - 638px)',
             background: 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
@@ -504,7 +504,7 @@ export default function DashboardAvatarOverview() {
         >
           <div className="relative h-full min-h-0">
             <section
-              className="absolute bottom-0 right-0 top-0 min-h-0 w-full max-w-[560px] overflow-hidden"
+              className="absolute bottom-0 right-0 top-0 min-h-0 w-full max-w-[680px] overflow-hidden"
               style={{
                 background: 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
               }}
