@@ -3,13 +3,23 @@ import {useAuth} from '@/components/auth/AuthContext';
 import {usePartySession} from '@/components/social/partySession';
 import {useDashboardSession,openPlayerMessage} from '@/components/social/dashboardSession';
 import {MessageSquare,Users,LogOut} from 'lucide-react';
+import {useAIBattleSurfaceState} from '@/components/battle/aiBattleSurfaceState';
 
 export default function PartyPortraitRail(){
  const {user}=useAuth(),party=usePartySession(),session=useDashboardSession();
+ const battleSurface=useAIBattleSurfaceState();
  const [selected,setSelected]=useState(null);
  const byId=new Map();
- for(const m of party.members||[])byId.set(m.user_id,{id:m.user_id,name:m.user_name,avatar:m.user_avatar,party:true});
- for(const p of session.players||[]) if(p.player_id!==user?.id || party.party) byId.set(p.player_id,{...byId.get(p.player_id),id:p.player_id,name:p.display_name,avatar:p.avatar_url,present:true});
+ const pvpIds=new Set((battleSurface.participantIds||[]).map(String));
+ for(const m of party.members||[])byId.set(String(m.user_id),{id:m.user_id,name:m.user_name,avatar:m.user_avatar,party:true});
+ for(const p of session.players||[]){
+  const id=String(p.player_id||'');
+  // A matchmaking opponent is temporary battle presence, not a social guest.
+  // Keep a real party member if they happen to be the opponent, but never add
+  // a random PvP player to the normal dashboard/party portrait rail.
+  if(pvpIds.has(id)&&!byId.has(id))continue;
+  if(p.player_id!==user?.id||party.party)byId.set(id,{...byId.get(id),id:p.player_id,name:p.display_name,avatar:p.avatar_url,present:true});
+ }
  const members=[...byId.values()].slice(0,5);
  if(!members.length)return null;
  return <div data-social-controls className="absolute top-[26px] z-50 flex flex-col gap-2 pointer-events-auto" style={{right:'calc(min(338px, 30vw) + 10px)'}} aria-label="Party and dashboard members">
