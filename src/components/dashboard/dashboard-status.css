@@ -1,5 +1,5 @@
 .luna-status{container-type:inline-size;display:flex;align-items:stretch;gap:0;height:100%;min-width:0;color:#e8f4ff;background:transparent;border:0;border-radius:0}
-.luna-status-announcements{position:relative;flex:0 0 44%;min-width:0;background:transparent}
+.luna-status-announcements{position:relative;flex:0 0 58%;min-width:0;background:transparent}
 .luna-status-selectors{position:absolute;right:6px;left:auto;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:2}
 .luna-status-icon{position:relative;display:grid;place-items:center;width:30px;height:28px;border-radius:4px;color:#93a9b9;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .luna-status-icon[aria-expanded=true]{color:#b6e9f3}
@@ -13,10 +13,10 @@
 .luna-status-feed-copy>small{color:#93b3c4;text-transform:uppercase;letter-spacing:.08em;font-size:8px;line-height:1.2}
 .luna-status-feed strong{font-size:12px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .luna-status-feed-copy>span{font-size:10px;line-height:1.35;color:#b0c2d1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.luna-status-underline{position:absolute;left:10px;right:6px;bottom:3px;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(190,224,238,.16) 16%,rgba(190,224,238,.34) 68%,rgba(190,224,238,.18) 100%)}
 .luna-status-divider{align-self:stretch;width:1px;flex:none;margin:8px 0;background:linear-gradient(transparent,rgba(176,224,240,.28) 18%,rgba(176,224,240,.42) 50%,rgba(176,224,240,.28) 82%,transparent)}
-.luna-status-calendar-side{position:relative;display:flex;align-items:center;justify-content:flex-start;flex:0 0 56%;min-width:0;padding:8px 0 9px 6px;background:transparent;backdrop-filter:none;border-radius:0}
-.luna-status-calendar-underline{position:absolute;left:6px;right:auto;bottom:3px;width:min(235px,calc(100% - 6px));height:1px;pointer-events:none;background:linear-gradient(90deg,rgba(190,224,238,.16),rgba(190,224,238,.36) 45%,rgba(190,224,238,.22) 85%,transparent)}
-.luna-status-clock{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:auto;max-width:100%;padding:8px 8px 9px 2px;text-align:left;border-radius:0;background:transparent}
+.luna-status-calendar-side{position:relative;display:flex;align-items:center;justify-content:flex-end;flex:0 0 42%;min-width:0;padding:8px 12px 9px 8px;background:transparent;backdrop-filter:none;border-radius:0}
+.luna-status-clock{display:flex;align-items:center;justify-content:flex-end;gap:12px;width:auto;max-width:100%;padding:8px 0 9px 4px;text-align:left;border-radius:0;background:transparent}
 .luna-status-clock>svg{color:#accedd;flex:none}
 .luna-status-clock time{display:block;font-size:23px;font-weight:600;line-height:1.1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
 .luna-status-clock small{display:block;margin-top:6px;font-size:9px;color:#92a7ba;text-transform:uppercase;letter-spacing:.05em}
@@ -24,6 +24,6 @@
 .luna-status-clock:hover{background:rgba(199,234,255,.025);color:white}
 .luna-status-feed:hover strong{color:white}
 .luna-status button:focus-visible{outline:2px solid #a0e8ff;outline-offset:-2px}
-@container (max-width:520px){.luna-status-calendar-side{flex-basis:58%;padding-left:5px;padding-right:0}.luna-status-announcements{flex-basis:42%}.luna-status-clock{gap:7px}.luna-status-clock time{font-size:19px}.luna-status-clock small{max-width:112px;font-size:8px}.luna-status-calendar-underline{left:5px;right:auto;width:min(205px,calc(100% - 5px))}.luna-status-feed{padding-left:6px}.luna-status-feed strong{font-size:11px}}
+@container (max-width:520px){.luna-status-announcements{flex-basis:56%}.luna-status-calendar-side{flex-basis:44%;padding-left:6px;padding-right:8px}.luna-status-clock{gap:7px}.luna-status-clock time{font-size:19px}.luna-status-clock small{max-width:112px;font-size:8px}.luna-status-underline{left:8px;right:5px}.luna-status-feed{padding-left:6px}.luna-status-feed strong{font-size:11px}}
 @container (max-width:350px){.luna-status-clock>svg{display:none}.luna-status-clock small{max-width:88px}.luna-status-feed-copy>small{display:none}.luna-status-feed strong{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.luna-status-preview,.luna-status-icon::after{transition:none!important;transform:none!important}.luna-status-icon:not([data-holding])::after{visibility:hidden}}
