@@ -1,0 +1,113 @@
+{
+  "name": "AvatarCustomizationAsset",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slot": {
+      "type": "string",
+      "enum": [
+        "hair",
+        "eyebrows",
+        "facial_hair",
+        "outfit",
+        "top",
+        "bottom",
+        "footwear",
+        "accessory",
+        "tattoo",
+        "complexion"
+      ]
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female"
+      ]
+    },
+    "rig_id": {
+      "type": "string"
+    },
+    "binding": {
+      "type": "string",
+      "enum": [
+        "skinned",
+        "socket",
+        "surface"
+      ]
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "published": {
+      "type": "boolean",
+      "default": false
+    },
+    "attach_bone": {
+      "type": "string"
+    },
+    "hide_meshes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "target_meshes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tint_materials": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "slot",
+    "gender",
+    "rig_id",
+    "binding",
+    "file_url"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.published": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
