@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
-let state = { dashboardMode: false, matchId: '' };
+const EMPTY_STATE = { dashboardMode: false, matchId: '', participantIds: [] };
+let state = EMPTY_STATE;
 const listeners = new Set();
 
 const emit = () => listeners.forEach((listener) => listener());
@@ -14,9 +15,16 @@ export const aiBattleSurfaceState = {
 };
 
 export function setAIBattleDashboardMode(active, matchId = '') {
-  const next = { dashboardMode: Boolean(active), matchId: String(matchId || '') };
+  const next = { ...state, dashboardMode: Boolean(active), matchId: String(matchId || '') };
   if (next.dashboardMode === state.dashboardMode && next.matchId === state.matchId) return;
   state = next;
+  emit();
+}
+
+export function setAIBattleParticipants(ids = []) {
+  const participantIds = [...new Set((ids || []).map(String).filter(Boolean))];
+  if (participantIds.length === state.participantIds.length && participantIds.every((id, index) => id === state.participantIds[index])) return;
+  state = { ...state, participantIds };
   emit();
 }
 
@@ -24,7 +32,7 @@ export function useAIBattleSurfaceState() {
   return useSyncExternalStore(
     aiBattleSurfaceState.subscribe,
     aiBattleSurfaceState.getSnapshot,
-    () => ({ dashboardMode: false, matchId: '' }),
+    () => EMPTY_STATE,
   );
 }
 
