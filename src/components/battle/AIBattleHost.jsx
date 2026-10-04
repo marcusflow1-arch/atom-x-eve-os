@@ -6,6 +6,7 @@ import AIBattleSessionBridge from '@/components/battle/AIBattleSessionBridge';
 import AIBattleQueueStatus from '@/components/battle/AIBattleQueueStatus';
 import PvPArenaStage from '@/components/battle/PvPArenaStage';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { setAIBattleDashboardMode, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
 const ARENA_STATUSES = ['connecting', 'countdown', 'fighting', 'ended'];
 
@@ -23,14 +24,22 @@ export default function AIBattleHost() {
   const { user } = useAuth();
   const battle = useAIBattleQueue({ sessionBridge: true, polling: true });
   const match = battle.match;
+  const surface = useAIBattleSurfaceState();
   const isParticipant = Boolean(match?.id && user?.id && (match.player_ids || []).map(String).includes(String(user.id)));
-  const showArena = isParticipant && ARENA_STATUSES.includes(String(match?.status || ''));
+  const matchStatus = String(match?.status || '');
+  const dashboardModeForMatch = surface.dashboardMode && String(surface.matchId || '') === String(match?.id || '');
+  // An active PvP match can be temporarily viewed from the Luna dashboard.
+  // The server-side match and queue keep running; only the arena presentation
+  // is hidden. Results always take over again so victory/defeat is not missed.
+  const showArena = isParticipant
+    && ARENA_STATUSES.includes(matchStatus)
+    && (matchStatus === 'ended' || !dashboardModeForMatch);
 
   // A reservation that falls through (the opponent backed out or left) now puts
   // this player straight back in the queue. Say so, rather than silently
   // swapping the arena for the queue indicator.
   const previousStatus = useRef('');
-  const matchStatus = String(match?.status || '');
+  const previousMatchId = useRef('');
   const queueStatus = String(battle.queue?.status || '');
   useEffect(() => {
     const before = previousStatus.current;
@@ -39,6 +48,13 @@ export default function AIBattleHost() {
       announceAIBattleNotice(OPPONENT_LEFT_NOTICE);
     }
   }, [matchStatus, queueStatus]);
+
+  useEffect(() => {
+    const nextId = String(match?.id || '');
+    if (previousMatchId.current && previousMatchId.current !== nextId) setAIBattleDashboardMode(false, '');
+    previousMatchId.current = nextId;
+    if (!nextId || matchStatus === 'ended') setAIBattleDashboardMode(false, nextId);
+  }, [match?.id, matchStatus]);
 
   if (!user?.id || typeof document === 'undefined') return null;
   return createPortal(
