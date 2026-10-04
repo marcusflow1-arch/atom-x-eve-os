@@ -21,6 +21,8 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
   const explicitlyJoinedRef = useRef(false); // true if joinMultiplayerChannel fired
   const hostGraceTimerRef = useRef(Date.now());
   const envUrlRef = useRef(envUrl);
+  const preBattleChannelRef = useRef(null);
+  const battleChannelActiveRef = useRef(false);
 
   useEffect(() => {
     envUrlRef.current = envUrl;
@@ -86,6 +88,14 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
       if (surface === 'dashboard' && (requestedSurface === 'game-world' || !isDashboardChannel)) return;
 
       if (targetChannel) {
+        // AI Battle may temporarily use another dashboard room for its realtime
+        // transport, but it must never replace the user's social dashboard
+        // destination. Remember where the player was so PvP can return without
+        // suspending a party/hangout session.
+        if (surface === 'dashboard' && detail.aiBattle && !battleChannelActiveRef.current) {
+          preBattleChannelRef.current = channelRef.current || `dashboard_${user?.id || ''}`;
+          battleChannelActiveRef.current = true;
+        }
         explicitlyJoinedRef.current = true;
         setCurrentChannel(targetChannel);
         channelRef.current = targetChannel;
@@ -219,13 +229,26 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
       });
     };
 
+    const restoreSocialDashboard = () => {
+      if (surface !== 'dashboard' || !battleChannelActiveRef.current) return;
+      const restoreChannel = preBattleChannelRef.current || `dashboard_${user?.id || ''}`;
+      battleChannelActiveRef.current = false;
+      preBattleChannelRef.current = null;
+      if (restoreChannel && restoreChannel !== channelRef.current) {
+        setCurrentChannel(restoreChannel);
+        channelRef.current = restoreChannel;
+      }
+    };
+
     window.addEventListener('joinMultiplayerChannel', handleJoin);
     window.addEventListener('multiplayerLocalUpdate', handleLocalUpdate);
     window.addEventListener('multiplayerLocalAction', handleLocalAction);
+    window.addEventListener('lunaPvPExited', restoreSocialDashboard);
     return () => {
       window.removeEventListener('joinMultiplayerChannel', handleJoin);
       window.removeEventListener('multiplayerLocalUpdate', handleLocalUpdate);
       window.removeEventListener('multiplayerLocalAction', handleLocalAction);
+      window.removeEventListener('lunaPvPExited', restoreSocialDashboard);
     };
   }, [user?.id, surface]);
 
