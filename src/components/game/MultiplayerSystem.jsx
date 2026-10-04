@@ -244,11 +244,13 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
     window.addEventListener('multiplayerLocalUpdate', handleLocalUpdate);
     window.addEventListener('multiplayerLocalAction', handleLocalAction);
     window.addEventListener('lunaPvPExited', restoreSocialDashboard);
+    window.addEventListener('lunaAIBattleDashboardView', restoreSocialDashboard);
     return () => {
       window.removeEventListener('joinMultiplayerChannel', handleJoin);
       window.removeEventListener('multiplayerLocalUpdate', handleLocalUpdate);
       window.removeEventListener('multiplayerLocalAction', handleLocalAction);
       window.removeEventListener('lunaPvPExited', restoreSocialDashboard);
+      window.removeEventListener('lunaAIBattleDashboardView', restoreSocialDashboard);
     };
   }, [user?.id, surface]);
 
