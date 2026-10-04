@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-const EMPTY_STATE = { dashboardMode: false, matchId: '', participantIds: [] };
+const EMPTY_STATE = { dashboardMode: false, matchId: '', participantIds: [], postMatch: null };
 let state = EMPTY_STATE;
 const listeners = new Set();
 
@@ -25,6 +25,17 @@ export function setAIBattleParticipants(ids = []) {
   const participantIds = [...new Set((ids || []).map(String).filter(Boolean))];
   if (participantIds.length === state.participantIds.length && participantIds.every((id, index) => id === state.participantIds[index])) return;
   state = { ...state, participantIds };
+  emit();
+}
+
+export function setAIBattlePostMatch(postMatch = null) {
+  state = { ...state, postMatch: postMatch || null };
+  emit();
+}
+
+export function clearAIBattlePostMatch() {
+  if (!state.postMatch) return;
+  state = { ...state, postMatch: null };
   emit();
 }
 
