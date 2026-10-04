@@ -1,12 +1,12 @@
 .luna-status{container-type:inline-size;display:flex;align-items:stretch;gap:0;height:100%;min-width:0;color:#e8f4ff;background:transparent;border:0;border-radius:0}
 .luna-status-announcements{position:relative;flex:0 0 44%;min-width:0;background:transparent}
-.luna-status-selectors{position:absolute;right:7px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:2}
+.luna-status-selectors{position:absolute;left:6px;right:auto;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:2}
 .luna-status-icon{position:relative;display:grid;place-items:center;width:30px;height:28px;border-radius:4px;color:#93a9b9;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .luna-status-icon[aria-expanded=true]{color:#b6e9f3}
 .luna-status-icon[data-unread]::before{content:'';position:absolute;right:3px;top:3px;width:4px;height:4px;border-radius:50%;background:#c0e8ef}
 .luna-status-icon::after{content:'';position:absolute;left:5px;right:5px;bottom:1px;height:1px;background:#beeaf3;transform:scaleX(0);transform-origin:left}
 .luna-status-icon[data-holding]::after{transform:scaleX(1);transition:transform 1s linear}
-.luna-status-preview{position:absolute;inset:2px 45px 2px 0;min-width:0;overflow:hidden;clip-path:inset(0 0 0 100%);opacity:0;transform:translateX(8px);pointer-events:none;transition:clip-path .26s ease,opacity .2s ease,transform .26s ease}
+.luna-status-preview{position:absolute;inset:2px 0 2px 44px;min-width:0;overflow:hidden;clip-path:inset(0 100% 0 0);opacity:0;transform:translateX(-8px);pointer-events:none;transition:clip-path .26s ease,opacity .2s ease,transform .26s ease}
 .luna-status-preview[data-expanded]{clip-path:inset(0);opacity:1;transform:translateX(0);pointer-events:auto}
 .luna-status-feed{display:flex;align-items:center;width:100%;height:100%;min-width:0;text-align:left;padding:7px 10px 7px 12px;border:0;background:linear-gradient(270deg,rgba(15,26,39,.7),rgba(15,26,39,0))}
 .luna-status-feed-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
