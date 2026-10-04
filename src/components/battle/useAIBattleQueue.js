@@ -9,6 +9,7 @@ import { showInfo } from '@/components/error/ErrorToast';
 import { dashboardSession, joinDashboard, useDashboardSession } from '@/components/social/dashboardSession';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { requestAIBattle, withoutDismissed } from './battleClient';
+import { useAIBattleSurfaceState } from './aiBattleSurfaceState';
 import { aiBattleQueryKey, battleDeadline, createBattleRefresh, matchSignal, mergeBattleSnapshot, queueSignal, RETRYABLE_BATTLE_ACTIONS, scheduleBattleDeadline } from './battleSync';
 export { aiBattleQueryKey } from './battleSync';
 export { dismissAIBattleResult } from './battleClient';
@@ -174,6 +175,7 @@ export function useAIBattleSnapshot() {
 export default function useAIBattleQueue({ sessionBridge = true, polling = true } = {}) {
   const { user, avatar } = useAuth();
   const companion = useCompanionIdentity();
+  const battleSurface = useAIBattleSurfaceState();
   const companionGender = detectAvatarGender(companion);
   const savedAvatarGender = detectAvatarGender(avatar);
   // AI Battle belongs to the Luna/dashboard avatar runtime. Never fall back to
@@ -329,6 +331,13 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
   // only after BOTH browser clients acknowledged the reserved match.
   useEffect(() => {
     if (!sessionBridge || !match?.id || !user?.id || !ACTIVE_MATCH_STATUSES.includes(String(match.status || ''))) return undefined;
+    const deliberatelyOnDashboard = battleSurface.dashboardMode
+      && String(battleSurface.matchId || '') === String(match.id);
+    // "View Dashboard" intentionally releases the temporary PvP room so the
+    // user's normal dashboard/party session can resume. Matchmaking continues
+    // to poll server-side; pressing REJOIN flips this flag off and this effect
+    // reconnects the battle room.
+    if (deliberatelyOnDashboard) return undefined;
     const channelId = String(match.dashboard_channel || `dashboard_${match.host_id}`);
     const hostId = String(match.host_id || '');
     const token = `${match.id}:${hostId}`;
@@ -383,7 +392,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       dashboardSession.publish({ channel_id: channelId, host_id: hostId, host_name: match.host_name || 'Player', players: provisionalPlayers, status: 'connecting', error: '', ai_battle_match_id: String(match.id) });
     }
     return () => { if (retryTimer) window.clearTimeout(retryTimer); };
-  }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username, roomRetryTick]);
+  }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username, roomRetryTick, battleSurface.dashboardMode, battleSurface.matchId]);
 
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
