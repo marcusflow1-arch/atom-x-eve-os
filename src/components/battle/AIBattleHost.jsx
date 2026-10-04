@@ -6,7 +6,7 @@ import AIBattleSessionBridge from '@/components/battle/AIBattleSessionBridge';
 import AIBattleQueueStatus from '@/components/battle/AIBattleQueueStatus';
 import PvPArenaStage from '@/components/battle/PvPArenaStage';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { setAIBattleDashboardMode, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
+import { setAIBattleDashboardMode, setAIBattleParticipants, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
 const ARENA_STATUSES = ['connecting', 'countdown', 'fighting', 'ended'];
 
@@ -56,11 +56,24 @@ export default function AIBattleHost() {
     if (!nextId || matchStatus === 'ended') setAIBattleDashboardMode(false, nextId);
   }, [match?.id, matchStatus]);
 
+  useEffect(() => {
+    const ids = (match?.player_ids || []).map(String).filter(Boolean);
+    if (ids.length) {
+      setAIBattleParticipants(ids);
+      return undefined;
+    }
+    // Keep the just-finished PvP roster quarantined briefly while dashboard
+    // presence heartbeats age out, so a random opponent never flashes as a
+    // normal party/dashboard guest after the result screen closes.
+    const timer = window.setTimeout(() => setAIBattleParticipants([]), 20000);
+    return () => window.clearTimeout(timer);
+  }, [match?.id, match?.player_ids]);
+
   if (!user?.id || typeof document === 'undefined') return null;
   return createPortal(
     <>
       <AIBattleSessionBridge battle={battle} />
-      {!showArena && <AIBattleQueueStatus battle={battle} />}
+      {!showArena && !dashboardModeForMatch && <AIBattleQueueStatus battle={battle} />}
       {showArena && (
         <div className="fixed inset-0 z-[220]" data-ai-battle-arena-host>
           {/* An arena crash must not take the whole dashboard down. Reloading
