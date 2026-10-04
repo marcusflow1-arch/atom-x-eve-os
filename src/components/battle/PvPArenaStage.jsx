@@ -1,7 +1,7 @@
 import {AvatarCustomizationRuntime} from '@/components/onboarding/customizationRuntime';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Flag, Play, X } from 'lucide-react';
+import { Flag, Home, Play, X } from 'lucide-react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -21,6 +21,7 @@ import { CHIDORI_REACTION_CLIP, isChidoriCast } from '@/components/battle/chidor
 import { ARENA_CHIDORI, captureRestPose, chidoriAttackerPush, chidoriVictimKnock, createChidoriArenaPresenter } from '@/components/battle/chidoriArenaPresenter';
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { dismissAIBattleResult, getAIBattleClientSessionId, isRateLimited } from '@/components/battle/useAIBattleQueue';
+import { showAIBattleOnDashboard } from '@/components/battle/aiBattleSurfaceState';
 import { requestAIBattle } from './battleClient';
 import { skillSlotFromKey } from '@/components/luna/skillSlots';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
@@ -329,9 +330,20 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     queryClient.setQueryData(['ai-battle-matchmaking', user?.id], (prev = {}) => ({ ...prev, queue: null, match: null, server_time: Date.now() }));
     delete window.__lunaPvPMatch;
     delete window.__lunaPvPPosition;
-    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user.id}`, hostId: user.id, hostName: 'My' } }));
-    window.dispatchEvent(new CustomEvent('lunaPvPExited'));
+    // Ending PvP must not move the player between dashboard/party sessions.
+    // The social dashboard they were already visiting remains authoritative.
+    window.dispatchEvent(new CustomEvent('lunaPvPExited', { detail: { matchId: matchRef.current?.id || '' } }));
   }, [queryClient, user?.id]);
+
+  const leaveArenaToDashboard = useCallback(() => {
+    if (ended || !matchRef.current?.id) return;
+    setSurrenderConfirm(false);
+    setEscapeMenuOpen(false);
+    showAIBattleOnDashboard(matchRef.current.id);
+    window.dispatchEvent(new CustomEvent('lunaAIBattleDashboardView', {
+      detail: { matchId: matchRef.current.id },
+    }));
+  }, [ended]);
 
   const playSkill = (fighter, skill, targetId, facingYaw, detail = {}) => {
     if (!fighter?.runtime || !skill) return false;
@@ -985,6 +997,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         <p className="mt-2 max-w-sm text-xs leading-5 text-white/45">This is a live multiplayer match. Opening this menu does not pause the opponent or the server match.</p>
         {!surrenderConfirm?<div className="mt-6 space-y-3">
           <button type="button" onClick={()=>setEscapeMenuOpen(false)} className="flex w-full items-center gap-3 border border-cyan-100/18 bg-cyan-200/[0.08] px-4 py-4 text-left transition hover:bg-cyan-200/[0.13]"><span className="grid h-9 w-9 place-items-center border border-cyan-100/15 bg-cyan-100/[0.05]"><Play className="h-4 w-4 text-cyan-100"/></span><span><strong className="block text-sm">Resume Match</strong><small className="mt-0.5 block text-[10px] text-white/38">Return to the PvP battlefield</small></span><span className="ml-auto text-[9px] font-black uppercase tracking-[.16em] text-white/30">ESC</span></button>
+          <button type="button" onClick={leaveArenaToDashboard} className="flex w-full items-center gap-3 border border-white/12 bg-white/[0.035] px-4 py-4 text-left transition hover:bg-white/[0.07]"><span className="grid h-9 w-9 place-items-center border border-white/10 bg-white/[0.035]"><Home className="h-4 w-4 text-white/75"/></span><span><strong className="block text-sm">View Dashboard</strong><small className="mt-0.5 block text-[10px] text-white/38">Keep the match active and return to Luna</small></span></button>
           <button type="button" onClick={()=>setSurrenderConfirm(true)} className="flex w-full items-center gap-3 border border-red-300/18 bg-red-400/[0.055] px-4 py-4 text-left transition hover:bg-red-400/[0.10]"><span className="grid h-9 w-9 place-items-center border border-red-300/15 bg-red-300/[0.05]"><Flag className="h-4 w-4 text-red-200"/></span><span><strong className="block text-sm text-red-100">Surrender Match</strong><small className="mt-0.5 block text-[10px] text-white/38">Voluntarily forfeit this PvP match</small></span></button>
         </div>:<div className="mt-6 border border-red-300/16 bg-red-500/[0.05] p-5">
           <div className="flex items-center gap-3"><Flag className="h-5 w-5 text-red-200"/><div><div className="text-sm font-black text-red-100">Confirm surrender?</div><div className="mt-1 text-[10px] leading-4 text-white/40">This ends the match immediately and records the result as a forfeit.</div></div></div>
