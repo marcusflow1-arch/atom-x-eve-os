@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { SHAPE_CONTROLS, RIG_IDS } from '../../../base44/shared/avatarCustomization.ts';
 
+const morphHooks=new WeakSet();
+const surfaceSources=new WeakMap();
+
 export function materialChannel(mesh,material) {
  const explicit=material?.userData?.avatarCustomization?.channel || mesh?.userData?.avatarCustomization?.channel;
  if(['skin','hair','iris','brows'].includes(explicit))return explicit;
@@ -34,10 +37,10 @@ export function applyCustomizationAppearance(root,appearance={}) {
   if(mesh.morphTargetDictionary) {
    const indices=SHAPE_CONTROLS.filter(c=>mesh.morphTargetDictionary[c.morph]!==undefined);
    mesh.userData.creatorMorphs=indices.map(c=>[mesh.morphTargetDictionary[c.morph],Number(appearance.shape_controls?.[c.id]||0)]);
-   if(!mesh.userData.creatorMorphHook) {
+   if(!morphHooks.has(mesh)) {
     const before=mesh.onBeforeRender;
     mesh.onBeforeRender=function(...args){before?.apply(this,args);applyPersistentShapes(this);};
-    mesh.userData.creatorMorphHook=true;
+    morphHooks.add(mesh);
    }
    applyPersistentShapes(mesh);
   }
@@ -120,11 +123,12 @@ export class AvatarCustomizationRuntime {
  }
  async update(appearance={}) {
   this.appearance=appearance;
-  const assets=(appearance.customization_assets||[]).filter(a=>appearance.selected_assets?.[a.slot]===a.id);
+  const assets=(appearance.customization_assets||[]).filter(a=>appearance.selected_assets?.[a.slot]===a.id).sort((a,b)=>(a.binding==='surface'?2:a.slot==='body'?0:1)-(b.binding==='surface'?2:b.slot==='body'?0:1));
   const key=JSON.stringify(assets.map(a=>[a.id,a.file_url,a.binding,a.hide_meshes,a.target_meshes,a.attach_bone,a.tint_materials]));
   if(key===this.key){this.apply();return;}
   this.key=key;const revision=++this.revision;this.onState({loading:true,error:''});
   const created=[];
+  const retiringNodes=new Set();this.layers.forEach(item=>item.root.traverse(n=>retiringNodes.add(n)));
   try {
    for(const asset of assets) {
     if(asset.gender!==this.gender||asset.rig_id!==RIG_IDS[this.gender])throw Error('This layer is not compatible with the selected body.');
@@ -132,11 +136,12 @@ export class AvatarCustomizationRuntime {
      const texture=await new THREE.TextureLoader().loadAsync(asset.file_url);
      texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;
      const group=new THREE.Group();created.push({asset,root:group});
-     const candidates=[];this.root.traverse(n=>{if(n.isMesh&&!n.userData?.customizationSurface&&!n.userData?.creatorLayer&&asset.target_meshes.includes(n.name))candidates.push(n);});
+     const candidates=[];this.root.traverse(n=>{if(n.isMesh&&!n.userData?.customizationSurface&&!retiringNodes.has(n)&&asset.target_meshes.includes(n.name))candidates.push(n);});
      if(!candidates.length){texture.dispose();throw Error('The surface layer targets a mesh that is missing from this body.');}
      candidates.forEach(base=>{
       const material=new THREE.MeshStandardMaterial({map:texture,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,roughness:.8,side:THREE.DoubleSide});
       const overlay=base.isSkinnedMesh?new THREE.SkinnedMesh(base.geometry,material):new THREE.Mesh(base.geometry,material);
+      surfaceSources.set(overlay,base);
       overlay.userData.customizationSurface=true;overlay.userData.sharedCreatorGeometry=true;overlay.name='CreatorSurface_'+asset.slot;overlay.frustumCulled=false;overlay.renderOrder=2;
       if(base.isSkinnedMesh)overlay.bind(new THREE.Skeleton(base.skeleton.bones,base.skeleton.boneInverses.map(m=>m.clone())),base.bindMatrix.clone());
       overlay.morphTargetDictionary=base.morphTargetDictionary;overlay.morphTargetInfluences=base.morphTargetInfluences;
@@ -167,7 +172,7 @@ export class AvatarCustomizationRuntime {
   this.layers.forEach(({asset,root})=>{
    const color=this.appearance.layer_colors?.[asset.slot] || (['hair','eyebrows','facial_hair'].includes(asset.slot)&&this.appearance.hair_tint_enabled?this.appearance.hair_color:null);
    const nodes=root.userData.surfaceMeshes||[root];
-   nodes.forEach(n=>n.traverse(mesh=>{if(!mesh.isMesh)return;(Array.isArray(mesh.material)?mesh.material:[mesh.material]).forEach(m=>{
+   nodes.forEach(n=>n.traverse(mesh=>{if(!mesh.isMesh)return;if(surfaceSources.has(mesh))mesh.visible=surfaceSources.get(mesh).visible;(Array.isArray(mesh.material)?mesh.material:[mesh.material]).forEach(m=>{
     m.userData.creatorLayerColor ||= m.color?.clone();
     if(m.color&&m.userData.creatorLayerColor)m.color.copy(m.userData.creatorLayerColor);
     if(color&&(asset.binding==='surface'||asset.tint_materials?.includes(m.name)))m.color?.set(color);
