@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDashboardSession } from '@/components/social/dashboardSession';
-import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
+import { startAIBattleMusic, stopAIBattleMusic } from '@/components/battle/aiBattleAudio';
 
 // Keeps the shared dashboard room, music and manual reconnect control in sync
 // with matchmaking. It receives the single matchmaking instance owned by
@@ -30,10 +30,10 @@ export default function AIBattleSessionBridge({ battle }) {
   const reconnectable = Boolean((['connecting','countdown','fighting'].includes(matchStatus) && !roomHealthy) || (!match && rememberedMatch));
 
   useEffect(() => {
-    if (musicActive) startLoopSound('bgm_boss');
-    else stopLoopSound('bgm_boss');
+    if (musicActive) startAIBattleMusic();
+    else stopAIBattleMusic();
   }, [musicActive]);
-  useEffect(() => () => stopLoopSound('bgm_boss'), []);
+  useEffect(() => () => stopAIBattleMusic(), []);
 
   // Avoid flashing the control during the normal half-second room transition.
   // If the shared room stays unhealthy, expose a manual recovery path while the
