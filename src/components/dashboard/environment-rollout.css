@@ -1,22 +1,24 @@
-/* Luna Environment selector — intentionally borderless and game-HUD styled.
-   The rail artwork is the same two-line/diamond geometry used above the skill hotbar. */
+/* Luna Environment selector — borderless game-HUD presentation.
+   The rail reuses the same two-line / center-diamond language as the skill hotbar. */
 [data-luna-environment-hub]{
   position:relative!important;
   overflow:visible!important;
   border:0!important;
   border-radius:0!important;
-  background:linear-gradient(180deg,rgba(2,8,14,.18),rgba(2,7,12,.30))!important;
+  background:transparent!important;
   box-shadow:none!important;
-  backdrop-filter:blur(12px) saturate(118%)!important;
-  -webkit-backdrop-filter:blur(12px) saturate(118%)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
   isolation:isolate;
 }
+
+/* Closed-state rail: long lower line + shorter upper line + diamond. */
 [data-luna-environment-hub]::after{
   content:"";
   position:absolute;
   left:0;
   right:0;
-  bottom:3px;
+  bottom:2px;
   height:30px;
   z-index:4;
   pointer-events:none;
@@ -24,15 +26,15 @@
   opacity:.9;
   transition:filter .22s ease,opacity .22s ease;
 }
-body[data-luna-environment-open="true"] [data-luna-environment-hub]{
-  background:linear-gradient(180deg,rgba(2,8,14,.24),rgba(2,7,12,.38))!important;
-}
 body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   opacity:1;
   filter:drop-shadow(0 0 6px rgba(185,243,255,.16));
 }
+
+/* Strip the old image/card treatment. The Environment control becomes an icon
+   sitting to the LEFT of the shorter upper line. */
 [data-luna-environment-hub] > button:first-of-type{
-  z-index:3;
+  z-index:5;
   overflow:visible!important;
   background:transparent!important;
 }
@@ -43,32 +45,67 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   display:none!important;
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child{
-  top:17px!important;
+  position:absolute!important;
+  top:9px!important;
   bottom:auto!important;
-  left:18px!important;
-  right:18px!important;
-  z-index:5;
-  text-shadow:0 2px 12px rgba(0,0,0,.75);
+  left:34px!important;
+  right:auto!important;
+  width:24px!important;
+  height:24px!important;
+  z-index:8;
+  display:grid!important;
+  place-items:center!important;
+  text-shadow:none!important;
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child h4{
-  font-size:12px!important;
-  line-height:1.1!important;
-  letter-spacing:.10em!important;
-  text-transform:uppercase;
-  color:rgba(238,248,252,.86)!important;
-  font-weight:650!important;
+  width:24px!important;
+  height:24px!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:0!important;
+  line-height:0!important;
+  color:transparent!important;
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child h4 svg{
-  width:13px!important;
-  height:13px!important;
-  color:rgba(141,225,255,.78)!important;
+  width:16px!important;
+  height:16px!important;
+  margin:0!important;
+  color:rgba(151,230,255,.82)!important;
+  filter:drop-shadow(0 0 6px rgba(103,232,249,.13));
 }
 [data-luna-environment-hub] > button:first-of-type > div:last-child p{
-  margin-top:4px!important;
-  color:rgba(230,241,246,.36)!important;
-  font-size:8px!important;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+  display:none!important;
+}
+
+/* The existing Memories control remains the real clickable control. Move it
+   back over the Environment rail so it sits to the RIGHT of the short line. */
+div:has(> [data-luna-environment-hub]) + div{
+  position:relative!important;
+}
+div:has(> [data-luna-environment-hub]) + div > button:first-child{
+  position:absolute!important;
+  left:-56px!important;
+  top:8px!important;
+  z-index:35!important;
+  width:26px!important;
+  height:26px!important;
+  margin:0!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  gap:0!important;
+  color:rgba(224,241,248,.64)!important;
+  background:transparent!important;
+}
+div:has(> [data-luna-environment-hub]) + div > button:first-child > span:first-child{
+  font-size:15px!important;
+  line-height:1!important;
+  filter:grayscale(1) brightness(1.55) sepia(.2) hue-rotate(145deg) saturate(1.5);
+  opacity:.72;
+}
+div:has(> [data-luna-environment-hub]) + div > button:first-child > span:last-child{
+  display:none!important;
 }
 
 .luna-environment-rollout{
@@ -85,16 +122,21 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   transform-origin:top center;
   pointer-events:auto;
 }
+
+/* The rollout rail belongs BELOW the environment choices — it is the visual
+   handle that the panel rolls back into, not a header above the choices. */
 .luna-environment-rollout::before{
   content:"";
   position:absolute;
   left:0;
   right:0;
-  top:0;
+  top:auto;
+  bottom:0;
   height:30px;
+  z-index:4;
   pointer-events:none;
   background:url('/ui/luna/environment-roll-rail.svg') center/100% 100% no-repeat;
-  opacity:.78;
+  opacity:.82;
 }
 .luna-environment-rollout::after{
   content:"";
@@ -109,8 +151,8 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  height:34px;
-  padding:7px 12px 0;
+  height:30px;
+  padding:6px 12px 0;
   pointer-events:none;
 }
 .luna-environment-rollout__title{
@@ -133,9 +175,10 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
 .luna-environment-rollout__body{
   position:relative;
   z-index:2;
-  height:calc(100% - 34px);
+  box-sizing:border-box;
+  height:calc(100% - 30px);
   min-height:0;
-  padding:5px 10px 10px;
+  padding:4px 10px 34px;
 }
 .luna-environment-rollout__scroller{
   display:grid;
@@ -247,7 +290,8 @@ body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
 .luna-environment-rollout__loading svg{width:13px;height:13px}
 
 @media(max-width:900px){
-  [data-luna-environment-hub] > button:first-of-type > div:last-child{left:12px!important;right:12px!important}
+  [data-luna-environment-hub] > button:first-of-type > div:last-child{left:24px!important}
+  div:has(> [data-luna-environment-hub]) + div > button:first-child{left:-46px!important}
   .luna-environment-rollout__scroller{grid-auto-columns:minmax(118px,42vw)}
 }
 
