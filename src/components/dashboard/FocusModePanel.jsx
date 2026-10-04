@@ -49,6 +49,8 @@ import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
 import { useQuery } from '@tanstack/react-query';
+import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
+import { rejoinAIBattleArena, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
 // Mock pinned games
 const pinnedGames = [
@@ -1311,6 +1313,16 @@ export function LibraryBannerSection({
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
   const [joiningUsers, setJoiningUsers] = useState({});
   const [tradeFriend, setTradeFriend] = useState(null);
+  const { match: pvpMatch, isParticipant: isPvpParticipant } = useAIBattleSnapshot();
+  const battleSurface = useAIBattleSurfaceState();
+  const pvpStatus = String(pvpMatch?.status || '');
+  const livePvpMatch = Boolean(isPvpParticipant && ['connecting', 'countdown', 'fighting'].includes(pvpStatus));
+  const pvpParticipantIds = useMemo(() => new Set((battleSurface.participantIds || []).map(String)), [battleSurface.participantIds]);
+  const showPvpRejoin = Boolean(
+    livePvpMatch
+    && battleSurface.dashboardMode
+    && String(battleSurface.matchId || '') === String(pvpMatch?.id || '')
+  );
 
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
@@ -1368,6 +1380,9 @@ export function LibraryBannerSection({
     const now = Date.now();
     const isOnline = (p) => {
       if (p.player_id === user?.id) return false;
+      // Matchmade PvP opponents are temporary battle presence, never normal
+      // dashboard friends/guests in the five social slots.
+      if (pvpParticipantIds.has(String(p.player_id || ''))) return false;
       return isLivePlayer(p, now);
     };
     const usersList = [];
@@ -1394,7 +1409,7 @@ export function LibraryBannerSection({
       return b.lastUpdate - a.lastUpdate;
     });
     setOnlineFriends(usersList.filter(f => f && f.id).slice(0, 5));
-  }, [dbUsers, user?.id, friendIds]);
+  }, [dbUsers, user?.id, friendIds, pvpParticipantIds]);
 
   const handleFriendClick = (friend) => onActiveFriendChange(friend);
 
@@ -1583,36 +1598,56 @@ export function LibraryBannerSection({
               </button>
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
 
-              {/* Online Friends */}
-              {(onlineFriends || []).filter(Boolean).map((friend) => (
-                <div key={friend.id} className="flex-shrink-0">
-                  <FriendReference 
-                    friend={friend}
-                    isFriend={friendIds.has(String(friend.id))}
-                    requestState={friendRequestUsers[friend.id]}
-                    dashboardInviteState={invitedUsers[friend.id]}
-                    partyInviteState={partyInviteUsers[friend.id]}
-                    joining={!!joiningUsers[friend.id]}
-                    onClick={handleFriendClick}
-                    onAddFriend={handleAddFriend}
-                    onMessage={handleMessage}
-                    onJoin={handleJoin}
-                    onInvite={handleInvite}
-                    onPartyInvite={handlePartyInvite}
-                    onDuel={handleDuel}
-                    onTrade={handleTrade}
-                    isActive={activeFriend?.id === friend.id}
-                  />
-                </div>
-              ))}
+              {/* Five social slots. PvP rejoin belongs to the match layer, not
+                  to party/dashboard presence, so it sits below this group. */}
+              <div className="relative flex h-full flex-shrink-0 items-center gap-2">
+                {(onlineFriends || []).filter(Boolean).map((friend) => (
+                  <div key={friend.id} className="flex-shrink-0">
+                    <FriendReference 
+                      friend={friend}
+                      isFriend={friendIds.has(String(friend.id))}
+                      requestState={friendRequestUsers[friend.id]}
+                      dashboardInviteState={invitedUsers[friend.id]}
+                      partyInviteState={partyInviteUsers[friend.id]}
+                      joining={!!joiningUsers[friend.id]}
+                      onClick={handleFriendClick}
+                      onAddFriend={handleAddFriend}
+                      onMessage={handleMessage}
+                      onJoin={handleJoin}
+                      onInvite={handleInvite}
+                      onPartyInvite={handlePartyInvite}
+                      onDuel={handleDuel}
+                      onTrade={handleTrade}
+                      isActive={activeFriend?.id === friend.id}
+                    />
+                  </div>
+                ))}
 
-              {/* Empty friend slots */}
-              {[...Array(emptySlots)].map((_, i) => (
-                <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <Plus className="w-3.5 h-3.5 text-white" />
-                  <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
-                </div>
-              ))}
+                {[...Array(emptySlots)].map((_, i) => (
+                  <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <Plus className="w-3.5 h-3.5 text-white" />
+                    <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
+                  </div>
+                ))}
+
+                <AnimatePresence>
+                  {showPvpRejoin && (
+                    <motion.button
+                      type="button"
+                      initial={{ opacity: 0, y: -5, scale: 0.94 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -5, scale: 0.94 }}
+                      onClick={() => {
+                        rejoinAIBattleArena(pvpMatch?.id);
+                        window.dispatchEvent(new CustomEvent('lunaAIBattleRejoin', { detail: { matchId: pvpMatch?.id || '' } }));
+                      }}
+                      className="absolute left-1/2 top-[91px] z-[70] -translate-x-1/2 whitespace-nowrap border border-cyan-100/20 bg-slate-950/88 px-5 py-1.5 text-[8px] font-black uppercase tracking-[0.24em] text-cyan-100 shadow-[0_8px_24px_rgba(0,0,0,.38),0_0_20px_rgba(103,232,249,.08)] backdrop-blur-xl hover:bg-cyan-950/90"
+                    >
+                      Rejoin
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <div className="flex-shrink-0 ml-2">
                 <HomeReference onClick={handleHomeClick} />
