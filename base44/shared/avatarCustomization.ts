@@ -1,5 +1,5 @@
 // Shared contract for the creator, appearance saves, and uploaded asset catalog.
-export const CUSTOMIZATION_SLOTS = ['hair','eyebrows','facial_hair','outfit','top','bottom','footwear','accessory','tattoo','complexion'];
+export const CUSTOMIZATION_SLOTS = ['body','hair','eyebrows','facial_hair','outfit','top','bottom','footwear','accessory','tattoo','complexion'];
 export const SHAPE_CONTROLS = [
  {id:'brow_size',label:'Eyebrow size',morph:'CC_BrowSize',section:'face'},
  {id:'face_width',label:'Face width',morph:'CC_FaceWidth',section:'face'},

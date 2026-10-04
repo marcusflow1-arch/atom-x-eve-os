@@ -19,6 +19,7 @@ export function inspectCustomization(root) {
   if(n.isBone)result.boneNames.push(n.name);
   if(!n.isMesh||n.userData?.customizationSurface)return;
   result.meshNames.push(n.name);
+  if(!n.visible)return;
   (Array.isArray(n.material)?n.material:[n.material]).forEach(m=>{const c=materialChannel(n,m);if(c)result[c]=true;});
   Object.keys(n.morphTargetDictionary||{}).forEach(name=>morphs.add(name));
  });

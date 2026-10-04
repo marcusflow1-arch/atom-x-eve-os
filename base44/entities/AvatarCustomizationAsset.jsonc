@@ -8,6 +8,7 @@
     "slot": {
       "type": "string",
       "enum": [
+        "body",
         "hair",
         "eyebrows",
         "facial_hair",
