@@ -503,7 +503,22 @@ async function tryPair(svc: any, mode: string, callerQueueId = '') {
     const prior = freshestByUser.get(userId);
     if (!prior || heartbeatAt(row) > heartbeatAt(prior)) freshestByUser.set(userId, row);
   }
-  const unique = [...freshestByUser.values()].sort((a: Row, b: Row) => Date.parse(a.queued_at || a.created_date || 0) - Date.parse(b.queued_at || b.created_date || 0)).slice(0, 2);
+  const candidates = [...freshestByUser.values()].sort((a: Row, b: Row) => Date.parse(a.queued_at || a.created_date || 0) - Date.parse(b.queued_at || b.created_date || 0));
+  let unique: Row[] = [];
+  outer: for (let i = 0; i < candidates.length; i += 1) {
+    for (let j = i + 1; j < candidates.length; j += 1) {
+      const first = candidates[i], second = candidates[j];
+      const firstPref = String(first.preferred_opponent_id || '');
+      const secondPref = String(second.preferred_opponent_id || '');
+      // A rematch queue entry is targeted: never pair it with an unrelated
+      // player. The other side may also target back, or may simply be in the
+      // open PvP queue and therefore already consenting to a match.
+      if (firstPref && firstPref !== String(second.user_id)) continue;
+      if (secondPref && secondPref !== String(first.user_id)) continue;
+      unique = [first, second];
+      break outer;
+    }
+  }
   if (unique.length !== 2) return null;
 
   // Only one deterministic queue entry is allowed to create the pair. This
