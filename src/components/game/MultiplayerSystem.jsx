@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { getCompanionState } from '@/components/game3d/companionStore';
 import { getCompanionProgression } from '@/components/game3d/companionProgressionStore';
 
-export default function MultiplayerSystem({ envUrl }) {
+export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
   const { user, avatar } = useAuth();
   const [currentChannel, setCurrentChannel] = useState(null);
   const party = usePartySession();
@@ -55,32 +55,36 @@ export default function MultiplayerSystem({ envUrl }) {
   }, []);
   
   useEffect(() => {
-    if (user?.id && !explicitlyJoinedRef.current) {
-      // Default to user's own dashboard channel ONLY if no explicit join has occurred.
-      // GameWorldServerManager dispatches joinMultiplayerChannel BEFORE this effect
-      // runs on the GameView page → that path wins and we skip this default.
-      const pending = window.__lunaPendingDashboardJoin;
-      const defaultChannel = pending?.channelId || `dashboard_${user.id}`;
-      window.__lunaPendingDashboardJoin = null;
-      setCurrentChannel(defaultChannel);
-      channelRef.current = defaultChannel;
-      
-      if (defaultChannel.startsWith("dashboard_")) return;
-      // Register world instance in GameChannel
-      base44.entities.GameChannel.filter({ name: defaultChannel }).then(res => {
-        if (res.length > 0) {
-          base44.entities.GameChannel.update(res[0].id, { current_map: { envUrl } });
-        } else {
-          base44.entities.GameChannel.create({ name: defaultChannel, current_map: { envUrl }, player_count: 1 });
-        }
-      });
-    }
-  }, [user?.id]);
+    if (!user?.id || explicitlyJoinedRef.current) return;
+
+    // Luna/dashboard and Game 3D are separate multiplayer surfaces. The
+    // dashboard owns dashboard_* rooms (including AI Battle). GameView waits
+    // for GameWorldServerManager to join the shared world channel and must not
+    // consume a pending Luna dashboard join from another surface.
+    if (surface === 'game-world') return;
+
+    const pending = window.__lunaPendingDashboardJoin;
+    const defaultChannel = pending?.channelId || `dashboard_${user.id}`;
+    window.__lunaPendingDashboardJoin = null;
+    setCurrentChannel(defaultChannel);
+    channelRef.current = defaultChannel;
+  }, [user?.id, surface]);
 
   useEffect(() => {
     const handleJoin = async (e) => {
-      const targetChannel = e.detail.channelId;
-      const hostId = e.detail.hostId;
+      const detail = e.detail || {};
+      const targetChannel = detail.channelId;
+      const hostId = detail.hostId;
+      if (!targetChannel) return;
+
+      const isDashboardChannel = String(targetChannel).startsWith('dashboard_');
+      const requestedSurface = detail.surface || (isDashboardChannel ? 'dashboard' : 'game-world');
+
+      // Hard boundary: Game 3D never consumes Luna/AI-Battle room joins, and
+      // Luna never consumes Game 3D world-server joins.
+      if (surface === 'game-world' && (requestedSurface !== 'game-world' || isDashboardChannel || detail.aiBattle)) return;
+      if (surface === 'dashboard' && (requestedSurface === 'game-world' || !isDashboardChannel)) return;
+
       if (targetChannel) {
         explicitlyJoinedRef.current = true;
         setCurrentChannel(targetChannel);
@@ -223,7 +227,7 @@ export default function MultiplayerSystem({ envUrl }) {
       window.removeEventListener('multiplayerLocalUpdate', handleLocalUpdate);
       window.removeEventListener('multiplayerLocalAction', handleLocalAction);
     };
-  }, [user?.id]);
+  }, [user?.id, surface]);
 
   useEffect(() => {
     if (!user?.id || !currentChannel || currentChannel.startsWith("dashboard_")) return;
