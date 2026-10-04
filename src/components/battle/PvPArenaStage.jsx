@@ -10,7 +10,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { applyCompanionAppearance, COMPANION_MOTIONS, companionModel } from '@/components/onboarding/genesisAssets';
 import { retargetAvatarClip } from '@/components/onboarding/retargetAvatarClip';
-import { GetsugaDashboardRuntime } from '@/components/getsuga/GetsugaDashboardRuntime';
+import { GetsugaDashboardRuntime, prepareFaceDetailMeshes } from '@/components/getsuga/GetsugaDashboardRuntime';
 import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRuntime';
 import OverheadFighterBar from '@/components/battle/OverheadFighterBar';
 import arenaRenderer, { disposeArenaObjects } from '@/components/battle/arenaRenderer';
@@ -152,6 +152,8 @@ async function loadFighter({ scene, camera, player, side, onEffect }) {
   let runtime, root, mixer = null;
   if (female) {
     scene.add(assetRoot);
+    // Eyes and mouth interior sit behind the skin: no toon outline on them.
+    prepareFaceDetailMeshes(assetRoot);
     // The Artemis runtime does not advance its own mixer (the dashboard scene
     // does that). The arena must, or female fighters never animate and their
     // abilities never finish.

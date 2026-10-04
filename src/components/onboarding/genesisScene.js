@@ -674,6 +674,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         model = avatarRoot;
         mixer = new THREE.AnimationMixer(model);
         applyCompanionAppearance(model, appearance);
+        // Artemis' eyes and mouth interior sit just behind the skin: keep the
+        // toon outline pass off them (same as the male body).
+        if (options.artemisFemale) prepareFaceDetailMeshes(model);
 
         if (options.artemisFemale && atomxeRuntimeRig) {
           // The authored Artemis package owns its skeleton, bow, transitions,

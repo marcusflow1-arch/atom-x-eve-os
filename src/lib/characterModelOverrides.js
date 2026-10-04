@@ -8,15 +8,17 @@ import * as THREE from 'three';
 //          are part of the loop), Combat_Idle, Dodge_Left/Right, GetsugaTensho,
 //          Chidori_Attack_01, Chidori_Ultimate, Chidori_Hit_Stun_Fall. Adds eye,
 //          mouth and jaw rigs plus 31 facial shape keys on SK_Character.
-//   female (Artemis_Character.glb): Idle, Combat_Idle, Bow_Draw/Sheathe,
-//          Call_Of_The_Husky, Rain_Of_Arrows, Lunar_Beam, Chidori_Ultimate,
-//          Chidori_Hit_Stun_Fall
+//   female (Artemis_Character_v2.glb, Oct 2026): Idle (24 s living loop with
+//          facial animation), Combat_Idle, Bow_Draw/Sheathe, Call_Of_The_Husky,
+//          Rain_Of_Arrows, Lunar_Beam (full-body flow animation: hips, spine,
+//          legs and neck follow the arms), Chidori_Ultimate, Chidori_Hit_Stun_Fall.
+//          Adds eye, mouth and jaw rigs plus 30 facial shape keys on Artemis_Body.
 // They ship with the app (public/models/characters) so a GitHub sync is enough
 // to update them — no re-upload through the Base44 editor.
 // Versioned file name: a new body must never be served from a cached copy of
 // the previous one.
 export const MALE_CHARACTER_MODEL_URL = '/models/characters/Getsuga_Tensho_Character_v3.glb';
-export const FEMALE_CHARACTER_MODEL_URL = '/models/characters/Artemis_Character.glb';
+export const FEMALE_CHARACTER_MODEL_URL = '/models/characters/Artemis_Character_v2.glb';
 
 // Avatar records, Skill Book cards and backend defaults still store the old
 // hosted URLs (they are validated identifiers on the server). Every load of
@@ -25,6 +27,8 @@ const LEGACY_MODEL_FILES = [
   { pattern: /d646be928_Getsuga_Tensho_Character\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
   { pattern: /96bb872db_Artemis_Character\.glb(?:[?#].*)?$/i, url: FEMALE_CHARACTER_MODEL_URL },
   { pattern: /^(?:https?:\/\/[^/]+)?\/getsuga\/Getsuga_Character\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
+  // Previous in-app female body (Sep / early Oct 2026).
+  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Artemis_Character\.glb(?:[?#].*)?$/i, url: FEMALE_CHARACTER_MODEL_URL },
   // Previous in-app male bodies (Sep / early Oct 2026).
   { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Getsuga_Tensho_Character(?:_v2)?\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
 ];
