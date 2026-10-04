@@ -687,6 +687,11 @@ export default function LunaTemplate() {
       <div data-luna-dashboard-content className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
         {/* Dark moonlight aesthetic background */}
         <RealTimeMoonSky />
+        {currentHostName && !avatarFocusMode && (
+          <div className="fixed left-6 top-[20px] z-[40] pointer-events-none text-[11px] font-semibold tracking-[0.08em] text-white/85">
+            {currentHostName.toLowerCase() === 'my' ? 'My' : currentHostName}
+          </div>
+        )}
         {!avatarFocusMode && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
 
         {/* Home Section Switcher — left arrow + bottom arrow, only on default dashboard view */}
@@ -716,8 +721,63 @@ export default function LunaTemplate() {
 
 
       {/* Mini 3D Viewer Box + Game Library — unified left column, flush to left edge */}
-      {!showConsoleMode && !showAchievements &&
-              <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
+        </div>
+              }
+
+      {/* Inventory workspace — keep Library/Cards at far left, move the live AI avatar
+          directly beside it, and let Inventory fill every remaining pixel above the footer. */}
+      <AnimatePresence>
+        {clickedSlot && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' && (
+          <motion.div
+            key="inventory-dashboard-workspace"
+            initial={{ opacity: 0, x: 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 18 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="absolute z-[60] pointer-events-auto overflow-hidden"
+            style={{ left: '0px', top: '64px', right: '0px', bottom: '48px' }}
+          >
+            <div className="flex h-full w-full min-w-0">
+              <section
+                data-luna-inventory-library
+                className="h-full min-w-0 flex-shrink-0 overflow-hidden"
+                style={{ width: '330px' }}
+              >
+                <LibraryBrowser
+                  filters={libraryFilters}
+                  onFiltersChange={updateLibraryFilters}
+                  selectedGame={selectedFocusGame}
+                  fullView={false}
+                  onToggleFullView={() => { setLibrarySelection(null); setShowLibraryLanding(v => !v); }}
+                  onSelectGame={(game) => { setOptionsGame(null); setLongPressGame(null); setSelectedFocusGame(game); }}
+                  onOptionsGame={(game) => { setSelectedFocusGame(null); setLongPressGame(null); setOptionsGame(game); }}
+                  onLongPressGame={(game) => { setOptionsGame(null); setLongPressGame(game); }}
+                />
+              </section>
+
+              <section
+                data-luna-inventory-avatar
+                className="h-full flex-shrink-0 overflow-hidden border-l border-white/[0.05] border-r border-white/[0.07]"
+                style={{ width: '220px', background: 'rgba(5,10,18,0.16)' }}
+              >
+                <Mini3DViewerBox isUiVisible hostName={currentHostName} />
+              </section>
+
+              <section className="h-full min-w-0 flex-1 overflow-hidden">
+                <InventoryPanel
+                  inventory={inventoryData}
+                  onEquip={handleEquipItem}
+                  targetSlot={clickedSlot}
+                  dashboardDocked
+                  onClose={() => setClickedSlot(null)}
+                />
+              </section>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Avatar Focus Hub — blank UI on avatar click; A/D rotates full-page section UIs */}
               style={uiVisible ? {
                 left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
               } : { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }}>
@@ -1584,22 +1644,6 @@ export default function LunaTemplate() {
           </motion.div> :
                 null}
       </AnimatePresence>
-
-      {/* Inventory Panel Overlay (Global) - Single Instance */}
-      {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
-      {clickedSlot && !uiVisible &&
-              <div
-                className="absolute inset-0 z-[60]"
-                key="inventory-panel-container">
-                
-          <InventoryPanel
-                  inventory={inventoryData}
-                  onEquip={handleEquipItem}
-                  targetSlot={clickedSlot}
-                  onClose={() => setClickedSlot(null)} />
-                
-        </div>
-              }
 
       {/* Avatar Progression Overlay (O key) */}
       <AnimatePresence>
