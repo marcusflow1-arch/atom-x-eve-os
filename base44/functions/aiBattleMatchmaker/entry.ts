@@ -716,17 +716,19 @@ Deno.serve(async (req) => {
         const recovered=await statusFor(svc,userId,sessionId,data.position||null);
         return json({queue:publicQueue(recovered.queue),match:publicMatch(recovered.match),notice:recovered.notice||null,reconnected:Boolean(recovered.match),server_time:Date.now()});
       }
+      const preferredOpponentId = mode === 'pvp' ? String(data.preferred_opponent_id || '').trim() : '';
+      if (preferredOpponentId && preferredOpponentId === userId) return json({error:'You cannot rematch yourself.'},400);
       let current=await cleanupQueueDuplicates(svc,userId);
       if(current){
         if(current.status==='waiting'){
           if(String(current.mode)!==mode) return json({error:`You are already queued for ${String(current.mode).toUpperCase()}. Cancel that queue before changing modes.`},409);
           const refreshedAvatar=await getAvatarSnapshot(svc,userId,data);
-          current=await svc.AIBattleQueueEntry.update(current.id,{...refreshedAvatar,last_seen_at:nowIso(),client_session_id:sessionId||current.client_session_id||''});
+          current=await svc.AIBattleQueueEntry.update(current.id,{...refreshedAvatar,preferred_opponent_id:preferredOpponentId,last_seen_at:nowIso(),client_session_id:sessionId||current.client_session_id||''});
         }
         const state=await statusFor(svc,userId,sessionId); if(state.queue) return json({queue:publicQueue(state.queue),match:publicMatch(state.match),notice:state.notice||null,server_time:Date.now()});
       }
       const avatar=await getAvatarSnapshot(svc,userId,data);
-      await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
+      await svc.AIBattleQueueEntry.create({ user_id:userId,player_name:playerName(user),avatar_url:user.avatar_url||user.profile_image||'',...avatar,mode,status:'waiting',preferred_opponent_id:preferredOpponentId,request_id:String(data.request_id||'').slice(0,100),client_session_id:sessionId,queued_at:nowIso(),last_seen_at:nowIso(),connected_at:'',connected_session_id:'',ready_at:'' });
       // statusFor performs the single pairing attempt and reservation handshake.
       // A second scan here added database latency to every empty-queue join.
       const state=await statusFor(svc,userId,sessionId);
