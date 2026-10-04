@@ -241,7 +241,8 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const handleJoin = (e) => {
-      const { hostId, hostName } = e.detail;
+      const { hostId, hostName, channelId, surface } = e.detail || {};
+      if (surface === 'game-world' || (channelId && !String(channelId).startsWith('dashboard_'))) return;
       if (hostId === user?.id || !hostId) {
         setCurrentHostName(user?.full_name || user?.username || 'My');
       } else if (hostName) {
@@ -669,7 +670,7 @@ export default function LunaTemplate() {
     >
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
-    <MultiplayerSystem envUrl={roomModelUrl} />
+    <MultiplayerSystem envUrl={roomModelUrl} surface="dashboard" />
     {/* AI Battle: one matchmaking owner + PvP arena for the whole page. It lives
         outside every panel/section/focus branch so none of them can unmount a
         live match. */}
