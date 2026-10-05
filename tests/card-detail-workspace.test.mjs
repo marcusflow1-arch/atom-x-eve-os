@@ -76,7 +76,7 @@ test('the new workshop runs real level, stat, enchantment, divine and ascension 
   await click('Divine stage');assert(!document.querySelector('.cdw-offerings').textContent.includes('Common material'));
   for(const el of document.querySelectorAll('.cdw-offerings button'))await click(el);
   await click('Review divine evolution');assert.equal(f.rows('UserCard').length,4);
-  await click('Confirm divine evolution');assert.equal(p().stage,2);assert.equal(f.rows('UserCard').length,2);
+  await click('Confirm divine evolution');assert.equal(p().stage,2,document.querySelector('.cdw-content').textContent+' '+JSON.stringify(calls.at(-2)));assert.equal(f.rows('UserCard').length,2);
   p().level=p().max_level;p().xp=90;p().revision++;
   await click('Refresh card');await click('Ascension');await click('Review ascension');await click('Confirm ascension');
   assert.equal(p().ascension,1);assert.equal(p().max_level,20);assert.equal(p().level,10);assert.equal(p().xp,0);assert.equal(mats('ascension_core').quantity,19);
