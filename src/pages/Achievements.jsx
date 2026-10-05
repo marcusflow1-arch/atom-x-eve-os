@@ -232,6 +232,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         const isUnlocked = user?.unlocked_achievements?.includes(ach.id);
         cards.push({
           id: ach.id,
+          user_card_id: userCard?.id,
+          isOwned: Boolean(userCard),
           title: ach.reward.name || ach.title,
           series: selectedGame.title,
           rarity: ach.rarity,
