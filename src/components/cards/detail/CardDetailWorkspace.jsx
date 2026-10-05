@@ -11,7 +11,7 @@ import './card-detail.css';
 const TABS=[['overview','Overview',BookOpen],['upgrade','Upgrade',Hammer],['skills','Skill paths',GitBranch],['exchange','Exchange',ShoppingBag],['chronicle','Chronicle',History]];
 export default function CardDetailWorkspace({card={},onClose,allowLegacyAchievement=false}) {
   const identity=cardIdentity(card,allowLegacyAchievement);
-  return <CardWorkspace key={JSON.stringify(identity)||String(card.id||card.title)} card={card} identity={identity} onClose={onClose}/>;
+  return <CardWorkspace key={JSON.stringify(identity)+':'+String(card.id||card.title||'')} card={card} identity={identity} onClose={onClose}/>;
 }
 function CardWorkspace({card,identity,onClose}) {
   const detail=useCardDetail(identity);
@@ -19,6 +19,7 @@ function CardWorkspace({card,identity,onClose}) {
   const [tab,setTab]=useState('overview'),[upgrade,setUpgrade]=useState('level'),[imageError,setImageError]=useState(false);
   const root=useRef(null),closeButton=useRef(null);
   const item=displayCard(card,state),p=state?.progression,u=state?.userCard;
+  useEffect(()=>setImageError(false),[item.image]);
   useEffect(()=>{const previous=document.activeElement;closeButton.current?.focus();return ()=>{if(previous?.isConnected)previous.focus();};},[]);
   const focusTab=(event,index)=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
