@@ -411,6 +411,7 @@ function AIAchievementsView({ onClosePage }) {
           id: achievement.id,
           achievementId: achievement.id,
           userCardId: userCard?.id,
+          isOwned: Boolean(userCard),
           gameId: selectedGame.id,
           genre: selectedGame.genre,
           cardType: userCard?.card_type || achievement.category,
