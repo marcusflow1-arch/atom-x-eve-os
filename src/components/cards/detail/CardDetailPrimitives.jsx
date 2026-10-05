@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ArrowUpRight, Check, Gem, Lock, Sparkles } from 'lucide-react';
 import { format, materialCount, words } from './cardDetailModel';
 
@@ -25,7 +26,10 @@ export function Action({children,reason,busy,onClick,secondary=false}) {
   return <div className="cdw-action"><button className={secondary?'cdw-button':'cdw-button cdw-primary'} disabled={Boolean(reason)||busy} onClick={onClick}>{busy?<Sparkles size={16}/>:null}{children}</button>{reason && <p>{reason}</p>}</div>;
 }
 export function Review({title,children,onCancel,onConfirm,busy,label='Confirm',disabled=false}) {
-  return <section className="cdw-review" data-card-review role="region" aria-label={title}>
+  const panel = useRef(null), cancel = useRef(onCancel);
+  cancel.current = onCancel;
+  useEffect(() => { panel.current?.focus(); }, []);
+  return <section ref={panel} tabIndex={-1} className="cdw-review" data-card-review role="region" aria-label={title} onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); if (!busy) cancel.current(); } }}>
     <span className="cdw-eyebrow">Review before continuing</span><h3>{title}</h3><div>{children}</div>
     <div className="cdw-review-actions"><button className="cdw-button" disabled={busy} onClick={onCancel}>Go back</button><button className="cdw-button cdw-primary" disabled={busy||disabled} onClick={onConfirm}>{busy?'Applying…':label}</button></div>
   </section>;
