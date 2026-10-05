@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Activity, ArrowUpRight, Check, ChevronRight, Crown, Gem, GitBranch, History, Lock, Shield, Sparkles, Swords, Trophy } from 'lucide-react';
-import { Action, Empty, RankTrack, SectionTitle } from './CardDetailPrimitives';
+import { ArrowUpRight, Check, ChevronRight, Crown, Gem, GitBranch, History, Lock, Shield, Sparkles, Swords, Trophy } from 'lucide-react';
+import { Action, Empty, SectionTitle } from './CardDetailPrimitives';
 import { dateLabel, format, STAT_LABELS, words } from './cardDetailModel';
 
 const PATHS=[['level','Card level','Earn XP and strengthen your attributes.',Sparkles],['enchant','Enchantment','Infuse sockets and over-enchant your card.',Gem],['divine','Divine stage','Fuse compatible cards to evolve its stage.',Shield],['ascension','Ascension','Break the level cap and unlock more growth.',Crown]];

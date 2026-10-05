@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, Crown, Gem, Hammer, Lock, Plus, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Crown, Gem, Plus, Shield, Sparkles } from 'lucide-react';
 import { Action, Costs, Empty, Meter, PowerChange, RankTrack, Review, SectionTitle } from './CardDetailPrimitives';
 import { canAfford, format, STAT_LABELS, words } from './cardDetailModel';
 

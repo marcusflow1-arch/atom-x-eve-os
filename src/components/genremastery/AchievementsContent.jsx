@@ -22,6 +22,8 @@ export default function AchievementsContent({ genre, selectedGame, cards = [], i
     const buttons = () => [...element.querySelectorAll('button, a[href], input, select, [tabindex="0"]')].filter((item) => !item.disabled);
     buttons()[0]?.focus();
     const keydown = (event) => {
+      // The card workspace owns its keyboard navigation and inline reviews.
+      if (event.target.closest?.('.cdw')) return;
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); }
       if (event.key === 'Tab') {
         const items = buttons(); const first = items[0]; const last = items[items.length - 1];
