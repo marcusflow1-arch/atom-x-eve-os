@@ -14,7 +14,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const React = await import('react'), { act } = React, { createRoot } = await import('react-dom/client');
 const { QueryClient, QueryClientProvider } = createRequire(import.meta.url)('@tanstack/react-query');
 const calls = [], navigations = [];
-const state = { userCard: { id:'card', user_id:'a', card_name:'Moonstep', card_type:'ability', card_rarity:'Rare' }, progression: { level:1, xp:0, xp_to_next:100, max_level:10, stage:1, stat_points:1, skill_points:1, base_stats:{ attack:20,defense:15,magic:12,vitality:16,speed:10 }, enhanced_stats:{}, effective_stats:{ attack:20,defense:15,magic:12,vitality:16,speed:10 }, enchantments:[], active_perks:[], unlocked_skill_nodes:[] }, materials:[], skillTree:[], events:[], compatibleCards:[], enchantments:[] };
+const state = { success:true, userCard: { id:'card', user_id:'a', card_name:'Moonstep', card_type:'ability', card_rarity:'Rare' }, progression: { level:1, xp:0, xp_to_next:100, max_level:10, stage:1, stat_points:1, skill_points:1, base_stats:{ attack:20,defense:15,magic:12,vitality:16,speed:10 }, enhanced_stats:{}, effective_stats:{ attack:20,defense:15,magic:12,vitality:16,speed:10 }, enchantments:[], active_perks:[], unlocked_skill_nodes:[] }, materials:[], skillTree:[], events:[], compatibleCards:[], enchantments:[] };
 const entity = (rows = []) => ({ list:async()=>rows, filter:async()=>rows, subscribe:()=>()=>{} });
 globalThis.pdfFixture = {
   calls, navigations, user:{id:'a'},
@@ -32,7 +32,7 @@ globalThis.pdfFixture = {
   },
 };
 const built = await build({
-  stdin:{ contents:"export {default as Status} from './src/components/dashboard/DateTimeTile.jsx';export {default as Card} from './src/components/streaming/MysteryCardDetail.jsx';export {default as Clan} from './src/components/clan/ClanIntro.jsx';", resolveDir:process.cwd(), loader:'jsx' },
+  stdin:{ contents:"export {default as Status} from './src/components/dashboard/DateTimeTile.jsx';export {default as Card} from './src/components/streaming/MysteryCardDetail.jsx';export {default as Clan} from './src/components/clan/ClanIntro.jsx';export {cardWorkshop as rules} from './base44/shared/cardWorkshop.ts';", resolveDir:process.cwd(), loader:'jsx' },
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},
   plugins:[{name:'fixtures',setup(b){
     b.onResolve({filter:/^react(?:\/|$)/},a=>({path:a.path,external:true}));
@@ -47,7 +47,7 @@ const built = await build({
   }}],
 });
 const file=process.cwd()+'/tests/__pdf_ui.cjs',mod=new Module(file);mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(built.outputFiles[0].text,file);
-const { Status, Card, Clan }=mod.exports;
+const { Status, Card, Clan, rules }=mod.exports;state.workshop=rules(state.progression,state.userCard);
 const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
 const root=createRoot(document.getElementById('root'));
 const run=(fn=()=>{})=>act(async()=>{await fn();await new Promise(resolve=>setTimeout(resolve,50));});
@@ -67,17 +67,18 @@ try{
   await run(()=>button('System updates').click());assert.equal(document.querySelector('[data-testid="status-overlay"]').textContent,'updates');
 
   await render(Card,{card:{title:'Moonstep',user_card_id:'card'},onBack:()=>{}});await run();
-  assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(el=>el.textContent),['Overview','Enhancement','Skill Tree','Combined Stage','Essential']);
-  for(const label of ['Enhancement','Skill Tree','Combined Stage','Essential']){
-    await run(()=>button(label).click());
-    assert.equal(document.querySelector('[role="tabpanel"]').getAttribute('aria-label'),label);
+  assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(el=>el.dataset.tab),['overview','upgrade','skills','exchange','chronicle']);
+  for(const id of ['upgrade','skills','exchange','chronicle']){
+    await run(()=>document.querySelector('[data-tab="'+id+'"]').click());
+    assert.equal(document.querySelector('[role="tabpanel"]').getAttribute('aria-labelledby'),'cdw-tab-'+id);
   }
-  assert.ok(document.querySelector('select[aria-label="Socket type"]'));
-  await run(()=>button('Trade Card').click());assert.equal(navigations.at(-1),'/Store?mode=trading&offerCard=card');
-  await run(()=>button('Post to Black Market').click());
-  await run(()=>setInput(document.querySelector('.card-scroll-actions input'), '75'));
-  await run(()=>document.querySelector('.card-scroll-actions form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
-  assert.deepEqual(calls.find(call=>call.name==='tradePostMarket').body,{action:'listCard',payload:{userCardId:'card',price:75,market:'black_market'}});
+  await run(()=>document.querySelector('[data-tab="exchange"]').click());await run();
+  await run(()=>document.querySelectorAll('.cdw-market-options button')[1].click());
+  await run(()=>setInput(document.querySelector('input[aria-label="Asking price in AGP"]'), '75'));
+  await run(()=>button('Review listing').click());
+  assert.equal(calls.some(call=>call.body.action==='listCard'),false);
+  await run(()=>button('Publish listing').click());
+  assert.deepEqual(calls.find(call=>call.name==='tradePostMarket'&&call.body.action==='listCard').body,{action:'listCard',payload:{price:75,market:'black_market',userCardId:'card'}});
 
   let created;
   await render(Clan,{onClanCreated:id=>{created=id;},onClanJoined:()=>{}});await run();

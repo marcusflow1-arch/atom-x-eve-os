@@ -14,11 +14,15 @@ const React=await import('react'),{act}=React,{createRoot}=await import('react-d
 const {QueryClient,QueryClientProvider}=createRequire(import.meta.url)('@tanstack/react-query');
 const f=makeRewardFixture(),handlers={},calls=[];
 const user={id:'owner',role:'user',full_name:'Card owner',avatar_gamer_points:1000};
+const serviceEntities=()=>new Proxy(f.entities(),{get(target,key){
+ if(key!=='UserCard')return target[key];
+ return {...target.UserCard,delete:async id=>{const rows=f.rows('UserCard'),index=rows.findIndex(row=>row.id===id);if(index<0)throw new Error('Card not found');rows.splice(index,1);return {id};}};
+}});
 const deterministicMath=Object.create(Math);deterministicMath.random=()=>0;
 for(const name of ['cardProgression','tradePostMarket']){
  const code=buildSync({entryPoints:['base44/functions/'+name+'/entry.ts'],bundle:true,write:false,format:'cjs',platform:'node',external:['npm:*']}).outputFiles[0].text;
  const module={exports:{}};
- vm.runInNewContext(code,{module,exports:module.exports,Response,Date,Math:deterministicMath,console,Deno:{serve:fn=>handlers[name]=fn},require:()=>({createClientFromRequest:()=>({auth:{me:async()=>user},entities:f.entities(user),asServiceRole:{entities:f.entities()}})})});
+ vm.runInNewContext(code,{module,exports:module.exports,Response,Date,Math:deterministicMath,console,Deno:{serve:fn=>handlers[name]=fn},require:()=>({createClientFromRequest:()=>({auth:{me:async()=>user},entities:f.entities(user),asServiceRole:{entities:serviceEntities()}})})});
 }
 async function invoke(name,body){
  calls.push({name,body});
