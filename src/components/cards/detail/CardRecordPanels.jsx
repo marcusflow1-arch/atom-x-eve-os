@@ -19,7 +19,8 @@ export function CardOverview({card,item,state,onUpgrade}) {
 }
 function CombatPreview({state}) {
   const preview=state.combat_preview;
-  return <section className="cdw-combat-preview"><Swords size={22}/><div><h3>Avatar combat link</h3><p>Computed with your level {state.avatar_level} avatar. Final combat results depend on the opponent and active effects.</p><div>{Object.entries(preview).filter(([,value])=>typeof value==='number'&&Number.isFinite(value)).slice(0,6).map(([key,value])=><span key={key}>{words(key)} <strong>{format(value)}</strong></span>)}</div></div></section>;
+  const metrics = [['Damage before mitigation', preview.base_damage], ['Cooldown', format(Number(preview.cooldown_ms)/1000)+' s'], ['Cooldown reduction', format(Number(preview.cooldown_reduction)*100)+'%'], ['Card multiplier', '×'+format(preview.card_multiplier)]];
+  return <section className="cdw-combat-preview"><Swords size={22}/><div><h3>Avatar combat link</h3><p>Computed with your level {state.avatar_level} avatar. Final combat results depend on the opponent and active effects.</p><div>{metrics.map(([label,value])=><span key={label}>{label} <strong>{typeof value === 'number' ? format(value) : value}</strong></span>)}</div></div></section>;
 }
 export function CardChronicle({state}) {
   const [filter,setFilter]=useState('all');
