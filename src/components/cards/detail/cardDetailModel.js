@@ -1,6 +1,6 @@
 export const STAT_LABELS = { attack: 'Attack', defense: 'Defense', magic: 'Spirit', vitality: 'Vitality', speed: 'Dexterity' };
 export const RARITY_COLORS = { Common:'#bbc6cd',Uncommon:'#88cbae',Rare:'#8ac7ee',Epic:'#c0a3f0',Legendary:'#e3be79',Mythic:'#ee9eaa',Mythical:'#ee9eaa',Unique:'#e5ade5',Limitless:'#f5ecdb' };
-export const format = value => value === null || value === undefined || !Number.isFinite(Number(value)) ? '—' : Number(value).toLocaleString(undefined, {maximumFractionDigits:2});
+export const format = value => value === null || value === undefined || value === '' || !Number.isFinite(Number(value)) ? '—' : Number(value).toLocaleString(undefined, {maximumFractionDigits:2});
 export const words = value => String(value || '').replaceAll('_',' ').replace(/\b\w/g, char => char.toUpperCase());
 export function dateLabel(value) {
   const date = value ? new Date(value) : null;
@@ -33,3 +33,5 @@ export function displayCard(card, state) {
     description: card.description || card.card_description || owned?.card_description || '',
   };
 }
+
+export const signed = value => (Number(value) >= 0 ? '+' : '') + format(value);

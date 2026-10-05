@@ -30,7 +30,7 @@ export function cardWorkshop(p: Row, card: Row, recipes: Row[] = []) {
       success_chance: Math.max(35, Math.min(95, 82 - rank * 12 + stage * 2 + (nodes.includes('enchanter_focus') ? 8 : 0))),
       gain: 2 * (rank + 1), stability_loss_success: 5, stability_loss_failure: 15 },
     recipes: recipes.filter((recipe) => {
-      const types = recipe.allowed_item_types || [];
+      const types = Array.isArray(recipe.allowed_item_types) ? recipe.allowed_item_types : [];
       return ['core','gem','rune'].includes(recipe.socket_type || 'gem') && (!types.length || types.some((type: string) => ['all','any',String(card.card_type || '').toLowerCase()].includes(type.toLowerCase())));
     }).map(recipe => ({ ...recipe, socket_type: recipe.socket_type || 'gem', slot_cost: Number(recipe.slot_cost ?? 1),
       costs: Object.fromEntries(Object.entries(recipe.material_cost && Object.keys(recipe.material_cost).length ? recipe.material_cost : { resonance_fragment: 1 }).map(([key, value]) => [key, Math.max(1, Number(value) || 1)])) }))
