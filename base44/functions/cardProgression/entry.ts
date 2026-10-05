@@ -4,6 +4,7 @@ import { loadCombatProfile } from '../../shared/combatProfile.ts';
 import { abilityOutput } from '../../shared/combatStats.ts';
 import { skillStats } from '../../shared/pvpSkills.ts';
 import { hasLivePvpMatch } from '../../shared/matchLock.ts';
+import { cardWorkshop, compatibleFusionCard } from '../../shared/cardWorkshop.ts';
 
 type AnyObj = Record<string, any>;
 
@@ -168,9 +169,10 @@ Deno.serve(async (req) => {
       return progression;
     };
 
+    const workshop = cardWorkshop(progression, userCard);
     if (action === 'train') {
       await spend({ skill_catalyst: sessions });
-      const gain = sessions * (50 + Math.max(1, progression.stage) * 10);
+      const gain = sessions * workshop.training.xp_gain;
       await commit({ xp: Number(progression.xp || 0) + gain }, 'trained', `Training added ${gain} card XP`, { sessions, gain });
     } else if (action === 'levelUp') {
       if (progression.level >= progression.max_level) throw new Error('Level cap reached. Ascend the card to raise its cap.');
@@ -188,15 +190,14 @@ Deno.serve(async (req) => {
       const stat = String(payload?.stat || 'attack').toLowerCase();
       if (!['attack', 'defense', 'magic', 'vitality', 'speed'].includes(stat)) throw new Error('Invalid stat');
       const current = Number(progression.enhanced_stats?.[stat] || 0);
-      const tier = Math.floor(current / 10) + 1;
-      await spend({ precision_shard: tier, combat_core: Math.max(1, Math.ceil(tier / 2)) });
-      const gain = 3 + Math.floor(Number(progression.stage || 1) / 2) + ((progression.unlocked_skill_nodes || []).includes('resonant_edge') ? 1 : 0);
+      await spend(workshop.enhance[stat].costs);
+      const gain = workshop.enhance[stat].gain;
       await commit({ enhanced_stats: { ...(progression.enhanced_stats || {}), [stat]: current + gain } }, 'enhance', `${stat} enhanced by +${gain}`, { stat, gain });
     } else if (action === 'combine') {
       if (Number(progression.stage || 1) >= 5) throw new Error('This card is already at the maximum combination stage');
       const sacrificeIds = Array.isArray(payload?.sacrificeUserCardIds) ? payload.sacrificeUserCardIds.map((id: any) => String(id || '').trim()).filter(Boolean) : [];
       if (new Set(sacrificeIds).size !== sacrificeIds.length) throw new Error('Choose different cards for each fusion slot');
-      const needed = Math.min(3, Number(progression.stage || 1) + 1);
+      const needed = workshop.divine.needed;
       if (sacrificeIds.length < needed && !payload?.useWildcard) throw new Error(`Stage ${Number(progression.stage || 1) + 1} requires ${needed} compatible cards or a Wildcard`);
       const consumed: string[] = [];
       if (payload?.useWildcard) {
@@ -228,7 +229,7 @@ Deno.serve(async (req) => {
       if (Number(progression.level) < Number(progression.max_level)) throw new Error(`Reach level ${progression.max_level} before ascending`);
       const nextAscension = Number(progression.ascension || 0) + 1;
       if (nextAscension > 5) throw new Error('Maximum ascension reached');
-      await spend({ ascension_core: nextAscension });
+      await spend(workshop.ascension.costs);
       const newMax = Number(progression.max_level || 10) + 10;
       await commit({ ascension: nextAscension, max_level: newMax, xp: 0, xp_to_next: xpToNext(progression.level, nextAscension), skill_points: Number(progression.skill_points || 0) + 2 }, 'ascend', `Ascension ${nextAscension} unlocked; level cap is now ${newMax}`, { ascension: nextAscension, max_level: newMax });
     } else if (action === 'enchant') {
@@ -236,7 +237,7 @@ Deno.serve(async (req) => {
       if (!enchantmentId) throw new Error('Choose an enchantment');
       const enchantment = await base44.asServiceRole.entities.Enchantment.get(enchantmentId).catch(() => null);
       if (!enchantment) throw new Error('Enchantment not found');
-      const slots = 1 + Math.floor(Number(progression.stage || 1) / 2) + Math.min(2, Number(progression.ascension || 0));
+      const slots = workshop.sockets.total;
       const socketType = enchantment.socket_type || 'gem';
       if (!['core', 'gem', 'rune'].includes(socketType) || (payload.socketType && payload.socketType !== socketType)) throw new Error('Choose a recipe for this socket type');
       const slotCost = Number(enchantment.slot_cost ?? 1);
@@ -254,9 +255,8 @@ Deno.serve(async (req) => {
       if (!(progression.enchantments || []).length) throw new Error('Apply a normal enchantment before over-enchanting');
       const nextRank = Number(progression.over_enchant_rank || 0) + 1;
       if (nextRank > 5) throw new Error('Maximum over-enchant rank reached');
-      await spend({ adaptive_shard: nextRank });
-      const focusBonus = (progression.unlocked_skill_nodes || []).includes('enchanter_focus') ? 8 : 0;
-      const successChance = Math.max(35, Math.min(95, 82 - Number(progression.over_enchant_rank || 0) * 12 + Number(progression.stage || 1) * 2 + focusBonus));
+      await spend(workshop.over_enchant.costs);
+      const successChance = workshop.over_enchant.success_chance;
       const roll = Math.random() * 100;
       const success = roll <= successChance;
       const stability = Math.max(0, Number(progression.over_enchant_stability ?? 100) - (success ? 5 : 15));
@@ -311,7 +311,8 @@ Deno.serve(async (req) => {
       events,
       materials,
       enchantments,
-      compatibleCards: duplicates.filter((c: AnyObj) => c.id !== userCard.id && !c.starter_grant_user_id && !c.is_equipped && c.trade_status !== 'locked_in_trade'),
+      compatibleCards: duplicates.filter((c: AnyObj) => compatibleFusionCard(userCard, c)),
+      workshop: cardWorkshop(progression, userCard, enchantments),
       skillTree: SKILL_TREE
     });
   } catch (error) {
