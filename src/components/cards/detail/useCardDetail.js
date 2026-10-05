@@ -21,7 +21,7 @@ export default function useCardDetail(identity) {
       if (!alive.current || version !== request.current) return;
       latest.current = next; setState(next);
     } catch (error) {
-      if (alive.current && version === request.current) setNotice({type:'error',text:errorOf(error)});
+      if (alive.current && version === request.current) { latest.current = null; setState(null); setNotice({type:'error',text:errorOf(error)}); }
     } finally { if (alive.current && version === request.current) setLoading(false); }
   },[identityKey]);
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function useCardDetail(identity) {
         latest.current = updated; setState(updated);
       }
       setNotice({type:'success',text:endpoint === 'cardProgression'
-        ? (next.events?.[0]?.summary || 'Your card has been updated.')
+        ? (next.events?.find(event => event.after?.revision === next.progression?.revision)?.summary || 'Your card has been updated.')
         : action === 'listCard' ? 'Listing published. This card is reserved until it sells or you cancel.' : 'Listing cancelled. This card is available again.'});
       return true;
     } catch (error) {
