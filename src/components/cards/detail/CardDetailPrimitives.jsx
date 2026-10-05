@@ -28,7 +28,11 @@ export function Action({children,reason,busy,onClick,secondary=false}) {
 export function Review({title,children,onCancel,onConfirm,busy,label='Confirm',disabled=false}) {
   const panel = useRef(null), cancel = useRef(onCancel);
   cancel.current = onCancel;
-  useEffect(() => { panel.current?.focus(); }, []);
+  useEffect(() => {
+    const parent = panel.current?.parentElement;
+    panel.current?.focus();
+    return () => queueMicrotask(() => { if (document.activeElement === document.body && parent?.isConnected) parent.querySelector('.cdw-action button:not(:disabled)')?.focus(); });
+  }, []);
   return <section ref={panel} tabIndex={-1} className="cdw-review" data-card-review role="region" aria-label={title} onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); if (!busy) cancel.current(); } }}>
     <span className="cdw-eyebrow">Review before continuing</span><h3>{title}</h3><div>{children}</div>
     <div className="cdw-review-actions"><button className="cdw-button" disabled={busy} onClick={onCancel}>Go back</button><button className="cdw-button cdw-primary" disabled={busy||disabled} onClick={onConfirm}>{busy?'Applying…':label}</button></div>

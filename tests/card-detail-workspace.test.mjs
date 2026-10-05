@@ -28,7 +28,7 @@ async function invoke(name,body){
 let override=null;
 globalThis.cardDetailFixture={functions:{invoke:(...args)=>override?override(...args):invoke(...args)},entities:{CardProgression:{subscribe:()=>()=>{}},UserCard:{subscribe:()=>()=>{}}}};
 const bundle=await build({entryPoints:['src/components/cards/detail/CardDetailWorkspace.jsx'],bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},plugins:[{name:'card-api-fixture',setup(b){b.onResolve({filter:/base44Client$/},()=>({path:'api',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const base44=globalThis.cardDetailFixture;',loader:'js'}));}}]});
-const module=new Module(process.cwd()+'/tests/__card_detail_ui.cjs');module.paths=Module._nodeModulePaths(process.cwd());module._compile(bundle.outputFiles[0].text,module.filename);
+const module=new Module(process.cwd()+'/tests/__card_detail_ui.cjs');module.paths=Module._nodeModulePaths(process.cwd());module._compile(bundle.outputFiles[0].text,process.cwd()+'/tests/__card_detail_ui.cjs');
 const Card=module.exports.default;
 let root,client,closed;
 const run=fn=>act(async()=>{await fn?.();await new Promise(resolve=>setTimeout(resolve,25));});
