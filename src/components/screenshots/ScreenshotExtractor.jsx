@@ -5,7 +5,6 @@ import {
   CircleStop,
   Clock3,
   Download,
-  Film,
   FolderOpen,
   Gauge,
   Image as ImageIcon,
@@ -320,6 +319,7 @@ export default function ScreenshotExtractor() {
     setLastWritten('');
 
     let jobId = '';
+    let writtenCount = 0;
     try {
       await waitUntilLoaded(video);
       const width = Number(video.videoWidth || videoSize.width || 0);
@@ -362,6 +362,7 @@ export default function ScreenshotExtractor() {
         const filename = `${base}_frame_${String(index + 1).padStart(6, '0')}_${frameStamp(target)}.${EXT[format]}`;
         await writeBlob(blob, filename);
         const done = index + 1;
+        writtenCount = done;
         setCompleted(done);
         setLastWritten(filename);
 
@@ -373,7 +374,7 @@ export default function ScreenshotExtractor() {
 
       if (cancelRef.current) {
         setStatus('cancelled');
-        if (jobId) await invokeJob('cancel', { job_id: jobId, completed_frames: completed, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        if (jobId) await invokeJob('cancel', { job_id: jobId, completed_frames: writtenCount, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
       } else {
         setStatus('completed');
         if (jobId) await invokeJob('complete', { job_id: jobId, completed_frames: count, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
@@ -384,7 +385,7 @@ export default function ScreenshotExtractor() {
       if (jobId) {
         await invokeJob('fail', {
           job_id: jobId,
-          completed_frames: completed,
+          completed_frames: writtenCount,
           error_message: runError?.message || 'Screenshot extraction failed.',
         }).catch(() => {});
       }
@@ -397,7 +398,7 @@ export default function ScreenshotExtractor() {
 
   return (
     <div className="h-screen w-full overflow-hidden pb-12 pt-16 text-white">
-      <div className="mx-auto grid h-full max-w-[1680px] grid-cols-[minmax(0,1fr)_320px] gap-4 px-5 py-4">
+      <div className="mx-auto grid h-full max-w-[1680px] grid-cols-1 gap-4 overflow-y-auto px-5 py-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:overflow-hidden">
         <main className="min-h-0 overflow-y-auto rounded-[22px] border border-white/[0.065] bg-[linear-gradient(145deg,rgba(10,18,29,.62),rgba(5,11,19,.38))] p-5 shadow-[0_28px_80px_rgba(0,0,0,.22)] backdrop-blur-2xl">
           <header className="flex flex-wrap items-start justify-between gap-4">
             <div>
