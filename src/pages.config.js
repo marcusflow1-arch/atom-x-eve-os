@@ -15,6 +15,7 @@ import Admin from './pages/Admin';
 import AdminArtemis3D from './pages/AdminArtemis3D';
 import AdminUIBuilder from './pages/AdminUIBuilder';
 import Aura from './pages/Aura';
+import Screenshots from './pages/Screenshots';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import BlankTransition from './pages/BlankTransition';
@@ -78,6 +79,7 @@ export const PAGES = {
     "AdminArtemis3D": AdminArtemis3D,
     "AdminUIBuilder": AdminUIBuilder,
     "Aura": Aura,
+    "Screenshots": Screenshots,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "BlankTransition": BlankTransition,
