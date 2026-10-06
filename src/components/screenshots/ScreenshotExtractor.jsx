@@ -149,6 +149,7 @@ export default function ScreenshotExtractor() {
   const canvasRef = useRef(null);
   const cancelRef = useRef(false);
   const jobIdRef = useRef('');
+  const wakeLockRef = useRef(null);
   const [file, setFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [duration, setDuration] = useState(0);
@@ -366,6 +367,23 @@ export default function ScreenshotExtractor() {
     cancelRef.current = true;
   };
 
+  const syncVideoMetadata = (video) => {
+    const nextDuration = Number(video?.duration || 0);
+    const width = Number(video?.videoWidth || 0);
+    const height = Number(video?.videoHeight || 0);
+    if (width && height) setVideoSize({ width, height });
+    if (Number.isFinite(nextDuration) && nextDuration > 0) {
+      setDuration((previous) => {
+        if (!previous) {
+          setRangeStart(0);
+          setRangeEnd(nextDuration);
+        }
+        return nextDuration;
+      });
+      setError('');
+    }
+  };
+
   const startExtraction = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -392,6 +410,9 @@ export default function ScreenshotExtractor() {
 
     cancelRef.current = false;
     setStatus('running');
+    try {
+      if (navigator?.wakeLock?.request) wakeLockRef.current = await navigator.wakeLock.request('screen');
+    } catch { /* wake lock is optional */ }
     setCompleted(0);
     setCurrentTime(start);
     setError('');
@@ -484,6 +505,8 @@ export default function ScreenshotExtractor() {
         }
       });
     } finally {
+      try { await wakeLockRef.current?.release?.(); } catch { /* optional */ }
+      wakeLockRef.current = null;
       queryClient.invalidateQueries({ queryKey: ['screenshot-extraction-jobs'] });
     }
   };
@@ -514,13 +537,9 @@ export default function ScreenshotExtractor() {
                       controls={status !== 'running'}
                       preload="auto"
                       className="h-full max-h-[520px] min-h-[300px] w-full object-contain"
-                      onLoadedMetadata={(event) => {
-                        const nextDuration = Number(event.currentTarget.duration || 0);
-                        setDuration(nextDuration);
-                        setRangeStart(0);
-                        setRangeEnd(nextDuration);
-                        setVideoSize({ width: event.currentTarget.videoWidth || 0, height: event.currentTarget.videoHeight || 0 });
-                      }}
+                      onLoadedMetadata={(event) => syncVideoMetadata(event.currentTarget)}
+                      onDurationChange={(event) => syncVideoMetadata(event.currentTarget)}
+                      onLoadedData={(event) => syncVideoMetadata(event.currentTarget)}
                       onError={() => setError('This browser could not decode the selected video.')}
                     />
                     {status === 'running' && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 to-transparent" />}
