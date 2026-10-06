@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Check,
@@ -260,6 +260,14 @@ export default function ScreenshotExtractor() {
     }
   };
 
+  const beginVideoSelection = () => {
+    if (isEmbeddedFrame) {
+      openStandaloneScreenshots();
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
   const ensureDirectoryPermission = async (handle, { request = false } = {}) => {
     if (!handle) throw new Error('No folder is selected.');
     const descriptor = { mode: 'readwrite' };
@@ -519,15 +527,22 @@ export default function ScreenshotExtractor() {
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.055] px-4 py-3">
                     <div className="min-w-0"><div className="max-w-[420px] truncate text-[10px] font-semibold text-white/68">{file?.name}</div><div className="mt-1 text-[8px] text-white/27">{formatClock(duration)} · {videoSize.width || '—'}×{videoSize.height || '—'} · {(Number(file?.size || 0) / 1024 / 1024).toFixed(1)} MB</div></div>
-                    <button type="button" disabled={status === 'running'} onClick={() => fileInputRef.current?.click()} className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-2 text-[8px] font-bold uppercase tracking-[.11em] text-white/48 hover:bg-white/[0.055] disabled:opacity-35">Replace video</button>
+                    <button type="button" disabled={status === 'running'} onClick={beginVideoSelection} className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-2 text-[8px] font-bold uppercase tracking-[.11em] text-white/48 hover:bg-white/[0.055] disabled:opacity-35">Replace video</button>
                   </div>
                 </div>
               ) : (
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={beginVideoSelection}
                   onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }}
-                  onDrop={(event) => { event.preventDefault(); onVideoFile(event.dataTransfer.files?.[0]); }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    if (isEmbeddedFrame) {
+                      openStandaloneScreenshots();
+                      return;
+                    }
+                    onVideoFile(event.dataTransfer.files?.[0]);
+                  }}
                   className="grid h-full min-h-[390px] w-full place-items-center p-10 text-center transition hover:bg-white/[0.018]"
                 >
                   <div>
