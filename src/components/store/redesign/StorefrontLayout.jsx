@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
-import {ArrowLeft,ArrowRight,ChevronLeft,ChevronRight,Gamepad2,SlidersHorizontal,Sparkles,X} from 'lucide-react';
+import {ArrowRight,ChevronLeft,ChevronRight,Gamepad2,SlidersHorizontal,Sparkles,X} from 'lucide-react';
 import {base44} from '@/api/base44Client';
 import {useAuth} from '@/components/auth/AuthContext';
 import {filterGames,genresOf,label,priceOf,queryScore,releaseTime,comingSoon,discoveryOrder,rotateGames,recommendations,uniqueCatalog} from './discovery';

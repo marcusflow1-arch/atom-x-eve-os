@@ -32,11 +32,12 @@ export default function Store(){
  const {data:games=[],isLoading,error,refetch}=useQuery({queryKey:['store-catalog'],queryFn:async()=>{
   const all=[],seen=new Set();let offset=0;
   while(true){
+   const before=seen.size;
    const rows=await base44.entities.Game.list('title',200,offset);
    const page=rows?.data||rows;
    if(!Array.isArray(page))throw new Error('The game catalog returned an invalid response.');
    for(const game of page)if(game.id&&!seen.has(game.id)){seen.add(game.id);all.push(game);}
-   if(page.length<200)break;
+   if(page.length<200||seen.size===before)break;
    offset+=page.length;
   }
   return all;

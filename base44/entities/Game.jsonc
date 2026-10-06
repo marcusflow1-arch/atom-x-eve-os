@@ -92,6 +92,14 @@
         "type": "string"
       },
       "default": []
+    },
+    "demo_url": {
+      "type": "string",
+      "description": "Published playable demo URL; only games with a valid link appear in Demos."
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
