@@ -549,12 +549,39 @@ export default function ScreenshotExtractor() {
               </div>
 
               <div className="mt-5 border-t border-white/[0.055] pt-4">
-                <div className="flex items-center justify-between gap-3"><div><div className="text-[8px] font-bold uppercase tracking-[.14em] text-white/32">Output destination</div><div className="mt-1 max-w-[250px] truncate text-[9px] text-white/52">{outputMode === 'folder' && directoryHandle ? directoryHandle.name : 'Browser Downloads · one file at a time'}</div></div><FolderOpen className="h-4 w-4 text-white/25" /></div>
-                <div className="mt-3 flex gap-2">
-                  <button type="button" disabled={status === 'running'} onClick={chooseFolder} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-cyan-200/[0.10] bg-cyan-200/[0.035] text-[8px] font-bold uppercase tracking-[.1em] text-cyan-100/58 hover:bg-cyan-200/[0.07] disabled:opacity-35"><FolderOpen className="h-3.5 w-3.5" />Choose folder</button>
-                  <button type="button" disabled={status === 'running'} onClick={() => { setDirectoryHandle(null); setOutputMode('downloads'); setError(''); }} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] text-[8px] font-bold uppercase tracking-[.1em] text-white/42 hover:bg-white/[0.055] disabled:opacity-35"><Download className="h-3.5 w-3.5" />Downloads</button>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[8px] font-bold uppercase tracking-[.14em] text-white/32">Output destination</div>
+                    <div className="mt-1 flex min-w-0 items-center gap-2 text-[9px] text-white/52">
+                      {folderState === 'ready' && outputMode === 'folder' && <Check className="h-3 w-3 shrink-0 text-emerald-300/70" />}
+                      <span className="max-w-[250px] truncate">{outputMode === 'folder' && directoryHandle ? directoryHandle.name : (isEmbeddedFrame ? 'Editor preview · folder access blocked here' : 'Browser Downloads · one file at a time')}</span>
+                    </div>
+                  </div>
+                  <FolderOpen className="h-4 w-4 shrink-0 text-white/25" />
                 </div>
-                {!supportsDirectoryPicker && <p className="mt-2 text-[8px] leading-4 text-amber-100/38">This browser does not expose direct folder access. Use a Chromium desktop browser for “Choose folder,” or allow multiple downloads in your browser.</p>}
+
+                {isEmbeddedFrame && (
+                  <div className="mt-3 rounded-xl border border-cyan-200/[0.10] bg-cyan-200/[0.035] px-3 py-2.5">
+                    <div className="text-[8px] font-black uppercase tracking-[.14em] text-cyan-100/58">Folder access needs its own tab</div>
+                    <p className="mt-1 text-[8px] leading-4 text-white/34">The Base44 editor preview is embedded, so Chrome blocks writable-folder selection inside it. Open this tool in its own Atom X Eve tab, then select the folder there.</p>
+                  </div>
+                )}
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={status === 'running' || folderState === 'opening' || folderState === 'verifying'}
+                    onClick={chooseFolder}
+                    className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-cyan-200/[0.10] bg-cyan-200/[0.035] text-[8px] font-bold uppercase tracking-[.1em] text-cyan-100/58 hover:bg-cyan-200/[0.07] disabled:opacity-35"
+                  >
+                    {folderState === 'opening' || folderState === 'verifying' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FolderOpen className="h-3.5 w-3.5" />}
+                    {isEmbeddedFrame ? 'Open Folder-Enabled Page' : folderState === 'verifying' ? 'Testing Folder…' : folderState === 'opening' ? 'Opening…' : folderState === 'ready' ? 'Change Folder' : 'Choose Folder'}
+                  </button>
+                  <button type="button" disabled={status === 'running'} onClick={() => { setDirectoryHandle(null); setFolderState('idle'); setOutputMode('downloads'); setError(''); }} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] text-[8px] font-bold uppercase tracking-[.1em] text-white/42 hover:bg-white/[0.055] disabled:opacity-35"><Download className="h-3.5 w-3.5" />Downloads</button>
+                </div>
+
+                {!isEmbeddedFrame && !directFolderAccessAvailable && <p className="mt-2 text-[8px] leading-4 text-amber-100/38">Direct folder writing is unavailable in this browser/context. Use the published HTTPS app in desktop Chrome or Edge, or use Browser Downloads.</p>}
+                {folderState === 'ready' && outputMode === 'folder' && directoryHandle && <p className="mt-2 text-[8px] leading-4 text-emerald-100/42">Folder verified. Atom X Eve successfully tested write access and will save each frame directly into “{directoryHandle.name}”.</p>}
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/[0.055] pt-4">
