@@ -23,18 +23,18 @@ Deno.serve(async (req) => {
     const svc = base44.asServiceRole.entities.ScreenshotExtractionJob;
 
     if (action === 'start') {
-      const interval = safeNumber(data.interval_seconds, 0.05, 3600);
-      const expected = Math.floor(safeNumber(data.expected_frames, 1, 50000));
-      const duration = safeNumber(data.video_duration, 0, 86400 * 7);
-      const start = safeNumber(data.start_seconds, 0, duration || 86400 * 7);
-      const end = safeNumber(data.end_seconds, start, duration || 86400 * 7);
+      const interval = safeNumber(data.interval_seconds, 0.01);
+      const expected = Math.floor(safeNumber(data.expected_frames, 1));
+      const duration = safeNumber(data.video_duration, 0);
+      const start = safeNumber(data.start_seconds, 0, duration || Number.MAX_SAFE_INTEGER);
+      const end = safeNumber(data.end_seconds, start, duration || Number.MAX_SAFE_INTEGER);
       const format = ['jpeg', 'png', 'webp'].includes(data.format) ? data.format : 'jpeg';
       const outputMode = data.output_mode === 'folder' ? 'folder' : 'downloads';
 
       const row = await svc.create({
         user_id: String(user.id),
         file_name: String(data.file_name || 'video').slice(0, 240),
-        file_size: safeNumber(data.file_size, 0, 1024 ** 4),
+        file_size: safeNumber(data.file_size, 0),
         video_duration: duration,
         interval_seconds: interval,
         start_seconds: start,
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
       const patch: Record<string, unknown> = {};
       if (data.completed_frames !== undefined) {
-        patch.completed_frames = Math.floor(safeNumber(data.completed_frames, 0, Number(row.expected_frames || 50000)));
+        patch.completed_frames = Math.floor(safeNumber(data.completed_frames, 0, Number(row.expected_frames || Number.MAX_SAFE_INTEGER)));
       }
       if (data.output_folder_name !== undefined) patch.output_folder_name = String(data.output_folder_name || '').slice(0, 240);
 
