@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
+                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar, Images
                 } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
@@ -307,7 +307,7 @@ function LayoutContent({ children, currentPageName }) {
   const showStoreHeader = ['/store', '/gamedetail'].some(s => p_lower.includes(s));
   const showNotificationsHeader = !showStoreHeader && p_lower.includes('/notifications');
   // Luna header bar used for most pages including Library, Aura, Cards, AI Battle, etc.
-  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/entertainment','/clan','/community','/farm','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass']
+  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/entertainment','/clan','/community','/farm','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/screenshots','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass']
   .some(s => p_lower.includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
@@ -351,7 +351,7 @@ function LayoutContent({ children, currentPageName }) {
   }, [isAuthenticated, user?.id]);
 
   const [navOrder, setNavOrder] = useState(() => {
-    const defaults = ['home', 'store', 'cards', 'clan', 'forum', 'aura'];
+    const defaults = ['home', 'store', 'cards', 'clan', 'forum', 'aura', 'screenshots'];
     try {
       const saved = JSON.parse(localStorage.getItem('nav_order') || '[]');
       const known = new Set(defaults);
@@ -457,6 +457,15 @@ function LayoutContent({ children, currentPageName }) {
             className={btnClass(location.pathname.toLowerCase().includes('/aura'))}
           >
             Aura
+          </button>
+        );
+      case 'screenshots':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl('Screenshots'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/screenshots'))}
+          >
+            Screenshots
           </button>
         );
       default:
@@ -1061,6 +1070,7 @@ function LayoutContent({ children, currentPageName }) {
                             if (pp.includes('/community')) return 'Atom X Eve Forum';
                             if (pp.includes('/farm')) return 'Atom X Eve Farm';
                             if (pp.includes('/entertainment') || new URLSearchParams(location.search).get('panel') === 'entertainment') return 'Atom X Eve Entertainment';
+                            if (pp.includes('/screenshots')) return 'Atom X Eve Screenshots';
                             if (pp.includes('/aura') || pp.includes('/streaming')) return 'Atom X Eve Aura Stream';
                             if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
                             if (pp.includes('/worldevents')) return 'Atom X Eve World Events';
